@@ -88,7 +88,7 @@ func (*ApprovalWorkflow) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ApprovalWorkflow fields.
-func (aw *ApprovalWorkflow) assignValues(columns []string, values []any) error {
+func (_m *ApprovalWorkflow) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -99,36 +99,36 @@ func (aw *ApprovalWorkflow) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			aw.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case approvalworkflow.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				aw.Name = value.String
+				_m.Name = value.String
 			}
 		case approvalworkflow.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				aw.Description = value.String
+				_m.Description = value.String
 			}
 		case approvalworkflow.FieldTicketType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_type", values[i])
 			} else if value.Valid {
-				aw.TicketType = value.String
+				_m.TicketType = value.String
 			}
 		case approvalworkflow.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				aw.Priority = value.String
+				_m.Priority = value.String
 			}
 		case approvalworkflow.FieldNodes:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field nodes", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &aw.Nodes); err != nil {
+				if err := json.Unmarshal(*value, &_m.Nodes); err != nil {
 					return fmt.Errorf("unmarshal field nodes: %w", err)
 				}
 			}
@@ -136,41 +136,41 @@ func (aw *ApprovalWorkflow) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				aw.Status = value.String
+				_m.Status = value.String
 			}
 		case approvalworkflow.FieldCompletedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field completed_at", values[i])
 			} else if value.Valid {
-				aw.CompletedAt = new(time.Time)
-				*aw.CompletedAt = value.Time
+				_m.CompletedAt = new(time.Time)
+				*_m.CompletedAt = value.Time
 			}
 		case approvalworkflow.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				aw.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case approvalworkflow.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				aw.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case approvalworkflow.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				aw.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case approvalworkflow.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				aw.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			aw.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -178,72 +178,72 @@ func (aw *ApprovalWorkflow) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ApprovalWorkflow.
 // This includes values selected through modifiers, order, etc.
-func (aw *ApprovalWorkflow) Value(name string) (ent.Value, error) {
-	return aw.selectValues.Get(name)
+func (_m *ApprovalWorkflow) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryApprovalRecords queries the "approval_records" edge of the ApprovalWorkflow entity.
-func (aw *ApprovalWorkflow) QueryApprovalRecords() *ApprovalRecordQuery {
-	return NewApprovalWorkflowClient(aw.config).QueryApprovalRecords(aw)
+func (_m *ApprovalWorkflow) QueryApprovalRecords() *ApprovalRecordQuery {
+	return NewApprovalWorkflowClient(_m.config).QueryApprovalRecords(_m)
 }
 
 // Update returns a builder for updating this ApprovalWorkflow.
 // Note that you need to call ApprovalWorkflow.Unwrap() before calling this method if this ApprovalWorkflow
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (aw *ApprovalWorkflow) Update() *ApprovalWorkflowUpdateOne {
-	return NewApprovalWorkflowClient(aw.config).UpdateOne(aw)
+func (_m *ApprovalWorkflow) Update() *ApprovalWorkflowUpdateOne {
+	return NewApprovalWorkflowClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ApprovalWorkflow entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (aw *ApprovalWorkflow) Unwrap() *ApprovalWorkflow {
-	_tx, ok := aw.config.driver.(*txDriver)
+func (_m *ApprovalWorkflow) Unwrap() *ApprovalWorkflow {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ApprovalWorkflow is not a transactional entity")
 	}
-	aw.config.driver = _tx.drv
-	return aw
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (aw *ApprovalWorkflow) String() string {
+func (_m *ApprovalWorkflow) String() string {
 	var builder strings.Builder
 	builder.WriteString("ApprovalWorkflow(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", aw.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(aw.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(aw.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("ticket_type=")
-	builder.WriteString(aw.TicketType)
+	builder.WriteString(_m.TicketType)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(aw.Priority)
+	builder.WriteString(_m.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("nodes=")
-	builder.WriteString(fmt.Sprintf("%v", aw.Nodes))
+	builder.WriteString(fmt.Sprintf("%v", _m.Nodes))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(aw.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
-	if v := aw.CompletedAt; v != nil {
+	if v := _m.CompletedAt; v != nil {
 		builder.WriteString("completed_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", aw.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", aw.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(aw.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(aw.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

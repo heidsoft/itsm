@@ -25,196 +25,196 @@ type CloudAccountUpdate struct {
 }
 
 // Where appends a list predicates to the CloudAccountUpdate builder.
-func (cau *CloudAccountUpdate) Where(ps ...predicate.CloudAccount) *CloudAccountUpdate {
-	cau.mutation.Where(ps...)
-	return cau
+func (_u *CloudAccountUpdate) Where(ps ...predicate.CloudAccount) *CloudAccountUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetProvider sets the "provider" field.
-func (cau *CloudAccountUpdate) SetProvider(s string) *CloudAccountUpdate {
-	cau.mutation.SetProvider(s)
-	return cau
+func (_u *CloudAccountUpdate) SetProvider(v string) *CloudAccountUpdate {
+	_u.mutation.SetProvider(v)
+	return _u
 }
 
 // SetNillableProvider sets the "provider" field if the given value is not nil.
-func (cau *CloudAccountUpdate) SetNillableProvider(s *string) *CloudAccountUpdate {
-	if s != nil {
-		cau.SetProvider(*s)
+func (_u *CloudAccountUpdate) SetNillableProvider(v *string) *CloudAccountUpdate {
+	if v != nil {
+		_u.SetProvider(*v)
 	}
-	return cau
+	return _u
 }
 
 // SetAccountID sets the "account_id" field.
-func (cau *CloudAccountUpdate) SetAccountID(s string) *CloudAccountUpdate {
-	cau.mutation.SetAccountID(s)
-	return cau
+func (_u *CloudAccountUpdate) SetAccountID(v string) *CloudAccountUpdate {
+	_u.mutation.SetAccountID(v)
+	return _u
 }
 
 // SetNillableAccountID sets the "account_id" field if the given value is not nil.
-func (cau *CloudAccountUpdate) SetNillableAccountID(s *string) *CloudAccountUpdate {
-	if s != nil {
-		cau.SetAccountID(*s)
+func (_u *CloudAccountUpdate) SetNillableAccountID(v *string) *CloudAccountUpdate {
+	if v != nil {
+		_u.SetAccountID(*v)
 	}
-	return cau
+	return _u
 }
 
 // SetAccountName sets the "account_name" field.
-func (cau *CloudAccountUpdate) SetAccountName(s string) *CloudAccountUpdate {
-	cau.mutation.SetAccountName(s)
-	return cau
+func (_u *CloudAccountUpdate) SetAccountName(v string) *CloudAccountUpdate {
+	_u.mutation.SetAccountName(v)
+	return _u
 }
 
 // SetNillableAccountName sets the "account_name" field if the given value is not nil.
-func (cau *CloudAccountUpdate) SetNillableAccountName(s *string) *CloudAccountUpdate {
-	if s != nil {
-		cau.SetAccountName(*s)
+func (_u *CloudAccountUpdate) SetNillableAccountName(v *string) *CloudAccountUpdate {
+	if v != nil {
+		_u.SetAccountName(*v)
 	}
-	return cau
+	return _u
 }
 
 // SetCredentialRef sets the "credential_ref" field.
-func (cau *CloudAccountUpdate) SetCredentialRef(s string) *CloudAccountUpdate {
-	cau.mutation.SetCredentialRef(s)
-	return cau
+func (_u *CloudAccountUpdate) SetCredentialRef(v string) *CloudAccountUpdate {
+	_u.mutation.SetCredentialRef(v)
+	return _u
 }
 
 // SetNillableCredentialRef sets the "credential_ref" field if the given value is not nil.
-func (cau *CloudAccountUpdate) SetNillableCredentialRef(s *string) *CloudAccountUpdate {
-	if s != nil {
-		cau.SetCredentialRef(*s)
+func (_u *CloudAccountUpdate) SetNillableCredentialRef(v *string) *CloudAccountUpdate {
+	if v != nil {
+		_u.SetCredentialRef(*v)
 	}
-	return cau
+	return _u
 }
 
 // ClearCredentialRef clears the value of the "credential_ref" field.
-func (cau *CloudAccountUpdate) ClearCredentialRef() *CloudAccountUpdate {
-	cau.mutation.ClearCredentialRef()
-	return cau
+func (_u *CloudAccountUpdate) ClearCredentialRef() *CloudAccountUpdate {
+	_u.mutation.ClearCredentialRef()
+	return _u
 }
 
 // SetRegionWhitelist sets the "region_whitelist" field.
-func (cau *CloudAccountUpdate) SetRegionWhitelist(s []string) *CloudAccountUpdate {
-	cau.mutation.SetRegionWhitelist(s)
-	return cau
+func (_u *CloudAccountUpdate) SetRegionWhitelist(v []string) *CloudAccountUpdate {
+	_u.mutation.SetRegionWhitelist(v)
+	return _u
 }
 
-// AppendRegionWhitelist appends s to the "region_whitelist" field.
-func (cau *CloudAccountUpdate) AppendRegionWhitelist(s []string) *CloudAccountUpdate {
-	cau.mutation.AppendRegionWhitelist(s)
-	return cau
+// AppendRegionWhitelist appends value to the "region_whitelist" field.
+func (_u *CloudAccountUpdate) AppendRegionWhitelist(v []string) *CloudAccountUpdate {
+	_u.mutation.AppendRegionWhitelist(v)
+	return _u
 }
 
 // ClearRegionWhitelist clears the value of the "region_whitelist" field.
-func (cau *CloudAccountUpdate) ClearRegionWhitelist() *CloudAccountUpdate {
-	cau.mutation.ClearRegionWhitelist()
-	return cau
+func (_u *CloudAccountUpdate) ClearRegionWhitelist() *CloudAccountUpdate {
+	_u.mutation.ClearRegionWhitelist()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (cau *CloudAccountUpdate) SetIsActive(b bool) *CloudAccountUpdate {
-	cau.mutation.SetIsActive(b)
-	return cau
+func (_u *CloudAccountUpdate) SetIsActive(v bool) *CloudAccountUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (cau *CloudAccountUpdate) SetNillableIsActive(b *bool) *CloudAccountUpdate {
-	if b != nil {
-		cau.SetIsActive(*b)
+func (_u *CloudAccountUpdate) SetNillableIsActive(v *bool) *CloudAccountUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return cau
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cau *CloudAccountUpdate) SetTenantID(i int) *CloudAccountUpdate {
-	cau.mutation.ResetTenantID()
-	cau.mutation.SetTenantID(i)
-	return cau
+func (_u *CloudAccountUpdate) SetTenantID(v int) *CloudAccountUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (cau *CloudAccountUpdate) SetNillableTenantID(i *int) *CloudAccountUpdate {
-	if i != nil {
-		cau.SetTenantID(*i)
+func (_u *CloudAccountUpdate) SetNillableTenantID(v *int) *CloudAccountUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return cau
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (cau *CloudAccountUpdate) AddTenantID(i int) *CloudAccountUpdate {
-	cau.mutation.AddTenantID(i)
-	return cau
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *CloudAccountUpdate) AddTenantID(v int) *CloudAccountUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cau *CloudAccountUpdate) SetCreatedAt(t time.Time) *CloudAccountUpdate {
-	cau.mutation.SetCreatedAt(t)
-	return cau
+func (_u *CloudAccountUpdate) SetCreatedAt(v time.Time) *CloudAccountUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cau *CloudAccountUpdate) SetNillableCreatedAt(t *time.Time) *CloudAccountUpdate {
-	if t != nil {
-		cau.SetCreatedAt(*t)
+func (_u *CloudAccountUpdate) SetNillableCreatedAt(v *time.Time) *CloudAccountUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return cau
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cau *CloudAccountUpdate) SetUpdatedAt(t time.Time) *CloudAccountUpdate {
-	cau.mutation.SetUpdatedAt(t)
-	return cau
+func (_u *CloudAccountUpdate) SetUpdatedAt(v time.Time) *CloudAccountUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddResourceIDs adds the "resources" edge to the CloudResource entity by IDs.
-func (cau *CloudAccountUpdate) AddResourceIDs(ids ...int) *CloudAccountUpdate {
-	cau.mutation.AddResourceIDs(ids...)
-	return cau
+func (_u *CloudAccountUpdate) AddResourceIDs(ids ...int) *CloudAccountUpdate {
+	_u.mutation.AddResourceIDs(ids...)
+	return _u
 }
 
 // AddResources adds the "resources" edges to the CloudResource entity.
-func (cau *CloudAccountUpdate) AddResources(c ...*CloudResource) *CloudAccountUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CloudAccountUpdate) AddResources(v ...*CloudResource) *CloudAccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cau.AddResourceIDs(ids...)
+	return _u.AddResourceIDs(ids...)
 }
 
 // Mutation returns the CloudAccountMutation object of the builder.
-func (cau *CloudAccountUpdate) Mutation() *CloudAccountMutation {
-	return cau.mutation
+func (_u *CloudAccountUpdate) Mutation() *CloudAccountMutation {
+	return _u.mutation
 }
 
 // ClearResources clears all "resources" edges to the CloudResource entity.
-func (cau *CloudAccountUpdate) ClearResources() *CloudAccountUpdate {
-	cau.mutation.ClearResources()
-	return cau
+func (_u *CloudAccountUpdate) ClearResources() *CloudAccountUpdate {
+	_u.mutation.ClearResources()
+	return _u
 }
 
 // RemoveResourceIDs removes the "resources" edge to CloudResource entities by IDs.
-func (cau *CloudAccountUpdate) RemoveResourceIDs(ids ...int) *CloudAccountUpdate {
-	cau.mutation.RemoveResourceIDs(ids...)
-	return cau
+func (_u *CloudAccountUpdate) RemoveResourceIDs(ids ...int) *CloudAccountUpdate {
+	_u.mutation.RemoveResourceIDs(ids...)
+	return _u
 }
 
 // RemoveResources removes "resources" edges to CloudResource entities.
-func (cau *CloudAccountUpdate) RemoveResources(c ...*CloudResource) *CloudAccountUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CloudAccountUpdate) RemoveResources(v ...*CloudResource) *CloudAccountUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cau.RemoveResourceIDs(ids...)
+	return _u.RemoveResourceIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (cau *CloudAccountUpdate) Save(ctx context.Context) (int, error) {
-	cau.defaults()
-	return withHooks(ctx, cau.sqlSave, cau.mutation, cau.hooks)
+func (_u *CloudAccountUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cau *CloudAccountUpdate) SaveX(ctx context.Context) int {
-	affected, err := cau.Save(ctx)
+func (_u *CloudAccountUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -222,44 +222,44 @@ func (cau *CloudAccountUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (cau *CloudAccountUpdate) Exec(ctx context.Context) error {
-	_, err := cau.Save(ctx)
+func (_u *CloudAccountUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cau *CloudAccountUpdate) ExecX(ctx context.Context) {
-	if err := cau.Exec(ctx); err != nil {
+func (_u *CloudAccountUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cau *CloudAccountUpdate) defaults() {
-	if _, ok := cau.mutation.UpdatedAt(); !ok {
+func (_u *CloudAccountUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := cloudaccount.UpdateDefaultUpdatedAt()
-		cau.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cau *CloudAccountUpdate) check() error {
-	if v, ok := cau.mutation.Provider(); ok {
+func (_u *CloudAccountUpdate) check() error {
+	if v, ok := _u.mutation.Provider(); ok {
 		if err := cloudaccount.ProviderValidator(v); err != nil {
 			return &ValidationError{Name: "provider", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.provider": %w`, err)}
 		}
 	}
-	if v, ok := cau.mutation.AccountID(); ok {
+	if v, ok := _u.mutation.AccountID(); ok {
 		if err := cloudaccount.AccountIDValidator(v); err != nil {
 			return &ValidationError{Name: "account_id", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.account_id": %w`, err)}
 		}
 	}
-	if v, ok := cau.mutation.AccountName(); ok {
+	if v, ok := _u.mutation.AccountName(); ok {
 		if err := cloudaccount.AccountNameValidator(v); err != nil {
 			return &ValidationError{Name: "account_name", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.account_name": %w`, err)}
 		}
 	}
-	if v, ok := cau.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := cloudaccount.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.tenant_id": %w`, err)}
 		}
@@ -267,60 +267,60 @@ func (cau *CloudAccountUpdate) check() error {
 	return nil
 }
 
-func (cau *CloudAccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := cau.check(); err != nil {
-		return n, err
+func (_u *CloudAccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(cloudaccount.Table, cloudaccount.Columns, sqlgraph.NewFieldSpec(cloudaccount.FieldID, field.TypeInt))
-	if ps := cau.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cau.mutation.Provider(); ok {
+	if value, ok := _u.mutation.Provider(); ok {
 		_spec.SetField(cloudaccount.FieldProvider, field.TypeString, value)
 	}
-	if value, ok := cau.mutation.AccountID(); ok {
+	if value, ok := _u.mutation.AccountID(); ok {
 		_spec.SetField(cloudaccount.FieldAccountID, field.TypeString, value)
 	}
-	if value, ok := cau.mutation.AccountName(); ok {
+	if value, ok := _u.mutation.AccountName(); ok {
 		_spec.SetField(cloudaccount.FieldAccountName, field.TypeString, value)
 	}
-	if value, ok := cau.mutation.CredentialRef(); ok {
+	if value, ok := _u.mutation.CredentialRef(); ok {
 		_spec.SetField(cloudaccount.FieldCredentialRef, field.TypeString, value)
 	}
-	if cau.mutation.CredentialRefCleared() {
+	if _u.mutation.CredentialRefCleared() {
 		_spec.ClearField(cloudaccount.FieldCredentialRef, field.TypeString)
 	}
-	if value, ok := cau.mutation.RegionWhitelist(); ok {
+	if value, ok := _u.mutation.RegionWhitelist(); ok {
 		_spec.SetField(cloudaccount.FieldRegionWhitelist, field.TypeJSON, value)
 	}
-	if value, ok := cau.mutation.AppendedRegionWhitelist(); ok {
+	if value, ok := _u.mutation.AppendedRegionWhitelist(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, cloudaccount.FieldRegionWhitelist, value)
 		})
 	}
-	if cau.mutation.RegionWhitelistCleared() {
+	if _u.mutation.RegionWhitelistCleared() {
 		_spec.ClearField(cloudaccount.FieldRegionWhitelist, field.TypeJSON)
 	}
-	if value, ok := cau.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(cloudaccount.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := cau.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(cloudaccount.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cau.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(cloudaccount.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cau.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(cloudaccount.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := cau.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(cloudaccount.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if cau.mutation.ResourcesCleared() {
+	if _u.mutation.ResourcesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -333,7 +333,7 @@ func (cau *CloudAccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cau.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !cau.mutation.ResourcesCleared() {
+	if nodes := _u.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !_u.mutation.ResourcesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -349,7 +349,7 @@ func (cau *CloudAccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cau.mutation.ResourcesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ResourcesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -365,7 +365,7 @@ func (cau *CloudAccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, cau.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{cloudaccount.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -373,8 +373,8 @@ func (cau *CloudAccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	cau.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // CloudAccountUpdateOne is the builder for updating a single CloudAccount entity.
@@ -386,203 +386,203 @@ type CloudAccountUpdateOne struct {
 }
 
 // SetProvider sets the "provider" field.
-func (cauo *CloudAccountUpdateOne) SetProvider(s string) *CloudAccountUpdateOne {
-	cauo.mutation.SetProvider(s)
-	return cauo
+func (_u *CloudAccountUpdateOne) SetProvider(v string) *CloudAccountUpdateOne {
+	_u.mutation.SetProvider(v)
+	return _u
 }
 
 // SetNillableProvider sets the "provider" field if the given value is not nil.
-func (cauo *CloudAccountUpdateOne) SetNillableProvider(s *string) *CloudAccountUpdateOne {
-	if s != nil {
-		cauo.SetProvider(*s)
+func (_u *CloudAccountUpdateOne) SetNillableProvider(v *string) *CloudAccountUpdateOne {
+	if v != nil {
+		_u.SetProvider(*v)
 	}
-	return cauo
+	return _u
 }
 
 // SetAccountID sets the "account_id" field.
-func (cauo *CloudAccountUpdateOne) SetAccountID(s string) *CloudAccountUpdateOne {
-	cauo.mutation.SetAccountID(s)
-	return cauo
+func (_u *CloudAccountUpdateOne) SetAccountID(v string) *CloudAccountUpdateOne {
+	_u.mutation.SetAccountID(v)
+	return _u
 }
 
 // SetNillableAccountID sets the "account_id" field if the given value is not nil.
-func (cauo *CloudAccountUpdateOne) SetNillableAccountID(s *string) *CloudAccountUpdateOne {
-	if s != nil {
-		cauo.SetAccountID(*s)
+func (_u *CloudAccountUpdateOne) SetNillableAccountID(v *string) *CloudAccountUpdateOne {
+	if v != nil {
+		_u.SetAccountID(*v)
 	}
-	return cauo
+	return _u
 }
 
 // SetAccountName sets the "account_name" field.
-func (cauo *CloudAccountUpdateOne) SetAccountName(s string) *CloudAccountUpdateOne {
-	cauo.mutation.SetAccountName(s)
-	return cauo
+func (_u *CloudAccountUpdateOne) SetAccountName(v string) *CloudAccountUpdateOne {
+	_u.mutation.SetAccountName(v)
+	return _u
 }
 
 // SetNillableAccountName sets the "account_name" field if the given value is not nil.
-func (cauo *CloudAccountUpdateOne) SetNillableAccountName(s *string) *CloudAccountUpdateOne {
-	if s != nil {
-		cauo.SetAccountName(*s)
+func (_u *CloudAccountUpdateOne) SetNillableAccountName(v *string) *CloudAccountUpdateOne {
+	if v != nil {
+		_u.SetAccountName(*v)
 	}
-	return cauo
+	return _u
 }
 
 // SetCredentialRef sets the "credential_ref" field.
-func (cauo *CloudAccountUpdateOne) SetCredentialRef(s string) *CloudAccountUpdateOne {
-	cauo.mutation.SetCredentialRef(s)
-	return cauo
+func (_u *CloudAccountUpdateOne) SetCredentialRef(v string) *CloudAccountUpdateOne {
+	_u.mutation.SetCredentialRef(v)
+	return _u
 }
 
 // SetNillableCredentialRef sets the "credential_ref" field if the given value is not nil.
-func (cauo *CloudAccountUpdateOne) SetNillableCredentialRef(s *string) *CloudAccountUpdateOne {
-	if s != nil {
-		cauo.SetCredentialRef(*s)
+func (_u *CloudAccountUpdateOne) SetNillableCredentialRef(v *string) *CloudAccountUpdateOne {
+	if v != nil {
+		_u.SetCredentialRef(*v)
 	}
-	return cauo
+	return _u
 }
 
 // ClearCredentialRef clears the value of the "credential_ref" field.
-func (cauo *CloudAccountUpdateOne) ClearCredentialRef() *CloudAccountUpdateOne {
-	cauo.mutation.ClearCredentialRef()
-	return cauo
+func (_u *CloudAccountUpdateOne) ClearCredentialRef() *CloudAccountUpdateOne {
+	_u.mutation.ClearCredentialRef()
+	return _u
 }
 
 // SetRegionWhitelist sets the "region_whitelist" field.
-func (cauo *CloudAccountUpdateOne) SetRegionWhitelist(s []string) *CloudAccountUpdateOne {
-	cauo.mutation.SetRegionWhitelist(s)
-	return cauo
+func (_u *CloudAccountUpdateOne) SetRegionWhitelist(v []string) *CloudAccountUpdateOne {
+	_u.mutation.SetRegionWhitelist(v)
+	return _u
 }
 
-// AppendRegionWhitelist appends s to the "region_whitelist" field.
-func (cauo *CloudAccountUpdateOne) AppendRegionWhitelist(s []string) *CloudAccountUpdateOne {
-	cauo.mutation.AppendRegionWhitelist(s)
-	return cauo
+// AppendRegionWhitelist appends value to the "region_whitelist" field.
+func (_u *CloudAccountUpdateOne) AppendRegionWhitelist(v []string) *CloudAccountUpdateOne {
+	_u.mutation.AppendRegionWhitelist(v)
+	return _u
 }
 
 // ClearRegionWhitelist clears the value of the "region_whitelist" field.
-func (cauo *CloudAccountUpdateOne) ClearRegionWhitelist() *CloudAccountUpdateOne {
-	cauo.mutation.ClearRegionWhitelist()
-	return cauo
+func (_u *CloudAccountUpdateOne) ClearRegionWhitelist() *CloudAccountUpdateOne {
+	_u.mutation.ClearRegionWhitelist()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (cauo *CloudAccountUpdateOne) SetIsActive(b bool) *CloudAccountUpdateOne {
-	cauo.mutation.SetIsActive(b)
-	return cauo
+func (_u *CloudAccountUpdateOne) SetIsActive(v bool) *CloudAccountUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (cauo *CloudAccountUpdateOne) SetNillableIsActive(b *bool) *CloudAccountUpdateOne {
-	if b != nil {
-		cauo.SetIsActive(*b)
+func (_u *CloudAccountUpdateOne) SetNillableIsActive(v *bool) *CloudAccountUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return cauo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cauo *CloudAccountUpdateOne) SetTenantID(i int) *CloudAccountUpdateOne {
-	cauo.mutation.ResetTenantID()
-	cauo.mutation.SetTenantID(i)
-	return cauo
+func (_u *CloudAccountUpdateOne) SetTenantID(v int) *CloudAccountUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (cauo *CloudAccountUpdateOne) SetNillableTenantID(i *int) *CloudAccountUpdateOne {
-	if i != nil {
-		cauo.SetTenantID(*i)
+func (_u *CloudAccountUpdateOne) SetNillableTenantID(v *int) *CloudAccountUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return cauo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (cauo *CloudAccountUpdateOne) AddTenantID(i int) *CloudAccountUpdateOne {
-	cauo.mutation.AddTenantID(i)
-	return cauo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *CloudAccountUpdateOne) AddTenantID(v int) *CloudAccountUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cauo *CloudAccountUpdateOne) SetCreatedAt(t time.Time) *CloudAccountUpdateOne {
-	cauo.mutation.SetCreatedAt(t)
-	return cauo
+func (_u *CloudAccountUpdateOne) SetCreatedAt(v time.Time) *CloudAccountUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cauo *CloudAccountUpdateOne) SetNillableCreatedAt(t *time.Time) *CloudAccountUpdateOne {
-	if t != nil {
-		cauo.SetCreatedAt(*t)
+func (_u *CloudAccountUpdateOne) SetNillableCreatedAt(v *time.Time) *CloudAccountUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return cauo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cauo *CloudAccountUpdateOne) SetUpdatedAt(t time.Time) *CloudAccountUpdateOne {
-	cauo.mutation.SetUpdatedAt(t)
-	return cauo
+func (_u *CloudAccountUpdateOne) SetUpdatedAt(v time.Time) *CloudAccountUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddResourceIDs adds the "resources" edge to the CloudResource entity by IDs.
-func (cauo *CloudAccountUpdateOne) AddResourceIDs(ids ...int) *CloudAccountUpdateOne {
-	cauo.mutation.AddResourceIDs(ids...)
-	return cauo
+func (_u *CloudAccountUpdateOne) AddResourceIDs(ids ...int) *CloudAccountUpdateOne {
+	_u.mutation.AddResourceIDs(ids...)
+	return _u
 }
 
 // AddResources adds the "resources" edges to the CloudResource entity.
-func (cauo *CloudAccountUpdateOne) AddResources(c ...*CloudResource) *CloudAccountUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CloudAccountUpdateOne) AddResources(v ...*CloudResource) *CloudAccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cauo.AddResourceIDs(ids...)
+	return _u.AddResourceIDs(ids...)
 }
 
 // Mutation returns the CloudAccountMutation object of the builder.
-func (cauo *CloudAccountUpdateOne) Mutation() *CloudAccountMutation {
-	return cauo.mutation
+func (_u *CloudAccountUpdateOne) Mutation() *CloudAccountMutation {
+	return _u.mutation
 }
 
 // ClearResources clears all "resources" edges to the CloudResource entity.
-func (cauo *CloudAccountUpdateOne) ClearResources() *CloudAccountUpdateOne {
-	cauo.mutation.ClearResources()
-	return cauo
+func (_u *CloudAccountUpdateOne) ClearResources() *CloudAccountUpdateOne {
+	_u.mutation.ClearResources()
+	return _u
 }
 
 // RemoveResourceIDs removes the "resources" edge to CloudResource entities by IDs.
-func (cauo *CloudAccountUpdateOne) RemoveResourceIDs(ids ...int) *CloudAccountUpdateOne {
-	cauo.mutation.RemoveResourceIDs(ids...)
-	return cauo
+func (_u *CloudAccountUpdateOne) RemoveResourceIDs(ids ...int) *CloudAccountUpdateOne {
+	_u.mutation.RemoveResourceIDs(ids...)
+	return _u
 }
 
 // RemoveResources removes "resources" edges to CloudResource entities.
-func (cauo *CloudAccountUpdateOne) RemoveResources(c ...*CloudResource) *CloudAccountUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CloudAccountUpdateOne) RemoveResources(v ...*CloudResource) *CloudAccountUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cauo.RemoveResourceIDs(ids...)
+	return _u.RemoveResourceIDs(ids...)
 }
 
 // Where appends a list predicates to the CloudAccountUpdate builder.
-func (cauo *CloudAccountUpdateOne) Where(ps ...predicate.CloudAccount) *CloudAccountUpdateOne {
-	cauo.mutation.Where(ps...)
-	return cauo
+func (_u *CloudAccountUpdateOne) Where(ps ...predicate.CloudAccount) *CloudAccountUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (cauo *CloudAccountUpdateOne) Select(field string, fields ...string) *CloudAccountUpdateOne {
-	cauo.fields = append([]string{field}, fields...)
-	return cauo
+func (_u *CloudAccountUpdateOne) Select(field string, fields ...string) *CloudAccountUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated CloudAccount entity.
-func (cauo *CloudAccountUpdateOne) Save(ctx context.Context) (*CloudAccount, error) {
-	cauo.defaults()
-	return withHooks(ctx, cauo.sqlSave, cauo.mutation, cauo.hooks)
+func (_u *CloudAccountUpdateOne) Save(ctx context.Context) (*CloudAccount, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cauo *CloudAccountUpdateOne) SaveX(ctx context.Context) *CloudAccount {
-	node, err := cauo.Save(ctx)
+func (_u *CloudAccountUpdateOne) SaveX(ctx context.Context) *CloudAccount {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -590,44 +590,44 @@ func (cauo *CloudAccountUpdateOne) SaveX(ctx context.Context) *CloudAccount {
 }
 
 // Exec executes the query on the entity.
-func (cauo *CloudAccountUpdateOne) Exec(ctx context.Context) error {
-	_, err := cauo.Save(ctx)
+func (_u *CloudAccountUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cauo *CloudAccountUpdateOne) ExecX(ctx context.Context) {
-	if err := cauo.Exec(ctx); err != nil {
+func (_u *CloudAccountUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cauo *CloudAccountUpdateOne) defaults() {
-	if _, ok := cauo.mutation.UpdatedAt(); !ok {
+func (_u *CloudAccountUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := cloudaccount.UpdateDefaultUpdatedAt()
-		cauo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cauo *CloudAccountUpdateOne) check() error {
-	if v, ok := cauo.mutation.Provider(); ok {
+func (_u *CloudAccountUpdateOne) check() error {
+	if v, ok := _u.mutation.Provider(); ok {
 		if err := cloudaccount.ProviderValidator(v); err != nil {
 			return &ValidationError{Name: "provider", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.provider": %w`, err)}
 		}
 	}
-	if v, ok := cauo.mutation.AccountID(); ok {
+	if v, ok := _u.mutation.AccountID(); ok {
 		if err := cloudaccount.AccountIDValidator(v); err != nil {
 			return &ValidationError{Name: "account_id", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.account_id": %w`, err)}
 		}
 	}
-	if v, ok := cauo.mutation.AccountName(); ok {
+	if v, ok := _u.mutation.AccountName(); ok {
 		if err := cloudaccount.AccountNameValidator(v); err != nil {
 			return &ValidationError{Name: "account_name", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.account_name": %w`, err)}
 		}
 	}
-	if v, ok := cauo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := cloudaccount.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.tenant_id": %w`, err)}
 		}
@@ -635,17 +635,17 @@ func (cauo *CloudAccountUpdateOne) check() error {
 	return nil
 }
 
-func (cauo *CloudAccountUpdateOne) sqlSave(ctx context.Context) (_node *CloudAccount, err error) {
-	if err := cauo.check(); err != nil {
+func (_u *CloudAccountUpdateOne) sqlSave(ctx context.Context) (_node *CloudAccount, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(cloudaccount.Table, cloudaccount.Columns, sqlgraph.NewFieldSpec(cloudaccount.FieldID, field.TypeInt))
-	id, ok := cauo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "CloudAccount.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := cauo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, cloudaccount.FieldID)
 		for _, f := range fields {
@@ -657,55 +657,55 @@ func (cauo *CloudAccountUpdateOne) sqlSave(ctx context.Context) (_node *CloudAcc
 			}
 		}
 	}
-	if ps := cauo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cauo.mutation.Provider(); ok {
+	if value, ok := _u.mutation.Provider(); ok {
 		_spec.SetField(cloudaccount.FieldProvider, field.TypeString, value)
 	}
-	if value, ok := cauo.mutation.AccountID(); ok {
+	if value, ok := _u.mutation.AccountID(); ok {
 		_spec.SetField(cloudaccount.FieldAccountID, field.TypeString, value)
 	}
-	if value, ok := cauo.mutation.AccountName(); ok {
+	if value, ok := _u.mutation.AccountName(); ok {
 		_spec.SetField(cloudaccount.FieldAccountName, field.TypeString, value)
 	}
-	if value, ok := cauo.mutation.CredentialRef(); ok {
+	if value, ok := _u.mutation.CredentialRef(); ok {
 		_spec.SetField(cloudaccount.FieldCredentialRef, field.TypeString, value)
 	}
-	if cauo.mutation.CredentialRefCleared() {
+	if _u.mutation.CredentialRefCleared() {
 		_spec.ClearField(cloudaccount.FieldCredentialRef, field.TypeString)
 	}
-	if value, ok := cauo.mutation.RegionWhitelist(); ok {
+	if value, ok := _u.mutation.RegionWhitelist(); ok {
 		_spec.SetField(cloudaccount.FieldRegionWhitelist, field.TypeJSON, value)
 	}
-	if value, ok := cauo.mutation.AppendedRegionWhitelist(); ok {
+	if value, ok := _u.mutation.AppendedRegionWhitelist(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, cloudaccount.FieldRegionWhitelist, value)
 		})
 	}
-	if cauo.mutation.RegionWhitelistCleared() {
+	if _u.mutation.RegionWhitelistCleared() {
 		_spec.ClearField(cloudaccount.FieldRegionWhitelist, field.TypeJSON)
 	}
-	if value, ok := cauo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(cloudaccount.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := cauo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(cloudaccount.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cauo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(cloudaccount.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cauo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(cloudaccount.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := cauo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(cloudaccount.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if cauo.mutation.ResourcesCleared() {
+	if _u.mutation.ResourcesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -718,7 +718,7 @@ func (cauo *CloudAccountUpdateOne) sqlSave(ctx context.Context) (_node *CloudAcc
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cauo.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !cauo.mutation.ResourcesCleared() {
+	if nodes := _u.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !_u.mutation.ResourcesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -734,7 +734,7 @@ func (cauo *CloudAccountUpdateOne) sqlSave(ctx context.Context) (_node *CloudAcc
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cauo.mutation.ResourcesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ResourcesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -750,10 +750,10 @@ func (cauo *CloudAccountUpdateOne) sqlSave(ctx context.Context) (_node *CloudAcc
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &CloudAccount{config: cauo.config}
+	_node = &CloudAccount{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, cauo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{cloudaccount.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -761,6 +761,6 @@ func (cauo *CloudAccountUpdateOne) sqlSave(ctx context.Context) (_node *CloudAcc
 		}
 		return nil, err
 	}
-	cauo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

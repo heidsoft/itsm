@@ -26,234 +26,234 @@ type SLAAlertRuleUpdate struct {
 }
 
 // Where appends a list predicates to the SLAAlertRuleUpdate builder.
-func (saru *SLAAlertRuleUpdate) Where(ps ...predicate.SLAAlertRule) *SLAAlertRuleUpdate {
-	saru.mutation.Where(ps...)
-	return saru
+func (_u *SLAAlertRuleUpdate) Where(ps ...predicate.SLAAlertRule) *SLAAlertRuleUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (saru *SLAAlertRuleUpdate) SetName(s string) *SLAAlertRuleUpdate {
-	saru.mutation.SetName(s)
-	return saru
+func (_u *SLAAlertRuleUpdate) SetName(v string) *SLAAlertRuleUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (saru *SLAAlertRuleUpdate) SetNillableName(s *string) *SLAAlertRuleUpdate {
-	if s != nil {
-		saru.SetName(*s)
+func (_u *SLAAlertRuleUpdate) SetNillableName(v *string) *SLAAlertRuleUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return saru
+	return _u
 }
 
 // SetSLADefinitionID sets the "sla_definition_id" field.
-func (saru *SLAAlertRuleUpdate) SetSLADefinitionID(i int) *SLAAlertRuleUpdate {
-	saru.mutation.SetSLADefinitionID(i)
-	return saru
+func (_u *SLAAlertRuleUpdate) SetSLADefinitionID(v int) *SLAAlertRuleUpdate {
+	_u.mutation.SetSLADefinitionID(v)
+	return _u
 }
 
 // SetNillableSLADefinitionID sets the "sla_definition_id" field if the given value is not nil.
-func (saru *SLAAlertRuleUpdate) SetNillableSLADefinitionID(i *int) *SLAAlertRuleUpdate {
-	if i != nil {
-		saru.SetSLADefinitionID(*i)
+func (_u *SLAAlertRuleUpdate) SetNillableSLADefinitionID(v *int) *SLAAlertRuleUpdate {
+	if v != nil {
+		_u.SetSLADefinitionID(*v)
 	}
-	return saru
+	return _u
 }
 
 // SetAlertLevel sets the "alert_level" field.
-func (saru *SLAAlertRuleUpdate) SetAlertLevel(s string) *SLAAlertRuleUpdate {
-	saru.mutation.SetAlertLevel(s)
-	return saru
+func (_u *SLAAlertRuleUpdate) SetAlertLevel(v string) *SLAAlertRuleUpdate {
+	_u.mutation.SetAlertLevel(v)
+	return _u
 }
 
 // SetNillableAlertLevel sets the "alert_level" field if the given value is not nil.
-func (saru *SLAAlertRuleUpdate) SetNillableAlertLevel(s *string) *SLAAlertRuleUpdate {
-	if s != nil {
-		saru.SetAlertLevel(*s)
+func (_u *SLAAlertRuleUpdate) SetNillableAlertLevel(v *string) *SLAAlertRuleUpdate {
+	if v != nil {
+		_u.SetAlertLevel(*v)
 	}
-	return saru
+	return _u
 }
 
 // SetThresholdPercentage sets the "threshold_percentage" field.
-func (saru *SLAAlertRuleUpdate) SetThresholdPercentage(i int) *SLAAlertRuleUpdate {
-	saru.mutation.ResetThresholdPercentage()
-	saru.mutation.SetThresholdPercentage(i)
-	return saru
+func (_u *SLAAlertRuleUpdate) SetThresholdPercentage(v int) *SLAAlertRuleUpdate {
+	_u.mutation.ResetThresholdPercentage()
+	_u.mutation.SetThresholdPercentage(v)
+	return _u
 }
 
 // SetNillableThresholdPercentage sets the "threshold_percentage" field if the given value is not nil.
-func (saru *SLAAlertRuleUpdate) SetNillableThresholdPercentage(i *int) *SLAAlertRuleUpdate {
-	if i != nil {
-		saru.SetThresholdPercentage(*i)
+func (_u *SLAAlertRuleUpdate) SetNillableThresholdPercentage(v *int) *SLAAlertRuleUpdate {
+	if v != nil {
+		_u.SetThresholdPercentage(*v)
 	}
-	return saru
+	return _u
 }
 
-// AddThresholdPercentage adds i to the "threshold_percentage" field.
-func (saru *SLAAlertRuleUpdate) AddThresholdPercentage(i int) *SLAAlertRuleUpdate {
-	saru.mutation.AddThresholdPercentage(i)
-	return saru
+// AddThresholdPercentage adds value to the "threshold_percentage" field.
+func (_u *SLAAlertRuleUpdate) AddThresholdPercentage(v int) *SLAAlertRuleUpdate {
+	_u.mutation.AddThresholdPercentage(v)
+	return _u
 }
 
 // SetNotificationChannels sets the "notification_channels" field.
-func (saru *SLAAlertRuleUpdate) SetNotificationChannels(s []string) *SLAAlertRuleUpdate {
-	saru.mutation.SetNotificationChannels(s)
-	return saru
+func (_u *SLAAlertRuleUpdate) SetNotificationChannels(v []string) *SLAAlertRuleUpdate {
+	_u.mutation.SetNotificationChannels(v)
+	return _u
 }
 
-// AppendNotificationChannels appends s to the "notification_channels" field.
-func (saru *SLAAlertRuleUpdate) AppendNotificationChannels(s []string) *SLAAlertRuleUpdate {
-	saru.mutation.AppendNotificationChannels(s)
-	return saru
+// AppendNotificationChannels appends value to the "notification_channels" field.
+func (_u *SLAAlertRuleUpdate) AppendNotificationChannels(v []string) *SLAAlertRuleUpdate {
+	_u.mutation.AppendNotificationChannels(v)
+	return _u
 }
 
 // SetEscalationEnabled sets the "escalation_enabled" field.
-func (saru *SLAAlertRuleUpdate) SetEscalationEnabled(b bool) *SLAAlertRuleUpdate {
-	saru.mutation.SetEscalationEnabled(b)
-	return saru
+func (_u *SLAAlertRuleUpdate) SetEscalationEnabled(v bool) *SLAAlertRuleUpdate {
+	_u.mutation.SetEscalationEnabled(v)
+	return _u
 }
 
 // SetNillableEscalationEnabled sets the "escalation_enabled" field if the given value is not nil.
-func (saru *SLAAlertRuleUpdate) SetNillableEscalationEnabled(b *bool) *SLAAlertRuleUpdate {
-	if b != nil {
-		saru.SetEscalationEnabled(*b)
+func (_u *SLAAlertRuleUpdate) SetNillableEscalationEnabled(v *bool) *SLAAlertRuleUpdate {
+	if v != nil {
+		_u.SetEscalationEnabled(*v)
 	}
-	return saru
+	return _u
 }
 
 // SetEscalationLevels sets the "escalation_levels" field.
-func (saru *SLAAlertRuleUpdate) SetEscalationLevels(m []map[string]interface{}) *SLAAlertRuleUpdate {
-	saru.mutation.SetEscalationLevels(m)
-	return saru
+func (_u *SLAAlertRuleUpdate) SetEscalationLevels(v []map[string]interface{}) *SLAAlertRuleUpdate {
+	_u.mutation.SetEscalationLevels(v)
+	return _u
 }
 
-// AppendEscalationLevels appends m to the "escalation_levels" field.
-func (saru *SLAAlertRuleUpdate) AppendEscalationLevels(m []map[string]interface{}) *SLAAlertRuleUpdate {
-	saru.mutation.AppendEscalationLevels(m)
-	return saru
+// AppendEscalationLevels appends value to the "escalation_levels" field.
+func (_u *SLAAlertRuleUpdate) AppendEscalationLevels(v []map[string]interface{}) *SLAAlertRuleUpdate {
+	_u.mutation.AppendEscalationLevels(v)
+	return _u
 }
 
 // ClearEscalationLevels clears the value of the "escalation_levels" field.
-func (saru *SLAAlertRuleUpdate) ClearEscalationLevels() *SLAAlertRuleUpdate {
-	saru.mutation.ClearEscalationLevels()
-	return saru
+func (_u *SLAAlertRuleUpdate) ClearEscalationLevels() *SLAAlertRuleUpdate {
+	_u.mutation.ClearEscalationLevels()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (saru *SLAAlertRuleUpdate) SetIsActive(b bool) *SLAAlertRuleUpdate {
-	saru.mutation.SetIsActive(b)
-	return saru
+func (_u *SLAAlertRuleUpdate) SetIsActive(v bool) *SLAAlertRuleUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (saru *SLAAlertRuleUpdate) SetNillableIsActive(b *bool) *SLAAlertRuleUpdate {
-	if b != nil {
-		saru.SetIsActive(*b)
+func (_u *SLAAlertRuleUpdate) SetNillableIsActive(v *bool) *SLAAlertRuleUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return saru
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (saru *SLAAlertRuleUpdate) SetTenantID(i int) *SLAAlertRuleUpdate {
-	saru.mutation.ResetTenantID()
-	saru.mutation.SetTenantID(i)
-	return saru
+func (_u *SLAAlertRuleUpdate) SetTenantID(v int) *SLAAlertRuleUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (saru *SLAAlertRuleUpdate) SetNillableTenantID(i *int) *SLAAlertRuleUpdate {
-	if i != nil {
-		saru.SetTenantID(*i)
+func (_u *SLAAlertRuleUpdate) SetNillableTenantID(v *int) *SLAAlertRuleUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return saru
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (saru *SLAAlertRuleUpdate) AddTenantID(i int) *SLAAlertRuleUpdate {
-	saru.mutation.AddTenantID(i)
-	return saru
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *SLAAlertRuleUpdate) AddTenantID(v int) *SLAAlertRuleUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (saru *SLAAlertRuleUpdate) SetCreatedAt(t time.Time) *SLAAlertRuleUpdate {
-	saru.mutation.SetCreatedAt(t)
-	return saru
+func (_u *SLAAlertRuleUpdate) SetCreatedAt(v time.Time) *SLAAlertRuleUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (saru *SLAAlertRuleUpdate) SetNillableCreatedAt(t *time.Time) *SLAAlertRuleUpdate {
-	if t != nil {
-		saru.SetCreatedAt(*t)
+func (_u *SLAAlertRuleUpdate) SetNillableCreatedAt(v *time.Time) *SLAAlertRuleUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return saru
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (saru *SLAAlertRuleUpdate) SetUpdatedAt(t time.Time) *SLAAlertRuleUpdate {
-	saru.mutation.SetUpdatedAt(t)
-	return saru
+func (_u *SLAAlertRuleUpdate) SetUpdatedAt(v time.Time) *SLAAlertRuleUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
-func (saru *SLAAlertRuleUpdate) SetSLADefinition(s *SLADefinition) *SLAAlertRuleUpdate {
-	return saru.SetSLADefinitionID(s.ID)
+func (_u *SLAAlertRuleUpdate) SetSLADefinition(v *SLADefinition) *SLAAlertRuleUpdate {
+	return _u.SetSLADefinitionID(v.ID)
 }
 
 // AddAlertHistoryIDs adds the "alert_history" edge to the SLAAlertHistory entity by IDs.
-func (saru *SLAAlertRuleUpdate) AddAlertHistoryIDs(ids ...int) *SLAAlertRuleUpdate {
-	saru.mutation.AddAlertHistoryIDs(ids...)
-	return saru
+func (_u *SLAAlertRuleUpdate) AddAlertHistoryIDs(ids ...int) *SLAAlertRuleUpdate {
+	_u.mutation.AddAlertHistoryIDs(ids...)
+	return _u
 }
 
 // AddAlertHistory adds the "alert_history" edges to the SLAAlertHistory entity.
-func (saru *SLAAlertRuleUpdate) AddAlertHistory(s ...*SLAAlertHistory) *SLAAlertRuleUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLAAlertRuleUpdate) AddAlertHistory(v ...*SLAAlertHistory) *SLAAlertRuleUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return saru.AddAlertHistoryIDs(ids...)
+	return _u.AddAlertHistoryIDs(ids...)
 }
 
 // Mutation returns the SLAAlertRuleMutation object of the builder.
-func (saru *SLAAlertRuleUpdate) Mutation() *SLAAlertRuleMutation {
-	return saru.mutation
+func (_u *SLAAlertRuleUpdate) Mutation() *SLAAlertRuleMutation {
+	return _u.mutation
 }
 
 // ClearSLADefinition clears the "sla_definition" edge to the SLADefinition entity.
-func (saru *SLAAlertRuleUpdate) ClearSLADefinition() *SLAAlertRuleUpdate {
-	saru.mutation.ClearSLADefinition()
-	return saru
+func (_u *SLAAlertRuleUpdate) ClearSLADefinition() *SLAAlertRuleUpdate {
+	_u.mutation.ClearSLADefinition()
+	return _u
 }
 
 // ClearAlertHistory clears all "alert_history" edges to the SLAAlertHistory entity.
-func (saru *SLAAlertRuleUpdate) ClearAlertHistory() *SLAAlertRuleUpdate {
-	saru.mutation.ClearAlertHistory()
-	return saru
+func (_u *SLAAlertRuleUpdate) ClearAlertHistory() *SLAAlertRuleUpdate {
+	_u.mutation.ClearAlertHistory()
+	return _u
 }
 
 // RemoveAlertHistoryIDs removes the "alert_history" edge to SLAAlertHistory entities by IDs.
-func (saru *SLAAlertRuleUpdate) RemoveAlertHistoryIDs(ids ...int) *SLAAlertRuleUpdate {
-	saru.mutation.RemoveAlertHistoryIDs(ids...)
-	return saru
+func (_u *SLAAlertRuleUpdate) RemoveAlertHistoryIDs(ids ...int) *SLAAlertRuleUpdate {
+	_u.mutation.RemoveAlertHistoryIDs(ids...)
+	return _u
 }
 
 // RemoveAlertHistory removes "alert_history" edges to SLAAlertHistory entities.
-func (saru *SLAAlertRuleUpdate) RemoveAlertHistory(s ...*SLAAlertHistory) *SLAAlertRuleUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLAAlertRuleUpdate) RemoveAlertHistory(v ...*SLAAlertHistory) *SLAAlertRuleUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return saru.RemoveAlertHistoryIDs(ids...)
+	return _u.RemoveAlertHistoryIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (saru *SLAAlertRuleUpdate) Save(ctx context.Context) (int, error) {
-	saru.defaults()
-	return withHooks(ctx, saru.sqlSave, saru.mutation, saru.hooks)
+func (_u *SLAAlertRuleUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (saru *SLAAlertRuleUpdate) SaveX(ctx context.Context) int {
-	affected, err := saru.Save(ctx)
+func (_u *SLAAlertRuleUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -261,116 +261,116 @@ func (saru *SLAAlertRuleUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (saru *SLAAlertRuleUpdate) Exec(ctx context.Context) error {
-	_, err := saru.Save(ctx)
+func (_u *SLAAlertRuleUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (saru *SLAAlertRuleUpdate) ExecX(ctx context.Context) {
-	if err := saru.Exec(ctx); err != nil {
+func (_u *SLAAlertRuleUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (saru *SLAAlertRuleUpdate) defaults() {
-	if _, ok := saru.mutation.UpdatedAt(); !ok {
+func (_u *SLAAlertRuleUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := slaalertrule.UpdateDefaultUpdatedAt()
-		saru.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (saru *SLAAlertRuleUpdate) check() error {
-	if v, ok := saru.mutation.Name(); ok {
+func (_u *SLAAlertRuleUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := slaalertrule.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.name": %w`, err)}
 		}
 	}
-	if v, ok := saru.mutation.SLADefinitionID(); ok {
+	if v, ok := _u.mutation.SLADefinitionID(); ok {
 		if err := slaalertrule.SLADefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "sla_definition_id", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.sla_definition_id": %w`, err)}
 		}
 	}
-	if v, ok := saru.mutation.ThresholdPercentage(); ok {
+	if v, ok := _u.mutation.ThresholdPercentage(); ok {
 		if err := slaalertrule.ThresholdPercentageValidator(v); err != nil {
 			return &ValidationError{Name: "threshold_percentage", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.threshold_percentage": %w`, err)}
 		}
 	}
-	if v, ok := saru.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := slaalertrule.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.tenant_id": %w`, err)}
 		}
 	}
-	if saru.mutation.SLADefinitionCleared() && len(saru.mutation.SLADefinitionIDs()) > 0 {
+	if _u.mutation.SLADefinitionCleared() && len(_u.mutation.SLADefinitionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "SLAAlertRule.sla_definition"`)
 	}
 	return nil
 }
 
-func (saru *SLAAlertRuleUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := saru.check(); err != nil {
-		return n, err
+func (_u *SLAAlertRuleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(slaalertrule.Table, slaalertrule.Columns, sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt))
-	if ps := saru.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := saru.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(slaalertrule.FieldName, field.TypeString, value)
 	}
-	if value, ok := saru.mutation.AlertLevel(); ok {
+	if value, ok := _u.mutation.AlertLevel(); ok {
 		_spec.SetField(slaalertrule.FieldAlertLevel, field.TypeString, value)
 	}
-	if value, ok := saru.mutation.ThresholdPercentage(); ok {
+	if value, ok := _u.mutation.ThresholdPercentage(); ok {
 		_spec.SetField(slaalertrule.FieldThresholdPercentage, field.TypeInt, value)
 	}
-	if value, ok := saru.mutation.AddedThresholdPercentage(); ok {
+	if value, ok := _u.mutation.AddedThresholdPercentage(); ok {
 		_spec.AddField(slaalertrule.FieldThresholdPercentage, field.TypeInt, value)
 	}
-	if value, ok := saru.mutation.NotificationChannels(); ok {
+	if value, ok := _u.mutation.NotificationChannels(); ok {
 		_spec.SetField(slaalertrule.FieldNotificationChannels, field.TypeJSON, value)
 	}
-	if value, ok := saru.mutation.AppendedNotificationChannels(); ok {
+	if value, ok := _u.mutation.AppendedNotificationChannels(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, slaalertrule.FieldNotificationChannels, value)
 		})
 	}
-	if value, ok := saru.mutation.EscalationEnabled(); ok {
+	if value, ok := _u.mutation.EscalationEnabled(); ok {
 		_spec.SetField(slaalertrule.FieldEscalationEnabled, field.TypeBool, value)
 	}
-	if value, ok := saru.mutation.EscalationLevels(); ok {
+	if value, ok := _u.mutation.EscalationLevels(); ok {
 		_spec.SetField(slaalertrule.FieldEscalationLevels, field.TypeJSON, value)
 	}
-	if value, ok := saru.mutation.AppendedEscalationLevels(); ok {
+	if value, ok := _u.mutation.AppendedEscalationLevels(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, slaalertrule.FieldEscalationLevels, value)
 		})
 	}
-	if saru.mutation.EscalationLevelsCleared() {
+	if _u.mutation.EscalationLevelsCleared() {
 		_spec.ClearField(slaalertrule.FieldEscalationLevels, field.TypeJSON)
 	}
-	if value, ok := saru.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(slaalertrule.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := saru.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(slaalertrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := saru.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(slaalertrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := saru.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(slaalertrule.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := saru.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(slaalertrule.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if saru.mutation.SLADefinitionCleared() {
+	if _u.mutation.SLADefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -383,7 +383,7 @@ func (saru *SLAAlertRuleUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := saru.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.SLADefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -399,7 +399,7 @@ func (saru *SLAAlertRuleUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if saru.mutation.AlertHistoryCleared() {
+	if _u.mutation.AlertHistoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -412,7 +412,7 @@ func (saru *SLAAlertRuleUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := saru.mutation.RemovedAlertHistoryIDs(); len(nodes) > 0 && !saru.mutation.AlertHistoryCleared() {
+	if nodes := _u.mutation.RemovedAlertHistoryIDs(); len(nodes) > 0 && !_u.mutation.AlertHistoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -428,7 +428,7 @@ func (saru *SLAAlertRuleUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := saru.mutation.AlertHistoryIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.AlertHistoryIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -444,7 +444,7 @@ func (saru *SLAAlertRuleUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, saru.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{slaalertrule.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -452,8 +452,8 @@ func (saru *SLAAlertRuleUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		return 0, err
 	}
-	saru.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // SLAAlertRuleUpdateOne is the builder for updating a single SLAAlertRule entity.
@@ -465,241 +465,241 @@ type SLAAlertRuleUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (saruo *SLAAlertRuleUpdateOne) SetName(s string) *SLAAlertRuleUpdateOne {
-	saruo.mutation.SetName(s)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) SetName(v string) *SLAAlertRuleUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (saruo *SLAAlertRuleUpdateOne) SetNillableName(s *string) *SLAAlertRuleUpdateOne {
-	if s != nil {
-		saruo.SetName(*s)
+func (_u *SLAAlertRuleUpdateOne) SetNillableName(v *string) *SLAAlertRuleUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return saruo
+	return _u
 }
 
 // SetSLADefinitionID sets the "sla_definition_id" field.
-func (saruo *SLAAlertRuleUpdateOne) SetSLADefinitionID(i int) *SLAAlertRuleUpdateOne {
-	saruo.mutation.SetSLADefinitionID(i)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) SetSLADefinitionID(v int) *SLAAlertRuleUpdateOne {
+	_u.mutation.SetSLADefinitionID(v)
+	return _u
 }
 
 // SetNillableSLADefinitionID sets the "sla_definition_id" field if the given value is not nil.
-func (saruo *SLAAlertRuleUpdateOne) SetNillableSLADefinitionID(i *int) *SLAAlertRuleUpdateOne {
-	if i != nil {
-		saruo.SetSLADefinitionID(*i)
+func (_u *SLAAlertRuleUpdateOne) SetNillableSLADefinitionID(v *int) *SLAAlertRuleUpdateOne {
+	if v != nil {
+		_u.SetSLADefinitionID(*v)
 	}
-	return saruo
+	return _u
 }
 
 // SetAlertLevel sets the "alert_level" field.
-func (saruo *SLAAlertRuleUpdateOne) SetAlertLevel(s string) *SLAAlertRuleUpdateOne {
-	saruo.mutation.SetAlertLevel(s)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) SetAlertLevel(v string) *SLAAlertRuleUpdateOne {
+	_u.mutation.SetAlertLevel(v)
+	return _u
 }
 
 // SetNillableAlertLevel sets the "alert_level" field if the given value is not nil.
-func (saruo *SLAAlertRuleUpdateOne) SetNillableAlertLevel(s *string) *SLAAlertRuleUpdateOne {
-	if s != nil {
-		saruo.SetAlertLevel(*s)
+func (_u *SLAAlertRuleUpdateOne) SetNillableAlertLevel(v *string) *SLAAlertRuleUpdateOne {
+	if v != nil {
+		_u.SetAlertLevel(*v)
 	}
-	return saruo
+	return _u
 }
 
 // SetThresholdPercentage sets the "threshold_percentage" field.
-func (saruo *SLAAlertRuleUpdateOne) SetThresholdPercentage(i int) *SLAAlertRuleUpdateOne {
-	saruo.mutation.ResetThresholdPercentage()
-	saruo.mutation.SetThresholdPercentage(i)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) SetThresholdPercentage(v int) *SLAAlertRuleUpdateOne {
+	_u.mutation.ResetThresholdPercentage()
+	_u.mutation.SetThresholdPercentage(v)
+	return _u
 }
 
 // SetNillableThresholdPercentage sets the "threshold_percentage" field if the given value is not nil.
-func (saruo *SLAAlertRuleUpdateOne) SetNillableThresholdPercentage(i *int) *SLAAlertRuleUpdateOne {
-	if i != nil {
-		saruo.SetThresholdPercentage(*i)
+func (_u *SLAAlertRuleUpdateOne) SetNillableThresholdPercentage(v *int) *SLAAlertRuleUpdateOne {
+	if v != nil {
+		_u.SetThresholdPercentage(*v)
 	}
-	return saruo
+	return _u
 }
 
-// AddThresholdPercentage adds i to the "threshold_percentage" field.
-func (saruo *SLAAlertRuleUpdateOne) AddThresholdPercentage(i int) *SLAAlertRuleUpdateOne {
-	saruo.mutation.AddThresholdPercentage(i)
-	return saruo
+// AddThresholdPercentage adds value to the "threshold_percentage" field.
+func (_u *SLAAlertRuleUpdateOne) AddThresholdPercentage(v int) *SLAAlertRuleUpdateOne {
+	_u.mutation.AddThresholdPercentage(v)
+	return _u
 }
 
 // SetNotificationChannels sets the "notification_channels" field.
-func (saruo *SLAAlertRuleUpdateOne) SetNotificationChannels(s []string) *SLAAlertRuleUpdateOne {
-	saruo.mutation.SetNotificationChannels(s)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) SetNotificationChannels(v []string) *SLAAlertRuleUpdateOne {
+	_u.mutation.SetNotificationChannels(v)
+	return _u
 }
 
-// AppendNotificationChannels appends s to the "notification_channels" field.
-func (saruo *SLAAlertRuleUpdateOne) AppendNotificationChannels(s []string) *SLAAlertRuleUpdateOne {
-	saruo.mutation.AppendNotificationChannels(s)
-	return saruo
+// AppendNotificationChannels appends value to the "notification_channels" field.
+func (_u *SLAAlertRuleUpdateOne) AppendNotificationChannels(v []string) *SLAAlertRuleUpdateOne {
+	_u.mutation.AppendNotificationChannels(v)
+	return _u
 }
 
 // SetEscalationEnabled sets the "escalation_enabled" field.
-func (saruo *SLAAlertRuleUpdateOne) SetEscalationEnabled(b bool) *SLAAlertRuleUpdateOne {
-	saruo.mutation.SetEscalationEnabled(b)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) SetEscalationEnabled(v bool) *SLAAlertRuleUpdateOne {
+	_u.mutation.SetEscalationEnabled(v)
+	return _u
 }
 
 // SetNillableEscalationEnabled sets the "escalation_enabled" field if the given value is not nil.
-func (saruo *SLAAlertRuleUpdateOne) SetNillableEscalationEnabled(b *bool) *SLAAlertRuleUpdateOne {
-	if b != nil {
-		saruo.SetEscalationEnabled(*b)
+func (_u *SLAAlertRuleUpdateOne) SetNillableEscalationEnabled(v *bool) *SLAAlertRuleUpdateOne {
+	if v != nil {
+		_u.SetEscalationEnabled(*v)
 	}
-	return saruo
+	return _u
 }
 
 // SetEscalationLevels sets the "escalation_levels" field.
-func (saruo *SLAAlertRuleUpdateOne) SetEscalationLevels(m []map[string]interface{}) *SLAAlertRuleUpdateOne {
-	saruo.mutation.SetEscalationLevels(m)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) SetEscalationLevels(v []map[string]interface{}) *SLAAlertRuleUpdateOne {
+	_u.mutation.SetEscalationLevels(v)
+	return _u
 }
 
-// AppendEscalationLevels appends m to the "escalation_levels" field.
-func (saruo *SLAAlertRuleUpdateOne) AppendEscalationLevels(m []map[string]interface{}) *SLAAlertRuleUpdateOne {
-	saruo.mutation.AppendEscalationLevels(m)
-	return saruo
+// AppendEscalationLevels appends value to the "escalation_levels" field.
+func (_u *SLAAlertRuleUpdateOne) AppendEscalationLevels(v []map[string]interface{}) *SLAAlertRuleUpdateOne {
+	_u.mutation.AppendEscalationLevels(v)
+	return _u
 }
 
 // ClearEscalationLevels clears the value of the "escalation_levels" field.
-func (saruo *SLAAlertRuleUpdateOne) ClearEscalationLevels() *SLAAlertRuleUpdateOne {
-	saruo.mutation.ClearEscalationLevels()
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) ClearEscalationLevels() *SLAAlertRuleUpdateOne {
+	_u.mutation.ClearEscalationLevels()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (saruo *SLAAlertRuleUpdateOne) SetIsActive(b bool) *SLAAlertRuleUpdateOne {
-	saruo.mutation.SetIsActive(b)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) SetIsActive(v bool) *SLAAlertRuleUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (saruo *SLAAlertRuleUpdateOne) SetNillableIsActive(b *bool) *SLAAlertRuleUpdateOne {
-	if b != nil {
-		saruo.SetIsActive(*b)
+func (_u *SLAAlertRuleUpdateOne) SetNillableIsActive(v *bool) *SLAAlertRuleUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return saruo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (saruo *SLAAlertRuleUpdateOne) SetTenantID(i int) *SLAAlertRuleUpdateOne {
-	saruo.mutation.ResetTenantID()
-	saruo.mutation.SetTenantID(i)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) SetTenantID(v int) *SLAAlertRuleUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (saruo *SLAAlertRuleUpdateOne) SetNillableTenantID(i *int) *SLAAlertRuleUpdateOne {
-	if i != nil {
-		saruo.SetTenantID(*i)
+func (_u *SLAAlertRuleUpdateOne) SetNillableTenantID(v *int) *SLAAlertRuleUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return saruo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (saruo *SLAAlertRuleUpdateOne) AddTenantID(i int) *SLAAlertRuleUpdateOne {
-	saruo.mutation.AddTenantID(i)
-	return saruo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *SLAAlertRuleUpdateOne) AddTenantID(v int) *SLAAlertRuleUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (saruo *SLAAlertRuleUpdateOne) SetCreatedAt(t time.Time) *SLAAlertRuleUpdateOne {
-	saruo.mutation.SetCreatedAt(t)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) SetCreatedAt(v time.Time) *SLAAlertRuleUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (saruo *SLAAlertRuleUpdateOne) SetNillableCreatedAt(t *time.Time) *SLAAlertRuleUpdateOne {
-	if t != nil {
-		saruo.SetCreatedAt(*t)
+func (_u *SLAAlertRuleUpdateOne) SetNillableCreatedAt(v *time.Time) *SLAAlertRuleUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return saruo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (saruo *SLAAlertRuleUpdateOne) SetUpdatedAt(t time.Time) *SLAAlertRuleUpdateOne {
-	saruo.mutation.SetUpdatedAt(t)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) SetUpdatedAt(v time.Time) *SLAAlertRuleUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
-func (saruo *SLAAlertRuleUpdateOne) SetSLADefinition(s *SLADefinition) *SLAAlertRuleUpdateOne {
-	return saruo.SetSLADefinitionID(s.ID)
+func (_u *SLAAlertRuleUpdateOne) SetSLADefinition(v *SLADefinition) *SLAAlertRuleUpdateOne {
+	return _u.SetSLADefinitionID(v.ID)
 }
 
 // AddAlertHistoryIDs adds the "alert_history" edge to the SLAAlertHistory entity by IDs.
-func (saruo *SLAAlertRuleUpdateOne) AddAlertHistoryIDs(ids ...int) *SLAAlertRuleUpdateOne {
-	saruo.mutation.AddAlertHistoryIDs(ids...)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) AddAlertHistoryIDs(ids ...int) *SLAAlertRuleUpdateOne {
+	_u.mutation.AddAlertHistoryIDs(ids...)
+	return _u
 }
 
 // AddAlertHistory adds the "alert_history" edges to the SLAAlertHistory entity.
-func (saruo *SLAAlertRuleUpdateOne) AddAlertHistory(s ...*SLAAlertHistory) *SLAAlertRuleUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLAAlertRuleUpdateOne) AddAlertHistory(v ...*SLAAlertHistory) *SLAAlertRuleUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return saruo.AddAlertHistoryIDs(ids...)
+	return _u.AddAlertHistoryIDs(ids...)
 }
 
 // Mutation returns the SLAAlertRuleMutation object of the builder.
-func (saruo *SLAAlertRuleUpdateOne) Mutation() *SLAAlertRuleMutation {
-	return saruo.mutation
+func (_u *SLAAlertRuleUpdateOne) Mutation() *SLAAlertRuleMutation {
+	return _u.mutation
 }
 
 // ClearSLADefinition clears the "sla_definition" edge to the SLADefinition entity.
-func (saruo *SLAAlertRuleUpdateOne) ClearSLADefinition() *SLAAlertRuleUpdateOne {
-	saruo.mutation.ClearSLADefinition()
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) ClearSLADefinition() *SLAAlertRuleUpdateOne {
+	_u.mutation.ClearSLADefinition()
+	return _u
 }
 
 // ClearAlertHistory clears all "alert_history" edges to the SLAAlertHistory entity.
-func (saruo *SLAAlertRuleUpdateOne) ClearAlertHistory() *SLAAlertRuleUpdateOne {
-	saruo.mutation.ClearAlertHistory()
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) ClearAlertHistory() *SLAAlertRuleUpdateOne {
+	_u.mutation.ClearAlertHistory()
+	return _u
 }
 
 // RemoveAlertHistoryIDs removes the "alert_history" edge to SLAAlertHistory entities by IDs.
-func (saruo *SLAAlertRuleUpdateOne) RemoveAlertHistoryIDs(ids ...int) *SLAAlertRuleUpdateOne {
-	saruo.mutation.RemoveAlertHistoryIDs(ids...)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) RemoveAlertHistoryIDs(ids ...int) *SLAAlertRuleUpdateOne {
+	_u.mutation.RemoveAlertHistoryIDs(ids...)
+	return _u
 }
 
 // RemoveAlertHistory removes "alert_history" edges to SLAAlertHistory entities.
-func (saruo *SLAAlertRuleUpdateOne) RemoveAlertHistory(s ...*SLAAlertHistory) *SLAAlertRuleUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLAAlertRuleUpdateOne) RemoveAlertHistory(v ...*SLAAlertHistory) *SLAAlertRuleUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return saruo.RemoveAlertHistoryIDs(ids...)
+	return _u.RemoveAlertHistoryIDs(ids...)
 }
 
 // Where appends a list predicates to the SLAAlertRuleUpdate builder.
-func (saruo *SLAAlertRuleUpdateOne) Where(ps ...predicate.SLAAlertRule) *SLAAlertRuleUpdateOne {
-	saruo.mutation.Where(ps...)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) Where(ps ...predicate.SLAAlertRule) *SLAAlertRuleUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (saruo *SLAAlertRuleUpdateOne) Select(field string, fields ...string) *SLAAlertRuleUpdateOne {
-	saruo.fields = append([]string{field}, fields...)
-	return saruo
+func (_u *SLAAlertRuleUpdateOne) Select(field string, fields ...string) *SLAAlertRuleUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated SLAAlertRule entity.
-func (saruo *SLAAlertRuleUpdateOne) Save(ctx context.Context) (*SLAAlertRule, error) {
-	saruo.defaults()
-	return withHooks(ctx, saruo.sqlSave, saruo.mutation, saruo.hooks)
+func (_u *SLAAlertRuleUpdateOne) Save(ctx context.Context) (*SLAAlertRule, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (saruo *SLAAlertRuleUpdateOne) SaveX(ctx context.Context) *SLAAlertRule {
-	node, err := saruo.Save(ctx)
+func (_u *SLAAlertRuleUpdateOne) SaveX(ctx context.Context) *SLAAlertRule {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -707,65 +707,65 @@ func (saruo *SLAAlertRuleUpdateOne) SaveX(ctx context.Context) *SLAAlertRule {
 }
 
 // Exec executes the query on the entity.
-func (saruo *SLAAlertRuleUpdateOne) Exec(ctx context.Context) error {
-	_, err := saruo.Save(ctx)
+func (_u *SLAAlertRuleUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (saruo *SLAAlertRuleUpdateOne) ExecX(ctx context.Context) {
-	if err := saruo.Exec(ctx); err != nil {
+func (_u *SLAAlertRuleUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (saruo *SLAAlertRuleUpdateOne) defaults() {
-	if _, ok := saruo.mutation.UpdatedAt(); !ok {
+func (_u *SLAAlertRuleUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := slaalertrule.UpdateDefaultUpdatedAt()
-		saruo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (saruo *SLAAlertRuleUpdateOne) check() error {
-	if v, ok := saruo.mutation.Name(); ok {
+func (_u *SLAAlertRuleUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := slaalertrule.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.name": %w`, err)}
 		}
 	}
-	if v, ok := saruo.mutation.SLADefinitionID(); ok {
+	if v, ok := _u.mutation.SLADefinitionID(); ok {
 		if err := slaalertrule.SLADefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "sla_definition_id", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.sla_definition_id": %w`, err)}
 		}
 	}
-	if v, ok := saruo.mutation.ThresholdPercentage(); ok {
+	if v, ok := _u.mutation.ThresholdPercentage(); ok {
 		if err := slaalertrule.ThresholdPercentageValidator(v); err != nil {
 			return &ValidationError{Name: "threshold_percentage", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.threshold_percentage": %w`, err)}
 		}
 	}
-	if v, ok := saruo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := slaalertrule.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.tenant_id": %w`, err)}
 		}
 	}
-	if saruo.mutation.SLADefinitionCleared() && len(saruo.mutation.SLADefinitionIDs()) > 0 {
+	if _u.mutation.SLADefinitionCleared() && len(_u.mutation.SLADefinitionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "SLAAlertRule.sla_definition"`)
 	}
 	return nil
 }
 
-func (saruo *SLAAlertRuleUpdateOne) sqlSave(ctx context.Context) (_node *SLAAlertRule, err error) {
-	if err := saruo.check(); err != nil {
+func (_u *SLAAlertRuleUpdateOne) sqlSave(ctx context.Context) (_node *SLAAlertRule, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(slaalertrule.Table, slaalertrule.Columns, sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt))
-	id, ok := saruo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "SLAAlertRule.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := saruo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, slaalertrule.FieldID)
 		for _, f := range fields {
@@ -777,63 +777,63 @@ func (saruo *SLAAlertRuleUpdateOne) sqlSave(ctx context.Context) (_node *SLAAler
 			}
 		}
 	}
-	if ps := saruo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := saruo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(slaalertrule.FieldName, field.TypeString, value)
 	}
-	if value, ok := saruo.mutation.AlertLevel(); ok {
+	if value, ok := _u.mutation.AlertLevel(); ok {
 		_spec.SetField(slaalertrule.FieldAlertLevel, field.TypeString, value)
 	}
-	if value, ok := saruo.mutation.ThresholdPercentage(); ok {
+	if value, ok := _u.mutation.ThresholdPercentage(); ok {
 		_spec.SetField(slaalertrule.FieldThresholdPercentage, field.TypeInt, value)
 	}
-	if value, ok := saruo.mutation.AddedThresholdPercentage(); ok {
+	if value, ok := _u.mutation.AddedThresholdPercentage(); ok {
 		_spec.AddField(slaalertrule.FieldThresholdPercentage, field.TypeInt, value)
 	}
-	if value, ok := saruo.mutation.NotificationChannels(); ok {
+	if value, ok := _u.mutation.NotificationChannels(); ok {
 		_spec.SetField(slaalertrule.FieldNotificationChannels, field.TypeJSON, value)
 	}
-	if value, ok := saruo.mutation.AppendedNotificationChannels(); ok {
+	if value, ok := _u.mutation.AppendedNotificationChannels(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, slaalertrule.FieldNotificationChannels, value)
 		})
 	}
-	if value, ok := saruo.mutation.EscalationEnabled(); ok {
+	if value, ok := _u.mutation.EscalationEnabled(); ok {
 		_spec.SetField(slaalertrule.FieldEscalationEnabled, field.TypeBool, value)
 	}
-	if value, ok := saruo.mutation.EscalationLevels(); ok {
+	if value, ok := _u.mutation.EscalationLevels(); ok {
 		_spec.SetField(slaalertrule.FieldEscalationLevels, field.TypeJSON, value)
 	}
-	if value, ok := saruo.mutation.AppendedEscalationLevels(); ok {
+	if value, ok := _u.mutation.AppendedEscalationLevels(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, slaalertrule.FieldEscalationLevels, value)
 		})
 	}
-	if saruo.mutation.EscalationLevelsCleared() {
+	if _u.mutation.EscalationLevelsCleared() {
 		_spec.ClearField(slaalertrule.FieldEscalationLevels, field.TypeJSON)
 	}
-	if value, ok := saruo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(slaalertrule.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := saruo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(slaalertrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := saruo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(slaalertrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := saruo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(slaalertrule.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := saruo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(slaalertrule.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if saruo.mutation.SLADefinitionCleared() {
+	if _u.mutation.SLADefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -846,7 +846,7 @@ func (saruo *SLAAlertRuleUpdateOne) sqlSave(ctx context.Context) (_node *SLAAler
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := saruo.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.SLADefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -862,7 +862,7 @@ func (saruo *SLAAlertRuleUpdateOne) sqlSave(ctx context.Context) (_node *SLAAler
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if saruo.mutation.AlertHistoryCleared() {
+	if _u.mutation.AlertHistoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -875,7 +875,7 @@ func (saruo *SLAAlertRuleUpdateOne) sqlSave(ctx context.Context) (_node *SLAAler
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := saruo.mutation.RemovedAlertHistoryIDs(); len(nodes) > 0 && !saruo.mutation.AlertHistoryCleared() {
+	if nodes := _u.mutation.RemovedAlertHistoryIDs(); len(nodes) > 0 && !_u.mutation.AlertHistoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -891,7 +891,7 @@ func (saruo *SLAAlertRuleUpdateOne) sqlSave(ctx context.Context) (_node *SLAAler
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := saruo.mutation.AlertHistoryIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.AlertHistoryIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -907,10 +907,10 @@ func (saruo *SLAAlertRuleUpdateOne) sqlSave(ctx context.Context) (_node *SLAAler
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &SLAAlertRule{config: saruo.config}
+	_node = &SLAAlertRule{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, saruo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{slaalertrule.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -918,6 +918,6 @@ func (saruo *SLAAlertRuleUpdateOne) sqlSave(ctx context.Context) (_node *SLAAler
 		}
 		return nil, err
 	}
-	saruo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

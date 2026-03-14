@@ -20,56 +20,56 @@ type ProcessBindingDelete struct {
 }
 
 // Where appends a list predicates to the ProcessBindingDelete builder.
-func (pbd *ProcessBindingDelete) Where(ps ...predicate.ProcessBinding) *ProcessBindingDelete {
-	pbd.mutation.Where(ps...)
-	return pbd
+func (_d *ProcessBindingDelete) Where(ps ...predicate.ProcessBinding) *ProcessBindingDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (pbd *ProcessBindingDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, pbd.sqlExec, pbd.mutation, pbd.hooks)
+func (_d *ProcessBindingDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pbd *ProcessBindingDelete) ExecX(ctx context.Context) int {
-	n, err := pbd.Exec(ctx)
+func (_d *ProcessBindingDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (pbd *ProcessBindingDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *ProcessBindingDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(processbinding.Table, sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt))
-	if ps := pbd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, pbd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	pbd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // ProcessBindingDeleteOne is the builder for deleting a single ProcessBinding entity.
 type ProcessBindingDeleteOne struct {
-	pbd *ProcessBindingDelete
+	_d *ProcessBindingDelete
 }
 
 // Where appends a list predicates to the ProcessBindingDelete builder.
-func (pbdo *ProcessBindingDeleteOne) Where(ps ...predicate.ProcessBinding) *ProcessBindingDeleteOne {
-	pbdo.pbd.mutation.Where(ps...)
-	return pbdo
+func (_d *ProcessBindingDeleteOne) Where(ps ...predicate.ProcessBinding) *ProcessBindingDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (pbdo *ProcessBindingDeleteOne) Exec(ctx context.Context) error {
-	n, err := pbdo.pbd.Exec(ctx)
+func (_d *ProcessBindingDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (pbdo *ProcessBindingDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pbdo *ProcessBindingDeleteOne) ExecX(ctx context.Context) {
-	if err := pbdo.Exec(ctx); err != nil {
+func (_d *ProcessBindingDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

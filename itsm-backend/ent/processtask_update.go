@@ -24,435 +24,435 @@ type ProcessTaskUpdate struct {
 }
 
 // Where appends a list predicates to the ProcessTaskUpdate builder.
-func (ptu *ProcessTaskUpdate) Where(ps ...predicate.ProcessTask) *ProcessTaskUpdate {
-	ptu.mutation.Where(ps...)
-	return ptu
+func (_u *ProcessTaskUpdate) Where(ps ...predicate.ProcessTask) *ProcessTaskUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetTaskID sets the "task_id" field.
-func (ptu *ProcessTaskUpdate) SetTaskID(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetTaskID(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetTaskID(v string) *ProcessTaskUpdate {
+	_u.mutation.SetTaskID(v)
+	return _u
 }
 
 // SetNillableTaskID sets the "task_id" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableTaskID(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetTaskID(*s)
+func (_u *ProcessTaskUpdate) SetNillableTaskID(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetTaskID(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (ptu *ProcessTaskUpdate) SetProcessInstanceID(i int) *ProcessTaskUpdate {
-	ptu.mutation.SetProcessInstanceID(i)
-	return ptu
+func (_u *ProcessTaskUpdate) SetProcessInstanceID(v int) *ProcessTaskUpdate {
+	_u.mutation.SetProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableProcessInstanceID(i *int) *ProcessTaskUpdate {
-	if i != nil {
-		ptu.SetProcessInstanceID(*i)
+func (_u *ProcessTaskUpdate) SetNillableProcessInstanceID(v *int) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetProcessInstanceID(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
-func (ptu *ProcessTaskUpdate) SetProcessDefinitionKey(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetProcessDefinitionKey(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetProcessDefinitionKey(v string) *ProcessTaskUpdate {
+	_u.mutation.SetProcessDefinitionKey(v)
+	return _u
 }
 
 // SetNillableProcessDefinitionKey sets the "process_definition_key" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableProcessDefinitionKey(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetProcessDefinitionKey(*s)
+func (_u *ProcessTaskUpdate) SetNillableProcessDefinitionKey(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetProcessDefinitionKey(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetTaskDefinitionKey sets the "task_definition_key" field.
-func (ptu *ProcessTaskUpdate) SetTaskDefinitionKey(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetTaskDefinitionKey(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetTaskDefinitionKey(v string) *ProcessTaskUpdate {
+	_u.mutation.SetTaskDefinitionKey(v)
+	return _u
 }
 
 // SetNillableTaskDefinitionKey sets the "task_definition_key" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableTaskDefinitionKey(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetTaskDefinitionKey(*s)
+func (_u *ProcessTaskUpdate) SetNillableTaskDefinitionKey(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetTaskDefinitionKey(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetTaskName sets the "task_name" field.
-func (ptu *ProcessTaskUpdate) SetTaskName(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetTaskName(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetTaskName(v string) *ProcessTaskUpdate {
+	_u.mutation.SetTaskName(v)
+	return _u
 }
 
 // SetNillableTaskName sets the "task_name" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableTaskName(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetTaskName(*s)
+func (_u *ProcessTaskUpdate) SetNillableTaskName(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetTaskName(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetTaskType sets the "task_type" field.
-func (ptu *ProcessTaskUpdate) SetTaskType(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetTaskType(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetTaskType(v string) *ProcessTaskUpdate {
+	_u.mutation.SetTaskType(v)
+	return _u
 }
 
 // SetNillableTaskType sets the "task_type" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableTaskType(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetTaskType(*s)
+func (_u *ProcessTaskUpdate) SetNillableTaskType(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetTaskType(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetAssignee sets the "assignee" field.
-func (ptu *ProcessTaskUpdate) SetAssignee(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetAssignee(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetAssignee(v string) *ProcessTaskUpdate {
+	_u.mutation.SetAssignee(v)
+	return _u
 }
 
 // SetNillableAssignee sets the "assignee" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableAssignee(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetAssignee(*s)
+func (_u *ProcessTaskUpdate) SetNillableAssignee(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetAssignee(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearAssignee clears the value of the "assignee" field.
-func (ptu *ProcessTaskUpdate) ClearAssignee() *ProcessTaskUpdate {
-	ptu.mutation.ClearAssignee()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearAssignee() *ProcessTaskUpdate {
+	_u.mutation.ClearAssignee()
+	return _u
 }
 
 // SetCandidateUsers sets the "candidate_users" field.
-func (ptu *ProcessTaskUpdate) SetCandidateUsers(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetCandidateUsers(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetCandidateUsers(v string) *ProcessTaskUpdate {
+	_u.mutation.SetCandidateUsers(v)
+	return _u
 }
 
 // SetNillableCandidateUsers sets the "candidate_users" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableCandidateUsers(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetCandidateUsers(*s)
+func (_u *ProcessTaskUpdate) SetNillableCandidateUsers(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetCandidateUsers(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearCandidateUsers clears the value of the "candidate_users" field.
-func (ptu *ProcessTaskUpdate) ClearCandidateUsers() *ProcessTaskUpdate {
-	ptu.mutation.ClearCandidateUsers()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearCandidateUsers() *ProcessTaskUpdate {
+	_u.mutation.ClearCandidateUsers()
+	return _u
 }
 
 // SetCandidateGroups sets the "candidate_groups" field.
-func (ptu *ProcessTaskUpdate) SetCandidateGroups(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetCandidateGroups(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetCandidateGroups(v string) *ProcessTaskUpdate {
+	_u.mutation.SetCandidateGroups(v)
+	return _u
 }
 
 // SetNillableCandidateGroups sets the "candidate_groups" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableCandidateGroups(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetCandidateGroups(*s)
+func (_u *ProcessTaskUpdate) SetNillableCandidateGroups(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetCandidateGroups(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearCandidateGroups clears the value of the "candidate_groups" field.
-func (ptu *ProcessTaskUpdate) ClearCandidateGroups() *ProcessTaskUpdate {
-	ptu.mutation.ClearCandidateGroups()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearCandidateGroups() *ProcessTaskUpdate {
+	_u.mutation.ClearCandidateGroups()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (ptu *ProcessTaskUpdate) SetStatus(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetStatus(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetStatus(v string) *ProcessTaskUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableStatus(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetStatus(*s)
+func (_u *ProcessTaskUpdate) SetNillableStatus(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (ptu *ProcessTaskUpdate) SetPriority(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetPriority(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetPriority(v string) *ProcessTaskUpdate {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillablePriority(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetPriority(*s)
+func (_u *ProcessTaskUpdate) SetNillablePriority(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetDueDate sets the "due_date" field.
-func (ptu *ProcessTaskUpdate) SetDueDate(t time.Time) *ProcessTaskUpdate {
-	ptu.mutation.SetDueDate(t)
-	return ptu
+func (_u *ProcessTaskUpdate) SetDueDate(v time.Time) *ProcessTaskUpdate {
+	_u.mutation.SetDueDate(v)
+	return _u
 }
 
 // SetNillableDueDate sets the "due_date" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableDueDate(t *time.Time) *ProcessTaskUpdate {
-	if t != nil {
-		ptu.SetDueDate(*t)
+func (_u *ProcessTaskUpdate) SetNillableDueDate(v *time.Time) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetDueDate(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearDueDate clears the value of the "due_date" field.
-func (ptu *ProcessTaskUpdate) ClearDueDate() *ProcessTaskUpdate {
-	ptu.mutation.ClearDueDate()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearDueDate() *ProcessTaskUpdate {
+	_u.mutation.ClearDueDate()
+	return _u
 }
 
 // SetCreatedTime sets the "created_time" field.
-func (ptu *ProcessTaskUpdate) SetCreatedTime(t time.Time) *ProcessTaskUpdate {
-	ptu.mutation.SetCreatedTime(t)
-	return ptu
+func (_u *ProcessTaskUpdate) SetCreatedTime(v time.Time) *ProcessTaskUpdate {
+	_u.mutation.SetCreatedTime(v)
+	return _u
 }
 
 // SetNillableCreatedTime sets the "created_time" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableCreatedTime(t *time.Time) *ProcessTaskUpdate {
-	if t != nil {
-		ptu.SetCreatedTime(*t)
+func (_u *ProcessTaskUpdate) SetNillableCreatedTime(v *time.Time) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetCreatedTime(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetAssignedTime sets the "assigned_time" field.
-func (ptu *ProcessTaskUpdate) SetAssignedTime(t time.Time) *ProcessTaskUpdate {
-	ptu.mutation.SetAssignedTime(t)
-	return ptu
+func (_u *ProcessTaskUpdate) SetAssignedTime(v time.Time) *ProcessTaskUpdate {
+	_u.mutation.SetAssignedTime(v)
+	return _u
 }
 
 // SetNillableAssignedTime sets the "assigned_time" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableAssignedTime(t *time.Time) *ProcessTaskUpdate {
-	if t != nil {
-		ptu.SetAssignedTime(*t)
+func (_u *ProcessTaskUpdate) SetNillableAssignedTime(v *time.Time) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetAssignedTime(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearAssignedTime clears the value of the "assigned_time" field.
-func (ptu *ProcessTaskUpdate) ClearAssignedTime() *ProcessTaskUpdate {
-	ptu.mutation.ClearAssignedTime()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearAssignedTime() *ProcessTaskUpdate {
+	_u.mutation.ClearAssignedTime()
+	return _u
 }
 
 // SetStartedTime sets the "started_time" field.
-func (ptu *ProcessTaskUpdate) SetStartedTime(t time.Time) *ProcessTaskUpdate {
-	ptu.mutation.SetStartedTime(t)
-	return ptu
+func (_u *ProcessTaskUpdate) SetStartedTime(v time.Time) *ProcessTaskUpdate {
+	_u.mutation.SetStartedTime(v)
+	return _u
 }
 
 // SetNillableStartedTime sets the "started_time" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableStartedTime(t *time.Time) *ProcessTaskUpdate {
-	if t != nil {
-		ptu.SetStartedTime(*t)
+func (_u *ProcessTaskUpdate) SetNillableStartedTime(v *time.Time) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetStartedTime(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearStartedTime clears the value of the "started_time" field.
-func (ptu *ProcessTaskUpdate) ClearStartedTime() *ProcessTaskUpdate {
-	ptu.mutation.ClearStartedTime()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearStartedTime() *ProcessTaskUpdate {
+	_u.mutation.ClearStartedTime()
+	return _u
 }
 
 // SetCompletedTime sets the "completed_time" field.
-func (ptu *ProcessTaskUpdate) SetCompletedTime(t time.Time) *ProcessTaskUpdate {
-	ptu.mutation.SetCompletedTime(t)
-	return ptu
+func (_u *ProcessTaskUpdate) SetCompletedTime(v time.Time) *ProcessTaskUpdate {
+	_u.mutation.SetCompletedTime(v)
+	return _u
 }
 
 // SetNillableCompletedTime sets the "completed_time" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableCompletedTime(t *time.Time) *ProcessTaskUpdate {
-	if t != nil {
-		ptu.SetCompletedTime(*t)
+func (_u *ProcessTaskUpdate) SetNillableCompletedTime(v *time.Time) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetCompletedTime(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearCompletedTime clears the value of the "completed_time" field.
-func (ptu *ProcessTaskUpdate) ClearCompletedTime() *ProcessTaskUpdate {
-	ptu.mutation.ClearCompletedTime()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearCompletedTime() *ProcessTaskUpdate {
+	_u.mutation.ClearCompletedTime()
+	return _u
 }
 
 // SetFormKey sets the "form_key" field.
-func (ptu *ProcessTaskUpdate) SetFormKey(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetFormKey(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetFormKey(v string) *ProcessTaskUpdate {
+	_u.mutation.SetFormKey(v)
+	return _u
 }
 
 // SetNillableFormKey sets the "form_key" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableFormKey(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetFormKey(*s)
+func (_u *ProcessTaskUpdate) SetNillableFormKey(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetFormKey(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearFormKey clears the value of the "form_key" field.
-func (ptu *ProcessTaskUpdate) ClearFormKey() *ProcessTaskUpdate {
-	ptu.mutation.ClearFormKey()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearFormKey() *ProcessTaskUpdate {
+	_u.mutation.ClearFormKey()
+	return _u
 }
 
 // SetTaskVariables sets the "task_variables" field.
-func (ptu *ProcessTaskUpdate) SetTaskVariables(m map[string]interface{}) *ProcessTaskUpdate {
-	ptu.mutation.SetTaskVariables(m)
-	return ptu
+func (_u *ProcessTaskUpdate) SetTaskVariables(v map[string]interface{}) *ProcessTaskUpdate {
+	_u.mutation.SetTaskVariables(v)
+	return _u
 }
 
 // ClearTaskVariables clears the value of the "task_variables" field.
-func (ptu *ProcessTaskUpdate) ClearTaskVariables() *ProcessTaskUpdate {
-	ptu.mutation.ClearTaskVariables()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearTaskVariables() *ProcessTaskUpdate {
+	_u.mutation.ClearTaskVariables()
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ptu *ProcessTaskUpdate) SetDescription(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetDescription(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetDescription(v string) *ProcessTaskUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableDescription(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetDescription(*s)
+func (_u *ProcessTaskUpdate) SetNillableDescription(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ptu *ProcessTaskUpdate) ClearDescription() *ProcessTaskUpdate {
-	ptu.mutation.ClearDescription()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearDescription() *ProcessTaskUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetParentTaskID sets the "parent_task_id" field.
-func (ptu *ProcessTaskUpdate) SetParentTaskID(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetParentTaskID(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetParentTaskID(v string) *ProcessTaskUpdate {
+	_u.mutation.SetParentTaskID(v)
+	return _u
 }
 
 // SetNillableParentTaskID sets the "parent_task_id" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableParentTaskID(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetParentTaskID(*s)
+func (_u *ProcessTaskUpdate) SetNillableParentTaskID(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetParentTaskID(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearParentTaskID clears the value of the "parent_task_id" field.
-func (ptu *ProcessTaskUpdate) ClearParentTaskID() *ProcessTaskUpdate {
-	ptu.mutation.ClearParentTaskID()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearParentTaskID() *ProcessTaskUpdate {
+	_u.mutation.ClearParentTaskID()
+	return _u
 }
 
 // SetRootTaskID sets the "root_task_id" field.
-func (ptu *ProcessTaskUpdate) SetRootTaskID(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetRootTaskID(s)
-	return ptu
+func (_u *ProcessTaskUpdate) SetRootTaskID(v string) *ProcessTaskUpdate {
+	_u.mutation.SetRootTaskID(v)
+	return _u
 }
 
 // SetNillableRootTaskID sets the "root_task_id" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableRootTaskID(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetRootTaskID(*s)
+func (_u *ProcessTaskUpdate) SetNillableRootTaskID(v *string) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetRootTaskID(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearRootTaskID clears the value of the "root_task_id" field.
-func (ptu *ProcessTaskUpdate) ClearRootTaskID() *ProcessTaskUpdate {
-	ptu.mutation.ClearRootTaskID()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearRootTaskID() *ProcessTaskUpdate {
+	_u.mutation.ClearRootTaskID()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ptu *ProcessTaskUpdate) SetTenantID(i int) *ProcessTaskUpdate {
-	ptu.mutation.ResetTenantID()
-	ptu.mutation.SetTenantID(i)
-	return ptu
+func (_u *ProcessTaskUpdate) SetTenantID(v int) *ProcessTaskUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableTenantID(i *int) *ProcessTaskUpdate {
-	if i != nil {
-		ptu.SetTenantID(*i)
+func (_u *ProcessTaskUpdate) SetNillableTenantID(v *int) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ptu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ptu *ProcessTaskUpdate) AddTenantID(i int) *ProcessTaskUpdate {
-	ptu.mutation.AddTenantID(i)
-	return ptu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessTaskUpdate) AddTenantID(v int) *ProcessTaskUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ptu *ProcessTaskUpdate) SetCreatedAt(t time.Time) *ProcessTaskUpdate {
-	ptu.mutation.SetCreatedAt(t)
-	return ptu
+func (_u *ProcessTaskUpdate) SetCreatedAt(v time.Time) *ProcessTaskUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableCreatedAt(t *time.Time) *ProcessTaskUpdate {
-	if t != nil {
-		ptu.SetCreatedAt(*t)
+func (_u *ProcessTaskUpdate) SetNillableCreatedAt(v *time.Time) *ProcessTaskUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ptu *ProcessTaskUpdate) SetUpdatedAt(t time.Time) *ProcessTaskUpdate {
-	ptu.mutation.SetUpdatedAt(t)
-	return ptu
+func (_u *ProcessTaskUpdate) SetUpdatedAt(v time.Time) *ProcessTaskUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
-func (ptu *ProcessTaskUpdate) SetProcessInstance(p *ProcessInstance) *ProcessTaskUpdate {
-	return ptu.SetProcessInstanceID(p.ID)
+func (_u *ProcessTaskUpdate) SetProcessInstance(v *ProcessInstance) *ProcessTaskUpdate {
+	return _u.SetProcessInstanceID(v.ID)
 }
 
 // Mutation returns the ProcessTaskMutation object of the builder.
-func (ptu *ProcessTaskUpdate) Mutation() *ProcessTaskMutation {
-	return ptu.mutation
+func (_u *ProcessTaskUpdate) Mutation() *ProcessTaskMutation {
+	return _u.mutation
 }
 
 // ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
-func (ptu *ProcessTaskUpdate) ClearProcessInstance() *ProcessTaskUpdate {
-	ptu.mutation.ClearProcessInstance()
-	return ptu
+func (_u *ProcessTaskUpdate) ClearProcessInstance() *ProcessTaskUpdate {
+	_u.mutation.ClearProcessInstance()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (ptu *ProcessTaskUpdate) Save(ctx context.Context) (int, error) {
-	ptu.defaults()
-	return withHooks(ctx, ptu.sqlSave, ptu.mutation, ptu.hooks)
+func (_u *ProcessTaskUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ptu *ProcessTaskUpdate) SaveX(ctx context.Context) int {
-	affected, err := ptu.Save(ctx)
+func (_u *ProcessTaskUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -460,185 +460,185 @@ func (ptu *ProcessTaskUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (ptu *ProcessTaskUpdate) Exec(ctx context.Context) error {
-	_, err := ptu.Save(ctx)
+func (_u *ProcessTaskUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptu *ProcessTaskUpdate) ExecX(ctx context.Context) {
-	if err := ptu.Exec(ctx); err != nil {
+func (_u *ProcessTaskUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ptu *ProcessTaskUpdate) defaults() {
-	if _, ok := ptu.mutation.UpdatedAt(); !ok {
+func (_u *ProcessTaskUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := processtask.UpdateDefaultUpdatedAt()
-		ptu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ptu *ProcessTaskUpdate) check() error {
-	if v, ok := ptu.mutation.TaskID(); ok {
+func (_u *ProcessTaskUpdate) check() error {
+	if v, ok := _u.mutation.TaskID(); ok {
 		if err := processtask.TaskIDValidator(v); err != nil {
 			return &ValidationError{Name: "task_id", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.task_id": %w`, err)}
 		}
 	}
-	if v, ok := ptu.mutation.ProcessInstanceID(); ok {
+	if v, ok := _u.mutation.ProcessInstanceID(); ok {
 		if err := processtask.ProcessInstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_instance_id", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.process_instance_id": %w`, err)}
 		}
 	}
-	if v, ok := ptu.mutation.ProcessDefinitionKey(); ok {
+	if v, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		if err := processtask.ProcessDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.process_definition_key": %w`, err)}
 		}
 	}
-	if v, ok := ptu.mutation.TaskDefinitionKey(); ok {
+	if v, ok := _u.mutation.TaskDefinitionKey(); ok {
 		if err := processtask.TaskDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "task_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.task_definition_key": %w`, err)}
 		}
 	}
-	if v, ok := ptu.mutation.TaskName(); ok {
+	if v, ok := _u.mutation.TaskName(); ok {
 		if err := processtask.TaskNameValidator(v); err != nil {
 			return &ValidationError{Name: "task_name", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.task_name": %w`, err)}
 		}
 	}
-	if v, ok := ptu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processtask.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.tenant_id": %w`, err)}
 		}
 	}
-	if ptu.mutation.ProcessInstanceCleared() && len(ptu.mutation.ProcessInstanceIDs()) > 0 {
+	if _u.mutation.ProcessInstanceCleared() && len(_u.mutation.ProcessInstanceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessTask.process_instance"`)
 	}
 	return nil
 }
 
-func (ptu *ProcessTaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := ptu.check(); err != nil {
-		return n, err
+func (_u *ProcessTaskUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processtask.Table, processtask.Columns, sqlgraph.NewFieldSpec(processtask.FieldID, field.TypeInt))
-	if ps := ptu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ptu.mutation.TaskID(); ok {
+	if value, ok := _u.mutation.TaskID(); ok {
 		_spec.SetField(processtask.FieldTaskID, field.TypeString, value)
 	}
-	if value, ok := ptu.mutation.ProcessDefinitionKey(); ok {
+	if value, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processtask.FieldProcessDefinitionKey, field.TypeString, value)
 	}
-	if value, ok := ptu.mutation.TaskDefinitionKey(); ok {
+	if value, ok := _u.mutation.TaskDefinitionKey(); ok {
 		_spec.SetField(processtask.FieldTaskDefinitionKey, field.TypeString, value)
 	}
-	if value, ok := ptu.mutation.TaskName(); ok {
+	if value, ok := _u.mutation.TaskName(); ok {
 		_spec.SetField(processtask.FieldTaskName, field.TypeString, value)
 	}
-	if value, ok := ptu.mutation.TaskType(); ok {
+	if value, ok := _u.mutation.TaskType(); ok {
 		_spec.SetField(processtask.FieldTaskType, field.TypeString, value)
 	}
-	if value, ok := ptu.mutation.Assignee(); ok {
+	if value, ok := _u.mutation.Assignee(); ok {
 		_spec.SetField(processtask.FieldAssignee, field.TypeString, value)
 	}
-	if ptu.mutation.AssigneeCleared() {
+	if _u.mutation.AssigneeCleared() {
 		_spec.ClearField(processtask.FieldAssignee, field.TypeString)
 	}
-	if value, ok := ptu.mutation.CandidateUsers(); ok {
+	if value, ok := _u.mutation.CandidateUsers(); ok {
 		_spec.SetField(processtask.FieldCandidateUsers, field.TypeString, value)
 	}
-	if ptu.mutation.CandidateUsersCleared() {
+	if _u.mutation.CandidateUsersCleared() {
 		_spec.ClearField(processtask.FieldCandidateUsers, field.TypeString)
 	}
-	if value, ok := ptu.mutation.CandidateGroups(); ok {
+	if value, ok := _u.mutation.CandidateGroups(); ok {
 		_spec.SetField(processtask.FieldCandidateGroups, field.TypeString, value)
 	}
-	if ptu.mutation.CandidateGroupsCleared() {
+	if _u.mutation.CandidateGroupsCleared() {
 		_spec.ClearField(processtask.FieldCandidateGroups, field.TypeString)
 	}
-	if value, ok := ptu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(processtask.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := ptu.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(processtask.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := ptu.mutation.DueDate(); ok {
+	if value, ok := _u.mutation.DueDate(); ok {
 		_spec.SetField(processtask.FieldDueDate, field.TypeTime, value)
 	}
-	if ptu.mutation.DueDateCleared() {
+	if _u.mutation.DueDateCleared() {
 		_spec.ClearField(processtask.FieldDueDate, field.TypeTime)
 	}
-	if value, ok := ptu.mutation.CreatedTime(); ok {
+	if value, ok := _u.mutation.CreatedTime(); ok {
 		_spec.SetField(processtask.FieldCreatedTime, field.TypeTime, value)
 	}
-	if value, ok := ptu.mutation.AssignedTime(); ok {
+	if value, ok := _u.mutation.AssignedTime(); ok {
 		_spec.SetField(processtask.FieldAssignedTime, field.TypeTime, value)
 	}
-	if ptu.mutation.AssignedTimeCleared() {
+	if _u.mutation.AssignedTimeCleared() {
 		_spec.ClearField(processtask.FieldAssignedTime, field.TypeTime)
 	}
-	if value, ok := ptu.mutation.StartedTime(); ok {
+	if value, ok := _u.mutation.StartedTime(); ok {
 		_spec.SetField(processtask.FieldStartedTime, field.TypeTime, value)
 	}
-	if ptu.mutation.StartedTimeCleared() {
+	if _u.mutation.StartedTimeCleared() {
 		_spec.ClearField(processtask.FieldStartedTime, field.TypeTime)
 	}
-	if value, ok := ptu.mutation.CompletedTime(); ok {
+	if value, ok := _u.mutation.CompletedTime(); ok {
 		_spec.SetField(processtask.FieldCompletedTime, field.TypeTime, value)
 	}
-	if ptu.mutation.CompletedTimeCleared() {
+	if _u.mutation.CompletedTimeCleared() {
 		_spec.ClearField(processtask.FieldCompletedTime, field.TypeTime)
 	}
-	if value, ok := ptu.mutation.FormKey(); ok {
+	if value, ok := _u.mutation.FormKey(); ok {
 		_spec.SetField(processtask.FieldFormKey, field.TypeString, value)
 	}
-	if ptu.mutation.FormKeyCleared() {
+	if _u.mutation.FormKeyCleared() {
 		_spec.ClearField(processtask.FieldFormKey, field.TypeString)
 	}
-	if value, ok := ptu.mutation.TaskVariables(); ok {
+	if value, ok := _u.mutation.TaskVariables(); ok {
 		_spec.SetField(processtask.FieldTaskVariables, field.TypeJSON, value)
 	}
-	if ptu.mutation.TaskVariablesCleared() {
+	if _u.mutation.TaskVariablesCleared() {
 		_spec.ClearField(processtask.FieldTaskVariables, field.TypeJSON)
 	}
-	if value, ok := ptu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(processtask.FieldDescription, field.TypeString, value)
 	}
-	if ptu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(processtask.FieldDescription, field.TypeString)
 	}
-	if value, ok := ptu.mutation.ParentTaskID(); ok {
+	if value, ok := _u.mutation.ParentTaskID(); ok {
 		_spec.SetField(processtask.FieldParentTaskID, field.TypeString, value)
 	}
-	if ptu.mutation.ParentTaskIDCleared() {
+	if _u.mutation.ParentTaskIDCleared() {
 		_spec.ClearField(processtask.FieldParentTaskID, field.TypeString)
 	}
-	if value, ok := ptu.mutation.RootTaskID(); ok {
+	if value, ok := _u.mutation.RootTaskID(); ok {
 		_spec.SetField(processtask.FieldRootTaskID, field.TypeString, value)
 	}
-	if ptu.mutation.RootTaskIDCleared() {
+	if _u.mutation.RootTaskIDCleared() {
 		_spec.ClearField(processtask.FieldRootTaskID, field.TypeString)
 	}
-	if value, ok := ptu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ptu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ptu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processtask.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ptu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(processtask.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if ptu.mutation.ProcessInstanceCleared() {
+	if _u.mutation.ProcessInstanceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -651,7 +651,7 @@ func (ptu *ProcessTaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ptu.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -667,7 +667,7 @@ func (ptu *ProcessTaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, ptu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processtask.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -675,8 +675,8 @@ func (ptu *ProcessTaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	ptu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ProcessTaskUpdateOne is the builder for updating a single ProcessTask entity.
@@ -688,442 +688,442 @@ type ProcessTaskUpdateOne struct {
 }
 
 // SetTaskID sets the "task_id" field.
-func (ptuo *ProcessTaskUpdateOne) SetTaskID(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetTaskID(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetTaskID(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetTaskID(v)
+	return _u
 }
 
 // SetNillableTaskID sets the "task_id" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableTaskID(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetTaskID(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableTaskID(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetTaskID(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (ptuo *ProcessTaskUpdateOne) SetProcessInstanceID(i int) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetProcessInstanceID(i)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetProcessInstanceID(v int) *ProcessTaskUpdateOne {
+	_u.mutation.SetProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableProcessInstanceID(i *int) *ProcessTaskUpdateOne {
-	if i != nil {
-		ptuo.SetProcessInstanceID(*i)
+func (_u *ProcessTaskUpdateOne) SetNillableProcessInstanceID(v *int) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetProcessInstanceID(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
-func (ptuo *ProcessTaskUpdateOne) SetProcessDefinitionKey(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetProcessDefinitionKey(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetProcessDefinitionKey(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetProcessDefinitionKey(v)
+	return _u
 }
 
 // SetNillableProcessDefinitionKey sets the "process_definition_key" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableProcessDefinitionKey(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetProcessDefinitionKey(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableProcessDefinitionKey(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetProcessDefinitionKey(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetTaskDefinitionKey sets the "task_definition_key" field.
-func (ptuo *ProcessTaskUpdateOne) SetTaskDefinitionKey(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetTaskDefinitionKey(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetTaskDefinitionKey(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetTaskDefinitionKey(v)
+	return _u
 }
 
 // SetNillableTaskDefinitionKey sets the "task_definition_key" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableTaskDefinitionKey(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetTaskDefinitionKey(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableTaskDefinitionKey(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetTaskDefinitionKey(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetTaskName sets the "task_name" field.
-func (ptuo *ProcessTaskUpdateOne) SetTaskName(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetTaskName(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetTaskName(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetTaskName(v)
+	return _u
 }
 
 // SetNillableTaskName sets the "task_name" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableTaskName(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetTaskName(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableTaskName(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetTaskName(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetTaskType sets the "task_type" field.
-func (ptuo *ProcessTaskUpdateOne) SetTaskType(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetTaskType(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetTaskType(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetTaskType(v)
+	return _u
 }
 
 // SetNillableTaskType sets the "task_type" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableTaskType(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetTaskType(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableTaskType(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetTaskType(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetAssignee sets the "assignee" field.
-func (ptuo *ProcessTaskUpdateOne) SetAssignee(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetAssignee(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetAssignee(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetAssignee(v)
+	return _u
 }
 
 // SetNillableAssignee sets the "assignee" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableAssignee(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetAssignee(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableAssignee(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetAssignee(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearAssignee clears the value of the "assignee" field.
-func (ptuo *ProcessTaskUpdateOne) ClearAssignee() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearAssignee()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearAssignee() *ProcessTaskUpdateOne {
+	_u.mutation.ClearAssignee()
+	return _u
 }
 
 // SetCandidateUsers sets the "candidate_users" field.
-func (ptuo *ProcessTaskUpdateOne) SetCandidateUsers(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetCandidateUsers(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetCandidateUsers(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetCandidateUsers(v)
+	return _u
 }
 
 // SetNillableCandidateUsers sets the "candidate_users" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableCandidateUsers(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetCandidateUsers(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableCandidateUsers(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetCandidateUsers(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearCandidateUsers clears the value of the "candidate_users" field.
-func (ptuo *ProcessTaskUpdateOne) ClearCandidateUsers() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearCandidateUsers()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearCandidateUsers() *ProcessTaskUpdateOne {
+	_u.mutation.ClearCandidateUsers()
+	return _u
 }
 
 // SetCandidateGroups sets the "candidate_groups" field.
-func (ptuo *ProcessTaskUpdateOne) SetCandidateGroups(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetCandidateGroups(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetCandidateGroups(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetCandidateGroups(v)
+	return _u
 }
 
 // SetNillableCandidateGroups sets the "candidate_groups" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableCandidateGroups(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetCandidateGroups(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableCandidateGroups(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetCandidateGroups(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearCandidateGroups clears the value of the "candidate_groups" field.
-func (ptuo *ProcessTaskUpdateOne) ClearCandidateGroups() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearCandidateGroups()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearCandidateGroups() *ProcessTaskUpdateOne {
+	_u.mutation.ClearCandidateGroups()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (ptuo *ProcessTaskUpdateOne) SetStatus(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetStatus(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetStatus(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableStatus(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetStatus(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableStatus(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (ptuo *ProcessTaskUpdateOne) SetPriority(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetPriority(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetPriority(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillablePriority(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetPriority(*s)
+func (_u *ProcessTaskUpdateOne) SetNillablePriority(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetDueDate sets the "due_date" field.
-func (ptuo *ProcessTaskUpdateOne) SetDueDate(t time.Time) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetDueDate(t)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetDueDate(v time.Time) *ProcessTaskUpdateOne {
+	_u.mutation.SetDueDate(v)
+	return _u
 }
 
 // SetNillableDueDate sets the "due_date" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableDueDate(t *time.Time) *ProcessTaskUpdateOne {
-	if t != nil {
-		ptuo.SetDueDate(*t)
+func (_u *ProcessTaskUpdateOne) SetNillableDueDate(v *time.Time) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetDueDate(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearDueDate clears the value of the "due_date" field.
-func (ptuo *ProcessTaskUpdateOne) ClearDueDate() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearDueDate()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearDueDate() *ProcessTaskUpdateOne {
+	_u.mutation.ClearDueDate()
+	return _u
 }
 
 // SetCreatedTime sets the "created_time" field.
-func (ptuo *ProcessTaskUpdateOne) SetCreatedTime(t time.Time) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetCreatedTime(t)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetCreatedTime(v time.Time) *ProcessTaskUpdateOne {
+	_u.mutation.SetCreatedTime(v)
+	return _u
 }
 
 // SetNillableCreatedTime sets the "created_time" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableCreatedTime(t *time.Time) *ProcessTaskUpdateOne {
-	if t != nil {
-		ptuo.SetCreatedTime(*t)
+func (_u *ProcessTaskUpdateOne) SetNillableCreatedTime(v *time.Time) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetCreatedTime(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetAssignedTime sets the "assigned_time" field.
-func (ptuo *ProcessTaskUpdateOne) SetAssignedTime(t time.Time) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetAssignedTime(t)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetAssignedTime(v time.Time) *ProcessTaskUpdateOne {
+	_u.mutation.SetAssignedTime(v)
+	return _u
 }
 
 // SetNillableAssignedTime sets the "assigned_time" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableAssignedTime(t *time.Time) *ProcessTaskUpdateOne {
-	if t != nil {
-		ptuo.SetAssignedTime(*t)
+func (_u *ProcessTaskUpdateOne) SetNillableAssignedTime(v *time.Time) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetAssignedTime(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearAssignedTime clears the value of the "assigned_time" field.
-func (ptuo *ProcessTaskUpdateOne) ClearAssignedTime() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearAssignedTime()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearAssignedTime() *ProcessTaskUpdateOne {
+	_u.mutation.ClearAssignedTime()
+	return _u
 }
 
 // SetStartedTime sets the "started_time" field.
-func (ptuo *ProcessTaskUpdateOne) SetStartedTime(t time.Time) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetStartedTime(t)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetStartedTime(v time.Time) *ProcessTaskUpdateOne {
+	_u.mutation.SetStartedTime(v)
+	return _u
 }
 
 // SetNillableStartedTime sets the "started_time" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableStartedTime(t *time.Time) *ProcessTaskUpdateOne {
-	if t != nil {
-		ptuo.SetStartedTime(*t)
+func (_u *ProcessTaskUpdateOne) SetNillableStartedTime(v *time.Time) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetStartedTime(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearStartedTime clears the value of the "started_time" field.
-func (ptuo *ProcessTaskUpdateOne) ClearStartedTime() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearStartedTime()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearStartedTime() *ProcessTaskUpdateOne {
+	_u.mutation.ClearStartedTime()
+	return _u
 }
 
 // SetCompletedTime sets the "completed_time" field.
-func (ptuo *ProcessTaskUpdateOne) SetCompletedTime(t time.Time) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetCompletedTime(t)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetCompletedTime(v time.Time) *ProcessTaskUpdateOne {
+	_u.mutation.SetCompletedTime(v)
+	return _u
 }
 
 // SetNillableCompletedTime sets the "completed_time" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableCompletedTime(t *time.Time) *ProcessTaskUpdateOne {
-	if t != nil {
-		ptuo.SetCompletedTime(*t)
+func (_u *ProcessTaskUpdateOne) SetNillableCompletedTime(v *time.Time) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetCompletedTime(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearCompletedTime clears the value of the "completed_time" field.
-func (ptuo *ProcessTaskUpdateOne) ClearCompletedTime() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearCompletedTime()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearCompletedTime() *ProcessTaskUpdateOne {
+	_u.mutation.ClearCompletedTime()
+	return _u
 }
 
 // SetFormKey sets the "form_key" field.
-func (ptuo *ProcessTaskUpdateOne) SetFormKey(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetFormKey(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetFormKey(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetFormKey(v)
+	return _u
 }
 
 // SetNillableFormKey sets the "form_key" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableFormKey(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetFormKey(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableFormKey(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetFormKey(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearFormKey clears the value of the "form_key" field.
-func (ptuo *ProcessTaskUpdateOne) ClearFormKey() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearFormKey()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearFormKey() *ProcessTaskUpdateOne {
+	_u.mutation.ClearFormKey()
+	return _u
 }
 
 // SetTaskVariables sets the "task_variables" field.
-func (ptuo *ProcessTaskUpdateOne) SetTaskVariables(m map[string]interface{}) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetTaskVariables(m)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetTaskVariables(v map[string]interface{}) *ProcessTaskUpdateOne {
+	_u.mutation.SetTaskVariables(v)
+	return _u
 }
 
 // ClearTaskVariables clears the value of the "task_variables" field.
-func (ptuo *ProcessTaskUpdateOne) ClearTaskVariables() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearTaskVariables()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearTaskVariables() *ProcessTaskUpdateOne {
+	_u.mutation.ClearTaskVariables()
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ptuo *ProcessTaskUpdateOne) SetDescription(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetDescription(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetDescription(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableDescription(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetDescription(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableDescription(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ptuo *ProcessTaskUpdateOne) ClearDescription() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearDescription()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearDescription() *ProcessTaskUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetParentTaskID sets the "parent_task_id" field.
-func (ptuo *ProcessTaskUpdateOne) SetParentTaskID(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetParentTaskID(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetParentTaskID(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetParentTaskID(v)
+	return _u
 }
 
 // SetNillableParentTaskID sets the "parent_task_id" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableParentTaskID(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetParentTaskID(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableParentTaskID(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetParentTaskID(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearParentTaskID clears the value of the "parent_task_id" field.
-func (ptuo *ProcessTaskUpdateOne) ClearParentTaskID() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearParentTaskID()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearParentTaskID() *ProcessTaskUpdateOne {
+	_u.mutation.ClearParentTaskID()
+	return _u
 }
 
 // SetRootTaskID sets the "root_task_id" field.
-func (ptuo *ProcessTaskUpdateOne) SetRootTaskID(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetRootTaskID(s)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetRootTaskID(v string) *ProcessTaskUpdateOne {
+	_u.mutation.SetRootTaskID(v)
+	return _u
 }
 
 // SetNillableRootTaskID sets the "root_task_id" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableRootTaskID(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetRootTaskID(*s)
+func (_u *ProcessTaskUpdateOne) SetNillableRootTaskID(v *string) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetRootTaskID(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearRootTaskID clears the value of the "root_task_id" field.
-func (ptuo *ProcessTaskUpdateOne) ClearRootTaskID() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearRootTaskID()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearRootTaskID() *ProcessTaskUpdateOne {
+	_u.mutation.ClearRootTaskID()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ptuo *ProcessTaskUpdateOne) SetTenantID(i int) *ProcessTaskUpdateOne {
-	ptuo.mutation.ResetTenantID()
-	ptuo.mutation.SetTenantID(i)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetTenantID(v int) *ProcessTaskUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableTenantID(i *int) *ProcessTaskUpdateOne {
-	if i != nil {
-		ptuo.SetTenantID(*i)
+func (_u *ProcessTaskUpdateOne) SetNillableTenantID(v *int) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ptuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ptuo *ProcessTaskUpdateOne) AddTenantID(i int) *ProcessTaskUpdateOne {
-	ptuo.mutation.AddTenantID(i)
-	return ptuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessTaskUpdateOne) AddTenantID(v int) *ProcessTaskUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ptuo *ProcessTaskUpdateOne) SetCreatedAt(t time.Time) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetCreatedAt(t)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetCreatedAt(v time.Time) *ProcessTaskUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableCreatedAt(t *time.Time) *ProcessTaskUpdateOne {
-	if t != nil {
-		ptuo.SetCreatedAt(*t)
+func (_u *ProcessTaskUpdateOne) SetNillableCreatedAt(v *time.Time) *ProcessTaskUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ptuo *ProcessTaskUpdateOne) SetUpdatedAt(t time.Time) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetUpdatedAt(t)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) SetUpdatedAt(v time.Time) *ProcessTaskUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
-func (ptuo *ProcessTaskUpdateOne) SetProcessInstance(p *ProcessInstance) *ProcessTaskUpdateOne {
-	return ptuo.SetProcessInstanceID(p.ID)
+func (_u *ProcessTaskUpdateOne) SetProcessInstance(v *ProcessInstance) *ProcessTaskUpdateOne {
+	return _u.SetProcessInstanceID(v.ID)
 }
 
 // Mutation returns the ProcessTaskMutation object of the builder.
-func (ptuo *ProcessTaskUpdateOne) Mutation() *ProcessTaskMutation {
-	return ptuo.mutation
+func (_u *ProcessTaskUpdateOne) Mutation() *ProcessTaskMutation {
+	return _u.mutation
 }
 
 // ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
-func (ptuo *ProcessTaskUpdateOne) ClearProcessInstance() *ProcessTaskUpdateOne {
-	ptuo.mutation.ClearProcessInstance()
-	return ptuo
+func (_u *ProcessTaskUpdateOne) ClearProcessInstance() *ProcessTaskUpdateOne {
+	_u.mutation.ClearProcessInstance()
+	return _u
 }
 
 // Where appends a list predicates to the ProcessTaskUpdate builder.
-func (ptuo *ProcessTaskUpdateOne) Where(ps ...predicate.ProcessTask) *ProcessTaskUpdateOne {
-	ptuo.mutation.Where(ps...)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) Where(ps ...predicate.ProcessTask) *ProcessTaskUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (ptuo *ProcessTaskUpdateOne) Select(field string, fields ...string) *ProcessTaskUpdateOne {
-	ptuo.fields = append([]string{field}, fields...)
-	return ptuo
+func (_u *ProcessTaskUpdateOne) Select(field string, fields ...string) *ProcessTaskUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ProcessTask entity.
-func (ptuo *ProcessTaskUpdateOne) Save(ctx context.Context) (*ProcessTask, error) {
-	ptuo.defaults()
-	return withHooks(ctx, ptuo.sqlSave, ptuo.mutation, ptuo.hooks)
+func (_u *ProcessTaskUpdateOne) Save(ctx context.Context) (*ProcessTask, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ptuo *ProcessTaskUpdateOne) SaveX(ctx context.Context) *ProcessTask {
-	node, err := ptuo.Save(ctx)
+func (_u *ProcessTaskUpdateOne) SaveX(ctx context.Context) *ProcessTask {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1131,75 +1131,75 @@ func (ptuo *ProcessTaskUpdateOne) SaveX(ctx context.Context) *ProcessTask {
 }
 
 // Exec executes the query on the entity.
-func (ptuo *ProcessTaskUpdateOne) Exec(ctx context.Context) error {
-	_, err := ptuo.Save(ctx)
+func (_u *ProcessTaskUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptuo *ProcessTaskUpdateOne) ExecX(ctx context.Context) {
-	if err := ptuo.Exec(ctx); err != nil {
+func (_u *ProcessTaskUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ptuo *ProcessTaskUpdateOne) defaults() {
-	if _, ok := ptuo.mutation.UpdatedAt(); !ok {
+func (_u *ProcessTaskUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := processtask.UpdateDefaultUpdatedAt()
-		ptuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ptuo *ProcessTaskUpdateOne) check() error {
-	if v, ok := ptuo.mutation.TaskID(); ok {
+func (_u *ProcessTaskUpdateOne) check() error {
+	if v, ok := _u.mutation.TaskID(); ok {
 		if err := processtask.TaskIDValidator(v); err != nil {
 			return &ValidationError{Name: "task_id", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.task_id": %w`, err)}
 		}
 	}
-	if v, ok := ptuo.mutation.ProcessInstanceID(); ok {
+	if v, ok := _u.mutation.ProcessInstanceID(); ok {
 		if err := processtask.ProcessInstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_instance_id", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.process_instance_id": %w`, err)}
 		}
 	}
-	if v, ok := ptuo.mutation.ProcessDefinitionKey(); ok {
+	if v, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		if err := processtask.ProcessDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.process_definition_key": %w`, err)}
 		}
 	}
-	if v, ok := ptuo.mutation.TaskDefinitionKey(); ok {
+	if v, ok := _u.mutation.TaskDefinitionKey(); ok {
 		if err := processtask.TaskDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "task_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.task_definition_key": %w`, err)}
 		}
 	}
-	if v, ok := ptuo.mutation.TaskName(); ok {
+	if v, ok := _u.mutation.TaskName(); ok {
 		if err := processtask.TaskNameValidator(v); err != nil {
 			return &ValidationError{Name: "task_name", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.task_name": %w`, err)}
 		}
 	}
-	if v, ok := ptuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processtask.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.tenant_id": %w`, err)}
 		}
 	}
-	if ptuo.mutation.ProcessInstanceCleared() && len(ptuo.mutation.ProcessInstanceIDs()) > 0 {
+	if _u.mutation.ProcessInstanceCleared() && len(_u.mutation.ProcessInstanceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessTask.process_instance"`)
 	}
 	return nil
 }
 
-func (ptuo *ProcessTaskUpdateOne) sqlSave(ctx context.Context) (_node *ProcessTask, err error) {
-	if err := ptuo.check(); err != nil {
+func (_u *ProcessTaskUpdateOne) sqlSave(ctx context.Context) (_node *ProcessTask, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processtask.Table, processtask.Columns, sqlgraph.NewFieldSpec(processtask.FieldID, field.TypeInt))
-	id, ok := ptuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ProcessTask.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := ptuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, processtask.FieldID)
 		for _, f := range fields {
@@ -1211,122 +1211,122 @@ func (ptuo *ProcessTaskUpdateOne) sqlSave(ctx context.Context) (_node *ProcessTa
 			}
 		}
 	}
-	if ps := ptuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ptuo.mutation.TaskID(); ok {
+	if value, ok := _u.mutation.TaskID(); ok {
 		_spec.SetField(processtask.FieldTaskID, field.TypeString, value)
 	}
-	if value, ok := ptuo.mutation.ProcessDefinitionKey(); ok {
+	if value, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processtask.FieldProcessDefinitionKey, field.TypeString, value)
 	}
-	if value, ok := ptuo.mutation.TaskDefinitionKey(); ok {
+	if value, ok := _u.mutation.TaskDefinitionKey(); ok {
 		_spec.SetField(processtask.FieldTaskDefinitionKey, field.TypeString, value)
 	}
-	if value, ok := ptuo.mutation.TaskName(); ok {
+	if value, ok := _u.mutation.TaskName(); ok {
 		_spec.SetField(processtask.FieldTaskName, field.TypeString, value)
 	}
-	if value, ok := ptuo.mutation.TaskType(); ok {
+	if value, ok := _u.mutation.TaskType(); ok {
 		_spec.SetField(processtask.FieldTaskType, field.TypeString, value)
 	}
-	if value, ok := ptuo.mutation.Assignee(); ok {
+	if value, ok := _u.mutation.Assignee(); ok {
 		_spec.SetField(processtask.FieldAssignee, field.TypeString, value)
 	}
-	if ptuo.mutation.AssigneeCleared() {
+	if _u.mutation.AssigneeCleared() {
 		_spec.ClearField(processtask.FieldAssignee, field.TypeString)
 	}
-	if value, ok := ptuo.mutation.CandidateUsers(); ok {
+	if value, ok := _u.mutation.CandidateUsers(); ok {
 		_spec.SetField(processtask.FieldCandidateUsers, field.TypeString, value)
 	}
-	if ptuo.mutation.CandidateUsersCleared() {
+	if _u.mutation.CandidateUsersCleared() {
 		_spec.ClearField(processtask.FieldCandidateUsers, field.TypeString)
 	}
-	if value, ok := ptuo.mutation.CandidateGroups(); ok {
+	if value, ok := _u.mutation.CandidateGroups(); ok {
 		_spec.SetField(processtask.FieldCandidateGroups, field.TypeString, value)
 	}
-	if ptuo.mutation.CandidateGroupsCleared() {
+	if _u.mutation.CandidateGroupsCleared() {
 		_spec.ClearField(processtask.FieldCandidateGroups, field.TypeString)
 	}
-	if value, ok := ptuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(processtask.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := ptuo.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(processtask.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := ptuo.mutation.DueDate(); ok {
+	if value, ok := _u.mutation.DueDate(); ok {
 		_spec.SetField(processtask.FieldDueDate, field.TypeTime, value)
 	}
-	if ptuo.mutation.DueDateCleared() {
+	if _u.mutation.DueDateCleared() {
 		_spec.ClearField(processtask.FieldDueDate, field.TypeTime)
 	}
-	if value, ok := ptuo.mutation.CreatedTime(); ok {
+	if value, ok := _u.mutation.CreatedTime(); ok {
 		_spec.SetField(processtask.FieldCreatedTime, field.TypeTime, value)
 	}
-	if value, ok := ptuo.mutation.AssignedTime(); ok {
+	if value, ok := _u.mutation.AssignedTime(); ok {
 		_spec.SetField(processtask.FieldAssignedTime, field.TypeTime, value)
 	}
-	if ptuo.mutation.AssignedTimeCleared() {
+	if _u.mutation.AssignedTimeCleared() {
 		_spec.ClearField(processtask.FieldAssignedTime, field.TypeTime)
 	}
-	if value, ok := ptuo.mutation.StartedTime(); ok {
+	if value, ok := _u.mutation.StartedTime(); ok {
 		_spec.SetField(processtask.FieldStartedTime, field.TypeTime, value)
 	}
-	if ptuo.mutation.StartedTimeCleared() {
+	if _u.mutation.StartedTimeCleared() {
 		_spec.ClearField(processtask.FieldStartedTime, field.TypeTime)
 	}
-	if value, ok := ptuo.mutation.CompletedTime(); ok {
+	if value, ok := _u.mutation.CompletedTime(); ok {
 		_spec.SetField(processtask.FieldCompletedTime, field.TypeTime, value)
 	}
-	if ptuo.mutation.CompletedTimeCleared() {
+	if _u.mutation.CompletedTimeCleared() {
 		_spec.ClearField(processtask.FieldCompletedTime, field.TypeTime)
 	}
-	if value, ok := ptuo.mutation.FormKey(); ok {
+	if value, ok := _u.mutation.FormKey(); ok {
 		_spec.SetField(processtask.FieldFormKey, field.TypeString, value)
 	}
-	if ptuo.mutation.FormKeyCleared() {
+	if _u.mutation.FormKeyCleared() {
 		_spec.ClearField(processtask.FieldFormKey, field.TypeString)
 	}
-	if value, ok := ptuo.mutation.TaskVariables(); ok {
+	if value, ok := _u.mutation.TaskVariables(); ok {
 		_spec.SetField(processtask.FieldTaskVariables, field.TypeJSON, value)
 	}
-	if ptuo.mutation.TaskVariablesCleared() {
+	if _u.mutation.TaskVariablesCleared() {
 		_spec.ClearField(processtask.FieldTaskVariables, field.TypeJSON)
 	}
-	if value, ok := ptuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(processtask.FieldDescription, field.TypeString, value)
 	}
-	if ptuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(processtask.FieldDescription, field.TypeString)
 	}
-	if value, ok := ptuo.mutation.ParentTaskID(); ok {
+	if value, ok := _u.mutation.ParentTaskID(); ok {
 		_spec.SetField(processtask.FieldParentTaskID, field.TypeString, value)
 	}
-	if ptuo.mutation.ParentTaskIDCleared() {
+	if _u.mutation.ParentTaskIDCleared() {
 		_spec.ClearField(processtask.FieldParentTaskID, field.TypeString)
 	}
-	if value, ok := ptuo.mutation.RootTaskID(); ok {
+	if value, ok := _u.mutation.RootTaskID(); ok {
 		_spec.SetField(processtask.FieldRootTaskID, field.TypeString, value)
 	}
-	if ptuo.mutation.RootTaskIDCleared() {
+	if _u.mutation.RootTaskIDCleared() {
 		_spec.ClearField(processtask.FieldRootTaskID, field.TypeString)
 	}
-	if value, ok := ptuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ptuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ptuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processtask.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ptuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(processtask.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if ptuo.mutation.ProcessInstanceCleared() {
+	if _u.mutation.ProcessInstanceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1339,7 +1339,7 @@ func (ptuo *ProcessTaskUpdateOne) sqlSave(ctx context.Context) (_node *ProcessTa
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ptuo.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1355,10 +1355,10 @@ func (ptuo *ProcessTaskUpdateOne) sqlSave(ctx context.Context) (_node *ProcessTa
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &ProcessTask{config: ptuo.config}
+	_node = &ProcessTask{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, ptuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processtask.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1366,6 +1366,6 @@ func (ptuo *ProcessTaskUpdateOne) sqlSave(ctx context.Context) (_node *ProcessTa
 		}
 		return nil, err
 	}
-	ptuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

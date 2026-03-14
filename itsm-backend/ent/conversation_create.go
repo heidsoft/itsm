@@ -23,105 +23,105 @@ type ConversationCreate struct {
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cc *ConversationCreate) SetCreatedAt(t time.Time) *ConversationCreate {
-	cc.mutation.SetCreatedAt(t)
-	return cc
+func (_c *ConversationCreate) SetCreatedAt(v time.Time) *ConversationCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cc *ConversationCreate) SetNillableCreatedAt(t *time.Time) *ConversationCreate {
-	if t != nil {
-		cc.SetCreatedAt(*t)
+func (_c *ConversationCreate) SetNillableCreatedAt(v *time.Time) *ConversationCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cc *ConversationCreate) SetTenantID(i int) *ConversationCreate {
-	cc.mutation.SetTenantID(i)
-	return cc
+func (_c *ConversationCreate) SetTenantID(v int) *ConversationCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (cc *ConversationCreate) SetNillableTenantID(i *int) *ConversationCreate {
-	if i != nil {
-		cc.SetTenantID(*i)
+func (_c *ConversationCreate) SetNillableTenantID(v *int) *ConversationCreate {
+	if v != nil {
+		_c.SetTenantID(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetUserID sets the "user_id" field.
-func (cc *ConversationCreate) SetUserID(i int) *ConversationCreate {
-	cc.mutation.SetUserID(i)
-	return cc
+func (_c *ConversationCreate) SetUserID(v int) *ConversationCreate {
+	_c.mutation.SetUserID(v)
+	return _c
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (cc *ConversationCreate) SetNillableUserID(i *int) *ConversationCreate {
-	if i != nil {
-		cc.SetUserID(*i)
+func (_c *ConversationCreate) SetNillableUserID(v *int) *ConversationCreate {
+	if v != nil {
+		_c.SetUserID(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetTitle sets the "title" field.
-func (cc *ConversationCreate) SetTitle(s string) *ConversationCreate {
-	cc.mutation.SetTitle(s)
-	return cc
+func (_c *ConversationCreate) SetTitle(v string) *ConversationCreate {
+	_c.mutation.SetTitle(v)
+	return _c
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (cc *ConversationCreate) SetNillableTitle(s *string) *ConversationCreate {
-	if s != nil {
-		cc.SetTitle(*s)
+func (_c *ConversationCreate) SetNillableTitle(v *string) *ConversationCreate {
+	if v != nil {
+		_c.SetTitle(*v)
 	}
-	return cc
+	return _c
 }
 
 // AddMessageIDs adds the "messages" edge to the Message entity by IDs.
-func (cc *ConversationCreate) AddMessageIDs(ids ...int) *ConversationCreate {
-	cc.mutation.AddMessageIDs(ids...)
-	return cc
+func (_c *ConversationCreate) AddMessageIDs(ids ...int) *ConversationCreate {
+	_c.mutation.AddMessageIDs(ids...)
+	return _c
 }
 
 // AddMessages adds the "messages" edges to the Message entity.
-func (cc *ConversationCreate) AddMessages(m ...*Message) *ConversationCreate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_c *ConversationCreate) AddMessages(v ...*Message) *ConversationCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cc.AddMessageIDs(ids...)
+	return _c.AddMessageIDs(ids...)
 }
 
 // AddToolInvocationIDs adds the "tool_invocations" edge to the ToolInvocation entity by IDs.
-func (cc *ConversationCreate) AddToolInvocationIDs(ids ...int) *ConversationCreate {
-	cc.mutation.AddToolInvocationIDs(ids...)
-	return cc
+func (_c *ConversationCreate) AddToolInvocationIDs(ids ...int) *ConversationCreate {
+	_c.mutation.AddToolInvocationIDs(ids...)
+	return _c
 }
 
 // AddToolInvocations adds the "tool_invocations" edges to the ToolInvocation entity.
-func (cc *ConversationCreate) AddToolInvocations(t ...*ToolInvocation) *ConversationCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_c *ConversationCreate) AddToolInvocations(v ...*ToolInvocation) *ConversationCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cc.AddToolInvocationIDs(ids...)
+	return _c.AddToolInvocationIDs(ids...)
 }
 
 // Mutation returns the ConversationMutation object of the builder.
-func (cc *ConversationCreate) Mutation() *ConversationMutation {
-	return cc.mutation
+func (_c *ConversationCreate) Mutation() *ConversationMutation {
+	return _c.mutation
 }
 
 // Save creates the Conversation in the database.
-func (cc *ConversationCreate) Save(ctx context.Context) (*Conversation, error) {
-	cc.defaults()
-	return withHooks(ctx, cc.sqlSave, cc.mutation, cc.hooks)
+func (_c *ConversationCreate) Save(ctx context.Context) (*Conversation, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (cc *ConversationCreate) SaveX(ctx context.Context) *Conversation {
-	v, err := cc.Save(ctx)
+func (_c *ConversationCreate) SaveX(ctx context.Context) *Conversation {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -129,47 +129,47 @@ func (cc *ConversationCreate) SaveX(ctx context.Context) *Conversation {
 }
 
 // Exec executes the query.
-func (cc *ConversationCreate) Exec(ctx context.Context) error {
-	_, err := cc.Save(ctx)
+func (_c *ConversationCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cc *ConversationCreate) ExecX(ctx context.Context) {
-	if err := cc.Exec(ctx); err != nil {
+func (_c *ConversationCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cc *ConversationCreate) defaults() {
-	if _, ok := cc.mutation.CreatedAt(); !ok {
+func (_c *ConversationCreate) defaults() {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := conversation.DefaultCreatedAt()
-		cc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := cc.mutation.Title(); !ok {
+	if _, ok := _c.mutation.Title(); !ok {
 		v := conversation.DefaultTitle
-		cc.mutation.SetTitle(v)
+		_c.mutation.SetTitle(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cc *ConversationCreate) check() error {
-	if _, ok := cc.mutation.CreatedAt(); !ok {
+func (_c *ConversationCreate) check() error {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Conversation.created_at"`)}
 	}
-	if _, ok := cc.mutation.Title(); !ok {
+	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Conversation.title"`)}
 	}
 	return nil
 }
 
-func (cc *ConversationCreate) sqlSave(ctx context.Context) (*Conversation, error) {
-	if err := cc.check(); err != nil {
+func (_c *ConversationCreate) sqlSave(ctx context.Context) (*Conversation, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := cc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, cc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -177,33 +177,33 @@ func (cc *ConversationCreate) sqlSave(ctx context.Context) (*Conversation, error
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	cc.mutation.id = &_node.ID
-	cc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (cc *ConversationCreate) createSpec() (*Conversation, *sqlgraph.CreateSpec) {
+func (_c *ConversationCreate) createSpec() (*Conversation, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Conversation{config: cc.config}
+		_node = &Conversation{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(conversation.Table, sqlgraph.NewFieldSpec(conversation.FieldID, field.TypeInt))
 	)
-	if value, ok := cc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(conversation.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := cc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(conversation.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := cc.mutation.UserID(); ok {
+	if value, ok := _c.mutation.UserID(); ok {
 		_spec.SetField(conversation.FieldUserID, field.TypeInt, value)
 		_node.UserID = value
 	}
-	if value, ok := cc.mutation.Title(); ok {
+	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(conversation.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
-	if nodes := cc.mutation.MessagesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.MessagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -219,7 +219,7 @@ func (cc *ConversationCreate) createSpec() (*Conversation, *sqlgraph.CreateSpec)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := cc.mutation.ToolInvocationsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ToolInvocationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -246,16 +246,16 @@ type ConversationCreateBulk struct {
 }
 
 // Save creates the Conversation entities in the database.
-func (ccb *ConversationCreateBulk) Save(ctx context.Context) ([]*Conversation, error) {
-	if ccb.err != nil {
-		return nil, ccb.err
+func (_c *ConversationCreateBulk) Save(ctx context.Context) ([]*Conversation, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ccb.builders))
-	nodes := make([]*Conversation, len(ccb.builders))
-	mutators := make([]Mutator, len(ccb.builders))
-	for i := range ccb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Conversation, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ccb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ConversationMutation)
@@ -269,11 +269,11 @@ func (ccb *ConversationCreateBulk) Save(ctx context.Context) ([]*Conversation, e
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ccb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ccb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -297,7 +297,7 @@ func (ccb *ConversationCreateBulk) Save(ctx context.Context) ([]*Conversation, e
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ccb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -305,8 +305,8 @@ func (ccb *ConversationCreateBulk) Save(ctx context.Context) ([]*Conversation, e
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ccb *ConversationCreateBulk) SaveX(ctx context.Context) []*Conversation {
-	v, err := ccb.Save(ctx)
+func (_c *ConversationCreateBulk) SaveX(ctx context.Context) []*Conversation {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -314,14 +314,14 @@ func (ccb *ConversationCreateBulk) SaveX(ctx context.Context) []*Conversation {
 }
 
 // Exec executes the query.
-func (ccb *ConversationCreateBulk) Exec(ctx context.Context) error {
-	_, err := ccb.Save(ctx)
+func (_c *ConversationCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ccb *ConversationCreateBulk) ExecX(ctx context.Context) {
-	if err := ccb.Exec(ctx); err != nil {
+func (_c *ConversationCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

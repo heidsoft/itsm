@@ -198,6 +198,7 @@ export interface CreateTicketRequest {
   category_id?: number;
   formFields?: Record<string, unknown>;
   assigneeId?: number;
+  workflow_definition_key?: string;
 }
 
 export interface UpdateStatusRequest {

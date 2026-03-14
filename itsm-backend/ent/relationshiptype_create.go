@@ -21,101 +21,101 @@ type RelationshipTypeCreate struct {
 }
 
 // SetName sets the "name" field.
-func (rtc *RelationshipTypeCreate) SetName(s string) *RelationshipTypeCreate {
-	rtc.mutation.SetName(s)
-	return rtc
+func (_c *RelationshipTypeCreate) SetName(v string) *RelationshipTypeCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDirectional sets the "directional" field.
-func (rtc *RelationshipTypeCreate) SetDirectional(b bool) *RelationshipTypeCreate {
-	rtc.mutation.SetDirectional(b)
-	return rtc
+func (_c *RelationshipTypeCreate) SetDirectional(v bool) *RelationshipTypeCreate {
+	_c.mutation.SetDirectional(v)
+	return _c
 }
 
 // SetNillableDirectional sets the "directional" field if the given value is not nil.
-func (rtc *RelationshipTypeCreate) SetNillableDirectional(b *bool) *RelationshipTypeCreate {
-	if b != nil {
-		rtc.SetDirectional(*b)
+func (_c *RelationshipTypeCreate) SetNillableDirectional(v *bool) *RelationshipTypeCreate {
+	if v != nil {
+		_c.SetDirectional(*v)
 	}
-	return rtc
+	return _c
 }
 
 // SetReverseName sets the "reverse_name" field.
-func (rtc *RelationshipTypeCreate) SetReverseName(s string) *RelationshipTypeCreate {
-	rtc.mutation.SetReverseName(s)
-	return rtc
+func (_c *RelationshipTypeCreate) SetReverseName(v string) *RelationshipTypeCreate {
+	_c.mutation.SetReverseName(v)
+	return _c
 }
 
 // SetNillableReverseName sets the "reverse_name" field if the given value is not nil.
-func (rtc *RelationshipTypeCreate) SetNillableReverseName(s *string) *RelationshipTypeCreate {
-	if s != nil {
-		rtc.SetReverseName(*s)
+func (_c *RelationshipTypeCreate) SetNillableReverseName(v *string) *RelationshipTypeCreate {
+	if v != nil {
+		_c.SetReverseName(*v)
 	}
-	return rtc
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (rtc *RelationshipTypeCreate) SetDescription(s string) *RelationshipTypeCreate {
-	rtc.mutation.SetDescription(s)
-	return rtc
+func (_c *RelationshipTypeCreate) SetDescription(v string) *RelationshipTypeCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (rtc *RelationshipTypeCreate) SetNillableDescription(s *string) *RelationshipTypeCreate {
-	if s != nil {
-		rtc.SetDescription(*s)
+func (_c *RelationshipTypeCreate) SetNillableDescription(v *string) *RelationshipTypeCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return rtc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (rtc *RelationshipTypeCreate) SetTenantID(i int) *RelationshipTypeCreate {
-	rtc.mutation.SetTenantID(i)
-	return rtc
+func (_c *RelationshipTypeCreate) SetTenantID(v int) *RelationshipTypeCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (rtc *RelationshipTypeCreate) SetCreatedAt(t time.Time) *RelationshipTypeCreate {
-	rtc.mutation.SetCreatedAt(t)
-	return rtc
+func (_c *RelationshipTypeCreate) SetCreatedAt(v time.Time) *RelationshipTypeCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (rtc *RelationshipTypeCreate) SetNillableCreatedAt(t *time.Time) *RelationshipTypeCreate {
-	if t != nil {
-		rtc.SetCreatedAt(*t)
+func (_c *RelationshipTypeCreate) SetNillableCreatedAt(v *time.Time) *RelationshipTypeCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return rtc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (rtc *RelationshipTypeCreate) SetUpdatedAt(t time.Time) *RelationshipTypeCreate {
-	rtc.mutation.SetUpdatedAt(t)
-	return rtc
+func (_c *RelationshipTypeCreate) SetUpdatedAt(v time.Time) *RelationshipTypeCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (rtc *RelationshipTypeCreate) SetNillableUpdatedAt(t *time.Time) *RelationshipTypeCreate {
-	if t != nil {
-		rtc.SetUpdatedAt(*t)
+func (_c *RelationshipTypeCreate) SetNillableUpdatedAt(v *time.Time) *RelationshipTypeCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return rtc
+	return _c
 }
 
 // Mutation returns the RelationshipTypeMutation object of the builder.
-func (rtc *RelationshipTypeCreate) Mutation() *RelationshipTypeMutation {
-	return rtc.mutation
+func (_c *RelationshipTypeCreate) Mutation() *RelationshipTypeMutation {
+	return _c.mutation
 }
 
 // Save creates the RelationshipType in the database.
-func (rtc *RelationshipTypeCreate) Save(ctx context.Context) (*RelationshipType, error) {
-	rtc.defaults()
-	return withHooks(ctx, rtc.sqlSave, rtc.mutation, rtc.hooks)
+func (_c *RelationshipTypeCreate) Save(ctx context.Context) (*RelationshipType, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (rtc *RelationshipTypeCreate) SaveX(ctx context.Context) *RelationshipType {
-	v, err := rtc.Save(ctx)
+func (_c *RelationshipTypeCreate) SaveX(ctx context.Context) *RelationshipType {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -123,70 +123,70 @@ func (rtc *RelationshipTypeCreate) SaveX(ctx context.Context) *RelationshipType 
 }
 
 // Exec executes the query.
-func (rtc *RelationshipTypeCreate) Exec(ctx context.Context) error {
-	_, err := rtc.Save(ctx)
+func (_c *RelationshipTypeCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rtc *RelationshipTypeCreate) ExecX(ctx context.Context) {
-	if err := rtc.Exec(ctx); err != nil {
+func (_c *RelationshipTypeCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (rtc *RelationshipTypeCreate) defaults() {
-	if _, ok := rtc.mutation.Directional(); !ok {
+func (_c *RelationshipTypeCreate) defaults() {
+	if _, ok := _c.mutation.Directional(); !ok {
 		v := relationshiptype.DefaultDirectional
-		rtc.mutation.SetDirectional(v)
+		_c.mutation.SetDirectional(v)
 	}
-	if _, ok := rtc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := relationshiptype.DefaultCreatedAt()
-		rtc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := rtc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := relationshiptype.DefaultUpdatedAt()
-		rtc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (rtc *RelationshipTypeCreate) check() error {
-	if _, ok := rtc.mutation.Name(); !ok {
+func (_c *RelationshipTypeCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "RelationshipType.name"`)}
 	}
-	if v, ok := rtc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := relationshiptype.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RelationshipType.name": %w`, err)}
 		}
 	}
-	if _, ok := rtc.mutation.Directional(); !ok {
+	if _, ok := _c.mutation.Directional(); !ok {
 		return &ValidationError{Name: "directional", err: errors.New(`ent: missing required field "RelationshipType.directional"`)}
 	}
-	if _, ok := rtc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "RelationshipType.tenant_id"`)}
 	}
-	if v, ok := rtc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := relationshiptype.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "RelationshipType.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := rtc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "RelationshipType.created_at"`)}
 	}
-	if _, ok := rtc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "RelationshipType.updated_at"`)}
 	}
 	return nil
 }
 
-func (rtc *RelationshipTypeCreate) sqlSave(ctx context.Context) (*RelationshipType, error) {
-	if err := rtc.check(); err != nil {
+func (_c *RelationshipTypeCreate) sqlSave(ctx context.Context) (*RelationshipType, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := rtc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, rtc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -194,41 +194,41 @@ func (rtc *RelationshipTypeCreate) sqlSave(ctx context.Context) (*RelationshipTy
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	rtc.mutation.id = &_node.ID
-	rtc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (rtc *RelationshipTypeCreate) createSpec() (*RelationshipType, *sqlgraph.CreateSpec) {
+func (_c *RelationshipTypeCreate) createSpec() (*RelationshipType, *sqlgraph.CreateSpec) {
 	var (
-		_node = &RelationshipType{config: rtc.config}
+		_node = &RelationshipType{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(relationshiptype.Table, sqlgraph.NewFieldSpec(relationshiptype.FieldID, field.TypeInt))
 	)
-	if value, ok := rtc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(relationshiptype.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := rtc.mutation.Directional(); ok {
+	if value, ok := _c.mutation.Directional(); ok {
 		_spec.SetField(relationshiptype.FieldDirectional, field.TypeBool, value)
 		_node.Directional = value
 	}
-	if value, ok := rtc.mutation.ReverseName(); ok {
+	if value, ok := _c.mutation.ReverseName(); ok {
 		_spec.SetField(relationshiptype.FieldReverseName, field.TypeString, value)
 		_node.ReverseName = value
 	}
-	if value, ok := rtc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(relationshiptype.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := rtc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(relationshiptype.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := rtc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(relationshiptype.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := rtc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(relationshiptype.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
@@ -243,16 +243,16 @@ type RelationshipTypeCreateBulk struct {
 }
 
 // Save creates the RelationshipType entities in the database.
-func (rtcb *RelationshipTypeCreateBulk) Save(ctx context.Context) ([]*RelationshipType, error) {
-	if rtcb.err != nil {
-		return nil, rtcb.err
+func (_c *RelationshipTypeCreateBulk) Save(ctx context.Context) ([]*RelationshipType, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(rtcb.builders))
-	nodes := make([]*RelationshipType, len(rtcb.builders))
-	mutators := make([]Mutator, len(rtcb.builders))
-	for i := range rtcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*RelationshipType, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := rtcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*RelationshipTypeMutation)
@@ -266,11 +266,11 @@ func (rtcb *RelationshipTypeCreateBulk) Save(ctx context.Context) ([]*Relationsh
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, rtcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, rtcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -294,7 +294,7 @@ func (rtcb *RelationshipTypeCreateBulk) Save(ctx context.Context) ([]*Relationsh
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, rtcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -302,8 +302,8 @@ func (rtcb *RelationshipTypeCreateBulk) Save(ctx context.Context) ([]*Relationsh
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (rtcb *RelationshipTypeCreateBulk) SaveX(ctx context.Context) []*RelationshipType {
-	v, err := rtcb.Save(ctx)
+func (_c *RelationshipTypeCreateBulk) SaveX(ctx context.Context) []*RelationshipType {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -311,14 +311,14 @@ func (rtcb *RelationshipTypeCreateBulk) SaveX(ctx context.Context) []*Relationsh
 }
 
 // Exec executes the query.
-func (rtcb *RelationshipTypeCreateBulk) Exec(ctx context.Context) error {
-	_, err := rtcb.Save(ctx)
+func (_c *RelationshipTypeCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rtcb *RelationshipTypeCreateBulk) ExecX(ctx context.Context) {
-	if err := rtcb.Exec(ctx); err != nil {
+func (_c *RelationshipTypeCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

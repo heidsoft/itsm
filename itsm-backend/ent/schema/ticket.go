@@ -95,6 +95,18 @@ func (Ticket) Fields() []ent.Field {
 			Comment("更新时间").
 			Default(time.Now).
 			UpdateDefault(time.Now),
+		field.Bool("is_managed_by_msp").
+			Comment("是否由MSP管理").
+			Default(false),
+		field.Int("msp_provider_id").
+			Comment("MSP服务提供商ID").
+			Optional(),
+		field.Int("managed_by_user_id").
+			Comment("MSP处理人ID").
+			Optional(),
+		field.String("msp_ticket_id").
+			Comment("MSP工单ID(跨租户)").
+			Optional(),
 	}
 }
 

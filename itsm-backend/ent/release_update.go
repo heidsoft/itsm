@@ -24,485 +24,485 @@ type ReleaseUpdate struct {
 }
 
 // Where appends a list predicates to the ReleaseUpdate builder.
-func (ru *ReleaseUpdate) Where(ps ...predicate.Release) *ReleaseUpdate {
-	ru.mutation.Where(ps...)
-	return ru
+func (_u *ReleaseUpdate) Where(ps ...predicate.Release) *ReleaseUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetReleaseNumber sets the "release_number" field.
-func (ru *ReleaseUpdate) SetReleaseNumber(s string) *ReleaseUpdate {
-	ru.mutation.SetReleaseNumber(s)
-	return ru
+func (_u *ReleaseUpdate) SetReleaseNumber(v string) *ReleaseUpdate {
+	_u.mutation.SetReleaseNumber(v)
+	return _u
 }
 
 // SetNillableReleaseNumber sets the "release_number" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableReleaseNumber(s *string) *ReleaseUpdate {
-	if s != nil {
-		ru.SetReleaseNumber(*s)
+func (_u *ReleaseUpdate) SetNillableReleaseNumber(v *string) *ReleaseUpdate {
+	if v != nil {
+		_u.SetReleaseNumber(*v)
 	}
-	return ru
+	return _u
 }
 
 // SetTitle sets the "title" field.
-func (ru *ReleaseUpdate) SetTitle(s string) *ReleaseUpdate {
-	ru.mutation.SetTitle(s)
-	return ru
+func (_u *ReleaseUpdate) SetTitle(v string) *ReleaseUpdate {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableTitle(s *string) *ReleaseUpdate {
-	if s != nil {
-		ru.SetTitle(*s)
+func (_u *ReleaseUpdate) SetNillableTitle(v *string) *ReleaseUpdate {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return ru
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ru *ReleaseUpdate) SetDescription(s string) *ReleaseUpdate {
-	ru.mutation.SetDescription(s)
-	return ru
+func (_u *ReleaseUpdate) SetDescription(v string) *ReleaseUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableDescription(s *string) *ReleaseUpdate {
-	if s != nil {
-		ru.SetDescription(*s)
+func (_u *ReleaseUpdate) SetNillableDescription(v *string) *ReleaseUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ru
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ru *ReleaseUpdate) ClearDescription() *ReleaseUpdate {
-	ru.mutation.ClearDescription()
-	return ru
+func (_u *ReleaseUpdate) ClearDescription() *ReleaseUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetType sets the "type" field.
-func (ru *ReleaseUpdate) SetType(s string) *ReleaseUpdate {
-	ru.mutation.SetType(s)
-	return ru
+func (_u *ReleaseUpdate) SetType(v string) *ReleaseUpdate {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableType(s *string) *ReleaseUpdate {
-	if s != nil {
-		ru.SetType(*s)
+func (_u *ReleaseUpdate) SetNillableType(v *string) *ReleaseUpdate {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return ru
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (ru *ReleaseUpdate) SetStatus(s string) *ReleaseUpdate {
-	ru.mutation.SetStatus(s)
-	return ru
+func (_u *ReleaseUpdate) SetStatus(v string) *ReleaseUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableStatus(s *string) *ReleaseUpdate {
-	if s != nil {
-		ru.SetStatus(*s)
+func (_u *ReleaseUpdate) SetNillableStatus(v *string) *ReleaseUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return ru
+	return _u
 }
 
 // SetSeverity sets the "severity" field.
-func (ru *ReleaseUpdate) SetSeverity(s string) *ReleaseUpdate {
-	ru.mutation.SetSeverity(s)
-	return ru
+func (_u *ReleaseUpdate) SetSeverity(v string) *ReleaseUpdate {
+	_u.mutation.SetSeverity(v)
+	return _u
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableSeverity(s *string) *ReleaseUpdate {
-	if s != nil {
-		ru.SetSeverity(*s)
+func (_u *ReleaseUpdate) SetNillableSeverity(v *string) *ReleaseUpdate {
+	if v != nil {
+		_u.SetSeverity(*v)
 	}
-	return ru
+	return _u
 }
 
 // SetEnvironment sets the "environment" field.
-func (ru *ReleaseUpdate) SetEnvironment(s string) *ReleaseUpdate {
-	ru.mutation.SetEnvironment(s)
-	return ru
+func (_u *ReleaseUpdate) SetEnvironment(v string) *ReleaseUpdate {
+	_u.mutation.SetEnvironment(v)
+	return _u
 }
 
 // SetNillableEnvironment sets the "environment" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableEnvironment(s *string) *ReleaseUpdate {
-	if s != nil {
-		ru.SetEnvironment(*s)
+func (_u *ReleaseUpdate) SetNillableEnvironment(v *string) *ReleaseUpdate {
+	if v != nil {
+		_u.SetEnvironment(*v)
 	}
-	return ru
+	return _u
 }
 
 // SetChangeID sets the "change_id" field.
-func (ru *ReleaseUpdate) SetChangeID(i int) *ReleaseUpdate {
-	ru.mutation.ResetChangeID()
-	ru.mutation.SetChangeID(i)
-	return ru
+func (_u *ReleaseUpdate) SetChangeID(v int) *ReleaseUpdate {
+	_u.mutation.ResetChangeID()
+	_u.mutation.SetChangeID(v)
+	return _u
 }
 
 // SetNillableChangeID sets the "change_id" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableChangeID(i *int) *ReleaseUpdate {
-	if i != nil {
-		ru.SetChangeID(*i)
+func (_u *ReleaseUpdate) SetNillableChangeID(v *int) *ReleaseUpdate {
+	if v != nil {
+		_u.SetChangeID(*v)
 	}
-	return ru
+	return _u
 }
 
-// AddChangeID adds i to the "change_id" field.
-func (ru *ReleaseUpdate) AddChangeID(i int) *ReleaseUpdate {
-	ru.mutation.AddChangeID(i)
-	return ru
+// AddChangeID adds value to the "change_id" field.
+func (_u *ReleaseUpdate) AddChangeID(v int) *ReleaseUpdate {
+	_u.mutation.AddChangeID(v)
+	return _u
 }
 
 // ClearChangeID clears the value of the "change_id" field.
-func (ru *ReleaseUpdate) ClearChangeID() *ReleaseUpdate {
-	ru.mutation.ClearChangeID()
-	return ru
+func (_u *ReleaseUpdate) ClearChangeID() *ReleaseUpdate {
+	_u.mutation.ClearChangeID()
+	return _u
 }
 
 // SetOwnerID sets the "owner_id" field.
-func (ru *ReleaseUpdate) SetOwnerID(i int) *ReleaseUpdate {
-	ru.mutation.ResetOwnerID()
-	ru.mutation.SetOwnerID(i)
-	return ru
+func (_u *ReleaseUpdate) SetOwnerID(v int) *ReleaseUpdate {
+	_u.mutation.ResetOwnerID()
+	_u.mutation.SetOwnerID(v)
+	return _u
 }
 
 // SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableOwnerID(i *int) *ReleaseUpdate {
-	if i != nil {
-		ru.SetOwnerID(*i)
+func (_u *ReleaseUpdate) SetNillableOwnerID(v *int) *ReleaseUpdate {
+	if v != nil {
+		_u.SetOwnerID(*v)
 	}
-	return ru
+	return _u
 }
 
-// AddOwnerID adds i to the "owner_id" field.
-func (ru *ReleaseUpdate) AddOwnerID(i int) *ReleaseUpdate {
-	ru.mutation.AddOwnerID(i)
-	return ru
+// AddOwnerID adds value to the "owner_id" field.
+func (_u *ReleaseUpdate) AddOwnerID(v int) *ReleaseUpdate {
+	_u.mutation.AddOwnerID(v)
+	return _u
 }
 
 // ClearOwnerID clears the value of the "owner_id" field.
-func (ru *ReleaseUpdate) ClearOwnerID() *ReleaseUpdate {
-	ru.mutation.ClearOwnerID()
-	return ru
+func (_u *ReleaseUpdate) ClearOwnerID() *ReleaseUpdate {
+	_u.mutation.ClearOwnerID()
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (ru *ReleaseUpdate) SetCreatedBy(i int) *ReleaseUpdate {
-	ru.mutation.ResetCreatedBy()
-	ru.mutation.SetCreatedBy(i)
-	return ru
+func (_u *ReleaseUpdate) SetCreatedBy(v int) *ReleaseUpdate {
+	_u.mutation.ResetCreatedBy()
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableCreatedBy(i *int) *ReleaseUpdate {
-	if i != nil {
-		ru.SetCreatedBy(*i)
+func (_u *ReleaseUpdate) SetNillableCreatedBy(v *int) *ReleaseUpdate {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return ru
+	return _u
 }
 
-// AddCreatedBy adds i to the "created_by" field.
-func (ru *ReleaseUpdate) AddCreatedBy(i int) *ReleaseUpdate {
-	ru.mutation.AddCreatedBy(i)
-	return ru
+// AddCreatedBy adds value to the "created_by" field.
+func (_u *ReleaseUpdate) AddCreatedBy(v int) *ReleaseUpdate {
+	_u.mutation.AddCreatedBy(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ru *ReleaseUpdate) SetTenantID(i int) *ReleaseUpdate {
-	ru.mutation.ResetTenantID()
-	ru.mutation.SetTenantID(i)
-	return ru
+func (_u *ReleaseUpdate) SetTenantID(v int) *ReleaseUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableTenantID(i *int) *ReleaseUpdate {
-	if i != nil {
-		ru.SetTenantID(*i)
+func (_u *ReleaseUpdate) SetNillableTenantID(v *int) *ReleaseUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ru
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ru *ReleaseUpdate) AddTenantID(i int) *ReleaseUpdate {
-	ru.mutation.AddTenantID(i)
-	return ru
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ReleaseUpdate) AddTenantID(v int) *ReleaseUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetPlannedReleaseDate sets the "planned_release_date" field.
-func (ru *ReleaseUpdate) SetPlannedReleaseDate(t time.Time) *ReleaseUpdate {
-	ru.mutation.SetPlannedReleaseDate(t)
-	return ru
+func (_u *ReleaseUpdate) SetPlannedReleaseDate(v time.Time) *ReleaseUpdate {
+	_u.mutation.SetPlannedReleaseDate(v)
+	return _u
 }
 
 // SetNillablePlannedReleaseDate sets the "planned_release_date" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillablePlannedReleaseDate(t *time.Time) *ReleaseUpdate {
-	if t != nil {
-		ru.SetPlannedReleaseDate(*t)
+func (_u *ReleaseUpdate) SetNillablePlannedReleaseDate(v *time.Time) *ReleaseUpdate {
+	if v != nil {
+		_u.SetPlannedReleaseDate(*v)
 	}
-	return ru
+	return _u
 }
 
 // ClearPlannedReleaseDate clears the value of the "planned_release_date" field.
-func (ru *ReleaseUpdate) ClearPlannedReleaseDate() *ReleaseUpdate {
-	ru.mutation.ClearPlannedReleaseDate()
-	return ru
+func (_u *ReleaseUpdate) ClearPlannedReleaseDate() *ReleaseUpdate {
+	_u.mutation.ClearPlannedReleaseDate()
+	return _u
 }
 
 // SetActualReleaseDate sets the "actual_release_date" field.
-func (ru *ReleaseUpdate) SetActualReleaseDate(t time.Time) *ReleaseUpdate {
-	ru.mutation.SetActualReleaseDate(t)
-	return ru
+func (_u *ReleaseUpdate) SetActualReleaseDate(v time.Time) *ReleaseUpdate {
+	_u.mutation.SetActualReleaseDate(v)
+	return _u
 }
 
 // SetNillableActualReleaseDate sets the "actual_release_date" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableActualReleaseDate(t *time.Time) *ReleaseUpdate {
-	if t != nil {
-		ru.SetActualReleaseDate(*t)
+func (_u *ReleaseUpdate) SetNillableActualReleaseDate(v *time.Time) *ReleaseUpdate {
+	if v != nil {
+		_u.SetActualReleaseDate(*v)
 	}
-	return ru
+	return _u
 }
 
 // ClearActualReleaseDate clears the value of the "actual_release_date" field.
-func (ru *ReleaseUpdate) ClearActualReleaseDate() *ReleaseUpdate {
-	ru.mutation.ClearActualReleaseDate()
-	return ru
+func (_u *ReleaseUpdate) ClearActualReleaseDate() *ReleaseUpdate {
+	_u.mutation.ClearActualReleaseDate()
+	return _u
 }
 
 // SetPlannedStartDate sets the "planned_start_date" field.
-func (ru *ReleaseUpdate) SetPlannedStartDate(t time.Time) *ReleaseUpdate {
-	ru.mutation.SetPlannedStartDate(t)
-	return ru
+func (_u *ReleaseUpdate) SetPlannedStartDate(v time.Time) *ReleaseUpdate {
+	_u.mutation.SetPlannedStartDate(v)
+	return _u
 }
 
 // SetNillablePlannedStartDate sets the "planned_start_date" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillablePlannedStartDate(t *time.Time) *ReleaseUpdate {
-	if t != nil {
-		ru.SetPlannedStartDate(*t)
+func (_u *ReleaseUpdate) SetNillablePlannedStartDate(v *time.Time) *ReleaseUpdate {
+	if v != nil {
+		_u.SetPlannedStartDate(*v)
 	}
-	return ru
+	return _u
 }
 
 // ClearPlannedStartDate clears the value of the "planned_start_date" field.
-func (ru *ReleaseUpdate) ClearPlannedStartDate() *ReleaseUpdate {
-	ru.mutation.ClearPlannedStartDate()
-	return ru
+func (_u *ReleaseUpdate) ClearPlannedStartDate() *ReleaseUpdate {
+	_u.mutation.ClearPlannedStartDate()
+	return _u
 }
 
 // SetPlannedEndDate sets the "planned_end_date" field.
-func (ru *ReleaseUpdate) SetPlannedEndDate(t time.Time) *ReleaseUpdate {
-	ru.mutation.SetPlannedEndDate(t)
-	return ru
+func (_u *ReleaseUpdate) SetPlannedEndDate(v time.Time) *ReleaseUpdate {
+	_u.mutation.SetPlannedEndDate(v)
+	return _u
 }
 
 // SetNillablePlannedEndDate sets the "planned_end_date" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillablePlannedEndDate(t *time.Time) *ReleaseUpdate {
-	if t != nil {
-		ru.SetPlannedEndDate(*t)
+func (_u *ReleaseUpdate) SetNillablePlannedEndDate(v *time.Time) *ReleaseUpdate {
+	if v != nil {
+		_u.SetPlannedEndDate(*v)
 	}
-	return ru
+	return _u
 }
 
 // ClearPlannedEndDate clears the value of the "planned_end_date" field.
-func (ru *ReleaseUpdate) ClearPlannedEndDate() *ReleaseUpdate {
-	ru.mutation.ClearPlannedEndDate()
-	return ru
+func (_u *ReleaseUpdate) ClearPlannedEndDate() *ReleaseUpdate {
+	_u.mutation.ClearPlannedEndDate()
+	return _u
 }
 
 // SetReleaseNotes sets the "release_notes" field.
-func (ru *ReleaseUpdate) SetReleaseNotes(s string) *ReleaseUpdate {
-	ru.mutation.SetReleaseNotes(s)
-	return ru
+func (_u *ReleaseUpdate) SetReleaseNotes(v string) *ReleaseUpdate {
+	_u.mutation.SetReleaseNotes(v)
+	return _u
 }
 
 // SetNillableReleaseNotes sets the "release_notes" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableReleaseNotes(s *string) *ReleaseUpdate {
-	if s != nil {
-		ru.SetReleaseNotes(*s)
+func (_u *ReleaseUpdate) SetNillableReleaseNotes(v *string) *ReleaseUpdate {
+	if v != nil {
+		_u.SetReleaseNotes(*v)
 	}
-	return ru
+	return _u
 }
 
 // ClearReleaseNotes clears the value of the "release_notes" field.
-func (ru *ReleaseUpdate) ClearReleaseNotes() *ReleaseUpdate {
-	ru.mutation.ClearReleaseNotes()
-	return ru
+func (_u *ReleaseUpdate) ClearReleaseNotes() *ReleaseUpdate {
+	_u.mutation.ClearReleaseNotes()
+	return _u
 }
 
 // SetRollbackProcedure sets the "rollback_procedure" field.
-func (ru *ReleaseUpdate) SetRollbackProcedure(s string) *ReleaseUpdate {
-	ru.mutation.SetRollbackProcedure(s)
-	return ru
+func (_u *ReleaseUpdate) SetRollbackProcedure(v string) *ReleaseUpdate {
+	_u.mutation.SetRollbackProcedure(v)
+	return _u
 }
 
 // SetNillableRollbackProcedure sets the "rollback_procedure" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableRollbackProcedure(s *string) *ReleaseUpdate {
-	if s != nil {
-		ru.SetRollbackProcedure(*s)
+func (_u *ReleaseUpdate) SetNillableRollbackProcedure(v *string) *ReleaseUpdate {
+	if v != nil {
+		_u.SetRollbackProcedure(*v)
 	}
-	return ru
+	return _u
 }
 
 // ClearRollbackProcedure clears the value of the "rollback_procedure" field.
-func (ru *ReleaseUpdate) ClearRollbackProcedure() *ReleaseUpdate {
-	ru.mutation.ClearRollbackProcedure()
-	return ru
+func (_u *ReleaseUpdate) ClearRollbackProcedure() *ReleaseUpdate {
+	_u.mutation.ClearRollbackProcedure()
+	return _u
 }
 
 // SetValidationCriteria sets the "validation_criteria" field.
-func (ru *ReleaseUpdate) SetValidationCriteria(s string) *ReleaseUpdate {
-	ru.mutation.SetValidationCriteria(s)
-	return ru
+func (_u *ReleaseUpdate) SetValidationCriteria(v string) *ReleaseUpdate {
+	_u.mutation.SetValidationCriteria(v)
+	return _u
 }
 
 // SetNillableValidationCriteria sets the "validation_criteria" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableValidationCriteria(s *string) *ReleaseUpdate {
-	if s != nil {
-		ru.SetValidationCriteria(*s)
+func (_u *ReleaseUpdate) SetNillableValidationCriteria(v *string) *ReleaseUpdate {
+	if v != nil {
+		_u.SetValidationCriteria(*v)
 	}
-	return ru
+	return _u
 }
 
 // ClearValidationCriteria clears the value of the "validation_criteria" field.
-func (ru *ReleaseUpdate) ClearValidationCriteria() *ReleaseUpdate {
-	ru.mutation.ClearValidationCriteria()
-	return ru
+func (_u *ReleaseUpdate) ClearValidationCriteria() *ReleaseUpdate {
+	_u.mutation.ClearValidationCriteria()
+	return _u
 }
 
 // SetAffectedSystems sets the "affected_systems" field.
-func (ru *ReleaseUpdate) SetAffectedSystems(s []string) *ReleaseUpdate {
-	ru.mutation.SetAffectedSystems(s)
-	return ru
+func (_u *ReleaseUpdate) SetAffectedSystems(v []string) *ReleaseUpdate {
+	_u.mutation.SetAffectedSystems(v)
+	return _u
 }
 
-// AppendAffectedSystems appends s to the "affected_systems" field.
-func (ru *ReleaseUpdate) AppendAffectedSystems(s []string) *ReleaseUpdate {
-	ru.mutation.AppendAffectedSystems(s)
-	return ru
+// AppendAffectedSystems appends value to the "affected_systems" field.
+func (_u *ReleaseUpdate) AppendAffectedSystems(v []string) *ReleaseUpdate {
+	_u.mutation.AppendAffectedSystems(v)
+	return _u
 }
 
 // ClearAffectedSystems clears the value of the "affected_systems" field.
-func (ru *ReleaseUpdate) ClearAffectedSystems() *ReleaseUpdate {
-	ru.mutation.ClearAffectedSystems()
-	return ru
+func (_u *ReleaseUpdate) ClearAffectedSystems() *ReleaseUpdate {
+	_u.mutation.ClearAffectedSystems()
+	return _u
 }
 
 // SetAffectedComponents sets the "affected_components" field.
-func (ru *ReleaseUpdate) SetAffectedComponents(s []string) *ReleaseUpdate {
-	ru.mutation.SetAffectedComponents(s)
-	return ru
+func (_u *ReleaseUpdate) SetAffectedComponents(v []string) *ReleaseUpdate {
+	_u.mutation.SetAffectedComponents(v)
+	return _u
 }
 
-// AppendAffectedComponents appends s to the "affected_components" field.
-func (ru *ReleaseUpdate) AppendAffectedComponents(s []string) *ReleaseUpdate {
-	ru.mutation.AppendAffectedComponents(s)
-	return ru
+// AppendAffectedComponents appends value to the "affected_components" field.
+func (_u *ReleaseUpdate) AppendAffectedComponents(v []string) *ReleaseUpdate {
+	_u.mutation.AppendAffectedComponents(v)
+	return _u
 }
 
 // ClearAffectedComponents clears the value of the "affected_components" field.
-func (ru *ReleaseUpdate) ClearAffectedComponents() *ReleaseUpdate {
-	ru.mutation.ClearAffectedComponents()
-	return ru
+func (_u *ReleaseUpdate) ClearAffectedComponents() *ReleaseUpdate {
+	_u.mutation.ClearAffectedComponents()
+	return _u
 }
 
 // SetDeploymentSteps sets the "deployment_steps" field.
-func (ru *ReleaseUpdate) SetDeploymentSteps(s []string) *ReleaseUpdate {
-	ru.mutation.SetDeploymentSteps(s)
-	return ru
+func (_u *ReleaseUpdate) SetDeploymentSteps(v []string) *ReleaseUpdate {
+	_u.mutation.SetDeploymentSteps(v)
+	return _u
 }
 
-// AppendDeploymentSteps appends s to the "deployment_steps" field.
-func (ru *ReleaseUpdate) AppendDeploymentSteps(s []string) *ReleaseUpdate {
-	ru.mutation.AppendDeploymentSteps(s)
-	return ru
+// AppendDeploymentSteps appends value to the "deployment_steps" field.
+func (_u *ReleaseUpdate) AppendDeploymentSteps(v []string) *ReleaseUpdate {
+	_u.mutation.AppendDeploymentSteps(v)
+	return _u
 }
 
 // ClearDeploymentSteps clears the value of the "deployment_steps" field.
-func (ru *ReleaseUpdate) ClearDeploymentSteps() *ReleaseUpdate {
-	ru.mutation.ClearDeploymentSteps()
-	return ru
+func (_u *ReleaseUpdate) ClearDeploymentSteps() *ReleaseUpdate {
+	_u.mutation.ClearDeploymentSteps()
+	return _u
 }
 
 // SetTags sets the "tags" field.
-func (ru *ReleaseUpdate) SetTags(s []string) *ReleaseUpdate {
-	ru.mutation.SetTags(s)
-	return ru
+func (_u *ReleaseUpdate) SetTags(v []string) *ReleaseUpdate {
+	_u.mutation.SetTags(v)
+	return _u
 }
 
-// AppendTags appends s to the "tags" field.
-func (ru *ReleaseUpdate) AppendTags(s []string) *ReleaseUpdate {
-	ru.mutation.AppendTags(s)
-	return ru
+// AppendTags appends value to the "tags" field.
+func (_u *ReleaseUpdate) AppendTags(v []string) *ReleaseUpdate {
+	_u.mutation.AppendTags(v)
+	return _u
 }
 
 // ClearTags clears the value of the "tags" field.
-func (ru *ReleaseUpdate) ClearTags() *ReleaseUpdate {
-	ru.mutation.ClearTags()
-	return ru
+func (_u *ReleaseUpdate) ClearTags() *ReleaseUpdate {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // SetIsEmergency sets the "is_emergency" field.
-func (ru *ReleaseUpdate) SetIsEmergency(b bool) *ReleaseUpdate {
-	ru.mutation.SetIsEmergency(b)
-	return ru
+func (_u *ReleaseUpdate) SetIsEmergency(v bool) *ReleaseUpdate {
+	_u.mutation.SetIsEmergency(v)
+	return _u
 }
 
 // SetNillableIsEmergency sets the "is_emergency" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableIsEmergency(b *bool) *ReleaseUpdate {
-	if b != nil {
-		ru.SetIsEmergency(*b)
+func (_u *ReleaseUpdate) SetNillableIsEmergency(v *bool) *ReleaseUpdate {
+	if v != nil {
+		_u.SetIsEmergency(*v)
 	}
-	return ru
+	return _u
 }
 
 // SetRequiresApproval sets the "requires_approval" field.
-func (ru *ReleaseUpdate) SetRequiresApproval(b bool) *ReleaseUpdate {
-	ru.mutation.SetRequiresApproval(b)
-	return ru
+func (_u *ReleaseUpdate) SetRequiresApproval(v bool) *ReleaseUpdate {
+	_u.mutation.SetRequiresApproval(v)
+	return _u
 }
 
 // SetNillableRequiresApproval sets the "requires_approval" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableRequiresApproval(b *bool) *ReleaseUpdate {
-	if b != nil {
-		ru.SetRequiresApproval(*b)
+func (_u *ReleaseUpdate) SetNillableRequiresApproval(v *bool) *ReleaseUpdate {
+	if v != nil {
+		_u.SetRequiresApproval(*v)
 	}
-	return ru
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ru *ReleaseUpdate) SetCreatedAt(t time.Time) *ReleaseUpdate {
-	ru.mutation.SetCreatedAt(t)
-	return ru
+func (_u *ReleaseUpdate) SetCreatedAt(v time.Time) *ReleaseUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ru *ReleaseUpdate) SetNillableCreatedAt(t *time.Time) *ReleaseUpdate {
-	if t != nil {
-		ru.SetCreatedAt(*t)
+func (_u *ReleaseUpdate) SetNillableCreatedAt(v *time.Time) *ReleaseUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ru
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ru *ReleaseUpdate) SetUpdatedAt(t time.Time) *ReleaseUpdate {
-	ru.mutation.SetUpdatedAt(t)
-	return ru
+func (_u *ReleaseUpdate) SetUpdatedAt(v time.Time) *ReleaseUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the ReleaseMutation object of the builder.
-func (ru *ReleaseUpdate) Mutation() *ReleaseMutation {
-	return ru.mutation
+func (_u *ReleaseUpdate) Mutation() *ReleaseMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (ru *ReleaseUpdate) Save(ctx context.Context) (int, error) {
-	ru.defaults()
-	return withHooks(ctx, ru.sqlSave, ru.mutation, ru.hooks)
+func (_u *ReleaseUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ru *ReleaseUpdate) SaveX(ctx context.Context) int {
-	affected, err := ru.Save(ctx)
+func (_u *ReleaseUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -510,44 +510,44 @@ func (ru *ReleaseUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (ru *ReleaseUpdate) Exec(ctx context.Context) error {
-	_, err := ru.Save(ctx)
+func (_u *ReleaseUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ru *ReleaseUpdate) ExecX(ctx context.Context) {
-	if err := ru.Exec(ctx); err != nil {
+func (_u *ReleaseUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ru *ReleaseUpdate) defaults() {
-	if _, ok := ru.mutation.UpdatedAt(); !ok {
+func (_u *ReleaseUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := release.UpdateDefaultUpdatedAt()
-		ru.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ru *ReleaseUpdate) check() error {
-	if v, ok := ru.mutation.ReleaseNumber(); ok {
+func (_u *ReleaseUpdate) check() error {
+	if v, ok := _u.mutation.ReleaseNumber(); ok {
 		if err := release.ReleaseNumberValidator(v); err != nil {
 			return &ValidationError{Name: "release_number", err: fmt.Errorf(`ent: validator failed for field "Release.release_number": %w`, err)}
 		}
 	}
-	if v, ok := ru.mutation.Title(); ok {
+	if v, ok := _u.mutation.Title(); ok {
 		if err := release.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Release.title": %w`, err)}
 		}
 	}
-	if v, ok := ru.mutation.CreatedBy(); ok {
+	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := release.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "Release.created_by": %w`, err)}
 		}
 	}
-	if v, ok := ru.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := release.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Release.tenant_id": %w`, err)}
 		}
@@ -555,171 +555,171 @@ func (ru *ReleaseUpdate) check() error {
 	return nil
 }
 
-func (ru *ReleaseUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := ru.check(); err != nil {
-		return n, err
+func (_u *ReleaseUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(release.Table, release.Columns, sqlgraph.NewFieldSpec(release.FieldID, field.TypeInt))
-	if ps := ru.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ru.mutation.ReleaseNumber(); ok {
+	if value, ok := _u.mutation.ReleaseNumber(); ok {
 		_spec.SetField(release.FieldReleaseNumber, field.TypeString, value)
 	}
-	if value, ok := ru.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(release.FieldTitle, field.TypeString, value)
 	}
-	if value, ok := ru.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(release.FieldDescription, field.TypeString, value)
 	}
-	if ru.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(release.FieldDescription, field.TypeString)
 	}
-	if value, ok := ru.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(release.FieldType, field.TypeString, value)
 	}
-	if value, ok := ru.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(release.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := ru.mutation.Severity(); ok {
+	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(release.FieldSeverity, field.TypeString, value)
 	}
-	if value, ok := ru.mutation.Environment(); ok {
+	if value, ok := _u.mutation.Environment(); ok {
 		_spec.SetField(release.FieldEnvironment, field.TypeString, value)
 	}
-	if value, ok := ru.mutation.ChangeID(); ok {
+	if value, ok := _u.mutation.ChangeID(); ok {
 		_spec.SetField(release.FieldChangeID, field.TypeInt, value)
 	}
-	if value, ok := ru.mutation.AddedChangeID(); ok {
+	if value, ok := _u.mutation.AddedChangeID(); ok {
 		_spec.AddField(release.FieldChangeID, field.TypeInt, value)
 	}
-	if ru.mutation.ChangeIDCleared() {
+	if _u.mutation.ChangeIDCleared() {
 		_spec.ClearField(release.FieldChangeID, field.TypeInt)
 	}
-	if value, ok := ru.mutation.OwnerID(); ok {
+	if value, ok := _u.mutation.OwnerID(); ok {
 		_spec.SetField(release.FieldOwnerID, field.TypeInt, value)
 	}
-	if value, ok := ru.mutation.AddedOwnerID(); ok {
+	if value, ok := _u.mutation.AddedOwnerID(); ok {
 		_spec.AddField(release.FieldOwnerID, field.TypeInt, value)
 	}
-	if ru.mutation.OwnerIDCleared() {
+	if _u.mutation.OwnerIDCleared() {
 		_spec.ClearField(release.FieldOwnerID, field.TypeInt)
 	}
-	if value, ok := ru.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(release.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := ru.mutation.AddedCreatedBy(); ok {
+	if value, ok := _u.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(release.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := ru.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(release.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ru.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(release.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ru.mutation.PlannedReleaseDate(); ok {
+	if value, ok := _u.mutation.PlannedReleaseDate(); ok {
 		_spec.SetField(release.FieldPlannedReleaseDate, field.TypeTime, value)
 	}
-	if ru.mutation.PlannedReleaseDateCleared() {
+	if _u.mutation.PlannedReleaseDateCleared() {
 		_spec.ClearField(release.FieldPlannedReleaseDate, field.TypeTime)
 	}
-	if value, ok := ru.mutation.ActualReleaseDate(); ok {
+	if value, ok := _u.mutation.ActualReleaseDate(); ok {
 		_spec.SetField(release.FieldActualReleaseDate, field.TypeTime, value)
 	}
-	if ru.mutation.ActualReleaseDateCleared() {
+	if _u.mutation.ActualReleaseDateCleared() {
 		_spec.ClearField(release.FieldActualReleaseDate, field.TypeTime)
 	}
-	if value, ok := ru.mutation.PlannedStartDate(); ok {
+	if value, ok := _u.mutation.PlannedStartDate(); ok {
 		_spec.SetField(release.FieldPlannedStartDate, field.TypeTime, value)
 	}
-	if ru.mutation.PlannedStartDateCleared() {
+	if _u.mutation.PlannedStartDateCleared() {
 		_spec.ClearField(release.FieldPlannedStartDate, field.TypeTime)
 	}
-	if value, ok := ru.mutation.PlannedEndDate(); ok {
+	if value, ok := _u.mutation.PlannedEndDate(); ok {
 		_spec.SetField(release.FieldPlannedEndDate, field.TypeTime, value)
 	}
-	if ru.mutation.PlannedEndDateCleared() {
+	if _u.mutation.PlannedEndDateCleared() {
 		_spec.ClearField(release.FieldPlannedEndDate, field.TypeTime)
 	}
-	if value, ok := ru.mutation.ReleaseNotes(); ok {
+	if value, ok := _u.mutation.ReleaseNotes(); ok {
 		_spec.SetField(release.FieldReleaseNotes, field.TypeString, value)
 	}
-	if ru.mutation.ReleaseNotesCleared() {
+	if _u.mutation.ReleaseNotesCleared() {
 		_spec.ClearField(release.FieldReleaseNotes, field.TypeString)
 	}
-	if value, ok := ru.mutation.RollbackProcedure(); ok {
+	if value, ok := _u.mutation.RollbackProcedure(); ok {
 		_spec.SetField(release.FieldRollbackProcedure, field.TypeString, value)
 	}
-	if ru.mutation.RollbackProcedureCleared() {
+	if _u.mutation.RollbackProcedureCleared() {
 		_spec.ClearField(release.FieldRollbackProcedure, field.TypeString)
 	}
-	if value, ok := ru.mutation.ValidationCriteria(); ok {
+	if value, ok := _u.mutation.ValidationCriteria(); ok {
 		_spec.SetField(release.FieldValidationCriteria, field.TypeString, value)
 	}
-	if ru.mutation.ValidationCriteriaCleared() {
+	if _u.mutation.ValidationCriteriaCleared() {
 		_spec.ClearField(release.FieldValidationCriteria, field.TypeString)
 	}
-	if value, ok := ru.mutation.AffectedSystems(); ok {
+	if value, ok := _u.mutation.AffectedSystems(); ok {
 		_spec.SetField(release.FieldAffectedSystems, field.TypeJSON, value)
 	}
-	if value, ok := ru.mutation.AppendedAffectedSystems(); ok {
+	if value, ok := _u.mutation.AppendedAffectedSystems(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, release.FieldAffectedSystems, value)
 		})
 	}
-	if ru.mutation.AffectedSystemsCleared() {
+	if _u.mutation.AffectedSystemsCleared() {
 		_spec.ClearField(release.FieldAffectedSystems, field.TypeJSON)
 	}
-	if value, ok := ru.mutation.AffectedComponents(); ok {
+	if value, ok := _u.mutation.AffectedComponents(); ok {
 		_spec.SetField(release.FieldAffectedComponents, field.TypeJSON, value)
 	}
-	if value, ok := ru.mutation.AppendedAffectedComponents(); ok {
+	if value, ok := _u.mutation.AppendedAffectedComponents(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, release.FieldAffectedComponents, value)
 		})
 	}
-	if ru.mutation.AffectedComponentsCleared() {
+	if _u.mutation.AffectedComponentsCleared() {
 		_spec.ClearField(release.FieldAffectedComponents, field.TypeJSON)
 	}
-	if value, ok := ru.mutation.DeploymentSteps(); ok {
+	if value, ok := _u.mutation.DeploymentSteps(); ok {
 		_spec.SetField(release.FieldDeploymentSteps, field.TypeJSON, value)
 	}
-	if value, ok := ru.mutation.AppendedDeploymentSteps(); ok {
+	if value, ok := _u.mutation.AppendedDeploymentSteps(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, release.FieldDeploymentSteps, value)
 		})
 	}
-	if ru.mutation.DeploymentStepsCleared() {
+	if _u.mutation.DeploymentStepsCleared() {
 		_spec.ClearField(release.FieldDeploymentSteps, field.TypeJSON)
 	}
-	if value, ok := ru.mutation.Tags(); ok {
+	if value, ok := _u.mutation.Tags(); ok {
 		_spec.SetField(release.FieldTags, field.TypeJSON, value)
 	}
-	if value, ok := ru.mutation.AppendedTags(); ok {
+	if value, ok := _u.mutation.AppendedTags(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, release.FieldTags, value)
 		})
 	}
-	if ru.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		_spec.ClearField(release.FieldTags, field.TypeJSON)
 	}
-	if value, ok := ru.mutation.IsEmergency(); ok {
+	if value, ok := _u.mutation.IsEmergency(); ok {
 		_spec.SetField(release.FieldIsEmergency, field.TypeBool, value)
 	}
-	if value, ok := ru.mutation.RequiresApproval(); ok {
+	if value, ok := _u.mutation.RequiresApproval(); ok {
 		_spec.SetField(release.FieldRequiresApproval, field.TypeBool, value)
 	}
-	if value, ok := ru.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(release.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ru.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(release.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, ru.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{release.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -727,8 +727,8 @@ func (ru *ReleaseUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	ru.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ReleaseUpdateOne is the builder for updating a single Release entity.
@@ -740,492 +740,492 @@ type ReleaseUpdateOne struct {
 }
 
 // SetReleaseNumber sets the "release_number" field.
-func (ruo *ReleaseUpdateOne) SetReleaseNumber(s string) *ReleaseUpdateOne {
-	ruo.mutation.SetReleaseNumber(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetReleaseNumber(v string) *ReleaseUpdateOne {
+	_u.mutation.SetReleaseNumber(v)
+	return _u
 }
 
 // SetNillableReleaseNumber sets the "release_number" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableReleaseNumber(s *string) *ReleaseUpdateOne {
-	if s != nil {
-		ruo.SetReleaseNumber(*s)
+func (_u *ReleaseUpdateOne) SetNillableReleaseNumber(v *string) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetReleaseNumber(*v)
 	}
-	return ruo
+	return _u
 }
 
 // SetTitle sets the "title" field.
-func (ruo *ReleaseUpdateOne) SetTitle(s string) *ReleaseUpdateOne {
-	ruo.mutation.SetTitle(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetTitle(v string) *ReleaseUpdateOne {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableTitle(s *string) *ReleaseUpdateOne {
-	if s != nil {
-		ruo.SetTitle(*s)
+func (_u *ReleaseUpdateOne) SetNillableTitle(v *string) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return ruo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ruo *ReleaseUpdateOne) SetDescription(s string) *ReleaseUpdateOne {
-	ruo.mutation.SetDescription(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetDescription(v string) *ReleaseUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableDescription(s *string) *ReleaseUpdateOne {
-	if s != nil {
-		ruo.SetDescription(*s)
+func (_u *ReleaseUpdateOne) SetNillableDescription(v *string) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ruo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ruo *ReleaseUpdateOne) ClearDescription() *ReleaseUpdateOne {
-	ruo.mutation.ClearDescription()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearDescription() *ReleaseUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetType sets the "type" field.
-func (ruo *ReleaseUpdateOne) SetType(s string) *ReleaseUpdateOne {
-	ruo.mutation.SetType(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetType(v string) *ReleaseUpdateOne {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableType(s *string) *ReleaseUpdateOne {
-	if s != nil {
-		ruo.SetType(*s)
+func (_u *ReleaseUpdateOne) SetNillableType(v *string) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return ruo
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (ruo *ReleaseUpdateOne) SetStatus(s string) *ReleaseUpdateOne {
-	ruo.mutation.SetStatus(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetStatus(v string) *ReleaseUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableStatus(s *string) *ReleaseUpdateOne {
-	if s != nil {
-		ruo.SetStatus(*s)
+func (_u *ReleaseUpdateOne) SetNillableStatus(v *string) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return ruo
+	return _u
 }
 
 // SetSeverity sets the "severity" field.
-func (ruo *ReleaseUpdateOne) SetSeverity(s string) *ReleaseUpdateOne {
-	ruo.mutation.SetSeverity(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetSeverity(v string) *ReleaseUpdateOne {
+	_u.mutation.SetSeverity(v)
+	return _u
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableSeverity(s *string) *ReleaseUpdateOne {
-	if s != nil {
-		ruo.SetSeverity(*s)
+func (_u *ReleaseUpdateOne) SetNillableSeverity(v *string) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetSeverity(*v)
 	}
-	return ruo
+	return _u
 }
 
 // SetEnvironment sets the "environment" field.
-func (ruo *ReleaseUpdateOne) SetEnvironment(s string) *ReleaseUpdateOne {
-	ruo.mutation.SetEnvironment(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetEnvironment(v string) *ReleaseUpdateOne {
+	_u.mutation.SetEnvironment(v)
+	return _u
 }
 
 // SetNillableEnvironment sets the "environment" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableEnvironment(s *string) *ReleaseUpdateOne {
-	if s != nil {
-		ruo.SetEnvironment(*s)
+func (_u *ReleaseUpdateOne) SetNillableEnvironment(v *string) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetEnvironment(*v)
 	}
-	return ruo
+	return _u
 }
 
 // SetChangeID sets the "change_id" field.
-func (ruo *ReleaseUpdateOne) SetChangeID(i int) *ReleaseUpdateOne {
-	ruo.mutation.ResetChangeID()
-	ruo.mutation.SetChangeID(i)
-	return ruo
+func (_u *ReleaseUpdateOne) SetChangeID(v int) *ReleaseUpdateOne {
+	_u.mutation.ResetChangeID()
+	_u.mutation.SetChangeID(v)
+	return _u
 }
 
 // SetNillableChangeID sets the "change_id" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableChangeID(i *int) *ReleaseUpdateOne {
-	if i != nil {
-		ruo.SetChangeID(*i)
+func (_u *ReleaseUpdateOne) SetNillableChangeID(v *int) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetChangeID(*v)
 	}
-	return ruo
+	return _u
 }
 
-// AddChangeID adds i to the "change_id" field.
-func (ruo *ReleaseUpdateOne) AddChangeID(i int) *ReleaseUpdateOne {
-	ruo.mutation.AddChangeID(i)
-	return ruo
+// AddChangeID adds value to the "change_id" field.
+func (_u *ReleaseUpdateOne) AddChangeID(v int) *ReleaseUpdateOne {
+	_u.mutation.AddChangeID(v)
+	return _u
 }
 
 // ClearChangeID clears the value of the "change_id" field.
-func (ruo *ReleaseUpdateOne) ClearChangeID() *ReleaseUpdateOne {
-	ruo.mutation.ClearChangeID()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearChangeID() *ReleaseUpdateOne {
+	_u.mutation.ClearChangeID()
+	return _u
 }
 
 // SetOwnerID sets the "owner_id" field.
-func (ruo *ReleaseUpdateOne) SetOwnerID(i int) *ReleaseUpdateOne {
-	ruo.mutation.ResetOwnerID()
-	ruo.mutation.SetOwnerID(i)
-	return ruo
+func (_u *ReleaseUpdateOne) SetOwnerID(v int) *ReleaseUpdateOne {
+	_u.mutation.ResetOwnerID()
+	_u.mutation.SetOwnerID(v)
+	return _u
 }
 
 // SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableOwnerID(i *int) *ReleaseUpdateOne {
-	if i != nil {
-		ruo.SetOwnerID(*i)
+func (_u *ReleaseUpdateOne) SetNillableOwnerID(v *int) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetOwnerID(*v)
 	}
-	return ruo
+	return _u
 }
 
-// AddOwnerID adds i to the "owner_id" field.
-func (ruo *ReleaseUpdateOne) AddOwnerID(i int) *ReleaseUpdateOne {
-	ruo.mutation.AddOwnerID(i)
-	return ruo
+// AddOwnerID adds value to the "owner_id" field.
+func (_u *ReleaseUpdateOne) AddOwnerID(v int) *ReleaseUpdateOne {
+	_u.mutation.AddOwnerID(v)
+	return _u
 }
 
 // ClearOwnerID clears the value of the "owner_id" field.
-func (ruo *ReleaseUpdateOne) ClearOwnerID() *ReleaseUpdateOne {
-	ruo.mutation.ClearOwnerID()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearOwnerID() *ReleaseUpdateOne {
+	_u.mutation.ClearOwnerID()
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (ruo *ReleaseUpdateOne) SetCreatedBy(i int) *ReleaseUpdateOne {
-	ruo.mutation.ResetCreatedBy()
-	ruo.mutation.SetCreatedBy(i)
-	return ruo
+func (_u *ReleaseUpdateOne) SetCreatedBy(v int) *ReleaseUpdateOne {
+	_u.mutation.ResetCreatedBy()
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableCreatedBy(i *int) *ReleaseUpdateOne {
-	if i != nil {
-		ruo.SetCreatedBy(*i)
+func (_u *ReleaseUpdateOne) SetNillableCreatedBy(v *int) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return ruo
+	return _u
 }
 
-// AddCreatedBy adds i to the "created_by" field.
-func (ruo *ReleaseUpdateOne) AddCreatedBy(i int) *ReleaseUpdateOne {
-	ruo.mutation.AddCreatedBy(i)
-	return ruo
+// AddCreatedBy adds value to the "created_by" field.
+func (_u *ReleaseUpdateOne) AddCreatedBy(v int) *ReleaseUpdateOne {
+	_u.mutation.AddCreatedBy(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ruo *ReleaseUpdateOne) SetTenantID(i int) *ReleaseUpdateOne {
-	ruo.mutation.ResetTenantID()
-	ruo.mutation.SetTenantID(i)
-	return ruo
+func (_u *ReleaseUpdateOne) SetTenantID(v int) *ReleaseUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableTenantID(i *int) *ReleaseUpdateOne {
-	if i != nil {
-		ruo.SetTenantID(*i)
+func (_u *ReleaseUpdateOne) SetNillableTenantID(v *int) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ruo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ruo *ReleaseUpdateOne) AddTenantID(i int) *ReleaseUpdateOne {
-	ruo.mutation.AddTenantID(i)
-	return ruo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ReleaseUpdateOne) AddTenantID(v int) *ReleaseUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetPlannedReleaseDate sets the "planned_release_date" field.
-func (ruo *ReleaseUpdateOne) SetPlannedReleaseDate(t time.Time) *ReleaseUpdateOne {
-	ruo.mutation.SetPlannedReleaseDate(t)
-	return ruo
+func (_u *ReleaseUpdateOne) SetPlannedReleaseDate(v time.Time) *ReleaseUpdateOne {
+	_u.mutation.SetPlannedReleaseDate(v)
+	return _u
 }
 
 // SetNillablePlannedReleaseDate sets the "planned_release_date" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillablePlannedReleaseDate(t *time.Time) *ReleaseUpdateOne {
-	if t != nil {
-		ruo.SetPlannedReleaseDate(*t)
+func (_u *ReleaseUpdateOne) SetNillablePlannedReleaseDate(v *time.Time) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetPlannedReleaseDate(*v)
 	}
-	return ruo
+	return _u
 }
 
 // ClearPlannedReleaseDate clears the value of the "planned_release_date" field.
-func (ruo *ReleaseUpdateOne) ClearPlannedReleaseDate() *ReleaseUpdateOne {
-	ruo.mutation.ClearPlannedReleaseDate()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearPlannedReleaseDate() *ReleaseUpdateOne {
+	_u.mutation.ClearPlannedReleaseDate()
+	return _u
 }
 
 // SetActualReleaseDate sets the "actual_release_date" field.
-func (ruo *ReleaseUpdateOne) SetActualReleaseDate(t time.Time) *ReleaseUpdateOne {
-	ruo.mutation.SetActualReleaseDate(t)
-	return ruo
+func (_u *ReleaseUpdateOne) SetActualReleaseDate(v time.Time) *ReleaseUpdateOne {
+	_u.mutation.SetActualReleaseDate(v)
+	return _u
 }
 
 // SetNillableActualReleaseDate sets the "actual_release_date" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableActualReleaseDate(t *time.Time) *ReleaseUpdateOne {
-	if t != nil {
-		ruo.SetActualReleaseDate(*t)
+func (_u *ReleaseUpdateOne) SetNillableActualReleaseDate(v *time.Time) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetActualReleaseDate(*v)
 	}
-	return ruo
+	return _u
 }
 
 // ClearActualReleaseDate clears the value of the "actual_release_date" field.
-func (ruo *ReleaseUpdateOne) ClearActualReleaseDate() *ReleaseUpdateOne {
-	ruo.mutation.ClearActualReleaseDate()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearActualReleaseDate() *ReleaseUpdateOne {
+	_u.mutation.ClearActualReleaseDate()
+	return _u
 }
 
 // SetPlannedStartDate sets the "planned_start_date" field.
-func (ruo *ReleaseUpdateOne) SetPlannedStartDate(t time.Time) *ReleaseUpdateOne {
-	ruo.mutation.SetPlannedStartDate(t)
-	return ruo
+func (_u *ReleaseUpdateOne) SetPlannedStartDate(v time.Time) *ReleaseUpdateOne {
+	_u.mutation.SetPlannedStartDate(v)
+	return _u
 }
 
 // SetNillablePlannedStartDate sets the "planned_start_date" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillablePlannedStartDate(t *time.Time) *ReleaseUpdateOne {
-	if t != nil {
-		ruo.SetPlannedStartDate(*t)
+func (_u *ReleaseUpdateOne) SetNillablePlannedStartDate(v *time.Time) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetPlannedStartDate(*v)
 	}
-	return ruo
+	return _u
 }
 
 // ClearPlannedStartDate clears the value of the "planned_start_date" field.
-func (ruo *ReleaseUpdateOne) ClearPlannedStartDate() *ReleaseUpdateOne {
-	ruo.mutation.ClearPlannedStartDate()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearPlannedStartDate() *ReleaseUpdateOne {
+	_u.mutation.ClearPlannedStartDate()
+	return _u
 }
 
 // SetPlannedEndDate sets the "planned_end_date" field.
-func (ruo *ReleaseUpdateOne) SetPlannedEndDate(t time.Time) *ReleaseUpdateOne {
-	ruo.mutation.SetPlannedEndDate(t)
-	return ruo
+func (_u *ReleaseUpdateOne) SetPlannedEndDate(v time.Time) *ReleaseUpdateOne {
+	_u.mutation.SetPlannedEndDate(v)
+	return _u
 }
 
 // SetNillablePlannedEndDate sets the "planned_end_date" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillablePlannedEndDate(t *time.Time) *ReleaseUpdateOne {
-	if t != nil {
-		ruo.SetPlannedEndDate(*t)
+func (_u *ReleaseUpdateOne) SetNillablePlannedEndDate(v *time.Time) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetPlannedEndDate(*v)
 	}
-	return ruo
+	return _u
 }
 
 // ClearPlannedEndDate clears the value of the "planned_end_date" field.
-func (ruo *ReleaseUpdateOne) ClearPlannedEndDate() *ReleaseUpdateOne {
-	ruo.mutation.ClearPlannedEndDate()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearPlannedEndDate() *ReleaseUpdateOne {
+	_u.mutation.ClearPlannedEndDate()
+	return _u
 }
 
 // SetReleaseNotes sets the "release_notes" field.
-func (ruo *ReleaseUpdateOne) SetReleaseNotes(s string) *ReleaseUpdateOne {
-	ruo.mutation.SetReleaseNotes(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetReleaseNotes(v string) *ReleaseUpdateOne {
+	_u.mutation.SetReleaseNotes(v)
+	return _u
 }
 
 // SetNillableReleaseNotes sets the "release_notes" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableReleaseNotes(s *string) *ReleaseUpdateOne {
-	if s != nil {
-		ruo.SetReleaseNotes(*s)
+func (_u *ReleaseUpdateOne) SetNillableReleaseNotes(v *string) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetReleaseNotes(*v)
 	}
-	return ruo
+	return _u
 }
 
 // ClearReleaseNotes clears the value of the "release_notes" field.
-func (ruo *ReleaseUpdateOne) ClearReleaseNotes() *ReleaseUpdateOne {
-	ruo.mutation.ClearReleaseNotes()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearReleaseNotes() *ReleaseUpdateOne {
+	_u.mutation.ClearReleaseNotes()
+	return _u
 }
 
 // SetRollbackProcedure sets the "rollback_procedure" field.
-func (ruo *ReleaseUpdateOne) SetRollbackProcedure(s string) *ReleaseUpdateOne {
-	ruo.mutation.SetRollbackProcedure(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetRollbackProcedure(v string) *ReleaseUpdateOne {
+	_u.mutation.SetRollbackProcedure(v)
+	return _u
 }
 
 // SetNillableRollbackProcedure sets the "rollback_procedure" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableRollbackProcedure(s *string) *ReleaseUpdateOne {
-	if s != nil {
-		ruo.SetRollbackProcedure(*s)
+func (_u *ReleaseUpdateOne) SetNillableRollbackProcedure(v *string) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetRollbackProcedure(*v)
 	}
-	return ruo
+	return _u
 }
 
 // ClearRollbackProcedure clears the value of the "rollback_procedure" field.
-func (ruo *ReleaseUpdateOne) ClearRollbackProcedure() *ReleaseUpdateOne {
-	ruo.mutation.ClearRollbackProcedure()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearRollbackProcedure() *ReleaseUpdateOne {
+	_u.mutation.ClearRollbackProcedure()
+	return _u
 }
 
 // SetValidationCriteria sets the "validation_criteria" field.
-func (ruo *ReleaseUpdateOne) SetValidationCriteria(s string) *ReleaseUpdateOne {
-	ruo.mutation.SetValidationCriteria(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetValidationCriteria(v string) *ReleaseUpdateOne {
+	_u.mutation.SetValidationCriteria(v)
+	return _u
 }
 
 // SetNillableValidationCriteria sets the "validation_criteria" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableValidationCriteria(s *string) *ReleaseUpdateOne {
-	if s != nil {
-		ruo.SetValidationCriteria(*s)
+func (_u *ReleaseUpdateOne) SetNillableValidationCriteria(v *string) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetValidationCriteria(*v)
 	}
-	return ruo
+	return _u
 }
 
 // ClearValidationCriteria clears the value of the "validation_criteria" field.
-func (ruo *ReleaseUpdateOne) ClearValidationCriteria() *ReleaseUpdateOne {
-	ruo.mutation.ClearValidationCriteria()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearValidationCriteria() *ReleaseUpdateOne {
+	_u.mutation.ClearValidationCriteria()
+	return _u
 }
 
 // SetAffectedSystems sets the "affected_systems" field.
-func (ruo *ReleaseUpdateOne) SetAffectedSystems(s []string) *ReleaseUpdateOne {
-	ruo.mutation.SetAffectedSystems(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetAffectedSystems(v []string) *ReleaseUpdateOne {
+	_u.mutation.SetAffectedSystems(v)
+	return _u
 }
 
-// AppendAffectedSystems appends s to the "affected_systems" field.
-func (ruo *ReleaseUpdateOne) AppendAffectedSystems(s []string) *ReleaseUpdateOne {
-	ruo.mutation.AppendAffectedSystems(s)
-	return ruo
+// AppendAffectedSystems appends value to the "affected_systems" field.
+func (_u *ReleaseUpdateOne) AppendAffectedSystems(v []string) *ReleaseUpdateOne {
+	_u.mutation.AppendAffectedSystems(v)
+	return _u
 }
 
 // ClearAffectedSystems clears the value of the "affected_systems" field.
-func (ruo *ReleaseUpdateOne) ClearAffectedSystems() *ReleaseUpdateOne {
-	ruo.mutation.ClearAffectedSystems()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearAffectedSystems() *ReleaseUpdateOne {
+	_u.mutation.ClearAffectedSystems()
+	return _u
 }
 
 // SetAffectedComponents sets the "affected_components" field.
-func (ruo *ReleaseUpdateOne) SetAffectedComponents(s []string) *ReleaseUpdateOne {
-	ruo.mutation.SetAffectedComponents(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetAffectedComponents(v []string) *ReleaseUpdateOne {
+	_u.mutation.SetAffectedComponents(v)
+	return _u
 }
 
-// AppendAffectedComponents appends s to the "affected_components" field.
-func (ruo *ReleaseUpdateOne) AppendAffectedComponents(s []string) *ReleaseUpdateOne {
-	ruo.mutation.AppendAffectedComponents(s)
-	return ruo
+// AppendAffectedComponents appends value to the "affected_components" field.
+func (_u *ReleaseUpdateOne) AppendAffectedComponents(v []string) *ReleaseUpdateOne {
+	_u.mutation.AppendAffectedComponents(v)
+	return _u
 }
 
 // ClearAffectedComponents clears the value of the "affected_components" field.
-func (ruo *ReleaseUpdateOne) ClearAffectedComponents() *ReleaseUpdateOne {
-	ruo.mutation.ClearAffectedComponents()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearAffectedComponents() *ReleaseUpdateOne {
+	_u.mutation.ClearAffectedComponents()
+	return _u
 }
 
 // SetDeploymentSteps sets the "deployment_steps" field.
-func (ruo *ReleaseUpdateOne) SetDeploymentSteps(s []string) *ReleaseUpdateOne {
-	ruo.mutation.SetDeploymentSteps(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetDeploymentSteps(v []string) *ReleaseUpdateOne {
+	_u.mutation.SetDeploymentSteps(v)
+	return _u
 }
 
-// AppendDeploymentSteps appends s to the "deployment_steps" field.
-func (ruo *ReleaseUpdateOne) AppendDeploymentSteps(s []string) *ReleaseUpdateOne {
-	ruo.mutation.AppendDeploymentSteps(s)
-	return ruo
+// AppendDeploymentSteps appends value to the "deployment_steps" field.
+func (_u *ReleaseUpdateOne) AppendDeploymentSteps(v []string) *ReleaseUpdateOne {
+	_u.mutation.AppendDeploymentSteps(v)
+	return _u
 }
 
 // ClearDeploymentSteps clears the value of the "deployment_steps" field.
-func (ruo *ReleaseUpdateOne) ClearDeploymentSteps() *ReleaseUpdateOne {
-	ruo.mutation.ClearDeploymentSteps()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearDeploymentSteps() *ReleaseUpdateOne {
+	_u.mutation.ClearDeploymentSteps()
+	return _u
 }
 
 // SetTags sets the "tags" field.
-func (ruo *ReleaseUpdateOne) SetTags(s []string) *ReleaseUpdateOne {
-	ruo.mutation.SetTags(s)
-	return ruo
+func (_u *ReleaseUpdateOne) SetTags(v []string) *ReleaseUpdateOne {
+	_u.mutation.SetTags(v)
+	return _u
 }
 
-// AppendTags appends s to the "tags" field.
-func (ruo *ReleaseUpdateOne) AppendTags(s []string) *ReleaseUpdateOne {
-	ruo.mutation.AppendTags(s)
-	return ruo
+// AppendTags appends value to the "tags" field.
+func (_u *ReleaseUpdateOne) AppendTags(v []string) *ReleaseUpdateOne {
+	_u.mutation.AppendTags(v)
+	return _u
 }
 
 // ClearTags clears the value of the "tags" field.
-func (ruo *ReleaseUpdateOne) ClearTags() *ReleaseUpdateOne {
-	ruo.mutation.ClearTags()
-	return ruo
+func (_u *ReleaseUpdateOne) ClearTags() *ReleaseUpdateOne {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // SetIsEmergency sets the "is_emergency" field.
-func (ruo *ReleaseUpdateOne) SetIsEmergency(b bool) *ReleaseUpdateOne {
-	ruo.mutation.SetIsEmergency(b)
-	return ruo
+func (_u *ReleaseUpdateOne) SetIsEmergency(v bool) *ReleaseUpdateOne {
+	_u.mutation.SetIsEmergency(v)
+	return _u
 }
 
 // SetNillableIsEmergency sets the "is_emergency" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableIsEmergency(b *bool) *ReleaseUpdateOne {
-	if b != nil {
-		ruo.SetIsEmergency(*b)
+func (_u *ReleaseUpdateOne) SetNillableIsEmergency(v *bool) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetIsEmergency(*v)
 	}
-	return ruo
+	return _u
 }
 
 // SetRequiresApproval sets the "requires_approval" field.
-func (ruo *ReleaseUpdateOne) SetRequiresApproval(b bool) *ReleaseUpdateOne {
-	ruo.mutation.SetRequiresApproval(b)
-	return ruo
+func (_u *ReleaseUpdateOne) SetRequiresApproval(v bool) *ReleaseUpdateOne {
+	_u.mutation.SetRequiresApproval(v)
+	return _u
 }
 
 // SetNillableRequiresApproval sets the "requires_approval" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableRequiresApproval(b *bool) *ReleaseUpdateOne {
-	if b != nil {
-		ruo.SetRequiresApproval(*b)
+func (_u *ReleaseUpdateOne) SetNillableRequiresApproval(v *bool) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetRequiresApproval(*v)
 	}
-	return ruo
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ruo *ReleaseUpdateOne) SetCreatedAt(t time.Time) *ReleaseUpdateOne {
-	ruo.mutation.SetCreatedAt(t)
-	return ruo
+func (_u *ReleaseUpdateOne) SetCreatedAt(v time.Time) *ReleaseUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ruo *ReleaseUpdateOne) SetNillableCreatedAt(t *time.Time) *ReleaseUpdateOne {
-	if t != nil {
-		ruo.SetCreatedAt(*t)
+func (_u *ReleaseUpdateOne) SetNillableCreatedAt(v *time.Time) *ReleaseUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ruo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ruo *ReleaseUpdateOne) SetUpdatedAt(t time.Time) *ReleaseUpdateOne {
-	ruo.mutation.SetUpdatedAt(t)
-	return ruo
+func (_u *ReleaseUpdateOne) SetUpdatedAt(v time.Time) *ReleaseUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the ReleaseMutation object of the builder.
-func (ruo *ReleaseUpdateOne) Mutation() *ReleaseMutation {
-	return ruo.mutation
+func (_u *ReleaseUpdateOne) Mutation() *ReleaseMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the ReleaseUpdate builder.
-func (ruo *ReleaseUpdateOne) Where(ps ...predicate.Release) *ReleaseUpdateOne {
-	ruo.mutation.Where(ps...)
-	return ruo
+func (_u *ReleaseUpdateOne) Where(ps ...predicate.Release) *ReleaseUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (ruo *ReleaseUpdateOne) Select(field string, fields ...string) *ReleaseUpdateOne {
-	ruo.fields = append([]string{field}, fields...)
-	return ruo
+func (_u *ReleaseUpdateOne) Select(field string, fields ...string) *ReleaseUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Release entity.
-func (ruo *ReleaseUpdateOne) Save(ctx context.Context) (*Release, error) {
-	ruo.defaults()
-	return withHooks(ctx, ruo.sqlSave, ruo.mutation, ruo.hooks)
+func (_u *ReleaseUpdateOne) Save(ctx context.Context) (*Release, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ruo *ReleaseUpdateOne) SaveX(ctx context.Context) *Release {
-	node, err := ruo.Save(ctx)
+func (_u *ReleaseUpdateOne) SaveX(ctx context.Context) *Release {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1233,44 +1233,44 @@ func (ruo *ReleaseUpdateOne) SaveX(ctx context.Context) *Release {
 }
 
 // Exec executes the query on the entity.
-func (ruo *ReleaseUpdateOne) Exec(ctx context.Context) error {
-	_, err := ruo.Save(ctx)
+func (_u *ReleaseUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ruo *ReleaseUpdateOne) ExecX(ctx context.Context) {
-	if err := ruo.Exec(ctx); err != nil {
+func (_u *ReleaseUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ruo *ReleaseUpdateOne) defaults() {
-	if _, ok := ruo.mutation.UpdatedAt(); !ok {
+func (_u *ReleaseUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := release.UpdateDefaultUpdatedAt()
-		ruo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ruo *ReleaseUpdateOne) check() error {
-	if v, ok := ruo.mutation.ReleaseNumber(); ok {
+func (_u *ReleaseUpdateOne) check() error {
+	if v, ok := _u.mutation.ReleaseNumber(); ok {
 		if err := release.ReleaseNumberValidator(v); err != nil {
 			return &ValidationError{Name: "release_number", err: fmt.Errorf(`ent: validator failed for field "Release.release_number": %w`, err)}
 		}
 	}
-	if v, ok := ruo.mutation.Title(); ok {
+	if v, ok := _u.mutation.Title(); ok {
 		if err := release.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Release.title": %w`, err)}
 		}
 	}
-	if v, ok := ruo.mutation.CreatedBy(); ok {
+	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := release.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "Release.created_by": %w`, err)}
 		}
 	}
-	if v, ok := ruo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := release.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Release.tenant_id": %w`, err)}
 		}
@@ -1278,17 +1278,17 @@ func (ruo *ReleaseUpdateOne) check() error {
 	return nil
 }
 
-func (ruo *ReleaseUpdateOne) sqlSave(ctx context.Context) (_node *Release, err error) {
-	if err := ruo.check(); err != nil {
+func (_u *ReleaseUpdateOne) sqlSave(ctx context.Context) (_node *Release, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(release.Table, release.Columns, sqlgraph.NewFieldSpec(release.FieldID, field.TypeInt))
-	id, ok := ruo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Release.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := ruo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, release.FieldID)
 		for _, f := range fields {
@@ -1300,169 +1300,169 @@ func (ruo *ReleaseUpdateOne) sqlSave(ctx context.Context) (_node *Release, err e
 			}
 		}
 	}
-	if ps := ruo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ruo.mutation.ReleaseNumber(); ok {
+	if value, ok := _u.mutation.ReleaseNumber(); ok {
 		_spec.SetField(release.FieldReleaseNumber, field.TypeString, value)
 	}
-	if value, ok := ruo.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(release.FieldTitle, field.TypeString, value)
 	}
-	if value, ok := ruo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(release.FieldDescription, field.TypeString, value)
 	}
-	if ruo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(release.FieldDescription, field.TypeString)
 	}
-	if value, ok := ruo.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(release.FieldType, field.TypeString, value)
 	}
-	if value, ok := ruo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(release.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := ruo.mutation.Severity(); ok {
+	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(release.FieldSeverity, field.TypeString, value)
 	}
-	if value, ok := ruo.mutation.Environment(); ok {
+	if value, ok := _u.mutation.Environment(); ok {
 		_spec.SetField(release.FieldEnvironment, field.TypeString, value)
 	}
-	if value, ok := ruo.mutation.ChangeID(); ok {
+	if value, ok := _u.mutation.ChangeID(); ok {
 		_spec.SetField(release.FieldChangeID, field.TypeInt, value)
 	}
-	if value, ok := ruo.mutation.AddedChangeID(); ok {
+	if value, ok := _u.mutation.AddedChangeID(); ok {
 		_spec.AddField(release.FieldChangeID, field.TypeInt, value)
 	}
-	if ruo.mutation.ChangeIDCleared() {
+	if _u.mutation.ChangeIDCleared() {
 		_spec.ClearField(release.FieldChangeID, field.TypeInt)
 	}
-	if value, ok := ruo.mutation.OwnerID(); ok {
+	if value, ok := _u.mutation.OwnerID(); ok {
 		_spec.SetField(release.FieldOwnerID, field.TypeInt, value)
 	}
-	if value, ok := ruo.mutation.AddedOwnerID(); ok {
+	if value, ok := _u.mutation.AddedOwnerID(); ok {
 		_spec.AddField(release.FieldOwnerID, field.TypeInt, value)
 	}
-	if ruo.mutation.OwnerIDCleared() {
+	if _u.mutation.OwnerIDCleared() {
 		_spec.ClearField(release.FieldOwnerID, field.TypeInt)
 	}
-	if value, ok := ruo.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(release.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := ruo.mutation.AddedCreatedBy(); ok {
+	if value, ok := _u.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(release.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := ruo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(release.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ruo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(release.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ruo.mutation.PlannedReleaseDate(); ok {
+	if value, ok := _u.mutation.PlannedReleaseDate(); ok {
 		_spec.SetField(release.FieldPlannedReleaseDate, field.TypeTime, value)
 	}
-	if ruo.mutation.PlannedReleaseDateCleared() {
+	if _u.mutation.PlannedReleaseDateCleared() {
 		_spec.ClearField(release.FieldPlannedReleaseDate, field.TypeTime)
 	}
-	if value, ok := ruo.mutation.ActualReleaseDate(); ok {
+	if value, ok := _u.mutation.ActualReleaseDate(); ok {
 		_spec.SetField(release.FieldActualReleaseDate, field.TypeTime, value)
 	}
-	if ruo.mutation.ActualReleaseDateCleared() {
+	if _u.mutation.ActualReleaseDateCleared() {
 		_spec.ClearField(release.FieldActualReleaseDate, field.TypeTime)
 	}
-	if value, ok := ruo.mutation.PlannedStartDate(); ok {
+	if value, ok := _u.mutation.PlannedStartDate(); ok {
 		_spec.SetField(release.FieldPlannedStartDate, field.TypeTime, value)
 	}
-	if ruo.mutation.PlannedStartDateCleared() {
+	if _u.mutation.PlannedStartDateCleared() {
 		_spec.ClearField(release.FieldPlannedStartDate, field.TypeTime)
 	}
-	if value, ok := ruo.mutation.PlannedEndDate(); ok {
+	if value, ok := _u.mutation.PlannedEndDate(); ok {
 		_spec.SetField(release.FieldPlannedEndDate, field.TypeTime, value)
 	}
-	if ruo.mutation.PlannedEndDateCleared() {
+	if _u.mutation.PlannedEndDateCleared() {
 		_spec.ClearField(release.FieldPlannedEndDate, field.TypeTime)
 	}
-	if value, ok := ruo.mutation.ReleaseNotes(); ok {
+	if value, ok := _u.mutation.ReleaseNotes(); ok {
 		_spec.SetField(release.FieldReleaseNotes, field.TypeString, value)
 	}
-	if ruo.mutation.ReleaseNotesCleared() {
+	if _u.mutation.ReleaseNotesCleared() {
 		_spec.ClearField(release.FieldReleaseNotes, field.TypeString)
 	}
-	if value, ok := ruo.mutation.RollbackProcedure(); ok {
+	if value, ok := _u.mutation.RollbackProcedure(); ok {
 		_spec.SetField(release.FieldRollbackProcedure, field.TypeString, value)
 	}
-	if ruo.mutation.RollbackProcedureCleared() {
+	if _u.mutation.RollbackProcedureCleared() {
 		_spec.ClearField(release.FieldRollbackProcedure, field.TypeString)
 	}
-	if value, ok := ruo.mutation.ValidationCriteria(); ok {
+	if value, ok := _u.mutation.ValidationCriteria(); ok {
 		_spec.SetField(release.FieldValidationCriteria, field.TypeString, value)
 	}
-	if ruo.mutation.ValidationCriteriaCleared() {
+	if _u.mutation.ValidationCriteriaCleared() {
 		_spec.ClearField(release.FieldValidationCriteria, field.TypeString)
 	}
-	if value, ok := ruo.mutation.AffectedSystems(); ok {
+	if value, ok := _u.mutation.AffectedSystems(); ok {
 		_spec.SetField(release.FieldAffectedSystems, field.TypeJSON, value)
 	}
-	if value, ok := ruo.mutation.AppendedAffectedSystems(); ok {
+	if value, ok := _u.mutation.AppendedAffectedSystems(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, release.FieldAffectedSystems, value)
 		})
 	}
-	if ruo.mutation.AffectedSystemsCleared() {
+	if _u.mutation.AffectedSystemsCleared() {
 		_spec.ClearField(release.FieldAffectedSystems, field.TypeJSON)
 	}
-	if value, ok := ruo.mutation.AffectedComponents(); ok {
+	if value, ok := _u.mutation.AffectedComponents(); ok {
 		_spec.SetField(release.FieldAffectedComponents, field.TypeJSON, value)
 	}
-	if value, ok := ruo.mutation.AppendedAffectedComponents(); ok {
+	if value, ok := _u.mutation.AppendedAffectedComponents(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, release.FieldAffectedComponents, value)
 		})
 	}
-	if ruo.mutation.AffectedComponentsCleared() {
+	if _u.mutation.AffectedComponentsCleared() {
 		_spec.ClearField(release.FieldAffectedComponents, field.TypeJSON)
 	}
-	if value, ok := ruo.mutation.DeploymentSteps(); ok {
+	if value, ok := _u.mutation.DeploymentSteps(); ok {
 		_spec.SetField(release.FieldDeploymentSteps, field.TypeJSON, value)
 	}
-	if value, ok := ruo.mutation.AppendedDeploymentSteps(); ok {
+	if value, ok := _u.mutation.AppendedDeploymentSteps(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, release.FieldDeploymentSteps, value)
 		})
 	}
-	if ruo.mutation.DeploymentStepsCleared() {
+	if _u.mutation.DeploymentStepsCleared() {
 		_spec.ClearField(release.FieldDeploymentSteps, field.TypeJSON)
 	}
-	if value, ok := ruo.mutation.Tags(); ok {
+	if value, ok := _u.mutation.Tags(); ok {
 		_spec.SetField(release.FieldTags, field.TypeJSON, value)
 	}
-	if value, ok := ruo.mutation.AppendedTags(); ok {
+	if value, ok := _u.mutation.AppendedTags(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, release.FieldTags, value)
 		})
 	}
-	if ruo.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		_spec.ClearField(release.FieldTags, field.TypeJSON)
 	}
-	if value, ok := ruo.mutation.IsEmergency(); ok {
+	if value, ok := _u.mutation.IsEmergency(); ok {
 		_spec.SetField(release.FieldIsEmergency, field.TypeBool, value)
 	}
-	if value, ok := ruo.mutation.RequiresApproval(); ok {
+	if value, ok := _u.mutation.RequiresApproval(); ok {
 		_spec.SetField(release.FieldRequiresApproval, field.TypeBool, value)
 	}
-	if value, ok := ruo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(release.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ruo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(release.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &Release{config: ruo.config}
+	_node = &Release{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, ruo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{release.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1470,6 +1470,6 @@ func (ruo *ReleaseUpdateOne) sqlSave(ctx context.Context) (_node *Release, err e
 		}
 		return nil, err
 	}
-	ruo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

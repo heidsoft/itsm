@@ -20,56 +20,56 @@ type PromptTemplateDelete struct {
 }
 
 // Where appends a list predicates to the PromptTemplateDelete builder.
-func (ptd *PromptTemplateDelete) Where(ps ...predicate.PromptTemplate) *PromptTemplateDelete {
-	ptd.mutation.Where(ps...)
-	return ptd
+func (_d *PromptTemplateDelete) Where(ps ...predicate.PromptTemplate) *PromptTemplateDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ptd *PromptTemplateDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, ptd.sqlExec, ptd.mutation, ptd.hooks)
+func (_d *PromptTemplateDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptd *PromptTemplateDelete) ExecX(ctx context.Context) int {
-	n, err := ptd.Exec(ctx)
+func (_d *PromptTemplateDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (ptd *PromptTemplateDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *PromptTemplateDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(prompttemplate.Table, sqlgraph.NewFieldSpec(prompttemplate.FieldID, field.TypeInt))
-	if ps := ptd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, ptd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	ptd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // PromptTemplateDeleteOne is the builder for deleting a single PromptTemplate entity.
 type PromptTemplateDeleteOne struct {
-	ptd *PromptTemplateDelete
+	_d *PromptTemplateDelete
 }
 
 // Where appends a list predicates to the PromptTemplateDelete builder.
-func (ptdo *PromptTemplateDeleteOne) Where(ps ...predicate.PromptTemplate) *PromptTemplateDeleteOne {
-	ptdo.ptd.mutation.Where(ps...)
-	return ptdo
+func (_d *PromptTemplateDeleteOne) Where(ps ...predicate.PromptTemplate) *PromptTemplateDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (ptdo *PromptTemplateDeleteOne) Exec(ctx context.Context) error {
-	n, err := ptdo.ptd.Exec(ctx)
+func (_d *PromptTemplateDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (ptdo *PromptTemplateDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptdo *PromptTemplateDeleteOne) ExecX(ctx context.Context) {
-	if err := ptdo.Exec(ctx); err != nil {
+func (_d *PromptTemplateDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -22,122 +22,122 @@ type IncidentMetricCreate struct {
 }
 
 // SetIncidentID sets the "incident_id" field.
-func (imc *IncidentMetricCreate) SetIncidentID(i int) *IncidentMetricCreate {
-	imc.mutation.SetIncidentID(i)
-	return imc
+func (_c *IncidentMetricCreate) SetIncidentID(v int) *IncidentMetricCreate {
+	_c.mutation.SetIncidentID(v)
+	return _c
 }
 
 // SetMetricType sets the "metric_type" field.
-func (imc *IncidentMetricCreate) SetMetricType(s string) *IncidentMetricCreate {
-	imc.mutation.SetMetricType(s)
-	return imc
+func (_c *IncidentMetricCreate) SetMetricType(v string) *IncidentMetricCreate {
+	_c.mutation.SetMetricType(v)
+	return _c
 }
 
 // SetMetricName sets the "metric_name" field.
-func (imc *IncidentMetricCreate) SetMetricName(s string) *IncidentMetricCreate {
-	imc.mutation.SetMetricName(s)
-	return imc
+func (_c *IncidentMetricCreate) SetMetricName(v string) *IncidentMetricCreate {
+	_c.mutation.SetMetricName(v)
+	return _c
 }
 
 // SetMetricValue sets the "metric_value" field.
-func (imc *IncidentMetricCreate) SetMetricValue(f float64) *IncidentMetricCreate {
-	imc.mutation.SetMetricValue(f)
-	return imc
+func (_c *IncidentMetricCreate) SetMetricValue(v float64) *IncidentMetricCreate {
+	_c.mutation.SetMetricValue(v)
+	return _c
 }
 
 // SetUnit sets the "unit" field.
-func (imc *IncidentMetricCreate) SetUnit(s string) *IncidentMetricCreate {
-	imc.mutation.SetUnit(s)
-	return imc
+func (_c *IncidentMetricCreate) SetUnit(v string) *IncidentMetricCreate {
+	_c.mutation.SetUnit(v)
+	return _c
 }
 
 // SetNillableUnit sets the "unit" field if the given value is not nil.
-func (imc *IncidentMetricCreate) SetNillableUnit(s *string) *IncidentMetricCreate {
-	if s != nil {
-		imc.SetUnit(*s)
+func (_c *IncidentMetricCreate) SetNillableUnit(v *string) *IncidentMetricCreate {
+	if v != nil {
+		_c.SetUnit(*v)
 	}
-	return imc
+	return _c
 }
 
 // SetMeasuredAt sets the "measured_at" field.
-func (imc *IncidentMetricCreate) SetMeasuredAt(t time.Time) *IncidentMetricCreate {
-	imc.mutation.SetMeasuredAt(t)
-	return imc
+func (_c *IncidentMetricCreate) SetMeasuredAt(v time.Time) *IncidentMetricCreate {
+	_c.mutation.SetMeasuredAt(v)
+	return _c
 }
 
 // SetNillableMeasuredAt sets the "measured_at" field if the given value is not nil.
-func (imc *IncidentMetricCreate) SetNillableMeasuredAt(t *time.Time) *IncidentMetricCreate {
-	if t != nil {
-		imc.SetMeasuredAt(*t)
+func (_c *IncidentMetricCreate) SetNillableMeasuredAt(v *time.Time) *IncidentMetricCreate {
+	if v != nil {
+		_c.SetMeasuredAt(*v)
 	}
-	return imc
+	return _c
 }
 
 // SetTags sets the "tags" field.
-func (imc *IncidentMetricCreate) SetTags(m map[string]string) *IncidentMetricCreate {
-	imc.mutation.SetTags(m)
-	return imc
+func (_c *IncidentMetricCreate) SetTags(v map[string]string) *IncidentMetricCreate {
+	_c.mutation.SetTags(v)
+	return _c
 }
 
 // SetMetadata sets the "metadata" field.
-func (imc *IncidentMetricCreate) SetMetadata(m map[string]interface{}) *IncidentMetricCreate {
-	imc.mutation.SetMetadata(m)
-	return imc
+func (_c *IncidentMetricCreate) SetMetadata(v map[string]interface{}) *IncidentMetricCreate {
+	_c.mutation.SetMetadata(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (imc *IncidentMetricCreate) SetTenantID(i int) *IncidentMetricCreate {
-	imc.mutation.SetTenantID(i)
-	return imc
+func (_c *IncidentMetricCreate) SetTenantID(v int) *IncidentMetricCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (imc *IncidentMetricCreate) SetCreatedAt(t time.Time) *IncidentMetricCreate {
-	imc.mutation.SetCreatedAt(t)
-	return imc
+func (_c *IncidentMetricCreate) SetCreatedAt(v time.Time) *IncidentMetricCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (imc *IncidentMetricCreate) SetNillableCreatedAt(t *time.Time) *IncidentMetricCreate {
-	if t != nil {
-		imc.SetCreatedAt(*t)
+func (_c *IncidentMetricCreate) SetNillableCreatedAt(v *time.Time) *IncidentMetricCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return imc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (imc *IncidentMetricCreate) SetUpdatedAt(t time.Time) *IncidentMetricCreate {
-	imc.mutation.SetUpdatedAt(t)
-	return imc
+func (_c *IncidentMetricCreate) SetUpdatedAt(v time.Time) *IncidentMetricCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (imc *IncidentMetricCreate) SetNillableUpdatedAt(t *time.Time) *IncidentMetricCreate {
-	if t != nil {
-		imc.SetUpdatedAt(*t)
+func (_c *IncidentMetricCreate) SetNillableUpdatedAt(v *time.Time) *IncidentMetricCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return imc
+	return _c
 }
 
 // SetIncident sets the "incident" edge to the Incident entity.
-func (imc *IncidentMetricCreate) SetIncident(i *Incident) *IncidentMetricCreate {
-	return imc.SetIncidentID(i.ID)
+func (_c *IncidentMetricCreate) SetIncident(v *Incident) *IncidentMetricCreate {
+	return _c.SetIncidentID(v.ID)
 }
 
 // Mutation returns the IncidentMetricMutation object of the builder.
-func (imc *IncidentMetricCreate) Mutation() *IncidentMetricMutation {
-	return imc.mutation
+func (_c *IncidentMetricCreate) Mutation() *IncidentMetricMutation {
+	return _c.mutation
 }
 
 // Save creates the IncidentMetric in the database.
-func (imc *IncidentMetricCreate) Save(ctx context.Context) (*IncidentMetric, error) {
-	imc.defaults()
-	return withHooks(ctx, imc.sqlSave, imc.mutation, imc.hooks)
+func (_c *IncidentMetricCreate) Save(ctx context.Context) (*IncidentMetric, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (imc *IncidentMetricCreate) SaveX(ctx context.Context) *IncidentMetric {
-	v, err := imc.Save(ctx)
+func (_c *IncidentMetricCreate) SaveX(ctx context.Context) *IncidentMetric {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -145,92 +145,92 @@ func (imc *IncidentMetricCreate) SaveX(ctx context.Context) *IncidentMetric {
 }
 
 // Exec executes the query.
-func (imc *IncidentMetricCreate) Exec(ctx context.Context) error {
-	_, err := imc.Save(ctx)
+func (_c *IncidentMetricCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (imc *IncidentMetricCreate) ExecX(ctx context.Context) {
-	if err := imc.Exec(ctx); err != nil {
+func (_c *IncidentMetricCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (imc *IncidentMetricCreate) defaults() {
-	if _, ok := imc.mutation.MeasuredAt(); !ok {
+func (_c *IncidentMetricCreate) defaults() {
+	if _, ok := _c.mutation.MeasuredAt(); !ok {
 		v := incidentmetric.DefaultMeasuredAt()
-		imc.mutation.SetMeasuredAt(v)
+		_c.mutation.SetMeasuredAt(v)
 	}
-	if _, ok := imc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := incidentmetric.DefaultCreatedAt()
-		imc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := imc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := incidentmetric.DefaultUpdatedAt()
-		imc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (imc *IncidentMetricCreate) check() error {
-	if _, ok := imc.mutation.IncidentID(); !ok {
+func (_c *IncidentMetricCreate) check() error {
+	if _, ok := _c.mutation.IncidentID(); !ok {
 		return &ValidationError{Name: "incident_id", err: errors.New(`ent: missing required field "IncidentMetric.incident_id"`)}
 	}
-	if v, ok := imc.mutation.IncidentID(); ok {
+	if v, ok := _c.mutation.IncidentID(); ok {
 		if err := incidentmetric.IncidentIDValidator(v); err != nil {
 			return &ValidationError{Name: "incident_id", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.incident_id": %w`, err)}
 		}
 	}
-	if _, ok := imc.mutation.MetricType(); !ok {
+	if _, ok := _c.mutation.MetricType(); !ok {
 		return &ValidationError{Name: "metric_type", err: errors.New(`ent: missing required field "IncidentMetric.metric_type"`)}
 	}
-	if v, ok := imc.mutation.MetricType(); ok {
+	if v, ok := _c.mutation.MetricType(); ok {
 		if err := incidentmetric.MetricTypeValidator(v); err != nil {
 			return &ValidationError{Name: "metric_type", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.metric_type": %w`, err)}
 		}
 	}
-	if _, ok := imc.mutation.MetricName(); !ok {
+	if _, ok := _c.mutation.MetricName(); !ok {
 		return &ValidationError{Name: "metric_name", err: errors.New(`ent: missing required field "IncidentMetric.metric_name"`)}
 	}
-	if v, ok := imc.mutation.MetricName(); ok {
+	if v, ok := _c.mutation.MetricName(); ok {
 		if err := incidentmetric.MetricNameValidator(v); err != nil {
 			return &ValidationError{Name: "metric_name", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.metric_name": %w`, err)}
 		}
 	}
-	if _, ok := imc.mutation.MetricValue(); !ok {
+	if _, ok := _c.mutation.MetricValue(); !ok {
 		return &ValidationError{Name: "metric_value", err: errors.New(`ent: missing required field "IncidentMetric.metric_value"`)}
 	}
-	if _, ok := imc.mutation.MeasuredAt(); !ok {
+	if _, ok := _c.mutation.MeasuredAt(); !ok {
 		return &ValidationError{Name: "measured_at", err: errors.New(`ent: missing required field "IncidentMetric.measured_at"`)}
 	}
-	if _, ok := imc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "IncidentMetric.tenant_id"`)}
 	}
-	if v, ok := imc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := incidentmetric.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := imc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "IncidentMetric.created_at"`)}
 	}
-	if _, ok := imc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "IncidentMetric.updated_at"`)}
 	}
-	if len(imc.mutation.IncidentIDs()) == 0 {
+	if len(_c.mutation.IncidentIDs()) == 0 {
 		return &ValidationError{Name: "incident", err: errors.New(`ent: missing required edge "IncidentMetric.incident"`)}
 	}
 	return nil
 }
 
-func (imc *IncidentMetricCreate) sqlSave(ctx context.Context) (*IncidentMetric, error) {
-	if err := imc.check(); err != nil {
+func (_c *IncidentMetricCreate) sqlSave(ctx context.Context) (*IncidentMetric, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := imc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, imc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -238,57 +238,57 @@ func (imc *IncidentMetricCreate) sqlSave(ctx context.Context) (*IncidentMetric, 
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	imc.mutation.id = &_node.ID
-	imc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (imc *IncidentMetricCreate) createSpec() (*IncidentMetric, *sqlgraph.CreateSpec) {
+func (_c *IncidentMetricCreate) createSpec() (*IncidentMetric, *sqlgraph.CreateSpec) {
 	var (
-		_node = &IncidentMetric{config: imc.config}
+		_node = &IncidentMetric{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(incidentmetric.Table, sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt))
 	)
-	if value, ok := imc.mutation.MetricType(); ok {
+	if value, ok := _c.mutation.MetricType(); ok {
 		_spec.SetField(incidentmetric.FieldMetricType, field.TypeString, value)
 		_node.MetricType = value
 	}
-	if value, ok := imc.mutation.MetricName(); ok {
+	if value, ok := _c.mutation.MetricName(); ok {
 		_spec.SetField(incidentmetric.FieldMetricName, field.TypeString, value)
 		_node.MetricName = value
 	}
-	if value, ok := imc.mutation.MetricValue(); ok {
+	if value, ok := _c.mutation.MetricValue(); ok {
 		_spec.SetField(incidentmetric.FieldMetricValue, field.TypeFloat64, value)
 		_node.MetricValue = value
 	}
-	if value, ok := imc.mutation.Unit(); ok {
+	if value, ok := _c.mutation.Unit(); ok {
 		_spec.SetField(incidentmetric.FieldUnit, field.TypeString, value)
 		_node.Unit = value
 	}
-	if value, ok := imc.mutation.MeasuredAt(); ok {
+	if value, ok := _c.mutation.MeasuredAt(); ok {
 		_spec.SetField(incidentmetric.FieldMeasuredAt, field.TypeTime, value)
 		_node.MeasuredAt = value
 	}
-	if value, ok := imc.mutation.Tags(); ok {
+	if value, ok := _c.mutation.Tags(); ok {
 		_spec.SetField(incidentmetric.FieldTags, field.TypeJSON, value)
 		_node.Tags = value
 	}
-	if value, ok := imc.mutation.Metadata(); ok {
+	if value, ok := _c.mutation.Metadata(); ok {
 		_spec.SetField(incidentmetric.FieldMetadata, field.TypeJSON, value)
 		_node.Metadata = value
 	}
-	if value, ok := imc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(incidentmetric.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := imc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentmetric.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := imc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentmetric.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := imc.mutation.IncidentIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.IncidentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -316,16 +316,16 @@ type IncidentMetricCreateBulk struct {
 }
 
 // Save creates the IncidentMetric entities in the database.
-func (imcb *IncidentMetricCreateBulk) Save(ctx context.Context) ([]*IncidentMetric, error) {
-	if imcb.err != nil {
-		return nil, imcb.err
+func (_c *IncidentMetricCreateBulk) Save(ctx context.Context) ([]*IncidentMetric, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(imcb.builders))
-	nodes := make([]*IncidentMetric, len(imcb.builders))
-	mutators := make([]Mutator, len(imcb.builders))
-	for i := range imcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*IncidentMetric, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := imcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*IncidentMetricMutation)
@@ -339,11 +339,11 @@ func (imcb *IncidentMetricCreateBulk) Save(ctx context.Context) ([]*IncidentMetr
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, imcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, imcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -367,7 +367,7 @@ func (imcb *IncidentMetricCreateBulk) Save(ctx context.Context) ([]*IncidentMetr
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, imcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -375,8 +375,8 @@ func (imcb *IncidentMetricCreateBulk) Save(ctx context.Context) ([]*IncidentMetr
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (imcb *IncidentMetricCreateBulk) SaveX(ctx context.Context) []*IncidentMetric {
-	v, err := imcb.Save(ctx)
+func (_c *IncidentMetricCreateBulk) SaveX(ctx context.Context) []*IncidentMetric {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -384,14 +384,14 @@ func (imcb *IncidentMetricCreateBulk) SaveX(ctx context.Context) []*IncidentMetr
 }
 
 // Exec executes the query.
-func (imcb *IncidentMetricCreateBulk) Exec(ctx context.Context) error {
-	_, err := imcb.Save(ctx)
+func (_c *IncidentMetricCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (imcb *IncidentMetricCreateBulk) ExecX(ctx context.Context) {
-	if err := imcb.Exec(ctx); err != nil {
+func (_c *IncidentMetricCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

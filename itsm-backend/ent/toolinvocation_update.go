@@ -24,268 +24,268 @@ type ToolInvocationUpdate struct {
 }
 
 // Where appends a list predicates to the ToolInvocationUpdate builder.
-func (tiu *ToolInvocationUpdate) Where(ps ...predicate.ToolInvocation) *ToolInvocationUpdate {
-	tiu.mutation.Where(ps...)
-	return tiu
+func (_u *ToolInvocationUpdate) Where(ps ...predicate.ToolInvocation) *ToolInvocationUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tiu *ToolInvocationUpdate) SetCreatedAt(t time.Time) *ToolInvocationUpdate {
-	tiu.mutation.SetCreatedAt(t)
-	return tiu
+func (_u *ToolInvocationUpdate) SetCreatedAt(v time.Time) *ToolInvocationUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableCreatedAt(t *time.Time) *ToolInvocationUpdate {
-	if t != nil {
-		tiu.SetCreatedAt(*t)
+func (_u *ToolInvocationUpdate) SetNillableCreatedAt(v *time.Time) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return tiu
+	return _u
 }
 
 // SetConversationID sets the "conversation_id" field.
-func (tiu *ToolInvocationUpdate) SetConversationID(i int) *ToolInvocationUpdate {
-	tiu.mutation.SetConversationID(i)
-	return tiu
+func (_u *ToolInvocationUpdate) SetConversationID(v int) *ToolInvocationUpdate {
+	_u.mutation.SetConversationID(v)
+	return _u
 }
 
 // SetNillableConversationID sets the "conversation_id" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableConversationID(i *int) *ToolInvocationUpdate {
-	if i != nil {
-		tiu.SetConversationID(*i)
+func (_u *ToolInvocationUpdate) SetNillableConversationID(v *int) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetConversationID(*v)
 	}
-	return tiu
+	return _u
 }
 
 // SetToolName sets the "tool_name" field.
-func (tiu *ToolInvocationUpdate) SetToolName(s string) *ToolInvocationUpdate {
-	tiu.mutation.SetToolName(s)
-	return tiu
+func (_u *ToolInvocationUpdate) SetToolName(v string) *ToolInvocationUpdate {
+	_u.mutation.SetToolName(v)
+	return _u
 }
 
 // SetNillableToolName sets the "tool_name" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableToolName(s *string) *ToolInvocationUpdate {
-	if s != nil {
-		tiu.SetToolName(*s)
+func (_u *ToolInvocationUpdate) SetNillableToolName(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetToolName(*v)
 	}
-	return tiu
+	return _u
 }
 
 // SetArguments sets the "arguments" field.
-func (tiu *ToolInvocationUpdate) SetArguments(s string) *ToolInvocationUpdate {
-	tiu.mutation.SetArguments(s)
-	return tiu
+func (_u *ToolInvocationUpdate) SetArguments(v string) *ToolInvocationUpdate {
+	_u.mutation.SetArguments(v)
+	return _u
 }
 
 // SetNillableArguments sets the "arguments" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableArguments(s *string) *ToolInvocationUpdate {
-	if s != nil {
-		tiu.SetArguments(*s)
+func (_u *ToolInvocationUpdate) SetNillableArguments(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetArguments(*v)
 	}
-	return tiu
+	return _u
 }
 
 // SetResult sets the "result" field.
-func (tiu *ToolInvocationUpdate) SetResult(s string) *ToolInvocationUpdate {
-	tiu.mutation.SetResult(s)
-	return tiu
+func (_u *ToolInvocationUpdate) SetResult(v string) *ToolInvocationUpdate {
+	_u.mutation.SetResult(v)
+	return _u
 }
 
 // SetNillableResult sets the "result" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableResult(s *string) *ToolInvocationUpdate {
-	if s != nil {
-		tiu.SetResult(*s)
+func (_u *ToolInvocationUpdate) SetNillableResult(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetResult(*v)
 	}
-	return tiu
+	return _u
 }
 
 // ClearResult clears the value of the "result" field.
-func (tiu *ToolInvocationUpdate) ClearResult() *ToolInvocationUpdate {
-	tiu.mutation.ClearResult()
-	return tiu
+func (_u *ToolInvocationUpdate) ClearResult() *ToolInvocationUpdate {
+	_u.mutation.ClearResult()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (tiu *ToolInvocationUpdate) SetStatus(s string) *ToolInvocationUpdate {
-	tiu.mutation.SetStatus(s)
-	return tiu
+func (_u *ToolInvocationUpdate) SetStatus(v string) *ToolInvocationUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableStatus(s *string) *ToolInvocationUpdate {
-	if s != nil {
-		tiu.SetStatus(*s)
+func (_u *ToolInvocationUpdate) SetNillableStatus(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return tiu
+	return _u
 }
 
 // SetRequestID sets the "request_id" field.
-func (tiu *ToolInvocationUpdate) SetRequestID(s string) *ToolInvocationUpdate {
-	tiu.mutation.SetRequestID(s)
-	return tiu
+func (_u *ToolInvocationUpdate) SetRequestID(v string) *ToolInvocationUpdate {
+	_u.mutation.SetRequestID(v)
+	return _u
 }
 
 // SetNillableRequestID sets the "request_id" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableRequestID(s *string) *ToolInvocationUpdate {
-	if s != nil {
-		tiu.SetRequestID(*s)
+func (_u *ToolInvocationUpdate) SetNillableRequestID(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetRequestID(*v)
 	}
-	return tiu
+	return _u
 }
 
 // ClearRequestID clears the value of the "request_id" field.
-func (tiu *ToolInvocationUpdate) ClearRequestID() *ToolInvocationUpdate {
-	tiu.mutation.ClearRequestID()
-	return tiu
+func (_u *ToolInvocationUpdate) ClearRequestID() *ToolInvocationUpdate {
+	_u.mutation.ClearRequestID()
+	return _u
 }
 
 // SetNeedsApproval sets the "needs_approval" field.
-func (tiu *ToolInvocationUpdate) SetNeedsApproval(b bool) *ToolInvocationUpdate {
-	tiu.mutation.SetNeedsApproval(b)
-	return tiu
+func (_u *ToolInvocationUpdate) SetNeedsApproval(v bool) *ToolInvocationUpdate {
+	_u.mutation.SetNeedsApproval(v)
+	return _u
 }
 
 // SetNillableNeedsApproval sets the "needs_approval" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableNeedsApproval(b *bool) *ToolInvocationUpdate {
-	if b != nil {
-		tiu.SetNeedsApproval(*b)
+func (_u *ToolInvocationUpdate) SetNillableNeedsApproval(v *bool) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetNeedsApproval(*v)
 	}
-	return tiu
+	return _u
 }
 
 // SetApprovalState sets the "approval_state" field.
-func (tiu *ToolInvocationUpdate) SetApprovalState(s string) *ToolInvocationUpdate {
-	tiu.mutation.SetApprovalState(s)
-	return tiu
+func (_u *ToolInvocationUpdate) SetApprovalState(v string) *ToolInvocationUpdate {
+	_u.mutation.SetApprovalState(v)
+	return _u
 }
 
 // SetNillableApprovalState sets the "approval_state" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableApprovalState(s *string) *ToolInvocationUpdate {
-	if s != nil {
-		tiu.SetApprovalState(*s)
+func (_u *ToolInvocationUpdate) SetNillableApprovalState(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetApprovalState(*v)
 	}
-	return tiu
+	return _u
 }
 
 // SetApprovalReason sets the "approval_reason" field.
-func (tiu *ToolInvocationUpdate) SetApprovalReason(s string) *ToolInvocationUpdate {
-	tiu.mutation.SetApprovalReason(s)
-	return tiu
+func (_u *ToolInvocationUpdate) SetApprovalReason(v string) *ToolInvocationUpdate {
+	_u.mutation.SetApprovalReason(v)
+	return _u
 }
 
 // SetNillableApprovalReason sets the "approval_reason" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableApprovalReason(s *string) *ToolInvocationUpdate {
-	if s != nil {
-		tiu.SetApprovalReason(*s)
+func (_u *ToolInvocationUpdate) SetNillableApprovalReason(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetApprovalReason(*v)
 	}
-	return tiu
+	return _u
 }
 
 // SetApprovedBy sets the "approved_by" field.
-func (tiu *ToolInvocationUpdate) SetApprovedBy(i int) *ToolInvocationUpdate {
-	tiu.mutation.ResetApprovedBy()
-	tiu.mutation.SetApprovedBy(i)
-	return tiu
+func (_u *ToolInvocationUpdate) SetApprovedBy(v int) *ToolInvocationUpdate {
+	_u.mutation.ResetApprovedBy()
+	_u.mutation.SetApprovedBy(v)
+	return _u
 }
 
 // SetNillableApprovedBy sets the "approved_by" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableApprovedBy(i *int) *ToolInvocationUpdate {
-	if i != nil {
-		tiu.SetApprovedBy(*i)
+func (_u *ToolInvocationUpdate) SetNillableApprovedBy(v *int) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetApprovedBy(*v)
 	}
-	return tiu
+	return _u
 }
 
-// AddApprovedBy adds i to the "approved_by" field.
-func (tiu *ToolInvocationUpdate) AddApprovedBy(i int) *ToolInvocationUpdate {
-	tiu.mutation.AddApprovedBy(i)
-	return tiu
+// AddApprovedBy adds value to the "approved_by" field.
+func (_u *ToolInvocationUpdate) AddApprovedBy(v int) *ToolInvocationUpdate {
+	_u.mutation.AddApprovedBy(v)
+	return _u
 }
 
 // ClearApprovedBy clears the value of the "approved_by" field.
-func (tiu *ToolInvocationUpdate) ClearApprovedBy() *ToolInvocationUpdate {
-	tiu.mutation.ClearApprovedBy()
-	return tiu
+func (_u *ToolInvocationUpdate) ClearApprovedBy() *ToolInvocationUpdate {
+	_u.mutation.ClearApprovedBy()
+	return _u
 }
 
 // SetApprovedAt sets the "approved_at" field.
-func (tiu *ToolInvocationUpdate) SetApprovedAt(t time.Time) *ToolInvocationUpdate {
-	tiu.mutation.SetApprovedAt(t)
-	return tiu
+func (_u *ToolInvocationUpdate) SetApprovedAt(v time.Time) *ToolInvocationUpdate {
+	_u.mutation.SetApprovedAt(v)
+	return _u
 }
 
 // SetNillableApprovedAt sets the "approved_at" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableApprovedAt(t *time.Time) *ToolInvocationUpdate {
-	if t != nil {
-		tiu.SetApprovedAt(*t)
+func (_u *ToolInvocationUpdate) SetNillableApprovedAt(v *time.Time) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetApprovedAt(*v)
 	}
-	return tiu
+	return _u
 }
 
 // ClearApprovedAt clears the value of the "approved_at" field.
-func (tiu *ToolInvocationUpdate) ClearApprovedAt() *ToolInvocationUpdate {
-	tiu.mutation.ClearApprovedAt()
-	return tiu
+func (_u *ToolInvocationUpdate) ClearApprovedAt() *ToolInvocationUpdate {
+	_u.mutation.ClearApprovedAt()
+	return _u
 }
 
 // SetDryRun sets the "dry_run" field.
-func (tiu *ToolInvocationUpdate) SetDryRun(b bool) *ToolInvocationUpdate {
-	tiu.mutation.SetDryRun(b)
-	return tiu
+func (_u *ToolInvocationUpdate) SetDryRun(v bool) *ToolInvocationUpdate {
+	_u.mutation.SetDryRun(v)
+	return _u
 }
 
 // SetNillableDryRun sets the "dry_run" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableDryRun(b *bool) *ToolInvocationUpdate {
-	if b != nil {
-		tiu.SetDryRun(*b)
+func (_u *ToolInvocationUpdate) SetNillableDryRun(v *bool) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetDryRun(*v)
 	}
-	return tiu
+	return _u
 }
 
 // SetError sets the "error" field.
-func (tiu *ToolInvocationUpdate) SetError(s string) *ToolInvocationUpdate {
-	tiu.mutation.SetError(s)
-	return tiu
+func (_u *ToolInvocationUpdate) SetError(v string) *ToolInvocationUpdate {
+	_u.mutation.SetError(v)
+	return _u
 }
 
 // SetNillableError sets the "error" field if the given value is not nil.
-func (tiu *ToolInvocationUpdate) SetNillableError(s *string) *ToolInvocationUpdate {
-	if s != nil {
-		tiu.SetError(*s)
+func (_u *ToolInvocationUpdate) SetNillableError(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetError(*v)
 	}
-	return tiu
+	return _u
 }
 
 // ClearError clears the value of the "error" field.
-func (tiu *ToolInvocationUpdate) ClearError() *ToolInvocationUpdate {
-	tiu.mutation.ClearError()
-	return tiu
+func (_u *ToolInvocationUpdate) ClearError() *ToolInvocationUpdate {
+	_u.mutation.ClearError()
+	return _u
 }
 
 // SetConversation sets the "conversation" edge to the Conversation entity.
-func (tiu *ToolInvocationUpdate) SetConversation(c *Conversation) *ToolInvocationUpdate {
-	return tiu.SetConversationID(c.ID)
+func (_u *ToolInvocationUpdate) SetConversation(v *Conversation) *ToolInvocationUpdate {
+	return _u.SetConversationID(v.ID)
 }
 
 // Mutation returns the ToolInvocationMutation object of the builder.
-func (tiu *ToolInvocationUpdate) Mutation() *ToolInvocationMutation {
-	return tiu.mutation
+func (_u *ToolInvocationUpdate) Mutation() *ToolInvocationMutation {
+	return _u.mutation
 }
 
 // ClearConversation clears the "conversation" edge to the Conversation entity.
-func (tiu *ToolInvocationUpdate) ClearConversation() *ToolInvocationUpdate {
-	tiu.mutation.ClearConversation()
-	return tiu
+func (_u *ToolInvocationUpdate) ClearConversation() *ToolInvocationUpdate {
+	_u.mutation.ClearConversation()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (tiu *ToolInvocationUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, tiu.sqlSave, tiu.mutation, tiu.hooks)
+func (_u *ToolInvocationUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tiu *ToolInvocationUpdate) SaveX(ctx context.Context) int {
-	affected, err := tiu.Save(ctx)
+func (_u *ToolInvocationUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -293,96 +293,96 @@ func (tiu *ToolInvocationUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (tiu *ToolInvocationUpdate) Exec(ctx context.Context) error {
-	_, err := tiu.Save(ctx)
+func (_u *ToolInvocationUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tiu *ToolInvocationUpdate) ExecX(ctx context.Context) {
-	if err := tiu.Exec(ctx); err != nil {
+func (_u *ToolInvocationUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tiu *ToolInvocationUpdate) check() error {
-	if tiu.mutation.ConversationCleared() && len(tiu.mutation.ConversationIDs()) > 0 {
+func (_u *ToolInvocationUpdate) check() error {
+	if _u.mutation.ConversationCleared() && len(_u.mutation.ConversationIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ToolInvocation.conversation"`)
 	}
 	return nil
 }
 
-func (tiu *ToolInvocationUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := tiu.check(); err != nil {
-		return n, err
+func (_u *ToolInvocationUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(toolinvocation.Table, toolinvocation.Columns, sqlgraph.NewFieldSpec(toolinvocation.FieldID, field.TypeInt))
-	if ps := tiu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tiu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(toolinvocation.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := tiu.mutation.ToolName(); ok {
+	if value, ok := _u.mutation.ToolName(); ok {
 		_spec.SetField(toolinvocation.FieldToolName, field.TypeString, value)
 	}
-	if value, ok := tiu.mutation.Arguments(); ok {
+	if value, ok := _u.mutation.Arguments(); ok {
 		_spec.SetField(toolinvocation.FieldArguments, field.TypeString, value)
 	}
-	if value, ok := tiu.mutation.Result(); ok {
+	if value, ok := _u.mutation.Result(); ok {
 		_spec.SetField(toolinvocation.FieldResult, field.TypeString, value)
 	}
-	if tiu.mutation.ResultCleared() {
+	if _u.mutation.ResultCleared() {
 		_spec.ClearField(toolinvocation.FieldResult, field.TypeString)
 	}
-	if value, ok := tiu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(toolinvocation.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := tiu.mutation.RequestID(); ok {
+	if value, ok := _u.mutation.RequestID(); ok {
 		_spec.SetField(toolinvocation.FieldRequestID, field.TypeString, value)
 	}
-	if tiu.mutation.RequestIDCleared() {
+	if _u.mutation.RequestIDCleared() {
 		_spec.ClearField(toolinvocation.FieldRequestID, field.TypeString)
 	}
-	if value, ok := tiu.mutation.NeedsApproval(); ok {
+	if value, ok := _u.mutation.NeedsApproval(); ok {
 		_spec.SetField(toolinvocation.FieldNeedsApproval, field.TypeBool, value)
 	}
-	if value, ok := tiu.mutation.ApprovalState(); ok {
+	if value, ok := _u.mutation.ApprovalState(); ok {
 		_spec.SetField(toolinvocation.FieldApprovalState, field.TypeString, value)
 	}
-	if value, ok := tiu.mutation.ApprovalReason(); ok {
+	if value, ok := _u.mutation.ApprovalReason(); ok {
 		_spec.SetField(toolinvocation.FieldApprovalReason, field.TypeString, value)
 	}
-	if value, ok := tiu.mutation.ApprovedBy(); ok {
+	if value, ok := _u.mutation.ApprovedBy(); ok {
 		_spec.SetField(toolinvocation.FieldApprovedBy, field.TypeInt, value)
 	}
-	if value, ok := tiu.mutation.AddedApprovedBy(); ok {
+	if value, ok := _u.mutation.AddedApprovedBy(); ok {
 		_spec.AddField(toolinvocation.FieldApprovedBy, field.TypeInt, value)
 	}
-	if tiu.mutation.ApprovedByCleared() {
+	if _u.mutation.ApprovedByCleared() {
 		_spec.ClearField(toolinvocation.FieldApprovedBy, field.TypeInt)
 	}
-	if value, ok := tiu.mutation.ApprovedAt(); ok {
+	if value, ok := _u.mutation.ApprovedAt(); ok {
 		_spec.SetField(toolinvocation.FieldApprovedAt, field.TypeTime, value)
 	}
-	if tiu.mutation.ApprovedAtCleared() {
+	if _u.mutation.ApprovedAtCleared() {
 		_spec.ClearField(toolinvocation.FieldApprovedAt, field.TypeTime)
 	}
-	if value, ok := tiu.mutation.DryRun(); ok {
+	if value, ok := _u.mutation.DryRun(); ok {
 		_spec.SetField(toolinvocation.FieldDryRun, field.TypeBool, value)
 	}
-	if value, ok := tiu.mutation.Error(); ok {
+	if value, ok := _u.mutation.Error(); ok {
 		_spec.SetField(toolinvocation.FieldError, field.TypeString, value)
 	}
-	if tiu.mutation.ErrorCleared() {
+	if _u.mutation.ErrorCleared() {
 		_spec.ClearField(toolinvocation.FieldError, field.TypeString)
 	}
-	if tiu.mutation.ConversationCleared() {
+	if _u.mutation.ConversationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -395,7 +395,7 @@ func (tiu *ToolInvocationUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tiu.mutation.ConversationIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ConversationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -411,7 +411,7 @@ func (tiu *ToolInvocationUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, tiu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{toolinvocation.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -419,8 +419,8 @@ func (tiu *ToolInvocationUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		return 0, err
 	}
-	tiu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ToolInvocationUpdateOne is the builder for updating a single ToolInvocation entity.
@@ -432,275 +432,275 @@ type ToolInvocationUpdateOne struct {
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tiuo *ToolInvocationUpdateOne) SetCreatedAt(t time.Time) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetCreatedAt(t)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetCreatedAt(v time.Time) *ToolInvocationUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableCreatedAt(t *time.Time) *ToolInvocationUpdateOne {
-	if t != nil {
-		tiuo.SetCreatedAt(*t)
+func (_u *ToolInvocationUpdateOne) SetNillableCreatedAt(v *time.Time) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // SetConversationID sets the "conversation_id" field.
-func (tiuo *ToolInvocationUpdateOne) SetConversationID(i int) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetConversationID(i)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetConversationID(v int) *ToolInvocationUpdateOne {
+	_u.mutation.SetConversationID(v)
+	return _u
 }
 
 // SetNillableConversationID sets the "conversation_id" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableConversationID(i *int) *ToolInvocationUpdateOne {
-	if i != nil {
-		tiuo.SetConversationID(*i)
+func (_u *ToolInvocationUpdateOne) SetNillableConversationID(v *int) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetConversationID(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // SetToolName sets the "tool_name" field.
-func (tiuo *ToolInvocationUpdateOne) SetToolName(s string) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetToolName(s)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetToolName(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetToolName(v)
+	return _u
 }
 
 // SetNillableToolName sets the "tool_name" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableToolName(s *string) *ToolInvocationUpdateOne {
-	if s != nil {
-		tiuo.SetToolName(*s)
+func (_u *ToolInvocationUpdateOne) SetNillableToolName(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetToolName(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // SetArguments sets the "arguments" field.
-func (tiuo *ToolInvocationUpdateOne) SetArguments(s string) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetArguments(s)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetArguments(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetArguments(v)
+	return _u
 }
 
 // SetNillableArguments sets the "arguments" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableArguments(s *string) *ToolInvocationUpdateOne {
-	if s != nil {
-		tiuo.SetArguments(*s)
+func (_u *ToolInvocationUpdateOne) SetNillableArguments(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetArguments(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // SetResult sets the "result" field.
-func (tiuo *ToolInvocationUpdateOne) SetResult(s string) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetResult(s)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetResult(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetResult(v)
+	return _u
 }
 
 // SetNillableResult sets the "result" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableResult(s *string) *ToolInvocationUpdateOne {
-	if s != nil {
-		tiuo.SetResult(*s)
+func (_u *ToolInvocationUpdateOne) SetNillableResult(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetResult(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // ClearResult clears the value of the "result" field.
-func (tiuo *ToolInvocationUpdateOne) ClearResult() *ToolInvocationUpdateOne {
-	tiuo.mutation.ClearResult()
-	return tiuo
+func (_u *ToolInvocationUpdateOne) ClearResult() *ToolInvocationUpdateOne {
+	_u.mutation.ClearResult()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (tiuo *ToolInvocationUpdateOne) SetStatus(s string) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetStatus(s)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetStatus(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableStatus(s *string) *ToolInvocationUpdateOne {
-	if s != nil {
-		tiuo.SetStatus(*s)
+func (_u *ToolInvocationUpdateOne) SetNillableStatus(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // SetRequestID sets the "request_id" field.
-func (tiuo *ToolInvocationUpdateOne) SetRequestID(s string) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetRequestID(s)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetRequestID(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetRequestID(v)
+	return _u
 }
 
 // SetNillableRequestID sets the "request_id" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableRequestID(s *string) *ToolInvocationUpdateOne {
-	if s != nil {
-		tiuo.SetRequestID(*s)
+func (_u *ToolInvocationUpdateOne) SetNillableRequestID(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetRequestID(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // ClearRequestID clears the value of the "request_id" field.
-func (tiuo *ToolInvocationUpdateOne) ClearRequestID() *ToolInvocationUpdateOne {
-	tiuo.mutation.ClearRequestID()
-	return tiuo
+func (_u *ToolInvocationUpdateOne) ClearRequestID() *ToolInvocationUpdateOne {
+	_u.mutation.ClearRequestID()
+	return _u
 }
 
 // SetNeedsApproval sets the "needs_approval" field.
-func (tiuo *ToolInvocationUpdateOne) SetNeedsApproval(b bool) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetNeedsApproval(b)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetNeedsApproval(v bool) *ToolInvocationUpdateOne {
+	_u.mutation.SetNeedsApproval(v)
+	return _u
 }
 
 // SetNillableNeedsApproval sets the "needs_approval" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableNeedsApproval(b *bool) *ToolInvocationUpdateOne {
-	if b != nil {
-		tiuo.SetNeedsApproval(*b)
+func (_u *ToolInvocationUpdateOne) SetNillableNeedsApproval(v *bool) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetNeedsApproval(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // SetApprovalState sets the "approval_state" field.
-func (tiuo *ToolInvocationUpdateOne) SetApprovalState(s string) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetApprovalState(s)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetApprovalState(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetApprovalState(v)
+	return _u
 }
 
 // SetNillableApprovalState sets the "approval_state" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableApprovalState(s *string) *ToolInvocationUpdateOne {
-	if s != nil {
-		tiuo.SetApprovalState(*s)
+func (_u *ToolInvocationUpdateOne) SetNillableApprovalState(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetApprovalState(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // SetApprovalReason sets the "approval_reason" field.
-func (tiuo *ToolInvocationUpdateOne) SetApprovalReason(s string) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetApprovalReason(s)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetApprovalReason(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetApprovalReason(v)
+	return _u
 }
 
 // SetNillableApprovalReason sets the "approval_reason" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableApprovalReason(s *string) *ToolInvocationUpdateOne {
-	if s != nil {
-		tiuo.SetApprovalReason(*s)
+func (_u *ToolInvocationUpdateOne) SetNillableApprovalReason(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetApprovalReason(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // SetApprovedBy sets the "approved_by" field.
-func (tiuo *ToolInvocationUpdateOne) SetApprovedBy(i int) *ToolInvocationUpdateOne {
-	tiuo.mutation.ResetApprovedBy()
-	tiuo.mutation.SetApprovedBy(i)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetApprovedBy(v int) *ToolInvocationUpdateOne {
+	_u.mutation.ResetApprovedBy()
+	_u.mutation.SetApprovedBy(v)
+	return _u
 }
 
 // SetNillableApprovedBy sets the "approved_by" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableApprovedBy(i *int) *ToolInvocationUpdateOne {
-	if i != nil {
-		tiuo.SetApprovedBy(*i)
+func (_u *ToolInvocationUpdateOne) SetNillableApprovedBy(v *int) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetApprovedBy(*v)
 	}
-	return tiuo
+	return _u
 }
 
-// AddApprovedBy adds i to the "approved_by" field.
-func (tiuo *ToolInvocationUpdateOne) AddApprovedBy(i int) *ToolInvocationUpdateOne {
-	tiuo.mutation.AddApprovedBy(i)
-	return tiuo
+// AddApprovedBy adds value to the "approved_by" field.
+func (_u *ToolInvocationUpdateOne) AddApprovedBy(v int) *ToolInvocationUpdateOne {
+	_u.mutation.AddApprovedBy(v)
+	return _u
 }
 
 // ClearApprovedBy clears the value of the "approved_by" field.
-func (tiuo *ToolInvocationUpdateOne) ClearApprovedBy() *ToolInvocationUpdateOne {
-	tiuo.mutation.ClearApprovedBy()
-	return tiuo
+func (_u *ToolInvocationUpdateOne) ClearApprovedBy() *ToolInvocationUpdateOne {
+	_u.mutation.ClearApprovedBy()
+	return _u
 }
 
 // SetApprovedAt sets the "approved_at" field.
-func (tiuo *ToolInvocationUpdateOne) SetApprovedAt(t time.Time) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetApprovedAt(t)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetApprovedAt(v time.Time) *ToolInvocationUpdateOne {
+	_u.mutation.SetApprovedAt(v)
+	return _u
 }
 
 // SetNillableApprovedAt sets the "approved_at" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableApprovedAt(t *time.Time) *ToolInvocationUpdateOne {
-	if t != nil {
-		tiuo.SetApprovedAt(*t)
+func (_u *ToolInvocationUpdateOne) SetNillableApprovedAt(v *time.Time) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetApprovedAt(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // ClearApprovedAt clears the value of the "approved_at" field.
-func (tiuo *ToolInvocationUpdateOne) ClearApprovedAt() *ToolInvocationUpdateOne {
-	tiuo.mutation.ClearApprovedAt()
-	return tiuo
+func (_u *ToolInvocationUpdateOne) ClearApprovedAt() *ToolInvocationUpdateOne {
+	_u.mutation.ClearApprovedAt()
+	return _u
 }
 
 // SetDryRun sets the "dry_run" field.
-func (tiuo *ToolInvocationUpdateOne) SetDryRun(b bool) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetDryRun(b)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetDryRun(v bool) *ToolInvocationUpdateOne {
+	_u.mutation.SetDryRun(v)
+	return _u
 }
 
 // SetNillableDryRun sets the "dry_run" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableDryRun(b *bool) *ToolInvocationUpdateOne {
-	if b != nil {
-		tiuo.SetDryRun(*b)
+func (_u *ToolInvocationUpdateOne) SetNillableDryRun(v *bool) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetDryRun(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // SetError sets the "error" field.
-func (tiuo *ToolInvocationUpdateOne) SetError(s string) *ToolInvocationUpdateOne {
-	tiuo.mutation.SetError(s)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) SetError(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetError(v)
+	return _u
 }
 
 // SetNillableError sets the "error" field if the given value is not nil.
-func (tiuo *ToolInvocationUpdateOne) SetNillableError(s *string) *ToolInvocationUpdateOne {
-	if s != nil {
-		tiuo.SetError(*s)
+func (_u *ToolInvocationUpdateOne) SetNillableError(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetError(*v)
 	}
-	return tiuo
+	return _u
 }
 
 // ClearError clears the value of the "error" field.
-func (tiuo *ToolInvocationUpdateOne) ClearError() *ToolInvocationUpdateOne {
-	tiuo.mutation.ClearError()
-	return tiuo
+func (_u *ToolInvocationUpdateOne) ClearError() *ToolInvocationUpdateOne {
+	_u.mutation.ClearError()
+	return _u
 }
 
 // SetConversation sets the "conversation" edge to the Conversation entity.
-func (tiuo *ToolInvocationUpdateOne) SetConversation(c *Conversation) *ToolInvocationUpdateOne {
-	return tiuo.SetConversationID(c.ID)
+func (_u *ToolInvocationUpdateOne) SetConversation(v *Conversation) *ToolInvocationUpdateOne {
+	return _u.SetConversationID(v.ID)
 }
 
 // Mutation returns the ToolInvocationMutation object of the builder.
-func (tiuo *ToolInvocationUpdateOne) Mutation() *ToolInvocationMutation {
-	return tiuo.mutation
+func (_u *ToolInvocationUpdateOne) Mutation() *ToolInvocationMutation {
+	return _u.mutation
 }
 
 // ClearConversation clears the "conversation" edge to the Conversation entity.
-func (tiuo *ToolInvocationUpdateOne) ClearConversation() *ToolInvocationUpdateOne {
-	tiuo.mutation.ClearConversation()
-	return tiuo
+func (_u *ToolInvocationUpdateOne) ClearConversation() *ToolInvocationUpdateOne {
+	_u.mutation.ClearConversation()
+	return _u
 }
 
 // Where appends a list predicates to the ToolInvocationUpdate builder.
-func (tiuo *ToolInvocationUpdateOne) Where(ps ...predicate.ToolInvocation) *ToolInvocationUpdateOne {
-	tiuo.mutation.Where(ps...)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) Where(ps ...predicate.ToolInvocation) *ToolInvocationUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (tiuo *ToolInvocationUpdateOne) Select(field string, fields ...string) *ToolInvocationUpdateOne {
-	tiuo.fields = append([]string{field}, fields...)
-	return tiuo
+func (_u *ToolInvocationUpdateOne) Select(field string, fields ...string) *ToolInvocationUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ToolInvocation entity.
-func (tiuo *ToolInvocationUpdateOne) Save(ctx context.Context) (*ToolInvocation, error) {
-	return withHooks(ctx, tiuo.sqlSave, tiuo.mutation, tiuo.hooks)
+func (_u *ToolInvocationUpdateOne) Save(ctx context.Context) (*ToolInvocation, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tiuo *ToolInvocationUpdateOne) SaveX(ctx context.Context) *ToolInvocation {
-	node, err := tiuo.Save(ctx)
+func (_u *ToolInvocationUpdateOne) SaveX(ctx context.Context) *ToolInvocation {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -708,37 +708,37 @@ func (tiuo *ToolInvocationUpdateOne) SaveX(ctx context.Context) *ToolInvocation 
 }
 
 // Exec executes the query on the entity.
-func (tiuo *ToolInvocationUpdateOne) Exec(ctx context.Context) error {
-	_, err := tiuo.Save(ctx)
+func (_u *ToolInvocationUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tiuo *ToolInvocationUpdateOne) ExecX(ctx context.Context) {
-	if err := tiuo.Exec(ctx); err != nil {
+func (_u *ToolInvocationUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tiuo *ToolInvocationUpdateOne) check() error {
-	if tiuo.mutation.ConversationCleared() && len(tiuo.mutation.ConversationIDs()) > 0 {
+func (_u *ToolInvocationUpdateOne) check() error {
+	if _u.mutation.ConversationCleared() && len(_u.mutation.ConversationIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ToolInvocation.conversation"`)
 	}
 	return nil
 }
 
-func (tiuo *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolInvocation, err error) {
-	if err := tiuo.check(); err != nil {
+func (_u *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolInvocation, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(toolinvocation.Table, toolinvocation.Columns, sqlgraph.NewFieldSpec(toolinvocation.FieldID, field.TypeInt))
-	id, ok := tiuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ToolInvocation.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := tiuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, toolinvocation.FieldID)
 		for _, f := range fields {
@@ -750,71 +750,71 @@ func (tiuo *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolIn
 			}
 		}
 	}
-	if ps := tiuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tiuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(toolinvocation.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := tiuo.mutation.ToolName(); ok {
+	if value, ok := _u.mutation.ToolName(); ok {
 		_spec.SetField(toolinvocation.FieldToolName, field.TypeString, value)
 	}
-	if value, ok := tiuo.mutation.Arguments(); ok {
+	if value, ok := _u.mutation.Arguments(); ok {
 		_spec.SetField(toolinvocation.FieldArguments, field.TypeString, value)
 	}
-	if value, ok := tiuo.mutation.Result(); ok {
+	if value, ok := _u.mutation.Result(); ok {
 		_spec.SetField(toolinvocation.FieldResult, field.TypeString, value)
 	}
-	if tiuo.mutation.ResultCleared() {
+	if _u.mutation.ResultCleared() {
 		_spec.ClearField(toolinvocation.FieldResult, field.TypeString)
 	}
-	if value, ok := tiuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(toolinvocation.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := tiuo.mutation.RequestID(); ok {
+	if value, ok := _u.mutation.RequestID(); ok {
 		_spec.SetField(toolinvocation.FieldRequestID, field.TypeString, value)
 	}
-	if tiuo.mutation.RequestIDCleared() {
+	if _u.mutation.RequestIDCleared() {
 		_spec.ClearField(toolinvocation.FieldRequestID, field.TypeString)
 	}
-	if value, ok := tiuo.mutation.NeedsApproval(); ok {
+	if value, ok := _u.mutation.NeedsApproval(); ok {
 		_spec.SetField(toolinvocation.FieldNeedsApproval, field.TypeBool, value)
 	}
-	if value, ok := tiuo.mutation.ApprovalState(); ok {
+	if value, ok := _u.mutation.ApprovalState(); ok {
 		_spec.SetField(toolinvocation.FieldApprovalState, field.TypeString, value)
 	}
-	if value, ok := tiuo.mutation.ApprovalReason(); ok {
+	if value, ok := _u.mutation.ApprovalReason(); ok {
 		_spec.SetField(toolinvocation.FieldApprovalReason, field.TypeString, value)
 	}
-	if value, ok := tiuo.mutation.ApprovedBy(); ok {
+	if value, ok := _u.mutation.ApprovedBy(); ok {
 		_spec.SetField(toolinvocation.FieldApprovedBy, field.TypeInt, value)
 	}
-	if value, ok := tiuo.mutation.AddedApprovedBy(); ok {
+	if value, ok := _u.mutation.AddedApprovedBy(); ok {
 		_spec.AddField(toolinvocation.FieldApprovedBy, field.TypeInt, value)
 	}
-	if tiuo.mutation.ApprovedByCleared() {
+	if _u.mutation.ApprovedByCleared() {
 		_spec.ClearField(toolinvocation.FieldApprovedBy, field.TypeInt)
 	}
-	if value, ok := tiuo.mutation.ApprovedAt(); ok {
+	if value, ok := _u.mutation.ApprovedAt(); ok {
 		_spec.SetField(toolinvocation.FieldApprovedAt, field.TypeTime, value)
 	}
-	if tiuo.mutation.ApprovedAtCleared() {
+	if _u.mutation.ApprovedAtCleared() {
 		_spec.ClearField(toolinvocation.FieldApprovedAt, field.TypeTime)
 	}
-	if value, ok := tiuo.mutation.DryRun(); ok {
+	if value, ok := _u.mutation.DryRun(); ok {
 		_spec.SetField(toolinvocation.FieldDryRun, field.TypeBool, value)
 	}
-	if value, ok := tiuo.mutation.Error(); ok {
+	if value, ok := _u.mutation.Error(); ok {
 		_spec.SetField(toolinvocation.FieldError, field.TypeString, value)
 	}
-	if tiuo.mutation.ErrorCleared() {
+	if _u.mutation.ErrorCleared() {
 		_spec.ClearField(toolinvocation.FieldError, field.TypeString)
 	}
-	if tiuo.mutation.ConversationCleared() {
+	if _u.mutation.ConversationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -827,7 +827,7 @@ func (tiuo *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolIn
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tiuo.mutation.ConversationIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ConversationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -843,10 +843,10 @@ func (tiuo *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolIn
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &ToolInvocation{config: tiuo.config}
+	_node = &ToolInvocation{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, tiuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{toolinvocation.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -854,6 +854,6 @@ func (tiuo *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolIn
 		}
 		return nil, err
 	}
-	tiuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

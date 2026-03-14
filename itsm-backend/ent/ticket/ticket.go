@@ -64,6 +64,14 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldIsManagedByMsp holds the string denoting the is_managed_by_msp field in the database.
+	FieldIsManagedByMsp = "is_managed_by_msp"
+	// FieldMspProviderID holds the string denoting the msp_provider_id field in the database.
+	FieldMspProviderID = "msp_provider_id"
+	// FieldManagedByUserID holds the string denoting the managed_by_user_id field in the database.
+	FieldManagedByUserID = "managed_by_user_id"
+	// FieldMspTicketID holds the string denoting the msp_ticket_id field in the database.
+	FieldMspTicketID = "msp_ticket_id"
 	// EdgeTemplate holds the string denoting the template edge name in mutations.
 	EdgeTemplate = "template"
 	// EdgeCategory holds the string denoting the category edge name in mutations.
@@ -232,6 +240,10 @@ var Columns = []string{
 	FieldRatedBy,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldIsManagedByMsp,
+	FieldMspProviderID,
+	FieldManagedByUserID,
+	FieldMspTicketID,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "tickets"
@@ -285,6 +297,8 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultIsManagedByMsp holds the default value on creation for the "is_managed_by_msp" field.
+	DefaultIsManagedByMsp bool
 )
 
 // OrderOption defines the ordering options for the Ticket queries.
@@ -418,6 +432,26 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByIsManagedByMsp orders the results by the is_managed_by_msp field.
+func ByIsManagedByMsp(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsManagedByMsp, opts...).ToFunc()
+}
+
+// ByMspProviderID orders the results by the msp_provider_id field.
+func ByMspProviderID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMspProviderID, opts...).ToFunc()
+}
+
+// ByManagedByUserID orders the results by the managed_by_user_id field.
+func ByManagedByUserID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldManagedByUserID, opts...).ToFunc()
+}
+
+// ByMspTicketID orders the results by the msp_ticket_id field.
+func ByMspTicketID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMspTicketID, opts...).ToFunc()
 }
 
 // ByTemplateField orders the results by template field.

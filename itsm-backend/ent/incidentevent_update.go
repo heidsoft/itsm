@@ -24,246 +24,246 @@ type IncidentEventUpdate struct {
 }
 
 // Where appends a list predicates to the IncidentEventUpdate builder.
-func (ieu *IncidentEventUpdate) Where(ps ...predicate.IncidentEvent) *IncidentEventUpdate {
-	ieu.mutation.Where(ps...)
-	return ieu
+func (_u *IncidentEventUpdate) Where(ps ...predicate.IncidentEvent) *IncidentEventUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetIncidentID sets the "incident_id" field.
-func (ieu *IncidentEventUpdate) SetIncidentID(i int) *IncidentEventUpdate {
-	ieu.mutation.SetIncidentID(i)
-	return ieu
+func (_u *IncidentEventUpdate) SetIncidentID(v int) *IncidentEventUpdate {
+	_u.mutation.SetIncidentID(v)
+	return _u
 }
 
 // SetNillableIncidentID sets the "incident_id" field if the given value is not nil.
-func (ieu *IncidentEventUpdate) SetNillableIncidentID(i *int) *IncidentEventUpdate {
-	if i != nil {
-		ieu.SetIncidentID(*i)
+func (_u *IncidentEventUpdate) SetNillableIncidentID(v *int) *IncidentEventUpdate {
+	if v != nil {
+		_u.SetIncidentID(*v)
 	}
-	return ieu
+	return _u
 }
 
 // SetEventType sets the "event_type" field.
-func (ieu *IncidentEventUpdate) SetEventType(s string) *IncidentEventUpdate {
-	ieu.mutation.SetEventType(s)
-	return ieu
+func (_u *IncidentEventUpdate) SetEventType(v string) *IncidentEventUpdate {
+	_u.mutation.SetEventType(v)
+	return _u
 }
 
 // SetNillableEventType sets the "event_type" field if the given value is not nil.
-func (ieu *IncidentEventUpdate) SetNillableEventType(s *string) *IncidentEventUpdate {
-	if s != nil {
-		ieu.SetEventType(*s)
+func (_u *IncidentEventUpdate) SetNillableEventType(v *string) *IncidentEventUpdate {
+	if v != nil {
+		_u.SetEventType(*v)
 	}
-	return ieu
+	return _u
 }
 
 // SetEventName sets the "event_name" field.
-func (ieu *IncidentEventUpdate) SetEventName(s string) *IncidentEventUpdate {
-	ieu.mutation.SetEventName(s)
-	return ieu
+func (_u *IncidentEventUpdate) SetEventName(v string) *IncidentEventUpdate {
+	_u.mutation.SetEventName(v)
+	return _u
 }
 
 // SetNillableEventName sets the "event_name" field if the given value is not nil.
-func (ieu *IncidentEventUpdate) SetNillableEventName(s *string) *IncidentEventUpdate {
-	if s != nil {
-		ieu.SetEventName(*s)
+func (_u *IncidentEventUpdate) SetNillableEventName(v *string) *IncidentEventUpdate {
+	if v != nil {
+		_u.SetEventName(*v)
 	}
-	return ieu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ieu *IncidentEventUpdate) SetDescription(s string) *IncidentEventUpdate {
-	ieu.mutation.SetDescription(s)
-	return ieu
+func (_u *IncidentEventUpdate) SetDescription(v string) *IncidentEventUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ieu *IncidentEventUpdate) SetNillableDescription(s *string) *IncidentEventUpdate {
-	if s != nil {
-		ieu.SetDescription(*s)
+func (_u *IncidentEventUpdate) SetNillableDescription(v *string) *IncidentEventUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ieu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ieu *IncidentEventUpdate) ClearDescription() *IncidentEventUpdate {
-	ieu.mutation.ClearDescription()
-	return ieu
+func (_u *IncidentEventUpdate) ClearDescription() *IncidentEventUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (ieu *IncidentEventUpdate) SetStatus(s string) *IncidentEventUpdate {
-	ieu.mutation.SetStatus(s)
-	return ieu
+func (_u *IncidentEventUpdate) SetStatus(v string) *IncidentEventUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ieu *IncidentEventUpdate) SetNillableStatus(s *string) *IncidentEventUpdate {
-	if s != nil {
-		ieu.SetStatus(*s)
+func (_u *IncidentEventUpdate) SetNillableStatus(v *string) *IncidentEventUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return ieu
+	return _u
 }
 
 // SetSeverity sets the "severity" field.
-func (ieu *IncidentEventUpdate) SetSeverity(s string) *IncidentEventUpdate {
-	ieu.mutation.SetSeverity(s)
-	return ieu
+func (_u *IncidentEventUpdate) SetSeverity(v string) *IncidentEventUpdate {
+	_u.mutation.SetSeverity(v)
+	return _u
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (ieu *IncidentEventUpdate) SetNillableSeverity(s *string) *IncidentEventUpdate {
-	if s != nil {
-		ieu.SetSeverity(*s)
+func (_u *IncidentEventUpdate) SetNillableSeverity(v *string) *IncidentEventUpdate {
+	if v != nil {
+		_u.SetSeverity(*v)
 	}
-	return ieu
+	return _u
 }
 
 // SetData sets the "data" field.
-func (ieu *IncidentEventUpdate) SetData(m map[string]interface{}) *IncidentEventUpdate {
-	ieu.mutation.SetData(m)
-	return ieu
+func (_u *IncidentEventUpdate) SetData(v map[string]interface{}) *IncidentEventUpdate {
+	_u.mutation.SetData(v)
+	return _u
 }
 
 // ClearData clears the value of the "data" field.
-func (ieu *IncidentEventUpdate) ClearData() *IncidentEventUpdate {
-	ieu.mutation.ClearData()
-	return ieu
+func (_u *IncidentEventUpdate) ClearData() *IncidentEventUpdate {
+	_u.mutation.ClearData()
+	return _u
 }
 
 // SetOccurredAt sets the "occurred_at" field.
-func (ieu *IncidentEventUpdate) SetOccurredAt(t time.Time) *IncidentEventUpdate {
-	ieu.mutation.SetOccurredAt(t)
-	return ieu
+func (_u *IncidentEventUpdate) SetOccurredAt(v time.Time) *IncidentEventUpdate {
+	_u.mutation.SetOccurredAt(v)
+	return _u
 }
 
 // SetNillableOccurredAt sets the "occurred_at" field if the given value is not nil.
-func (ieu *IncidentEventUpdate) SetNillableOccurredAt(t *time.Time) *IncidentEventUpdate {
-	if t != nil {
-		ieu.SetOccurredAt(*t)
+func (_u *IncidentEventUpdate) SetNillableOccurredAt(v *time.Time) *IncidentEventUpdate {
+	if v != nil {
+		_u.SetOccurredAt(*v)
 	}
-	return ieu
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (ieu *IncidentEventUpdate) SetUserID(i int) *IncidentEventUpdate {
-	ieu.mutation.ResetUserID()
-	ieu.mutation.SetUserID(i)
-	return ieu
+func (_u *IncidentEventUpdate) SetUserID(v int) *IncidentEventUpdate {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (ieu *IncidentEventUpdate) SetNillableUserID(i *int) *IncidentEventUpdate {
-	if i != nil {
-		ieu.SetUserID(*i)
+func (_u *IncidentEventUpdate) SetNillableUserID(v *int) *IncidentEventUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return ieu
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (ieu *IncidentEventUpdate) AddUserID(i int) *IncidentEventUpdate {
-	ieu.mutation.AddUserID(i)
-	return ieu
+// AddUserID adds value to the "user_id" field.
+func (_u *IncidentEventUpdate) AddUserID(v int) *IncidentEventUpdate {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // ClearUserID clears the value of the "user_id" field.
-func (ieu *IncidentEventUpdate) ClearUserID() *IncidentEventUpdate {
-	ieu.mutation.ClearUserID()
-	return ieu
+func (_u *IncidentEventUpdate) ClearUserID() *IncidentEventUpdate {
+	_u.mutation.ClearUserID()
+	return _u
 }
 
 // SetSource sets the "source" field.
-func (ieu *IncidentEventUpdate) SetSource(s string) *IncidentEventUpdate {
-	ieu.mutation.SetSource(s)
-	return ieu
+func (_u *IncidentEventUpdate) SetSource(v string) *IncidentEventUpdate {
+	_u.mutation.SetSource(v)
+	return _u
 }
 
 // SetNillableSource sets the "source" field if the given value is not nil.
-func (ieu *IncidentEventUpdate) SetNillableSource(s *string) *IncidentEventUpdate {
-	if s != nil {
-		ieu.SetSource(*s)
+func (_u *IncidentEventUpdate) SetNillableSource(v *string) *IncidentEventUpdate {
+	if v != nil {
+		_u.SetSource(*v)
 	}
-	return ieu
+	return _u
 }
 
 // SetMetadata sets the "metadata" field.
-func (ieu *IncidentEventUpdate) SetMetadata(m map[string]interface{}) *IncidentEventUpdate {
-	ieu.mutation.SetMetadata(m)
-	return ieu
+func (_u *IncidentEventUpdate) SetMetadata(v map[string]interface{}) *IncidentEventUpdate {
+	_u.mutation.SetMetadata(v)
+	return _u
 }
 
 // ClearMetadata clears the value of the "metadata" field.
-func (ieu *IncidentEventUpdate) ClearMetadata() *IncidentEventUpdate {
-	ieu.mutation.ClearMetadata()
-	return ieu
+func (_u *IncidentEventUpdate) ClearMetadata() *IncidentEventUpdate {
+	_u.mutation.ClearMetadata()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ieu *IncidentEventUpdate) SetTenantID(i int) *IncidentEventUpdate {
-	ieu.mutation.ResetTenantID()
-	ieu.mutation.SetTenantID(i)
-	return ieu
+func (_u *IncidentEventUpdate) SetTenantID(v int) *IncidentEventUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ieu *IncidentEventUpdate) SetNillableTenantID(i *int) *IncidentEventUpdate {
-	if i != nil {
-		ieu.SetTenantID(*i)
+func (_u *IncidentEventUpdate) SetNillableTenantID(v *int) *IncidentEventUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ieu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ieu *IncidentEventUpdate) AddTenantID(i int) *IncidentEventUpdate {
-	ieu.mutation.AddTenantID(i)
-	return ieu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentEventUpdate) AddTenantID(v int) *IncidentEventUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ieu *IncidentEventUpdate) SetCreatedAt(t time.Time) *IncidentEventUpdate {
-	ieu.mutation.SetCreatedAt(t)
-	return ieu
+func (_u *IncidentEventUpdate) SetCreatedAt(v time.Time) *IncidentEventUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ieu *IncidentEventUpdate) SetNillableCreatedAt(t *time.Time) *IncidentEventUpdate {
-	if t != nil {
-		ieu.SetCreatedAt(*t)
+func (_u *IncidentEventUpdate) SetNillableCreatedAt(v *time.Time) *IncidentEventUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ieu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ieu *IncidentEventUpdate) SetUpdatedAt(t time.Time) *IncidentEventUpdate {
-	ieu.mutation.SetUpdatedAt(t)
-	return ieu
+func (_u *IncidentEventUpdate) SetUpdatedAt(v time.Time) *IncidentEventUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetIncident sets the "incident" edge to the Incident entity.
-func (ieu *IncidentEventUpdate) SetIncident(i *Incident) *IncidentEventUpdate {
-	return ieu.SetIncidentID(i.ID)
+func (_u *IncidentEventUpdate) SetIncident(v *Incident) *IncidentEventUpdate {
+	return _u.SetIncidentID(v.ID)
 }
 
 // Mutation returns the IncidentEventMutation object of the builder.
-func (ieu *IncidentEventUpdate) Mutation() *IncidentEventMutation {
-	return ieu.mutation
+func (_u *IncidentEventUpdate) Mutation() *IncidentEventMutation {
+	return _u.mutation
 }
 
 // ClearIncident clears the "incident" edge to the Incident entity.
-func (ieu *IncidentEventUpdate) ClearIncident() *IncidentEventUpdate {
-	ieu.mutation.ClearIncident()
-	return ieu
+func (_u *IncidentEventUpdate) ClearIncident() *IncidentEventUpdate {
+	_u.mutation.ClearIncident()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (ieu *IncidentEventUpdate) Save(ctx context.Context) (int, error) {
-	ieu.defaults()
-	return withHooks(ctx, ieu.sqlSave, ieu.mutation, ieu.hooks)
+func (_u *IncidentEventUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ieu *IncidentEventUpdate) SaveX(ctx context.Context) int {
-	affected, err := ieu.Save(ctx)
+func (_u *IncidentEventUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -271,124 +271,124 @@ func (ieu *IncidentEventUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (ieu *IncidentEventUpdate) Exec(ctx context.Context) error {
-	_, err := ieu.Save(ctx)
+func (_u *IncidentEventUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ieu *IncidentEventUpdate) ExecX(ctx context.Context) {
-	if err := ieu.Exec(ctx); err != nil {
+func (_u *IncidentEventUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ieu *IncidentEventUpdate) defaults() {
-	if _, ok := ieu.mutation.UpdatedAt(); !ok {
+func (_u *IncidentEventUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incidentevent.UpdateDefaultUpdatedAt()
-		ieu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ieu *IncidentEventUpdate) check() error {
-	if v, ok := ieu.mutation.IncidentID(); ok {
+func (_u *IncidentEventUpdate) check() error {
+	if v, ok := _u.mutation.IncidentID(); ok {
 		if err := incidentevent.IncidentIDValidator(v); err != nil {
 			return &ValidationError{Name: "incident_id", err: fmt.Errorf(`ent: validator failed for field "IncidentEvent.incident_id": %w`, err)}
 		}
 	}
-	if v, ok := ieu.mutation.EventType(); ok {
+	if v, ok := _u.mutation.EventType(); ok {
 		if err := incidentevent.EventTypeValidator(v); err != nil {
 			return &ValidationError{Name: "event_type", err: fmt.Errorf(`ent: validator failed for field "IncidentEvent.event_type": %w`, err)}
 		}
 	}
-	if v, ok := ieu.mutation.EventName(); ok {
+	if v, ok := _u.mutation.EventName(); ok {
 		if err := incidentevent.EventNameValidator(v); err != nil {
 			return &ValidationError{Name: "event_name", err: fmt.Errorf(`ent: validator failed for field "IncidentEvent.event_name": %w`, err)}
 		}
 	}
-	if v, ok := ieu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incidentevent.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentEvent.tenant_id": %w`, err)}
 		}
 	}
-	if ieu.mutation.IncidentCleared() && len(ieu.mutation.IncidentIDs()) > 0 {
+	if _u.mutation.IncidentCleared() && len(_u.mutation.IncidentIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "IncidentEvent.incident"`)
 	}
 	return nil
 }
 
-func (ieu *IncidentEventUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := ieu.check(); err != nil {
-		return n, err
+func (_u *IncidentEventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incidentevent.Table, incidentevent.Columns, sqlgraph.NewFieldSpec(incidentevent.FieldID, field.TypeInt))
-	if ps := ieu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ieu.mutation.EventType(); ok {
+	if value, ok := _u.mutation.EventType(); ok {
 		_spec.SetField(incidentevent.FieldEventType, field.TypeString, value)
 	}
-	if value, ok := ieu.mutation.EventName(); ok {
+	if value, ok := _u.mutation.EventName(); ok {
 		_spec.SetField(incidentevent.FieldEventName, field.TypeString, value)
 	}
-	if value, ok := ieu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(incidentevent.FieldDescription, field.TypeString, value)
 	}
-	if ieu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(incidentevent.FieldDescription, field.TypeString)
 	}
-	if value, ok := ieu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(incidentevent.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := ieu.mutation.Severity(); ok {
+	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(incidentevent.FieldSeverity, field.TypeString, value)
 	}
-	if value, ok := ieu.mutation.Data(); ok {
+	if value, ok := _u.mutation.Data(); ok {
 		_spec.SetField(incidentevent.FieldData, field.TypeJSON, value)
 	}
-	if ieu.mutation.DataCleared() {
+	if _u.mutation.DataCleared() {
 		_spec.ClearField(incidentevent.FieldData, field.TypeJSON)
 	}
-	if value, ok := ieu.mutation.OccurredAt(); ok {
+	if value, ok := _u.mutation.OccurredAt(); ok {
 		_spec.SetField(incidentevent.FieldOccurredAt, field.TypeTime, value)
 	}
-	if value, ok := ieu.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(incidentevent.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := ieu.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(incidentevent.FieldUserID, field.TypeInt, value)
 	}
-	if ieu.mutation.UserIDCleared() {
+	if _u.mutation.UserIDCleared() {
 		_spec.ClearField(incidentevent.FieldUserID, field.TypeInt)
 	}
-	if value, ok := ieu.mutation.Source(); ok {
+	if value, ok := _u.mutation.Source(); ok {
 		_spec.SetField(incidentevent.FieldSource, field.TypeString, value)
 	}
-	if value, ok := ieu.mutation.Metadata(); ok {
+	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(incidentevent.FieldMetadata, field.TypeJSON, value)
 	}
-	if ieu.mutation.MetadataCleared() {
+	if _u.mutation.MetadataCleared() {
 		_spec.ClearField(incidentevent.FieldMetadata, field.TypeJSON)
 	}
-	if value, ok := ieu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incidentevent.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ieu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incidentevent.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ieu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentevent.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ieu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentevent.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if ieu.mutation.IncidentCleared() {
+	if _u.mutation.IncidentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -401,7 +401,7 @@ func (ieu *IncidentEventUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ieu.mutation.IncidentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.IncidentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -417,7 +417,7 @@ func (ieu *IncidentEventUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, ieu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incidentevent.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -425,8 +425,8 @@ func (ieu *IncidentEventUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		return 0, err
 	}
-	ieu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // IncidentEventUpdateOne is the builder for updating a single IncidentEvent entity.
@@ -438,253 +438,253 @@ type IncidentEventUpdateOne struct {
 }
 
 // SetIncidentID sets the "incident_id" field.
-func (ieuo *IncidentEventUpdateOne) SetIncidentID(i int) *IncidentEventUpdateOne {
-	ieuo.mutation.SetIncidentID(i)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetIncidentID(v int) *IncidentEventUpdateOne {
+	_u.mutation.SetIncidentID(v)
+	return _u
 }
 
 // SetNillableIncidentID sets the "incident_id" field if the given value is not nil.
-func (ieuo *IncidentEventUpdateOne) SetNillableIncidentID(i *int) *IncidentEventUpdateOne {
-	if i != nil {
-		ieuo.SetIncidentID(*i)
+func (_u *IncidentEventUpdateOne) SetNillableIncidentID(v *int) *IncidentEventUpdateOne {
+	if v != nil {
+		_u.SetIncidentID(*v)
 	}
-	return ieuo
+	return _u
 }
 
 // SetEventType sets the "event_type" field.
-func (ieuo *IncidentEventUpdateOne) SetEventType(s string) *IncidentEventUpdateOne {
-	ieuo.mutation.SetEventType(s)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetEventType(v string) *IncidentEventUpdateOne {
+	_u.mutation.SetEventType(v)
+	return _u
 }
 
 // SetNillableEventType sets the "event_type" field if the given value is not nil.
-func (ieuo *IncidentEventUpdateOne) SetNillableEventType(s *string) *IncidentEventUpdateOne {
-	if s != nil {
-		ieuo.SetEventType(*s)
+func (_u *IncidentEventUpdateOne) SetNillableEventType(v *string) *IncidentEventUpdateOne {
+	if v != nil {
+		_u.SetEventType(*v)
 	}
-	return ieuo
+	return _u
 }
 
 // SetEventName sets the "event_name" field.
-func (ieuo *IncidentEventUpdateOne) SetEventName(s string) *IncidentEventUpdateOne {
-	ieuo.mutation.SetEventName(s)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetEventName(v string) *IncidentEventUpdateOne {
+	_u.mutation.SetEventName(v)
+	return _u
 }
 
 // SetNillableEventName sets the "event_name" field if the given value is not nil.
-func (ieuo *IncidentEventUpdateOne) SetNillableEventName(s *string) *IncidentEventUpdateOne {
-	if s != nil {
-		ieuo.SetEventName(*s)
+func (_u *IncidentEventUpdateOne) SetNillableEventName(v *string) *IncidentEventUpdateOne {
+	if v != nil {
+		_u.SetEventName(*v)
 	}
-	return ieuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ieuo *IncidentEventUpdateOne) SetDescription(s string) *IncidentEventUpdateOne {
-	ieuo.mutation.SetDescription(s)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetDescription(v string) *IncidentEventUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ieuo *IncidentEventUpdateOne) SetNillableDescription(s *string) *IncidentEventUpdateOne {
-	if s != nil {
-		ieuo.SetDescription(*s)
+func (_u *IncidentEventUpdateOne) SetNillableDescription(v *string) *IncidentEventUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ieuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ieuo *IncidentEventUpdateOne) ClearDescription() *IncidentEventUpdateOne {
-	ieuo.mutation.ClearDescription()
-	return ieuo
+func (_u *IncidentEventUpdateOne) ClearDescription() *IncidentEventUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (ieuo *IncidentEventUpdateOne) SetStatus(s string) *IncidentEventUpdateOne {
-	ieuo.mutation.SetStatus(s)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetStatus(v string) *IncidentEventUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ieuo *IncidentEventUpdateOne) SetNillableStatus(s *string) *IncidentEventUpdateOne {
-	if s != nil {
-		ieuo.SetStatus(*s)
+func (_u *IncidentEventUpdateOne) SetNillableStatus(v *string) *IncidentEventUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return ieuo
+	return _u
 }
 
 // SetSeverity sets the "severity" field.
-func (ieuo *IncidentEventUpdateOne) SetSeverity(s string) *IncidentEventUpdateOne {
-	ieuo.mutation.SetSeverity(s)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetSeverity(v string) *IncidentEventUpdateOne {
+	_u.mutation.SetSeverity(v)
+	return _u
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (ieuo *IncidentEventUpdateOne) SetNillableSeverity(s *string) *IncidentEventUpdateOne {
-	if s != nil {
-		ieuo.SetSeverity(*s)
+func (_u *IncidentEventUpdateOne) SetNillableSeverity(v *string) *IncidentEventUpdateOne {
+	if v != nil {
+		_u.SetSeverity(*v)
 	}
-	return ieuo
+	return _u
 }
 
 // SetData sets the "data" field.
-func (ieuo *IncidentEventUpdateOne) SetData(m map[string]interface{}) *IncidentEventUpdateOne {
-	ieuo.mutation.SetData(m)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetData(v map[string]interface{}) *IncidentEventUpdateOne {
+	_u.mutation.SetData(v)
+	return _u
 }
 
 // ClearData clears the value of the "data" field.
-func (ieuo *IncidentEventUpdateOne) ClearData() *IncidentEventUpdateOne {
-	ieuo.mutation.ClearData()
-	return ieuo
+func (_u *IncidentEventUpdateOne) ClearData() *IncidentEventUpdateOne {
+	_u.mutation.ClearData()
+	return _u
 }
 
 // SetOccurredAt sets the "occurred_at" field.
-func (ieuo *IncidentEventUpdateOne) SetOccurredAt(t time.Time) *IncidentEventUpdateOne {
-	ieuo.mutation.SetOccurredAt(t)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetOccurredAt(v time.Time) *IncidentEventUpdateOne {
+	_u.mutation.SetOccurredAt(v)
+	return _u
 }
 
 // SetNillableOccurredAt sets the "occurred_at" field if the given value is not nil.
-func (ieuo *IncidentEventUpdateOne) SetNillableOccurredAt(t *time.Time) *IncidentEventUpdateOne {
-	if t != nil {
-		ieuo.SetOccurredAt(*t)
+func (_u *IncidentEventUpdateOne) SetNillableOccurredAt(v *time.Time) *IncidentEventUpdateOne {
+	if v != nil {
+		_u.SetOccurredAt(*v)
 	}
-	return ieuo
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (ieuo *IncidentEventUpdateOne) SetUserID(i int) *IncidentEventUpdateOne {
-	ieuo.mutation.ResetUserID()
-	ieuo.mutation.SetUserID(i)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetUserID(v int) *IncidentEventUpdateOne {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (ieuo *IncidentEventUpdateOne) SetNillableUserID(i *int) *IncidentEventUpdateOne {
-	if i != nil {
-		ieuo.SetUserID(*i)
+func (_u *IncidentEventUpdateOne) SetNillableUserID(v *int) *IncidentEventUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return ieuo
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (ieuo *IncidentEventUpdateOne) AddUserID(i int) *IncidentEventUpdateOne {
-	ieuo.mutation.AddUserID(i)
-	return ieuo
+// AddUserID adds value to the "user_id" field.
+func (_u *IncidentEventUpdateOne) AddUserID(v int) *IncidentEventUpdateOne {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // ClearUserID clears the value of the "user_id" field.
-func (ieuo *IncidentEventUpdateOne) ClearUserID() *IncidentEventUpdateOne {
-	ieuo.mutation.ClearUserID()
-	return ieuo
+func (_u *IncidentEventUpdateOne) ClearUserID() *IncidentEventUpdateOne {
+	_u.mutation.ClearUserID()
+	return _u
 }
 
 // SetSource sets the "source" field.
-func (ieuo *IncidentEventUpdateOne) SetSource(s string) *IncidentEventUpdateOne {
-	ieuo.mutation.SetSource(s)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetSource(v string) *IncidentEventUpdateOne {
+	_u.mutation.SetSource(v)
+	return _u
 }
 
 // SetNillableSource sets the "source" field if the given value is not nil.
-func (ieuo *IncidentEventUpdateOne) SetNillableSource(s *string) *IncidentEventUpdateOne {
-	if s != nil {
-		ieuo.SetSource(*s)
+func (_u *IncidentEventUpdateOne) SetNillableSource(v *string) *IncidentEventUpdateOne {
+	if v != nil {
+		_u.SetSource(*v)
 	}
-	return ieuo
+	return _u
 }
 
 // SetMetadata sets the "metadata" field.
-func (ieuo *IncidentEventUpdateOne) SetMetadata(m map[string]interface{}) *IncidentEventUpdateOne {
-	ieuo.mutation.SetMetadata(m)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetMetadata(v map[string]interface{}) *IncidentEventUpdateOne {
+	_u.mutation.SetMetadata(v)
+	return _u
 }
 
 // ClearMetadata clears the value of the "metadata" field.
-func (ieuo *IncidentEventUpdateOne) ClearMetadata() *IncidentEventUpdateOne {
-	ieuo.mutation.ClearMetadata()
-	return ieuo
+func (_u *IncidentEventUpdateOne) ClearMetadata() *IncidentEventUpdateOne {
+	_u.mutation.ClearMetadata()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ieuo *IncidentEventUpdateOne) SetTenantID(i int) *IncidentEventUpdateOne {
-	ieuo.mutation.ResetTenantID()
-	ieuo.mutation.SetTenantID(i)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetTenantID(v int) *IncidentEventUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ieuo *IncidentEventUpdateOne) SetNillableTenantID(i *int) *IncidentEventUpdateOne {
-	if i != nil {
-		ieuo.SetTenantID(*i)
+func (_u *IncidentEventUpdateOne) SetNillableTenantID(v *int) *IncidentEventUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ieuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ieuo *IncidentEventUpdateOne) AddTenantID(i int) *IncidentEventUpdateOne {
-	ieuo.mutation.AddTenantID(i)
-	return ieuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentEventUpdateOne) AddTenantID(v int) *IncidentEventUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ieuo *IncidentEventUpdateOne) SetCreatedAt(t time.Time) *IncidentEventUpdateOne {
-	ieuo.mutation.SetCreatedAt(t)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetCreatedAt(v time.Time) *IncidentEventUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ieuo *IncidentEventUpdateOne) SetNillableCreatedAt(t *time.Time) *IncidentEventUpdateOne {
-	if t != nil {
-		ieuo.SetCreatedAt(*t)
+func (_u *IncidentEventUpdateOne) SetNillableCreatedAt(v *time.Time) *IncidentEventUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ieuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ieuo *IncidentEventUpdateOne) SetUpdatedAt(t time.Time) *IncidentEventUpdateOne {
-	ieuo.mutation.SetUpdatedAt(t)
-	return ieuo
+func (_u *IncidentEventUpdateOne) SetUpdatedAt(v time.Time) *IncidentEventUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetIncident sets the "incident" edge to the Incident entity.
-func (ieuo *IncidentEventUpdateOne) SetIncident(i *Incident) *IncidentEventUpdateOne {
-	return ieuo.SetIncidentID(i.ID)
+func (_u *IncidentEventUpdateOne) SetIncident(v *Incident) *IncidentEventUpdateOne {
+	return _u.SetIncidentID(v.ID)
 }
 
 // Mutation returns the IncidentEventMutation object of the builder.
-func (ieuo *IncidentEventUpdateOne) Mutation() *IncidentEventMutation {
-	return ieuo.mutation
+func (_u *IncidentEventUpdateOne) Mutation() *IncidentEventMutation {
+	return _u.mutation
 }
 
 // ClearIncident clears the "incident" edge to the Incident entity.
-func (ieuo *IncidentEventUpdateOne) ClearIncident() *IncidentEventUpdateOne {
-	ieuo.mutation.ClearIncident()
-	return ieuo
+func (_u *IncidentEventUpdateOne) ClearIncident() *IncidentEventUpdateOne {
+	_u.mutation.ClearIncident()
+	return _u
 }
 
 // Where appends a list predicates to the IncidentEventUpdate builder.
-func (ieuo *IncidentEventUpdateOne) Where(ps ...predicate.IncidentEvent) *IncidentEventUpdateOne {
-	ieuo.mutation.Where(ps...)
-	return ieuo
+func (_u *IncidentEventUpdateOne) Where(ps ...predicate.IncidentEvent) *IncidentEventUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (ieuo *IncidentEventUpdateOne) Select(field string, fields ...string) *IncidentEventUpdateOne {
-	ieuo.fields = append([]string{field}, fields...)
-	return ieuo
+func (_u *IncidentEventUpdateOne) Select(field string, fields ...string) *IncidentEventUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated IncidentEvent entity.
-func (ieuo *IncidentEventUpdateOne) Save(ctx context.Context) (*IncidentEvent, error) {
-	ieuo.defaults()
-	return withHooks(ctx, ieuo.sqlSave, ieuo.mutation, ieuo.hooks)
+func (_u *IncidentEventUpdateOne) Save(ctx context.Context) (*IncidentEvent, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ieuo *IncidentEventUpdateOne) SaveX(ctx context.Context) *IncidentEvent {
-	node, err := ieuo.Save(ctx)
+func (_u *IncidentEventUpdateOne) SaveX(ctx context.Context) *IncidentEvent {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -692,65 +692,65 @@ func (ieuo *IncidentEventUpdateOne) SaveX(ctx context.Context) *IncidentEvent {
 }
 
 // Exec executes the query on the entity.
-func (ieuo *IncidentEventUpdateOne) Exec(ctx context.Context) error {
-	_, err := ieuo.Save(ctx)
+func (_u *IncidentEventUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ieuo *IncidentEventUpdateOne) ExecX(ctx context.Context) {
-	if err := ieuo.Exec(ctx); err != nil {
+func (_u *IncidentEventUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ieuo *IncidentEventUpdateOne) defaults() {
-	if _, ok := ieuo.mutation.UpdatedAt(); !ok {
+func (_u *IncidentEventUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incidentevent.UpdateDefaultUpdatedAt()
-		ieuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ieuo *IncidentEventUpdateOne) check() error {
-	if v, ok := ieuo.mutation.IncidentID(); ok {
+func (_u *IncidentEventUpdateOne) check() error {
+	if v, ok := _u.mutation.IncidentID(); ok {
 		if err := incidentevent.IncidentIDValidator(v); err != nil {
 			return &ValidationError{Name: "incident_id", err: fmt.Errorf(`ent: validator failed for field "IncidentEvent.incident_id": %w`, err)}
 		}
 	}
-	if v, ok := ieuo.mutation.EventType(); ok {
+	if v, ok := _u.mutation.EventType(); ok {
 		if err := incidentevent.EventTypeValidator(v); err != nil {
 			return &ValidationError{Name: "event_type", err: fmt.Errorf(`ent: validator failed for field "IncidentEvent.event_type": %w`, err)}
 		}
 	}
-	if v, ok := ieuo.mutation.EventName(); ok {
+	if v, ok := _u.mutation.EventName(); ok {
 		if err := incidentevent.EventNameValidator(v); err != nil {
 			return &ValidationError{Name: "event_name", err: fmt.Errorf(`ent: validator failed for field "IncidentEvent.event_name": %w`, err)}
 		}
 	}
-	if v, ok := ieuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incidentevent.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentEvent.tenant_id": %w`, err)}
 		}
 	}
-	if ieuo.mutation.IncidentCleared() && len(ieuo.mutation.IncidentIDs()) > 0 {
+	if _u.mutation.IncidentCleared() && len(_u.mutation.IncidentIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "IncidentEvent.incident"`)
 	}
 	return nil
 }
 
-func (ieuo *IncidentEventUpdateOne) sqlSave(ctx context.Context) (_node *IncidentEvent, err error) {
-	if err := ieuo.check(); err != nil {
+func (_u *IncidentEventUpdateOne) sqlSave(ctx context.Context) (_node *IncidentEvent, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incidentevent.Table, incidentevent.Columns, sqlgraph.NewFieldSpec(incidentevent.FieldID, field.TypeInt))
-	id, ok := ieuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "IncidentEvent.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := ieuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, incidentevent.FieldID)
 		for _, f := range fields {
@@ -762,71 +762,71 @@ func (ieuo *IncidentEventUpdateOne) sqlSave(ctx context.Context) (_node *Inciden
 			}
 		}
 	}
-	if ps := ieuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ieuo.mutation.EventType(); ok {
+	if value, ok := _u.mutation.EventType(); ok {
 		_spec.SetField(incidentevent.FieldEventType, field.TypeString, value)
 	}
-	if value, ok := ieuo.mutation.EventName(); ok {
+	if value, ok := _u.mutation.EventName(); ok {
 		_spec.SetField(incidentevent.FieldEventName, field.TypeString, value)
 	}
-	if value, ok := ieuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(incidentevent.FieldDescription, field.TypeString, value)
 	}
-	if ieuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(incidentevent.FieldDescription, field.TypeString)
 	}
-	if value, ok := ieuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(incidentevent.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := ieuo.mutation.Severity(); ok {
+	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(incidentevent.FieldSeverity, field.TypeString, value)
 	}
-	if value, ok := ieuo.mutation.Data(); ok {
+	if value, ok := _u.mutation.Data(); ok {
 		_spec.SetField(incidentevent.FieldData, field.TypeJSON, value)
 	}
-	if ieuo.mutation.DataCleared() {
+	if _u.mutation.DataCleared() {
 		_spec.ClearField(incidentevent.FieldData, field.TypeJSON)
 	}
-	if value, ok := ieuo.mutation.OccurredAt(); ok {
+	if value, ok := _u.mutation.OccurredAt(); ok {
 		_spec.SetField(incidentevent.FieldOccurredAt, field.TypeTime, value)
 	}
-	if value, ok := ieuo.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(incidentevent.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := ieuo.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(incidentevent.FieldUserID, field.TypeInt, value)
 	}
-	if ieuo.mutation.UserIDCleared() {
+	if _u.mutation.UserIDCleared() {
 		_spec.ClearField(incidentevent.FieldUserID, field.TypeInt)
 	}
-	if value, ok := ieuo.mutation.Source(); ok {
+	if value, ok := _u.mutation.Source(); ok {
 		_spec.SetField(incidentevent.FieldSource, field.TypeString, value)
 	}
-	if value, ok := ieuo.mutation.Metadata(); ok {
+	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(incidentevent.FieldMetadata, field.TypeJSON, value)
 	}
-	if ieuo.mutation.MetadataCleared() {
+	if _u.mutation.MetadataCleared() {
 		_spec.ClearField(incidentevent.FieldMetadata, field.TypeJSON)
 	}
-	if value, ok := ieuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incidentevent.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ieuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incidentevent.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ieuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentevent.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ieuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentevent.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if ieuo.mutation.IncidentCleared() {
+	if _u.mutation.IncidentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -839,7 +839,7 @@ func (ieuo *IncidentEventUpdateOne) sqlSave(ctx context.Context) (_node *Inciden
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ieuo.mutation.IncidentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.IncidentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -855,10 +855,10 @@ func (ieuo *IncidentEventUpdateOne) sqlSave(ctx context.Context) (_node *Inciden
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &IncidentEvent{config: ieuo.config}
+	_node = &IncidentEvent{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, ieuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incidentevent.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -866,6 +866,6 @@ func (ieuo *IncidentEventUpdateOne) sqlSave(ctx context.Context) (_node *Inciden
 		}
 		return nil, err
 	}
-	ieuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

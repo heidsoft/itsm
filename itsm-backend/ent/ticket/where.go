@@ -180,6 +180,26 @@ func UpdatedAt(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// IsManagedByMsp applies equality check predicate on the "is_managed_by_msp" field. It's identical to IsManagedByMspEQ.
+func IsManagedByMsp(v bool) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldIsManagedByMsp, v))
+}
+
+// MspProviderID applies equality check predicate on the "msp_provider_id" field. It's identical to MspProviderIDEQ.
+func MspProviderID(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldMspProviderID, v))
+}
+
+// ManagedByUserID applies equality check predicate on the "managed_by_user_id" field. It's identical to ManagedByUserIDEQ.
+func ManagedByUserID(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldManagedByUserID, v))
+}
+
+// MspTicketID applies equality check predicate on the "msp_ticket_id" field. It's identical to MspTicketIDEQ.
+func MspTicketID(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldMspTicketID, v))
+}
+
 // TitleEQ applies the EQ predicate on the "title" field.
 func TitleEQ(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldTitle, v))
@@ -1438,6 +1458,191 @@ func UpdatedAtLT(v time.Time) predicate.Ticket {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// IsManagedByMspEQ applies the EQ predicate on the "is_managed_by_msp" field.
+func IsManagedByMspEQ(v bool) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldIsManagedByMsp, v))
+}
+
+// IsManagedByMspNEQ applies the NEQ predicate on the "is_managed_by_msp" field.
+func IsManagedByMspNEQ(v bool) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldIsManagedByMsp, v))
+}
+
+// MspProviderIDEQ applies the EQ predicate on the "msp_provider_id" field.
+func MspProviderIDEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldMspProviderID, v))
+}
+
+// MspProviderIDNEQ applies the NEQ predicate on the "msp_provider_id" field.
+func MspProviderIDNEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldMspProviderID, v))
+}
+
+// MspProviderIDIn applies the In predicate on the "msp_provider_id" field.
+func MspProviderIDIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldMspProviderID, vs...))
+}
+
+// MspProviderIDNotIn applies the NotIn predicate on the "msp_provider_id" field.
+func MspProviderIDNotIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldMspProviderID, vs...))
+}
+
+// MspProviderIDGT applies the GT predicate on the "msp_provider_id" field.
+func MspProviderIDGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldMspProviderID, v))
+}
+
+// MspProviderIDGTE applies the GTE predicate on the "msp_provider_id" field.
+func MspProviderIDGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldMspProviderID, v))
+}
+
+// MspProviderIDLT applies the LT predicate on the "msp_provider_id" field.
+func MspProviderIDLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldMspProviderID, v))
+}
+
+// MspProviderIDLTE applies the LTE predicate on the "msp_provider_id" field.
+func MspProviderIDLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldMspProviderID, v))
+}
+
+// MspProviderIDIsNil applies the IsNil predicate on the "msp_provider_id" field.
+func MspProviderIDIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldMspProviderID))
+}
+
+// MspProviderIDNotNil applies the NotNil predicate on the "msp_provider_id" field.
+func MspProviderIDNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldMspProviderID))
+}
+
+// ManagedByUserIDEQ applies the EQ predicate on the "managed_by_user_id" field.
+func ManagedByUserIDEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldManagedByUserID, v))
+}
+
+// ManagedByUserIDNEQ applies the NEQ predicate on the "managed_by_user_id" field.
+func ManagedByUserIDNEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldManagedByUserID, v))
+}
+
+// ManagedByUserIDIn applies the In predicate on the "managed_by_user_id" field.
+func ManagedByUserIDIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldManagedByUserID, vs...))
+}
+
+// ManagedByUserIDNotIn applies the NotIn predicate on the "managed_by_user_id" field.
+func ManagedByUserIDNotIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldManagedByUserID, vs...))
+}
+
+// ManagedByUserIDGT applies the GT predicate on the "managed_by_user_id" field.
+func ManagedByUserIDGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldManagedByUserID, v))
+}
+
+// ManagedByUserIDGTE applies the GTE predicate on the "managed_by_user_id" field.
+func ManagedByUserIDGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldManagedByUserID, v))
+}
+
+// ManagedByUserIDLT applies the LT predicate on the "managed_by_user_id" field.
+func ManagedByUserIDLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldManagedByUserID, v))
+}
+
+// ManagedByUserIDLTE applies the LTE predicate on the "managed_by_user_id" field.
+func ManagedByUserIDLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldManagedByUserID, v))
+}
+
+// ManagedByUserIDIsNil applies the IsNil predicate on the "managed_by_user_id" field.
+func ManagedByUserIDIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldManagedByUserID))
+}
+
+// ManagedByUserIDNotNil applies the NotNil predicate on the "managed_by_user_id" field.
+func ManagedByUserIDNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldManagedByUserID))
+}
+
+// MspTicketIDEQ applies the EQ predicate on the "msp_ticket_id" field.
+func MspTicketIDEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldMspTicketID, v))
+}
+
+// MspTicketIDNEQ applies the NEQ predicate on the "msp_ticket_id" field.
+func MspTicketIDNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldMspTicketID, v))
+}
+
+// MspTicketIDIn applies the In predicate on the "msp_ticket_id" field.
+func MspTicketIDIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldMspTicketID, vs...))
+}
+
+// MspTicketIDNotIn applies the NotIn predicate on the "msp_ticket_id" field.
+func MspTicketIDNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldMspTicketID, vs...))
+}
+
+// MspTicketIDGT applies the GT predicate on the "msp_ticket_id" field.
+func MspTicketIDGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldMspTicketID, v))
+}
+
+// MspTicketIDGTE applies the GTE predicate on the "msp_ticket_id" field.
+func MspTicketIDGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldMspTicketID, v))
+}
+
+// MspTicketIDLT applies the LT predicate on the "msp_ticket_id" field.
+func MspTicketIDLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldMspTicketID, v))
+}
+
+// MspTicketIDLTE applies the LTE predicate on the "msp_ticket_id" field.
+func MspTicketIDLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldMspTicketID, v))
+}
+
+// MspTicketIDContains applies the Contains predicate on the "msp_ticket_id" field.
+func MspTicketIDContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldMspTicketID, v))
+}
+
+// MspTicketIDHasPrefix applies the HasPrefix predicate on the "msp_ticket_id" field.
+func MspTicketIDHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldMspTicketID, v))
+}
+
+// MspTicketIDHasSuffix applies the HasSuffix predicate on the "msp_ticket_id" field.
+func MspTicketIDHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldMspTicketID, v))
+}
+
+// MspTicketIDIsNil applies the IsNil predicate on the "msp_ticket_id" field.
+func MspTicketIDIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldMspTicketID))
+}
+
+// MspTicketIDNotNil applies the NotNil predicate on the "msp_ticket_id" field.
+func MspTicketIDNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldMspTicketID))
+}
+
+// MspTicketIDEqualFold applies the EqualFold predicate on the "msp_ticket_id" field.
+func MspTicketIDEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldMspTicketID, v))
+}
+
+// MspTicketIDContainsFold applies the ContainsFold predicate on the "msp_ticket_id" field.
+func MspTicketIDContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldMspTicketID, v))
 }
 
 // HasTemplate applies the HasEdge predicate on the "template" edge.

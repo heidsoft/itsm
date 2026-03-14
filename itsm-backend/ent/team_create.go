@@ -23,137 +23,137 @@ type TeamCreate struct {
 }
 
 // SetName sets the "name" field.
-func (tc *TeamCreate) SetName(s string) *TeamCreate {
-	tc.mutation.SetName(s)
-	return tc
+func (_c *TeamCreate) SetName(v string) *TeamCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetCode sets the "code" field.
-func (tc *TeamCreate) SetCode(s string) *TeamCreate {
-	tc.mutation.SetCode(s)
-	return tc
+func (_c *TeamCreate) SetCode(v string) *TeamCreate {
+	_c.mutation.SetCode(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (tc *TeamCreate) SetDescription(s string) *TeamCreate {
-	tc.mutation.SetDescription(s)
-	return tc
+func (_c *TeamCreate) SetDescription(v string) *TeamCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (tc *TeamCreate) SetNillableDescription(s *string) *TeamCreate {
-	if s != nil {
-		tc.SetDescription(*s)
+func (_c *TeamCreate) SetNillableDescription(v *string) *TeamCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return tc
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (tc *TeamCreate) SetStatus(s string) *TeamCreate {
-	tc.mutation.SetStatus(s)
-	return tc
+func (_c *TeamCreate) SetStatus(v string) *TeamCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (tc *TeamCreate) SetNillableStatus(s *string) *TeamCreate {
-	if s != nil {
-		tc.SetStatus(*s)
+func (_c *TeamCreate) SetNillableStatus(v *string) *TeamCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return tc
+	return _c
 }
 
 // SetManagerID sets the "manager_id" field.
-func (tc *TeamCreate) SetManagerID(i int) *TeamCreate {
-	tc.mutation.SetManagerID(i)
-	return tc
+func (_c *TeamCreate) SetManagerID(v int) *TeamCreate {
+	_c.mutation.SetManagerID(v)
+	return _c
 }
 
 // SetNillableManagerID sets the "manager_id" field if the given value is not nil.
-func (tc *TeamCreate) SetNillableManagerID(i *int) *TeamCreate {
-	if i != nil {
-		tc.SetManagerID(*i)
+func (_c *TeamCreate) SetNillableManagerID(v *int) *TeamCreate {
+	if v != nil {
+		_c.SetManagerID(*v)
 	}
-	return tc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tc *TeamCreate) SetTenantID(i int) *TeamCreate {
-	tc.mutation.SetTenantID(i)
-	return tc
+func (_c *TeamCreate) SetTenantID(v int) *TeamCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tc *TeamCreate) SetCreatedAt(t time.Time) *TeamCreate {
-	tc.mutation.SetCreatedAt(t)
-	return tc
+func (_c *TeamCreate) SetCreatedAt(v time.Time) *TeamCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tc *TeamCreate) SetNillableCreatedAt(t *time.Time) *TeamCreate {
-	if t != nil {
-		tc.SetCreatedAt(*t)
+func (_c *TeamCreate) SetNillableCreatedAt(v *time.Time) *TeamCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return tc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tc *TeamCreate) SetUpdatedAt(t time.Time) *TeamCreate {
-	tc.mutation.SetUpdatedAt(t)
-	return tc
+func (_c *TeamCreate) SetUpdatedAt(v time.Time) *TeamCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (tc *TeamCreate) SetNillableUpdatedAt(t *time.Time) *TeamCreate {
-	if t != nil {
-		tc.SetUpdatedAt(*t)
+func (_c *TeamCreate) SetNillableUpdatedAt(v *time.Time) *TeamCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return tc
+	return _c
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
-func (tc *TeamCreate) AddUserIDs(ids ...int) *TeamCreate {
-	tc.mutation.AddUserIDs(ids...)
-	return tc
+func (_c *TeamCreate) AddUserIDs(ids ...int) *TeamCreate {
+	_c.mutation.AddUserIDs(ids...)
+	return _c
 }
 
 // AddUsers adds the "users" edges to the User entity.
-func (tc *TeamCreate) AddUsers(u ...*User) *TeamCreate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+func (_c *TeamCreate) AddUsers(v ...*User) *TeamCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tc.AddUserIDs(ids...)
+	return _c.AddUserIDs(ids...)
 }
 
 // AddTagIDs adds the "tags" edge to the Tag entity by IDs.
-func (tc *TeamCreate) AddTagIDs(ids ...int) *TeamCreate {
-	tc.mutation.AddTagIDs(ids...)
-	return tc
+func (_c *TeamCreate) AddTagIDs(ids ...int) *TeamCreate {
+	_c.mutation.AddTagIDs(ids...)
+	return _c
 }
 
 // AddTags adds the "tags" edges to the Tag entity.
-func (tc *TeamCreate) AddTags(t ...*Tag) *TeamCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_c *TeamCreate) AddTags(v ...*Tag) *TeamCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tc.AddTagIDs(ids...)
+	return _c.AddTagIDs(ids...)
 }
 
 // Mutation returns the TeamMutation object of the builder.
-func (tc *TeamCreate) Mutation() *TeamMutation {
-	return tc.mutation
+func (_c *TeamCreate) Mutation() *TeamMutation {
+	return _c.mutation
 }
 
 // Save creates the Team in the database.
-func (tc *TeamCreate) Save(ctx context.Context) (*Team, error) {
-	tc.defaults()
-	return withHooks(ctx, tc.sqlSave, tc.mutation, tc.hooks)
+func (_c *TeamCreate) Save(ctx context.Context) (*Team, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (tc *TeamCreate) SaveX(ctx context.Context) *Team {
-	v, err := tc.Save(ctx)
+func (_c *TeamCreate) SaveX(ctx context.Context) *Team {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -161,78 +161,78 @@ func (tc *TeamCreate) SaveX(ctx context.Context) *Team {
 }
 
 // Exec executes the query.
-func (tc *TeamCreate) Exec(ctx context.Context) error {
-	_, err := tc.Save(ctx)
+func (_c *TeamCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tc *TeamCreate) ExecX(ctx context.Context) {
-	if err := tc.Exec(ctx); err != nil {
+func (_c *TeamCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tc *TeamCreate) defaults() {
-	if _, ok := tc.mutation.Status(); !ok {
+func (_c *TeamCreate) defaults() {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := team.DefaultStatus
-		tc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := tc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := team.DefaultCreatedAt()
-		tc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := tc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := team.DefaultUpdatedAt()
-		tc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tc *TeamCreate) check() error {
-	if _, ok := tc.mutation.Name(); !ok {
+func (_c *TeamCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Team.name"`)}
 	}
-	if v, ok := tc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := team.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Team.name": %w`, err)}
 		}
 	}
-	if _, ok := tc.mutation.Code(); !ok {
+	if _, ok := _c.mutation.Code(); !ok {
 		return &ValidationError{Name: "code", err: errors.New(`ent: missing required field "Team.code"`)}
 	}
-	if v, ok := tc.mutation.Code(); ok {
+	if v, ok := _c.mutation.Code(); ok {
 		if err := team.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Team.code": %w`, err)}
 		}
 	}
-	if _, ok := tc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Team.status"`)}
 	}
-	if _, ok := tc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Team.tenant_id"`)}
 	}
-	if v, ok := tc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := team.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Team.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := tc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Team.created_at"`)}
 	}
-	if _, ok := tc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Team.updated_at"`)}
 	}
 	return nil
 }
 
-func (tc *TeamCreate) sqlSave(ctx context.Context) (*Team, error) {
-	if err := tc.check(); err != nil {
+func (_c *TeamCreate) sqlSave(ctx context.Context) (*Team, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := tc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, tc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -240,49 +240,49 @@ func (tc *TeamCreate) sqlSave(ctx context.Context) (*Team, error) {
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	tc.mutation.id = &_node.ID
-	tc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (tc *TeamCreate) createSpec() (*Team, *sqlgraph.CreateSpec) {
+func (_c *TeamCreate) createSpec() (*Team, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Team{config: tc.config}
+		_node = &Team{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(team.Table, sqlgraph.NewFieldSpec(team.FieldID, field.TypeInt))
 	)
-	if value, ok := tc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(team.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := tc.mutation.Code(); ok {
+	if value, ok := _c.mutation.Code(); ok {
 		_spec.SetField(team.FieldCode, field.TypeString, value)
 		_node.Code = value
 	}
-	if value, ok := tc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(team.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := tc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(team.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := tc.mutation.ManagerID(); ok {
+	if value, ok := _c.mutation.ManagerID(); ok {
 		_spec.SetField(team.FieldManagerID, field.TypeInt, value)
 		_node.ManagerID = value
 	}
-	if value, ok := tc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(team.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := tc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(team.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := tc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(team.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := tc.mutation.UsersIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -298,7 +298,7 @@ func (tc *TeamCreate) createSpec() (*Team, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tc.mutation.TagsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TagsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -325,16 +325,16 @@ type TeamCreateBulk struct {
 }
 
 // Save creates the Team entities in the database.
-func (tcb *TeamCreateBulk) Save(ctx context.Context) ([]*Team, error) {
-	if tcb.err != nil {
-		return nil, tcb.err
+func (_c *TeamCreateBulk) Save(ctx context.Context) ([]*Team, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(tcb.builders))
-	nodes := make([]*Team, len(tcb.builders))
-	mutators := make([]Mutator, len(tcb.builders))
-	for i := range tcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Team, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := tcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TeamMutation)
@@ -348,11 +348,11 @@ func (tcb *TeamCreateBulk) Save(ctx context.Context) ([]*Team, error) {
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, tcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, tcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -376,7 +376,7 @@ func (tcb *TeamCreateBulk) Save(ctx context.Context) ([]*Team, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, tcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -384,8 +384,8 @@ func (tcb *TeamCreateBulk) Save(ctx context.Context) ([]*Team, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tcb *TeamCreateBulk) SaveX(ctx context.Context) []*Team {
-	v, err := tcb.Save(ctx)
+func (_c *TeamCreateBulk) SaveX(ctx context.Context) []*Team {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -393,14 +393,14 @@ func (tcb *TeamCreateBulk) SaveX(ctx context.Context) []*Team {
 }
 
 // Exec executes the query.
-func (tcb *TeamCreateBulk) Exec(ctx context.Context) error {
-	_, err := tcb.Save(ctx)
+func (_c *TeamCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tcb *TeamCreateBulk) ExecX(ctx context.Context) {
-	if err := tcb.Exec(ctx); err != nil {
+func (_c *TeamCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -24,420 +24,420 @@ type AssetLicenseUpdate struct {
 }
 
 // Where appends a list predicates to the AssetLicenseUpdate builder.
-func (alu *AssetLicenseUpdate) Where(ps ...predicate.AssetLicense) *AssetLicenseUpdate {
-	alu.mutation.Where(ps...)
-	return alu
+func (_u *AssetLicenseUpdate) Where(ps ...predicate.AssetLicense) *AssetLicenseUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetLicenseKey sets the "license_key" field.
-func (alu *AssetLicenseUpdate) SetLicenseKey(s string) *AssetLicenseUpdate {
-	alu.mutation.SetLicenseKey(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetLicenseKey(v string) *AssetLicenseUpdate {
+	_u.mutation.SetLicenseKey(v)
+	return _u
 }
 
 // SetNillableLicenseKey sets the "license_key" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableLicenseKey(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetLicenseKey(*s)
+func (_u *AssetLicenseUpdate) SetNillableLicenseKey(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetLicenseKey(*v)
 	}
-	return alu
+	return _u
 }
 
 // ClearLicenseKey clears the value of the "license_key" field.
-func (alu *AssetLicenseUpdate) ClearLicenseKey() *AssetLicenseUpdate {
-	alu.mutation.ClearLicenseKey()
-	return alu
+func (_u *AssetLicenseUpdate) ClearLicenseKey() *AssetLicenseUpdate {
+	_u.mutation.ClearLicenseKey()
+	return _u
 }
 
 // SetName sets the "name" field.
-func (alu *AssetLicenseUpdate) SetName(s string) *AssetLicenseUpdate {
-	alu.mutation.SetName(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetName(v string) *AssetLicenseUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableName(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetName(*s)
+func (_u *AssetLicenseUpdate) SetNillableName(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return alu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (alu *AssetLicenseUpdate) SetDescription(s string) *AssetLicenseUpdate {
-	alu.mutation.SetDescription(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetDescription(v string) *AssetLicenseUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableDescription(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetDescription(*s)
+func (_u *AssetLicenseUpdate) SetNillableDescription(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return alu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (alu *AssetLicenseUpdate) ClearDescription() *AssetLicenseUpdate {
-	alu.mutation.ClearDescription()
-	return alu
+func (_u *AssetLicenseUpdate) ClearDescription() *AssetLicenseUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetVendor sets the "vendor" field.
-func (alu *AssetLicenseUpdate) SetVendor(s string) *AssetLicenseUpdate {
-	alu.mutation.SetVendor(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetVendor(v string) *AssetLicenseUpdate {
+	_u.mutation.SetVendor(v)
+	return _u
 }
 
 // SetNillableVendor sets the "vendor" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableVendor(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetVendor(*s)
+func (_u *AssetLicenseUpdate) SetNillableVendor(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetVendor(*v)
 	}
-	return alu
+	return _u
 }
 
 // ClearVendor clears the value of the "vendor" field.
-func (alu *AssetLicenseUpdate) ClearVendor() *AssetLicenseUpdate {
-	alu.mutation.ClearVendor()
-	return alu
+func (_u *AssetLicenseUpdate) ClearVendor() *AssetLicenseUpdate {
+	_u.mutation.ClearVendor()
+	return _u
 }
 
 // SetLicenseType sets the "license_type" field.
-func (alu *AssetLicenseUpdate) SetLicenseType(s string) *AssetLicenseUpdate {
-	alu.mutation.SetLicenseType(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetLicenseType(v string) *AssetLicenseUpdate {
+	_u.mutation.SetLicenseType(v)
+	return _u
 }
 
 // SetNillableLicenseType sets the "license_type" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableLicenseType(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetLicenseType(*s)
+func (_u *AssetLicenseUpdate) SetNillableLicenseType(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetLicenseType(*v)
 	}
-	return alu
+	return _u
 }
 
 // SetTotalQuantity sets the "total_quantity" field.
-func (alu *AssetLicenseUpdate) SetTotalQuantity(i int) *AssetLicenseUpdate {
-	alu.mutation.ResetTotalQuantity()
-	alu.mutation.SetTotalQuantity(i)
-	return alu
+func (_u *AssetLicenseUpdate) SetTotalQuantity(v int) *AssetLicenseUpdate {
+	_u.mutation.ResetTotalQuantity()
+	_u.mutation.SetTotalQuantity(v)
+	return _u
 }
 
 // SetNillableTotalQuantity sets the "total_quantity" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableTotalQuantity(i *int) *AssetLicenseUpdate {
-	if i != nil {
-		alu.SetTotalQuantity(*i)
+func (_u *AssetLicenseUpdate) SetNillableTotalQuantity(v *int) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetTotalQuantity(*v)
 	}
-	return alu
+	return _u
 }
 
-// AddTotalQuantity adds i to the "total_quantity" field.
-func (alu *AssetLicenseUpdate) AddTotalQuantity(i int) *AssetLicenseUpdate {
-	alu.mutation.AddTotalQuantity(i)
-	return alu
+// AddTotalQuantity adds value to the "total_quantity" field.
+func (_u *AssetLicenseUpdate) AddTotalQuantity(v int) *AssetLicenseUpdate {
+	_u.mutation.AddTotalQuantity(v)
+	return _u
 }
 
 // SetUsedQuantity sets the "used_quantity" field.
-func (alu *AssetLicenseUpdate) SetUsedQuantity(i int) *AssetLicenseUpdate {
-	alu.mutation.ResetUsedQuantity()
-	alu.mutation.SetUsedQuantity(i)
-	return alu
+func (_u *AssetLicenseUpdate) SetUsedQuantity(v int) *AssetLicenseUpdate {
+	_u.mutation.ResetUsedQuantity()
+	_u.mutation.SetUsedQuantity(v)
+	return _u
 }
 
 // SetNillableUsedQuantity sets the "used_quantity" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableUsedQuantity(i *int) *AssetLicenseUpdate {
-	if i != nil {
-		alu.SetUsedQuantity(*i)
+func (_u *AssetLicenseUpdate) SetNillableUsedQuantity(v *int) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetUsedQuantity(*v)
 	}
-	return alu
+	return _u
 }
 
-// AddUsedQuantity adds i to the "used_quantity" field.
-func (alu *AssetLicenseUpdate) AddUsedQuantity(i int) *AssetLicenseUpdate {
-	alu.mutation.AddUsedQuantity(i)
-	return alu
+// AddUsedQuantity adds value to the "used_quantity" field.
+func (_u *AssetLicenseUpdate) AddUsedQuantity(v int) *AssetLicenseUpdate {
+	_u.mutation.AddUsedQuantity(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (alu *AssetLicenseUpdate) SetTenantID(i int) *AssetLicenseUpdate {
-	alu.mutation.ResetTenantID()
-	alu.mutation.SetTenantID(i)
-	return alu
+func (_u *AssetLicenseUpdate) SetTenantID(v int) *AssetLicenseUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableTenantID(i *int) *AssetLicenseUpdate {
-	if i != nil {
-		alu.SetTenantID(*i)
+func (_u *AssetLicenseUpdate) SetNillableTenantID(v *int) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return alu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (alu *AssetLicenseUpdate) AddTenantID(i int) *AssetLicenseUpdate {
-	alu.mutation.AddTenantID(i)
-	return alu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *AssetLicenseUpdate) AddTenantID(v int) *AssetLicenseUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetAssetID sets the "asset_id" field.
-func (alu *AssetLicenseUpdate) SetAssetID(i int) *AssetLicenseUpdate {
-	alu.mutation.ResetAssetID()
-	alu.mutation.SetAssetID(i)
-	return alu
+func (_u *AssetLicenseUpdate) SetAssetID(v int) *AssetLicenseUpdate {
+	_u.mutation.ResetAssetID()
+	_u.mutation.SetAssetID(v)
+	return _u
 }
 
 // SetNillableAssetID sets the "asset_id" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableAssetID(i *int) *AssetLicenseUpdate {
-	if i != nil {
-		alu.SetAssetID(*i)
+func (_u *AssetLicenseUpdate) SetNillableAssetID(v *int) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetAssetID(*v)
 	}
-	return alu
+	return _u
 }
 
-// AddAssetID adds i to the "asset_id" field.
-func (alu *AssetLicenseUpdate) AddAssetID(i int) *AssetLicenseUpdate {
-	alu.mutation.AddAssetID(i)
-	return alu
+// AddAssetID adds value to the "asset_id" field.
+func (_u *AssetLicenseUpdate) AddAssetID(v int) *AssetLicenseUpdate {
+	_u.mutation.AddAssetID(v)
+	return _u
 }
 
 // ClearAssetID clears the value of the "asset_id" field.
-func (alu *AssetLicenseUpdate) ClearAssetID() *AssetLicenseUpdate {
-	alu.mutation.ClearAssetID()
-	return alu
+func (_u *AssetLicenseUpdate) ClearAssetID() *AssetLicenseUpdate {
+	_u.mutation.ClearAssetID()
+	return _u
 }
 
 // SetPurchaseDate sets the "purchase_date" field.
-func (alu *AssetLicenseUpdate) SetPurchaseDate(s string) *AssetLicenseUpdate {
-	alu.mutation.SetPurchaseDate(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetPurchaseDate(v string) *AssetLicenseUpdate {
+	_u.mutation.SetPurchaseDate(v)
+	return _u
 }
 
 // SetNillablePurchaseDate sets the "purchase_date" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillablePurchaseDate(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetPurchaseDate(*s)
+func (_u *AssetLicenseUpdate) SetNillablePurchaseDate(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetPurchaseDate(*v)
 	}
-	return alu
+	return _u
 }
 
 // ClearPurchaseDate clears the value of the "purchase_date" field.
-func (alu *AssetLicenseUpdate) ClearPurchaseDate() *AssetLicenseUpdate {
-	alu.mutation.ClearPurchaseDate()
-	return alu
+func (_u *AssetLicenseUpdate) ClearPurchaseDate() *AssetLicenseUpdate {
+	_u.mutation.ClearPurchaseDate()
+	return _u
 }
 
 // SetPurchasePrice sets the "purchase_price" field.
-func (alu *AssetLicenseUpdate) SetPurchasePrice(f float64) *AssetLicenseUpdate {
-	alu.mutation.ResetPurchasePrice()
-	alu.mutation.SetPurchasePrice(f)
-	return alu
+func (_u *AssetLicenseUpdate) SetPurchasePrice(v float64) *AssetLicenseUpdate {
+	_u.mutation.ResetPurchasePrice()
+	_u.mutation.SetPurchasePrice(v)
+	return _u
 }
 
 // SetNillablePurchasePrice sets the "purchase_price" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillablePurchasePrice(f *float64) *AssetLicenseUpdate {
-	if f != nil {
-		alu.SetPurchasePrice(*f)
+func (_u *AssetLicenseUpdate) SetNillablePurchasePrice(v *float64) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetPurchasePrice(*v)
 	}
-	return alu
+	return _u
 }
 
-// AddPurchasePrice adds f to the "purchase_price" field.
-func (alu *AssetLicenseUpdate) AddPurchasePrice(f float64) *AssetLicenseUpdate {
-	alu.mutation.AddPurchasePrice(f)
-	return alu
+// AddPurchasePrice adds value to the "purchase_price" field.
+func (_u *AssetLicenseUpdate) AddPurchasePrice(v float64) *AssetLicenseUpdate {
+	_u.mutation.AddPurchasePrice(v)
+	return _u
 }
 
 // ClearPurchasePrice clears the value of the "purchase_price" field.
-func (alu *AssetLicenseUpdate) ClearPurchasePrice() *AssetLicenseUpdate {
-	alu.mutation.ClearPurchasePrice()
-	return alu
+func (_u *AssetLicenseUpdate) ClearPurchasePrice() *AssetLicenseUpdate {
+	_u.mutation.ClearPurchasePrice()
+	return _u
 }
 
 // SetExpiryDate sets the "expiry_date" field.
-func (alu *AssetLicenseUpdate) SetExpiryDate(s string) *AssetLicenseUpdate {
-	alu.mutation.SetExpiryDate(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetExpiryDate(v string) *AssetLicenseUpdate {
+	_u.mutation.SetExpiryDate(v)
+	return _u
 }
 
 // SetNillableExpiryDate sets the "expiry_date" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableExpiryDate(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetExpiryDate(*s)
+func (_u *AssetLicenseUpdate) SetNillableExpiryDate(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetExpiryDate(*v)
 	}
-	return alu
+	return _u
 }
 
 // ClearExpiryDate clears the value of the "expiry_date" field.
-func (alu *AssetLicenseUpdate) ClearExpiryDate() *AssetLicenseUpdate {
-	alu.mutation.ClearExpiryDate()
-	return alu
+func (_u *AssetLicenseUpdate) ClearExpiryDate() *AssetLicenseUpdate {
+	_u.mutation.ClearExpiryDate()
+	return _u
 }
 
 // SetSupportVendor sets the "support_vendor" field.
-func (alu *AssetLicenseUpdate) SetSupportVendor(s string) *AssetLicenseUpdate {
-	alu.mutation.SetSupportVendor(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetSupportVendor(v string) *AssetLicenseUpdate {
+	_u.mutation.SetSupportVendor(v)
+	return _u
 }
 
 // SetNillableSupportVendor sets the "support_vendor" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableSupportVendor(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetSupportVendor(*s)
+func (_u *AssetLicenseUpdate) SetNillableSupportVendor(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetSupportVendor(*v)
 	}
-	return alu
+	return _u
 }
 
 // ClearSupportVendor clears the value of the "support_vendor" field.
-func (alu *AssetLicenseUpdate) ClearSupportVendor() *AssetLicenseUpdate {
-	alu.mutation.ClearSupportVendor()
-	return alu
+func (_u *AssetLicenseUpdate) ClearSupportVendor() *AssetLicenseUpdate {
+	_u.mutation.ClearSupportVendor()
+	return _u
 }
 
 // SetSupportContact sets the "support_contact" field.
-func (alu *AssetLicenseUpdate) SetSupportContact(s string) *AssetLicenseUpdate {
-	alu.mutation.SetSupportContact(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetSupportContact(v string) *AssetLicenseUpdate {
+	_u.mutation.SetSupportContact(v)
+	return _u
 }
 
 // SetNillableSupportContact sets the "support_contact" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableSupportContact(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetSupportContact(*s)
+func (_u *AssetLicenseUpdate) SetNillableSupportContact(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetSupportContact(*v)
 	}
-	return alu
+	return _u
 }
 
 // ClearSupportContact clears the value of the "support_contact" field.
-func (alu *AssetLicenseUpdate) ClearSupportContact() *AssetLicenseUpdate {
-	alu.mutation.ClearSupportContact()
-	return alu
+func (_u *AssetLicenseUpdate) ClearSupportContact() *AssetLicenseUpdate {
+	_u.mutation.ClearSupportContact()
+	return _u
 }
 
 // SetRenewalCost sets the "renewal_cost" field.
-func (alu *AssetLicenseUpdate) SetRenewalCost(s string) *AssetLicenseUpdate {
-	alu.mutation.SetRenewalCost(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetRenewalCost(v string) *AssetLicenseUpdate {
+	_u.mutation.SetRenewalCost(v)
+	return _u
 }
 
 // SetNillableRenewalCost sets the "renewal_cost" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableRenewalCost(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetRenewalCost(*s)
+func (_u *AssetLicenseUpdate) SetNillableRenewalCost(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetRenewalCost(*v)
 	}
-	return alu
+	return _u
 }
 
 // ClearRenewalCost clears the value of the "renewal_cost" field.
-func (alu *AssetLicenseUpdate) ClearRenewalCost() *AssetLicenseUpdate {
-	alu.mutation.ClearRenewalCost()
-	return alu
+func (_u *AssetLicenseUpdate) ClearRenewalCost() *AssetLicenseUpdate {
+	_u.mutation.ClearRenewalCost()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (alu *AssetLicenseUpdate) SetStatus(s string) *AssetLicenseUpdate {
-	alu.mutation.SetStatus(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetStatus(v string) *AssetLicenseUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableStatus(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetStatus(*s)
+func (_u *AssetLicenseUpdate) SetNillableStatus(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return alu
+	return _u
 }
 
 // SetNotes sets the "notes" field.
-func (alu *AssetLicenseUpdate) SetNotes(s string) *AssetLicenseUpdate {
-	alu.mutation.SetNotes(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetNotes(v string) *AssetLicenseUpdate {
+	_u.mutation.SetNotes(v)
+	return _u
 }
 
 // SetNillableNotes sets the "notes" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableNotes(s *string) *AssetLicenseUpdate {
-	if s != nil {
-		alu.SetNotes(*s)
+func (_u *AssetLicenseUpdate) SetNillableNotes(v *string) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetNotes(*v)
 	}
-	return alu
+	return _u
 }
 
 // ClearNotes clears the value of the "notes" field.
-func (alu *AssetLicenseUpdate) ClearNotes() *AssetLicenseUpdate {
-	alu.mutation.ClearNotes()
-	return alu
+func (_u *AssetLicenseUpdate) ClearNotes() *AssetLicenseUpdate {
+	_u.mutation.ClearNotes()
+	return _u
 }
 
 // SetUsers sets the "users" field.
-func (alu *AssetLicenseUpdate) SetUsers(i []int) *AssetLicenseUpdate {
-	alu.mutation.SetUsers(i)
-	return alu
+func (_u *AssetLicenseUpdate) SetUsers(v []int) *AssetLicenseUpdate {
+	_u.mutation.SetUsers(v)
+	return _u
 }
 
-// AppendUsers appends i to the "users" field.
-func (alu *AssetLicenseUpdate) AppendUsers(i []int) *AssetLicenseUpdate {
-	alu.mutation.AppendUsers(i)
-	return alu
+// AppendUsers appends value to the "users" field.
+func (_u *AssetLicenseUpdate) AppendUsers(v []int) *AssetLicenseUpdate {
+	_u.mutation.AppendUsers(v)
+	return _u
 }
 
 // ClearUsers clears the value of the "users" field.
-func (alu *AssetLicenseUpdate) ClearUsers() *AssetLicenseUpdate {
-	alu.mutation.ClearUsers()
-	return alu
+func (_u *AssetLicenseUpdate) ClearUsers() *AssetLicenseUpdate {
+	_u.mutation.ClearUsers()
+	return _u
 }
 
 // SetTags sets the "tags" field.
-func (alu *AssetLicenseUpdate) SetTags(s []string) *AssetLicenseUpdate {
-	alu.mutation.SetTags(s)
-	return alu
+func (_u *AssetLicenseUpdate) SetTags(v []string) *AssetLicenseUpdate {
+	_u.mutation.SetTags(v)
+	return _u
 }
 
-// AppendTags appends s to the "tags" field.
-func (alu *AssetLicenseUpdate) AppendTags(s []string) *AssetLicenseUpdate {
-	alu.mutation.AppendTags(s)
-	return alu
+// AppendTags appends value to the "tags" field.
+func (_u *AssetLicenseUpdate) AppendTags(v []string) *AssetLicenseUpdate {
+	_u.mutation.AppendTags(v)
+	return _u
 }
 
 // ClearTags clears the value of the "tags" field.
-func (alu *AssetLicenseUpdate) ClearTags() *AssetLicenseUpdate {
-	alu.mutation.ClearTags()
-	return alu
+func (_u *AssetLicenseUpdate) ClearTags() *AssetLicenseUpdate {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (alu *AssetLicenseUpdate) SetCreatedAt(t time.Time) *AssetLicenseUpdate {
-	alu.mutation.SetCreatedAt(t)
-	return alu
+func (_u *AssetLicenseUpdate) SetCreatedAt(v time.Time) *AssetLicenseUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (alu *AssetLicenseUpdate) SetNillableCreatedAt(t *time.Time) *AssetLicenseUpdate {
-	if t != nil {
-		alu.SetCreatedAt(*t)
+func (_u *AssetLicenseUpdate) SetNillableCreatedAt(v *time.Time) *AssetLicenseUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return alu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (alu *AssetLicenseUpdate) SetUpdatedAt(t time.Time) *AssetLicenseUpdate {
-	alu.mutation.SetUpdatedAt(t)
-	return alu
+func (_u *AssetLicenseUpdate) SetUpdatedAt(v time.Time) *AssetLicenseUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the AssetLicenseMutation object of the builder.
-func (alu *AssetLicenseUpdate) Mutation() *AssetLicenseMutation {
-	return alu.mutation
+func (_u *AssetLicenseUpdate) Mutation() *AssetLicenseMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (alu *AssetLicenseUpdate) Save(ctx context.Context) (int, error) {
-	alu.defaults()
-	return withHooks(ctx, alu.sqlSave, alu.mutation, alu.hooks)
+func (_u *AssetLicenseUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (alu *AssetLicenseUpdate) SaveX(ctx context.Context) int {
-	affected, err := alu.Save(ctx)
+func (_u *AssetLicenseUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -445,34 +445,34 @@ func (alu *AssetLicenseUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (alu *AssetLicenseUpdate) Exec(ctx context.Context) error {
-	_, err := alu.Save(ctx)
+func (_u *AssetLicenseUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (alu *AssetLicenseUpdate) ExecX(ctx context.Context) {
-	if err := alu.Exec(ctx); err != nil {
+func (_u *AssetLicenseUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (alu *AssetLicenseUpdate) defaults() {
-	if _, ok := alu.mutation.UpdatedAt(); !ok {
+func (_u *AssetLicenseUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := assetlicense.UpdateDefaultUpdatedAt()
-		alu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (alu *AssetLicenseUpdate) check() error {
-	if v, ok := alu.mutation.Name(); ok {
+func (_u *AssetLicenseUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := assetlicense.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "AssetLicense.name": %w`, err)}
 		}
 	}
-	if v, ok := alu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := assetlicense.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "AssetLicense.tenant_id": %w`, err)}
 		}
@@ -480,146 +480,146 @@ func (alu *AssetLicenseUpdate) check() error {
 	return nil
 }
 
-func (alu *AssetLicenseUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := alu.check(); err != nil {
-		return n, err
+func (_u *AssetLicenseUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(assetlicense.Table, assetlicense.Columns, sqlgraph.NewFieldSpec(assetlicense.FieldID, field.TypeInt))
-	if ps := alu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := alu.mutation.LicenseKey(); ok {
+	if value, ok := _u.mutation.LicenseKey(); ok {
 		_spec.SetField(assetlicense.FieldLicenseKey, field.TypeString, value)
 	}
-	if alu.mutation.LicenseKeyCleared() {
+	if _u.mutation.LicenseKeyCleared() {
 		_spec.ClearField(assetlicense.FieldLicenseKey, field.TypeString)
 	}
-	if value, ok := alu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(assetlicense.FieldName, field.TypeString, value)
 	}
-	if value, ok := alu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(assetlicense.FieldDescription, field.TypeString, value)
 	}
-	if alu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(assetlicense.FieldDescription, field.TypeString)
 	}
-	if value, ok := alu.mutation.Vendor(); ok {
+	if value, ok := _u.mutation.Vendor(); ok {
 		_spec.SetField(assetlicense.FieldVendor, field.TypeString, value)
 	}
-	if alu.mutation.VendorCleared() {
+	if _u.mutation.VendorCleared() {
 		_spec.ClearField(assetlicense.FieldVendor, field.TypeString)
 	}
-	if value, ok := alu.mutation.LicenseType(); ok {
+	if value, ok := _u.mutation.LicenseType(); ok {
 		_spec.SetField(assetlicense.FieldLicenseType, field.TypeString, value)
 	}
-	if value, ok := alu.mutation.TotalQuantity(); ok {
+	if value, ok := _u.mutation.TotalQuantity(); ok {
 		_spec.SetField(assetlicense.FieldTotalQuantity, field.TypeInt, value)
 	}
-	if value, ok := alu.mutation.AddedTotalQuantity(); ok {
+	if value, ok := _u.mutation.AddedTotalQuantity(); ok {
 		_spec.AddField(assetlicense.FieldTotalQuantity, field.TypeInt, value)
 	}
-	if value, ok := alu.mutation.UsedQuantity(); ok {
+	if value, ok := _u.mutation.UsedQuantity(); ok {
 		_spec.SetField(assetlicense.FieldUsedQuantity, field.TypeInt, value)
 	}
-	if value, ok := alu.mutation.AddedUsedQuantity(); ok {
+	if value, ok := _u.mutation.AddedUsedQuantity(); ok {
 		_spec.AddField(assetlicense.FieldUsedQuantity, field.TypeInt, value)
 	}
-	if value, ok := alu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(assetlicense.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := alu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(assetlicense.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := alu.mutation.AssetID(); ok {
+	if value, ok := _u.mutation.AssetID(); ok {
 		_spec.SetField(assetlicense.FieldAssetID, field.TypeInt, value)
 	}
-	if value, ok := alu.mutation.AddedAssetID(); ok {
+	if value, ok := _u.mutation.AddedAssetID(); ok {
 		_spec.AddField(assetlicense.FieldAssetID, field.TypeInt, value)
 	}
-	if alu.mutation.AssetIDCleared() {
+	if _u.mutation.AssetIDCleared() {
 		_spec.ClearField(assetlicense.FieldAssetID, field.TypeInt)
 	}
-	if value, ok := alu.mutation.PurchaseDate(); ok {
+	if value, ok := _u.mutation.PurchaseDate(); ok {
 		_spec.SetField(assetlicense.FieldPurchaseDate, field.TypeString, value)
 	}
-	if alu.mutation.PurchaseDateCleared() {
+	if _u.mutation.PurchaseDateCleared() {
 		_spec.ClearField(assetlicense.FieldPurchaseDate, field.TypeString)
 	}
-	if value, ok := alu.mutation.PurchasePrice(); ok {
+	if value, ok := _u.mutation.PurchasePrice(); ok {
 		_spec.SetField(assetlicense.FieldPurchasePrice, field.TypeFloat64, value)
 	}
-	if value, ok := alu.mutation.AddedPurchasePrice(); ok {
+	if value, ok := _u.mutation.AddedPurchasePrice(); ok {
 		_spec.AddField(assetlicense.FieldPurchasePrice, field.TypeFloat64, value)
 	}
-	if alu.mutation.PurchasePriceCleared() {
+	if _u.mutation.PurchasePriceCleared() {
 		_spec.ClearField(assetlicense.FieldPurchasePrice, field.TypeFloat64)
 	}
-	if value, ok := alu.mutation.ExpiryDate(); ok {
+	if value, ok := _u.mutation.ExpiryDate(); ok {
 		_spec.SetField(assetlicense.FieldExpiryDate, field.TypeString, value)
 	}
-	if alu.mutation.ExpiryDateCleared() {
+	if _u.mutation.ExpiryDateCleared() {
 		_spec.ClearField(assetlicense.FieldExpiryDate, field.TypeString)
 	}
-	if value, ok := alu.mutation.SupportVendor(); ok {
+	if value, ok := _u.mutation.SupportVendor(); ok {
 		_spec.SetField(assetlicense.FieldSupportVendor, field.TypeString, value)
 	}
-	if alu.mutation.SupportVendorCleared() {
+	if _u.mutation.SupportVendorCleared() {
 		_spec.ClearField(assetlicense.FieldSupportVendor, field.TypeString)
 	}
-	if value, ok := alu.mutation.SupportContact(); ok {
+	if value, ok := _u.mutation.SupportContact(); ok {
 		_spec.SetField(assetlicense.FieldSupportContact, field.TypeString, value)
 	}
-	if alu.mutation.SupportContactCleared() {
+	if _u.mutation.SupportContactCleared() {
 		_spec.ClearField(assetlicense.FieldSupportContact, field.TypeString)
 	}
-	if value, ok := alu.mutation.RenewalCost(); ok {
+	if value, ok := _u.mutation.RenewalCost(); ok {
 		_spec.SetField(assetlicense.FieldRenewalCost, field.TypeString, value)
 	}
-	if alu.mutation.RenewalCostCleared() {
+	if _u.mutation.RenewalCostCleared() {
 		_spec.ClearField(assetlicense.FieldRenewalCost, field.TypeString)
 	}
-	if value, ok := alu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(assetlicense.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := alu.mutation.Notes(); ok {
+	if value, ok := _u.mutation.Notes(); ok {
 		_spec.SetField(assetlicense.FieldNotes, field.TypeString, value)
 	}
-	if alu.mutation.NotesCleared() {
+	if _u.mutation.NotesCleared() {
 		_spec.ClearField(assetlicense.FieldNotes, field.TypeString)
 	}
-	if value, ok := alu.mutation.Users(); ok {
+	if value, ok := _u.mutation.Users(); ok {
 		_spec.SetField(assetlicense.FieldUsers, field.TypeJSON, value)
 	}
-	if value, ok := alu.mutation.AppendedUsers(); ok {
+	if value, ok := _u.mutation.AppendedUsers(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, assetlicense.FieldUsers, value)
 		})
 	}
-	if alu.mutation.UsersCleared() {
+	if _u.mutation.UsersCleared() {
 		_spec.ClearField(assetlicense.FieldUsers, field.TypeJSON)
 	}
-	if value, ok := alu.mutation.Tags(); ok {
+	if value, ok := _u.mutation.Tags(); ok {
 		_spec.SetField(assetlicense.FieldTags, field.TypeJSON, value)
 	}
-	if value, ok := alu.mutation.AppendedTags(); ok {
+	if value, ok := _u.mutation.AppendedTags(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, assetlicense.FieldTags, value)
 		})
 	}
-	if alu.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		_spec.ClearField(assetlicense.FieldTags, field.TypeJSON)
 	}
-	if value, ok := alu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(assetlicense.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := alu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(assetlicense.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, alu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{assetlicense.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -627,8 +627,8 @@ func (alu *AssetLicenseUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	alu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // AssetLicenseUpdateOne is the builder for updating a single AssetLicense entity.
@@ -640,427 +640,427 @@ type AssetLicenseUpdateOne struct {
 }
 
 // SetLicenseKey sets the "license_key" field.
-func (aluo *AssetLicenseUpdateOne) SetLicenseKey(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetLicenseKey(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetLicenseKey(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetLicenseKey(v)
+	return _u
 }
 
 // SetNillableLicenseKey sets the "license_key" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableLicenseKey(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetLicenseKey(*s)
+func (_u *AssetLicenseUpdateOne) SetNillableLicenseKey(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetLicenseKey(*v)
 	}
-	return aluo
+	return _u
 }
 
 // ClearLicenseKey clears the value of the "license_key" field.
-func (aluo *AssetLicenseUpdateOne) ClearLicenseKey() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearLicenseKey()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearLicenseKey() *AssetLicenseUpdateOne {
+	_u.mutation.ClearLicenseKey()
+	return _u
 }
 
 // SetName sets the "name" field.
-func (aluo *AssetLicenseUpdateOne) SetName(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetName(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetName(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableName(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetName(*s)
+func (_u *AssetLicenseUpdateOne) SetNillableName(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return aluo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (aluo *AssetLicenseUpdateOne) SetDescription(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetDescription(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetDescription(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableDescription(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetDescription(*s)
+func (_u *AssetLicenseUpdateOne) SetNillableDescription(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return aluo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (aluo *AssetLicenseUpdateOne) ClearDescription() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearDescription()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearDescription() *AssetLicenseUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetVendor sets the "vendor" field.
-func (aluo *AssetLicenseUpdateOne) SetVendor(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetVendor(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetVendor(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetVendor(v)
+	return _u
 }
 
 // SetNillableVendor sets the "vendor" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableVendor(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetVendor(*s)
+func (_u *AssetLicenseUpdateOne) SetNillableVendor(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetVendor(*v)
 	}
-	return aluo
+	return _u
 }
 
 // ClearVendor clears the value of the "vendor" field.
-func (aluo *AssetLicenseUpdateOne) ClearVendor() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearVendor()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearVendor() *AssetLicenseUpdateOne {
+	_u.mutation.ClearVendor()
+	return _u
 }
 
 // SetLicenseType sets the "license_type" field.
-func (aluo *AssetLicenseUpdateOne) SetLicenseType(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetLicenseType(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetLicenseType(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetLicenseType(v)
+	return _u
 }
 
 // SetNillableLicenseType sets the "license_type" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableLicenseType(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetLicenseType(*s)
+func (_u *AssetLicenseUpdateOne) SetNillableLicenseType(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetLicenseType(*v)
 	}
-	return aluo
+	return _u
 }
 
 // SetTotalQuantity sets the "total_quantity" field.
-func (aluo *AssetLicenseUpdateOne) SetTotalQuantity(i int) *AssetLicenseUpdateOne {
-	aluo.mutation.ResetTotalQuantity()
-	aluo.mutation.SetTotalQuantity(i)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetTotalQuantity(v int) *AssetLicenseUpdateOne {
+	_u.mutation.ResetTotalQuantity()
+	_u.mutation.SetTotalQuantity(v)
+	return _u
 }
 
 // SetNillableTotalQuantity sets the "total_quantity" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableTotalQuantity(i *int) *AssetLicenseUpdateOne {
-	if i != nil {
-		aluo.SetTotalQuantity(*i)
+func (_u *AssetLicenseUpdateOne) SetNillableTotalQuantity(v *int) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetTotalQuantity(*v)
 	}
-	return aluo
+	return _u
 }
 
-// AddTotalQuantity adds i to the "total_quantity" field.
-func (aluo *AssetLicenseUpdateOne) AddTotalQuantity(i int) *AssetLicenseUpdateOne {
-	aluo.mutation.AddTotalQuantity(i)
-	return aluo
+// AddTotalQuantity adds value to the "total_quantity" field.
+func (_u *AssetLicenseUpdateOne) AddTotalQuantity(v int) *AssetLicenseUpdateOne {
+	_u.mutation.AddTotalQuantity(v)
+	return _u
 }
 
 // SetUsedQuantity sets the "used_quantity" field.
-func (aluo *AssetLicenseUpdateOne) SetUsedQuantity(i int) *AssetLicenseUpdateOne {
-	aluo.mutation.ResetUsedQuantity()
-	aluo.mutation.SetUsedQuantity(i)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetUsedQuantity(v int) *AssetLicenseUpdateOne {
+	_u.mutation.ResetUsedQuantity()
+	_u.mutation.SetUsedQuantity(v)
+	return _u
 }
 
 // SetNillableUsedQuantity sets the "used_quantity" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableUsedQuantity(i *int) *AssetLicenseUpdateOne {
-	if i != nil {
-		aluo.SetUsedQuantity(*i)
+func (_u *AssetLicenseUpdateOne) SetNillableUsedQuantity(v *int) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetUsedQuantity(*v)
 	}
-	return aluo
+	return _u
 }
 
-// AddUsedQuantity adds i to the "used_quantity" field.
-func (aluo *AssetLicenseUpdateOne) AddUsedQuantity(i int) *AssetLicenseUpdateOne {
-	aluo.mutation.AddUsedQuantity(i)
-	return aluo
+// AddUsedQuantity adds value to the "used_quantity" field.
+func (_u *AssetLicenseUpdateOne) AddUsedQuantity(v int) *AssetLicenseUpdateOne {
+	_u.mutation.AddUsedQuantity(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (aluo *AssetLicenseUpdateOne) SetTenantID(i int) *AssetLicenseUpdateOne {
-	aluo.mutation.ResetTenantID()
-	aluo.mutation.SetTenantID(i)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetTenantID(v int) *AssetLicenseUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableTenantID(i *int) *AssetLicenseUpdateOne {
-	if i != nil {
-		aluo.SetTenantID(*i)
+func (_u *AssetLicenseUpdateOne) SetNillableTenantID(v *int) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return aluo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (aluo *AssetLicenseUpdateOne) AddTenantID(i int) *AssetLicenseUpdateOne {
-	aluo.mutation.AddTenantID(i)
-	return aluo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *AssetLicenseUpdateOne) AddTenantID(v int) *AssetLicenseUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetAssetID sets the "asset_id" field.
-func (aluo *AssetLicenseUpdateOne) SetAssetID(i int) *AssetLicenseUpdateOne {
-	aluo.mutation.ResetAssetID()
-	aluo.mutation.SetAssetID(i)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetAssetID(v int) *AssetLicenseUpdateOne {
+	_u.mutation.ResetAssetID()
+	_u.mutation.SetAssetID(v)
+	return _u
 }
 
 // SetNillableAssetID sets the "asset_id" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableAssetID(i *int) *AssetLicenseUpdateOne {
-	if i != nil {
-		aluo.SetAssetID(*i)
+func (_u *AssetLicenseUpdateOne) SetNillableAssetID(v *int) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetAssetID(*v)
 	}
-	return aluo
+	return _u
 }
 
-// AddAssetID adds i to the "asset_id" field.
-func (aluo *AssetLicenseUpdateOne) AddAssetID(i int) *AssetLicenseUpdateOne {
-	aluo.mutation.AddAssetID(i)
-	return aluo
+// AddAssetID adds value to the "asset_id" field.
+func (_u *AssetLicenseUpdateOne) AddAssetID(v int) *AssetLicenseUpdateOne {
+	_u.mutation.AddAssetID(v)
+	return _u
 }
 
 // ClearAssetID clears the value of the "asset_id" field.
-func (aluo *AssetLicenseUpdateOne) ClearAssetID() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearAssetID()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearAssetID() *AssetLicenseUpdateOne {
+	_u.mutation.ClearAssetID()
+	return _u
 }
 
 // SetPurchaseDate sets the "purchase_date" field.
-func (aluo *AssetLicenseUpdateOne) SetPurchaseDate(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetPurchaseDate(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetPurchaseDate(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetPurchaseDate(v)
+	return _u
 }
 
 // SetNillablePurchaseDate sets the "purchase_date" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillablePurchaseDate(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetPurchaseDate(*s)
+func (_u *AssetLicenseUpdateOne) SetNillablePurchaseDate(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetPurchaseDate(*v)
 	}
-	return aluo
+	return _u
 }
 
 // ClearPurchaseDate clears the value of the "purchase_date" field.
-func (aluo *AssetLicenseUpdateOne) ClearPurchaseDate() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearPurchaseDate()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearPurchaseDate() *AssetLicenseUpdateOne {
+	_u.mutation.ClearPurchaseDate()
+	return _u
 }
 
 // SetPurchasePrice sets the "purchase_price" field.
-func (aluo *AssetLicenseUpdateOne) SetPurchasePrice(f float64) *AssetLicenseUpdateOne {
-	aluo.mutation.ResetPurchasePrice()
-	aluo.mutation.SetPurchasePrice(f)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetPurchasePrice(v float64) *AssetLicenseUpdateOne {
+	_u.mutation.ResetPurchasePrice()
+	_u.mutation.SetPurchasePrice(v)
+	return _u
 }
 
 // SetNillablePurchasePrice sets the "purchase_price" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillablePurchasePrice(f *float64) *AssetLicenseUpdateOne {
-	if f != nil {
-		aluo.SetPurchasePrice(*f)
+func (_u *AssetLicenseUpdateOne) SetNillablePurchasePrice(v *float64) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetPurchasePrice(*v)
 	}
-	return aluo
+	return _u
 }
 
-// AddPurchasePrice adds f to the "purchase_price" field.
-func (aluo *AssetLicenseUpdateOne) AddPurchasePrice(f float64) *AssetLicenseUpdateOne {
-	aluo.mutation.AddPurchasePrice(f)
-	return aluo
+// AddPurchasePrice adds value to the "purchase_price" field.
+func (_u *AssetLicenseUpdateOne) AddPurchasePrice(v float64) *AssetLicenseUpdateOne {
+	_u.mutation.AddPurchasePrice(v)
+	return _u
 }
 
 // ClearPurchasePrice clears the value of the "purchase_price" field.
-func (aluo *AssetLicenseUpdateOne) ClearPurchasePrice() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearPurchasePrice()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearPurchasePrice() *AssetLicenseUpdateOne {
+	_u.mutation.ClearPurchasePrice()
+	return _u
 }
 
 // SetExpiryDate sets the "expiry_date" field.
-func (aluo *AssetLicenseUpdateOne) SetExpiryDate(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetExpiryDate(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetExpiryDate(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetExpiryDate(v)
+	return _u
 }
 
 // SetNillableExpiryDate sets the "expiry_date" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableExpiryDate(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetExpiryDate(*s)
+func (_u *AssetLicenseUpdateOne) SetNillableExpiryDate(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetExpiryDate(*v)
 	}
-	return aluo
+	return _u
 }
 
 // ClearExpiryDate clears the value of the "expiry_date" field.
-func (aluo *AssetLicenseUpdateOne) ClearExpiryDate() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearExpiryDate()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearExpiryDate() *AssetLicenseUpdateOne {
+	_u.mutation.ClearExpiryDate()
+	return _u
 }
 
 // SetSupportVendor sets the "support_vendor" field.
-func (aluo *AssetLicenseUpdateOne) SetSupportVendor(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetSupportVendor(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetSupportVendor(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetSupportVendor(v)
+	return _u
 }
 
 // SetNillableSupportVendor sets the "support_vendor" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableSupportVendor(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetSupportVendor(*s)
+func (_u *AssetLicenseUpdateOne) SetNillableSupportVendor(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetSupportVendor(*v)
 	}
-	return aluo
+	return _u
 }
 
 // ClearSupportVendor clears the value of the "support_vendor" field.
-func (aluo *AssetLicenseUpdateOne) ClearSupportVendor() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearSupportVendor()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearSupportVendor() *AssetLicenseUpdateOne {
+	_u.mutation.ClearSupportVendor()
+	return _u
 }
 
 // SetSupportContact sets the "support_contact" field.
-func (aluo *AssetLicenseUpdateOne) SetSupportContact(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetSupportContact(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetSupportContact(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetSupportContact(v)
+	return _u
 }
 
 // SetNillableSupportContact sets the "support_contact" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableSupportContact(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetSupportContact(*s)
+func (_u *AssetLicenseUpdateOne) SetNillableSupportContact(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetSupportContact(*v)
 	}
-	return aluo
+	return _u
 }
 
 // ClearSupportContact clears the value of the "support_contact" field.
-func (aluo *AssetLicenseUpdateOne) ClearSupportContact() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearSupportContact()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearSupportContact() *AssetLicenseUpdateOne {
+	_u.mutation.ClearSupportContact()
+	return _u
 }
 
 // SetRenewalCost sets the "renewal_cost" field.
-func (aluo *AssetLicenseUpdateOne) SetRenewalCost(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetRenewalCost(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetRenewalCost(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetRenewalCost(v)
+	return _u
 }
 
 // SetNillableRenewalCost sets the "renewal_cost" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableRenewalCost(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetRenewalCost(*s)
+func (_u *AssetLicenseUpdateOne) SetNillableRenewalCost(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetRenewalCost(*v)
 	}
-	return aluo
+	return _u
 }
 
 // ClearRenewalCost clears the value of the "renewal_cost" field.
-func (aluo *AssetLicenseUpdateOne) ClearRenewalCost() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearRenewalCost()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearRenewalCost() *AssetLicenseUpdateOne {
+	_u.mutation.ClearRenewalCost()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (aluo *AssetLicenseUpdateOne) SetStatus(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetStatus(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetStatus(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableStatus(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetStatus(*s)
+func (_u *AssetLicenseUpdateOne) SetNillableStatus(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return aluo
+	return _u
 }
 
 // SetNotes sets the "notes" field.
-func (aluo *AssetLicenseUpdateOne) SetNotes(s string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetNotes(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetNotes(v string) *AssetLicenseUpdateOne {
+	_u.mutation.SetNotes(v)
+	return _u
 }
 
 // SetNillableNotes sets the "notes" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableNotes(s *string) *AssetLicenseUpdateOne {
-	if s != nil {
-		aluo.SetNotes(*s)
+func (_u *AssetLicenseUpdateOne) SetNillableNotes(v *string) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetNotes(*v)
 	}
-	return aluo
+	return _u
 }
 
 // ClearNotes clears the value of the "notes" field.
-func (aluo *AssetLicenseUpdateOne) ClearNotes() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearNotes()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearNotes() *AssetLicenseUpdateOne {
+	_u.mutation.ClearNotes()
+	return _u
 }
 
 // SetUsers sets the "users" field.
-func (aluo *AssetLicenseUpdateOne) SetUsers(i []int) *AssetLicenseUpdateOne {
-	aluo.mutation.SetUsers(i)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetUsers(v []int) *AssetLicenseUpdateOne {
+	_u.mutation.SetUsers(v)
+	return _u
 }
 
-// AppendUsers appends i to the "users" field.
-func (aluo *AssetLicenseUpdateOne) AppendUsers(i []int) *AssetLicenseUpdateOne {
-	aluo.mutation.AppendUsers(i)
-	return aluo
+// AppendUsers appends value to the "users" field.
+func (_u *AssetLicenseUpdateOne) AppendUsers(v []int) *AssetLicenseUpdateOne {
+	_u.mutation.AppendUsers(v)
+	return _u
 }
 
 // ClearUsers clears the value of the "users" field.
-func (aluo *AssetLicenseUpdateOne) ClearUsers() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearUsers()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearUsers() *AssetLicenseUpdateOne {
+	_u.mutation.ClearUsers()
+	return _u
 }
 
 // SetTags sets the "tags" field.
-func (aluo *AssetLicenseUpdateOne) SetTags(s []string) *AssetLicenseUpdateOne {
-	aluo.mutation.SetTags(s)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetTags(v []string) *AssetLicenseUpdateOne {
+	_u.mutation.SetTags(v)
+	return _u
 }
 
-// AppendTags appends s to the "tags" field.
-func (aluo *AssetLicenseUpdateOne) AppendTags(s []string) *AssetLicenseUpdateOne {
-	aluo.mutation.AppendTags(s)
-	return aluo
+// AppendTags appends value to the "tags" field.
+func (_u *AssetLicenseUpdateOne) AppendTags(v []string) *AssetLicenseUpdateOne {
+	_u.mutation.AppendTags(v)
+	return _u
 }
 
 // ClearTags clears the value of the "tags" field.
-func (aluo *AssetLicenseUpdateOne) ClearTags() *AssetLicenseUpdateOne {
-	aluo.mutation.ClearTags()
-	return aluo
+func (_u *AssetLicenseUpdateOne) ClearTags() *AssetLicenseUpdateOne {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (aluo *AssetLicenseUpdateOne) SetCreatedAt(t time.Time) *AssetLicenseUpdateOne {
-	aluo.mutation.SetCreatedAt(t)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetCreatedAt(v time.Time) *AssetLicenseUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (aluo *AssetLicenseUpdateOne) SetNillableCreatedAt(t *time.Time) *AssetLicenseUpdateOne {
-	if t != nil {
-		aluo.SetCreatedAt(*t)
+func (_u *AssetLicenseUpdateOne) SetNillableCreatedAt(v *time.Time) *AssetLicenseUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return aluo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (aluo *AssetLicenseUpdateOne) SetUpdatedAt(t time.Time) *AssetLicenseUpdateOne {
-	aluo.mutation.SetUpdatedAt(t)
-	return aluo
+func (_u *AssetLicenseUpdateOne) SetUpdatedAt(v time.Time) *AssetLicenseUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the AssetLicenseMutation object of the builder.
-func (aluo *AssetLicenseUpdateOne) Mutation() *AssetLicenseMutation {
-	return aluo.mutation
+func (_u *AssetLicenseUpdateOne) Mutation() *AssetLicenseMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the AssetLicenseUpdate builder.
-func (aluo *AssetLicenseUpdateOne) Where(ps ...predicate.AssetLicense) *AssetLicenseUpdateOne {
-	aluo.mutation.Where(ps...)
-	return aluo
+func (_u *AssetLicenseUpdateOne) Where(ps ...predicate.AssetLicense) *AssetLicenseUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (aluo *AssetLicenseUpdateOne) Select(field string, fields ...string) *AssetLicenseUpdateOne {
-	aluo.fields = append([]string{field}, fields...)
-	return aluo
+func (_u *AssetLicenseUpdateOne) Select(field string, fields ...string) *AssetLicenseUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated AssetLicense entity.
-func (aluo *AssetLicenseUpdateOne) Save(ctx context.Context) (*AssetLicense, error) {
-	aluo.defaults()
-	return withHooks(ctx, aluo.sqlSave, aluo.mutation, aluo.hooks)
+func (_u *AssetLicenseUpdateOne) Save(ctx context.Context) (*AssetLicense, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (aluo *AssetLicenseUpdateOne) SaveX(ctx context.Context) *AssetLicense {
-	node, err := aluo.Save(ctx)
+func (_u *AssetLicenseUpdateOne) SaveX(ctx context.Context) *AssetLicense {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1068,34 +1068,34 @@ func (aluo *AssetLicenseUpdateOne) SaveX(ctx context.Context) *AssetLicense {
 }
 
 // Exec executes the query on the entity.
-func (aluo *AssetLicenseUpdateOne) Exec(ctx context.Context) error {
-	_, err := aluo.Save(ctx)
+func (_u *AssetLicenseUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (aluo *AssetLicenseUpdateOne) ExecX(ctx context.Context) {
-	if err := aluo.Exec(ctx); err != nil {
+func (_u *AssetLicenseUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (aluo *AssetLicenseUpdateOne) defaults() {
-	if _, ok := aluo.mutation.UpdatedAt(); !ok {
+func (_u *AssetLicenseUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := assetlicense.UpdateDefaultUpdatedAt()
-		aluo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (aluo *AssetLicenseUpdateOne) check() error {
-	if v, ok := aluo.mutation.Name(); ok {
+func (_u *AssetLicenseUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := assetlicense.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "AssetLicense.name": %w`, err)}
 		}
 	}
-	if v, ok := aluo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := assetlicense.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "AssetLicense.tenant_id": %w`, err)}
 		}
@@ -1103,17 +1103,17 @@ func (aluo *AssetLicenseUpdateOne) check() error {
 	return nil
 }
 
-func (aluo *AssetLicenseUpdateOne) sqlSave(ctx context.Context) (_node *AssetLicense, err error) {
-	if err := aluo.check(); err != nil {
+func (_u *AssetLicenseUpdateOne) sqlSave(ctx context.Context) (_node *AssetLicense, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(assetlicense.Table, assetlicense.Columns, sqlgraph.NewFieldSpec(assetlicense.FieldID, field.TypeInt))
-	id, ok := aluo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "AssetLicense.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := aluo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, assetlicense.FieldID)
 		for _, f := range fields {
@@ -1125,144 +1125,144 @@ func (aluo *AssetLicenseUpdateOne) sqlSave(ctx context.Context) (_node *AssetLic
 			}
 		}
 	}
-	if ps := aluo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := aluo.mutation.LicenseKey(); ok {
+	if value, ok := _u.mutation.LicenseKey(); ok {
 		_spec.SetField(assetlicense.FieldLicenseKey, field.TypeString, value)
 	}
-	if aluo.mutation.LicenseKeyCleared() {
+	if _u.mutation.LicenseKeyCleared() {
 		_spec.ClearField(assetlicense.FieldLicenseKey, field.TypeString)
 	}
-	if value, ok := aluo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(assetlicense.FieldName, field.TypeString, value)
 	}
-	if value, ok := aluo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(assetlicense.FieldDescription, field.TypeString, value)
 	}
-	if aluo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(assetlicense.FieldDescription, field.TypeString)
 	}
-	if value, ok := aluo.mutation.Vendor(); ok {
+	if value, ok := _u.mutation.Vendor(); ok {
 		_spec.SetField(assetlicense.FieldVendor, field.TypeString, value)
 	}
-	if aluo.mutation.VendorCleared() {
+	if _u.mutation.VendorCleared() {
 		_spec.ClearField(assetlicense.FieldVendor, field.TypeString)
 	}
-	if value, ok := aluo.mutation.LicenseType(); ok {
+	if value, ok := _u.mutation.LicenseType(); ok {
 		_spec.SetField(assetlicense.FieldLicenseType, field.TypeString, value)
 	}
-	if value, ok := aluo.mutation.TotalQuantity(); ok {
+	if value, ok := _u.mutation.TotalQuantity(); ok {
 		_spec.SetField(assetlicense.FieldTotalQuantity, field.TypeInt, value)
 	}
-	if value, ok := aluo.mutation.AddedTotalQuantity(); ok {
+	if value, ok := _u.mutation.AddedTotalQuantity(); ok {
 		_spec.AddField(assetlicense.FieldTotalQuantity, field.TypeInt, value)
 	}
-	if value, ok := aluo.mutation.UsedQuantity(); ok {
+	if value, ok := _u.mutation.UsedQuantity(); ok {
 		_spec.SetField(assetlicense.FieldUsedQuantity, field.TypeInt, value)
 	}
-	if value, ok := aluo.mutation.AddedUsedQuantity(); ok {
+	if value, ok := _u.mutation.AddedUsedQuantity(); ok {
 		_spec.AddField(assetlicense.FieldUsedQuantity, field.TypeInt, value)
 	}
-	if value, ok := aluo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(assetlicense.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := aluo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(assetlicense.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := aluo.mutation.AssetID(); ok {
+	if value, ok := _u.mutation.AssetID(); ok {
 		_spec.SetField(assetlicense.FieldAssetID, field.TypeInt, value)
 	}
-	if value, ok := aluo.mutation.AddedAssetID(); ok {
+	if value, ok := _u.mutation.AddedAssetID(); ok {
 		_spec.AddField(assetlicense.FieldAssetID, field.TypeInt, value)
 	}
-	if aluo.mutation.AssetIDCleared() {
+	if _u.mutation.AssetIDCleared() {
 		_spec.ClearField(assetlicense.FieldAssetID, field.TypeInt)
 	}
-	if value, ok := aluo.mutation.PurchaseDate(); ok {
+	if value, ok := _u.mutation.PurchaseDate(); ok {
 		_spec.SetField(assetlicense.FieldPurchaseDate, field.TypeString, value)
 	}
-	if aluo.mutation.PurchaseDateCleared() {
+	if _u.mutation.PurchaseDateCleared() {
 		_spec.ClearField(assetlicense.FieldPurchaseDate, field.TypeString)
 	}
-	if value, ok := aluo.mutation.PurchasePrice(); ok {
+	if value, ok := _u.mutation.PurchasePrice(); ok {
 		_spec.SetField(assetlicense.FieldPurchasePrice, field.TypeFloat64, value)
 	}
-	if value, ok := aluo.mutation.AddedPurchasePrice(); ok {
+	if value, ok := _u.mutation.AddedPurchasePrice(); ok {
 		_spec.AddField(assetlicense.FieldPurchasePrice, field.TypeFloat64, value)
 	}
-	if aluo.mutation.PurchasePriceCleared() {
+	if _u.mutation.PurchasePriceCleared() {
 		_spec.ClearField(assetlicense.FieldPurchasePrice, field.TypeFloat64)
 	}
-	if value, ok := aluo.mutation.ExpiryDate(); ok {
+	if value, ok := _u.mutation.ExpiryDate(); ok {
 		_spec.SetField(assetlicense.FieldExpiryDate, field.TypeString, value)
 	}
-	if aluo.mutation.ExpiryDateCleared() {
+	if _u.mutation.ExpiryDateCleared() {
 		_spec.ClearField(assetlicense.FieldExpiryDate, field.TypeString)
 	}
-	if value, ok := aluo.mutation.SupportVendor(); ok {
+	if value, ok := _u.mutation.SupportVendor(); ok {
 		_spec.SetField(assetlicense.FieldSupportVendor, field.TypeString, value)
 	}
-	if aluo.mutation.SupportVendorCleared() {
+	if _u.mutation.SupportVendorCleared() {
 		_spec.ClearField(assetlicense.FieldSupportVendor, field.TypeString)
 	}
-	if value, ok := aluo.mutation.SupportContact(); ok {
+	if value, ok := _u.mutation.SupportContact(); ok {
 		_spec.SetField(assetlicense.FieldSupportContact, field.TypeString, value)
 	}
-	if aluo.mutation.SupportContactCleared() {
+	if _u.mutation.SupportContactCleared() {
 		_spec.ClearField(assetlicense.FieldSupportContact, field.TypeString)
 	}
-	if value, ok := aluo.mutation.RenewalCost(); ok {
+	if value, ok := _u.mutation.RenewalCost(); ok {
 		_spec.SetField(assetlicense.FieldRenewalCost, field.TypeString, value)
 	}
-	if aluo.mutation.RenewalCostCleared() {
+	if _u.mutation.RenewalCostCleared() {
 		_spec.ClearField(assetlicense.FieldRenewalCost, field.TypeString)
 	}
-	if value, ok := aluo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(assetlicense.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := aluo.mutation.Notes(); ok {
+	if value, ok := _u.mutation.Notes(); ok {
 		_spec.SetField(assetlicense.FieldNotes, field.TypeString, value)
 	}
-	if aluo.mutation.NotesCleared() {
+	if _u.mutation.NotesCleared() {
 		_spec.ClearField(assetlicense.FieldNotes, field.TypeString)
 	}
-	if value, ok := aluo.mutation.Users(); ok {
+	if value, ok := _u.mutation.Users(); ok {
 		_spec.SetField(assetlicense.FieldUsers, field.TypeJSON, value)
 	}
-	if value, ok := aluo.mutation.AppendedUsers(); ok {
+	if value, ok := _u.mutation.AppendedUsers(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, assetlicense.FieldUsers, value)
 		})
 	}
-	if aluo.mutation.UsersCleared() {
+	if _u.mutation.UsersCleared() {
 		_spec.ClearField(assetlicense.FieldUsers, field.TypeJSON)
 	}
-	if value, ok := aluo.mutation.Tags(); ok {
+	if value, ok := _u.mutation.Tags(); ok {
 		_spec.SetField(assetlicense.FieldTags, field.TypeJSON, value)
 	}
-	if value, ok := aluo.mutation.AppendedTags(); ok {
+	if value, ok := _u.mutation.AppendedTags(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, assetlicense.FieldTags, value)
 		})
 	}
-	if aluo.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		_spec.ClearField(assetlicense.FieldTags, field.TypeJSON)
 	}
-	if value, ok := aluo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(assetlicense.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := aluo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(assetlicense.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &AssetLicense{config: aluo.config}
+	_node = &AssetLicense{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, aluo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{assetlicense.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1270,6 +1270,6 @@ func (aluo *AssetLicenseUpdateOne) sqlSave(ctx context.Context) (_node *AssetLic
 		}
 		return nil, err
 	}
-	aluo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

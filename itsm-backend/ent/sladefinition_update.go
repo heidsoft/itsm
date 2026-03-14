@@ -27,376 +27,376 @@ type SLADefinitionUpdate struct {
 }
 
 // Where appends a list predicates to the SLADefinitionUpdate builder.
-func (sdu *SLADefinitionUpdate) Where(ps ...predicate.SLADefinition) *SLADefinitionUpdate {
-	sdu.mutation.Where(ps...)
-	return sdu
+func (_u *SLADefinitionUpdate) Where(ps ...predicate.SLADefinition) *SLADefinitionUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (sdu *SLADefinitionUpdate) SetName(s string) *SLADefinitionUpdate {
-	sdu.mutation.SetName(s)
-	return sdu
+func (_u *SLADefinitionUpdate) SetName(v string) *SLADefinitionUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableName(s *string) *SLADefinitionUpdate {
-	if s != nil {
-		sdu.SetName(*s)
+func (_u *SLADefinitionUpdate) SetNillableName(v *string) *SLADefinitionUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return sdu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (sdu *SLADefinitionUpdate) SetDescription(s string) *SLADefinitionUpdate {
-	sdu.mutation.SetDescription(s)
-	return sdu
+func (_u *SLADefinitionUpdate) SetDescription(v string) *SLADefinitionUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableDescription(s *string) *SLADefinitionUpdate {
-	if s != nil {
-		sdu.SetDescription(*s)
+func (_u *SLADefinitionUpdate) SetNillableDescription(v *string) *SLADefinitionUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return sdu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (sdu *SLADefinitionUpdate) ClearDescription() *SLADefinitionUpdate {
-	sdu.mutation.ClearDescription()
-	return sdu
+func (_u *SLADefinitionUpdate) ClearDescription() *SLADefinitionUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetServiceType sets the "service_type" field.
-func (sdu *SLADefinitionUpdate) SetServiceType(s string) *SLADefinitionUpdate {
-	sdu.mutation.SetServiceType(s)
-	return sdu
+func (_u *SLADefinitionUpdate) SetServiceType(v string) *SLADefinitionUpdate {
+	_u.mutation.SetServiceType(v)
+	return _u
 }
 
 // SetNillableServiceType sets the "service_type" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableServiceType(s *string) *SLADefinitionUpdate {
-	if s != nil {
-		sdu.SetServiceType(*s)
+func (_u *SLADefinitionUpdate) SetNillableServiceType(v *string) *SLADefinitionUpdate {
+	if v != nil {
+		_u.SetServiceType(*v)
 	}
-	return sdu
+	return _u
 }
 
 // ClearServiceType clears the value of the "service_type" field.
-func (sdu *SLADefinitionUpdate) ClearServiceType() *SLADefinitionUpdate {
-	sdu.mutation.ClearServiceType()
-	return sdu
+func (_u *SLADefinitionUpdate) ClearServiceType() *SLADefinitionUpdate {
+	_u.mutation.ClearServiceType()
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (sdu *SLADefinitionUpdate) SetPriority(s string) *SLADefinitionUpdate {
-	sdu.mutation.SetPriority(s)
-	return sdu
+func (_u *SLADefinitionUpdate) SetPriority(v string) *SLADefinitionUpdate {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillablePriority(s *string) *SLADefinitionUpdate {
-	if s != nil {
-		sdu.SetPriority(*s)
+func (_u *SLADefinitionUpdate) SetNillablePriority(v *string) *SLADefinitionUpdate {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return sdu
+	return _u
 }
 
 // ClearPriority clears the value of the "priority" field.
-func (sdu *SLADefinitionUpdate) ClearPriority() *SLADefinitionUpdate {
-	sdu.mutation.ClearPriority()
-	return sdu
+func (_u *SLADefinitionUpdate) ClearPriority() *SLADefinitionUpdate {
+	_u.mutation.ClearPriority()
+	return _u
 }
 
 // SetResponseTime sets the "response_time" field.
-func (sdu *SLADefinitionUpdate) SetResponseTime(i int) *SLADefinitionUpdate {
-	sdu.mutation.ResetResponseTime()
-	sdu.mutation.SetResponseTime(i)
-	return sdu
+func (_u *SLADefinitionUpdate) SetResponseTime(v int) *SLADefinitionUpdate {
+	_u.mutation.ResetResponseTime()
+	_u.mutation.SetResponseTime(v)
+	return _u
 }
 
 // SetNillableResponseTime sets the "response_time" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableResponseTime(i *int) *SLADefinitionUpdate {
-	if i != nil {
-		sdu.SetResponseTime(*i)
+func (_u *SLADefinitionUpdate) SetNillableResponseTime(v *int) *SLADefinitionUpdate {
+	if v != nil {
+		_u.SetResponseTime(*v)
 	}
-	return sdu
+	return _u
 }
 
-// AddResponseTime adds i to the "response_time" field.
-func (sdu *SLADefinitionUpdate) AddResponseTime(i int) *SLADefinitionUpdate {
-	sdu.mutation.AddResponseTime(i)
-	return sdu
+// AddResponseTime adds value to the "response_time" field.
+func (_u *SLADefinitionUpdate) AddResponseTime(v int) *SLADefinitionUpdate {
+	_u.mutation.AddResponseTime(v)
+	return _u
 }
 
 // SetResolutionTime sets the "resolution_time" field.
-func (sdu *SLADefinitionUpdate) SetResolutionTime(i int) *SLADefinitionUpdate {
-	sdu.mutation.ResetResolutionTime()
-	sdu.mutation.SetResolutionTime(i)
-	return sdu
+func (_u *SLADefinitionUpdate) SetResolutionTime(v int) *SLADefinitionUpdate {
+	_u.mutation.ResetResolutionTime()
+	_u.mutation.SetResolutionTime(v)
+	return _u
 }
 
 // SetNillableResolutionTime sets the "resolution_time" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableResolutionTime(i *int) *SLADefinitionUpdate {
-	if i != nil {
-		sdu.SetResolutionTime(*i)
+func (_u *SLADefinitionUpdate) SetNillableResolutionTime(v *int) *SLADefinitionUpdate {
+	if v != nil {
+		_u.SetResolutionTime(*v)
 	}
-	return sdu
+	return _u
 }
 
-// AddResolutionTime adds i to the "resolution_time" field.
-func (sdu *SLADefinitionUpdate) AddResolutionTime(i int) *SLADefinitionUpdate {
-	sdu.mutation.AddResolutionTime(i)
-	return sdu
+// AddResolutionTime adds value to the "resolution_time" field.
+func (_u *SLADefinitionUpdate) AddResolutionTime(v int) *SLADefinitionUpdate {
+	_u.mutation.AddResolutionTime(v)
+	return _u
 }
 
 // SetBusinessHours sets the "business_hours" field.
-func (sdu *SLADefinitionUpdate) SetBusinessHours(m map[string]interface{}) *SLADefinitionUpdate {
-	sdu.mutation.SetBusinessHours(m)
-	return sdu
+func (_u *SLADefinitionUpdate) SetBusinessHours(v map[string]interface{}) *SLADefinitionUpdate {
+	_u.mutation.SetBusinessHours(v)
+	return _u
 }
 
 // ClearBusinessHours clears the value of the "business_hours" field.
-func (sdu *SLADefinitionUpdate) ClearBusinessHours() *SLADefinitionUpdate {
-	sdu.mutation.ClearBusinessHours()
-	return sdu
+func (_u *SLADefinitionUpdate) ClearBusinessHours() *SLADefinitionUpdate {
+	_u.mutation.ClearBusinessHours()
+	return _u
 }
 
 // SetEscalationRules sets the "escalation_rules" field.
-func (sdu *SLADefinitionUpdate) SetEscalationRules(m map[string]interface{}) *SLADefinitionUpdate {
-	sdu.mutation.SetEscalationRules(m)
-	return sdu
+func (_u *SLADefinitionUpdate) SetEscalationRules(v map[string]interface{}) *SLADefinitionUpdate {
+	_u.mutation.SetEscalationRules(v)
+	return _u
 }
 
 // ClearEscalationRules clears the value of the "escalation_rules" field.
-func (sdu *SLADefinitionUpdate) ClearEscalationRules() *SLADefinitionUpdate {
-	sdu.mutation.ClearEscalationRules()
-	return sdu
+func (_u *SLADefinitionUpdate) ClearEscalationRules() *SLADefinitionUpdate {
+	_u.mutation.ClearEscalationRules()
+	return _u
 }
 
 // SetConditions sets the "conditions" field.
-func (sdu *SLADefinitionUpdate) SetConditions(m map[string]interface{}) *SLADefinitionUpdate {
-	sdu.mutation.SetConditions(m)
-	return sdu
+func (_u *SLADefinitionUpdate) SetConditions(v map[string]interface{}) *SLADefinitionUpdate {
+	_u.mutation.SetConditions(v)
+	return _u
 }
 
 // ClearConditions clears the value of the "conditions" field.
-func (sdu *SLADefinitionUpdate) ClearConditions() *SLADefinitionUpdate {
-	sdu.mutation.ClearConditions()
-	return sdu
+func (_u *SLADefinitionUpdate) ClearConditions() *SLADefinitionUpdate {
+	_u.mutation.ClearConditions()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (sdu *SLADefinitionUpdate) SetIsActive(b bool) *SLADefinitionUpdate {
-	sdu.mutation.SetIsActive(b)
-	return sdu
+func (_u *SLADefinitionUpdate) SetIsActive(v bool) *SLADefinitionUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableIsActive(b *bool) *SLADefinitionUpdate {
-	if b != nil {
-		sdu.SetIsActive(*b)
+func (_u *SLADefinitionUpdate) SetNillableIsActive(v *bool) *SLADefinitionUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return sdu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (sdu *SLADefinitionUpdate) SetTenantID(i int) *SLADefinitionUpdate {
-	sdu.mutation.ResetTenantID()
-	sdu.mutation.SetTenantID(i)
-	return sdu
+func (_u *SLADefinitionUpdate) SetTenantID(v int) *SLADefinitionUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableTenantID(i *int) *SLADefinitionUpdate {
-	if i != nil {
-		sdu.SetTenantID(*i)
+func (_u *SLADefinitionUpdate) SetNillableTenantID(v *int) *SLADefinitionUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return sdu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (sdu *SLADefinitionUpdate) AddTenantID(i int) *SLADefinitionUpdate {
-	sdu.mutation.AddTenantID(i)
-	return sdu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *SLADefinitionUpdate) AddTenantID(v int) *SLADefinitionUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (sdu *SLADefinitionUpdate) SetCreatedAt(t time.Time) *SLADefinitionUpdate {
-	sdu.mutation.SetCreatedAt(t)
-	return sdu
+func (_u *SLADefinitionUpdate) SetCreatedAt(v time.Time) *SLADefinitionUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableCreatedAt(t *time.Time) *SLADefinitionUpdate {
-	if t != nil {
-		sdu.SetCreatedAt(*t)
+func (_u *SLADefinitionUpdate) SetNillableCreatedAt(v *time.Time) *SLADefinitionUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return sdu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (sdu *SLADefinitionUpdate) SetUpdatedAt(t time.Time) *SLADefinitionUpdate {
-	sdu.mutation.SetUpdatedAt(t)
-	return sdu
+func (_u *SLADefinitionUpdate) SetUpdatedAt(v time.Time) *SLADefinitionUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddViolationIDs adds the "violations" edge to the SLAViolation entity by IDs.
-func (sdu *SLADefinitionUpdate) AddViolationIDs(ids ...int) *SLADefinitionUpdate {
-	sdu.mutation.AddViolationIDs(ids...)
-	return sdu
+func (_u *SLADefinitionUpdate) AddViolationIDs(ids ...int) *SLADefinitionUpdate {
+	_u.mutation.AddViolationIDs(ids...)
+	return _u
 }
 
 // AddViolations adds the "violations" edges to the SLAViolation entity.
-func (sdu *SLADefinitionUpdate) AddViolations(s ...*SLAViolation) *SLADefinitionUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdate) AddViolations(v ...*SLAViolation) *SLADefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sdu.AddViolationIDs(ids...)
+	return _u.AddViolationIDs(ids...)
 }
 
 // AddMetricIDs adds the "metrics" edge to the SLAMetric entity by IDs.
-func (sdu *SLADefinitionUpdate) AddMetricIDs(ids ...int) *SLADefinitionUpdate {
-	sdu.mutation.AddMetricIDs(ids...)
-	return sdu
+func (_u *SLADefinitionUpdate) AddMetricIDs(ids ...int) *SLADefinitionUpdate {
+	_u.mutation.AddMetricIDs(ids...)
+	return _u
 }
 
 // AddMetrics adds the "metrics" edges to the SLAMetric entity.
-func (sdu *SLADefinitionUpdate) AddMetrics(s ...*SLAMetric) *SLADefinitionUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdate) AddMetrics(v ...*SLAMetric) *SLADefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sdu.AddMetricIDs(ids...)
+	return _u.AddMetricIDs(ids...)
 }
 
 // AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (sdu *SLADefinitionUpdate) AddTicketIDs(ids ...int) *SLADefinitionUpdate {
-	sdu.mutation.AddTicketIDs(ids...)
-	return sdu
+func (_u *SLADefinitionUpdate) AddTicketIDs(ids ...int) *SLADefinitionUpdate {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
 }
 
 // AddTickets adds the "tickets" edges to the Ticket entity.
-func (sdu *SLADefinitionUpdate) AddTickets(t ...*Ticket) *SLADefinitionUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *SLADefinitionUpdate) AddTickets(v ...*Ticket) *SLADefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sdu.AddTicketIDs(ids...)
+	return _u.AddTicketIDs(ids...)
 }
 
 // AddAlertRuleIDs adds the "alert_rules" edge to the SLAAlertRule entity by IDs.
-func (sdu *SLADefinitionUpdate) AddAlertRuleIDs(ids ...int) *SLADefinitionUpdate {
-	sdu.mutation.AddAlertRuleIDs(ids...)
-	return sdu
+func (_u *SLADefinitionUpdate) AddAlertRuleIDs(ids ...int) *SLADefinitionUpdate {
+	_u.mutation.AddAlertRuleIDs(ids...)
+	return _u
 }
 
 // AddAlertRules adds the "alert_rules" edges to the SLAAlertRule entity.
-func (sdu *SLADefinitionUpdate) AddAlertRules(s ...*SLAAlertRule) *SLADefinitionUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdate) AddAlertRules(v ...*SLAAlertRule) *SLADefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sdu.AddAlertRuleIDs(ids...)
+	return _u.AddAlertRuleIDs(ids...)
 }
 
 // Mutation returns the SLADefinitionMutation object of the builder.
-func (sdu *SLADefinitionUpdate) Mutation() *SLADefinitionMutation {
-	return sdu.mutation
+func (_u *SLADefinitionUpdate) Mutation() *SLADefinitionMutation {
+	return _u.mutation
 }
 
 // ClearViolations clears all "violations" edges to the SLAViolation entity.
-func (sdu *SLADefinitionUpdate) ClearViolations() *SLADefinitionUpdate {
-	sdu.mutation.ClearViolations()
-	return sdu
+func (_u *SLADefinitionUpdate) ClearViolations() *SLADefinitionUpdate {
+	_u.mutation.ClearViolations()
+	return _u
 }
 
 // RemoveViolationIDs removes the "violations" edge to SLAViolation entities by IDs.
-func (sdu *SLADefinitionUpdate) RemoveViolationIDs(ids ...int) *SLADefinitionUpdate {
-	sdu.mutation.RemoveViolationIDs(ids...)
-	return sdu
+func (_u *SLADefinitionUpdate) RemoveViolationIDs(ids ...int) *SLADefinitionUpdate {
+	_u.mutation.RemoveViolationIDs(ids...)
+	return _u
 }
 
 // RemoveViolations removes "violations" edges to SLAViolation entities.
-func (sdu *SLADefinitionUpdate) RemoveViolations(s ...*SLAViolation) *SLADefinitionUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdate) RemoveViolations(v ...*SLAViolation) *SLADefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sdu.RemoveViolationIDs(ids...)
+	return _u.RemoveViolationIDs(ids...)
 }
 
 // ClearMetrics clears all "metrics" edges to the SLAMetric entity.
-func (sdu *SLADefinitionUpdate) ClearMetrics() *SLADefinitionUpdate {
-	sdu.mutation.ClearMetrics()
-	return sdu
+func (_u *SLADefinitionUpdate) ClearMetrics() *SLADefinitionUpdate {
+	_u.mutation.ClearMetrics()
+	return _u
 }
 
 // RemoveMetricIDs removes the "metrics" edge to SLAMetric entities by IDs.
-func (sdu *SLADefinitionUpdate) RemoveMetricIDs(ids ...int) *SLADefinitionUpdate {
-	sdu.mutation.RemoveMetricIDs(ids...)
-	return sdu
+func (_u *SLADefinitionUpdate) RemoveMetricIDs(ids ...int) *SLADefinitionUpdate {
+	_u.mutation.RemoveMetricIDs(ids...)
+	return _u
 }
 
 // RemoveMetrics removes "metrics" edges to SLAMetric entities.
-func (sdu *SLADefinitionUpdate) RemoveMetrics(s ...*SLAMetric) *SLADefinitionUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdate) RemoveMetrics(v ...*SLAMetric) *SLADefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sdu.RemoveMetricIDs(ids...)
+	return _u.RemoveMetricIDs(ids...)
 }
 
 // ClearTickets clears all "tickets" edges to the Ticket entity.
-func (sdu *SLADefinitionUpdate) ClearTickets() *SLADefinitionUpdate {
-	sdu.mutation.ClearTickets()
-	return sdu
+func (_u *SLADefinitionUpdate) ClearTickets() *SLADefinitionUpdate {
+	_u.mutation.ClearTickets()
+	return _u
 }
 
 // RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
-func (sdu *SLADefinitionUpdate) RemoveTicketIDs(ids ...int) *SLADefinitionUpdate {
-	sdu.mutation.RemoveTicketIDs(ids...)
-	return sdu
+func (_u *SLADefinitionUpdate) RemoveTicketIDs(ids ...int) *SLADefinitionUpdate {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
 }
 
 // RemoveTickets removes "tickets" edges to Ticket entities.
-func (sdu *SLADefinitionUpdate) RemoveTickets(t ...*Ticket) *SLADefinitionUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *SLADefinitionUpdate) RemoveTickets(v ...*Ticket) *SLADefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sdu.RemoveTicketIDs(ids...)
+	return _u.RemoveTicketIDs(ids...)
 }
 
 // ClearAlertRules clears all "alert_rules" edges to the SLAAlertRule entity.
-func (sdu *SLADefinitionUpdate) ClearAlertRules() *SLADefinitionUpdate {
-	sdu.mutation.ClearAlertRules()
-	return sdu
+func (_u *SLADefinitionUpdate) ClearAlertRules() *SLADefinitionUpdate {
+	_u.mutation.ClearAlertRules()
+	return _u
 }
 
 // RemoveAlertRuleIDs removes the "alert_rules" edge to SLAAlertRule entities by IDs.
-func (sdu *SLADefinitionUpdate) RemoveAlertRuleIDs(ids ...int) *SLADefinitionUpdate {
-	sdu.mutation.RemoveAlertRuleIDs(ids...)
-	return sdu
+func (_u *SLADefinitionUpdate) RemoveAlertRuleIDs(ids ...int) *SLADefinitionUpdate {
+	_u.mutation.RemoveAlertRuleIDs(ids...)
+	return _u
 }
 
 // RemoveAlertRules removes "alert_rules" edges to SLAAlertRule entities.
-func (sdu *SLADefinitionUpdate) RemoveAlertRules(s ...*SLAAlertRule) *SLADefinitionUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdate) RemoveAlertRules(v ...*SLAAlertRule) *SLADefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sdu.RemoveAlertRuleIDs(ids...)
+	return _u.RemoveAlertRuleIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (sdu *SLADefinitionUpdate) Save(ctx context.Context) (int, error) {
-	sdu.defaults()
-	return withHooks(ctx, sdu.sqlSave, sdu.mutation, sdu.hooks)
+func (_u *SLADefinitionUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (sdu *SLADefinitionUpdate) SaveX(ctx context.Context) int {
-	affected, err := sdu.Save(ctx)
+func (_u *SLADefinitionUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -404,44 +404,44 @@ func (sdu *SLADefinitionUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (sdu *SLADefinitionUpdate) Exec(ctx context.Context) error {
-	_, err := sdu.Save(ctx)
+func (_u *SLADefinitionUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sdu *SLADefinitionUpdate) ExecX(ctx context.Context) {
-	if err := sdu.Exec(ctx); err != nil {
+func (_u *SLADefinitionUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (sdu *SLADefinitionUpdate) defaults() {
-	if _, ok := sdu.mutation.UpdatedAt(); !ok {
+func (_u *SLADefinitionUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := sladefinition.UpdateDefaultUpdatedAt()
-		sdu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (sdu *SLADefinitionUpdate) check() error {
-	if v, ok := sdu.mutation.Name(); ok {
+func (_u *SLADefinitionUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := sladefinition.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.name": %w`, err)}
 		}
 	}
-	if v, ok := sdu.mutation.ResponseTime(); ok {
+	if v, ok := _u.mutation.ResponseTime(); ok {
 		if err := sladefinition.ResponseTimeValidator(v); err != nil {
 			return &ValidationError{Name: "response_time", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.response_time": %w`, err)}
 		}
 	}
-	if v, ok := sdu.mutation.ResolutionTime(); ok {
+	if v, ok := _u.mutation.ResolutionTime(); ok {
 		if err := sladefinition.ResolutionTimeValidator(v); err != nil {
 			return &ValidationError{Name: "resolution_time", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.resolution_time": %w`, err)}
 		}
 	}
-	if v, ok := sdu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := sladefinition.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.tenant_id": %w`, err)}
 		}
@@ -449,85 +449,85 @@ func (sdu *SLADefinitionUpdate) check() error {
 	return nil
 }
 
-func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := sdu.check(); err != nil {
-		return n, err
+func (_u *SLADefinitionUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(sladefinition.Table, sladefinition.Columns, sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt))
-	if ps := sdu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := sdu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(sladefinition.FieldName, field.TypeString, value)
 	}
-	if value, ok := sdu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(sladefinition.FieldDescription, field.TypeString, value)
 	}
-	if sdu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(sladefinition.FieldDescription, field.TypeString)
 	}
-	if value, ok := sdu.mutation.ServiceType(); ok {
+	if value, ok := _u.mutation.ServiceType(); ok {
 		_spec.SetField(sladefinition.FieldServiceType, field.TypeString, value)
 	}
-	if sdu.mutation.ServiceTypeCleared() {
+	if _u.mutation.ServiceTypeCleared() {
 		_spec.ClearField(sladefinition.FieldServiceType, field.TypeString)
 	}
-	if value, ok := sdu.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(sladefinition.FieldPriority, field.TypeString, value)
 	}
-	if sdu.mutation.PriorityCleared() {
+	if _u.mutation.PriorityCleared() {
 		_spec.ClearField(sladefinition.FieldPriority, field.TypeString)
 	}
-	if value, ok := sdu.mutation.ResponseTime(); ok {
+	if value, ok := _u.mutation.ResponseTime(); ok {
 		_spec.SetField(sladefinition.FieldResponseTime, field.TypeInt, value)
 	}
-	if value, ok := sdu.mutation.AddedResponseTime(); ok {
+	if value, ok := _u.mutation.AddedResponseTime(); ok {
 		_spec.AddField(sladefinition.FieldResponseTime, field.TypeInt, value)
 	}
-	if value, ok := sdu.mutation.ResolutionTime(); ok {
+	if value, ok := _u.mutation.ResolutionTime(); ok {
 		_spec.SetField(sladefinition.FieldResolutionTime, field.TypeInt, value)
 	}
-	if value, ok := sdu.mutation.AddedResolutionTime(); ok {
+	if value, ok := _u.mutation.AddedResolutionTime(); ok {
 		_spec.AddField(sladefinition.FieldResolutionTime, field.TypeInt, value)
 	}
-	if value, ok := sdu.mutation.BusinessHours(); ok {
+	if value, ok := _u.mutation.BusinessHours(); ok {
 		_spec.SetField(sladefinition.FieldBusinessHours, field.TypeJSON, value)
 	}
-	if sdu.mutation.BusinessHoursCleared() {
+	if _u.mutation.BusinessHoursCleared() {
 		_spec.ClearField(sladefinition.FieldBusinessHours, field.TypeJSON)
 	}
-	if value, ok := sdu.mutation.EscalationRules(); ok {
+	if value, ok := _u.mutation.EscalationRules(); ok {
 		_spec.SetField(sladefinition.FieldEscalationRules, field.TypeJSON, value)
 	}
-	if sdu.mutation.EscalationRulesCleared() {
+	if _u.mutation.EscalationRulesCleared() {
 		_spec.ClearField(sladefinition.FieldEscalationRules, field.TypeJSON)
 	}
-	if value, ok := sdu.mutation.Conditions(); ok {
+	if value, ok := _u.mutation.Conditions(); ok {
 		_spec.SetField(sladefinition.FieldConditions, field.TypeJSON, value)
 	}
-	if sdu.mutation.ConditionsCleared() {
+	if _u.mutation.ConditionsCleared() {
 		_spec.ClearField(sladefinition.FieldConditions, field.TypeJSON)
 	}
-	if value, ok := sdu.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(sladefinition.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := sdu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(sladefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := sdu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(sladefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := sdu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(sladefinition.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := sdu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(sladefinition.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if sdu.mutation.ViolationsCleared() {
+	if _u.mutation.ViolationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -540,23 +540,7 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sdu.mutation.RemovedViolationsIDs(); len(nodes) > 0 && !sdu.mutation.ViolationsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   sladefinition.ViolationsTable,
-			Columns: []string{sladefinition.ViolationsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := sdu.mutation.ViolationsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedViolationsIDs(); len(nodes) > 0 && !_u.mutation.ViolationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -570,9 +554,25 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.ViolationsTable,
+			Columns: []string{sladefinition.ViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if sdu.mutation.MetricsCleared() {
+	if _u.mutation.MetricsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -585,7 +585,7 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sdu.mutation.RemovedMetricsIDs(); len(nodes) > 0 && !sdu.mutation.MetricsCleared() {
+	if nodes := _u.mutation.RemovedMetricsIDs(); len(nodes) > 0 && !_u.mutation.MetricsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -601,7 +601,7 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sdu.mutation.MetricsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MetricsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -617,7 +617,7 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if sdu.mutation.TicketsCleared() {
+	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -630,7 +630,7 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sdu.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !sdu.mutation.TicketsCleared() {
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -646,7 +646,7 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sdu.mutation.TicketsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -662,7 +662,7 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if sdu.mutation.AlertRulesCleared() {
+	if _u.mutation.AlertRulesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -675,7 +675,7 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sdu.mutation.RemovedAlertRulesIDs(); len(nodes) > 0 && !sdu.mutation.AlertRulesCleared() {
+	if nodes := _u.mutation.RemovedAlertRulesIDs(); len(nodes) > 0 && !_u.mutation.AlertRulesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -691,7 +691,7 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sdu.mutation.AlertRulesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.AlertRulesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -707,7 +707,7 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, sdu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{sladefinition.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -715,8 +715,8 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		return 0, err
 	}
-	sdu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // SLADefinitionUpdateOne is the builder for updating a single SLADefinition entity.
@@ -728,383 +728,383 @@ type SLADefinitionUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (sduo *SLADefinitionUpdateOne) SetName(s string) *SLADefinitionUpdateOne {
-	sduo.mutation.SetName(s)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetName(v string) *SLADefinitionUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableName(s *string) *SLADefinitionUpdateOne {
-	if s != nil {
-		sduo.SetName(*s)
+func (_u *SLADefinitionUpdateOne) SetNillableName(v *string) *SLADefinitionUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return sduo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (sduo *SLADefinitionUpdateOne) SetDescription(s string) *SLADefinitionUpdateOne {
-	sduo.mutation.SetDescription(s)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetDescription(v string) *SLADefinitionUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableDescription(s *string) *SLADefinitionUpdateOne {
-	if s != nil {
-		sduo.SetDescription(*s)
+func (_u *SLADefinitionUpdateOne) SetNillableDescription(v *string) *SLADefinitionUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return sduo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (sduo *SLADefinitionUpdateOne) ClearDescription() *SLADefinitionUpdateOne {
-	sduo.mutation.ClearDescription()
-	return sduo
+func (_u *SLADefinitionUpdateOne) ClearDescription() *SLADefinitionUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetServiceType sets the "service_type" field.
-func (sduo *SLADefinitionUpdateOne) SetServiceType(s string) *SLADefinitionUpdateOne {
-	sduo.mutation.SetServiceType(s)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetServiceType(v string) *SLADefinitionUpdateOne {
+	_u.mutation.SetServiceType(v)
+	return _u
 }
 
 // SetNillableServiceType sets the "service_type" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableServiceType(s *string) *SLADefinitionUpdateOne {
-	if s != nil {
-		sduo.SetServiceType(*s)
+func (_u *SLADefinitionUpdateOne) SetNillableServiceType(v *string) *SLADefinitionUpdateOne {
+	if v != nil {
+		_u.SetServiceType(*v)
 	}
-	return sduo
+	return _u
 }
 
 // ClearServiceType clears the value of the "service_type" field.
-func (sduo *SLADefinitionUpdateOne) ClearServiceType() *SLADefinitionUpdateOne {
-	sduo.mutation.ClearServiceType()
-	return sduo
+func (_u *SLADefinitionUpdateOne) ClearServiceType() *SLADefinitionUpdateOne {
+	_u.mutation.ClearServiceType()
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (sduo *SLADefinitionUpdateOne) SetPriority(s string) *SLADefinitionUpdateOne {
-	sduo.mutation.SetPriority(s)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetPriority(v string) *SLADefinitionUpdateOne {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillablePriority(s *string) *SLADefinitionUpdateOne {
-	if s != nil {
-		sduo.SetPriority(*s)
+func (_u *SLADefinitionUpdateOne) SetNillablePriority(v *string) *SLADefinitionUpdateOne {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return sduo
+	return _u
 }
 
 // ClearPriority clears the value of the "priority" field.
-func (sduo *SLADefinitionUpdateOne) ClearPriority() *SLADefinitionUpdateOne {
-	sduo.mutation.ClearPriority()
-	return sduo
+func (_u *SLADefinitionUpdateOne) ClearPriority() *SLADefinitionUpdateOne {
+	_u.mutation.ClearPriority()
+	return _u
 }
 
 // SetResponseTime sets the "response_time" field.
-func (sduo *SLADefinitionUpdateOne) SetResponseTime(i int) *SLADefinitionUpdateOne {
-	sduo.mutation.ResetResponseTime()
-	sduo.mutation.SetResponseTime(i)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetResponseTime(v int) *SLADefinitionUpdateOne {
+	_u.mutation.ResetResponseTime()
+	_u.mutation.SetResponseTime(v)
+	return _u
 }
 
 // SetNillableResponseTime sets the "response_time" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableResponseTime(i *int) *SLADefinitionUpdateOne {
-	if i != nil {
-		sduo.SetResponseTime(*i)
+func (_u *SLADefinitionUpdateOne) SetNillableResponseTime(v *int) *SLADefinitionUpdateOne {
+	if v != nil {
+		_u.SetResponseTime(*v)
 	}
-	return sduo
+	return _u
 }
 
-// AddResponseTime adds i to the "response_time" field.
-func (sduo *SLADefinitionUpdateOne) AddResponseTime(i int) *SLADefinitionUpdateOne {
-	sduo.mutation.AddResponseTime(i)
-	return sduo
+// AddResponseTime adds value to the "response_time" field.
+func (_u *SLADefinitionUpdateOne) AddResponseTime(v int) *SLADefinitionUpdateOne {
+	_u.mutation.AddResponseTime(v)
+	return _u
 }
 
 // SetResolutionTime sets the "resolution_time" field.
-func (sduo *SLADefinitionUpdateOne) SetResolutionTime(i int) *SLADefinitionUpdateOne {
-	sduo.mutation.ResetResolutionTime()
-	sduo.mutation.SetResolutionTime(i)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetResolutionTime(v int) *SLADefinitionUpdateOne {
+	_u.mutation.ResetResolutionTime()
+	_u.mutation.SetResolutionTime(v)
+	return _u
 }
 
 // SetNillableResolutionTime sets the "resolution_time" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableResolutionTime(i *int) *SLADefinitionUpdateOne {
-	if i != nil {
-		sduo.SetResolutionTime(*i)
+func (_u *SLADefinitionUpdateOne) SetNillableResolutionTime(v *int) *SLADefinitionUpdateOne {
+	if v != nil {
+		_u.SetResolutionTime(*v)
 	}
-	return sduo
+	return _u
 }
 
-// AddResolutionTime adds i to the "resolution_time" field.
-func (sduo *SLADefinitionUpdateOne) AddResolutionTime(i int) *SLADefinitionUpdateOne {
-	sduo.mutation.AddResolutionTime(i)
-	return sduo
+// AddResolutionTime adds value to the "resolution_time" field.
+func (_u *SLADefinitionUpdateOne) AddResolutionTime(v int) *SLADefinitionUpdateOne {
+	_u.mutation.AddResolutionTime(v)
+	return _u
 }
 
 // SetBusinessHours sets the "business_hours" field.
-func (sduo *SLADefinitionUpdateOne) SetBusinessHours(m map[string]interface{}) *SLADefinitionUpdateOne {
-	sduo.mutation.SetBusinessHours(m)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetBusinessHours(v map[string]interface{}) *SLADefinitionUpdateOne {
+	_u.mutation.SetBusinessHours(v)
+	return _u
 }
 
 // ClearBusinessHours clears the value of the "business_hours" field.
-func (sduo *SLADefinitionUpdateOne) ClearBusinessHours() *SLADefinitionUpdateOne {
-	sduo.mutation.ClearBusinessHours()
-	return sduo
+func (_u *SLADefinitionUpdateOne) ClearBusinessHours() *SLADefinitionUpdateOne {
+	_u.mutation.ClearBusinessHours()
+	return _u
 }
 
 // SetEscalationRules sets the "escalation_rules" field.
-func (sduo *SLADefinitionUpdateOne) SetEscalationRules(m map[string]interface{}) *SLADefinitionUpdateOne {
-	sduo.mutation.SetEscalationRules(m)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetEscalationRules(v map[string]interface{}) *SLADefinitionUpdateOne {
+	_u.mutation.SetEscalationRules(v)
+	return _u
 }
 
 // ClearEscalationRules clears the value of the "escalation_rules" field.
-func (sduo *SLADefinitionUpdateOne) ClearEscalationRules() *SLADefinitionUpdateOne {
-	sduo.mutation.ClearEscalationRules()
-	return sduo
+func (_u *SLADefinitionUpdateOne) ClearEscalationRules() *SLADefinitionUpdateOne {
+	_u.mutation.ClearEscalationRules()
+	return _u
 }
 
 // SetConditions sets the "conditions" field.
-func (sduo *SLADefinitionUpdateOne) SetConditions(m map[string]interface{}) *SLADefinitionUpdateOne {
-	sduo.mutation.SetConditions(m)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetConditions(v map[string]interface{}) *SLADefinitionUpdateOne {
+	_u.mutation.SetConditions(v)
+	return _u
 }
 
 // ClearConditions clears the value of the "conditions" field.
-func (sduo *SLADefinitionUpdateOne) ClearConditions() *SLADefinitionUpdateOne {
-	sduo.mutation.ClearConditions()
-	return sduo
+func (_u *SLADefinitionUpdateOne) ClearConditions() *SLADefinitionUpdateOne {
+	_u.mutation.ClearConditions()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (sduo *SLADefinitionUpdateOne) SetIsActive(b bool) *SLADefinitionUpdateOne {
-	sduo.mutation.SetIsActive(b)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetIsActive(v bool) *SLADefinitionUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableIsActive(b *bool) *SLADefinitionUpdateOne {
-	if b != nil {
-		sduo.SetIsActive(*b)
+func (_u *SLADefinitionUpdateOne) SetNillableIsActive(v *bool) *SLADefinitionUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return sduo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (sduo *SLADefinitionUpdateOne) SetTenantID(i int) *SLADefinitionUpdateOne {
-	sduo.mutation.ResetTenantID()
-	sduo.mutation.SetTenantID(i)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetTenantID(v int) *SLADefinitionUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableTenantID(i *int) *SLADefinitionUpdateOne {
-	if i != nil {
-		sduo.SetTenantID(*i)
+func (_u *SLADefinitionUpdateOne) SetNillableTenantID(v *int) *SLADefinitionUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return sduo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (sduo *SLADefinitionUpdateOne) AddTenantID(i int) *SLADefinitionUpdateOne {
-	sduo.mutation.AddTenantID(i)
-	return sduo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *SLADefinitionUpdateOne) AddTenantID(v int) *SLADefinitionUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (sduo *SLADefinitionUpdateOne) SetCreatedAt(t time.Time) *SLADefinitionUpdateOne {
-	sduo.mutation.SetCreatedAt(t)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetCreatedAt(v time.Time) *SLADefinitionUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableCreatedAt(t *time.Time) *SLADefinitionUpdateOne {
-	if t != nil {
-		sduo.SetCreatedAt(*t)
+func (_u *SLADefinitionUpdateOne) SetNillableCreatedAt(v *time.Time) *SLADefinitionUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return sduo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (sduo *SLADefinitionUpdateOne) SetUpdatedAt(t time.Time) *SLADefinitionUpdateOne {
-	sduo.mutation.SetUpdatedAt(t)
-	return sduo
+func (_u *SLADefinitionUpdateOne) SetUpdatedAt(v time.Time) *SLADefinitionUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddViolationIDs adds the "violations" edge to the SLAViolation entity by IDs.
-func (sduo *SLADefinitionUpdateOne) AddViolationIDs(ids ...int) *SLADefinitionUpdateOne {
-	sduo.mutation.AddViolationIDs(ids...)
-	return sduo
+func (_u *SLADefinitionUpdateOne) AddViolationIDs(ids ...int) *SLADefinitionUpdateOne {
+	_u.mutation.AddViolationIDs(ids...)
+	return _u
 }
 
 // AddViolations adds the "violations" edges to the SLAViolation entity.
-func (sduo *SLADefinitionUpdateOne) AddViolations(s ...*SLAViolation) *SLADefinitionUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdateOne) AddViolations(v ...*SLAViolation) *SLADefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sduo.AddViolationIDs(ids...)
+	return _u.AddViolationIDs(ids...)
 }
 
 // AddMetricIDs adds the "metrics" edge to the SLAMetric entity by IDs.
-func (sduo *SLADefinitionUpdateOne) AddMetricIDs(ids ...int) *SLADefinitionUpdateOne {
-	sduo.mutation.AddMetricIDs(ids...)
-	return sduo
+func (_u *SLADefinitionUpdateOne) AddMetricIDs(ids ...int) *SLADefinitionUpdateOne {
+	_u.mutation.AddMetricIDs(ids...)
+	return _u
 }
 
 // AddMetrics adds the "metrics" edges to the SLAMetric entity.
-func (sduo *SLADefinitionUpdateOne) AddMetrics(s ...*SLAMetric) *SLADefinitionUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdateOne) AddMetrics(v ...*SLAMetric) *SLADefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sduo.AddMetricIDs(ids...)
+	return _u.AddMetricIDs(ids...)
 }
 
 // AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (sduo *SLADefinitionUpdateOne) AddTicketIDs(ids ...int) *SLADefinitionUpdateOne {
-	sduo.mutation.AddTicketIDs(ids...)
-	return sduo
+func (_u *SLADefinitionUpdateOne) AddTicketIDs(ids ...int) *SLADefinitionUpdateOne {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
 }
 
 // AddTickets adds the "tickets" edges to the Ticket entity.
-func (sduo *SLADefinitionUpdateOne) AddTickets(t ...*Ticket) *SLADefinitionUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *SLADefinitionUpdateOne) AddTickets(v ...*Ticket) *SLADefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sduo.AddTicketIDs(ids...)
+	return _u.AddTicketIDs(ids...)
 }
 
 // AddAlertRuleIDs adds the "alert_rules" edge to the SLAAlertRule entity by IDs.
-func (sduo *SLADefinitionUpdateOne) AddAlertRuleIDs(ids ...int) *SLADefinitionUpdateOne {
-	sduo.mutation.AddAlertRuleIDs(ids...)
-	return sduo
+func (_u *SLADefinitionUpdateOne) AddAlertRuleIDs(ids ...int) *SLADefinitionUpdateOne {
+	_u.mutation.AddAlertRuleIDs(ids...)
+	return _u
 }
 
 // AddAlertRules adds the "alert_rules" edges to the SLAAlertRule entity.
-func (sduo *SLADefinitionUpdateOne) AddAlertRules(s ...*SLAAlertRule) *SLADefinitionUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdateOne) AddAlertRules(v ...*SLAAlertRule) *SLADefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sduo.AddAlertRuleIDs(ids...)
+	return _u.AddAlertRuleIDs(ids...)
 }
 
 // Mutation returns the SLADefinitionMutation object of the builder.
-func (sduo *SLADefinitionUpdateOne) Mutation() *SLADefinitionMutation {
-	return sduo.mutation
+func (_u *SLADefinitionUpdateOne) Mutation() *SLADefinitionMutation {
+	return _u.mutation
 }
 
 // ClearViolations clears all "violations" edges to the SLAViolation entity.
-func (sduo *SLADefinitionUpdateOne) ClearViolations() *SLADefinitionUpdateOne {
-	sduo.mutation.ClearViolations()
-	return sduo
+func (_u *SLADefinitionUpdateOne) ClearViolations() *SLADefinitionUpdateOne {
+	_u.mutation.ClearViolations()
+	return _u
 }
 
 // RemoveViolationIDs removes the "violations" edge to SLAViolation entities by IDs.
-func (sduo *SLADefinitionUpdateOne) RemoveViolationIDs(ids ...int) *SLADefinitionUpdateOne {
-	sduo.mutation.RemoveViolationIDs(ids...)
-	return sduo
+func (_u *SLADefinitionUpdateOne) RemoveViolationIDs(ids ...int) *SLADefinitionUpdateOne {
+	_u.mutation.RemoveViolationIDs(ids...)
+	return _u
 }
 
 // RemoveViolations removes "violations" edges to SLAViolation entities.
-func (sduo *SLADefinitionUpdateOne) RemoveViolations(s ...*SLAViolation) *SLADefinitionUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdateOne) RemoveViolations(v ...*SLAViolation) *SLADefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sduo.RemoveViolationIDs(ids...)
+	return _u.RemoveViolationIDs(ids...)
 }
 
 // ClearMetrics clears all "metrics" edges to the SLAMetric entity.
-func (sduo *SLADefinitionUpdateOne) ClearMetrics() *SLADefinitionUpdateOne {
-	sduo.mutation.ClearMetrics()
-	return sduo
+func (_u *SLADefinitionUpdateOne) ClearMetrics() *SLADefinitionUpdateOne {
+	_u.mutation.ClearMetrics()
+	return _u
 }
 
 // RemoveMetricIDs removes the "metrics" edge to SLAMetric entities by IDs.
-func (sduo *SLADefinitionUpdateOne) RemoveMetricIDs(ids ...int) *SLADefinitionUpdateOne {
-	sduo.mutation.RemoveMetricIDs(ids...)
-	return sduo
+func (_u *SLADefinitionUpdateOne) RemoveMetricIDs(ids ...int) *SLADefinitionUpdateOne {
+	_u.mutation.RemoveMetricIDs(ids...)
+	return _u
 }
 
 // RemoveMetrics removes "metrics" edges to SLAMetric entities.
-func (sduo *SLADefinitionUpdateOne) RemoveMetrics(s ...*SLAMetric) *SLADefinitionUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdateOne) RemoveMetrics(v ...*SLAMetric) *SLADefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sduo.RemoveMetricIDs(ids...)
+	return _u.RemoveMetricIDs(ids...)
 }
 
 // ClearTickets clears all "tickets" edges to the Ticket entity.
-func (sduo *SLADefinitionUpdateOne) ClearTickets() *SLADefinitionUpdateOne {
-	sduo.mutation.ClearTickets()
-	return sduo
+func (_u *SLADefinitionUpdateOne) ClearTickets() *SLADefinitionUpdateOne {
+	_u.mutation.ClearTickets()
+	return _u
 }
 
 // RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
-func (sduo *SLADefinitionUpdateOne) RemoveTicketIDs(ids ...int) *SLADefinitionUpdateOne {
-	sduo.mutation.RemoveTicketIDs(ids...)
-	return sduo
+func (_u *SLADefinitionUpdateOne) RemoveTicketIDs(ids ...int) *SLADefinitionUpdateOne {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
 }
 
 // RemoveTickets removes "tickets" edges to Ticket entities.
-func (sduo *SLADefinitionUpdateOne) RemoveTickets(t ...*Ticket) *SLADefinitionUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *SLADefinitionUpdateOne) RemoveTickets(v ...*Ticket) *SLADefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sduo.RemoveTicketIDs(ids...)
+	return _u.RemoveTicketIDs(ids...)
 }
 
 // ClearAlertRules clears all "alert_rules" edges to the SLAAlertRule entity.
-func (sduo *SLADefinitionUpdateOne) ClearAlertRules() *SLADefinitionUpdateOne {
-	sduo.mutation.ClearAlertRules()
-	return sduo
+func (_u *SLADefinitionUpdateOne) ClearAlertRules() *SLADefinitionUpdateOne {
+	_u.mutation.ClearAlertRules()
+	return _u
 }
 
 // RemoveAlertRuleIDs removes the "alert_rules" edge to SLAAlertRule entities by IDs.
-func (sduo *SLADefinitionUpdateOne) RemoveAlertRuleIDs(ids ...int) *SLADefinitionUpdateOne {
-	sduo.mutation.RemoveAlertRuleIDs(ids...)
-	return sduo
+func (_u *SLADefinitionUpdateOne) RemoveAlertRuleIDs(ids ...int) *SLADefinitionUpdateOne {
+	_u.mutation.RemoveAlertRuleIDs(ids...)
+	return _u
 }
 
 // RemoveAlertRules removes "alert_rules" edges to SLAAlertRule entities.
-func (sduo *SLADefinitionUpdateOne) RemoveAlertRules(s ...*SLAAlertRule) *SLADefinitionUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLADefinitionUpdateOne) RemoveAlertRules(v ...*SLAAlertRule) *SLADefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sduo.RemoveAlertRuleIDs(ids...)
+	return _u.RemoveAlertRuleIDs(ids...)
 }
 
 // Where appends a list predicates to the SLADefinitionUpdate builder.
-func (sduo *SLADefinitionUpdateOne) Where(ps ...predicate.SLADefinition) *SLADefinitionUpdateOne {
-	sduo.mutation.Where(ps...)
-	return sduo
+func (_u *SLADefinitionUpdateOne) Where(ps ...predicate.SLADefinition) *SLADefinitionUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (sduo *SLADefinitionUpdateOne) Select(field string, fields ...string) *SLADefinitionUpdateOne {
-	sduo.fields = append([]string{field}, fields...)
-	return sduo
+func (_u *SLADefinitionUpdateOne) Select(field string, fields ...string) *SLADefinitionUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated SLADefinition entity.
-func (sduo *SLADefinitionUpdateOne) Save(ctx context.Context) (*SLADefinition, error) {
-	sduo.defaults()
-	return withHooks(ctx, sduo.sqlSave, sduo.mutation, sduo.hooks)
+func (_u *SLADefinitionUpdateOne) Save(ctx context.Context) (*SLADefinition, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (sduo *SLADefinitionUpdateOne) SaveX(ctx context.Context) *SLADefinition {
-	node, err := sduo.Save(ctx)
+func (_u *SLADefinitionUpdateOne) SaveX(ctx context.Context) *SLADefinition {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1112,44 +1112,44 @@ func (sduo *SLADefinitionUpdateOne) SaveX(ctx context.Context) *SLADefinition {
 }
 
 // Exec executes the query on the entity.
-func (sduo *SLADefinitionUpdateOne) Exec(ctx context.Context) error {
-	_, err := sduo.Save(ctx)
+func (_u *SLADefinitionUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sduo *SLADefinitionUpdateOne) ExecX(ctx context.Context) {
-	if err := sduo.Exec(ctx); err != nil {
+func (_u *SLADefinitionUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (sduo *SLADefinitionUpdateOne) defaults() {
-	if _, ok := sduo.mutation.UpdatedAt(); !ok {
+func (_u *SLADefinitionUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := sladefinition.UpdateDefaultUpdatedAt()
-		sduo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (sduo *SLADefinitionUpdateOne) check() error {
-	if v, ok := sduo.mutation.Name(); ok {
+func (_u *SLADefinitionUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := sladefinition.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.name": %w`, err)}
 		}
 	}
-	if v, ok := sduo.mutation.ResponseTime(); ok {
+	if v, ok := _u.mutation.ResponseTime(); ok {
 		if err := sladefinition.ResponseTimeValidator(v); err != nil {
 			return &ValidationError{Name: "response_time", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.response_time": %w`, err)}
 		}
 	}
-	if v, ok := sduo.mutation.ResolutionTime(); ok {
+	if v, ok := _u.mutation.ResolutionTime(); ok {
 		if err := sladefinition.ResolutionTimeValidator(v); err != nil {
 			return &ValidationError{Name: "resolution_time", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.resolution_time": %w`, err)}
 		}
 	}
-	if v, ok := sduo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := sladefinition.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.tenant_id": %w`, err)}
 		}
@@ -1157,17 +1157,17 @@ func (sduo *SLADefinitionUpdateOne) check() error {
 	return nil
 }
 
-func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefinition, err error) {
-	if err := sduo.check(); err != nil {
+func (_u *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefinition, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(sladefinition.Table, sladefinition.Columns, sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt))
-	id, ok := sduo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "SLADefinition.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := sduo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, sladefinition.FieldID)
 		for _, f := range fields {
@@ -1179,80 +1179,80 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 			}
 		}
 	}
-	if ps := sduo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := sduo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(sladefinition.FieldName, field.TypeString, value)
 	}
-	if value, ok := sduo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(sladefinition.FieldDescription, field.TypeString, value)
 	}
-	if sduo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(sladefinition.FieldDescription, field.TypeString)
 	}
-	if value, ok := sduo.mutation.ServiceType(); ok {
+	if value, ok := _u.mutation.ServiceType(); ok {
 		_spec.SetField(sladefinition.FieldServiceType, field.TypeString, value)
 	}
-	if sduo.mutation.ServiceTypeCleared() {
+	if _u.mutation.ServiceTypeCleared() {
 		_spec.ClearField(sladefinition.FieldServiceType, field.TypeString)
 	}
-	if value, ok := sduo.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(sladefinition.FieldPriority, field.TypeString, value)
 	}
-	if sduo.mutation.PriorityCleared() {
+	if _u.mutation.PriorityCleared() {
 		_spec.ClearField(sladefinition.FieldPriority, field.TypeString)
 	}
-	if value, ok := sduo.mutation.ResponseTime(); ok {
+	if value, ok := _u.mutation.ResponseTime(); ok {
 		_spec.SetField(sladefinition.FieldResponseTime, field.TypeInt, value)
 	}
-	if value, ok := sduo.mutation.AddedResponseTime(); ok {
+	if value, ok := _u.mutation.AddedResponseTime(); ok {
 		_spec.AddField(sladefinition.FieldResponseTime, field.TypeInt, value)
 	}
-	if value, ok := sduo.mutation.ResolutionTime(); ok {
+	if value, ok := _u.mutation.ResolutionTime(); ok {
 		_spec.SetField(sladefinition.FieldResolutionTime, field.TypeInt, value)
 	}
-	if value, ok := sduo.mutation.AddedResolutionTime(); ok {
+	if value, ok := _u.mutation.AddedResolutionTime(); ok {
 		_spec.AddField(sladefinition.FieldResolutionTime, field.TypeInt, value)
 	}
-	if value, ok := sduo.mutation.BusinessHours(); ok {
+	if value, ok := _u.mutation.BusinessHours(); ok {
 		_spec.SetField(sladefinition.FieldBusinessHours, field.TypeJSON, value)
 	}
-	if sduo.mutation.BusinessHoursCleared() {
+	if _u.mutation.BusinessHoursCleared() {
 		_spec.ClearField(sladefinition.FieldBusinessHours, field.TypeJSON)
 	}
-	if value, ok := sduo.mutation.EscalationRules(); ok {
+	if value, ok := _u.mutation.EscalationRules(); ok {
 		_spec.SetField(sladefinition.FieldEscalationRules, field.TypeJSON, value)
 	}
-	if sduo.mutation.EscalationRulesCleared() {
+	if _u.mutation.EscalationRulesCleared() {
 		_spec.ClearField(sladefinition.FieldEscalationRules, field.TypeJSON)
 	}
-	if value, ok := sduo.mutation.Conditions(); ok {
+	if value, ok := _u.mutation.Conditions(); ok {
 		_spec.SetField(sladefinition.FieldConditions, field.TypeJSON, value)
 	}
-	if sduo.mutation.ConditionsCleared() {
+	if _u.mutation.ConditionsCleared() {
 		_spec.ClearField(sladefinition.FieldConditions, field.TypeJSON)
 	}
-	if value, ok := sduo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(sladefinition.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := sduo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(sladefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := sduo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(sladefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := sduo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(sladefinition.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := sduo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(sladefinition.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if sduo.mutation.ViolationsCleared() {
+	if _u.mutation.ViolationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1265,23 +1265,7 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sduo.mutation.RemovedViolationsIDs(); len(nodes) > 0 && !sduo.mutation.ViolationsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   sladefinition.ViolationsTable,
-			Columns: []string{sladefinition.ViolationsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := sduo.mutation.ViolationsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedViolationsIDs(); len(nodes) > 0 && !_u.mutation.ViolationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1295,9 +1279,25 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.ViolationsTable,
+			Columns: []string{sladefinition.ViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if sduo.mutation.MetricsCleared() {
+	if _u.mutation.MetricsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1310,7 +1310,7 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sduo.mutation.RemovedMetricsIDs(); len(nodes) > 0 && !sduo.mutation.MetricsCleared() {
+	if nodes := _u.mutation.RemovedMetricsIDs(); len(nodes) > 0 && !_u.mutation.MetricsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1326,7 +1326,7 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sduo.mutation.MetricsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MetricsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1342,7 +1342,7 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if sduo.mutation.TicketsCleared() {
+	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1355,7 +1355,7 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sduo.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !sduo.mutation.TicketsCleared() {
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1371,7 +1371,7 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sduo.mutation.TicketsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1387,7 +1387,7 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if sduo.mutation.AlertRulesCleared() {
+	if _u.mutation.AlertRulesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1400,7 +1400,7 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sduo.mutation.RemovedAlertRulesIDs(); len(nodes) > 0 && !sduo.mutation.AlertRulesCleared() {
+	if nodes := _u.mutation.RemovedAlertRulesIDs(); len(nodes) > 0 && !_u.mutation.AlertRulesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1416,7 +1416,7 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := sduo.mutation.AlertRulesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.AlertRulesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1432,10 +1432,10 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &SLADefinition{config: sduo.config}
+	_node = &SLADefinition{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, sduo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{sladefinition.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1443,6 +1443,6 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 		}
 		return nil, err
 	}
-	sduo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

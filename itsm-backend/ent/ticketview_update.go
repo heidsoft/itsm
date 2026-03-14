@@ -25,199 +25,199 @@ type TicketViewUpdate struct {
 }
 
 // Where appends a list predicates to the TicketViewUpdate builder.
-func (tvu *TicketViewUpdate) Where(ps ...predicate.TicketView) *TicketViewUpdate {
-	tvu.mutation.Where(ps...)
-	return tvu
+func (_u *TicketViewUpdate) Where(ps ...predicate.TicketView) *TicketViewUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (tvu *TicketViewUpdate) SetName(s string) *TicketViewUpdate {
-	tvu.mutation.SetName(s)
-	return tvu
+func (_u *TicketViewUpdate) SetName(v string) *TicketViewUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (tvu *TicketViewUpdate) SetNillableName(s *string) *TicketViewUpdate {
-	if s != nil {
-		tvu.SetName(*s)
+func (_u *TicketViewUpdate) SetNillableName(v *string) *TicketViewUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return tvu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (tvu *TicketViewUpdate) SetDescription(s string) *TicketViewUpdate {
-	tvu.mutation.SetDescription(s)
-	return tvu
+func (_u *TicketViewUpdate) SetDescription(v string) *TicketViewUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (tvu *TicketViewUpdate) SetNillableDescription(s *string) *TicketViewUpdate {
-	if s != nil {
-		tvu.SetDescription(*s)
+func (_u *TicketViewUpdate) SetNillableDescription(v *string) *TicketViewUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return tvu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (tvu *TicketViewUpdate) ClearDescription() *TicketViewUpdate {
-	tvu.mutation.ClearDescription()
-	return tvu
+func (_u *TicketViewUpdate) ClearDescription() *TicketViewUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetFilters sets the "filters" field.
-func (tvu *TicketViewUpdate) SetFilters(m map[string]interface{}) *TicketViewUpdate {
-	tvu.mutation.SetFilters(m)
-	return tvu
+func (_u *TicketViewUpdate) SetFilters(v map[string]interface{}) *TicketViewUpdate {
+	_u.mutation.SetFilters(v)
+	return _u
 }
 
 // ClearFilters clears the value of the "filters" field.
-func (tvu *TicketViewUpdate) ClearFilters() *TicketViewUpdate {
-	tvu.mutation.ClearFilters()
-	return tvu
+func (_u *TicketViewUpdate) ClearFilters() *TicketViewUpdate {
+	_u.mutation.ClearFilters()
+	return _u
 }
 
 // SetColumns sets the "columns" field.
-func (tvu *TicketViewUpdate) SetColumns(s []string) *TicketViewUpdate {
-	tvu.mutation.SetColumns(s)
-	return tvu
+func (_u *TicketViewUpdate) SetColumns(v []string) *TicketViewUpdate {
+	_u.mutation.SetColumns(v)
+	return _u
 }
 
-// AppendColumns appends s to the "columns" field.
-func (tvu *TicketViewUpdate) AppendColumns(s []string) *TicketViewUpdate {
-	tvu.mutation.AppendColumns(s)
-	return tvu
+// AppendColumns appends value to the "columns" field.
+func (_u *TicketViewUpdate) AppendColumns(v []string) *TicketViewUpdate {
+	_u.mutation.AppendColumns(v)
+	return _u
 }
 
 // ClearColumns clears the value of the "columns" field.
-func (tvu *TicketViewUpdate) ClearColumns() *TicketViewUpdate {
-	tvu.mutation.ClearColumns()
-	return tvu
+func (_u *TicketViewUpdate) ClearColumns() *TicketViewUpdate {
+	_u.mutation.ClearColumns()
+	return _u
 }
 
 // SetSortConfig sets the "sort_config" field.
-func (tvu *TicketViewUpdate) SetSortConfig(m map[string]interface{}) *TicketViewUpdate {
-	tvu.mutation.SetSortConfig(m)
-	return tvu
+func (_u *TicketViewUpdate) SetSortConfig(v map[string]interface{}) *TicketViewUpdate {
+	_u.mutation.SetSortConfig(v)
+	return _u
 }
 
 // ClearSortConfig clears the value of the "sort_config" field.
-func (tvu *TicketViewUpdate) ClearSortConfig() *TicketViewUpdate {
-	tvu.mutation.ClearSortConfig()
-	return tvu
+func (_u *TicketViewUpdate) ClearSortConfig() *TicketViewUpdate {
+	_u.mutation.ClearSortConfig()
+	return _u
 }
 
 // SetGroupConfig sets the "group_config" field.
-func (tvu *TicketViewUpdate) SetGroupConfig(m map[string]interface{}) *TicketViewUpdate {
-	tvu.mutation.SetGroupConfig(m)
-	return tvu
+func (_u *TicketViewUpdate) SetGroupConfig(v map[string]interface{}) *TicketViewUpdate {
+	_u.mutation.SetGroupConfig(v)
+	return _u
 }
 
 // ClearGroupConfig clears the value of the "group_config" field.
-func (tvu *TicketViewUpdate) ClearGroupConfig() *TicketViewUpdate {
-	tvu.mutation.ClearGroupConfig()
-	return tvu
+func (_u *TicketViewUpdate) ClearGroupConfig() *TicketViewUpdate {
+	_u.mutation.ClearGroupConfig()
+	return _u
 }
 
 // SetIsShared sets the "is_shared" field.
-func (tvu *TicketViewUpdate) SetIsShared(b bool) *TicketViewUpdate {
-	tvu.mutation.SetIsShared(b)
-	return tvu
+func (_u *TicketViewUpdate) SetIsShared(v bool) *TicketViewUpdate {
+	_u.mutation.SetIsShared(v)
+	return _u
 }
 
 // SetNillableIsShared sets the "is_shared" field if the given value is not nil.
-func (tvu *TicketViewUpdate) SetNillableIsShared(b *bool) *TicketViewUpdate {
-	if b != nil {
-		tvu.SetIsShared(*b)
+func (_u *TicketViewUpdate) SetNillableIsShared(v *bool) *TicketViewUpdate {
+	if v != nil {
+		_u.SetIsShared(*v)
 	}
-	return tvu
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (tvu *TicketViewUpdate) SetCreatedBy(i int) *TicketViewUpdate {
-	tvu.mutation.SetCreatedBy(i)
-	return tvu
+func (_u *TicketViewUpdate) SetCreatedBy(v int) *TicketViewUpdate {
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (tvu *TicketViewUpdate) SetNillableCreatedBy(i *int) *TicketViewUpdate {
-	if i != nil {
-		tvu.SetCreatedBy(*i)
+func (_u *TicketViewUpdate) SetNillableCreatedBy(v *int) *TicketViewUpdate {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return tvu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tvu *TicketViewUpdate) SetTenantID(i int) *TicketViewUpdate {
-	tvu.mutation.ResetTenantID()
-	tvu.mutation.SetTenantID(i)
-	return tvu
+func (_u *TicketViewUpdate) SetTenantID(v int) *TicketViewUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (tvu *TicketViewUpdate) SetNillableTenantID(i *int) *TicketViewUpdate {
-	if i != nil {
-		tvu.SetTenantID(*i)
+func (_u *TicketViewUpdate) SetNillableTenantID(v *int) *TicketViewUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return tvu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (tvu *TicketViewUpdate) AddTenantID(i int) *TicketViewUpdate {
-	tvu.mutation.AddTenantID(i)
-	return tvu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TicketViewUpdate) AddTenantID(v int) *TicketViewUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tvu *TicketViewUpdate) SetCreatedAt(t time.Time) *TicketViewUpdate {
-	tvu.mutation.SetCreatedAt(t)
-	return tvu
+func (_u *TicketViewUpdate) SetCreatedAt(v time.Time) *TicketViewUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tvu *TicketViewUpdate) SetNillableCreatedAt(t *time.Time) *TicketViewUpdate {
-	if t != nil {
-		tvu.SetCreatedAt(*t)
+func (_u *TicketViewUpdate) SetNillableCreatedAt(v *time.Time) *TicketViewUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return tvu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tvu *TicketViewUpdate) SetUpdatedAt(t time.Time) *TicketViewUpdate {
-	tvu.mutation.SetUpdatedAt(t)
-	return tvu
+func (_u *TicketViewUpdate) SetUpdatedAt(v time.Time) *TicketViewUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetCreatorID sets the "creator" edge to the User entity by ID.
-func (tvu *TicketViewUpdate) SetCreatorID(id int) *TicketViewUpdate {
-	tvu.mutation.SetCreatorID(id)
-	return tvu
+func (_u *TicketViewUpdate) SetCreatorID(id int) *TicketViewUpdate {
+	_u.mutation.SetCreatorID(id)
+	return _u
 }
 
 // SetCreator sets the "creator" edge to the User entity.
-func (tvu *TicketViewUpdate) SetCreator(u *User) *TicketViewUpdate {
-	return tvu.SetCreatorID(u.ID)
+func (_u *TicketViewUpdate) SetCreator(v *User) *TicketViewUpdate {
+	return _u.SetCreatorID(v.ID)
 }
 
 // Mutation returns the TicketViewMutation object of the builder.
-func (tvu *TicketViewUpdate) Mutation() *TicketViewMutation {
-	return tvu.mutation
+func (_u *TicketViewUpdate) Mutation() *TicketViewMutation {
+	return _u.mutation
 }
 
 // ClearCreator clears the "creator" edge to the User entity.
-func (tvu *TicketViewUpdate) ClearCreator() *TicketViewUpdate {
-	tvu.mutation.ClearCreator()
-	return tvu
+func (_u *TicketViewUpdate) ClearCreator() *TicketViewUpdate {
+	_u.mutation.ClearCreator()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (tvu *TicketViewUpdate) Save(ctx context.Context) (int, error) {
-	tvu.defaults()
-	return withHooks(ctx, tvu.sqlSave, tvu.mutation, tvu.hooks)
+func (_u *TicketViewUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tvu *TicketViewUpdate) SaveX(ctx context.Context) int {
-	affected, err := tvu.Save(ctx)
+func (_u *TicketViewUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -225,115 +225,115 @@ func (tvu *TicketViewUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (tvu *TicketViewUpdate) Exec(ctx context.Context) error {
-	_, err := tvu.Save(ctx)
+func (_u *TicketViewUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tvu *TicketViewUpdate) ExecX(ctx context.Context) {
-	if err := tvu.Exec(ctx); err != nil {
+func (_u *TicketViewUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tvu *TicketViewUpdate) defaults() {
-	if _, ok := tvu.mutation.UpdatedAt(); !ok {
+func (_u *TicketViewUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := ticketview.UpdateDefaultUpdatedAt()
-		tvu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tvu *TicketViewUpdate) check() error {
-	if v, ok := tvu.mutation.Name(); ok {
+func (_u *TicketViewUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := ticketview.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketView.name": %w`, err)}
 		}
 	}
-	if v, ok := tvu.mutation.CreatedBy(); ok {
+	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := ticketview.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "TicketView.created_by": %w`, err)}
 		}
 	}
-	if v, ok := tvu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := ticketview.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketView.tenant_id": %w`, err)}
 		}
 	}
-	if tvu.mutation.CreatorCleared() && len(tvu.mutation.CreatorIDs()) > 0 {
+	if _u.mutation.CreatorCleared() && len(_u.mutation.CreatorIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TicketView.creator"`)
 	}
 	return nil
 }
 
-func (tvu *TicketViewUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := tvu.check(); err != nil {
-		return n, err
+func (_u *TicketViewUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(ticketview.Table, ticketview.Columns, sqlgraph.NewFieldSpec(ticketview.FieldID, field.TypeInt))
-	if ps := tvu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tvu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(ticketview.FieldName, field.TypeString, value)
 	}
-	if value, ok := tvu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(ticketview.FieldDescription, field.TypeString, value)
 	}
-	if tvu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(ticketview.FieldDescription, field.TypeString)
 	}
-	if value, ok := tvu.mutation.Filters(); ok {
+	if value, ok := _u.mutation.Filters(); ok {
 		_spec.SetField(ticketview.FieldFilters, field.TypeJSON, value)
 	}
-	if tvu.mutation.FiltersCleared() {
+	if _u.mutation.FiltersCleared() {
 		_spec.ClearField(ticketview.FieldFilters, field.TypeJSON)
 	}
-	if value, ok := tvu.mutation.Columns(); ok {
+	if value, ok := _u.mutation.Columns(); ok {
 		_spec.SetField(ticketview.FieldColumns, field.TypeJSON, value)
 	}
-	if value, ok := tvu.mutation.AppendedColumns(); ok {
+	if value, ok := _u.mutation.AppendedColumns(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, ticketview.FieldColumns, value)
 		})
 	}
-	if tvu.mutation.ColumnsCleared() {
+	if _u.mutation.ColumnsCleared() {
 		_spec.ClearField(ticketview.FieldColumns, field.TypeJSON)
 	}
-	if value, ok := tvu.mutation.SortConfig(); ok {
+	if value, ok := _u.mutation.SortConfig(); ok {
 		_spec.SetField(ticketview.FieldSortConfig, field.TypeJSON, value)
 	}
-	if tvu.mutation.SortConfigCleared() {
+	if _u.mutation.SortConfigCleared() {
 		_spec.ClearField(ticketview.FieldSortConfig, field.TypeJSON)
 	}
-	if value, ok := tvu.mutation.GroupConfig(); ok {
+	if value, ok := _u.mutation.GroupConfig(); ok {
 		_spec.SetField(ticketview.FieldGroupConfig, field.TypeJSON, value)
 	}
-	if tvu.mutation.GroupConfigCleared() {
+	if _u.mutation.GroupConfigCleared() {
 		_spec.ClearField(ticketview.FieldGroupConfig, field.TypeJSON)
 	}
-	if value, ok := tvu.mutation.IsShared(); ok {
+	if value, ok := _u.mutation.IsShared(); ok {
 		_spec.SetField(ticketview.FieldIsShared, field.TypeBool, value)
 	}
-	if value, ok := tvu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ticketview.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tvu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticketview.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tvu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketview.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := tvu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticketview.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if tvu.mutation.CreatorCleared() {
+	if _u.mutation.CreatorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
@@ -346,7 +346,7 @@ func (tvu *TicketViewUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tvu.mutation.CreatorIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.CreatorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
@@ -362,7 +362,7 @@ func (tvu *TicketViewUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, tvu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticketview.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -370,8 +370,8 @@ func (tvu *TicketViewUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	tvu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // TicketViewUpdateOne is the builder for updating a single TicketView entity.
@@ -383,206 +383,206 @@ type TicketViewUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (tvuo *TicketViewUpdateOne) SetName(s string) *TicketViewUpdateOne {
-	tvuo.mutation.SetName(s)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetName(v string) *TicketViewUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (tvuo *TicketViewUpdateOne) SetNillableName(s *string) *TicketViewUpdateOne {
-	if s != nil {
-		tvuo.SetName(*s)
+func (_u *TicketViewUpdateOne) SetNillableName(v *string) *TicketViewUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return tvuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (tvuo *TicketViewUpdateOne) SetDescription(s string) *TicketViewUpdateOne {
-	tvuo.mutation.SetDescription(s)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetDescription(v string) *TicketViewUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (tvuo *TicketViewUpdateOne) SetNillableDescription(s *string) *TicketViewUpdateOne {
-	if s != nil {
-		tvuo.SetDescription(*s)
+func (_u *TicketViewUpdateOne) SetNillableDescription(v *string) *TicketViewUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return tvuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (tvuo *TicketViewUpdateOne) ClearDescription() *TicketViewUpdateOne {
-	tvuo.mutation.ClearDescription()
-	return tvuo
+func (_u *TicketViewUpdateOne) ClearDescription() *TicketViewUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetFilters sets the "filters" field.
-func (tvuo *TicketViewUpdateOne) SetFilters(m map[string]interface{}) *TicketViewUpdateOne {
-	tvuo.mutation.SetFilters(m)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetFilters(v map[string]interface{}) *TicketViewUpdateOne {
+	_u.mutation.SetFilters(v)
+	return _u
 }
 
 // ClearFilters clears the value of the "filters" field.
-func (tvuo *TicketViewUpdateOne) ClearFilters() *TicketViewUpdateOne {
-	tvuo.mutation.ClearFilters()
-	return tvuo
+func (_u *TicketViewUpdateOne) ClearFilters() *TicketViewUpdateOne {
+	_u.mutation.ClearFilters()
+	return _u
 }
 
 // SetColumns sets the "columns" field.
-func (tvuo *TicketViewUpdateOne) SetColumns(s []string) *TicketViewUpdateOne {
-	tvuo.mutation.SetColumns(s)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetColumns(v []string) *TicketViewUpdateOne {
+	_u.mutation.SetColumns(v)
+	return _u
 }
 
-// AppendColumns appends s to the "columns" field.
-func (tvuo *TicketViewUpdateOne) AppendColumns(s []string) *TicketViewUpdateOne {
-	tvuo.mutation.AppendColumns(s)
-	return tvuo
+// AppendColumns appends value to the "columns" field.
+func (_u *TicketViewUpdateOne) AppendColumns(v []string) *TicketViewUpdateOne {
+	_u.mutation.AppendColumns(v)
+	return _u
 }
 
 // ClearColumns clears the value of the "columns" field.
-func (tvuo *TicketViewUpdateOne) ClearColumns() *TicketViewUpdateOne {
-	tvuo.mutation.ClearColumns()
-	return tvuo
+func (_u *TicketViewUpdateOne) ClearColumns() *TicketViewUpdateOne {
+	_u.mutation.ClearColumns()
+	return _u
 }
 
 // SetSortConfig sets the "sort_config" field.
-func (tvuo *TicketViewUpdateOne) SetSortConfig(m map[string]interface{}) *TicketViewUpdateOne {
-	tvuo.mutation.SetSortConfig(m)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetSortConfig(v map[string]interface{}) *TicketViewUpdateOne {
+	_u.mutation.SetSortConfig(v)
+	return _u
 }
 
 // ClearSortConfig clears the value of the "sort_config" field.
-func (tvuo *TicketViewUpdateOne) ClearSortConfig() *TicketViewUpdateOne {
-	tvuo.mutation.ClearSortConfig()
-	return tvuo
+func (_u *TicketViewUpdateOne) ClearSortConfig() *TicketViewUpdateOne {
+	_u.mutation.ClearSortConfig()
+	return _u
 }
 
 // SetGroupConfig sets the "group_config" field.
-func (tvuo *TicketViewUpdateOne) SetGroupConfig(m map[string]interface{}) *TicketViewUpdateOne {
-	tvuo.mutation.SetGroupConfig(m)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetGroupConfig(v map[string]interface{}) *TicketViewUpdateOne {
+	_u.mutation.SetGroupConfig(v)
+	return _u
 }
 
 // ClearGroupConfig clears the value of the "group_config" field.
-func (tvuo *TicketViewUpdateOne) ClearGroupConfig() *TicketViewUpdateOne {
-	tvuo.mutation.ClearGroupConfig()
-	return tvuo
+func (_u *TicketViewUpdateOne) ClearGroupConfig() *TicketViewUpdateOne {
+	_u.mutation.ClearGroupConfig()
+	return _u
 }
 
 // SetIsShared sets the "is_shared" field.
-func (tvuo *TicketViewUpdateOne) SetIsShared(b bool) *TicketViewUpdateOne {
-	tvuo.mutation.SetIsShared(b)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetIsShared(v bool) *TicketViewUpdateOne {
+	_u.mutation.SetIsShared(v)
+	return _u
 }
 
 // SetNillableIsShared sets the "is_shared" field if the given value is not nil.
-func (tvuo *TicketViewUpdateOne) SetNillableIsShared(b *bool) *TicketViewUpdateOne {
-	if b != nil {
-		tvuo.SetIsShared(*b)
+func (_u *TicketViewUpdateOne) SetNillableIsShared(v *bool) *TicketViewUpdateOne {
+	if v != nil {
+		_u.SetIsShared(*v)
 	}
-	return tvuo
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (tvuo *TicketViewUpdateOne) SetCreatedBy(i int) *TicketViewUpdateOne {
-	tvuo.mutation.SetCreatedBy(i)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetCreatedBy(v int) *TicketViewUpdateOne {
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (tvuo *TicketViewUpdateOne) SetNillableCreatedBy(i *int) *TicketViewUpdateOne {
-	if i != nil {
-		tvuo.SetCreatedBy(*i)
+func (_u *TicketViewUpdateOne) SetNillableCreatedBy(v *int) *TicketViewUpdateOne {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return tvuo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tvuo *TicketViewUpdateOne) SetTenantID(i int) *TicketViewUpdateOne {
-	tvuo.mutation.ResetTenantID()
-	tvuo.mutation.SetTenantID(i)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetTenantID(v int) *TicketViewUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (tvuo *TicketViewUpdateOne) SetNillableTenantID(i *int) *TicketViewUpdateOne {
-	if i != nil {
-		tvuo.SetTenantID(*i)
+func (_u *TicketViewUpdateOne) SetNillableTenantID(v *int) *TicketViewUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return tvuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (tvuo *TicketViewUpdateOne) AddTenantID(i int) *TicketViewUpdateOne {
-	tvuo.mutation.AddTenantID(i)
-	return tvuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TicketViewUpdateOne) AddTenantID(v int) *TicketViewUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tvuo *TicketViewUpdateOne) SetCreatedAt(t time.Time) *TicketViewUpdateOne {
-	tvuo.mutation.SetCreatedAt(t)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetCreatedAt(v time.Time) *TicketViewUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tvuo *TicketViewUpdateOne) SetNillableCreatedAt(t *time.Time) *TicketViewUpdateOne {
-	if t != nil {
-		tvuo.SetCreatedAt(*t)
+func (_u *TicketViewUpdateOne) SetNillableCreatedAt(v *time.Time) *TicketViewUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return tvuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tvuo *TicketViewUpdateOne) SetUpdatedAt(t time.Time) *TicketViewUpdateOne {
-	tvuo.mutation.SetUpdatedAt(t)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetUpdatedAt(v time.Time) *TicketViewUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetCreatorID sets the "creator" edge to the User entity by ID.
-func (tvuo *TicketViewUpdateOne) SetCreatorID(id int) *TicketViewUpdateOne {
-	tvuo.mutation.SetCreatorID(id)
-	return tvuo
+func (_u *TicketViewUpdateOne) SetCreatorID(id int) *TicketViewUpdateOne {
+	_u.mutation.SetCreatorID(id)
+	return _u
 }
 
 // SetCreator sets the "creator" edge to the User entity.
-func (tvuo *TicketViewUpdateOne) SetCreator(u *User) *TicketViewUpdateOne {
-	return tvuo.SetCreatorID(u.ID)
+func (_u *TicketViewUpdateOne) SetCreator(v *User) *TicketViewUpdateOne {
+	return _u.SetCreatorID(v.ID)
 }
 
 // Mutation returns the TicketViewMutation object of the builder.
-func (tvuo *TicketViewUpdateOne) Mutation() *TicketViewMutation {
-	return tvuo.mutation
+func (_u *TicketViewUpdateOne) Mutation() *TicketViewMutation {
+	return _u.mutation
 }
 
 // ClearCreator clears the "creator" edge to the User entity.
-func (tvuo *TicketViewUpdateOne) ClearCreator() *TicketViewUpdateOne {
-	tvuo.mutation.ClearCreator()
-	return tvuo
+func (_u *TicketViewUpdateOne) ClearCreator() *TicketViewUpdateOne {
+	_u.mutation.ClearCreator()
+	return _u
 }
 
 // Where appends a list predicates to the TicketViewUpdate builder.
-func (tvuo *TicketViewUpdateOne) Where(ps ...predicate.TicketView) *TicketViewUpdateOne {
-	tvuo.mutation.Where(ps...)
-	return tvuo
+func (_u *TicketViewUpdateOne) Where(ps ...predicate.TicketView) *TicketViewUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (tvuo *TicketViewUpdateOne) Select(field string, fields ...string) *TicketViewUpdateOne {
-	tvuo.fields = append([]string{field}, fields...)
-	return tvuo
+func (_u *TicketViewUpdateOne) Select(field string, fields ...string) *TicketViewUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated TicketView entity.
-func (tvuo *TicketViewUpdateOne) Save(ctx context.Context) (*TicketView, error) {
-	tvuo.defaults()
-	return withHooks(ctx, tvuo.sqlSave, tvuo.mutation, tvuo.hooks)
+func (_u *TicketViewUpdateOne) Save(ctx context.Context) (*TicketView, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tvuo *TicketViewUpdateOne) SaveX(ctx context.Context) *TicketView {
-	node, err := tvuo.Save(ctx)
+func (_u *TicketViewUpdateOne) SaveX(ctx context.Context) *TicketView {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -590,60 +590,60 @@ func (tvuo *TicketViewUpdateOne) SaveX(ctx context.Context) *TicketView {
 }
 
 // Exec executes the query on the entity.
-func (tvuo *TicketViewUpdateOne) Exec(ctx context.Context) error {
-	_, err := tvuo.Save(ctx)
+func (_u *TicketViewUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tvuo *TicketViewUpdateOne) ExecX(ctx context.Context) {
-	if err := tvuo.Exec(ctx); err != nil {
+func (_u *TicketViewUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tvuo *TicketViewUpdateOne) defaults() {
-	if _, ok := tvuo.mutation.UpdatedAt(); !ok {
+func (_u *TicketViewUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := ticketview.UpdateDefaultUpdatedAt()
-		tvuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tvuo *TicketViewUpdateOne) check() error {
-	if v, ok := tvuo.mutation.Name(); ok {
+func (_u *TicketViewUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := ticketview.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketView.name": %w`, err)}
 		}
 	}
-	if v, ok := tvuo.mutation.CreatedBy(); ok {
+	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := ticketview.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "TicketView.created_by": %w`, err)}
 		}
 	}
-	if v, ok := tvuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := ticketview.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketView.tenant_id": %w`, err)}
 		}
 	}
-	if tvuo.mutation.CreatorCleared() && len(tvuo.mutation.CreatorIDs()) > 0 {
+	if _u.mutation.CreatorCleared() && len(_u.mutation.CreatorIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TicketView.creator"`)
 	}
 	return nil
 }
 
-func (tvuo *TicketViewUpdateOne) sqlSave(ctx context.Context) (_node *TicketView, err error) {
-	if err := tvuo.check(); err != nil {
+func (_u *TicketViewUpdateOne) sqlSave(ctx context.Context) (_node *TicketView, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(ticketview.Table, ticketview.Columns, sqlgraph.NewFieldSpec(ticketview.FieldID, field.TypeInt))
-	id, ok := tvuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "TicketView.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := tvuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, ticketview.FieldID)
 		for _, f := range fields {
@@ -655,67 +655,67 @@ func (tvuo *TicketViewUpdateOne) sqlSave(ctx context.Context) (_node *TicketView
 			}
 		}
 	}
-	if ps := tvuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tvuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(ticketview.FieldName, field.TypeString, value)
 	}
-	if value, ok := tvuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(ticketview.FieldDescription, field.TypeString, value)
 	}
-	if tvuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(ticketview.FieldDescription, field.TypeString)
 	}
-	if value, ok := tvuo.mutation.Filters(); ok {
+	if value, ok := _u.mutation.Filters(); ok {
 		_spec.SetField(ticketview.FieldFilters, field.TypeJSON, value)
 	}
-	if tvuo.mutation.FiltersCleared() {
+	if _u.mutation.FiltersCleared() {
 		_spec.ClearField(ticketview.FieldFilters, field.TypeJSON)
 	}
-	if value, ok := tvuo.mutation.Columns(); ok {
+	if value, ok := _u.mutation.Columns(); ok {
 		_spec.SetField(ticketview.FieldColumns, field.TypeJSON, value)
 	}
-	if value, ok := tvuo.mutation.AppendedColumns(); ok {
+	if value, ok := _u.mutation.AppendedColumns(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, ticketview.FieldColumns, value)
 		})
 	}
-	if tvuo.mutation.ColumnsCleared() {
+	if _u.mutation.ColumnsCleared() {
 		_spec.ClearField(ticketview.FieldColumns, field.TypeJSON)
 	}
-	if value, ok := tvuo.mutation.SortConfig(); ok {
+	if value, ok := _u.mutation.SortConfig(); ok {
 		_spec.SetField(ticketview.FieldSortConfig, field.TypeJSON, value)
 	}
-	if tvuo.mutation.SortConfigCleared() {
+	if _u.mutation.SortConfigCleared() {
 		_spec.ClearField(ticketview.FieldSortConfig, field.TypeJSON)
 	}
-	if value, ok := tvuo.mutation.GroupConfig(); ok {
+	if value, ok := _u.mutation.GroupConfig(); ok {
 		_spec.SetField(ticketview.FieldGroupConfig, field.TypeJSON, value)
 	}
-	if tvuo.mutation.GroupConfigCleared() {
+	if _u.mutation.GroupConfigCleared() {
 		_spec.ClearField(ticketview.FieldGroupConfig, field.TypeJSON)
 	}
-	if value, ok := tvuo.mutation.IsShared(); ok {
+	if value, ok := _u.mutation.IsShared(); ok {
 		_spec.SetField(ticketview.FieldIsShared, field.TypeBool, value)
 	}
-	if value, ok := tvuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ticketview.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tvuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticketview.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tvuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketview.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := tvuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticketview.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if tvuo.mutation.CreatorCleared() {
+	if _u.mutation.CreatorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
@@ -728,7 +728,7 @@ func (tvuo *TicketViewUpdateOne) sqlSave(ctx context.Context) (_node *TicketView
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tvuo.mutation.CreatorIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.CreatorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
@@ -744,10 +744,10 @@ func (tvuo *TicketViewUpdateOne) sqlSave(ctx context.Context) (_node *TicketView
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &TicketView{config: tvuo.config}
+	_node = &TicketView{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, tvuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticketview.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -755,6 +755,6 @@ func (tvuo *TicketViewUpdateOne) sqlSave(ctx context.Context) (_node *TicketView
 		}
 		return nil, err
 	}
-	tvuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

@@ -23,296 +23,296 @@ type ProblemUpdate struct {
 }
 
 // Where appends a list predicates to the ProblemUpdate builder.
-func (pu *ProblemUpdate) Where(ps ...predicate.Problem) *ProblemUpdate {
-	pu.mutation.Where(ps...)
-	return pu
+func (_u *ProblemUpdate) Where(ps ...predicate.Problem) *ProblemUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetTitle sets the "title" field.
-func (pu *ProblemUpdate) SetTitle(s string) *ProblemUpdate {
-	pu.mutation.SetTitle(s)
-	return pu
+func (_u *ProblemUpdate) SetTitle(v string) *ProblemUpdate {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableTitle(s *string) *ProblemUpdate {
-	if s != nil {
-		pu.SetTitle(*s)
+func (_u *ProblemUpdate) SetNillableTitle(v *string) *ProblemUpdate {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (pu *ProblemUpdate) SetDescription(s string) *ProblemUpdate {
-	pu.mutation.SetDescription(s)
-	return pu
+func (_u *ProblemUpdate) SetDescription(v string) *ProblemUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableDescription(s *string) *ProblemUpdate {
-	if s != nil {
-		pu.SetDescription(*s)
+func (_u *ProblemUpdate) SetNillableDescription(v *string) *ProblemUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return pu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (pu *ProblemUpdate) ClearDescription() *ProblemUpdate {
-	pu.mutation.ClearDescription()
-	return pu
+func (_u *ProblemUpdate) ClearDescription() *ProblemUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (pu *ProblemUpdate) SetStatus(s string) *ProblemUpdate {
-	pu.mutation.SetStatus(s)
-	return pu
+func (_u *ProblemUpdate) SetStatus(v string) *ProblemUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableStatus(s *string) *ProblemUpdate {
-	if s != nil {
-		pu.SetStatus(*s)
+func (_u *ProblemUpdate) SetNillableStatus(v *string) *ProblemUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (pu *ProblemUpdate) SetPriority(s string) *ProblemUpdate {
-	pu.mutation.SetPriority(s)
-	return pu
+func (_u *ProblemUpdate) SetPriority(v string) *ProblemUpdate {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillablePriority(s *string) *ProblemUpdate {
-	if s != nil {
-		pu.SetPriority(*s)
+func (_u *ProblemUpdate) SetNillablePriority(v *string) *ProblemUpdate {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (pu *ProblemUpdate) SetCategory(s string) *ProblemUpdate {
-	pu.mutation.SetCategory(s)
-	return pu
+func (_u *ProblemUpdate) SetCategory(v string) *ProblemUpdate {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableCategory(s *string) *ProblemUpdate {
-	if s != nil {
-		pu.SetCategory(*s)
+func (_u *ProblemUpdate) SetNillableCategory(v *string) *ProblemUpdate {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return pu
+	return _u
 }
 
 // ClearCategory clears the value of the "category" field.
-func (pu *ProblemUpdate) ClearCategory() *ProblemUpdate {
-	pu.mutation.ClearCategory()
-	return pu
+func (_u *ProblemUpdate) ClearCategory() *ProblemUpdate {
+	_u.mutation.ClearCategory()
+	return _u
 }
 
 // SetRootCause sets the "root_cause" field.
-func (pu *ProblemUpdate) SetRootCause(s string) *ProblemUpdate {
-	pu.mutation.SetRootCause(s)
-	return pu
+func (_u *ProblemUpdate) SetRootCause(v string) *ProblemUpdate {
+	_u.mutation.SetRootCause(v)
+	return _u
 }
 
 // SetNillableRootCause sets the "root_cause" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableRootCause(s *string) *ProblemUpdate {
-	if s != nil {
-		pu.SetRootCause(*s)
+func (_u *ProblemUpdate) SetNillableRootCause(v *string) *ProblemUpdate {
+	if v != nil {
+		_u.SetRootCause(*v)
 	}
-	return pu
+	return _u
 }
 
 // ClearRootCause clears the value of the "root_cause" field.
-func (pu *ProblemUpdate) ClearRootCause() *ProblemUpdate {
-	pu.mutation.ClearRootCause()
-	return pu
+func (_u *ProblemUpdate) ClearRootCause() *ProblemUpdate {
+	_u.mutation.ClearRootCause()
+	return _u
 }
 
 // SetImpact sets the "impact" field.
-func (pu *ProblemUpdate) SetImpact(s string) *ProblemUpdate {
-	pu.mutation.SetImpact(s)
-	return pu
+func (_u *ProblemUpdate) SetImpact(v string) *ProblemUpdate {
+	_u.mutation.SetImpact(v)
+	return _u
 }
 
 // SetNillableImpact sets the "impact" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableImpact(s *string) *ProblemUpdate {
-	if s != nil {
-		pu.SetImpact(*s)
+func (_u *ProblemUpdate) SetNillableImpact(v *string) *ProblemUpdate {
+	if v != nil {
+		_u.SetImpact(*v)
 	}
-	return pu
+	return _u
 }
 
 // ClearImpact clears the value of the "impact" field.
-func (pu *ProblemUpdate) ClearImpact() *ProblemUpdate {
-	pu.mutation.ClearImpact()
-	return pu
+func (_u *ProblemUpdate) ClearImpact() *ProblemUpdate {
+	_u.mutation.ClearImpact()
+	return _u
 }
 
 // SetAssigneeID sets the "assignee_id" field.
-func (pu *ProblemUpdate) SetAssigneeID(i int) *ProblemUpdate {
-	pu.mutation.ResetAssigneeID()
-	pu.mutation.SetAssigneeID(i)
-	return pu
+func (_u *ProblemUpdate) SetAssigneeID(v int) *ProblemUpdate {
+	_u.mutation.ResetAssigneeID()
+	_u.mutation.SetAssigneeID(v)
+	return _u
 }
 
 // SetNillableAssigneeID sets the "assignee_id" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableAssigneeID(i *int) *ProblemUpdate {
-	if i != nil {
-		pu.SetAssigneeID(*i)
+func (_u *ProblemUpdate) SetNillableAssigneeID(v *int) *ProblemUpdate {
+	if v != nil {
+		_u.SetAssigneeID(*v)
 	}
-	return pu
+	return _u
 }
 
-// AddAssigneeID adds i to the "assignee_id" field.
-func (pu *ProblemUpdate) AddAssigneeID(i int) *ProblemUpdate {
-	pu.mutation.AddAssigneeID(i)
-	return pu
+// AddAssigneeID adds value to the "assignee_id" field.
+func (_u *ProblemUpdate) AddAssigneeID(v int) *ProblemUpdate {
+	_u.mutation.AddAssigneeID(v)
+	return _u
 }
 
 // ClearAssigneeID clears the value of the "assignee_id" field.
-func (pu *ProblemUpdate) ClearAssigneeID() *ProblemUpdate {
-	pu.mutation.ClearAssigneeID()
-	return pu
+func (_u *ProblemUpdate) ClearAssigneeID() *ProblemUpdate {
+	_u.mutation.ClearAssigneeID()
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (pu *ProblemUpdate) SetCreatedBy(i int) *ProblemUpdate {
-	pu.mutation.ResetCreatedBy()
-	pu.mutation.SetCreatedBy(i)
-	return pu
+func (_u *ProblemUpdate) SetCreatedBy(v int) *ProblemUpdate {
+	_u.mutation.ResetCreatedBy()
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableCreatedBy(i *int) *ProblemUpdate {
-	if i != nil {
-		pu.SetCreatedBy(*i)
+func (_u *ProblemUpdate) SetNillableCreatedBy(v *int) *ProblemUpdate {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return pu
+	return _u
 }
 
-// AddCreatedBy adds i to the "created_by" field.
-func (pu *ProblemUpdate) AddCreatedBy(i int) *ProblemUpdate {
-	pu.mutation.AddCreatedBy(i)
-	return pu
+// AddCreatedBy adds value to the "created_by" field.
+func (_u *ProblemUpdate) AddCreatedBy(v int) *ProblemUpdate {
+	_u.mutation.AddCreatedBy(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pu *ProblemUpdate) SetTenantID(i int) *ProblemUpdate {
-	pu.mutation.ResetTenantID()
-	pu.mutation.SetTenantID(i)
-	return pu
+func (_u *ProblemUpdate) SetTenantID(v int) *ProblemUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableTenantID(i *int) *ProblemUpdate {
-	if i != nil {
-		pu.SetTenantID(*i)
+func (_u *ProblemUpdate) SetNillableTenantID(v *int) *ProblemUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pu *ProblemUpdate) AddTenantID(i int) *ProblemUpdate {
-	pu.mutation.AddTenantID(i)
-	return pu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProblemUpdate) AddTenantID(v int) *ProblemUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pu *ProblemUpdate) SetCreatedAt(t time.Time) *ProblemUpdate {
-	pu.mutation.SetCreatedAt(t)
-	return pu
+func (_u *ProblemUpdate) SetCreatedAt(v time.Time) *ProblemUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableCreatedAt(t *time.Time) *ProblemUpdate {
-	if t != nil {
-		pu.SetCreatedAt(*t)
+func (_u *ProblemUpdate) SetNillableCreatedAt(v *time.Time) *ProblemUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pu *ProblemUpdate) SetUpdatedAt(t time.Time) *ProblemUpdate {
-	pu.mutation.SetUpdatedAt(t)
-	return pu
+func (_u *ProblemUpdate) SetUpdatedAt(v time.Time) *ProblemUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (pu *ProblemUpdate) SetResolvedAt(t time.Time) *ProblemUpdate {
-	pu.mutation.SetResolvedAt(t)
-	return pu
+func (_u *ProblemUpdate) SetResolvedAt(v time.Time) *ProblemUpdate {
+	_u.mutation.SetResolvedAt(v)
+	return _u
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableResolvedAt(t *time.Time) *ProblemUpdate {
-	if t != nil {
-		pu.SetResolvedAt(*t)
+func (_u *ProblemUpdate) SetNillableResolvedAt(v *time.Time) *ProblemUpdate {
+	if v != nil {
+		_u.SetResolvedAt(*v)
 	}
-	return pu
+	return _u
 }
 
 // ClearResolvedAt clears the value of the "resolved_at" field.
-func (pu *ProblemUpdate) ClearResolvedAt() *ProblemUpdate {
-	pu.mutation.ClearResolvedAt()
-	return pu
+func (_u *ProblemUpdate) ClearResolvedAt() *ProblemUpdate {
+	_u.mutation.ClearResolvedAt()
+	return _u
 }
 
 // SetClosedAt sets the "closed_at" field.
-func (pu *ProblemUpdate) SetClosedAt(t time.Time) *ProblemUpdate {
-	pu.mutation.SetClosedAt(t)
-	return pu
+func (_u *ProblemUpdate) SetClosedAt(v time.Time) *ProblemUpdate {
+	_u.mutation.SetClosedAt(v)
+	return _u
 }
 
 // SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableClosedAt(t *time.Time) *ProblemUpdate {
-	if t != nil {
-		pu.SetClosedAt(*t)
+func (_u *ProblemUpdate) SetNillableClosedAt(v *time.Time) *ProblemUpdate {
+	if v != nil {
+		_u.SetClosedAt(*v)
 	}
-	return pu
+	return _u
 }
 
 // ClearClosedAt clears the value of the "closed_at" field.
-func (pu *ProblemUpdate) ClearClosedAt() *ProblemUpdate {
-	pu.mutation.ClearClosedAt()
-	return pu
+func (_u *ProblemUpdate) ClearClosedAt() *ProblemUpdate {
+	_u.mutation.ClearClosedAt()
+	return _u
 }
 
 // SetDeletedAt sets the "deleted_at" field.
-func (pu *ProblemUpdate) SetDeletedAt(t time.Time) *ProblemUpdate {
-	pu.mutation.SetDeletedAt(t)
-	return pu
+func (_u *ProblemUpdate) SetDeletedAt(v time.Time) *ProblemUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
 }
 
 // SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (pu *ProblemUpdate) SetNillableDeletedAt(t *time.Time) *ProblemUpdate {
-	if t != nil {
-		pu.SetDeletedAt(*t)
+func (_u *ProblemUpdate) SetNillableDeletedAt(v *time.Time) *ProblemUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
 	}
-	return pu
+	return _u
 }
 
 // ClearDeletedAt clears the value of the "deleted_at" field.
-func (pu *ProblemUpdate) ClearDeletedAt() *ProblemUpdate {
-	pu.mutation.ClearDeletedAt()
-	return pu
+func (_u *ProblemUpdate) ClearDeletedAt() *ProblemUpdate {
+	_u.mutation.ClearDeletedAt()
+	return _u
 }
 
 // Mutation returns the ProblemMutation object of the builder.
-func (pu *ProblemUpdate) Mutation() *ProblemMutation {
-	return pu.mutation
+func (_u *ProblemUpdate) Mutation() *ProblemMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (pu *ProblemUpdate) Save(ctx context.Context) (int, error) {
-	pu.defaults()
-	return withHooks(ctx, pu.sqlSave, pu.mutation, pu.hooks)
+func (_u *ProblemUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pu *ProblemUpdate) SaveX(ctx context.Context) int {
-	affected, err := pu.Save(ctx)
+func (_u *ProblemUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -320,39 +320,39 @@ func (pu *ProblemUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (pu *ProblemUpdate) Exec(ctx context.Context) error {
-	_, err := pu.Save(ctx)
+func (_u *ProblemUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pu *ProblemUpdate) ExecX(ctx context.Context) {
-	if err := pu.Exec(ctx); err != nil {
+func (_u *ProblemUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pu *ProblemUpdate) defaults() {
-	if _, ok := pu.mutation.UpdatedAt(); !ok {
+func (_u *ProblemUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := problem.UpdateDefaultUpdatedAt()
-		pu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pu *ProblemUpdate) check() error {
-	if v, ok := pu.mutation.Title(); ok {
+func (_u *ProblemUpdate) check() error {
+	if v, ok := _u.mutation.Title(); ok {
 		if err := problem.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Problem.title": %w`, err)}
 		}
 	}
-	if v, ok := pu.mutation.CreatedBy(); ok {
+	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := problem.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "Problem.created_by": %w`, err)}
 		}
 	}
-	if v, ok := pu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := problem.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Problem.tenant_id": %w`, err)}
 		}
@@ -360,97 +360,97 @@ func (pu *ProblemUpdate) check() error {
 	return nil
 }
 
-func (pu *ProblemUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := pu.check(); err != nil {
-		return n, err
+func (_u *ProblemUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(problem.Table, problem.Columns, sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt))
-	if ps := pu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pu.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(problem.FieldTitle, field.TypeString, value)
 	}
-	if value, ok := pu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(problem.FieldDescription, field.TypeString, value)
 	}
-	if pu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(problem.FieldDescription, field.TypeString)
 	}
-	if value, ok := pu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(problem.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := pu.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(problem.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := pu.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(problem.FieldCategory, field.TypeString, value)
 	}
-	if pu.mutation.CategoryCleared() {
+	if _u.mutation.CategoryCleared() {
 		_spec.ClearField(problem.FieldCategory, field.TypeString)
 	}
-	if value, ok := pu.mutation.RootCause(); ok {
+	if value, ok := _u.mutation.RootCause(); ok {
 		_spec.SetField(problem.FieldRootCause, field.TypeString, value)
 	}
-	if pu.mutation.RootCauseCleared() {
+	if _u.mutation.RootCauseCleared() {
 		_spec.ClearField(problem.FieldRootCause, field.TypeString)
 	}
-	if value, ok := pu.mutation.Impact(); ok {
+	if value, ok := _u.mutation.Impact(); ok {
 		_spec.SetField(problem.FieldImpact, field.TypeString, value)
 	}
-	if pu.mutation.ImpactCleared() {
+	if _u.mutation.ImpactCleared() {
 		_spec.ClearField(problem.FieldImpact, field.TypeString)
 	}
-	if value, ok := pu.mutation.AssigneeID(); ok {
+	if value, ok := _u.mutation.AssigneeID(); ok {
 		_spec.SetField(problem.FieldAssigneeID, field.TypeInt, value)
 	}
-	if value, ok := pu.mutation.AddedAssigneeID(); ok {
+	if value, ok := _u.mutation.AddedAssigneeID(); ok {
 		_spec.AddField(problem.FieldAssigneeID, field.TypeInt, value)
 	}
-	if pu.mutation.AssigneeIDCleared() {
+	if _u.mutation.AssigneeIDCleared() {
 		_spec.ClearField(problem.FieldAssigneeID, field.TypeInt)
 	}
-	if value, ok := pu.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(problem.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := pu.mutation.AddedCreatedBy(); ok {
+	if value, ok := _u.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(problem.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := pu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(problem.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(problem.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(problem.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := pu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(problem.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := pu.mutation.ResolvedAt(); ok {
+	if value, ok := _u.mutation.ResolvedAt(); ok {
 		_spec.SetField(problem.FieldResolvedAt, field.TypeTime, value)
 	}
-	if pu.mutation.ResolvedAtCleared() {
+	if _u.mutation.ResolvedAtCleared() {
 		_spec.ClearField(problem.FieldResolvedAt, field.TypeTime)
 	}
-	if value, ok := pu.mutation.ClosedAt(); ok {
+	if value, ok := _u.mutation.ClosedAt(); ok {
 		_spec.SetField(problem.FieldClosedAt, field.TypeTime, value)
 	}
-	if pu.mutation.ClosedAtCleared() {
+	if _u.mutation.ClosedAtCleared() {
 		_spec.ClearField(problem.FieldClosedAt, field.TypeTime)
 	}
-	if value, ok := pu.mutation.DeletedAt(); ok {
+	if value, ok := _u.mutation.DeletedAt(); ok {
 		_spec.SetField(problem.FieldDeletedAt, field.TypeTime, value)
 	}
-	if pu.mutation.DeletedAtCleared() {
+	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(problem.FieldDeletedAt, field.TypeTime)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{problem.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -458,8 +458,8 @@ func (pu *ProblemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	pu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ProblemUpdateOne is the builder for updating a single Problem entity.
@@ -471,303 +471,303 @@ type ProblemUpdateOne struct {
 }
 
 // SetTitle sets the "title" field.
-func (puo *ProblemUpdateOne) SetTitle(s string) *ProblemUpdateOne {
-	puo.mutation.SetTitle(s)
-	return puo
+func (_u *ProblemUpdateOne) SetTitle(v string) *ProblemUpdateOne {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableTitle(s *string) *ProblemUpdateOne {
-	if s != nil {
-		puo.SetTitle(*s)
+func (_u *ProblemUpdateOne) SetNillableTitle(v *string) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (puo *ProblemUpdateOne) SetDescription(s string) *ProblemUpdateOne {
-	puo.mutation.SetDescription(s)
-	return puo
+func (_u *ProblemUpdateOne) SetDescription(v string) *ProblemUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableDescription(s *string) *ProblemUpdateOne {
-	if s != nil {
-		puo.SetDescription(*s)
+func (_u *ProblemUpdateOne) SetNillableDescription(v *string) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return puo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (puo *ProblemUpdateOne) ClearDescription() *ProblemUpdateOne {
-	puo.mutation.ClearDescription()
-	return puo
+func (_u *ProblemUpdateOne) ClearDescription() *ProblemUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (puo *ProblemUpdateOne) SetStatus(s string) *ProblemUpdateOne {
-	puo.mutation.SetStatus(s)
-	return puo
+func (_u *ProblemUpdateOne) SetStatus(v string) *ProblemUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableStatus(s *string) *ProblemUpdateOne {
-	if s != nil {
-		puo.SetStatus(*s)
+func (_u *ProblemUpdateOne) SetNillableStatus(v *string) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (puo *ProblemUpdateOne) SetPriority(s string) *ProblemUpdateOne {
-	puo.mutation.SetPriority(s)
-	return puo
+func (_u *ProblemUpdateOne) SetPriority(v string) *ProblemUpdateOne {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillablePriority(s *string) *ProblemUpdateOne {
-	if s != nil {
-		puo.SetPriority(*s)
+func (_u *ProblemUpdateOne) SetNillablePriority(v *string) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (puo *ProblemUpdateOne) SetCategory(s string) *ProblemUpdateOne {
-	puo.mutation.SetCategory(s)
-	return puo
+func (_u *ProblemUpdateOne) SetCategory(v string) *ProblemUpdateOne {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableCategory(s *string) *ProblemUpdateOne {
-	if s != nil {
-		puo.SetCategory(*s)
+func (_u *ProblemUpdateOne) SetNillableCategory(v *string) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return puo
+	return _u
 }
 
 // ClearCategory clears the value of the "category" field.
-func (puo *ProblemUpdateOne) ClearCategory() *ProblemUpdateOne {
-	puo.mutation.ClearCategory()
-	return puo
+func (_u *ProblemUpdateOne) ClearCategory() *ProblemUpdateOne {
+	_u.mutation.ClearCategory()
+	return _u
 }
 
 // SetRootCause sets the "root_cause" field.
-func (puo *ProblemUpdateOne) SetRootCause(s string) *ProblemUpdateOne {
-	puo.mutation.SetRootCause(s)
-	return puo
+func (_u *ProblemUpdateOne) SetRootCause(v string) *ProblemUpdateOne {
+	_u.mutation.SetRootCause(v)
+	return _u
 }
 
 // SetNillableRootCause sets the "root_cause" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableRootCause(s *string) *ProblemUpdateOne {
-	if s != nil {
-		puo.SetRootCause(*s)
+func (_u *ProblemUpdateOne) SetNillableRootCause(v *string) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetRootCause(*v)
 	}
-	return puo
+	return _u
 }
 
 // ClearRootCause clears the value of the "root_cause" field.
-func (puo *ProblemUpdateOne) ClearRootCause() *ProblemUpdateOne {
-	puo.mutation.ClearRootCause()
-	return puo
+func (_u *ProblemUpdateOne) ClearRootCause() *ProblemUpdateOne {
+	_u.mutation.ClearRootCause()
+	return _u
 }
 
 // SetImpact sets the "impact" field.
-func (puo *ProblemUpdateOne) SetImpact(s string) *ProblemUpdateOne {
-	puo.mutation.SetImpact(s)
-	return puo
+func (_u *ProblemUpdateOne) SetImpact(v string) *ProblemUpdateOne {
+	_u.mutation.SetImpact(v)
+	return _u
 }
 
 // SetNillableImpact sets the "impact" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableImpact(s *string) *ProblemUpdateOne {
-	if s != nil {
-		puo.SetImpact(*s)
+func (_u *ProblemUpdateOne) SetNillableImpact(v *string) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetImpact(*v)
 	}
-	return puo
+	return _u
 }
 
 // ClearImpact clears the value of the "impact" field.
-func (puo *ProblemUpdateOne) ClearImpact() *ProblemUpdateOne {
-	puo.mutation.ClearImpact()
-	return puo
+func (_u *ProblemUpdateOne) ClearImpact() *ProblemUpdateOne {
+	_u.mutation.ClearImpact()
+	return _u
 }
 
 // SetAssigneeID sets the "assignee_id" field.
-func (puo *ProblemUpdateOne) SetAssigneeID(i int) *ProblemUpdateOne {
-	puo.mutation.ResetAssigneeID()
-	puo.mutation.SetAssigneeID(i)
-	return puo
+func (_u *ProblemUpdateOne) SetAssigneeID(v int) *ProblemUpdateOne {
+	_u.mutation.ResetAssigneeID()
+	_u.mutation.SetAssigneeID(v)
+	return _u
 }
 
 // SetNillableAssigneeID sets the "assignee_id" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableAssigneeID(i *int) *ProblemUpdateOne {
-	if i != nil {
-		puo.SetAssigneeID(*i)
+func (_u *ProblemUpdateOne) SetNillableAssigneeID(v *int) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetAssigneeID(*v)
 	}
-	return puo
+	return _u
 }
 
-// AddAssigneeID adds i to the "assignee_id" field.
-func (puo *ProblemUpdateOne) AddAssigneeID(i int) *ProblemUpdateOne {
-	puo.mutation.AddAssigneeID(i)
-	return puo
+// AddAssigneeID adds value to the "assignee_id" field.
+func (_u *ProblemUpdateOne) AddAssigneeID(v int) *ProblemUpdateOne {
+	_u.mutation.AddAssigneeID(v)
+	return _u
 }
 
 // ClearAssigneeID clears the value of the "assignee_id" field.
-func (puo *ProblemUpdateOne) ClearAssigneeID() *ProblemUpdateOne {
-	puo.mutation.ClearAssigneeID()
-	return puo
+func (_u *ProblemUpdateOne) ClearAssigneeID() *ProblemUpdateOne {
+	_u.mutation.ClearAssigneeID()
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (puo *ProblemUpdateOne) SetCreatedBy(i int) *ProblemUpdateOne {
-	puo.mutation.ResetCreatedBy()
-	puo.mutation.SetCreatedBy(i)
-	return puo
+func (_u *ProblemUpdateOne) SetCreatedBy(v int) *ProblemUpdateOne {
+	_u.mutation.ResetCreatedBy()
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableCreatedBy(i *int) *ProblemUpdateOne {
-	if i != nil {
-		puo.SetCreatedBy(*i)
+func (_u *ProblemUpdateOne) SetNillableCreatedBy(v *int) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return puo
+	return _u
 }
 
-// AddCreatedBy adds i to the "created_by" field.
-func (puo *ProblemUpdateOne) AddCreatedBy(i int) *ProblemUpdateOne {
-	puo.mutation.AddCreatedBy(i)
-	return puo
+// AddCreatedBy adds value to the "created_by" field.
+func (_u *ProblemUpdateOne) AddCreatedBy(v int) *ProblemUpdateOne {
+	_u.mutation.AddCreatedBy(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (puo *ProblemUpdateOne) SetTenantID(i int) *ProblemUpdateOne {
-	puo.mutation.ResetTenantID()
-	puo.mutation.SetTenantID(i)
-	return puo
+func (_u *ProblemUpdateOne) SetTenantID(v int) *ProblemUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableTenantID(i *int) *ProblemUpdateOne {
-	if i != nil {
-		puo.SetTenantID(*i)
+func (_u *ProblemUpdateOne) SetNillableTenantID(v *int) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return puo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (puo *ProblemUpdateOne) AddTenantID(i int) *ProblemUpdateOne {
-	puo.mutation.AddTenantID(i)
-	return puo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProblemUpdateOne) AddTenantID(v int) *ProblemUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (puo *ProblemUpdateOne) SetCreatedAt(t time.Time) *ProblemUpdateOne {
-	puo.mutation.SetCreatedAt(t)
-	return puo
+func (_u *ProblemUpdateOne) SetCreatedAt(v time.Time) *ProblemUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableCreatedAt(t *time.Time) *ProblemUpdateOne {
-	if t != nil {
-		puo.SetCreatedAt(*t)
+func (_u *ProblemUpdateOne) SetNillableCreatedAt(v *time.Time) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (puo *ProblemUpdateOne) SetUpdatedAt(t time.Time) *ProblemUpdateOne {
-	puo.mutation.SetUpdatedAt(t)
-	return puo
+func (_u *ProblemUpdateOne) SetUpdatedAt(v time.Time) *ProblemUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (puo *ProblemUpdateOne) SetResolvedAt(t time.Time) *ProblemUpdateOne {
-	puo.mutation.SetResolvedAt(t)
-	return puo
+func (_u *ProblemUpdateOne) SetResolvedAt(v time.Time) *ProblemUpdateOne {
+	_u.mutation.SetResolvedAt(v)
+	return _u
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableResolvedAt(t *time.Time) *ProblemUpdateOne {
-	if t != nil {
-		puo.SetResolvedAt(*t)
+func (_u *ProblemUpdateOne) SetNillableResolvedAt(v *time.Time) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetResolvedAt(*v)
 	}
-	return puo
+	return _u
 }
 
 // ClearResolvedAt clears the value of the "resolved_at" field.
-func (puo *ProblemUpdateOne) ClearResolvedAt() *ProblemUpdateOne {
-	puo.mutation.ClearResolvedAt()
-	return puo
+func (_u *ProblemUpdateOne) ClearResolvedAt() *ProblemUpdateOne {
+	_u.mutation.ClearResolvedAt()
+	return _u
 }
 
 // SetClosedAt sets the "closed_at" field.
-func (puo *ProblemUpdateOne) SetClosedAt(t time.Time) *ProblemUpdateOne {
-	puo.mutation.SetClosedAt(t)
-	return puo
+func (_u *ProblemUpdateOne) SetClosedAt(v time.Time) *ProblemUpdateOne {
+	_u.mutation.SetClosedAt(v)
+	return _u
 }
 
 // SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableClosedAt(t *time.Time) *ProblemUpdateOne {
-	if t != nil {
-		puo.SetClosedAt(*t)
+func (_u *ProblemUpdateOne) SetNillableClosedAt(v *time.Time) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetClosedAt(*v)
 	}
-	return puo
+	return _u
 }
 
 // ClearClosedAt clears the value of the "closed_at" field.
-func (puo *ProblemUpdateOne) ClearClosedAt() *ProblemUpdateOne {
-	puo.mutation.ClearClosedAt()
-	return puo
+func (_u *ProblemUpdateOne) ClearClosedAt() *ProblemUpdateOne {
+	_u.mutation.ClearClosedAt()
+	return _u
 }
 
 // SetDeletedAt sets the "deleted_at" field.
-func (puo *ProblemUpdateOne) SetDeletedAt(t time.Time) *ProblemUpdateOne {
-	puo.mutation.SetDeletedAt(t)
-	return puo
+func (_u *ProblemUpdateOne) SetDeletedAt(v time.Time) *ProblemUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
 }
 
 // SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (puo *ProblemUpdateOne) SetNillableDeletedAt(t *time.Time) *ProblemUpdateOne {
-	if t != nil {
-		puo.SetDeletedAt(*t)
+func (_u *ProblemUpdateOne) SetNillableDeletedAt(v *time.Time) *ProblemUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
 	}
-	return puo
+	return _u
 }
 
 // ClearDeletedAt clears the value of the "deleted_at" field.
-func (puo *ProblemUpdateOne) ClearDeletedAt() *ProblemUpdateOne {
-	puo.mutation.ClearDeletedAt()
-	return puo
+func (_u *ProblemUpdateOne) ClearDeletedAt() *ProblemUpdateOne {
+	_u.mutation.ClearDeletedAt()
+	return _u
 }
 
 // Mutation returns the ProblemMutation object of the builder.
-func (puo *ProblemUpdateOne) Mutation() *ProblemMutation {
-	return puo.mutation
+func (_u *ProblemUpdateOne) Mutation() *ProblemMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the ProblemUpdate builder.
-func (puo *ProblemUpdateOne) Where(ps ...predicate.Problem) *ProblemUpdateOne {
-	puo.mutation.Where(ps...)
-	return puo
+func (_u *ProblemUpdateOne) Where(ps ...predicate.Problem) *ProblemUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (puo *ProblemUpdateOne) Select(field string, fields ...string) *ProblemUpdateOne {
-	puo.fields = append([]string{field}, fields...)
-	return puo
+func (_u *ProblemUpdateOne) Select(field string, fields ...string) *ProblemUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Problem entity.
-func (puo *ProblemUpdateOne) Save(ctx context.Context) (*Problem, error) {
-	puo.defaults()
-	return withHooks(ctx, puo.sqlSave, puo.mutation, puo.hooks)
+func (_u *ProblemUpdateOne) Save(ctx context.Context) (*Problem, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (puo *ProblemUpdateOne) SaveX(ctx context.Context) *Problem {
-	node, err := puo.Save(ctx)
+func (_u *ProblemUpdateOne) SaveX(ctx context.Context) *Problem {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -775,39 +775,39 @@ func (puo *ProblemUpdateOne) SaveX(ctx context.Context) *Problem {
 }
 
 // Exec executes the query on the entity.
-func (puo *ProblemUpdateOne) Exec(ctx context.Context) error {
-	_, err := puo.Save(ctx)
+func (_u *ProblemUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (puo *ProblemUpdateOne) ExecX(ctx context.Context) {
-	if err := puo.Exec(ctx); err != nil {
+func (_u *ProblemUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (puo *ProblemUpdateOne) defaults() {
-	if _, ok := puo.mutation.UpdatedAt(); !ok {
+func (_u *ProblemUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := problem.UpdateDefaultUpdatedAt()
-		puo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (puo *ProblemUpdateOne) check() error {
-	if v, ok := puo.mutation.Title(); ok {
+func (_u *ProblemUpdateOne) check() error {
+	if v, ok := _u.mutation.Title(); ok {
 		if err := problem.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Problem.title": %w`, err)}
 		}
 	}
-	if v, ok := puo.mutation.CreatedBy(); ok {
+	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := problem.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "Problem.created_by": %w`, err)}
 		}
 	}
-	if v, ok := puo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := problem.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Problem.tenant_id": %w`, err)}
 		}
@@ -815,17 +815,17 @@ func (puo *ProblemUpdateOne) check() error {
 	return nil
 }
 
-func (puo *ProblemUpdateOne) sqlSave(ctx context.Context) (_node *Problem, err error) {
-	if err := puo.check(); err != nil {
+func (_u *ProblemUpdateOne) sqlSave(ctx context.Context) (_node *Problem, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(problem.Table, problem.Columns, sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt))
-	id, ok := puo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Problem.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := puo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, problem.FieldID)
 		for _, f := range fields {
@@ -837,95 +837,95 @@ func (puo *ProblemUpdateOne) sqlSave(ctx context.Context) (_node *Problem, err e
 			}
 		}
 	}
-	if ps := puo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := puo.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(problem.FieldTitle, field.TypeString, value)
 	}
-	if value, ok := puo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(problem.FieldDescription, field.TypeString, value)
 	}
-	if puo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(problem.FieldDescription, field.TypeString)
 	}
-	if value, ok := puo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(problem.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := puo.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(problem.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := puo.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(problem.FieldCategory, field.TypeString, value)
 	}
-	if puo.mutation.CategoryCleared() {
+	if _u.mutation.CategoryCleared() {
 		_spec.ClearField(problem.FieldCategory, field.TypeString)
 	}
-	if value, ok := puo.mutation.RootCause(); ok {
+	if value, ok := _u.mutation.RootCause(); ok {
 		_spec.SetField(problem.FieldRootCause, field.TypeString, value)
 	}
-	if puo.mutation.RootCauseCleared() {
+	if _u.mutation.RootCauseCleared() {
 		_spec.ClearField(problem.FieldRootCause, field.TypeString)
 	}
-	if value, ok := puo.mutation.Impact(); ok {
+	if value, ok := _u.mutation.Impact(); ok {
 		_spec.SetField(problem.FieldImpact, field.TypeString, value)
 	}
-	if puo.mutation.ImpactCleared() {
+	if _u.mutation.ImpactCleared() {
 		_spec.ClearField(problem.FieldImpact, field.TypeString)
 	}
-	if value, ok := puo.mutation.AssigneeID(); ok {
+	if value, ok := _u.mutation.AssigneeID(); ok {
 		_spec.SetField(problem.FieldAssigneeID, field.TypeInt, value)
 	}
-	if value, ok := puo.mutation.AddedAssigneeID(); ok {
+	if value, ok := _u.mutation.AddedAssigneeID(); ok {
 		_spec.AddField(problem.FieldAssigneeID, field.TypeInt, value)
 	}
-	if puo.mutation.AssigneeIDCleared() {
+	if _u.mutation.AssigneeIDCleared() {
 		_spec.ClearField(problem.FieldAssigneeID, field.TypeInt)
 	}
-	if value, ok := puo.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(problem.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := puo.mutation.AddedCreatedBy(); ok {
+	if value, ok := _u.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(problem.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := puo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(problem.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := puo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(problem.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := puo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(problem.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := puo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(problem.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := puo.mutation.ResolvedAt(); ok {
+	if value, ok := _u.mutation.ResolvedAt(); ok {
 		_spec.SetField(problem.FieldResolvedAt, field.TypeTime, value)
 	}
-	if puo.mutation.ResolvedAtCleared() {
+	if _u.mutation.ResolvedAtCleared() {
 		_spec.ClearField(problem.FieldResolvedAt, field.TypeTime)
 	}
-	if value, ok := puo.mutation.ClosedAt(); ok {
+	if value, ok := _u.mutation.ClosedAt(); ok {
 		_spec.SetField(problem.FieldClosedAt, field.TypeTime, value)
 	}
-	if puo.mutation.ClosedAtCleared() {
+	if _u.mutation.ClosedAtCleared() {
 		_spec.ClearField(problem.FieldClosedAt, field.TypeTime)
 	}
-	if value, ok := puo.mutation.DeletedAt(); ok {
+	if value, ok := _u.mutation.DeletedAt(); ok {
 		_spec.SetField(problem.FieldDeletedAt, field.TypeTime, value)
 	}
-	if puo.mutation.DeletedAtCleared() {
+	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(problem.FieldDeletedAt, field.TypeTime)
 	}
-	_node = &Problem{config: puo.config}
+	_node = &Problem{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, puo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{problem.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -933,6 +933,6 @@ func (puo *ProblemUpdateOne) sqlSave(ctx context.Context) (_node *Problem, err e
 		}
 		return nil, err
 	}
-	puo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

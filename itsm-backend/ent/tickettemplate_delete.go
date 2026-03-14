@@ -20,56 +20,56 @@ type TicketTemplateDelete struct {
 }
 
 // Where appends a list predicates to the TicketTemplateDelete builder.
-func (ttd *TicketTemplateDelete) Where(ps ...predicate.TicketTemplate) *TicketTemplateDelete {
-	ttd.mutation.Where(ps...)
-	return ttd
+func (_d *TicketTemplateDelete) Where(ps ...predicate.TicketTemplate) *TicketTemplateDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ttd *TicketTemplateDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, ttd.sqlExec, ttd.mutation, ttd.hooks)
+func (_d *TicketTemplateDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ttd *TicketTemplateDelete) ExecX(ctx context.Context) int {
-	n, err := ttd.Exec(ctx)
+func (_d *TicketTemplateDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (ttd *TicketTemplateDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *TicketTemplateDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(tickettemplate.Table, sqlgraph.NewFieldSpec(tickettemplate.FieldID, field.TypeInt))
-	if ps := ttd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, ttd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	ttd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // TicketTemplateDeleteOne is the builder for deleting a single TicketTemplate entity.
 type TicketTemplateDeleteOne struct {
-	ttd *TicketTemplateDelete
+	_d *TicketTemplateDelete
 }
 
 // Where appends a list predicates to the TicketTemplateDelete builder.
-func (ttdo *TicketTemplateDeleteOne) Where(ps ...predicate.TicketTemplate) *TicketTemplateDeleteOne {
-	ttdo.ttd.mutation.Where(ps...)
-	return ttdo
+func (_d *TicketTemplateDeleteOne) Where(ps ...predicate.TicketTemplate) *TicketTemplateDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (ttdo *TicketTemplateDeleteOne) Exec(ctx context.Context) error {
-	n, err := ttdo.ttd.Exec(ctx)
+func (_d *TicketTemplateDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (ttdo *TicketTemplateDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ttdo *TicketTemplateDeleteOne) ExecX(ctx context.Context) {
-	if err := ttdo.Exec(ctx); err != nil {
+func (_d *TicketTemplateDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

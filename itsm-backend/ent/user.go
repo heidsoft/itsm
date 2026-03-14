@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
 	"strings"
 	"time"
@@ -42,6 +43,10 @@ type User struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// MSP角色: provider_admin=MSP管理员, provider_agent=MSP客服, customer_user=客户用户
+	MspRole user.MspRole `json:"msp_role,omitempty"`
+	// MSP分配人ID
+	AssignedByMspID int `json:"assigned_by_msp_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges         UserEdges `json:"edges"`
@@ -54,6 +59,8 @@ type User struct {
 type UserEdges struct {
 	// DepartmentRef holds the value of the department_ref edge.
 	DepartmentRef *Department `json:"department_ref,omitempty"`
+	// Tenant holds the value of the tenant edge.
+	Tenant *Tenant `json:"tenant,omitempty"`
 	// 工单评论
 	TicketComments []*TicketComment `json:"ticket_comments,omitempty"`
 	// 工单附件
@@ -68,9 +75,11 @@ type UserEdges struct {
 	VersionChangelogs []*ProcessVersionChangelog `json:"version_changelogs,omitempty"`
 	// 用户所属组
 	Groups []*Group `json:"groups,omitempty"`
+	// MSP用户分配
+	MspAllocations []*MSPAllocation `json:"msp_allocations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [10]bool
 }
 
 // DepartmentRefOrErr returns the DepartmentRef value or an error if the edge
@@ -84,10 +93,21 @@ func (e UserEdges) DepartmentRefOrErr() (*Department, error) {
 	return nil, &NotLoadedError{edge: "department_ref"}
 }
 
+// TenantOrErr returns the Tenant value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserEdges) TenantOrErr() (*Tenant, error) {
+	if e.Tenant != nil {
+		return e.Tenant, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: tenant.Label}
+	}
+	return nil, &NotLoadedError{edge: "tenant"}
+}
+
 // TicketCommentsOrErr returns the TicketComments value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) TicketCommentsOrErr() ([]*TicketComment, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.TicketComments, nil
 	}
 	return nil, &NotLoadedError{edge: "ticket_comments"}
@@ -96,7 +116,7 @@ func (e UserEdges) TicketCommentsOrErr() ([]*TicketComment, error) {
 // TicketAttachmentsOrErr returns the TicketAttachments value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) TicketAttachmentsOrErr() ([]*TicketAttachment, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.TicketAttachments, nil
 	}
 	return nil, &NotLoadedError{edge: "ticket_attachments"}
@@ -105,7 +125,7 @@ func (e UserEdges) TicketAttachmentsOrErr() ([]*TicketAttachment, error) {
 // TicketNotificationsOrErr returns the TicketNotifications value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) TicketNotificationsOrErr() ([]*TicketNotification, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.TicketNotifications, nil
 	}
 	return nil, &NotLoadedError{edge: "ticket_notifications"}
@@ -114,7 +134,7 @@ func (e UserEdges) TicketNotificationsOrErr() ([]*TicketNotification, error) {
 // NotificationPreferencesOrErr returns the NotificationPreferences value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) NotificationPreferencesOrErr() ([]*NotificationPreference, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.NotificationPreferences, nil
 	}
 	return nil, &NotLoadedError{edge: "notification_preferences"}
@@ -123,7 +143,7 @@ func (e UserEdges) NotificationPreferencesOrErr() ([]*NotificationPreference, er
 // RolesOrErr returns the Roles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
@@ -132,7 +152,7 @@ func (e UserEdges) RolesOrErr() ([]*Role, error) {
 // VersionChangelogsOrErr returns the VersionChangelogs value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) VersionChangelogsOrErr() ([]*ProcessVersionChangelog, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[7] {
 		return e.VersionChangelogs, nil
 	}
 	return nil, &NotLoadedError{edge: "version_changelogs"}
@@ -141,10 +161,19 @@ func (e UserEdges) VersionChangelogsOrErr() ([]*ProcessVersionChangelog, error) 
 // GroupsOrErr returns the Groups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) GroupsOrErr() ([]*Group, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[8] {
 		return e.Groups, nil
 	}
 	return nil, &NotLoadedError{edge: "groups"}
+}
+
+// MspAllocationsOrErr returns the MspAllocations value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) MspAllocationsOrErr() ([]*MSPAllocation, error) {
+	if e.loadedTypes[9] {
+		return e.MspAllocations, nil
+	}
+	return nil, &NotLoadedError{edge: "msp_allocations"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -154,9 +183,9 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldActive:
 			values[i] = new(sql.NullBool)
-		case user.FieldID, user.FieldDepartmentID, user.FieldTenantID:
+		case user.FieldID, user.FieldDepartmentID, user.FieldTenantID, user.FieldAssignedByMspID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldUsername, user.FieldEmail, user.FieldName, user.FieldRole, user.FieldDepartment, user.FieldPhone, user.FieldPasswordHash:
+		case user.FieldUsername, user.FieldEmail, user.FieldName, user.FieldRole, user.FieldDepartment, user.FieldPhone, user.FieldPasswordHash, user.FieldMspRole:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -173,7 +202,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the User fields.
-func (u *User) assignValues(columns []string, values []any) error {
+func (_m *User) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -184,95 +213,107 @@ func (u *User) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			u.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case user.FieldUsername:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field username", values[i])
 			} else if value.Valid {
-				u.Username = value.String
+				_m.Username = value.String
 			}
 		case user.FieldEmail:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field email", values[i])
 			} else if value.Valid {
-				u.Email = value.String
+				_m.Email = value.String
 			}
 		case user.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				u.Name = value.String
+				_m.Name = value.String
 			}
 		case user.FieldRole:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field role", values[i])
 			} else if value.Valid {
-				u.Role = user.Role(value.String)
+				_m.Role = user.Role(value.String)
 			}
 		case user.FieldDepartment:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field department", values[i])
 			} else if value.Valid {
-				u.Department = value.String
+				_m.Department = value.String
 			}
 		case user.FieldDepartmentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field department_id", values[i])
 			} else if value.Valid {
-				u.DepartmentID = int(value.Int64)
+				_m.DepartmentID = int(value.Int64)
 			}
 		case user.FieldPhone:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field phone", values[i])
 			} else if value.Valid {
-				u.Phone = value.String
+				_m.Phone = value.String
 			}
 		case user.FieldPasswordHash:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field password_hash", values[i])
 			} else if value.Valid {
-				u.PasswordHash = value.String
+				_m.PasswordHash = value.String
 			}
 		case user.FieldActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field active", values[i])
 			} else if value.Valid {
-				u.Active = value.Bool
+				_m.Active = value.Bool
 			}
 		case user.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				u.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case user.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				u.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case user.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				u.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
+			}
+		case user.FieldMspRole:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field msp_role", values[i])
+			} else if value.Valid {
+				_m.MspRole = user.MspRole(value.String)
+			}
+		case user.FieldAssignedByMspID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field assigned_by_msp_id", values[i])
+			} else if value.Valid {
+				_m.AssignedByMspID = int(value.Int64)
 			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field group_members", value)
 			} else if value.Valid {
-				u.group_members = new(int)
-				*u.group_members = int(value.Int64)
+				_m.group_members = new(int)
+				*_m.group_members = int(value.Int64)
 			}
 		case user.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field team_users", value)
 			} else if value.Valid {
-				u.team_users = new(int)
-				*u.team_users = int(value.Int64)
+				_m.team_users = new(int)
+				*_m.team_users = int(value.Int64)
 			}
 		default:
-			u.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -280,108 +321,124 @@ func (u *User) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the User.
 // This includes values selected through modifiers, order, etc.
-func (u *User) Value(name string) (ent.Value, error) {
-	return u.selectValues.Get(name)
+func (_m *User) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryDepartmentRef queries the "department_ref" edge of the User entity.
-func (u *User) QueryDepartmentRef() *DepartmentQuery {
-	return NewUserClient(u.config).QueryDepartmentRef(u)
+func (_m *User) QueryDepartmentRef() *DepartmentQuery {
+	return NewUserClient(_m.config).QueryDepartmentRef(_m)
+}
+
+// QueryTenant queries the "tenant" edge of the User entity.
+func (_m *User) QueryTenant() *TenantQuery {
+	return NewUserClient(_m.config).QueryTenant(_m)
 }
 
 // QueryTicketComments queries the "ticket_comments" edge of the User entity.
-func (u *User) QueryTicketComments() *TicketCommentQuery {
-	return NewUserClient(u.config).QueryTicketComments(u)
+func (_m *User) QueryTicketComments() *TicketCommentQuery {
+	return NewUserClient(_m.config).QueryTicketComments(_m)
 }
 
 // QueryTicketAttachments queries the "ticket_attachments" edge of the User entity.
-func (u *User) QueryTicketAttachments() *TicketAttachmentQuery {
-	return NewUserClient(u.config).QueryTicketAttachments(u)
+func (_m *User) QueryTicketAttachments() *TicketAttachmentQuery {
+	return NewUserClient(_m.config).QueryTicketAttachments(_m)
 }
 
 // QueryTicketNotifications queries the "ticket_notifications" edge of the User entity.
-func (u *User) QueryTicketNotifications() *TicketNotificationQuery {
-	return NewUserClient(u.config).QueryTicketNotifications(u)
+func (_m *User) QueryTicketNotifications() *TicketNotificationQuery {
+	return NewUserClient(_m.config).QueryTicketNotifications(_m)
 }
 
 // QueryNotificationPreferences queries the "notification_preferences" edge of the User entity.
-func (u *User) QueryNotificationPreferences() *NotificationPreferenceQuery {
-	return NewUserClient(u.config).QueryNotificationPreferences(u)
+func (_m *User) QueryNotificationPreferences() *NotificationPreferenceQuery {
+	return NewUserClient(_m.config).QueryNotificationPreferences(_m)
 }
 
 // QueryRoles queries the "roles" edge of the User entity.
-func (u *User) QueryRoles() *RoleQuery {
-	return NewUserClient(u.config).QueryRoles(u)
+func (_m *User) QueryRoles() *RoleQuery {
+	return NewUserClient(_m.config).QueryRoles(_m)
 }
 
 // QueryVersionChangelogs queries the "version_changelogs" edge of the User entity.
-func (u *User) QueryVersionChangelogs() *ProcessVersionChangelogQuery {
-	return NewUserClient(u.config).QueryVersionChangelogs(u)
+func (_m *User) QueryVersionChangelogs() *ProcessVersionChangelogQuery {
+	return NewUserClient(_m.config).QueryVersionChangelogs(_m)
 }
 
 // QueryGroups queries the "groups" edge of the User entity.
-func (u *User) QueryGroups() *GroupQuery {
-	return NewUserClient(u.config).QueryGroups(u)
+func (_m *User) QueryGroups() *GroupQuery {
+	return NewUserClient(_m.config).QueryGroups(_m)
+}
+
+// QueryMspAllocations queries the "msp_allocations" edge of the User entity.
+func (_m *User) QueryMspAllocations() *MSPAllocationQuery {
+	return NewUserClient(_m.config).QueryMspAllocations(_m)
 }
 
 // Update returns a builder for updating this User.
 // Note that you need to call User.Unwrap() before calling this method if this User
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (u *User) Update() *UserUpdateOne {
-	return NewUserClient(u.config).UpdateOne(u)
+func (_m *User) Update() *UserUpdateOne {
+	return NewUserClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the User entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (u *User) Unwrap() *User {
-	_tx, ok := u.config.driver.(*txDriver)
+func (_m *User) Unwrap() *User {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: User is not a transactional entity")
 	}
-	u.config.driver = _tx.drv
-	return u
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (u *User) String() string {
+func (_m *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", u.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("username=")
-	builder.WriteString(u.Username)
+	builder.WriteString(_m.Username)
 	builder.WriteString(", ")
 	builder.WriteString("email=")
-	builder.WriteString(u.Email)
+	builder.WriteString(_m.Email)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
-	builder.WriteString(u.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("role=")
-	builder.WriteString(fmt.Sprintf("%v", u.Role))
+	builder.WriteString(fmt.Sprintf("%v", _m.Role))
 	builder.WriteString(", ")
 	builder.WriteString("department=")
-	builder.WriteString(u.Department)
+	builder.WriteString(_m.Department)
 	builder.WriteString(", ")
 	builder.WriteString("department_id=")
-	builder.WriteString(fmt.Sprintf("%v", u.DepartmentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.DepartmentID))
 	builder.WriteString(", ")
 	builder.WriteString("phone=")
-	builder.WriteString(u.Phone)
+	builder.WriteString(_m.Phone)
 	builder.WriteString(", ")
 	builder.WriteString("password_hash=")
-	builder.WriteString(u.PasswordHash)
+	builder.WriteString(_m.PasswordHash)
 	builder.WriteString(", ")
 	builder.WriteString("active=")
-	builder.WriteString(fmt.Sprintf("%v", u.Active))
+	builder.WriteString(fmt.Sprintf("%v", _m.Active))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", u.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(u.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(u.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("msp_role=")
+	builder.WriteString(fmt.Sprintf("%v", _m.MspRole))
+	builder.WriteString(", ")
+	builder.WriteString("assigned_by_msp_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AssignedByMspID))
 	builder.WriteByte(')')
 	return builder.String()
 }

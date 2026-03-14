@@ -128,7 +128,7 @@ func (*SLADefinition) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the SLADefinition fields.
-func (sd *SLADefinition) assignValues(columns []string, values []any) error {
+func (_m *SLADefinition) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -139,48 +139,48 @@ func (sd *SLADefinition) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			sd.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case sladefinition.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				sd.Name = value.String
+				_m.Name = value.String
 			}
 		case sladefinition.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				sd.Description = value.String
+				_m.Description = value.String
 			}
 		case sladefinition.FieldServiceType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field service_type", values[i])
 			} else if value.Valid {
-				sd.ServiceType = value.String
+				_m.ServiceType = value.String
 			}
 		case sladefinition.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				sd.Priority = value.String
+				_m.Priority = value.String
 			}
 		case sladefinition.FieldResponseTime:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field response_time", values[i])
 			} else if value.Valid {
-				sd.ResponseTime = int(value.Int64)
+				_m.ResponseTime = int(value.Int64)
 			}
 		case sladefinition.FieldResolutionTime:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field resolution_time", values[i])
 			} else if value.Valid {
-				sd.ResolutionTime = int(value.Int64)
+				_m.ResolutionTime = int(value.Int64)
 			}
 		case sladefinition.FieldBusinessHours:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field business_hours", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &sd.BusinessHours); err != nil {
+				if err := json.Unmarshal(*value, &_m.BusinessHours); err != nil {
 					return fmt.Errorf("unmarshal field business_hours: %w", err)
 				}
 			}
@@ -188,7 +188,7 @@ func (sd *SLADefinition) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field escalation_rules", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &sd.EscalationRules); err != nil {
+				if err := json.Unmarshal(*value, &_m.EscalationRules); err != nil {
 					return fmt.Errorf("unmarshal field escalation_rules: %w", err)
 				}
 			}
@@ -196,7 +196,7 @@ func (sd *SLADefinition) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field conditions", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &sd.Conditions); err != nil {
+				if err := json.Unmarshal(*value, &_m.Conditions); err != nil {
 					return fmt.Errorf("unmarshal field conditions: %w", err)
 				}
 			}
@@ -204,35 +204,35 @@ func (sd *SLADefinition) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				sd.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case sladefinition.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				sd.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case sladefinition.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				sd.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case sladefinition.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				sd.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case sladefinition.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field sla_policy_sla_definition", value)
 			} else if value.Valid {
-				sd.sla_policy_sla_definition = new(int)
-				*sd.sla_policy_sla_definition = int(value.Int64)
+				_m.sla_policy_sla_definition = new(int)
+				*_m.sla_policy_sla_definition = int(value.Int64)
 			}
 		default:
-			sd.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -240,91 +240,91 @@ func (sd *SLADefinition) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the SLADefinition.
 // This includes values selected through modifiers, order, etc.
-func (sd *SLADefinition) Value(name string) (ent.Value, error) {
-	return sd.selectValues.Get(name)
+func (_m *SLADefinition) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryViolations queries the "violations" edge of the SLADefinition entity.
-func (sd *SLADefinition) QueryViolations() *SLAViolationQuery {
-	return NewSLADefinitionClient(sd.config).QueryViolations(sd)
+func (_m *SLADefinition) QueryViolations() *SLAViolationQuery {
+	return NewSLADefinitionClient(_m.config).QueryViolations(_m)
 }
 
 // QueryMetrics queries the "metrics" edge of the SLADefinition entity.
-func (sd *SLADefinition) QueryMetrics() *SLAMetricQuery {
-	return NewSLADefinitionClient(sd.config).QueryMetrics(sd)
+func (_m *SLADefinition) QueryMetrics() *SLAMetricQuery {
+	return NewSLADefinitionClient(_m.config).QueryMetrics(_m)
 }
 
 // QueryTickets queries the "tickets" edge of the SLADefinition entity.
-func (sd *SLADefinition) QueryTickets() *TicketQuery {
-	return NewSLADefinitionClient(sd.config).QueryTickets(sd)
+func (_m *SLADefinition) QueryTickets() *TicketQuery {
+	return NewSLADefinitionClient(_m.config).QueryTickets(_m)
 }
 
 // QueryAlertRules queries the "alert_rules" edge of the SLADefinition entity.
-func (sd *SLADefinition) QueryAlertRules() *SLAAlertRuleQuery {
-	return NewSLADefinitionClient(sd.config).QueryAlertRules(sd)
+func (_m *SLADefinition) QueryAlertRules() *SLAAlertRuleQuery {
+	return NewSLADefinitionClient(_m.config).QueryAlertRules(_m)
 }
 
 // Update returns a builder for updating this SLADefinition.
 // Note that you need to call SLADefinition.Unwrap() before calling this method if this SLADefinition
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (sd *SLADefinition) Update() *SLADefinitionUpdateOne {
-	return NewSLADefinitionClient(sd.config).UpdateOne(sd)
+func (_m *SLADefinition) Update() *SLADefinitionUpdateOne {
+	return NewSLADefinitionClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the SLADefinition entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (sd *SLADefinition) Unwrap() *SLADefinition {
-	_tx, ok := sd.config.driver.(*txDriver)
+func (_m *SLADefinition) Unwrap() *SLADefinition {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: SLADefinition is not a transactional entity")
 	}
-	sd.config.driver = _tx.drv
-	return sd
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (sd *SLADefinition) String() string {
+func (_m *SLADefinition) String() string {
 	var builder strings.Builder
 	builder.WriteString("SLADefinition(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", sd.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(sd.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(sd.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("service_type=")
-	builder.WriteString(sd.ServiceType)
+	builder.WriteString(_m.ServiceType)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(sd.Priority)
+	builder.WriteString(_m.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("response_time=")
-	builder.WriteString(fmt.Sprintf("%v", sd.ResponseTime))
+	builder.WriteString(fmt.Sprintf("%v", _m.ResponseTime))
 	builder.WriteString(", ")
 	builder.WriteString("resolution_time=")
-	builder.WriteString(fmt.Sprintf("%v", sd.ResolutionTime))
+	builder.WriteString(fmt.Sprintf("%v", _m.ResolutionTime))
 	builder.WriteString(", ")
 	builder.WriteString("business_hours=")
-	builder.WriteString(fmt.Sprintf("%v", sd.BusinessHours))
+	builder.WriteString(fmt.Sprintf("%v", _m.BusinessHours))
 	builder.WriteString(", ")
 	builder.WriteString("escalation_rules=")
-	builder.WriteString(fmt.Sprintf("%v", sd.EscalationRules))
+	builder.WriteString(fmt.Sprintf("%v", _m.EscalationRules))
 	builder.WriteString(", ")
 	builder.WriteString("conditions=")
-	builder.WriteString(fmt.Sprintf("%v", sd.Conditions))
+	builder.WriteString(fmt.Sprintf("%v", _m.Conditions))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", sd.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", sd.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(sd.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(sd.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

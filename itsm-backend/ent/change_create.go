@@ -21,273 +21,273 @@ type ChangeCreate struct {
 }
 
 // SetTitle sets the "title" field.
-func (cc *ChangeCreate) SetTitle(s string) *ChangeCreate {
-	cc.mutation.SetTitle(s)
-	return cc
+func (_c *ChangeCreate) SetTitle(v string) *ChangeCreate {
+	_c.mutation.SetTitle(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (cc *ChangeCreate) SetDescription(s string) *ChangeCreate {
-	cc.mutation.SetDescription(s)
-	return cc
+func (_c *ChangeCreate) SetDescription(v string) *ChangeCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableDescription(s *string) *ChangeCreate {
-	if s != nil {
-		cc.SetDescription(*s)
+func (_c *ChangeCreate) SetNillableDescription(v *string) *ChangeCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetJustification sets the "justification" field.
-func (cc *ChangeCreate) SetJustification(s string) *ChangeCreate {
-	cc.mutation.SetJustification(s)
-	return cc
+func (_c *ChangeCreate) SetJustification(v string) *ChangeCreate {
+	_c.mutation.SetJustification(v)
+	return _c
 }
 
 // SetNillableJustification sets the "justification" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableJustification(s *string) *ChangeCreate {
-	if s != nil {
-		cc.SetJustification(*s)
+func (_c *ChangeCreate) SetNillableJustification(v *string) *ChangeCreate {
+	if v != nil {
+		_c.SetJustification(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetType sets the "type" field.
-func (cc *ChangeCreate) SetType(s string) *ChangeCreate {
-	cc.mutation.SetType(s)
-	return cc
+func (_c *ChangeCreate) SetType(v string) *ChangeCreate {
+	_c.mutation.SetType(v)
+	return _c
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableType(s *string) *ChangeCreate {
-	if s != nil {
-		cc.SetType(*s)
+func (_c *ChangeCreate) SetNillableType(v *string) *ChangeCreate {
+	if v != nil {
+		_c.SetType(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (cc *ChangeCreate) SetStatus(s string) *ChangeCreate {
-	cc.mutation.SetStatus(s)
-	return cc
+func (_c *ChangeCreate) SetStatus(v string) *ChangeCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableStatus(s *string) *ChangeCreate {
-	if s != nil {
-		cc.SetStatus(*s)
+func (_c *ChangeCreate) SetNillableStatus(v *string) *ChangeCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetPriority sets the "priority" field.
-func (cc *ChangeCreate) SetPriority(s string) *ChangeCreate {
-	cc.mutation.SetPriority(s)
-	return cc
+func (_c *ChangeCreate) SetPriority(v string) *ChangeCreate {
+	_c.mutation.SetPriority(v)
+	return _c
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillablePriority(s *string) *ChangeCreate {
-	if s != nil {
-		cc.SetPriority(*s)
+func (_c *ChangeCreate) SetNillablePriority(v *string) *ChangeCreate {
+	if v != nil {
+		_c.SetPriority(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetImpactScope sets the "impact_scope" field.
-func (cc *ChangeCreate) SetImpactScope(s string) *ChangeCreate {
-	cc.mutation.SetImpactScope(s)
-	return cc
+func (_c *ChangeCreate) SetImpactScope(v string) *ChangeCreate {
+	_c.mutation.SetImpactScope(v)
+	return _c
 }
 
 // SetNillableImpactScope sets the "impact_scope" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableImpactScope(s *string) *ChangeCreate {
-	if s != nil {
-		cc.SetImpactScope(*s)
+func (_c *ChangeCreate) SetNillableImpactScope(v *string) *ChangeCreate {
+	if v != nil {
+		_c.SetImpactScope(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetRiskLevel sets the "risk_level" field.
-func (cc *ChangeCreate) SetRiskLevel(s string) *ChangeCreate {
-	cc.mutation.SetRiskLevel(s)
-	return cc
+func (_c *ChangeCreate) SetRiskLevel(v string) *ChangeCreate {
+	_c.mutation.SetRiskLevel(v)
+	return _c
 }
 
 // SetNillableRiskLevel sets the "risk_level" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableRiskLevel(s *string) *ChangeCreate {
-	if s != nil {
-		cc.SetRiskLevel(*s)
+func (_c *ChangeCreate) SetNillableRiskLevel(v *string) *ChangeCreate {
+	if v != nil {
+		_c.SetRiskLevel(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetAssigneeID sets the "assignee_id" field.
-func (cc *ChangeCreate) SetAssigneeID(i int) *ChangeCreate {
-	cc.mutation.SetAssigneeID(i)
-	return cc
+func (_c *ChangeCreate) SetAssigneeID(v int) *ChangeCreate {
+	_c.mutation.SetAssigneeID(v)
+	return _c
 }
 
 // SetNillableAssigneeID sets the "assignee_id" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableAssigneeID(i *int) *ChangeCreate {
-	if i != nil {
-		cc.SetAssigneeID(*i)
+func (_c *ChangeCreate) SetNillableAssigneeID(v *int) *ChangeCreate {
+	if v != nil {
+		_c.SetAssigneeID(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (cc *ChangeCreate) SetCreatedBy(i int) *ChangeCreate {
-	cc.mutation.SetCreatedBy(i)
-	return cc
+func (_c *ChangeCreate) SetCreatedBy(v int) *ChangeCreate {
+	_c.mutation.SetCreatedBy(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cc *ChangeCreate) SetTenantID(i int) *ChangeCreate {
-	cc.mutation.SetTenantID(i)
-	return cc
+func (_c *ChangeCreate) SetTenantID(v int) *ChangeCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetPlannedStartDate sets the "planned_start_date" field.
-func (cc *ChangeCreate) SetPlannedStartDate(t time.Time) *ChangeCreate {
-	cc.mutation.SetPlannedStartDate(t)
-	return cc
+func (_c *ChangeCreate) SetPlannedStartDate(v time.Time) *ChangeCreate {
+	_c.mutation.SetPlannedStartDate(v)
+	return _c
 }
 
 // SetNillablePlannedStartDate sets the "planned_start_date" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillablePlannedStartDate(t *time.Time) *ChangeCreate {
-	if t != nil {
-		cc.SetPlannedStartDate(*t)
+func (_c *ChangeCreate) SetNillablePlannedStartDate(v *time.Time) *ChangeCreate {
+	if v != nil {
+		_c.SetPlannedStartDate(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetPlannedEndDate sets the "planned_end_date" field.
-func (cc *ChangeCreate) SetPlannedEndDate(t time.Time) *ChangeCreate {
-	cc.mutation.SetPlannedEndDate(t)
-	return cc
+func (_c *ChangeCreate) SetPlannedEndDate(v time.Time) *ChangeCreate {
+	_c.mutation.SetPlannedEndDate(v)
+	return _c
 }
 
 // SetNillablePlannedEndDate sets the "planned_end_date" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillablePlannedEndDate(t *time.Time) *ChangeCreate {
-	if t != nil {
-		cc.SetPlannedEndDate(*t)
+func (_c *ChangeCreate) SetNillablePlannedEndDate(v *time.Time) *ChangeCreate {
+	if v != nil {
+		_c.SetPlannedEndDate(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetActualStartDate sets the "actual_start_date" field.
-func (cc *ChangeCreate) SetActualStartDate(t time.Time) *ChangeCreate {
-	cc.mutation.SetActualStartDate(t)
-	return cc
+func (_c *ChangeCreate) SetActualStartDate(v time.Time) *ChangeCreate {
+	_c.mutation.SetActualStartDate(v)
+	return _c
 }
 
 // SetNillableActualStartDate sets the "actual_start_date" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableActualStartDate(t *time.Time) *ChangeCreate {
-	if t != nil {
-		cc.SetActualStartDate(*t)
+func (_c *ChangeCreate) SetNillableActualStartDate(v *time.Time) *ChangeCreate {
+	if v != nil {
+		_c.SetActualStartDate(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetActualEndDate sets the "actual_end_date" field.
-func (cc *ChangeCreate) SetActualEndDate(t time.Time) *ChangeCreate {
-	cc.mutation.SetActualEndDate(t)
-	return cc
+func (_c *ChangeCreate) SetActualEndDate(v time.Time) *ChangeCreate {
+	_c.mutation.SetActualEndDate(v)
+	return _c
 }
 
 // SetNillableActualEndDate sets the "actual_end_date" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableActualEndDate(t *time.Time) *ChangeCreate {
-	if t != nil {
-		cc.SetActualEndDate(*t)
+func (_c *ChangeCreate) SetNillableActualEndDate(v *time.Time) *ChangeCreate {
+	if v != nil {
+		_c.SetActualEndDate(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetImplementationPlan sets the "implementation_plan" field.
-func (cc *ChangeCreate) SetImplementationPlan(s string) *ChangeCreate {
-	cc.mutation.SetImplementationPlan(s)
-	return cc
+func (_c *ChangeCreate) SetImplementationPlan(v string) *ChangeCreate {
+	_c.mutation.SetImplementationPlan(v)
+	return _c
 }
 
 // SetNillableImplementationPlan sets the "implementation_plan" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableImplementationPlan(s *string) *ChangeCreate {
-	if s != nil {
-		cc.SetImplementationPlan(*s)
+func (_c *ChangeCreate) SetNillableImplementationPlan(v *string) *ChangeCreate {
+	if v != nil {
+		_c.SetImplementationPlan(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetRollbackPlan sets the "rollback_plan" field.
-func (cc *ChangeCreate) SetRollbackPlan(s string) *ChangeCreate {
-	cc.mutation.SetRollbackPlan(s)
-	return cc
+func (_c *ChangeCreate) SetRollbackPlan(v string) *ChangeCreate {
+	_c.mutation.SetRollbackPlan(v)
+	return _c
 }
 
 // SetNillableRollbackPlan sets the "rollback_plan" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableRollbackPlan(s *string) *ChangeCreate {
-	if s != nil {
-		cc.SetRollbackPlan(*s)
+func (_c *ChangeCreate) SetNillableRollbackPlan(v *string) *ChangeCreate {
+	if v != nil {
+		_c.SetRollbackPlan(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetAffectedCis sets the "affected_cis" field.
-func (cc *ChangeCreate) SetAffectedCis(s []string) *ChangeCreate {
-	cc.mutation.SetAffectedCis(s)
-	return cc
+func (_c *ChangeCreate) SetAffectedCis(v []string) *ChangeCreate {
+	_c.mutation.SetAffectedCis(v)
+	return _c
 }
 
 // SetRelatedTickets sets the "related_tickets" field.
-func (cc *ChangeCreate) SetRelatedTickets(s []string) *ChangeCreate {
-	cc.mutation.SetRelatedTickets(s)
-	return cc
+func (_c *ChangeCreate) SetRelatedTickets(v []string) *ChangeCreate {
+	_c.mutation.SetRelatedTickets(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cc *ChangeCreate) SetCreatedAt(t time.Time) *ChangeCreate {
-	cc.mutation.SetCreatedAt(t)
-	return cc
+func (_c *ChangeCreate) SetCreatedAt(v time.Time) *ChangeCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableCreatedAt(t *time.Time) *ChangeCreate {
-	if t != nil {
-		cc.SetCreatedAt(*t)
+func (_c *ChangeCreate) SetNillableCreatedAt(v *time.Time) *ChangeCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return cc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cc *ChangeCreate) SetUpdatedAt(t time.Time) *ChangeCreate {
-	cc.mutation.SetUpdatedAt(t)
-	return cc
+func (_c *ChangeCreate) SetUpdatedAt(v time.Time) *ChangeCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (cc *ChangeCreate) SetNillableUpdatedAt(t *time.Time) *ChangeCreate {
-	if t != nil {
-		cc.SetUpdatedAt(*t)
+func (_c *ChangeCreate) SetNillableUpdatedAt(v *time.Time) *ChangeCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return cc
+	return _c
 }
 
 // Mutation returns the ChangeMutation object of the builder.
-func (cc *ChangeCreate) Mutation() *ChangeMutation {
-	return cc.mutation
+func (_c *ChangeCreate) Mutation() *ChangeMutation {
+	return _c.mutation
 }
 
 // Save creates the Change in the database.
-func (cc *ChangeCreate) Save(ctx context.Context) (*Change, error) {
-	cc.defaults()
-	return withHooks(ctx, cc.sqlSave, cc.mutation, cc.hooks)
+func (_c *ChangeCreate) Save(ctx context.Context) (*Change, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (cc *ChangeCreate) SaveX(ctx context.Context) *Change {
-	v, err := cc.Save(ctx)
+func (_c *ChangeCreate) SaveX(ctx context.Context) *Change {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -295,106 +295,106 @@ func (cc *ChangeCreate) SaveX(ctx context.Context) *Change {
 }
 
 // Exec executes the query.
-func (cc *ChangeCreate) Exec(ctx context.Context) error {
-	_, err := cc.Save(ctx)
+func (_c *ChangeCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cc *ChangeCreate) ExecX(ctx context.Context) {
-	if err := cc.Exec(ctx); err != nil {
+func (_c *ChangeCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cc *ChangeCreate) defaults() {
-	if _, ok := cc.mutation.GetType(); !ok {
+func (_c *ChangeCreate) defaults() {
+	if _, ok := _c.mutation.GetType(); !ok {
 		v := change.DefaultType
-		cc.mutation.SetType(v)
+		_c.mutation.SetType(v)
 	}
-	if _, ok := cc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := change.DefaultStatus
-		cc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := cc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		v := change.DefaultPriority
-		cc.mutation.SetPriority(v)
+		_c.mutation.SetPriority(v)
 	}
-	if _, ok := cc.mutation.ImpactScope(); !ok {
+	if _, ok := _c.mutation.ImpactScope(); !ok {
 		v := change.DefaultImpactScope
-		cc.mutation.SetImpactScope(v)
+		_c.mutation.SetImpactScope(v)
 	}
-	if _, ok := cc.mutation.RiskLevel(); !ok {
+	if _, ok := _c.mutation.RiskLevel(); !ok {
 		v := change.DefaultRiskLevel
-		cc.mutation.SetRiskLevel(v)
+		_c.mutation.SetRiskLevel(v)
 	}
-	if _, ok := cc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := change.DefaultCreatedAt()
-		cc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := cc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := change.DefaultUpdatedAt()
-		cc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cc *ChangeCreate) check() error {
-	if _, ok := cc.mutation.Title(); !ok {
+func (_c *ChangeCreate) check() error {
+	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Change.title"`)}
 	}
-	if v, ok := cc.mutation.Title(); ok {
+	if v, ok := _c.mutation.Title(); ok {
 		if err := change.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Change.title": %w`, err)}
 		}
 	}
-	if _, ok := cc.mutation.GetType(); !ok {
+	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Change.type"`)}
 	}
-	if _, ok := cc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Change.status"`)}
 	}
-	if _, ok := cc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "Change.priority"`)}
 	}
-	if _, ok := cc.mutation.ImpactScope(); !ok {
+	if _, ok := _c.mutation.ImpactScope(); !ok {
 		return &ValidationError{Name: "impact_scope", err: errors.New(`ent: missing required field "Change.impact_scope"`)}
 	}
-	if _, ok := cc.mutation.RiskLevel(); !ok {
+	if _, ok := _c.mutation.RiskLevel(); !ok {
 		return &ValidationError{Name: "risk_level", err: errors.New(`ent: missing required field "Change.risk_level"`)}
 	}
-	if _, ok := cc.mutation.CreatedBy(); !ok {
+	if _, ok := _c.mutation.CreatedBy(); !ok {
 		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "Change.created_by"`)}
 	}
-	if v, ok := cc.mutation.CreatedBy(); ok {
+	if v, ok := _c.mutation.CreatedBy(); ok {
 		if err := change.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "Change.created_by": %w`, err)}
 		}
 	}
-	if _, ok := cc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Change.tenant_id"`)}
 	}
-	if v, ok := cc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := change.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Change.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := cc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Change.created_at"`)}
 	}
-	if _, ok := cc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Change.updated_at"`)}
 	}
 	return nil
 }
 
-func (cc *ChangeCreate) sqlSave(ctx context.Context) (*Change, error) {
-	if err := cc.check(); err != nil {
+func (_c *ChangeCreate) sqlSave(ctx context.Context) (*Change, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := cc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, cc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -402,97 +402,97 @@ func (cc *ChangeCreate) sqlSave(ctx context.Context) (*Change, error) {
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	cc.mutation.id = &_node.ID
-	cc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (cc *ChangeCreate) createSpec() (*Change, *sqlgraph.CreateSpec) {
+func (_c *ChangeCreate) createSpec() (*Change, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Change{config: cc.config}
+		_node = &Change{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(change.Table, sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt))
 	)
-	if value, ok := cc.mutation.Title(); ok {
+	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(change.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
-	if value, ok := cc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(change.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := cc.mutation.Justification(); ok {
+	if value, ok := _c.mutation.Justification(); ok {
 		_spec.SetField(change.FieldJustification, field.TypeString, value)
 		_node.Justification = value
 	}
-	if value, ok := cc.mutation.GetType(); ok {
+	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(change.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
-	if value, ok := cc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(change.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := cc.mutation.Priority(); ok {
+	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(change.FieldPriority, field.TypeString, value)
 		_node.Priority = value
 	}
-	if value, ok := cc.mutation.ImpactScope(); ok {
+	if value, ok := _c.mutation.ImpactScope(); ok {
 		_spec.SetField(change.FieldImpactScope, field.TypeString, value)
 		_node.ImpactScope = value
 	}
-	if value, ok := cc.mutation.RiskLevel(); ok {
+	if value, ok := _c.mutation.RiskLevel(); ok {
 		_spec.SetField(change.FieldRiskLevel, field.TypeString, value)
 		_node.RiskLevel = value
 	}
-	if value, ok := cc.mutation.AssigneeID(); ok {
+	if value, ok := _c.mutation.AssigneeID(); ok {
 		_spec.SetField(change.FieldAssigneeID, field.TypeInt, value)
 		_node.AssigneeID = value
 	}
-	if value, ok := cc.mutation.CreatedBy(); ok {
+	if value, ok := _c.mutation.CreatedBy(); ok {
 		_spec.SetField(change.FieldCreatedBy, field.TypeInt, value)
 		_node.CreatedBy = value
 	}
-	if value, ok := cc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(change.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := cc.mutation.PlannedStartDate(); ok {
+	if value, ok := _c.mutation.PlannedStartDate(); ok {
 		_spec.SetField(change.FieldPlannedStartDate, field.TypeTime, value)
 		_node.PlannedStartDate = value
 	}
-	if value, ok := cc.mutation.PlannedEndDate(); ok {
+	if value, ok := _c.mutation.PlannedEndDate(); ok {
 		_spec.SetField(change.FieldPlannedEndDate, field.TypeTime, value)
 		_node.PlannedEndDate = value
 	}
-	if value, ok := cc.mutation.ActualStartDate(); ok {
+	if value, ok := _c.mutation.ActualStartDate(); ok {
 		_spec.SetField(change.FieldActualStartDate, field.TypeTime, value)
 		_node.ActualStartDate = value
 	}
-	if value, ok := cc.mutation.ActualEndDate(); ok {
+	if value, ok := _c.mutation.ActualEndDate(); ok {
 		_spec.SetField(change.FieldActualEndDate, field.TypeTime, value)
 		_node.ActualEndDate = value
 	}
-	if value, ok := cc.mutation.ImplementationPlan(); ok {
+	if value, ok := _c.mutation.ImplementationPlan(); ok {
 		_spec.SetField(change.FieldImplementationPlan, field.TypeString, value)
 		_node.ImplementationPlan = value
 	}
-	if value, ok := cc.mutation.RollbackPlan(); ok {
+	if value, ok := _c.mutation.RollbackPlan(); ok {
 		_spec.SetField(change.FieldRollbackPlan, field.TypeString, value)
 		_node.RollbackPlan = value
 	}
-	if value, ok := cc.mutation.AffectedCis(); ok {
+	if value, ok := _c.mutation.AffectedCis(); ok {
 		_spec.SetField(change.FieldAffectedCis, field.TypeJSON, value)
 		_node.AffectedCis = value
 	}
-	if value, ok := cc.mutation.RelatedTickets(); ok {
+	if value, ok := _c.mutation.RelatedTickets(); ok {
 		_spec.SetField(change.FieldRelatedTickets, field.TypeJSON, value)
 		_node.RelatedTickets = value
 	}
-	if value, ok := cc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(change.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := cc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(change.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
@@ -507,16 +507,16 @@ type ChangeCreateBulk struct {
 }
 
 // Save creates the Change entities in the database.
-func (ccb *ChangeCreateBulk) Save(ctx context.Context) ([]*Change, error) {
-	if ccb.err != nil {
-		return nil, ccb.err
+func (_c *ChangeCreateBulk) Save(ctx context.Context) ([]*Change, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ccb.builders))
-	nodes := make([]*Change, len(ccb.builders))
-	mutators := make([]Mutator, len(ccb.builders))
-	for i := range ccb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Change, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ccb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ChangeMutation)
@@ -530,11 +530,11 @@ func (ccb *ChangeCreateBulk) Save(ctx context.Context) ([]*Change, error) {
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ccb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ccb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -558,7 +558,7 @@ func (ccb *ChangeCreateBulk) Save(ctx context.Context) ([]*Change, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ccb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -566,8 +566,8 @@ func (ccb *ChangeCreateBulk) Save(ctx context.Context) ([]*Change, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ccb *ChangeCreateBulk) SaveX(ctx context.Context) []*Change {
-	v, err := ccb.Save(ctx)
+func (_c *ChangeCreateBulk) SaveX(ctx context.Context) []*Change {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -575,14 +575,14 @@ func (ccb *ChangeCreateBulk) SaveX(ctx context.Context) []*Change {
 }
 
 // Exec executes the query.
-func (ccb *ChangeCreateBulk) Exec(ctx context.Context) error {
-	_, err := ccb.Save(ctx)
+func (_c *ChangeCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ccb *ChangeCreateBulk) ExecX(ctx context.Context) {
-	if err := ccb.Exec(ctx); err != nil {
+func (_c *ChangeCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

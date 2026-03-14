@@ -87,7 +87,7 @@ func (*AssetLicense) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the AssetLicense fields.
-func (al *AssetLicense) assignValues(columns []string, values []any) error {
+func (_m *AssetLicense) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -98,114 +98,114 @@ func (al *AssetLicense) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			al.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case assetlicense.FieldLicenseKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field license_key", values[i])
 			} else if value.Valid {
-				al.LicenseKey = value.String
+				_m.LicenseKey = value.String
 			}
 		case assetlicense.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				al.Name = value.String
+				_m.Name = value.String
 			}
 		case assetlicense.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				al.Description = value.String
+				_m.Description = value.String
 			}
 		case assetlicense.FieldVendor:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field vendor", values[i])
 			} else if value.Valid {
-				al.Vendor = value.String
+				_m.Vendor = value.String
 			}
 		case assetlicense.FieldLicenseType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field license_type", values[i])
 			} else if value.Valid {
-				al.LicenseType = value.String
+				_m.LicenseType = value.String
 			}
 		case assetlicense.FieldTotalQuantity:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field total_quantity", values[i])
 			} else if value.Valid {
-				al.TotalQuantity = int(value.Int64)
+				_m.TotalQuantity = int(value.Int64)
 			}
 		case assetlicense.FieldUsedQuantity:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field used_quantity", values[i])
 			} else if value.Valid {
-				al.UsedQuantity = int(value.Int64)
+				_m.UsedQuantity = int(value.Int64)
 			}
 		case assetlicense.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				al.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case assetlicense.FieldAssetID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field asset_id", values[i])
 			} else if value.Valid {
-				al.AssetID = int(value.Int64)
+				_m.AssetID = int(value.Int64)
 			}
 		case assetlicense.FieldPurchaseDate:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field purchase_date", values[i])
 			} else if value.Valid {
-				al.PurchaseDate = value.String
+				_m.PurchaseDate = value.String
 			}
 		case assetlicense.FieldPurchasePrice:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
 				return fmt.Errorf("unexpected type %T for field purchase_price", values[i])
 			} else if value.Valid {
-				al.PurchasePrice = value.Float64
+				_m.PurchasePrice = value.Float64
 			}
 		case assetlicense.FieldExpiryDate:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field expiry_date", values[i])
 			} else if value.Valid {
-				al.ExpiryDate = value.String
+				_m.ExpiryDate = value.String
 			}
 		case assetlicense.FieldSupportVendor:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field support_vendor", values[i])
 			} else if value.Valid {
-				al.SupportVendor = value.String
+				_m.SupportVendor = value.String
 			}
 		case assetlicense.FieldSupportContact:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field support_contact", values[i])
 			} else if value.Valid {
-				al.SupportContact = value.String
+				_m.SupportContact = value.String
 			}
 		case assetlicense.FieldRenewalCost:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field renewal_cost", values[i])
 			} else if value.Valid {
-				al.RenewalCost = value.String
+				_m.RenewalCost = value.String
 			}
 		case assetlicense.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				al.Status = value.String
+				_m.Status = value.String
 			}
 		case assetlicense.FieldNotes:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field notes", values[i])
 			} else if value.Valid {
-				al.Notes = value.String
+				_m.Notes = value.String
 			}
 		case assetlicense.FieldUsers:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field users", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &al.Users); err != nil {
+				if err := json.Unmarshal(*value, &_m.Users); err != nil {
 					return fmt.Errorf("unmarshal field users: %w", err)
 				}
 			}
@@ -213,7 +213,7 @@ func (al *AssetLicense) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field tags", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &al.Tags); err != nil {
+				if err := json.Unmarshal(*value, &_m.Tags); err != nil {
 					return fmt.Errorf("unmarshal field tags: %w", err)
 				}
 			}
@@ -221,16 +221,16 @@ func (al *AssetLicense) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				al.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case assetlicense.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				al.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			al.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -238,95 +238,95 @@ func (al *AssetLicense) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the AssetLicense.
 // This includes values selected through modifiers, order, etc.
-func (al *AssetLicense) Value(name string) (ent.Value, error) {
-	return al.selectValues.Get(name)
+func (_m *AssetLicense) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this AssetLicense.
 // Note that you need to call AssetLicense.Unwrap() before calling this method if this AssetLicense
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (al *AssetLicense) Update() *AssetLicenseUpdateOne {
-	return NewAssetLicenseClient(al.config).UpdateOne(al)
+func (_m *AssetLicense) Update() *AssetLicenseUpdateOne {
+	return NewAssetLicenseClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the AssetLicense entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (al *AssetLicense) Unwrap() *AssetLicense {
-	_tx, ok := al.config.driver.(*txDriver)
+func (_m *AssetLicense) Unwrap() *AssetLicense {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: AssetLicense is not a transactional entity")
 	}
-	al.config.driver = _tx.drv
-	return al
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (al *AssetLicense) String() string {
+func (_m *AssetLicense) String() string {
 	var builder strings.Builder
 	builder.WriteString("AssetLicense(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", al.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("license_key=")
-	builder.WriteString(al.LicenseKey)
+	builder.WriteString(_m.LicenseKey)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
-	builder.WriteString(al.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(al.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("vendor=")
-	builder.WriteString(al.Vendor)
+	builder.WriteString(_m.Vendor)
 	builder.WriteString(", ")
 	builder.WriteString("license_type=")
-	builder.WriteString(al.LicenseType)
+	builder.WriteString(_m.LicenseType)
 	builder.WriteString(", ")
 	builder.WriteString("total_quantity=")
-	builder.WriteString(fmt.Sprintf("%v", al.TotalQuantity))
+	builder.WriteString(fmt.Sprintf("%v", _m.TotalQuantity))
 	builder.WriteString(", ")
 	builder.WriteString("used_quantity=")
-	builder.WriteString(fmt.Sprintf("%v", al.UsedQuantity))
+	builder.WriteString(fmt.Sprintf("%v", _m.UsedQuantity))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", al.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("asset_id=")
-	builder.WriteString(fmt.Sprintf("%v", al.AssetID))
+	builder.WriteString(fmt.Sprintf("%v", _m.AssetID))
 	builder.WriteString(", ")
 	builder.WriteString("purchase_date=")
-	builder.WriteString(al.PurchaseDate)
+	builder.WriteString(_m.PurchaseDate)
 	builder.WriteString(", ")
 	builder.WriteString("purchase_price=")
-	builder.WriteString(fmt.Sprintf("%v", al.PurchasePrice))
+	builder.WriteString(fmt.Sprintf("%v", _m.PurchasePrice))
 	builder.WriteString(", ")
 	builder.WriteString("expiry_date=")
-	builder.WriteString(al.ExpiryDate)
+	builder.WriteString(_m.ExpiryDate)
 	builder.WriteString(", ")
 	builder.WriteString("support_vendor=")
-	builder.WriteString(al.SupportVendor)
+	builder.WriteString(_m.SupportVendor)
 	builder.WriteString(", ")
 	builder.WriteString("support_contact=")
-	builder.WriteString(al.SupportContact)
+	builder.WriteString(_m.SupportContact)
 	builder.WriteString(", ")
 	builder.WriteString("renewal_cost=")
-	builder.WriteString(al.RenewalCost)
+	builder.WriteString(_m.RenewalCost)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(al.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("notes=")
-	builder.WriteString(al.Notes)
+	builder.WriteString(_m.Notes)
 	builder.WriteString(", ")
 	builder.WriteString("users=")
-	builder.WriteString(fmt.Sprintf("%v", al.Users))
+	builder.WriteString(fmt.Sprintf("%v", _m.Users))
 	builder.WriteString(", ")
 	builder.WriteString("tags=")
-	builder.WriteString(fmt.Sprintf("%v", al.Tags))
+	builder.WriteString(fmt.Sprintf("%v", _m.Tags))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(al.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(al.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

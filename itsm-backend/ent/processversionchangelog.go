@@ -99,7 +99,7 @@ func (*ProcessVersionChangelog) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ProcessVersionChangelog fields.
-func (pvc *ProcessVersionChangelog) assignValues(columns []string, values []any) error {
+func (_m *ProcessVersionChangelog) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -110,30 +110,30 @@ func (pvc *ProcessVersionChangelog) assignValues(columns []string, values []any)
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			pvc.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case processversionchangelog.FieldProcessDefinitionID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field process_definition_id", values[i])
 			} else if value.Valid {
-				pvc.ProcessDefinitionID = int(value.Int64)
+				_m.ProcessDefinitionID = int(value.Int64)
 			}
 		case processversionchangelog.FieldVersion:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field version", values[i])
 			} else if value.Valid {
-				pvc.Version = value.String
+				_m.Version = value.String
 			}
 		case processversionchangelog.FieldChangeLog:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field change_log", values[i])
 			} else if value.Valid {
-				pvc.ChangeLog = value.String
+				_m.ChangeLog = value.String
 			}
 		case processversionchangelog.FieldChangeDetails:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field change_details", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &pvc.ChangeDetails); err != nil {
+				if err := json.Unmarshal(*value, &_m.ChangeDetails); err != nil {
 					return fmt.Errorf("unmarshal field change_details: %w", err)
 				}
 			}
@@ -141,34 +141,34 @@ func (pvc *ProcessVersionChangelog) assignValues(columns []string, values []any)
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field change_type", values[i])
 			} else if value.Valid {
-				pvc.ChangeType = value.String
+				_m.ChangeType = value.String
 			}
 		case processversionchangelog.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				pvc.CreatedBy = int(value.Int64)
+				_m.CreatedBy = int(value.Int64)
 			}
 		case processversionchangelog.FieldCreatedByName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by_name", values[i])
 			} else if value.Valid {
-				pvc.CreatedByName = value.String
+				_m.CreatedByName = value.String
 			}
 		case processversionchangelog.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				pvc.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case processversionchangelog.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				pvc.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		default:
-			pvc.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -176,69 +176,69 @@ func (pvc *ProcessVersionChangelog) assignValues(columns []string, values []any)
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ProcessVersionChangelog.
 // This includes values selected through modifiers, order, etc.
-func (pvc *ProcessVersionChangelog) Value(name string) (ent.Value, error) {
-	return pvc.selectValues.Get(name)
+func (_m *ProcessVersionChangelog) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryProcessDefinition queries the "process_definition" edge of the ProcessVersionChangelog entity.
-func (pvc *ProcessVersionChangelog) QueryProcessDefinition() *ProcessDefinitionQuery {
-	return NewProcessVersionChangelogClient(pvc.config).QueryProcessDefinition(pvc)
+func (_m *ProcessVersionChangelog) QueryProcessDefinition() *ProcessDefinitionQuery {
+	return NewProcessVersionChangelogClient(_m.config).QueryProcessDefinition(_m)
 }
 
 // QueryUser queries the "user" edge of the ProcessVersionChangelog entity.
-func (pvc *ProcessVersionChangelog) QueryUser() *UserQuery {
-	return NewProcessVersionChangelogClient(pvc.config).QueryUser(pvc)
+func (_m *ProcessVersionChangelog) QueryUser() *UserQuery {
+	return NewProcessVersionChangelogClient(_m.config).QueryUser(_m)
 }
 
 // Update returns a builder for updating this ProcessVersionChangelog.
 // Note that you need to call ProcessVersionChangelog.Unwrap() before calling this method if this ProcessVersionChangelog
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (pvc *ProcessVersionChangelog) Update() *ProcessVersionChangelogUpdateOne {
-	return NewProcessVersionChangelogClient(pvc.config).UpdateOne(pvc)
+func (_m *ProcessVersionChangelog) Update() *ProcessVersionChangelogUpdateOne {
+	return NewProcessVersionChangelogClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ProcessVersionChangelog entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (pvc *ProcessVersionChangelog) Unwrap() *ProcessVersionChangelog {
-	_tx, ok := pvc.config.driver.(*txDriver)
+func (_m *ProcessVersionChangelog) Unwrap() *ProcessVersionChangelog {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ProcessVersionChangelog is not a transactional entity")
 	}
-	pvc.config.driver = _tx.drv
-	return pvc
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (pvc *ProcessVersionChangelog) String() string {
+func (_m *ProcessVersionChangelog) String() string {
 	var builder strings.Builder
 	builder.WriteString("ProcessVersionChangelog(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", pvc.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("process_definition_id=")
-	builder.WriteString(fmt.Sprintf("%v", pvc.ProcessDefinitionID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ProcessDefinitionID))
 	builder.WriteString(", ")
 	builder.WriteString("version=")
-	builder.WriteString(pvc.Version)
+	builder.WriteString(_m.Version)
 	builder.WriteString(", ")
 	builder.WriteString("change_log=")
-	builder.WriteString(pvc.ChangeLog)
+	builder.WriteString(_m.ChangeLog)
 	builder.WriteString(", ")
 	builder.WriteString("change_details=")
-	builder.WriteString(fmt.Sprintf("%v", pvc.ChangeDetails))
+	builder.WriteString(fmt.Sprintf("%v", _m.ChangeDetails))
 	builder.WriteString(", ")
 	builder.WriteString("change_type=")
-	builder.WriteString(pvc.ChangeType)
+	builder.WriteString(_m.ChangeType)
 	builder.WriteString(", ")
 	builder.WriteString("created_by=")
-	builder.WriteString(fmt.Sprintf("%v", pvc.CreatedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.CreatedBy))
 	builder.WriteString(", ")
 	builder.WriteString("created_by_name=")
-	builder.WriteString(pvc.CreatedByName)
+	builder.WriteString(_m.CreatedByName)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", pvc.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(pvc.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

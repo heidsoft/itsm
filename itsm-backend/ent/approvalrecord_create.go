@@ -23,203 +23,203 @@ type ApprovalRecordCreate struct {
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (arc *ApprovalRecordCreate) SetTicketID(i int) *ApprovalRecordCreate {
-	arc.mutation.SetTicketID(i)
-	return arc
+func (_c *ApprovalRecordCreate) SetTicketID(v int) *ApprovalRecordCreate {
+	_c.mutation.SetTicketID(v)
+	return _c
 }
 
 // SetTicketNumber sets the "ticket_number" field.
-func (arc *ApprovalRecordCreate) SetTicketNumber(s string) *ApprovalRecordCreate {
-	arc.mutation.SetTicketNumber(s)
-	return arc
+func (_c *ApprovalRecordCreate) SetTicketNumber(v string) *ApprovalRecordCreate {
+	_c.mutation.SetTicketNumber(v)
+	return _c
 }
 
 // SetTicketTitle sets the "ticket_title" field.
-func (arc *ApprovalRecordCreate) SetTicketTitle(s string) *ApprovalRecordCreate {
-	arc.mutation.SetTicketTitle(s)
-	return arc
+func (_c *ApprovalRecordCreate) SetTicketTitle(v string) *ApprovalRecordCreate {
+	_c.mutation.SetTicketTitle(v)
+	return _c
 }
 
 // SetWorkflowID sets the "workflow_id" field.
-func (arc *ApprovalRecordCreate) SetWorkflowID(i int) *ApprovalRecordCreate {
-	arc.mutation.SetWorkflowID(i)
-	return arc
+func (_c *ApprovalRecordCreate) SetWorkflowID(v int) *ApprovalRecordCreate {
+	_c.mutation.SetWorkflowID(v)
+	return _c
 }
 
 // SetWorkflowName sets the "workflow_name" field.
-func (arc *ApprovalRecordCreate) SetWorkflowName(s string) *ApprovalRecordCreate {
-	arc.mutation.SetWorkflowName(s)
-	return arc
+func (_c *ApprovalRecordCreate) SetWorkflowName(v string) *ApprovalRecordCreate {
+	_c.mutation.SetWorkflowName(v)
+	return _c
 }
 
 // SetCurrentLevel sets the "current_level" field.
-func (arc *ApprovalRecordCreate) SetCurrentLevel(i int) *ApprovalRecordCreate {
-	arc.mutation.SetCurrentLevel(i)
-	return arc
+func (_c *ApprovalRecordCreate) SetCurrentLevel(v int) *ApprovalRecordCreate {
+	_c.mutation.SetCurrentLevel(v)
+	return _c
 }
 
 // SetNillableCurrentLevel sets the "current_level" field if the given value is not nil.
-func (arc *ApprovalRecordCreate) SetNillableCurrentLevel(i *int) *ApprovalRecordCreate {
-	if i != nil {
-		arc.SetCurrentLevel(*i)
+func (_c *ApprovalRecordCreate) SetNillableCurrentLevel(v *int) *ApprovalRecordCreate {
+	if v != nil {
+		_c.SetCurrentLevel(*v)
 	}
-	return arc
+	return _c
 }
 
 // SetTotalLevels sets the "total_levels" field.
-func (arc *ApprovalRecordCreate) SetTotalLevels(i int) *ApprovalRecordCreate {
-	arc.mutation.SetTotalLevels(i)
-	return arc
+func (_c *ApprovalRecordCreate) SetTotalLevels(v int) *ApprovalRecordCreate {
+	_c.mutation.SetTotalLevels(v)
+	return _c
 }
 
 // SetNillableTotalLevels sets the "total_levels" field if the given value is not nil.
-func (arc *ApprovalRecordCreate) SetNillableTotalLevels(i *int) *ApprovalRecordCreate {
-	if i != nil {
-		arc.SetTotalLevels(*i)
+func (_c *ApprovalRecordCreate) SetNillableTotalLevels(v *int) *ApprovalRecordCreate {
+	if v != nil {
+		_c.SetTotalLevels(*v)
 	}
-	return arc
+	return _c
 }
 
 // SetApproverID sets the "approver_id" field.
-func (arc *ApprovalRecordCreate) SetApproverID(i int) *ApprovalRecordCreate {
-	arc.mutation.SetApproverID(i)
-	return arc
+func (_c *ApprovalRecordCreate) SetApproverID(v int) *ApprovalRecordCreate {
+	_c.mutation.SetApproverID(v)
+	return _c
 }
 
 // SetApproverName sets the "approver_name" field.
-func (arc *ApprovalRecordCreate) SetApproverName(s string) *ApprovalRecordCreate {
-	arc.mutation.SetApproverName(s)
-	return arc
+func (_c *ApprovalRecordCreate) SetApproverName(v string) *ApprovalRecordCreate {
+	_c.mutation.SetApproverName(v)
+	return _c
 }
 
 // SetStepOrder sets the "step_order" field.
-func (arc *ApprovalRecordCreate) SetStepOrder(i int) *ApprovalRecordCreate {
-	arc.mutation.SetStepOrder(i)
-	return arc
+func (_c *ApprovalRecordCreate) SetStepOrder(v int) *ApprovalRecordCreate {
+	_c.mutation.SetStepOrder(v)
+	return _c
 }
 
 // SetNillableStepOrder sets the "step_order" field if the given value is not nil.
-func (arc *ApprovalRecordCreate) SetNillableStepOrder(i *int) *ApprovalRecordCreate {
-	if i != nil {
-		arc.SetStepOrder(*i)
+func (_c *ApprovalRecordCreate) SetNillableStepOrder(v *int) *ApprovalRecordCreate {
+	if v != nil {
+		_c.SetStepOrder(*v)
 	}
-	return arc
+	return _c
 }
 
 // SetDueDate sets the "due_date" field.
-func (arc *ApprovalRecordCreate) SetDueDate(t time.Time) *ApprovalRecordCreate {
-	arc.mutation.SetDueDate(t)
-	return arc
+func (_c *ApprovalRecordCreate) SetDueDate(v time.Time) *ApprovalRecordCreate {
+	_c.mutation.SetDueDate(v)
+	return _c
 }
 
 // SetNillableDueDate sets the "due_date" field if the given value is not nil.
-func (arc *ApprovalRecordCreate) SetNillableDueDate(t *time.Time) *ApprovalRecordCreate {
-	if t != nil {
-		arc.SetDueDate(*t)
+func (_c *ApprovalRecordCreate) SetNillableDueDate(v *time.Time) *ApprovalRecordCreate {
+	if v != nil {
+		_c.SetDueDate(*v)
 	}
-	return arc
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (arc *ApprovalRecordCreate) SetStatus(s string) *ApprovalRecordCreate {
-	arc.mutation.SetStatus(s)
-	return arc
+func (_c *ApprovalRecordCreate) SetStatus(v string) *ApprovalRecordCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (arc *ApprovalRecordCreate) SetNillableStatus(s *string) *ApprovalRecordCreate {
-	if s != nil {
-		arc.SetStatus(*s)
+func (_c *ApprovalRecordCreate) SetNillableStatus(v *string) *ApprovalRecordCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return arc
+	return _c
 }
 
 // SetAction sets the "action" field.
-func (arc *ApprovalRecordCreate) SetAction(s string) *ApprovalRecordCreate {
-	arc.mutation.SetAction(s)
-	return arc
+func (_c *ApprovalRecordCreate) SetAction(v string) *ApprovalRecordCreate {
+	_c.mutation.SetAction(v)
+	return _c
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (arc *ApprovalRecordCreate) SetNillableAction(s *string) *ApprovalRecordCreate {
-	if s != nil {
-		arc.SetAction(*s)
+func (_c *ApprovalRecordCreate) SetNillableAction(v *string) *ApprovalRecordCreate {
+	if v != nil {
+		_c.SetAction(*v)
 	}
-	return arc
+	return _c
 }
 
 // SetComment sets the "comment" field.
-func (arc *ApprovalRecordCreate) SetComment(s string) *ApprovalRecordCreate {
-	arc.mutation.SetComment(s)
-	return arc
+func (_c *ApprovalRecordCreate) SetComment(v string) *ApprovalRecordCreate {
+	_c.mutation.SetComment(v)
+	return _c
 }
 
 // SetNillableComment sets the "comment" field if the given value is not nil.
-func (arc *ApprovalRecordCreate) SetNillableComment(s *string) *ApprovalRecordCreate {
-	if s != nil {
-		arc.SetComment(*s)
+func (_c *ApprovalRecordCreate) SetNillableComment(v *string) *ApprovalRecordCreate {
+	if v != nil {
+		_c.SetComment(*v)
 	}
-	return arc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (arc *ApprovalRecordCreate) SetTenantID(i int) *ApprovalRecordCreate {
-	arc.mutation.SetTenantID(i)
-	return arc
+func (_c *ApprovalRecordCreate) SetTenantID(v int) *ApprovalRecordCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (arc *ApprovalRecordCreate) SetCreatedAt(t time.Time) *ApprovalRecordCreate {
-	arc.mutation.SetCreatedAt(t)
-	return arc
+func (_c *ApprovalRecordCreate) SetCreatedAt(v time.Time) *ApprovalRecordCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (arc *ApprovalRecordCreate) SetNillableCreatedAt(t *time.Time) *ApprovalRecordCreate {
-	if t != nil {
-		arc.SetCreatedAt(*t)
+func (_c *ApprovalRecordCreate) SetNillableCreatedAt(v *time.Time) *ApprovalRecordCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return arc
+	return _c
 }
 
 // SetProcessedAt sets the "processed_at" field.
-func (arc *ApprovalRecordCreate) SetProcessedAt(t time.Time) *ApprovalRecordCreate {
-	arc.mutation.SetProcessedAt(t)
-	return arc
+func (_c *ApprovalRecordCreate) SetProcessedAt(v time.Time) *ApprovalRecordCreate {
+	_c.mutation.SetProcessedAt(v)
+	return _c
 }
 
 // SetNillableProcessedAt sets the "processed_at" field if the given value is not nil.
-func (arc *ApprovalRecordCreate) SetNillableProcessedAt(t *time.Time) *ApprovalRecordCreate {
-	if t != nil {
-		arc.SetProcessedAt(*t)
+func (_c *ApprovalRecordCreate) SetNillableProcessedAt(v *time.Time) *ApprovalRecordCreate {
+	if v != nil {
+		_c.SetProcessedAt(*v)
 	}
-	return arc
+	return _c
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (arc *ApprovalRecordCreate) SetTicket(t *Ticket) *ApprovalRecordCreate {
-	return arc.SetTicketID(t.ID)
+func (_c *ApprovalRecordCreate) SetTicket(v *Ticket) *ApprovalRecordCreate {
+	return _c.SetTicketID(v.ID)
 }
 
 // SetWorkflow sets the "workflow" edge to the ApprovalWorkflow entity.
-func (arc *ApprovalRecordCreate) SetWorkflow(a *ApprovalWorkflow) *ApprovalRecordCreate {
-	return arc.SetWorkflowID(a.ID)
+func (_c *ApprovalRecordCreate) SetWorkflow(v *ApprovalWorkflow) *ApprovalRecordCreate {
+	return _c.SetWorkflowID(v.ID)
 }
 
 // Mutation returns the ApprovalRecordMutation object of the builder.
-func (arc *ApprovalRecordCreate) Mutation() *ApprovalRecordMutation {
-	return arc.mutation
+func (_c *ApprovalRecordCreate) Mutation() *ApprovalRecordMutation {
+	return _c.mutation
 }
 
 // Save creates the ApprovalRecord in the database.
-func (arc *ApprovalRecordCreate) Save(ctx context.Context) (*ApprovalRecord, error) {
-	arc.defaults()
-	return withHooks(ctx, arc.sqlSave, arc.mutation, arc.hooks)
+func (_c *ApprovalRecordCreate) Save(ctx context.Context) (*ApprovalRecord, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (arc *ApprovalRecordCreate) SaveX(ctx context.Context) *ApprovalRecord {
-	v, err := arc.Save(ctx)
+func (_c *ApprovalRecordCreate) SaveX(ctx context.Context) *ApprovalRecord {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -227,138 +227,138 @@ func (arc *ApprovalRecordCreate) SaveX(ctx context.Context) *ApprovalRecord {
 }
 
 // Exec executes the query.
-func (arc *ApprovalRecordCreate) Exec(ctx context.Context) error {
-	_, err := arc.Save(ctx)
+func (_c *ApprovalRecordCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (arc *ApprovalRecordCreate) ExecX(ctx context.Context) {
-	if err := arc.Exec(ctx); err != nil {
+func (_c *ApprovalRecordCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (arc *ApprovalRecordCreate) defaults() {
-	if _, ok := arc.mutation.CurrentLevel(); !ok {
+func (_c *ApprovalRecordCreate) defaults() {
+	if _, ok := _c.mutation.CurrentLevel(); !ok {
 		v := approvalrecord.DefaultCurrentLevel
-		arc.mutation.SetCurrentLevel(v)
+		_c.mutation.SetCurrentLevel(v)
 	}
-	if _, ok := arc.mutation.TotalLevels(); !ok {
+	if _, ok := _c.mutation.TotalLevels(); !ok {
 		v := approvalrecord.DefaultTotalLevels
-		arc.mutation.SetTotalLevels(v)
+		_c.mutation.SetTotalLevels(v)
 	}
-	if _, ok := arc.mutation.StepOrder(); !ok {
+	if _, ok := _c.mutation.StepOrder(); !ok {
 		v := approvalrecord.DefaultStepOrder
-		arc.mutation.SetStepOrder(v)
+		_c.mutation.SetStepOrder(v)
 	}
-	if _, ok := arc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := approvalrecord.DefaultStatus
-		arc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := arc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := approvalrecord.DefaultCreatedAt()
-		arc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (arc *ApprovalRecordCreate) check() error {
-	if _, ok := arc.mutation.TicketID(); !ok {
+func (_c *ApprovalRecordCreate) check() error {
+	if _, ok := _c.mutation.TicketID(); !ok {
 		return &ValidationError{Name: "ticket_id", err: errors.New(`ent: missing required field "ApprovalRecord.ticket_id"`)}
 	}
-	if v, ok := arc.mutation.TicketID(); ok {
+	if v, ok := _c.mutation.TicketID(); ok {
 		if err := approvalrecord.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.ticket_id": %w`, err)}
 		}
 	}
-	if _, ok := arc.mutation.TicketNumber(); !ok {
+	if _, ok := _c.mutation.TicketNumber(); !ok {
 		return &ValidationError{Name: "ticket_number", err: errors.New(`ent: missing required field "ApprovalRecord.ticket_number"`)}
 	}
-	if v, ok := arc.mutation.TicketNumber(); ok {
+	if v, ok := _c.mutation.TicketNumber(); ok {
 		if err := approvalrecord.TicketNumberValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_number", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.ticket_number": %w`, err)}
 		}
 	}
-	if _, ok := arc.mutation.TicketTitle(); !ok {
+	if _, ok := _c.mutation.TicketTitle(); !ok {
 		return &ValidationError{Name: "ticket_title", err: errors.New(`ent: missing required field "ApprovalRecord.ticket_title"`)}
 	}
-	if v, ok := arc.mutation.TicketTitle(); ok {
+	if v, ok := _c.mutation.TicketTitle(); ok {
 		if err := approvalrecord.TicketTitleValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_title", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.ticket_title": %w`, err)}
 		}
 	}
-	if _, ok := arc.mutation.WorkflowID(); !ok {
+	if _, ok := _c.mutation.WorkflowID(); !ok {
 		return &ValidationError{Name: "workflow_id", err: errors.New(`ent: missing required field "ApprovalRecord.workflow_id"`)}
 	}
-	if v, ok := arc.mutation.WorkflowID(); ok {
+	if v, ok := _c.mutation.WorkflowID(); ok {
 		if err := approvalrecord.WorkflowIDValidator(v); err != nil {
 			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.workflow_id": %w`, err)}
 		}
 	}
-	if _, ok := arc.mutation.WorkflowName(); !ok {
+	if _, ok := _c.mutation.WorkflowName(); !ok {
 		return &ValidationError{Name: "workflow_name", err: errors.New(`ent: missing required field "ApprovalRecord.workflow_name"`)}
 	}
-	if v, ok := arc.mutation.WorkflowName(); ok {
+	if v, ok := _c.mutation.WorkflowName(); ok {
 		if err := approvalrecord.WorkflowNameValidator(v); err != nil {
 			return &ValidationError{Name: "workflow_name", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.workflow_name": %w`, err)}
 		}
 	}
-	if _, ok := arc.mutation.CurrentLevel(); !ok {
+	if _, ok := _c.mutation.CurrentLevel(); !ok {
 		return &ValidationError{Name: "current_level", err: errors.New(`ent: missing required field "ApprovalRecord.current_level"`)}
 	}
-	if _, ok := arc.mutation.TotalLevels(); !ok {
+	if _, ok := _c.mutation.TotalLevels(); !ok {
 		return &ValidationError{Name: "total_levels", err: errors.New(`ent: missing required field "ApprovalRecord.total_levels"`)}
 	}
-	if _, ok := arc.mutation.ApproverID(); !ok {
+	if _, ok := _c.mutation.ApproverID(); !ok {
 		return &ValidationError{Name: "approver_id", err: errors.New(`ent: missing required field "ApprovalRecord.approver_id"`)}
 	}
-	if v, ok := arc.mutation.ApproverID(); ok {
+	if v, ok := _c.mutation.ApproverID(); ok {
 		if err := approvalrecord.ApproverIDValidator(v); err != nil {
 			return &ValidationError{Name: "approver_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.approver_id": %w`, err)}
 		}
 	}
-	if _, ok := arc.mutation.ApproverName(); !ok {
+	if _, ok := _c.mutation.ApproverName(); !ok {
 		return &ValidationError{Name: "approver_name", err: errors.New(`ent: missing required field "ApprovalRecord.approver_name"`)}
 	}
-	if v, ok := arc.mutation.ApproverName(); ok {
+	if v, ok := _c.mutation.ApproverName(); ok {
 		if err := approvalrecord.ApproverNameValidator(v); err != nil {
 			return &ValidationError{Name: "approver_name", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.approver_name": %w`, err)}
 		}
 	}
-	if _, ok := arc.mutation.StepOrder(); !ok {
+	if _, ok := _c.mutation.StepOrder(); !ok {
 		return &ValidationError{Name: "step_order", err: errors.New(`ent: missing required field "ApprovalRecord.step_order"`)}
 	}
-	if _, ok := arc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ApprovalRecord.status"`)}
 	}
-	if _, ok := arc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ApprovalRecord.tenant_id"`)}
 	}
-	if v, ok := arc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := approvalrecord.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := arc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ApprovalRecord.created_at"`)}
 	}
-	if len(arc.mutation.TicketIDs()) == 0 {
+	if len(_c.mutation.TicketIDs()) == 0 {
 		return &ValidationError{Name: "ticket", err: errors.New(`ent: missing required edge "ApprovalRecord.ticket"`)}
 	}
-	if len(arc.mutation.WorkflowIDs()) == 0 {
+	if len(_c.mutation.WorkflowIDs()) == 0 {
 		return &ValidationError{Name: "workflow", err: errors.New(`ent: missing required edge "ApprovalRecord.workflow"`)}
 	}
 	return nil
 }
 
-func (arc *ApprovalRecordCreate) sqlSave(ctx context.Context) (*ApprovalRecord, error) {
-	if err := arc.check(); err != nil {
+func (_c *ApprovalRecordCreate) sqlSave(ctx context.Context) (*ApprovalRecord, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := arc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, arc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -366,77 +366,77 @@ func (arc *ApprovalRecordCreate) sqlSave(ctx context.Context) (*ApprovalRecord, 
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	arc.mutation.id = &_node.ID
-	arc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (arc *ApprovalRecordCreate) createSpec() (*ApprovalRecord, *sqlgraph.CreateSpec) {
+func (_c *ApprovalRecordCreate) createSpec() (*ApprovalRecord, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ApprovalRecord{config: arc.config}
+		_node = &ApprovalRecord{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(approvalrecord.Table, sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt))
 	)
-	if value, ok := arc.mutation.TicketNumber(); ok {
+	if value, ok := _c.mutation.TicketNumber(); ok {
 		_spec.SetField(approvalrecord.FieldTicketNumber, field.TypeString, value)
 		_node.TicketNumber = value
 	}
-	if value, ok := arc.mutation.TicketTitle(); ok {
+	if value, ok := _c.mutation.TicketTitle(); ok {
 		_spec.SetField(approvalrecord.FieldTicketTitle, field.TypeString, value)
 		_node.TicketTitle = value
 	}
-	if value, ok := arc.mutation.WorkflowName(); ok {
+	if value, ok := _c.mutation.WorkflowName(); ok {
 		_spec.SetField(approvalrecord.FieldWorkflowName, field.TypeString, value)
 		_node.WorkflowName = value
 	}
-	if value, ok := arc.mutation.CurrentLevel(); ok {
+	if value, ok := _c.mutation.CurrentLevel(); ok {
 		_spec.SetField(approvalrecord.FieldCurrentLevel, field.TypeInt, value)
 		_node.CurrentLevel = value
 	}
-	if value, ok := arc.mutation.TotalLevels(); ok {
+	if value, ok := _c.mutation.TotalLevels(); ok {
 		_spec.SetField(approvalrecord.FieldTotalLevels, field.TypeInt, value)
 		_node.TotalLevels = value
 	}
-	if value, ok := arc.mutation.ApproverID(); ok {
+	if value, ok := _c.mutation.ApproverID(); ok {
 		_spec.SetField(approvalrecord.FieldApproverID, field.TypeInt, value)
 		_node.ApproverID = value
 	}
-	if value, ok := arc.mutation.ApproverName(); ok {
+	if value, ok := _c.mutation.ApproverName(); ok {
 		_spec.SetField(approvalrecord.FieldApproverName, field.TypeString, value)
 		_node.ApproverName = value
 	}
-	if value, ok := arc.mutation.StepOrder(); ok {
+	if value, ok := _c.mutation.StepOrder(); ok {
 		_spec.SetField(approvalrecord.FieldStepOrder, field.TypeInt, value)
 		_node.StepOrder = value
 	}
-	if value, ok := arc.mutation.DueDate(); ok {
+	if value, ok := _c.mutation.DueDate(); ok {
 		_spec.SetField(approvalrecord.FieldDueDate, field.TypeTime, value)
 		_node.DueDate = &value
 	}
-	if value, ok := arc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(approvalrecord.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := arc.mutation.Action(); ok {
+	if value, ok := _c.mutation.Action(); ok {
 		_spec.SetField(approvalrecord.FieldAction, field.TypeString, value)
 		_node.Action = value
 	}
-	if value, ok := arc.mutation.Comment(); ok {
+	if value, ok := _c.mutation.Comment(); ok {
 		_spec.SetField(approvalrecord.FieldComment, field.TypeString, value)
 		_node.Comment = value
 	}
-	if value, ok := arc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(approvalrecord.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := arc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(approvalrecord.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := arc.mutation.ProcessedAt(); ok {
+	if value, ok := _c.mutation.ProcessedAt(); ok {
 		_spec.SetField(approvalrecord.FieldProcessedAt, field.TypeTime, value)
 		_node.ProcessedAt = value
 	}
-	if nodes := arc.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -453,7 +453,7 @@ func (arc *ApprovalRecordCreate) createSpec() (*ApprovalRecord, *sqlgraph.Create
 		_node.TicketID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := arc.mutation.WorkflowIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.WorkflowIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -481,16 +481,16 @@ type ApprovalRecordCreateBulk struct {
 }
 
 // Save creates the ApprovalRecord entities in the database.
-func (arcb *ApprovalRecordCreateBulk) Save(ctx context.Context) ([]*ApprovalRecord, error) {
-	if arcb.err != nil {
-		return nil, arcb.err
+func (_c *ApprovalRecordCreateBulk) Save(ctx context.Context) ([]*ApprovalRecord, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(arcb.builders))
-	nodes := make([]*ApprovalRecord, len(arcb.builders))
-	mutators := make([]Mutator, len(arcb.builders))
-	for i := range arcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ApprovalRecord, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := arcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ApprovalRecordMutation)
@@ -504,11 +504,11 @@ func (arcb *ApprovalRecordCreateBulk) Save(ctx context.Context) ([]*ApprovalReco
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, arcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, arcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -532,7 +532,7 @@ func (arcb *ApprovalRecordCreateBulk) Save(ctx context.Context) ([]*ApprovalReco
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, arcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -540,8 +540,8 @@ func (arcb *ApprovalRecordCreateBulk) Save(ctx context.Context) ([]*ApprovalReco
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (arcb *ApprovalRecordCreateBulk) SaveX(ctx context.Context) []*ApprovalRecord {
-	v, err := arcb.Save(ctx)
+func (_c *ApprovalRecordCreateBulk) SaveX(ctx context.Context) []*ApprovalRecord {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -549,14 +549,14 @@ func (arcb *ApprovalRecordCreateBulk) SaveX(ctx context.Context) []*ApprovalReco
 }
 
 // Exec executes the query.
-func (arcb *ApprovalRecordCreateBulk) Exec(ctx context.Context) error {
-	_, err := arcb.Save(ctx)
+func (_c *ApprovalRecordCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (arcb *ApprovalRecordCreateBulk) ExecX(ctx context.Context) {
-	if err := arcb.Exec(ctx); err != nil {
+func (_c *ApprovalRecordCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

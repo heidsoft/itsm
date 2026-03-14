@@ -24,229 +24,229 @@ type NotificationPreferenceUpdate struct {
 }
 
 // Where appends a list predicates to the NotificationPreferenceUpdate builder.
-func (npu *NotificationPreferenceUpdate) Where(ps ...predicate.NotificationPreference) *NotificationPreferenceUpdate {
-	npu.mutation.Where(ps...)
-	return npu
+func (_u *NotificationPreferenceUpdate) Where(ps ...predicate.NotificationPreference) *NotificationPreferenceUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (npu *NotificationPreferenceUpdate) SetUserID(i int) *NotificationPreferenceUpdate {
-	npu.mutation.SetUserID(i)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetUserID(v int) *NotificationPreferenceUpdate {
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillableUserID(i *int) *NotificationPreferenceUpdate {
-	if i != nil {
-		npu.SetUserID(*i)
+func (_u *NotificationPreferenceUpdate) SetNillableUserID(v *int) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return npu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (npu *NotificationPreferenceUpdate) SetTenantID(i int) *NotificationPreferenceUpdate {
-	npu.mutation.ResetTenantID()
-	npu.mutation.SetTenantID(i)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetTenantID(v int) *NotificationPreferenceUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillableTenantID(i *int) *NotificationPreferenceUpdate {
-	if i != nil {
-		npu.SetTenantID(*i)
+func (_u *NotificationPreferenceUpdate) SetNillableTenantID(v *int) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return npu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (npu *NotificationPreferenceUpdate) AddTenantID(i int) *NotificationPreferenceUpdate {
-	npu.mutation.AddTenantID(i)
-	return npu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *NotificationPreferenceUpdate) AddTenantID(v int) *NotificationPreferenceUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetEventType sets the "event_type" field.
-func (npu *NotificationPreferenceUpdate) SetEventType(s string) *NotificationPreferenceUpdate {
-	npu.mutation.SetEventType(s)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetEventType(v string) *NotificationPreferenceUpdate {
+	_u.mutation.SetEventType(v)
+	return _u
 }
 
 // SetNillableEventType sets the "event_type" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillableEventType(s *string) *NotificationPreferenceUpdate {
-	if s != nil {
-		npu.SetEventType(*s)
+func (_u *NotificationPreferenceUpdate) SetNillableEventType(v *string) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetEventType(*v)
 	}
-	return npu
+	return _u
 }
 
 // SetEmailEnabled sets the "email_enabled" field.
-func (npu *NotificationPreferenceUpdate) SetEmailEnabled(b bool) *NotificationPreferenceUpdate {
-	npu.mutation.SetEmailEnabled(b)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetEmailEnabled(v bool) *NotificationPreferenceUpdate {
+	_u.mutation.SetEmailEnabled(v)
+	return _u
 }
 
 // SetNillableEmailEnabled sets the "email_enabled" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillableEmailEnabled(b *bool) *NotificationPreferenceUpdate {
-	if b != nil {
-		npu.SetEmailEnabled(*b)
+func (_u *NotificationPreferenceUpdate) SetNillableEmailEnabled(v *bool) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetEmailEnabled(*v)
 	}
-	return npu
+	return _u
 }
 
 // SetSmsEnabled sets the "sms_enabled" field.
-func (npu *NotificationPreferenceUpdate) SetSmsEnabled(b bool) *NotificationPreferenceUpdate {
-	npu.mutation.SetSmsEnabled(b)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetSmsEnabled(v bool) *NotificationPreferenceUpdate {
+	_u.mutation.SetSmsEnabled(v)
+	return _u
 }
 
 // SetNillableSmsEnabled sets the "sms_enabled" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillableSmsEnabled(b *bool) *NotificationPreferenceUpdate {
-	if b != nil {
-		npu.SetSmsEnabled(*b)
+func (_u *NotificationPreferenceUpdate) SetNillableSmsEnabled(v *bool) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetSmsEnabled(*v)
 	}
-	return npu
+	return _u
 }
 
 // SetInAppEnabled sets the "in_app_enabled" field.
-func (npu *NotificationPreferenceUpdate) SetInAppEnabled(b bool) *NotificationPreferenceUpdate {
-	npu.mutation.SetInAppEnabled(b)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetInAppEnabled(v bool) *NotificationPreferenceUpdate {
+	_u.mutation.SetInAppEnabled(v)
+	return _u
 }
 
 // SetNillableInAppEnabled sets the "in_app_enabled" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillableInAppEnabled(b *bool) *NotificationPreferenceUpdate {
-	if b != nil {
-		npu.SetInAppEnabled(*b)
+func (_u *NotificationPreferenceUpdate) SetNillableInAppEnabled(v *bool) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetInAppEnabled(*v)
 	}
-	return npu
+	return _u
 }
 
 // SetPushEnabled sets the "push_enabled" field.
-func (npu *NotificationPreferenceUpdate) SetPushEnabled(b bool) *NotificationPreferenceUpdate {
-	npu.mutation.SetPushEnabled(b)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetPushEnabled(v bool) *NotificationPreferenceUpdate {
+	_u.mutation.SetPushEnabled(v)
+	return _u
 }
 
 // SetNillablePushEnabled sets the "push_enabled" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillablePushEnabled(b *bool) *NotificationPreferenceUpdate {
-	if b != nil {
-		npu.SetPushEnabled(*b)
+func (_u *NotificationPreferenceUpdate) SetNillablePushEnabled(v *bool) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetPushEnabled(*v)
 	}
-	return npu
+	return _u
 }
 
 // SetFrequency sets the "frequency" field.
-func (npu *NotificationPreferenceUpdate) SetFrequency(s string) *NotificationPreferenceUpdate {
-	npu.mutation.SetFrequency(s)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetFrequency(v string) *NotificationPreferenceUpdate {
+	_u.mutation.SetFrequency(v)
+	return _u
 }
 
 // SetNillableFrequency sets the "frequency" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillableFrequency(s *string) *NotificationPreferenceUpdate {
-	if s != nil {
-		npu.SetFrequency(*s)
+func (_u *NotificationPreferenceUpdate) SetNillableFrequency(v *string) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetFrequency(*v)
 	}
-	return npu
+	return _u
 }
 
 // SetQuietHoursStart sets the "quiet_hours_start" field.
-func (npu *NotificationPreferenceUpdate) SetQuietHoursStart(t time.Time) *NotificationPreferenceUpdate {
-	npu.mutation.SetQuietHoursStart(t)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetQuietHoursStart(v time.Time) *NotificationPreferenceUpdate {
+	_u.mutation.SetQuietHoursStart(v)
+	return _u
 }
 
 // SetNillableQuietHoursStart sets the "quiet_hours_start" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillableQuietHoursStart(t *time.Time) *NotificationPreferenceUpdate {
-	if t != nil {
-		npu.SetQuietHoursStart(*t)
+func (_u *NotificationPreferenceUpdate) SetNillableQuietHoursStart(v *time.Time) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetQuietHoursStart(*v)
 	}
-	return npu
+	return _u
 }
 
 // ClearQuietHoursStart clears the value of the "quiet_hours_start" field.
-func (npu *NotificationPreferenceUpdate) ClearQuietHoursStart() *NotificationPreferenceUpdate {
-	npu.mutation.ClearQuietHoursStart()
-	return npu
+func (_u *NotificationPreferenceUpdate) ClearQuietHoursStart() *NotificationPreferenceUpdate {
+	_u.mutation.ClearQuietHoursStart()
+	return _u
 }
 
 // SetQuietHoursEnd sets the "quiet_hours_end" field.
-func (npu *NotificationPreferenceUpdate) SetQuietHoursEnd(t time.Time) *NotificationPreferenceUpdate {
-	npu.mutation.SetQuietHoursEnd(t)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetQuietHoursEnd(v time.Time) *NotificationPreferenceUpdate {
+	_u.mutation.SetQuietHoursEnd(v)
+	return _u
 }
 
 // SetNillableQuietHoursEnd sets the "quiet_hours_end" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillableQuietHoursEnd(t *time.Time) *NotificationPreferenceUpdate {
-	if t != nil {
-		npu.SetQuietHoursEnd(*t)
+func (_u *NotificationPreferenceUpdate) SetNillableQuietHoursEnd(v *time.Time) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetQuietHoursEnd(*v)
 	}
-	return npu
+	return _u
 }
 
 // ClearQuietHoursEnd clears the value of the "quiet_hours_end" field.
-func (npu *NotificationPreferenceUpdate) ClearQuietHoursEnd() *NotificationPreferenceUpdate {
-	npu.mutation.ClearQuietHoursEnd()
-	return npu
+func (_u *NotificationPreferenceUpdate) ClearQuietHoursEnd() *NotificationPreferenceUpdate {
+	_u.mutation.ClearQuietHoursEnd()
+	return _u
 }
 
 // SetTimezone sets the "timezone" field.
-func (npu *NotificationPreferenceUpdate) SetTimezone(s string) *NotificationPreferenceUpdate {
-	npu.mutation.SetTimezone(s)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetTimezone(v string) *NotificationPreferenceUpdate {
+	_u.mutation.SetTimezone(v)
+	return _u
 }
 
 // SetNillableTimezone sets the "timezone" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillableTimezone(s *string) *NotificationPreferenceUpdate {
-	if s != nil {
-		npu.SetTimezone(*s)
+func (_u *NotificationPreferenceUpdate) SetNillableTimezone(v *string) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetTimezone(*v)
 	}
-	return npu
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (npu *NotificationPreferenceUpdate) SetCreatedAt(t time.Time) *NotificationPreferenceUpdate {
-	npu.mutation.SetCreatedAt(t)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetCreatedAt(v time.Time) *NotificationPreferenceUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (npu *NotificationPreferenceUpdate) SetNillableCreatedAt(t *time.Time) *NotificationPreferenceUpdate {
-	if t != nil {
-		npu.SetCreatedAt(*t)
+func (_u *NotificationPreferenceUpdate) SetNillableCreatedAt(v *time.Time) *NotificationPreferenceUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return npu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (npu *NotificationPreferenceUpdate) SetUpdatedAt(t time.Time) *NotificationPreferenceUpdate {
-	npu.mutation.SetUpdatedAt(t)
-	return npu
+func (_u *NotificationPreferenceUpdate) SetUpdatedAt(v time.Time) *NotificationPreferenceUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetUser sets the "user" edge to the User entity.
-func (npu *NotificationPreferenceUpdate) SetUser(u *User) *NotificationPreferenceUpdate {
-	return npu.SetUserID(u.ID)
+func (_u *NotificationPreferenceUpdate) SetUser(v *User) *NotificationPreferenceUpdate {
+	return _u.SetUserID(v.ID)
 }
 
 // Mutation returns the NotificationPreferenceMutation object of the builder.
-func (npu *NotificationPreferenceUpdate) Mutation() *NotificationPreferenceMutation {
-	return npu.mutation
+func (_u *NotificationPreferenceUpdate) Mutation() *NotificationPreferenceMutation {
+	return _u.mutation
 }
 
 // ClearUser clears the "user" edge to the User entity.
-func (npu *NotificationPreferenceUpdate) ClearUser() *NotificationPreferenceUpdate {
-	npu.mutation.ClearUser()
-	return npu
+func (_u *NotificationPreferenceUpdate) ClearUser() *NotificationPreferenceUpdate {
+	_u.mutation.ClearUser()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (npu *NotificationPreferenceUpdate) Save(ctx context.Context) (int, error) {
-	npu.defaults()
-	return withHooks(ctx, npu.sqlSave, npu.mutation, npu.hooks)
+func (_u *NotificationPreferenceUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (npu *NotificationPreferenceUpdate) SaveX(ctx context.Context) int {
-	affected, err := npu.Save(ctx)
+func (_u *NotificationPreferenceUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -254,107 +254,107 @@ func (npu *NotificationPreferenceUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (npu *NotificationPreferenceUpdate) Exec(ctx context.Context) error {
-	_, err := npu.Save(ctx)
+func (_u *NotificationPreferenceUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (npu *NotificationPreferenceUpdate) ExecX(ctx context.Context) {
-	if err := npu.Exec(ctx); err != nil {
+func (_u *NotificationPreferenceUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (npu *NotificationPreferenceUpdate) defaults() {
-	if _, ok := npu.mutation.UpdatedAt(); !ok {
+func (_u *NotificationPreferenceUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := notificationpreference.UpdateDefaultUpdatedAt()
-		npu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (npu *NotificationPreferenceUpdate) check() error {
-	if v, ok := npu.mutation.UserID(); ok {
+func (_u *NotificationPreferenceUpdate) check() error {
+	if v, ok := _u.mutation.UserID(); ok {
 		if err := notificationpreference.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "NotificationPreference.user_id": %w`, err)}
 		}
 	}
-	if v, ok := npu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := notificationpreference.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "NotificationPreference.tenant_id": %w`, err)}
 		}
 	}
-	if v, ok := npu.mutation.EventType(); ok {
+	if v, ok := _u.mutation.EventType(); ok {
 		if err := notificationpreference.EventTypeValidator(v); err != nil {
 			return &ValidationError{Name: "event_type", err: fmt.Errorf(`ent: validator failed for field "NotificationPreference.event_type": %w`, err)}
 		}
 	}
-	if npu.mutation.UserCleared() && len(npu.mutation.UserIDs()) > 0 {
+	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "NotificationPreference.user"`)
 	}
 	return nil
 }
 
-func (npu *NotificationPreferenceUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := npu.check(); err != nil {
-		return n, err
+func (_u *NotificationPreferenceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(notificationpreference.Table, notificationpreference.Columns, sqlgraph.NewFieldSpec(notificationpreference.FieldID, field.TypeInt))
-	if ps := npu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := npu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(notificationpreference.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := npu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(notificationpreference.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := npu.mutation.EventType(); ok {
+	if value, ok := _u.mutation.EventType(); ok {
 		_spec.SetField(notificationpreference.FieldEventType, field.TypeString, value)
 	}
-	if value, ok := npu.mutation.EmailEnabled(); ok {
+	if value, ok := _u.mutation.EmailEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldEmailEnabled, field.TypeBool, value)
 	}
-	if value, ok := npu.mutation.SmsEnabled(); ok {
+	if value, ok := _u.mutation.SmsEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldSmsEnabled, field.TypeBool, value)
 	}
-	if value, ok := npu.mutation.InAppEnabled(); ok {
+	if value, ok := _u.mutation.InAppEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldInAppEnabled, field.TypeBool, value)
 	}
-	if value, ok := npu.mutation.PushEnabled(); ok {
+	if value, ok := _u.mutation.PushEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldPushEnabled, field.TypeBool, value)
 	}
-	if value, ok := npu.mutation.Frequency(); ok {
+	if value, ok := _u.mutation.Frequency(); ok {
 		_spec.SetField(notificationpreference.FieldFrequency, field.TypeString, value)
 	}
-	if value, ok := npu.mutation.QuietHoursStart(); ok {
+	if value, ok := _u.mutation.QuietHoursStart(); ok {
 		_spec.SetField(notificationpreference.FieldQuietHoursStart, field.TypeTime, value)
 	}
-	if npu.mutation.QuietHoursStartCleared() {
+	if _u.mutation.QuietHoursStartCleared() {
 		_spec.ClearField(notificationpreference.FieldQuietHoursStart, field.TypeTime)
 	}
-	if value, ok := npu.mutation.QuietHoursEnd(); ok {
+	if value, ok := _u.mutation.QuietHoursEnd(); ok {
 		_spec.SetField(notificationpreference.FieldQuietHoursEnd, field.TypeTime, value)
 	}
-	if npu.mutation.QuietHoursEndCleared() {
+	if _u.mutation.QuietHoursEndCleared() {
 		_spec.ClearField(notificationpreference.FieldQuietHoursEnd, field.TypeTime)
 	}
-	if value, ok := npu.mutation.Timezone(); ok {
+	if value, ok := _u.mutation.Timezone(); ok {
 		_spec.SetField(notificationpreference.FieldTimezone, field.TypeString, value)
 	}
-	if value, ok := npu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(notificationpreference.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := npu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(notificationpreference.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if npu.mutation.UserCleared() {
+	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -367,7 +367,7 @@ func (npu *NotificationPreferenceUpdate) sqlSave(ctx context.Context) (n int, er
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := npu.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -383,7 +383,7 @@ func (npu *NotificationPreferenceUpdate) sqlSave(ctx context.Context) (n int, er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, npu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{notificationpreference.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -391,8 +391,8 @@ func (npu *NotificationPreferenceUpdate) sqlSave(ctx context.Context) (n int, er
 		}
 		return 0, err
 	}
-	npu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // NotificationPreferenceUpdateOne is the builder for updating a single NotificationPreference entity.
@@ -404,236 +404,236 @@ type NotificationPreferenceUpdateOne struct {
 }
 
 // SetUserID sets the "user_id" field.
-func (npuo *NotificationPreferenceUpdateOne) SetUserID(i int) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetUserID(i)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetUserID(v int) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillableUserID(i *int) *NotificationPreferenceUpdateOne {
-	if i != nil {
-		npuo.SetUserID(*i)
+func (_u *NotificationPreferenceUpdateOne) SetNillableUserID(v *int) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return npuo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (npuo *NotificationPreferenceUpdateOne) SetTenantID(i int) *NotificationPreferenceUpdateOne {
-	npuo.mutation.ResetTenantID()
-	npuo.mutation.SetTenantID(i)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetTenantID(v int) *NotificationPreferenceUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillableTenantID(i *int) *NotificationPreferenceUpdateOne {
-	if i != nil {
-		npuo.SetTenantID(*i)
+func (_u *NotificationPreferenceUpdateOne) SetNillableTenantID(v *int) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return npuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (npuo *NotificationPreferenceUpdateOne) AddTenantID(i int) *NotificationPreferenceUpdateOne {
-	npuo.mutation.AddTenantID(i)
-	return npuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *NotificationPreferenceUpdateOne) AddTenantID(v int) *NotificationPreferenceUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetEventType sets the "event_type" field.
-func (npuo *NotificationPreferenceUpdateOne) SetEventType(s string) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetEventType(s)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetEventType(v string) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetEventType(v)
+	return _u
 }
 
 // SetNillableEventType sets the "event_type" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillableEventType(s *string) *NotificationPreferenceUpdateOne {
-	if s != nil {
-		npuo.SetEventType(*s)
+func (_u *NotificationPreferenceUpdateOne) SetNillableEventType(v *string) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetEventType(*v)
 	}
-	return npuo
+	return _u
 }
 
 // SetEmailEnabled sets the "email_enabled" field.
-func (npuo *NotificationPreferenceUpdateOne) SetEmailEnabled(b bool) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetEmailEnabled(b)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetEmailEnabled(v bool) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetEmailEnabled(v)
+	return _u
 }
 
 // SetNillableEmailEnabled sets the "email_enabled" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillableEmailEnabled(b *bool) *NotificationPreferenceUpdateOne {
-	if b != nil {
-		npuo.SetEmailEnabled(*b)
+func (_u *NotificationPreferenceUpdateOne) SetNillableEmailEnabled(v *bool) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetEmailEnabled(*v)
 	}
-	return npuo
+	return _u
 }
 
 // SetSmsEnabled sets the "sms_enabled" field.
-func (npuo *NotificationPreferenceUpdateOne) SetSmsEnabled(b bool) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetSmsEnabled(b)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetSmsEnabled(v bool) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetSmsEnabled(v)
+	return _u
 }
 
 // SetNillableSmsEnabled sets the "sms_enabled" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillableSmsEnabled(b *bool) *NotificationPreferenceUpdateOne {
-	if b != nil {
-		npuo.SetSmsEnabled(*b)
+func (_u *NotificationPreferenceUpdateOne) SetNillableSmsEnabled(v *bool) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetSmsEnabled(*v)
 	}
-	return npuo
+	return _u
 }
 
 // SetInAppEnabled sets the "in_app_enabled" field.
-func (npuo *NotificationPreferenceUpdateOne) SetInAppEnabled(b bool) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetInAppEnabled(b)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetInAppEnabled(v bool) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetInAppEnabled(v)
+	return _u
 }
 
 // SetNillableInAppEnabled sets the "in_app_enabled" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillableInAppEnabled(b *bool) *NotificationPreferenceUpdateOne {
-	if b != nil {
-		npuo.SetInAppEnabled(*b)
+func (_u *NotificationPreferenceUpdateOne) SetNillableInAppEnabled(v *bool) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetInAppEnabled(*v)
 	}
-	return npuo
+	return _u
 }
 
 // SetPushEnabled sets the "push_enabled" field.
-func (npuo *NotificationPreferenceUpdateOne) SetPushEnabled(b bool) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetPushEnabled(b)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetPushEnabled(v bool) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetPushEnabled(v)
+	return _u
 }
 
 // SetNillablePushEnabled sets the "push_enabled" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillablePushEnabled(b *bool) *NotificationPreferenceUpdateOne {
-	if b != nil {
-		npuo.SetPushEnabled(*b)
+func (_u *NotificationPreferenceUpdateOne) SetNillablePushEnabled(v *bool) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetPushEnabled(*v)
 	}
-	return npuo
+	return _u
 }
 
 // SetFrequency sets the "frequency" field.
-func (npuo *NotificationPreferenceUpdateOne) SetFrequency(s string) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetFrequency(s)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetFrequency(v string) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetFrequency(v)
+	return _u
 }
 
 // SetNillableFrequency sets the "frequency" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillableFrequency(s *string) *NotificationPreferenceUpdateOne {
-	if s != nil {
-		npuo.SetFrequency(*s)
+func (_u *NotificationPreferenceUpdateOne) SetNillableFrequency(v *string) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetFrequency(*v)
 	}
-	return npuo
+	return _u
 }
 
 // SetQuietHoursStart sets the "quiet_hours_start" field.
-func (npuo *NotificationPreferenceUpdateOne) SetQuietHoursStart(t time.Time) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetQuietHoursStart(t)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetQuietHoursStart(v time.Time) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetQuietHoursStart(v)
+	return _u
 }
 
 // SetNillableQuietHoursStart sets the "quiet_hours_start" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillableQuietHoursStart(t *time.Time) *NotificationPreferenceUpdateOne {
-	if t != nil {
-		npuo.SetQuietHoursStart(*t)
+func (_u *NotificationPreferenceUpdateOne) SetNillableQuietHoursStart(v *time.Time) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetQuietHoursStart(*v)
 	}
-	return npuo
+	return _u
 }
 
 // ClearQuietHoursStart clears the value of the "quiet_hours_start" field.
-func (npuo *NotificationPreferenceUpdateOne) ClearQuietHoursStart() *NotificationPreferenceUpdateOne {
-	npuo.mutation.ClearQuietHoursStart()
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) ClearQuietHoursStart() *NotificationPreferenceUpdateOne {
+	_u.mutation.ClearQuietHoursStart()
+	return _u
 }
 
 // SetQuietHoursEnd sets the "quiet_hours_end" field.
-func (npuo *NotificationPreferenceUpdateOne) SetQuietHoursEnd(t time.Time) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetQuietHoursEnd(t)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetQuietHoursEnd(v time.Time) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetQuietHoursEnd(v)
+	return _u
 }
 
 // SetNillableQuietHoursEnd sets the "quiet_hours_end" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillableQuietHoursEnd(t *time.Time) *NotificationPreferenceUpdateOne {
-	if t != nil {
-		npuo.SetQuietHoursEnd(*t)
+func (_u *NotificationPreferenceUpdateOne) SetNillableQuietHoursEnd(v *time.Time) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetQuietHoursEnd(*v)
 	}
-	return npuo
+	return _u
 }
 
 // ClearQuietHoursEnd clears the value of the "quiet_hours_end" field.
-func (npuo *NotificationPreferenceUpdateOne) ClearQuietHoursEnd() *NotificationPreferenceUpdateOne {
-	npuo.mutation.ClearQuietHoursEnd()
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) ClearQuietHoursEnd() *NotificationPreferenceUpdateOne {
+	_u.mutation.ClearQuietHoursEnd()
+	return _u
 }
 
 // SetTimezone sets the "timezone" field.
-func (npuo *NotificationPreferenceUpdateOne) SetTimezone(s string) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetTimezone(s)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetTimezone(v string) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetTimezone(v)
+	return _u
 }
 
 // SetNillableTimezone sets the "timezone" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillableTimezone(s *string) *NotificationPreferenceUpdateOne {
-	if s != nil {
-		npuo.SetTimezone(*s)
+func (_u *NotificationPreferenceUpdateOne) SetNillableTimezone(v *string) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetTimezone(*v)
 	}
-	return npuo
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (npuo *NotificationPreferenceUpdateOne) SetCreatedAt(t time.Time) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetCreatedAt(t)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetCreatedAt(v time.Time) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (npuo *NotificationPreferenceUpdateOne) SetNillableCreatedAt(t *time.Time) *NotificationPreferenceUpdateOne {
-	if t != nil {
-		npuo.SetCreatedAt(*t)
+func (_u *NotificationPreferenceUpdateOne) SetNillableCreatedAt(v *time.Time) *NotificationPreferenceUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return npuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (npuo *NotificationPreferenceUpdateOne) SetUpdatedAt(t time.Time) *NotificationPreferenceUpdateOne {
-	npuo.mutation.SetUpdatedAt(t)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) SetUpdatedAt(v time.Time) *NotificationPreferenceUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetUser sets the "user" edge to the User entity.
-func (npuo *NotificationPreferenceUpdateOne) SetUser(u *User) *NotificationPreferenceUpdateOne {
-	return npuo.SetUserID(u.ID)
+func (_u *NotificationPreferenceUpdateOne) SetUser(v *User) *NotificationPreferenceUpdateOne {
+	return _u.SetUserID(v.ID)
 }
 
 // Mutation returns the NotificationPreferenceMutation object of the builder.
-func (npuo *NotificationPreferenceUpdateOne) Mutation() *NotificationPreferenceMutation {
-	return npuo.mutation
+func (_u *NotificationPreferenceUpdateOne) Mutation() *NotificationPreferenceMutation {
+	return _u.mutation
 }
 
 // ClearUser clears the "user" edge to the User entity.
-func (npuo *NotificationPreferenceUpdateOne) ClearUser() *NotificationPreferenceUpdateOne {
-	npuo.mutation.ClearUser()
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) ClearUser() *NotificationPreferenceUpdateOne {
+	_u.mutation.ClearUser()
+	return _u
 }
 
 // Where appends a list predicates to the NotificationPreferenceUpdate builder.
-func (npuo *NotificationPreferenceUpdateOne) Where(ps ...predicate.NotificationPreference) *NotificationPreferenceUpdateOne {
-	npuo.mutation.Where(ps...)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) Where(ps ...predicate.NotificationPreference) *NotificationPreferenceUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (npuo *NotificationPreferenceUpdateOne) Select(field string, fields ...string) *NotificationPreferenceUpdateOne {
-	npuo.fields = append([]string{field}, fields...)
-	return npuo
+func (_u *NotificationPreferenceUpdateOne) Select(field string, fields ...string) *NotificationPreferenceUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated NotificationPreference entity.
-func (npuo *NotificationPreferenceUpdateOne) Save(ctx context.Context) (*NotificationPreference, error) {
-	npuo.defaults()
-	return withHooks(ctx, npuo.sqlSave, npuo.mutation, npuo.hooks)
+func (_u *NotificationPreferenceUpdateOne) Save(ctx context.Context) (*NotificationPreference, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (npuo *NotificationPreferenceUpdateOne) SaveX(ctx context.Context) *NotificationPreference {
-	node, err := npuo.Save(ctx)
+func (_u *NotificationPreferenceUpdateOne) SaveX(ctx context.Context) *NotificationPreference {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -641,60 +641,60 @@ func (npuo *NotificationPreferenceUpdateOne) SaveX(ctx context.Context) *Notific
 }
 
 // Exec executes the query on the entity.
-func (npuo *NotificationPreferenceUpdateOne) Exec(ctx context.Context) error {
-	_, err := npuo.Save(ctx)
+func (_u *NotificationPreferenceUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (npuo *NotificationPreferenceUpdateOne) ExecX(ctx context.Context) {
-	if err := npuo.Exec(ctx); err != nil {
+func (_u *NotificationPreferenceUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (npuo *NotificationPreferenceUpdateOne) defaults() {
-	if _, ok := npuo.mutation.UpdatedAt(); !ok {
+func (_u *NotificationPreferenceUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := notificationpreference.UpdateDefaultUpdatedAt()
-		npuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (npuo *NotificationPreferenceUpdateOne) check() error {
-	if v, ok := npuo.mutation.UserID(); ok {
+func (_u *NotificationPreferenceUpdateOne) check() error {
+	if v, ok := _u.mutation.UserID(); ok {
 		if err := notificationpreference.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "NotificationPreference.user_id": %w`, err)}
 		}
 	}
-	if v, ok := npuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := notificationpreference.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "NotificationPreference.tenant_id": %w`, err)}
 		}
 	}
-	if v, ok := npuo.mutation.EventType(); ok {
+	if v, ok := _u.mutation.EventType(); ok {
 		if err := notificationpreference.EventTypeValidator(v); err != nil {
 			return &ValidationError{Name: "event_type", err: fmt.Errorf(`ent: validator failed for field "NotificationPreference.event_type": %w`, err)}
 		}
 	}
-	if npuo.mutation.UserCleared() && len(npuo.mutation.UserIDs()) > 0 {
+	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "NotificationPreference.user"`)
 	}
 	return nil
 }
 
-func (npuo *NotificationPreferenceUpdateOne) sqlSave(ctx context.Context) (_node *NotificationPreference, err error) {
-	if err := npuo.check(); err != nil {
+func (_u *NotificationPreferenceUpdateOne) sqlSave(ctx context.Context) (_node *NotificationPreference, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(notificationpreference.Table, notificationpreference.Columns, sqlgraph.NewFieldSpec(notificationpreference.FieldID, field.TypeInt))
-	id, ok := npuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "NotificationPreference.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := npuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, notificationpreference.FieldID)
 		for _, f := range fields {
@@ -706,59 +706,59 @@ func (npuo *NotificationPreferenceUpdateOne) sqlSave(ctx context.Context) (_node
 			}
 		}
 	}
-	if ps := npuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := npuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(notificationpreference.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := npuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(notificationpreference.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := npuo.mutation.EventType(); ok {
+	if value, ok := _u.mutation.EventType(); ok {
 		_spec.SetField(notificationpreference.FieldEventType, field.TypeString, value)
 	}
-	if value, ok := npuo.mutation.EmailEnabled(); ok {
+	if value, ok := _u.mutation.EmailEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldEmailEnabled, field.TypeBool, value)
 	}
-	if value, ok := npuo.mutation.SmsEnabled(); ok {
+	if value, ok := _u.mutation.SmsEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldSmsEnabled, field.TypeBool, value)
 	}
-	if value, ok := npuo.mutation.InAppEnabled(); ok {
+	if value, ok := _u.mutation.InAppEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldInAppEnabled, field.TypeBool, value)
 	}
-	if value, ok := npuo.mutation.PushEnabled(); ok {
+	if value, ok := _u.mutation.PushEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldPushEnabled, field.TypeBool, value)
 	}
-	if value, ok := npuo.mutation.Frequency(); ok {
+	if value, ok := _u.mutation.Frequency(); ok {
 		_spec.SetField(notificationpreference.FieldFrequency, field.TypeString, value)
 	}
-	if value, ok := npuo.mutation.QuietHoursStart(); ok {
+	if value, ok := _u.mutation.QuietHoursStart(); ok {
 		_spec.SetField(notificationpreference.FieldQuietHoursStart, field.TypeTime, value)
 	}
-	if npuo.mutation.QuietHoursStartCleared() {
+	if _u.mutation.QuietHoursStartCleared() {
 		_spec.ClearField(notificationpreference.FieldQuietHoursStart, field.TypeTime)
 	}
-	if value, ok := npuo.mutation.QuietHoursEnd(); ok {
+	if value, ok := _u.mutation.QuietHoursEnd(); ok {
 		_spec.SetField(notificationpreference.FieldQuietHoursEnd, field.TypeTime, value)
 	}
-	if npuo.mutation.QuietHoursEndCleared() {
+	if _u.mutation.QuietHoursEndCleared() {
 		_spec.ClearField(notificationpreference.FieldQuietHoursEnd, field.TypeTime)
 	}
-	if value, ok := npuo.mutation.Timezone(); ok {
+	if value, ok := _u.mutation.Timezone(); ok {
 		_spec.SetField(notificationpreference.FieldTimezone, field.TypeString, value)
 	}
-	if value, ok := npuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(notificationpreference.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := npuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(notificationpreference.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if npuo.mutation.UserCleared() {
+	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -771,7 +771,7 @@ func (npuo *NotificationPreferenceUpdateOne) sqlSave(ctx context.Context) (_node
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := npuo.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -787,10 +787,10 @@ func (npuo *NotificationPreferenceUpdateOne) sqlSave(ctx context.Context) (_node
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &NotificationPreference{config: npuo.config}
+	_node = &NotificationPreference{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, npuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{notificationpreference.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -798,6 +798,6 @@ func (npuo *NotificationPreferenceUpdateOne) sqlSave(ctx context.Context) (_node
 		}
 		return nil, err
 	}
-	npuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

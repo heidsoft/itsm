@@ -23,173 +23,173 @@ type ProvisioningTaskUpdate struct {
 }
 
 // Where appends a list predicates to the ProvisioningTaskUpdate builder.
-func (ptu *ProvisioningTaskUpdate) Where(ps ...predicate.ProvisioningTask) *ProvisioningTaskUpdate {
-	ptu.mutation.Where(ps...)
-	return ptu
+func (_u *ProvisioningTaskUpdate) Where(ps ...predicate.ProvisioningTask) *ProvisioningTaskUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ptu *ProvisioningTaskUpdate) SetTenantID(i int) *ProvisioningTaskUpdate {
-	ptu.mutation.ResetTenantID()
-	ptu.mutation.SetTenantID(i)
-	return ptu
+func (_u *ProvisioningTaskUpdate) SetTenantID(v int) *ProvisioningTaskUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ptu *ProvisioningTaskUpdate) SetNillableTenantID(i *int) *ProvisioningTaskUpdate {
-	if i != nil {
-		ptu.SetTenantID(*i)
+func (_u *ProvisioningTaskUpdate) SetNillableTenantID(v *int) *ProvisioningTaskUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ptu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ptu *ProvisioningTaskUpdate) AddTenantID(i int) *ProvisioningTaskUpdate {
-	ptu.mutation.AddTenantID(i)
-	return ptu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProvisioningTaskUpdate) AddTenantID(v int) *ProvisioningTaskUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetServiceRequestID sets the "service_request_id" field.
-func (ptu *ProvisioningTaskUpdate) SetServiceRequestID(i int) *ProvisioningTaskUpdate {
-	ptu.mutation.ResetServiceRequestID()
-	ptu.mutation.SetServiceRequestID(i)
-	return ptu
+func (_u *ProvisioningTaskUpdate) SetServiceRequestID(v int) *ProvisioningTaskUpdate {
+	_u.mutation.ResetServiceRequestID()
+	_u.mutation.SetServiceRequestID(v)
+	return _u
 }
 
 // SetNillableServiceRequestID sets the "service_request_id" field if the given value is not nil.
-func (ptu *ProvisioningTaskUpdate) SetNillableServiceRequestID(i *int) *ProvisioningTaskUpdate {
-	if i != nil {
-		ptu.SetServiceRequestID(*i)
+func (_u *ProvisioningTaskUpdate) SetNillableServiceRequestID(v *int) *ProvisioningTaskUpdate {
+	if v != nil {
+		_u.SetServiceRequestID(*v)
 	}
-	return ptu
+	return _u
 }
 
-// AddServiceRequestID adds i to the "service_request_id" field.
-func (ptu *ProvisioningTaskUpdate) AddServiceRequestID(i int) *ProvisioningTaskUpdate {
-	ptu.mutation.AddServiceRequestID(i)
-	return ptu
+// AddServiceRequestID adds value to the "service_request_id" field.
+func (_u *ProvisioningTaskUpdate) AddServiceRequestID(v int) *ProvisioningTaskUpdate {
+	_u.mutation.AddServiceRequestID(v)
+	return _u
 }
 
 // SetProvider sets the "provider" field.
-func (ptu *ProvisioningTaskUpdate) SetProvider(s string) *ProvisioningTaskUpdate {
-	ptu.mutation.SetProvider(s)
-	return ptu
+func (_u *ProvisioningTaskUpdate) SetProvider(v string) *ProvisioningTaskUpdate {
+	_u.mutation.SetProvider(v)
+	return _u
 }
 
 // SetNillableProvider sets the "provider" field if the given value is not nil.
-func (ptu *ProvisioningTaskUpdate) SetNillableProvider(s *string) *ProvisioningTaskUpdate {
-	if s != nil {
-		ptu.SetProvider(*s)
+func (_u *ProvisioningTaskUpdate) SetNillableProvider(v *string) *ProvisioningTaskUpdate {
+	if v != nil {
+		_u.SetProvider(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetResourceType sets the "resource_type" field.
-func (ptu *ProvisioningTaskUpdate) SetResourceType(s string) *ProvisioningTaskUpdate {
-	ptu.mutation.SetResourceType(s)
-	return ptu
+func (_u *ProvisioningTaskUpdate) SetResourceType(v string) *ProvisioningTaskUpdate {
+	_u.mutation.SetResourceType(v)
+	return _u
 }
 
 // SetNillableResourceType sets the "resource_type" field if the given value is not nil.
-func (ptu *ProvisioningTaskUpdate) SetNillableResourceType(s *string) *ProvisioningTaskUpdate {
-	if s != nil {
-		ptu.SetResourceType(*s)
+func (_u *ProvisioningTaskUpdate) SetNillableResourceType(v *string) *ProvisioningTaskUpdate {
+	if v != nil {
+		_u.SetResourceType(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetPayload sets the "payload" field.
-func (ptu *ProvisioningTaskUpdate) SetPayload(m map[string]interface{}) *ProvisioningTaskUpdate {
-	ptu.mutation.SetPayload(m)
-	return ptu
+func (_u *ProvisioningTaskUpdate) SetPayload(v map[string]interface{}) *ProvisioningTaskUpdate {
+	_u.mutation.SetPayload(v)
+	return _u
 }
 
 // ClearPayload clears the value of the "payload" field.
-func (ptu *ProvisioningTaskUpdate) ClearPayload() *ProvisioningTaskUpdate {
-	ptu.mutation.ClearPayload()
-	return ptu
+func (_u *ProvisioningTaskUpdate) ClearPayload() *ProvisioningTaskUpdate {
+	_u.mutation.ClearPayload()
+	return _u
 }
 
 // SetResult sets the "result" field.
-func (ptu *ProvisioningTaskUpdate) SetResult(m map[string]interface{}) *ProvisioningTaskUpdate {
-	ptu.mutation.SetResult(m)
-	return ptu
+func (_u *ProvisioningTaskUpdate) SetResult(v map[string]interface{}) *ProvisioningTaskUpdate {
+	_u.mutation.SetResult(v)
+	return _u
 }
 
 // ClearResult clears the value of the "result" field.
-func (ptu *ProvisioningTaskUpdate) ClearResult() *ProvisioningTaskUpdate {
-	ptu.mutation.ClearResult()
-	return ptu
+func (_u *ProvisioningTaskUpdate) ClearResult() *ProvisioningTaskUpdate {
+	_u.mutation.ClearResult()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (ptu *ProvisioningTaskUpdate) SetStatus(s string) *ProvisioningTaskUpdate {
-	ptu.mutation.SetStatus(s)
-	return ptu
+func (_u *ProvisioningTaskUpdate) SetStatus(v string) *ProvisioningTaskUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ptu *ProvisioningTaskUpdate) SetNillableStatus(s *string) *ProvisioningTaskUpdate {
-	if s != nil {
-		ptu.SetStatus(*s)
+func (_u *ProvisioningTaskUpdate) SetNillableStatus(v *string) *ProvisioningTaskUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetErrorMessage sets the "error_message" field.
-func (ptu *ProvisioningTaskUpdate) SetErrorMessage(s string) *ProvisioningTaskUpdate {
-	ptu.mutation.SetErrorMessage(s)
-	return ptu
+func (_u *ProvisioningTaskUpdate) SetErrorMessage(v string) *ProvisioningTaskUpdate {
+	_u.mutation.SetErrorMessage(v)
+	return _u
 }
 
 // SetNillableErrorMessage sets the "error_message" field if the given value is not nil.
-func (ptu *ProvisioningTaskUpdate) SetNillableErrorMessage(s *string) *ProvisioningTaskUpdate {
-	if s != nil {
-		ptu.SetErrorMessage(*s)
+func (_u *ProvisioningTaskUpdate) SetNillableErrorMessage(v *string) *ProvisioningTaskUpdate {
+	if v != nil {
+		_u.SetErrorMessage(*v)
 	}
-	return ptu
+	return _u
 }
 
 // ClearErrorMessage clears the value of the "error_message" field.
-func (ptu *ProvisioningTaskUpdate) ClearErrorMessage() *ProvisioningTaskUpdate {
-	ptu.mutation.ClearErrorMessage()
-	return ptu
+func (_u *ProvisioningTaskUpdate) ClearErrorMessage() *ProvisioningTaskUpdate {
+	_u.mutation.ClearErrorMessage()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ptu *ProvisioningTaskUpdate) SetCreatedAt(t time.Time) *ProvisioningTaskUpdate {
-	ptu.mutation.SetCreatedAt(t)
-	return ptu
+func (_u *ProvisioningTaskUpdate) SetCreatedAt(v time.Time) *ProvisioningTaskUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ptu *ProvisioningTaskUpdate) SetNillableCreatedAt(t *time.Time) *ProvisioningTaskUpdate {
-	if t != nil {
-		ptu.SetCreatedAt(*t)
+func (_u *ProvisioningTaskUpdate) SetNillableCreatedAt(v *time.Time) *ProvisioningTaskUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ptu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ptu *ProvisioningTaskUpdate) SetUpdatedAt(t time.Time) *ProvisioningTaskUpdate {
-	ptu.mutation.SetUpdatedAt(t)
-	return ptu
+func (_u *ProvisioningTaskUpdate) SetUpdatedAt(v time.Time) *ProvisioningTaskUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the ProvisioningTaskMutation object of the builder.
-func (ptu *ProvisioningTaskUpdate) Mutation() *ProvisioningTaskMutation {
-	return ptu.mutation
+func (_u *ProvisioningTaskUpdate) Mutation() *ProvisioningTaskMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (ptu *ProvisioningTaskUpdate) Save(ctx context.Context) (int, error) {
-	ptu.defaults()
-	return withHooks(ctx, ptu.sqlSave, ptu.mutation, ptu.hooks)
+func (_u *ProvisioningTaskUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ptu *ProvisioningTaskUpdate) SaveX(ctx context.Context) int {
-	affected, err := ptu.Save(ctx)
+func (_u *ProvisioningTaskUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -197,34 +197,34 @@ func (ptu *ProvisioningTaskUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (ptu *ProvisioningTaskUpdate) Exec(ctx context.Context) error {
-	_, err := ptu.Save(ctx)
+func (_u *ProvisioningTaskUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptu *ProvisioningTaskUpdate) ExecX(ctx context.Context) {
-	if err := ptu.Exec(ctx); err != nil {
+func (_u *ProvisioningTaskUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ptu *ProvisioningTaskUpdate) defaults() {
-	if _, ok := ptu.mutation.UpdatedAt(); !ok {
+func (_u *ProvisioningTaskUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := provisioningtask.UpdateDefaultUpdatedAt()
-		ptu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ptu *ProvisioningTaskUpdate) check() error {
-	if v, ok := ptu.mutation.TenantID(); ok {
+func (_u *ProvisioningTaskUpdate) check() error {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := provisioningtask.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProvisioningTask.tenant_id": %w`, err)}
 		}
 	}
-	if v, ok := ptu.mutation.ServiceRequestID(); ok {
+	if v, ok := _u.mutation.ServiceRequestID(); ok {
 		if err := provisioningtask.ServiceRequestIDValidator(v); err != nil {
 			return &ValidationError{Name: "service_request_id", err: fmt.Errorf(`ent: validator failed for field "ProvisioningTask.service_request_id": %w`, err)}
 		}
@@ -232,64 +232,64 @@ func (ptu *ProvisioningTaskUpdate) check() error {
 	return nil
 }
 
-func (ptu *ProvisioningTaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := ptu.check(); err != nil {
-		return n, err
+func (_u *ProvisioningTaskUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(provisioningtask.Table, provisioningtask.Columns, sqlgraph.NewFieldSpec(provisioningtask.FieldID, field.TypeInt))
-	if ps := ptu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ptu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(provisioningtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ptu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(provisioningtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ptu.mutation.ServiceRequestID(); ok {
+	if value, ok := _u.mutation.ServiceRequestID(); ok {
 		_spec.SetField(provisioningtask.FieldServiceRequestID, field.TypeInt, value)
 	}
-	if value, ok := ptu.mutation.AddedServiceRequestID(); ok {
+	if value, ok := _u.mutation.AddedServiceRequestID(); ok {
 		_spec.AddField(provisioningtask.FieldServiceRequestID, field.TypeInt, value)
 	}
-	if value, ok := ptu.mutation.Provider(); ok {
+	if value, ok := _u.mutation.Provider(); ok {
 		_spec.SetField(provisioningtask.FieldProvider, field.TypeString, value)
 	}
-	if value, ok := ptu.mutation.ResourceType(); ok {
+	if value, ok := _u.mutation.ResourceType(); ok {
 		_spec.SetField(provisioningtask.FieldResourceType, field.TypeString, value)
 	}
-	if value, ok := ptu.mutation.Payload(); ok {
+	if value, ok := _u.mutation.Payload(); ok {
 		_spec.SetField(provisioningtask.FieldPayload, field.TypeJSON, value)
 	}
-	if ptu.mutation.PayloadCleared() {
+	if _u.mutation.PayloadCleared() {
 		_spec.ClearField(provisioningtask.FieldPayload, field.TypeJSON)
 	}
-	if value, ok := ptu.mutation.Result(); ok {
+	if value, ok := _u.mutation.Result(); ok {
 		_spec.SetField(provisioningtask.FieldResult, field.TypeJSON, value)
 	}
-	if ptu.mutation.ResultCleared() {
+	if _u.mutation.ResultCleared() {
 		_spec.ClearField(provisioningtask.FieldResult, field.TypeJSON)
 	}
-	if value, ok := ptu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(provisioningtask.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := ptu.mutation.ErrorMessage(); ok {
+	if value, ok := _u.mutation.ErrorMessage(); ok {
 		_spec.SetField(provisioningtask.FieldErrorMessage, field.TypeString, value)
 	}
-	if ptu.mutation.ErrorMessageCleared() {
+	if _u.mutation.ErrorMessageCleared() {
 		_spec.ClearField(provisioningtask.FieldErrorMessage, field.TypeString)
 	}
-	if value, ok := ptu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(provisioningtask.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ptu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(provisioningtask.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, ptu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{provisioningtask.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -297,8 +297,8 @@ func (ptu *ProvisioningTaskUpdate) sqlSave(ctx context.Context) (n int, err erro
 		}
 		return 0, err
 	}
-	ptu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ProvisioningTaskUpdateOne is the builder for updating a single ProvisioningTask entity.
@@ -310,180 +310,180 @@ type ProvisioningTaskUpdateOne struct {
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ptuo *ProvisioningTaskUpdateOne) SetTenantID(i int) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.ResetTenantID()
-	ptuo.mutation.SetTenantID(i)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) SetTenantID(v int) *ProvisioningTaskUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ptuo *ProvisioningTaskUpdateOne) SetNillableTenantID(i *int) *ProvisioningTaskUpdateOne {
-	if i != nil {
-		ptuo.SetTenantID(*i)
+func (_u *ProvisioningTaskUpdateOne) SetNillableTenantID(v *int) *ProvisioningTaskUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ptuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ptuo *ProvisioningTaskUpdateOne) AddTenantID(i int) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.AddTenantID(i)
-	return ptuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProvisioningTaskUpdateOne) AddTenantID(v int) *ProvisioningTaskUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetServiceRequestID sets the "service_request_id" field.
-func (ptuo *ProvisioningTaskUpdateOne) SetServiceRequestID(i int) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.ResetServiceRequestID()
-	ptuo.mutation.SetServiceRequestID(i)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) SetServiceRequestID(v int) *ProvisioningTaskUpdateOne {
+	_u.mutation.ResetServiceRequestID()
+	_u.mutation.SetServiceRequestID(v)
+	return _u
 }
 
 // SetNillableServiceRequestID sets the "service_request_id" field if the given value is not nil.
-func (ptuo *ProvisioningTaskUpdateOne) SetNillableServiceRequestID(i *int) *ProvisioningTaskUpdateOne {
-	if i != nil {
-		ptuo.SetServiceRequestID(*i)
+func (_u *ProvisioningTaskUpdateOne) SetNillableServiceRequestID(v *int) *ProvisioningTaskUpdateOne {
+	if v != nil {
+		_u.SetServiceRequestID(*v)
 	}
-	return ptuo
+	return _u
 }
 
-// AddServiceRequestID adds i to the "service_request_id" field.
-func (ptuo *ProvisioningTaskUpdateOne) AddServiceRequestID(i int) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.AddServiceRequestID(i)
-	return ptuo
+// AddServiceRequestID adds value to the "service_request_id" field.
+func (_u *ProvisioningTaskUpdateOne) AddServiceRequestID(v int) *ProvisioningTaskUpdateOne {
+	_u.mutation.AddServiceRequestID(v)
+	return _u
 }
 
 // SetProvider sets the "provider" field.
-func (ptuo *ProvisioningTaskUpdateOne) SetProvider(s string) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.SetProvider(s)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) SetProvider(v string) *ProvisioningTaskUpdateOne {
+	_u.mutation.SetProvider(v)
+	return _u
 }
 
 // SetNillableProvider sets the "provider" field if the given value is not nil.
-func (ptuo *ProvisioningTaskUpdateOne) SetNillableProvider(s *string) *ProvisioningTaskUpdateOne {
-	if s != nil {
-		ptuo.SetProvider(*s)
+func (_u *ProvisioningTaskUpdateOne) SetNillableProvider(v *string) *ProvisioningTaskUpdateOne {
+	if v != nil {
+		_u.SetProvider(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetResourceType sets the "resource_type" field.
-func (ptuo *ProvisioningTaskUpdateOne) SetResourceType(s string) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.SetResourceType(s)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) SetResourceType(v string) *ProvisioningTaskUpdateOne {
+	_u.mutation.SetResourceType(v)
+	return _u
 }
 
 // SetNillableResourceType sets the "resource_type" field if the given value is not nil.
-func (ptuo *ProvisioningTaskUpdateOne) SetNillableResourceType(s *string) *ProvisioningTaskUpdateOne {
-	if s != nil {
-		ptuo.SetResourceType(*s)
+func (_u *ProvisioningTaskUpdateOne) SetNillableResourceType(v *string) *ProvisioningTaskUpdateOne {
+	if v != nil {
+		_u.SetResourceType(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetPayload sets the "payload" field.
-func (ptuo *ProvisioningTaskUpdateOne) SetPayload(m map[string]interface{}) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.SetPayload(m)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) SetPayload(v map[string]interface{}) *ProvisioningTaskUpdateOne {
+	_u.mutation.SetPayload(v)
+	return _u
 }
 
 // ClearPayload clears the value of the "payload" field.
-func (ptuo *ProvisioningTaskUpdateOne) ClearPayload() *ProvisioningTaskUpdateOne {
-	ptuo.mutation.ClearPayload()
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) ClearPayload() *ProvisioningTaskUpdateOne {
+	_u.mutation.ClearPayload()
+	return _u
 }
 
 // SetResult sets the "result" field.
-func (ptuo *ProvisioningTaskUpdateOne) SetResult(m map[string]interface{}) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.SetResult(m)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) SetResult(v map[string]interface{}) *ProvisioningTaskUpdateOne {
+	_u.mutation.SetResult(v)
+	return _u
 }
 
 // ClearResult clears the value of the "result" field.
-func (ptuo *ProvisioningTaskUpdateOne) ClearResult() *ProvisioningTaskUpdateOne {
-	ptuo.mutation.ClearResult()
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) ClearResult() *ProvisioningTaskUpdateOne {
+	_u.mutation.ClearResult()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (ptuo *ProvisioningTaskUpdateOne) SetStatus(s string) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.SetStatus(s)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) SetStatus(v string) *ProvisioningTaskUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ptuo *ProvisioningTaskUpdateOne) SetNillableStatus(s *string) *ProvisioningTaskUpdateOne {
-	if s != nil {
-		ptuo.SetStatus(*s)
+func (_u *ProvisioningTaskUpdateOne) SetNillableStatus(v *string) *ProvisioningTaskUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetErrorMessage sets the "error_message" field.
-func (ptuo *ProvisioningTaskUpdateOne) SetErrorMessage(s string) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.SetErrorMessage(s)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) SetErrorMessage(v string) *ProvisioningTaskUpdateOne {
+	_u.mutation.SetErrorMessage(v)
+	return _u
 }
 
 // SetNillableErrorMessage sets the "error_message" field if the given value is not nil.
-func (ptuo *ProvisioningTaskUpdateOne) SetNillableErrorMessage(s *string) *ProvisioningTaskUpdateOne {
-	if s != nil {
-		ptuo.SetErrorMessage(*s)
+func (_u *ProvisioningTaskUpdateOne) SetNillableErrorMessage(v *string) *ProvisioningTaskUpdateOne {
+	if v != nil {
+		_u.SetErrorMessage(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // ClearErrorMessage clears the value of the "error_message" field.
-func (ptuo *ProvisioningTaskUpdateOne) ClearErrorMessage() *ProvisioningTaskUpdateOne {
-	ptuo.mutation.ClearErrorMessage()
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) ClearErrorMessage() *ProvisioningTaskUpdateOne {
+	_u.mutation.ClearErrorMessage()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ptuo *ProvisioningTaskUpdateOne) SetCreatedAt(t time.Time) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.SetCreatedAt(t)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) SetCreatedAt(v time.Time) *ProvisioningTaskUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ptuo *ProvisioningTaskUpdateOne) SetNillableCreatedAt(t *time.Time) *ProvisioningTaskUpdateOne {
-	if t != nil {
-		ptuo.SetCreatedAt(*t)
+func (_u *ProvisioningTaskUpdateOne) SetNillableCreatedAt(v *time.Time) *ProvisioningTaskUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ptuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ptuo *ProvisioningTaskUpdateOne) SetUpdatedAt(t time.Time) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.SetUpdatedAt(t)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) SetUpdatedAt(v time.Time) *ProvisioningTaskUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the ProvisioningTaskMutation object of the builder.
-func (ptuo *ProvisioningTaskUpdateOne) Mutation() *ProvisioningTaskMutation {
-	return ptuo.mutation
+func (_u *ProvisioningTaskUpdateOne) Mutation() *ProvisioningTaskMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the ProvisioningTaskUpdate builder.
-func (ptuo *ProvisioningTaskUpdateOne) Where(ps ...predicate.ProvisioningTask) *ProvisioningTaskUpdateOne {
-	ptuo.mutation.Where(ps...)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) Where(ps ...predicate.ProvisioningTask) *ProvisioningTaskUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (ptuo *ProvisioningTaskUpdateOne) Select(field string, fields ...string) *ProvisioningTaskUpdateOne {
-	ptuo.fields = append([]string{field}, fields...)
-	return ptuo
+func (_u *ProvisioningTaskUpdateOne) Select(field string, fields ...string) *ProvisioningTaskUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ProvisioningTask entity.
-func (ptuo *ProvisioningTaskUpdateOne) Save(ctx context.Context) (*ProvisioningTask, error) {
-	ptuo.defaults()
-	return withHooks(ctx, ptuo.sqlSave, ptuo.mutation, ptuo.hooks)
+func (_u *ProvisioningTaskUpdateOne) Save(ctx context.Context) (*ProvisioningTask, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ptuo *ProvisioningTaskUpdateOne) SaveX(ctx context.Context) *ProvisioningTask {
-	node, err := ptuo.Save(ctx)
+func (_u *ProvisioningTaskUpdateOne) SaveX(ctx context.Context) *ProvisioningTask {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -491,34 +491,34 @@ func (ptuo *ProvisioningTaskUpdateOne) SaveX(ctx context.Context) *ProvisioningT
 }
 
 // Exec executes the query on the entity.
-func (ptuo *ProvisioningTaskUpdateOne) Exec(ctx context.Context) error {
-	_, err := ptuo.Save(ctx)
+func (_u *ProvisioningTaskUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptuo *ProvisioningTaskUpdateOne) ExecX(ctx context.Context) {
-	if err := ptuo.Exec(ctx); err != nil {
+func (_u *ProvisioningTaskUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ptuo *ProvisioningTaskUpdateOne) defaults() {
-	if _, ok := ptuo.mutation.UpdatedAt(); !ok {
+func (_u *ProvisioningTaskUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := provisioningtask.UpdateDefaultUpdatedAt()
-		ptuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ptuo *ProvisioningTaskUpdateOne) check() error {
-	if v, ok := ptuo.mutation.TenantID(); ok {
+func (_u *ProvisioningTaskUpdateOne) check() error {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := provisioningtask.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProvisioningTask.tenant_id": %w`, err)}
 		}
 	}
-	if v, ok := ptuo.mutation.ServiceRequestID(); ok {
+	if v, ok := _u.mutation.ServiceRequestID(); ok {
 		if err := provisioningtask.ServiceRequestIDValidator(v); err != nil {
 			return &ValidationError{Name: "service_request_id", err: fmt.Errorf(`ent: validator failed for field "ProvisioningTask.service_request_id": %w`, err)}
 		}
@@ -526,17 +526,17 @@ func (ptuo *ProvisioningTaskUpdateOne) check() error {
 	return nil
 }
 
-func (ptuo *ProvisioningTaskUpdateOne) sqlSave(ctx context.Context) (_node *ProvisioningTask, err error) {
-	if err := ptuo.check(); err != nil {
+func (_u *ProvisioningTaskUpdateOne) sqlSave(ctx context.Context) (_node *ProvisioningTask, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(provisioningtask.Table, provisioningtask.Columns, sqlgraph.NewFieldSpec(provisioningtask.FieldID, field.TypeInt))
-	id, ok := ptuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ProvisioningTask.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := ptuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, provisioningtask.FieldID)
 		for _, f := range fields {
@@ -548,62 +548,62 @@ func (ptuo *ProvisioningTaskUpdateOne) sqlSave(ctx context.Context) (_node *Prov
 			}
 		}
 	}
-	if ps := ptuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ptuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(provisioningtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ptuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(provisioningtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ptuo.mutation.ServiceRequestID(); ok {
+	if value, ok := _u.mutation.ServiceRequestID(); ok {
 		_spec.SetField(provisioningtask.FieldServiceRequestID, field.TypeInt, value)
 	}
-	if value, ok := ptuo.mutation.AddedServiceRequestID(); ok {
+	if value, ok := _u.mutation.AddedServiceRequestID(); ok {
 		_spec.AddField(provisioningtask.FieldServiceRequestID, field.TypeInt, value)
 	}
-	if value, ok := ptuo.mutation.Provider(); ok {
+	if value, ok := _u.mutation.Provider(); ok {
 		_spec.SetField(provisioningtask.FieldProvider, field.TypeString, value)
 	}
-	if value, ok := ptuo.mutation.ResourceType(); ok {
+	if value, ok := _u.mutation.ResourceType(); ok {
 		_spec.SetField(provisioningtask.FieldResourceType, field.TypeString, value)
 	}
-	if value, ok := ptuo.mutation.Payload(); ok {
+	if value, ok := _u.mutation.Payload(); ok {
 		_spec.SetField(provisioningtask.FieldPayload, field.TypeJSON, value)
 	}
-	if ptuo.mutation.PayloadCleared() {
+	if _u.mutation.PayloadCleared() {
 		_spec.ClearField(provisioningtask.FieldPayload, field.TypeJSON)
 	}
-	if value, ok := ptuo.mutation.Result(); ok {
+	if value, ok := _u.mutation.Result(); ok {
 		_spec.SetField(provisioningtask.FieldResult, field.TypeJSON, value)
 	}
-	if ptuo.mutation.ResultCleared() {
+	if _u.mutation.ResultCleared() {
 		_spec.ClearField(provisioningtask.FieldResult, field.TypeJSON)
 	}
-	if value, ok := ptuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(provisioningtask.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := ptuo.mutation.ErrorMessage(); ok {
+	if value, ok := _u.mutation.ErrorMessage(); ok {
 		_spec.SetField(provisioningtask.FieldErrorMessage, field.TypeString, value)
 	}
-	if ptuo.mutation.ErrorMessageCleared() {
+	if _u.mutation.ErrorMessageCleared() {
 		_spec.ClearField(provisioningtask.FieldErrorMessage, field.TypeString)
 	}
-	if value, ok := ptuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(provisioningtask.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ptuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(provisioningtask.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &ProvisioningTask{config: ptuo.config}
+	_node = &ProvisioningTask{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, ptuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{provisioningtask.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -611,6 +611,6 @@ func (ptuo *ProvisioningTaskUpdateOne) sqlSave(ctx context.Context) (_node *Prov
 		}
 		return nil, err
 	}
-	ptuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

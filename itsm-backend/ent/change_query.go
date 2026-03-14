@@ -28,40 +28,40 @@ type ChangeQuery struct {
 }
 
 // Where adds a new predicate for the ChangeQuery builder.
-func (cq *ChangeQuery) Where(ps ...predicate.Change) *ChangeQuery {
-	cq.predicates = append(cq.predicates, ps...)
-	return cq
+func (_q *ChangeQuery) Where(ps ...predicate.Change) *ChangeQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (cq *ChangeQuery) Limit(limit int) *ChangeQuery {
-	cq.ctx.Limit = &limit
-	return cq
+func (_q *ChangeQuery) Limit(limit int) *ChangeQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (cq *ChangeQuery) Offset(offset int) *ChangeQuery {
-	cq.ctx.Offset = &offset
-	return cq
+func (_q *ChangeQuery) Offset(offset int) *ChangeQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (cq *ChangeQuery) Unique(unique bool) *ChangeQuery {
-	cq.ctx.Unique = &unique
-	return cq
+func (_q *ChangeQuery) Unique(unique bool) *ChangeQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (cq *ChangeQuery) Order(o ...change.OrderOption) *ChangeQuery {
-	cq.order = append(cq.order, o...)
-	return cq
+func (_q *ChangeQuery) Order(o ...change.OrderOption) *ChangeQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // First returns the first Change entity from the query.
 // Returns a *NotFoundError when no Change was found.
-func (cq *ChangeQuery) First(ctx context.Context) (*Change, error) {
-	nodes, err := cq.Limit(1).All(setContextOp(ctx, cq.ctx, ent.OpQueryFirst))
+func (_q *ChangeQuery) First(ctx context.Context) (*Change, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +72,8 @@ func (cq *ChangeQuery) First(ctx context.Context) (*Change, error) {
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (cq *ChangeQuery) FirstX(ctx context.Context) *Change {
-	node, err := cq.First(ctx)
+func (_q *ChangeQuery) FirstX(ctx context.Context) *Change {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -82,9 +82,9 @@ func (cq *ChangeQuery) FirstX(ctx context.Context) *Change {
 
 // FirstID returns the first Change ID from the query.
 // Returns a *NotFoundError when no Change ID was found.
-func (cq *ChangeQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *ChangeQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = cq.Limit(1).IDs(setContextOp(ctx, cq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -95,8 +95,8 @@ func (cq *ChangeQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (cq *ChangeQuery) FirstIDX(ctx context.Context) int {
-	id, err := cq.FirstID(ctx)
+func (_q *ChangeQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,8 +106,8 @@ func (cq *ChangeQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single Change entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one Change entity is found.
 // Returns a *NotFoundError when no Change entities are found.
-func (cq *ChangeQuery) Only(ctx context.Context) (*Change, error) {
-	nodes, err := cq.Limit(2).All(setContextOp(ctx, cq.ctx, ent.OpQueryOnly))
+func (_q *ChangeQuery) Only(ctx context.Context) (*Change, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +122,8 @@ func (cq *ChangeQuery) Only(ctx context.Context) (*Change, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (cq *ChangeQuery) OnlyX(ctx context.Context) *Change {
-	node, err := cq.Only(ctx)
+func (_q *ChangeQuery) OnlyX(ctx context.Context) *Change {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -133,9 +133,9 @@ func (cq *ChangeQuery) OnlyX(ctx context.Context) *Change {
 // OnlyID is like Only, but returns the only Change ID in the query.
 // Returns a *NotSingularError when more than one Change ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (cq *ChangeQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *ChangeQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = cq.Limit(2).IDs(setContextOp(ctx, cq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -150,8 +150,8 @@ func (cq *ChangeQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (cq *ChangeQuery) OnlyIDX(ctx context.Context) int {
-	id, err := cq.OnlyID(ctx)
+func (_q *ChangeQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,18 +159,18 @@ func (cq *ChangeQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of Changes.
-func (cq *ChangeQuery) All(ctx context.Context) ([]*Change, error) {
-	ctx = setContextOp(ctx, cq.ctx, ent.OpQueryAll)
-	if err := cq.prepareQuery(ctx); err != nil {
+func (_q *ChangeQuery) All(ctx context.Context) ([]*Change, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*Change, *ChangeQuery]()
-	return withInterceptors[[]*Change](ctx, cq, qr, cq.inters)
+	return withInterceptors[[]*Change](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (cq *ChangeQuery) AllX(ctx context.Context) []*Change {
-	nodes, err := cq.All(ctx)
+func (_q *ChangeQuery) AllX(ctx context.Context) []*Change {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -178,20 +178,20 @@ func (cq *ChangeQuery) AllX(ctx context.Context) []*Change {
 }
 
 // IDs executes the query and returns a list of Change IDs.
-func (cq *ChangeQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if cq.ctx.Unique == nil && cq.path != nil {
-		cq.Unique(true)
+func (_q *ChangeQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, cq.ctx, ent.OpQueryIDs)
-	if err = cq.Select(change.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(change.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (cq *ChangeQuery) IDsX(ctx context.Context) []int {
-	ids, err := cq.IDs(ctx)
+func (_q *ChangeQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -199,17 +199,17 @@ func (cq *ChangeQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (cq *ChangeQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, cq.ctx, ent.OpQueryCount)
-	if err := cq.prepareQuery(ctx); err != nil {
+func (_q *ChangeQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, cq, querierCount[*ChangeQuery](), cq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ChangeQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (cq *ChangeQuery) CountX(ctx context.Context) int {
-	count, err := cq.Count(ctx)
+func (_q *ChangeQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -217,9 +217,9 @@ func (cq *ChangeQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (cq *ChangeQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, cq.ctx, ent.OpQueryExist)
-	switch _, err := cq.FirstID(ctx); {
+func (_q *ChangeQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -230,8 +230,8 @@ func (cq *ChangeQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (cq *ChangeQuery) ExistX(ctx context.Context) bool {
-	exist, err := cq.Exist(ctx)
+func (_q *ChangeQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -240,19 +240,19 @@ func (cq *ChangeQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the ChangeQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (cq *ChangeQuery) Clone() *ChangeQuery {
-	if cq == nil {
+func (_q *ChangeQuery) Clone() *ChangeQuery {
+	if _q == nil {
 		return nil
 	}
 	return &ChangeQuery{
-		config:     cq.config,
-		ctx:        cq.ctx.Clone(),
-		order:      append([]change.OrderOption{}, cq.order...),
-		inters:     append([]Interceptor{}, cq.inters...),
-		predicates: append([]predicate.Change{}, cq.predicates...),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]change.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.Change{}, _q.predicates...),
 		// clone intermediate query.
-		sql:  cq.sql.Clone(),
-		path: cq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
@@ -270,10 +270,10 @@ func (cq *ChangeQuery) Clone() *ChangeQuery {
 //		GroupBy(change.FieldTitle).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (cq *ChangeQuery) GroupBy(field string, fields ...string) *ChangeGroupBy {
-	cq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &ChangeGroupBy{build: cq}
-	grbuild.flds = &cq.ctx.Fields
+func (_q *ChangeQuery) GroupBy(field string, fields ...string) *ChangeGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &ChangeGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = change.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -291,62 +291,62 @@ func (cq *ChangeQuery) GroupBy(field string, fields ...string) *ChangeGroupBy {
 //	client.Change.Query().
 //		Select(change.FieldTitle).
 //		Scan(ctx, &v)
-func (cq *ChangeQuery) Select(fields ...string) *ChangeSelect {
-	cq.ctx.Fields = append(cq.ctx.Fields, fields...)
-	sbuild := &ChangeSelect{ChangeQuery: cq}
+func (_q *ChangeQuery) Select(fields ...string) *ChangeSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &ChangeSelect{ChangeQuery: _q}
 	sbuild.label = change.Label
-	sbuild.flds, sbuild.scan = &cq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a ChangeSelect configured with the given aggregations.
-func (cq *ChangeQuery) Aggregate(fns ...AggregateFunc) *ChangeSelect {
-	return cq.Select().Aggregate(fns...)
+func (_q *ChangeQuery) Aggregate(fns ...AggregateFunc) *ChangeSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (cq *ChangeQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range cq.inters {
+func (_q *ChangeQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, cq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range cq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !change.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if cq.path != nil {
-		prev, err := cq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		cq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (cq *ChangeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Change, error) {
+func (_q *ChangeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Change, error) {
 	var (
 		nodes = []*Change{}
-		_spec = cq.querySpec()
+		_spec = _q.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Change).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Change{config: cq.config}
+		node := &Change{config: _q.config}
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, cq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
@@ -355,24 +355,24 @@ func (cq *ChangeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chang
 	return nodes, nil
 }
 
-func (cq *ChangeQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := cq.querySpec()
-	_spec.Node.Columns = cq.ctx.Fields
-	if len(cq.ctx.Fields) > 0 {
-		_spec.Unique = cq.ctx.Unique != nil && *cq.ctx.Unique
+func (_q *ChangeQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, cq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (cq *ChangeQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *ChangeQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(change.Table, change.Columns, sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt))
-	_spec.From = cq.sql
-	if unique := cq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if cq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := cq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, change.FieldID)
 		for i := range fields {
@@ -381,20 +381,20 @@ func (cq *ChangeQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := cq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := cq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := cq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := cq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -404,33 +404,33 @@ func (cq *ChangeQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (cq *ChangeQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(cq.driver.Dialect())
+func (_q *ChangeQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(change.Table)
-	columns := cq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = change.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if cq.sql != nil {
-		selector = cq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if cq.ctx.Unique != nil && *cq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range cq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range cq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := cq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := cq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -443,41 +443,41 @@ type ChangeGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (cgb *ChangeGroupBy) Aggregate(fns ...AggregateFunc) *ChangeGroupBy {
-	cgb.fns = append(cgb.fns, fns...)
-	return cgb
+func (_g *ChangeGroupBy) Aggregate(fns ...AggregateFunc) *ChangeGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (cgb *ChangeGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, cgb.build.ctx, ent.OpQueryGroupBy)
-	if err := cgb.build.prepareQuery(ctx); err != nil {
+func (_g *ChangeGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ChangeQuery, *ChangeGroupBy](ctx, cgb.build, cgb, cgb.build.inters, v)
+	return scanWithInterceptors[*ChangeQuery, *ChangeGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (cgb *ChangeGroupBy) sqlScan(ctx context.Context, root *ChangeQuery, v any) error {
+func (_g *ChangeGroupBy) sqlScan(ctx context.Context, root *ChangeQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(cgb.fns))
-	for _, fn := range cgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*cgb.flds)+len(cgb.fns))
-		for _, f := range *cgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*cgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := cgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -491,27 +491,27 @@ type ChangeSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (cs *ChangeSelect) Aggregate(fns ...AggregateFunc) *ChangeSelect {
-	cs.fns = append(cs.fns, fns...)
-	return cs
+func (_s *ChangeSelect) Aggregate(fns ...AggregateFunc) *ChangeSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (cs *ChangeSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, cs.ctx, ent.OpQuerySelect)
-	if err := cs.prepareQuery(ctx); err != nil {
+func (_s *ChangeSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ChangeQuery, *ChangeSelect](ctx, cs.ChangeQuery, cs, cs.inters, v)
+	return scanWithInterceptors[*ChangeQuery, *ChangeSelect](ctx, _s.ChangeQuery, _s, _s.inters, v)
 }
 
-func (cs *ChangeSelect) sqlScan(ctx context.Context, root *ChangeQuery, v any) error {
+func (_s *ChangeSelect) sqlScan(ctx context.Context, root *ChangeQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(cs.fns))
-	for _, fn := range cs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*cs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -519,7 +519,7 @@ func (cs *ChangeSelect) sqlScan(ctx context.Context, root *ChangeQuery, v any) e
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := cs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

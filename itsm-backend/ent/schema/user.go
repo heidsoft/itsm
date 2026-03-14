@@ -56,6 +56,13 @@ func (User) Fields() []ent.Field {
 			Comment("更新时间").
 			Default(time.Now).
 			UpdateDefault(time.Now),
+		field.Enum("msp_role").
+			Comment("MSP角色: provider_admin=MSP管理员, provider_agent=MSP客服, customer_user=客户用户").
+			Values("provider_admin", "provider_agent", "customer_user").
+			Optional(),
+		field.Int("assigned_by_msp_id").
+			Comment("MSP分配人ID").
+			Optional(),
 	}
 }
 
@@ -65,6 +72,11 @@ func (User) Edges() []ent.Edge {
 		edge.From("department_ref", Department.Type).
 			Ref("users").
 			Field("department_id").
+			Unique(),
+		edge.From("tenant", Tenant.Type).
+			Ref("users").
+			Field("tenant_id").
+			Required().
 			Unique(),
 		edge.To("ticket_comments", TicketComment.Type).
 			Comment("工单评论"),
@@ -80,5 +92,7 @@ func (User) Edges() []ent.Edge {
 			Comment("版本变更日志"),
 		edge.To("groups", Group.Type).
 			Comment("用户所属组"),
+		edge.To("msp_allocations", MSPAllocation.Type).
+			Comment("MSP用户分配"),
 	}
 }

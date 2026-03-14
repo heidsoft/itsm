@@ -112,7 +112,7 @@ func (*ApprovalRecord) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ApprovalRecord fields.
-func (ar *ApprovalRecord) assignValues(columns []string, values []any) error {
+func (_m *ApprovalRecord) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -123,112 +123,112 @@ func (ar *ApprovalRecord) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ar.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case approvalrecord.FieldTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_id", values[i])
 			} else if value.Valid {
-				ar.TicketID = int(value.Int64)
+				_m.TicketID = int(value.Int64)
 			}
 		case approvalrecord.FieldTicketNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_number", values[i])
 			} else if value.Valid {
-				ar.TicketNumber = value.String
+				_m.TicketNumber = value.String
 			}
 		case approvalrecord.FieldTicketTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_title", values[i])
 			} else if value.Valid {
-				ar.TicketTitle = value.String
+				_m.TicketTitle = value.String
 			}
 		case approvalrecord.FieldWorkflowID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field workflow_id", values[i])
 			} else if value.Valid {
-				ar.WorkflowID = int(value.Int64)
+				_m.WorkflowID = int(value.Int64)
 			}
 		case approvalrecord.FieldWorkflowName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field workflow_name", values[i])
 			} else if value.Valid {
-				ar.WorkflowName = value.String
+				_m.WorkflowName = value.String
 			}
 		case approvalrecord.FieldCurrentLevel:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field current_level", values[i])
 			} else if value.Valid {
-				ar.CurrentLevel = int(value.Int64)
+				_m.CurrentLevel = int(value.Int64)
 			}
 		case approvalrecord.FieldTotalLevels:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field total_levels", values[i])
 			} else if value.Valid {
-				ar.TotalLevels = int(value.Int64)
+				_m.TotalLevels = int(value.Int64)
 			}
 		case approvalrecord.FieldApproverID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field approver_id", values[i])
 			} else if value.Valid {
-				ar.ApproverID = int(value.Int64)
+				_m.ApproverID = int(value.Int64)
 			}
 		case approvalrecord.FieldApproverName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field approver_name", values[i])
 			} else if value.Valid {
-				ar.ApproverName = value.String
+				_m.ApproverName = value.String
 			}
 		case approvalrecord.FieldStepOrder:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field step_order", values[i])
 			} else if value.Valid {
-				ar.StepOrder = int(value.Int64)
+				_m.StepOrder = int(value.Int64)
 			}
 		case approvalrecord.FieldDueDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field due_date", values[i])
 			} else if value.Valid {
-				ar.DueDate = new(time.Time)
-				*ar.DueDate = value.Time
+				_m.DueDate = new(time.Time)
+				*_m.DueDate = value.Time
 			}
 		case approvalrecord.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				ar.Status = value.String
+				_m.Status = value.String
 			}
 		case approvalrecord.FieldAction:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field action", values[i])
 			} else if value.Valid {
-				ar.Action = value.String
+				_m.Action = value.String
 			}
 		case approvalrecord.FieldComment:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field comment", values[i])
 			} else if value.Valid {
-				ar.Comment = value.String
+				_m.Comment = value.String
 			}
 		case approvalrecord.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ar.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case approvalrecord.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ar.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case approvalrecord.FieldProcessedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field processed_at", values[i])
 			} else if value.Valid {
-				ar.ProcessedAt = value.Time
+				_m.ProcessedAt = value.Time
 			}
 		default:
-			ar.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -236,95 +236,95 @@ func (ar *ApprovalRecord) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ApprovalRecord.
 // This includes values selected through modifiers, order, etc.
-func (ar *ApprovalRecord) Value(name string) (ent.Value, error) {
-	return ar.selectValues.Get(name)
+func (_m *ApprovalRecord) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryTicket queries the "ticket" edge of the ApprovalRecord entity.
-func (ar *ApprovalRecord) QueryTicket() *TicketQuery {
-	return NewApprovalRecordClient(ar.config).QueryTicket(ar)
+func (_m *ApprovalRecord) QueryTicket() *TicketQuery {
+	return NewApprovalRecordClient(_m.config).QueryTicket(_m)
 }
 
 // QueryWorkflow queries the "workflow" edge of the ApprovalRecord entity.
-func (ar *ApprovalRecord) QueryWorkflow() *ApprovalWorkflowQuery {
-	return NewApprovalRecordClient(ar.config).QueryWorkflow(ar)
+func (_m *ApprovalRecord) QueryWorkflow() *ApprovalWorkflowQuery {
+	return NewApprovalRecordClient(_m.config).QueryWorkflow(_m)
 }
 
 // Update returns a builder for updating this ApprovalRecord.
 // Note that you need to call ApprovalRecord.Unwrap() before calling this method if this ApprovalRecord
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ar *ApprovalRecord) Update() *ApprovalRecordUpdateOne {
-	return NewApprovalRecordClient(ar.config).UpdateOne(ar)
+func (_m *ApprovalRecord) Update() *ApprovalRecordUpdateOne {
+	return NewApprovalRecordClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ApprovalRecord entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ar *ApprovalRecord) Unwrap() *ApprovalRecord {
-	_tx, ok := ar.config.driver.(*txDriver)
+func (_m *ApprovalRecord) Unwrap() *ApprovalRecord {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ApprovalRecord is not a transactional entity")
 	}
-	ar.config.driver = _tx.drv
-	return ar
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ar *ApprovalRecord) String() string {
+func (_m *ApprovalRecord) String() string {
 	var builder strings.Builder
 	builder.WriteString("ApprovalRecord(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ar.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("ticket_id=")
-	builder.WriteString(fmt.Sprintf("%v", ar.TicketID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TicketID))
 	builder.WriteString(", ")
 	builder.WriteString("ticket_number=")
-	builder.WriteString(ar.TicketNumber)
+	builder.WriteString(_m.TicketNumber)
 	builder.WriteString(", ")
 	builder.WriteString("ticket_title=")
-	builder.WriteString(ar.TicketTitle)
+	builder.WriteString(_m.TicketTitle)
 	builder.WriteString(", ")
 	builder.WriteString("workflow_id=")
-	builder.WriteString(fmt.Sprintf("%v", ar.WorkflowID))
+	builder.WriteString(fmt.Sprintf("%v", _m.WorkflowID))
 	builder.WriteString(", ")
 	builder.WriteString("workflow_name=")
-	builder.WriteString(ar.WorkflowName)
+	builder.WriteString(_m.WorkflowName)
 	builder.WriteString(", ")
 	builder.WriteString("current_level=")
-	builder.WriteString(fmt.Sprintf("%v", ar.CurrentLevel))
+	builder.WriteString(fmt.Sprintf("%v", _m.CurrentLevel))
 	builder.WriteString(", ")
 	builder.WriteString("total_levels=")
-	builder.WriteString(fmt.Sprintf("%v", ar.TotalLevels))
+	builder.WriteString(fmt.Sprintf("%v", _m.TotalLevels))
 	builder.WriteString(", ")
 	builder.WriteString("approver_id=")
-	builder.WriteString(fmt.Sprintf("%v", ar.ApproverID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ApproverID))
 	builder.WriteString(", ")
 	builder.WriteString("approver_name=")
-	builder.WriteString(ar.ApproverName)
+	builder.WriteString(_m.ApproverName)
 	builder.WriteString(", ")
 	builder.WriteString("step_order=")
-	builder.WriteString(fmt.Sprintf("%v", ar.StepOrder))
+	builder.WriteString(fmt.Sprintf("%v", _m.StepOrder))
 	builder.WriteString(", ")
-	if v := ar.DueDate; v != nil {
+	if v := _m.DueDate; v != nil {
 		builder.WriteString("due_date=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(ar.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("action=")
-	builder.WriteString(ar.Action)
+	builder.WriteString(_m.Action)
 	builder.WriteString(", ")
 	builder.WriteString("comment=")
-	builder.WriteString(ar.Comment)
+	builder.WriteString(_m.Comment)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ar.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ar.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("processed_at=")
-	builder.WriteString(ar.ProcessedAt.Format(time.ANSIC))
+	builder.WriteString(_m.ProcessedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

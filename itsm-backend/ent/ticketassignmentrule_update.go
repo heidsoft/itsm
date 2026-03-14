@@ -24,206 +24,206 @@ type TicketAssignmentRuleUpdate struct {
 }
 
 // Where appends a list predicates to the TicketAssignmentRuleUpdate builder.
-func (taru *TicketAssignmentRuleUpdate) Where(ps ...predicate.TicketAssignmentRule) *TicketAssignmentRuleUpdate {
-	taru.mutation.Where(ps...)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) Where(ps ...predicate.TicketAssignmentRule) *TicketAssignmentRuleUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (taru *TicketAssignmentRuleUpdate) SetName(s string) *TicketAssignmentRuleUpdate {
-	taru.mutation.SetName(s)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) SetName(v string) *TicketAssignmentRuleUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (taru *TicketAssignmentRuleUpdate) SetNillableName(s *string) *TicketAssignmentRuleUpdate {
-	if s != nil {
-		taru.SetName(*s)
+func (_u *TicketAssignmentRuleUpdate) SetNillableName(v *string) *TicketAssignmentRuleUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return taru
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (taru *TicketAssignmentRuleUpdate) SetDescription(s string) *TicketAssignmentRuleUpdate {
-	taru.mutation.SetDescription(s)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) SetDescription(v string) *TicketAssignmentRuleUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (taru *TicketAssignmentRuleUpdate) SetNillableDescription(s *string) *TicketAssignmentRuleUpdate {
-	if s != nil {
-		taru.SetDescription(*s)
+func (_u *TicketAssignmentRuleUpdate) SetNillableDescription(v *string) *TicketAssignmentRuleUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return taru
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (taru *TicketAssignmentRuleUpdate) ClearDescription() *TicketAssignmentRuleUpdate {
-	taru.mutation.ClearDescription()
-	return taru
+func (_u *TicketAssignmentRuleUpdate) ClearDescription() *TicketAssignmentRuleUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (taru *TicketAssignmentRuleUpdate) SetPriority(i int) *TicketAssignmentRuleUpdate {
-	taru.mutation.ResetPriority()
-	taru.mutation.SetPriority(i)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) SetPriority(v int) *TicketAssignmentRuleUpdate {
+	_u.mutation.ResetPriority()
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (taru *TicketAssignmentRuleUpdate) SetNillablePriority(i *int) *TicketAssignmentRuleUpdate {
-	if i != nil {
-		taru.SetPriority(*i)
+func (_u *TicketAssignmentRuleUpdate) SetNillablePriority(v *int) *TicketAssignmentRuleUpdate {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return taru
+	return _u
 }
 
-// AddPriority adds i to the "priority" field.
-func (taru *TicketAssignmentRuleUpdate) AddPriority(i int) *TicketAssignmentRuleUpdate {
-	taru.mutation.AddPriority(i)
-	return taru
+// AddPriority adds value to the "priority" field.
+func (_u *TicketAssignmentRuleUpdate) AddPriority(v int) *TicketAssignmentRuleUpdate {
+	_u.mutation.AddPriority(v)
+	return _u
 }
 
 // SetConditions sets the "conditions" field.
-func (taru *TicketAssignmentRuleUpdate) SetConditions(m []map[string]interface{}) *TicketAssignmentRuleUpdate {
-	taru.mutation.SetConditions(m)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) SetConditions(v []map[string]interface{}) *TicketAssignmentRuleUpdate {
+	_u.mutation.SetConditions(v)
+	return _u
 }
 
-// AppendConditions appends m to the "conditions" field.
-func (taru *TicketAssignmentRuleUpdate) AppendConditions(m []map[string]interface{}) *TicketAssignmentRuleUpdate {
-	taru.mutation.AppendConditions(m)
-	return taru
+// AppendConditions appends value to the "conditions" field.
+func (_u *TicketAssignmentRuleUpdate) AppendConditions(v []map[string]interface{}) *TicketAssignmentRuleUpdate {
+	_u.mutation.AppendConditions(v)
+	return _u
 }
 
 // ClearConditions clears the value of the "conditions" field.
-func (taru *TicketAssignmentRuleUpdate) ClearConditions() *TicketAssignmentRuleUpdate {
-	taru.mutation.ClearConditions()
-	return taru
+func (_u *TicketAssignmentRuleUpdate) ClearConditions() *TicketAssignmentRuleUpdate {
+	_u.mutation.ClearConditions()
+	return _u
 }
 
 // SetActions sets the "actions" field.
-func (taru *TicketAssignmentRuleUpdate) SetActions(m map[string]interface{}) *TicketAssignmentRuleUpdate {
-	taru.mutation.SetActions(m)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) SetActions(v map[string]interface{}) *TicketAssignmentRuleUpdate {
+	_u.mutation.SetActions(v)
+	return _u
 }
 
 // ClearActions clears the value of the "actions" field.
-func (taru *TicketAssignmentRuleUpdate) ClearActions() *TicketAssignmentRuleUpdate {
-	taru.mutation.ClearActions()
-	return taru
+func (_u *TicketAssignmentRuleUpdate) ClearActions() *TicketAssignmentRuleUpdate {
+	_u.mutation.ClearActions()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (taru *TicketAssignmentRuleUpdate) SetIsActive(b bool) *TicketAssignmentRuleUpdate {
-	taru.mutation.SetIsActive(b)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) SetIsActive(v bool) *TicketAssignmentRuleUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (taru *TicketAssignmentRuleUpdate) SetNillableIsActive(b *bool) *TicketAssignmentRuleUpdate {
-	if b != nil {
-		taru.SetIsActive(*b)
+func (_u *TicketAssignmentRuleUpdate) SetNillableIsActive(v *bool) *TicketAssignmentRuleUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return taru
+	return _u
 }
 
 // SetExecutionCount sets the "execution_count" field.
-func (taru *TicketAssignmentRuleUpdate) SetExecutionCount(i int) *TicketAssignmentRuleUpdate {
-	taru.mutation.ResetExecutionCount()
-	taru.mutation.SetExecutionCount(i)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) SetExecutionCount(v int) *TicketAssignmentRuleUpdate {
+	_u.mutation.ResetExecutionCount()
+	_u.mutation.SetExecutionCount(v)
+	return _u
 }
 
 // SetNillableExecutionCount sets the "execution_count" field if the given value is not nil.
-func (taru *TicketAssignmentRuleUpdate) SetNillableExecutionCount(i *int) *TicketAssignmentRuleUpdate {
-	if i != nil {
-		taru.SetExecutionCount(*i)
+func (_u *TicketAssignmentRuleUpdate) SetNillableExecutionCount(v *int) *TicketAssignmentRuleUpdate {
+	if v != nil {
+		_u.SetExecutionCount(*v)
 	}
-	return taru
+	return _u
 }
 
-// AddExecutionCount adds i to the "execution_count" field.
-func (taru *TicketAssignmentRuleUpdate) AddExecutionCount(i int) *TicketAssignmentRuleUpdate {
-	taru.mutation.AddExecutionCount(i)
-	return taru
+// AddExecutionCount adds value to the "execution_count" field.
+func (_u *TicketAssignmentRuleUpdate) AddExecutionCount(v int) *TicketAssignmentRuleUpdate {
+	_u.mutation.AddExecutionCount(v)
+	return _u
 }
 
 // SetLastExecutedAt sets the "last_executed_at" field.
-func (taru *TicketAssignmentRuleUpdate) SetLastExecutedAt(t time.Time) *TicketAssignmentRuleUpdate {
-	taru.mutation.SetLastExecutedAt(t)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) SetLastExecutedAt(v time.Time) *TicketAssignmentRuleUpdate {
+	_u.mutation.SetLastExecutedAt(v)
+	return _u
 }
 
 // SetNillableLastExecutedAt sets the "last_executed_at" field if the given value is not nil.
-func (taru *TicketAssignmentRuleUpdate) SetNillableLastExecutedAt(t *time.Time) *TicketAssignmentRuleUpdate {
-	if t != nil {
-		taru.SetLastExecutedAt(*t)
+func (_u *TicketAssignmentRuleUpdate) SetNillableLastExecutedAt(v *time.Time) *TicketAssignmentRuleUpdate {
+	if v != nil {
+		_u.SetLastExecutedAt(*v)
 	}
-	return taru
+	return _u
 }
 
 // ClearLastExecutedAt clears the value of the "last_executed_at" field.
-func (taru *TicketAssignmentRuleUpdate) ClearLastExecutedAt() *TicketAssignmentRuleUpdate {
-	taru.mutation.ClearLastExecutedAt()
-	return taru
+func (_u *TicketAssignmentRuleUpdate) ClearLastExecutedAt() *TicketAssignmentRuleUpdate {
+	_u.mutation.ClearLastExecutedAt()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (taru *TicketAssignmentRuleUpdate) SetTenantID(i int) *TicketAssignmentRuleUpdate {
-	taru.mutation.ResetTenantID()
-	taru.mutation.SetTenantID(i)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) SetTenantID(v int) *TicketAssignmentRuleUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (taru *TicketAssignmentRuleUpdate) SetNillableTenantID(i *int) *TicketAssignmentRuleUpdate {
-	if i != nil {
-		taru.SetTenantID(*i)
+func (_u *TicketAssignmentRuleUpdate) SetNillableTenantID(v *int) *TicketAssignmentRuleUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return taru
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (taru *TicketAssignmentRuleUpdate) AddTenantID(i int) *TicketAssignmentRuleUpdate {
-	taru.mutation.AddTenantID(i)
-	return taru
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TicketAssignmentRuleUpdate) AddTenantID(v int) *TicketAssignmentRuleUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (taru *TicketAssignmentRuleUpdate) SetCreatedAt(t time.Time) *TicketAssignmentRuleUpdate {
-	taru.mutation.SetCreatedAt(t)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) SetCreatedAt(v time.Time) *TicketAssignmentRuleUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (taru *TicketAssignmentRuleUpdate) SetNillableCreatedAt(t *time.Time) *TicketAssignmentRuleUpdate {
-	if t != nil {
-		taru.SetCreatedAt(*t)
+func (_u *TicketAssignmentRuleUpdate) SetNillableCreatedAt(v *time.Time) *TicketAssignmentRuleUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return taru
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (taru *TicketAssignmentRuleUpdate) SetUpdatedAt(t time.Time) *TicketAssignmentRuleUpdate {
-	taru.mutation.SetUpdatedAt(t)
-	return taru
+func (_u *TicketAssignmentRuleUpdate) SetUpdatedAt(v time.Time) *TicketAssignmentRuleUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the TicketAssignmentRuleMutation object of the builder.
-func (taru *TicketAssignmentRuleUpdate) Mutation() *TicketAssignmentRuleMutation {
-	return taru.mutation
+func (_u *TicketAssignmentRuleUpdate) Mutation() *TicketAssignmentRuleMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (taru *TicketAssignmentRuleUpdate) Save(ctx context.Context) (int, error) {
-	taru.defaults()
-	return withHooks(ctx, taru.sqlSave, taru.mutation, taru.hooks)
+func (_u *TicketAssignmentRuleUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (taru *TicketAssignmentRuleUpdate) SaveX(ctx context.Context) int {
-	affected, err := taru.Save(ctx)
+func (_u *TicketAssignmentRuleUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -231,34 +231,34 @@ func (taru *TicketAssignmentRuleUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (taru *TicketAssignmentRuleUpdate) Exec(ctx context.Context) error {
-	_, err := taru.Save(ctx)
+func (_u *TicketAssignmentRuleUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (taru *TicketAssignmentRuleUpdate) ExecX(ctx context.Context) {
-	if err := taru.Exec(ctx); err != nil {
+func (_u *TicketAssignmentRuleUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (taru *TicketAssignmentRuleUpdate) defaults() {
-	if _, ok := taru.mutation.UpdatedAt(); !ok {
+func (_u *TicketAssignmentRuleUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := ticketassignmentrule.UpdateDefaultUpdatedAt()
-		taru.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (taru *TicketAssignmentRuleUpdate) check() error {
-	if v, ok := taru.mutation.Name(); ok {
+func (_u *TicketAssignmentRuleUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := ticketassignmentrule.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketAssignmentRule.name": %w`, err)}
 		}
 	}
-	if v, ok := taru.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := ticketassignmentrule.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketAssignmentRule.tenant_id": %w`, err)}
 		}
@@ -266,78 +266,78 @@ func (taru *TicketAssignmentRuleUpdate) check() error {
 	return nil
 }
 
-func (taru *TicketAssignmentRuleUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := taru.check(); err != nil {
-		return n, err
+func (_u *TicketAssignmentRuleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(ticketassignmentrule.Table, ticketassignmentrule.Columns, sqlgraph.NewFieldSpec(ticketassignmentrule.FieldID, field.TypeInt))
-	if ps := taru.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := taru.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(ticketassignmentrule.FieldName, field.TypeString, value)
 	}
-	if value, ok := taru.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(ticketassignmentrule.FieldDescription, field.TypeString, value)
 	}
-	if taru.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(ticketassignmentrule.FieldDescription, field.TypeString)
 	}
-	if value, ok := taru.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(ticketassignmentrule.FieldPriority, field.TypeInt, value)
 	}
-	if value, ok := taru.mutation.AddedPriority(); ok {
+	if value, ok := _u.mutation.AddedPriority(); ok {
 		_spec.AddField(ticketassignmentrule.FieldPriority, field.TypeInt, value)
 	}
-	if value, ok := taru.mutation.Conditions(); ok {
+	if value, ok := _u.mutation.Conditions(); ok {
 		_spec.SetField(ticketassignmentrule.FieldConditions, field.TypeJSON, value)
 	}
-	if value, ok := taru.mutation.AppendedConditions(); ok {
+	if value, ok := _u.mutation.AppendedConditions(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, ticketassignmentrule.FieldConditions, value)
 		})
 	}
-	if taru.mutation.ConditionsCleared() {
+	if _u.mutation.ConditionsCleared() {
 		_spec.ClearField(ticketassignmentrule.FieldConditions, field.TypeJSON)
 	}
-	if value, ok := taru.mutation.Actions(); ok {
+	if value, ok := _u.mutation.Actions(); ok {
 		_spec.SetField(ticketassignmentrule.FieldActions, field.TypeJSON, value)
 	}
-	if taru.mutation.ActionsCleared() {
+	if _u.mutation.ActionsCleared() {
 		_spec.ClearField(ticketassignmentrule.FieldActions, field.TypeJSON)
 	}
-	if value, ok := taru.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(ticketassignmentrule.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := taru.mutation.ExecutionCount(); ok {
+	if value, ok := _u.mutation.ExecutionCount(); ok {
 		_spec.SetField(ticketassignmentrule.FieldExecutionCount, field.TypeInt, value)
 	}
-	if value, ok := taru.mutation.AddedExecutionCount(); ok {
+	if value, ok := _u.mutation.AddedExecutionCount(); ok {
 		_spec.AddField(ticketassignmentrule.FieldExecutionCount, field.TypeInt, value)
 	}
-	if value, ok := taru.mutation.LastExecutedAt(); ok {
+	if value, ok := _u.mutation.LastExecutedAt(); ok {
 		_spec.SetField(ticketassignmentrule.FieldLastExecutedAt, field.TypeTime, value)
 	}
-	if taru.mutation.LastExecutedAtCleared() {
+	if _u.mutation.LastExecutedAtCleared() {
 		_spec.ClearField(ticketassignmentrule.FieldLastExecutedAt, field.TypeTime)
 	}
-	if value, ok := taru.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ticketassignmentrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := taru.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticketassignmentrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := taru.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketassignmentrule.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := taru.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticketassignmentrule.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, taru.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticketassignmentrule.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -345,8 +345,8 @@ func (taru *TicketAssignmentRuleUpdate) sqlSave(ctx context.Context) (n int, err
 		}
 		return 0, err
 	}
-	taru.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // TicketAssignmentRuleUpdateOne is the builder for updating a single TicketAssignmentRule entity.
@@ -358,213 +358,213 @@ type TicketAssignmentRuleUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (taruo *TicketAssignmentRuleUpdateOne) SetName(s string) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.SetName(s)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) SetName(v string) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (taruo *TicketAssignmentRuleUpdateOne) SetNillableName(s *string) *TicketAssignmentRuleUpdateOne {
-	if s != nil {
-		taruo.SetName(*s)
+func (_u *TicketAssignmentRuleUpdateOne) SetNillableName(v *string) *TicketAssignmentRuleUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return taruo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (taruo *TicketAssignmentRuleUpdateOne) SetDescription(s string) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.SetDescription(s)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) SetDescription(v string) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (taruo *TicketAssignmentRuleUpdateOne) SetNillableDescription(s *string) *TicketAssignmentRuleUpdateOne {
-	if s != nil {
-		taruo.SetDescription(*s)
+func (_u *TicketAssignmentRuleUpdateOne) SetNillableDescription(v *string) *TicketAssignmentRuleUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return taruo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (taruo *TicketAssignmentRuleUpdateOne) ClearDescription() *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.ClearDescription()
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) ClearDescription() *TicketAssignmentRuleUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (taruo *TicketAssignmentRuleUpdateOne) SetPriority(i int) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.ResetPriority()
-	taruo.mutation.SetPriority(i)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) SetPriority(v int) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.ResetPriority()
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (taruo *TicketAssignmentRuleUpdateOne) SetNillablePriority(i *int) *TicketAssignmentRuleUpdateOne {
-	if i != nil {
-		taruo.SetPriority(*i)
+func (_u *TicketAssignmentRuleUpdateOne) SetNillablePriority(v *int) *TicketAssignmentRuleUpdateOne {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return taruo
+	return _u
 }
 
-// AddPriority adds i to the "priority" field.
-func (taruo *TicketAssignmentRuleUpdateOne) AddPriority(i int) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.AddPriority(i)
-	return taruo
+// AddPriority adds value to the "priority" field.
+func (_u *TicketAssignmentRuleUpdateOne) AddPriority(v int) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.AddPriority(v)
+	return _u
 }
 
 // SetConditions sets the "conditions" field.
-func (taruo *TicketAssignmentRuleUpdateOne) SetConditions(m []map[string]interface{}) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.SetConditions(m)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) SetConditions(v []map[string]interface{}) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.SetConditions(v)
+	return _u
 }
 
-// AppendConditions appends m to the "conditions" field.
-func (taruo *TicketAssignmentRuleUpdateOne) AppendConditions(m []map[string]interface{}) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.AppendConditions(m)
-	return taruo
+// AppendConditions appends value to the "conditions" field.
+func (_u *TicketAssignmentRuleUpdateOne) AppendConditions(v []map[string]interface{}) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.AppendConditions(v)
+	return _u
 }
 
 // ClearConditions clears the value of the "conditions" field.
-func (taruo *TicketAssignmentRuleUpdateOne) ClearConditions() *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.ClearConditions()
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) ClearConditions() *TicketAssignmentRuleUpdateOne {
+	_u.mutation.ClearConditions()
+	return _u
 }
 
 // SetActions sets the "actions" field.
-func (taruo *TicketAssignmentRuleUpdateOne) SetActions(m map[string]interface{}) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.SetActions(m)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) SetActions(v map[string]interface{}) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.SetActions(v)
+	return _u
 }
 
 // ClearActions clears the value of the "actions" field.
-func (taruo *TicketAssignmentRuleUpdateOne) ClearActions() *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.ClearActions()
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) ClearActions() *TicketAssignmentRuleUpdateOne {
+	_u.mutation.ClearActions()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (taruo *TicketAssignmentRuleUpdateOne) SetIsActive(b bool) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.SetIsActive(b)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) SetIsActive(v bool) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (taruo *TicketAssignmentRuleUpdateOne) SetNillableIsActive(b *bool) *TicketAssignmentRuleUpdateOne {
-	if b != nil {
-		taruo.SetIsActive(*b)
+func (_u *TicketAssignmentRuleUpdateOne) SetNillableIsActive(v *bool) *TicketAssignmentRuleUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return taruo
+	return _u
 }
 
 // SetExecutionCount sets the "execution_count" field.
-func (taruo *TicketAssignmentRuleUpdateOne) SetExecutionCount(i int) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.ResetExecutionCount()
-	taruo.mutation.SetExecutionCount(i)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) SetExecutionCount(v int) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.ResetExecutionCount()
+	_u.mutation.SetExecutionCount(v)
+	return _u
 }
 
 // SetNillableExecutionCount sets the "execution_count" field if the given value is not nil.
-func (taruo *TicketAssignmentRuleUpdateOne) SetNillableExecutionCount(i *int) *TicketAssignmentRuleUpdateOne {
-	if i != nil {
-		taruo.SetExecutionCount(*i)
+func (_u *TicketAssignmentRuleUpdateOne) SetNillableExecutionCount(v *int) *TicketAssignmentRuleUpdateOne {
+	if v != nil {
+		_u.SetExecutionCount(*v)
 	}
-	return taruo
+	return _u
 }
 
-// AddExecutionCount adds i to the "execution_count" field.
-func (taruo *TicketAssignmentRuleUpdateOne) AddExecutionCount(i int) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.AddExecutionCount(i)
-	return taruo
+// AddExecutionCount adds value to the "execution_count" field.
+func (_u *TicketAssignmentRuleUpdateOne) AddExecutionCount(v int) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.AddExecutionCount(v)
+	return _u
 }
 
 // SetLastExecutedAt sets the "last_executed_at" field.
-func (taruo *TicketAssignmentRuleUpdateOne) SetLastExecutedAt(t time.Time) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.SetLastExecutedAt(t)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) SetLastExecutedAt(v time.Time) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.SetLastExecutedAt(v)
+	return _u
 }
 
 // SetNillableLastExecutedAt sets the "last_executed_at" field if the given value is not nil.
-func (taruo *TicketAssignmentRuleUpdateOne) SetNillableLastExecutedAt(t *time.Time) *TicketAssignmentRuleUpdateOne {
-	if t != nil {
-		taruo.SetLastExecutedAt(*t)
+func (_u *TicketAssignmentRuleUpdateOne) SetNillableLastExecutedAt(v *time.Time) *TicketAssignmentRuleUpdateOne {
+	if v != nil {
+		_u.SetLastExecutedAt(*v)
 	}
-	return taruo
+	return _u
 }
 
 // ClearLastExecutedAt clears the value of the "last_executed_at" field.
-func (taruo *TicketAssignmentRuleUpdateOne) ClearLastExecutedAt() *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.ClearLastExecutedAt()
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) ClearLastExecutedAt() *TicketAssignmentRuleUpdateOne {
+	_u.mutation.ClearLastExecutedAt()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (taruo *TicketAssignmentRuleUpdateOne) SetTenantID(i int) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.ResetTenantID()
-	taruo.mutation.SetTenantID(i)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) SetTenantID(v int) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (taruo *TicketAssignmentRuleUpdateOne) SetNillableTenantID(i *int) *TicketAssignmentRuleUpdateOne {
-	if i != nil {
-		taruo.SetTenantID(*i)
+func (_u *TicketAssignmentRuleUpdateOne) SetNillableTenantID(v *int) *TicketAssignmentRuleUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return taruo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (taruo *TicketAssignmentRuleUpdateOne) AddTenantID(i int) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.AddTenantID(i)
-	return taruo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TicketAssignmentRuleUpdateOne) AddTenantID(v int) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (taruo *TicketAssignmentRuleUpdateOne) SetCreatedAt(t time.Time) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.SetCreatedAt(t)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) SetCreatedAt(v time.Time) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (taruo *TicketAssignmentRuleUpdateOne) SetNillableCreatedAt(t *time.Time) *TicketAssignmentRuleUpdateOne {
-	if t != nil {
-		taruo.SetCreatedAt(*t)
+func (_u *TicketAssignmentRuleUpdateOne) SetNillableCreatedAt(v *time.Time) *TicketAssignmentRuleUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return taruo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (taruo *TicketAssignmentRuleUpdateOne) SetUpdatedAt(t time.Time) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.SetUpdatedAt(t)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) SetUpdatedAt(v time.Time) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the TicketAssignmentRuleMutation object of the builder.
-func (taruo *TicketAssignmentRuleUpdateOne) Mutation() *TicketAssignmentRuleMutation {
-	return taruo.mutation
+func (_u *TicketAssignmentRuleUpdateOne) Mutation() *TicketAssignmentRuleMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the TicketAssignmentRuleUpdate builder.
-func (taruo *TicketAssignmentRuleUpdateOne) Where(ps ...predicate.TicketAssignmentRule) *TicketAssignmentRuleUpdateOne {
-	taruo.mutation.Where(ps...)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) Where(ps ...predicate.TicketAssignmentRule) *TicketAssignmentRuleUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (taruo *TicketAssignmentRuleUpdateOne) Select(field string, fields ...string) *TicketAssignmentRuleUpdateOne {
-	taruo.fields = append([]string{field}, fields...)
-	return taruo
+func (_u *TicketAssignmentRuleUpdateOne) Select(field string, fields ...string) *TicketAssignmentRuleUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated TicketAssignmentRule entity.
-func (taruo *TicketAssignmentRuleUpdateOne) Save(ctx context.Context) (*TicketAssignmentRule, error) {
-	taruo.defaults()
-	return withHooks(ctx, taruo.sqlSave, taruo.mutation, taruo.hooks)
+func (_u *TicketAssignmentRuleUpdateOne) Save(ctx context.Context) (*TicketAssignmentRule, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (taruo *TicketAssignmentRuleUpdateOne) SaveX(ctx context.Context) *TicketAssignmentRule {
-	node, err := taruo.Save(ctx)
+func (_u *TicketAssignmentRuleUpdateOne) SaveX(ctx context.Context) *TicketAssignmentRule {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -572,34 +572,34 @@ func (taruo *TicketAssignmentRuleUpdateOne) SaveX(ctx context.Context) *TicketAs
 }
 
 // Exec executes the query on the entity.
-func (taruo *TicketAssignmentRuleUpdateOne) Exec(ctx context.Context) error {
-	_, err := taruo.Save(ctx)
+func (_u *TicketAssignmentRuleUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (taruo *TicketAssignmentRuleUpdateOne) ExecX(ctx context.Context) {
-	if err := taruo.Exec(ctx); err != nil {
+func (_u *TicketAssignmentRuleUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (taruo *TicketAssignmentRuleUpdateOne) defaults() {
-	if _, ok := taruo.mutation.UpdatedAt(); !ok {
+func (_u *TicketAssignmentRuleUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := ticketassignmentrule.UpdateDefaultUpdatedAt()
-		taruo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (taruo *TicketAssignmentRuleUpdateOne) check() error {
-	if v, ok := taruo.mutation.Name(); ok {
+func (_u *TicketAssignmentRuleUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := ticketassignmentrule.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketAssignmentRule.name": %w`, err)}
 		}
 	}
-	if v, ok := taruo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := ticketassignmentrule.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketAssignmentRule.tenant_id": %w`, err)}
 		}
@@ -607,17 +607,17 @@ func (taruo *TicketAssignmentRuleUpdateOne) check() error {
 	return nil
 }
 
-func (taruo *TicketAssignmentRuleUpdateOne) sqlSave(ctx context.Context) (_node *TicketAssignmentRule, err error) {
-	if err := taruo.check(); err != nil {
+func (_u *TicketAssignmentRuleUpdateOne) sqlSave(ctx context.Context) (_node *TicketAssignmentRule, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(ticketassignmentrule.Table, ticketassignmentrule.Columns, sqlgraph.NewFieldSpec(ticketassignmentrule.FieldID, field.TypeInt))
-	id, ok := taruo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "TicketAssignmentRule.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := taruo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, ticketassignmentrule.FieldID)
 		for _, f := range fields {
@@ -629,76 +629,76 @@ func (taruo *TicketAssignmentRuleUpdateOne) sqlSave(ctx context.Context) (_node 
 			}
 		}
 	}
-	if ps := taruo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := taruo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(ticketassignmentrule.FieldName, field.TypeString, value)
 	}
-	if value, ok := taruo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(ticketassignmentrule.FieldDescription, field.TypeString, value)
 	}
-	if taruo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(ticketassignmentrule.FieldDescription, field.TypeString)
 	}
-	if value, ok := taruo.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(ticketassignmentrule.FieldPriority, field.TypeInt, value)
 	}
-	if value, ok := taruo.mutation.AddedPriority(); ok {
+	if value, ok := _u.mutation.AddedPriority(); ok {
 		_spec.AddField(ticketassignmentrule.FieldPriority, field.TypeInt, value)
 	}
-	if value, ok := taruo.mutation.Conditions(); ok {
+	if value, ok := _u.mutation.Conditions(); ok {
 		_spec.SetField(ticketassignmentrule.FieldConditions, field.TypeJSON, value)
 	}
-	if value, ok := taruo.mutation.AppendedConditions(); ok {
+	if value, ok := _u.mutation.AppendedConditions(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, ticketassignmentrule.FieldConditions, value)
 		})
 	}
-	if taruo.mutation.ConditionsCleared() {
+	if _u.mutation.ConditionsCleared() {
 		_spec.ClearField(ticketassignmentrule.FieldConditions, field.TypeJSON)
 	}
-	if value, ok := taruo.mutation.Actions(); ok {
+	if value, ok := _u.mutation.Actions(); ok {
 		_spec.SetField(ticketassignmentrule.FieldActions, field.TypeJSON, value)
 	}
-	if taruo.mutation.ActionsCleared() {
+	if _u.mutation.ActionsCleared() {
 		_spec.ClearField(ticketassignmentrule.FieldActions, field.TypeJSON)
 	}
-	if value, ok := taruo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(ticketassignmentrule.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := taruo.mutation.ExecutionCount(); ok {
+	if value, ok := _u.mutation.ExecutionCount(); ok {
 		_spec.SetField(ticketassignmentrule.FieldExecutionCount, field.TypeInt, value)
 	}
-	if value, ok := taruo.mutation.AddedExecutionCount(); ok {
+	if value, ok := _u.mutation.AddedExecutionCount(); ok {
 		_spec.AddField(ticketassignmentrule.FieldExecutionCount, field.TypeInt, value)
 	}
-	if value, ok := taruo.mutation.LastExecutedAt(); ok {
+	if value, ok := _u.mutation.LastExecutedAt(); ok {
 		_spec.SetField(ticketassignmentrule.FieldLastExecutedAt, field.TypeTime, value)
 	}
-	if taruo.mutation.LastExecutedAtCleared() {
+	if _u.mutation.LastExecutedAtCleared() {
 		_spec.ClearField(ticketassignmentrule.FieldLastExecutedAt, field.TypeTime)
 	}
-	if value, ok := taruo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ticketassignmentrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := taruo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticketassignmentrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := taruo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketassignmentrule.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := taruo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticketassignmentrule.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &TicketAssignmentRule{config: taruo.config}
+	_node = &TicketAssignmentRule{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, taruo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticketassignmentrule.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -706,6 +706,6 @@ func (taruo *TicketAssignmentRuleUpdateOne) sqlSave(ctx context.Context) (_node 
 		}
 		return nil, err
 	}
-	taruo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

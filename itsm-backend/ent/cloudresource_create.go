@@ -24,212 +24,212 @@ type CloudResourceCreate struct {
 }
 
 // SetCloudAccountID sets the "cloud_account_id" field.
-func (crc *CloudResourceCreate) SetCloudAccountID(i int) *CloudResourceCreate {
-	crc.mutation.SetCloudAccountID(i)
-	return crc
+func (_c *CloudResourceCreate) SetCloudAccountID(v int) *CloudResourceCreate {
+	_c.mutation.SetCloudAccountID(v)
+	return _c
 }
 
 // SetServiceID sets the "service_id" field.
-func (crc *CloudResourceCreate) SetServiceID(i int) *CloudResourceCreate {
-	crc.mutation.SetServiceID(i)
-	return crc
+func (_c *CloudResourceCreate) SetServiceID(v int) *CloudResourceCreate {
+	_c.mutation.SetServiceID(v)
+	return _c
 }
 
 // SetResourceID sets the "resource_id" field.
-func (crc *CloudResourceCreate) SetResourceID(s string) *CloudResourceCreate {
-	crc.mutation.SetResourceID(s)
-	return crc
+func (_c *CloudResourceCreate) SetResourceID(v string) *CloudResourceCreate {
+	_c.mutation.SetResourceID(v)
+	return _c
 }
 
 // SetResourceName sets the "resource_name" field.
-func (crc *CloudResourceCreate) SetResourceName(s string) *CloudResourceCreate {
-	crc.mutation.SetResourceName(s)
-	return crc
+func (_c *CloudResourceCreate) SetResourceName(v string) *CloudResourceCreate {
+	_c.mutation.SetResourceName(v)
+	return _c
 }
 
 // SetNillableResourceName sets the "resource_name" field if the given value is not nil.
-func (crc *CloudResourceCreate) SetNillableResourceName(s *string) *CloudResourceCreate {
-	if s != nil {
-		crc.SetResourceName(*s)
+func (_c *CloudResourceCreate) SetNillableResourceName(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetResourceName(*v)
 	}
-	return crc
+	return _c
 }
 
 // SetRegion sets the "region" field.
-func (crc *CloudResourceCreate) SetRegion(s string) *CloudResourceCreate {
-	crc.mutation.SetRegion(s)
-	return crc
+func (_c *CloudResourceCreate) SetRegion(v string) *CloudResourceCreate {
+	_c.mutation.SetRegion(v)
+	return _c
 }
 
 // SetNillableRegion sets the "region" field if the given value is not nil.
-func (crc *CloudResourceCreate) SetNillableRegion(s *string) *CloudResourceCreate {
-	if s != nil {
-		crc.SetRegion(*s)
+func (_c *CloudResourceCreate) SetNillableRegion(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetRegion(*v)
 	}
-	return crc
+	return _c
 }
 
 // SetZone sets the "zone" field.
-func (crc *CloudResourceCreate) SetZone(s string) *CloudResourceCreate {
-	crc.mutation.SetZone(s)
-	return crc
+func (_c *CloudResourceCreate) SetZone(v string) *CloudResourceCreate {
+	_c.mutation.SetZone(v)
+	return _c
 }
 
 // SetNillableZone sets the "zone" field if the given value is not nil.
-func (crc *CloudResourceCreate) SetNillableZone(s *string) *CloudResourceCreate {
-	if s != nil {
-		crc.SetZone(*s)
+func (_c *CloudResourceCreate) SetNillableZone(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetZone(*v)
 	}
-	return crc
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (crc *CloudResourceCreate) SetStatus(s string) *CloudResourceCreate {
-	crc.mutation.SetStatus(s)
-	return crc
+func (_c *CloudResourceCreate) SetStatus(v string) *CloudResourceCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (crc *CloudResourceCreate) SetNillableStatus(s *string) *CloudResourceCreate {
-	if s != nil {
-		crc.SetStatus(*s)
+func (_c *CloudResourceCreate) SetNillableStatus(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return crc
+	return _c
 }
 
 // SetTags sets the "tags" field.
-func (crc *CloudResourceCreate) SetTags(m map[string]string) *CloudResourceCreate {
-	crc.mutation.SetTags(m)
-	return crc
+func (_c *CloudResourceCreate) SetTags(v map[string]string) *CloudResourceCreate {
+	_c.mutation.SetTags(v)
+	return _c
 }
 
 // SetMetadata sets the "metadata" field.
-func (crc *CloudResourceCreate) SetMetadata(m map[string]interface{}) *CloudResourceCreate {
-	crc.mutation.SetMetadata(m)
-	return crc
+func (_c *CloudResourceCreate) SetMetadata(v map[string]interface{}) *CloudResourceCreate {
+	_c.mutation.SetMetadata(v)
+	return _c
 }
 
 // SetFirstSeenAt sets the "first_seen_at" field.
-func (crc *CloudResourceCreate) SetFirstSeenAt(t time.Time) *CloudResourceCreate {
-	crc.mutation.SetFirstSeenAt(t)
-	return crc
+func (_c *CloudResourceCreate) SetFirstSeenAt(v time.Time) *CloudResourceCreate {
+	_c.mutation.SetFirstSeenAt(v)
+	return _c
 }
 
 // SetNillableFirstSeenAt sets the "first_seen_at" field if the given value is not nil.
-func (crc *CloudResourceCreate) SetNillableFirstSeenAt(t *time.Time) *CloudResourceCreate {
-	if t != nil {
-		crc.SetFirstSeenAt(*t)
+func (_c *CloudResourceCreate) SetNillableFirstSeenAt(v *time.Time) *CloudResourceCreate {
+	if v != nil {
+		_c.SetFirstSeenAt(*v)
 	}
-	return crc
+	return _c
 }
 
 // SetLastSeenAt sets the "last_seen_at" field.
-func (crc *CloudResourceCreate) SetLastSeenAt(t time.Time) *CloudResourceCreate {
-	crc.mutation.SetLastSeenAt(t)
-	return crc
+func (_c *CloudResourceCreate) SetLastSeenAt(v time.Time) *CloudResourceCreate {
+	_c.mutation.SetLastSeenAt(v)
+	return _c
 }
 
 // SetNillableLastSeenAt sets the "last_seen_at" field if the given value is not nil.
-func (crc *CloudResourceCreate) SetNillableLastSeenAt(t *time.Time) *CloudResourceCreate {
-	if t != nil {
-		crc.SetLastSeenAt(*t)
+func (_c *CloudResourceCreate) SetNillableLastSeenAt(v *time.Time) *CloudResourceCreate {
+	if v != nil {
+		_c.SetLastSeenAt(*v)
 	}
-	return crc
+	return _c
 }
 
 // SetLifecycleState sets the "lifecycle_state" field.
-func (crc *CloudResourceCreate) SetLifecycleState(s string) *CloudResourceCreate {
-	crc.mutation.SetLifecycleState(s)
-	return crc
+func (_c *CloudResourceCreate) SetLifecycleState(v string) *CloudResourceCreate {
+	_c.mutation.SetLifecycleState(v)
+	return _c
 }
 
 // SetNillableLifecycleState sets the "lifecycle_state" field if the given value is not nil.
-func (crc *CloudResourceCreate) SetNillableLifecycleState(s *string) *CloudResourceCreate {
-	if s != nil {
-		crc.SetLifecycleState(*s)
+func (_c *CloudResourceCreate) SetNillableLifecycleState(v *string) *CloudResourceCreate {
+	if v != nil {
+		_c.SetLifecycleState(*v)
 	}
-	return crc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (crc *CloudResourceCreate) SetTenantID(i int) *CloudResourceCreate {
-	crc.mutation.SetTenantID(i)
-	return crc
+func (_c *CloudResourceCreate) SetTenantID(v int) *CloudResourceCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (crc *CloudResourceCreate) SetCreatedAt(t time.Time) *CloudResourceCreate {
-	crc.mutation.SetCreatedAt(t)
-	return crc
+func (_c *CloudResourceCreate) SetCreatedAt(v time.Time) *CloudResourceCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (crc *CloudResourceCreate) SetNillableCreatedAt(t *time.Time) *CloudResourceCreate {
-	if t != nil {
-		crc.SetCreatedAt(*t)
+func (_c *CloudResourceCreate) SetNillableCreatedAt(v *time.Time) *CloudResourceCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return crc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (crc *CloudResourceCreate) SetUpdatedAt(t time.Time) *CloudResourceCreate {
-	crc.mutation.SetUpdatedAt(t)
-	return crc
+func (_c *CloudResourceCreate) SetUpdatedAt(v time.Time) *CloudResourceCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (crc *CloudResourceCreate) SetNillableUpdatedAt(t *time.Time) *CloudResourceCreate {
-	if t != nil {
-		crc.SetUpdatedAt(*t)
+func (_c *CloudResourceCreate) SetNillableUpdatedAt(v *time.Time) *CloudResourceCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return crc
+	return _c
 }
 
 // SetAccountID sets the "account" edge to the CloudAccount entity by ID.
-func (crc *CloudResourceCreate) SetAccountID(id int) *CloudResourceCreate {
-	crc.mutation.SetAccountID(id)
-	return crc
+func (_c *CloudResourceCreate) SetAccountID(id int) *CloudResourceCreate {
+	_c.mutation.SetAccountID(id)
+	return _c
 }
 
 // SetAccount sets the "account" edge to the CloudAccount entity.
-func (crc *CloudResourceCreate) SetAccount(c *CloudAccount) *CloudResourceCreate {
-	return crc.SetAccountID(c.ID)
+func (_c *CloudResourceCreate) SetAccount(v *CloudAccount) *CloudResourceCreate {
+	return _c.SetAccountID(v.ID)
 }
 
 // SetService sets the "service" edge to the CloudService entity.
-func (crc *CloudResourceCreate) SetService(c *CloudService) *CloudResourceCreate {
-	return crc.SetServiceID(c.ID)
+func (_c *CloudResourceCreate) SetService(v *CloudService) *CloudResourceCreate {
+	return _c.SetServiceID(v.ID)
 }
 
 // AddCiIDs adds the "cis" edge to the ConfigurationItem entity by IDs.
-func (crc *CloudResourceCreate) AddCiIDs(ids ...int) *CloudResourceCreate {
-	crc.mutation.AddCiIDs(ids...)
-	return crc
+func (_c *CloudResourceCreate) AddCiIDs(ids ...int) *CloudResourceCreate {
+	_c.mutation.AddCiIDs(ids...)
+	return _c
 }
 
 // AddCis adds the "cis" edges to the ConfigurationItem entity.
-func (crc *CloudResourceCreate) AddCis(c ...*ConfigurationItem) *CloudResourceCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_c *CloudResourceCreate) AddCis(v ...*ConfigurationItem) *CloudResourceCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return crc.AddCiIDs(ids...)
+	return _c.AddCiIDs(ids...)
 }
 
 // Mutation returns the CloudResourceMutation object of the builder.
-func (crc *CloudResourceCreate) Mutation() *CloudResourceMutation {
-	return crc.mutation
+func (_c *CloudResourceCreate) Mutation() *CloudResourceMutation {
+	return _c.mutation
 }
 
 // Save creates the CloudResource in the database.
-func (crc *CloudResourceCreate) Save(ctx context.Context) (*CloudResource, error) {
-	crc.defaults()
-	return withHooks(ctx, crc.sqlSave, crc.mutation, crc.hooks)
+func (_c *CloudResourceCreate) Save(ctx context.Context) (*CloudResource, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (crc *CloudResourceCreate) SaveX(ctx context.Context) *CloudResource {
-	v, err := crc.Save(ctx)
+func (_c *CloudResourceCreate) SaveX(ctx context.Context) *CloudResource {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -237,85 +237,85 @@ func (crc *CloudResourceCreate) SaveX(ctx context.Context) *CloudResource {
 }
 
 // Exec executes the query.
-func (crc *CloudResourceCreate) Exec(ctx context.Context) error {
-	_, err := crc.Save(ctx)
+func (_c *CloudResourceCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (crc *CloudResourceCreate) ExecX(ctx context.Context) {
-	if err := crc.Exec(ctx); err != nil {
+func (_c *CloudResourceCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (crc *CloudResourceCreate) defaults() {
-	if _, ok := crc.mutation.CreatedAt(); !ok {
+func (_c *CloudResourceCreate) defaults() {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := cloudresource.DefaultCreatedAt()
-		crc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := crc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := cloudresource.DefaultUpdatedAt()
-		crc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (crc *CloudResourceCreate) check() error {
-	if _, ok := crc.mutation.CloudAccountID(); !ok {
+func (_c *CloudResourceCreate) check() error {
+	if _, ok := _c.mutation.CloudAccountID(); !ok {
 		return &ValidationError{Name: "cloud_account_id", err: errors.New(`ent: missing required field "CloudResource.cloud_account_id"`)}
 	}
-	if v, ok := crc.mutation.CloudAccountID(); ok {
+	if v, ok := _c.mutation.CloudAccountID(); ok {
 		if err := cloudresource.CloudAccountIDValidator(v); err != nil {
 			return &ValidationError{Name: "cloud_account_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.cloud_account_id": %w`, err)}
 		}
 	}
-	if _, ok := crc.mutation.ServiceID(); !ok {
+	if _, ok := _c.mutation.ServiceID(); !ok {
 		return &ValidationError{Name: "service_id", err: errors.New(`ent: missing required field "CloudResource.service_id"`)}
 	}
-	if v, ok := crc.mutation.ServiceID(); ok {
+	if v, ok := _c.mutation.ServiceID(); ok {
 		if err := cloudresource.ServiceIDValidator(v); err != nil {
 			return &ValidationError{Name: "service_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.service_id": %w`, err)}
 		}
 	}
-	if _, ok := crc.mutation.ResourceID(); !ok {
+	if _, ok := _c.mutation.ResourceID(); !ok {
 		return &ValidationError{Name: "resource_id", err: errors.New(`ent: missing required field "CloudResource.resource_id"`)}
 	}
-	if v, ok := crc.mutation.ResourceID(); ok {
+	if v, ok := _c.mutation.ResourceID(); ok {
 		if err := cloudresource.ResourceIDValidator(v); err != nil {
 			return &ValidationError{Name: "resource_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.resource_id": %w`, err)}
 		}
 	}
-	if _, ok := crc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "CloudResource.tenant_id"`)}
 	}
-	if v, ok := crc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := cloudresource.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := crc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "CloudResource.created_at"`)}
 	}
-	if _, ok := crc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "CloudResource.updated_at"`)}
 	}
-	if len(crc.mutation.AccountIDs()) == 0 {
+	if len(_c.mutation.AccountIDs()) == 0 {
 		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "CloudResource.account"`)}
 	}
-	if len(crc.mutation.ServiceIDs()) == 0 {
+	if len(_c.mutation.ServiceIDs()) == 0 {
 		return &ValidationError{Name: "service", err: errors.New(`ent: missing required edge "CloudResource.service"`)}
 	}
 	return nil
 }
 
-func (crc *CloudResourceCreate) sqlSave(ctx context.Context) (*CloudResource, error) {
-	if err := crc.check(); err != nil {
+func (_c *CloudResourceCreate) sqlSave(ctx context.Context) (*CloudResource, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := crc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, crc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -323,69 +323,69 @@ func (crc *CloudResourceCreate) sqlSave(ctx context.Context) (*CloudResource, er
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	crc.mutation.id = &_node.ID
-	crc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (crc *CloudResourceCreate) createSpec() (*CloudResource, *sqlgraph.CreateSpec) {
+func (_c *CloudResourceCreate) createSpec() (*CloudResource, *sqlgraph.CreateSpec) {
 	var (
-		_node = &CloudResource{config: crc.config}
+		_node = &CloudResource{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(cloudresource.Table, sqlgraph.NewFieldSpec(cloudresource.FieldID, field.TypeInt))
 	)
-	if value, ok := crc.mutation.ResourceID(); ok {
+	if value, ok := _c.mutation.ResourceID(); ok {
 		_spec.SetField(cloudresource.FieldResourceID, field.TypeString, value)
 		_node.ResourceID = value
 	}
-	if value, ok := crc.mutation.ResourceName(); ok {
+	if value, ok := _c.mutation.ResourceName(); ok {
 		_spec.SetField(cloudresource.FieldResourceName, field.TypeString, value)
 		_node.ResourceName = value
 	}
-	if value, ok := crc.mutation.Region(); ok {
+	if value, ok := _c.mutation.Region(); ok {
 		_spec.SetField(cloudresource.FieldRegion, field.TypeString, value)
 		_node.Region = value
 	}
-	if value, ok := crc.mutation.Zone(); ok {
+	if value, ok := _c.mutation.Zone(); ok {
 		_spec.SetField(cloudresource.FieldZone, field.TypeString, value)
 		_node.Zone = value
 	}
-	if value, ok := crc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(cloudresource.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := crc.mutation.Tags(); ok {
+	if value, ok := _c.mutation.Tags(); ok {
 		_spec.SetField(cloudresource.FieldTags, field.TypeJSON, value)
 		_node.Tags = value
 	}
-	if value, ok := crc.mutation.Metadata(); ok {
+	if value, ok := _c.mutation.Metadata(); ok {
 		_spec.SetField(cloudresource.FieldMetadata, field.TypeJSON, value)
 		_node.Metadata = value
 	}
-	if value, ok := crc.mutation.FirstSeenAt(); ok {
+	if value, ok := _c.mutation.FirstSeenAt(); ok {
 		_spec.SetField(cloudresource.FieldFirstSeenAt, field.TypeTime, value)
 		_node.FirstSeenAt = value
 	}
-	if value, ok := crc.mutation.LastSeenAt(); ok {
+	if value, ok := _c.mutation.LastSeenAt(); ok {
 		_spec.SetField(cloudresource.FieldLastSeenAt, field.TypeTime, value)
 		_node.LastSeenAt = value
 	}
-	if value, ok := crc.mutation.LifecycleState(); ok {
+	if value, ok := _c.mutation.LifecycleState(); ok {
 		_spec.SetField(cloudresource.FieldLifecycleState, field.TypeString, value)
 		_node.LifecycleState = value
 	}
-	if value, ok := crc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(cloudresource.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := crc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(cloudresource.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := crc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(cloudresource.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := crc.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -402,7 +402,7 @@ func (crc *CloudResourceCreate) createSpec() (*CloudResource, *sqlgraph.CreateSp
 		_node.CloudAccountID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := crc.mutation.ServiceIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ServiceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -419,7 +419,7 @@ func (crc *CloudResourceCreate) createSpec() (*CloudResource, *sqlgraph.CreateSp
 		_node.ServiceID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := crc.mutation.CisIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.CisIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -446,16 +446,16 @@ type CloudResourceCreateBulk struct {
 }
 
 // Save creates the CloudResource entities in the database.
-func (crcb *CloudResourceCreateBulk) Save(ctx context.Context) ([]*CloudResource, error) {
-	if crcb.err != nil {
-		return nil, crcb.err
+func (_c *CloudResourceCreateBulk) Save(ctx context.Context) ([]*CloudResource, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(crcb.builders))
-	nodes := make([]*CloudResource, len(crcb.builders))
-	mutators := make([]Mutator, len(crcb.builders))
-	for i := range crcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*CloudResource, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := crcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*CloudResourceMutation)
@@ -469,11 +469,11 @@ func (crcb *CloudResourceCreateBulk) Save(ctx context.Context) ([]*CloudResource
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, crcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, crcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -497,7 +497,7 @@ func (crcb *CloudResourceCreateBulk) Save(ctx context.Context) ([]*CloudResource
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, crcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -505,8 +505,8 @@ func (crcb *CloudResourceCreateBulk) Save(ctx context.Context) ([]*CloudResource
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (crcb *CloudResourceCreateBulk) SaveX(ctx context.Context) []*CloudResource {
-	v, err := crcb.Save(ctx)
+func (_c *CloudResourceCreateBulk) SaveX(ctx context.Context) []*CloudResource {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -514,14 +514,14 @@ func (crcb *CloudResourceCreateBulk) SaveX(ctx context.Context) []*CloudResource
 }
 
 // Exec executes the query.
-func (crcb *CloudResourceCreateBulk) Exec(ctx context.Context) error {
-	_, err := crcb.Save(ctx)
+func (_c *CloudResourceCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (crcb *CloudResourceCreateBulk) ExecX(ctx context.Context) {
-	if err := crcb.Exec(ctx); err != nil {
+func (_c *CloudResourceCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

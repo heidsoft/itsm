@@ -22,134 +22,134 @@ type TicketTemplateCreate struct {
 }
 
 // SetName sets the "name" field.
-func (ttc *TicketTemplateCreate) SetName(s string) *TicketTemplateCreate {
-	ttc.mutation.SetName(s)
-	return ttc
+func (_c *TicketTemplateCreate) SetName(v string) *TicketTemplateCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (ttc *TicketTemplateCreate) SetDescription(s string) *TicketTemplateCreate {
-	ttc.mutation.SetDescription(s)
-	return ttc
+func (_c *TicketTemplateCreate) SetDescription(v string) *TicketTemplateCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ttc *TicketTemplateCreate) SetNillableDescription(s *string) *TicketTemplateCreate {
-	if s != nil {
-		ttc.SetDescription(*s)
+func (_c *TicketTemplateCreate) SetNillableDescription(v *string) *TicketTemplateCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return ttc
+	return _c
 }
 
 // SetCategory sets the "category" field.
-func (ttc *TicketTemplateCreate) SetCategory(s string) *TicketTemplateCreate {
-	ttc.mutation.SetCategory(s)
-	return ttc
+func (_c *TicketTemplateCreate) SetCategory(v string) *TicketTemplateCreate {
+	_c.mutation.SetCategory(v)
+	return _c
 }
 
 // SetPriority sets the "priority" field.
-func (ttc *TicketTemplateCreate) SetPriority(s string) *TicketTemplateCreate {
-	ttc.mutation.SetPriority(s)
-	return ttc
+func (_c *TicketTemplateCreate) SetPriority(v string) *TicketTemplateCreate {
+	_c.mutation.SetPriority(v)
+	return _c
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (ttc *TicketTemplateCreate) SetNillablePriority(s *string) *TicketTemplateCreate {
-	if s != nil {
-		ttc.SetPriority(*s)
+func (_c *TicketTemplateCreate) SetNillablePriority(v *string) *TicketTemplateCreate {
+	if v != nil {
+		_c.SetPriority(*v)
 	}
-	return ttc
+	return _c
 }
 
 // SetFormFields sets the "form_fields" field.
-func (ttc *TicketTemplateCreate) SetFormFields(u []uint8) *TicketTemplateCreate {
-	ttc.mutation.SetFormFields(u)
-	return ttc
+func (_c *TicketTemplateCreate) SetFormFields(v []uint8) *TicketTemplateCreate {
+	_c.mutation.SetFormFields(v)
+	return _c
 }
 
 // SetWorkflowSteps sets the "workflow_steps" field.
-func (ttc *TicketTemplateCreate) SetWorkflowSteps(u []uint8) *TicketTemplateCreate {
-	ttc.mutation.SetWorkflowSteps(u)
-	return ttc
+func (_c *TicketTemplateCreate) SetWorkflowSteps(v []uint8) *TicketTemplateCreate {
+	_c.mutation.SetWorkflowSteps(v)
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (ttc *TicketTemplateCreate) SetIsActive(b bool) *TicketTemplateCreate {
-	ttc.mutation.SetIsActive(b)
-	return ttc
+func (_c *TicketTemplateCreate) SetIsActive(v bool) *TicketTemplateCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (ttc *TicketTemplateCreate) SetNillableIsActive(b *bool) *TicketTemplateCreate {
-	if b != nil {
-		ttc.SetIsActive(*b)
+func (_c *TicketTemplateCreate) SetNillableIsActive(v *bool) *TicketTemplateCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return ttc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ttc *TicketTemplateCreate) SetTenantID(i int) *TicketTemplateCreate {
-	ttc.mutation.SetTenantID(i)
-	return ttc
+func (_c *TicketTemplateCreate) SetTenantID(v int) *TicketTemplateCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ttc *TicketTemplateCreate) SetCreatedAt(t time.Time) *TicketTemplateCreate {
-	ttc.mutation.SetCreatedAt(t)
-	return ttc
+func (_c *TicketTemplateCreate) SetCreatedAt(v time.Time) *TicketTemplateCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ttc *TicketTemplateCreate) SetNillableCreatedAt(t *time.Time) *TicketTemplateCreate {
-	if t != nil {
-		ttc.SetCreatedAt(*t)
+func (_c *TicketTemplateCreate) SetNillableCreatedAt(v *time.Time) *TicketTemplateCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return ttc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ttc *TicketTemplateCreate) SetUpdatedAt(t time.Time) *TicketTemplateCreate {
-	ttc.mutation.SetUpdatedAt(t)
-	return ttc
+func (_c *TicketTemplateCreate) SetUpdatedAt(v time.Time) *TicketTemplateCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (ttc *TicketTemplateCreate) SetNillableUpdatedAt(t *time.Time) *TicketTemplateCreate {
-	if t != nil {
-		ttc.SetUpdatedAt(*t)
+func (_c *TicketTemplateCreate) SetNillableUpdatedAt(v *time.Time) *TicketTemplateCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return ttc
+	return _c
 }
 
 // AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (ttc *TicketTemplateCreate) AddTicketIDs(ids ...int) *TicketTemplateCreate {
-	ttc.mutation.AddTicketIDs(ids...)
-	return ttc
+func (_c *TicketTemplateCreate) AddTicketIDs(ids ...int) *TicketTemplateCreate {
+	_c.mutation.AddTicketIDs(ids...)
+	return _c
 }
 
 // AddTickets adds the "tickets" edges to the Ticket entity.
-func (ttc *TicketTemplateCreate) AddTickets(t ...*Ticket) *TicketTemplateCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_c *TicketTemplateCreate) AddTickets(v ...*Ticket) *TicketTemplateCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ttc.AddTicketIDs(ids...)
+	return _c.AddTicketIDs(ids...)
 }
 
 // Mutation returns the TicketTemplateMutation object of the builder.
-func (ttc *TicketTemplateCreate) Mutation() *TicketTemplateMutation {
-	return ttc.mutation
+func (_c *TicketTemplateCreate) Mutation() *TicketTemplateMutation {
+	return _c.mutation
 }
 
 // Save creates the TicketTemplate in the database.
-func (ttc *TicketTemplateCreate) Save(ctx context.Context) (*TicketTemplate, error) {
-	ttc.defaults()
-	return withHooks(ctx, ttc.sqlSave, ttc.mutation, ttc.hooks)
+func (_c *TicketTemplateCreate) Save(ctx context.Context) (*TicketTemplate, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (ttc *TicketTemplateCreate) SaveX(ctx context.Context) *TicketTemplate {
-	v, err := ttc.Save(ctx)
+func (_c *TicketTemplateCreate) SaveX(ctx context.Context) *TicketTemplate {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,85 +157,85 @@ func (ttc *TicketTemplateCreate) SaveX(ctx context.Context) *TicketTemplate {
 }
 
 // Exec executes the query.
-func (ttc *TicketTemplateCreate) Exec(ctx context.Context) error {
-	_, err := ttc.Save(ctx)
+func (_c *TicketTemplateCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ttc *TicketTemplateCreate) ExecX(ctx context.Context) {
-	if err := ttc.Exec(ctx); err != nil {
+func (_c *TicketTemplateCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ttc *TicketTemplateCreate) defaults() {
-	if _, ok := ttc.mutation.Priority(); !ok {
+func (_c *TicketTemplateCreate) defaults() {
+	if _, ok := _c.mutation.Priority(); !ok {
 		v := tickettemplate.DefaultPriority
-		ttc.mutation.SetPriority(v)
+		_c.mutation.SetPriority(v)
 	}
-	if _, ok := ttc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := tickettemplate.DefaultIsActive
-		ttc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := ttc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := tickettemplate.DefaultCreatedAt()
-		ttc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := ttc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := tickettemplate.DefaultUpdatedAt()
-		ttc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ttc *TicketTemplateCreate) check() error {
-	if _, ok := ttc.mutation.Name(); !ok {
+func (_c *TicketTemplateCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "TicketTemplate.name"`)}
 	}
-	if v, ok := ttc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := tickettemplate.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketTemplate.name": %w`, err)}
 		}
 	}
-	if _, ok := ttc.mutation.Category(); !ok {
+	if _, ok := _c.mutation.Category(); !ok {
 		return &ValidationError{Name: "category", err: errors.New(`ent: missing required field "TicketTemplate.category"`)}
 	}
-	if v, ok := ttc.mutation.Category(); ok {
+	if v, ok := _c.mutation.Category(); ok {
 		if err := tickettemplate.CategoryValidator(v); err != nil {
 			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "TicketTemplate.category": %w`, err)}
 		}
 	}
-	if _, ok := ttc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "TicketTemplate.priority"`)}
 	}
-	if _, ok := ttc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "TicketTemplate.is_active"`)}
 	}
-	if _, ok := ttc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "TicketTemplate.tenant_id"`)}
 	}
-	if v, ok := ttc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := tickettemplate.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketTemplate.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := ttc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "TicketTemplate.created_at"`)}
 	}
-	if _, ok := ttc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "TicketTemplate.updated_at"`)}
 	}
 	return nil
 }
 
-func (ttc *TicketTemplateCreate) sqlSave(ctx context.Context) (*TicketTemplate, error) {
-	if err := ttc.check(); err != nil {
+func (_c *TicketTemplateCreate) sqlSave(ctx context.Context) (*TicketTemplate, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := ttc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, ttc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -243,57 +243,57 @@ func (ttc *TicketTemplateCreate) sqlSave(ctx context.Context) (*TicketTemplate, 
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	ttc.mutation.id = &_node.ID
-	ttc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (ttc *TicketTemplateCreate) createSpec() (*TicketTemplate, *sqlgraph.CreateSpec) {
+func (_c *TicketTemplateCreate) createSpec() (*TicketTemplate, *sqlgraph.CreateSpec) {
 	var (
-		_node = &TicketTemplate{config: ttc.config}
+		_node = &TicketTemplate{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(tickettemplate.Table, sqlgraph.NewFieldSpec(tickettemplate.FieldID, field.TypeInt))
 	)
-	if value, ok := ttc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(tickettemplate.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := ttc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(tickettemplate.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := ttc.mutation.Category(); ok {
+	if value, ok := _c.mutation.Category(); ok {
 		_spec.SetField(tickettemplate.FieldCategory, field.TypeString, value)
 		_node.Category = value
 	}
-	if value, ok := ttc.mutation.Priority(); ok {
+	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(tickettemplate.FieldPriority, field.TypeString, value)
 		_node.Priority = value
 	}
-	if value, ok := ttc.mutation.FormFields(); ok {
+	if value, ok := _c.mutation.FormFields(); ok {
 		_spec.SetField(tickettemplate.FieldFormFields, field.TypeJSON, value)
 		_node.FormFields = value
 	}
-	if value, ok := ttc.mutation.WorkflowSteps(); ok {
+	if value, ok := _c.mutation.WorkflowSteps(); ok {
 		_spec.SetField(tickettemplate.FieldWorkflowSteps, field.TypeJSON, value)
 		_node.WorkflowSteps = value
 	}
-	if value, ok := ttc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(tickettemplate.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := ttc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(tickettemplate.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := ttc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(tickettemplate.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := ttc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(tickettemplate.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := ttc.mutation.TicketsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -320,16 +320,16 @@ type TicketTemplateCreateBulk struct {
 }
 
 // Save creates the TicketTemplate entities in the database.
-func (ttcb *TicketTemplateCreateBulk) Save(ctx context.Context) ([]*TicketTemplate, error) {
-	if ttcb.err != nil {
-		return nil, ttcb.err
+func (_c *TicketTemplateCreateBulk) Save(ctx context.Context) ([]*TicketTemplate, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ttcb.builders))
-	nodes := make([]*TicketTemplate, len(ttcb.builders))
-	mutators := make([]Mutator, len(ttcb.builders))
-	for i := range ttcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*TicketTemplate, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ttcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TicketTemplateMutation)
@@ -343,11 +343,11 @@ func (ttcb *TicketTemplateCreateBulk) Save(ctx context.Context) ([]*TicketTempla
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ttcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ttcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -371,7 +371,7 @@ func (ttcb *TicketTemplateCreateBulk) Save(ctx context.Context) ([]*TicketTempla
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ttcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -379,8 +379,8 @@ func (ttcb *TicketTemplateCreateBulk) Save(ctx context.Context) ([]*TicketTempla
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ttcb *TicketTemplateCreateBulk) SaveX(ctx context.Context) []*TicketTemplate {
-	v, err := ttcb.Save(ctx)
+func (_c *TicketTemplateCreateBulk) SaveX(ctx context.Context) []*TicketTemplate {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -388,14 +388,14 @@ func (ttcb *TicketTemplateCreateBulk) SaveX(ctx context.Context) []*TicketTempla
 }
 
 // Exec executes the query.
-func (ttcb *TicketTemplateCreateBulk) Exec(ctx context.Context) error {
-	_, err := ttcb.Save(ctx)
+func (_c *TicketTemplateCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ttcb *TicketTemplateCreateBulk) ExecX(ctx context.Context) {
-	if err := ttcb.Exec(ctx); err != nil {
+func (_c *TicketTemplateCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

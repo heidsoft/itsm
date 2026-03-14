@@ -63,7 +63,7 @@ func (*ProvisioningTask) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ProvisioningTask fields.
-func (pt *ProvisioningTask) assignValues(columns []string, values []any) error {
+func (_m *ProvisioningTask) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -74,36 +74,36 @@ func (pt *ProvisioningTask) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			pt.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case provisioningtask.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				pt.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case provisioningtask.FieldServiceRequestID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field service_request_id", values[i])
 			} else if value.Valid {
-				pt.ServiceRequestID = int(value.Int64)
+				_m.ServiceRequestID = int(value.Int64)
 			}
 		case provisioningtask.FieldProvider:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field provider", values[i])
 			} else if value.Valid {
-				pt.Provider = value.String
+				_m.Provider = value.String
 			}
 		case provisioningtask.FieldResourceType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resource_type", values[i])
 			} else if value.Valid {
-				pt.ResourceType = value.String
+				_m.ResourceType = value.String
 			}
 		case provisioningtask.FieldPayload:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field payload", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &pt.Payload); err != nil {
+				if err := json.Unmarshal(*value, &_m.Payload); err != nil {
 					return fmt.Errorf("unmarshal field payload: %w", err)
 				}
 			}
@@ -111,7 +111,7 @@ func (pt *ProvisioningTask) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field result", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &pt.Result); err != nil {
+				if err := json.Unmarshal(*value, &_m.Result); err != nil {
 					return fmt.Errorf("unmarshal field result: %w", err)
 				}
 			}
@@ -119,28 +119,28 @@ func (pt *ProvisioningTask) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				pt.Status = value.String
+				_m.Status = value.String
 			}
 		case provisioningtask.FieldErrorMessage:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field error_message", values[i])
 			} else if value.Valid {
-				pt.ErrorMessage = value.String
+				_m.ErrorMessage = value.String
 			}
 		case provisioningtask.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				pt.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case provisioningtask.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				pt.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			pt.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -148,62 +148,62 @@ func (pt *ProvisioningTask) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ProvisioningTask.
 // This includes values selected through modifiers, order, etc.
-func (pt *ProvisioningTask) Value(name string) (ent.Value, error) {
-	return pt.selectValues.Get(name)
+func (_m *ProvisioningTask) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this ProvisioningTask.
 // Note that you need to call ProvisioningTask.Unwrap() before calling this method if this ProvisioningTask
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (pt *ProvisioningTask) Update() *ProvisioningTaskUpdateOne {
-	return NewProvisioningTaskClient(pt.config).UpdateOne(pt)
+func (_m *ProvisioningTask) Update() *ProvisioningTaskUpdateOne {
+	return NewProvisioningTaskClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ProvisioningTask entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (pt *ProvisioningTask) Unwrap() *ProvisioningTask {
-	_tx, ok := pt.config.driver.(*txDriver)
+func (_m *ProvisioningTask) Unwrap() *ProvisioningTask {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ProvisioningTask is not a transactional entity")
 	}
-	pt.config.driver = _tx.drv
-	return pt
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (pt *ProvisioningTask) String() string {
+func (_m *ProvisioningTask) String() string {
 	var builder strings.Builder
 	builder.WriteString("ProvisioningTask(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", pt.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", pt.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("service_request_id=")
-	builder.WriteString(fmt.Sprintf("%v", pt.ServiceRequestID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ServiceRequestID))
 	builder.WriteString(", ")
 	builder.WriteString("provider=")
-	builder.WriteString(pt.Provider)
+	builder.WriteString(_m.Provider)
 	builder.WriteString(", ")
 	builder.WriteString("resource_type=")
-	builder.WriteString(pt.ResourceType)
+	builder.WriteString(_m.ResourceType)
 	builder.WriteString(", ")
 	builder.WriteString("payload=")
-	builder.WriteString(fmt.Sprintf("%v", pt.Payload))
+	builder.WriteString(fmt.Sprintf("%v", _m.Payload))
 	builder.WriteString(", ")
 	builder.WriteString("result=")
-	builder.WriteString(fmt.Sprintf("%v", pt.Result))
+	builder.WriteString(fmt.Sprintf("%v", _m.Result))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(pt.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("error_message=")
-	builder.WriteString(pt.ErrorMessage)
+	builder.WriteString(_m.ErrorMessage)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(pt.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(pt.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

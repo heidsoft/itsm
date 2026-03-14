@@ -92,6 +92,18 @@ func (f AuditLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AuditLogMutation", m)
 }
 
+// The BPMNPermissionFunc type is an adapter to allow the use of ordinary
+// function as BPMNPermission mutator.
+type BPMNPermissionFunc func(context.Context, *ent.BPMNPermissionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BPMNPermissionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BPMNPermissionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BPMNPermissionMutation", m)
+}
+
 // The CIAttributeDefinitionFunc type is an adapter to allow the use of ordinary
 // function as CIAttributeDefinition mutator.
 type CIAttributeDefinitionFunc func(context.Context, *ent.CIAttributeDefinitionMutation) (ent.Value, error)
@@ -392,6 +404,18 @@ func (f KnownErrorFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnownErrorMutation", m)
 }
 
+// The MSPAllocationFunc type is an adapter to allow the use of ordinary
+// function as MSPAllocation mutator.
+type MSPAllocationFunc func(context.Context, *ent.MSPAllocationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MSPAllocationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MSPAllocationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MSPAllocationMutation", m)
+}
+
 // The MessageFunc type is an adapter to allow the use of ordinary
 // function as Message mutator.
 type MessageFunc func(context.Context, *ent.MessageMutation) (ent.Value, error)
@@ -474,6 +498,18 @@ func (f ProblemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProblemMutation", m)
+}
+
+// The ProcessAuditLogFunc type is an adapter to allow the use of ordinary
+// function as ProcessAuditLog mutator.
+type ProcessAuditLogFunc func(context.Context, *ent.ProcessAuditLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProcessAuditLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProcessAuditLogMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessAuditLogMutation", m)
 }
 
 // The ProcessBindingFunc type is an adapter to allow the use of ordinary

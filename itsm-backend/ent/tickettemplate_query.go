@@ -31,44 +31,44 @@ type TicketTemplateQuery struct {
 }
 
 // Where adds a new predicate for the TicketTemplateQuery builder.
-func (ttq *TicketTemplateQuery) Where(ps ...predicate.TicketTemplate) *TicketTemplateQuery {
-	ttq.predicates = append(ttq.predicates, ps...)
-	return ttq
+func (_q *TicketTemplateQuery) Where(ps ...predicate.TicketTemplate) *TicketTemplateQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (ttq *TicketTemplateQuery) Limit(limit int) *TicketTemplateQuery {
-	ttq.ctx.Limit = &limit
-	return ttq
+func (_q *TicketTemplateQuery) Limit(limit int) *TicketTemplateQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (ttq *TicketTemplateQuery) Offset(offset int) *TicketTemplateQuery {
-	ttq.ctx.Offset = &offset
-	return ttq
+func (_q *TicketTemplateQuery) Offset(offset int) *TicketTemplateQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (ttq *TicketTemplateQuery) Unique(unique bool) *TicketTemplateQuery {
-	ttq.ctx.Unique = &unique
-	return ttq
+func (_q *TicketTemplateQuery) Unique(unique bool) *TicketTemplateQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (ttq *TicketTemplateQuery) Order(o ...tickettemplate.OrderOption) *TicketTemplateQuery {
-	ttq.order = append(ttq.order, o...)
-	return ttq
+func (_q *TicketTemplateQuery) Order(o ...tickettemplate.OrderOption) *TicketTemplateQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryTickets chains the current query on the "tickets" edge.
-func (ttq *TicketTemplateQuery) QueryTickets() *TicketQuery {
-	query := (&TicketClient{config: ttq.config}).Query()
+func (_q *TicketTemplateQuery) QueryTickets() *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ttq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := ttq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -77,7 +77,7 @@ func (ttq *TicketTemplateQuery) QueryTickets() *TicketQuery {
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tickettemplate.TicketsTable, tickettemplate.TicketsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(ttq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -85,8 +85,8 @@ func (ttq *TicketTemplateQuery) QueryTickets() *TicketQuery {
 
 // First returns the first TicketTemplate entity from the query.
 // Returns a *NotFoundError when no TicketTemplate was found.
-func (ttq *TicketTemplateQuery) First(ctx context.Context) (*TicketTemplate, error) {
-	nodes, err := ttq.Limit(1).All(setContextOp(ctx, ttq.ctx, ent.OpQueryFirst))
+func (_q *TicketTemplateQuery) First(ctx context.Context) (*TicketTemplate, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +97,8 @@ func (ttq *TicketTemplateQuery) First(ctx context.Context) (*TicketTemplate, err
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (ttq *TicketTemplateQuery) FirstX(ctx context.Context) *TicketTemplate {
-	node, err := ttq.First(ctx)
+func (_q *TicketTemplateQuery) FirstX(ctx context.Context) *TicketTemplate {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -107,9 +107,9 @@ func (ttq *TicketTemplateQuery) FirstX(ctx context.Context) *TicketTemplate {
 
 // FirstID returns the first TicketTemplate ID from the query.
 // Returns a *NotFoundError when no TicketTemplate ID was found.
-func (ttq *TicketTemplateQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *TicketTemplateQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = ttq.Limit(1).IDs(setContextOp(ctx, ttq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -120,8 +120,8 @@ func (ttq *TicketTemplateQuery) FirstID(ctx context.Context) (id int, err error)
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (ttq *TicketTemplateQuery) FirstIDX(ctx context.Context) int {
-	id, err := ttq.FirstID(ctx)
+func (_q *TicketTemplateQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -131,8 +131,8 @@ func (ttq *TicketTemplateQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single TicketTemplate entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one TicketTemplate entity is found.
 // Returns a *NotFoundError when no TicketTemplate entities are found.
-func (ttq *TicketTemplateQuery) Only(ctx context.Context) (*TicketTemplate, error) {
-	nodes, err := ttq.Limit(2).All(setContextOp(ctx, ttq.ctx, ent.OpQueryOnly))
+func (_q *TicketTemplateQuery) Only(ctx context.Context) (*TicketTemplate, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +147,8 @@ func (ttq *TicketTemplateQuery) Only(ctx context.Context) (*TicketTemplate, erro
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (ttq *TicketTemplateQuery) OnlyX(ctx context.Context) *TicketTemplate {
-	node, err := ttq.Only(ctx)
+func (_q *TicketTemplateQuery) OnlyX(ctx context.Context) *TicketTemplate {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -158,9 +158,9 @@ func (ttq *TicketTemplateQuery) OnlyX(ctx context.Context) *TicketTemplate {
 // OnlyID is like Only, but returns the only TicketTemplate ID in the query.
 // Returns a *NotSingularError when more than one TicketTemplate ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (ttq *TicketTemplateQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *TicketTemplateQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = ttq.Limit(2).IDs(setContextOp(ctx, ttq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -175,8 +175,8 @@ func (ttq *TicketTemplateQuery) OnlyID(ctx context.Context) (id int, err error) 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (ttq *TicketTemplateQuery) OnlyIDX(ctx context.Context) int {
-	id, err := ttq.OnlyID(ctx)
+func (_q *TicketTemplateQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -184,18 +184,18 @@ func (ttq *TicketTemplateQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of TicketTemplates.
-func (ttq *TicketTemplateQuery) All(ctx context.Context) ([]*TicketTemplate, error) {
-	ctx = setContextOp(ctx, ttq.ctx, ent.OpQueryAll)
-	if err := ttq.prepareQuery(ctx); err != nil {
+func (_q *TicketTemplateQuery) All(ctx context.Context) ([]*TicketTemplate, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*TicketTemplate, *TicketTemplateQuery]()
-	return withInterceptors[[]*TicketTemplate](ctx, ttq, qr, ttq.inters)
+	return withInterceptors[[]*TicketTemplate](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (ttq *TicketTemplateQuery) AllX(ctx context.Context) []*TicketTemplate {
-	nodes, err := ttq.All(ctx)
+func (_q *TicketTemplateQuery) AllX(ctx context.Context) []*TicketTemplate {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -203,20 +203,20 @@ func (ttq *TicketTemplateQuery) AllX(ctx context.Context) []*TicketTemplate {
 }
 
 // IDs executes the query and returns a list of TicketTemplate IDs.
-func (ttq *TicketTemplateQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if ttq.ctx.Unique == nil && ttq.path != nil {
-		ttq.Unique(true)
+func (_q *TicketTemplateQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, ttq.ctx, ent.OpQueryIDs)
-	if err = ttq.Select(tickettemplate.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(tickettemplate.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (ttq *TicketTemplateQuery) IDsX(ctx context.Context) []int {
-	ids, err := ttq.IDs(ctx)
+func (_q *TicketTemplateQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -224,17 +224,17 @@ func (ttq *TicketTemplateQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (ttq *TicketTemplateQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, ttq.ctx, ent.OpQueryCount)
-	if err := ttq.prepareQuery(ctx); err != nil {
+func (_q *TicketTemplateQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, ttq, querierCount[*TicketTemplateQuery](), ttq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*TicketTemplateQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (ttq *TicketTemplateQuery) CountX(ctx context.Context) int {
-	count, err := ttq.Count(ctx)
+func (_q *TicketTemplateQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -242,9 +242,9 @@ func (ttq *TicketTemplateQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (ttq *TicketTemplateQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, ttq.ctx, ent.OpQueryExist)
-	switch _, err := ttq.FirstID(ctx); {
+func (_q *TicketTemplateQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -255,8 +255,8 @@ func (ttq *TicketTemplateQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (ttq *TicketTemplateQuery) ExistX(ctx context.Context) bool {
-	exist, err := ttq.Exist(ctx)
+func (_q *TicketTemplateQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -265,32 +265,32 @@ func (ttq *TicketTemplateQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the TicketTemplateQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (ttq *TicketTemplateQuery) Clone() *TicketTemplateQuery {
-	if ttq == nil {
+func (_q *TicketTemplateQuery) Clone() *TicketTemplateQuery {
+	if _q == nil {
 		return nil
 	}
 	return &TicketTemplateQuery{
-		config:      ttq.config,
-		ctx:         ttq.ctx.Clone(),
-		order:       append([]tickettemplate.OrderOption{}, ttq.order...),
-		inters:      append([]Interceptor{}, ttq.inters...),
-		predicates:  append([]predicate.TicketTemplate{}, ttq.predicates...),
-		withTickets: ttq.withTickets.Clone(),
+		config:      _q.config,
+		ctx:         _q.ctx.Clone(),
+		order:       append([]tickettemplate.OrderOption{}, _q.order...),
+		inters:      append([]Interceptor{}, _q.inters...),
+		predicates:  append([]predicate.TicketTemplate{}, _q.predicates...),
+		withTickets: _q.withTickets.Clone(),
 		// clone intermediate query.
-		sql:  ttq.sql.Clone(),
-		path: ttq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithTickets tells the query-builder to eager-load the nodes that are connected to
 // the "tickets" edge. The optional arguments are used to configure the query builder of the edge.
-func (ttq *TicketTemplateQuery) WithTickets(opts ...func(*TicketQuery)) *TicketTemplateQuery {
-	query := (&TicketClient{config: ttq.config}).Query()
+func (_q *TicketTemplateQuery) WithTickets(opts ...func(*TicketQuery)) *TicketTemplateQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ttq.withTickets = query
-	return ttq
+	_q.withTickets = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -307,10 +307,10 @@ func (ttq *TicketTemplateQuery) WithTickets(opts ...func(*TicketQuery)) *TicketT
 //		GroupBy(tickettemplate.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (ttq *TicketTemplateQuery) GroupBy(field string, fields ...string) *TicketTemplateGroupBy {
-	ttq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &TicketTemplateGroupBy{build: ttq}
-	grbuild.flds = &ttq.ctx.Fields
+func (_q *TicketTemplateQuery) GroupBy(field string, fields ...string) *TicketTemplateGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &TicketTemplateGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = tickettemplate.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -328,58 +328,58 @@ func (ttq *TicketTemplateQuery) GroupBy(field string, fields ...string) *TicketT
 //	client.TicketTemplate.Query().
 //		Select(tickettemplate.FieldName).
 //		Scan(ctx, &v)
-func (ttq *TicketTemplateQuery) Select(fields ...string) *TicketTemplateSelect {
-	ttq.ctx.Fields = append(ttq.ctx.Fields, fields...)
-	sbuild := &TicketTemplateSelect{TicketTemplateQuery: ttq}
+func (_q *TicketTemplateQuery) Select(fields ...string) *TicketTemplateSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &TicketTemplateSelect{TicketTemplateQuery: _q}
 	sbuild.label = tickettemplate.Label
-	sbuild.flds, sbuild.scan = &ttq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a TicketTemplateSelect configured with the given aggregations.
-func (ttq *TicketTemplateQuery) Aggregate(fns ...AggregateFunc) *TicketTemplateSelect {
-	return ttq.Select().Aggregate(fns...)
+func (_q *TicketTemplateQuery) Aggregate(fns ...AggregateFunc) *TicketTemplateSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (ttq *TicketTemplateQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range ttq.inters {
+func (_q *TicketTemplateQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, ttq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range ttq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !tickettemplate.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if ttq.path != nil {
-		prev, err := ttq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		ttq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (ttq *TicketTemplateQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*TicketTemplate, error) {
+func (_q *TicketTemplateQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*TicketTemplate, error) {
 	var (
 		nodes       = []*TicketTemplate{}
-		_spec       = ttq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			ttq.withTickets != nil,
+			_q.withTickets != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*TicketTemplate).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &TicketTemplate{config: ttq.config}
+		node := &TicketTemplate{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -387,14 +387,14 @@ func (ttq *TicketTemplateQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, ttq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := ttq.withTickets; query != nil {
-		if err := ttq.loadTickets(ctx, query, nodes,
+	if query := _q.withTickets; query != nil {
+		if err := _q.loadTickets(ctx, query, nodes,
 			func(n *TicketTemplate) { n.Edges.Tickets = []*Ticket{} },
 			func(n *TicketTemplate, e *Ticket) { n.Edges.Tickets = append(n.Edges.Tickets, e) }); err != nil {
 			return nil, err
@@ -403,7 +403,7 @@ func (ttq *TicketTemplateQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	return nodes, nil
 }
 
-func (ttq *TicketTemplateQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*TicketTemplate, init func(*TicketTemplate), assign func(*TicketTemplate, *Ticket)) error {
+func (_q *TicketTemplateQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*TicketTemplate, init func(*TicketTemplate), assign func(*TicketTemplate, *Ticket)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*TicketTemplate)
 	for i := range nodes {
@@ -435,24 +435,24 @@ func (ttq *TicketTemplateQuery) loadTickets(ctx context.Context, query *TicketQu
 	return nil
 }
 
-func (ttq *TicketTemplateQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := ttq.querySpec()
-	_spec.Node.Columns = ttq.ctx.Fields
-	if len(ttq.ctx.Fields) > 0 {
-		_spec.Unique = ttq.ctx.Unique != nil && *ttq.ctx.Unique
+func (_q *TicketTemplateQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, ttq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (ttq *TicketTemplateQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *TicketTemplateQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(tickettemplate.Table, tickettemplate.Columns, sqlgraph.NewFieldSpec(tickettemplate.FieldID, field.TypeInt))
-	_spec.From = ttq.sql
-	if unique := ttq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if ttq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := ttq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, tickettemplate.FieldID)
 		for i := range fields {
@@ -461,20 +461,20 @@ func (ttq *TicketTemplateQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := ttq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := ttq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := ttq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := ttq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -484,33 +484,33 @@ func (ttq *TicketTemplateQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (ttq *TicketTemplateQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(ttq.driver.Dialect())
+func (_q *TicketTemplateQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(tickettemplate.Table)
-	columns := ttq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = tickettemplate.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if ttq.sql != nil {
-		selector = ttq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if ttq.ctx.Unique != nil && *ttq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range ttq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range ttq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := ttq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := ttq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -523,41 +523,41 @@ type TicketTemplateGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (ttgb *TicketTemplateGroupBy) Aggregate(fns ...AggregateFunc) *TicketTemplateGroupBy {
-	ttgb.fns = append(ttgb.fns, fns...)
-	return ttgb
+func (_g *TicketTemplateGroupBy) Aggregate(fns ...AggregateFunc) *TicketTemplateGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (ttgb *TicketTemplateGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ttgb.build.ctx, ent.OpQueryGroupBy)
-	if err := ttgb.build.prepareQuery(ctx); err != nil {
+func (_g *TicketTemplateGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TicketTemplateQuery, *TicketTemplateGroupBy](ctx, ttgb.build, ttgb, ttgb.build.inters, v)
+	return scanWithInterceptors[*TicketTemplateQuery, *TicketTemplateGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (ttgb *TicketTemplateGroupBy) sqlScan(ctx context.Context, root *TicketTemplateQuery, v any) error {
+func (_g *TicketTemplateGroupBy) sqlScan(ctx context.Context, root *TicketTemplateQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(ttgb.fns))
-	for _, fn := range ttgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*ttgb.flds)+len(ttgb.fns))
-		for _, f := range *ttgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*ttgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := ttgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -571,27 +571,27 @@ type TicketTemplateSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (tts *TicketTemplateSelect) Aggregate(fns ...AggregateFunc) *TicketTemplateSelect {
-	tts.fns = append(tts.fns, fns...)
-	return tts
+func (_s *TicketTemplateSelect) Aggregate(fns ...AggregateFunc) *TicketTemplateSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (tts *TicketTemplateSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tts.ctx, ent.OpQuerySelect)
-	if err := tts.prepareQuery(ctx); err != nil {
+func (_s *TicketTemplateSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TicketTemplateQuery, *TicketTemplateSelect](ctx, tts.TicketTemplateQuery, tts, tts.inters, v)
+	return scanWithInterceptors[*TicketTemplateQuery, *TicketTemplateSelect](ctx, _s.TicketTemplateQuery, _s, _s.inters, v)
 }
 
-func (tts *TicketTemplateSelect) sqlScan(ctx context.Context, root *TicketTemplateQuery, v any) error {
+func (_s *TicketTemplateSelect) sqlScan(ctx context.Context, root *TicketTemplateQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(tts.fns))
-	for _, fn := range tts.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*tts.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -599,7 +599,7 @@ func (tts *TicketTemplateSelect) sqlScan(ctx context.Context, root *TicketTempla
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := tts.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

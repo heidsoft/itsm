@@ -24,105 +24,105 @@ type KnowledgeArticleLikeUpdate struct {
 }
 
 // Where appends a list predicates to the KnowledgeArticleLikeUpdate builder.
-func (kalu *KnowledgeArticleLikeUpdate) Where(ps ...predicate.KnowledgeArticleLike) *KnowledgeArticleLikeUpdate {
-	kalu.mutation.Where(ps...)
-	return kalu
+func (_u *KnowledgeArticleLikeUpdate) Where(ps ...predicate.KnowledgeArticleLike) *KnowledgeArticleLikeUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetArticleID sets the "article_id" field.
-func (kalu *KnowledgeArticleLikeUpdate) SetArticleID(i int) *KnowledgeArticleLikeUpdate {
-	kalu.mutation.SetArticleID(i)
-	return kalu
+func (_u *KnowledgeArticleLikeUpdate) SetArticleID(v int) *KnowledgeArticleLikeUpdate {
+	_u.mutation.SetArticleID(v)
+	return _u
 }
 
 // SetNillableArticleID sets the "article_id" field if the given value is not nil.
-func (kalu *KnowledgeArticleLikeUpdate) SetNillableArticleID(i *int) *KnowledgeArticleLikeUpdate {
-	if i != nil {
-		kalu.SetArticleID(*i)
+func (_u *KnowledgeArticleLikeUpdate) SetNillableArticleID(v *int) *KnowledgeArticleLikeUpdate {
+	if v != nil {
+		_u.SetArticleID(*v)
 	}
-	return kalu
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (kalu *KnowledgeArticleLikeUpdate) SetUserID(i int) *KnowledgeArticleLikeUpdate {
-	kalu.mutation.ResetUserID()
-	kalu.mutation.SetUserID(i)
-	return kalu
+func (_u *KnowledgeArticleLikeUpdate) SetUserID(v int) *KnowledgeArticleLikeUpdate {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (kalu *KnowledgeArticleLikeUpdate) SetNillableUserID(i *int) *KnowledgeArticleLikeUpdate {
-	if i != nil {
-		kalu.SetUserID(*i)
+func (_u *KnowledgeArticleLikeUpdate) SetNillableUserID(v *int) *KnowledgeArticleLikeUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return kalu
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (kalu *KnowledgeArticleLikeUpdate) AddUserID(i int) *KnowledgeArticleLikeUpdate {
-	kalu.mutation.AddUserID(i)
-	return kalu
+// AddUserID adds value to the "user_id" field.
+func (_u *KnowledgeArticleLikeUpdate) AddUserID(v int) *KnowledgeArticleLikeUpdate {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (kalu *KnowledgeArticleLikeUpdate) SetTenantID(i int) *KnowledgeArticleLikeUpdate {
-	kalu.mutation.ResetTenantID()
-	kalu.mutation.SetTenantID(i)
-	return kalu
+func (_u *KnowledgeArticleLikeUpdate) SetTenantID(v int) *KnowledgeArticleLikeUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (kalu *KnowledgeArticleLikeUpdate) SetNillableTenantID(i *int) *KnowledgeArticleLikeUpdate {
-	if i != nil {
-		kalu.SetTenantID(*i)
+func (_u *KnowledgeArticleLikeUpdate) SetNillableTenantID(v *int) *KnowledgeArticleLikeUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return kalu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (kalu *KnowledgeArticleLikeUpdate) AddTenantID(i int) *KnowledgeArticleLikeUpdate {
-	kalu.mutation.AddTenantID(i)
-	return kalu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *KnowledgeArticleLikeUpdate) AddTenantID(v int) *KnowledgeArticleLikeUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (kalu *KnowledgeArticleLikeUpdate) SetCreatedAt(t time.Time) *KnowledgeArticleLikeUpdate {
-	kalu.mutation.SetCreatedAt(t)
-	return kalu
+func (_u *KnowledgeArticleLikeUpdate) SetCreatedAt(v time.Time) *KnowledgeArticleLikeUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (kalu *KnowledgeArticleLikeUpdate) SetNillableCreatedAt(t *time.Time) *KnowledgeArticleLikeUpdate {
-	if t != nil {
-		kalu.SetCreatedAt(*t)
+func (_u *KnowledgeArticleLikeUpdate) SetNillableCreatedAt(v *time.Time) *KnowledgeArticleLikeUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return kalu
+	return _u
 }
 
 // SetArticle sets the "article" edge to the KnowledgeArticle entity.
-func (kalu *KnowledgeArticleLikeUpdate) SetArticle(k *KnowledgeArticle) *KnowledgeArticleLikeUpdate {
-	return kalu.SetArticleID(k.ID)
+func (_u *KnowledgeArticleLikeUpdate) SetArticle(v *KnowledgeArticle) *KnowledgeArticleLikeUpdate {
+	return _u.SetArticleID(v.ID)
 }
 
 // Mutation returns the KnowledgeArticleLikeMutation object of the builder.
-func (kalu *KnowledgeArticleLikeUpdate) Mutation() *KnowledgeArticleLikeMutation {
-	return kalu.mutation
+func (_u *KnowledgeArticleLikeUpdate) Mutation() *KnowledgeArticleLikeMutation {
+	return _u.mutation
 }
 
 // ClearArticle clears the "article" edge to the KnowledgeArticle entity.
-func (kalu *KnowledgeArticleLikeUpdate) ClearArticle() *KnowledgeArticleLikeUpdate {
-	kalu.mutation.ClearArticle()
-	return kalu
+func (_u *KnowledgeArticleLikeUpdate) ClearArticle() *KnowledgeArticleLikeUpdate {
+	_u.mutation.ClearArticle()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (kalu *KnowledgeArticleLikeUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, kalu.sqlSave, kalu.mutation, kalu.hooks)
+func (_u *KnowledgeArticleLikeUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (kalu *KnowledgeArticleLikeUpdate) SaveX(ctx context.Context) int {
-	affected, err := kalu.Save(ctx)
+func (_u *KnowledgeArticleLikeUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -130,69 +130,69 @@ func (kalu *KnowledgeArticleLikeUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (kalu *KnowledgeArticleLikeUpdate) Exec(ctx context.Context) error {
-	_, err := kalu.Save(ctx)
+func (_u *KnowledgeArticleLikeUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (kalu *KnowledgeArticleLikeUpdate) ExecX(ctx context.Context) {
-	if err := kalu.Exec(ctx); err != nil {
+func (_u *KnowledgeArticleLikeUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (kalu *KnowledgeArticleLikeUpdate) check() error {
-	if v, ok := kalu.mutation.ArticleID(); ok {
+func (_u *KnowledgeArticleLikeUpdate) check() error {
+	if v, ok := _u.mutation.ArticleID(); ok {
 		if err := knowledgearticlelike.ArticleIDValidator(v); err != nil {
 			return &ValidationError{Name: "article_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticleLike.article_id": %w`, err)}
 		}
 	}
-	if v, ok := kalu.mutation.UserID(); ok {
+	if v, ok := _u.mutation.UserID(); ok {
 		if err := knowledgearticlelike.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticleLike.user_id": %w`, err)}
 		}
 	}
-	if v, ok := kalu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := knowledgearticlelike.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticleLike.tenant_id": %w`, err)}
 		}
 	}
-	if kalu.mutation.ArticleCleared() && len(kalu.mutation.ArticleIDs()) > 0 {
+	if _u.mutation.ArticleCleared() && len(_u.mutation.ArticleIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "KnowledgeArticleLike.article"`)
 	}
 	return nil
 }
 
-func (kalu *KnowledgeArticleLikeUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := kalu.check(); err != nil {
-		return n, err
+func (_u *KnowledgeArticleLikeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(knowledgearticlelike.Table, knowledgearticlelike.Columns, sqlgraph.NewFieldSpec(knowledgearticlelike.FieldID, field.TypeInt))
-	if ps := kalu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := kalu.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(knowledgearticlelike.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := kalu.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(knowledgearticlelike.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := kalu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(knowledgearticlelike.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := kalu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(knowledgearticlelike.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := kalu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticlelike.FieldCreatedAt, field.TypeTime, value)
 	}
-	if kalu.mutation.ArticleCleared() {
+	if _u.mutation.ArticleCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -205,7 +205,7 @@ func (kalu *KnowledgeArticleLikeUpdate) sqlSave(ctx context.Context) (n int, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := kalu.mutation.ArticleIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ArticleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -221,7 +221,7 @@ func (kalu *KnowledgeArticleLikeUpdate) sqlSave(ctx context.Context) (n int, err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, kalu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{knowledgearticlelike.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -229,8 +229,8 @@ func (kalu *KnowledgeArticleLikeUpdate) sqlSave(ctx context.Context) (n int, err
 		}
 		return 0, err
 	}
-	kalu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // KnowledgeArticleLikeUpdateOne is the builder for updating a single KnowledgeArticleLike entity.
@@ -242,112 +242,112 @@ type KnowledgeArticleLikeUpdateOne struct {
 }
 
 // SetArticleID sets the "article_id" field.
-func (kaluo *KnowledgeArticleLikeUpdateOne) SetArticleID(i int) *KnowledgeArticleLikeUpdateOne {
-	kaluo.mutation.SetArticleID(i)
-	return kaluo
+func (_u *KnowledgeArticleLikeUpdateOne) SetArticleID(v int) *KnowledgeArticleLikeUpdateOne {
+	_u.mutation.SetArticleID(v)
+	return _u
 }
 
 // SetNillableArticleID sets the "article_id" field if the given value is not nil.
-func (kaluo *KnowledgeArticleLikeUpdateOne) SetNillableArticleID(i *int) *KnowledgeArticleLikeUpdateOne {
-	if i != nil {
-		kaluo.SetArticleID(*i)
+func (_u *KnowledgeArticleLikeUpdateOne) SetNillableArticleID(v *int) *KnowledgeArticleLikeUpdateOne {
+	if v != nil {
+		_u.SetArticleID(*v)
 	}
-	return kaluo
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (kaluo *KnowledgeArticleLikeUpdateOne) SetUserID(i int) *KnowledgeArticleLikeUpdateOne {
-	kaluo.mutation.ResetUserID()
-	kaluo.mutation.SetUserID(i)
-	return kaluo
+func (_u *KnowledgeArticleLikeUpdateOne) SetUserID(v int) *KnowledgeArticleLikeUpdateOne {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (kaluo *KnowledgeArticleLikeUpdateOne) SetNillableUserID(i *int) *KnowledgeArticleLikeUpdateOne {
-	if i != nil {
-		kaluo.SetUserID(*i)
+func (_u *KnowledgeArticleLikeUpdateOne) SetNillableUserID(v *int) *KnowledgeArticleLikeUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return kaluo
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (kaluo *KnowledgeArticleLikeUpdateOne) AddUserID(i int) *KnowledgeArticleLikeUpdateOne {
-	kaluo.mutation.AddUserID(i)
-	return kaluo
+// AddUserID adds value to the "user_id" field.
+func (_u *KnowledgeArticleLikeUpdateOne) AddUserID(v int) *KnowledgeArticleLikeUpdateOne {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (kaluo *KnowledgeArticleLikeUpdateOne) SetTenantID(i int) *KnowledgeArticleLikeUpdateOne {
-	kaluo.mutation.ResetTenantID()
-	kaluo.mutation.SetTenantID(i)
-	return kaluo
+func (_u *KnowledgeArticleLikeUpdateOne) SetTenantID(v int) *KnowledgeArticleLikeUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (kaluo *KnowledgeArticleLikeUpdateOne) SetNillableTenantID(i *int) *KnowledgeArticleLikeUpdateOne {
-	if i != nil {
-		kaluo.SetTenantID(*i)
+func (_u *KnowledgeArticleLikeUpdateOne) SetNillableTenantID(v *int) *KnowledgeArticleLikeUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return kaluo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (kaluo *KnowledgeArticleLikeUpdateOne) AddTenantID(i int) *KnowledgeArticleLikeUpdateOne {
-	kaluo.mutation.AddTenantID(i)
-	return kaluo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *KnowledgeArticleLikeUpdateOne) AddTenantID(v int) *KnowledgeArticleLikeUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (kaluo *KnowledgeArticleLikeUpdateOne) SetCreatedAt(t time.Time) *KnowledgeArticleLikeUpdateOne {
-	kaluo.mutation.SetCreatedAt(t)
-	return kaluo
+func (_u *KnowledgeArticleLikeUpdateOne) SetCreatedAt(v time.Time) *KnowledgeArticleLikeUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (kaluo *KnowledgeArticleLikeUpdateOne) SetNillableCreatedAt(t *time.Time) *KnowledgeArticleLikeUpdateOne {
-	if t != nil {
-		kaluo.SetCreatedAt(*t)
+func (_u *KnowledgeArticleLikeUpdateOne) SetNillableCreatedAt(v *time.Time) *KnowledgeArticleLikeUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return kaluo
+	return _u
 }
 
 // SetArticle sets the "article" edge to the KnowledgeArticle entity.
-func (kaluo *KnowledgeArticleLikeUpdateOne) SetArticle(k *KnowledgeArticle) *KnowledgeArticleLikeUpdateOne {
-	return kaluo.SetArticleID(k.ID)
+func (_u *KnowledgeArticleLikeUpdateOne) SetArticle(v *KnowledgeArticle) *KnowledgeArticleLikeUpdateOne {
+	return _u.SetArticleID(v.ID)
 }
 
 // Mutation returns the KnowledgeArticleLikeMutation object of the builder.
-func (kaluo *KnowledgeArticleLikeUpdateOne) Mutation() *KnowledgeArticleLikeMutation {
-	return kaluo.mutation
+func (_u *KnowledgeArticleLikeUpdateOne) Mutation() *KnowledgeArticleLikeMutation {
+	return _u.mutation
 }
 
 // ClearArticle clears the "article" edge to the KnowledgeArticle entity.
-func (kaluo *KnowledgeArticleLikeUpdateOne) ClearArticle() *KnowledgeArticleLikeUpdateOne {
-	kaluo.mutation.ClearArticle()
-	return kaluo
+func (_u *KnowledgeArticleLikeUpdateOne) ClearArticle() *KnowledgeArticleLikeUpdateOne {
+	_u.mutation.ClearArticle()
+	return _u
 }
 
 // Where appends a list predicates to the KnowledgeArticleLikeUpdate builder.
-func (kaluo *KnowledgeArticleLikeUpdateOne) Where(ps ...predicate.KnowledgeArticleLike) *KnowledgeArticleLikeUpdateOne {
-	kaluo.mutation.Where(ps...)
-	return kaluo
+func (_u *KnowledgeArticleLikeUpdateOne) Where(ps ...predicate.KnowledgeArticleLike) *KnowledgeArticleLikeUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (kaluo *KnowledgeArticleLikeUpdateOne) Select(field string, fields ...string) *KnowledgeArticleLikeUpdateOne {
-	kaluo.fields = append([]string{field}, fields...)
-	return kaluo
+func (_u *KnowledgeArticleLikeUpdateOne) Select(field string, fields ...string) *KnowledgeArticleLikeUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated KnowledgeArticleLike entity.
-func (kaluo *KnowledgeArticleLikeUpdateOne) Save(ctx context.Context) (*KnowledgeArticleLike, error) {
-	return withHooks(ctx, kaluo.sqlSave, kaluo.mutation, kaluo.hooks)
+func (_u *KnowledgeArticleLikeUpdateOne) Save(ctx context.Context) (*KnowledgeArticleLike, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (kaluo *KnowledgeArticleLikeUpdateOne) SaveX(ctx context.Context) *KnowledgeArticleLike {
-	node, err := kaluo.Save(ctx)
+func (_u *KnowledgeArticleLikeUpdateOne) SaveX(ctx context.Context) *KnowledgeArticleLike {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -355,52 +355,52 @@ func (kaluo *KnowledgeArticleLikeUpdateOne) SaveX(ctx context.Context) *Knowledg
 }
 
 // Exec executes the query on the entity.
-func (kaluo *KnowledgeArticleLikeUpdateOne) Exec(ctx context.Context) error {
-	_, err := kaluo.Save(ctx)
+func (_u *KnowledgeArticleLikeUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (kaluo *KnowledgeArticleLikeUpdateOne) ExecX(ctx context.Context) {
-	if err := kaluo.Exec(ctx); err != nil {
+func (_u *KnowledgeArticleLikeUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (kaluo *KnowledgeArticleLikeUpdateOne) check() error {
-	if v, ok := kaluo.mutation.ArticleID(); ok {
+func (_u *KnowledgeArticleLikeUpdateOne) check() error {
+	if v, ok := _u.mutation.ArticleID(); ok {
 		if err := knowledgearticlelike.ArticleIDValidator(v); err != nil {
 			return &ValidationError{Name: "article_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticleLike.article_id": %w`, err)}
 		}
 	}
-	if v, ok := kaluo.mutation.UserID(); ok {
+	if v, ok := _u.mutation.UserID(); ok {
 		if err := knowledgearticlelike.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticleLike.user_id": %w`, err)}
 		}
 	}
-	if v, ok := kaluo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := knowledgearticlelike.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticleLike.tenant_id": %w`, err)}
 		}
 	}
-	if kaluo.mutation.ArticleCleared() && len(kaluo.mutation.ArticleIDs()) > 0 {
+	if _u.mutation.ArticleCleared() && len(_u.mutation.ArticleIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "KnowledgeArticleLike.article"`)
 	}
 	return nil
 }
 
-func (kaluo *KnowledgeArticleLikeUpdateOne) sqlSave(ctx context.Context) (_node *KnowledgeArticleLike, err error) {
-	if err := kaluo.check(); err != nil {
+func (_u *KnowledgeArticleLikeUpdateOne) sqlSave(ctx context.Context) (_node *KnowledgeArticleLike, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(knowledgearticlelike.Table, knowledgearticlelike.Columns, sqlgraph.NewFieldSpec(knowledgearticlelike.FieldID, field.TypeInt))
-	id, ok := kaluo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "KnowledgeArticleLike.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := kaluo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, knowledgearticlelike.FieldID)
 		for _, f := range fields {
@@ -412,29 +412,29 @@ func (kaluo *KnowledgeArticleLikeUpdateOne) sqlSave(ctx context.Context) (_node 
 			}
 		}
 	}
-	if ps := kaluo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := kaluo.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(knowledgearticlelike.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := kaluo.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(knowledgearticlelike.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := kaluo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(knowledgearticlelike.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := kaluo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(knowledgearticlelike.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := kaluo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticlelike.FieldCreatedAt, field.TypeTime, value)
 	}
-	if kaluo.mutation.ArticleCleared() {
+	if _u.mutation.ArticleCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -447,7 +447,7 @@ func (kaluo *KnowledgeArticleLikeUpdateOne) sqlSave(ctx context.Context) (_node 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := kaluo.mutation.ArticleIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ArticleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -463,10 +463,10 @@ func (kaluo *KnowledgeArticleLikeUpdateOne) sqlSave(ctx context.Context) (_node 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &KnowledgeArticleLike{config: kaluo.config}
+	_node = &KnowledgeArticleLike{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, kaluo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{knowledgearticlelike.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -474,6 +474,6 @@ func (kaluo *KnowledgeArticleLikeUpdateOne) sqlSave(ctx context.Context) (_node 
 		}
 		return nil, err
 	}
-	kaluo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

@@ -27,6 +27,9 @@ type AssetLicense func(*sql.Selector)
 // AuditLog is the predicate function for auditlog builders.
 type AuditLog func(*sql.Selector)
 
+// BPMNPermission is the predicate function for bpmnpermission builders.
+type BPMNPermission func(*sql.Selector)
+
 // CIAttributeDefinition is the predicate function for ciattributedefinition builders.
 type CIAttributeDefinition func(*sql.Selector)
 
@@ -102,6 +105,9 @@ type KnowledgeArticleLike func(*sql.Selector)
 // KnownError is the predicate function for knownerror builders.
 type KnownError func(*sql.Selector)
 
+// MSPAllocation is the predicate function for mspallocation builders.
+type MSPAllocation func(*sql.Selector)
+
 // Message is the predicate function for message builders.
 type Message func(*sql.Selector)
 
@@ -122,6 +128,9 @@ type Permission func(*sql.Selector)
 
 // Problem is the predicate function for problem builders.
 type Problem func(*sql.Selector)
+
+// ProcessAuditLog is the predicate function for processauditlog builders.
+type ProcessAuditLog func(*sql.Selector)
 
 // ProcessBinding is the predicate function for processbinding builders.
 type ProcessBinding func(*sql.Selector)

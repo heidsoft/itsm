@@ -18,6 +18,12 @@ export default defineConfig({
     },
   },
   reporter: [['list'], ['html', { open: 'never' }]],
+  webServer: {
+    command: 'npm run dev',
+    port: 3000,
+    reuseExistingServer: true,
+    timeout: 120_000,
+  },
   projects: [
     {
       name: 'chrome',

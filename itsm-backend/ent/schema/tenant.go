@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -25,12 +26,19 @@ func (Tenant) Fields() []ent.Field {
 		field.String("domain").
 			Comment("域名").
 			Optional(),
-		field.String("type").
-			Comment("租户类型").
+		field.Enum("type").
+			Comment("租户类型: standard=标准租户, msp=MSP服务提供商, customer=MSP客户").
+			Values("standard", "msp", "customer").
 			Default("standard"),
 		field.String("status").
 			Comment("状态").
 			Default("active"),
+		field.Int("parent_tenant_id").
+			Comment("父租户ID (MSP客户指向MSP提供商)").
+			Optional(),
+		field.Int("msp_provider_id").
+			Comment("MSP服务提供商ID").
+			Optional(),
 		field.Time("expires_at").
 			Comment("过期时间").
 			Optional(),
@@ -46,5 +54,10 @@ func (Tenant) Fields() []ent.Field {
 
 // Edges of the Tenant.
 func (Tenant) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.To("users", User.Type).
+			Comment("租户用户"),
+		edge.To("msp_customer_allocations", MSPAllocation.Type).
+			Comment("MSP客户分配"),
+	}
 }

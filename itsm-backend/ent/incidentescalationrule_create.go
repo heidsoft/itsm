@@ -21,223 +21,223 @@ type IncidentEscalationRuleCreate struct {
 }
 
 // SetName sets the "name" field.
-func (ierc *IncidentEscalationRuleCreate) SetName(s string) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetName(s)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetName(v string) *IncidentEscalationRuleCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (ierc *IncidentEscalationRuleCreate) SetDescription(s string) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetDescription(s)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetDescription(v string) *IncidentEscalationRuleCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillableDescription(s *string) *IncidentEscalationRuleCreate {
-	if s != nil {
-		ierc.SetDescription(*s)
+func (_c *IncidentEscalationRuleCreate) SetNillableDescription(v *string) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return ierc
+	return _c
 }
 
 // SetTriggerType sets the "trigger_type" field.
-func (ierc *IncidentEscalationRuleCreate) SetTriggerType(s string) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetTriggerType(s)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetTriggerType(v string) *IncidentEscalationRuleCreate {
+	_c.mutation.SetTriggerType(v)
+	return _c
 }
 
 // SetEscalationLevel sets the "escalation_level" field.
-func (ierc *IncidentEscalationRuleCreate) SetEscalationLevel(i int) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetEscalationLevel(i)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetEscalationLevel(v int) *IncidentEscalationRuleCreate {
+	_c.mutation.SetEscalationLevel(v)
+	return _c
 }
 
 // SetNillableEscalationLevel sets the "escalation_level" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillableEscalationLevel(i *int) *IncidentEscalationRuleCreate {
-	if i != nil {
-		ierc.SetEscalationLevel(*i)
+func (_c *IncidentEscalationRuleCreate) SetNillableEscalationLevel(v *int) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetEscalationLevel(*v)
 	}
-	return ierc
+	return _c
 }
 
 // SetTriggerMinutes sets the "trigger_minutes" field.
-func (ierc *IncidentEscalationRuleCreate) SetTriggerMinutes(i int) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetTriggerMinutes(i)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetTriggerMinutes(v int) *IncidentEscalationRuleCreate {
+	_c.mutation.SetTriggerMinutes(v)
+	return _c
 }
 
 // SetFromStatus sets the "from_status" field.
-func (ierc *IncidentEscalationRuleCreate) SetFromStatus(s string) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetFromStatus(s)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetFromStatus(v string) *IncidentEscalationRuleCreate {
+	_c.mutation.SetFromStatus(v)
+	return _c
 }
 
 // SetNillableFromStatus sets the "from_status" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillableFromStatus(s *string) *IncidentEscalationRuleCreate {
-	if s != nil {
-		ierc.SetFromStatus(*s)
+func (_c *IncidentEscalationRuleCreate) SetNillableFromStatus(v *string) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetFromStatus(*v)
 	}
-	return ierc
+	return _c
 }
 
 // SetToStatus sets the "to_status" field.
-func (ierc *IncidentEscalationRuleCreate) SetToStatus(s string) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetToStatus(s)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetToStatus(v string) *IncidentEscalationRuleCreate {
+	_c.mutation.SetToStatus(v)
+	return _c
 }
 
 // SetNillableToStatus sets the "to_status" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillableToStatus(s *string) *IncidentEscalationRuleCreate {
-	if s != nil {
-		ierc.SetToStatus(*s)
+func (_c *IncidentEscalationRuleCreate) SetNillableToStatus(v *string) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetToStatus(*v)
 	}
-	return ierc
+	return _c
 }
 
 // SetTargetAssigneeType sets the "target_assignee_type" field.
-func (ierc *IncidentEscalationRuleCreate) SetTargetAssigneeType(s string) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetTargetAssigneeType(s)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetTargetAssigneeType(v string) *IncidentEscalationRuleCreate {
+	_c.mutation.SetTargetAssigneeType(v)
+	return _c
 }
 
 // SetTargetAssigneeID sets the "target_assignee_id" field.
-func (ierc *IncidentEscalationRuleCreate) SetTargetAssigneeID(i int) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetTargetAssigneeID(i)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetTargetAssigneeID(v int) *IncidentEscalationRuleCreate {
+	_c.mutation.SetTargetAssigneeID(v)
+	return _c
 }
 
 // SetNillableTargetAssigneeID sets the "target_assignee_id" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillableTargetAssigneeID(i *int) *IncidentEscalationRuleCreate {
-	if i != nil {
-		ierc.SetTargetAssigneeID(*i)
+func (_c *IncidentEscalationRuleCreate) SetNillableTargetAssigneeID(v *int) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetTargetAssigneeID(*v)
 	}
-	return ierc
+	return _c
 }
 
 // SetTargetGroup sets the "target_group" field.
-func (ierc *IncidentEscalationRuleCreate) SetTargetGroup(s string) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetTargetGroup(s)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetTargetGroup(v string) *IncidentEscalationRuleCreate {
+	_c.mutation.SetTargetGroup(v)
+	return _c
 }
 
 // SetNillableTargetGroup sets the "target_group" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillableTargetGroup(s *string) *IncidentEscalationRuleCreate {
-	if s != nil {
-		ierc.SetTargetGroup(*s)
+func (_c *IncidentEscalationRuleCreate) SetNillableTargetGroup(v *string) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetTargetGroup(*v)
 	}
-	return ierc
+	return _c
 }
 
 // SetAutoEscalate sets the "auto_escalate" field.
-func (ierc *IncidentEscalationRuleCreate) SetAutoEscalate(b bool) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetAutoEscalate(b)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetAutoEscalate(v bool) *IncidentEscalationRuleCreate {
+	_c.mutation.SetAutoEscalate(v)
+	return _c
 }
 
 // SetNillableAutoEscalate sets the "auto_escalate" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillableAutoEscalate(b *bool) *IncidentEscalationRuleCreate {
-	if b != nil {
-		ierc.SetAutoEscalate(*b)
+func (_c *IncidentEscalationRuleCreate) SetNillableAutoEscalate(v *bool) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetAutoEscalate(*v)
 	}
-	return ierc
+	return _c
 }
 
 // SetNotificationConfig sets the "notification_config" field.
-func (ierc *IncidentEscalationRuleCreate) SetNotificationConfig(m map[string]interface{}) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetNotificationConfig(m)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetNotificationConfig(v map[string]interface{}) *IncidentEscalationRuleCreate {
+	_c.mutation.SetNotificationConfig(v)
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (ierc *IncidentEscalationRuleCreate) SetIsActive(b bool) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetIsActive(b)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetIsActive(v bool) *IncidentEscalationRuleCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillableIsActive(b *bool) *IncidentEscalationRuleCreate {
-	if b != nil {
-		ierc.SetIsActive(*b)
+func (_c *IncidentEscalationRuleCreate) SetNillableIsActive(v *bool) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return ierc
+	return _c
 }
 
 // SetPriorityMatch sets the "priority_match" field.
-func (ierc *IncidentEscalationRuleCreate) SetPriorityMatch(s string) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetPriorityMatch(s)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetPriorityMatch(v string) *IncidentEscalationRuleCreate {
+	_c.mutation.SetPriorityMatch(v)
+	return _c
 }
 
 // SetNillablePriorityMatch sets the "priority_match" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillablePriorityMatch(s *string) *IncidentEscalationRuleCreate {
-	if s != nil {
-		ierc.SetPriorityMatch(*s)
+func (_c *IncidentEscalationRuleCreate) SetNillablePriorityMatch(v *string) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetPriorityMatch(*v)
 	}
-	return ierc
+	return _c
 }
 
 // SetCategoryMatch sets the "category_match" field.
-func (ierc *IncidentEscalationRuleCreate) SetCategoryMatch(s string) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetCategoryMatch(s)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetCategoryMatch(v string) *IncidentEscalationRuleCreate {
+	_c.mutation.SetCategoryMatch(v)
+	return _c
 }
 
 // SetNillableCategoryMatch sets the "category_match" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillableCategoryMatch(s *string) *IncidentEscalationRuleCreate {
-	if s != nil {
-		ierc.SetCategoryMatch(*s)
+func (_c *IncidentEscalationRuleCreate) SetNillableCategoryMatch(v *string) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetCategoryMatch(*v)
 	}
-	return ierc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ierc *IncidentEscalationRuleCreate) SetTenantID(i int) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetTenantID(i)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetTenantID(v int) *IncidentEscalationRuleCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ierc *IncidentEscalationRuleCreate) SetCreatedAt(t time.Time) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetCreatedAt(t)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetCreatedAt(v time.Time) *IncidentEscalationRuleCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillableCreatedAt(t *time.Time) *IncidentEscalationRuleCreate {
-	if t != nil {
-		ierc.SetCreatedAt(*t)
+func (_c *IncidentEscalationRuleCreate) SetNillableCreatedAt(v *time.Time) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return ierc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ierc *IncidentEscalationRuleCreate) SetUpdatedAt(t time.Time) *IncidentEscalationRuleCreate {
-	ierc.mutation.SetUpdatedAt(t)
-	return ierc
+func (_c *IncidentEscalationRuleCreate) SetUpdatedAt(v time.Time) *IncidentEscalationRuleCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (ierc *IncidentEscalationRuleCreate) SetNillableUpdatedAt(t *time.Time) *IncidentEscalationRuleCreate {
-	if t != nil {
-		ierc.SetUpdatedAt(*t)
+func (_c *IncidentEscalationRuleCreate) SetNillableUpdatedAt(v *time.Time) *IncidentEscalationRuleCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return ierc
+	return _c
 }
 
 // Mutation returns the IncidentEscalationRuleMutation object of the builder.
-func (ierc *IncidentEscalationRuleCreate) Mutation() *IncidentEscalationRuleMutation {
-	return ierc.mutation
+func (_c *IncidentEscalationRuleCreate) Mutation() *IncidentEscalationRuleMutation {
+	return _c.mutation
 }
 
 // Save creates the IncidentEscalationRule in the database.
-func (ierc *IncidentEscalationRuleCreate) Save(ctx context.Context) (*IncidentEscalationRule, error) {
-	ierc.defaults()
-	return withHooks(ctx, ierc.sqlSave, ierc.mutation, ierc.hooks)
+func (_c *IncidentEscalationRuleCreate) Save(ctx context.Context) (*IncidentEscalationRule, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (ierc *IncidentEscalationRuleCreate) SaveX(ctx context.Context) *IncidentEscalationRule {
-	v, err := ierc.Save(ctx)
+func (_c *IncidentEscalationRuleCreate) SaveX(ctx context.Context) *IncidentEscalationRule {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -245,108 +245,108 @@ func (ierc *IncidentEscalationRuleCreate) SaveX(ctx context.Context) *IncidentEs
 }
 
 // Exec executes the query.
-func (ierc *IncidentEscalationRuleCreate) Exec(ctx context.Context) error {
-	_, err := ierc.Save(ctx)
+func (_c *IncidentEscalationRuleCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ierc *IncidentEscalationRuleCreate) ExecX(ctx context.Context) {
-	if err := ierc.Exec(ctx); err != nil {
+func (_c *IncidentEscalationRuleCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ierc *IncidentEscalationRuleCreate) defaults() {
-	if _, ok := ierc.mutation.EscalationLevel(); !ok {
+func (_c *IncidentEscalationRuleCreate) defaults() {
+	if _, ok := _c.mutation.EscalationLevel(); !ok {
 		v := incidentescalationrule.DefaultEscalationLevel
-		ierc.mutation.SetEscalationLevel(v)
+		_c.mutation.SetEscalationLevel(v)
 	}
-	if _, ok := ierc.mutation.AutoEscalate(); !ok {
+	if _, ok := _c.mutation.AutoEscalate(); !ok {
 		v := incidentescalationrule.DefaultAutoEscalate
-		ierc.mutation.SetAutoEscalate(v)
+		_c.mutation.SetAutoEscalate(v)
 	}
-	if _, ok := ierc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := incidentescalationrule.DefaultIsActive
-		ierc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := ierc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := incidentescalationrule.DefaultCreatedAt()
-		ierc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := ierc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := incidentescalationrule.DefaultUpdatedAt()
-		ierc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ierc *IncidentEscalationRuleCreate) check() error {
-	if _, ok := ierc.mutation.Name(); !ok {
+func (_c *IncidentEscalationRuleCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "IncidentEscalationRule.name"`)}
 	}
-	if v, ok := ierc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := incidentescalationrule.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.name": %w`, err)}
 		}
 	}
-	if _, ok := ierc.mutation.TriggerType(); !ok {
+	if _, ok := _c.mutation.TriggerType(); !ok {
 		return &ValidationError{Name: "trigger_type", err: errors.New(`ent: missing required field "IncidentEscalationRule.trigger_type"`)}
 	}
-	if v, ok := ierc.mutation.TriggerType(); ok {
+	if v, ok := _c.mutation.TriggerType(); ok {
 		if err := incidentescalationrule.TriggerTypeValidator(v); err != nil {
 			return &ValidationError{Name: "trigger_type", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.trigger_type": %w`, err)}
 		}
 	}
-	if _, ok := ierc.mutation.EscalationLevel(); !ok {
+	if _, ok := _c.mutation.EscalationLevel(); !ok {
 		return &ValidationError{Name: "escalation_level", err: errors.New(`ent: missing required field "IncidentEscalationRule.escalation_level"`)}
 	}
-	if _, ok := ierc.mutation.TriggerMinutes(); !ok {
+	if _, ok := _c.mutation.TriggerMinutes(); !ok {
 		return &ValidationError{Name: "trigger_minutes", err: errors.New(`ent: missing required field "IncidentEscalationRule.trigger_minutes"`)}
 	}
-	if v, ok := ierc.mutation.TriggerMinutes(); ok {
+	if v, ok := _c.mutation.TriggerMinutes(); ok {
 		if err := incidentescalationrule.TriggerMinutesValidator(v); err != nil {
 			return &ValidationError{Name: "trigger_minutes", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.trigger_minutes": %w`, err)}
 		}
 	}
-	if _, ok := ierc.mutation.TargetAssigneeType(); !ok {
+	if _, ok := _c.mutation.TargetAssigneeType(); !ok {
 		return &ValidationError{Name: "target_assignee_type", err: errors.New(`ent: missing required field "IncidentEscalationRule.target_assignee_type"`)}
 	}
-	if v, ok := ierc.mutation.TargetAssigneeType(); ok {
+	if v, ok := _c.mutation.TargetAssigneeType(); ok {
 		if err := incidentescalationrule.TargetAssigneeTypeValidator(v); err != nil {
 			return &ValidationError{Name: "target_assignee_type", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.target_assignee_type": %w`, err)}
 		}
 	}
-	if _, ok := ierc.mutation.AutoEscalate(); !ok {
+	if _, ok := _c.mutation.AutoEscalate(); !ok {
 		return &ValidationError{Name: "auto_escalate", err: errors.New(`ent: missing required field "IncidentEscalationRule.auto_escalate"`)}
 	}
-	if _, ok := ierc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "IncidentEscalationRule.is_active"`)}
 	}
-	if _, ok := ierc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "IncidentEscalationRule.tenant_id"`)}
 	}
-	if v, ok := ierc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := incidentescalationrule.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := ierc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "IncidentEscalationRule.created_at"`)}
 	}
-	if _, ok := ierc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "IncidentEscalationRule.updated_at"`)}
 	}
 	return nil
 }
 
-func (ierc *IncidentEscalationRuleCreate) sqlSave(ctx context.Context) (*IncidentEscalationRule, error) {
-	if err := ierc.check(); err != nil {
+func (_c *IncidentEscalationRuleCreate) sqlSave(ctx context.Context) (*IncidentEscalationRule, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := ierc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, ierc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -354,85 +354,85 @@ func (ierc *IncidentEscalationRuleCreate) sqlSave(ctx context.Context) (*Inciden
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	ierc.mutation.id = &_node.ID
-	ierc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (ierc *IncidentEscalationRuleCreate) createSpec() (*IncidentEscalationRule, *sqlgraph.CreateSpec) {
+func (_c *IncidentEscalationRuleCreate) createSpec() (*IncidentEscalationRule, *sqlgraph.CreateSpec) {
 	var (
-		_node = &IncidentEscalationRule{config: ierc.config}
+		_node = &IncidentEscalationRule{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(incidentescalationrule.Table, sqlgraph.NewFieldSpec(incidentescalationrule.FieldID, field.TypeInt))
 	)
-	if value, ok := ierc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(incidentescalationrule.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := ierc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(incidentescalationrule.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := ierc.mutation.TriggerType(); ok {
+	if value, ok := _c.mutation.TriggerType(); ok {
 		_spec.SetField(incidentescalationrule.FieldTriggerType, field.TypeString, value)
 		_node.TriggerType = value
 	}
-	if value, ok := ierc.mutation.EscalationLevel(); ok {
+	if value, ok := _c.mutation.EscalationLevel(); ok {
 		_spec.SetField(incidentescalationrule.FieldEscalationLevel, field.TypeInt, value)
 		_node.EscalationLevel = value
 	}
-	if value, ok := ierc.mutation.TriggerMinutes(); ok {
+	if value, ok := _c.mutation.TriggerMinutes(); ok {
 		_spec.SetField(incidentescalationrule.FieldTriggerMinutes, field.TypeInt, value)
 		_node.TriggerMinutes = value
 	}
-	if value, ok := ierc.mutation.FromStatus(); ok {
+	if value, ok := _c.mutation.FromStatus(); ok {
 		_spec.SetField(incidentescalationrule.FieldFromStatus, field.TypeString, value)
 		_node.FromStatus = value
 	}
-	if value, ok := ierc.mutation.ToStatus(); ok {
+	if value, ok := _c.mutation.ToStatus(); ok {
 		_spec.SetField(incidentescalationrule.FieldToStatus, field.TypeString, value)
 		_node.ToStatus = value
 	}
-	if value, ok := ierc.mutation.TargetAssigneeType(); ok {
+	if value, ok := _c.mutation.TargetAssigneeType(); ok {
 		_spec.SetField(incidentescalationrule.FieldTargetAssigneeType, field.TypeString, value)
 		_node.TargetAssigneeType = value
 	}
-	if value, ok := ierc.mutation.TargetAssigneeID(); ok {
+	if value, ok := _c.mutation.TargetAssigneeID(); ok {
 		_spec.SetField(incidentescalationrule.FieldTargetAssigneeID, field.TypeInt, value)
 		_node.TargetAssigneeID = value
 	}
-	if value, ok := ierc.mutation.TargetGroup(); ok {
+	if value, ok := _c.mutation.TargetGroup(); ok {
 		_spec.SetField(incidentescalationrule.FieldTargetGroup, field.TypeString, value)
 		_node.TargetGroup = value
 	}
-	if value, ok := ierc.mutation.AutoEscalate(); ok {
+	if value, ok := _c.mutation.AutoEscalate(); ok {
 		_spec.SetField(incidentescalationrule.FieldAutoEscalate, field.TypeBool, value)
 		_node.AutoEscalate = value
 	}
-	if value, ok := ierc.mutation.NotificationConfig(); ok {
+	if value, ok := _c.mutation.NotificationConfig(); ok {
 		_spec.SetField(incidentescalationrule.FieldNotificationConfig, field.TypeJSON, value)
 		_node.NotificationConfig = value
 	}
-	if value, ok := ierc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(incidentescalationrule.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := ierc.mutation.PriorityMatch(); ok {
+	if value, ok := _c.mutation.PriorityMatch(); ok {
 		_spec.SetField(incidentescalationrule.FieldPriorityMatch, field.TypeString, value)
 		_node.PriorityMatch = value
 	}
-	if value, ok := ierc.mutation.CategoryMatch(); ok {
+	if value, ok := _c.mutation.CategoryMatch(); ok {
 		_spec.SetField(incidentescalationrule.FieldCategoryMatch, field.TypeString, value)
 		_node.CategoryMatch = value
 	}
-	if value, ok := ierc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(incidentescalationrule.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := ierc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentescalationrule.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := ierc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentescalationrule.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
@@ -447,16 +447,16 @@ type IncidentEscalationRuleCreateBulk struct {
 }
 
 // Save creates the IncidentEscalationRule entities in the database.
-func (iercb *IncidentEscalationRuleCreateBulk) Save(ctx context.Context) ([]*IncidentEscalationRule, error) {
-	if iercb.err != nil {
-		return nil, iercb.err
+func (_c *IncidentEscalationRuleCreateBulk) Save(ctx context.Context) ([]*IncidentEscalationRule, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(iercb.builders))
-	nodes := make([]*IncidentEscalationRule, len(iercb.builders))
-	mutators := make([]Mutator, len(iercb.builders))
-	for i := range iercb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*IncidentEscalationRule, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := iercb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*IncidentEscalationRuleMutation)
@@ -470,11 +470,11 @@ func (iercb *IncidentEscalationRuleCreateBulk) Save(ctx context.Context) ([]*Inc
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, iercb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, iercb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -498,7 +498,7 @@ func (iercb *IncidentEscalationRuleCreateBulk) Save(ctx context.Context) ([]*Inc
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, iercb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -506,8 +506,8 @@ func (iercb *IncidentEscalationRuleCreateBulk) Save(ctx context.Context) ([]*Inc
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (iercb *IncidentEscalationRuleCreateBulk) SaveX(ctx context.Context) []*IncidentEscalationRule {
-	v, err := iercb.Save(ctx)
+func (_c *IncidentEscalationRuleCreateBulk) SaveX(ctx context.Context) []*IncidentEscalationRule {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -515,14 +515,14 @@ func (iercb *IncidentEscalationRuleCreateBulk) SaveX(ctx context.Context) []*Inc
 }
 
 // Exec executes the query.
-func (iercb *IncidentEscalationRuleCreateBulk) Exec(ctx context.Context) error {
-	_, err := iercb.Save(ctx)
+func (_c *IncidentEscalationRuleCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (iercb *IncidentEscalationRuleCreateBulk) ExecX(ctx context.Context) {
-	if err := iercb.Exec(ctx); err != nil {
+func (_c *IncidentEscalationRuleCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -32,44 +32,44 @@ type TicketNotificationQuery struct {
 }
 
 // Where adds a new predicate for the TicketNotificationQuery builder.
-func (tnq *TicketNotificationQuery) Where(ps ...predicate.TicketNotification) *TicketNotificationQuery {
-	tnq.predicates = append(tnq.predicates, ps...)
-	return tnq
+func (_q *TicketNotificationQuery) Where(ps ...predicate.TicketNotification) *TicketNotificationQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (tnq *TicketNotificationQuery) Limit(limit int) *TicketNotificationQuery {
-	tnq.ctx.Limit = &limit
-	return tnq
+func (_q *TicketNotificationQuery) Limit(limit int) *TicketNotificationQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (tnq *TicketNotificationQuery) Offset(offset int) *TicketNotificationQuery {
-	tnq.ctx.Offset = &offset
-	return tnq
+func (_q *TicketNotificationQuery) Offset(offset int) *TicketNotificationQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (tnq *TicketNotificationQuery) Unique(unique bool) *TicketNotificationQuery {
-	tnq.ctx.Unique = &unique
-	return tnq
+func (_q *TicketNotificationQuery) Unique(unique bool) *TicketNotificationQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (tnq *TicketNotificationQuery) Order(o ...ticketnotification.OrderOption) *TicketNotificationQuery {
-	tnq.order = append(tnq.order, o...)
-	return tnq
+func (_q *TicketNotificationQuery) Order(o ...ticketnotification.OrderOption) *TicketNotificationQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryTicket chains the current query on the "ticket" edge.
-func (tnq *TicketNotificationQuery) QueryTicket() *TicketQuery {
-	query := (&TicketClient{config: tnq.config}).Query()
+func (_q *TicketNotificationQuery) QueryTicket() *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tnq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := tnq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -78,20 +78,20 @@ func (tnq *TicketNotificationQuery) QueryTicket() *TicketQuery {
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, ticketnotification.TicketTable, ticketnotification.TicketColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(tnq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryUser chains the current query on the "user" edge.
-func (tnq *TicketNotificationQuery) QueryUser() *UserQuery {
-	query := (&UserClient{config: tnq.config}).Query()
+func (_q *TicketNotificationQuery) QueryUser() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tnq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := tnq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func (tnq *TicketNotificationQuery) QueryUser() *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, ticketnotification.UserTable, ticketnotification.UserColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(tnq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -108,8 +108,8 @@ func (tnq *TicketNotificationQuery) QueryUser() *UserQuery {
 
 // First returns the first TicketNotification entity from the query.
 // Returns a *NotFoundError when no TicketNotification was found.
-func (tnq *TicketNotificationQuery) First(ctx context.Context) (*TicketNotification, error) {
-	nodes, err := tnq.Limit(1).All(setContextOp(ctx, tnq.ctx, ent.OpQueryFirst))
+func (_q *TicketNotificationQuery) First(ctx context.Context) (*TicketNotification, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -120,8 +120,8 @@ func (tnq *TicketNotificationQuery) First(ctx context.Context) (*TicketNotificat
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (tnq *TicketNotificationQuery) FirstX(ctx context.Context) *TicketNotification {
-	node, err := tnq.First(ctx)
+func (_q *TicketNotificationQuery) FirstX(ctx context.Context) *TicketNotification {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,9 +130,9 @@ func (tnq *TicketNotificationQuery) FirstX(ctx context.Context) *TicketNotificat
 
 // FirstID returns the first TicketNotification ID from the query.
 // Returns a *NotFoundError when no TicketNotification ID was found.
-func (tnq *TicketNotificationQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *TicketNotificationQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tnq.Limit(1).IDs(setContextOp(ctx, tnq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -143,8 +143,8 @@ func (tnq *TicketNotificationQuery) FirstID(ctx context.Context) (id int, err er
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (tnq *TicketNotificationQuery) FirstIDX(ctx context.Context) int {
-	id, err := tnq.FirstID(ctx)
+func (_q *TicketNotificationQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -154,8 +154,8 @@ func (tnq *TicketNotificationQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single TicketNotification entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one TicketNotification entity is found.
 // Returns a *NotFoundError when no TicketNotification entities are found.
-func (tnq *TicketNotificationQuery) Only(ctx context.Context) (*TicketNotification, error) {
-	nodes, err := tnq.Limit(2).All(setContextOp(ctx, tnq.ctx, ent.OpQueryOnly))
+func (_q *TicketNotificationQuery) Only(ctx context.Context) (*TicketNotification, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +170,8 @@ func (tnq *TicketNotificationQuery) Only(ctx context.Context) (*TicketNotificati
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (tnq *TicketNotificationQuery) OnlyX(ctx context.Context) *TicketNotification {
-	node, err := tnq.Only(ctx)
+func (_q *TicketNotificationQuery) OnlyX(ctx context.Context) *TicketNotification {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -181,9 +181,9 @@ func (tnq *TicketNotificationQuery) OnlyX(ctx context.Context) *TicketNotificati
 // OnlyID is like Only, but returns the only TicketNotification ID in the query.
 // Returns a *NotSingularError when more than one TicketNotification ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (tnq *TicketNotificationQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *TicketNotificationQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tnq.Limit(2).IDs(setContextOp(ctx, tnq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -198,8 +198,8 @@ func (tnq *TicketNotificationQuery) OnlyID(ctx context.Context) (id int, err err
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (tnq *TicketNotificationQuery) OnlyIDX(ctx context.Context) int {
-	id, err := tnq.OnlyID(ctx)
+func (_q *TicketNotificationQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -207,18 +207,18 @@ func (tnq *TicketNotificationQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of TicketNotifications.
-func (tnq *TicketNotificationQuery) All(ctx context.Context) ([]*TicketNotification, error) {
-	ctx = setContextOp(ctx, tnq.ctx, ent.OpQueryAll)
-	if err := tnq.prepareQuery(ctx); err != nil {
+func (_q *TicketNotificationQuery) All(ctx context.Context) ([]*TicketNotification, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*TicketNotification, *TicketNotificationQuery]()
-	return withInterceptors[[]*TicketNotification](ctx, tnq, qr, tnq.inters)
+	return withInterceptors[[]*TicketNotification](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (tnq *TicketNotificationQuery) AllX(ctx context.Context) []*TicketNotification {
-	nodes, err := tnq.All(ctx)
+func (_q *TicketNotificationQuery) AllX(ctx context.Context) []*TicketNotification {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -226,20 +226,20 @@ func (tnq *TicketNotificationQuery) AllX(ctx context.Context) []*TicketNotificat
 }
 
 // IDs executes the query and returns a list of TicketNotification IDs.
-func (tnq *TicketNotificationQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if tnq.ctx.Unique == nil && tnq.path != nil {
-		tnq.Unique(true)
+func (_q *TicketNotificationQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, tnq.ctx, ent.OpQueryIDs)
-	if err = tnq.Select(ticketnotification.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(ticketnotification.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (tnq *TicketNotificationQuery) IDsX(ctx context.Context) []int {
-	ids, err := tnq.IDs(ctx)
+func (_q *TicketNotificationQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -247,17 +247,17 @@ func (tnq *TicketNotificationQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (tnq *TicketNotificationQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, tnq.ctx, ent.OpQueryCount)
-	if err := tnq.prepareQuery(ctx); err != nil {
+func (_q *TicketNotificationQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, tnq, querierCount[*TicketNotificationQuery](), tnq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*TicketNotificationQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (tnq *TicketNotificationQuery) CountX(ctx context.Context) int {
-	count, err := tnq.Count(ctx)
+func (_q *TicketNotificationQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -265,9 +265,9 @@ func (tnq *TicketNotificationQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (tnq *TicketNotificationQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, tnq.ctx, ent.OpQueryExist)
-	switch _, err := tnq.FirstID(ctx); {
+func (_q *TicketNotificationQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -278,8 +278,8 @@ func (tnq *TicketNotificationQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (tnq *TicketNotificationQuery) ExistX(ctx context.Context) bool {
-	exist, err := tnq.Exist(ctx)
+func (_q *TicketNotificationQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -288,44 +288,44 @@ func (tnq *TicketNotificationQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the TicketNotificationQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (tnq *TicketNotificationQuery) Clone() *TicketNotificationQuery {
-	if tnq == nil {
+func (_q *TicketNotificationQuery) Clone() *TicketNotificationQuery {
+	if _q == nil {
 		return nil
 	}
 	return &TicketNotificationQuery{
-		config:     tnq.config,
-		ctx:        tnq.ctx.Clone(),
-		order:      append([]ticketnotification.OrderOption{}, tnq.order...),
-		inters:     append([]Interceptor{}, tnq.inters...),
-		predicates: append([]predicate.TicketNotification{}, tnq.predicates...),
-		withTicket: tnq.withTicket.Clone(),
-		withUser:   tnq.withUser.Clone(),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]ticketnotification.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.TicketNotification{}, _q.predicates...),
+		withTicket: _q.withTicket.Clone(),
+		withUser:   _q.withUser.Clone(),
 		// clone intermediate query.
-		sql:  tnq.sql.Clone(),
-		path: tnq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithTicket tells the query-builder to eager-load the nodes that are connected to
 // the "ticket" edge. The optional arguments are used to configure the query builder of the edge.
-func (tnq *TicketNotificationQuery) WithTicket(opts ...func(*TicketQuery)) *TicketNotificationQuery {
-	query := (&TicketClient{config: tnq.config}).Query()
+func (_q *TicketNotificationQuery) WithTicket(opts ...func(*TicketQuery)) *TicketNotificationQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tnq.withTicket = query
-	return tnq
+	_q.withTicket = query
+	return _q
 }
 
 // WithUser tells the query-builder to eager-load the nodes that are connected to
 // the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (tnq *TicketNotificationQuery) WithUser(opts ...func(*UserQuery)) *TicketNotificationQuery {
-	query := (&UserClient{config: tnq.config}).Query()
+func (_q *TicketNotificationQuery) WithUser(opts ...func(*UserQuery)) *TicketNotificationQuery {
+	query := (&UserClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tnq.withUser = query
-	return tnq
+	_q.withUser = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -342,10 +342,10 @@ func (tnq *TicketNotificationQuery) WithUser(opts ...func(*UserQuery)) *TicketNo
 //		GroupBy(ticketnotification.FieldTicketID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (tnq *TicketNotificationQuery) GroupBy(field string, fields ...string) *TicketNotificationGroupBy {
-	tnq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &TicketNotificationGroupBy{build: tnq}
-	grbuild.flds = &tnq.ctx.Fields
+func (_q *TicketNotificationQuery) GroupBy(field string, fields ...string) *TicketNotificationGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &TicketNotificationGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = ticketnotification.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -363,59 +363,59 @@ func (tnq *TicketNotificationQuery) GroupBy(field string, fields ...string) *Tic
 //	client.TicketNotification.Query().
 //		Select(ticketnotification.FieldTicketID).
 //		Scan(ctx, &v)
-func (tnq *TicketNotificationQuery) Select(fields ...string) *TicketNotificationSelect {
-	tnq.ctx.Fields = append(tnq.ctx.Fields, fields...)
-	sbuild := &TicketNotificationSelect{TicketNotificationQuery: tnq}
+func (_q *TicketNotificationQuery) Select(fields ...string) *TicketNotificationSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &TicketNotificationSelect{TicketNotificationQuery: _q}
 	sbuild.label = ticketnotification.Label
-	sbuild.flds, sbuild.scan = &tnq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a TicketNotificationSelect configured with the given aggregations.
-func (tnq *TicketNotificationQuery) Aggregate(fns ...AggregateFunc) *TicketNotificationSelect {
-	return tnq.Select().Aggregate(fns...)
+func (_q *TicketNotificationQuery) Aggregate(fns ...AggregateFunc) *TicketNotificationSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (tnq *TicketNotificationQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range tnq.inters {
+func (_q *TicketNotificationQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, tnq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range tnq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !ticketnotification.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if tnq.path != nil {
-		prev, err := tnq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		tnq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (tnq *TicketNotificationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*TicketNotification, error) {
+func (_q *TicketNotificationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*TicketNotification, error) {
 	var (
 		nodes       = []*TicketNotification{}
-		_spec       = tnq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			tnq.withTicket != nil,
-			tnq.withUser != nil,
+			_q.withTicket != nil,
+			_q.withUser != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*TicketNotification).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &TicketNotification{config: tnq.config}
+		node := &TicketNotification{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -423,20 +423,20 @@ func (tnq *TicketNotificationQuery) sqlAll(ctx context.Context, hooks ...queryHo
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, tnq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := tnq.withTicket; query != nil {
-		if err := tnq.loadTicket(ctx, query, nodes, nil,
+	if query := _q.withTicket; query != nil {
+		if err := _q.loadTicket(ctx, query, nodes, nil,
 			func(n *TicketNotification, e *Ticket) { n.Edges.Ticket = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := tnq.withUser; query != nil {
-		if err := tnq.loadUser(ctx, query, nodes, nil,
+	if query := _q.withUser; query != nil {
+		if err := _q.loadUser(ctx, query, nodes, nil,
 			func(n *TicketNotification, e *User) { n.Edges.User = e }); err != nil {
 			return nil, err
 		}
@@ -444,7 +444,7 @@ func (tnq *TicketNotificationQuery) sqlAll(ctx context.Context, hooks ...queryHo
 	return nodes, nil
 }
 
-func (tnq *TicketNotificationQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*TicketNotification, init func(*TicketNotification), assign func(*TicketNotification, *Ticket)) error {
+func (_q *TicketNotificationQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*TicketNotification, init func(*TicketNotification), assign func(*TicketNotification, *Ticket)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*TicketNotification)
 	for i := range nodes {
@@ -473,7 +473,7 @@ func (tnq *TicketNotificationQuery) loadTicket(ctx context.Context, query *Ticke
 	}
 	return nil
 }
-func (tnq *TicketNotificationQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*TicketNotification, init func(*TicketNotification), assign func(*TicketNotification, *User)) error {
+func (_q *TicketNotificationQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*TicketNotification, init func(*TicketNotification), assign func(*TicketNotification, *User)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*TicketNotification)
 	for i := range nodes {
@@ -503,24 +503,24 @@ func (tnq *TicketNotificationQuery) loadUser(ctx context.Context, query *UserQue
 	return nil
 }
 
-func (tnq *TicketNotificationQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := tnq.querySpec()
-	_spec.Node.Columns = tnq.ctx.Fields
-	if len(tnq.ctx.Fields) > 0 {
-		_spec.Unique = tnq.ctx.Unique != nil && *tnq.ctx.Unique
+func (_q *TicketNotificationQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, tnq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (tnq *TicketNotificationQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *TicketNotificationQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(ticketnotification.Table, ticketnotification.Columns, sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt))
-	_spec.From = tnq.sql
-	if unique := tnq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if tnq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := tnq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, ticketnotification.FieldID)
 		for i := range fields {
@@ -528,27 +528,27 @@ func (tnq *TicketNotificationQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if tnq.withTicket != nil {
+		if _q.withTicket != nil {
 			_spec.Node.AddColumnOnce(ticketnotification.FieldTicketID)
 		}
-		if tnq.withUser != nil {
+		if _q.withUser != nil {
 			_spec.Node.AddColumnOnce(ticketnotification.FieldUserID)
 		}
 	}
-	if ps := tnq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := tnq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := tnq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := tnq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -558,33 +558,33 @@ func (tnq *TicketNotificationQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (tnq *TicketNotificationQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(tnq.driver.Dialect())
+func (_q *TicketNotificationQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(ticketnotification.Table)
-	columns := tnq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = ticketnotification.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if tnq.sql != nil {
-		selector = tnq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if tnq.ctx.Unique != nil && *tnq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range tnq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range tnq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := tnq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := tnq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -597,41 +597,41 @@ type TicketNotificationGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (tngb *TicketNotificationGroupBy) Aggregate(fns ...AggregateFunc) *TicketNotificationGroupBy {
-	tngb.fns = append(tngb.fns, fns...)
-	return tngb
+func (_g *TicketNotificationGroupBy) Aggregate(fns ...AggregateFunc) *TicketNotificationGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (tngb *TicketNotificationGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tngb.build.ctx, ent.OpQueryGroupBy)
-	if err := tngb.build.prepareQuery(ctx); err != nil {
+func (_g *TicketNotificationGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TicketNotificationQuery, *TicketNotificationGroupBy](ctx, tngb.build, tngb, tngb.build.inters, v)
+	return scanWithInterceptors[*TicketNotificationQuery, *TicketNotificationGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (tngb *TicketNotificationGroupBy) sqlScan(ctx context.Context, root *TicketNotificationQuery, v any) error {
+func (_g *TicketNotificationGroupBy) sqlScan(ctx context.Context, root *TicketNotificationQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(tngb.fns))
-	for _, fn := range tngb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*tngb.flds)+len(tngb.fns))
-		for _, f := range *tngb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*tngb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := tngb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -645,27 +645,27 @@ type TicketNotificationSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (tns *TicketNotificationSelect) Aggregate(fns ...AggregateFunc) *TicketNotificationSelect {
-	tns.fns = append(tns.fns, fns...)
-	return tns
+func (_s *TicketNotificationSelect) Aggregate(fns ...AggregateFunc) *TicketNotificationSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (tns *TicketNotificationSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tns.ctx, ent.OpQuerySelect)
-	if err := tns.prepareQuery(ctx); err != nil {
+func (_s *TicketNotificationSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TicketNotificationQuery, *TicketNotificationSelect](ctx, tns.TicketNotificationQuery, tns, tns.inters, v)
+	return scanWithInterceptors[*TicketNotificationQuery, *TicketNotificationSelect](ctx, _s.TicketNotificationQuery, _s, _s.inters, v)
 }
 
-func (tns *TicketNotificationSelect) sqlScan(ctx context.Context, root *TicketNotificationQuery, v any) error {
+func (_s *TicketNotificationSelect) sqlScan(ctx context.Context, root *TicketNotificationQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(tns.fns))
-	for _, fn := range tns.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*tns.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -673,7 +673,7 @@ func (tns *TicketNotificationSelect) sqlScan(ctx context.Context, root *TicketNo
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := tns.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

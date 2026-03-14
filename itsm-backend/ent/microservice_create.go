@@ -23,183 +23,183 @@ type MicroserviceCreate struct {
 }
 
 // SetName sets the "name" field.
-func (mc *MicroserviceCreate) SetName(s string) *MicroserviceCreate {
-	mc.mutation.SetName(s)
-	return mc
+func (_c *MicroserviceCreate) SetName(v string) *MicroserviceCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetCode sets the "code" field.
-func (mc *MicroserviceCreate) SetCode(s string) *MicroserviceCreate {
-	mc.mutation.SetCode(s)
-	return mc
+func (_c *MicroserviceCreate) SetCode(v string) *MicroserviceCreate {
+	_c.mutation.SetCode(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (mc *MicroserviceCreate) SetDescription(s string) *MicroserviceCreate {
-	mc.mutation.SetDescription(s)
-	return mc
+func (_c *MicroserviceCreate) SetDescription(v string) *MicroserviceCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (mc *MicroserviceCreate) SetNillableDescription(s *string) *MicroserviceCreate {
-	if s != nil {
-		mc.SetDescription(*s)
+func (_c *MicroserviceCreate) SetNillableDescription(v *string) *MicroserviceCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return mc
+	return _c
 }
 
 // SetLanguage sets the "language" field.
-func (mc *MicroserviceCreate) SetLanguage(s string) *MicroserviceCreate {
-	mc.mutation.SetLanguage(s)
-	return mc
+func (_c *MicroserviceCreate) SetLanguage(v string) *MicroserviceCreate {
+	_c.mutation.SetLanguage(v)
+	return _c
 }
 
 // SetNillableLanguage sets the "language" field if the given value is not nil.
-func (mc *MicroserviceCreate) SetNillableLanguage(s *string) *MicroserviceCreate {
-	if s != nil {
-		mc.SetLanguage(*s)
+func (_c *MicroserviceCreate) SetNillableLanguage(v *string) *MicroserviceCreate {
+	if v != nil {
+		_c.SetLanguage(*v)
 	}
-	return mc
+	return _c
 }
 
 // SetFramework sets the "framework" field.
-func (mc *MicroserviceCreate) SetFramework(s string) *MicroserviceCreate {
-	mc.mutation.SetFramework(s)
-	return mc
+func (_c *MicroserviceCreate) SetFramework(v string) *MicroserviceCreate {
+	_c.mutation.SetFramework(v)
+	return _c
 }
 
 // SetNillableFramework sets the "framework" field if the given value is not nil.
-func (mc *MicroserviceCreate) SetNillableFramework(s *string) *MicroserviceCreate {
-	if s != nil {
-		mc.SetFramework(*s)
+func (_c *MicroserviceCreate) SetNillableFramework(v *string) *MicroserviceCreate {
+	if v != nil {
+		_c.SetFramework(*v)
 	}
-	return mc
+	return _c
 }
 
 // SetGitRepo sets the "git_repo" field.
-func (mc *MicroserviceCreate) SetGitRepo(s string) *MicroserviceCreate {
-	mc.mutation.SetGitRepo(s)
-	return mc
+func (_c *MicroserviceCreate) SetGitRepo(v string) *MicroserviceCreate {
+	_c.mutation.SetGitRepo(v)
+	return _c
 }
 
 // SetNillableGitRepo sets the "git_repo" field if the given value is not nil.
-func (mc *MicroserviceCreate) SetNillableGitRepo(s *string) *MicroserviceCreate {
-	if s != nil {
-		mc.SetGitRepo(*s)
+func (_c *MicroserviceCreate) SetNillableGitRepo(v *string) *MicroserviceCreate {
+	if v != nil {
+		_c.SetGitRepo(*v)
 	}
-	return mc
+	return _c
 }
 
 // SetCiPipeline sets the "ci_pipeline" field.
-func (mc *MicroserviceCreate) SetCiPipeline(s string) *MicroserviceCreate {
-	mc.mutation.SetCiPipeline(s)
-	return mc
+func (_c *MicroserviceCreate) SetCiPipeline(v string) *MicroserviceCreate {
+	_c.mutation.SetCiPipeline(v)
+	return _c
 }
 
 // SetNillableCiPipeline sets the "ci_pipeline" field if the given value is not nil.
-func (mc *MicroserviceCreate) SetNillableCiPipeline(s *string) *MicroserviceCreate {
-	if s != nil {
-		mc.SetCiPipeline(*s)
+func (_c *MicroserviceCreate) SetNillableCiPipeline(v *string) *MicroserviceCreate {
+	if v != nil {
+		_c.SetCiPipeline(*v)
 	}
-	return mc
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (mc *MicroserviceCreate) SetStatus(s string) *MicroserviceCreate {
-	mc.mutation.SetStatus(s)
-	return mc
+func (_c *MicroserviceCreate) SetStatus(v string) *MicroserviceCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (mc *MicroserviceCreate) SetNillableStatus(s *string) *MicroserviceCreate {
-	if s != nil {
-		mc.SetStatus(*s)
+func (_c *MicroserviceCreate) SetNillableStatus(v *string) *MicroserviceCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return mc
+	return _c
 }
 
 // SetApplicationID sets the "application_id" field.
-func (mc *MicroserviceCreate) SetApplicationID(i int) *MicroserviceCreate {
-	mc.mutation.SetApplicationID(i)
-	return mc
+func (_c *MicroserviceCreate) SetApplicationID(v int) *MicroserviceCreate {
+	_c.mutation.SetApplicationID(v)
+	return _c
 }
 
 // SetNillableApplicationID sets the "application_id" field if the given value is not nil.
-func (mc *MicroserviceCreate) SetNillableApplicationID(i *int) *MicroserviceCreate {
-	if i != nil {
-		mc.SetApplicationID(*i)
+func (_c *MicroserviceCreate) SetNillableApplicationID(v *int) *MicroserviceCreate {
+	if v != nil {
+		_c.SetApplicationID(*v)
 	}
-	return mc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (mc *MicroserviceCreate) SetTenantID(i int) *MicroserviceCreate {
-	mc.mutation.SetTenantID(i)
-	return mc
+func (_c *MicroserviceCreate) SetTenantID(v int) *MicroserviceCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (mc *MicroserviceCreate) SetCreatedAt(t time.Time) *MicroserviceCreate {
-	mc.mutation.SetCreatedAt(t)
-	return mc
+func (_c *MicroserviceCreate) SetCreatedAt(v time.Time) *MicroserviceCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (mc *MicroserviceCreate) SetNillableCreatedAt(t *time.Time) *MicroserviceCreate {
-	if t != nil {
-		mc.SetCreatedAt(*t)
+func (_c *MicroserviceCreate) SetNillableCreatedAt(v *time.Time) *MicroserviceCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return mc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (mc *MicroserviceCreate) SetUpdatedAt(t time.Time) *MicroserviceCreate {
-	mc.mutation.SetUpdatedAt(t)
-	return mc
+func (_c *MicroserviceCreate) SetUpdatedAt(v time.Time) *MicroserviceCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (mc *MicroserviceCreate) SetNillableUpdatedAt(t *time.Time) *MicroserviceCreate {
-	if t != nil {
-		mc.SetUpdatedAt(*t)
+func (_c *MicroserviceCreate) SetNillableUpdatedAt(v *time.Time) *MicroserviceCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return mc
+	return _c
 }
 
 // SetApplication sets the "application" edge to the Application entity.
-func (mc *MicroserviceCreate) SetApplication(a *Application) *MicroserviceCreate {
-	return mc.SetApplicationID(a.ID)
+func (_c *MicroserviceCreate) SetApplication(v *Application) *MicroserviceCreate {
+	return _c.SetApplicationID(v.ID)
 }
 
 // AddTagIDs adds the "tags" edge to the Tag entity by IDs.
-func (mc *MicroserviceCreate) AddTagIDs(ids ...int) *MicroserviceCreate {
-	mc.mutation.AddTagIDs(ids...)
-	return mc
+func (_c *MicroserviceCreate) AddTagIDs(ids ...int) *MicroserviceCreate {
+	_c.mutation.AddTagIDs(ids...)
+	return _c
 }
 
 // AddTags adds the "tags" edges to the Tag entity.
-func (mc *MicroserviceCreate) AddTags(t ...*Tag) *MicroserviceCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_c *MicroserviceCreate) AddTags(v ...*Tag) *MicroserviceCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return mc.AddTagIDs(ids...)
+	return _c.AddTagIDs(ids...)
 }
 
 // Mutation returns the MicroserviceMutation object of the builder.
-func (mc *MicroserviceCreate) Mutation() *MicroserviceMutation {
-	return mc.mutation
+func (_c *MicroserviceCreate) Mutation() *MicroserviceMutation {
+	return _c.mutation
 }
 
 // Save creates the Microservice in the database.
-func (mc *MicroserviceCreate) Save(ctx context.Context) (*Microservice, error) {
-	mc.defaults()
-	return withHooks(ctx, mc.sqlSave, mc.mutation, mc.hooks)
+func (_c *MicroserviceCreate) Save(ctx context.Context) (*Microservice, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (mc *MicroserviceCreate) SaveX(ctx context.Context) *Microservice {
-	v, err := mc.Save(ctx)
+func (_c *MicroserviceCreate) SaveX(ctx context.Context) *Microservice {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -207,78 +207,78 @@ func (mc *MicroserviceCreate) SaveX(ctx context.Context) *Microservice {
 }
 
 // Exec executes the query.
-func (mc *MicroserviceCreate) Exec(ctx context.Context) error {
-	_, err := mc.Save(ctx)
+func (_c *MicroserviceCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (mc *MicroserviceCreate) ExecX(ctx context.Context) {
-	if err := mc.Exec(ctx); err != nil {
+func (_c *MicroserviceCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (mc *MicroserviceCreate) defaults() {
-	if _, ok := mc.mutation.Status(); !ok {
+func (_c *MicroserviceCreate) defaults() {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := microservice.DefaultStatus
-		mc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := mc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := microservice.DefaultCreatedAt()
-		mc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := mc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := microservice.DefaultUpdatedAt()
-		mc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (mc *MicroserviceCreate) check() error {
-	if _, ok := mc.mutation.Name(); !ok {
+func (_c *MicroserviceCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Microservice.name"`)}
 	}
-	if v, ok := mc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := microservice.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Microservice.name": %w`, err)}
 		}
 	}
-	if _, ok := mc.mutation.Code(); !ok {
+	if _, ok := _c.mutation.Code(); !ok {
 		return &ValidationError{Name: "code", err: errors.New(`ent: missing required field "Microservice.code"`)}
 	}
-	if v, ok := mc.mutation.Code(); ok {
+	if v, ok := _c.mutation.Code(); ok {
 		if err := microservice.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Microservice.code": %w`, err)}
 		}
 	}
-	if _, ok := mc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Microservice.status"`)}
 	}
-	if _, ok := mc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Microservice.tenant_id"`)}
 	}
-	if v, ok := mc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := microservice.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Microservice.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := mc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Microservice.created_at"`)}
 	}
-	if _, ok := mc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Microservice.updated_at"`)}
 	}
 	return nil
 }
 
-func (mc *MicroserviceCreate) sqlSave(ctx context.Context) (*Microservice, error) {
-	if err := mc.check(); err != nil {
+func (_c *MicroserviceCreate) sqlSave(ctx context.Context) (*Microservice, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := mc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, mc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -286,61 +286,61 @@ func (mc *MicroserviceCreate) sqlSave(ctx context.Context) (*Microservice, error
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	mc.mutation.id = &_node.ID
-	mc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (mc *MicroserviceCreate) createSpec() (*Microservice, *sqlgraph.CreateSpec) {
+func (_c *MicroserviceCreate) createSpec() (*Microservice, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Microservice{config: mc.config}
+		_node = &Microservice{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(microservice.Table, sqlgraph.NewFieldSpec(microservice.FieldID, field.TypeInt))
 	)
-	if value, ok := mc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(microservice.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := mc.mutation.Code(); ok {
+	if value, ok := _c.mutation.Code(); ok {
 		_spec.SetField(microservice.FieldCode, field.TypeString, value)
 		_node.Code = value
 	}
-	if value, ok := mc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(microservice.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := mc.mutation.Language(); ok {
+	if value, ok := _c.mutation.Language(); ok {
 		_spec.SetField(microservice.FieldLanguage, field.TypeString, value)
 		_node.Language = value
 	}
-	if value, ok := mc.mutation.Framework(); ok {
+	if value, ok := _c.mutation.Framework(); ok {
 		_spec.SetField(microservice.FieldFramework, field.TypeString, value)
 		_node.Framework = value
 	}
-	if value, ok := mc.mutation.GitRepo(); ok {
+	if value, ok := _c.mutation.GitRepo(); ok {
 		_spec.SetField(microservice.FieldGitRepo, field.TypeString, value)
 		_node.GitRepo = value
 	}
-	if value, ok := mc.mutation.CiPipeline(); ok {
+	if value, ok := _c.mutation.CiPipeline(); ok {
 		_spec.SetField(microservice.FieldCiPipeline, field.TypeString, value)
 		_node.CiPipeline = value
 	}
-	if value, ok := mc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(microservice.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := mc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(microservice.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := mc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(microservice.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := mc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(microservice.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := mc.mutation.ApplicationIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ApplicationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -357,7 +357,7 @@ func (mc *MicroserviceCreate) createSpec() (*Microservice, *sqlgraph.CreateSpec)
 		_node.ApplicationID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := mc.mutation.TagsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TagsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -384,16 +384,16 @@ type MicroserviceCreateBulk struct {
 }
 
 // Save creates the Microservice entities in the database.
-func (mcb *MicroserviceCreateBulk) Save(ctx context.Context) ([]*Microservice, error) {
-	if mcb.err != nil {
-		return nil, mcb.err
+func (_c *MicroserviceCreateBulk) Save(ctx context.Context) ([]*Microservice, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(mcb.builders))
-	nodes := make([]*Microservice, len(mcb.builders))
-	mutators := make([]Mutator, len(mcb.builders))
-	for i := range mcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Microservice, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := mcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*MicroserviceMutation)
@@ -407,11 +407,11 @@ func (mcb *MicroserviceCreateBulk) Save(ctx context.Context) ([]*Microservice, e
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, mcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, mcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -435,7 +435,7 @@ func (mcb *MicroserviceCreateBulk) Save(ctx context.Context) ([]*Microservice, e
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, mcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -443,8 +443,8 @@ func (mcb *MicroserviceCreateBulk) Save(ctx context.Context) ([]*Microservice, e
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (mcb *MicroserviceCreateBulk) SaveX(ctx context.Context) []*Microservice {
-	v, err := mcb.Save(ctx)
+func (_c *MicroserviceCreateBulk) SaveX(ctx context.Context) []*Microservice {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -452,14 +452,14 @@ func (mcb *MicroserviceCreateBulk) SaveX(ctx context.Context) []*Microservice {
 }
 
 // Exec executes the query.
-func (mcb *MicroserviceCreateBulk) Exec(ctx context.Context) error {
-	_, err := mcb.Save(ctx)
+func (_c *MicroserviceCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (mcb *MicroserviceCreateBulk) ExecX(ctx context.Context) {
-	if err := mcb.Exec(ctx); err != nil {
+func (_c *MicroserviceCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

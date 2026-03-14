@@ -22,116 +22,116 @@ type TicketTagCreate struct {
 }
 
 // SetName sets the "name" field.
-func (ttc *TicketTagCreate) SetName(s string) *TicketTagCreate {
-	ttc.mutation.SetName(s)
-	return ttc
+func (_c *TicketTagCreate) SetName(v string) *TicketTagCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetColor sets the "color" field.
-func (ttc *TicketTagCreate) SetColor(s string) *TicketTagCreate {
-	ttc.mutation.SetColor(s)
-	return ttc
+func (_c *TicketTagCreate) SetColor(v string) *TicketTagCreate {
+	_c.mutation.SetColor(v)
+	return _c
 }
 
 // SetNillableColor sets the "color" field if the given value is not nil.
-func (ttc *TicketTagCreate) SetNillableColor(s *string) *TicketTagCreate {
-	if s != nil {
-		ttc.SetColor(*s)
+func (_c *TicketTagCreate) SetNillableColor(v *string) *TicketTagCreate {
+	if v != nil {
+		_c.SetColor(*v)
 	}
-	return ttc
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (ttc *TicketTagCreate) SetDescription(s string) *TicketTagCreate {
-	ttc.mutation.SetDescription(s)
-	return ttc
+func (_c *TicketTagCreate) SetDescription(v string) *TicketTagCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ttc *TicketTagCreate) SetNillableDescription(s *string) *TicketTagCreate {
-	if s != nil {
-		ttc.SetDescription(*s)
+func (_c *TicketTagCreate) SetNillableDescription(v *string) *TicketTagCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return ttc
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (ttc *TicketTagCreate) SetIsActive(b bool) *TicketTagCreate {
-	ttc.mutation.SetIsActive(b)
-	return ttc
+func (_c *TicketTagCreate) SetIsActive(v bool) *TicketTagCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (ttc *TicketTagCreate) SetNillableIsActive(b *bool) *TicketTagCreate {
-	if b != nil {
-		ttc.SetIsActive(*b)
+func (_c *TicketTagCreate) SetNillableIsActive(v *bool) *TicketTagCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return ttc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ttc *TicketTagCreate) SetTenantID(i int) *TicketTagCreate {
-	ttc.mutation.SetTenantID(i)
-	return ttc
+func (_c *TicketTagCreate) SetTenantID(v int) *TicketTagCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ttc *TicketTagCreate) SetCreatedAt(t time.Time) *TicketTagCreate {
-	ttc.mutation.SetCreatedAt(t)
-	return ttc
+func (_c *TicketTagCreate) SetCreatedAt(v time.Time) *TicketTagCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ttc *TicketTagCreate) SetNillableCreatedAt(t *time.Time) *TicketTagCreate {
-	if t != nil {
-		ttc.SetCreatedAt(*t)
+func (_c *TicketTagCreate) SetNillableCreatedAt(v *time.Time) *TicketTagCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return ttc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ttc *TicketTagCreate) SetUpdatedAt(t time.Time) *TicketTagCreate {
-	ttc.mutation.SetUpdatedAt(t)
-	return ttc
+func (_c *TicketTagCreate) SetUpdatedAt(v time.Time) *TicketTagCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (ttc *TicketTagCreate) SetNillableUpdatedAt(t *time.Time) *TicketTagCreate {
-	if t != nil {
-		ttc.SetUpdatedAt(*t)
+func (_c *TicketTagCreate) SetNillableUpdatedAt(v *time.Time) *TicketTagCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return ttc
+	return _c
 }
 
 // AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (ttc *TicketTagCreate) AddTicketIDs(ids ...int) *TicketTagCreate {
-	ttc.mutation.AddTicketIDs(ids...)
-	return ttc
+func (_c *TicketTagCreate) AddTicketIDs(ids ...int) *TicketTagCreate {
+	_c.mutation.AddTicketIDs(ids...)
+	return _c
 }
 
 // AddTickets adds the "tickets" edges to the Ticket entity.
-func (ttc *TicketTagCreate) AddTickets(t ...*Ticket) *TicketTagCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_c *TicketTagCreate) AddTickets(v ...*Ticket) *TicketTagCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ttc.AddTicketIDs(ids...)
+	return _c.AddTicketIDs(ids...)
 }
 
 // Mutation returns the TicketTagMutation object of the builder.
-func (ttc *TicketTagCreate) Mutation() *TicketTagMutation {
-	return ttc.mutation
+func (_c *TicketTagCreate) Mutation() *TicketTagMutation {
+	return _c.mutation
 }
 
 // Save creates the TicketTag in the database.
-func (ttc *TicketTagCreate) Save(ctx context.Context) (*TicketTag, error) {
-	ttc.defaults()
-	return withHooks(ctx, ttc.sqlSave, ttc.mutation, ttc.hooks)
+func (_c *TicketTagCreate) Save(ctx context.Context) (*TicketTag, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (ttc *TicketTagCreate) SaveX(ctx context.Context) *TicketTag {
-	v, err := ttc.Save(ctx)
+func (_c *TicketTagCreate) SaveX(ctx context.Context) *TicketTag {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -139,77 +139,77 @@ func (ttc *TicketTagCreate) SaveX(ctx context.Context) *TicketTag {
 }
 
 // Exec executes the query.
-func (ttc *TicketTagCreate) Exec(ctx context.Context) error {
-	_, err := ttc.Save(ctx)
+func (_c *TicketTagCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ttc *TicketTagCreate) ExecX(ctx context.Context) {
-	if err := ttc.Exec(ctx); err != nil {
+func (_c *TicketTagCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ttc *TicketTagCreate) defaults() {
-	if _, ok := ttc.mutation.Color(); !ok {
+func (_c *TicketTagCreate) defaults() {
+	if _, ok := _c.mutation.Color(); !ok {
 		v := tickettag.DefaultColor
-		ttc.mutation.SetColor(v)
+		_c.mutation.SetColor(v)
 	}
-	if _, ok := ttc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := tickettag.DefaultIsActive
-		ttc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := ttc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := tickettag.DefaultCreatedAt()
-		ttc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := ttc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := tickettag.DefaultUpdatedAt()
-		ttc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ttc *TicketTagCreate) check() error {
-	if _, ok := ttc.mutation.Name(); !ok {
+func (_c *TicketTagCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "TicketTag.name"`)}
 	}
-	if v, ok := ttc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := tickettag.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketTag.name": %w`, err)}
 		}
 	}
-	if _, ok := ttc.mutation.Color(); !ok {
+	if _, ok := _c.mutation.Color(); !ok {
 		return &ValidationError{Name: "color", err: errors.New(`ent: missing required field "TicketTag.color"`)}
 	}
-	if _, ok := ttc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "TicketTag.is_active"`)}
 	}
-	if _, ok := ttc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "TicketTag.tenant_id"`)}
 	}
-	if v, ok := ttc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := tickettag.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketTag.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := ttc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "TicketTag.created_at"`)}
 	}
-	if _, ok := ttc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "TicketTag.updated_at"`)}
 	}
 	return nil
 }
 
-func (ttc *TicketTagCreate) sqlSave(ctx context.Context) (*TicketTag, error) {
-	if err := ttc.check(); err != nil {
+func (_c *TicketTagCreate) sqlSave(ctx context.Context) (*TicketTag, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := ttc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, ttc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -217,45 +217,45 @@ func (ttc *TicketTagCreate) sqlSave(ctx context.Context) (*TicketTag, error) {
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	ttc.mutation.id = &_node.ID
-	ttc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (ttc *TicketTagCreate) createSpec() (*TicketTag, *sqlgraph.CreateSpec) {
+func (_c *TicketTagCreate) createSpec() (*TicketTag, *sqlgraph.CreateSpec) {
 	var (
-		_node = &TicketTag{config: ttc.config}
+		_node = &TicketTag{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(tickettag.Table, sqlgraph.NewFieldSpec(tickettag.FieldID, field.TypeInt))
 	)
-	if value, ok := ttc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(tickettag.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := ttc.mutation.Color(); ok {
+	if value, ok := _c.mutation.Color(); ok {
 		_spec.SetField(tickettag.FieldColor, field.TypeString, value)
 		_node.Color = value
 	}
-	if value, ok := ttc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(tickettag.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := ttc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(tickettag.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := ttc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(tickettag.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := ttc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(tickettag.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := ttc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(tickettag.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := ttc.mutation.TicketsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -282,16 +282,16 @@ type TicketTagCreateBulk struct {
 }
 
 // Save creates the TicketTag entities in the database.
-func (ttcb *TicketTagCreateBulk) Save(ctx context.Context) ([]*TicketTag, error) {
-	if ttcb.err != nil {
-		return nil, ttcb.err
+func (_c *TicketTagCreateBulk) Save(ctx context.Context) ([]*TicketTag, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ttcb.builders))
-	nodes := make([]*TicketTag, len(ttcb.builders))
-	mutators := make([]Mutator, len(ttcb.builders))
-	for i := range ttcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*TicketTag, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ttcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TicketTagMutation)
@@ -305,11 +305,11 @@ func (ttcb *TicketTagCreateBulk) Save(ctx context.Context) ([]*TicketTag, error)
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ttcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ttcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -333,7 +333,7 @@ func (ttcb *TicketTagCreateBulk) Save(ctx context.Context) ([]*TicketTag, error)
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ttcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -341,8 +341,8 @@ func (ttcb *TicketTagCreateBulk) Save(ctx context.Context) ([]*TicketTag, error)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ttcb *TicketTagCreateBulk) SaveX(ctx context.Context) []*TicketTag {
-	v, err := ttcb.Save(ctx)
+func (_c *TicketTagCreateBulk) SaveX(ctx context.Context) []*TicketTag {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -350,14 +350,14 @@ func (ttcb *TicketTagCreateBulk) SaveX(ctx context.Context) []*TicketTag {
 }
 
 // Exec executes the query.
-func (ttcb *TicketTagCreateBulk) Exec(ctx context.Context) error {
-	_, err := ttcb.Save(ctx)
+func (_c *TicketTagCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ttcb *TicketTagCreateBulk) ExecX(ctx context.Context) {
-	if err := ttcb.Exec(ctx); err != nil {
+func (_c *TicketTagCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

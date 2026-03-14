@@ -85,7 +85,7 @@ func (*Change) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Change fields.
-func (c *Change) assignValues(columns []string, values []any) error {
+func (_m *Change) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -96,114 +96,114 @@ func (c *Change) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			c.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case change.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
-				c.Title = value.String
+				_m.Title = value.String
 			}
 		case change.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				c.Description = value.String
+				_m.Description = value.String
 			}
 		case change.FieldJustification:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field justification", values[i])
 			} else if value.Valid {
-				c.Justification = value.String
+				_m.Justification = value.String
 			}
 		case change.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				c.Type = value.String
+				_m.Type = value.String
 			}
 		case change.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				c.Status = value.String
+				_m.Status = value.String
 			}
 		case change.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				c.Priority = value.String
+				_m.Priority = value.String
 			}
 		case change.FieldImpactScope:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field impact_scope", values[i])
 			} else if value.Valid {
-				c.ImpactScope = value.String
+				_m.ImpactScope = value.String
 			}
 		case change.FieldRiskLevel:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field risk_level", values[i])
 			} else if value.Valid {
-				c.RiskLevel = value.String
+				_m.RiskLevel = value.String
 			}
 		case change.FieldAssigneeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field assignee_id", values[i])
 			} else if value.Valid {
-				c.AssigneeID = int(value.Int64)
+				_m.AssigneeID = int(value.Int64)
 			}
 		case change.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				c.CreatedBy = int(value.Int64)
+				_m.CreatedBy = int(value.Int64)
 			}
 		case change.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				c.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case change.FieldPlannedStartDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field planned_start_date", values[i])
 			} else if value.Valid {
-				c.PlannedStartDate = value.Time
+				_m.PlannedStartDate = value.Time
 			}
 		case change.FieldPlannedEndDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field planned_end_date", values[i])
 			} else if value.Valid {
-				c.PlannedEndDate = value.Time
+				_m.PlannedEndDate = value.Time
 			}
 		case change.FieldActualStartDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field actual_start_date", values[i])
 			} else if value.Valid {
-				c.ActualStartDate = value.Time
+				_m.ActualStartDate = value.Time
 			}
 		case change.FieldActualEndDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field actual_end_date", values[i])
 			} else if value.Valid {
-				c.ActualEndDate = value.Time
+				_m.ActualEndDate = value.Time
 			}
 		case change.FieldImplementationPlan:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field implementation_plan", values[i])
 			} else if value.Valid {
-				c.ImplementationPlan = value.String
+				_m.ImplementationPlan = value.String
 			}
 		case change.FieldRollbackPlan:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field rollback_plan", values[i])
 			} else if value.Valid {
-				c.RollbackPlan = value.String
+				_m.RollbackPlan = value.String
 			}
 		case change.FieldAffectedCis:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field affected_cis", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &c.AffectedCis); err != nil {
+				if err := json.Unmarshal(*value, &_m.AffectedCis); err != nil {
 					return fmt.Errorf("unmarshal field affected_cis: %w", err)
 				}
 			}
@@ -211,7 +211,7 @@ func (c *Change) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field related_tickets", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &c.RelatedTickets); err != nil {
+				if err := json.Unmarshal(*value, &_m.RelatedTickets); err != nil {
 					return fmt.Errorf("unmarshal field related_tickets: %w", err)
 				}
 			}
@@ -219,16 +219,16 @@ func (c *Change) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				c.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case change.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				c.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			c.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -236,95 +236,95 @@ func (c *Change) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Change.
 // This includes values selected through modifiers, order, etc.
-func (c *Change) Value(name string) (ent.Value, error) {
-	return c.selectValues.Get(name)
+func (_m *Change) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this Change.
 // Note that you need to call Change.Unwrap() before calling this method if this Change
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (c *Change) Update() *ChangeUpdateOne {
-	return NewChangeClient(c.config).UpdateOne(c)
+func (_m *Change) Update() *ChangeUpdateOne {
+	return NewChangeClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Change entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (c *Change) Unwrap() *Change {
-	_tx, ok := c.config.driver.(*txDriver)
+func (_m *Change) Unwrap() *Change {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Change is not a transactional entity")
 	}
-	c.config.driver = _tx.drv
-	return c
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (c *Change) String() string {
+func (_m *Change) String() string {
 	var builder strings.Builder
 	builder.WriteString("Change(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", c.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("title=")
-	builder.WriteString(c.Title)
+	builder.WriteString(_m.Title)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(c.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("justification=")
-	builder.WriteString(c.Justification)
+	builder.WriteString(_m.Justification)
 	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(c.Type)
+	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(c.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(c.Priority)
+	builder.WriteString(_m.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("impact_scope=")
-	builder.WriteString(c.ImpactScope)
+	builder.WriteString(_m.ImpactScope)
 	builder.WriteString(", ")
 	builder.WriteString("risk_level=")
-	builder.WriteString(c.RiskLevel)
+	builder.WriteString(_m.RiskLevel)
 	builder.WriteString(", ")
 	builder.WriteString("assignee_id=")
-	builder.WriteString(fmt.Sprintf("%v", c.AssigneeID))
+	builder.WriteString(fmt.Sprintf("%v", _m.AssigneeID))
 	builder.WriteString(", ")
 	builder.WriteString("created_by=")
-	builder.WriteString(fmt.Sprintf("%v", c.CreatedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.CreatedBy))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", c.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("planned_start_date=")
-	builder.WriteString(c.PlannedStartDate.Format(time.ANSIC))
+	builder.WriteString(_m.PlannedStartDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("planned_end_date=")
-	builder.WriteString(c.PlannedEndDate.Format(time.ANSIC))
+	builder.WriteString(_m.PlannedEndDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("actual_start_date=")
-	builder.WriteString(c.ActualStartDate.Format(time.ANSIC))
+	builder.WriteString(_m.ActualStartDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("actual_end_date=")
-	builder.WriteString(c.ActualEndDate.Format(time.ANSIC))
+	builder.WriteString(_m.ActualEndDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("implementation_plan=")
-	builder.WriteString(c.ImplementationPlan)
+	builder.WriteString(_m.ImplementationPlan)
 	builder.WriteString(", ")
 	builder.WriteString("rollback_plan=")
-	builder.WriteString(c.RollbackPlan)
+	builder.WriteString(_m.RollbackPlan)
 	builder.WriteString(", ")
 	builder.WriteString("affected_cis=")
-	builder.WriteString(fmt.Sprintf("%v", c.AffectedCis))
+	builder.WriteString(fmt.Sprintf("%v", _m.AffectedCis))
 	builder.WriteString(", ")
 	builder.WriteString("related_tickets=")
-	builder.WriteString(fmt.Sprintf("%v", c.RelatedTickets))
+	builder.WriteString(fmt.Sprintf("%v", _m.RelatedTickets))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(c.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

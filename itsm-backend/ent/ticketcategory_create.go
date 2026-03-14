@@ -24,208 +24,208 @@ type TicketCategoryCreate struct {
 }
 
 // SetName sets the "name" field.
-func (tcc *TicketCategoryCreate) SetName(s string) *TicketCategoryCreate {
-	tcc.mutation.SetName(s)
-	return tcc
+func (_c *TicketCategoryCreate) SetName(v string) *TicketCategoryCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (tcc *TicketCategoryCreate) SetDescription(s string) *TicketCategoryCreate {
-	tcc.mutation.SetDescription(s)
-	return tcc
+func (_c *TicketCategoryCreate) SetDescription(v string) *TicketCategoryCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (tcc *TicketCategoryCreate) SetNillableDescription(s *string) *TicketCategoryCreate {
-	if s != nil {
-		tcc.SetDescription(*s)
+func (_c *TicketCategoryCreate) SetNillableDescription(v *string) *TicketCategoryCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetCode sets the "code" field.
-func (tcc *TicketCategoryCreate) SetCode(s string) *TicketCategoryCreate {
-	tcc.mutation.SetCode(s)
-	return tcc
+func (_c *TicketCategoryCreate) SetCode(v string) *TicketCategoryCreate {
+	_c.mutation.SetCode(v)
+	return _c
 }
 
 // SetParentID sets the "parent_id" field.
-func (tcc *TicketCategoryCreate) SetParentID(i int) *TicketCategoryCreate {
-	tcc.mutation.SetParentID(i)
-	return tcc
+func (_c *TicketCategoryCreate) SetParentID(v int) *TicketCategoryCreate {
+	_c.mutation.SetParentID(v)
+	return _c
 }
 
 // SetNillableParentID sets the "parent_id" field if the given value is not nil.
-func (tcc *TicketCategoryCreate) SetNillableParentID(i *int) *TicketCategoryCreate {
-	if i != nil {
-		tcc.SetParentID(*i)
+func (_c *TicketCategoryCreate) SetNillableParentID(v *int) *TicketCategoryCreate {
+	if v != nil {
+		_c.SetParentID(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetLevel sets the "level" field.
-func (tcc *TicketCategoryCreate) SetLevel(i int) *TicketCategoryCreate {
-	tcc.mutation.SetLevel(i)
-	return tcc
+func (_c *TicketCategoryCreate) SetLevel(v int) *TicketCategoryCreate {
+	_c.mutation.SetLevel(v)
+	return _c
 }
 
 // SetNillableLevel sets the "level" field if the given value is not nil.
-func (tcc *TicketCategoryCreate) SetNillableLevel(i *int) *TicketCategoryCreate {
-	if i != nil {
-		tcc.SetLevel(*i)
+func (_c *TicketCategoryCreate) SetNillableLevel(v *int) *TicketCategoryCreate {
+	if v != nil {
+		_c.SetLevel(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetSortOrder sets the "sort_order" field.
-func (tcc *TicketCategoryCreate) SetSortOrder(i int) *TicketCategoryCreate {
-	tcc.mutation.SetSortOrder(i)
-	return tcc
+func (_c *TicketCategoryCreate) SetSortOrder(v int) *TicketCategoryCreate {
+	_c.mutation.SetSortOrder(v)
+	return _c
 }
 
 // SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
-func (tcc *TicketCategoryCreate) SetNillableSortOrder(i *int) *TicketCategoryCreate {
-	if i != nil {
-		tcc.SetSortOrder(*i)
+func (_c *TicketCategoryCreate) SetNillableSortOrder(v *int) *TicketCategoryCreate {
+	if v != nil {
+		_c.SetSortOrder(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (tcc *TicketCategoryCreate) SetIsActive(b bool) *TicketCategoryCreate {
-	tcc.mutation.SetIsActive(b)
-	return tcc
+func (_c *TicketCategoryCreate) SetIsActive(v bool) *TicketCategoryCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (tcc *TicketCategoryCreate) SetNillableIsActive(b *bool) *TicketCategoryCreate {
-	if b != nil {
-		tcc.SetIsActive(*b)
+func (_c *TicketCategoryCreate) SetNillableIsActive(v *bool) *TicketCategoryCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tcc *TicketCategoryCreate) SetTenantID(i int) *TicketCategoryCreate {
-	tcc.mutation.SetTenantID(i)
-	return tcc
+func (_c *TicketCategoryCreate) SetTenantID(v int) *TicketCategoryCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetDepartmentID sets the "department_id" field.
-func (tcc *TicketCategoryCreate) SetDepartmentID(i int) *TicketCategoryCreate {
-	tcc.mutation.SetDepartmentID(i)
-	return tcc
+func (_c *TicketCategoryCreate) SetDepartmentID(v int) *TicketCategoryCreate {
+	_c.mutation.SetDepartmentID(v)
+	return _c
 }
 
 // SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
-func (tcc *TicketCategoryCreate) SetNillableDepartmentID(i *int) *TicketCategoryCreate {
-	if i != nil {
-		tcc.SetDepartmentID(*i)
+func (_c *TicketCategoryCreate) SetNillableDepartmentID(v *int) *TicketCategoryCreate {
+	if v != nil {
+		_c.SetDepartmentID(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetWorkflowID sets the "workflow_id" field.
-func (tcc *TicketCategoryCreate) SetWorkflowID(i int) *TicketCategoryCreate {
-	tcc.mutation.SetWorkflowID(i)
-	return tcc
+func (_c *TicketCategoryCreate) SetWorkflowID(v int) *TicketCategoryCreate {
+	_c.mutation.SetWorkflowID(v)
+	return _c
 }
 
 // SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
-func (tcc *TicketCategoryCreate) SetNillableWorkflowID(i *int) *TicketCategoryCreate {
-	if i != nil {
-		tcc.SetWorkflowID(*i)
+func (_c *TicketCategoryCreate) SetNillableWorkflowID(v *int) *TicketCategoryCreate {
+	if v != nil {
+		_c.SetWorkflowID(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tcc *TicketCategoryCreate) SetCreatedAt(t time.Time) *TicketCategoryCreate {
-	tcc.mutation.SetCreatedAt(t)
-	return tcc
+func (_c *TicketCategoryCreate) SetCreatedAt(v time.Time) *TicketCategoryCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tcc *TicketCategoryCreate) SetNillableCreatedAt(t *time.Time) *TicketCategoryCreate {
-	if t != nil {
-		tcc.SetCreatedAt(*t)
+func (_c *TicketCategoryCreate) SetNillableCreatedAt(v *time.Time) *TicketCategoryCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return tcc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tcc *TicketCategoryCreate) SetUpdatedAt(t time.Time) *TicketCategoryCreate {
-	tcc.mutation.SetUpdatedAt(t)
-	return tcc
+func (_c *TicketCategoryCreate) SetUpdatedAt(v time.Time) *TicketCategoryCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (tcc *TicketCategoryCreate) SetNillableUpdatedAt(t *time.Time) *TicketCategoryCreate {
-	if t != nil {
-		tcc.SetUpdatedAt(*t)
+func (_c *TicketCategoryCreate) SetNillableUpdatedAt(v *time.Time) *TicketCategoryCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return tcc
+	return _c
 }
 
 // AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (tcc *TicketCategoryCreate) AddTicketIDs(ids ...int) *TicketCategoryCreate {
-	tcc.mutation.AddTicketIDs(ids...)
-	return tcc
+func (_c *TicketCategoryCreate) AddTicketIDs(ids ...int) *TicketCategoryCreate {
+	_c.mutation.AddTicketIDs(ids...)
+	return _c
 }
 
 // AddTickets adds the "tickets" edges to the Ticket entity.
-func (tcc *TicketCategoryCreate) AddTickets(t ...*Ticket) *TicketCategoryCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_c *TicketCategoryCreate) AddTickets(v ...*Ticket) *TicketCategoryCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tcc.AddTicketIDs(ids...)
+	return _c.AddTicketIDs(ids...)
 }
 
 // AddChildIDs adds the "children" edge to the TicketCategory entity by IDs.
-func (tcc *TicketCategoryCreate) AddChildIDs(ids ...int) *TicketCategoryCreate {
-	tcc.mutation.AddChildIDs(ids...)
-	return tcc
+func (_c *TicketCategoryCreate) AddChildIDs(ids ...int) *TicketCategoryCreate {
+	_c.mutation.AddChildIDs(ids...)
+	return _c
 }
 
 // AddChildren adds the "children" edges to the TicketCategory entity.
-func (tcc *TicketCategoryCreate) AddChildren(t ...*TicketCategory) *TicketCategoryCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_c *TicketCategoryCreate) AddChildren(v ...*TicketCategory) *TicketCategoryCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tcc.AddChildIDs(ids...)
+	return _c.AddChildIDs(ids...)
 }
 
 // SetParent sets the "parent" edge to the TicketCategory entity.
-func (tcc *TicketCategoryCreate) SetParent(t *TicketCategory) *TicketCategoryCreate {
-	return tcc.SetParentID(t.ID)
+func (_c *TicketCategoryCreate) SetParent(v *TicketCategory) *TicketCategoryCreate {
+	return _c.SetParentID(v.ID)
 }
 
 // SetDepartment sets the "department" edge to the Department entity.
-func (tcc *TicketCategoryCreate) SetDepartment(d *Department) *TicketCategoryCreate {
-	return tcc.SetDepartmentID(d.ID)
+func (_c *TicketCategoryCreate) SetDepartment(v *Department) *TicketCategoryCreate {
+	return _c.SetDepartmentID(v.ID)
 }
 
 // SetWorkflow sets the "workflow" edge to the Workflow entity.
-func (tcc *TicketCategoryCreate) SetWorkflow(w *Workflow) *TicketCategoryCreate {
-	return tcc.SetWorkflowID(w.ID)
+func (_c *TicketCategoryCreate) SetWorkflow(v *Workflow) *TicketCategoryCreate {
+	return _c.SetWorkflowID(v.ID)
 }
 
 // Mutation returns the TicketCategoryMutation object of the builder.
-func (tcc *TicketCategoryCreate) Mutation() *TicketCategoryMutation {
-	return tcc.mutation
+func (_c *TicketCategoryCreate) Mutation() *TicketCategoryMutation {
+	return _c.mutation
 }
 
 // Save creates the TicketCategory in the database.
-func (tcc *TicketCategoryCreate) Save(ctx context.Context) (*TicketCategory, error) {
-	tcc.defaults()
-	return withHooks(ctx, tcc.sqlSave, tcc.mutation, tcc.hooks)
+func (_c *TicketCategoryCreate) Save(ctx context.Context) (*TicketCategory, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (tcc *TicketCategoryCreate) SaveX(ctx context.Context) *TicketCategory {
-	v, err := tcc.Save(ctx)
+func (_c *TicketCategoryCreate) SaveX(ctx context.Context) *TicketCategory {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -233,92 +233,92 @@ func (tcc *TicketCategoryCreate) SaveX(ctx context.Context) *TicketCategory {
 }
 
 // Exec executes the query.
-func (tcc *TicketCategoryCreate) Exec(ctx context.Context) error {
-	_, err := tcc.Save(ctx)
+func (_c *TicketCategoryCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tcc *TicketCategoryCreate) ExecX(ctx context.Context) {
-	if err := tcc.Exec(ctx); err != nil {
+func (_c *TicketCategoryCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tcc *TicketCategoryCreate) defaults() {
-	if _, ok := tcc.mutation.Level(); !ok {
+func (_c *TicketCategoryCreate) defaults() {
+	if _, ok := _c.mutation.Level(); !ok {
 		v := ticketcategory.DefaultLevel
-		tcc.mutation.SetLevel(v)
+		_c.mutation.SetLevel(v)
 	}
-	if _, ok := tcc.mutation.SortOrder(); !ok {
+	if _, ok := _c.mutation.SortOrder(); !ok {
 		v := ticketcategory.DefaultSortOrder
-		tcc.mutation.SetSortOrder(v)
+		_c.mutation.SetSortOrder(v)
 	}
-	if _, ok := tcc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := ticketcategory.DefaultIsActive
-		tcc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := tcc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := ticketcategory.DefaultCreatedAt()
-		tcc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := tcc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := ticketcategory.DefaultUpdatedAt()
-		tcc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tcc *TicketCategoryCreate) check() error {
-	if _, ok := tcc.mutation.Name(); !ok {
+func (_c *TicketCategoryCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "TicketCategory.name"`)}
 	}
-	if v, ok := tcc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := ticketcategory.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketCategory.name": %w`, err)}
 		}
 	}
-	if _, ok := tcc.mutation.Code(); !ok {
+	if _, ok := _c.mutation.Code(); !ok {
 		return &ValidationError{Name: "code", err: errors.New(`ent: missing required field "TicketCategory.code"`)}
 	}
-	if v, ok := tcc.mutation.Code(); ok {
+	if v, ok := _c.mutation.Code(); ok {
 		if err := ticketcategory.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "TicketCategory.code": %w`, err)}
 		}
 	}
-	if _, ok := tcc.mutation.Level(); !ok {
+	if _, ok := _c.mutation.Level(); !ok {
 		return &ValidationError{Name: "level", err: errors.New(`ent: missing required field "TicketCategory.level"`)}
 	}
-	if _, ok := tcc.mutation.SortOrder(); !ok {
+	if _, ok := _c.mutation.SortOrder(); !ok {
 		return &ValidationError{Name: "sort_order", err: errors.New(`ent: missing required field "TicketCategory.sort_order"`)}
 	}
-	if _, ok := tcc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "TicketCategory.is_active"`)}
 	}
-	if _, ok := tcc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "TicketCategory.tenant_id"`)}
 	}
-	if v, ok := tcc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := ticketcategory.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketCategory.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := tcc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "TicketCategory.created_at"`)}
 	}
-	if _, ok := tcc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "TicketCategory.updated_at"`)}
 	}
 	return nil
 }
 
-func (tcc *TicketCategoryCreate) sqlSave(ctx context.Context) (*TicketCategory, error) {
-	if err := tcc.check(); err != nil {
+func (_c *TicketCategoryCreate) sqlSave(ctx context.Context) (*TicketCategory, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := tcc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, tcc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -326,53 +326,53 @@ func (tcc *TicketCategoryCreate) sqlSave(ctx context.Context) (*TicketCategory, 
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	tcc.mutation.id = &_node.ID
-	tcc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (tcc *TicketCategoryCreate) createSpec() (*TicketCategory, *sqlgraph.CreateSpec) {
+func (_c *TicketCategoryCreate) createSpec() (*TicketCategory, *sqlgraph.CreateSpec) {
 	var (
-		_node = &TicketCategory{config: tcc.config}
+		_node = &TicketCategory{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(ticketcategory.Table, sqlgraph.NewFieldSpec(ticketcategory.FieldID, field.TypeInt))
 	)
-	if value, ok := tcc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(ticketcategory.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := tcc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(ticketcategory.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := tcc.mutation.Code(); ok {
+	if value, ok := _c.mutation.Code(); ok {
 		_spec.SetField(ticketcategory.FieldCode, field.TypeString, value)
 		_node.Code = value
 	}
-	if value, ok := tcc.mutation.Level(); ok {
+	if value, ok := _c.mutation.Level(); ok {
 		_spec.SetField(ticketcategory.FieldLevel, field.TypeInt, value)
 		_node.Level = value
 	}
-	if value, ok := tcc.mutation.SortOrder(); ok {
+	if value, ok := _c.mutation.SortOrder(); ok {
 		_spec.SetField(ticketcategory.FieldSortOrder, field.TypeInt, value)
 		_node.SortOrder = value
 	}
-	if value, ok := tcc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(ticketcategory.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := tcc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(ticketcategory.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := tcc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketcategory.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := tcc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticketcategory.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := tcc.mutation.TicketsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -388,7 +388,7 @@ func (tcc *TicketCategoryCreate) createSpec() (*TicketCategory, *sqlgraph.Create
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tcc.mutation.ChildrenIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ChildrenIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -404,7 +404,7 @@ func (tcc *TicketCategoryCreate) createSpec() (*TicketCategory, *sqlgraph.Create
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tcc.mutation.ParentIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ParentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -421,7 +421,7 @@ func (tcc *TicketCategoryCreate) createSpec() (*TicketCategory, *sqlgraph.Create
 		_node.ParentID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tcc.mutation.DepartmentIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.DepartmentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -438,7 +438,7 @@ func (tcc *TicketCategoryCreate) createSpec() (*TicketCategory, *sqlgraph.Create
 		_node.DepartmentID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tcc.mutation.WorkflowIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.WorkflowIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
@@ -466,16 +466,16 @@ type TicketCategoryCreateBulk struct {
 }
 
 // Save creates the TicketCategory entities in the database.
-func (tccb *TicketCategoryCreateBulk) Save(ctx context.Context) ([]*TicketCategory, error) {
-	if tccb.err != nil {
-		return nil, tccb.err
+func (_c *TicketCategoryCreateBulk) Save(ctx context.Context) ([]*TicketCategory, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(tccb.builders))
-	nodes := make([]*TicketCategory, len(tccb.builders))
-	mutators := make([]Mutator, len(tccb.builders))
-	for i := range tccb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*TicketCategory, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := tccb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TicketCategoryMutation)
@@ -489,11 +489,11 @@ func (tccb *TicketCategoryCreateBulk) Save(ctx context.Context) ([]*TicketCatego
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, tccb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, tccb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -517,7 +517,7 @@ func (tccb *TicketCategoryCreateBulk) Save(ctx context.Context) ([]*TicketCatego
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, tccb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -525,8 +525,8 @@ func (tccb *TicketCategoryCreateBulk) Save(ctx context.Context) ([]*TicketCatego
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tccb *TicketCategoryCreateBulk) SaveX(ctx context.Context) []*TicketCategory {
-	v, err := tccb.Save(ctx)
+func (_c *TicketCategoryCreateBulk) SaveX(ctx context.Context) []*TicketCategory {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -534,14 +534,14 @@ func (tccb *TicketCategoryCreateBulk) SaveX(ctx context.Context) []*TicketCatego
 }
 
 // Exec executes the query.
-func (tccb *TicketCategoryCreateBulk) Exec(ctx context.Context) error {
-	_, err := tccb.Save(ctx)
+func (_c *TicketCategoryCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tccb *TicketCategoryCreateBulk) ExecX(ctx context.Context) {
-	if err := tccb.Exec(ctx); err != nil {
+func (_c *TicketCategoryCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

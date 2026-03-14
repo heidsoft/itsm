@@ -101,7 +101,7 @@ func (*ProcessExecutionHistory) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ProcessExecutionHistory fields.
-func (peh *ProcessExecutionHistory) assignValues(columns []string, values []any) error {
+func (_m *ProcessExecutionHistory) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -112,60 +112,60 @@ func (peh *ProcessExecutionHistory) assignValues(columns []string, values []any)
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			peh.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case processexecutionhistory.FieldHistoryID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field history_id", values[i])
 			} else if value.Valid {
-				peh.HistoryID = value.String
+				_m.HistoryID = value.String
 			}
 		case processexecutionhistory.FieldProcessInstanceID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field process_instance_id", values[i])
 			} else if value.Valid {
-				peh.ProcessInstanceID = int(value.Int64)
+				_m.ProcessInstanceID = int(value.Int64)
 			}
 		case processexecutionhistory.FieldProcessDefinitionKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field process_definition_key", values[i])
 			} else if value.Valid {
-				peh.ProcessDefinitionKey = value.String
+				_m.ProcessDefinitionKey = value.String
 			}
 		case processexecutionhistory.FieldActivityID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field activity_id", values[i])
 			} else if value.Valid {
-				peh.ActivityID = value.String
+				_m.ActivityID = value.String
 			}
 		case processexecutionhistory.FieldActivityName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field activity_name", values[i])
 			} else if value.Valid {
-				peh.ActivityName = value.String
+				_m.ActivityName = value.String
 			}
 		case processexecutionhistory.FieldActivityType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field activity_type", values[i])
 			} else if value.Valid {
-				peh.ActivityType = value.String
+				_m.ActivityType = value.String
 			}
 		case processexecutionhistory.FieldEventType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field event_type", values[i])
 			} else if value.Valid {
-				peh.EventType = value.String
+				_m.EventType = value.String
 			}
 		case processexecutionhistory.FieldEventDetail:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field event_detail", values[i])
 			} else if value.Valid {
-				peh.EventDetail = value.String
+				_m.EventDetail = value.String
 			}
 		case processexecutionhistory.FieldVariables:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field variables", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &peh.Variables); err != nil {
+				if err := json.Unmarshal(*value, &_m.Variables); err != nil {
 					return fmt.Errorf("unmarshal field variables: %w", err)
 				}
 			}
@@ -173,52 +173,52 @@ func (peh *ProcessExecutionHistory) assignValues(columns []string, values []any)
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
-				peh.UserID = value.String
+				_m.UserID = value.String
 			}
 		case processexecutionhistory.FieldUserName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field user_name", values[i])
 			} else if value.Valid {
-				peh.UserName = value.String
+				_m.UserName = value.String
 			}
 		case processexecutionhistory.FieldTimestamp:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field timestamp", values[i])
 			} else if value.Valid {
-				peh.Timestamp = value.Time
+				_m.Timestamp = value.Time
 			}
 		case processexecutionhistory.FieldComment:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field comment", values[i])
 			} else if value.Valid {
-				peh.Comment = value.String
+				_m.Comment = value.String
 			}
 		case processexecutionhistory.FieldErrorMessage:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field error_message", values[i])
 			} else if value.Valid {
-				peh.ErrorMessage = value.String
+				_m.ErrorMessage = value.String
 			}
 		case processexecutionhistory.FieldErrorCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field error_code", values[i])
 			} else if value.Valid {
-				peh.ErrorCode = value.String
+				_m.ErrorCode = value.String
 			}
 		case processexecutionhistory.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				peh.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case processexecutionhistory.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				peh.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		default:
-			peh.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -226,88 +226,88 @@ func (peh *ProcessExecutionHistory) assignValues(columns []string, values []any)
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ProcessExecutionHistory.
 // This includes values selected through modifiers, order, etc.
-func (peh *ProcessExecutionHistory) Value(name string) (ent.Value, error) {
-	return peh.selectValues.Get(name)
+func (_m *ProcessExecutionHistory) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryProcessInstance queries the "process_instance" edge of the ProcessExecutionHistory entity.
-func (peh *ProcessExecutionHistory) QueryProcessInstance() *ProcessInstanceQuery {
-	return NewProcessExecutionHistoryClient(peh.config).QueryProcessInstance(peh)
+func (_m *ProcessExecutionHistory) QueryProcessInstance() *ProcessInstanceQuery {
+	return NewProcessExecutionHistoryClient(_m.config).QueryProcessInstance(_m)
 }
 
 // Update returns a builder for updating this ProcessExecutionHistory.
 // Note that you need to call ProcessExecutionHistory.Unwrap() before calling this method if this ProcessExecutionHistory
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (peh *ProcessExecutionHistory) Update() *ProcessExecutionHistoryUpdateOne {
-	return NewProcessExecutionHistoryClient(peh.config).UpdateOne(peh)
+func (_m *ProcessExecutionHistory) Update() *ProcessExecutionHistoryUpdateOne {
+	return NewProcessExecutionHistoryClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ProcessExecutionHistory entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (peh *ProcessExecutionHistory) Unwrap() *ProcessExecutionHistory {
-	_tx, ok := peh.config.driver.(*txDriver)
+func (_m *ProcessExecutionHistory) Unwrap() *ProcessExecutionHistory {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ProcessExecutionHistory is not a transactional entity")
 	}
-	peh.config.driver = _tx.drv
-	return peh
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (peh *ProcessExecutionHistory) String() string {
+func (_m *ProcessExecutionHistory) String() string {
 	var builder strings.Builder
 	builder.WriteString("ProcessExecutionHistory(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", peh.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("history_id=")
-	builder.WriteString(peh.HistoryID)
+	builder.WriteString(_m.HistoryID)
 	builder.WriteString(", ")
 	builder.WriteString("process_instance_id=")
-	builder.WriteString(fmt.Sprintf("%v", peh.ProcessInstanceID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ProcessInstanceID))
 	builder.WriteString(", ")
 	builder.WriteString("process_definition_key=")
-	builder.WriteString(peh.ProcessDefinitionKey)
+	builder.WriteString(_m.ProcessDefinitionKey)
 	builder.WriteString(", ")
 	builder.WriteString("activity_id=")
-	builder.WriteString(peh.ActivityID)
+	builder.WriteString(_m.ActivityID)
 	builder.WriteString(", ")
 	builder.WriteString("activity_name=")
-	builder.WriteString(peh.ActivityName)
+	builder.WriteString(_m.ActivityName)
 	builder.WriteString(", ")
 	builder.WriteString("activity_type=")
-	builder.WriteString(peh.ActivityType)
+	builder.WriteString(_m.ActivityType)
 	builder.WriteString(", ")
 	builder.WriteString("event_type=")
-	builder.WriteString(peh.EventType)
+	builder.WriteString(_m.EventType)
 	builder.WriteString(", ")
 	builder.WriteString("event_detail=")
-	builder.WriteString(peh.EventDetail)
+	builder.WriteString(_m.EventDetail)
 	builder.WriteString(", ")
 	builder.WriteString("variables=")
-	builder.WriteString(fmt.Sprintf("%v", peh.Variables))
+	builder.WriteString(fmt.Sprintf("%v", _m.Variables))
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
-	builder.WriteString(peh.UserID)
+	builder.WriteString(_m.UserID)
 	builder.WriteString(", ")
 	builder.WriteString("user_name=")
-	builder.WriteString(peh.UserName)
+	builder.WriteString(_m.UserName)
 	builder.WriteString(", ")
 	builder.WriteString("timestamp=")
-	builder.WriteString(peh.Timestamp.Format(time.ANSIC))
+	builder.WriteString(_m.Timestamp.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("comment=")
-	builder.WriteString(peh.Comment)
+	builder.WriteString(_m.Comment)
 	builder.WriteString(", ")
 	builder.WriteString("error_message=")
-	builder.WriteString(peh.ErrorMessage)
+	builder.WriteString(_m.ErrorMessage)
 	builder.WriteString(", ")
 	builder.WriteString("error_code=")
-	builder.WriteString(peh.ErrorCode)
+	builder.WriteString(_m.ErrorCode)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", peh.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(peh.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

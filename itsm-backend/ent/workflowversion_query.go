@@ -30,44 +30,44 @@ type WorkflowVersionQuery struct {
 }
 
 // Where adds a new predicate for the WorkflowVersionQuery builder.
-func (wvq *WorkflowVersionQuery) Where(ps ...predicate.WorkflowVersion) *WorkflowVersionQuery {
-	wvq.predicates = append(wvq.predicates, ps...)
-	return wvq
+func (_q *WorkflowVersionQuery) Where(ps ...predicate.WorkflowVersion) *WorkflowVersionQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (wvq *WorkflowVersionQuery) Limit(limit int) *WorkflowVersionQuery {
-	wvq.ctx.Limit = &limit
-	return wvq
+func (_q *WorkflowVersionQuery) Limit(limit int) *WorkflowVersionQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (wvq *WorkflowVersionQuery) Offset(offset int) *WorkflowVersionQuery {
-	wvq.ctx.Offset = &offset
-	return wvq
+func (_q *WorkflowVersionQuery) Offset(offset int) *WorkflowVersionQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (wvq *WorkflowVersionQuery) Unique(unique bool) *WorkflowVersionQuery {
-	wvq.ctx.Unique = &unique
-	return wvq
+func (_q *WorkflowVersionQuery) Unique(unique bool) *WorkflowVersionQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (wvq *WorkflowVersionQuery) Order(o ...workflowversion.OrderOption) *WorkflowVersionQuery {
-	wvq.order = append(wvq.order, o...)
-	return wvq
+func (_q *WorkflowVersionQuery) Order(o ...workflowversion.OrderOption) *WorkflowVersionQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryWorkflow chains the current query on the "workflow" edge.
-func (wvq *WorkflowVersionQuery) QueryWorkflow() *WorkflowQuery {
-	query := (&WorkflowClient{config: wvq.config}).Query()
+func (_q *WorkflowVersionQuery) QueryWorkflow() *WorkflowQuery {
+	query := (&WorkflowClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := wvq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := wvq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (wvq *WorkflowVersionQuery) QueryWorkflow() *WorkflowQuery {
 			sqlgraph.To(workflow.Table, workflow.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, workflowversion.WorkflowTable, workflowversion.WorkflowColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(wvq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -84,8 +84,8 @@ func (wvq *WorkflowVersionQuery) QueryWorkflow() *WorkflowQuery {
 
 // First returns the first WorkflowVersion entity from the query.
 // Returns a *NotFoundError when no WorkflowVersion was found.
-func (wvq *WorkflowVersionQuery) First(ctx context.Context) (*WorkflowVersion, error) {
-	nodes, err := wvq.Limit(1).All(setContextOp(ctx, wvq.ctx, ent.OpQueryFirst))
+func (_q *WorkflowVersionQuery) First(ctx context.Context) (*WorkflowVersion, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (wvq *WorkflowVersionQuery) First(ctx context.Context) (*WorkflowVersion, e
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (wvq *WorkflowVersionQuery) FirstX(ctx context.Context) *WorkflowVersion {
-	node, err := wvq.First(ctx)
+func (_q *WorkflowVersionQuery) FirstX(ctx context.Context) *WorkflowVersion {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,9 +106,9 @@ func (wvq *WorkflowVersionQuery) FirstX(ctx context.Context) *WorkflowVersion {
 
 // FirstID returns the first WorkflowVersion ID from the query.
 // Returns a *NotFoundError when no WorkflowVersion ID was found.
-func (wvq *WorkflowVersionQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *WorkflowVersionQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = wvq.Limit(1).IDs(setContextOp(ctx, wvq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -119,8 +119,8 @@ func (wvq *WorkflowVersionQuery) FirstID(ctx context.Context) (id int, err error
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (wvq *WorkflowVersionQuery) FirstIDX(ctx context.Context) int {
-	id, err := wvq.FirstID(ctx)
+func (_q *WorkflowVersionQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,8 +130,8 @@ func (wvq *WorkflowVersionQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single WorkflowVersion entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one WorkflowVersion entity is found.
 // Returns a *NotFoundError when no WorkflowVersion entities are found.
-func (wvq *WorkflowVersionQuery) Only(ctx context.Context) (*WorkflowVersion, error) {
-	nodes, err := wvq.Limit(2).All(setContextOp(ctx, wvq.ctx, ent.OpQueryOnly))
+func (_q *WorkflowVersionQuery) Only(ctx context.Context) (*WorkflowVersion, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,8 @@ func (wvq *WorkflowVersionQuery) Only(ctx context.Context) (*WorkflowVersion, er
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (wvq *WorkflowVersionQuery) OnlyX(ctx context.Context) *WorkflowVersion {
-	node, err := wvq.Only(ctx)
+func (_q *WorkflowVersionQuery) OnlyX(ctx context.Context) *WorkflowVersion {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,9 +157,9 @@ func (wvq *WorkflowVersionQuery) OnlyX(ctx context.Context) *WorkflowVersion {
 // OnlyID is like Only, but returns the only WorkflowVersion ID in the query.
 // Returns a *NotSingularError when more than one WorkflowVersion ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (wvq *WorkflowVersionQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *WorkflowVersionQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = wvq.Limit(2).IDs(setContextOp(ctx, wvq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -174,8 +174,8 @@ func (wvq *WorkflowVersionQuery) OnlyID(ctx context.Context) (id int, err error)
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (wvq *WorkflowVersionQuery) OnlyIDX(ctx context.Context) int {
-	id, err := wvq.OnlyID(ctx)
+func (_q *WorkflowVersionQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -183,18 +183,18 @@ func (wvq *WorkflowVersionQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of WorkflowVersions.
-func (wvq *WorkflowVersionQuery) All(ctx context.Context) ([]*WorkflowVersion, error) {
-	ctx = setContextOp(ctx, wvq.ctx, ent.OpQueryAll)
-	if err := wvq.prepareQuery(ctx); err != nil {
+func (_q *WorkflowVersionQuery) All(ctx context.Context) ([]*WorkflowVersion, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*WorkflowVersion, *WorkflowVersionQuery]()
-	return withInterceptors[[]*WorkflowVersion](ctx, wvq, qr, wvq.inters)
+	return withInterceptors[[]*WorkflowVersion](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (wvq *WorkflowVersionQuery) AllX(ctx context.Context) []*WorkflowVersion {
-	nodes, err := wvq.All(ctx)
+func (_q *WorkflowVersionQuery) AllX(ctx context.Context) []*WorkflowVersion {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,20 +202,20 @@ func (wvq *WorkflowVersionQuery) AllX(ctx context.Context) []*WorkflowVersion {
 }
 
 // IDs executes the query and returns a list of WorkflowVersion IDs.
-func (wvq *WorkflowVersionQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if wvq.ctx.Unique == nil && wvq.path != nil {
-		wvq.Unique(true)
+func (_q *WorkflowVersionQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, wvq.ctx, ent.OpQueryIDs)
-	if err = wvq.Select(workflowversion.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(workflowversion.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (wvq *WorkflowVersionQuery) IDsX(ctx context.Context) []int {
-	ids, err := wvq.IDs(ctx)
+func (_q *WorkflowVersionQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,17 +223,17 @@ func (wvq *WorkflowVersionQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (wvq *WorkflowVersionQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, wvq.ctx, ent.OpQueryCount)
-	if err := wvq.prepareQuery(ctx); err != nil {
+func (_q *WorkflowVersionQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, wvq, querierCount[*WorkflowVersionQuery](), wvq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*WorkflowVersionQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (wvq *WorkflowVersionQuery) CountX(ctx context.Context) int {
-	count, err := wvq.Count(ctx)
+func (_q *WorkflowVersionQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -241,9 +241,9 @@ func (wvq *WorkflowVersionQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (wvq *WorkflowVersionQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, wvq.ctx, ent.OpQueryExist)
-	switch _, err := wvq.FirstID(ctx); {
+func (_q *WorkflowVersionQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -254,8 +254,8 @@ func (wvq *WorkflowVersionQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (wvq *WorkflowVersionQuery) ExistX(ctx context.Context) bool {
-	exist, err := wvq.Exist(ctx)
+func (_q *WorkflowVersionQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -264,32 +264,32 @@ func (wvq *WorkflowVersionQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the WorkflowVersionQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (wvq *WorkflowVersionQuery) Clone() *WorkflowVersionQuery {
-	if wvq == nil {
+func (_q *WorkflowVersionQuery) Clone() *WorkflowVersionQuery {
+	if _q == nil {
 		return nil
 	}
 	return &WorkflowVersionQuery{
-		config:       wvq.config,
-		ctx:          wvq.ctx.Clone(),
-		order:        append([]workflowversion.OrderOption{}, wvq.order...),
-		inters:       append([]Interceptor{}, wvq.inters...),
-		predicates:   append([]predicate.WorkflowVersion{}, wvq.predicates...),
-		withWorkflow: wvq.withWorkflow.Clone(),
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]workflowversion.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.WorkflowVersion{}, _q.predicates...),
+		withWorkflow: _q.withWorkflow.Clone(),
 		// clone intermediate query.
-		sql:  wvq.sql.Clone(),
-		path: wvq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithWorkflow tells the query-builder to eager-load the nodes that are connected to
 // the "workflow" edge. The optional arguments are used to configure the query builder of the edge.
-func (wvq *WorkflowVersionQuery) WithWorkflow(opts ...func(*WorkflowQuery)) *WorkflowVersionQuery {
-	query := (&WorkflowClient{config: wvq.config}).Query()
+func (_q *WorkflowVersionQuery) WithWorkflow(opts ...func(*WorkflowQuery)) *WorkflowVersionQuery {
+	query := (&WorkflowClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	wvq.withWorkflow = query
-	return wvq
+	_q.withWorkflow = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -306,10 +306,10 @@ func (wvq *WorkflowVersionQuery) WithWorkflow(opts ...func(*WorkflowQuery)) *Wor
 //		GroupBy(workflowversion.FieldWorkflowID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (wvq *WorkflowVersionQuery) GroupBy(field string, fields ...string) *WorkflowVersionGroupBy {
-	wvq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &WorkflowVersionGroupBy{build: wvq}
-	grbuild.flds = &wvq.ctx.Fields
+func (_q *WorkflowVersionQuery) GroupBy(field string, fields ...string) *WorkflowVersionGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &WorkflowVersionGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = workflowversion.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -327,58 +327,58 @@ func (wvq *WorkflowVersionQuery) GroupBy(field string, fields ...string) *Workfl
 //	client.WorkflowVersion.Query().
 //		Select(workflowversion.FieldWorkflowID).
 //		Scan(ctx, &v)
-func (wvq *WorkflowVersionQuery) Select(fields ...string) *WorkflowVersionSelect {
-	wvq.ctx.Fields = append(wvq.ctx.Fields, fields...)
-	sbuild := &WorkflowVersionSelect{WorkflowVersionQuery: wvq}
+func (_q *WorkflowVersionQuery) Select(fields ...string) *WorkflowVersionSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &WorkflowVersionSelect{WorkflowVersionQuery: _q}
 	sbuild.label = workflowversion.Label
-	sbuild.flds, sbuild.scan = &wvq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a WorkflowVersionSelect configured with the given aggregations.
-func (wvq *WorkflowVersionQuery) Aggregate(fns ...AggregateFunc) *WorkflowVersionSelect {
-	return wvq.Select().Aggregate(fns...)
+func (_q *WorkflowVersionQuery) Aggregate(fns ...AggregateFunc) *WorkflowVersionSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (wvq *WorkflowVersionQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range wvq.inters {
+func (_q *WorkflowVersionQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, wvq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range wvq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !workflowversion.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if wvq.path != nil {
-		prev, err := wvq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		wvq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (wvq *WorkflowVersionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*WorkflowVersion, error) {
+func (_q *WorkflowVersionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*WorkflowVersion, error) {
 	var (
 		nodes       = []*WorkflowVersion{}
-		_spec       = wvq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			wvq.withWorkflow != nil,
+			_q.withWorkflow != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*WorkflowVersion).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &WorkflowVersion{config: wvq.config}
+		node := &WorkflowVersion{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -386,14 +386,14 @@ func (wvq *WorkflowVersionQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, wvq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := wvq.withWorkflow; query != nil {
-		if err := wvq.loadWorkflow(ctx, query, nodes, nil,
+	if query := _q.withWorkflow; query != nil {
+		if err := _q.loadWorkflow(ctx, query, nodes, nil,
 			func(n *WorkflowVersion, e *Workflow) { n.Edges.Workflow = e }); err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func (wvq *WorkflowVersionQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	return nodes, nil
 }
 
-func (wvq *WorkflowVersionQuery) loadWorkflow(ctx context.Context, query *WorkflowQuery, nodes []*WorkflowVersion, init func(*WorkflowVersion), assign func(*WorkflowVersion, *Workflow)) error {
+func (_q *WorkflowVersionQuery) loadWorkflow(ctx context.Context, query *WorkflowQuery, nodes []*WorkflowVersion, init func(*WorkflowVersion), assign func(*WorkflowVersion, *Workflow)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*WorkflowVersion)
 	for i := range nodes {
@@ -431,24 +431,24 @@ func (wvq *WorkflowVersionQuery) loadWorkflow(ctx context.Context, query *Workfl
 	return nil
 }
 
-func (wvq *WorkflowVersionQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := wvq.querySpec()
-	_spec.Node.Columns = wvq.ctx.Fields
-	if len(wvq.ctx.Fields) > 0 {
-		_spec.Unique = wvq.ctx.Unique != nil && *wvq.ctx.Unique
+func (_q *WorkflowVersionQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, wvq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (wvq *WorkflowVersionQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *WorkflowVersionQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(workflowversion.Table, workflowversion.Columns, sqlgraph.NewFieldSpec(workflowversion.FieldID, field.TypeInt))
-	_spec.From = wvq.sql
-	if unique := wvq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if wvq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := wvq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, workflowversion.FieldID)
 		for i := range fields {
@@ -456,24 +456,24 @@ func (wvq *WorkflowVersionQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if wvq.withWorkflow != nil {
+		if _q.withWorkflow != nil {
 			_spec.Node.AddColumnOnce(workflowversion.FieldWorkflowID)
 		}
 	}
-	if ps := wvq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := wvq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := wvq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := wvq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (wvq *WorkflowVersionQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (wvq *WorkflowVersionQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(wvq.driver.Dialect())
+func (_q *WorkflowVersionQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(workflowversion.Table)
-	columns := wvq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = workflowversion.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if wvq.sql != nil {
-		selector = wvq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if wvq.ctx.Unique != nil && *wvq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range wvq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range wvq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := wvq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := wvq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type WorkflowVersionGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (wvgb *WorkflowVersionGroupBy) Aggregate(fns ...AggregateFunc) *WorkflowVersionGroupBy {
-	wvgb.fns = append(wvgb.fns, fns...)
-	return wvgb
+func (_g *WorkflowVersionGroupBy) Aggregate(fns ...AggregateFunc) *WorkflowVersionGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (wvgb *WorkflowVersionGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, wvgb.build.ctx, ent.OpQueryGroupBy)
-	if err := wvgb.build.prepareQuery(ctx); err != nil {
+func (_g *WorkflowVersionGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*WorkflowVersionQuery, *WorkflowVersionGroupBy](ctx, wvgb.build, wvgb, wvgb.build.inters, v)
+	return scanWithInterceptors[*WorkflowVersionQuery, *WorkflowVersionGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (wvgb *WorkflowVersionGroupBy) sqlScan(ctx context.Context, root *WorkflowVersionQuery, v any) error {
+func (_g *WorkflowVersionGroupBy) sqlScan(ctx context.Context, root *WorkflowVersionQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(wvgb.fns))
-	for _, fn := range wvgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*wvgb.flds)+len(wvgb.fns))
-		for _, f := range *wvgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*wvgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := wvgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type WorkflowVersionSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (wvs *WorkflowVersionSelect) Aggregate(fns ...AggregateFunc) *WorkflowVersionSelect {
-	wvs.fns = append(wvs.fns, fns...)
-	return wvs
+func (_s *WorkflowVersionSelect) Aggregate(fns ...AggregateFunc) *WorkflowVersionSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (wvs *WorkflowVersionSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, wvs.ctx, ent.OpQuerySelect)
-	if err := wvs.prepareQuery(ctx); err != nil {
+func (_s *WorkflowVersionSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*WorkflowVersionQuery, *WorkflowVersionSelect](ctx, wvs.WorkflowVersionQuery, wvs, wvs.inters, v)
+	return scanWithInterceptors[*WorkflowVersionQuery, *WorkflowVersionSelect](ctx, _s.WorkflowVersionQuery, _s, _s.inters, v)
 }
 
-func (wvs *WorkflowVersionSelect) sqlScan(ctx context.Context, root *WorkflowVersionQuery, v any) error {
+func (_s *WorkflowVersionSelect) sqlScan(ctx context.Context, root *WorkflowVersionQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(wvs.fns))
-	for _, fn := range wvs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*wvs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (wvs *WorkflowVersionSelect) sqlScan(ctx context.Context, root *WorkflowVer
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := wvs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

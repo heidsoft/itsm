@@ -71,6 +71,14 @@ type Ticket struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// 是否由MSP管理
+	IsManagedByMsp bool `json:"is_managed_by_msp,omitempty"`
+	// MSP服务提供商ID
+	MspProviderID int `json:"msp_provider_id,omitempty"`
+	// MSP处理人ID
+	ManagedByUserID int `json:"managed_by_user_id,omitempty"`
+	// MSP工单ID(跨租户)
+	MspTicketID string `json:"msp_ticket_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TicketQuery when eager-loading is set.
 	Edges              TicketEdges `json:"edges"`
@@ -277,9 +285,11 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID, ticket.FieldRating, ticket.FieldRatedBy:
+		case ticket.FieldIsManagedByMsp:
+			values[i] = new(sql.NullBool)
+		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID, ticket.FieldRating, ticket.FieldRatedBy, ticket.FieldMspProviderID, ticket.FieldManagedByUserID:
 			values[i] = new(sql.NullInt64)
-		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldType, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldResolution, ticket.FieldRatingComment:
+		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldType, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldResolution, ticket.FieldRatingComment, ticket.FieldMspTicketID:
 			values[i] = new(sql.NullString)
 		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -296,7 +306,7 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Ticket fields.
-func (t *Ticket) assignValues(columns []string, values []any) error {
+func (_m *Ticket) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -307,173 +317,197 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			t.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case ticket.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
-				t.Title = value.String
+				_m.Title = value.String
 			}
 		case ticket.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				t.Description = value.String
+				_m.Description = value.String
 			}
 		case ticket.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				t.Status = value.String
+				_m.Status = value.String
 			}
 		case ticket.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				t.Type = value.String
+				_m.Type = value.String
 			}
 		case ticket.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				t.Priority = value.String
+				_m.Priority = value.String
 			}
 		case ticket.FieldTicketNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_number", values[i])
 			} else if value.Valid {
-				t.TicketNumber = value.String
+				_m.TicketNumber = value.String
 			}
 		case ticket.FieldRequesterID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field requester_id", values[i])
 			} else if value.Valid {
-				t.RequesterID = int(value.Int64)
+				_m.RequesterID = int(value.Int64)
 			}
 		case ticket.FieldAssigneeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field assignee_id", values[i])
 			} else if value.Valid {
-				t.AssigneeID = int(value.Int64)
+				_m.AssigneeID = int(value.Int64)
 			}
 		case ticket.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				t.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case ticket.FieldTemplateID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field template_id", values[i])
 			} else if value.Valid {
-				t.TemplateID = int(value.Int64)
+				_m.TemplateID = int(value.Int64)
 			}
 		case ticket.FieldCategoryID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field category_id", values[i])
 			} else if value.Valid {
-				t.CategoryID = int(value.Int64)
+				_m.CategoryID = int(value.Int64)
 			}
 		case ticket.FieldDepartmentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field department_id", values[i])
 			} else if value.Valid {
-				t.DepartmentID = int(value.Int64)
+				_m.DepartmentID = int(value.Int64)
 			}
 		case ticket.FieldParentTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field parent_ticket_id", values[i])
 			} else if value.Valid {
-				t.ParentTicketID = int(value.Int64)
+				_m.ParentTicketID = int(value.Int64)
 			}
 		case ticket.FieldSLADefinitionID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field sla_definition_id", values[i])
 			} else if value.Valid {
-				t.SLADefinitionID = int(value.Int64)
+				_m.SLADefinitionID = int(value.Int64)
 			}
 		case ticket.FieldSLAResponseDeadline:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field sla_response_deadline", values[i])
 			} else if value.Valid {
-				t.SLAResponseDeadline = value.Time
+				_m.SLAResponseDeadline = value.Time
 			}
 		case ticket.FieldSLAResolutionDeadline:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field sla_resolution_deadline", values[i])
 			} else if value.Valid {
-				t.SLAResolutionDeadline = value.Time
+				_m.SLAResolutionDeadline = value.Time
 			}
 		case ticket.FieldFirstResponseAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field first_response_at", values[i])
 			} else if value.Valid {
-				t.FirstResponseAt = value.Time
+				_m.FirstResponseAt = value.Time
 			}
 		case ticket.FieldResolvedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field resolved_at", values[i])
 			} else if value.Valid {
-				t.ResolvedAt = value.Time
+				_m.ResolvedAt = value.Time
 			}
 		case ticket.FieldResolution:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resolution", values[i])
 			} else if value.Valid {
-				t.Resolution = value.String
+				_m.Resolution = value.String
 			}
 		case ticket.FieldRating:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field rating", values[i])
 			} else if value.Valid {
-				t.Rating = int(value.Int64)
+				_m.Rating = int(value.Int64)
 			}
 		case ticket.FieldRatingComment:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field rating_comment", values[i])
 			} else if value.Valid {
-				t.RatingComment = value.String
+				_m.RatingComment = value.String
 			}
 		case ticket.FieldRatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field rated_at", values[i])
 			} else if value.Valid {
-				t.RatedAt = value.Time
+				_m.RatedAt = value.Time
 			}
 		case ticket.FieldRatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field rated_by", values[i])
 			} else if value.Valid {
-				t.RatedBy = int(value.Int64)
+				_m.RatedBy = int(value.Int64)
 			}
 		case ticket.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				t.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case ticket.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				t.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
+			}
+		case ticket.FieldIsManagedByMsp:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_managed_by_msp", values[i])
+			} else if value.Valid {
+				_m.IsManagedByMsp = value.Bool
+			}
+		case ticket.FieldMspProviderID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field msp_provider_id", values[i])
+			} else if value.Valid {
+				_m.MspProviderID = int(value.Int64)
+			}
+		case ticket.FieldManagedByUserID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field managed_by_user_id", values[i])
+			} else if value.Valid {
+				_m.ManagedByUserID = int(value.Int64)
+			}
+		case ticket.FieldMspTicketID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field msp_ticket_id", values[i])
+			} else if value.Valid {
+				_m.MspTicketID = value.String
 			}
 		case ticket.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field sla_policy_tickets", value)
 			} else if value.Valid {
-				t.sla_policy_tickets = new(int)
-				*t.sla_policy_tickets = int(value.Int64)
+				_m.sla_policy_tickets = new(int)
+				*_m.sla_policy_tickets = int(value.Int64)
 			}
 		case ticket.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field ticket_tag_tickets", value)
 			} else if value.Valid {
-				t.ticket_tag_tickets = new(int)
-				*t.ticket_tag_tickets = int(value.Int64)
+				_m.ticket_tag_tickets = new(int)
+				*_m.ticket_tag_tickets = int(value.Int64)
 			}
 		default:
-			t.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -481,187 +515,199 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Ticket.
 // This includes values selected through modifiers, order, etc.
-func (t *Ticket) Value(name string) (ent.Value, error) {
-	return t.selectValues.Get(name)
+func (_m *Ticket) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryTemplate queries the "template" edge of the Ticket entity.
-func (t *Ticket) QueryTemplate() *TicketTemplateQuery {
-	return NewTicketClient(t.config).QueryTemplate(t)
+func (_m *Ticket) QueryTemplate() *TicketTemplateQuery {
+	return NewTicketClient(_m.config).QueryTemplate(_m)
 }
 
 // QueryCategory queries the "category" edge of the Ticket entity.
-func (t *Ticket) QueryCategory() *TicketCategoryQuery {
-	return NewTicketClient(t.config).QueryCategory(t)
+func (_m *Ticket) QueryCategory() *TicketCategoryQuery {
+	return NewTicketClient(_m.config).QueryCategory(_m)
 }
 
 // QueryDepartment queries the "department" edge of the Ticket entity.
-func (t *Ticket) QueryDepartment() *DepartmentQuery {
-	return NewTicketClient(t.config).QueryDepartment(t)
+func (_m *Ticket) QueryDepartment() *DepartmentQuery {
+	return NewTicketClient(_m.config).QueryDepartment(_m)
 }
 
 // QueryTags queries the "tags" edge of the Ticket entity.
-func (t *Ticket) QueryTags() *TicketTagQuery {
-	return NewTicketClient(t.config).QueryTags(t)
+func (_m *Ticket) QueryTags() *TicketTagQuery {
+	return NewTicketClient(_m.config).QueryTags(_m)
 }
 
 // QueryRelatedTickets queries the "related_tickets" edge of the Ticket entity.
-func (t *Ticket) QueryRelatedTickets() *TicketQuery {
-	return NewTicketClient(t.config).QueryRelatedTickets(t)
+func (_m *Ticket) QueryRelatedTickets() *TicketQuery {
+	return NewTicketClient(_m.config).QueryRelatedTickets(_m)
 }
 
 // QueryParentTicket queries the "parent_ticket" edge of the Ticket entity.
-func (t *Ticket) QueryParentTicket() *TicketQuery {
-	return NewTicketClient(t.config).QueryParentTicket(t)
+func (_m *Ticket) QueryParentTicket() *TicketQuery {
+	return NewTicketClient(_m.config).QueryParentTicket(_m)
 }
 
 // QueryWorkflowInstances queries the "workflow_instances" edge of the Ticket entity.
-func (t *Ticket) QueryWorkflowInstances() *WorkflowInstanceQuery {
-	return NewTicketClient(t.config).QueryWorkflowInstances(t)
+func (_m *Ticket) QueryWorkflowInstances() *WorkflowInstanceQuery {
+	return NewTicketClient(_m.config).QueryWorkflowInstances(_m)
 }
 
 // QuerySLADefinition queries the "sla_definition" edge of the Ticket entity.
-func (t *Ticket) QuerySLADefinition() *SLADefinitionQuery {
-	return NewTicketClient(t.config).QuerySLADefinition(t)
+func (_m *Ticket) QuerySLADefinition() *SLADefinitionQuery {
+	return NewTicketClient(_m.config).QuerySLADefinition(_m)
 }
 
 // QuerySLAViolations queries the "sla_violations" edge of the Ticket entity.
-func (t *Ticket) QuerySLAViolations() *SLAViolationQuery {
-	return NewTicketClient(t.config).QuerySLAViolations(t)
+func (_m *Ticket) QuerySLAViolations() *SLAViolationQuery {
+	return NewTicketClient(_m.config).QuerySLAViolations(_m)
 }
 
 // QueryComments queries the "comments" edge of the Ticket entity.
-func (t *Ticket) QueryComments() *TicketCommentQuery {
-	return NewTicketClient(t.config).QueryComments(t)
+func (_m *Ticket) QueryComments() *TicketCommentQuery {
+	return NewTicketClient(_m.config).QueryComments(_m)
 }
 
 // QueryAttachments queries the "attachments" edge of the Ticket entity.
-func (t *Ticket) QueryAttachments() *TicketAttachmentQuery {
-	return NewTicketClient(t.config).QueryAttachments(t)
+func (_m *Ticket) QueryAttachments() *TicketAttachmentQuery {
+	return NewTicketClient(_m.config).QueryAttachments(_m)
 }
 
 // QueryNotifications queries the "notifications" edge of the Ticket entity.
-func (t *Ticket) QueryNotifications() *TicketNotificationQuery {
-	return NewTicketClient(t.config).QueryNotifications(t)
+func (_m *Ticket) QueryNotifications() *TicketNotificationQuery {
+	return NewTicketClient(_m.config).QueryNotifications(_m)
 }
 
 // QuerySLAAlertHistory queries the "sla_alert_history" edge of the Ticket entity.
-func (t *Ticket) QuerySLAAlertHistory() *SLAAlertHistoryQuery {
-	return NewTicketClient(t.config).QuerySLAAlertHistory(t)
+func (_m *Ticket) QuerySLAAlertHistory() *SLAAlertHistoryQuery {
+	return NewTicketClient(_m.config).QuerySLAAlertHistory(_m)
 }
 
 // QueryApprovalRecords queries the "approval_records" edge of the Ticket entity.
-func (t *Ticket) QueryApprovalRecords() *ApprovalRecordQuery {
-	return NewTicketClient(t.config).QueryApprovalRecords(t)
+func (_m *Ticket) QueryApprovalRecords() *ApprovalRecordQuery {
+	return NewTicketClient(_m.config).QueryApprovalRecords(_m)
 }
 
 // QueryRootCauseAnalyses queries the "root_cause_analyses" edge of the Ticket entity.
-func (t *Ticket) QueryRootCauseAnalyses() *RootCauseAnalysisQuery {
-	return NewTicketClient(t.config).QueryRootCauseAnalyses(t)
+func (_m *Ticket) QueryRootCauseAnalyses() *RootCauseAnalysisQuery {
+	return NewTicketClient(_m.config).QueryRootCauseAnalyses(_m)
 }
 
 // QueryConfigurationItems queries the "configuration_items" edge of the Ticket entity.
-func (t *Ticket) QueryConfigurationItems() *ConfigurationItemQuery {
-	return NewTicketClient(t.config).QueryConfigurationItems(t)
+func (_m *Ticket) QueryConfigurationItems() *ConfigurationItemQuery {
+	return NewTicketClient(_m.config).QueryConfigurationItems(_m)
 }
 
 // Update returns a builder for updating this Ticket.
 // Note that you need to call Ticket.Unwrap() before calling this method if this Ticket
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (t *Ticket) Update() *TicketUpdateOne {
-	return NewTicketClient(t.config).UpdateOne(t)
+func (_m *Ticket) Update() *TicketUpdateOne {
+	return NewTicketClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Ticket entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (t *Ticket) Unwrap() *Ticket {
-	_tx, ok := t.config.driver.(*txDriver)
+func (_m *Ticket) Unwrap() *Ticket {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Ticket is not a transactional entity")
 	}
-	t.config.driver = _tx.drv
-	return t
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (t *Ticket) String() string {
+func (_m *Ticket) String() string {
 	var builder strings.Builder
 	builder.WriteString("Ticket(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("title=")
-	builder.WriteString(t.Title)
+	builder.WriteString(_m.Title)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(t.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(t.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(t.Type)
+	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(t.Priority)
+	builder.WriteString(_m.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("ticket_number=")
-	builder.WriteString(t.TicketNumber)
+	builder.WriteString(_m.TicketNumber)
 	builder.WriteString(", ")
 	builder.WriteString("requester_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.RequesterID))
+	builder.WriteString(fmt.Sprintf("%v", _m.RequesterID))
 	builder.WriteString(", ")
 	builder.WriteString("assignee_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.AssigneeID))
+	builder.WriteString(fmt.Sprintf("%v", _m.AssigneeID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("template_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.TemplateID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TemplateID))
 	builder.WriteString(", ")
 	builder.WriteString("category_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.CategoryID))
+	builder.WriteString(fmt.Sprintf("%v", _m.CategoryID))
 	builder.WriteString(", ")
 	builder.WriteString("department_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.DepartmentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.DepartmentID))
 	builder.WriteString(", ")
 	builder.WriteString("parent_ticket_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.ParentTicketID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ParentTicketID))
 	builder.WriteString(", ")
 	builder.WriteString("sla_definition_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.SLADefinitionID))
+	builder.WriteString(fmt.Sprintf("%v", _m.SLADefinitionID))
 	builder.WriteString(", ")
 	builder.WriteString("sla_response_deadline=")
-	builder.WriteString(t.SLAResponseDeadline.Format(time.ANSIC))
+	builder.WriteString(_m.SLAResponseDeadline.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("sla_resolution_deadline=")
-	builder.WriteString(t.SLAResolutionDeadline.Format(time.ANSIC))
+	builder.WriteString(_m.SLAResolutionDeadline.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("first_response_at=")
-	builder.WriteString(t.FirstResponseAt.Format(time.ANSIC))
+	builder.WriteString(_m.FirstResponseAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("resolved_at=")
-	builder.WriteString(t.ResolvedAt.Format(time.ANSIC))
+	builder.WriteString(_m.ResolvedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("resolution=")
-	builder.WriteString(t.Resolution)
+	builder.WriteString(_m.Resolution)
 	builder.WriteString(", ")
 	builder.WriteString("rating=")
-	builder.WriteString(fmt.Sprintf("%v", t.Rating))
+	builder.WriteString(fmt.Sprintf("%v", _m.Rating))
 	builder.WriteString(", ")
 	builder.WriteString("rating_comment=")
-	builder.WriteString(t.RatingComment)
+	builder.WriteString(_m.RatingComment)
 	builder.WriteString(", ")
 	builder.WriteString("rated_at=")
-	builder.WriteString(t.RatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.RatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("rated_by=")
-	builder.WriteString(fmt.Sprintf("%v", t.RatedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.RatedBy))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(t.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(t.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("is_managed_by_msp=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsManagedByMsp))
+	builder.WriteString(", ")
+	builder.WriteString("msp_provider_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.MspProviderID))
+	builder.WriteString(", ")
+	builder.WriteString("managed_by_user_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ManagedByUserID))
+	builder.WriteString(", ")
+	builder.WriteString("msp_ticket_id=")
+	builder.WriteString(_m.MspTicketID)
 	builder.WriteByte(')')
 	return builder.String()
 }

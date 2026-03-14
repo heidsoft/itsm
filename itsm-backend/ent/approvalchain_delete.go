@@ -20,56 +20,56 @@ type ApprovalChainDelete struct {
 }
 
 // Where appends a list predicates to the ApprovalChainDelete builder.
-func (acd *ApprovalChainDelete) Where(ps ...predicate.ApprovalChain) *ApprovalChainDelete {
-	acd.mutation.Where(ps...)
-	return acd
+func (_d *ApprovalChainDelete) Where(ps ...predicate.ApprovalChain) *ApprovalChainDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (acd *ApprovalChainDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, acd.sqlExec, acd.mutation, acd.hooks)
+func (_d *ApprovalChainDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (acd *ApprovalChainDelete) ExecX(ctx context.Context) int {
-	n, err := acd.Exec(ctx)
+func (_d *ApprovalChainDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (acd *ApprovalChainDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *ApprovalChainDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(approvalchain.Table, sqlgraph.NewFieldSpec(approvalchain.FieldID, field.TypeInt))
-	if ps := acd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, acd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	acd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // ApprovalChainDeleteOne is the builder for deleting a single ApprovalChain entity.
 type ApprovalChainDeleteOne struct {
-	acd *ApprovalChainDelete
+	_d *ApprovalChainDelete
 }
 
 // Where appends a list predicates to the ApprovalChainDelete builder.
-func (acdo *ApprovalChainDeleteOne) Where(ps ...predicate.ApprovalChain) *ApprovalChainDeleteOne {
-	acdo.acd.mutation.Where(ps...)
-	return acdo
+func (_d *ApprovalChainDeleteOne) Where(ps ...predicate.ApprovalChain) *ApprovalChainDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (acdo *ApprovalChainDeleteOne) Exec(ctx context.Context) error {
-	n, err := acdo.acd.Exec(ctx)
+func (_d *ApprovalChainDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (acdo *ApprovalChainDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (acdo *ApprovalChainDeleteOne) ExecX(ctx context.Context) {
-	if err := acdo.Exec(ctx); err != nil {
+func (_d *ApprovalChainDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

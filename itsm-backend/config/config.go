@@ -19,6 +19,14 @@ type Config struct {
 	SMS      SMSConfig      `mapstructure:"sms"`
 	SMTP     SMTPConfig     `mapstructure:"smtp"`
 	Ticket   TicketConfig   `mapstructure:"ticket"`
+	Redis    RedisConfig    `mapstructure:"redis"`
+}
+
+type RedisConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Password string `mapstructure:"password"`
+	DB       int    `mapstructure:"db"`
 }
 
 type TicketConfig struct {

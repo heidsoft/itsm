@@ -28,40 +28,40 @@ type CIAttributeDefinitionQuery struct {
 }
 
 // Where adds a new predicate for the CIAttributeDefinitionQuery builder.
-func (cadq *CIAttributeDefinitionQuery) Where(ps ...predicate.CIAttributeDefinition) *CIAttributeDefinitionQuery {
-	cadq.predicates = append(cadq.predicates, ps...)
-	return cadq
+func (_q *CIAttributeDefinitionQuery) Where(ps ...predicate.CIAttributeDefinition) *CIAttributeDefinitionQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (cadq *CIAttributeDefinitionQuery) Limit(limit int) *CIAttributeDefinitionQuery {
-	cadq.ctx.Limit = &limit
-	return cadq
+func (_q *CIAttributeDefinitionQuery) Limit(limit int) *CIAttributeDefinitionQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (cadq *CIAttributeDefinitionQuery) Offset(offset int) *CIAttributeDefinitionQuery {
-	cadq.ctx.Offset = &offset
-	return cadq
+func (_q *CIAttributeDefinitionQuery) Offset(offset int) *CIAttributeDefinitionQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (cadq *CIAttributeDefinitionQuery) Unique(unique bool) *CIAttributeDefinitionQuery {
-	cadq.ctx.Unique = &unique
-	return cadq
+func (_q *CIAttributeDefinitionQuery) Unique(unique bool) *CIAttributeDefinitionQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (cadq *CIAttributeDefinitionQuery) Order(o ...ciattributedefinition.OrderOption) *CIAttributeDefinitionQuery {
-	cadq.order = append(cadq.order, o...)
-	return cadq
+func (_q *CIAttributeDefinitionQuery) Order(o ...ciattributedefinition.OrderOption) *CIAttributeDefinitionQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // First returns the first CIAttributeDefinition entity from the query.
 // Returns a *NotFoundError when no CIAttributeDefinition was found.
-func (cadq *CIAttributeDefinitionQuery) First(ctx context.Context) (*CIAttributeDefinition, error) {
-	nodes, err := cadq.Limit(1).All(setContextOp(ctx, cadq.ctx, ent.OpQueryFirst))
+func (_q *CIAttributeDefinitionQuery) First(ctx context.Context) (*CIAttributeDefinition, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +72,8 @@ func (cadq *CIAttributeDefinitionQuery) First(ctx context.Context) (*CIAttribute
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (cadq *CIAttributeDefinitionQuery) FirstX(ctx context.Context) *CIAttributeDefinition {
-	node, err := cadq.First(ctx)
+func (_q *CIAttributeDefinitionQuery) FirstX(ctx context.Context) *CIAttributeDefinition {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -82,9 +82,9 @@ func (cadq *CIAttributeDefinitionQuery) FirstX(ctx context.Context) *CIAttribute
 
 // FirstID returns the first CIAttributeDefinition ID from the query.
 // Returns a *NotFoundError when no CIAttributeDefinition ID was found.
-func (cadq *CIAttributeDefinitionQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *CIAttributeDefinitionQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = cadq.Limit(1).IDs(setContextOp(ctx, cadq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -95,8 +95,8 @@ func (cadq *CIAttributeDefinitionQuery) FirstID(ctx context.Context) (id int, er
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (cadq *CIAttributeDefinitionQuery) FirstIDX(ctx context.Context) int {
-	id, err := cadq.FirstID(ctx)
+func (_q *CIAttributeDefinitionQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,8 +106,8 @@ func (cadq *CIAttributeDefinitionQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single CIAttributeDefinition entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one CIAttributeDefinition entity is found.
 // Returns a *NotFoundError when no CIAttributeDefinition entities are found.
-func (cadq *CIAttributeDefinitionQuery) Only(ctx context.Context) (*CIAttributeDefinition, error) {
-	nodes, err := cadq.Limit(2).All(setContextOp(ctx, cadq.ctx, ent.OpQueryOnly))
+func (_q *CIAttributeDefinitionQuery) Only(ctx context.Context) (*CIAttributeDefinition, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +122,8 @@ func (cadq *CIAttributeDefinitionQuery) Only(ctx context.Context) (*CIAttributeD
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (cadq *CIAttributeDefinitionQuery) OnlyX(ctx context.Context) *CIAttributeDefinition {
-	node, err := cadq.Only(ctx)
+func (_q *CIAttributeDefinitionQuery) OnlyX(ctx context.Context) *CIAttributeDefinition {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -133,9 +133,9 @@ func (cadq *CIAttributeDefinitionQuery) OnlyX(ctx context.Context) *CIAttributeD
 // OnlyID is like Only, but returns the only CIAttributeDefinition ID in the query.
 // Returns a *NotSingularError when more than one CIAttributeDefinition ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (cadq *CIAttributeDefinitionQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *CIAttributeDefinitionQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = cadq.Limit(2).IDs(setContextOp(ctx, cadq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -150,8 +150,8 @@ func (cadq *CIAttributeDefinitionQuery) OnlyID(ctx context.Context) (id int, err
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (cadq *CIAttributeDefinitionQuery) OnlyIDX(ctx context.Context) int {
-	id, err := cadq.OnlyID(ctx)
+func (_q *CIAttributeDefinitionQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,18 +159,18 @@ func (cadq *CIAttributeDefinitionQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of CIAttributeDefinitions.
-func (cadq *CIAttributeDefinitionQuery) All(ctx context.Context) ([]*CIAttributeDefinition, error) {
-	ctx = setContextOp(ctx, cadq.ctx, ent.OpQueryAll)
-	if err := cadq.prepareQuery(ctx); err != nil {
+func (_q *CIAttributeDefinitionQuery) All(ctx context.Context) ([]*CIAttributeDefinition, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*CIAttributeDefinition, *CIAttributeDefinitionQuery]()
-	return withInterceptors[[]*CIAttributeDefinition](ctx, cadq, qr, cadq.inters)
+	return withInterceptors[[]*CIAttributeDefinition](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (cadq *CIAttributeDefinitionQuery) AllX(ctx context.Context) []*CIAttributeDefinition {
-	nodes, err := cadq.All(ctx)
+func (_q *CIAttributeDefinitionQuery) AllX(ctx context.Context) []*CIAttributeDefinition {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -178,20 +178,20 @@ func (cadq *CIAttributeDefinitionQuery) AllX(ctx context.Context) []*CIAttribute
 }
 
 // IDs executes the query and returns a list of CIAttributeDefinition IDs.
-func (cadq *CIAttributeDefinitionQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if cadq.ctx.Unique == nil && cadq.path != nil {
-		cadq.Unique(true)
+func (_q *CIAttributeDefinitionQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, cadq.ctx, ent.OpQueryIDs)
-	if err = cadq.Select(ciattributedefinition.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(ciattributedefinition.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (cadq *CIAttributeDefinitionQuery) IDsX(ctx context.Context) []int {
-	ids, err := cadq.IDs(ctx)
+func (_q *CIAttributeDefinitionQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -199,17 +199,17 @@ func (cadq *CIAttributeDefinitionQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (cadq *CIAttributeDefinitionQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, cadq.ctx, ent.OpQueryCount)
-	if err := cadq.prepareQuery(ctx); err != nil {
+func (_q *CIAttributeDefinitionQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, cadq, querierCount[*CIAttributeDefinitionQuery](), cadq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*CIAttributeDefinitionQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (cadq *CIAttributeDefinitionQuery) CountX(ctx context.Context) int {
-	count, err := cadq.Count(ctx)
+func (_q *CIAttributeDefinitionQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -217,9 +217,9 @@ func (cadq *CIAttributeDefinitionQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (cadq *CIAttributeDefinitionQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, cadq.ctx, ent.OpQueryExist)
-	switch _, err := cadq.FirstID(ctx); {
+func (_q *CIAttributeDefinitionQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -230,8 +230,8 @@ func (cadq *CIAttributeDefinitionQuery) Exist(ctx context.Context) (bool, error)
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (cadq *CIAttributeDefinitionQuery) ExistX(ctx context.Context) bool {
-	exist, err := cadq.Exist(ctx)
+func (_q *CIAttributeDefinitionQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -240,19 +240,19 @@ func (cadq *CIAttributeDefinitionQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the CIAttributeDefinitionQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (cadq *CIAttributeDefinitionQuery) Clone() *CIAttributeDefinitionQuery {
-	if cadq == nil {
+func (_q *CIAttributeDefinitionQuery) Clone() *CIAttributeDefinitionQuery {
+	if _q == nil {
 		return nil
 	}
 	return &CIAttributeDefinitionQuery{
-		config:     cadq.config,
-		ctx:        cadq.ctx.Clone(),
-		order:      append([]ciattributedefinition.OrderOption{}, cadq.order...),
-		inters:     append([]Interceptor{}, cadq.inters...),
-		predicates: append([]predicate.CIAttributeDefinition{}, cadq.predicates...),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]ciattributedefinition.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.CIAttributeDefinition{}, _q.predicates...),
 		// clone intermediate query.
-		sql:  cadq.sql.Clone(),
-		path: cadq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
@@ -270,10 +270,10 @@ func (cadq *CIAttributeDefinitionQuery) Clone() *CIAttributeDefinitionQuery {
 //		GroupBy(ciattributedefinition.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (cadq *CIAttributeDefinitionQuery) GroupBy(field string, fields ...string) *CIAttributeDefinitionGroupBy {
-	cadq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &CIAttributeDefinitionGroupBy{build: cadq}
-	grbuild.flds = &cadq.ctx.Fields
+func (_q *CIAttributeDefinitionQuery) GroupBy(field string, fields ...string) *CIAttributeDefinitionGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &CIAttributeDefinitionGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = ciattributedefinition.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -291,62 +291,62 @@ func (cadq *CIAttributeDefinitionQuery) GroupBy(field string, fields ...string) 
 //	client.CIAttributeDefinition.Query().
 //		Select(ciattributedefinition.FieldName).
 //		Scan(ctx, &v)
-func (cadq *CIAttributeDefinitionQuery) Select(fields ...string) *CIAttributeDefinitionSelect {
-	cadq.ctx.Fields = append(cadq.ctx.Fields, fields...)
-	sbuild := &CIAttributeDefinitionSelect{CIAttributeDefinitionQuery: cadq}
+func (_q *CIAttributeDefinitionQuery) Select(fields ...string) *CIAttributeDefinitionSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &CIAttributeDefinitionSelect{CIAttributeDefinitionQuery: _q}
 	sbuild.label = ciattributedefinition.Label
-	sbuild.flds, sbuild.scan = &cadq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a CIAttributeDefinitionSelect configured with the given aggregations.
-func (cadq *CIAttributeDefinitionQuery) Aggregate(fns ...AggregateFunc) *CIAttributeDefinitionSelect {
-	return cadq.Select().Aggregate(fns...)
+func (_q *CIAttributeDefinitionQuery) Aggregate(fns ...AggregateFunc) *CIAttributeDefinitionSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (cadq *CIAttributeDefinitionQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range cadq.inters {
+func (_q *CIAttributeDefinitionQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, cadq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range cadq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !ciattributedefinition.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if cadq.path != nil {
-		prev, err := cadq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		cadq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (cadq *CIAttributeDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CIAttributeDefinition, error) {
+func (_q *CIAttributeDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CIAttributeDefinition, error) {
 	var (
 		nodes = []*CIAttributeDefinition{}
-		_spec = cadq.querySpec()
+		_spec = _q.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*CIAttributeDefinition).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &CIAttributeDefinition{config: cadq.config}
+		node := &CIAttributeDefinition{config: _q.config}
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, cadq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
@@ -355,24 +355,24 @@ func (cadq *CIAttributeDefinitionQuery) sqlAll(ctx context.Context, hooks ...que
 	return nodes, nil
 }
 
-func (cadq *CIAttributeDefinitionQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := cadq.querySpec()
-	_spec.Node.Columns = cadq.ctx.Fields
-	if len(cadq.ctx.Fields) > 0 {
-		_spec.Unique = cadq.ctx.Unique != nil && *cadq.ctx.Unique
+func (_q *CIAttributeDefinitionQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, cadq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (cadq *CIAttributeDefinitionQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *CIAttributeDefinitionQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(ciattributedefinition.Table, ciattributedefinition.Columns, sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt))
-	_spec.From = cadq.sql
-	if unique := cadq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if cadq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := cadq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, ciattributedefinition.FieldID)
 		for i := range fields {
@@ -381,20 +381,20 @@ func (cadq *CIAttributeDefinitionQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := cadq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := cadq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := cadq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := cadq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -404,33 +404,33 @@ func (cadq *CIAttributeDefinitionQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (cadq *CIAttributeDefinitionQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(cadq.driver.Dialect())
+func (_q *CIAttributeDefinitionQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(ciattributedefinition.Table)
-	columns := cadq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = ciattributedefinition.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if cadq.sql != nil {
-		selector = cadq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if cadq.ctx.Unique != nil && *cadq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range cadq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range cadq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := cadq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := cadq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -443,41 +443,41 @@ type CIAttributeDefinitionGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (cadgb *CIAttributeDefinitionGroupBy) Aggregate(fns ...AggregateFunc) *CIAttributeDefinitionGroupBy {
-	cadgb.fns = append(cadgb.fns, fns...)
-	return cadgb
+func (_g *CIAttributeDefinitionGroupBy) Aggregate(fns ...AggregateFunc) *CIAttributeDefinitionGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (cadgb *CIAttributeDefinitionGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, cadgb.build.ctx, ent.OpQueryGroupBy)
-	if err := cadgb.build.prepareQuery(ctx); err != nil {
+func (_g *CIAttributeDefinitionGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*CIAttributeDefinitionQuery, *CIAttributeDefinitionGroupBy](ctx, cadgb.build, cadgb, cadgb.build.inters, v)
+	return scanWithInterceptors[*CIAttributeDefinitionQuery, *CIAttributeDefinitionGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (cadgb *CIAttributeDefinitionGroupBy) sqlScan(ctx context.Context, root *CIAttributeDefinitionQuery, v any) error {
+func (_g *CIAttributeDefinitionGroupBy) sqlScan(ctx context.Context, root *CIAttributeDefinitionQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(cadgb.fns))
-	for _, fn := range cadgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*cadgb.flds)+len(cadgb.fns))
-		for _, f := range *cadgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*cadgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := cadgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -491,27 +491,27 @@ type CIAttributeDefinitionSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (cads *CIAttributeDefinitionSelect) Aggregate(fns ...AggregateFunc) *CIAttributeDefinitionSelect {
-	cads.fns = append(cads.fns, fns...)
-	return cads
+func (_s *CIAttributeDefinitionSelect) Aggregate(fns ...AggregateFunc) *CIAttributeDefinitionSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (cads *CIAttributeDefinitionSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, cads.ctx, ent.OpQuerySelect)
-	if err := cads.prepareQuery(ctx); err != nil {
+func (_s *CIAttributeDefinitionSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*CIAttributeDefinitionQuery, *CIAttributeDefinitionSelect](ctx, cads.CIAttributeDefinitionQuery, cads, cads.inters, v)
+	return scanWithInterceptors[*CIAttributeDefinitionQuery, *CIAttributeDefinitionSelect](ctx, _s.CIAttributeDefinitionQuery, _s, _s.inters, v)
 }
 
-func (cads *CIAttributeDefinitionSelect) sqlScan(ctx context.Context, root *CIAttributeDefinitionQuery, v any) error {
+func (_s *CIAttributeDefinitionSelect) sqlScan(ctx context.Context, root *CIAttributeDefinitionQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(cads.fns))
-	for _, fn := range cads.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*cads.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -519,7 +519,7 @@ func (cads *CIAttributeDefinitionSelect) sqlScan(ctx context.Context, root *CIAt
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := cads.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

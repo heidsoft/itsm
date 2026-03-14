@@ -20,56 +20,56 @@ type KnowledgeArticleDelete struct {
 }
 
 // Where appends a list predicates to the KnowledgeArticleDelete builder.
-func (kad *KnowledgeArticleDelete) Where(ps ...predicate.KnowledgeArticle) *KnowledgeArticleDelete {
-	kad.mutation.Where(ps...)
-	return kad
+func (_d *KnowledgeArticleDelete) Where(ps ...predicate.KnowledgeArticle) *KnowledgeArticleDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (kad *KnowledgeArticleDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, kad.sqlExec, kad.mutation, kad.hooks)
+func (_d *KnowledgeArticleDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (kad *KnowledgeArticleDelete) ExecX(ctx context.Context) int {
-	n, err := kad.Exec(ctx)
+func (_d *KnowledgeArticleDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (kad *KnowledgeArticleDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *KnowledgeArticleDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(knowledgearticle.Table, sqlgraph.NewFieldSpec(knowledgearticle.FieldID, field.TypeInt))
-	if ps := kad.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, kad.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	kad.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // KnowledgeArticleDeleteOne is the builder for deleting a single KnowledgeArticle entity.
 type KnowledgeArticleDeleteOne struct {
-	kad *KnowledgeArticleDelete
+	_d *KnowledgeArticleDelete
 }
 
 // Where appends a list predicates to the KnowledgeArticleDelete builder.
-func (kado *KnowledgeArticleDeleteOne) Where(ps ...predicate.KnowledgeArticle) *KnowledgeArticleDeleteOne {
-	kado.kad.mutation.Where(ps...)
-	return kado
+func (_d *KnowledgeArticleDeleteOne) Where(ps ...predicate.KnowledgeArticle) *KnowledgeArticleDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (kado *KnowledgeArticleDeleteOne) Exec(ctx context.Context) error {
-	n, err := kado.kad.Exec(ctx)
+func (_d *KnowledgeArticleDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (kado *KnowledgeArticleDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (kado *KnowledgeArticleDeleteOne) ExecX(ctx context.Context) {
-	if err := kado.Exec(ctx); err != nil {
+func (_d *KnowledgeArticleDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

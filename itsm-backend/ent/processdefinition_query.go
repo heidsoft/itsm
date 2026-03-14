@@ -37,44 +37,44 @@ type ProcessDefinitionQuery struct {
 }
 
 // Where adds a new predicate for the ProcessDefinitionQuery builder.
-func (pdq *ProcessDefinitionQuery) Where(ps ...predicate.ProcessDefinition) *ProcessDefinitionQuery {
-	pdq.predicates = append(pdq.predicates, ps...)
-	return pdq
+func (_q *ProcessDefinitionQuery) Where(ps ...predicate.ProcessDefinition) *ProcessDefinitionQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (pdq *ProcessDefinitionQuery) Limit(limit int) *ProcessDefinitionQuery {
-	pdq.ctx.Limit = &limit
-	return pdq
+func (_q *ProcessDefinitionQuery) Limit(limit int) *ProcessDefinitionQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (pdq *ProcessDefinitionQuery) Offset(offset int) *ProcessDefinitionQuery {
-	pdq.ctx.Offset = &offset
-	return pdq
+func (_q *ProcessDefinitionQuery) Offset(offset int) *ProcessDefinitionQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (pdq *ProcessDefinitionQuery) Unique(unique bool) *ProcessDefinitionQuery {
-	pdq.ctx.Unique = &unique
-	return pdq
+func (_q *ProcessDefinitionQuery) Unique(unique bool) *ProcessDefinitionQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (pdq *ProcessDefinitionQuery) Order(o ...processdefinition.OrderOption) *ProcessDefinitionQuery {
-	pdq.order = append(pdq.order, o...)
-	return pdq
+func (_q *ProcessDefinitionQuery) Order(o ...processdefinition.OrderOption) *ProcessDefinitionQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryProcessInstances chains the current query on the "process_instances" edge.
-func (pdq *ProcessDefinitionQuery) QueryProcessInstances() *ProcessInstanceQuery {
-	query := (&ProcessInstanceClient{config: pdq.config}).Query()
+func (_q *ProcessDefinitionQuery) QueryProcessInstances() *ProcessInstanceQuery {
+	query := (&ProcessInstanceClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := pdq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := pdq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -83,20 +83,20 @@ func (pdq *ProcessDefinitionQuery) QueryProcessInstances() *ProcessInstanceQuery
 			sqlgraph.To(processinstance.Table, processinstance.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, processdefinition.ProcessInstancesTable, processdefinition.ProcessInstancesColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(pdq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryBindings chains the current query on the "bindings" edge.
-func (pdq *ProcessDefinitionQuery) QueryBindings() *ProcessBindingQuery {
-	query := (&ProcessBindingClient{config: pdq.config}).Query()
+func (_q *ProcessDefinitionQuery) QueryBindings() *ProcessBindingQuery {
+	query := (&ProcessBindingClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := pdq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := pdq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -105,20 +105,20 @@ func (pdq *ProcessDefinitionQuery) QueryBindings() *ProcessBindingQuery {
 			sqlgraph.To(processbinding.Table, processbinding.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, processdefinition.BindingsTable, processdefinition.BindingsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(pdq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryVersionChangelogs chains the current query on the "version_changelogs" edge.
-func (pdq *ProcessDefinitionQuery) QueryVersionChangelogs() *ProcessVersionChangelogQuery {
-	query := (&ProcessVersionChangelogClient{config: pdq.config}).Query()
+func (_q *ProcessDefinitionQuery) QueryVersionChangelogs() *ProcessVersionChangelogQuery {
+	query := (&ProcessVersionChangelogClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := pdq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := pdq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -127,20 +127,20 @@ func (pdq *ProcessDefinitionQuery) QueryVersionChangelogs() *ProcessVersionChang
 			sqlgraph.To(processversionchangelog.Table, processversionchangelog.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, processdefinition.VersionChangelogsTable, processdefinition.VersionChangelogsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(pdq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryDeployment chains the current query on the "deployment" edge.
-func (pdq *ProcessDefinitionQuery) QueryDeployment() *ProcessDeploymentQuery {
-	query := (&ProcessDeploymentClient{config: pdq.config}).Query()
+func (_q *ProcessDefinitionQuery) QueryDeployment() *ProcessDeploymentQuery {
+	query := (&ProcessDeploymentClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := pdq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := pdq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -149,7 +149,7 @@ func (pdq *ProcessDefinitionQuery) QueryDeployment() *ProcessDeploymentQuery {
 			sqlgraph.To(processdeployment.Table, processdeployment.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, processdefinition.DeploymentTable, processdefinition.DeploymentColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(pdq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -157,8 +157,8 @@ func (pdq *ProcessDefinitionQuery) QueryDeployment() *ProcessDeploymentQuery {
 
 // First returns the first ProcessDefinition entity from the query.
 // Returns a *NotFoundError when no ProcessDefinition was found.
-func (pdq *ProcessDefinitionQuery) First(ctx context.Context) (*ProcessDefinition, error) {
-	nodes, err := pdq.Limit(1).All(setContextOp(ctx, pdq.ctx, ent.OpQueryFirst))
+func (_q *ProcessDefinitionQuery) First(ctx context.Context) (*ProcessDefinition, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -169,8 +169,8 @@ func (pdq *ProcessDefinitionQuery) First(ctx context.Context) (*ProcessDefinitio
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (pdq *ProcessDefinitionQuery) FirstX(ctx context.Context) *ProcessDefinition {
-	node, err := pdq.First(ctx)
+func (_q *ProcessDefinitionQuery) FirstX(ctx context.Context) *ProcessDefinition {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -179,9 +179,9 @@ func (pdq *ProcessDefinitionQuery) FirstX(ctx context.Context) *ProcessDefinitio
 
 // FirstID returns the first ProcessDefinition ID from the query.
 // Returns a *NotFoundError when no ProcessDefinition ID was found.
-func (pdq *ProcessDefinitionQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *ProcessDefinitionQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = pdq.Limit(1).IDs(setContextOp(ctx, pdq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -192,8 +192,8 @@ func (pdq *ProcessDefinitionQuery) FirstID(ctx context.Context) (id int, err err
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (pdq *ProcessDefinitionQuery) FirstIDX(ctx context.Context) int {
-	id, err := pdq.FirstID(ctx)
+func (_q *ProcessDefinitionQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -203,8 +203,8 @@ func (pdq *ProcessDefinitionQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single ProcessDefinition entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one ProcessDefinition entity is found.
 // Returns a *NotFoundError when no ProcessDefinition entities are found.
-func (pdq *ProcessDefinitionQuery) Only(ctx context.Context) (*ProcessDefinition, error) {
-	nodes, err := pdq.Limit(2).All(setContextOp(ctx, pdq.ctx, ent.OpQueryOnly))
+func (_q *ProcessDefinitionQuery) Only(ctx context.Context) (*ProcessDefinition, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -219,8 +219,8 @@ func (pdq *ProcessDefinitionQuery) Only(ctx context.Context) (*ProcessDefinition
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (pdq *ProcessDefinitionQuery) OnlyX(ctx context.Context) *ProcessDefinition {
-	node, err := pdq.Only(ctx)
+func (_q *ProcessDefinitionQuery) OnlyX(ctx context.Context) *ProcessDefinition {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -230,9 +230,9 @@ func (pdq *ProcessDefinitionQuery) OnlyX(ctx context.Context) *ProcessDefinition
 // OnlyID is like Only, but returns the only ProcessDefinition ID in the query.
 // Returns a *NotSingularError when more than one ProcessDefinition ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (pdq *ProcessDefinitionQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *ProcessDefinitionQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = pdq.Limit(2).IDs(setContextOp(ctx, pdq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -247,8 +247,8 @@ func (pdq *ProcessDefinitionQuery) OnlyID(ctx context.Context) (id int, err erro
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (pdq *ProcessDefinitionQuery) OnlyIDX(ctx context.Context) int {
-	id, err := pdq.OnlyID(ctx)
+func (_q *ProcessDefinitionQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -256,18 +256,18 @@ func (pdq *ProcessDefinitionQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of ProcessDefinitions.
-func (pdq *ProcessDefinitionQuery) All(ctx context.Context) ([]*ProcessDefinition, error) {
-	ctx = setContextOp(ctx, pdq.ctx, ent.OpQueryAll)
-	if err := pdq.prepareQuery(ctx); err != nil {
+func (_q *ProcessDefinitionQuery) All(ctx context.Context) ([]*ProcessDefinition, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*ProcessDefinition, *ProcessDefinitionQuery]()
-	return withInterceptors[[]*ProcessDefinition](ctx, pdq, qr, pdq.inters)
+	return withInterceptors[[]*ProcessDefinition](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (pdq *ProcessDefinitionQuery) AllX(ctx context.Context) []*ProcessDefinition {
-	nodes, err := pdq.All(ctx)
+func (_q *ProcessDefinitionQuery) AllX(ctx context.Context) []*ProcessDefinition {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -275,20 +275,20 @@ func (pdq *ProcessDefinitionQuery) AllX(ctx context.Context) []*ProcessDefinitio
 }
 
 // IDs executes the query and returns a list of ProcessDefinition IDs.
-func (pdq *ProcessDefinitionQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if pdq.ctx.Unique == nil && pdq.path != nil {
-		pdq.Unique(true)
+func (_q *ProcessDefinitionQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, pdq.ctx, ent.OpQueryIDs)
-	if err = pdq.Select(processdefinition.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(processdefinition.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (pdq *ProcessDefinitionQuery) IDsX(ctx context.Context) []int {
-	ids, err := pdq.IDs(ctx)
+func (_q *ProcessDefinitionQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -296,17 +296,17 @@ func (pdq *ProcessDefinitionQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (pdq *ProcessDefinitionQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, pdq.ctx, ent.OpQueryCount)
-	if err := pdq.prepareQuery(ctx); err != nil {
+func (_q *ProcessDefinitionQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, pdq, querierCount[*ProcessDefinitionQuery](), pdq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ProcessDefinitionQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (pdq *ProcessDefinitionQuery) CountX(ctx context.Context) int {
-	count, err := pdq.Count(ctx)
+func (_q *ProcessDefinitionQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -314,9 +314,9 @@ func (pdq *ProcessDefinitionQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (pdq *ProcessDefinitionQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, pdq.ctx, ent.OpQueryExist)
-	switch _, err := pdq.FirstID(ctx); {
+func (_q *ProcessDefinitionQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -327,8 +327,8 @@ func (pdq *ProcessDefinitionQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (pdq *ProcessDefinitionQuery) ExistX(ctx context.Context) bool {
-	exist, err := pdq.Exist(ctx)
+func (_q *ProcessDefinitionQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -337,68 +337,68 @@ func (pdq *ProcessDefinitionQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the ProcessDefinitionQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (pdq *ProcessDefinitionQuery) Clone() *ProcessDefinitionQuery {
-	if pdq == nil {
+func (_q *ProcessDefinitionQuery) Clone() *ProcessDefinitionQuery {
+	if _q == nil {
 		return nil
 	}
 	return &ProcessDefinitionQuery{
-		config:                pdq.config,
-		ctx:                   pdq.ctx.Clone(),
-		order:                 append([]processdefinition.OrderOption{}, pdq.order...),
-		inters:                append([]Interceptor{}, pdq.inters...),
-		predicates:            append([]predicate.ProcessDefinition{}, pdq.predicates...),
-		withProcessInstances:  pdq.withProcessInstances.Clone(),
-		withBindings:          pdq.withBindings.Clone(),
-		withVersionChangelogs: pdq.withVersionChangelogs.Clone(),
-		withDeployment:        pdq.withDeployment.Clone(),
+		config:                _q.config,
+		ctx:                   _q.ctx.Clone(),
+		order:                 append([]processdefinition.OrderOption{}, _q.order...),
+		inters:                append([]Interceptor{}, _q.inters...),
+		predicates:            append([]predicate.ProcessDefinition{}, _q.predicates...),
+		withProcessInstances:  _q.withProcessInstances.Clone(),
+		withBindings:          _q.withBindings.Clone(),
+		withVersionChangelogs: _q.withVersionChangelogs.Clone(),
+		withDeployment:        _q.withDeployment.Clone(),
 		// clone intermediate query.
-		sql:  pdq.sql.Clone(),
-		path: pdq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithProcessInstances tells the query-builder to eager-load the nodes that are connected to
 // the "process_instances" edge. The optional arguments are used to configure the query builder of the edge.
-func (pdq *ProcessDefinitionQuery) WithProcessInstances(opts ...func(*ProcessInstanceQuery)) *ProcessDefinitionQuery {
-	query := (&ProcessInstanceClient{config: pdq.config}).Query()
+func (_q *ProcessDefinitionQuery) WithProcessInstances(opts ...func(*ProcessInstanceQuery)) *ProcessDefinitionQuery {
+	query := (&ProcessInstanceClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	pdq.withProcessInstances = query
-	return pdq
+	_q.withProcessInstances = query
+	return _q
 }
 
 // WithBindings tells the query-builder to eager-load the nodes that are connected to
 // the "bindings" edge. The optional arguments are used to configure the query builder of the edge.
-func (pdq *ProcessDefinitionQuery) WithBindings(opts ...func(*ProcessBindingQuery)) *ProcessDefinitionQuery {
-	query := (&ProcessBindingClient{config: pdq.config}).Query()
+func (_q *ProcessDefinitionQuery) WithBindings(opts ...func(*ProcessBindingQuery)) *ProcessDefinitionQuery {
+	query := (&ProcessBindingClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	pdq.withBindings = query
-	return pdq
+	_q.withBindings = query
+	return _q
 }
 
 // WithVersionChangelogs tells the query-builder to eager-load the nodes that are connected to
 // the "version_changelogs" edge. The optional arguments are used to configure the query builder of the edge.
-func (pdq *ProcessDefinitionQuery) WithVersionChangelogs(opts ...func(*ProcessVersionChangelogQuery)) *ProcessDefinitionQuery {
-	query := (&ProcessVersionChangelogClient{config: pdq.config}).Query()
+func (_q *ProcessDefinitionQuery) WithVersionChangelogs(opts ...func(*ProcessVersionChangelogQuery)) *ProcessDefinitionQuery {
+	query := (&ProcessVersionChangelogClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	pdq.withVersionChangelogs = query
-	return pdq
+	_q.withVersionChangelogs = query
+	return _q
 }
 
 // WithDeployment tells the query-builder to eager-load the nodes that are connected to
 // the "deployment" edge. The optional arguments are used to configure the query builder of the edge.
-func (pdq *ProcessDefinitionQuery) WithDeployment(opts ...func(*ProcessDeploymentQuery)) *ProcessDefinitionQuery {
-	query := (&ProcessDeploymentClient{config: pdq.config}).Query()
+func (_q *ProcessDefinitionQuery) WithDeployment(opts ...func(*ProcessDeploymentQuery)) *ProcessDefinitionQuery {
+	query := (&ProcessDeploymentClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	pdq.withDeployment = query
-	return pdq
+	_q.withDeployment = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -415,10 +415,10 @@ func (pdq *ProcessDefinitionQuery) WithDeployment(opts ...func(*ProcessDeploymen
 //		GroupBy(processdefinition.FieldKey).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (pdq *ProcessDefinitionQuery) GroupBy(field string, fields ...string) *ProcessDefinitionGroupBy {
-	pdq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &ProcessDefinitionGroupBy{build: pdq}
-	grbuild.flds = &pdq.ctx.Fields
+func (_q *ProcessDefinitionQuery) GroupBy(field string, fields ...string) *ProcessDefinitionGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &ProcessDefinitionGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = processdefinition.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -436,61 +436,61 @@ func (pdq *ProcessDefinitionQuery) GroupBy(field string, fields ...string) *Proc
 //	client.ProcessDefinition.Query().
 //		Select(processdefinition.FieldKey).
 //		Scan(ctx, &v)
-func (pdq *ProcessDefinitionQuery) Select(fields ...string) *ProcessDefinitionSelect {
-	pdq.ctx.Fields = append(pdq.ctx.Fields, fields...)
-	sbuild := &ProcessDefinitionSelect{ProcessDefinitionQuery: pdq}
+func (_q *ProcessDefinitionQuery) Select(fields ...string) *ProcessDefinitionSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &ProcessDefinitionSelect{ProcessDefinitionQuery: _q}
 	sbuild.label = processdefinition.Label
-	sbuild.flds, sbuild.scan = &pdq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a ProcessDefinitionSelect configured with the given aggregations.
-func (pdq *ProcessDefinitionQuery) Aggregate(fns ...AggregateFunc) *ProcessDefinitionSelect {
-	return pdq.Select().Aggregate(fns...)
+func (_q *ProcessDefinitionQuery) Aggregate(fns ...AggregateFunc) *ProcessDefinitionSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (pdq *ProcessDefinitionQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range pdq.inters {
+func (_q *ProcessDefinitionQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, pdq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range pdq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !processdefinition.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if pdq.path != nil {
-		prev, err := pdq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		pdq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessDefinition, error) {
+func (_q *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessDefinition, error) {
 	var (
 		nodes       = []*ProcessDefinition{}
-		_spec       = pdq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [4]bool{
-			pdq.withProcessInstances != nil,
-			pdq.withBindings != nil,
-			pdq.withVersionChangelogs != nil,
-			pdq.withDeployment != nil,
+			_q.withProcessInstances != nil,
+			_q.withBindings != nil,
+			_q.withVersionChangelogs != nil,
+			_q.withDeployment != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ProcessDefinition).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &ProcessDefinition{config: pdq.config}
+		node := &ProcessDefinition{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -498,14 +498,14 @@ func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, pdq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := pdq.withProcessInstances; query != nil {
-		if err := pdq.loadProcessInstances(ctx, query, nodes,
+	if query := _q.withProcessInstances; query != nil {
+		if err := _q.loadProcessInstances(ctx, query, nodes,
 			func(n *ProcessDefinition) { n.Edges.ProcessInstances = []*ProcessInstance{} },
 			func(n *ProcessDefinition, e *ProcessInstance) {
 				n.Edges.ProcessInstances = append(n.Edges.ProcessInstances, e)
@@ -513,15 +513,15 @@ func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 			return nil, err
 		}
 	}
-	if query := pdq.withBindings; query != nil {
-		if err := pdq.loadBindings(ctx, query, nodes,
+	if query := _q.withBindings; query != nil {
+		if err := _q.loadBindings(ctx, query, nodes,
 			func(n *ProcessDefinition) { n.Edges.Bindings = []*ProcessBinding{} },
 			func(n *ProcessDefinition, e *ProcessBinding) { n.Edges.Bindings = append(n.Edges.Bindings, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := pdq.withVersionChangelogs; query != nil {
-		if err := pdq.loadVersionChangelogs(ctx, query, nodes,
+	if query := _q.withVersionChangelogs; query != nil {
+		if err := _q.loadVersionChangelogs(ctx, query, nodes,
 			func(n *ProcessDefinition) { n.Edges.VersionChangelogs = []*ProcessVersionChangelog{} },
 			func(n *ProcessDefinition, e *ProcessVersionChangelog) {
 				n.Edges.VersionChangelogs = append(n.Edges.VersionChangelogs, e)
@@ -529,8 +529,8 @@ func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 			return nil, err
 		}
 	}
-	if query := pdq.withDeployment; query != nil {
-		if err := pdq.loadDeployment(ctx, query, nodes, nil,
+	if query := _q.withDeployment; query != nil {
+		if err := _q.loadDeployment(ctx, query, nodes, nil,
 			func(n *ProcessDefinition, e *ProcessDeployment) { n.Edges.Deployment = e }); err != nil {
 			return nil, err
 		}
@@ -538,7 +538,7 @@ func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	return nodes, nil
 }
 
-func (pdq *ProcessDefinitionQuery) loadProcessInstances(ctx context.Context, query *ProcessInstanceQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessInstance)) error {
+func (_q *ProcessDefinitionQuery) loadProcessInstances(ctx context.Context, query *ProcessInstanceQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessInstance)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*ProcessDefinition)
 	for i := range nodes {
@@ -568,7 +568,7 @@ func (pdq *ProcessDefinitionQuery) loadProcessInstances(ctx context.Context, que
 	}
 	return nil
 }
-func (pdq *ProcessDefinitionQuery) loadBindings(ctx context.Context, query *ProcessBindingQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessBinding)) error {
+func (_q *ProcessDefinitionQuery) loadBindings(ctx context.Context, query *ProcessBindingQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessBinding)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*ProcessDefinition)
 	for i := range nodes {
@@ -599,7 +599,7 @@ func (pdq *ProcessDefinitionQuery) loadBindings(ctx context.Context, query *Proc
 	}
 	return nil
 }
-func (pdq *ProcessDefinitionQuery) loadVersionChangelogs(ctx context.Context, query *ProcessVersionChangelogQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessVersionChangelog)) error {
+func (_q *ProcessDefinitionQuery) loadVersionChangelogs(ctx context.Context, query *ProcessVersionChangelogQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessVersionChangelog)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*ProcessDefinition)
 	for i := range nodes {
@@ -629,7 +629,7 @@ func (pdq *ProcessDefinitionQuery) loadVersionChangelogs(ctx context.Context, qu
 	}
 	return nil
 }
-func (pdq *ProcessDefinitionQuery) loadDeployment(ctx context.Context, query *ProcessDeploymentQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessDeployment)) error {
+func (_q *ProcessDefinitionQuery) loadDeployment(ctx context.Context, query *ProcessDeploymentQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessDeployment)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*ProcessDefinition)
 	for i := range nodes {
@@ -659,24 +659,24 @@ func (pdq *ProcessDefinitionQuery) loadDeployment(ctx context.Context, query *Pr
 	return nil
 }
 
-func (pdq *ProcessDefinitionQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := pdq.querySpec()
-	_spec.Node.Columns = pdq.ctx.Fields
-	if len(pdq.ctx.Fields) > 0 {
-		_spec.Unique = pdq.ctx.Unique != nil && *pdq.ctx.Unique
+func (_q *ProcessDefinitionQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, pdq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (pdq *ProcessDefinitionQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *ProcessDefinitionQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(processdefinition.Table, processdefinition.Columns, sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt))
-	_spec.From = pdq.sql
-	if unique := pdq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if pdq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := pdq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, processdefinition.FieldID)
 		for i := range fields {
@@ -684,24 +684,24 @@ func (pdq *ProcessDefinitionQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if pdq.withDeployment != nil {
+		if _q.withDeployment != nil {
 			_spec.Node.AddColumnOnce(processdefinition.FieldDeploymentID)
 		}
 	}
-	if ps := pdq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := pdq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := pdq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := pdq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -711,33 +711,33 @@ func (pdq *ProcessDefinitionQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (pdq *ProcessDefinitionQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(pdq.driver.Dialect())
+func (_q *ProcessDefinitionQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(processdefinition.Table)
-	columns := pdq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = processdefinition.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if pdq.sql != nil {
-		selector = pdq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if pdq.ctx.Unique != nil && *pdq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range pdq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range pdq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := pdq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := pdq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -750,41 +750,41 @@ type ProcessDefinitionGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (pdgb *ProcessDefinitionGroupBy) Aggregate(fns ...AggregateFunc) *ProcessDefinitionGroupBy {
-	pdgb.fns = append(pdgb.fns, fns...)
-	return pdgb
+func (_g *ProcessDefinitionGroupBy) Aggregate(fns ...AggregateFunc) *ProcessDefinitionGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (pdgb *ProcessDefinitionGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, pdgb.build.ctx, ent.OpQueryGroupBy)
-	if err := pdgb.build.prepareQuery(ctx); err != nil {
+func (_g *ProcessDefinitionGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ProcessDefinitionQuery, *ProcessDefinitionGroupBy](ctx, pdgb.build, pdgb, pdgb.build.inters, v)
+	return scanWithInterceptors[*ProcessDefinitionQuery, *ProcessDefinitionGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (pdgb *ProcessDefinitionGroupBy) sqlScan(ctx context.Context, root *ProcessDefinitionQuery, v any) error {
+func (_g *ProcessDefinitionGroupBy) sqlScan(ctx context.Context, root *ProcessDefinitionQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(pdgb.fns))
-	for _, fn := range pdgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*pdgb.flds)+len(pdgb.fns))
-		for _, f := range *pdgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*pdgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := pdgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -798,27 +798,27 @@ type ProcessDefinitionSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (pds *ProcessDefinitionSelect) Aggregate(fns ...AggregateFunc) *ProcessDefinitionSelect {
-	pds.fns = append(pds.fns, fns...)
-	return pds
+func (_s *ProcessDefinitionSelect) Aggregate(fns ...AggregateFunc) *ProcessDefinitionSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (pds *ProcessDefinitionSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, pds.ctx, ent.OpQuerySelect)
-	if err := pds.prepareQuery(ctx); err != nil {
+func (_s *ProcessDefinitionSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ProcessDefinitionQuery, *ProcessDefinitionSelect](ctx, pds.ProcessDefinitionQuery, pds, pds.inters, v)
+	return scanWithInterceptors[*ProcessDefinitionQuery, *ProcessDefinitionSelect](ctx, _s.ProcessDefinitionQuery, _s, _s.inters, v)
 }
 
-func (pds *ProcessDefinitionSelect) sqlScan(ctx context.Context, root *ProcessDefinitionQuery, v any) error {
+func (_s *ProcessDefinitionSelect) sqlScan(ctx context.Context, root *ProcessDefinitionQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(pds.fns))
-	for _, fn := range pds.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*pds.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -826,7 +826,7 @@ func (pds *ProcessDefinitionSelect) sqlScan(ctx context.Context, root *ProcessDe
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := pds.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

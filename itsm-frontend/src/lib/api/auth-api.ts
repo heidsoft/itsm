@@ -41,7 +41,7 @@ export interface WebAuthnChallengeResponse {
 }
 
 // API配置
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090';
 const API_TIMEOUT = 30000; // 30秒超时
 
 // 统一 token 存储工具
@@ -134,22 +134,34 @@ class AuthApiClient {
         };
       }
 
+      // 后端返回格式: { code: 0, message: "success", data: { access_token, refresh_token, user } }
+      const responseData = data.data || data;
+
       // 安全地存储token（仅在成功时）
-      if (data.access_token) {
+      if (responseData.access_token) {
         // 统一使用 access_token（通过 token-storage 统一管理）
-        setAccessToken(data.access_token);
-      } else if (data.token) {
+        setAccessToken(responseData.access_token);
+        // 同时设置 Cookie（用于 middleware 验证）
+        if (typeof window !== 'undefined') {
+          document.cookie = `auth-token=${responseData.access_token}; path=/; max-age=900; SameSite=Lax`;
+        }
+      } else if (responseData.token) {
         // 兼容旧接口（如果有）
-        setAccessToken(data.token);
+        setAccessToken(responseData.token);
+      }
+
+      // 同时保存 refresh_token
+      if (responseData.refresh_token && typeof window !== 'undefined') {
+        localStorage.setItem('refresh_token', responseData.refresh_token);
       }
 
       return {
         success: true,
-        token: data.access_token || data.token,
-        refreshToken: data.refresh_token,
-        requiresMfa: data.requires_mfa,
-        mfaType: data.mfa_type,
-        user: data.user,
+        token: responseData.access_token || responseData.token,
+        refreshToken: responseData.refresh_token,
+        requiresMfa: responseData.requires_mfa,
+        mfaType: responseData.mfa_type,
+        user: responseData.user,
       };
     } catch (error) {
       console.error('Login error:', error);
@@ -235,6 +247,11 @@ class AuthApiClient {
 
       // 清除本地存储的token（统一清理，包含历史键名）
       clearAuthStorage();
+      // 清除 Cookie
+      if (typeof window !== 'undefined') {
+        document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      }
 
       if (!response.ok) {
         const data = await response.json();

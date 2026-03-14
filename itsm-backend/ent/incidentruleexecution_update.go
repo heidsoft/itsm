@@ -24,257 +24,257 @@ type IncidentRuleExecutionUpdate struct {
 }
 
 // Where appends a list predicates to the IncidentRuleExecutionUpdate builder.
-func (ireu *IncidentRuleExecutionUpdate) Where(ps ...predicate.IncidentRuleExecution) *IncidentRuleExecutionUpdate {
-	ireu.mutation.Where(ps...)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) Where(ps ...predicate.IncidentRuleExecution) *IncidentRuleExecutionUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetRuleID sets the "rule_id" field.
-func (ireu *IncidentRuleExecutionUpdate) SetRuleID(i int) *IncidentRuleExecutionUpdate {
-	ireu.mutation.SetRuleID(i)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetRuleID(v int) *IncidentRuleExecutionUpdate {
+	_u.mutation.SetRuleID(v)
+	return _u
 }
 
 // SetNillableRuleID sets the "rule_id" field if the given value is not nil.
-func (ireu *IncidentRuleExecutionUpdate) SetNillableRuleID(i *int) *IncidentRuleExecutionUpdate {
-	if i != nil {
-		ireu.SetRuleID(*i)
+func (_u *IncidentRuleExecutionUpdate) SetNillableRuleID(v *int) *IncidentRuleExecutionUpdate {
+	if v != nil {
+		_u.SetRuleID(*v)
 	}
-	return ireu
+	return _u
 }
 
 // SetIncidentID sets the "incident_id" field.
-func (ireu *IncidentRuleExecutionUpdate) SetIncidentID(i int) *IncidentRuleExecutionUpdate {
-	ireu.mutation.ResetIncidentID()
-	ireu.mutation.SetIncidentID(i)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetIncidentID(v int) *IncidentRuleExecutionUpdate {
+	_u.mutation.ResetIncidentID()
+	_u.mutation.SetIncidentID(v)
+	return _u
 }
 
 // SetNillableIncidentID sets the "incident_id" field if the given value is not nil.
-func (ireu *IncidentRuleExecutionUpdate) SetNillableIncidentID(i *int) *IncidentRuleExecutionUpdate {
-	if i != nil {
-		ireu.SetIncidentID(*i)
+func (_u *IncidentRuleExecutionUpdate) SetNillableIncidentID(v *int) *IncidentRuleExecutionUpdate {
+	if v != nil {
+		_u.SetIncidentID(*v)
 	}
-	return ireu
+	return _u
 }
 
-// AddIncidentID adds i to the "incident_id" field.
-func (ireu *IncidentRuleExecutionUpdate) AddIncidentID(i int) *IncidentRuleExecutionUpdate {
-	ireu.mutation.AddIncidentID(i)
-	return ireu
+// AddIncidentID adds value to the "incident_id" field.
+func (_u *IncidentRuleExecutionUpdate) AddIncidentID(v int) *IncidentRuleExecutionUpdate {
+	_u.mutation.AddIncidentID(v)
+	return _u
 }
 
 // ClearIncidentID clears the value of the "incident_id" field.
-func (ireu *IncidentRuleExecutionUpdate) ClearIncidentID() *IncidentRuleExecutionUpdate {
-	ireu.mutation.ClearIncidentID()
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) ClearIncidentID() *IncidentRuleExecutionUpdate {
+	_u.mutation.ClearIncidentID()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (ireu *IncidentRuleExecutionUpdate) SetStatus(s string) *IncidentRuleExecutionUpdate {
-	ireu.mutation.SetStatus(s)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetStatus(v string) *IncidentRuleExecutionUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ireu *IncidentRuleExecutionUpdate) SetNillableStatus(s *string) *IncidentRuleExecutionUpdate {
-	if s != nil {
-		ireu.SetStatus(*s)
+func (_u *IncidentRuleExecutionUpdate) SetNillableStatus(v *string) *IncidentRuleExecutionUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return ireu
+	return _u
 }
 
 // SetResult sets the "result" field.
-func (ireu *IncidentRuleExecutionUpdate) SetResult(s string) *IncidentRuleExecutionUpdate {
-	ireu.mutation.SetResult(s)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetResult(v string) *IncidentRuleExecutionUpdate {
+	_u.mutation.SetResult(v)
+	return _u
 }
 
 // SetNillableResult sets the "result" field if the given value is not nil.
-func (ireu *IncidentRuleExecutionUpdate) SetNillableResult(s *string) *IncidentRuleExecutionUpdate {
-	if s != nil {
-		ireu.SetResult(*s)
+func (_u *IncidentRuleExecutionUpdate) SetNillableResult(v *string) *IncidentRuleExecutionUpdate {
+	if v != nil {
+		_u.SetResult(*v)
 	}
-	return ireu
+	return _u
 }
 
 // ClearResult clears the value of the "result" field.
-func (ireu *IncidentRuleExecutionUpdate) ClearResult() *IncidentRuleExecutionUpdate {
-	ireu.mutation.ClearResult()
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) ClearResult() *IncidentRuleExecutionUpdate {
+	_u.mutation.ClearResult()
+	return _u
 }
 
 // SetErrorMessage sets the "error_message" field.
-func (ireu *IncidentRuleExecutionUpdate) SetErrorMessage(s string) *IncidentRuleExecutionUpdate {
-	ireu.mutation.SetErrorMessage(s)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetErrorMessage(v string) *IncidentRuleExecutionUpdate {
+	_u.mutation.SetErrorMessage(v)
+	return _u
 }
 
 // SetNillableErrorMessage sets the "error_message" field if the given value is not nil.
-func (ireu *IncidentRuleExecutionUpdate) SetNillableErrorMessage(s *string) *IncidentRuleExecutionUpdate {
-	if s != nil {
-		ireu.SetErrorMessage(*s)
+func (_u *IncidentRuleExecutionUpdate) SetNillableErrorMessage(v *string) *IncidentRuleExecutionUpdate {
+	if v != nil {
+		_u.SetErrorMessage(*v)
 	}
-	return ireu
+	return _u
 }
 
 // ClearErrorMessage clears the value of the "error_message" field.
-func (ireu *IncidentRuleExecutionUpdate) ClearErrorMessage() *IncidentRuleExecutionUpdate {
-	ireu.mutation.ClearErrorMessage()
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) ClearErrorMessage() *IncidentRuleExecutionUpdate {
+	_u.mutation.ClearErrorMessage()
+	return _u
 }
 
 // SetStartedAt sets the "started_at" field.
-func (ireu *IncidentRuleExecutionUpdate) SetStartedAt(t time.Time) *IncidentRuleExecutionUpdate {
-	ireu.mutation.SetStartedAt(t)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetStartedAt(v time.Time) *IncidentRuleExecutionUpdate {
+	_u.mutation.SetStartedAt(v)
+	return _u
 }
 
 // SetNillableStartedAt sets the "started_at" field if the given value is not nil.
-func (ireu *IncidentRuleExecutionUpdate) SetNillableStartedAt(t *time.Time) *IncidentRuleExecutionUpdate {
-	if t != nil {
-		ireu.SetStartedAt(*t)
+func (_u *IncidentRuleExecutionUpdate) SetNillableStartedAt(v *time.Time) *IncidentRuleExecutionUpdate {
+	if v != nil {
+		_u.SetStartedAt(*v)
 	}
-	return ireu
+	return _u
 }
 
 // SetCompletedAt sets the "completed_at" field.
-func (ireu *IncidentRuleExecutionUpdate) SetCompletedAt(t time.Time) *IncidentRuleExecutionUpdate {
-	ireu.mutation.SetCompletedAt(t)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetCompletedAt(v time.Time) *IncidentRuleExecutionUpdate {
+	_u.mutation.SetCompletedAt(v)
+	return _u
 }
 
 // SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
-func (ireu *IncidentRuleExecutionUpdate) SetNillableCompletedAt(t *time.Time) *IncidentRuleExecutionUpdate {
-	if t != nil {
-		ireu.SetCompletedAt(*t)
+func (_u *IncidentRuleExecutionUpdate) SetNillableCompletedAt(v *time.Time) *IncidentRuleExecutionUpdate {
+	if v != nil {
+		_u.SetCompletedAt(*v)
 	}
-	return ireu
+	return _u
 }
 
 // ClearCompletedAt clears the value of the "completed_at" field.
-func (ireu *IncidentRuleExecutionUpdate) ClearCompletedAt() *IncidentRuleExecutionUpdate {
-	ireu.mutation.ClearCompletedAt()
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) ClearCompletedAt() *IncidentRuleExecutionUpdate {
+	_u.mutation.ClearCompletedAt()
+	return _u
 }
 
 // SetExecutionTimeMs sets the "execution_time_ms" field.
-func (ireu *IncidentRuleExecutionUpdate) SetExecutionTimeMs(i int) *IncidentRuleExecutionUpdate {
-	ireu.mutation.ResetExecutionTimeMs()
-	ireu.mutation.SetExecutionTimeMs(i)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetExecutionTimeMs(v int) *IncidentRuleExecutionUpdate {
+	_u.mutation.ResetExecutionTimeMs()
+	_u.mutation.SetExecutionTimeMs(v)
+	return _u
 }
 
 // SetNillableExecutionTimeMs sets the "execution_time_ms" field if the given value is not nil.
-func (ireu *IncidentRuleExecutionUpdate) SetNillableExecutionTimeMs(i *int) *IncidentRuleExecutionUpdate {
-	if i != nil {
-		ireu.SetExecutionTimeMs(*i)
+func (_u *IncidentRuleExecutionUpdate) SetNillableExecutionTimeMs(v *int) *IncidentRuleExecutionUpdate {
+	if v != nil {
+		_u.SetExecutionTimeMs(*v)
 	}
-	return ireu
+	return _u
 }
 
-// AddExecutionTimeMs adds i to the "execution_time_ms" field.
-func (ireu *IncidentRuleExecutionUpdate) AddExecutionTimeMs(i int) *IncidentRuleExecutionUpdate {
-	ireu.mutation.AddExecutionTimeMs(i)
-	return ireu
+// AddExecutionTimeMs adds value to the "execution_time_ms" field.
+func (_u *IncidentRuleExecutionUpdate) AddExecutionTimeMs(v int) *IncidentRuleExecutionUpdate {
+	_u.mutation.AddExecutionTimeMs(v)
+	return _u
 }
 
 // ClearExecutionTimeMs clears the value of the "execution_time_ms" field.
-func (ireu *IncidentRuleExecutionUpdate) ClearExecutionTimeMs() *IncidentRuleExecutionUpdate {
-	ireu.mutation.ClearExecutionTimeMs()
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) ClearExecutionTimeMs() *IncidentRuleExecutionUpdate {
+	_u.mutation.ClearExecutionTimeMs()
+	return _u
 }
 
 // SetInputData sets the "input_data" field.
-func (ireu *IncidentRuleExecutionUpdate) SetInputData(m map[string]interface{}) *IncidentRuleExecutionUpdate {
-	ireu.mutation.SetInputData(m)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetInputData(v map[string]interface{}) *IncidentRuleExecutionUpdate {
+	_u.mutation.SetInputData(v)
+	return _u
 }
 
 // ClearInputData clears the value of the "input_data" field.
-func (ireu *IncidentRuleExecutionUpdate) ClearInputData() *IncidentRuleExecutionUpdate {
-	ireu.mutation.ClearInputData()
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) ClearInputData() *IncidentRuleExecutionUpdate {
+	_u.mutation.ClearInputData()
+	return _u
 }
 
 // SetOutputData sets the "output_data" field.
-func (ireu *IncidentRuleExecutionUpdate) SetOutputData(m map[string]interface{}) *IncidentRuleExecutionUpdate {
-	ireu.mutation.SetOutputData(m)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetOutputData(v map[string]interface{}) *IncidentRuleExecutionUpdate {
+	_u.mutation.SetOutputData(v)
+	return _u
 }
 
 // ClearOutputData clears the value of the "output_data" field.
-func (ireu *IncidentRuleExecutionUpdate) ClearOutputData() *IncidentRuleExecutionUpdate {
-	ireu.mutation.ClearOutputData()
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) ClearOutputData() *IncidentRuleExecutionUpdate {
+	_u.mutation.ClearOutputData()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ireu *IncidentRuleExecutionUpdate) SetTenantID(i int) *IncidentRuleExecutionUpdate {
-	ireu.mutation.ResetTenantID()
-	ireu.mutation.SetTenantID(i)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetTenantID(v int) *IncidentRuleExecutionUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ireu *IncidentRuleExecutionUpdate) SetNillableTenantID(i *int) *IncidentRuleExecutionUpdate {
-	if i != nil {
-		ireu.SetTenantID(*i)
+func (_u *IncidentRuleExecutionUpdate) SetNillableTenantID(v *int) *IncidentRuleExecutionUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ireu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ireu *IncidentRuleExecutionUpdate) AddTenantID(i int) *IncidentRuleExecutionUpdate {
-	ireu.mutation.AddTenantID(i)
-	return ireu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentRuleExecutionUpdate) AddTenantID(v int) *IncidentRuleExecutionUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ireu *IncidentRuleExecutionUpdate) SetCreatedAt(t time.Time) *IncidentRuleExecutionUpdate {
-	ireu.mutation.SetCreatedAt(t)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetCreatedAt(v time.Time) *IncidentRuleExecutionUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ireu *IncidentRuleExecutionUpdate) SetNillableCreatedAt(t *time.Time) *IncidentRuleExecutionUpdate {
-	if t != nil {
-		ireu.SetCreatedAt(*t)
+func (_u *IncidentRuleExecutionUpdate) SetNillableCreatedAt(v *time.Time) *IncidentRuleExecutionUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ireu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ireu *IncidentRuleExecutionUpdate) SetUpdatedAt(t time.Time) *IncidentRuleExecutionUpdate {
-	ireu.mutation.SetUpdatedAt(t)
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) SetUpdatedAt(v time.Time) *IncidentRuleExecutionUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetRule sets the "rule" edge to the IncidentRule entity.
-func (ireu *IncidentRuleExecutionUpdate) SetRule(i *IncidentRule) *IncidentRuleExecutionUpdate {
-	return ireu.SetRuleID(i.ID)
+func (_u *IncidentRuleExecutionUpdate) SetRule(v *IncidentRule) *IncidentRuleExecutionUpdate {
+	return _u.SetRuleID(v.ID)
 }
 
 // Mutation returns the IncidentRuleExecutionMutation object of the builder.
-func (ireu *IncidentRuleExecutionUpdate) Mutation() *IncidentRuleExecutionMutation {
-	return ireu.mutation
+func (_u *IncidentRuleExecutionUpdate) Mutation() *IncidentRuleExecutionMutation {
+	return _u.mutation
 }
 
 // ClearRule clears the "rule" edge to the IncidentRule entity.
-func (ireu *IncidentRuleExecutionUpdate) ClearRule() *IncidentRuleExecutionUpdate {
-	ireu.mutation.ClearRule()
-	return ireu
+func (_u *IncidentRuleExecutionUpdate) ClearRule() *IncidentRuleExecutionUpdate {
+	_u.mutation.ClearRule()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (ireu *IncidentRuleExecutionUpdate) Save(ctx context.Context) (int, error) {
-	ireu.defaults()
-	return withHooks(ctx, ireu.sqlSave, ireu.mutation, ireu.hooks)
+func (_u *IncidentRuleExecutionUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ireu *IncidentRuleExecutionUpdate) SaveX(ctx context.Context) int {
-	affected, err := ireu.Save(ctx)
+func (_u *IncidentRuleExecutionUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -282,123 +282,123 @@ func (ireu *IncidentRuleExecutionUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (ireu *IncidentRuleExecutionUpdate) Exec(ctx context.Context) error {
-	_, err := ireu.Save(ctx)
+func (_u *IncidentRuleExecutionUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ireu *IncidentRuleExecutionUpdate) ExecX(ctx context.Context) {
-	if err := ireu.Exec(ctx); err != nil {
+func (_u *IncidentRuleExecutionUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ireu *IncidentRuleExecutionUpdate) defaults() {
-	if _, ok := ireu.mutation.UpdatedAt(); !ok {
+func (_u *IncidentRuleExecutionUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incidentruleexecution.UpdateDefaultUpdatedAt()
-		ireu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ireu *IncidentRuleExecutionUpdate) check() error {
-	if v, ok := ireu.mutation.RuleID(); ok {
+func (_u *IncidentRuleExecutionUpdate) check() error {
+	if v, ok := _u.mutation.RuleID(); ok {
 		if err := incidentruleexecution.RuleIDValidator(v); err != nil {
 			return &ValidationError{Name: "rule_id", err: fmt.Errorf(`ent: validator failed for field "IncidentRuleExecution.rule_id": %w`, err)}
 		}
 	}
-	if v, ok := ireu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incidentruleexecution.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentRuleExecution.tenant_id": %w`, err)}
 		}
 	}
-	if ireu.mutation.RuleCleared() && len(ireu.mutation.RuleIDs()) > 0 {
+	if _u.mutation.RuleCleared() && len(_u.mutation.RuleIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "IncidentRuleExecution.rule"`)
 	}
 	return nil
 }
 
-func (ireu *IncidentRuleExecutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := ireu.check(); err != nil {
-		return n, err
+func (_u *IncidentRuleExecutionUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incidentruleexecution.Table, incidentruleexecution.Columns, sqlgraph.NewFieldSpec(incidentruleexecution.FieldID, field.TypeInt))
-	if ps := ireu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ireu.mutation.IncidentID(); ok {
+	if value, ok := _u.mutation.IncidentID(); ok {
 		_spec.SetField(incidentruleexecution.FieldIncidentID, field.TypeInt, value)
 	}
-	if value, ok := ireu.mutation.AddedIncidentID(); ok {
+	if value, ok := _u.mutation.AddedIncidentID(); ok {
 		_spec.AddField(incidentruleexecution.FieldIncidentID, field.TypeInt, value)
 	}
-	if ireu.mutation.IncidentIDCleared() {
+	if _u.mutation.IncidentIDCleared() {
 		_spec.ClearField(incidentruleexecution.FieldIncidentID, field.TypeInt)
 	}
-	if value, ok := ireu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(incidentruleexecution.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := ireu.mutation.Result(); ok {
+	if value, ok := _u.mutation.Result(); ok {
 		_spec.SetField(incidentruleexecution.FieldResult, field.TypeString, value)
 	}
-	if ireu.mutation.ResultCleared() {
+	if _u.mutation.ResultCleared() {
 		_spec.ClearField(incidentruleexecution.FieldResult, field.TypeString)
 	}
-	if value, ok := ireu.mutation.ErrorMessage(); ok {
+	if value, ok := _u.mutation.ErrorMessage(); ok {
 		_spec.SetField(incidentruleexecution.FieldErrorMessage, field.TypeString, value)
 	}
-	if ireu.mutation.ErrorMessageCleared() {
+	if _u.mutation.ErrorMessageCleared() {
 		_spec.ClearField(incidentruleexecution.FieldErrorMessage, field.TypeString)
 	}
-	if value, ok := ireu.mutation.StartedAt(); ok {
+	if value, ok := _u.mutation.StartedAt(); ok {
 		_spec.SetField(incidentruleexecution.FieldStartedAt, field.TypeTime, value)
 	}
-	if value, ok := ireu.mutation.CompletedAt(); ok {
+	if value, ok := _u.mutation.CompletedAt(); ok {
 		_spec.SetField(incidentruleexecution.FieldCompletedAt, field.TypeTime, value)
 	}
-	if ireu.mutation.CompletedAtCleared() {
+	if _u.mutation.CompletedAtCleared() {
 		_spec.ClearField(incidentruleexecution.FieldCompletedAt, field.TypeTime)
 	}
-	if value, ok := ireu.mutation.ExecutionTimeMs(); ok {
+	if value, ok := _u.mutation.ExecutionTimeMs(); ok {
 		_spec.SetField(incidentruleexecution.FieldExecutionTimeMs, field.TypeInt, value)
 	}
-	if value, ok := ireu.mutation.AddedExecutionTimeMs(); ok {
+	if value, ok := _u.mutation.AddedExecutionTimeMs(); ok {
 		_spec.AddField(incidentruleexecution.FieldExecutionTimeMs, field.TypeInt, value)
 	}
-	if ireu.mutation.ExecutionTimeMsCleared() {
+	if _u.mutation.ExecutionTimeMsCleared() {
 		_spec.ClearField(incidentruleexecution.FieldExecutionTimeMs, field.TypeInt)
 	}
-	if value, ok := ireu.mutation.InputData(); ok {
+	if value, ok := _u.mutation.InputData(); ok {
 		_spec.SetField(incidentruleexecution.FieldInputData, field.TypeJSON, value)
 	}
-	if ireu.mutation.InputDataCleared() {
+	if _u.mutation.InputDataCleared() {
 		_spec.ClearField(incidentruleexecution.FieldInputData, field.TypeJSON)
 	}
-	if value, ok := ireu.mutation.OutputData(); ok {
+	if value, ok := _u.mutation.OutputData(); ok {
 		_spec.SetField(incidentruleexecution.FieldOutputData, field.TypeJSON, value)
 	}
-	if ireu.mutation.OutputDataCleared() {
+	if _u.mutation.OutputDataCleared() {
 		_spec.ClearField(incidentruleexecution.FieldOutputData, field.TypeJSON)
 	}
-	if value, ok := ireu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incidentruleexecution.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ireu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incidentruleexecution.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ireu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentruleexecution.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ireu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentruleexecution.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if ireu.mutation.RuleCleared() {
+	if _u.mutation.RuleCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -411,7 +411,7 @@ func (ireu *IncidentRuleExecutionUpdate) sqlSave(ctx context.Context) (n int, er
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ireu.mutation.RuleIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RuleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -427,7 +427,7 @@ func (ireu *IncidentRuleExecutionUpdate) sqlSave(ctx context.Context) (n int, er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, ireu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incidentruleexecution.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -435,8 +435,8 @@ func (ireu *IncidentRuleExecutionUpdate) sqlSave(ctx context.Context) (n int, er
 		}
 		return 0, err
 	}
-	ireu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // IncidentRuleExecutionUpdateOne is the builder for updating a single IncidentRuleExecution entity.
@@ -448,264 +448,264 @@ type IncidentRuleExecutionUpdateOne struct {
 }
 
 // SetRuleID sets the "rule_id" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetRuleID(i int) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.SetRuleID(i)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetRuleID(v int) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.SetRuleID(v)
+	return _u
 }
 
 // SetNillableRuleID sets the "rule_id" field if the given value is not nil.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetNillableRuleID(i *int) *IncidentRuleExecutionUpdateOne {
-	if i != nil {
-		ireuo.SetRuleID(*i)
+func (_u *IncidentRuleExecutionUpdateOne) SetNillableRuleID(v *int) *IncidentRuleExecutionUpdateOne {
+	if v != nil {
+		_u.SetRuleID(*v)
 	}
-	return ireuo
+	return _u
 }
 
 // SetIncidentID sets the "incident_id" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetIncidentID(i int) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.ResetIncidentID()
-	ireuo.mutation.SetIncidentID(i)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetIncidentID(v int) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.ResetIncidentID()
+	_u.mutation.SetIncidentID(v)
+	return _u
 }
 
 // SetNillableIncidentID sets the "incident_id" field if the given value is not nil.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetNillableIncidentID(i *int) *IncidentRuleExecutionUpdateOne {
-	if i != nil {
-		ireuo.SetIncidentID(*i)
+func (_u *IncidentRuleExecutionUpdateOne) SetNillableIncidentID(v *int) *IncidentRuleExecutionUpdateOne {
+	if v != nil {
+		_u.SetIncidentID(*v)
 	}
-	return ireuo
+	return _u
 }
 
-// AddIncidentID adds i to the "incident_id" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) AddIncidentID(i int) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.AddIncidentID(i)
-	return ireuo
+// AddIncidentID adds value to the "incident_id" field.
+func (_u *IncidentRuleExecutionUpdateOne) AddIncidentID(v int) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.AddIncidentID(v)
+	return _u
 }
 
 // ClearIncidentID clears the value of the "incident_id" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) ClearIncidentID() *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.ClearIncidentID()
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) ClearIncidentID() *IncidentRuleExecutionUpdateOne {
+	_u.mutation.ClearIncidentID()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetStatus(s string) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.SetStatus(s)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetStatus(v string) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetNillableStatus(s *string) *IncidentRuleExecutionUpdateOne {
-	if s != nil {
-		ireuo.SetStatus(*s)
+func (_u *IncidentRuleExecutionUpdateOne) SetNillableStatus(v *string) *IncidentRuleExecutionUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return ireuo
+	return _u
 }
 
 // SetResult sets the "result" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetResult(s string) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.SetResult(s)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetResult(v string) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.SetResult(v)
+	return _u
 }
 
 // SetNillableResult sets the "result" field if the given value is not nil.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetNillableResult(s *string) *IncidentRuleExecutionUpdateOne {
-	if s != nil {
-		ireuo.SetResult(*s)
+func (_u *IncidentRuleExecutionUpdateOne) SetNillableResult(v *string) *IncidentRuleExecutionUpdateOne {
+	if v != nil {
+		_u.SetResult(*v)
 	}
-	return ireuo
+	return _u
 }
 
 // ClearResult clears the value of the "result" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) ClearResult() *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.ClearResult()
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) ClearResult() *IncidentRuleExecutionUpdateOne {
+	_u.mutation.ClearResult()
+	return _u
 }
 
 // SetErrorMessage sets the "error_message" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetErrorMessage(s string) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.SetErrorMessage(s)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetErrorMessage(v string) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.SetErrorMessage(v)
+	return _u
 }
 
 // SetNillableErrorMessage sets the "error_message" field if the given value is not nil.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetNillableErrorMessage(s *string) *IncidentRuleExecutionUpdateOne {
-	if s != nil {
-		ireuo.SetErrorMessage(*s)
+func (_u *IncidentRuleExecutionUpdateOne) SetNillableErrorMessage(v *string) *IncidentRuleExecutionUpdateOne {
+	if v != nil {
+		_u.SetErrorMessage(*v)
 	}
-	return ireuo
+	return _u
 }
 
 // ClearErrorMessage clears the value of the "error_message" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) ClearErrorMessage() *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.ClearErrorMessage()
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) ClearErrorMessage() *IncidentRuleExecutionUpdateOne {
+	_u.mutation.ClearErrorMessage()
+	return _u
 }
 
 // SetStartedAt sets the "started_at" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetStartedAt(t time.Time) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.SetStartedAt(t)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetStartedAt(v time.Time) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.SetStartedAt(v)
+	return _u
 }
 
 // SetNillableStartedAt sets the "started_at" field if the given value is not nil.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetNillableStartedAt(t *time.Time) *IncidentRuleExecutionUpdateOne {
-	if t != nil {
-		ireuo.SetStartedAt(*t)
+func (_u *IncidentRuleExecutionUpdateOne) SetNillableStartedAt(v *time.Time) *IncidentRuleExecutionUpdateOne {
+	if v != nil {
+		_u.SetStartedAt(*v)
 	}
-	return ireuo
+	return _u
 }
 
 // SetCompletedAt sets the "completed_at" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetCompletedAt(t time.Time) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.SetCompletedAt(t)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetCompletedAt(v time.Time) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.SetCompletedAt(v)
+	return _u
 }
 
 // SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetNillableCompletedAt(t *time.Time) *IncidentRuleExecutionUpdateOne {
-	if t != nil {
-		ireuo.SetCompletedAt(*t)
+func (_u *IncidentRuleExecutionUpdateOne) SetNillableCompletedAt(v *time.Time) *IncidentRuleExecutionUpdateOne {
+	if v != nil {
+		_u.SetCompletedAt(*v)
 	}
-	return ireuo
+	return _u
 }
 
 // ClearCompletedAt clears the value of the "completed_at" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) ClearCompletedAt() *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.ClearCompletedAt()
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) ClearCompletedAt() *IncidentRuleExecutionUpdateOne {
+	_u.mutation.ClearCompletedAt()
+	return _u
 }
 
 // SetExecutionTimeMs sets the "execution_time_ms" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetExecutionTimeMs(i int) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.ResetExecutionTimeMs()
-	ireuo.mutation.SetExecutionTimeMs(i)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetExecutionTimeMs(v int) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.ResetExecutionTimeMs()
+	_u.mutation.SetExecutionTimeMs(v)
+	return _u
 }
 
 // SetNillableExecutionTimeMs sets the "execution_time_ms" field if the given value is not nil.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetNillableExecutionTimeMs(i *int) *IncidentRuleExecutionUpdateOne {
-	if i != nil {
-		ireuo.SetExecutionTimeMs(*i)
+func (_u *IncidentRuleExecutionUpdateOne) SetNillableExecutionTimeMs(v *int) *IncidentRuleExecutionUpdateOne {
+	if v != nil {
+		_u.SetExecutionTimeMs(*v)
 	}
-	return ireuo
+	return _u
 }
 
-// AddExecutionTimeMs adds i to the "execution_time_ms" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) AddExecutionTimeMs(i int) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.AddExecutionTimeMs(i)
-	return ireuo
+// AddExecutionTimeMs adds value to the "execution_time_ms" field.
+func (_u *IncidentRuleExecutionUpdateOne) AddExecutionTimeMs(v int) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.AddExecutionTimeMs(v)
+	return _u
 }
 
 // ClearExecutionTimeMs clears the value of the "execution_time_ms" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) ClearExecutionTimeMs() *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.ClearExecutionTimeMs()
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) ClearExecutionTimeMs() *IncidentRuleExecutionUpdateOne {
+	_u.mutation.ClearExecutionTimeMs()
+	return _u
 }
 
 // SetInputData sets the "input_data" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetInputData(m map[string]interface{}) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.SetInputData(m)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetInputData(v map[string]interface{}) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.SetInputData(v)
+	return _u
 }
 
 // ClearInputData clears the value of the "input_data" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) ClearInputData() *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.ClearInputData()
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) ClearInputData() *IncidentRuleExecutionUpdateOne {
+	_u.mutation.ClearInputData()
+	return _u
 }
 
 // SetOutputData sets the "output_data" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetOutputData(m map[string]interface{}) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.SetOutputData(m)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetOutputData(v map[string]interface{}) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.SetOutputData(v)
+	return _u
 }
 
 // ClearOutputData clears the value of the "output_data" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) ClearOutputData() *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.ClearOutputData()
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) ClearOutputData() *IncidentRuleExecutionUpdateOne {
+	_u.mutation.ClearOutputData()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetTenantID(i int) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.ResetTenantID()
-	ireuo.mutation.SetTenantID(i)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetTenantID(v int) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetNillableTenantID(i *int) *IncidentRuleExecutionUpdateOne {
-	if i != nil {
-		ireuo.SetTenantID(*i)
+func (_u *IncidentRuleExecutionUpdateOne) SetNillableTenantID(v *int) *IncidentRuleExecutionUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ireuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) AddTenantID(i int) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.AddTenantID(i)
-	return ireuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentRuleExecutionUpdateOne) AddTenantID(v int) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetCreatedAt(t time.Time) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.SetCreatedAt(t)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetCreatedAt(v time.Time) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetNillableCreatedAt(t *time.Time) *IncidentRuleExecutionUpdateOne {
-	if t != nil {
-		ireuo.SetCreatedAt(*t)
+func (_u *IncidentRuleExecutionUpdateOne) SetNillableCreatedAt(v *time.Time) *IncidentRuleExecutionUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ireuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetUpdatedAt(t time.Time) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.SetUpdatedAt(t)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) SetUpdatedAt(v time.Time) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetRule sets the "rule" edge to the IncidentRule entity.
-func (ireuo *IncidentRuleExecutionUpdateOne) SetRule(i *IncidentRule) *IncidentRuleExecutionUpdateOne {
-	return ireuo.SetRuleID(i.ID)
+func (_u *IncidentRuleExecutionUpdateOne) SetRule(v *IncidentRule) *IncidentRuleExecutionUpdateOne {
+	return _u.SetRuleID(v.ID)
 }
 
 // Mutation returns the IncidentRuleExecutionMutation object of the builder.
-func (ireuo *IncidentRuleExecutionUpdateOne) Mutation() *IncidentRuleExecutionMutation {
-	return ireuo.mutation
+func (_u *IncidentRuleExecutionUpdateOne) Mutation() *IncidentRuleExecutionMutation {
+	return _u.mutation
 }
 
 // ClearRule clears the "rule" edge to the IncidentRule entity.
-func (ireuo *IncidentRuleExecutionUpdateOne) ClearRule() *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.ClearRule()
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) ClearRule() *IncidentRuleExecutionUpdateOne {
+	_u.mutation.ClearRule()
+	return _u
 }
 
 // Where appends a list predicates to the IncidentRuleExecutionUpdate builder.
-func (ireuo *IncidentRuleExecutionUpdateOne) Where(ps ...predicate.IncidentRuleExecution) *IncidentRuleExecutionUpdateOne {
-	ireuo.mutation.Where(ps...)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) Where(ps ...predicate.IncidentRuleExecution) *IncidentRuleExecutionUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (ireuo *IncidentRuleExecutionUpdateOne) Select(field string, fields ...string) *IncidentRuleExecutionUpdateOne {
-	ireuo.fields = append([]string{field}, fields...)
-	return ireuo
+func (_u *IncidentRuleExecutionUpdateOne) Select(field string, fields ...string) *IncidentRuleExecutionUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated IncidentRuleExecution entity.
-func (ireuo *IncidentRuleExecutionUpdateOne) Save(ctx context.Context) (*IncidentRuleExecution, error) {
-	ireuo.defaults()
-	return withHooks(ctx, ireuo.sqlSave, ireuo.mutation, ireuo.hooks)
+func (_u *IncidentRuleExecutionUpdateOne) Save(ctx context.Context) (*IncidentRuleExecution, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ireuo *IncidentRuleExecutionUpdateOne) SaveX(ctx context.Context) *IncidentRuleExecution {
-	node, err := ireuo.Save(ctx)
+func (_u *IncidentRuleExecutionUpdateOne) SaveX(ctx context.Context) *IncidentRuleExecution {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -713,55 +713,55 @@ func (ireuo *IncidentRuleExecutionUpdateOne) SaveX(ctx context.Context) *Inciden
 }
 
 // Exec executes the query on the entity.
-func (ireuo *IncidentRuleExecutionUpdateOne) Exec(ctx context.Context) error {
-	_, err := ireuo.Save(ctx)
+func (_u *IncidentRuleExecutionUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ireuo *IncidentRuleExecutionUpdateOne) ExecX(ctx context.Context) {
-	if err := ireuo.Exec(ctx); err != nil {
+func (_u *IncidentRuleExecutionUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ireuo *IncidentRuleExecutionUpdateOne) defaults() {
-	if _, ok := ireuo.mutation.UpdatedAt(); !ok {
+func (_u *IncidentRuleExecutionUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incidentruleexecution.UpdateDefaultUpdatedAt()
-		ireuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ireuo *IncidentRuleExecutionUpdateOne) check() error {
-	if v, ok := ireuo.mutation.RuleID(); ok {
+func (_u *IncidentRuleExecutionUpdateOne) check() error {
+	if v, ok := _u.mutation.RuleID(); ok {
 		if err := incidentruleexecution.RuleIDValidator(v); err != nil {
 			return &ValidationError{Name: "rule_id", err: fmt.Errorf(`ent: validator failed for field "IncidentRuleExecution.rule_id": %w`, err)}
 		}
 	}
-	if v, ok := ireuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incidentruleexecution.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentRuleExecution.tenant_id": %w`, err)}
 		}
 	}
-	if ireuo.mutation.RuleCleared() && len(ireuo.mutation.RuleIDs()) > 0 {
+	if _u.mutation.RuleCleared() && len(_u.mutation.RuleIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "IncidentRuleExecution.rule"`)
 	}
 	return nil
 }
 
-func (ireuo *IncidentRuleExecutionUpdateOne) sqlSave(ctx context.Context) (_node *IncidentRuleExecution, err error) {
-	if err := ireuo.check(); err != nil {
+func (_u *IncidentRuleExecutionUpdateOne) sqlSave(ctx context.Context) (_node *IncidentRuleExecution, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incidentruleexecution.Table, incidentruleexecution.Columns, sqlgraph.NewFieldSpec(incidentruleexecution.FieldID, field.TypeInt))
-	id, ok := ireuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "IncidentRuleExecution.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := ireuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, incidentruleexecution.FieldID)
 		for _, f := range fields {
@@ -773,80 +773,80 @@ func (ireuo *IncidentRuleExecutionUpdateOne) sqlSave(ctx context.Context) (_node
 			}
 		}
 	}
-	if ps := ireuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ireuo.mutation.IncidentID(); ok {
+	if value, ok := _u.mutation.IncidentID(); ok {
 		_spec.SetField(incidentruleexecution.FieldIncidentID, field.TypeInt, value)
 	}
-	if value, ok := ireuo.mutation.AddedIncidentID(); ok {
+	if value, ok := _u.mutation.AddedIncidentID(); ok {
 		_spec.AddField(incidentruleexecution.FieldIncidentID, field.TypeInt, value)
 	}
-	if ireuo.mutation.IncidentIDCleared() {
+	if _u.mutation.IncidentIDCleared() {
 		_spec.ClearField(incidentruleexecution.FieldIncidentID, field.TypeInt)
 	}
-	if value, ok := ireuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(incidentruleexecution.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := ireuo.mutation.Result(); ok {
+	if value, ok := _u.mutation.Result(); ok {
 		_spec.SetField(incidentruleexecution.FieldResult, field.TypeString, value)
 	}
-	if ireuo.mutation.ResultCleared() {
+	if _u.mutation.ResultCleared() {
 		_spec.ClearField(incidentruleexecution.FieldResult, field.TypeString)
 	}
-	if value, ok := ireuo.mutation.ErrorMessage(); ok {
+	if value, ok := _u.mutation.ErrorMessage(); ok {
 		_spec.SetField(incidentruleexecution.FieldErrorMessage, field.TypeString, value)
 	}
-	if ireuo.mutation.ErrorMessageCleared() {
+	if _u.mutation.ErrorMessageCleared() {
 		_spec.ClearField(incidentruleexecution.FieldErrorMessage, field.TypeString)
 	}
-	if value, ok := ireuo.mutation.StartedAt(); ok {
+	if value, ok := _u.mutation.StartedAt(); ok {
 		_spec.SetField(incidentruleexecution.FieldStartedAt, field.TypeTime, value)
 	}
-	if value, ok := ireuo.mutation.CompletedAt(); ok {
+	if value, ok := _u.mutation.CompletedAt(); ok {
 		_spec.SetField(incidentruleexecution.FieldCompletedAt, field.TypeTime, value)
 	}
-	if ireuo.mutation.CompletedAtCleared() {
+	if _u.mutation.CompletedAtCleared() {
 		_spec.ClearField(incidentruleexecution.FieldCompletedAt, field.TypeTime)
 	}
-	if value, ok := ireuo.mutation.ExecutionTimeMs(); ok {
+	if value, ok := _u.mutation.ExecutionTimeMs(); ok {
 		_spec.SetField(incidentruleexecution.FieldExecutionTimeMs, field.TypeInt, value)
 	}
-	if value, ok := ireuo.mutation.AddedExecutionTimeMs(); ok {
+	if value, ok := _u.mutation.AddedExecutionTimeMs(); ok {
 		_spec.AddField(incidentruleexecution.FieldExecutionTimeMs, field.TypeInt, value)
 	}
-	if ireuo.mutation.ExecutionTimeMsCleared() {
+	if _u.mutation.ExecutionTimeMsCleared() {
 		_spec.ClearField(incidentruleexecution.FieldExecutionTimeMs, field.TypeInt)
 	}
-	if value, ok := ireuo.mutation.InputData(); ok {
+	if value, ok := _u.mutation.InputData(); ok {
 		_spec.SetField(incidentruleexecution.FieldInputData, field.TypeJSON, value)
 	}
-	if ireuo.mutation.InputDataCleared() {
+	if _u.mutation.InputDataCleared() {
 		_spec.ClearField(incidentruleexecution.FieldInputData, field.TypeJSON)
 	}
-	if value, ok := ireuo.mutation.OutputData(); ok {
+	if value, ok := _u.mutation.OutputData(); ok {
 		_spec.SetField(incidentruleexecution.FieldOutputData, field.TypeJSON, value)
 	}
-	if ireuo.mutation.OutputDataCleared() {
+	if _u.mutation.OutputDataCleared() {
 		_spec.ClearField(incidentruleexecution.FieldOutputData, field.TypeJSON)
 	}
-	if value, ok := ireuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incidentruleexecution.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ireuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incidentruleexecution.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ireuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentruleexecution.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ireuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentruleexecution.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if ireuo.mutation.RuleCleared() {
+	if _u.mutation.RuleCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -859,7 +859,7 @@ func (ireuo *IncidentRuleExecutionUpdateOne) sqlSave(ctx context.Context) (_node
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ireuo.mutation.RuleIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RuleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -875,10 +875,10 @@ func (ireuo *IncidentRuleExecutionUpdateOne) sqlSave(ctx context.Context) (_node
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &IncidentRuleExecution{config: ireuo.config}
+	_node = &IncidentRuleExecution{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, ireuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incidentruleexecution.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -886,6 +886,6 @@ func (ireuo *IncidentRuleExecutionUpdateOne) sqlSave(ctx context.Context) (_node
 		}
 		return nil, err
 	}
-	ireuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

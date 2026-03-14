@@ -22,120 +22,120 @@ type CloudAccountCreate struct {
 }
 
 // SetProvider sets the "provider" field.
-func (cac *CloudAccountCreate) SetProvider(s string) *CloudAccountCreate {
-	cac.mutation.SetProvider(s)
-	return cac
+func (_c *CloudAccountCreate) SetProvider(v string) *CloudAccountCreate {
+	_c.mutation.SetProvider(v)
+	return _c
 }
 
 // SetAccountID sets the "account_id" field.
-func (cac *CloudAccountCreate) SetAccountID(s string) *CloudAccountCreate {
-	cac.mutation.SetAccountID(s)
-	return cac
+func (_c *CloudAccountCreate) SetAccountID(v string) *CloudAccountCreate {
+	_c.mutation.SetAccountID(v)
+	return _c
 }
 
 // SetAccountName sets the "account_name" field.
-func (cac *CloudAccountCreate) SetAccountName(s string) *CloudAccountCreate {
-	cac.mutation.SetAccountName(s)
-	return cac
+func (_c *CloudAccountCreate) SetAccountName(v string) *CloudAccountCreate {
+	_c.mutation.SetAccountName(v)
+	return _c
 }
 
 // SetCredentialRef sets the "credential_ref" field.
-func (cac *CloudAccountCreate) SetCredentialRef(s string) *CloudAccountCreate {
-	cac.mutation.SetCredentialRef(s)
-	return cac
+func (_c *CloudAccountCreate) SetCredentialRef(v string) *CloudAccountCreate {
+	_c.mutation.SetCredentialRef(v)
+	return _c
 }
 
 // SetNillableCredentialRef sets the "credential_ref" field if the given value is not nil.
-func (cac *CloudAccountCreate) SetNillableCredentialRef(s *string) *CloudAccountCreate {
-	if s != nil {
-		cac.SetCredentialRef(*s)
+func (_c *CloudAccountCreate) SetNillableCredentialRef(v *string) *CloudAccountCreate {
+	if v != nil {
+		_c.SetCredentialRef(*v)
 	}
-	return cac
+	return _c
 }
 
 // SetRegionWhitelist sets the "region_whitelist" field.
-func (cac *CloudAccountCreate) SetRegionWhitelist(s []string) *CloudAccountCreate {
-	cac.mutation.SetRegionWhitelist(s)
-	return cac
+func (_c *CloudAccountCreate) SetRegionWhitelist(v []string) *CloudAccountCreate {
+	_c.mutation.SetRegionWhitelist(v)
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (cac *CloudAccountCreate) SetIsActive(b bool) *CloudAccountCreate {
-	cac.mutation.SetIsActive(b)
-	return cac
+func (_c *CloudAccountCreate) SetIsActive(v bool) *CloudAccountCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (cac *CloudAccountCreate) SetNillableIsActive(b *bool) *CloudAccountCreate {
-	if b != nil {
-		cac.SetIsActive(*b)
+func (_c *CloudAccountCreate) SetNillableIsActive(v *bool) *CloudAccountCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return cac
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cac *CloudAccountCreate) SetTenantID(i int) *CloudAccountCreate {
-	cac.mutation.SetTenantID(i)
-	return cac
+func (_c *CloudAccountCreate) SetTenantID(v int) *CloudAccountCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cac *CloudAccountCreate) SetCreatedAt(t time.Time) *CloudAccountCreate {
-	cac.mutation.SetCreatedAt(t)
-	return cac
+func (_c *CloudAccountCreate) SetCreatedAt(v time.Time) *CloudAccountCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cac *CloudAccountCreate) SetNillableCreatedAt(t *time.Time) *CloudAccountCreate {
-	if t != nil {
-		cac.SetCreatedAt(*t)
+func (_c *CloudAccountCreate) SetNillableCreatedAt(v *time.Time) *CloudAccountCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return cac
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cac *CloudAccountCreate) SetUpdatedAt(t time.Time) *CloudAccountCreate {
-	cac.mutation.SetUpdatedAt(t)
-	return cac
+func (_c *CloudAccountCreate) SetUpdatedAt(v time.Time) *CloudAccountCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (cac *CloudAccountCreate) SetNillableUpdatedAt(t *time.Time) *CloudAccountCreate {
-	if t != nil {
-		cac.SetUpdatedAt(*t)
+func (_c *CloudAccountCreate) SetNillableUpdatedAt(v *time.Time) *CloudAccountCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return cac
+	return _c
 }
 
 // AddResourceIDs adds the "resources" edge to the CloudResource entity by IDs.
-func (cac *CloudAccountCreate) AddResourceIDs(ids ...int) *CloudAccountCreate {
-	cac.mutation.AddResourceIDs(ids...)
-	return cac
+func (_c *CloudAccountCreate) AddResourceIDs(ids ...int) *CloudAccountCreate {
+	_c.mutation.AddResourceIDs(ids...)
+	return _c
 }
 
 // AddResources adds the "resources" edges to the CloudResource entity.
-func (cac *CloudAccountCreate) AddResources(c ...*CloudResource) *CloudAccountCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_c *CloudAccountCreate) AddResources(v ...*CloudResource) *CloudAccountCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cac.AddResourceIDs(ids...)
+	return _c.AddResourceIDs(ids...)
 }
 
 // Mutation returns the CloudAccountMutation object of the builder.
-func (cac *CloudAccountCreate) Mutation() *CloudAccountMutation {
-	return cac.mutation
+func (_c *CloudAccountCreate) Mutation() *CloudAccountMutation {
+	return _c.mutation
 }
 
 // Save creates the CloudAccount in the database.
-func (cac *CloudAccountCreate) Save(ctx context.Context) (*CloudAccount, error) {
-	cac.defaults()
-	return withHooks(ctx, cac.sqlSave, cac.mutation, cac.hooks)
+func (_c *CloudAccountCreate) Save(ctx context.Context) (*CloudAccount, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (cac *CloudAccountCreate) SaveX(ctx context.Context) *CloudAccount {
-	v, err := cac.Save(ctx)
+func (_c *CloudAccountCreate) SaveX(ctx context.Context) *CloudAccount {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -143,86 +143,86 @@ func (cac *CloudAccountCreate) SaveX(ctx context.Context) *CloudAccount {
 }
 
 // Exec executes the query.
-func (cac *CloudAccountCreate) Exec(ctx context.Context) error {
-	_, err := cac.Save(ctx)
+func (_c *CloudAccountCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cac *CloudAccountCreate) ExecX(ctx context.Context) {
-	if err := cac.Exec(ctx); err != nil {
+func (_c *CloudAccountCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cac *CloudAccountCreate) defaults() {
-	if _, ok := cac.mutation.IsActive(); !ok {
+func (_c *CloudAccountCreate) defaults() {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := cloudaccount.DefaultIsActive
-		cac.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := cac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := cloudaccount.DefaultCreatedAt()
-		cac.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := cac.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := cloudaccount.DefaultUpdatedAt()
-		cac.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cac *CloudAccountCreate) check() error {
-	if _, ok := cac.mutation.Provider(); !ok {
+func (_c *CloudAccountCreate) check() error {
+	if _, ok := _c.mutation.Provider(); !ok {
 		return &ValidationError{Name: "provider", err: errors.New(`ent: missing required field "CloudAccount.provider"`)}
 	}
-	if v, ok := cac.mutation.Provider(); ok {
+	if v, ok := _c.mutation.Provider(); ok {
 		if err := cloudaccount.ProviderValidator(v); err != nil {
 			return &ValidationError{Name: "provider", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.provider": %w`, err)}
 		}
 	}
-	if _, ok := cac.mutation.AccountID(); !ok {
+	if _, ok := _c.mutation.AccountID(); !ok {
 		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "CloudAccount.account_id"`)}
 	}
-	if v, ok := cac.mutation.AccountID(); ok {
+	if v, ok := _c.mutation.AccountID(); ok {
 		if err := cloudaccount.AccountIDValidator(v); err != nil {
 			return &ValidationError{Name: "account_id", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.account_id": %w`, err)}
 		}
 	}
-	if _, ok := cac.mutation.AccountName(); !ok {
+	if _, ok := _c.mutation.AccountName(); !ok {
 		return &ValidationError{Name: "account_name", err: errors.New(`ent: missing required field "CloudAccount.account_name"`)}
 	}
-	if v, ok := cac.mutation.AccountName(); ok {
+	if v, ok := _c.mutation.AccountName(); ok {
 		if err := cloudaccount.AccountNameValidator(v); err != nil {
 			return &ValidationError{Name: "account_name", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.account_name": %w`, err)}
 		}
 	}
-	if _, ok := cac.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "CloudAccount.is_active"`)}
 	}
-	if _, ok := cac.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "CloudAccount.tenant_id"`)}
 	}
-	if v, ok := cac.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := cloudaccount.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CloudAccount.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := cac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "CloudAccount.created_at"`)}
 	}
-	if _, ok := cac.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "CloudAccount.updated_at"`)}
 	}
 	return nil
 }
 
-func (cac *CloudAccountCreate) sqlSave(ctx context.Context) (*CloudAccount, error) {
-	if err := cac.check(); err != nil {
+func (_c *CloudAccountCreate) sqlSave(ctx context.Context) (*CloudAccount, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := cac.createSpec()
-	if err := sqlgraph.CreateNode(ctx, cac.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -230,53 +230,53 @@ func (cac *CloudAccountCreate) sqlSave(ctx context.Context) (*CloudAccount, erro
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	cac.mutation.id = &_node.ID
-	cac.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (cac *CloudAccountCreate) createSpec() (*CloudAccount, *sqlgraph.CreateSpec) {
+func (_c *CloudAccountCreate) createSpec() (*CloudAccount, *sqlgraph.CreateSpec) {
 	var (
-		_node = &CloudAccount{config: cac.config}
+		_node = &CloudAccount{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(cloudaccount.Table, sqlgraph.NewFieldSpec(cloudaccount.FieldID, field.TypeInt))
 	)
-	if value, ok := cac.mutation.Provider(); ok {
+	if value, ok := _c.mutation.Provider(); ok {
 		_spec.SetField(cloudaccount.FieldProvider, field.TypeString, value)
 		_node.Provider = value
 	}
-	if value, ok := cac.mutation.AccountID(); ok {
+	if value, ok := _c.mutation.AccountID(); ok {
 		_spec.SetField(cloudaccount.FieldAccountID, field.TypeString, value)
 		_node.AccountID = value
 	}
-	if value, ok := cac.mutation.AccountName(); ok {
+	if value, ok := _c.mutation.AccountName(); ok {
 		_spec.SetField(cloudaccount.FieldAccountName, field.TypeString, value)
 		_node.AccountName = value
 	}
-	if value, ok := cac.mutation.CredentialRef(); ok {
+	if value, ok := _c.mutation.CredentialRef(); ok {
 		_spec.SetField(cloudaccount.FieldCredentialRef, field.TypeString, value)
 		_node.CredentialRef = value
 	}
-	if value, ok := cac.mutation.RegionWhitelist(); ok {
+	if value, ok := _c.mutation.RegionWhitelist(); ok {
 		_spec.SetField(cloudaccount.FieldRegionWhitelist, field.TypeJSON, value)
 		_node.RegionWhitelist = value
 	}
-	if value, ok := cac.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(cloudaccount.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := cac.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(cloudaccount.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := cac.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(cloudaccount.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := cac.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(cloudaccount.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := cac.mutation.ResourcesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ResourcesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -303,16 +303,16 @@ type CloudAccountCreateBulk struct {
 }
 
 // Save creates the CloudAccount entities in the database.
-func (cacb *CloudAccountCreateBulk) Save(ctx context.Context) ([]*CloudAccount, error) {
-	if cacb.err != nil {
-		return nil, cacb.err
+func (_c *CloudAccountCreateBulk) Save(ctx context.Context) ([]*CloudAccount, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(cacb.builders))
-	nodes := make([]*CloudAccount, len(cacb.builders))
-	mutators := make([]Mutator, len(cacb.builders))
-	for i := range cacb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*CloudAccount, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := cacb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*CloudAccountMutation)
@@ -326,11 +326,11 @@ func (cacb *CloudAccountCreateBulk) Save(ctx context.Context) ([]*CloudAccount, 
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, cacb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, cacb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -354,7 +354,7 @@ func (cacb *CloudAccountCreateBulk) Save(ctx context.Context) ([]*CloudAccount, 
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, cacb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -362,8 +362,8 @@ func (cacb *CloudAccountCreateBulk) Save(ctx context.Context) ([]*CloudAccount, 
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cacb *CloudAccountCreateBulk) SaveX(ctx context.Context) []*CloudAccount {
-	v, err := cacb.Save(ctx)
+func (_c *CloudAccountCreateBulk) SaveX(ctx context.Context) []*CloudAccount {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -371,14 +371,14 @@ func (cacb *CloudAccountCreateBulk) SaveX(ctx context.Context) []*CloudAccount {
 }
 
 // Exec executes the query.
-func (cacb *CloudAccountCreateBulk) Exec(ctx context.Context) error {
-	_, err := cacb.Save(ctx)
+func (_c *CloudAccountCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cacb *CloudAccountCreateBulk) ExecX(ctx context.Context) {
-	if err := cacb.Exec(ctx); err != nil {
+func (_c *CloudAccountCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

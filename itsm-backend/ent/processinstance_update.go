@@ -28,471 +28,471 @@ type ProcessInstanceUpdate struct {
 }
 
 // Where appends a list predicates to the ProcessInstanceUpdate builder.
-func (piu *ProcessInstanceUpdate) Where(ps ...predicate.ProcessInstance) *ProcessInstanceUpdate {
-	piu.mutation.Where(ps...)
-	return piu
+func (_u *ProcessInstanceUpdate) Where(ps ...predicate.ProcessInstance) *ProcessInstanceUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (piu *ProcessInstanceUpdate) SetProcessInstanceID(s string) *ProcessInstanceUpdate {
-	piu.mutation.SetProcessInstanceID(s)
-	return piu
+func (_u *ProcessInstanceUpdate) SetProcessInstanceID(v string) *ProcessInstanceUpdate {
+	_u.mutation.SetProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableProcessInstanceID(s *string) *ProcessInstanceUpdate {
-	if s != nil {
-		piu.SetProcessInstanceID(*s)
+func (_u *ProcessInstanceUpdate) SetNillableProcessInstanceID(v *string) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetProcessInstanceID(*v)
 	}
-	return piu
+	return _u
 }
 
 // SetBusinessKey sets the "business_key" field.
-func (piu *ProcessInstanceUpdate) SetBusinessKey(s string) *ProcessInstanceUpdate {
-	piu.mutation.SetBusinessKey(s)
-	return piu
+func (_u *ProcessInstanceUpdate) SetBusinessKey(v string) *ProcessInstanceUpdate {
+	_u.mutation.SetBusinessKey(v)
+	return _u
 }
 
 // SetNillableBusinessKey sets the "business_key" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableBusinessKey(s *string) *ProcessInstanceUpdate {
-	if s != nil {
-		piu.SetBusinessKey(*s)
+func (_u *ProcessInstanceUpdate) SetNillableBusinessKey(v *string) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetBusinessKey(*v)
 	}
-	return piu
+	return _u
 }
 
 // ClearBusinessKey clears the value of the "business_key" field.
-func (piu *ProcessInstanceUpdate) ClearBusinessKey() *ProcessInstanceUpdate {
-	piu.mutation.ClearBusinessKey()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearBusinessKey() *ProcessInstanceUpdate {
+	_u.mutation.ClearBusinessKey()
+	return _u
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
-func (piu *ProcessInstanceUpdate) SetProcessDefinitionKey(s string) *ProcessInstanceUpdate {
-	piu.mutation.SetProcessDefinitionKey(s)
-	return piu
+func (_u *ProcessInstanceUpdate) SetProcessDefinitionKey(v string) *ProcessInstanceUpdate {
+	_u.mutation.SetProcessDefinitionKey(v)
+	return _u
 }
 
 // SetNillableProcessDefinitionKey sets the "process_definition_key" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableProcessDefinitionKey(s *string) *ProcessInstanceUpdate {
-	if s != nil {
-		piu.SetProcessDefinitionKey(*s)
+func (_u *ProcessInstanceUpdate) SetNillableProcessDefinitionKey(v *string) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetProcessDefinitionKey(*v)
 	}
-	return piu
+	return _u
 }
 
 // SetProcessDefinitionID sets the "process_definition_id" field.
-func (piu *ProcessInstanceUpdate) SetProcessDefinitionID(i int) *ProcessInstanceUpdate {
-	piu.mutation.SetProcessDefinitionID(i)
-	return piu
+func (_u *ProcessInstanceUpdate) SetProcessDefinitionID(v int) *ProcessInstanceUpdate {
+	_u.mutation.SetProcessDefinitionID(v)
+	return _u
 }
 
 // SetNillableProcessDefinitionID sets the "process_definition_id" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableProcessDefinitionID(i *int) *ProcessInstanceUpdate {
-	if i != nil {
-		piu.SetProcessDefinitionID(*i)
+func (_u *ProcessInstanceUpdate) SetNillableProcessDefinitionID(v *int) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetProcessDefinitionID(*v)
 	}
-	return piu
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (piu *ProcessInstanceUpdate) SetStatus(s string) *ProcessInstanceUpdate {
-	piu.mutation.SetStatus(s)
-	return piu
+func (_u *ProcessInstanceUpdate) SetStatus(v string) *ProcessInstanceUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableStatus(s *string) *ProcessInstanceUpdate {
-	if s != nil {
-		piu.SetStatus(*s)
+func (_u *ProcessInstanceUpdate) SetNillableStatus(v *string) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return piu
+	return _u
 }
 
 // SetCurrentActivityID sets the "current_activity_id" field.
-func (piu *ProcessInstanceUpdate) SetCurrentActivityID(s string) *ProcessInstanceUpdate {
-	piu.mutation.SetCurrentActivityID(s)
-	return piu
+func (_u *ProcessInstanceUpdate) SetCurrentActivityID(v string) *ProcessInstanceUpdate {
+	_u.mutation.SetCurrentActivityID(v)
+	return _u
 }
 
 // SetNillableCurrentActivityID sets the "current_activity_id" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableCurrentActivityID(s *string) *ProcessInstanceUpdate {
-	if s != nil {
-		piu.SetCurrentActivityID(*s)
+func (_u *ProcessInstanceUpdate) SetNillableCurrentActivityID(v *string) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetCurrentActivityID(*v)
 	}
-	return piu
+	return _u
 }
 
 // ClearCurrentActivityID clears the value of the "current_activity_id" field.
-func (piu *ProcessInstanceUpdate) ClearCurrentActivityID() *ProcessInstanceUpdate {
-	piu.mutation.ClearCurrentActivityID()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearCurrentActivityID() *ProcessInstanceUpdate {
+	_u.mutation.ClearCurrentActivityID()
+	return _u
 }
 
 // SetCurrentActivityName sets the "current_activity_name" field.
-func (piu *ProcessInstanceUpdate) SetCurrentActivityName(s string) *ProcessInstanceUpdate {
-	piu.mutation.SetCurrentActivityName(s)
-	return piu
+func (_u *ProcessInstanceUpdate) SetCurrentActivityName(v string) *ProcessInstanceUpdate {
+	_u.mutation.SetCurrentActivityName(v)
+	return _u
 }
 
 // SetNillableCurrentActivityName sets the "current_activity_name" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableCurrentActivityName(s *string) *ProcessInstanceUpdate {
-	if s != nil {
-		piu.SetCurrentActivityName(*s)
+func (_u *ProcessInstanceUpdate) SetNillableCurrentActivityName(v *string) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetCurrentActivityName(*v)
 	}
-	return piu
+	return _u
 }
 
 // ClearCurrentActivityName clears the value of the "current_activity_name" field.
-func (piu *ProcessInstanceUpdate) ClearCurrentActivityName() *ProcessInstanceUpdate {
-	piu.mutation.ClearCurrentActivityName()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearCurrentActivityName() *ProcessInstanceUpdate {
+	_u.mutation.ClearCurrentActivityName()
+	return _u
 }
 
 // SetVariables sets the "variables" field.
-func (piu *ProcessInstanceUpdate) SetVariables(m map[string]interface{}) *ProcessInstanceUpdate {
-	piu.mutation.SetVariables(m)
-	return piu
+func (_u *ProcessInstanceUpdate) SetVariables(v map[string]interface{}) *ProcessInstanceUpdate {
+	_u.mutation.SetVariables(v)
+	return _u
 }
 
 // ClearVariables clears the value of the "variables" field.
-func (piu *ProcessInstanceUpdate) ClearVariables() *ProcessInstanceUpdate {
-	piu.mutation.ClearVariables()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearVariables() *ProcessInstanceUpdate {
+	_u.mutation.ClearVariables()
+	return _u
 }
 
 // SetStartTime sets the "start_time" field.
-func (piu *ProcessInstanceUpdate) SetStartTime(t time.Time) *ProcessInstanceUpdate {
-	piu.mutation.SetStartTime(t)
-	return piu
+func (_u *ProcessInstanceUpdate) SetStartTime(v time.Time) *ProcessInstanceUpdate {
+	_u.mutation.SetStartTime(v)
+	return _u
 }
 
 // SetNillableStartTime sets the "start_time" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableStartTime(t *time.Time) *ProcessInstanceUpdate {
-	if t != nil {
-		piu.SetStartTime(*t)
+func (_u *ProcessInstanceUpdate) SetNillableStartTime(v *time.Time) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetStartTime(*v)
 	}
-	return piu
+	return _u
 }
 
 // SetEndTime sets the "end_time" field.
-func (piu *ProcessInstanceUpdate) SetEndTime(t time.Time) *ProcessInstanceUpdate {
-	piu.mutation.SetEndTime(t)
-	return piu
+func (_u *ProcessInstanceUpdate) SetEndTime(v time.Time) *ProcessInstanceUpdate {
+	_u.mutation.SetEndTime(v)
+	return _u
 }
 
 // SetNillableEndTime sets the "end_time" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableEndTime(t *time.Time) *ProcessInstanceUpdate {
-	if t != nil {
-		piu.SetEndTime(*t)
+func (_u *ProcessInstanceUpdate) SetNillableEndTime(v *time.Time) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetEndTime(*v)
 	}
-	return piu
+	return _u
 }
 
 // ClearEndTime clears the value of the "end_time" field.
-func (piu *ProcessInstanceUpdate) ClearEndTime() *ProcessInstanceUpdate {
-	piu.mutation.ClearEndTime()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearEndTime() *ProcessInstanceUpdate {
+	_u.mutation.ClearEndTime()
+	return _u
 }
 
 // SetSuspendedTime sets the "suspended_time" field.
-func (piu *ProcessInstanceUpdate) SetSuspendedTime(t time.Time) *ProcessInstanceUpdate {
-	piu.mutation.SetSuspendedTime(t)
-	return piu
+func (_u *ProcessInstanceUpdate) SetSuspendedTime(v time.Time) *ProcessInstanceUpdate {
+	_u.mutation.SetSuspendedTime(v)
+	return _u
 }
 
 // SetNillableSuspendedTime sets the "suspended_time" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableSuspendedTime(t *time.Time) *ProcessInstanceUpdate {
-	if t != nil {
-		piu.SetSuspendedTime(*t)
+func (_u *ProcessInstanceUpdate) SetNillableSuspendedTime(v *time.Time) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetSuspendedTime(*v)
 	}
-	return piu
+	return _u
 }
 
 // ClearSuspendedTime clears the value of the "suspended_time" field.
-func (piu *ProcessInstanceUpdate) ClearSuspendedTime() *ProcessInstanceUpdate {
-	piu.mutation.ClearSuspendedTime()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearSuspendedTime() *ProcessInstanceUpdate {
+	_u.mutation.ClearSuspendedTime()
+	return _u
 }
 
 // SetSuspendedReason sets the "suspended_reason" field.
-func (piu *ProcessInstanceUpdate) SetSuspendedReason(s string) *ProcessInstanceUpdate {
-	piu.mutation.SetSuspendedReason(s)
-	return piu
+func (_u *ProcessInstanceUpdate) SetSuspendedReason(v string) *ProcessInstanceUpdate {
+	_u.mutation.SetSuspendedReason(v)
+	return _u
 }
 
 // SetNillableSuspendedReason sets the "suspended_reason" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableSuspendedReason(s *string) *ProcessInstanceUpdate {
-	if s != nil {
-		piu.SetSuspendedReason(*s)
+func (_u *ProcessInstanceUpdate) SetNillableSuspendedReason(v *string) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetSuspendedReason(*v)
 	}
-	return piu
+	return _u
 }
 
 // ClearSuspendedReason clears the value of the "suspended_reason" field.
-func (piu *ProcessInstanceUpdate) ClearSuspendedReason() *ProcessInstanceUpdate {
-	piu.mutation.ClearSuspendedReason()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearSuspendedReason() *ProcessInstanceUpdate {
+	_u.mutation.ClearSuspendedReason()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (piu *ProcessInstanceUpdate) SetTenantID(i int) *ProcessInstanceUpdate {
-	piu.mutation.ResetTenantID()
-	piu.mutation.SetTenantID(i)
-	return piu
+func (_u *ProcessInstanceUpdate) SetTenantID(v int) *ProcessInstanceUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableTenantID(i *int) *ProcessInstanceUpdate {
-	if i != nil {
-		piu.SetTenantID(*i)
+func (_u *ProcessInstanceUpdate) SetNillableTenantID(v *int) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return piu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (piu *ProcessInstanceUpdate) AddTenantID(i int) *ProcessInstanceUpdate {
-	piu.mutation.AddTenantID(i)
-	return piu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessInstanceUpdate) AddTenantID(v int) *ProcessInstanceUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetInitiator sets the "initiator" field.
-func (piu *ProcessInstanceUpdate) SetInitiator(s string) *ProcessInstanceUpdate {
-	piu.mutation.SetInitiator(s)
-	return piu
+func (_u *ProcessInstanceUpdate) SetInitiator(v string) *ProcessInstanceUpdate {
+	_u.mutation.SetInitiator(v)
+	return _u
 }
 
 // SetNillableInitiator sets the "initiator" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableInitiator(s *string) *ProcessInstanceUpdate {
-	if s != nil {
-		piu.SetInitiator(*s)
+func (_u *ProcessInstanceUpdate) SetNillableInitiator(v *string) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetInitiator(*v)
 	}
-	return piu
+	return _u
 }
 
 // ClearInitiator clears the value of the "initiator" field.
-func (piu *ProcessInstanceUpdate) ClearInitiator() *ProcessInstanceUpdate {
-	piu.mutation.ClearInitiator()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearInitiator() *ProcessInstanceUpdate {
+	_u.mutation.ClearInitiator()
+	return _u
 }
 
 // SetParentProcessInstanceID sets the "parent_process_instance_id" field.
-func (piu *ProcessInstanceUpdate) SetParentProcessInstanceID(s string) *ProcessInstanceUpdate {
-	piu.mutation.SetParentProcessInstanceID(s)
-	return piu
+func (_u *ProcessInstanceUpdate) SetParentProcessInstanceID(v string) *ProcessInstanceUpdate {
+	_u.mutation.SetParentProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableParentProcessInstanceID sets the "parent_process_instance_id" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableParentProcessInstanceID(s *string) *ProcessInstanceUpdate {
-	if s != nil {
-		piu.SetParentProcessInstanceID(*s)
+func (_u *ProcessInstanceUpdate) SetNillableParentProcessInstanceID(v *string) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetParentProcessInstanceID(*v)
 	}
-	return piu
+	return _u
 }
 
 // ClearParentProcessInstanceID clears the value of the "parent_process_instance_id" field.
-func (piu *ProcessInstanceUpdate) ClearParentProcessInstanceID() *ProcessInstanceUpdate {
-	piu.mutation.ClearParentProcessInstanceID()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearParentProcessInstanceID() *ProcessInstanceUpdate {
+	_u.mutation.ClearParentProcessInstanceID()
+	return _u
 }
 
 // SetRootProcessInstanceID sets the "root_process_instance_id" field.
-func (piu *ProcessInstanceUpdate) SetRootProcessInstanceID(s string) *ProcessInstanceUpdate {
-	piu.mutation.SetRootProcessInstanceID(s)
-	return piu
+func (_u *ProcessInstanceUpdate) SetRootProcessInstanceID(v string) *ProcessInstanceUpdate {
+	_u.mutation.SetRootProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableRootProcessInstanceID sets the "root_process_instance_id" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableRootProcessInstanceID(s *string) *ProcessInstanceUpdate {
-	if s != nil {
-		piu.SetRootProcessInstanceID(*s)
+func (_u *ProcessInstanceUpdate) SetNillableRootProcessInstanceID(v *string) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetRootProcessInstanceID(*v)
 	}
-	return piu
+	return _u
 }
 
 // ClearRootProcessInstanceID clears the value of the "root_process_instance_id" field.
-func (piu *ProcessInstanceUpdate) ClearRootProcessInstanceID() *ProcessInstanceUpdate {
-	piu.mutation.ClearRootProcessInstanceID()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearRootProcessInstanceID() *ProcessInstanceUpdate {
+	_u.mutation.ClearRootProcessInstanceID()
+	return _u
 }
 
 // SetStateSnapshot sets the "state_snapshot" field.
-func (piu *ProcessInstanceUpdate) SetStateSnapshot(u []uint8) *ProcessInstanceUpdate {
-	piu.mutation.SetStateSnapshot(u)
-	return piu
+func (_u *ProcessInstanceUpdate) SetStateSnapshot(v []uint8) *ProcessInstanceUpdate {
+	_u.mutation.SetStateSnapshot(v)
+	return _u
 }
 
-// AppendStateSnapshot appends u to the "state_snapshot" field.
-func (piu *ProcessInstanceUpdate) AppendStateSnapshot(u []uint8) *ProcessInstanceUpdate {
-	piu.mutation.AppendStateSnapshot(u)
-	return piu
+// AppendStateSnapshot appends value to the "state_snapshot" field.
+func (_u *ProcessInstanceUpdate) AppendStateSnapshot(v []uint8) *ProcessInstanceUpdate {
+	_u.mutation.AppendStateSnapshot(v)
+	return _u
 }
 
 // ClearStateSnapshot clears the value of the "state_snapshot" field.
-func (piu *ProcessInstanceUpdate) ClearStateSnapshot() *ProcessInstanceUpdate {
-	piu.mutation.ClearStateSnapshot()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearStateSnapshot() *ProcessInstanceUpdate {
+	_u.mutation.ClearStateSnapshot()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (piu *ProcessInstanceUpdate) SetCreatedAt(t time.Time) *ProcessInstanceUpdate {
-	piu.mutation.SetCreatedAt(t)
-	return piu
+func (_u *ProcessInstanceUpdate) SetCreatedAt(v time.Time) *ProcessInstanceUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableCreatedAt(t *time.Time) *ProcessInstanceUpdate {
-	if t != nil {
-		piu.SetCreatedAt(*t)
+func (_u *ProcessInstanceUpdate) SetNillableCreatedAt(v *time.Time) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return piu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (piu *ProcessInstanceUpdate) SetUpdatedAt(t time.Time) *ProcessInstanceUpdate {
-	piu.mutation.SetUpdatedAt(t)
-	return piu
+func (_u *ProcessInstanceUpdate) SetUpdatedAt(v time.Time) *ProcessInstanceUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddProcessTaskIDs adds the "process_tasks" edge to the ProcessTask entity by IDs.
-func (piu *ProcessInstanceUpdate) AddProcessTaskIDs(ids ...int) *ProcessInstanceUpdate {
-	piu.mutation.AddProcessTaskIDs(ids...)
-	return piu
+func (_u *ProcessInstanceUpdate) AddProcessTaskIDs(ids ...int) *ProcessInstanceUpdate {
+	_u.mutation.AddProcessTaskIDs(ids...)
+	return _u
 }
 
 // AddProcessTasks adds the "process_tasks" edges to the ProcessTask entity.
-func (piu *ProcessInstanceUpdate) AddProcessTasks(p ...*ProcessTask) *ProcessInstanceUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdate) AddProcessTasks(v ...*ProcessTask) *ProcessInstanceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piu.AddProcessTaskIDs(ids...)
+	return _u.AddProcessTaskIDs(ids...)
 }
 
 // AddProcessVariableIDs adds the "process_variables" edge to the ProcessVariable entity by IDs.
-func (piu *ProcessInstanceUpdate) AddProcessVariableIDs(ids ...int) *ProcessInstanceUpdate {
-	piu.mutation.AddProcessVariableIDs(ids...)
-	return piu
+func (_u *ProcessInstanceUpdate) AddProcessVariableIDs(ids ...int) *ProcessInstanceUpdate {
+	_u.mutation.AddProcessVariableIDs(ids...)
+	return _u
 }
 
 // AddProcessVariables adds the "process_variables" edges to the ProcessVariable entity.
-func (piu *ProcessInstanceUpdate) AddProcessVariables(p ...*ProcessVariable) *ProcessInstanceUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdate) AddProcessVariables(v ...*ProcessVariable) *ProcessInstanceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piu.AddProcessVariableIDs(ids...)
+	return _u.AddProcessVariableIDs(ids...)
 }
 
 // AddExecutionHistoryIDs adds the "execution_history" edge to the ProcessExecutionHistory entity by IDs.
-func (piu *ProcessInstanceUpdate) AddExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdate {
-	piu.mutation.AddExecutionHistoryIDs(ids...)
-	return piu
+func (_u *ProcessInstanceUpdate) AddExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdate {
+	_u.mutation.AddExecutionHistoryIDs(ids...)
+	return _u
 }
 
 // AddExecutionHistory adds the "execution_history" edges to the ProcessExecutionHistory entity.
-func (piu *ProcessInstanceUpdate) AddExecutionHistory(p ...*ProcessExecutionHistory) *ProcessInstanceUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdate) AddExecutionHistory(v ...*ProcessExecutionHistory) *ProcessInstanceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piu.AddExecutionHistoryIDs(ids...)
+	return _u.AddExecutionHistoryIDs(ids...)
 }
 
 // SetDefinitionID sets the "definition" edge to the ProcessDefinition entity by ID.
-func (piu *ProcessInstanceUpdate) SetDefinitionID(id int) *ProcessInstanceUpdate {
-	piu.mutation.SetDefinitionID(id)
-	return piu
+func (_u *ProcessInstanceUpdate) SetDefinitionID(id int) *ProcessInstanceUpdate {
+	_u.mutation.SetDefinitionID(id)
+	return _u
 }
 
 // SetDefinition sets the "definition" edge to the ProcessDefinition entity.
-func (piu *ProcessInstanceUpdate) SetDefinition(p *ProcessDefinition) *ProcessInstanceUpdate {
-	return piu.SetDefinitionID(p.ID)
+func (_u *ProcessInstanceUpdate) SetDefinition(v *ProcessDefinition) *ProcessInstanceUpdate {
+	return _u.SetDefinitionID(v.ID)
 }
 
 // Mutation returns the ProcessInstanceMutation object of the builder.
-func (piu *ProcessInstanceUpdate) Mutation() *ProcessInstanceMutation {
-	return piu.mutation
+func (_u *ProcessInstanceUpdate) Mutation() *ProcessInstanceMutation {
+	return _u.mutation
 }
 
 // ClearProcessTasks clears all "process_tasks" edges to the ProcessTask entity.
-func (piu *ProcessInstanceUpdate) ClearProcessTasks() *ProcessInstanceUpdate {
-	piu.mutation.ClearProcessTasks()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearProcessTasks() *ProcessInstanceUpdate {
+	_u.mutation.ClearProcessTasks()
+	return _u
 }
 
 // RemoveProcessTaskIDs removes the "process_tasks" edge to ProcessTask entities by IDs.
-func (piu *ProcessInstanceUpdate) RemoveProcessTaskIDs(ids ...int) *ProcessInstanceUpdate {
-	piu.mutation.RemoveProcessTaskIDs(ids...)
-	return piu
+func (_u *ProcessInstanceUpdate) RemoveProcessTaskIDs(ids ...int) *ProcessInstanceUpdate {
+	_u.mutation.RemoveProcessTaskIDs(ids...)
+	return _u
 }
 
 // RemoveProcessTasks removes "process_tasks" edges to ProcessTask entities.
-func (piu *ProcessInstanceUpdate) RemoveProcessTasks(p ...*ProcessTask) *ProcessInstanceUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdate) RemoveProcessTasks(v ...*ProcessTask) *ProcessInstanceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piu.RemoveProcessTaskIDs(ids...)
+	return _u.RemoveProcessTaskIDs(ids...)
 }
 
 // ClearProcessVariables clears all "process_variables" edges to the ProcessVariable entity.
-func (piu *ProcessInstanceUpdate) ClearProcessVariables() *ProcessInstanceUpdate {
-	piu.mutation.ClearProcessVariables()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearProcessVariables() *ProcessInstanceUpdate {
+	_u.mutation.ClearProcessVariables()
+	return _u
 }
 
 // RemoveProcessVariableIDs removes the "process_variables" edge to ProcessVariable entities by IDs.
-func (piu *ProcessInstanceUpdate) RemoveProcessVariableIDs(ids ...int) *ProcessInstanceUpdate {
-	piu.mutation.RemoveProcessVariableIDs(ids...)
-	return piu
+func (_u *ProcessInstanceUpdate) RemoveProcessVariableIDs(ids ...int) *ProcessInstanceUpdate {
+	_u.mutation.RemoveProcessVariableIDs(ids...)
+	return _u
 }
 
 // RemoveProcessVariables removes "process_variables" edges to ProcessVariable entities.
-func (piu *ProcessInstanceUpdate) RemoveProcessVariables(p ...*ProcessVariable) *ProcessInstanceUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdate) RemoveProcessVariables(v ...*ProcessVariable) *ProcessInstanceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piu.RemoveProcessVariableIDs(ids...)
+	return _u.RemoveProcessVariableIDs(ids...)
 }
 
 // ClearExecutionHistory clears all "execution_history" edges to the ProcessExecutionHistory entity.
-func (piu *ProcessInstanceUpdate) ClearExecutionHistory() *ProcessInstanceUpdate {
-	piu.mutation.ClearExecutionHistory()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearExecutionHistory() *ProcessInstanceUpdate {
+	_u.mutation.ClearExecutionHistory()
+	return _u
 }
 
 // RemoveExecutionHistoryIDs removes the "execution_history" edge to ProcessExecutionHistory entities by IDs.
-func (piu *ProcessInstanceUpdate) RemoveExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdate {
-	piu.mutation.RemoveExecutionHistoryIDs(ids...)
-	return piu
+func (_u *ProcessInstanceUpdate) RemoveExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdate {
+	_u.mutation.RemoveExecutionHistoryIDs(ids...)
+	return _u
 }
 
 // RemoveExecutionHistory removes "execution_history" edges to ProcessExecutionHistory entities.
-func (piu *ProcessInstanceUpdate) RemoveExecutionHistory(p ...*ProcessExecutionHistory) *ProcessInstanceUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdate) RemoveExecutionHistory(v ...*ProcessExecutionHistory) *ProcessInstanceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piu.RemoveExecutionHistoryIDs(ids...)
+	return _u.RemoveExecutionHistoryIDs(ids...)
 }
 
 // ClearDefinition clears the "definition" edge to the ProcessDefinition entity.
-func (piu *ProcessInstanceUpdate) ClearDefinition() *ProcessInstanceUpdate {
-	piu.mutation.ClearDefinition()
-	return piu
+func (_u *ProcessInstanceUpdate) ClearDefinition() *ProcessInstanceUpdate {
+	_u.mutation.ClearDefinition()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (piu *ProcessInstanceUpdate) Save(ctx context.Context) (int, error) {
-	piu.defaults()
-	return withHooks(ctx, piu.sqlSave, piu.mutation, piu.hooks)
+func (_u *ProcessInstanceUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (piu *ProcessInstanceUpdate) SaveX(ctx context.Context) int {
-	affected, err := piu.Save(ctx)
+func (_u *ProcessInstanceUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -500,162 +500,162 @@ func (piu *ProcessInstanceUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (piu *ProcessInstanceUpdate) Exec(ctx context.Context) error {
-	_, err := piu.Save(ctx)
+func (_u *ProcessInstanceUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (piu *ProcessInstanceUpdate) ExecX(ctx context.Context) {
-	if err := piu.Exec(ctx); err != nil {
+func (_u *ProcessInstanceUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (piu *ProcessInstanceUpdate) defaults() {
-	if _, ok := piu.mutation.UpdatedAt(); !ok {
+func (_u *ProcessInstanceUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := processinstance.UpdateDefaultUpdatedAt()
-		piu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (piu *ProcessInstanceUpdate) check() error {
-	if v, ok := piu.mutation.ProcessInstanceID(); ok {
+func (_u *ProcessInstanceUpdate) check() error {
+	if v, ok := _u.mutation.ProcessInstanceID(); ok {
 		if err := processinstance.ProcessInstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_instance_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.process_instance_id": %w`, err)}
 		}
 	}
-	if v, ok := piu.mutation.ProcessDefinitionKey(); ok {
+	if v, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		if err := processinstance.ProcessDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.process_definition_key": %w`, err)}
 		}
 	}
-	if v, ok := piu.mutation.ProcessDefinitionID(); ok {
+	if v, ok := _u.mutation.ProcessDefinitionID(); ok {
 		if err := processinstance.ProcessDefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.process_definition_id": %w`, err)}
 		}
 	}
-	if v, ok := piu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processinstance.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.tenant_id": %w`, err)}
 		}
 	}
-	if piu.mutation.DefinitionCleared() && len(piu.mutation.DefinitionIDs()) > 0 {
+	if _u.mutation.DefinitionCleared() && len(_u.mutation.DefinitionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessInstance.definition"`)
 	}
 	return nil
 }
 
-func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := piu.check(); err != nil {
-		return n, err
+func (_u *ProcessInstanceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processinstance.Table, processinstance.Columns, sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt))
-	if ps := piu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := piu.mutation.ProcessInstanceID(); ok {
+	if value, ok := _u.mutation.ProcessInstanceID(); ok {
 		_spec.SetField(processinstance.FieldProcessInstanceID, field.TypeString, value)
 	}
-	if value, ok := piu.mutation.BusinessKey(); ok {
+	if value, ok := _u.mutation.BusinessKey(); ok {
 		_spec.SetField(processinstance.FieldBusinessKey, field.TypeString, value)
 	}
-	if piu.mutation.BusinessKeyCleared() {
+	if _u.mutation.BusinessKeyCleared() {
 		_spec.ClearField(processinstance.FieldBusinessKey, field.TypeString)
 	}
-	if value, ok := piu.mutation.ProcessDefinitionKey(); ok {
+	if value, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processinstance.FieldProcessDefinitionKey, field.TypeString, value)
 	}
-	if value, ok := piu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(processinstance.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := piu.mutation.CurrentActivityID(); ok {
+	if value, ok := _u.mutation.CurrentActivityID(); ok {
 		_spec.SetField(processinstance.FieldCurrentActivityID, field.TypeString, value)
 	}
-	if piu.mutation.CurrentActivityIDCleared() {
+	if _u.mutation.CurrentActivityIDCleared() {
 		_spec.ClearField(processinstance.FieldCurrentActivityID, field.TypeString)
 	}
-	if value, ok := piu.mutation.CurrentActivityName(); ok {
+	if value, ok := _u.mutation.CurrentActivityName(); ok {
 		_spec.SetField(processinstance.FieldCurrentActivityName, field.TypeString, value)
 	}
-	if piu.mutation.CurrentActivityNameCleared() {
+	if _u.mutation.CurrentActivityNameCleared() {
 		_spec.ClearField(processinstance.FieldCurrentActivityName, field.TypeString)
 	}
-	if value, ok := piu.mutation.Variables(); ok {
+	if value, ok := _u.mutation.Variables(); ok {
 		_spec.SetField(processinstance.FieldVariables, field.TypeJSON, value)
 	}
-	if piu.mutation.VariablesCleared() {
+	if _u.mutation.VariablesCleared() {
 		_spec.ClearField(processinstance.FieldVariables, field.TypeJSON)
 	}
-	if value, ok := piu.mutation.StartTime(); ok {
+	if value, ok := _u.mutation.StartTime(); ok {
 		_spec.SetField(processinstance.FieldStartTime, field.TypeTime, value)
 	}
-	if value, ok := piu.mutation.EndTime(); ok {
+	if value, ok := _u.mutation.EndTime(); ok {
 		_spec.SetField(processinstance.FieldEndTime, field.TypeTime, value)
 	}
-	if piu.mutation.EndTimeCleared() {
+	if _u.mutation.EndTimeCleared() {
 		_spec.ClearField(processinstance.FieldEndTime, field.TypeTime)
 	}
-	if value, ok := piu.mutation.SuspendedTime(); ok {
+	if value, ok := _u.mutation.SuspendedTime(); ok {
 		_spec.SetField(processinstance.FieldSuspendedTime, field.TypeTime, value)
 	}
-	if piu.mutation.SuspendedTimeCleared() {
+	if _u.mutation.SuspendedTimeCleared() {
 		_spec.ClearField(processinstance.FieldSuspendedTime, field.TypeTime)
 	}
-	if value, ok := piu.mutation.SuspendedReason(); ok {
+	if value, ok := _u.mutation.SuspendedReason(); ok {
 		_spec.SetField(processinstance.FieldSuspendedReason, field.TypeString, value)
 	}
-	if piu.mutation.SuspendedReasonCleared() {
+	if _u.mutation.SuspendedReasonCleared() {
 		_spec.ClearField(processinstance.FieldSuspendedReason, field.TypeString)
 	}
-	if value, ok := piu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processinstance.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := piu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processinstance.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := piu.mutation.Initiator(); ok {
+	if value, ok := _u.mutation.Initiator(); ok {
 		_spec.SetField(processinstance.FieldInitiator, field.TypeString, value)
 	}
-	if piu.mutation.InitiatorCleared() {
+	if _u.mutation.InitiatorCleared() {
 		_spec.ClearField(processinstance.FieldInitiator, field.TypeString)
 	}
-	if value, ok := piu.mutation.ParentProcessInstanceID(); ok {
+	if value, ok := _u.mutation.ParentProcessInstanceID(); ok {
 		_spec.SetField(processinstance.FieldParentProcessInstanceID, field.TypeString, value)
 	}
-	if piu.mutation.ParentProcessInstanceIDCleared() {
+	if _u.mutation.ParentProcessInstanceIDCleared() {
 		_spec.ClearField(processinstance.FieldParentProcessInstanceID, field.TypeString)
 	}
-	if value, ok := piu.mutation.RootProcessInstanceID(); ok {
+	if value, ok := _u.mutation.RootProcessInstanceID(); ok {
 		_spec.SetField(processinstance.FieldRootProcessInstanceID, field.TypeString, value)
 	}
-	if piu.mutation.RootProcessInstanceIDCleared() {
+	if _u.mutation.RootProcessInstanceIDCleared() {
 		_spec.ClearField(processinstance.FieldRootProcessInstanceID, field.TypeString)
 	}
-	if value, ok := piu.mutation.StateSnapshot(); ok {
+	if value, ok := _u.mutation.StateSnapshot(); ok {
 		_spec.SetField(processinstance.FieldStateSnapshot, field.TypeJSON, value)
 	}
-	if value, ok := piu.mutation.AppendedStateSnapshot(); ok {
+	if value, ok := _u.mutation.AppendedStateSnapshot(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, processinstance.FieldStateSnapshot, value)
 		})
 	}
-	if piu.mutation.StateSnapshotCleared() {
+	if _u.mutation.StateSnapshotCleared() {
 		_spec.ClearField(processinstance.FieldStateSnapshot, field.TypeJSON)
 	}
-	if value, ok := piu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processinstance.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := piu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(processinstance.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if piu.mutation.ProcessTasksCleared() {
+	if _u.mutation.ProcessTasksCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -668,7 +668,7 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piu.mutation.RemovedProcessTasksIDs(); len(nodes) > 0 && !piu.mutation.ProcessTasksCleared() {
+	if nodes := _u.mutation.RemovedProcessTasksIDs(); len(nodes) > 0 && !_u.mutation.ProcessTasksCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -684,7 +684,7 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piu.mutation.ProcessTasksIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessTasksIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -700,7 +700,7 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if piu.mutation.ProcessVariablesCleared() {
+	if _u.mutation.ProcessVariablesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -713,7 +713,7 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piu.mutation.RemovedProcessVariablesIDs(); len(nodes) > 0 && !piu.mutation.ProcessVariablesCleared() {
+	if nodes := _u.mutation.RemovedProcessVariablesIDs(); len(nodes) > 0 && !_u.mutation.ProcessVariablesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -729,7 +729,7 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piu.mutation.ProcessVariablesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessVariablesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -745,7 +745,7 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if piu.mutation.ExecutionHistoryCleared() {
+	if _u.mutation.ExecutionHistoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -758,7 +758,7 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piu.mutation.RemovedExecutionHistoryIDs(); len(nodes) > 0 && !piu.mutation.ExecutionHistoryCleared() {
+	if nodes := _u.mutation.RemovedExecutionHistoryIDs(); len(nodes) > 0 && !_u.mutation.ExecutionHistoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -774,7 +774,7 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piu.mutation.ExecutionHistoryIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ExecutionHistoryIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -790,7 +790,7 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if piu.mutation.DefinitionCleared() {
+	if _u.mutation.DefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -803,7 +803,7 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piu.mutation.DefinitionIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.DefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -819,7 +819,7 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, piu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processinstance.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -827,8 +827,8 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		return 0, err
 	}
-	piu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ProcessInstanceUpdateOne is the builder for updating a single ProcessInstance entity.
@@ -840,478 +840,478 @@ type ProcessInstanceUpdateOne struct {
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (piuo *ProcessInstanceUpdateOne) SetProcessInstanceID(s string) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetProcessInstanceID(s)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetProcessInstanceID(v string) *ProcessInstanceUpdateOne {
+	_u.mutation.SetProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableProcessInstanceID(s *string) *ProcessInstanceUpdateOne {
-	if s != nil {
-		piuo.SetProcessInstanceID(*s)
+func (_u *ProcessInstanceUpdateOne) SetNillableProcessInstanceID(v *string) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetProcessInstanceID(*v)
 	}
-	return piuo
+	return _u
 }
 
 // SetBusinessKey sets the "business_key" field.
-func (piuo *ProcessInstanceUpdateOne) SetBusinessKey(s string) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetBusinessKey(s)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetBusinessKey(v string) *ProcessInstanceUpdateOne {
+	_u.mutation.SetBusinessKey(v)
+	return _u
 }
 
 // SetNillableBusinessKey sets the "business_key" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableBusinessKey(s *string) *ProcessInstanceUpdateOne {
-	if s != nil {
-		piuo.SetBusinessKey(*s)
+func (_u *ProcessInstanceUpdateOne) SetNillableBusinessKey(v *string) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetBusinessKey(*v)
 	}
-	return piuo
+	return _u
 }
 
 // ClearBusinessKey clears the value of the "business_key" field.
-func (piuo *ProcessInstanceUpdateOne) ClearBusinessKey() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearBusinessKey()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearBusinessKey() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearBusinessKey()
+	return _u
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
-func (piuo *ProcessInstanceUpdateOne) SetProcessDefinitionKey(s string) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetProcessDefinitionKey(s)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetProcessDefinitionKey(v string) *ProcessInstanceUpdateOne {
+	_u.mutation.SetProcessDefinitionKey(v)
+	return _u
 }
 
 // SetNillableProcessDefinitionKey sets the "process_definition_key" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableProcessDefinitionKey(s *string) *ProcessInstanceUpdateOne {
-	if s != nil {
-		piuo.SetProcessDefinitionKey(*s)
+func (_u *ProcessInstanceUpdateOne) SetNillableProcessDefinitionKey(v *string) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetProcessDefinitionKey(*v)
 	}
-	return piuo
+	return _u
 }
 
 // SetProcessDefinitionID sets the "process_definition_id" field.
-func (piuo *ProcessInstanceUpdateOne) SetProcessDefinitionID(i int) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetProcessDefinitionID(i)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetProcessDefinitionID(v int) *ProcessInstanceUpdateOne {
+	_u.mutation.SetProcessDefinitionID(v)
+	return _u
 }
 
 // SetNillableProcessDefinitionID sets the "process_definition_id" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableProcessDefinitionID(i *int) *ProcessInstanceUpdateOne {
-	if i != nil {
-		piuo.SetProcessDefinitionID(*i)
+func (_u *ProcessInstanceUpdateOne) SetNillableProcessDefinitionID(v *int) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetProcessDefinitionID(*v)
 	}
-	return piuo
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (piuo *ProcessInstanceUpdateOne) SetStatus(s string) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetStatus(s)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetStatus(v string) *ProcessInstanceUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableStatus(s *string) *ProcessInstanceUpdateOne {
-	if s != nil {
-		piuo.SetStatus(*s)
+func (_u *ProcessInstanceUpdateOne) SetNillableStatus(v *string) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return piuo
+	return _u
 }
 
 // SetCurrentActivityID sets the "current_activity_id" field.
-func (piuo *ProcessInstanceUpdateOne) SetCurrentActivityID(s string) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetCurrentActivityID(s)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetCurrentActivityID(v string) *ProcessInstanceUpdateOne {
+	_u.mutation.SetCurrentActivityID(v)
+	return _u
 }
 
 // SetNillableCurrentActivityID sets the "current_activity_id" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableCurrentActivityID(s *string) *ProcessInstanceUpdateOne {
-	if s != nil {
-		piuo.SetCurrentActivityID(*s)
+func (_u *ProcessInstanceUpdateOne) SetNillableCurrentActivityID(v *string) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetCurrentActivityID(*v)
 	}
-	return piuo
+	return _u
 }
 
 // ClearCurrentActivityID clears the value of the "current_activity_id" field.
-func (piuo *ProcessInstanceUpdateOne) ClearCurrentActivityID() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearCurrentActivityID()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearCurrentActivityID() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearCurrentActivityID()
+	return _u
 }
 
 // SetCurrentActivityName sets the "current_activity_name" field.
-func (piuo *ProcessInstanceUpdateOne) SetCurrentActivityName(s string) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetCurrentActivityName(s)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetCurrentActivityName(v string) *ProcessInstanceUpdateOne {
+	_u.mutation.SetCurrentActivityName(v)
+	return _u
 }
 
 // SetNillableCurrentActivityName sets the "current_activity_name" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableCurrentActivityName(s *string) *ProcessInstanceUpdateOne {
-	if s != nil {
-		piuo.SetCurrentActivityName(*s)
+func (_u *ProcessInstanceUpdateOne) SetNillableCurrentActivityName(v *string) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetCurrentActivityName(*v)
 	}
-	return piuo
+	return _u
 }
 
 // ClearCurrentActivityName clears the value of the "current_activity_name" field.
-func (piuo *ProcessInstanceUpdateOne) ClearCurrentActivityName() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearCurrentActivityName()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearCurrentActivityName() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearCurrentActivityName()
+	return _u
 }
 
 // SetVariables sets the "variables" field.
-func (piuo *ProcessInstanceUpdateOne) SetVariables(m map[string]interface{}) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetVariables(m)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetVariables(v map[string]interface{}) *ProcessInstanceUpdateOne {
+	_u.mutation.SetVariables(v)
+	return _u
 }
 
 // ClearVariables clears the value of the "variables" field.
-func (piuo *ProcessInstanceUpdateOne) ClearVariables() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearVariables()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearVariables() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearVariables()
+	return _u
 }
 
 // SetStartTime sets the "start_time" field.
-func (piuo *ProcessInstanceUpdateOne) SetStartTime(t time.Time) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetStartTime(t)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetStartTime(v time.Time) *ProcessInstanceUpdateOne {
+	_u.mutation.SetStartTime(v)
+	return _u
 }
 
 // SetNillableStartTime sets the "start_time" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableStartTime(t *time.Time) *ProcessInstanceUpdateOne {
-	if t != nil {
-		piuo.SetStartTime(*t)
+func (_u *ProcessInstanceUpdateOne) SetNillableStartTime(v *time.Time) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetStartTime(*v)
 	}
-	return piuo
+	return _u
 }
 
 // SetEndTime sets the "end_time" field.
-func (piuo *ProcessInstanceUpdateOne) SetEndTime(t time.Time) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetEndTime(t)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetEndTime(v time.Time) *ProcessInstanceUpdateOne {
+	_u.mutation.SetEndTime(v)
+	return _u
 }
 
 // SetNillableEndTime sets the "end_time" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableEndTime(t *time.Time) *ProcessInstanceUpdateOne {
-	if t != nil {
-		piuo.SetEndTime(*t)
+func (_u *ProcessInstanceUpdateOne) SetNillableEndTime(v *time.Time) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetEndTime(*v)
 	}
-	return piuo
+	return _u
 }
 
 // ClearEndTime clears the value of the "end_time" field.
-func (piuo *ProcessInstanceUpdateOne) ClearEndTime() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearEndTime()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearEndTime() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearEndTime()
+	return _u
 }
 
 // SetSuspendedTime sets the "suspended_time" field.
-func (piuo *ProcessInstanceUpdateOne) SetSuspendedTime(t time.Time) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetSuspendedTime(t)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetSuspendedTime(v time.Time) *ProcessInstanceUpdateOne {
+	_u.mutation.SetSuspendedTime(v)
+	return _u
 }
 
 // SetNillableSuspendedTime sets the "suspended_time" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableSuspendedTime(t *time.Time) *ProcessInstanceUpdateOne {
-	if t != nil {
-		piuo.SetSuspendedTime(*t)
+func (_u *ProcessInstanceUpdateOne) SetNillableSuspendedTime(v *time.Time) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetSuspendedTime(*v)
 	}
-	return piuo
+	return _u
 }
 
 // ClearSuspendedTime clears the value of the "suspended_time" field.
-func (piuo *ProcessInstanceUpdateOne) ClearSuspendedTime() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearSuspendedTime()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearSuspendedTime() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearSuspendedTime()
+	return _u
 }
 
 // SetSuspendedReason sets the "suspended_reason" field.
-func (piuo *ProcessInstanceUpdateOne) SetSuspendedReason(s string) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetSuspendedReason(s)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetSuspendedReason(v string) *ProcessInstanceUpdateOne {
+	_u.mutation.SetSuspendedReason(v)
+	return _u
 }
 
 // SetNillableSuspendedReason sets the "suspended_reason" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableSuspendedReason(s *string) *ProcessInstanceUpdateOne {
-	if s != nil {
-		piuo.SetSuspendedReason(*s)
+func (_u *ProcessInstanceUpdateOne) SetNillableSuspendedReason(v *string) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetSuspendedReason(*v)
 	}
-	return piuo
+	return _u
 }
 
 // ClearSuspendedReason clears the value of the "suspended_reason" field.
-func (piuo *ProcessInstanceUpdateOne) ClearSuspendedReason() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearSuspendedReason()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearSuspendedReason() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearSuspendedReason()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (piuo *ProcessInstanceUpdateOne) SetTenantID(i int) *ProcessInstanceUpdateOne {
-	piuo.mutation.ResetTenantID()
-	piuo.mutation.SetTenantID(i)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetTenantID(v int) *ProcessInstanceUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableTenantID(i *int) *ProcessInstanceUpdateOne {
-	if i != nil {
-		piuo.SetTenantID(*i)
+func (_u *ProcessInstanceUpdateOne) SetNillableTenantID(v *int) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return piuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (piuo *ProcessInstanceUpdateOne) AddTenantID(i int) *ProcessInstanceUpdateOne {
-	piuo.mutation.AddTenantID(i)
-	return piuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessInstanceUpdateOne) AddTenantID(v int) *ProcessInstanceUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetInitiator sets the "initiator" field.
-func (piuo *ProcessInstanceUpdateOne) SetInitiator(s string) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetInitiator(s)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetInitiator(v string) *ProcessInstanceUpdateOne {
+	_u.mutation.SetInitiator(v)
+	return _u
 }
 
 // SetNillableInitiator sets the "initiator" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableInitiator(s *string) *ProcessInstanceUpdateOne {
-	if s != nil {
-		piuo.SetInitiator(*s)
+func (_u *ProcessInstanceUpdateOne) SetNillableInitiator(v *string) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetInitiator(*v)
 	}
-	return piuo
+	return _u
 }
 
 // ClearInitiator clears the value of the "initiator" field.
-func (piuo *ProcessInstanceUpdateOne) ClearInitiator() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearInitiator()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearInitiator() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearInitiator()
+	return _u
 }
 
 // SetParentProcessInstanceID sets the "parent_process_instance_id" field.
-func (piuo *ProcessInstanceUpdateOne) SetParentProcessInstanceID(s string) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetParentProcessInstanceID(s)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetParentProcessInstanceID(v string) *ProcessInstanceUpdateOne {
+	_u.mutation.SetParentProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableParentProcessInstanceID sets the "parent_process_instance_id" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableParentProcessInstanceID(s *string) *ProcessInstanceUpdateOne {
-	if s != nil {
-		piuo.SetParentProcessInstanceID(*s)
+func (_u *ProcessInstanceUpdateOne) SetNillableParentProcessInstanceID(v *string) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetParentProcessInstanceID(*v)
 	}
-	return piuo
+	return _u
 }
 
 // ClearParentProcessInstanceID clears the value of the "parent_process_instance_id" field.
-func (piuo *ProcessInstanceUpdateOne) ClearParentProcessInstanceID() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearParentProcessInstanceID()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearParentProcessInstanceID() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearParentProcessInstanceID()
+	return _u
 }
 
 // SetRootProcessInstanceID sets the "root_process_instance_id" field.
-func (piuo *ProcessInstanceUpdateOne) SetRootProcessInstanceID(s string) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetRootProcessInstanceID(s)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetRootProcessInstanceID(v string) *ProcessInstanceUpdateOne {
+	_u.mutation.SetRootProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableRootProcessInstanceID sets the "root_process_instance_id" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableRootProcessInstanceID(s *string) *ProcessInstanceUpdateOne {
-	if s != nil {
-		piuo.SetRootProcessInstanceID(*s)
+func (_u *ProcessInstanceUpdateOne) SetNillableRootProcessInstanceID(v *string) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetRootProcessInstanceID(*v)
 	}
-	return piuo
+	return _u
 }
 
 // ClearRootProcessInstanceID clears the value of the "root_process_instance_id" field.
-func (piuo *ProcessInstanceUpdateOne) ClearRootProcessInstanceID() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearRootProcessInstanceID()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearRootProcessInstanceID() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearRootProcessInstanceID()
+	return _u
 }
 
 // SetStateSnapshot sets the "state_snapshot" field.
-func (piuo *ProcessInstanceUpdateOne) SetStateSnapshot(u []uint8) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetStateSnapshot(u)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetStateSnapshot(v []uint8) *ProcessInstanceUpdateOne {
+	_u.mutation.SetStateSnapshot(v)
+	return _u
 }
 
-// AppendStateSnapshot appends u to the "state_snapshot" field.
-func (piuo *ProcessInstanceUpdateOne) AppendStateSnapshot(u []uint8) *ProcessInstanceUpdateOne {
-	piuo.mutation.AppendStateSnapshot(u)
-	return piuo
+// AppendStateSnapshot appends value to the "state_snapshot" field.
+func (_u *ProcessInstanceUpdateOne) AppendStateSnapshot(v []uint8) *ProcessInstanceUpdateOne {
+	_u.mutation.AppendStateSnapshot(v)
+	return _u
 }
 
 // ClearStateSnapshot clears the value of the "state_snapshot" field.
-func (piuo *ProcessInstanceUpdateOne) ClearStateSnapshot() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearStateSnapshot()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearStateSnapshot() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearStateSnapshot()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (piuo *ProcessInstanceUpdateOne) SetCreatedAt(t time.Time) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetCreatedAt(t)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetCreatedAt(v time.Time) *ProcessInstanceUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableCreatedAt(t *time.Time) *ProcessInstanceUpdateOne {
-	if t != nil {
-		piuo.SetCreatedAt(*t)
+func (_u *ProcessInstanceUpdateOne) SetNillableCreatedAt(v *time.Time) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return piuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (piuo *ProcessInstanceUpdateOne) SetUpdatedAt(t time.Time) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetUpdatedAt(t)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetUpdatedAt(v time.Time) *ProcessInstanceUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddProcessTaskIDs adds the "process_tasks" edge to the ProcessTask entity by IDs.
-func (piuo *ProcessInstanceUpdateOne) AddProcessTaskIDs(ids ...int) *ProcessInstanceUpdateOne {
-	piuo.mutation.AddProcessTaskIDs(ids...)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) AddProcessTaskIDs(ids ...int) *ProcessInstanceUpdateOne {
+	_u.mutation.AddProcessTaskIDs(ids...)
+	return _u
 }
 
 // AddProcessTasks adds the "process_tasks" edges to the ProcessTask entity.
-func (piuo *ProcessInstanceUpdateOne) AddProcessTasks(p ...*ProcessTask) *ProcessInstanceUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdateOne) AddProcessTasks(v ...*ProcessTask) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piuo.AddProcessTaskIDs(ids...)
+	return _u.AddProcessTaskIDs(ids...)
 }
 
 // AddProcessVariableIDs adds the "process_variables" edge to the ProcessVariable entity by IDs.
-func (piuo *ProcessInstanceUpdateOne) AddProcessVariableIDs(ids ...int) *ProcessInstanceUpdateOne {
-	piuo.mutation.AddProcessVariableIDs(ids...)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) AddProcessVariableIDs(ids ...int) *ProcessInstanceUpdateOne {
+	_u.mutation.AddProcessVariableIDs(ids...)
+	return _u
 }
 
 // AddProcessVariables adds the "process_variables" edges to the ProcessVariable entity.
-func (piuo *ProcessInstanceUpdateOne) AddProcessVariables(p ...*ProcessVariable) *ProcessInstanceUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdateOne) AddProcessVariables(v ...*ProcessVariable) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piuo.AddProcessVariableIDs(ids...)
+	return _u.AddProcessVariableIDs(ids...)
 }
 
 // AddExecutionHistoryIDs adds the "execution_history" edge to the ProcessExecutionHistory entity by IDs.
-func (piuo *ProcessInstanceUpdateOne) AddExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdateOne {
-	piuo.mutation.AddExecutionHistoryIDs(ids...)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) AddExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdateOne {
+	_u.mutation.AddExecutionHistoryIDs(ids...)
+	return _u
 }
 
 // AddExecutionHistory adds the "execution_history" edges to the ProcessExecutionHistory entity.
-func (piuo *ProcessInstanceUpdateOne) AddExecutionHistory(p ...*ProcessExecutionHistory) *ProcessInstanceUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdateOne) AddExecutionHistory(v ...*ProcessExecutionHistory) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piuo.AddExecutionHistoryIDs(ids...)
+	return _u.AddExecutionHistoryIDs(ids...)
 }
 
 // SetDefinitionID sets the "definition" edge to the ProcessDefinition entity by ID.
-func (piuo *ProcessInstanceUpdateOne) SetDefinitionID(id int) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetDefinitionID(id)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) SetDefinitionID(id int) *ProcessInstanceUpdateOne {
+	_u.mutation.SetDefinitionID(id)
+	return _u
 }
 
 // SetDefinition sets the "definition" edge to the ProcessDefinition entity.
-func (piuo *ProcessInstanceUpdateOne) SetDefinition(p *ProcessDefinition) *ProcessInstanceUpdateOne {
-	return piuo.SetDefinitionID(p.ID)
+func (_u *ProcessInstanceUpdateOne) SetDefinition(v *ProcessDefinition) *ProcessInstanceUpdateOne {
+	return _u.SetDefinitionID(v.ID)
 }
 
 // Mutation returns the ProcessInstanceMutation object of the builder.
-func (piuo *ProcessInstanceUpdateOne) Mutation() *ProcessInstanceMutation {
-	return piuo.mutation
+func (_u *ProcessInstanceUpdateOne) Mutation() *ProcessInstanceMutation {
+	return _u.mutation
 }
 
 // ClearProcessTasks clears all "process_tasks" edges to the ProcessTask entity.
-func (piuo *ProcessInstanceUpdateOne) ClearProcessTasks() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearProcessTasks()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearProcessTasks() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearProcessTasks()
+	return _u
 }
 
 // RemoveProcessTaskIDs removes the "process_tasks" edge to ProcessTask entities by IDs.
-func (piuo *ProcessInstanceUpdateOne) RemoveProcessTaskIDs(ids ...int) *ProcessInstanceUpdateOne {
-	piuo.mutation.RemoveProcessTaskIDs(ids...)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) RemoveProcessTaskIDs(ids ...int) *ProcessInstanceUpdateOne {
+	_u.mutation.RemoveProcessTaskIDs(ids...)
+	return _u
 }
 
 // RemoveProcessTasks removes "process_tasks" edges to ProcessTask entities.
-func (piuo *ProcessInstanceUpdateOne) RemoveProcessTasks(p ...*ProcessTask) *ProcessInstanceUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdateOne) RemoveProcessTasks(v ...*ProcessTask) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piuo.RemoveProcessTaskIDs(ids...)
+	return _u.RemoveProcessTaskIDs(ids...)
 }
 
 // ClearProcessVariables clears all "process_variables" edges to the ProcessVariable entity.
-func (piuo *ProcessInstanceUpdateOne) ClearProcessVariables() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearProcessVariables()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearProcessVariables() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearProcessVariables()
+	return _u
 }
 
 // RemoveProcessVariableIDs removes the "process_variables" edge to ProcessVariable entities by IDs.
-func (piuo *ProcessInstanceUpdateOne) RemoveProcessVariableIDs(ids ...int) *ProcessInstanceUpdateOne {
-	piuo.mutation.RemoveProcessVariableIDs(ids...)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) RemoveProcessVariableIDs(ids ...int) *ProcessInstanceUpdateOne {
+	_u.mutation.RemoveProcessVariableIDs(ids...)
+	return _u
 }
 
 // RemoveProcessVariables removes "process_variables" edges to ProcessVariable entities.
-func (piuo *ProcessInstanceUpdateOne) RemoveProcessVariables(p ...*ProcessVariable) *ProcessInstanceUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdateOne) RemoveProcessVariables(v ...*ProcessVariable) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piuo.RemoveProcessVariableIDs(ids...)
+	return _u.RemoveProcessVariableIDs(ids...)
 }
 
 // ClearExecutionHistory clears all "execution_history" edges to the ProcessExecutionHistory entity.
-func (piuo *ProcessInstanceUpdateOne) ClearExecutionHistory() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearExecutionHistory()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearExecutionHistory() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearExecutionHistory()
+	return _u
 }
 
 // RemoveExecutionHistoryIDs removes the "execution_history" edge to ProcessExecutionHistory entities by IDs.
-func (piuo *ProcessInstanceUpdateOne) RemoveExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdateOne {
-	piuo.mutation.RemoveExecutionHistoryIDs(ids...)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) RemoveExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdateOne {
+	_u.mutation.RemoveExecutionHistoryIDs(ids...)
+	return _u
 }
 
 // RemoveExecutionHistory removes "execution_history" edges to ProcessExecutionHistory entities.
-func (piuo *ProcessInstanceUpdateOne) RemoveExecutionHistory(p ...*ProcessExecutionHistory) *ProcessInstanceUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessInstanceUpdateOne) RemoveExecutionHistory(v ...*ProcessExecutionHistory) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return piuo.RemoveExecutionHistoryIDs(ids...)
+	return _u.RemoveExecutionHistoryIDs(ids...)
 }
 
 // ClearDefinition clears the "definition" edge to the ProcessDefinition entity.
-func (piuo *ProcessInstanceUpdateOne) ClearDefinition() *ProcessInstanceUpdateOne {
-	piuo.mutation.ClearDefinition()
-	return piuo
+func (_u *ProcessInstanceUpdateOne) ClearDefinition() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearDefinition()
+	return _u
 }
 
 // Where appends a list predicates to the ProcessInstanceUpdate builder.
-func (piuo *ProcessInstanceUpdateOne) Where(ps ...predicate.ProcessInstance) *ProcessInstanceUpdateOne {
-	piuo.mutation.Where(ps...)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) Where(ps ...predicate.ProcessInstance) *ProcessInstanceUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (piuo *ProcessInstanceUpdateOne) Select(field string, fields ...string) *ProcessInstanceUpdateOne {
-	piuo.fields = append([]string{field}, fields...)
-	return piuo
+func (_u *ProcessInstanceUpdateOne) Select(field string, fields ...string) *ProcessInstanceUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ProcessInstance entity.
-func (piuo *ProcessInstanceUpdateOne) Save(ctx context.Context) (*ProcessInstance, error) {
-	piuo.defaults()
-	return withHooks(ctx, piuo.sqlSave, piuo.mutation, piuo.hooks)
+func (_u *ProcessInstanceUpdateOne) Save(ctx context.Context) (*ProcessInstance, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (piuo *ProcessInstanceUpdateOne) SaveX(ctx context.Context) *ProcessInstance {
-	node, err := piuo.Save(ctx)
+func (_u *ProcessInstanceUpdateOne) SaveX(ctx context.Context) *ProcessInstance {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1319,65 +1319,65 @@ func (piuo *ProcessInstanceUpdateOne) SaveX(ctx context.Context) *ProcessInstanc
 }
 
 // Exec executes the query on the entity.
-func (piuo *ProcessInstanceUpdateOne) Exec(ctx context.Context) error {
-	_, err := piuo.Save(ctx)
+func (_u *ProcessInstanceUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (piuo *ProcessInstanceUpdateOne) ExecX(ctx context.Context) {
-	if err := piuo.Exec(ctx); err != nil {
+func (_u *ProcessInstanceUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (piuo *ProcessInstanceUpdateOne) defaults() {
-	if _, ok := piuo.mutation.UpdatedAt(); !ok {
+func (_u *ProcessInstanceUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := processinstance.UpdateDefaultUpdatedAt()
-		piuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (piuo *ProcessInstanceUpdateOne) check() error {
-	if v, ok := piuo.mutation.ProcessInstanceID(); ok {
+func (_u *ProcessInstanceUpdateOne) check() error {
+	if v, ok := _u.mutation.ProcessInstanceID(); ok {
 		if err := processinstance.ProcessInstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_instance_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.process_instance_id": %w`, err)}
 		}
 	}
-	if v, ok := piuo.mutation.ProcessDefinitionKey(); ok {
+	if v, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		if err := processinstance.ProcessDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.process_definition_key": %w`, err)}
 		}
 	}
-	if v, ok := piuo.mutation.ProcessDefinitionID(); ok {
+	if v, ok := _u.mutation.ProcessDefinitionID(); ok {
 		if err := processinstance.ProcessDefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.process_definition_id": %w`, err)}
 		}
 	}
-	if v, ok := piuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processinstance.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.tenant_id": %w`, err)}
 		}
 	}
-	if piuo.mutation.DefinitionCleared() && len(piuo.mutation.DefinitionIDs()) > 0 {
+	if _u.mutation.DefinitionCleared() && len(_u.mutation.DefinitionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessInstance.definition"`)
 	}
 	return nil
 }
 
-func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *ProcessInstance, err error) {
-	if err := piuo.check(); err != nil {
+func (_u *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *ProcessInstance, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processinstance.Table, processinstance.Columns, sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt))
-	id, ok := piuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ProcessInstance.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := piuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, processinstance.FieldID)
 		for _, f := range fields {
@@ -1389,109 +1389,109 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 			}
 		}
 	}
-	if ps := piuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := piuo.mutation.ProcessInstanceID(); ok {
+	if value, ok := _u.mutation.ProcessInstanceID(); ok {
 		_spec.SetField(processinstance.FieldProcessInstanceID, field.TypeString, value)
 	}
-	if value, ok := piuo.mutation.BusinessKey(); ok {
+	if value, ok := _u.mutation.BusinessKey(); ok {
 		_spec.SetField(processinstance.FieldBusinessKey, field.TypeString, value)
 	}
-	if piuo.mutation.BusinessKeyCleared() {
+	if _u.mutation.BusinessKeyCleared() {
 		_spec.ClearField(processinstance.FieldBusinessKey, field.TypeString)
 	}
-	if value, ok := piuo.mutation.ProcessDefinitionKey(); ok {
+	if value, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processinstance.FieldProcessDefinitionKey, field.TypeString, value)
 	}
-	if value, ok := piuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(processinstance.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := piuo.mutation.CurrentActivityID(); ok {
+	if value, ok := _u.mutation.CurrentActivityID(); ok {
 		_spec.SetField(processinstance.FieldCurrentActivityID, field.TypeString, value)
 	}
-	if piuo.mutation.CurrentActivityIDCleared() {
+	if _u.mutation.CurrentActivityIDCleared() {
 		_spec.ClearField(processinstance.FieldCurrentActivityID, field.TypeString)
 	}
-	if value, ok := piuo.mutation.CurrentActivityName(); ok {
+	if value, ok := _u.mutation.CurrentActivityName(); ok {
 		_spec.SetField(processinstance.FieldCurrentActivityName, field.TypeString, value)
 	}
-	if piuo.mutation.CurrentActivityNameCleared() {
+	if _u.mutation.CurrentActivityNameCleared() {
 		_spec.ClearField(processinstance.FieldCurrentActivityName, field.TypeString)
 	}
-	if value, ok := piuo.mutation.Variables(); ok {
+	if value, ok := _u.mutation.Variables(); ok {
 		_spec.SetField(processinstance.FieldVariables, field.TypeJSON, value)
 	}
-	if piuo.mutation.VariablesCleared() {
+	if _u.mutation.VariablesCleared() {
 		_spec.ClearField(processinstance.FieldVariables, field.TypeJSON)
 	}
-	if value, ok := piuo.mutation.StartTime(); ok {
+	if value, ok := _u.mutation.StartTime(); ok {
 		_spec.SetField(processinstance.FieldStartTime, field.TypeTime, value)
 	}
-	if value, ok := piuo.mutation.EndTime(); ok {
+	if value, ok := _u.mutation.EndTime(); ok {
 		_spec.SetField(processinstance.FieldEndTime, field.TypeTime, value)
 	}
-	if piuo.mutation.EndTimeCleared() {
+	if _u.mutation.EndTimeCleared() {
 		_spec.ClearField(processinstance.FieldEndTime, field.TypeTime)
 	}
-	if value, ok := piuo.mutation.SuspendedTime(); ok {
+	if value, ok := _u.mutation.SuspendedTime(); ok {
 		_spec.SetField(processinstance.FieldSuspendedTime, field.TypeTime, value)
 	}
-	if piuo.mutation.SuspendedTimeCleared() {
+	if _u.mutation.SuspendedTimeCleared() {
 		_spec.ClearField(processinstance.FieldSuspendedTime, field.TypeTime)
 	}
-	if value, ok := piuo.mutation.SuspendedReason(); ok {
+	if value, ok := _u.mutation.SuspendedReason(); ok {
 		_spec.SetField(processinstance.FieldSuspendedReason, field.TypeString, value)
 	}
-	if piuo.mutation.SuspendedReasonCleared() {
+	if _u.mutation.SuspendedReasonCleared() {
 		_spec.ClearField(processinstance.FieldSuspendedReason, field.TypeString)
 	}
-	if value, ok := piuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processinstance.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := piuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processinstance.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := piuo.mutation.Initiator(); ok {
+	if value, ok := _u.mutation.Initiator(); ok {
 		_spec.SetField(processinstance.FieldInitiator, field.TypeString, value)
 	}
-	if piuo.mutation.InitiatorCleared() {
+	if _u.mutation.InitiatorCleared() {
 		_spec.ClearField(processinstance.FieldInitiator, field.TypeString)
 	}
-	if value, ok := piuo.mutation.ParentProcessInstanceID(); ok {
+	if value, ok := _u.mutation.ParentProcessInstanceID(); ok {
 		_spec.SetField(processinstance.FieldParentProcessInstanceID, field.TypeString, value)
 	}
-	if piuo.mutation.ParentProcessInstanceIDCleared() {
+	if _u.mutation.ParentProcessInstanceIDCleared() {
 		_spec.ClearField(processinstance.FieldParentProcessInstanceID, field.TypeString)
 	}
-	if value, ok := piuo.mutation.RootProcessInstanceID(); ok {
+	if value, ok := _u.mutation.RootProcessInstanceID(); ok {
 		_spec.SetField(processinstance.FieldRootProcessInstanceID, field.TypeString, value)
 	}
-	if piuo.mutation.RootProcessInstanceIDCleared() {
+	if _u.mutation.RootProcessInstanceIDCleared() {
 		_spec.ClearField(processinstance.FieldRootProcessInstanceID, field.TypeString)
 	}
-	if value, ok := piuo.mutation.StateSnapshot(); ok {
+	if value, ok := _u.mutation.StateSnapshot(); ok {
 		_spec.SetField(processinstance.FieldStateSnapshot, field.TypeJSON, value)
 	}
-	if value, ok := piuo.mutation.AppendedStateSnapshot(); ok {
+	if value, ok := _u.mutation.AppendedStateSnapshot(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, processinstance.FieldStateSnapshot, value)
 		})
 	}
-	if piuo.mutation.StateSnapshotCleared() {
+	if _u.mutation.StateSnapshotCleared() {
 		_spec.ClearField(processinstance.FieldStateSnapshot, field.TypeJSON)
 	}
-	if value, ok := piuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processinstance.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := piuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(processinstance.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if piuo.mutation.ProcessTasksCleared() {
+	if _u.mutation.ProcessTasksCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1504,7 +1504,7 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piuo.mutation.RemovedProcessTasksIDs(); len(nodes) > 0 && !piuo.mutation.ProcessTasksCleared() {
+	if nodes := _u.mutation.RemovedProcessTasksIDs(); len(nodes) > 0 && !_u.mutation.ProcessTasksCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1520,7 +1520,7 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piuo.mutation.ProcessTasksIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessTasksIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1536,7 +1536,7 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if piuo.mutation.ProcessVariablesCleared() {
+	if _u.mutation.ProcessVariablesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1549,7 +1549,7 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piuo.mutation.RemovedProcessVariablesIDs(); len(nodes) > 0 && !piuo.mutation.ProcessVariablesCleared() {
+	if nodes := _u.mutation.RemovedProcessVariablesIDs(); len(nodes) > 0 && !_u.mutation.ProcessVariablesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1565,7 +1565,7 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piuo.mutation.ProcessVariablesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessVariablesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1581,7 +1581,7 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if piuo.mutation.ExecutionHistoryCleared() {
+	if _u.mutation.ExecutionHistoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1594,7 +1594,7 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piuo.mutation.RemovedExecutionHistoryIDs(); len(nodes) > 0 && !piuo.mutation.ExecutionHistoryCleared() {
+	if nodes := _u.mutation.RemovedExecutionHistoryIDs(); len(nodes) > 0 && !_u.mutation.ExecutionHistoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1610,7 +1610,7 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piuo.mutation.ExecutionHistoryIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ExecutionHistoryIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1626,7 +1626,7 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if piuo.mutation.DefinitionCleared() {
+	if _u.mutation.DefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1639,7 +1639,7 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := piuo.mutation.DefinitionIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.DefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1655,10 +1655,10 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &ProcessInstance{config: piuo.config}
+	_node = &ProcessInstance{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, piuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processinstance.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1666,6 +1666,6 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		return nil, err
 	}
-	piuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }
