@@ -59,6 +59,10 @@ type ProcessInstanceService interface {
 // TaskService 任务管理服务接口
 type TaskService interface {
 	GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error)
+	GetTaskByID(ctx context.Context, id int) (*ent.ProcessTask, error)
+	CompleteTaskByID(ctx context.Context, id int, variables map[string]interface{}) error
+	ClaimTask(ctx context.Context, taskID string, userID string) error
+	ClaimTaskByID(ctx context.Context, id int, userID int) error
 	ListUserTasks(ctx context.Context, req *ListUserTasksRequest) ([]*ent.ProcessTask, int, error)
 	AssignTask(ctx context.Context, taskID string, assignee string) error
 	CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error
@@ -89,6 +93,8 @@ type CustomProcessEngine struct {
 	processDefinitionService *bpmnProcessDefinitionService
 	processInstanceService   *bpmnProcessInstanceService
 	taskService              *bpmnTaskService
+	// 审计服务
+	auditService *BPMNAuditService
 }
 
 // NewCustomProcessEngine 创建自定义流程引擎实例
@@ -103,6 +109,7 @@ func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) Proce
 	engine.processDefinitionService = &bpmnProcessDefinitionService{client: client, logger: logger}
 	engine.processInstanceService = &bpmnProcessInstanceService{client: client, logger: logger}
 	engine.taskService = &bpmnTaskService{client: client, logger: logger}
+	engine.auditService = NewBPMNAuditService(client, logger)
 
 	// 注册流程相关的内置函数
 	engine.registerProcessFunctions()
@@ -229,6 +236,16 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 		return nil, err
 	}
 
+	// 6. 记录审计日志 - 流程启动
+	// 从context中获取用户信息
+	userID := 0
+	userName := ""
+	if u, ok := ctx.Value("user").(*ent.User); ok {
+		userID = u.ID
+		userName = u.Name
+	}
+	_ = e.auditService.RecordProcessStarted(ctx, instance, userID, userName, variables)
+
 	return instance, nil
 }
 
@@ -290,7 +307,21 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	}
 
 	// 6. 执行流程推进（从当前UserTask继续）
-	return e.executeStep(ctx, instance, process, task.TaskDefinitionKey, currentVars)
+	if err := e.executeStep(ctx, instance, process, task.TaskDefinitionKey, currentVars); err != nil {
+		return err
+	}
+
+	// 7. 记录审计日志 - 任务完成
+	userID := 0
+	userName := ""
+	if u, ok := ctx.Value("user").(*ent.User); ok {
+		userID = u.ID
+		userName = u.Name
+	}
+	variablesBefore := task.TaskVariables
+	_ = e.auditService.RecordTaskCompleted(ctx, task, userID, userName, variablesBefore, variables)
+
+	return nil
 }
 
 // executeStep 执行流程步骤
@@ -557,14 +588,142 @@ func (e *CustomProcessEngine) findServiceTask(process *BPMNProcess, id string) *
 }
 
 func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanceID string, reason string) error {
+	// 1. 获取流程实例
+	instance, err := e.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(processInstanceID)).
+		First(ctx)
+	if err != nil {
+		return fmt.Errorf("获取流程实例失败: %w", err)
+	}
+
+	// 2. 更新实例状态
+	_, err = e.client.ProcessInstance.UpdateOne(instance).
+		SetStatus("suspended").
+		SetSuspendedTime(time.Now()).
+		SetSuspendedReason(reason).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("暂停流程实例失败: %w", err)
+	}
+
+	// 3. 记录审计日志
+	userID := 0
+	userName := ""
+	if u, ok := ctx.Value("user").(*ent.User); ok {
+		userID = u.ID
+		userName = u.Name
+	}
+	_ = e.auditService.RecordAudit(ctx, &AuditContext{
+		ProcessInstanceID:    instance.ID,
+		ProcessInstanceKey:   instance.ProcessInstanceID,
+		ProcessDefinitionKey: instance.ProcessDefinitionKey,
+		ProcessDefinitionID:  instance.ProcessDefinitionID,
+		ActivityID:           instance.CurrentActivityID,
+		ActivityName:         instance.CurrentActivityName,
+		ActivityType:         ActivityTypeUserTask,
+		Action:               AuditActionProcessSuspended,
+		UserID:               userID,
+		UserName:             userName,
+		Comment:              reason,
+		TenantID:             instance.TenantID,
+	})
+
 	return nil
 }
 
 func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstanceID string) error {
+	// 1. 获取流程实例
+	instance, err := e.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(processInstanceID)).
+		First(ctx)
+	if err != nil {
+		return fmt.Errorf("获取流程实例失败: %w", err)
+	}
+
+	// 2. 更新实例状态
+	_, err = e.client.ProcessInstance.UpdateOne(instance).
+		SetStatus("running").
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("恢复流程实例失败: %w", err)
+	}
+
+	// 3. 记录审计日志
+	userID := 0
+	userName := ""
+	if u, ok := ctx.Value("user").(*ent.User); ok {
+		userID = u.ID
+		userName = u.Name
+	}
+	_ = e.auditService.RecordAudit(ctx, &AuditContext{
+		ProcessInstanceID:    instance.ID,
+		ProcessInstanceKey:   instance.ProcessInstanceID,
+		ProcessDefinitionKey: instance.ProcessDefinitionKey,
+		ProcessDefinitionID:  instance.ProcessDefinitionID,
+		ActivityID:           instance.CurrentActivityID,
+		ActivityName:         instance.CurrentActivityName,
+		ActivityType:         ActivityTypeUserTask,
+		Action:               AuditActionProcessResumed,
+		UserID:               userID,
+		UserName:             userName,
+		TenantID:             instance.TenantID,
+	})
+
 	return nil
 }
 
 func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInstanceID string, reason string) error {
+	// 1. 获取流程实例
+	instance, err := e.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(processInstanceID)).
+		First(ctx)
+	if err != nil {
+		return fmt.Errorf("获取流程实例失败: %w", err)
+	}
+
+	// 2. 更新实例状态
+	_, err = e.client.ProcessInstance.UpdateOne(instance).
+		SetStatus("terminated").
+		SetEndTime(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("终止流程实例失败: %w", err)
+	}
+
+	// 3. 取消所有进行中的任务
+	_, err = e.client.ProcessTask.Update().
+		Where(processtask.ProcessInstanceID(instance.ID)).
+		Where(processtask.StatusNEQ("completed")).
+		Where(processtask.StatusNEQ("cancelled")).
+		SetStatus("cancelled").
+		SetCompletedTime(time.Now()).
+		Save(ctx)
+	if err != nil {
+		e.logger.Warnw("取消流程任务失败", "error", err)
+	}
+
+	// 4. 记录审计日志
+	userID := 0
+	userName := ""
+	if u, ok := ctx.Value("user").(*ent.User); ok {
+		userID = u.ID
+		userName = u.Name
+	}
+	_ = e.auditService.RecordAudit(ctx, &AuditContext{
+		ProcessInstanceID:    instance.ID,
+		ProcessInstanceKey:   instance.ProcessInstanceID,
+		ProcessDefinitionKey: instance.ProcessDefinitionKey,
+		ProcessDefinitionID:  instance.ProcessDefinitionID,
+		ActivityID:           instance.CurrentActivityID,
+		ActivityName:         instance.CurrentActivityName,
+		ActivityType:         ActivityTypeEndEvent,
+		Action:               AuditActionProcessTerminated,
+		UserID:               userID,
+		UserName:             userName,
+		Comment:              reason,
+		TenantID:             instance.TenantID,
+	})
+
 	return nil
 }
 
@@ -1066,6 +1225,7 @@ type bpmnTaskService struct {
 	logger *zap.SugaredLogger
 }
 
+// GetTask 根据任务ID (BPMN标准task_id字符串)获取任务
 func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error) {
 	task, err := s.client.ProcessTask.Query().
 		Where(processtask.TaskID(taskID)).
@@ -1075,6 +1235,26 @@ func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.Proc
 	}
 
 	return task, nil
+}
+
+// GetTaskByID 根据数据库自增ID获取任务
+func (s *bpmnTaskService) GetTaskByID(ctx context.Context, id int) (*ent.ProcessTask, error) {
+	task, err := s.client.ProcessTask.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("获取任务失败: %w", err)
+	}
+
+	return task, nil
+}
+
+// CompleteTaskByID 根据数据库自增ID完成任务
+func (s *bpmnTaskService) CompleteTaskByID(ctx context.Context, id int, variables map[string]interface{}) error {
+	engine := NewCustomProcessEngine(s.client, s.logger)
+	task, err := s.client.ProcessTask.Get(ctx, id)
+	if err != nil {
+		return fmt.Errorf("获取任务失败: %w", err)
+	}
+	return engine.CompleteTask(ctx, task.TaskID, variables)
 }
 
 func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksRequest) ([]*ent.ProcessTask, int, error) {
@@ -1130,6 +1310,48 @@ func (s *bpmnTaskService) AssignTask(ctx context.Context, taskID string, assigne
 
 	_, err = s.client.ProcessTask.UpdateOne(task).
 		SetAssignee(assignee).
+		SetStatus("assigned").
+		SetAssignedTime(time.Now()).
+		Save(ctx)
+
+	return err
+}
+
+// ClaimTask 认领任务 (根据task_id字符串)
+func (s *bpmnTaskService) ClaimTask(ctx context.Context, taskID string, userID string) error {
+	task, err := s.GetTask(ctx, taskID)
+	if err != nil {
+		return err
+	}
+
+	// 检查任务是否已分配 (assignee不为空且不为"0")
+	if task.Assignee != "" && task.Assignee != "0" {
+		return fmt.Errorf("任务已被其他用户认领")
+	}
+
+	_, err = s.client.ProcessTask.UpdateOne(task).
+		SetAssignee(userID).
+		SetStatus("assigned").
+		SetAssignedTime(time.Now()).
+		Save(ctx)
+
+	return err
+}
+
+// ClaimTaskByID 认领任务 (根据数据库自增ID)
+func (s *bpmnTaskService) ClaimTaskByID(ctx context.Context, id int, userID int) error {
+	task, err := s.GetTaskByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// 检查任务是否已分配 (assignee不为空且不为"0")
+	if task.Assignee != "" && task.Assignee != "0" {
+		return fmt.Errorf("任务已被其他用户认领")
+	}
+
+	_, err = s.client.ProcessTask.UpdateOne(task).
+		SetAssignee(fmt.Sprintf("%d", userID)).
 		SetStatus("assigned").
 		SetAssignedTime(time.Now()).
 		Save(ctx)
