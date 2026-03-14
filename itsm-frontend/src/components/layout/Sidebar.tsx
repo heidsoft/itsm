@@ -21,6 +21,10 @@ import {
   Play,
   Settings,
   History,
+  Users,
+  Activity,
+  Clock,
+  ClipboardList,
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
@@ -161,6 +165,31 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
     },
   ],
   admin: [
+    // MSP 菜单 (MSP 员工可见)
+    {
+      key: '/msp',
+      icon: <Users style={iconStyle} />,
+      label: 'MSP 管理',
+      path: '/msp',
+      permission: 'msp:view',
+      description: 'MSP 服务管理',
+      children: [
+        {
+          key: '/msp',
+          icon: <Users style={iconStyle} />,
+          label: 'MSP 仪表盘',
+          path: '/msp',
+          permission: 'msp:view',
+        },
+        {
+          key: '/msp/management',
+          icon: <Settings style={iconStyle} />,
+          label: '分配管理',
+          path: '/msp/management',
+          permission: 'msp:manage',
+        },
+      ],
+    },
     {
       key: 'workflow-group',
       icon: <GitMerge style={iconStyle} />,
@@ -196,6 +225,27 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
           label: '版本管理',
           path: '/workflow/versions',
           permission: 'workflow:config',
+        },
+        {
+          key: '/workflow/dashboard',
+          icon: <BarChart3 style={iconStyle} />,
+          label: '监控仪表盘',
+          path: '/workflow/dashboard',
+          permission: 'workflow:view',
+        },
+        {
+          key: '/workflow/audit',
+          icon: <ClipboardList style={iconStyle} />,
+          label: '审计日志',
+          path: '/workflow/audit',
+          permission: 'workflow:view',
+        },
+        {
+          key: '/workflow/sla',
+          icon: <Clock style={iconStyle} />,
+          label: 'SLA监控',
+          path: '/workflow/sla',
+          permission: 'workflow:view',
         },
       ],
     },
