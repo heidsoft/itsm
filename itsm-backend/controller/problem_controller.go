@@ -37,7 +37,7 @@ func NewProblemController(logger *zap.SugaredLogger, problemService *service.Pro
 func (pc *ProblemController) CreateProblem(c *gin.Context) {
 	var req dto.CreateProblemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.Fail(c, common.ParamErrorCode, "请求参数错误")
 		return
 	}
 
@@ -47,7 +47,7 @@ func (pc *ProblemController) CreateProblem(c *gin.Context) {
 	problem, err := pc.problemService.CreateProblem(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Create problem failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "创建问题失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
@@ -78,7 +78,7 @@ func (pc *ProblemController) GetProblem(c *gin.Context) {
 	problem, err := pc.problemService.GetProblem(c.Request.Context(), problemID, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Get problem failed", "error", err, "problem_id", problemID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取问题失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
@@ -99,7 +99,7 @@ func (pc *ProblemController) GetProblem(c *gin.Context) {
 func (pc *ProblemController) ListProblems(c *gin.Context) {
 	var req dto.ListProblemsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.Fail(c, common.ParamErrorCode, "请求参数错误")
 		return
 	}
 
@@ -116,7 +116,7 @@ func (pc *ProblemController) ListProblems(c *gin.Context) {
 	response, err := pc.problemService.ListProblems(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		pc.logger.Errorw("List problems failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取问题列表失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
@@ -133,7 +133,7 @@ func (pc *ProblemController) UpdateProblem(c *gin.Context) {
 
 	var req dto.UpdateProblemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.Fail(c, common.ParamErrorCode, "请求参数错误")
 		return
 	}
 
@@ -142,7 +142,7 @@ func (pc *ProblemController) UpdateProblem(c *gin.Context) {
 	problem, err := pc.problemService.UpdateProblem(c.Request.Context(), problemID, &req, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Update problem failed", "error", err, "problem_id", problemID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "更新问题失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
@@ -165,7 +165,7 @@ func (pc *ProblemController) DeleteProblem(c *gin.Context) {
 	err = pc.problemService.DeleteProblem(c.Request.Context(), problemID, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Delete problem failed", "error", err, "problem_id", problemID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "删除问题失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
@@ -182,7 +182,7 @@ func (pc *ProblemController) GetProblemStats(c *gin.Context) {
 	stats, err := pc.problemService.GetProblemStats(c.Request.Context(), tenantID)
 	if err != nil {
 		pc.logger.Errorw("Get problem stats failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取问题统计失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 

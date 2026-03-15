@@ -52,6 +52,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   // 监听系统主题变化
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
     const handleChange = () => {
@@ -68,6 +70,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   // 更新暗色状态
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     if (mode === 'dark') {
       setIsDark(true);
     } else if (mode === 'light') {

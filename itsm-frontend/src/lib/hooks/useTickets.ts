@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { message } from 'antd';
 import {
   ticketService,
@@ -63,7 +63,6 @@ export interface UseTicketsReturn {
 }
 
 export const useTickets = (): UseTicketsReturn => {
-  // State
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [stats, setStats] = useState<TicketStats>({
     total: 0,
@@ -80,42 +79,54 @@ export const useTickets = (): UseTicketsReturn => {
   });
   const [filters, setFilters] = useState<Partial<TicketQueryFilters>>({});
 
-  // Fetch tickets
-  const fetchTickets = useCallback(
-    async (customFilters?: Partial<TicketQueryFilters>) => {
-      setLoading(true);
-      setError(null);
+  // 用 ref 持有最新值，避免 fetchTickets 因依赖变化无限重建
+  const filtersRef = useRef(filters);
+  const paginationRef = useRef(pagination);
+  // 用于触发 fetchTickets 的计数器
+  const [fetchTrigger, setFetchTrigger] = useState(0);
 
-      try {
-        const currentFilters = customFilters || filters;
-        const dateRange = currentFilters.dateRange;
-        const response = await ticketService.listTickets({
-          page: pagination.current,
-          page_size: pagination.pageSize,
-          status: currentFilters.status,
-          priority: currentFilters.priority,
-          type: currentFilters.type,
-          category: currentFilters.category,
-          assignee_id: currentFilters.assignee_id,
-          keyword: currentFilters.keyword,
-          date_from: dateRange?.[0],
-          date_to: dateRange?.[1],
-          tags: currentFilters.tags,
-        });
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
 
-        setTickets(response.tickets);
-        setPagination(prev => ({ ...prev, total: response.total }));
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load tickets';
-        setError(errorMessage);
-        message.error(errorMessage);
-        console.error('Failed to load tickets:', err);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [pagination.current, pagination.pageSize, filters]
-  );
+  useEffect(() => {
+    paginationRef.current = pagination;
+  }, [pagination]);
+
+  // fetchTickets 不再依赖 filters/pagination state，通过 ref 读取最新值
+  const fetchTickets = useCallback(async (customFilters?: Partial<TicketQueryFilters>) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const currentFilters = customFilters ?? filtersRef.current;
+      const { current: page, pageSize: page_size } = paginationRef.current;
+      const dateRange = currentFilters.dateRange;
+
+      const response = await ticketService.listTickets({
+        page,
+        page_size,
+        status: currentFilters.status,
+        priority: currentFilters.priority,
+        type: currentFilters.type,
+        category: currentFilters.category,
+        assignee_id: currentFilters.assignee_id,
+        keyword: currentFilters.keyword,
+        date_from: dateRange?.[0],
+        date_to: dateRange?.[1],
+        tags: currentFilters.tags,
+      });
+
+      setTickets(response.tickets ?? []);
+      setPagination(prev => ({ ...prev, total: response.total ?? 0 }));
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load tickets';
+      setError(errorMessage);
+      message.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []); // 空依赖，永不重建
 
   // Fetch statistics
   const fetchStats = useCallback(async () => {
@@ -132,20 +143,34 @@ export const useTickets = (): UseTicketsReturn => {
     }
   }, []);
 
-  // Refresh all data
   const refreshData = useCallback(async () => {
     await Promise.all([fetchTickets(), fetchStats()]);
   }, [fetchTickets, fetchStats]);
 
-  // Update filters
+  // updateFilters：更新 filters state 并触发重新拉取
   const updateFilters = useCallback((newFilters: Partial<TicketQueryFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-    setPagination(prev => ({ ...prev, current: 1 }));
+    setFilters(prev => {
+      const next = { ...prev, ...newFilters };
+      filtersRef.current = next;
+      return next;
+    });
+    setPagination(prev => {
+      const next = { ...prev, current: 1 };
+      paginationRef.current = next;
+      return next;
+    });
+    // 触发 fetchTickets
+    setFetchTrigger(n => n + 1);
   }, []);
 
-  // Update pagination
+  // updatePagination：更新分页并触发重新拉取
   const updatePagination = useCallback((page: number, pageSize: number) => {
-    setPagination(prev => ({ ...prev, current: page, pageSize }));
+    setPagination(prev => {
+      const next = { ...prev, current: page, pageSize };
+      paginationRef.current = next;
+      return next;
+    });
+    setFetchTrigger(n => n + 1);
   }, []);
 
   // Create ticket
@@ -212,45 +237,28 @@ export const useTickets = (): UseTicketsReturn => {
     [refreshData]
   );
 
-  // Initial statistics fetch
+  // 初始加载 + fetchTrigger 变化时重新拉取
   useEffect(() => {
-    let isMounted = true;
+    fetchTickets();
+  }, [fetchTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 初始加载统计
+  useEffect(() => {
     fetchStats();
-    return () => {
-      isMounted = false;
-    };
   }, [fetchStats]);
 
-  // Refetch tickets when filters or pagination change (including initial mount)
-  useEffect(() => {
-    let isMounted = true;
-    fetchTickets();
-    return () => {
-      isMounted = false;
-    };
-  }, [fetchTickets]);
-
   return {
-    // Data
     tickets,
     stats,
     loading,
     error,
-
-    // Pagination
     pagination,
-
-    // Filters
     filters,
-
-    // Actions
     fetchTickets,
     fetchStats,
     refreshData,
     updateFilters,
     updatePagination,
-
-    // Ticket operations
     createTicket,
     updateTicket,
     deleteTicket,

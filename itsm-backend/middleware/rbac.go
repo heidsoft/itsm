@@ -228,6 +228,75 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "asset", Action: "read"},
 		{Resource: "license", Action: "read"},
 	},
+	// MSP Roles - MSP服务提供商角色权限
+	"msp_viewer": {
+		{Resource: "msp", Action: "read"},
+		{Resource: "msp_customer", Action: "read"},
+		{Resource: "msp_ticket", Action: "read"},
+		{Resource: "msp_allocation", Action: "read"},
+		{Resource: "msp_report", Action: "read"},
+	},
+	"msp_tech": {
+		{Resource: "msp", Action: "read"},
+		{Resource: "msp_customer", Action: "read"},
+		{Resource: "msp_ticket", Action: "read"},
+		{Resource: "msp_ticket", Action: "write"},
+		{Resource: "msp_allocation", Action: "read"},
+		{Resource: "msp_report", Action: "read"},
+	},
+	"msp_specialist": {
+		{Resource: "msp", Action: "read"},
+		{Resource: "msp_customer", Action: "read"},
+		{Resource: "msp_customer", Action: "write"},
+		{Resource: "msp_ticket", Action: "read"},
+		{Resource: "msp_ticket", Action: "write"},
+		{Resource: "msp_allocation", Action: "read"},
+		{Resource: "msp_report", Action: "read"},
+	},
+	"msp_manager": {
+		{Resource: "msp", Action: "read"},
+		{Resource: "msp", Action: "write"},
+		{Resource: "msp_customer", Action: "read"},
+		{Resource: "msp_customer", Action: "write"},
+		{Resource: "msp_ticket", Action: "read"},
+		{Resource: "msp_ticket", Action: "write"},
+		{Resource: "msp_allocation", Action: "read"},
+		{Resource: "msp_allocation", Action: "write"},
+		{Resource: "msp_report", Action: "read"},
+		{Resource: "msp_report", Action: "write"},
+	},
+	"msp_admin": {
+		{Resource: "msp", Action: "*"},
+		{Resource: "msp_customer", Action: "*"},
+		{Resource: "msp_ticket", Action: "*"},
+		{Resource: "msp_allocation", Action: "*"},
+		{Resource: "msp_report", Action: "*"},
+	},
+}
+
+// PermissionConfigMode 权限配置模式
+type PermissionConfigMode int
+
+const (
+	// PermissionConfigModeDBOnly 仅使用数据库权限
+	PermissionConfigModeDBOnly PermissionConfigMode = iota
+	// PermissionConfigModeHardcodeOnly 仅使用硬编码权限
+	PermissionConfigModeHardcodeOnly
+	// PermissionConfigModeMerge 合并数据库和硬编码权限（并集）
+	PermissionConfigModeMerge
+	// PermissionConfigModeFallback 先数据库，失败则使用硬编码（默认）
+	PermissionConfigModeFallback
+)
+
+// PermissionConfig 权限配置
+var PermissionConfig = struct {
+	// Mode 权限加载模式
+	Mode PermissionConfigMode
+	// EnableCache 是否启用缓存
+	EnableCache bool
+}{
+	Mode:       PermissionConfigModeFallback,
+	EnableCache: true,
 }
 
 // loadRolePermissionsFromDB 从数据库加载角色的权限
@@ -343,6 +412,14 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/process-trigger/*":  {Resource: "bpmn", Action: "read"},
 		"/api/v1/process-bindings":   {Resource: "bpmn", Action: "read"},
 		"/api/v1/process-bindings/*": {Resource: "bpmn", Action: "read"},
+		// MSP Permissions
+		"/api/v1/msp/status":           {Resource: "msp", Action: "read"},
+		"/api/v1/msp/context":          {Resource: "msp", Action: "read"},
+		"/api/v1/msp/allocations":     {Resource: "msp_allocation", Action: "read"},
+		"/api/v1/msp/customers":        {Resource: "msp_customer", Action: "read"},
+		"/api/v1/msp/customers/*":     {Resource: "msp_customer", Action: "read"},
+		"/api/v1/msp/customers/*/tickets": {Resource: "msp_ticket", Action: "read"},
+		"/api/v1/msp/reports/*":       {Resource: "msp_report", Action: "read"},
 	},
 	"POST": {
 		"/api/v1/tickets":               {Resource: "ticket", Action: "write"},
@@ -387,6 +464,10 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/process-trigger/*":  {Resource: "bpmn", Action: "write"},
 		"/api/v1/process-bindings":   {Resource: "bpmn", Action: "write"},
 		"/api/v1/process-bindings/*": {Resource: "bpmn", Action: "write"},
+		// MSP Permissions
+		"/api/v1/msp/allocations":      {Resource: "msp_allocation", Action: "write"},
+		"/api/v1/msp/allocations/deallocate": {Resource: "msp_allocation", Action: "write"},
+		"/api/v1/msp/tickets/*/assign": {Resource: "msp_ticket", Action: "write"},
 	},
 	"PUT": {
 		"/api/v1/tickets/*":            {Resource: "ticket", Action: "write"},
@@ -598,23 +679,75 @@ func hasPermission(client *ent.Client, role, method, path string, userID, tenant
 	return checkResourceLevelPermission(role, perm.Resource, perm.Action, userID, c)
 }
 
-// hasResourcePermission 检查角色是否有指定资源的操作权限（从数据库加载）
+// hasResourcePermission 检查角色是否有指定资源的操作权限（支持多种配置模式）
 func hasResourcePermission(client *ent.Client, role, resource, action string, tenantID int) bool {
 	// 超级管理员拥有所有权限
 	if role == "super_admin" {
 		return true
 	}
 
-	// 从数据库加载权限
-	permissions := loadRolePermissionsFromDB(client, role, tenantID)
+	// 根据配置模式加载权限
+	permissions := loadPermissionsByMode(client, role, tenantID)
 
-	// 如果数据库中没有权限配置，使用默认的 RolePermissions
-	if len(permissions) == 0 {
-		if defaultPerms, exists := RolePermissions[role]; exists {
-			permissions = defaultPerms
-		} else {
-			return false
+	// 检查权限
+	return checkPermissionMatch(permissions, resource, action)
+}
+
+// loadPermissionsByMode 根据配置模式加载权限
+func loadPermissionsByMode(client *ent.Client, role string, tenantID int) []Permission {
+	switch PermissionConfig.Mode {
+	case PermissionConfigModeDBOnly:
+		return loadRolePermissionsFromDB(client, role, tenantID)
+	case PermissionConfigModeHardcodeOnly:
+		if perms, ok := RolePermissions[role]; ok {
+			return perms
 		}
+		return nil
+	case PermissionConfigModeMerge:
+		// 合并数据库和硬编码权限（并集）
+		dbPerms := loadRolePermissionsFromDB(client, role, tenantID)
+		hardcodePerms, hasHardcode := RolePermissions[role]
+		if !hasHardcode {
+			return dbPerms
+		}
+		if len(dbPerms) == 0 {
+			return hardcodePerms
+		}
+		// 合并去重
+		permMap := make(map[string]Permission)
+		for _, p := range dbPerms {
+			permMap[p.Resource+":"+p.Action] = p
+		}
+		for _, p := range hardcodePerms {
+			key := p.Resource + ":" + p.Action
+			if _, exists := permMap[key]; !exists {
+				permMap[key] = p
+			}
+		}
+		result := make([]Permission, 0, len(permMap))
+		for _, p := range permMap {
+			result = append(result, p)
+		}
+		return result
+	case PermissionConfigModeFallback:
+		fallthrough
+	default:
+		// 默认：先数据库，失败则使用硬编码
+		dbPerms := loadRolePermissionsFromDB(client, role, tenantID)
+		if len(dbPerms) > 0 {
+			return dbPerms
+		}
+		if defaultPerms, exists := RolePermissions[role]; exists {
+			return defaultPerms
+		}
+		return nil
+	}
+}
+
+// checkPermissionMatch 检查权限是否匹配
+func checkPermissionMatch(permissions []Permission, resource, action string) bool {
+	if len(permissions) == 0 {
+		return false
 	}
 
 	for _, perm := range permissions {
@@ -634,6 +767,20 @@ func hasResourcePermission(client *ent.Client, role, resource, action string, te
 	}
 
 	return false
+}
+
+// InvalidateRolePermissionCache 使指定角色-租户的权限缓存失效（导出供外部调用）
+func InvalidateRolePermissionCache(roleName string, tenantID int) {
+	if PermissionConfig.EnableCache {
+		invalidatePermissionCache(roleName, tenantID)
+	}
+}
+
+// InvalidateAllPermissionCachesEx 使所有权限缓存失效（导出供外部调用）
+func InvalidateAllPermissionCachesEx() {
+	if PermissionConfig.EnableCache {
+		InvalidateAllPermissionCaches()
+	}
 }
 
 // getPermissionFromPath 从路径获取权限信息

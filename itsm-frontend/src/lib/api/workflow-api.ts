@@ -58,19 +58,12 @@ export class WorkflowApi {
 
     // 修正: 确保路径与后端一致，后端可能是 /api/v1/bpmn/process-definitions
     const res = await httpClient.get<
-      Array<{
-        id: number;
-        key: string;
-        name: string;
-        description?: string;
-        version: number;
-        status: string;
-        created_at: string;
-        updated_at: string;
-      }>
+      | Array<{ id: number; key: string; name: string; description?: string; version: number; status: string; created_at: string; updated_at: string; }>
+      | { items: Array<{ id: number; key: string; name: string; description?: string; version: number; status: string; created_at: string; updated_at: string; }>; pagination?: { total: number } }
     >('/api/v1/bpmn/process-definitions', params);
 
-    const list = Array.isArray(res) ? res : [];
+    const list = Array.isArray(res) ? res : ((res as any).items || []);
+    const total = Array.isArray(res) ? list.length : ((res as any).pagination?.total ?? list.length);
     const workflows: WorkflowDefinition[] = list.map(item => ({
       id: String(item.id || ''),
       code: item.key || '',
@@ -93,7 +86,7 @@ export class WorkflowApi {
       updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
       description: item.description,
     })) as WorkflowDefinition[];
-    return { workflows, total: list.length };
+    return { workflows, total };
   }
 
   /**

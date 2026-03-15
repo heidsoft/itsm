@@ -44,6 +44,7 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/knownerror"
+	"itsm-backend/ent/menu"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/mspallocation"
@@ -177,6 +178,8 @@ type Client struct {
 	KnownError *KnownErrorClient
 	// MSPAllocation is the client for interacting with the MSPAllocation builders.
 	MSPAllocation *MSPAllocationClient
+	// Menu is the client for interacting with the Menu builders.
+	Menu *MenuClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
 	// Microservice is the client for interacting with the Microservice builders.
@@ -326,6 +329,7 @@ func (c *Client) init() {
 	c.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(c.config)
 	c.KnownError = NewKnownErrorClient(c.config)
 	c.MSPAllocation = NewMSPAllocationClient(c.config)
+	c.Menu = NewMenuClient(c.config)
 	c.Message = NewMessageClient(c.config)
 	c.Microservice = NewMicroserviceClient(c.config)
 	c.Notification = NewNotificationClient(c.config)
@@ -504,6 +508,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		KnowledgeArticleLike:    NewKnowledgeArticleLikeClient(cfg),
 		KnownError:              NewKnownErrorClient(cfg),
 		MSPAllocation:           NewMSPAllocationClient(cfg),
+		Menu:                    NewMenuClient(cfg),
 		Message:                 NewMessageClient(cfg),
 		Microservice:            NewMicroserviceClient(cfg),
 		Notification:            NewNotificationClient(cfg),
@@ -609,6 +614,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		KnowledgeArticleLike:    NewKnowledgeArticleLikeClient(cfg),
 		KnownError:              NewKnownErrorClient(cfg),
 		MSPAllocation:           NewMSPAllocationClient(cfg),
+		Menu:                    NewMenuClient(cfg),
 		Message:                 NewMessageClient(cfg),
 		Microservice:            NewMicroserviceClient(cfg),
 		Notification:            NewNotificationClient(cfg),
@@ -697,7 +703,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.EngineerSkill, c.Group,
 		c.Incident, c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent,
 		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
-		c.KnowledgeArticleLike, c.KnownError, c.MSPAllocation, c.Message,
+		c.KnowledgeArticleLike, c.KnownError, c.MSPAllocation, c.Menu, c.Message,
 		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
 		c.Permission, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
 		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
@@ -727,7 +733,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.EngineerSkill, c.Group,
 		c.Incident, c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent,
 		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
-		c.KnowledgeArticleLike, c.KnownError, c.MSPAllocation, c.Message,
+		c.KnowledgeArticleLike, c.KnownError, c.MSPAllocation, c.Menu, c.Message,
 		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
 		c.Permission, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
 		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
@@ -817,6 +823,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.KnownError.mutate(ctx, m)
 	case *MSPAllocationMutation:
 		return c.MSPAllocation.mutate(ctx, m)
+	case *MenuMutation:
+		return c.Menu.mutate(ctx, m)
 	case *MessageMutation:
 		return c.Message.mutate(ctx, m)
 	case *MicroserviceMutation:
@@ -6309,6 +6317,171 @@ func (c *MSPAllocationClient) mutate(ctx context.Context, m *MSPAllocationMutati
 		return (&MSPAllocationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown MSPAllocation mutation op: %q", m.Op())
+	}
+}
+
+// MenuClient is a client for the Menu schema.
+type MenuClient struct {
+	config
+}
+
+// NewMenuClient returns a client for the Menu from the given config.
+func NewMenuClient(c config) *MenuClient {
+	return &MenuClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `menu.Hooks(f(g(h())))`.
+func (c *MenuClient) Use(hooks ...Hook) {
+	c.hooks.Menu = append(c.hooks.Menu, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `menu.Intercept(f(g(h())))`.
+func (c *MenuClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Menu = append(c.inters.Menu, interceptors...)
+}
+
+// Create returns a builder for creating a Menu entity.
+func (c *MenuClient) Create() *MenuCreate {
+	mutation := newMenuMutation(c.config, OpCreate)
+	return &MenuCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Menu entities.
+func (c *MenuClient) CreateBulk(builders ...*MenuCreate) *MenuCreateBulk {
+	return &MenuCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MenuClient) MapCreateBulk(slice any, setFunc func(*MenuCreate, int)) *MenuCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MenuCreateBulk{err: fmt.Errorf("calling to MenuClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MenuCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MenuCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Menu.
+func (c *MenuClient) Update() *MenuUpdate {
+	mutation := newMenuMutation(c.config, OpUpdate)
+	return &MenuUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MenuClient) UpdateOne(_m *Menu) *MenuUpdateOne {
+	mutation := newMenuMutation(c.config, OpUpdateOne, withMenu(_m))
+	return &MenuUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MenuClient) UpdateOneID(id int) *MenuUpdateOne {
+	mutation := newMenuMutation(c.config, OpUpdateOne, withMenuID(id))
+	return &MenuUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Menu.
+func (c *MenuClient) Delete() *MenuDelete {
+	mutation := newMenuMutation(c.config, OpDelete)
+	return &MenuDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MenuClient) DeleteOne(_m *Menu) *MenuDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MenuClient) DeleteOneID(id int) *MenuDeleteOne {
+	builder := c.Delete().Where(menu.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MenuDeleteOne{builder}
+}
+
+// Query returns a query builder for Menu.
+func (c *MenuClient) Query() *MenuQuery {
+	return &MenuQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMenu},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Menu entity by its id.
+func (c *MenuClient) Get(ctx context.Context, id int) (*Menu, error) {
+	return c.Query().Where(menu.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MenuClient) GetX(ctx context.Context, id int) *Menu {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryParent queries the parent edge of a Menu.
+func (c *MenuClient) QueryParent(_m *Menu) *MenuQuery {
+	query := (&MenuClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(menu.Table, menu.FieldID, id),
+			sqlgraph.To(menu.Table, menu.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, menu.ParentTable, menu.ParentColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChildren queries the children edge of a Menu.
+func (c *MenuClient) QueryChildren(_m *Menu) *MenuQuery {
+	query := (&MenuClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(menu.Table, menu.FieldID, id),
+			sqlgraph.To(menu.Table, menu.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, menu.ChildrenTable, menu.ChildrenColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MenuClient) Hooks() []Hook {
+	return c.hooks.Menu
+}
+
+// Interceptors returns the client interceptors.
+func (c *MenuClient) Interceptors() []Interceptor {
+	return c.inters.Menu
+}
+
+func (c *MenuClient) mutate(ctx context.Context, m *MenuMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MenuCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MenuUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MenuUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MenuDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Menu mutation op: %q", m.Op())
 	}
 }
 
@@ -14789,11 +14962,11 @@ type (
 		Conversation, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
 		EngineerSkill, Group, Incident, IncidentAlert, IncidentEscalationRule,
 		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
-		KnowledgeArticle, KnowledgeArticleLike, KnownError, MSPAllocation, Message,
-		Microservice, Notification, NotificationPreference, PasswordResetToken,
-		Permission, Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition,
-		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
-		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		KnowledgeArticle, KnowledgeArticleLike, KnownError, MSPAllocation, Menu,
+		Message, Microservice, Notification, NotificationPreference,
+		PasswordResetToken, Permission, Problem, ProcessAuditLog, ProcessBinding,
+		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
+		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
 		ProvisioningTask, RelationshipType, Release, Role, RootCauseAnalysis,
 		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
 		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
@@ -14809,11 +14982,11 @@ type (
 		Conversation, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
 		EngineerSkill, Group, Incident, IncidentAlert, IncidentEscalationRule,
 		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
-		KnowledgeArticle, KnowledgeArticleLike, KnownError, MSPAllocation, Message,
-		Microservice, Notification, NotificationPreference, PasswordResetToken,
-		Permission, Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition,
-		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
-		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		KnowledgeArticle, KnowledgeArticleLike, KnownError, MSPAllocation, Menu,
+		Message, Microservice, Notification, NotificationPreference,
+		PasswordResetToken, Permission, Problem, ProcessAuditLog, ProcessBinding,
+		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
+		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
 		ProvisioningTask, RelationshipType, Release, Role, RootCauseAnalysis,
 		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
 		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,

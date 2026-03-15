@@ -95,6 +95,10 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 
 		// 解析JWT token
 		token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+			// 验证签名算法，防止算法混淆攻击
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
 			return []byte(jwtSecret), nil
 		})
 

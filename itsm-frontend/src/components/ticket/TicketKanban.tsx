@@ -159,7 +159,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
       key: 'edit',
       icon: <EditOutlined />,
       label: '编辑',
-      onClick: () => router.push(`/tickets/${ticket.id}/edit`),
+      onClick: () => router.push(`/tickets/${ticket.id}`),
     },
     {
       type: 'divider',

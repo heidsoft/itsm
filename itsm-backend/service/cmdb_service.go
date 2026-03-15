@@ -25,7 +25,7 @@ func (s *CMDBService) CreateCI(ctx context.Context, req *CreateCIRequest) (*ent.
 		SetStatus(req.Status).
 		SetEnvironment(req.Environment).
 		SetCriticality(req.Criticality).
-		SetTenantID(1) // 默认租户ID
+		SetTenantID(req.TenantID)
 
 	if req.AssetTag != nil {
 		create = create.SetAssetTag(*req.AssetTag)
@@ -62,10 +62,13 @@ func (s *CMDBService) GetCI(ctx context.Context, id int) (*ent.ConfigurationItem
 		Only(ctx)
 }
 
-// ListCIs 列出配置项
-func (s *CMDBService) ListCIs(ctx context.Context, req *ListCIsRequest) ([]*ent.ConfigurationItem, error) {
+// ListCIs 列出配置项，返回列表和总数
+func (s *CMDBService) ListCIs(ctx context.Context, req *ListCIsRequest) ([]*ent.ConfigurationItem, int, error) {
 	query := s.client.ConfigurationItem.Query()
 
+	if req.TenantID > 0 {
+		query = query.Where(configurationitem.TenantID(req.TenantID))
+	}
 	if req.CiType != "" {
 		query = query.Where(configurationitem.CiType(req.CiType))
 	}
@@ -76,25 +79,61 @@ func (s *CMDBService) ListCIs(ctx context.Context, req *ListCIsRequest) ([]*ent.
 		query = query.Where(configurationitem.Environment(req.Environment))
 	}
 
-	return query.
+	total, err := query.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	items, err := query.
 		Offset(req.Offset).
 		Limit(req.Limit).
 		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return items, total, nil
 }
 
-// CreateRelationship 创建CI关系
+// CreateRelationship 创建CI关系（支持 source_ci_id/target_ci_id 字段）
 func (s *CMDBService) CreateRelationship(ctx context.Context, req *CreateRelationshipRequest) (*ent.CIRelationship, error) {
 	create := s.client.CIRelationship.
 		Create().
 		SetRelationshipType(req.Type).
-		SetSourceCiID(req.ParentID).
-		SetTargetCiID(req.ChildID)
+		SetSourceCiID(req.SourceCIID).
+		SetTargetCiID(req.TargetCIID)
 
 	if req.Description != nil {
 		create = create.SetDescription(*req.Description)
 	}
 
 	return create.Save(ctx)
+}
+
+// DeleteRelationship 删除CI关系
+func (s *CMDBService) DeleteRelationship(ctx context.Context, id int) error {
+	return s.client.CIRelationship.DeleteOneID(id).Exec(ctx)
+}
+
+// UpdateRelationship 更新CI关系
+func (s *CMDBService) UpdateRelationship(ctx context.Context, id int, req *UpdateRelationshipRequest) (*ent.CIRelationship, error) {
+	update := s.client.CIRelationship.UpdateOneID(id)
+	if req.Type != "" {
+		update = update.SetRelationshipType(req.Type)
+	}
+	if req.Description != nil {
+		update = update.SetDescription(*req.Description)
+	}
+	return update.Save(ctx)
+}
+
+// CountCIs 统计配置项数量
+func (s *CMDBService) CountCIs(ctx context.Context, tenantID int) (int, error) {
+	q := s.client.ConfigurationItem.Query()
+	if tenantID > 0 {
+		q = q.Where(configurationitem.TenantID(tenantID))
+	}
+	return q.Count(ctx)
 }
 
 // ListRelationships 获取CI关系列表
@@ -157,6 +196,7 @@ type CreateCIRequest struct {
 	Status          string                  `json:"status"`
 	Environment     string                  `json:"environment"`
 	Criticality     string                  `json:"criticality"`
+	TenantID        int                     `json:"tenant_id"`
 	AssetTag        *string                 `json:"asset_tag,omitempty"`
 	SerialNumber    *string                 `json:"serial_number,omitempty"`
 	Location        *string                 `json:"location,omitempty"`
@@ -167,6 +207,7 @@ type CreateCIRequest struct {
 }
 
 type ListCIsRequest struct {
+	TenantID    int    `json:"tenant_id,omitempty"`
 	CiType      string `json:"ci_type,omitempty"`
 	Status      string `json:"status,omitempty"`
 	Environment string `json:"environment,omitempty"`
@@ -175,9 +216,14 @@ type ListCIsRequest struct {
 }
 
 type CreateRelationshipRequest struct {
-	ParentID    int     `json:"parent_id"`
-	ChildID     int     `json:"child_id"`
+	SourceCIID  int     `json:"source_ci_id"`
+	TargetCIID  int     `json:"target_ci_id"`
 	Type        string  `json:"type"`
+	Description *string `json:"description,omitempty"`
+}
+
+type UpdateRelationshipRequest struct {
+	Type        string  `json:"type,omitempty"`
 	Description *string `json:"description,omitempty"`
 }
 

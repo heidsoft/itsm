@@ -1269,6 +1269,34 @@ var (
 			},
 		},
 	}
+	// MenusColumns holds the columns for the "menus" table.
+	MenusColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "path", Type: field.TypeString},
+		{Name: "icon", Type: field.TypeString, Nullable: true},
+		{Name: "permission_code", Type: field.TypeString, Nullable: true},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "is_visible", Type: field.TypeBool, Default: true},
+		{Name: "is_enabled", Type: field.TypeBool, Default: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "parent_id", Type: field.TypeInt, Nullable: true},
+	}
+	// MenusTable holds the schema information for the "menus" table.
+	MenusTable = &schema.Table{
+		Name:       "menus",
+		Columns:    MenusColumns,
+		PrimaryKey: []*schema.Column{MenusColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "menus_menus_children",
+				Columns:    []*schema.Column{MenusColumns[10]},
+				RefColumns: []*schema.Column{MenusColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// MessagesColumns holds the columns for the "messages" table.
 	MessagesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -3702,6 +3730,7 @@ var (
 		KnowledgeArticleLikesTable,
 		KnownErrorsTable,
 		MspAllocationsTable,
+		MenusTable,
 		MessagesTable,
 		MicroservicesTable,
 		NotificationsTable,
@@ -3789,6 +3818,7 @@ func init() {
 	KnowledgeArticlesTable.ForeignKeys[0].RefTable = KnownErrorsTable
 	KnowledgeArticleLikesTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
 	MspAllocationsTable.ForeignKeys[0].RefTable = UsersTable
+	MenusTable.ForeignKeys[0].RefTable = MenusTable
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
 	MicroservicesTable.ForeignKeys[0].RefTable = ApplicationsTable
 	NotificationPreferencesTable.ForeignKeys[0].RefTable = UsersTable

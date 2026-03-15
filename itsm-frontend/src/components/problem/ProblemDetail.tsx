@@ -138,7 +138,7 @@ const ProblemDetail: React.FC = () => {
   ];
 
   return (
-    <Space orientation="vertical" style={{ width: '100%' }} size="middle">
+    <Space direction="vertical" style={{ width: '100%' }} size="middle">
       {/* 操作栏 */}
       <Card variant="borderless" bodyStyle={{ padding: '16px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
