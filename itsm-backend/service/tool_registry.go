@@ -78,7 +78,8 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			offset = int(v)
 		}
 		req := &ListCIsRequest{Limit: limit, Offset: offset}
-		return t.cmdb.ListCIs(ctx, req)
+		items, _, err := t.cmdb.ListCIs(ctx, req)
+		return items, err
 	case "create_ticket":
 		return map[string]any{"needs_approval": true}, nil
 	case "update_ticket":
