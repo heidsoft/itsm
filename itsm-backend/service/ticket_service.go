@@ -13,10 +13,10 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcomment"
-	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
 
 	"itsm-backend/config"
@@ -35,10 +35,10 @@ type TicketService struct {
 	// 审批服务
 	approvalService *ApprovalService
 	// 子服务
-	lifecycleService   *TicketLifecycleService
-	assignmentService  *TicketAssignmentService
-	slaService         *TicketSLAService
-	sequenceService    *SequenceService // Redis 序列服务
+	lifecycleService  *TicketLifecycleService
+	assignmentService *TicketAssignmentService
+	slaService        *TicketSLAService
+	sequenceService   *SequenceService // Redis 序列服务
 }
 
 func NewTicketService(client *ent.Client, logger *zap.SugaredLogger) *TicketService {
@@ -157,8 +157,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 			RequesterID:  req.RequesterID,
 			TenantID:     tenantID,
 		}
+		reqCtx := ctx
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			ctx2, cancel := context.WithTimeout(reqCtx, 30*time.Second)
 			defer cancel()
 			if _, err := s.approvalService.TriggerApproval(ctx2, approvalReq); err != nil {
 				s.logger.Warnw("Approval trigger failed", "error", err)
@@ -168,8 +169,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 
 	// 通知（如果分配了处理人）
 	if s.notificationService != nil && ticket.AssigneeID > 0 {
+		reqCtx := ctx
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(reqCtx, 10*time.Second)
 			defer cancel()
 			if err := s.notificationService.NotifyTicketCreated(ctx2, ticket); err != nil {
 				s.logger.Warnw("Notification failed", "error", err)
@@ -179,8 +181,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 
 	// 自动化规则
 	if s.automationRuleService != nil {
+		reqCtx := ctx
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			ctx2, cancel := context.WithTimeout(reqCtx, 30*time.Second)
 			defer cancel()
 			if err := s.automationRuleService.ExecuteRulesForTicket(ctx2, ticket.ID, tenantID); err != nil {
 				s.logger.Warnw("Automation rules failed", "error", err)
@@ -190,8 +193,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 
 	// 工作流触发
 	if s.processTriggerService != nil {
+		reqCtx := ctx
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			ctx2, cancel := context.WithTimeout(reqCtx, 30*time.Second)
 			defer cancel()
 			if err := s.triggerWorkflowForTicket(ctx2, ticket.ID, tenantID, req.WorkflowDefinitionKey); err != nil {
 				s.logger.Warnw("Workflow trigger failed", "error", err)
@@ -412,8 +416,9 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto
 
 	// 执行自动化规则（异步）
 	if s.automationRuleService != nil {
+		reqCtx := ctx
 		go func() {
-			ruleCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			ruleCtx, cancel := context.WithTimeout(reqCtx, 30*time.Second)
 			defer cancel()
 			if err := s.automationRuleService.ExecuteRulesForTicket(ruleCtx, ticket.ID, tenantID); err != nil {
 				s.logger.Warnw("Failed to execute automation rules", "error", err, "ticket_id", ticket.ID)
@@ -1706,7 +1711,7 @@ func (s *TicketService) generateTicketNumberWithRedis(ctx context.Context, year,
 		return "", err
 	}
 
-		// 生成请求编号格式: REQ-YYYYMM-XXXXXX
+	// 生成请求编号格式: REQ-YYYYMM-XXXXXX
 	ticketNumber := fmt.Sprintf("REQ-%04d%02d-%06d", year, month, seq)
 	return ticketNumber, nil
 }
@@ -1884,13 +1889,13 @@ func (s *TicketService) buildCustomerReport(ctx context.Context, tenantID int, t
 	}
 
 	return dto.MSPCustomerReport{
-		CustomerTenantID:      tenantID,
-		CustomerName:          tenantName,
-		Period:                fmt.Sprintf("%s ~ %s", start.Format("2006-01-02"), end.Format("2006-01-02")),
-		TotalTickets:          totalTickets,
-		ResolvedTickets:       resolvedTickets,
-		MSPHandlingTimeAvg:    avgHandleTime,
-		SLAComplianceRate:     slaComplianceRate,
+		CustomerTenantID:   tenantID,
+		CustomerName:       tenantName,
+		Period:             fmt.Sprintf("%s ~ %s", start.Format("2006-01-02"), end.Format("2006-01-02")),
+		TotalTickets:       totalTickets,
+		ResolvedTickets:    resolvedTickets,
+		MSPHandlingTimeAvg: avgHandleTime,
+		SLAComplianceRate:  slaComplianceRate,
 	}
 }
 
@@ -1956,12 +1961,12 @@ func (s *TicketService) GetMSPPerformanceReports(ctx context.Context, startDate,
 
 	reports := []dto.MSPPerformanceReport{
 		{
-			MSPUserID:      mspUserID,
-			MSPUsername:    mspUser.Name,
-			Period:         fmt.Sprintf("%s ~ %s", start.Format("2006-01-02"), end.Format("2006-01-02")),
-			TotalTickets:   totalTickets,
+			MSPUserID:       mspUserID,
+			MSPUsername:     mspUser.Name,
+			Period:          fmt.Sprintf("%s ~ %s", start.Format("2006-01-02"), end.Format("2006-01-02")),
+			TotalTickets:    totalTickets,
 			ResolvedTickets: resolvedTickets,
-			AvgHandleTime:  avgHandleTime,
+			AvgHandleTime:   avgHandleTime,
 		},
 	}
 

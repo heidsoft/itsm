@@ -301,11 +301,15 @@ func (h *Handler) GetStats(c *gin.Context) {
 	resolved, _ := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("resolved")).Count(c.Request.Context())
 	closed, _ := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("closed")).Count(c.Request.Context())
 
+	// 按优先级统计
+	critical, _ := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Priority("critical")).Count(c.Request.Context())
+	major, _ := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Priority("high")).Count(c.Request.Context())
+
 	common.Success(c, gin.H{
 		"total_incidents":     total,
 		"open_incidents":      open + inProgress,
-		"critical_incidents":  0,
-		"major_incidents":     0,
+		"critical_incidents":  critical,
+		"major_incidents":     major,
 		"resolved_incidents":  resolved + closed,
 		"avg_resolution_time": 0,
 	})

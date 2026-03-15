@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/user"
+	"itsm-backend/middleware"
 
 	"go.uber.org/zap"
 )
@@ -103,6 +104,14 @@ func (s *RoleService) ListRoles(ctx context.Context, tenantID int, page, pageSiz
 func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRoleRequest, tenantID int) (*dto.RoleResponse, error) {
 	s.logger.Infow("Updating role", "id", id, "tenant_id", tenantID)
 
+	// 获取更新前的角色信息（用于缓存失效）
+	roleEntity, err := s.client.Role.Query().
+		Where(role.IDEQ(id)).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("角色不存在: %w", err)
+	}
+
 	update := s.client.Role.Update().
 		Where(
 			role.IDEQ(id),
@@ -116,10 +125,13 @@ func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRol
 		update = update.SetDescription(*req.Description)
 	}
 
-	_, err := update.Save(ctx)
+	_, err = update.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("更新角色失败: %w", err)
 	}
+
+	// 使该角色的权限缓存失效
+	middleware.InvalidateRolePermissionCache(roleEntity.Code, tenantID)
 
 	return s.GetRole(ctx, id, tenantID)
 }
@@ -154,11 +166,17 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 		return fmt.Errorf("有%d个用户使用此角色，无法删除", count)
 	}
 
+	// 保存角色code用于缓存失效
+	roleCode := roleEntity.Code
+
 	// 删除角色的权限关联
 	_, err = s.client.Role.Delete().Where(role.IDEQ(id)).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("删除角色失败: %w", err)
 	}
+
+	// 使该角色的权限缓存失效
+	middleware.InvalidateRolePermissionCache(roleCode, tenantID)
 
 	return nil
 }
@@ -204,6 +222,9 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 			s.logger.Warnw("Failed to add permission to role", "permission_id", p.ID, "error", err)
 		}
 	}
+
+	// 使该角色的权限缓存失效
+	middleware.InvalidateRolePermissionCache(roleEntity.Code, tenantID)
 
 	return nil
 }

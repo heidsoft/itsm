@@ -119,9 +119,9 @@ export default function ProblemEditPage() {
                 rules={[{ required: true, message: '请选择状态' }]}
               >
                 <Select placeholder="请选择状态">
-                  <Option value="open">打开</Option>
-                  <Option value="investigating">调查中</Option>
-                  <Option value="solved">已解决</Option>
+                  <Option value="open">待处理</Option>
+                  <Option value="in_progress">处理中</Option>
+                  <Option value="resolved">已解决</Option>
                   <Option value="closed">已关闭</Option>
                 </Select>
               </Form.Item>

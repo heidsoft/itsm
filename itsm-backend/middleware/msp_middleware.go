@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/mspallocation"
@@ -110,7 +111,8 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 		role, _ := roleVal.(string)
 
 		// 超级管理员可以直接使用 MSP 功能进行测试
-		if role == "super_admin" || role == "sysadmin" {
+		// admin 角色也允许访问 MSP 功能（用于测试）
+		if role == "super_admin" || role == "sysadmin" || role == "admin" {
 			isMSP = true
 			mspRole = "msp_manager" // 默认为 manager 角色
 		} else if tenantObj.Type == TenantTypeMSP && u.MspRole != "" {
@@ -343,4 +345,126 @@ func GetMSPContextFromContext(ctx context.Context) (*MSPContext, bool) {
 		IsMSP:            true,
 		CustomerTenantID: &tenantID,
 	}, true
+}
+
+// MSP角色到RBAC角色的映射
+var mspRoleToRBACRoleMap = map[string]string{
+	"provider_admin":  "msp_manager",
+	"provider_agent": "msp_tech",
+	"customer_user":  "end_user",
+}
+
+// GetMSPRBACRole 将用户的 MSP 角色转换为 RBAC 角色
+func GetMSPRBACRole(mspRole string) string {
+	if rbacRole, ok := mspRoleToRBACRoleMap[mspRole]; ok {
+		return rbacRole
+	}
+	// 默认返回 msp_viewer
+	return "msp_viewer"
+}
+
+// RequireMSPPermission 要求 MSP 权限的中间件
+// 支持资源级别的权限检查和客户级别验证
+func RequireMSPPermission(resource, action string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 1. 获取 MSP 上下文
+		mspCtx, exists := GetMSPContextFromGin(c)
+		if !exists || !mspCtx.IsMSP {
+			c.JSON(http.StatusForbidden, gin.H{
+				"code":    http.StatusForbidden,
+				"message": "仅MSP员工可访问",
+			})
+			c.Abort()
+			return
+		}
+
+		// 2. 获取用户的 RBAC 角色
+		// 注意：mspCtx.Role 已经是 RBAC 角色（如 msp_manager），不需要再转换
+		// 只有当 Role 是原生 MSP 角色（如 provider_admin）时才需要转换
+		rbacRole := mspCtx.Role
+		if !strings.HasPrefix(rbacRole, "msp_") {
+			// 如果不是 RBAC 角色格式，进行转换
+			rbacRole = GetMSPRBACRole(rbacRole)
+		}
+
+		// 3. 获取租户ID
+		tenantIDInterface, exists := c.Get("tenant_id")
+		if !exists {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    http.StatusInternalServerError,
+				"message": "租户信息缺失",
+			})
+			c.Abort()
+			return
+		}
+		tenantID := tenantIDInterface.(int)
+
+		// 4. 获取客户端
+		clientInterface, exists := c.Get("client")
+		if !exists {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    http.StatusInternalServerError,
+				"message": "客户端缺失",
+			})
+			c.Abort()
+			return
+		}
+		client := clientInterface.(*ent.Client)
+
+		// 5. 检查 RBAC 权限
+		if !hasResourcePermission(client, rbacRole, resource, action, tenantID) {
+			c.JSON(http.StatusForbidden, gin.H{
+				"code":    http.StatusForbidden,
+				"message": "权限不足",
+				"data": gin.H{
+					"required_resource": resource,
+					"required_action":  action,
+					"msp_role":         mspCtx.Role,
+					"rbac_role":       rbacRole,
+				},
+			})
+			c.Abort()
+			return
+		}
+
+		// 6. 如果请求头中包含目标客户租户，验证客户级别权限
+		targetCustomerHeader := c.GetHeader("X-Customer-Tenant-ID")
+		if targetCustomerHeader != "" {
+			targetTenantID, convErr := strconv.Atoi(targetCustomerHeader)
+			if convErr != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"code":    http.StatusBadRequest,
+					"message": "目标客户租户ID格式错误",
+				})
+				c.Abort()
+				return
+			}
+
+			// 验证该 MSP 员工是否有权访问此客户
+			hasAccess := false
+			for _, allowedID := range mspCtx.AllowedCustomers {
+				if allowedID == targetTenantID {
+					hasAccess = true
+					break
+				}
+			}
+			if !hasAccess {
+				c.JSON(http.StatusForbidden, gin.H{
+					"code":    http.StatusForbidden,
+					"message": "MSP员工无权访问此客户租户",
+					"data": gin.H{
+						"target_customer":   targetTenantID,
+						"allowed_customers": mspCtx.AllowedCustomers,
+					},
+				})
+				c.Abort()
+				return
+			}
+			// 更新上下文中的客户租户 ID
+			mspCtx.CustomerTenantID = &targetTenantID
+			c.Set(MSPContextKey, mspCtx)
+		}
+
+		c.Next()
+	}
 }

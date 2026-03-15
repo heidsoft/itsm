@@ -201,3 +201,18 @@ func (s *Service) AssessRisk(ctx context.Context, ra *RiskAssessment) (*RiskAsse
 func (s *Service) GetRisk(ctx context.Context, changeID int) (*RiskAssessment, error) {
 	return s.repo.GetRiskAssessment(ctx, changeID)
 }
+
+// TransitionStatus transitions a change to a new status
+func (s *Service) TransitionStatus(ctx context.Context, id, tenantID int, targetStatus string) (*Change, error) {
+	c, err := s.repo.Get(ctx, id, tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("change not found")
+	}
+	c.Status = targetStatus
+	return s.repo.Update(ctx, c)
+}
+
+// GetApprovalHistory returns approval records for a change
+func (s *Service) GetApprovalHistory(ctx context.Context, changeID int) ([]*ApprovalRecord, error) {
+	return s.repo.GetApprovalHistory(ctx, changeID)
+}

@@ -80,6 +80,8 @@ type Tx struct {
 	KnownError *KnownErrorClient
 	// MSPAllocation is the client for interacting with the MSPAllocation builders.
 	MSPAllocation *MSPAllocationClient
+	// Menu is the client for interacting with the Menu builders.
+	Menu *MenuClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
 	// Microservice is the client for interacting with the Microservice builders.
@@ -349,6 +351,7 @@ func (tx *Tx) init() {
 	tx.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(tx.config)
 	tx.KnownError = NewKnownErrorClient(tx.config)
 	tx.MSPAllocation = NewMSPAllocationClient(tx.config)
+	tx.Menu = NewMenuClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
 	tx.Microservice = NewMicroserviceClient(tx.config)
 	tx.Notification = NewNotificationClient(tx.config)

@@ -94,6 +94,10 @@ func (c *IncidentController) GetIncident(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		api.Error(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
 	response, err := c.incidentService.GetIncident(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		if err.Error() == "incident not found" {
@@ -226,6 +230,10 @@ func (c *IncidentController) UpdateIncident(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
 	response, err := c.incidentService.UpdateIncident(ctx.Request.Context(), id, &req, tenantID)
 	if err != nil {
 		if err.Error() == "incident not found" {
@@ -260,6 +268,10 @@ func (c *IncidentController) DeleteIncident(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
 	err = c.incidentService.DeleteIncident(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		if err.Error() == "incident not found" {
@@ -295,6 +307,10 @@ func (c *IncidentController) EscalateIncident(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
 	response, err := c.incidentService.EscalateIncident(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
 		if err.Error() == "incident not found" {
@@ -329,6 +345,10 @@ func (c *IncidentController) GetIncidentMonitoring(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
 	response, err := c.monitoringService.GenerateIncidentReport(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Failed to get incident monitoring", "error", err)
@@ -359,6 +379,10 @@ func (c *IncidentController) AnalyzeIncidentImpact(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
 	analysis, err := c.monitoringService.AnalyzeIncidentImpact(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		if err.Error() == "incident not found" {
@@ -465,6 +489,10 @@ func (c *IncidentController) GetIncidentMetrics(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
 	metrics, err := c.incidentService.GetIncidentMetrics(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Failed to get incident metrics", "error", err, "incident_id", id)
@@ -521,6 +549,10 @@ func (c *IncidentController) CreateIncidentEvent(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
 	response, err := c.incidentService.CreateIncidentEvent(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Failed to create incident event", "error", err)
@@ -551,6 +583,10 @@ func (c *IncidentController) CreateIncidentAlert(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
 	response, err := c.alertingService.CreateIncidentAlert(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Failed to create incident alert", "error", err)
@@ -665,6 +701,10 @@ func (c *IncidentController) GetActiveAlerts(ctx *gin.Context) {
 	size, _ := strconv.Atoi(ctx.DefaultQuery("size", "10"))
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
 	alerts, total, err := c.alertingService.GetActiveAlerts(ctx.Request.Context(), tenantID, page, size)
 	if err != nil {
 		c.logger.Errorw("Failed to get active alerts", "error", err)
@@ -713,6 +753,10 @@ func (c *IncidentController) GetAlertStatistics(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
 	statistics, err := c.alertingService.GetAlertStatistics(ctx.Request.Context(), tenantID, startTime, endTime)
 	if err != nil {
 		c.logger.Errorw("Failed to get alert statistics", "error", err)

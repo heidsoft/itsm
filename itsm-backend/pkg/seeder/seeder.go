@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/menu"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processbinding"
@@ -351,6 +352,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
 	s.seedPermissions(ctx) // 新增：初始化权限
+	s.seedMenus(ctx)      // 新增：初始化菜单
 	s.backfillAdminRole(ctx)
 	s.seedAdmin(ctx)
 	s.seedUser1(ctx)
@@ -965,6 +967,17 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		// 系统权限
 		{"system:read", "查看系统", "system", "read", "查看系统配置"},
 		{"system:write", "系统管理", "system", "write", "管理系统配置"},
+		// MSP 权限
+		{"msp:read", "查看MSP", "msp", "read", "查看MSP状态和上下文"},
+		{"msp:write", "管理MSP", "msp", "write", "管理MSP配置"},
+		{"msp_customer:read", "查看客户", "msp_customer", "read", "查看MSP客户列表和详情"},
+		{"msp_customer:write", "管理客户", "msp_customer", "write", "创建、编辑MSP客户"},
+		{"msp_ticket:read", "查看客户工单", "msp_ticket", "read", "查看客户工单"},
+		{"msp_ticket:write", "处理客户工单", "msp_ticket", "write", "处理客户工单"},
+		{"msp_allocation:read", "查看分配", "msp_allocation", "read", "查看MSP分配"},
+		{"msp_allocation:write", "管理分配", "msp_allocation", "write", "创建、编辑MSP分配"},
+		{"msp_report:read", "查看报表", "msp_report", "read", "查看MSP报表"},
+		{"msp_report:write", "管理报表", "msp_report", "write", "生成和管理MSP报表"},
 	}
 
 	for _, p := range permissions {
@@ -980,6 +993,91 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		}
 	}
 	s.sugar.Infow("permissions seeded", "count", len(permissions))
+}
+
+// seedMenus 初始化系统菜单
+func (s *Seeder) seedMenus(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip menus seed", "error", err)
+		return
+	}
+
+	// 检查是否已有菜单
+	existing, err := s.client.Menu.Query().Where(menu.TenantIDEQ(t.ID)).Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("check existing menus failed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("menus already seeded")
+		return
+	}
+
+	// 定义所有菜单
+	menus := []struct {
+		Name           string
+		Path           string
+		Icon           string
+		ParentID       *int
+		PermissionCode string
+		SortOrder      int
+	}{
+		// 主菜单
+		{Name: "仪表盘", Path: "/dashboard", Icon: "LayoutDashboard", PermissionCode: "", SortOrder: 10},
+		{Name: "工单管理", Path: "/tickets", Icon: "FileText", PermissionCode: "ticket:read", SortOrder: 20},
+		{Name: "事件管理", Path: "/incidents", Icon: "AlertCircle", PermissionCode: "incident:read", SortOrder: 30},
+		{Name: "问题管理", Path: "/problems", Icon: "HelpCircle", PermissionCode: "problem:read", SortOrder: 40},
+		{Name: "变更管理", Path: "/changes", Icon: "BarChart3", PermissionCode: "change:read", SortOrder: 50},
+		{Name: "CMDB", Path: "/cmdb", Icon: "Database", PermissionCode: "cmdb:read", SortOrder: 60},
+		{Name: "服务目录", Path: "/service-catalog", Icon: "Book", PermissionCode: "service:read", SortOrder: 70},
+		{Name: "知识库", Path: "/knowledge", Icon: "HelpCircle", PermissionCode: "knowledge:read", SortOrder: 80},
+		{Name: "SLA监控", Path: "/sla-dashboard", Icon: "Calendar", PermissionCode: "sla:read", SortOrder: 90},
+		{Name: "报表", Path: "/reports", Icon: "TrendingUp", PermissionCode: "report:read", SortOrder: 100},
+		{Name: "发布管理", Path: "/releases", Icon: "Rocket", PermissionCode: "release:read", SortOrder: 110},
+		{Name: "资产管理", Path: "/assets", Icon: "Monitor", PermissionCode: "asset:read", SortOrder: 120},
+		{Name: "MSP管理", Path: "/msp", Icon: "Shield", PermissionCode: "msp:read", SortOrder: 130},
+
+		// 管理菜单
+		{Name: "工作流", Path: "/workflow", Icon: "Workflow", PermissionCode: "workflow:read", SortOrder: 200},
+		{Name: "用户管理", Path: "/admin/users", Icon: "Users", PermissionCode: "user:read", SortOrder: 210},
+		{Name: "角色管理", Path: "/admin/roles", Icon: "Shield", PermissionCode: "role:read", SortOrder: 220},
+		{Name: "组管理", Path: "/admin/groups", Icon: "Users", PermissionCode: "group:read", SortOrder: 230},
+		{Name: "部门管理", Path: "/admin/departments", Icon: "Activity", PermissionCode: "department:read", SortOrder: 240},
+		{Name: "团队管理", Path: "/admin/teams", Icon: "Users", PermissionCode: "team:read", SortOrder: 250},
+		{Name: "审批管理", Path: "/admin/approvals", Icon: "ClipboardList", PermissionCode: "approval:read", SortOrder: 260},
+		{Name: "SLA配置", Path: "/admin/sla", Icon: "Calendar", PermissionCode: "sla:write", SortOrder: 270},
+		{Name: "系统配置", Path: "/admin/system", Icon: "Settings", PermissionCode: "system:write", SortOrder: 280},
+	}
+
+	for _, m := range menus {
+		builder := s.client.Menu.Create().
+			SetName(m.Name).
+			SetPath(m.Path).
+			SetIcon(m.Icon).
+			SetTenantID(t.ID).
+			SetSortOrder(m.SortOrder).
+			SetIsVisible(true).
+			SetIsEnabled(true).
+			SetPermissionCode(m.PermissionCode)
+
+		// 设置父菜单ID
+		if m.ParentID != nil {
+			builder = builder.SetParentID(*m.ParentID)
+		} else {
+			builder = builder.SetNillableParentID(nil)
+		}
+
+		if _, err := builder.Save(ctx); err != nil {
+			s.sugar.Warnw("seed menu failed", "error", err, "name", m.Name)
+		}
+	}
+	s.sugar.Infow("menus seeded", "count", len(menus))
+}
+
+// strPtr 字符串指针辅助函数
+func strPtr(s string) *string {
+	return &s
 }
 
 func (s *Seeder) seedServiceCatalog(ctx context.Context) {

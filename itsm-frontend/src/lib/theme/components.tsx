@@ -38,6 +38,8 @@ export function ThemeProvider({
 
   // Update color scheme based on mode and system preference
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const updateColorScheme = () => {
       if (mode === 'system') {
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -379,6 +381,8 @@ export function useBreakpoint() {
   const [breakpoint, setBreakpoint] = useState<string>('');
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const getBreakpoint = () => {
       const width = window.innerWidth;
       if (width >= 1536) return '2xl';

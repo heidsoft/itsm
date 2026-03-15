@@ -83,16 +83,16 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 	query := r.client.Problem.Query().Where(problem.TenantID(tenantID))
 
 	if v, ok := filters["status"].(string); ok && v != "" {
-		query.Where(problem.StatusEQ(v))
+		query = query.Where(problem.StatusEQ(v))
 	}
 	if v, ok := filters["priority"].(string); ok && v != "" {
-		query.Where(problem.PriorityEQ(v))
+		query = query.Where(problem.PriorityEQ(v))
 	}
 	if v, ok := filters["category"].(string); ok && v != "" {
-		query.Where(problem.CategoryEQ(v))
+		query = query.Where(problem.CategoryEQ(v))
 	}
 	if v, ok := filters["keyword"].(string); ok && v != "" {
-		query.Where(problem.Or(
+		query = query.Where(problem.Or(
 			problem.TitleContains(v),
 			problem.DescriptionContains(v),
 		))
@@ -163,7 +163,7 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*ProblemSta
 	inProgress, _ := r.client.Problem.Query().Where(problem.TenantID(tenantID), problem.StatusEQ("in_progress")).Count(ctx)
 	resolved, _ := r.client.Problem.Query().Where(problem.TenantID(tenantID), problem.StatusEQ("resolved")).Count(ctx)
 	closed, _ := r.client.Problem.Query().Where(problem.TenantID(tenantID), problem.StatusEQ("closed")).Count(ctx)
-	high, _ := r.client.Problem.Query().Where(problem.TenantID(tenantID), problem.PriorityEQ("high")).Count(ctx)
+	high, _ := r.client.Problem.Query().Where(problem.TenantID(tenantID), problem.PriorityIn("high", "critical")).Count(ctx)
 
 	return &ProblemStats{
 		Total:        total,
