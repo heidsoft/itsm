@@ -33,7 +33,7 @@ import dayjs from 'dayjs';
 
 import { CMDBApi } from '@/lib/api/';
 import { CIStatus, CIStatusLabels } from '@/constants/cmdb';
-import type { ConfigurationItem, CIType, CIQuery } from '@/types/biz/cmdb';
+import type { ConfigurationItem, CIType } from '@/types/biz/cmdb';
 
 const { Option } = Select;
 
@@ -61,19 +61,19 @@ const CIList: React.FC = () => {
   const requestIdRef = useRef(0);
   const isMountedRef = useRef(true);
 
-  const [query, setQuery] = useState<CIQuery>({
-    page: 1,
-    page_size: 10,
+  const [query, setQuery] = useState({
+    offset: 0,
+    limit: 10,
   });
 
   const loadTypes = useCallback(async () => {
     try {
-      const res = await CMDBApi.getTypes();
+      const res = await CMDBApi.getCITypes();
       if (!isMountedRef.current) return;
-      setTypes(res || []);
+      const list = (res as any)?.data ?? res;
+      setTypes(Array.isArray(list) ? list : []);
     } catch (e) {
       if (!isMountedRef.current) return;
-      // console.error(e);
       message.error('加载资产类型失败');
     }
   }, []);
@@ -84,15 +84,16 @@ const CIList: React.FC = () => {
     try {
       const values = form.getFieldsValue();
       const resp = await CMDBApi.getCIs({
-        ...query,
-        ...values,
+        offset: query.offset,
+        limit: query.limit,
+        ci_type: values.ci_type_id ? String(values.ci_type_id) : undefined,
+        status: values.status,
       });
       if (!isMountedRef.current || requestId !== requestIdRef.current) return;
-      setData((resp as any).items || (resp as any).cis || []);
-      setTotal((resp as any).total || 0);
+      setData((resp as any).items ?? (resp as any).cis ?? []);
+      setTotal((resp as any).total ?? 0);
     } catch (error) {
       if (!isMountedRef.current || requestId !== requestIdRef.current) return;
-      // console.error(error);
       const errorMessage = getErrorMessage(error);
       message.error(errorMessage ? `加载配置项列表失败：${errorMessage}` : '加载配置项列表失败');
     } finally {
@@ -117,7 +118,7 @@ const CIList: React.FC = () => {
   }, [loadData]);
 
   const handleSearch = () => {
-    setQuery(prev => ({ ...prev, page: 1 }));
+    setQuery(prev => ({ ...prev, offset: 0 }));
   };
 
   const handleDelete = (id: number) => {
@@ -302,12 +303,12 @@ const CIList: React.FC = () => {
             ),
           }}
           pagination={{
-            current: query.page,
-            pageSize: query.page_size,
+            current: Math.floor(query.offset / query.limit) + 1,
+            pageSize: query.limit,
             total: total,
             showSizeChanger: true,
             showTotal: total => `共 ${total} 条记录`,
-            onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
+            onChange: (page, pageSize) => setQuery({ offset: (page - 1) * pageSize, limit: pageSize }),
           }}
           scroll={{ x: 1200 }}
           getPopupContainer={node => node.parentElement || document.body}

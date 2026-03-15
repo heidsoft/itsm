@@ -1,10 +1,9 @@
 /**
- * CMDB API 服务 - 更新以匹配后端实际端点
+ * CMDB API 服务 - 统一使用 /api/v1/configuration-items
  */
 
 import { httpClient } from './http-client';
 
-// 简化的类型定义，匹配后端
 export interface ConfigurationItem {
   id: number;
   name: string;
@@ -35,7 +34,8 @@ export interface CIRelationship {
 
 export interface CreateCIRequest {
   name: string;
-  ci_type: string;
+  ci_type?: string;
+  ci_type_id?: number;
   status: string;
   environment: string;
   criticality: string;
@@ -53,7 +53,6 @@ export interface CITopology {
   children: CITopology[];
 }
 
-// Compatibility types for legacy code
 export interface GetCIListRequest {
   ci_type?: string;
   status?: string;
@@ -63,151 +62,62 @@ export interface GetCIListRequest {
 }
 
 export interface GetCIListResponse {
-  cis: ConfigurationItem[];
+  items?: ConfigurationItem[];
+  cis?: ConfigurationItem[];
   total: number;
-  items?: ConfigurationItem[]; // Optional for compatibility
 }
 
+const BASE = '/api/v1/configuration-items';
+
 export class CMDBApi {
-  // ==================== 新的配置项管理 API ====================
+  // ==================== CI CRUD ====================
 
-  /**
-   * 获取配置项列表 (新端点)
-   */
-  static async getConfigurationItems(params?: {
-    ci_type?: string;
-    status?: string;
-    environment?: string;
-    offset?: number;
-    limit?: number;
-  }): Promise<{ data: ConfigurationItem[] }> {
-    return httpClient.get('/api/v1/configuration-items', params);
-  }
-
-  /**
-   * 创建配置项 (新端点)
-   */
-  static async createConfigurationItem(data: CreateCIRequest): Promise<ConfigurationItem> {
-    return httpClient.post('/api/v1/configuration-items', data);
-  }
-
-  /**
-   * 获取配置项详情 (新端点)
-   */
-  static async getConfigurationItem(id: number): Promise<ConfigurationItem> {
-    return httpClient.get(`/api/v1/configuration-items/${id}`);
-  }
-
-  /**
-   * 获取CI拓扑关系 (新端点)
-   */
-  static async getCITopology(id: number, depth = 3): Promise<CITopology> {
-    return httpClient.get(`/api/v1/configuration-items/${id}/topology`, {
-      depth,
-    });
-  }
-
-  /**
-   * 获取CI影响分析 (新端点)
-   */
-  static async getCIImpactAnalysis(id: number): Promise<any> {
-    return httpClient.get(`/api/v1/configuration-items/${id}/impact-analysis`);
-  }
-
-  /**
-   * 获取CI变更历史 (新端点)
-   */
-  static async getCIChangeHistory(
-    id: number,
-    params?: { page?: number; page_size?: number }
-  ): Promise<any> {
-    return httpClient.get(`/api/v1/configuration-items/${id}/change-history`, params);
-  }
-
-  /**
-   * 创建CI关系 (新端点)
-   */
-  static async createCIRelationship(data: {
-    parent_id: number;
-    child_id: number;
-    type: string;
-    description?: string;
-  }): Promise<CIRelationship> {
-    return httpClient.post('/api/v1/configuration-items/relationships', data);
-  }
-
-  // ==================== DDD架构的CMDB API ====================
-
-  /**
-   * 获取CI列表 (DDD架构)
-   */
   static async getCIs(query?: GetCIListRequest): Promise<GetCIListResponse> {
-    return httpClient.get('/api/v1/cmdb/cis', query);
+    return httpClient.get(BASE, query);
   }
 
-  /**
-   * 获取单个CI (DDD架构)
-   */
-  static async getCI(id: string): Promise<ConfigurationItem> {
-    return httpClient.get(`/api/v1/cmdb/cis/${id}`);
+  static async getConfigurationItems(params?: GetCIListRequest): Promise<{ data: ConfigurationItem[] }> {
+    return httpClient.get(BASE, params);
   }
 
-  /**
-   * 创建CI (DDD架构)
-   */
+  static async getCI(id: string | number): Promise<ConfigurationItem> {
+    return httpClient.get(`${BASE}/${id}`);
+  }
+
+  static async getConfigurationItem(id: number): Promise<ConfigurationItem> {
+    return httpClient.get(`${BASE}/${id}`);
+  }
+
   static async createCI(request: CreateCIRequest): Promise<ConfigurationItem> {
-    return httpClient.post('/api/v1/cmdb/cis', request);
+    return httpClient.post(BASE, request);
   }
 
-  /**
-   * 更新CI (DDD架构)
-   */
-  static async updateCI(
-    id: string,
-    request: Partial<CreateCIRequest> & Record<string, any>
-  ): Promise<ConfigurationItem> {
-    return httpClient.put(`/api/v1/cmdb/cis/${id}`, request);
+  static async createConfigurationItem(data: CreateCIRequest): Promise<ConfigurationItem> {
+    return httpClient.post(BASE, data);
   }
 
-  /**
-   * 删除CI (DDD架构)
-   */
-  static async deleteCI(id: string): Promise<void> {
-    return httpClient.delete(`/api/v1/cmdb/cis/${id}`);
+  static async updateCI(id: string | number, request: Partial<CreateCIRequest> & Record<string, any>): Promise<ConfigurationItem> {
+    return httpClient.put(`${BASE}/${id}`, request);
   }
 
-  /**
-   * 获取CMDB统计 (DDD架构)
-   */
+  static async deleteCI(id: string | number): Promise<void> {
+    return httpClient.delete(`${BASE}/${id}`);
+  }
+
+  // ==================== Stats & Types ====================
+
   static async getCMDBStats(params?: Record<string, unknown>): Promise<any> {
-    return httpClient.get('/api/v1/cmdb/stats', params);
+    return httpClient.get(`${BASE}/stats`, params);
   }
 
-  /**
-   * 搜索配置项 (DDD架构)
-   */
-  static async searchCIs(query: {
-    keyword?: string;
-    ci_type?: string;
-    status?: string;
-  }): Promise<{ items: ConfigurationItem[]; total: number }> {
-    const result = await this.getCIs(query);
-    return {
-      items: result.cis,
-      total: result.total,
-    };
+  static async getCITypes(): Promise<any> {
+    return httpClient.get(`${BASE}/types`);
   }
 
-  /**
-   * 获取CI类型列表 (DDD架构)
-   */
   static async getCMDBTypes(): Promise<any> {
-    return httpClient.get('/api/v1/cmdb/types');
+    return this.getCITypes();
   }
 
-  /**
-   * 创建CI类型 (DDD架构)
-   */
   static async createCITypes(data: {
     name: string;
     description?: string;
@@ -216,131 +126,57 @@ export class CMDBApi {
     attribute_schema?: string;
     is_active?: boolean;
   }): Promise<any> {
-    return httpClient.post('/api/v1/cmdb/types', {
-      name: data.name,
-      description: data.description,
-      icon: data.icon,
-      color: data.color,
-      attribute_schema: data.attribute_schema,
-      is_active: data.is_active ?? true,
-    });
+    return httpClient.post(`${BASE}/types`, data);
   }
 
-  /**
-   * 更新CI类型 (DDD架构)
-   */
-  static async updateCITypes(
-    id: number,
-    data: {
-      name: string;
-      description?: string;
-      icon?: string;
-      color?: string;
-      attribute_schema?: string;
-      is_active?: boolean;
-    }
-  ): Promise<any> {
-    return httpClient.put(`/api/v1/cmdb/types/${id}`, {
-      name: data.name,
-      description: data.description,
-      icon: data.icon,
-      color: data.color,
-      attribute_schema: data.attribute_schema,
-      is_active: data.is_active,
-    });
+  static async updateCITypes(id: number, data: {
+    name: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+    attribute_schema?: string;
+    is_active?: boolean;
+  }): Promise<any> {
+    return httpClient.put(`${BASE}/types/${id}`, data);
   }
 
-  /**
-   * 删除CI类型 (DDD架构)
-   */
   static async deleteCITypes(id: number): Promise<void> {
-    return httpClient.delete(`/api/v1/cmdb/types/${id}`);
+    return httpClient.delete(`${BASE}/types/${id}`);
   }
 
-  /**
-   * 获取关系图谱
-   */
-  static async getRelationshipGraph(query?: Record<string, any>): Promise<any> {
-    return httpClient.get('/api/v1/cmdb/graph', query);
+  // ==================== Topology & Impact ====================
+
+  static async getCITopology(id: number, depth = 3): Promise<CITopology> {
+    return httpClient.get(`${BASE}/${id}/topology`, { depth });
   }
 
-  /**
-   * 影响分析
-   */
-  static async analyzeImpact(request: unknown): Promise<any> {
-    return httpClient.post('/api/v1/cmdb/impact', request);
+  static async getCIImpactAnalysis(id: number): Promise<any> {
+    return httpClient.get(`${BASE}/${id}/impact-analysis`);
   }
 
-  /**
-   * 获取CI类型列表 (兼容别名)
-   */
-  static async getCITypes(): Promise<any> {
-    return this.getCMDBTypes();
+  static async analyzeImpact(request: { ciId: string; analysisType?: string; maxDepth?: number }): Promise<any> {
+    return httpClient.get(`${BASE}/${request.ciId}/impact-analysis`);
   }
 
-  /**
-   * 获取CI健康状态
-   */
-  static async getCIHealth(ciId: string): Promise<any> {
-    return httpClient.get(`/api/v1/cmdb/cis/${ciId}/health`);
+  static async getCIHealth(id: string | number): Promise<any> {
+    return httpClient.get(`${BASE}/${id}/health`);
   }
 
-  /**
-   * 获取发现规则
-   */
-  static async getDiscoveryRules(): Promise<any[]> {
-    return httpClient.get('/api/v1/cmdb/discovery/rules');
+  static async getCIChangeHistory(id: number, params?: { page?: number; page_size?: number }): Promise<any> {
+    return httpClient.get(`${BASE}/${id}/change-history`, params);
   }
 
-  /**
-   * 获取发现历史
-   */
-  static async getDiscoveryHistory(ruleId?: string): Promise<any[]> {
-    return httpClient.get(
-      '/api/v1/cmdb/discovery/history',
-      ruleId ? { rule_id: ruleId } : undefined
-    );
+  // ==================== Relationships ====================
+
+  static async createCIRelationship(data: {
+    parent_id: number;
+    child_id: number;
+    type: string;
+    description?: string;
+  }): Promise<CIRelationship> {
+    return httpClient.post(`${BASE}/relationships`, data);
   }
 
-  /**
-   * 删除关系
-   */
-  static async deleteRelationship(id: string): Promise<void> {
-    return httpClient.delete(`/api/v1/cmdb/relationships/${id}`);
-  }
-
-  /**
-   * 运行发现规则
-   */
-  static async runDiscoveryRule(ruleId: string): Promise<void> {
-    return httpClient.post(`/api/v1/cmdb/discovery/rules/${ruleId}/run`);
-  }
-
-  // ==================== 兼容性方法 ====================
-
-  /**
-   * 获取CI的关系列表
-   */
-  static async getCIRelationships(
-    ciId: string,
-    params?: {
-      direction?: 'incoming' | 'outgoing' | 'both';
-      types?: string[];
-    }
-  ): Promise<CIRelationship[]> {
-    // 使用新的拓扑API来获取关系
-    try {
-      const topology = await this.getCITopology(parseInt(ciId));
-      return []; // 简化返回，实际应该从拓扑中提取关系
-    } catch (error) {
-      console.warn('使用拓扑API获取关系失败，返回空数组');
-      return [];
-    }
-  }
-
-  /**
-   * 创建关系 (兼容性方法)
-   */
   static async createRelationship(request: {
     source_ci_id: number;
     target_ci_id: number;
@@ -355,16 +191,93 @@ export class CMDBApi {
     });
   }
 
-  /**
-   * 批量创建CI
-   */
+  static async getCIRelationships(ciId: string | number, params?: {
+    direction?: 'incoming' | 'outgoing' | 'both';
+    types?: string[];
+  }): Promise<CIRelationship[]> {
+    try {
+      const topology = await this.getCITopology(Number(ciId));
+      return [];
+    } catch {
+      return [];
+    }
+  }
+
+  static async deleteRelationship(id: string): Promise<void> {
+    return httpClient.delete(`${BASE}/relationships/${id}`);
+  }
+
+  // ==================== Reconciliation ====================
+
+  static async getReconciliationResults(params?: any): Promise<any> {
+    return httpClient.get(`${BASE}/reconciliation`, params);
+  }
+
+  static async runReconciliation(params?: any): Promise<any> {
+    return httpClient.post(`${BASE}/reconciliation/run`, params);
+  }
+
+  // ==================== Cloud ====================
+
+  static async getCloudServices(provider?: string): Promise<any[]> {
+    return httpClient.get(`${BASE}/cloud-services`, provider ? { provider } : undefined);
+  }
+
+  static async createCloudService(data: unknown): Promise<any> {
+    return httpClient.post(`${BASE}/cloud-services`, data);
+  }
+
+  static async getCloudAccounts(): Promise<any[]> {
+    return httpClient.get(`${BASE}/cloud-accounts`);
+  }
+
+  static async createCloudAccount(data: unknown): Promise<any> {
+    return httpClient.post(`${BASE}/cloud-accounts`, data);
+  }
+
+  static async deleteCloudAccount(id: string): Promise<void> {
+    return httpClient.delete(`${BASE}/cloud-accounts/${id}`);
+  }
+
+  static async getCloudResources(params?: any): Promise<any> {
+    return httpClient.get(`${BASE}/cloud-resources`, params);
+  }
+
+  // ==================== Discovery ====================
+
+  static async getDiscoveryRules(): Promise<any[]> {
+    return httpClient.get(`${BASE}/discovery-sources`);
+  }
+
+  static async getDiscoveryHistory(ruleId?: string): Promise<any[]> {
+    return httpClient.get(`${BASE}/discovery/results`, ruleId ? { source_id: ruleId } : undefined);
+  }
+
+  static async runDiscoveryRule(ruleId: string): Promise<void> {
+    return httpClient.post(`${BASE}/discovery/jobs`, { source_id: ruleId });
+  }
+
+  // ==================== Search ====================
+
+  static async searchCIs(query: {
+    keyword?: string;
+    ci_type?: string;
+    status?: string;
+  }): Promise<{ items: ConfigurationItem[]; total: number }> {
+    const result = await this.getCIs(query);
+    return {
+      items: result.items ?? result.cis ?? [],
+      total: result.total,
+    };
+  }
+
+  // ==================== Batch ====================
+
   static async batchCreateCIs(requests: CreateCIRequest[]): Promise<ConfigurationItem[]> {
-    // 简单实现：逐个创建
     const results: ConfigurationItem[] = [];
     for (const request of requests) {
       try {
-        const ci = await this.createConfigurationItem(request);
-        results.push(ci);
+        results.push(await this.createCI(request));
       } catch (error) {
         console.error('批量创建CI失败:', error);
       }
@@ -372,77 +285,18 @@ export class CMDBApi {
     return results;
   }
 
-  // ==================== 云服务相关（兼容旧代码） ====================
+  // ==================== Deprecated aliases ====================
 
-  /**
-   * 获取云服务列表
-   */
-  static async getCloudServices(provider?: string): Promise<any[]> {
-    return httpClient.get('/api/v1/cmdb/cloud-services', provider ? { provider } : undefined);
-  }
+  /** @deprecated use getCITypes */
+  static getTypes = CMDBApi.getCITypes;
 
-  /**
-   * 获取云资源列表
-   */
-  static async getCloudResources(params?: any): Promise<any> {
-    return httpClient.get('/api/v1/cmdb/cloud-resources', params);
-  }
+  /** @deprecated use getReconciliationResults */
+  static getReconciliation = CMDBApi.getReconciliationResults;
 
-  /**
-   * 获取云账号列表
-   */
-  static async getCloudAccounts(): Promise<any[]> {
-    return httpClient.get('/api/v1/cmdb/cloud-accounts');
-  }
-
-  /**
-   * 创建云账号
-   */
-  static async createCloudAccount(data: unknown): Promise<any> {
-    return httpClient.post('/api/v1/cmdb/cloud-accounts', data);
-  }
-
-  /**
-   * 删除云账号
-   */
-  static async deleteCloudAccount(id: string): Promise<void> {
-    return httpClient.delete(`/api/v1/cmdb/cloud-accounts/${id}`);
-  }
-
-  /**
-   * 创建云服务
-   */
-  static async createCloudService(data: unknown): Promise<any> {
-    return httpClient.post('/api/v1/cmdb/cloud-services', data);
-  }
-
-  /**
-   * 获取对账结果
-   */
-  static async getReconciliationResults(params?: any): Promise<any> {
-    return httpClient.get('/api/v1/cmdb/reconciliation', params);
-  }
-
-  /**
-   * 运行对账
-   */
-  static async runReconciliation(params?: any): Promise<any> {
-    return httpClient.post('/api/v1/cmdb/reconciliation/run', params);
-  }
-
-  // ==================== 兼容别名（旧代码使用） ====================
-
-  /** @deprecated 使用 getCITypes */
-  static getTypes = this.getCITypes;
-
-  /** @deprecated 使用 getReconciliationResults */
-  static getReconciliation = this.getReconciliationResults;
-
-  /** @deprecated 使用 getCIs */
   static get cis() {
     return {
-      list: (params?: GetCIListRequest) => this.getCIs(params),
-      items: (params?: GetCIListRequest) => this.getCIs(params).then((r: GetCIListResponse) => r.cis || r.items || []),
+      list: (params?: GetCIListRequest) => CMDBApi.getCIs(params),
+      items: (params?: GetCIListRequest) => CMDBApi.getCIs(params).then((r: GetCIListResponse) => r.items ?? r.cis ?? []),
     };
   }
 }

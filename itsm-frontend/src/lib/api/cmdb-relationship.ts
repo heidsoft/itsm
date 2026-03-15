@@ -155,25 +155,25 @@ export interface RelationshipTypeInfo {
 export const CIRelationshipAPI = {
   // 获取关系类型列表
   async getRelationshipTypes(): Promise<RelationshipTypeInfo[]> {
-    return httpClient.get('/api/v1/cmdb/relationships/types');
+    return httpClient.get('/api/v1/configuration-items/relationship-types');
   },
 
   // 创建关系
   async createRelationship(data: CreateRelationshipRequest): Promise<CIRelationship> {
-    return httpClient.post('/api/v1/cmdb/relationships', data);
+    return httpClient.post('/api/v1/configuration-items/relationships', data);
   },
 
-  // 更新关系
+  // 更新关系（后端暂无此路由，预留）
   async updateRelationship(id: number, data: UpdateRelationshipRequest): Promise<CIRelationship> {
-    return httpClient.patch(`/api/v1/cmdb/relationships/${id}`, data);
+    return httpClient.patch(`/api/v1/configuration-items/relationships/${id}`, data);
   },
 
   // 删除关系
   async deleteRelationship(id: number): Promise<void> {
-    return httpClient.delete(`/api/v1/cmdb/relationships/${id}`);
+    return httpClient.delete(`/api/v1/configuration-items/relationships/${id}`);
   },
 
-  // 获取CI的所有关系
+  // 获取CI的所有关系（返回平铺列表，前端自行按 source_ci_id/target_ci_id 分组）
   async getCIRelationships(
     ciId: number,
     options?: {
@@ -189,13 +189,22 @@ export const CIRelationshipAPI = {
     total_incoming: number;
   }> {
     const params = new URLSearchParams();
-    if (options?.includeOutgoing !== false) params.append('include_outgoing', 'true');
-    if (options?.includeIncoming !== false) params.append('include_incoming', 'true');
+    params.append('ci_id', String(ciId));
     if (options?.relationshipType) params.append('relationship_type', options.relationshipType);
     if (options?.activeOnly) params.append('active_only', 'true');
 
-    const query = params.toString();
-    return httpClient.get(`/api/v1/cmdb/cis/${ciId}/relationships${query ? `?${query}` : ''}`);
+    const list: CIRelationship[] = await httpClient.get(
+      `/api/v1/configuration-items/relationships?${params.toString()}`
+    );
+    const arr = Array.isArray(list) ? list : [];
+    const outgoing = arr.filter(r => r.source_ci_id === ciId);
+    const incoming = arr.filter(r => r.target_ci_id === ciId);
+    return {
+      outgoing_relations: outgoing,
+      incoming_relations: incoming,
+      total_outgoing: outgoing.length,
+      total_incoming: incoming.length,
+    };
   },
 
   // 获取拓扑图
@@ -209,19 +218,42 @@ export const CIRelationshipAPI = {
     return httpClient.get(`/api/v1/configuration-items/${ciId}/impact-analysis`);
   },
 
-  // 批量创建关系
+  // 批量创建关系（逐个调用，后端无 batch 路由）
   async batchCreateRelationships(relationships: CreateRelationshipRequest[]): Promise<{
     created_count: number;
     failed_count: number;
     errors: string[];
   }> {
-    return httpClient.post('/api/v1/cmdb/relationships/batch', { relationships });
+    let created = 0;
+    let failed = 0;
+    const errors: string[] = [];
+    for (const rel of relationships) {
+      try {
+        await CIRelationshipAPI.createRelationship(rel);
+        created++;
+      } catch (e: any) {
+        failed++;
+        errors.push(e?.message ?? String(e));
+      }
+    }
+    return { created_count: created, failed_count: failed, errors };
   },
 
-  // 获取可用的目标CI列表（用于创建关系时选择）
+  // 获取可用的目标CI列表（通过 getCIs 搜索）
   async getAvailableCIs(ciId: number, search?: string): Promise<TopologyNode[]> {
-    const params = search ? `?search=${encodeURIComponent(search)}` : '';
-    return httpClient.get(`/api/v1/cmdb/cis/${ciId}/available-cis${params}`);
+    const { CMDBApi } = await import('./cmdb-api');
+    const result = await CMDBApi.getCIs(search ? { ci_type: undefined, status: undefined } : undefined);
+    const items = result.items ?? result.cis ?? [];
+    const filtered = items.filter((ci: any) => ci.id !== ciId);
+    return filtered.map((ci: any) => ({
+      id: ci.id,
+      name: ci.name,
+      type: ci.ci_type ?? ci.type ?? '',
+      type_name: ci.ci_type ?? ci.type ?? '',
+      status: ci.status ?? '',
+      criticality: ci.criticality ?? '',
+      attributes: ci.attributes ?? {},
+    }));
   },
 };
 

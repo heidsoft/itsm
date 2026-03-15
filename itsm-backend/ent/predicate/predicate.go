@@ -108,6 +108,9 @@ type KnownError func(*sql.Selector)
 // MSPAllocation is the predicate function for mspallocation builders.
 type MSPAllocation func(*sql.Selector)
 
+// Menu is the predicate function for menu builders.
+type Menu func(*sql.Selector)
+
 // Message is the predicate function for message builders.
 type Message func(*sql.Selector)
 

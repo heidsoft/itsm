@@ -119,12 +119,16 @@ const TicketList: React.FC<TicketListProps> = ({
   // 当防抖值变化时触发搜索
   useEffect(() => {
     updateFilters({ keyword: debouncedSearchValue || undefined });
-  }, [debouncedSearchValue, updateFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchValue]);
 
+  // 用 JSON 序列化做深比较，避免对象引用变化导致无限循环
+  const advancedFiltersKey = JSON.stringify(advancedFilters);
   useEffect(() => {
     if (advancedFilters === undefined) return;
     updateFilters(advancedFilters);
-  }, [advancedFilters, updateFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [advancedFiltersKey]);
 
   // 选择操作
   const selectTicket = useCallback((id: number) => {
@@ -369,7 +373,7 @@ const TicketList: React.FC<TicketListProps> = ({
               key: 'edit',
               icon: <EditOutlined />,
               label: '编辑',
-              onClick: () => router.push(`/tickets/${record.id}/edit`),
+              onClick: () => router.push(`/tickets/${record.id}`),
             },
             {
               type: 'divider',

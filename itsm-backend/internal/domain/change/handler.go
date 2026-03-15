@@ -3,6 +3,7 @@ package change
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -318,4 +319,115 @@ func (h *Handler) GetStats(c *gin.Context) {
 		return
 	}
 	common.Success(c, res)
+}
+
+// TransitionStatus handles status transition actions
+// POST /api/v1/changes/:id/approve|reject|start|complete|rollback|cancel
+func (h *Handler) TransitionStatus(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+		return
+	}
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	// Determine target status from the last path segment
+	path := c.FullPath() // e.g. /api/v1/changes/:id/approve
+	parts := strings.Split(path, "/")
+	action := parts[len(parts)-1]
+	statusMap := map[string]string{
+		"approve":  "approved",
+		"reject":   "rejected",
+		"start":    "in_progress",
+		"complete": "completed",
+		"rollback": "rolled_back",
+		"cancel":   "cancelled",
+	}
+	targetStatus, ok := statusMap[action]
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Unknown action: "+action)
+		return
+	}
+
+	var body struct {
+		Comment string `json:"comment"`
+		Reason  string `json:"reason"`
+	}
+	_ = c.ShouldBindJSON(&body)
+
+	res, err := h.svc.TransitionStatus(c.Request.Context(), id, tenantID, targetStatus)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, toDTO(res))
+}
+
+// AssignChange handles POST /api/v1/changes/:id/assign
+func (h *Handler) AssignChange(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+		return
+	}
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	var req struct {
+		AssigneeID int `json:"assignee_id" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "assignee_id is required")
+		return
+	}
+
+	existing, err := h.svc.GetChange(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusNotFound, "Change not found")
+		return
+	}
+	existing.AssigneeID = &req.AssigneeID
+	res, err := h.svc.UpdateChange(c.Request.Context(), existing)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, toDTO(res))
+}
+
+// GetApprovals handles GET /api/v1/changes/:id/approvals
+func (h *Handler) GetApprovals(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+		return
+	}
+	history, err := h.svc.GetApprovalHistory(c.Request.Context(), id)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, history)
+}
+
+// DeleteChange handles DELETE /api/v1/changes/:id
+func (h *Handler) DeleteChange(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+		return
+	}
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	if err := h.svc.DeleteChange(c.Request.Context(), id, tenantID); err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, gin.H{"message": "deleted"})
 }

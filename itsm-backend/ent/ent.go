@@ -39,6 +39,7 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/knownerror"
+	"itsm-backend/ent/menu"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/mspallocation"
@@ -192,6 +193,7 @@ func checkColumn(t, c string) error {
 			knowledgearticlelike.Table:    knowledgearticlelike.ValidColumn,
 			knownerror.Table:              knownerror.ValidColumn,
 			mspallocation.Table:           mspallocation.ValidColumn,
+			menu.Table:                    menu.ValidColumn,
 			message.Table:                 message.ValidColumn,
 			microservice.Table:            microservice.ValidColumn,
 			notification.Table:            notification.ValidColumn,

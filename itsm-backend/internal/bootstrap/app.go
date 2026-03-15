@@ -54,6 +54,9 @@ func NewApplication() *Application {
 	sugar := logger.Sugar()
 	middleware.SetLogger(sugar)
 
+	// 3. 初始化权限配置（数据库优先，不存在时使用硬编码权限）
+	middleware.PermissionConfig.Mode = middleware.PermissionConfigModeFallback
+
 	// 3. 初始化数据库连接
 	client, err := database.InitDatabase(&cfg.Database)
 	if err != nil {
@@ -246,6 +249,7 @@ func NewApplication() *Application {
 	cmdbRepo := cmdb.NewEntRepository(client)
 	cmdbServiceDomain := cmdb.NewService(cmdbRepo, sugar)
 	cmdbHandler := cmdb.NewHandler(cmdbServiceDomain)
+	_ = cmdbHandler // CMDBHandler routes removed; using CMDBController with /configuration-items instead
 
 	// Domain: Service Request (DDD)
 	srRepo := service_request.NewEntRepository(client)
@@ -253,9 +257,8 @@ func NewApplication() *Application {
 	srHandler := service_request.NewHandler(srService)
 
 	// Domain: Incident (DDD)
-	incRepo := incident.NewEntRepository(client)
-	incService := incident.NewService(incRepo, sugar)
-	incHandler := incident.NewHandler(incService)
+	// Note: Incident handler has been removed from router config
+	_ = incident.NewEntRepository // Prevent unused import warning
 
 	// Domain: Problem (DDD)
 	problemRepo := problem.NewEntRepository(client)
@@ -271,7 +274,7 @@ func NewApplication() *Application {
 	// Note: cmdbService already declared at line 83
 	ciRelationshipService := service.NewCIRelationshipService(client)
 	auditLogService := service.NewAuditLogService(client, sugar)
-	cmdbController := controller.NewCMDBController(cmdbService, ciRelationshipService, auditLogService)
+	cmdbController := controller.NewCMDBController(cmdbService, ciRelationshipService, auditLogService, cmdbServiceDomain)
 
 	// Analytics & Prediction Controllers
 	analyticsController := controller.NewAnalyticsController(analyticsService)
@@ -313,6 +316,10 @@ func NewApplication() *Application {
 	roleController := controller.NewRoleController(roleService, sugar)
 	permissionService := service.NewPermissionService(client, sugar)
 	permissionController := controller.NewPermissionController(permissionService, sugar)
+
+	// Menu Controller (database-backed with tenant isolation)
+	menuService := service.NewMenuService(client, sugar)
+	menuController := controller.NewMenuController(menuService)
 
 	// Tenant Controller
 	tenantService := service.NewTenantService(client, sugar)
@@ -378,8 +385,9 @@ func NewApplication() *Application {
 		// Role & Permission Controllers
 		RoleController:          roleController,
 		PermissionController:    permissionController,
+		MenuController:          menuController,
 		TenantController:        tenantController,
-		MSPController:          mspController,
+		MSPController:           mspController,
 		SystemConfigController:  systemConfigController,
 		ApprovalChainController: approvalChainController,
 
@@ -401,10 +409,8 @@ func NewApplication() *Application {
 		// Domain Handlers
 		ServiceCatalogHandler: scHandler,
 		ServiceRequestHandler: srHandler,
-		IncidentHandler:       incHandler,
 		ProblemHandler:        problemHandler,
 		ChangeHandler:         changeHandler,
-		CMDBHandler:           cmdbHandler,
 		KnowledgeHandler:      knowledgeHandler,
 		SLAHandler:            slaHandler,
 		AIHandler:             aiHandler, // Added AI domain handler

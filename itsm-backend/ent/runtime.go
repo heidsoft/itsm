@@ -36,6 +36,7 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/knownerror"
+	"itsm-backend/ent/menu"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/mspallocation"
@@ -1227,6 +1228,32 @@ func init() {
 	mspallocationDescCreatedAt := mspallocationFields[4].Descriptor()
 	// mspallocation.DefaultCreatedAt holds the default value on creation for the created_at field.
 	mspallocation.DefaultCreatedAt = mspallocationDescCreatedAt.Default.(func() time.Time)
+	menuFields := schema.Menu{}.Fields()
+	_ = menuFields
+	// menuDescName is the schema descriptor for name field.
+	menuDescName := menuFields[0].Descriptor()
+	// menu.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	menu.NameValidator = menuDescName.Validators[0].(func(string) error)
+	// menuDescPath is the schema descriptor for path field.
+	menuDescPath := menuFields[1].Descriptor()
+	// menu.PathValidator is a validator for the "path" field. It is called by the builders before save.
+	menu.PathValidator = menuDescPath.Validators[0].(func(string) error)
+	// menuDescSortOrder is the schema descriptor for sort_order field.
+	menuDescSortOrder := menuFields[5].Descriptor()
+	// menu.DefaultSortOrder holds the default value on creation for the sort_order field.
+	menu.DefaultSortOrder = menuDescSortOrder.Default.(int)
+	// menuDescTenantID is the schema descriptor for tenant_id field.
+	menuDescTenantID := menuFields[6].Descriptor()
+	// menu.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	menu.TenantIDValidator = menuDescTenantID.Validators[0].(func(int) error)
+	// menuDescIsVisible is the schema descriptor for is_visible field.
+	menuDescIsVisible := menuFields[7].Descriptor()
+	// menu.DefaultIsVisible holds the default value on creation for the is_visible field.
+	menu.DefaultIsVisible = menuDescIsVisible.Default.(bool)
+	// menuDescIsEnabled is the schema descriptor for is_enabled field.
+	menuDescIsEnabled := menuFields[8].Descriptor()
+	// menu.DefaultIsEnabled holds the default value on creation for the is_enabled field.
+	menu.DefaultIsEnabled = menuDescIsEnabled.Default.(bool)
 	messageFields := schema.Message{}.Fields()
 	_ = messageFields
 	// messageDescCreatedAt is the schema descriptor for created_at field.
