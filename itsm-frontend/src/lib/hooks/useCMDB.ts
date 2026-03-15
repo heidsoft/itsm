@@ -56,7 +56,7 @@ export function useCIRelationshipsQuery(
 export function useRelationshipGraphQuery(query: GraphQuery, enabled = true) {
   return useQuery({
     queryKey: CMDB_KEYS.graph(query),
-    queryFn: () => CMDBApi.getRelationshipGraph(query),
+    queryFn: () => CMDBApi.getCITopology(Number(query.rootCI), query.depth),
     enabled: enabled && !!query.rootCI,
     staleTime: 60000,
   });

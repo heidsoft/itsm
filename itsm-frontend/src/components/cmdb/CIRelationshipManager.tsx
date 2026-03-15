@@ -204,10 +204,10 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       render: (_: unknown, record: CIRelationship) => (
         <Space orientation="vertical" size={0}>
           <Text strong>
-            {createType === 'outgoing' ? record.target_ci_name : record.source_ci_name}
+            {record.source_ci_id === ciId ? record.target_ci_name : record.source_ci_name}
           </Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            {createType === 'outgoing' ? record.target_ci_type : record.source_ci_type}
+            {record.source_ci_id === ciId ? record.target_ci_type : record.source_ci_type}
           </Text>
         </Space>
       ),

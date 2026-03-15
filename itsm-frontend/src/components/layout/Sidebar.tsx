@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Menu, theme, Badge } from 'antd';
 import {
   LayoutDashboard,
@@ -31,6 +31,7 @@ import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
 import styles from './Sidebar.module.css';
 import { useI18n } from '@/lib/i18n';
+import { getUserMenus, MenuItem as MenuItemType, MenuTreeResponse } from '@/lib/api/menu-api';
 
 const { Sider } = Layout;
 
@@ -357,6 +358,85 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   useAuthStoreHydration();
   const MENU_CONFIG = getMenuConfig(t);
 
+  // 动态菜单状态
+  const [dynamicMenus, setDynamicMenus] = useState<MenuTreeResponse | null>(null);
+  const [menuLoading, setMenuLoading] = useState(false);
+  const [menuError, setMenuError] = useState(false);
+
+  // 加载用户菜单
+  useEffect(() => {
+    const loadMenus = async () => {
+      if (!user) return;
+
+      try {
+        setMenuLoading(true);
+        const menus = await getUserMenus();
+        if (menus && (menus.main?.length > 0 || menus.admin?.length > 0)) {
+          setDynamicMenus(menus);
+        }
+      } catch (error) {
+        console.warn('Failed to load dynamic menus, using fallback:', error);
+        setMenuError(true);
+      } finally {
+        setMenuLoading(false);
+      }
+    };
+
+    loadMenus();
+  }, [user]);
+
+  // 将API菜单转换为Sidebar格式
+  const convertApiMenuToSidebar = (menus: MenuItemType[]): MenuItem[] => {
+    return menus.map(menu => {
+      const icon = getIconByName(menu.icon);
+      const item: MenuItem = {
+        key: menu.path,
+        icon,
+        label: menu.name,
+        path: menu.path,
+        permission: menu.permission_code,
+        description: menu.description,
+        children: menu.children ? convertApiMenuToSidebar(menu.children) : undefined,
+      };
+      return item;
+    });
+  };
+
+  // 根据图标名称获取图标组件
+  const getIconByName = (iconName?: string) => {
+    if (!iconName) return undefined;
+    const iconMap: Record<string, React.ReactNode> = {
+      LayoutDashboard: <LayoutDashboard style={iconStyle} />,
+      FileText: <FileText style={iconStyle} />,
+      AlertCircle: <AlertCircle style={iconStyle} />,
+      HelpCircle: <HelpCircle style={iconStyle} />,
+      BarChart3: <BarChart3 style={iconStyle} />,
+      Database: <Database style={iconStyle} />,
+      Book: <Book style={iconStyle} />,
+      Calendar: <Calendar style={iconStyle} />,
+      GitMerge: <GitMerge style={iconStyle} />,
+      Shield: <Shield style={iconStyle} />,
+      TrendingUp: <TrendingUp style={iconStyle} />,
+      Rocket: <Rocket style={iconStyle} />,
+      Monitor: <Monitor style={iconStyle} />,
+      Key: <Key style={iconStyle} />,
+      Workflow: <Workflow style={iconStyle} />,
+      Play: <Play style={iconStyle} />,
+      Settings: <Settings style={iconStyle} />,
+      History: <History style={iconStyle} />,
+      Users: <Users style={iconStyle} />,
+      Activity: <Activity style={iconStyle} />,
+      Clock: <Clock style={iconStyle} />,
+      ClipboardList: <ClipboardList style={iconStyle} />,
+    };
+    return iconMap[iconName];
+  };
+
+  // 确定使用哪个菜单配置
+  const useDynamicMenu = dynamicMenus && !menuError;
+  const mainMenus = useDynamicMenu ? convertApiMenuToSidebar(dynamicMenus.main) : MENU_CONFIG.main;
+  const adminMenus = useDynamicMenu ? convertApiMenuToSidebar(dynamicMenus.admin) : MENU_CONFIG.admin;
+
   const handleMenuClick = ({ key }: { key: string }) => {
     router.push(key);
   };
@@ -439,7 +519,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           inlineIndent={24}
           selectedKeys={[pathname]}
           className={styles.customMenu}
-          items={renderMenuItems(MENU_CONFIG.main)}
+          items={renderMenuItems(mainMenus)}
           theme="light"
         />
       </div>
@@ -454,7 +534,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
               inlineIndent={24}
               selectedKeys={[pathname]}
               className={styles.customMenu}
-              items={renderMenuItems(MENU_CONFIG.admin)}
+              items={renderMenuItems(adminMenus)}
               theme="light"
             />
           </div>

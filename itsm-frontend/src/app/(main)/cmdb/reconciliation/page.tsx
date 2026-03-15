@@ -50,7 +50,7 @@ export default function ReconciliationPage() {
     setLoading(true);
     try {
       const [recon, serviceList] = await Promise.all([
-        CMDBApi.getReconciliation(),
+        CMDBApi.getReconciliationResults(),
         CMDBApi.getCloudServices(),
       ]);
       setSummary(recon.summary);

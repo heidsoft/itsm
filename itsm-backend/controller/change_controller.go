@@ -56,7 +56,7 @@ func (cc *ChangeController) ListChanges(c *gin.Context) {
 	changes, err := cc.changeService.ListChanges(c.Request.Context(), tenantID, page, pageSize, status, search)
 	if err != nil {
 		cc.logger.Errorw("List changes failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取变更列表失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
@@ -82,7 +82,7 @@ func (cc *ChangeController) CreateChange(c *gin.Context) {
 	// 解析请求体
 	var req dto.CreateChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.Fail(c, common.BadRequestCode, "请求参数错误")
 		return
 	}
 
@@ -90,7 +90,7 @@ func (cc *ChangeController) CreateChange(c *gin.Context) {
 	change, err := cc.changeService.CreateChange(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		cc.logger.Errorw("Create change failed", "error", err, "tenant_id", tenantID, "user_id", userID)
-		common.Fail(c, common.InternalErrorCode, "创建变更失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
@@ -121,7 +121,7 @@ func (cc *ChangeController) GetChange(c *gin.Context) {
 			return
 		}
 		cc.logger.Errorw("Get change failed", "error", err, "change_id", changeID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取变更详情失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
@@ -147,7 +147,7 @@ func (cc *ChangeController) UpdateChange(c *gin.Context) {
 	// 解析请求体
 	var req dto.UpdateChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.Fail(c, common.BadRequestCode, "请求参数错误")
 		return
 	}
 
@@ -159,7 +159,7 @@ func (cc *ChangeController) UpdateChange(c *gin.Context) {
 			return
 		}
 		cc.logger.Errorw("Update change failed", "error", err, "change_id", changeID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "更新变更失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
@@ -190,7 +190,7 @@ func (cc *ChangeController) DeleteChange(c *gin.Context) {
 			return
 		}
 		cc.logger.Errorw("Delete change failed", "error", err, "change_id", changeID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "删除变更失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
@@ -210,7 +210,7 @@ func (cc *ChangeController) GetChangeStats(c *gin.Context) {
 	stats, err := cc.changeService.GetChangeStats(c.Request.Context(), tenantID)
 	if err != nil {
 		cc.logger.Errorw("Get change stats failed", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取变更统计失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
@@ -238,7 +238,7 @@ func (cc *ChangeController) UpdateChangeStatus(c *gin.Context) {
 		Status dto.ChangeStatus `json:"status" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "请求参数错误: "+err.Error())
+		common.Fail(c, common.BadRequestCode, "请求参数错误")
 		return
 	}
 
@@ -250,7 +250,7 @@ func (cc *ChangeController) UpdateChangeStatus(c *gin.Context) {
 			return
 		}
 		cc.logger.Errorw("Update change status failed", "error", err, "change_id", changeID, "status", req.Status, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "更新变更状态失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 

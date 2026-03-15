@@ -338,7 +338,7 @@ export class IncidentAPI {
 
   // 更新事件
   static async updateIncident(id: number, data: UpdateIncidentRequest): Promise<Incident> {
-    const response = await httpClient.patch<Incident>(`/api/v1/incidents/${id}`, data);
+    const response = await httpClient.put<Incident>(`/api/v1/incidents/${id}`, data);
     return response;
   }
 
@@ -367,7 +367,7 @@ export class IncidentAPI {
   static async getRootCauseAnalysis(incidentId: number): Promise<RootCauseAnalysis> {
     try {
       const response = await httpClient.get<RootCauseAnalysis>(
-        `/api/incidents/${incidentId}/root-cause`
+        `/api/v1/incidents/${incidentId}/root-cause`
       );
       return response;
     } catch (error) {
@@ -381,7 +381,7 @@ export class IncidentAPI {
   ): Promise<RootCauseAnalysis> {
     try {
       const response = await httpClient.post<RootCauseAnalysis>(
-        '/api/incidents/root-cause',
+        '/api/v1/incidents/root-cause',
         request
       );
       return response;
@@ -397,7 +397,7 @@ export class IncidentAPI {
   ): Promise<RootCauseAnalysis> {
     try {
       const response = await httpClient.put<RootCauseAnalysis>(
-        `/api/incidents/root-cause/${id}`,
+        `/api/v1/incidents/root-cause/${id}`,
         request
       );
       return response;
@@ -411,7 +411,7 @@ export class IncidentAPI {
   static async getImpactAssessment(incidentId: number): Promise<ImpactAssessment> {
     try {
       const response = await httpClient.get<ImpactAssessment>(
-        `/api/incidents/${incidentId}/impact-assessment`
+        `/api/v1/incidents/${incidentId}/impact-assessment`
       );
       return response;
     } catch (error) {
@@ -425,7 +425,7 @@ export class IncidentAPI {
   ): Promise<ImpactAssessment> {
     try {
       const response = await httpClient.post<ImpactAssessment>(
-        '/api/incidents/impact-assessment',
+        '/api/v1/incidents/impact-assessment',
         request
       );
       return response;
@@ -441,7 +441,7 @@ export class IncidentAPI {
   ): Promise<ImpactAssessment> {
     try {
       const response = await httpClient.put<ImpactAssessment>(
-        `/api/incidents/impact-assessment/${id}`,
+        `/api/v1/incidents/impact-assessment/${id}`,
         request
       );
       return response;
@@ -455,7 +455,7 @@ export class IncidentAPI {
   static async getIncidentClassification(incidentId: number): Promise<IncidentClassification> {
     try {
       const response = await httpClient.get<IncidentClassification>(
-        `/api/incidents/${incidentId}/classification`
+        `/api/v1/incidents/${incidentId}/classification`
       );
       return response;
     } catch (error) {
@@ -469,7 +469,7 @@ export class IncidentAPI {
   ): Promise<IncidentClassification> {
     try {
       const response = await httpClient.post<IncidentClassification>(
-        '/api/incidents/classification',
+        '/api/v1/incidents/classification',
         request
       );
       return response;
@@ -485,7 +485,7 @@ export class IncidentAPI {
   ): Promise<IncidentClassification> {
     try {
       const response = await httpClient.put<IncidentClassification>(
-        `/api/incidents/classification/${id}`,
+        `/api/v1/incidents/classification/${id}`,
         request
       );
       return response;
@@ -506,7 +506,7 @@ export class IncidentAPI {
         suggested_classification: Partial<IncidentClassification>;
         suggested_root_causes: string[];
         similar_incidents: Incident[];
-      }>(`/api/incidents/${incidentId}/ai-analysis`);
+      }>(`/api/v1/incidents/${incidentId}/ai-analysis`);
       return response;
     } catch (error) {
       console.error('IncidentAPI.analyzeIncidentWithAI error:', error);

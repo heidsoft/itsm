@@ -10,6 +10,7 @@ import (
 	"itsm-backend/controller"
 	"itsm-backend/ent"
 	"itsm-backend/ent/citype"
+	"itsm-backend/internal/domain/cmdb"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -41,8 +42,13 @@ func main() {
 	cmdbService := service.NewCMDBService(client)
 	ciRelationshipService := service.NewCIRelationshipService(client)
 
+	// 初始化 DDD CMDB 服务
+	sugar.Infow("Initializing DDD CMDB service")
+	cmdbRepo := cmdb.NewEntRepository(client)
+	cmdbDDDService := cmdb.NewService(cmdbRepo, sugar)
+
 	// 初始化控制器
-	cmdbController := controller.NewCMDBController(cmdbService, ciRelationshipService, nil)
+	cmdbController := controller.NewCMDBController(cmdbService, ciRelationshipService, nil, cmdbDDDService)
 
 	// 初始化路由
 	r := gin.Default()

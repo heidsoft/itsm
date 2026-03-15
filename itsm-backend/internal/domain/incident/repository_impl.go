@@ -155,13 +155,13 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 	query := r.client.Incident.Query().Where(incident.TenantIDEQ(tenantID))
 
 	if v, ok := filters["status"].(string); ok && v != "" {
-		query.Where(incident.StatusEQ(v))
+		query = query.Where(incident.StatusEQ(v))
 	}
 	if v, ok := filters["priority"].(string); ok && v != "" {
-		query.Where(incident.PriorityEQ(v))
+		query = query.Where(incident.PriorityEQ(v))
 	}
 	if v, ok := filters["keyword"].(string); ok && v != "" {
-		query.Where(incident.Or(
+		query = query.Where(incident.Or(
 			incident.TitleContains(v),
 			incident.DescriptionContains(v),
 			incident.IncidentNumberContains(v),

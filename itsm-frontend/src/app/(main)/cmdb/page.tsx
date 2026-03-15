@@ -48,16 +48,14 @@ export default function CMDBPage() {
   const fetchStats = async () => {
     try {
       const statsData = await CMDBApi.getCMDBStats();
-      if (statsData.data) {
-        setStats(statsData.data);
-      } else if (typeof statsData === 'object') {
-        setStats({
-          totalCIs: (statsData as any).totalCIs || (statsData as any).total_cis || 0,
-          online: (statsData as any).online || 0,
-          offline: (statsData as any).offline || 0,
-          maintenance: (statsData as any).maintenance || 0,
-        });
-      }
+      // Backend returns: { total_count, active_count, inactive_count, maintenance_count, ... }
+      const d = (statsData as any)?.data ?? statsData;
+      setStats({
+        totalCIs: d?.total_count ?? d?.totalCIs ?? d?.total_cis ?? 0,
+        online: d?.active_count ?? d?.online ?? 0,
+        offline: d?.inactive_count ?? d?.offline ?? 0,
+        maintenance: d?.maintenance_count ?? d?.maintenance ?? 0,
+      });
     } catch (error) {
       console.error('Failed to fetch CMDB stats:', error);
     }
@@ -91,11 +89,18 @@ export default function CMDBPage() {
 
   const fetchReconciliationData = async () => {
     try {
-      const reconciliationResult = await CMDBApi.getReconciliationResults();
-      if (reconciliationResult.data && Array.isArray(reconciliationResult.data)) {
-        setReconciliationData(reconciliationResult.data);
-      } else if (Array.isArray(reconciliationResult)) {
-        setReconciliationData(reconciliationResult);
+      const result = await CMDBApi.getReconciliationResults();
+      // Backend returns { summary, unbound_resources, orphan_cis, unlinked_cis }
+      // Flatten into a display-friendly array for the table
+      const d = (result as any)?.data ?? result;
+      if (d && typeof d === 'object' && !Array.isArray(d)) {
+        const rows: any[] = [];
+        (d.unbound_resources ?? []).forEach((r: any) => rows.push({ ...r, _kind: 'unbound' }));
+        (d.orphan_cis ?? []).forEach((r: any) => rows.push({ ...r, _kind: 'orphan' }));
+        (d.unlinked_cis ?? []).forEach((r: any) => rows.push({ ...r, _kind: 'unlinked' }));
+        setReconciliationData(rows);
+      } else if (Array.isArray(d)) {
+        setReconciliationData(d);
       }
     } catch (error) {
       console.error('Failed to fetch reconciliation data:', error);

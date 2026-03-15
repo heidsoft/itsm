@@ -12,9 +12,7 @@ import (
 	"itsm-backend/handlers"
 	"itsm-backend/internal/domain/ai"
 	"itsm-backend/internal/domain/change"
-	"itsm-backend/internal/domain/cmdb"
 	domainCommon "itsm-backend/internal/domain/common"
-	"itsm-backend/internal/domain/incident"
 	"itsm-backend/internal/domain/knowledge"
 	"itsm-backend/internal/domain/problem"
 	"itsm-backend/internal/domain/service_catalog"
@@ -73,8 +71,9 @@ type RouterConfig struct {
 	// Role & Permission Controllers (new database-backed implementation)
 	RoleController                   *controller.RoleController
 	PermissionController             *controller.PermissionController
+	MenuController                   *controller.MenuController
 	TenantController                 *controller.TenantController
-	MSPController                   *controller.MSPController
+	MSPController                    *controller.MSPController
 	SystemConfigController           *controller.SystemConfigController
 	ApprovalChainController          *controller.ApprovalChainController
 	NotificationPreferenceController *controller.NotificationPreferenceController
@@ -96,10 +95,8 @@ type RouterConfig struct {
 	ServiceCatalogHandler *service_catalog.Handler
 	ServiceRequestHandler *service_request.Handler
 
-	IncidentHandler  *incident.Handler
 	ProblemHandler   *problem.Handler
 	ChangeHandler    *change.Handler
-	CMDBHandler      *cmdb.Handler
 	KnowledgeHandler *knowledge.Handler
 	SLAHandler       *sla.Handler
 	AIHandler        *ai.Handler
@@ -159,18 +156,28 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	if config.MSPController != nil {
 		msp := r.Group("/api/v1/msp")
 		msp.Use(middleware.AuthMiddleware(config.JWTSecret))
+		msp.Use(middleware.RBACMiddleware(config.Client)) // 设置 client 到 context
 		msp.Use(middleware.MSPMiddleware(config.Client))
 		{
-			msp.GET("/status", config.MSPController.GetMSPStatus)
-			msp.GET("/context", config.MSPController.GetMSPContext)
-			msp.GET("/allocations", config.MSPController.GetAllocations)
-			msp.POST("/allocations", config.MSPController.CreateAllocation)
-			msp.POST("/allocations/deallocate", config.MSPController.Deallocate)
-			msp.GET("/customers", config.MSPController.GetAllCustomers)
-			msp.GET("/customers/:customer_tenant_id/tickets", config.MSPController.GetCustomerTickets)
-			msp.POST("/tickets/:id/assign", config.MSPController.AssignMSPTechnician)
-			msp.GET("/reports/customers", config.MSPController.GetCustomerReports)
-			msp.GET("/reports/performance", config.MSPController.GetPerformanceReports)
+			// MSP 基础信息 - 需要 msp:read 权限
+			msp.GET("/status", middleware.RequireMSPPermission("msp", "read"), config.MSPController.GetMSPStatus)
+			msp.GET("/context", middleware.RequireMSPPermission("msp", "read"), config.MSPController.GetMSPContext)
+
+			// 分配管理 - 需要 msp_allocation 权限
+			msp.GET("/allocations", middleware.RequireMSPPermission("msp_allocation", "read"), config.MSPController.GetAllocations)
+			msp.POST("/allocations", middleware.RequireMSPPermission("msp_allocation", "write"), config.MSPController.CreateAllocation)
+			msp.POST("/allocations/deallocate", middleware.RequireMSPPermission("msp_allocation", "write"), config.MSPController.Deallocate)
+
+			// 客户管理 - 需要 msp_customer 权限
+			msp.GET("/customers", middleware.RequireMSPPermission("msp_customer", "read"), config.MSPController.GetAllCustomers)
+			msp.GET("/customers/:customer_tenant_id/tickets", middleware.RequireMSPPermission("msp_ticket", "read"), config.MSPController.GetCustomerTickets)
+
+			// 工单分配 - 需要 msp_ticket:write 权限
+			msp.POST("/tickets/:id/assign", middleware.RequireMSPPermission("msp_ticket", "write"), config.MSPController.AssignMSPTechnician)
+
+			// 报表 - 需要 msp_report 权限
+			msp.GET("/reports/customers", middleware.RequireMSPPermission("msp_report", "read"), config.MSPController.GetCustomerReports)
+			msp.GET("/reports/performance", middleware.RequireMSPPermission("msp_report", "read"), config.MSPController.GetPerformanceReports)
 		}
 	}
 
@@ -306,6 +313,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.GET("/rating-stats", config.TicketRatingController.GetRatingStats)
 			}
 
+			// 工单模板
+			tickets.GET("/templates", config.TicketController.GetTicketTemplates)
+			tickets.POST("/templates", config.TicketController.CreateTicketTemplate)
+			tickets.PUT("/templates/:template_id", config.TicketController.UpdateTicketTemplate)
+			tickets.DELETE("/templates/:template_id", config.TicketController.DeleteTicketTemplate)
+
 			// 工单分析与预测 (Alias for frontend compatibility)
 			if config.AIHandler != nil {
 				tickets.POST("/analytics/deep", config.AIHandler.GetDeepAnalytics)
@@ -368,25 +381,37 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 		}
 
-		// ==================== Incidents (DDD) ====================
-		if config.IncidentHandler != nil {
+		// ==================== Incidents ====================
+		if config.IncidentController != nil {
 			inc := tenant.(*gin.RouterGroup).Group("/incidents")
 			{
-				inc.GET("", middleware.RequirePermission("incident", "read"), config.IncidentHandler.List)
-				inc.POST("", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Create)
-				inc.GET("/stats", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetStats)
-				inc.GET("/:id", middleware.RequirePermission("incident", "read"), config.IncidentHandler.Get)
-				inc.PUT("/:id", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Update)
-				inc.POST("/:id/escalate", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Escalate)
-				inc.GET("/:id/events", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetIncidentEvents)
-				inc.GET("/:id/alerts", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetIncidentAlerts)
-				inc.GET("/:id/metrics", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetIncidentMetrics)
-				inc.GET("/:id/root-cause", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetRootCause)
-				inc.PUT("/:id/root-cause", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateRootCause)
-				inc.GET("/:id/impact-assessment", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetImpactAssessment)
-				inc.PUT("/:id/impact-assessment", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateImpactAssessment)
-				inc.GET("/:id/classification", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetClassification)
-				inc.PUT("/:id/classification", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateClassification)
+				// 核心 CRUD
+				inc.GET("", middleware.RequirePermission("incident", "read"), config.IncidentController.ListIncidents)
+				inc.POST("", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncident)
+				inc.GET("/stats", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentStats)
+				inc.GET("/:id", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncident)
+				inc.PUT("/:id", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateIncident)
+				inc.DELETE("/:id", middleware.RequirePermission("incident", "delete"), config.IncidentController.DeleteIncident)
+
+				// 事件操作
+				inc.POST("/:id/escalate", middleware.RequirePermission("incident", "write"), config.IncidentController.EscalateIncident)
+				inc.GET("/:id/impact", middleware.RequirePermission("incident", "read"), config.IncidentController.AnalyzeIncidentImpact)
+
+				// 关联数据
+				inc.GET("/:id/events", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentEvents)
+				inc.POST("/events", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncidentEvent)
+				inc.GET("/:id/alerts", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentAlerts)
+				inc.GET("/:id/metrics", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentMetrics)
+
+				// 监控
+				inc.POST("/monitoring", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentMonitoring)
+
+				// 告警管理
+				inc.POST("/alerts", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncidentAlert)
+				inc.GET("/alerts/active", middleware.RequirePermission("incident", "read"), config.IncidentController.GetActiveAlerts)
+				inc.GET("/alerts/statistics", middleware.RequirePermission("incident", "read"), config.IncidentController.GetAlertStatistics)
+				inc.POST("/alerts/:id/acknowledge", middleware.RequirePermission("incident", "write"), config.IncidentController.AcknowledgeAlert)
+				inc.POST("/alerts/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentController.ResolveAlert)
 			}
 		}
 
@@ -436,10 +461,23 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				changes.GET("/stats", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetStats)
 				changes.GET("/:id", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetChange)
 				changes.PUT("/:id", middleware.RequirePermission("change", "write"), config.ChangeHandler.UpdateChange)
+				changes.DELETE("/:id", middleware.RequirePermission("change", "delete"), config.ChangeHandler.DeleteChange)
+				changes.POST("/:id/submit", middleware.RequirePermission("change", "write"), config.ChangeHandler.SubmitChange)
+				changes.POST("/:id/assign", middleware.RequirePermission("change", "write"), config.ChangeHandler.AssignChange)
+				// 状态转换
+				changes.POST("/:id/approve", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
+				changes.POST("/:id/reject", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
+				changes.POST("/:id/start", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
+				changes.POST("/:id/complete", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
+				changes.POST("/:id/rollback", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
+				changes.POST("/:id/cancel", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
+				// 审批
+				changes.GET("/:id/approvals", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetApprovals)
 				changes.POST("/:id/approvals", middleware.RequirePermission("change", "write"), config.ChangeHandler.SubmitApproval)
 				changes.GET("/:id/approval-summary", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetApprovalSummary)
+				// 风险评估（同时支持 /risk 和 /risk-assessment 两个路径）
 				changes.GET("/:id/risk-assessment", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
-				changes.POST("/:id/submit", middleware.RequirePermission("change", "write"), config.ChangeHandler.SubmitChange)
+				changes.GET("/:id/risk", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
 			}
 		}
 
@@ -487,47 +525,45 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 		}
 
-		// ==================== CMDB (DDD) ====================
-		if config.CMDBHandler != nil {
-			cmdbGrp := tenant.(*gin.RouterGroup).Group("/cmdb")
-			{
-				cmdbGrp.GET("/cis", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCIs)
-				cmdbGrp.POST("/cis", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateCI)
-				cmdbGrp.GET("/cis/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetCI)
-				cmdbGrp.PUT("/cis/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.UpdateCI)
-				cmdbGrp.DELETE("/cis/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBHandler.DeleteCI)
-				cmdbGrp.GET("/stats", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetStats)
-				cmdbGrp.GET("/types", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListTypes)
-				cmdbGrp.POST("/types", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateType)
-				cmdbGrp.PUT("/types/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.UpdateType)
-				cmdbGrp.DELETE("/types/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBHandler.DeleteType)
-				cmdbGrp.POST("/items", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateCIItem)
-				cmdbGrp.GET("/reconciliation", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetReconciliation)
-				cmdbGrp.GET("/relationship-types", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListRelationshipTypes)
-				cmdbGrp.GET("/cloud-services", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCloudServices)
-				cmdbGrp.POST("/cloud-services", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateCloudService)
-				cmdbGrp.GET("/cloud-accounts", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCloudAccounts)
-				cmdbGrp.POST("/cloud-accounts", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateCloudAccount)
-				cmdbGrp.GET("/cloud-resources", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCloudResources)
-				cmdbGrp.GET("/discovery-sources", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListDiscoverySources)
-				cmdbGrp.POST("/discovery-sources", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoverySource)
-				cmdbGrp.POST("/discovery/jobs", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoveryJob)
-				cmdbGrp.GET("/discovery/results", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListDiscoveryResults)
-			}
-		}
-
-		// CMDB 新控制器路由
+		// ==================== CMDB ====================
 		if config.CMDBController != nil {
 			cmdb := tenant.(*gin.RouterGroup).Group("/configuration-items")
 			{
+				// CI CRUD
 				cmdb.GET("", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCIs)
 				cmdb.POST("", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCI)
+				cmdb.GET("/stats", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetStats)
+				cmdb.GET("/relationships", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListRelationships)
+				cmdb.POST("/relationships", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateRelationship)
+				cmdb.PATCH("/relationships/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateRelationship)
+				cmdb.DELETE("/relationships/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteRelationship)
+				cmdb.GET("/relationship-types", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListRelationshipTypes)
+				// Types
+				cmdb.GET("/types", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListTypes)
+				cmdb.POST("/types", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateType)
+				cmdb.PUT("/types/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateType)
+				cmdb.DELETE("/types/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteType)
+				// Reconciliation
+				cmdb.GET("/reconciliation", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetReconciliation)
+				cmdb.POST("/reconciliation/run", middleware.RequirePermission("cmdb", "write"), config.CMDBController.RunReconciliation)
+				// Cloud
+				cmdb.GET("/cloud-services", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCloudServices)
+				cmdb.POST("/cloud-services", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCloudService)
+				cmdb.GET("/cloud-accounts", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCloudAccounts)
+				cmdb.POST("/cloud-accounts", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCloudAccount)
+				cmdb.GET("/cloud-resources", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCloudResources)
+				// Discovery
+				cmdb.GET("/discovery-sources", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListDiscoverySources)
+				cmdb.POST("/discovery-sources", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateDiscoverySource)
+				cmdb.POST("/discovery/jobs", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateDiscoveryJob)
+				cmdb.GET("/discovery/results", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListDiscoveryResults)
+				// Per-CI routes (must come after static routes)
 				cmdb.GET("/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCI)
+				cmdb.PUT("/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateCI)
+				cmdb.DELETE("/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteCI)
 				cmdb.GET("/:id/topology", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCITopology)
 				cmdb.GET("/:id/impact-analysis", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCIImpactAnalysis)
 				cmdb.GET("/:id/change-history", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCIChangeHistory)
-				cmdb.GET("/relationships", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListRelationships)
-				cmdb.POST("/relationships", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateRelationship)
 			}
 		}
 
@@ -569,10 +605,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			{
 				kbGrp.GET("", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.ListArticles)
 				kbGrp.POST("", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.CreateArticle)
+				// 静态路由必须在动态路由 /:id 之前注册，否则 Gin 会将 "categories" 当作 :id 参数
+				kbGrp.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetCategories)
 				kbGrp.GET("/:id", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticle)
 				kbGrp.PUT("/:id", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.UpdateArticle)
 				kbGrp.DELETE("/:id", middleware.RequirePermission("knowledge", "delete"), config.KnowledgeHandler.DeleteArticle)
-				kbGrp.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetCategories)
 			}
 		}
 
@@ -632,6 +669,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			authGrp := tenant.(*gin.RouterGroup).Group("/auth")
 			{
 				authGrp.GET("/me", config.CommonHandler.GetMe)
+			}
+
+			// User Menu (no permission required, will be filtered by role)
+			if config.MenuController != nil {
+				authGrp.GET("/menus", config.MenuController.GetUserMenus)
 			}
 
 			// Users
@@ -703,6 +745,19 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					permissions.GET("", config.PermissionController.ListPermissions)
 					permissions.POST("", config.PermissionController.CreatePermission)
 					permissions.POST("/init", config.PermissionController.InitDefaultPermissions)
+				}
+			}
+
+			// Menu Controllers (database-backed with tenant isolation)
+			if config.MenuController != nil {
+				menus := tenant.(*gin.RouterGroup).Group("/menus")
+				{
+					menus.GET("", config.MenuController.ListMenus)
+					menus.POST("", config.MenuController.CreateMenu)
+					menus.GET("/:id", config.MenuController.GetMenu)
+					menus.PUT("/:id", config.MenuController.UpdateMenu)
+					menus.DELETE("/:id", config.MenuController.DeleteMenu)
+					menus.POST("/init", config.MenuController.InitDefaultMenus)
 				}
 			}
 
