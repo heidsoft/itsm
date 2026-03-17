@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Tabs, Button, Space, Tag, Table, message, Spin, Alert } from 'antd';
-import { BookOpen, FileText, Eye, CheckCircle, Plus, Clock, Star, MessageCircle } from 'lucide-react';
+import { Card, Row, Col, Statistic, Typography, Tabs, Button, Space, Tag, Table, message, Spin, Alert, Input, Empty } from 'antd';
+import { BookOpen, FileText, Eye, CheckCircle, Plus, Clock, Star, MessageCircle, Search, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ArticleList from '@/components/knowledge/ArticleList';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import { ArticleStatus } from '@/types/knowledge-base';
+import { httpClient } from '@/lib/api/http-client';
 
 const { Title, Text } = Typography;
 
@@ -15,6 +16,13 @@ export default function KnowledgePage() {
   const [activeTab, setActiveTab] = useState('list');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // AI 智能搜索
+  const [aiSearchQuery, setAiSearchQuery] = useState('');
+  const [aiSearchResults, setAiSearchResults] = useState<any[]>([]);
+  const [aiSearchLoading, setAiSearchLoading] = useState(false);
+  const [aiSearchError, setAiSearchError] = useState<string | null>(null);
+  const [showAiSearch, setShowAiSearch] = useState(false);
 
   const [recentArticles, setRecentArticles] = useState<Array<{
     id: string;
@@ -96,6 +104,33 @@ export default function KnowledgePage() {
       message.error('获取知识库统计数据失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // AI 智能搜索
+  const handleAISearch = async () => {
+    if (!aiSearchQuery.trim()) {
+      message.warning('请输入搜索关键词');
+      return;
+    }
+
+    setAiSearchLoading(true);
+    setAiSearchError(null);
+
+    try {
+      const response = await httpClient.post<any[]>('/api/ai/knowledge/search', {
+        query: aiSearchQuery,
+        limit: 10,
+        type: 'kb',
+      });
+
+      setAiSearchResults(response || []);
+      setShowAiSearch(true);
+    } catch (error) {
+      console.error('AI search error:', error);
+      setAiSearchError('智能搜索服务暂时不可用，请使用普通搜索');
+    } finally {
+      setAiSearchLoading(false);
     }
   };
 
@@ -203,15 +238,80 @@ export default function KnowledgePage() {
             创建、维护和分享解决方案与最佳实践
           </Text>
         </div>
-        <Button
-          type="primary"
-          icon={<Plus className="w-4 h-4" />}
-          size="large"
-          onClick={() => router.push('/knowledge/articles/new')}
-        >
-          新建文章
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* AI 智能搜索 */}
+          <Input.Search
+            placeholder="AI 智能搜索..."
+            value={aiSearchQuery}
+            onChange={(e) => setAiSearchQuery(e.target.value)}
+            onSearch={handleAISearch}
+            loading={aiSearchLoading}
+            enterButton={
+              <Button type="text" icon={<Sparkles className="w-4 h-4 text-yellow-500" />} />
+            }
+            style={{ width: 300 }}
+            onPressEnter={handleAISearch}
+          />
+          <Button
+            type="primary"
+            icon={<Plus className="w-4 h-4" />}
+            size="large"
+            onClick={() => router.push('/knowledge/articles/new')}
+          >
+            新建文章
+          </Button>
+        </div>
       </div>
+
+      {/* AI 搜索结果展示 */}
+      {showAiSearch && (
+        <Card className="mb-6" title={
+          <span className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-yellow-500" />
+            智能搜索结果
+          </span>
+        }>
+          {aiSearchError && (
+            <Alert message={aiSearchError} type="warning" showIcon className="mb-4" />
+          )}
+          {aiSearchResults.length > 0 ? (
+            <div className="space-y-3">
+              {aiSearchResults.map((result: any, index: number) => (
+                <Card
+                  key={index}
+                  size="small"
+                  hoverable
+                  onClick={() => router.push(`/knowledge/articles/${result.id}`)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <Text strong>{result.title || '未命名'}</Text>
+                      {result.category && <Tag className="ml-2">{result.category}</Tag>}
+                    </div>
+                    <Tag color={result.score > 0.8 ? 'green' : result.score > 0.5 ? 'blue' : 'default'}>
+                      匹配度: {Math.round((result.score || 0) * 100)}%
+                    </Tag>
+                  </div>
+                  {result.snippet && (
+                    <Text type="secondary" className="block mt-2">
+                      {result.snippet}
+                    </Text>
+                  )}
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Empty description="未找到相关内容" />
+          )}
+          <Button
+            type="link"
+            onClick={() => setShowAiSearch(false)}
+            className="mt-2"
+          >
+            关闭搜索结果
+          </Button>
+        </Card>
+      )}
 
       {/* 错误提示 */}
       {error && (

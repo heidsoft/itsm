@@ -64,7 +64,7 @@ export class WorkflowApi {
 
     const list = Array.isArray(res) ? res : ((res as any).items || []);
     const total = Array.isArray(res) ? list.length : ((res as any).pagination?.total ?? list.length);
-    const workflows: WorkflowDefinition[] = list.map(item => ({
+    const workflows: WorkflowDefinition[] = list.map((item: { id: number; key: string; name: string; description?: string; version: number; status: string; created_at: string; updated_at: string }) => ({
       id: String(item.id || ''),
       code: item.key || '',
       name: item.name || '',
