@@ -132,12 +132,28 @@ func (s *Service) CreateDepartment(ctx context.Context, d *Department) (*Departm
 	return s.repo.CreateDepartment(ctx, d)
 }
 
+func (s *Service) UpdateDepartment(ctx context.Context, d *Department) (*Department, error) {
+	return s.repo.UpdateDepartment(ctx, d)
+}
+
+func (s *Service) DeleteDepartment(ctx context.Context, id int, tenantID int) error {
+	return s.repo.DeleteDepartment(ctx, id, tenantID)
+}
+
 func (s *Service) ListTeams(ctx context.Context, tenantID int) ([]*Team, error) {
 	return s.repo.ListTeams(ctx, tenantID)
 }
 
 func (s *Service) CreateTeam(ctx context.Context, t *Team) (*Team, error) {
 	return s.repo.CreateTeam(ctx, t)
+}
+
+func (s *Service) UpdateTeam(ctx context.Context, t *Team) (*Team, error) {
+	return s.repo.UpdateTeam(ctx, t)
+}
+
+func (s *Service) DeleteTeam(ctx context.Context, id int, tenantID int) error {
+	return s.repo.DeleteTeam(ctx, id, tenantID)
 }
 
 func (s *Service) AddTeamMember(ctx context.Context, teamID int, userID int) error {

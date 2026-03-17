@@ -15,6 +15,8 @@ import {
   Tag,
   Row,
   Col,
+  Spin,
+  Alert,
 } from 'antd';
 import {
   ArrowLeft,
@@ -31,9 +33,11 @@ import {
   Key,
   FileText,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import { TicketApi } from '@/lib/api/ticket-api';
 import { useI18n } from '@/lib/i18n';
+import { httpClient } from '@/lib/api/http-client';
 import {
   ticketTypePresets,
   ticketTypeCategories,
@@ -73,6 +77,16 @@ export default function CreateTicketPage() {
   const [selectedType, setSelectedType] = useState<TicketTypePreset | null>(null);
   // 分类筛选
   const [categoryFilter, setCategoryFilter] = useState('all');
+  // AI 分类建议
+  const [aiSuggestions, setAiSuggestions] = useState<{
+    category?: string;
+    priority?: string;
+    urgency?: string;
+    confidence?: number;
+    reasoning?: string;
+  } | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   // 过滤后的类型列表
   const filteredTypes = getTicketTypesByCategory(categoryFilter);
@@ -144,6 +158,47 @@ export default function CreateTicketPage() {
       message.error(errorMsg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // AI 智能分类
+  const handleAITriage = async () => {
+    try {
+      const values = await form.validateFields();
+      const title = values.title || (selectedType ? `${selectedType.name}请求` : '');
+      const description = values.description || '';
+
+      if (!title) {
+        message.warning('请先填写标题');
+        return;
+      }
+
+      setAiLoading(true);
+      setAiError(null);
+
+      const response = await httpClient.post<any>('/api/ai/triage', {
+        title,
+        description,
+        category: values.category,
+        priority: values.priority,
+      });
+
+      if (response?.suggestions) {
+        setAiSuggestions(response.suggestions);
+        // 自动应用建议
+        if (response.suggestions.category) {
+          form.setFieldValue('category', response.suggestions.category);
+        }
+        if (response.suggestions.priority) {
+          form.setFieldValue('priority', response.suggestions.priority);
+        }
+        message.success('AI 分类建议已应用');
+      }
+    } catch (e: unknown) {
+      console.error('AI triage error:', e);
+      setAiError('AI 分类服务暂时不可用');
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -462,16 +517,16 @@ export default function CreateTicketPage() {
                 </Card>
               )}
 
-              <Space 
-                direction="vertical" 
-                size="middle" 
+              <Space
+                direction="vertical"
+                size="middle"
                 style={{ width: '100%' }}
                 role="group"
                 aria-label="表单操作按钮"
               >
-                <Button 
-                  type="primary" 
-                  onClick={handleSubmit} 
+                <Button
+                  type="primary"
+                  onClick={handleSubmit}
                   loading={loading}
                   size="large"
                   block
@@ -479,7 +534,7 @@ export default function CreateTicketPage() {
                 >
                   创建工单
                 </Button>
-                <Button 
+                <Button
                   onClick={() => router.push('/tickets')}
                   size="large"
                   block
@@ -488,6 +543,65 @@ export default function CreateTicketPage() {
                   {t('common.cancel')}
                 </Button>
               </Space>
+
+              {/* AI 智能分类区域 */}
+              <Card
+                size="small"
+                className="mt-4"
+                title={
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-yellow-500" />
+                    AI 智能分类
+                  </span>
+                }
+              >
+                <Spin spinning={aiLoading}>
+                  {aiError && (
+                    <Alert message={aiError} type="warning" showIcon className="mb-2" />
+                  )}
+                  {aiSuggestions ? (
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        {aiSuggestions.category && (
+                          <Tag color="blue">分类: {aiSuggestions.category}</Tag>
+                        )}
+                        {aiSuggestions.priority && (
+                          <Tag color={aiSuggestions.priority === 'urgent' ? 'red' : 'orange'}>
+                            优先级: {aiSuggestions.priority}
+                          </Tag>
+                        )}
+                        {aiSuggestions.urgency && (
+                          <Tag color="purple">紧急度: {aiSuggestions.urgency}</Tag>
+                        )}
+                      </div>
+                      {aiSuggestions.reasoning && (
+                        <Text type="secondary" className="text-sm">
+                          {aiSuggestions.reasoning}
+                        </Text>
+                      )}
+                      {aiSuggestions.confidence && (
+                        <Text type="secondary" className="text-xs">
+                          置信度: {Math.round(aiSuggestions.confidence * 100)}%
+                        </Text>
+                      )}
+                    </div>
+                  ) : (
+                    <Text type="secondary">
+                      点击下方按钮获取AI智能分类建议
+                    </Text>
+                  )}
+                </Spin>
+                <Button
+                  type="default"
+                  icon={<Sparkles className="w-4 h-4" />}
+                  onClick={handleAITriage}
+                  loading={aiLoading}
+                  className="mt-2"
+                  block
+                >
+                  获取智能分类建议
+                </Button>
+              </Card>
             </Form>
           </Col>
         </Row>

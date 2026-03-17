@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -43,8 +44,29 @@ const (
 	FieldClosedAt = "closed_at"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
+	// EdgeTickets holds the string denoting the tickets edge name in mutations.
+	EdgeTickets = "tickets"
+	// EdgeIncidents holds the string denoting the incidents edge name in mutations.
+	EdgeIncidents = "incidents"
+	// EdgeChanges holds the string denoting the changes edge name in mutations.
+	EdgeChanges = "changes"
 	// Table holds the table name of the problem in the database.
 	Table = "problems"
+	// TicketsTable is the table that holds the tickets relation/edge. The primary key declared below.
+	TicketsTable = "problem_tickets"
+	// TicketsInverseTable is the table name for the Ticket entity.
+	// It exists in this package in order to avoid circular dependency with the "ticket" package.
+	TicketsInverseTable = "tickets"
+	// IncidentsTable is the table that holds the incidents relation/edge. The primary key declared below.
+	IncidentsTable = "problem_incidents"
+	// IncidentsInverseTable is the table name for the Incident entity.
+	// It exists in this package in order to avoid circular dependency with the "incident" package.
+	IncidentsInverseTable = "incidents"
+	// ChangesTable is the table that holds the changes relation/edge. The primary key declared below.
+	ChangesTable = "problem_changes"
+	// ChangesInverseTable is the table name for the Change entity.
+	// It exists in this package in order to avoid circular dependency with the "change" package.
+	ChangesInverseTable = "changes"
 )
 
 // Columns holds all SQL columns for problem fields.
@@ -72,6 +94,18 @@ var Columns = []string{
 var ForeignKeys = []string{
 	"known_error_problem",
 }
+
+var (
+	// TicketsPrimaryKey and TicketsColumn2 are the table columns denoting the
+	// primary key for the tickets relation (M2M).
+	TicketsPrimaryKey = []string{"problem_id", "ticket_id"}
+	// IncidentsPrimaryKey and IncidentsColumn2 are the table columns denoting the
+	// primary key for the incidents relation (M2M).
+	IncidentsPrimaryKey = []string{"problem_id", "incident_id"}
+	// ChangesPrimaryKey and ChangesColumn2 are the table columns denoting the
+	// primary key for the changes relation (M2M).
+	ChangesPrimaryKey = []string{"problem_id", "change_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -188,4 +222,67 @@ func ByClosedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByDeletedAt orders the results by the deleted_at field.
 func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
+}
+
+// ByTicketsCount orders the results by tickets count.
+func ByTicketsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTicketsStep(), opts...)
+	}
+}
+
+// ByTickets orders the results by tickets terms.
+func ByTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByIncidentsCount orders the results by incidents count.
+func ByIncidentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newIncidentsStep(), opts...)
+	}
+}
+
+// ByIncidents orders the results by incidents terms.
+func ByIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newIncidentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByChangesCount orders the results by changes count.
+func ByChangesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChangesStep(), opts...)
+	}
+}
+
+// ByChanges orders the results by changes terms.
+func ByChanges(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChangesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newTicketsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TicketsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, TicketsTable, TicketsPrimaryKey...),
+	)
+}
+func newIncidentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(IncidentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, IncidentsTable, IncidentsPrimaryKey...),
+	)
+}
+func newChangesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChangesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ChangesTable, ChangesPrimaryKey...),
+	)
 }

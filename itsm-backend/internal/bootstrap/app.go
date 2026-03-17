@@ -274,7 +274,9 @@ func NewApplication() *Application {
 	// Note: cmdbService already declared at line 83
 	ciRelationshipService := service.NewCIRelationshipService(client)
 	auditLogService := service.NewAuditLogService(client, sugar)
+	cloudDiscoveryService := service.NewCloudDiscoveryService(client, sugar)
 	cmdbController := controller.NewCMDBController(cmdbService, ciRelationshipService, auditLogService, cmdbServiceDomain)
+	cmdbController.SetCloudDiscoveryService(cloudDiscoveryService)
 
 	// Analytics & Prediction Controllers
 	analyticsController := controller.NewAnalyticsController(analyticsService)

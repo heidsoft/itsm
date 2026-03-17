@@ -14408,6 +14408,9 @@ type ChangeMutation struct {
 	created_at            *time.Time
 	updated_at            *time.Time
 	clearedFields         map[string]struct{}
+	problems              map[int]struct{}
+	removedproblems       map[int]struct{}
+	clearedproblems       bool
 	done                  bool
 	oldValue              func(context.Context) (*Change, error)
 	predicates            []predicate.Change
@@ -15503,6 +15506,60 @@ func (m *ChangeMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// AddProblemIDs adds the "problems" edge to the Problem entity by ids.
+func (m *ChangeMutation) AddProblemIDs(ids ...int) {
+	if m.problems == nil {
+		m.problems = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.problems[ids[i]] = struct{}{}
+	}
+}
+
+// ClearProblems clears the "problems" edge to the Problem entity.
+func (m *ChangeMutation) ClearProblems() {
+	m.clearedproblems = true
+}
+
+// ProblemsCleared reports if the "problems" edge to the Problem entity was cleared.
+func (m *ChangeMutation) ProblemsCleared() bool {
+	return m.clearedproblems
+}
+
+// RemoveProblemIDs removes the "problems" edge to the Problem entity by IDs.
+func (m *ChangeMutation) RemoveProblemIDs(ids ...int) {
+	if m.removedproblems == nil {
+		m.removedproblems = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.problems, ids[i])
+		m.removedproblems[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedProblems returns the removed IDs of the "problems" edge to the Problem entity.
+func (m *ChangeMutation) RemovedProblemsIDs() (ids []int) {
+	for id := range m.removedproblems {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ProblemsIDs returns the "problems" edge IDs in the mutation.
+func (m *ChangeMutation) ProblemsIDs() (ids []int) {
+	for id := range m.problems {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetProblems resets all changes to the "problems" edge.
+func (m *ChangeMutation) ResetProblems() {
+	m.problems = nil
+	m.clearedproblems = false
+	m.removedproblems = nil
+}
+
 // Where appends a list predicates to the ChangeMutation builder.
 func (m *ChangeMutation) Where(ps ...predicate.Change) {
 	m.predicates = append(m.predicates, ps...)
@@ -16084,49 +16141,85 @@ func (m *ChangeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ChangeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.problems != nil {
+		edges = append(edges, change.EdgeProblems)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *ChangeMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case change.EdgeProblems:
+		ids := make([]ent.Value, 0, len(m.problems))
+		for id := range m.problems {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ChangeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removedproblems != nil {
+		edges = append(edges, change.EdgeProblems)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *ChangeMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case change.EdgeProblems:
+		ids := make([]ent.Value, 0, len(m.removedproblems))
+		for id := range m.removedproblems {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ChangeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedproblems {
+		edges = append(edges, change.EdgeProblems)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *ChangeMutation) EdgeCleared(name string) bool {
+	switch name {
+	case change.EdgeProblems:
+		return m.clearedproblems
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *ChangeMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown Change unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *ChangeMutation) ResetEdge(name string) error {
+	switch name {
+	case change.EdgeProblems:
+		m.ResetProblems()
+		return nil
+	}
 	return fmt.Errorf("unknown Change edge %s", name)
 }
 
@@ -30010,6 +30103,9 @@ type IncidentMutation struct {
 	configuration_items        map[int]struct{}
 	removedconfiguration_items map[int]struct{}
 	clearedconfiguration_items bool
+	problems                   map[int]struct{}
+	removedproblems            map[int]struct{}
+	clearedproblems            bool
 	done                       bool
 	oldValue                   func(context.Context) (*Incident, error)
 	predicates                 []predicate.Incident
@@ -31647,6 +31743,60 @@ func (m *IncidentMutation) ResetConfigurationItems() {
 	m.removedconfiguration_items = nil
 }
 
+// AddProblemIDs adds the "problems" edge to the Problem entity by ids.
+func (m *IncidentMutation) AddProblemIDs(ids ...int) {
+	if m.problems == nil {
+		m.problems = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.problems[ids[i]] = struct{}{}
+	}
+}
+
+// ClearProblems clears the "problems" edge to the Problem entity.
+func (m *IncidentMutation) ClearProblems() {
+	m.clearedproblems = true
+}
+
+// ProblemsCleared reports if the "problems" edge to the Problem entity was cleared.
+func (m *IncidentMutation) ProblemsCleared() bool {
+	return m.clearedproblems
+}
+
+// RemoveProblemIDs removes the "problems" edge to the Problem entity by IDs.
+func (m *IncidentMutation) RemoveProblemIDs(ids ...int) {
+	if m.removedproblems == nil {
+		m.removedproblems = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.problems, ids[i])
+		m.removedproblems[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedProblems returns the removed IDs of the "problems" edge to the Problem entity.
+func (m *IncidentMutation) RemovedProblemsIDs() (ids []int) {
+	for id := range m.removedproblems {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ProblemsIDs returns the "problems" edge IDs in the mutation.
+func (m *IncidentMutation) ProblemsIDs() (ids []int) {
+	for id := range m.problems {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetProblems resets all changes to the "problems" edge.
+func (m *IncidentMutation) ResetProblems() {
+	m.problems = nil
+	m.clearedproblems = false
+	m.removedproblems = nil
+}
+
 // Where appends a list predicates to the IncidentMutation builder.
 func (m *IncidentMutation) Where(ps ...predicate.Incident) {
 	m.predicates = append(m.predicates, ps...)
@@ -32343,7 +32493,7 @@ func (m *IncidentMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *IncidentMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.related_incidents != nil {
 		edges = append(edges, incident.EdgeRelatedIncidents)
 	}
@@ -32361,6 +32511,9 @@ func (m *IncidentMutation) AddedEdges() []string {
 	}
 	if m.configuration_items != nil {
 		edges = append(edges, incident.EdgeConfigurationItems)
+	}
+	if m.problems != nil {
+		edges = append(edges, incident.EdgeProblems)
 	}
 	return edges
 }
@@ -32405,13 +32558,19 @@ func (m *IncidentMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case incident.EdgeProblems:
+		ids := make([]ent.Value, 0, len(m.problems))
+		for id := range m.problems {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *IncidentMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.removedrelated_incidents != nil {
 		edges = append(edges, incident.EdgeRelatedIncidents)
 	}
@@ -32429,6 +32588,9 @@ func (m *IncidentMutation) RemovedEdges() []string {
 	}
 	if m.removedconfiguration_items != nil {
 		edges = append(edges, incident.EdgeConfigurationItems)
+	}
+	if m.removedproblems != nil {
+		edges = append(edges, incident.EdgeProblems)
 	}
 	return edges
 }
@@ -32473,13 +32635,19 @@ func (m *IncidentMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case incident.EdgeProblems:
+		ids := make([]ent.Value, 0, len(m.removedproblems))
+		for id := range m.removedproblems {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *IncidentMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.clearedrelated_incidents {
 		edges = append(edges, incident.EdgeRelatedIncidents)
 	}
@@ -32497,6 +32665,9 @@ func (m *IncidentMutation) ClearedEdges() []string {
 	}
 	if m.clearedconfiguration_items {
 		edges = append(edges, incident.EdgeConfigurationItems)
+	}
+	if m.clearedproblems {
+		edges = append(edges, incident.EdgeProblems)
 	}
 	return edges
 }
@@ -32517,6 +32688,8 @@ func (m *IncidentMutation) EdgeCleared(name string) bool {
 		return m.clearedparent_incident
 	case incident.EdgeConfigurationItems:
 		return m.clearedconfiguration_items
+	case incident.EdgeProblems:
+		return m.clearedproblems
 	}
 	return false
 }
@@ -32550,6 +32723,9 @@ func (m *IncidentMutation) ResetEdge(name string) error {
 		return nil
 	case incident.EdgeConfigurationItems:
 		m.ResetConfigurationItems()
+		return nil
+	case incident.EdgeProblems:
+		m.ResetProblems()
 		return nil
 	}
 	return fmt.Errorf("unknown Incident edge %s", name)
@@ -51093,31 +51269,40 @@ func (m *PermissionMutation) ResetEdge(name string) error {
 // ProblemMutation represents an operation that mutates the Problem nodes in the graph.
 type ProblemMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *int
-	title          *string
-	description    *string
-	status         *string
-	priority       *string
-	category       *string
-	root_cause     *string
-	impact         *string
-	assignee_id    *int
-	addassignee_id *int
-	created_by     *int
-	addcreated_by  *int
-	tenant_id      *int
-	addtenant_id   *int
-	created_at     *time.Time
-	updated_at     *time.Time
-	resolved_at    *time.Time
-	closed_at      *time.Time
-	deleted_at     *time.Time
-	clearedFields  map[string]struct{}
-	done           bool
-	oldValue       func(context.Context) (*Problem, error)
-	predicates     []predicate.Problem
+	op               Op
+	typ              string
+	id               *int
+	title            *string
+	description      *string
+	status           *string
+	priority         *string
+	category         *string
+	root_cause       *string
+	impact           *string
+	assignee_id      *int
+	addassignee_id   *int
+	created_by       *int
+	addcreated_by    *int
+	tenant_id        *int
+	addtenant_id     *int
+	created_at       *time.Time
+	updated_at       *time.Time
+	resolved_at      *time.Time
+	closed_at        *time.Time
+	deleted_at       *time.Time
+	clearedFields    map[string]struct{}
+	tickets          map[int]struct{}
+	removedtickets   map[int]struct{}
+	clearedtickets   bool
+	incidents        map[int]struct{}
+	removedincidents map[int]struct{}
+	clearedincidents bool
+	changes          map[int]struct{}
+	removedchanges   map[int]struct{}
+	clearedchanges   bool
+	done             bool
+	oldValue         func(context.Context) (*Problem, error)
+	predicates       []predicate.Problem
 }
 
 var _ ent.Mutation = (*ProblemMutation)(nil)
@@ -51923,6 +52108,168 @@ func (m *ProblemMutation) ResetDeletedAt() {
 	delete(m.clearedFields, problem.FieldDeletedAt)
 }
 
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by ids.
+func (m *ProblemMutation) AddTicketIDs(ids ...int) {
+	if m.tickets == nil {
+		m.tickets = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tickets[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTickets clears the "tickets" edge to the Ticket entity.
+func (m *ProblemMutation) ClearTickets() {
+	m.clearedtickets = true
+}
+
+// TicketsCleared reports if the "tickets" edge to the Ticket entity was cleared.
+func (m *ProblemMutation) TicketsCleared() bool {
+	return m.clearedtickets
+}
+
+// RemoveTicketIDs removes the "tickets" edge to the Ticket entity by IDs.
+func (m *ProblemMutation) RemoveTicketIDs(ids ...int) {
+	if m.removedtickets == nil {
+		m.removedtickets = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tickets, ids[i])
+		m.removedtickets[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTickets returns the removed IDs of the "tickets" edge to the Ticket entity.
+func (m *ProblemMutation) RemovedTicketsIDs() (ids []int) {
+	for id := range m.removedtickets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TicketsIDs returns the "tickets" edge IDs in the mutation.
+func (m *ProblemMutation) TicketsIDs() (ids []int) {
+	for id := range m.tickets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTickets resets all changes to the "tickets" edge.
+func (m *ProblemMutation) ResetTickets() {
+	m.tickets = nil
+	m.clearedtickets = false
+	m.removedtickets = nil
+}
+
+// AddIncidentIDs adds the "incidents" edge to the Incident entity by ids.
+func (m *ProblemMutation) AddIncidentIDs(ids ...int) {
+	if m.incidents == nil {
+		m.incidents = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.incidents[ids[i]] = struct{}{}
+	}
+}
+
+// ClearIncidents clears the "incidents" edge to the Incident entity.
+func (m *ProblemMutation) ClearIncidents() {
+	m.clearedincidents = true
+}
+
+// IncidentsCleared reports if the "incidents" edge to the Incident entity was cleared.
+func (m *ProblemMutation) IncidentsCleared() bool {
+	return m.clearedincidents
+}
+
+// RemoveIncidentIDs removes the "incidents" edge to the Incident entity by IDs.
+func (m *ProblemMutation) RemoveIncidentIDs(ids ...int) {
+	if m.removedincidents == nil {
+		m.removedincidents = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.incidents, ids[i])
+		m.removedincidents[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedIncidents returns the removed IDs of the "incidents" edge to the Incident entity.
+func (m *ProblemMutation) RemovedIncidentsIDs() (ids []int) {
+	for id := range m.removedincidents {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// IncidentsIDs returns the "incidents" edge IDs in the mutation.
+func (m *ProblemMutation) IncidentsIDs() (ids []int) {
+	for id := range m.incidents {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetIncidents resets all changes to the "incidents" edge.
+func (m *ProblemMutation) ResetIncidents() {
+	m.incidents = nil
+	m.clearedincidents = false
+	m.removedincidents = nil
+}
+
+// AddChangeIDs adds the "changes" edge to the Change entity by ids.
+func (m *ProblemMutation) AddChangeIDs(ids ...int) {
+	if m.changes == nil {
+		m.changes = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.changes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChanges clears the "changes" edge to the Change entity.
+func (m *ProblemMutation) ClearChanges() {
+	m.clearedchanges = true
+}
+
+// ChangesCleared reports if the "changes" edge to the Change entity was cleared.
+func (m *ProblemMutation) ChangesCleared() bool {
+	return m.clearedchanges
+}
+
+// RemoveChangeIDs removes the "changes" edge to the Change entity by IDs.
+func (m *ProblemMutation) RemoveChangeIDs(ids ...int) {
+	if m.removedchanges == nil {
+		m.removedchanges = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.changes, ids[i])
+		m.removedchanges[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChanges returns the removed IDs of the "changes" edge to the Change entity.
+func (m *ProblemMutation) RemovedChangesIDs() (ids []int) {
+	for id := range m.removedchanges {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChangesIDs returns the "changes" edge IDs in the mutation.
+func (m *ProblemMutation) ChangesIDs() (ids []int) {
+	for id := range m.changes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChanges resets all changes to the "changes" edge.
+func (m *ProblemMutation) ResetChanges() {
+	m.changes = nil
+	m.clearedchanges = false
+	m.removedchanges = nil
+}
+
 // Where appends a list predicates to the ProblemMutation builder.
 func (m *ProblemMutation) Where(ps ...predicate.Problem) {
 	m.predicates = append(m.predicates, ps...)
@@ -52384,49 +52731,137 @@ func (m *ProblemMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProblemMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 3)
+	if m.tickets != nil {
+		edges = append(edges, problem.EdgeTickets)
+	}
+	if m.incidents != nil {
+		edges = append(edges, problem.EdgeIncidents)
+	}
+	if m.changes != nil {
+		edges = append(edges, problem.EdgeChanges)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *ProblemMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case problem.EdgeTickets:
+		ids := make([]ent.Value, 0, len(m.tickets))
+		for id := range m.tickets {
+			ids = append(ids, id)
+		}
+		return ids
+	case problem.EdgeIncidents:
+		ids := make([]ent.Value, 0, len(m.incidents))
+		for id := range m.incidents {
+			ids = append(ids, id)
+		}
+		return ids
+	case problem.EdgeChanges:
+		ids := make([]ent.Value, 0, len(m.changes))
+		for id := range m.changes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProblemMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 3)
+	if m.removedtickets != nil {
+		edges = append(edges, problem.EdgeTickets)
+	}
+	if m.removedincidents != nil {
+		edges = append(edges, problem.EdgeIncidents)
+	}
+	if m.removedchanges != nil {
+		edges = append(edges, problem.EdgeChanges)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *ProblemMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case problem.EdgeTickets:
+		ids := make([]ent.Value, 0, len(m.removedtickets))
+		for id := range m.removedtickets {
+			ids = append(ids, id)
+		}
+		return ids
+	case problem.EdgeIncidents:
+		ids := make([]ent.Value, 0, len(m.removedincidents))
+		for id := range m.removedincidents {
+			ids = append(ids, id)
+		}
+		return ids
+	case problem.EdgeChanges:
+		ids := make([]ent.Value, 0, len(m.removedchanges))
+		for id := range m.removedchanges {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProblemMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 3)
+	if m.clearedtickets {
+		edges = append(edges, problem.EdgeTickets)
+	}
+	if m.clearedincidents {
+		edges = append(edges, problem.EdgeIncidents)
+	}
+	if m.clearedchanges {
+		edges = append(edges, problem.EdgeChanges)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *ProblemMutation) EdgeCleared(name string) bool {
+	switch name {
+	case problem.EdgeTickets:
+		return m.clearedtickets
+	case problem.EdgeIncidents:
+		return m.clearedincidents
+	case problem.EdgeChanges:
+		return m.clearedchanges
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *ProblemMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown Problem unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *ProblemMutation) ResetEdge(name string) error {
+	switch name {
+	case problem.EdgeTickets:
+		m.ResetTickets()
+		return nil
+	case problem.EdgeIncidents:
+		m.ResetIncidents()
+		return nil
+	case problem.EdgeChanges:
+		m.ResetChanges()
+		return nil
+	}
 	return fmt.Errorf("unknown Problem edge %s", name)
 }
 
@@ -91232,6 +91667,7 @@ type TicketMutation struct {
 	managed_by_user_id         *int
 	addmanaged_by_user_id      *int
 	msp_ticket_id              *string
+	deleted_at                 *time.Time
 	clearedFields              map[string]struct{}
 	template                   *int
 	clearedtemplate            bool
@@ -91276,6 +91712,9 @@ type TicketMutation struct {
 	configuration_items        map[int]struct{}
 	removedconfiguration_items map[int]struct{}
 	clearedconfiguration_items bool
+	problems                   map[int]struct{}
+	removedproblems            map[int]struct{}
+	clearedproblems            bool
 	done                       bool
 	oldValue                   func(context.Context) (*Ticket, error)
 	predicates                 []predicate.Ticket
@@ -92815,6 +93254,55 @@ func (m *TicketMutation) ResetMspTicketID() {
 	delete(m.clearedFields, ticket.FieldMspTicketID)
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (m *TicketMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *TicketMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *TicketMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[ticket.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *TicketMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[ticket.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *TicketMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, ticket.FieldDeletedAt)
+}
+
 // ClearTemplate clears the "template" edge to the TicketTemplate entity.
 func (m *TicketMutation) ClearTemplate() {
 	m.clearedtemplate = true
@@ -93544,6 +94032,60 @@ func (m *TicketMutation) ResetConfigurationItems() {
 	m.removedconfiguration_items = nil
 }
 
+// AddProblemIDs adds the "problems" edge to the Problem entity by ids.
+func (m *TicketMutation) AddProblemIDs(ids ...int) {
+	if m.problems == nil {
+		m.problems = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.problems[ids[i]] = struct{}{}
+	}
+}
+
+// ClearProblems clears the "problems" edge to the Problem entity.
+func (m *TicketMutation) ClearProblems() {
+	m.clearedproblems = true
+}
+
+// ProblemsCleared reports if the "problems" edge to the Problem entity was cleared.
+func (m *TicketMutation) ProblemsCleared() bool {
+	return m.clearedproblems
+}
+
+// RemoveProblemIDs removes the "problems" edge to the Problem entity by IDs.
+func (m *TicketMutation) RemoveProblemIDs(ids ...int) {
+	if m.removedproblems == nil {
+		m.removedproblems = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.problems, ids[i])
+		m.removedproblems[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedProblems returns the removed IDs of the "problems" edge to the Problem entity.
+func (m *TicketMutation) RemovedProblemsIDs() (ids []int) {
+	for id := range m.removedproblems {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ProblemsIDs returns the "problems" edge IDs in the mutation.
+func (m *TicketMutation) ProblemsIDs() (ids []int) {
+	for id := range m.problems {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetProblems resets all changes to the "problems" edge.
+func (m *TicketMutation) ResetProblems() {
+	m.problems = nil
+	m.clearedproblems = false
+	m.removedproblems = nil
+}
+
 // Where appends a list predicates to the TicketMutation builder.
 func (m *TicketMutation) Where(ps ...predicate.Ticket) {
 	m.predicates = append(m.predicates, ps...)
@@ -93578,7 +94120,7 @@ func (m *TicketMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TicketMutation) Fields() []string {
-	fields := make([]string, 0, 29)
+	fields := make([]string, 0, 30)
 	if m.title != nil {
 		fields = append(fields, ticket.FieldTitle)
 	}
@@ -93666,6 +94208,9 @@ func (m *TicketMutation) Fields() []string {
 	if m.msp_ticket_id != nil {
 		fields = append(fields, ticket.FieldMspTicketID)
 	}
+	if m.deleted_at != nil {
+		fields = append(fields, ticket.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -93732,6 +94277,8 @@ func (m *TicketMutation) Field(name string) (ent.Value, bool) {
 		return m.ManagedByUserID()
 	case ticket.FieldMspTicketID:
 		return m.MspTicketID()
+	case ticket.FieldDeletedAt:
+		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -93799,6 +94346,8 @@ func (m *TicketMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldManagedByUserID(ctx)
 	case ticket.FieldMspTicketID:
 		return m.OldMspTicketID(ctx)
+	case ticket.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Ticket field %s", name)
 }
@@ -94011,6 +94560,13 @@ func (m *TicketMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetMspTicketID(v)
 		return nil
+	case ticket.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Ticket field %s", name)
 }
@@ -94185,6 +94741,9 @@ func (m *TicketMutation) ClearedFields() []string {
 	if m.FieldCleared(ticket.FieldMspTicketID) {
 		fields = append(fields, ticket.FieldMspTicketID)
 	}
+	if m.FieldCleared(ticket.FieldDeletedAt) {
+		fields = append(fields, ticket.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -94255,6 +94814,9 @@ func (m *TicketMutation) ClearField(name string) error {
 		return nil
 	case ticket.FieldMspTicketID:
 		m.ClearMspTicketID()
+		return nil
+	case ticket.FieldDeletedAt:
+		m.ClearDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Ticket nullable field %s", name)
@@ -94351,13 +94913,16 @@ func (m *TicketMutation) ResetField(name string) error {
 	case ticket.FieldMspTicketID:
 		m.ResetMspTicketID()
 		return nil
+	case ticket.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
 	}
 	return fmt.Errorf("unknown Ticket field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TicketMutation) AddedEdges() []string {
-	edges := make([]string, 0, 16)
+	edges := make([]string, 0, 17)
 	if m.template != nil {
 		edges = append(edges, ticket.EdgeTemplate)
 	}
@@ -94405,6 +94970,9 @@ func (m *TicketMutation) AddedEdges() []string {
 	}
 	if m.configuration_items != nil {
 		edges = append(edges, ticket.EdgeConfigurationItems)
+	}
+	if m.problems != nil {
+		edges = append(edges, ticket.EdgeProblems)
 	}
 	return edges
 }
@@ -94499,13 +95067,19 @@ func (m *TicketMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ticket.EdgeProblems:
+		ids := make([]ent.Value, 0, len(m.problems))
+		for id := range m.problems {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TicketMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 16)
+	edges := make([]string, 0, 17)
 	if m.removedtags != nil {
 		edges = append(edges, ticket.EdgeTags)
 	}
@@ -94538,6 +95112,9 @@ func (m *TicketMutation) RemovedEdges() []string {
 	}
 	if m.removedconfiguration_items != nil {
 		edges = append(edges, ticket.EdgeConfigurationItems)
+	}
+	if m.removedproblems != nil {
+		edges = append(edges, ticket.EdgeProblems)
 	}
 	return edges
 }
@@ -94612,13 +95189,19 @@ func (m *TicketMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case ticket.EdgeProblems:
+		ids := make([]ent.Value, 0, len(m.removedproblems))
+		for id := range m.removedproblems {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TicketMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 16)
+	edges := make([]string, 0, 17)
 	if m.clearedtemplate {
 		edges = append(edges, ticket.EdgeTemplate)
 	}
@@ -94667,6 +95250,9 @@ func (m *TicketMutation) ClearedEdges() []string {
 	if m.clearedconfiguration_items {
 		edges = append(edges, ticket.EdgeConfigurationItems)
 	}
+	if m.clearedproblems {
+		edges = append(edges, ticket.EdgeProblems)
+	}
 	return edges
 }
 
@@ -94706,6 +95292,8 @@ func (m *TicketMutation) EdgeCleared(name string) bool {
 		return m.clearedroot_cause_analyses
 	case ticket.EdgeConfigurationItems:
 		return m.clearedconfiguration_items
+	case ticket.EdgeProblems:
+		return m.clearedproblems
 	}
 	return false
 }
@@ -94784,6 +95372,9 @@ func (m *TicketMutation) ResetEdge(name string) error {
 		return nil
 	case ticket.EdgeConfigurationItems:
 		m.ResetConfigurationItems()
+		return nil
+	case ticket.EdgeProblems:
+		m.ResetProblems()
 		return nil
 	}
 	return fmt.Errorf("unknown Ticket edge %s", name)

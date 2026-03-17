@@ -72,7 +72,7 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       icon: <FileText style={iconStyle} />,
       label: t('tickets.title'),
       path: '/tickets',
-      permission: 'ticket:view',
+      permission: 'ticket:read',
       description: t('tickets.description'),
       badge: 'New',
     },
@@ -81,7 +81,7 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       icon: <AlertCircle style={iconStyle} />,
       label: t('incidents.title'),
       path: '/incidents',
-      permission: 'incident:view',
+      permission: 'incident:read',
       description: t('incidents.description'),
     },
     {
@@ -89,7 +89,7 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       icon: <HelpCircle style={iconStyle} />,
       label: t('problems.title'),
       path: '/problems',
-      permission: 'problem:view',
+      permission: 'problem:read',
       description: t('problems.description'),
     },
     {
@@ -97,7 +97,7 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       icon: <BarChart3 style={iconStyle} />,
       label: t('changes.title'),
       path: '/changes',
-      permission: 'change:view',
+      permission: 'change:read',
       description: t('changes.description'),
     },
     {
@@ -105,7 +105,7 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       icon: <Database style={iconStyle} />,
       label: 'CMDB',
       path: '/cmdb',
-      permission: 'cmdb:view',
+      permission: 'cmdb:read',
       description: t('cmdb.description'),
     },
     {
@@ -305,7 +305,7 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
           icon: <FileText style={iconStyle} />,
           label: '工单分类',
           path: '/admin/ticket-categories',
-          permission: 'admin:write',
+          permission: 'ticket_category:write',
         },
         {
           key: '/admin/approval-chains',
@@ -321,6 +321,27 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
           path: '/admin/system-config',
           permission: 'admin:write',
         },
+        {
+          key: '/admin/departments',
+          icon: <Users style={iconStyle} />,
+          label: '部门管理',
+          path: '/admin/departments',
+          permission: 'admin:write',
+        },
+        {
+          key: '/admin/teams',
+          icon: <Users style={iconStyle} />,
+          label: '团队管理',
+          path: '/admin/teams',
+          permission: 'admin:write',
+        },
+        {
+          key: '/admin/approvals',
+          icon: <GitMerge style={iconStyle} />,
+          label: '审批管理',
+          path: '/admin/approvals',
+          permission: 'admin:write',
+        },
       ],
     },
     {
@@ -328,7 +349,7 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       icon: <Database style={iconStyle} />,
       label: 'CMDB管理',
       path: '/cmdb',
-      permission: 'cmdb:view',
+      permission: 'cmdb:read',
       description: 'CMDB配置管理',
       children: [
         {
