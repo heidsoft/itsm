@@ -192,3 +192,111 @@ func (s *Service) SaveFeedback(ctx context.Context, tenantID, userID int, reques
 func (s *Service) GetMetrics(ctx context.Context, tenantID int, lookbackDays int) (interface{}, error) {
 	return s.aiTelemetryService.GetMetrics(ctx, tenantID, lookbackDays)
 }
+
+// SearchKnowledge handles RAG search over knowledge base
+func (s *Service) SearchKnowledge(ctx context.Context, tenantID int, query string, searchType string, limit int) (interface{}, error) {
+	s.logger.Infow("Knowledge Search", "query", query, "type", searchType, "tenantID", tenantID)
+
+	if s.rag == nil {
+		// Fallback to basic search if RAG is not available
+		return []map[string]interface{}{}, nil
+	}
+
+	results, err := s.rag.Ask(ctx, tenantID, query, limit)
+	if err != nil {
+		s.logger.Warnw("RAG search failed", "error", err)
+		return []map[string]interface{}{}, nil
+	}
+
+	return results, nil
+}
+
+// TriageTicket provides ticket classification and recommendations
+func (s *Service) TriageTicket(ctx context.Context, tenantID int, title, description, category, priority string) (interface{}, error) {
+	s.logger.Infow("Ticket Triage", "title", title, "tenantID", tenantID)
+
+	// Build triage result based on title/description analysis
+	result := map[string]interface{}{
+		"title":       title,
+		"description": description,
+		"suggestions":  make(map[string]interface{}),
+	}
+
+	// Simple keyword-based classification (fallback when LLM is not available)
+	suggestedCategory := category
+	suggestedPriority := priority
+	suggestedUrgency := "medium"
+
+	// Analyze title for category hints
+	titleLower := title
+	if len(titleLower) > 0 {
+		switch {
+		case containsAny(titleLower, "网络", "网速", "连接", "wifi", "网络"):
+			suggestedCategory = "network"
+		case containsAny(titleLower, "软件", "应用", "系统", "程序", "app"):
+			suggestedCategory = "software"
+		case containsAny(titleLower, "硬件", "电脑", "设备", "服务器", "hardware"):
+			suggestedCategory = "hardware"
+		case containsAny(titleLower, "账号", "密码", "权限", "登录", "access"):
+			suggestedCategory = "access"
+		case containsAny(titleLower, "打印机", "打印", "print"):
+			suggestedCategory = "printer"
+		case containsAny(titleLower, "邮箱", "邮件", "email", "outlook"):
+			suggestedCategory = "email"
+		default:
+			suggestedCategory = "general"
+		}
+	}
+
+	// Analyze for priority
+	descLower := description
+	if containsAny(descLower, "紧急", "严重", "无法工作", "critical", "urgent", "emergency") {
+		suggestedPriority = "critical"
+		suggestedUrgency = "high"
+	} else if containsAny(descLower, "重要", "影响工作", "high", "important") {
+		suggestedPriority = "high"
+		suggestedUrgency = "high"
+	} else if containsAny(descLower, "不紧急", "low", "minor") {
+		suggestedPriority = "low"
+		suggestedUrgency = "low"
+	}
+
+	// Build suggestions
+	suggestions := make(map[string]interface{})
+	suggestions["category"] = suggestedCategory
+	suggestions["priority"] = suggestedPriority
+	suggestions["urgency"] = suggestedUrgency
+	suggestions["confidence"] = 0.7
+	suggestions["reasoning"] = "Based on keyword analysis of title and description"
+
+	result["suggestions"] = suggestions
+
+	return result, nil
+}
+
+// containsAny checks if string contains any of the keywords
+func containsAny(s string, keywords ...string) bool {
+	for _, kw := range keywords {
+		if len(s) >= len(kw) {
+			for i := 0; i <= len(s)-len(kw); i++ {
+				if len(s[i:i+len(kw)]) >= len(kw) {
+					// Simple case-insensitive check
+					sub := ""
+					for j := 0; j < len(kw); j++ {
+						if i+j < len(s) {
+							c := s[i+j]
+							if c >= 'A' && c <= 'Z' {
+								c = c + 32
+							}
+							sub += string(c)
+						}
+					}
+					if sub == kw {
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
+}

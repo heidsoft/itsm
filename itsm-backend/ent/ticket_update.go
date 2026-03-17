@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/problem"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/slaalerthistory"
 	"itsm-backend/ent/sladefinition"
@@ -603,6 +604,26 @@ func (_u *TicketUpdate) ClearMspTicketID() *TicketUpdate {
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *TicketUpdate) SetDeletedAt(v time.Time) *TicketUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *TicketUpdate) SetNillableDeletedAt(v *time.Time) *TicketUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *TicketUpdate) ClearDeletedAt() *TicketUpdate {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // SetTemplate sets the "template" edge to the TicketTemplate entity.
 func (_u *TicketUpdate) SetTemplate(v *TicketTemplate) *TicketUpdate {
 	return _u.SetTemplateID(v.ID)
@@ -791,6 +812,21 @@ func (_u *TicketUpdate) AddConfigurationItems(v ...*ConfigurationItem) *TicketUp
 		ids[i] = v[i].ID
 	}
 	return _u.AddConfigurationItemIDs(ids...)
+}
+
+// AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
+func (_u *TicketUpdate) AddProblemIDs(ids ...int) *TicketUpdate {
+	_u.mutation.AddProblemIDs(ids...)
+	return _u
+}
+
+// AddProblems adds the "problems" edges to the Problem entity.
+func (_u *TicketUpdate) AddProblems(v ...*Problem) *TicketUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddProblemIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -1059,6 +1095,27 @@ func (_u *TicketUpdate) RemoveConfigurationItems(v ...*ConfigurationItem) *Ticke
 	return _u.RemoveConfigurationItemIDs(ids...)
 }
 
+// ClearProblems clears all "problems" edges to the Problem entity.
+func (_u *TicketUpdate) ClearProblems() *TicketUpdate {
+	_u.mutation.ClearProblems()
+	return _u
+}
+
+// RemoveProblemIDs removes the "problems" edge to Problem entities by IDs.
+func (_u *TicketUpdate) RemoveProblemIDs(ids ...int) *TicketUpdate {
+	_u.mutation.RemoveProblemIDs(ids...)
+	return _u
+}
+
+// RemoveProblems removes "problems" edges to Problem entities.
+func (_u *TicketUpdate) RemoveProblems(v ...*Problem) *TicketUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveProblemIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *TicketUpdate) Save(ctx context.Context) (int, error) {
 	_u.defaults()
@@ -1271,6 +1328,12 @@ func (_u *TicketUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.MspTicketIDCleared() {
 		_spec.ClearField(ticket.FieldMspTicketID, field.TypeString)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(ticket.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(ticket.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.TemplateCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1905,6 +1968,51 @@ func (_u *TicketUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ProblemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ProblemsTable,
+			Columns: ticket.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedProblemsIDs(); len(nodes) > 0 && !_u.mutation.ProblemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ProblemsTable,
+			Columns: ticket.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ProblemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ProblemsTable,
+			Columns: ticket.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -2493,6 +2601,26 @@ func (_u *TicketUpdateOne) ClearMspTicketID() *TicketUpdateOne {
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *TicketUpdateOne) SetDeletedAt(v time.Time) *TicketUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *TicketUpdateOne) SetNillableDeletedAt(v *time.Time) *TicketUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *TicketUpdateOne) ClearDeletedAt() *TicketUpdateOne {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // SetTemplate sets the "template" edge to the TicketTemplate entity.
 func (_u *TicketUpdateOne) SetTemplate(v *TicketTemplate) *TicketUpdateOne {
 	return _u.SetTemplateID(v.ID)
@@ -2681,6 +2809,21 @@ func (_u *TicketUpdateOne) AddConfigurationItems(v ...*ConfigurationItem) *Ticke
 		ids[i] = v[i].ID
 	}
 	return _u.AddConfigurationItemIDs(ids...)
+}
+
+// AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
+func (_u *TicketUpdateOne) AddProblemIDs(ids ...int) *TicketUpdateOne {
+	_u.mutation.AddProblemIDs(ids...)
+	return _u
+}
+
+// AddProblems adds the "problems" edges to the Problem entity.
+func (_u *TicketUpdateOne) AddProblems(v ...*Problem) *TicketUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddProblemIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -2949,6 +3092,27 @@ func (_u *TicketUpdateOne) RemoveConfigurationItems(v ...*ConfigurationItem) *Ti
 	return _u.RemoveConfigurationItemIDs(ids...)
 }
 
+// ClearProblems clears all "problems" edges to the Problem entity.
+func (_u *TicketUpdateOne) ClearProblems() *TicketUpdateOne {
+	_u.mutation.ClearProblems()
+	return _u
+}
+
+// RemoveProblemIDs removes the "problems" edge to Problem entities by IDs.
+func (_u *TicketUpdateOne) RemoveProblemIDs(ids ...int) *TicketUpdateOne {
+	_u.mutation.RemoveProblemIDs(ids...)
+	return _u
+}
+
+// RemoveProblems removes "problems" edges to Problem entities.
+func (_u *TicketUpdateOne) RemoveProblems(v ...*Problem) *TicketUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveProblemIDs(ids...)
+}
+
 // Where appends a list predicates to the TicketUpdate builder.
 func (_u *TicketUpdateOne) Where(ps ...predicate.Ticket) *TicketUpdateOne {
 	_u.mutation.Where(ps...)
@@ -3191,6 +3355,12 @@ func (_u *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err erro
 	}
 	if _u.mutation.MspTicketIDCleared() {
 		_spec.ClearField(ticket.FieldMspTicketID, field.TypeString)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(ticket.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(ticket.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.TemplateCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -3825,6 +3995,51 @@ func (_u *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ProblemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ProblemsTable,
+			Columns: ticket.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedProblemsIDs(); len(nodes) > 0 && !_u.mutation.ProblemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ProblemsTable,
+			Columns: ticket.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ProblemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ProblemsTable,
+			Columns: ticket.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

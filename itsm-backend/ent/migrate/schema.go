@@ -2841,6 +2841,7 @@ var (
 		{Name: "msp_provider_id", Type: field.TypeInt, Nullable: true},
 		{Name: "managed_by_user_id", Type: field.TypeInt, Nullable: true},
 		{Name: "msp_ticket_id", Type: field.TypeString, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "department_id", Type: field.TypeInt, Nullable: true},
 		{Name: "sla_definition_id", Type: field.TypeInt, Nullable: true},
 		{Name: "sla_policy_tickets", Type: field.TypeInt, Nullable: true},
@@ -2857,43 +2858,43 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tickets_departments_tickets",
-				Columns:    []*schema.Column{TicketsColumns[25]},
+				Columns:    []*schema.Column{TicketsColumns[26]},
 				RefColumns: []*schema.Column{DepartmentsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_sla_definitions_tickets",
-				Columns:    []*schema.Column{TicketsColumns[26]},
+				Columns:    []*schema.Column{TicketsColumns[27]},
 				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_sla_policies_tickets",
-				Columns:    []*schema.Column{TicketsColumns[27]},
+				Columns:    []*schema.Column{TicketsColumns[28]},
 				RefColumns: []*schema.Column{SLAPoliciesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_tickets_related_tickets",
-				Columns:    []*schema.Column{TicketsColumns[28]},
+				Columns:    []*schema.Column{TicketsColumns[29]},
 				RefColumns: []*schema.Column{TicketsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_categories_tickets",
-				Columns:    []*schema.Column{TicketsColumns[29]},
+				Columns:    []*schema.Column{TicketsColumns[30]},
 				RefColumns: []*schema.Column{TicketCategoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_tags_tickets",
-				Columns:    []*schema.Column{TicketsColumns[30]},
+				Columns:    []*schema.Column{TicketsColumns[31]},
 				RefColumns: []*schema.Column{TicketTagsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_templates_tickets",
-				Columns:    []*schema.Column{TicketsColumns[31]},
+				Columns:    []*schema.Column{TicketsColumns[32]},
 				RefColumns: []*schema.Column{TicketTemplatesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -3594,6 +3595,81 @@ var (
 			},
 		},
 	}
+	// ProblemTicketsColumns holds the columns for the "problem_tickets" table.
+	ProblemTicketsColumns = []*schema.Column{
+		{Name: "problem_id", Type: field.TypeInt},
+		{Name: "ticket_id", Type: field.TypeInt},
+	}
+	// ProblemTicketsTable holds the schema information for the "problem_tickets" table.
+	ProblemTicketsTable = &schema.Table{
+		Name:       "problem_tickets",
+		Columns:    ProblemTicketsColumns,
+		PrimaryKey: []*schema.Column{ProblemTicketsColumns[0], ProblemTicketsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "problem_tickets_problem_id",
+				Columns:    []*schema.Column{ProblemTicketsColumns[0]},
+				RefColumns: []*schema.Column{ProblemsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "problem_tickets_ticket_id",
+				Columns:    []*schema.Column{ProblemTicketsColumns[1]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// ProblemIncidentsColumns holds the columns for the "problem_incidents" table.
+	ProblemIncidentsColumns = []*schema.Column{
+		{Name: "problem_id", Type: field.TypeInt},
+		{Name: "incident_id", Type: field.TypeInt},
+	}
+	// ProblemIncidentsTable holds the schema information for the "problem_incidents" table.
+	ProblemIncidentsTable = &schema.Table{
+		Name:       "problem_incidents",
+		Columns:    ProblemIncidentsColumns,
+		PrimaryKey: []*schema.Column{ProblemIncidentsColumns[0], ProblemIncidentsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "problem_incidents_problem_id",
+				Columns:    []*schema.Column{ProblemIncidentsColumns[0]},
+				RefColumns: []*schema.Column{ProblemsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "problem_incidents_incident_id",
+				Columns:    []*schema.Column{ProblemIncidentsColumns[1]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// ProblemChangesColumns holds the columns for the "problem_changes" table.
+	ProblemChangesColumns = []*schema.Column{
+		{Name: "problem_id", Type: field.TypeInt},
+		{Name: "change_id", Type: field.TypeInt},
+	}
+	// ProblemChangesTable holds the schema information for the "problem_changes" table.
+	ProblemChangesTable = &schema.Table{
+		Name:       "problem_changes",
+		Columns:    ProblemChangesColumns,
+		PrimaryKey: []*schema.Column{ProblemChangesColumns[0], ProblemChangesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "problem_changes_problem_id",
+				Columns:    []*schema.Column{ProblemChangesColumns[0]},
+				RefColumns: []*schema.Column{ProblemsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "problem_changes_change_id",
+				Columns:    []*schema.Column{ProblemChangesColumns[1]},
+				RefColumns: []*schema.Column{ChangesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// ProjectTagsColumns holds the columns for the "project_tags" table.
 	ProjectTagsColumns = []*schema.Column{
 		{Name: "project_id", Type: field.TypeInt},
@@ -3789,6 +3865,9 @@ var (
 		DepartmentTagsTable,
 		IncidentRelatedIncidentsTable,
 		MicroserviceTagsTable,
+		ProblemTicketsTable,
+		ProblemIncidentsTable,
+		ProblemChangesTable,
 		ProjectTagsTable,
 		TeamTagsTable,
 		TenantMspCustomerAllocationsTable,
@@ -3883,6 +3962,12 @@ func init() {
 	IncidentRelatedIncidentsTable.ForeignKeys[1].RefTable = IncidentsTable
 	MicroserviceTagsTable.ForeignKeys[0].RefTable = MicroservicesTable
 	MicroserviceTagsTable.ForeignKeys[1].RefTable = TagsTable
+	ProblemTicketsTable.ForeignKeys[0].RefTable = ProblemsTable
+	ProblemTicketsTable.ForeignKeys[1].RefTable = TicketsTable
+	ProblemIncidentsTable.ForeignKeys[0].RefTable = ProblemsTable
+	ProblemIncidentsTable.ForeignKeys[1].RefTable = IncidentsTable
+	ProblemChangesTable.ForeignKeys[0].RefTable = ProblemsTable
+	ProblemChangesTable.ForeignKeys[1].RefTable = ChangesTable
 	ProjectTagsTable.ForeignKeys[0].RefTable = ProjectsTable
 	ProjectTagsTable.ForeignKeys[1].RefTable = TagsTable
 	TeamTagsTable.ForeignKeys[0].RefTable = TeamsTable

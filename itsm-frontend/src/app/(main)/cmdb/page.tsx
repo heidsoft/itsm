@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Tabs, Table, Tag, Button, Progress, Space, Input, Select, App } from 'antd';
-import { Database, Server, Cloud, Shield, Plus, AlertTriangle, CheckCircle, Search, Filter, RefreshCw } from 'lucide-react';
+import { Card, Row, Col, Statistic, Typography, Tabs, Table, Tag, Button, Progress, Space, Input, Select, App, Spin } from 'antd';
+import { Database, Server, Cloud, Shield, Plus, AlertTriangle, CheckCircle, Search, Filter, RefreshCw, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import CIList from '@/components/cmdb/CIList';
 import { CMDBApi } from '@/lib/api/cmdb-api';
+import { httpClient } from '@/lib/api/http-client';
 
 const { Title, Text } = Typography;
 
@@ -43,6 +44,14 @@ export default function CMDBPage() {
   const [ciTypeStats, setCiTypeStats] = useState<any[]>([]);
   const [cloudResources, setCloudResources] = useState<any[]>([]);
   const [reconciliationData, setReconciliationData] = useState<any[]>([]);
+  // 云资源同步状态
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<{
+    total_accounts: number;
+    active_accounts: number;
+    discovered_count: number;
+    last_discovery: string;
+  } | null>(null);
+  const [syncLoading, setSyncLoading] = useState(false);
 
   // Fetch all data
   const fetchStats = async () => {
@@ -71,6 +80,34 @@ export default function CMDBPage() {
       }
     } catch (error) {
       console.error('Failed to fetch CI types:', error);
+    }
+  };
+
+  // 获取云资源同步状态
+  const fetchCloudSyncStatus = async () => {
+    try {
+      // 模拟获取同步状态 - 后端需要实现实际API
+      const response = await httpClient.get<any>('/api/cmdb/discovery/status');
+      if (response) {
+        setCloudSyncStatus(response);
+      }
+    } catch (error) {
+      console.error('Failed to fetch cloud sync status:', error);
+    }
+  };
+
+  // 触发云资源发现
+  const triggerCloudDiscovery = async () => {
+    setSyncLoading(true);
+    try {
+      await httpClient.post('/api/cmdb/discovery/run', {});
+      message.success('云资源发现任务已启动');
+      // 延迟刷新状态
+      setTimeout(() => fetchCloudSyncStatus(), 3000);
+    } catch (error) {
+      message.error('启动发现任务失败');
+    } finally {
+      setSyncLoading(false);
     }
   };
 
@@ -112,6 +149,7 @@ export default function CMDBPage() {
     fetchCiTypeStats();
     fetchCloudResources();
     fetchReconciliationData();
+    fetchCloudSyncStatus();
   }, []);
 
   const ciTypeColumns = [
@@ -364,6 +402,57 @@ export default function CMDBPage() {
           </Card>
         </Col>
       </Row>
+
+      {/* 云资源同步状态卡片 */}
+      <Card className="mb-6" title={
+        <span className="flex items-center gap-2">
+          <Cloud className="w-4 h-4" />
+          云资源同步状态
+        </span>
+      } extra={
+        <Button
+          type="primary"
+          icon={<Sparkles className="w-4 h-4" />}
+          onClick={triggerCloudDiscovery}
+          loading={syncLoading}
+          size="small"
+        >
+          立即同步
+        </Button>
+      }>
+        <Spin spinning={syncLoading}>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={8}>
+              <Statistic
+                title="云账号总数"
+                value={cloudSyncStatus?.total_accounts ?? 0}
+                prefix={<Cloud />}
+              />
+            </Col>
+            <Col xs={24} sm={8}>
+              <Statistic
+                title="活跃账号"
+                value={cloudSyncStatus?.active_accounts ?? 0}
+                prefix={<CheckCircle className="text-green-500" />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Col>
+            <Col xs={24} sm={8}>
+              <Statistic
+                title="已发现资源"
+                value={cloudSyncStatus?.discovered_count ?? 0}
+                prefix={<Server />}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Col>
+          </Row>
+          {cloudSyncStatus?.last_discovery && (
+            <div className="mt-4 text-sm text-gray-500">
+              上次同步时间: {new Date(cloudSyncStatus.last_discovery).toLocaleString()}
+            </div>
+          )}
+        </Spin>
+      </Card>
 
       {/* 主要内容 */}
       <Card>

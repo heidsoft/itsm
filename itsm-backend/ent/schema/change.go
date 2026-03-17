@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -84,5 +85,9 @@ func (Change) Fields() []ent.Field {
 
 // Edges of the Change.
 func (Change) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("problems", Problem.Type).
+			Ref("changes").
+			Comment("关联的问题"),
+	}
 }

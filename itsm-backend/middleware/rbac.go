@@ -14,6 +14,7 @@ import (
 	"itsm-backend/ent/user"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // Permission 权限结构
@@ -509,6 +510,12 @@ var ResourceActionMap = map[string]map[string]Permission{
 // RBACMiddleware RBAC权限控制中间件
 func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 调试日志
+		zap.S().Infow("RBACMiddleware: received request",
+			"path", c.Request.URL.Path,
+			"method", c.Request.Method,
+		)
+
 		// 将 Ent 客户端放入上下文，供资源级别检查使用（例如工单所有权校验）
 		if client != nil {
 			c.Set("client", client)
@@ -516,6 +523,9 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		// 获取用户信息
 		userIDInterface, exists := c.Get("user_id")
 		if !exists {
+			zap.S().Warnw("RBACMiddleware: user_id not found in context",
+				"path", c.Request.URL.Path,
+			)
 			common.Fail(c, common.AuthFailedCode, "用户未认证")
 			c.Abort()
 			return
@@ -523,6 +533,10 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		userID, ok := userIDInterface.(int)
 		if !ok {
+			zap.S().Warnw("RBACMiddleware: user_id format error",
+				"path", c.Request.URL.Path,
+				"user_id_interface", userIDInterface,
+			)
 			common.Fail(c, common.AuthFailedCode, "用户ID格式错误")
 			c.Abort()
 			return
@@ -531,12 +545,20 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		// 获取租户ID
 		tenantIDInterface, exists := c.Get("tenant_id")
 		if !exists {
+			zap.S().Warnw("RBACMiddleware: tenant_id not found in context",
+				"path", c.Request.URL.Path,
+				"user_id", userID,
+			)
 			common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 			c.Abort()
 			return
 		}
 		tenantID, ok := tenantIDInterface.(int)
 		if !ok {
+			zap.S().Warnw("RBACMiddleware: tenant_id format error",
+				"path", c.Request.URL.Path,
+				"tenant_id_interface", tenantIDInterface,
+			)
 			common.Fail(c, common.AuthFailedCode, "租户ID格式错误")
 			c.Abort()
 			return
@@ -547,6 +569,11 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 			Where(user.ID(userID)).
 			Only(context.Background())
 		if err != nil {
+			zap.S().Warnw("RBACMiddleware: user not found in DB",
+				"path", c.Request.URL.Path,
+				"user_id", userID,
+				"error", err.Error(),
+			)
 			common.Fail(c, common.AuthFailedCode, "用户不存在")
 			c.Abort()
 			return
@@ -554,6 +581,10 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		// 检查用户是否被禁用
 		if !userEntity.Active {
+			zap.S().Warnw("RBACMiddleware: user is disabled",
+				"path", c.Request.URL.Path,
+				"user_id", userID,
+			)
 			common.Fail(c, common.ForbiddenCode, "用户已被禁用")
 			c.Abort()
 			return
@@ -562,6 +593,10 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		// 从JWT中获取角色信息
 		roleInterface, exists := c.Get("role")
 		if !exists {
+			zap.S().Warnw("RBACMiddleware: role not found in context",
+				"path", c.Request.URL.Path,
+				"user_id", userID,
+			)
 			common.Fail(c, common.AuthFailedCode, "角色信息缺失")
 			c.Abort()
 			return
@@ -569,6 +604,10 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		role, ok := roleInterface.(string)
 		if !ok {
+			zap.S().Warnw("RBACMiddleware: role format error",
+				"path", c.Request.URL.Path,
+				"role_interface", roleInterface,
+			)
 			common.Fail(c, common.AuthFailedCode, "角色格式错误")
 			c.Abort()
 			return
@@ -580,10 +619,24 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		// 检查权限（从数据库加载权限）
 		if !hasPermission(client, role, method, path, userID, tenantID, c) {
+			zap.S().Warnw("RBACMiddleware: permission denied",
+				"path", c.Request.URL.Path,
+				"method", c.Request.Method,
+				"user_id", userID,
+				"role", role,
+			)
 			common.Fail(c, common.ForbiddenCode, "权限不足")
 			c.Abort()
 			return
 		}
+
+		// 调试日志：RBAC检查通过
+		zap.S().Infow("RBACMiddleware: access granted",
+			"path", c.Request.URL.Path,
+			"user_id", userID,
+			"role", role,
+			"tenant_id", tenantID,
+		)
 
 		// 将用户实体信息存储到上下文中
 		c.Set("user_entity", userEntity)

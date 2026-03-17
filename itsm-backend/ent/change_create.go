@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/problem"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -274,6 +275,21 @@ func (_c *ChangeCreate) SetNillableUpdatedAt(v *time.Time) *ChangeCreate {
 	return _c
 }
 
+// AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
+func (_c *ChangeCreate) AddProblemIDs(ids ...int) *ChangeCreate {
+	_c.mutation.AddProblemIDs(ids...)
+	return _c
+}
+
+// AddProblems adds the "problems" edges to the Problem entity.
+func (_c *ChangeCreate) AddProblems(v ...*Problem) *ChangeCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddProblemIDs(ids...)
+}
+
 // Mutation returns the ChangeMutation object of the builder.
 func (_c *ChangeCreate) Mutation() *ChangeMutation {
 	return _c.mutation
@@ -495,6 +511,22 @@ func (_c *ChangeCreate) createSpec() (*Change, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(change.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := _c.mutation.ProblemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   change.ProblemsTable,
+			Columns: change.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

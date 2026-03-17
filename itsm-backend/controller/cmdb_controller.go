@@ -13,10 +13,11 @@ import (
 )
 
 type CMDBController struct {
-	cmdbService           *service.CMDBService
-	ciRelationshipService *service.CIRelationshipService
-	auditLogService       *service.AuditLogService
-	dddSvc                *dddcmdb.Service
+	cmdbService             *service.CMDBService
+	ciRelationshipService   *service.CIRelationshipService
+	auditLogService         *service.AuditLogService
+	dddSvc                  *dddcmdb.Service
+	cloudDiscoveryService   *service.CloudDiscoveryService
 }
 
 func NewCMDBController(
@@ -31,6 +32,11 @@ func NewCMDBController(
 		auditLogService:       auditLogService,
 		dddSvc:                dddSvc,
 	}
+}
+
+// SetCloudDiscoveryService 设置云发现服务
+func (c *CMDBController) SetCloudDiscoveryService(svc *service.CloudDiscoveryService) {
+	c.cloudDiscoveryService = svc
 }
 
 // CreateCI 创建配置项（统一走 ent 层，携带租户 ID）
@@ -1001,6 +1007,52 @@ func (c *CMDBController) ListDiscoveryResults(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, resp)
+}
+
+// GetDiscoveryStatus 获取云资源发现状态
+func (c *CMDBController) GetDiscoveryStatus(ctx *gin.Context) {
+	if c.cloudDiscoveryService == nil {
+		common.Fail(ctx, common.InternalErrorCode, "云发现服务未初始化")
+		return
+	}
+
+	tenantIDVal, _ := ctx.Get("tenant_id")
+	tenantID, _ := tenantIDVal.(int)
+	if tenantID == 0 {
+		tenantID = 1 // 默认租户
+	}
+
+	status, err := c.cloudDiscoveryService.GetDiscoveryStatus(ctx.Request.Context(), tenantID)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取发现状态失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, status)
+}
+
+// RunDiscovery 运行云资源发现任务
+func (c *CMDBController) RunDiscovery(ctx *gin.Context) {
+	if c.cloudDiscoveryService == nil {
+		common.Fail(ctx, common.InternalErrorCode, "云发现服务未初始化")
+		return
+	}
+
+	tenantIDVal, _ := ctx.Get("tenant_id")
+	tenantID, _ := tenantIDVal.(int)
+	if tenantID == 0 {
+		tenantID = 1 // 默认租户
+	}
+
+	// 异步执行发现任务
+	go func() {
+		err := c.cloudDiscoveryService.DiscoverAll(ctx.Request.Context(), tenantID)
+		if err != nil {
+			fmt.Printf("Cloud discovery error: %v\n", err)
+		}
+	}()
+
+	common.Success(ctx, gin.H{"message": "发现任务已启动"})
 }
 
 // ==================== Helper mappers ====================

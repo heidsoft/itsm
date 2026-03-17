@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/problem"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -398,9 +399,45 @@ func (_u *ChangeUpdate) SetUpdatedAt(v time.Time) *ChangeUpdate {
 	return _u
 }
 
+// AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
+func (_u *ChangeUpdate) AddProblemIDs(ids ...int) *ChangeUpdate {
+	_u.mutation.AddProblemIDs(ids...)
+	return _u
+}
+
+// AddProblems adds the "problems" edges to the Problem entity.
+func (_u *ChangeUpdate) AddProblems(v ...*Problem) *ChangeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddProblemIDs(ids...)
+}
+
 // Mutation returns the ChangeMutation object of the builder.
 func (_u *ChangeUpdate) Mutation() *ChangeMutation {
 	return _u.mutation
+}
+
+// ClearProblems clears all "problems" edges to the Problem entity.
+func (_u *ChangeUpdate) ClearProblems() *ChangeUpdate {
+	_u.mutation.ClearProblems()
+	return _u
+}
+
+// RemoveProblemIDs removes the "problems" edge to Problem entities by IDs.
+func (_u *ChangeUpdate) RemoveProblemIDs(ids ...int) *ChangeUpdate {
+	_u.mutation.RemoveProblemIDs(ids...)
+	return _u
+}
+
+// RemoveProblems removes "problems" edges to Problem entities.
+func (_u *ChangeUpdate) RemoveProblems(v ...*Problem) *ChangeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveProblemIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -585,6 +622,51 @@ func (_u *ChangeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(change.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.ProblemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   change.ProblemsTable,
+			Columns: change.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedProblemsIDs(); len(nodes) > 0 && !_u.mutation.ProblemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   change.ProblemsTable,
+			Columns: change.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ProblemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   change.ProblemsTable,
+			Columns: change.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -975,9 +1057,45 @@ func (_u *ChangeUpdateOne) SetUpdatedAt(v time.Time) *ChangeUpdateOne {
 	return _u
 }
 
+// AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
+func (_u *ChangeUpdateOne) AddProblemIDs(ids ...int) *ChangeUpdateOne {
+	_u.mutation.AddProblemIDs(ids...)
+	return _u
+}
+
+// AddProblems adds the "problems" edges to the Problem entity.
+func (_u *ChangeUpdateOne) AddProblems(v ...*Problem) *ChangeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddProblemIDs(ids...)
+}
+
 // Mutation returns the ChangeMutation object of the builder.
 func (_u *ChangeUpdateOne) Mutation() *ChangeMutation {
 	return _u.mutation
+}
+
+// ClearProblems clears all "problems" edges to the Problem entity.
+func (_u *ChangeUpdateOne) ClearProblems() *ChangeUpdateOne {
+	_u.mutation.ClearProblems()
+	return _u
+}
+
+// RemoveProblemIDs removes the "problems" edge to Problem entities by IDs.
+func (_u *ChangeUpdateOne) RemoveProblemIDs(ids ...int) *ChangeUpdateOne {
+	_u.mutation.RemoveProblemIDs(ids...)
+	return _u
+}
+
+// RemoveProblems removes "problems" edges to Problem entities.
+func (_u *ChangeUpdateOne) RemoveProblems(v ...*Problem) *ChangeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveProblemIDs(ids...)
 }
 
 // Where appends a list predicates to the ChangeUpdate builder.
@@ -1192,6 +1310,51 @@ func (_u *ChangeUpdateOne) sqlSave(ctx context.Context) (_node *Change, err erro
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(change.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.ProblemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   change.ProblemsTable,
+			Columns: change.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedProblemsIDs(); len(nodes) > 0 && !_u.mutation.ProblemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   change.ProblemsTable,
+			Columns: change.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ProblemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   change.ProblemsTable,
+			Columns: change.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Change{config: _u.config}
 	_spec.Assign = _node.assignValues

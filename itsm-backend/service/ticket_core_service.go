@@ -239,7 +239,10 @@ func (s *TicketCoreService) DeleteTicket(ctx context.Context, ticketID int, tena
 	if err != nil {
 		return err
 	}
-	err = s.client.Ticket.DeleteOneID(ticketID).Exec(ctx)
+	// 软删除：设置deleted_at时间戳
+	_, err = s.client.Ticket.UpdateOneID(ticketID).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("删除失败: %w", err)
 	}
@@ -256,9 +259,11 @@ func (s *TicketCoreService) BatchDeleteTickets(ctx context.Context, ticketIDs []
 			return fmt.Errorf("工单%d不存在: %w", id, err)
 		}
 	}
-	_, err := s.client.Ticket.Delete().
+	// 软删除：批量设置deleted_at时间戳
+	_, err := s.client.Ticket.Update().
 		Where(ticket.IDIn(ticketIDs...), ticket.TenantID(tenantID)).
-		Exec(ctx)
+		SetDeletedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("批量删除失败: %w", err)
 	}
