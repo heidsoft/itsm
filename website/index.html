@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITSM - 企业级 IT 服务管理系统</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            padding: 20px 0;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        /* Hero */
+        .hero {
+            padding: 100px 0;
+            text-align: center;
+            color: white;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .btn-secondary {
+            border: 2px solid white;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        /* Features */
+        .features {
+            background: white;
+            padding: 80px 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .section-title p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.7;
+        }
+        
+        /* Tech Stack */
+        .tech-stack {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+        
+        .tech-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .tech-item {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 150px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        
+        .tech-item span {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-top: 10px;
+        }
+        
+        /* Footer */
+        footer {
+            background: #1a1a2e;
+            color: white;
+            padding: 60px 0 30px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-section h4 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .footer-section ul {
+            list-style: none;
+        }
+        
+        .footer-section li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-section a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-section a:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.5);
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">🛠️ ITSM</a>
+                <ul class="nav-links">
+                    <li><a href="#features">功能特性</a></li>
+                    <li><a href="#tech">技术栈</a></li>
+                    <li><a href="https://github.com/heidsoft/itsm" target="_blank">GitHub</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <section class="hero">
+        <div class="container">
+            <h1>🚀 ITSM 企业级服务管理</h1>
+            <p>开源、现代化、功能完备的 IT 服务管理系统<br>助力企业实现 IT 服务数字化转型</p>
+            <div class="cta-buttons">
+                <a href="https://github.com/heidsoft/itsm" class="btn btn-primary" target="_blank">⭐ GitHub 仓库</a>
+                <a href="https://cloudmesh.top" class="btn btn-secondary" target="_blank">🌐 在线演示</a>
+            </div>
+        </div>
+    </section>
+    
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>核心功能</h2>
+                <p>全面覆盖 ITIL 最佳实践，满足企业多样化需求</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎫</div>
+                    <h3>工单管理</h3>
+                    <p>全生命周期工单管理，支持多级审批、SLA监控、自动分配，提升服务效率</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>CMDB 配置管理</h3>
+                    <p>可视化配置项管理，支持拓扑图、关系追踪、自动发现，保持数据一致性</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>变更管理</h3>
+                    <p>标准化的变更流程，风险评估、审批控制、回滚计划，降低变更风险</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>问题管理</h3>
+                    <p>根因分析、知识库联动，防止问题再次发生，提升服务稳定性</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>工作流引擎</h3>
+                    <p>BPMN 2.0 标准工作流设计器，可视化编排业务流程，灵活适应各种场景</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏢</div>
+                    <h3>多租户架构</h3>
+                    <p>SaaS 级多租户设计，数据隔离、权限精细控制，支持企业级部署</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="tech-stack" id="tech">
+        <div class="container">
+            <div class="section-title">
+                <h2>技术栈</h2>
+                <p>采用现代化技术架构，确保系统稳定、高性能、易扩展</p>
+            </div>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    📦<span>Go + Gin</span>
+                </div>
+                <div class="tech-item">
+                    ⚛️<span>React + Next.js</span>
+                </div>
+                <div class="tech-item">
+                    🗄️<span>PostgreSQL</span>
+                </div>
+                <div class="tech-item">
+                    🎨<span>Ant Design</span>
+                </div>
+                <div class="tech-item">
+                    🔄<span>BPMN.js</span>
+                </div>
+                <div class="tech-item">
+                    🐳<span>Docker</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>🛠️ ITSM</h4>
+                    <p style="color: rgba(255,255,255,0.7); margin-top: 15px;">
+                        开源企业级 IT 服务管理系统
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h4>快速链接</h4>
+                    <ul>
+                        <li><a href="https://github.com/heidsoft/itsm" target="_blank">GitHub 仓库</a></li>
+                        <li><a href="https://github.com/heidsoft/itsm/issues" target="_blank">问题反馈</a></li>
+                        <li><a href="https://github.com/heidsoft/itsm/blob/main/README.md" target="_blank">使用文档</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>联系我们</h4>
+                    <ul>
+                        <li><a href="https://cloudmesh.top" target="_blank">官网: cloudmesh.top</a></li>
+                        <li><a href="mailto:contact@cloudmesh.top">邮箱联系</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 ITSM Open Source Project. Apache 2.0 License.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
