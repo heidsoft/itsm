@@ -77,7 +77,7 @@ export default function EditArticlePage() {
       await KnowledgeBaseApi.updateArticle(id, {
         title: values.title,
         content: values.content,
-        category: values.category,
+        categoryId: values.category,
         tags: values.tags || [],
       });
       message.success('更新成功');
