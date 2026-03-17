@@ -128,3 +128,60 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 	}
 	common.Success(c, gin.H{"message": "Feedback saved"})
 }
+
+// KnowledgeSearch handles POST /api/v1/ai/knowledge/search - RAG search over knowledge base
+func (h *Handler) KnowledgeSearch(c *gin.Context) {
+	var req struct {
+		Query string `json:"query" binding:"required"`
+		Limit int    `json:"limit"`
+		Type  string `json:"type"` // kb|incident
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		tenantID = 1 // default tenant
+	}
+
+	limit := req.Limit
+	if limit <= 0 {
+		limit = 5
+	}
+
+	// Use the service's RAG search capability
+	result, err := h.svc.SearchKnowledge(c.Request.Context(), tenantID, req.Query, req.Type, limit)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, result)
+}
+
+// Triage handles POST /api/v1/ai/triage - Ticket classification and recommendation
+func (h *Handler) Triage(c *gin.Context) {
+	var req struct {
+		Title       string `json:"title" binding:"required"`
+		Description string `json:"description"`
+		Category    string `json:"category"`
+		Priority    string `json:"priority"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		tenantID = 1 // default tenant
+	}
+
+	result, err := h.svc.TriageTicket(c.Request.Context(), tenantID, req.Title, req.Description, req.Category, req.Priority)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, result)
+}

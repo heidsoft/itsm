@@ -79,6 +79,8 @@ type Ticket struct {
 	ManagedByUserID int `json:"managed_by_user_id,omitempty"`
 	// MSP工单ID(跨租户)
 	MspTicketID string `json:"msp_ticket_id,omitempty"`
+	// 删除时间
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TicketQuery when eager-loading is set.
 	Edges              TicketEdges `json:"edges"`
@@ -121,9 +123,11 @@ type TicketEdges struct {
 	RootCauseAnalyses []*RootCauseAnalysis `json:"root_cause_analyses,omitempty"`
 	// 关联的配置项
 	ConfigurationItems []*ConfigurationItem `json:"configuration_items,omitempty"`
+	// 关联的问题
+	Problems []*Problem `json:"problems,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [16]bool
+	loadedTypes [17]bool
 }
 
 // TemplateOrErr returns the Template value or an error if the edge
@@ -280,6 +284,15 @@ func (e TicketEdges) ConfigurationItemsOrErr() ([]*ConfigurationItem, error) {
 	return nil, &NotLoadedError{edge: "configuration_items"}
 }
 
+// ProblemsOrErr returns the Problems value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) ProblemsOrErr() ([]*Problem, error) {
+	if e.loadedTypes[16] {
+		return e.Problems, nil
+	}
+	return nil, &NotLoadedError{edge: "problems"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Ticket) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -291,7 +304,7 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldType, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldResolution, ticket.FieldRatingComment, ticket.FieldMspTicketID:
 			values[i] = new(sql.NullString)
-		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt:
+		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt, ticket.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case ticket.ForeignKeys[0]: // sla_policy_tickets
 			values[i] = new(sql.NullInt64)
@@ -492,6 +505,13 @@ func (_m *Ticket) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.MspTicketID = value.String
 			}
+		case ticket.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				_m.DeletedAt = new(time.Time)
+				*_m.DeletedAt = value.Time
+			}
 		case ticket.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field sla_policy_tickets", value)
@@ -597,6 +617,11 @@ func (_m *Ticket) QueryRootCauseAnalyses() *RootCauseAnalysisQuery {
 // QueryConfigurationItems queries the "configuration_items" edge of the Ticket entity.
 func (_m *Ticket) QueryConfigurationItems() *ConfigurationItemQuery {
 	return NewTicketClient(_m.config).QueryConfigurationItems(_m)
+}
+
+// QueryProblems queries the "problems" edge of the Ticket entity.
+func (_m *Ticket) QueryProblems() *ProblemQuery {
+	return NewTicketClient(_m.config).QueryProblems(_m)
 }
 
 // Update returns a builder for updating this Ticket.
@@ -708,6 +733,11 @@ func (_m *Ticket) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("msp_ticket_id=")
 	builder.WriteString(_m.MspTicketID)
+	builder.WriteString(", ")
+	if v := _m.DeletedAt; v != nil {
+		builder.WriteString("deleted_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

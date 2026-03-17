@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/tickettag"
 )
@@ -437,4 +438,141 @@ func (s *TicketAssociationService) getChildrenTree(ctx context.Context, ticketID
 	}
 
 	return tree, nil
+}
+
+// ConfigurationItemResponse 配置项响应
+type ConfigurationItemResponse struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	CIType       string `json:"ci_type"`
+	Status       string `json:"status"`
+	SerialNumber string `json:"serial_number,omitempty"`
+}
+
+// AddConfigurationItem 添加配置项关联
+func (s *TicketAssociationService) AddConfigurationItem(ctx context.Context, ticketID, ciID int) error {
+	// 验证工单是否存在
+	ticketExists, err := s.client.Ticket.Query().
+		Where(ticket.ID(ticketID)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("验证工单失败: %w", err)
+	}
+	if !ticketExists {
+		return fmt.Errorf("工单不存在")
+	}
+
+	// 验证配置项是否存在并获取
+	ci, err := s.client.ConfigurationItem.Query().
+		Where(configurationitem.ID(ciID)).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("配置项不存在: %w", err)
+	}
+
+	// 添加关联
+	_, err = s.client.Ticket.UpdateOneID(ticketID).
+		AddConfigurationItems(ci).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("添加配置项关联失败: %w", err)
+	}
+
+	return nil
+}
+
+// RemoveConfigurationItem 移除配置项关联
+func (s *TicketAssociationService) RemoveConfigurationItem(ctx context.Context, ticketID, ciID int) error {
+	// 验证工单是否存在
+	ticketExists, err := s.client.Ticket.Query().
+		Where(ticket.ID(ticketID)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("验证工单失败: %w", err)
+	}
+	if !ticketExists {
+		return fmt.Errorf("工单不存在")
+	}
+
+	// 获取配置项实体
+	ci, err := s.client.ConfigurationItem.Query().
+		Where(configurationitem.ID(ciID)).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("配置项不存在: %w", err)
+	}
+
+	// 移除关联
+	_, err = s.client.Ticket.UpdateOneID(ticketID).
+		RemoveConfigurationItems(ci).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("移除配置项关联失败: %w", err)
+	}
+
+	return nil
+}
+
+// GetConfigurationItems 获取配置项列表
+func (s *TicketAssociationService) GetConfigurationItems(ctx context.Context, ticketID int) ([]*ConfigurationItemResponse, error) {
+	ticketEntity, err := s.client.Ticket.Query().
+		WithConfigurationItems().
+		Where(ticket.ID(ticketID)).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取工单失败: %w", err)
+	}
+
+	items := ticketEntity.Edges.ConfigurationItems
+	response := make([]*ConfigurationItemResponse, len(items))
+	for i, ci := range items {
+		response[i] = &ConfigurationItemResponse{
+			ID:           ci.ID,
+			Name:         ci.Name,
+			CIType:       ci.CiType,
+			Status:       ci.Status,
+			SerialNumber: ci.SerialNumber,
+		}
+	}
+
+	return response, nil
+}
+
+// SetConfigurationItems 批量设置配置项
+func (s *TicketAssociationService) SetConfigurationItems(ctx context.Context, ticketID int, ciIDs []int) error {
+	// 验证工单是否存在
+	ticketExists, err := s.client.Ticket.Query().
+		Where(ticket.ID(ticketID)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("验证工单失败: %w", err)
+	}
+	if !ticketExists {
+		return fmt.Errorf("工单不存在")
+	}
+
+	// 获取所有配置项实体
+	var cis []*ent.ConfigurationItem
+	if len(ciIDs) > 0 {
+		cis, err = s.client.ConfigurationItem.Query().
+			Where(configurationitem.IDIn(ciIDs...)).
+			All(ctx)
+		if err != nil {
+			return fmt.Errorf("获取配置项失败: %w", err)
+		}
+		if len(cis) != len(ciIDs) {
+			return fmt.Errorf("部分配置项不存在")
+		}
+	}
+
+	// 清除现有关联并添加新关联
+	_, err = s.client.Ticket.UpdateOneID(ticketID).
+		ClearConfigurationItems().
+		AddConfigurationItems(cis...).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("设置配置项关联失败: %w", err)
+	}
+
+	return nil
 }

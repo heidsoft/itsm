@@ -33,7 +33,7 @@ export interface UpdateDepartmentRequest {
 }
 
 class DepartmentService {
-  private readonly baseUrl = '/api/v1/departments';
+  private readonly baseUrl = '/api/v1/org/departments';
 
   async getDepartmentTree(): Promise<Department[]> {
     return httpClient.get<Department[]>(`${this.baseUrl}/tree`);

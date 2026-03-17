@@ -92,6 +92,88 @@ func (h *Handler) GetDepartmentTree(c *gin.Context) {
 	common.Success(c, tree)
 }
 
+func (h *Handler) CreateDepartment(c *gin.Context) {
+	var req struct {
+		Name        string `json:"name" binding:"required"`
+		Code        string `json:"code" binding:"required"`
+		Description string `json:"description"`
+		ManagerID   int    `json:"manager_id"`
+		ParentID    int    `json:"parent_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	d := &Department{
+		Name:        req.Name,
+		Code:        req.Code,
+		Description: req.Description,
+		ManagerID:   req.ManagerID,
+		ParentID:    req.ParentID,
+		TenantID:    tenantID,
+	}
+	result, err := h.svc.CreateDepartment(c.Request.Context(), d)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *Handler) UpdateDepartment(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "invalid department id")
+		return
+	}
+
+	var req struct {
+		Name        string `json:"name"`
+		Code        string `json:"code"`
+		Description string `json:"description"`
+		ManagerID   int    `json:"manager_id"`
+		ParentID    int    `json:"parent_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	d := &Department{
+		ID:          id,
+		Name:        req.Name,
+		Code:        req.Code,
+		Description: req.Description,
+		ManagerID:   req.ManagerID,
+		ParentID:    req.ParentID,
+		TenantID:    tenantID,
+	}
+	result, err := h.svc.UpdateDepartment(c.Request.Context(), d)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *Handler) DeleteDepartment(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "invalid department id")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if err := h.svc.DeleteDepartment(c.Request.Context(), id, tenantID); err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, nil)
+}
+
 // Teams
 
 func (h *Handler) ListTeams(c *gin.Context) {
@@ -102,6 +184,84 @@ func (h *Handler) ListTeams(c *gin.Context) {
 		return
 	}
 	common.Success(c, teams)
+}
+
+func (h *Handler) CreateTeam(c *gin.Context) {
+	var req struct {
+		Name        string `json:"name" binding:"required"`
+		Code        string `json:"code" binding:"required"`
+		Description string `json:"description"`
+		ManagerID   int    `json:"manager_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	t := &Team{
+		Name:        req.Name,
+		Code:        req.Code,
+		Description: req.Description,
+		ManagerID:   req.ManagerID,
+		TenantID:    tenantID,
+	}
+	result, err := h.svc.CreateTeam(c.Request.Context(), t)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *Handler) UpdateTeam(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "invalid team id")
+		return
+	}
+
+	var req struct {
+		Name        string `json:"name"`
+		Code        string `json:"code"`
+		Description string `json:"description"`
+		ManagerID   int    `json:"manager_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	t := &Team{
+		ID:          id,
+		Name:        req.Name,
+		Code:        req.Code,
+		Description: req.Description,
+		ManagerID:   req.ManagerID,
+		TenantID:    tenantID,
+	}
+	result, err := h.svc.UpdateTeam(c.Request.Context(), t)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *Handler) DeleteTeam(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "invalid team id")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if err := h.svc.DeleteTeam(c.Request.Context(), id, tenantID); err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, nil)
 }
 
 // Tags

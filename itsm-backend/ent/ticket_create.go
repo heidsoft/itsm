@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/problem"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/slaalerthistory"
 	"itsm-backend/ent/sladefinition"
@@ -408,6 +409,20 @@ func (_c *TicketCreate) SetNillableMspTicketID(v *string) *TicketCreate {
 	return _c
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_c *TicketCreate) SetDeletedAt(v time.Time) *TicketCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_c *TicketCreate) SetNillableDeletedAt(v *time.Time) *TicketCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
+	}
+	return _c
+}
+
 // SetTemplate sets the "template" edge to the TicketTemplate entity.
 func (_c *TicketCreate) SetTemplate(v *TicketTemplate) *TicketCreate {
 	return _c.SetTemplateID(v.ID)
@@ -596,6 +611,21 @@ func (_c *TicketCreate) AddConfigurationItems(v ...*ConfigurationItem) *TicketCr
 		ids[i] = v[i].ID
 	}
 	return _c.AddConfigurationItemIDs(ids...)
+}
+
+// AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
+func (_c *TicketCreate) AddProblemIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddProblemIDs(ids...)
+	return _c
+}
+
+// AddProblems adds the "problems" edges to the Problem entity.
+func (_c *TicketCreate) AddProblems(v ...*Problem) *TicketCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddProblemIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -837,6 +867,10 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.MspTicketID(); ok {
 		_spec.SetField(ticket.FieldMspTicketID, field.TypeString, value)
 		_node.MspTicketID = value
+	}
+	if value, ok := _c.mutation.DeletedAt(); ok {
+		_spec.SetField(ticket.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
 	}
 	if nodes := _c.mutation.TemplateIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -1092,6 +1126,22 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ProblemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ProblemsTable,
+			Columns: ticket.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

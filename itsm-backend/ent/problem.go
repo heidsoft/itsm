@@ -46,9 +46,52 @@ type Problem struct {
 	// 关闭时间
 	ClosedAt *time.Time `json:"closed_at,omitempty"`
 	// 删除时间
-	DeletedAt           *time.Time `json:"deleted_at,omitempty"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ProblemQuery when eager-loading is set.
+	Edges               ProblemEdges `json:"edges"`
 	known_error_problem *int
 	selectValues        sql.SelectValues
+}
+
+// ProblemEdges holds the relations/edges for other nodes in the graph.
+type ProblemEdges struct {
+	// 关联的工单
+	Tickets []*Ticket `json:"tickets,omitempty"`
+	// 关联的事件
+	Incidents []*Incident `json:"incidents,omitempty"`
+	// 关联的变更
+	Changes []*Change `json:"changes,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [3]bool
+}
+
+// TicketsOrErr returns the Tickets value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProblemEdges) TicketsOrErr() ([]*Ticket, error) {
+	if e.loadedTypes[0] {
+		return e.Tickets, nil
+	}
+	return nil, &NotLoadedError{edge: "tickets"}
+}
+
+// IncidentsOrErr returns the Incidents value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProblemEdges) IncidentsOrErr() ([]*Incident, error) {
+	if e.loadedTypes[1] {
+		return e.Incidents, nil
+	}
+	return nil, &NotLoadedError{edge: "incidents"}
+}
+
+// ChangesOrErr returns the Changes value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProblemEdges) ChangesOrErr() ([]*Change, error) {
+	if e.loadedTypes[2] {
+		return e.Changes, nil
+	}
+	return nil, &NotLoadedError{edge: "changes"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -196,6 +239,21 @@ func (_m *Problem) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Problem) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryTickets queries the "tickets" edge of the Problem entity.
+func (_m *Problem) QueryTickets() *TicketQuery {
+	return NewProblemClient(_m.config).QueryTickets(_m)
+}
+
+// QueryIncidents queries the "incidents" edge of the Problem entity.
+func (_m *Problem) QueryIncidents() *IncidentQuery {
+	return NewProblemClient(_m.config).QueryIncidents(_m)
+}
+
+// QueryChanges queries the "changes" edge of the Problem entity.
+func (_m *Problem) QueryChanges() *ChangeQuery {
+	return NewProblemClient(_m.config).QueryChanges(_m)
 }
 
 // Update returns a builder for updating this Problem.

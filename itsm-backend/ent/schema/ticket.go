@@ -107,6 +107,10 @@ func (Ticket) Fields() []ent.Field {
 		field.String("msp_ticket_id").
 			Comment("MSP工单ID(跨租户)").
 			Optional(),
+		field.Time("deleted_at").
+			Comment("删除时间").
+			Optional().
+			Nillable(),
 	}
 }
 
@@ -161,6 +165,9 @@ func (Ticket) Edges() []ent.Edge {
 		edge.From("configuration_items", ConfigurationItem.Type).
 			Ref("tickets").
 			Comment("关联的配置项"),
+		edge.From("problems", Problem.Type).
+			Ref("tickets").
+			Comment("关联的问题"),
 	}
 }
 
