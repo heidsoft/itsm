@@ -72,6 +72,8 @@ const (
 	FieldManagedByUserID = "managed_by_user_id"
 	// FieldMspTicketID holds the string denoting the msp_ticket_id field in the database.
 	FieldMspTicketID = "msp_ticket_id"
+	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
+	FieldDeletedAt = "deleted_at"
 	// EdgeTemplate holds the string denoting the template edge name in mutations.
 	EdgeTemplate = "template"
 	// EdgeCategory holds the string denoting the category edge name in mutations.
@@ -104,6 +106,8 @@ const (
 	EdgeRootCauseAnalyses = "root_cause_analyses"
 	// EdgeConfigurationItems holds the string denoting the configuration_items edge name in mutations.
 	EdgeConfigurationItems = "configuration_items"
+	// EdgeProblems holds the string denoting the problems edge name in mutations.
+	EdgeProblems = "problems"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
 	// TemplateTable is the table that holds the template relation/edge.
@@ -210,6 +214,11 @@ const (
 	// ConfigurationItemsInverseTable is the table name for the ConfigurationItem entity.
 	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
 	ConfigurationItemsInverseTable = "configuration_items"
+	// ProblemsTable is the table that holds the problems relation/edge. The primary key declared below.
+	ProblemsTable = "problem_tickets"
+	// ProblemsInverseTable is the table name for the Problem entity.
+	// It exists in this package in order to avoid circular dependency with the "problem" package.
+	ProblemsInverseTable = "problems"
 )
 
 // Columns holds all SQL columns for ticket fields.
@@ -244,6 +253,7 @@ var Columns = []string{
 	FieldMspProviderID,
 	FieldManagedByUserID,
 	FieldMspTicketID,
+	FieldDeletedAt,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "tickets"
@@ -257,6 +267,9 @@ var (
 	// ConfigurationItemsPrimaryKey and ConfigurationItemsColumn2 are the table columns denoting the
 	// primary key for the configuration_items relation (M2M).
 	ConfigurationItemsPrimaryKey = []string{"configuration_item_id", "ticket_id"}
+	// ProblemsPrimaryKey and ProblemsColumn2 are the table columns denoting the
+	// primary key for the problems relation (M2M).
+	ProblemsPrimaryKey = []string{"problem_id", "ticket_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -454,6 +467,11 @@ func ByMspTicketID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldMspTicketID, opts...).ToFunc()
 }
 
+// ByDeletedAt orders the results by the deleted_at field.
+func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
+}
+
 // ByTemplateField orders the results by template field.
 func ByTemplateField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -642,6 +660,20 @@ func ByConfigurationItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOptio
 		sqlgraph.OrderByNeighborTerms(s, newConfigurationItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByProblemsCount orders the results by problems count.
+func ByProblemsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newProblemsStep(), opts...)
+	}
+}
+
+// ByProblems orders the results by problems terms.
+func ByProblems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProblemsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newTemplateStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -752,5 +784,12 @@ func newConfigurationItemsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ConfigurationItemsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, ConfigurationItemsTable, ConfigurationItemsPrimaryKey...),
+	)
+}
+func newProblemsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProblemsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ProblemsTable, ProblemsPrimaryKey...),
 	)
 }

@@ -1,4 +1,5 @@
 {
+  "seed_workflows": true,
   "departments": [
     {"name": "信息技术部", "code": "IT", "description": "IT整体管理"},
     {"name": "IT基础架构", "code": "IT-INFRA", "description": "基础设施运维", "parent_code": "IT"},

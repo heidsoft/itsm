@@ -26,6 +26,7 @@ import (
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
+	"itsm-backend/service"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -58,6 +59,8 @@ type SeedConfig struct {
 	Changes            []ChangeSeed            `json:"changes"`
 	KnowledgeArticles []KnowledgeArticleSeed  `json:"knowledge_articles"`
 	IncidentCategories []TicketCategorySeed    `json:"incident_categories"`
+	// 工作流种子配置
+	SeedWorkflows      bool                    `json:"seed_workflows"`
 }
 
 type DepartmentSeed struct {
@@ -177,17 +180,19 @@ type TicketCategorySeed struct {
 
 // Seeder manages database seeding operations
 type Seeder struct {
-	client *ent.Client
-	sugar  *zap.SugaredLogger
-	config *SeedConfig
+	client               *ent.Client
+	sugar                *zap.SugaredLogger
+	config               *SeedConfig
+	bpmnTemplateService *service.BPMNTemplateService
 }
 
 // NewSeeder creates a new Seeder instance
 func NewSeeder(client *ent.Client, sugar *zap.SugaredLogger) *Seeder {
 	return &Seeder{
-		client: client,
-		sugar:  sugar,
-		config: loadSeedConfig(sugar),
+		client:               client,
+		sugar:                sugar,
+		config:               loadSeedConfig(sugar),
+		bpmnTemplateService: service.NewBPMNTemplateService(client),
 	}
 }
 
@@ -367,6 +372,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedSLAAlertRules(ctx)
 	s.seedApprovalWorkflows(ctx)
 	s.seedProcessBindings(ctx)
+	s.seedBPMNWorkflows(ctx) // 部署BPMN工作流模板
 	s.seedTicketViews(ctx)
 	s.seedServiceCatalog(ctx)
 	s.seedTicketTypes(ctx)         // 新增：初始化工单类型
@@ -376,6 +382,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedProblems(ctx)           // 新增：初始化问题数据
 	s.seedChanges(ctx)            // 新增：初始化变更数据
 	s.seedKnowledgeArticles(ctx)  // 新增：初始化知识库文章
+	s.seedMenuAndPermissionFixes(ctx) // 修复：更新菜单路径和补充缺失权限
 }
 
 // seedDefaultTenant ensures default tenant exists
@@ -825,6 +832,30 @@ func (s *Seeder) seedProcessBindings(ctx context.Context) {
 	s.sugar.Infow("process bindings seeded", "count", len(s.config.ProcessBindings))
 }
 
+// seedBPMNWorkflows 部署BPMN工作流模板
+func (s *Seeder) seedBPMNWorkflows(ctx context.Context) {
+	// 检查是否已配置部署工作流
+	if s.config == nil || !s.config.SeedWorkflows {
+		s.sugar.Infow("workflow seeding is disabled in config")
+		return
+	}
+
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip BPMN workflows seed", "error", err)
+		return
+	}
+
+	// 使用BPMNTemplateService加载并部署内置模板
+	templates, err := s.bpmnTemplateService.LoadAndDeployTemplates(ctx, t.ID)
+	if err != nil {
+		s.sugar.Warnw("failed to deploy BPMN templates", "error", err)
+		return
+	}
+
+	s.sugar.Infow("BPMN workflows seeded", "count", len(templates))
+}
+
 func (s *Seeder) seedTicketViews(ctx context.Context) {
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
@@ -929,6 +960,12 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		{"asset:read", "查看资产", "asset", "read", "查看资产列表和详情"},
 		{"asset:write", "管理资产", "asset", "write", "创建、编辑资产"},
 		{"asset:delete", "删除资产", "asset", "delete", "删除资产"},
+		// CMDB 权限
+		{"cmdb:read", "查看CMDB", "cmdb", "read", "查看配置项"},
+		{"cmdb:write", "管理CMDB", "cmdb", "write", "管理配置项"},
+		// 报表权限
+		{"report:read", "查看报表", "report", "read", "查看报表"},
+		{"report:write", "管理报表", "report", "write", "创建、编辑报表"},
 		// 许可证权限
 		{"license:read", "查看许可证", "license", "read", "查看许可证列表和详情"},
 		{"license:write", "管理许可证", "license", "write", "创建、编辑许可证"},
@@ -1046,8 +1083,8 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		{Name: "部门管理", Path: "/admin/departments", Icon: "Activity", PermissionCode: "department:read", SortOrder: 240},
 		{Name: "团队管理", Path: "/admin/teams", Icon: "Users", PermissionCode: "team:read", SortOrder: 250},
 		{Name: "审批管理", Path: "/admin/approvals", Icon: "ClipboardList", PermissionCode: "approval:read", SortOrder: 260},
-		{Name: "SLA配置", Path: "/admin/sla", Icon: "Calendar", PermissionCode: "sla:write", SortOrder: 270},
-		{Name: "系统配置", Path: "/admin/system", Icon: "Settings", PermissionCode: "system:write", SortOrder: 280},
+		{Name: "SLA配置", Path: "/admin/sla-definitions", Icon: "Calendar", PermissionCode: "sla:write", SortOrder: 270},
+		{Name: "系统配置", Path: "/admin/system-config", Icon: "Settings", PermissionCode: "system:write", SortOrder: 280},
 	}
 
 	for _, m := range menus {
@@ -1073,6 +1110,115 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		}
 	}
 	s.sugar.Infow("menus seeded", "count", len(menus))
+}
+
+// seedMenuAndPermissionFixes 修复菜单路径和补充缺失的权限
+func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip fixes", "error", err)
+		return
+	}
+
+	// 1. 修复菜单路径
+	menuPathFixes := map[string]string{
+		"/admin/sla":       "/admin/sla-definitions",
+		"/admin/system":   "/admin/system-config",
+		"/admin/workflows": "/workflow",
+	}
+
+	for oldPath, newPath := range menuPathFixes {
+		_, err := s.client.Menu.Update().
+			Where(menu.Path(oldPath), menu.TenantIDEQ(t.ID)).
+			SetPath(newPath).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("fix menu path failed", "error", err, "old_path", oldPath, "new_path", newPath)
+		} else {
+			s.sugar.Infow("menu path fixed", "old_path", oldPath, "new_path", newPath)
+		}
+	}
+
+	// 2. 补充缺失的权限
+	missingPermissions := []struct {
+		Code        string
+		Name        string
+		Resource    string
+		Action      string
+		Description string
+	}{
+		{"cmdb:read", "查看CMDB", "cmdb", "read", "查看配置项"},
+		{"report:read", "查看报表", "report", "read", "查看报表"},
+		{"group:read", "查看组", "groups", "read", "查看组列表和详情"},
+		{"msp:read", "查看MSP", "msp", "read", "查看MSP状态和上下文"},
+	}
+
+	for _, p := range missingPermissions {
+		existing, err := s.client.Permission.Query().
+			Where(permission.Code(p.Code), permission.TenantIDEQ(t.ID)).
+			Count(ctx)
+		if err != nil {
+			s.sugar.Warnw("check permission failed", "error", err, "code", p.Code)
+			continue
+		}
+		if existing > 0 {
+			continue
+		}
+		_, err = s.client.Permission.Create().
+			SetCode(p.Code).
+			SetName(p.Name).
+			SetResource(p.Resource).
+			SetAction(p.Action).
+			SetDescription(p.Description).
+			SetTenantID(t.ID).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("create missing permission failed", "error", err, "code", p.Code)
+		} else {
+			s.sugar.Infow("missing permission created", "code", p.Code)
+		}
+	}
+
+	// 3. 补充缺失的菜单
+	missingMenus := []struct {
+		Name           string
+		Path           string
+		Icon           string
+		PermissionCode string
+		SortOrder      int
+	}{
+		{"工单分类", "/admin/ticket-categories", "Tag", "ticket:write", 275},
+		{"CI类型管理", "/admin/cmdb-types", "Database", "cmdb:write", 290},
+		{"许可证管理", "/licenses", "Key", "license:read", 125},
+	}
+
+	for _, m := range missingMenus {
+		existing, err := s.client.Menu.Query().
+			Where(menu.Path(m.Path), menu.TenantIDEQ(t.ID)).
+			Count(ctx)
+		if err != nil {
+			s.sugar.Warnw("check menu failed", "error", err, "path", m.Path)
+			continue
+		}
+		if existing > 0 {
+			continue
+		}
+		_, err = s.client.Menu.Create().
+			SetName(m.Name).
+			SetPath(m.Path).
+			SetIcon(m.Icon).
+			SetPermissionCode(m.PermissionCode).
+			SetSortOrder(m.SortOrder).
+			SetIsVisible(true).
+			SetIsEnabled(true).
+			SetTenantID(t.ID).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("create missing menu failed", "error", err, "path", m.Path)
+		} else {
+			s.sugar.Infow("missing menu created", "path", m.Path)
+		}
+	}
 }
 
 // strPtr 字符串指针辅助函数

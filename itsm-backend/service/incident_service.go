@@ -36,8 +36,8 @@ func (s *IncidentService) SetProcessTriggerService(triggerService ProcessTrigger
 }
 
 // CreateIncident 创建事件
-func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateIncidentRequest, tenantID int) (*dto.IncidentResponse, error) {
-	s.logger.Infow("Creating incident", "title", req.Title, "tenant_id", tenantID)
+func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateIncidentRequest, tenantID, userID int) (*dto.IncidentResponse, error) {
+	s.logger.Infow("Creating incident", "title", req.Title, "tenant_id", tenantID, "user_id", userID)
 
 	// 生成事件编号
 	incidentNumber, err := s.generateIncidentNumber(ctx, tenantID)
@@ -58,7 +58,7 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 		SetPriority(req.Priority).
 		SetSeverity(req.Severity).
 		SetIncidentNumber(incidentNumber).
-		SetReporterID(1). // 假设当前用户ID为1
+		SetReporterID(userID).
 		SetCategory(req.Category).
 		SetSubcategory(req.Subcategory).
 		SetImpactAnalysis(dto.StructToMap(req.ImpactAnalysis)).

@@ -64,7 +64,14 @@ func (c *IncidentController) CreateIncident(ctx *gin.Context) {
 		return
 	}
 
-	response, err := c.incidentService.CreateIncident(ctx.Request.Context(), &req, tenantID)
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get user ID", "error", err)
+		api.Error(ctx, common.InternalErrorCode, "获取用户ID失败")
+		return
+	}
+
+	response, err := c.incidentService.CreateIncident(ctx.Request.Context(), &req, tenantID, userID)
 	if err != nil {
 		c.logger.Errorw("Failed to create incident", "error", err)
 		api.Error(ctx, common.InternalErrorCode, "创建事件失败")

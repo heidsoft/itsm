@@ -27,7 +27,7 @@ export interface AddMemberRequest {
 }
 
 class TeamService {
-  private readonly baseUrl = '/api/v1/teams';
+  private readonly baseUrl = '/api/v1/org/teams';
 
   async listTeams(): Promise<Team[]> {
     return httpClient.get<Team[]>(this.baseUrl);

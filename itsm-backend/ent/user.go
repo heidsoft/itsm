@@ -34,7 +34,7 @@ type User struct {
 	// 电话
 	Phone string `json:"phone,omitempty"`
 	// 密码哈希
-	PasswordHash string `json:"-"`
+	PasswordHash string `json:"password_hash,omitempty"`
 	// 是否激活
 	Active bool `json:"active,omitempty"`
 	// 租户ID

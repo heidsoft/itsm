@@ -557,6 +557,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				cmdb.POST("/discovery-sources", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateDiscoverySource)
 				cmdb.POST("/discovery/jobs", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateDiscoveryJob)
 				cmdb.GET("/discovery/results", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListDiscoveryResults)
+			cmdb.GET("/discovery/status", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetDiscoveryStatus)
+			cmdb.POST("/discovery/run", middleware.RequirePermission("cmdb", "write"), config.CMDBController.RunDiscovery)
 				// Per-CI routes (must come after static routes)
 				cmdb.GET("/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCI)
 				cmdb.PUT("/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateCI)
@@ -660,6 +662,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				aiGrp.POST("/predictions", config.AIHandler.GetTrendPrediction)
 				aiGrp.POST("/tickets/:id/analyze", config.AIHandler.AnalyzeTicket)
 				aiGrp.POST("/feedback", config.AIHandler.SaveFeedback)
+				// RAG endpoints
+				aiGrp.POST("/knowledge/search", config.AIHandler.KnowledgeSearch)
+				aiGrp.POST("/triage", config.AIHandler.Triage)
 			}
 		}
 
@@ -716,7 +721,13 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			org := tenant.(*gin.RouterGroup).Group("/org")
 			{
 				org.GET("/departments/tree", config.CommonHandler.GetDepartmentTree)
+				org.POST("/departments", config.CommonHandler.CreateDepartment)
+				org.PUT("/departments/:id", config.CommonHandler.UpdateDepartment)
+				org.DELETE("/departments/:id", config.CommonHandler.DeleteDepartment)
 				org.GET("/teams", config.CommonHandler.ListTeams)
+				org.POST("/teams", config.CommonHandler.CreateTeam)
+				org.PUT("/teams/:id", config.CommonHandler.UpdateTeam)
+				org.DELETE("/teams/:id", config.CommonHandler.DeleteTeam)
 			}
 
 			// System

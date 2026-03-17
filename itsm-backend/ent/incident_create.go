@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentmetric"
+	"itsm-backend/ent/problem"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -414,6 +415,21 @@ func (_c *IncidentCreate) AddConfigurationItems(v ...*ConfigurationItem) *Incide
 	return _c.AddConfigurationItemIDs(ids...)
 }
 
+// AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
+func (_c *IncidentCreate) AddProblemIDs(ids ...int) *IncidentCreate {
+	_c.mutation.AddProblemIDs(ids...)
+	return _c
+}
+
+// AddProblems adds the "problems" edges to the Problem entity.
+func (_c *IncidentCreate) AddProblems(v ...*Problem) *IncidentCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddProblemIDs(ids...)
+}
+
 // Mutation returns the IncidentMutation object of the builder.
 func (_c *IncidentCreate) Mutation() *IncidentMutation {
 	return _c.mutation
@@ -774,6 +790,22 @@ func (_c *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ProblemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ProblemsTable,
+			Columns: incident.ProblemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
