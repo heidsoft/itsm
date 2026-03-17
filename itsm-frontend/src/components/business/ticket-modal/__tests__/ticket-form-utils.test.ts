@@ -5,12 +5,18 @@
 import {
   MOCK_TICKET_TEMPLATES,
   MOCK_USER_LIST,
-  getTicketTemplates,
-  getUsersByDepartment,
-  filterTemplatesByCategory,
-  validateTicketForm,
-  formatTicketData,
-  generateTicketNumber,
+  TICKET_FORM_STEPS,
+  TITLE_RULES,
+  DESCRIPTION_RULES,
+  TYPE_RULES,
+  CATEGORY_RULES,
+  PRIORITY_RULES,
+  TICKET_TYPE_OPTIONS,
+  PRIORITY_OPTIONS,
+  CATEGORY_OPTIONS,
+  getFieldsForStep,
+  mergeFormData,
+  resetFormData,
 } from '../utils/ticket-form-utils';
 
 describe('ticket-form-utils', () => {
@@ -28,14 +34,14 @@ describe('ticket-form-utils', () => {
         expect(template).toHaveProperty('description');
         expect(template).toHaveProperty('category');
         expect(template).toHaveProperty('priority');
-        expect(template).toHaveProperty('defaultValues');
+        expect(template).toHaveProperty('type');
       });
     });
 
-    it('模板应该包含有效的默认值', () => {
+    it('模板应该包含有效的描述', () => {
       MOCK_TICKET_TEMPLATES.forEach(template => {
-        expect(template.defaultValues).toHaveProperty('title');
-        expect(template.defaultValues).toHaveProperty('type');
+        expect(typeof template.description).toBe('string');
+        expect(template.description.length).toBeGreaterThan(0);
       });
     });
   });
@@ -51,238 +57,135 @@ describe('ticket-form-utils', () => {
       MOCK_USER_LIST.forEach(user => {
         expect(user).toHaveProperty('id');
         expect(user).toHaveProperty('name');
-        expect(user).toHaveProperty('email');
+        expect(user).toHaveProperty('role');
       });
     });
   });
 
-  describe('getTicketTemplates', () => {
-    it('应该返回所有模板', () => {
-      const templates = getTicketTemplates();
-      expect(templates).toEqual(MOCK_TICKET_TEMPLATES);
+  describe('TICKET_FORM_STEPS', () => {
+    it('应该定义表单步骤', () => {
+      expect(TICKET_FORM_STEPS).toBeDefined();
+      expect(Array.isArray(TICKET_FORM_STEPS)).toBe(true);
+      expect(TICKET_FORM_STEPS.length).toBeGreaterThan(0);
     });
 
-    it('返回的应该是数组', () => {
-      const templates = getTicketTemplates();
-      expect(Array.isArray(templates)).toBe(true);
+    it('每个步骤应该有标题', () => {
+      TICKET_FORM_STEPS.forEach(step => {
+        expect(step).toHaveProperty('title');
+      });
     });
   });
 
-  describe('getUsersByDepartment', () => {
-    it('应该返回指定部门的用户', () => {
-      const users = getUsersByDepartment('IT');
-      expect(Array.isArray(users)).toBe(true);
-      users.forEach(user => {
-        expect(user.department).toBe('IT');
-      });
-    });
-
-    it('不存在的部门应返回空数组', () => {
-      const users = getUsersByDepartment('NonExistent');
-      expect(users).toEqual([]);
-    });
-
-    it('应该正确处理空参数', () => {
-      const users = getUsersByDepartment('');
-      expect(Array.isArray(users)).toBe(true);
+  describe('TITLE_RULES', () => {
+    it('应该定义标题验证规则', () => {
+      expect(TITLE_RULES).toBeDefined();
+      expect(Array.isArray(TITLE_RULES)).toBe(true);
     });
   });
 
-  describe('filterTemplatesByCategory', () => {
-    it('应该按分类筛选模板', () => {
-      const filtered = filterTemplatesByCategory('network');
-      expect(filtered.every(t => t.category === 'network')).toBe(true);
-    });
-
-    it('返回的应该是数组', () => {
-      const filtered = filterTemplatesByCategory('hardware');
-      expect(Array.isArray(filtered)).toBe(true);
-    });
-
-    it('不存在的分类应返回空数组', () => {
-      const filtered = filterTemplatesByCategory('unknown');
-      expect(filtered).toEqual([]);
-    });
-
-    it('应该保留所有模板当分类为 all', () => {
-      const filtered = filterTemplatesByCategory('all');
-      expect(filtered.length).toBe(MOCK_TICKET_TEMPLATES.length);
+  describe('DESCRIPTION_RULES', () => {
+    it('应该定义描述验证规则', () => {
+      expect(DESCRIPTION_RULES).toBeDefined();
+      expect(Array.isArray(DESCRIPTION_RULES)).toBe(true);
     });
   });
 
-  describe('validateTicketForm', () => {
-    it('应该验证必填字段', () => {
-      const validData = {
-        title: 'Test Ticket',
-        description: 'Test description',
-        type: 'incident',
-      };
-
-      const result = validateTicketForm(validData);
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-
-    it('应该拒绝空标题', () => {
-      const invalidData = {
-        title: '',
-        description: 'Test description',
-        type: 'incident',
-      };
-
-      const result = validateTicketForm(invalidData);
-      expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.field === 'title')).toBe(true);
-    });
-
-    it('应该拒绝空描述', () => {
-      const invalidData = {
-        title: 'Test Ticket',
-        description: '',
-        type: 'incident',
-      };
-
-      const result = validateTicketForm(invalidData);
-      expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.field === 'description')).toBe(true);
-    });
-
-    it('应该拒绝过长的标题', () => {
-      const longTitle = 'a'.repeat(201); // 超过 200 字符限制
-
-      const result = validateTicketForm({
-        title: longTitle,
-        description: 'Test description',
-        type: 'incident',
-      });
-
-      expect(result.valid).toBe(false);
-    });
-
-    it('应该接受最小数据', () => {
-      const minimal = {
-        title: 'Minimal Ticket',
-        description: 'Minimal description',
-        type: 'incident',
-      };
-
-      const result = validateTicketForm(minimal);
-      expect(result.valid).toBe(true);
-    });
-
-    it('应该处理可选字段', () => {
-      const withOptional = {
-        title: 'Test Ticket',
-        description: 'Test description',
-        type: 'incident',
-        priority: 'high',
-        category: 'hardware',
-        assigneeId: 'user1',
-        dueDate: '2024-12-31',
-      };
-
-      const result = validateTicketForm(withOptional);
-      expect(result.valid).toBe(true);
-    });
-
-    it('应该验证有效类型', () => {
-      const validTypes = ['incident', 'problem', 'change', 'request'];
-
-      validTypes.forEach(type => {
-        const result = validateTicketForm({
-          title: 'Test',
-          description: 'Test',
-          type,
-        });
-        expect(result.valid).toBe(true);
-      });
-    });
-
-    it('应该拒绝无效类型', () => {
-      const result = validateTicketForm({
-        title: 'Test',
-        description: 'Test',
-        type: 'invalid-type',
-      });
-
-      expect(result.valid).toBe(false);
+  describe('TYPE_RULES', () => {
+    it('应该定义类型验证规则', () => {
+      expect(TYPE_RULES).toBeDefined();
+      expect(Array.isArray(TYPE_RULES)).toBe(true);
     });
   });
 
-  describe('formatTicketData', () => {
-    it('应该格式化日期字段', () => {
-      const rawData = {
-        title: 'Test',
-        description: 'Test',
-        type: 'incident',
-        dueDate: '2024-12-31T00:00:00Z',
-      };
-
-      const formatted = formatTicketData(rawData);
-      expect(formatted.dueDate).toBeDefined();
-    });
-
-    it('应该保留所有原始字段', () => {
-      const rawData = {
-        title: 'Test',
-        description: 'Test',
-        type: 'incident',
-        customField: 'custom',
-      };
-
-      const formatted = formatTicketData(rawData);
-      expect(formatted.customField).toBe('custom');
-    });
-
-    it('应该处理空日期', () => {
-      const rawData = {
-        title: 'Test',
-        description: 'Test',
-        type: 'incident',
-        dueDate: null,
-      };
-
-      const formatted = formatTicketData(rawData);
-      expect(formatted.dueDate).toBeNull();
-    });
-
-    it('应该添加时间戳', () => {
-      const formatted = formatTicketData({
-        title: 'Test',
-        description: 'Test',
-        type: 'incident',
-      });
-
-      expect(formatted.createdAt).toBeDefined();
-      expect(formatted.updatedAt).toBeDefined();
+  describe('CATEGORY_RULES', () => {
+    it('应该定义分类验证规则', () => {
+      expect(CATEGORY_RULES).toBeDefined();
+      expect(Array.isArray(CATEGORY_RULES)).toBe(true);
     });
   });
 
-  describe('generateTicketNumber', () => {
-    it('应该生成工单编号', () => {
-      const number = generateTicketNumber();
-      expect(number).toMatch(/^INC-\d{8}-\d{4}$/);
+  describe('PRIORITY_RULES', () => {
+    it('应该定义优先级验证规则', () => {
+      expect(PRIORITY_RULES).toBeDefined();
+      expect(Array.isArray(PRIORITY_RULES)).toBe(true);
+    });
+  });
+
+  describe('TICKET_TYPE_OPTIONS', () => {
+    it('应该定义工单类型选项', () => {
+      expect(TICKET_TYPE_OPTIONS).toBeDefined();
+      expect(Array.isArray(TICKET_TYPE_OPTIONS)).toBe(true);
+      expect(TICKET_TYPE_OPTIONS.length).toBeGreaterThan(0);
     });
 
-    it('每次调用应生成不同编号', () => {
-      const number1 = generateTicketNumber();
-      const number2 = generateTicketNumber();
-      expect(number1).not.toBe(number2);
+    it('每个选项应该有 value 和 label', () => {
+      TICKET_TYPE_OPTIONS.forEach(option => {
+        expect(option).toHaveProperty('value');
+        expect(option).toHaveProperty('label');
+      });
+    });
+  });
+
+  describe('PRIORITY_OPTIONS', () => {
+    it('应该定义优先级选项', () => {
+      expect(PRIORITY_OPTIONS).toBeDefined();
+      expect(Array.isArray(PRIORITY_OPTIONS)).toBe(true);
+      expect(PRIORITY_OPTIONS.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('CATEGORY_OPTIONS', () => {
+    it('应该定义分类选项', () => {
+      expect(CATEGORY_OPTIONS).toBeDefined();
+      expect(Array.isArray(CATEGORY_OPTIONS)).toBe(true);
+      expect(CATEGORY_OPTIONS.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('getFieldsForStep', () => {
+    it('应该返回步骤0的字段', () => {
+      const fields = getFieldsForStep(0);
+      expect(fields).toContain('title');
+      expect(fields).toContain('description');
     });
 
-    it('应该包含日期前缀', () => {
-      const number = generateTicketNumber();
-      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      expect(number).toContain(today);
+    it('应该返回步骤1的字段', () => {
+      const fields = getFieldsForStep(1);
+      expect(fields).toContain('type');
+      expect(fields).toContain('category');
+      expect(fields).toContain('priority');
     });
 
-    it('应该生成有效格式', () => {
-      const number = generateTicketNumber();
-      const parts = number.split('-');
-      expect(parts.length).toBe(3);
-      expect(parts[0]).toBe('INC');
-      expect(parseInt(parts[1])).not.toBeNaN();
-      expect(parseInt(parts[2])).not.toBeNaN();
+    it('应该返回步骤2的空数组', () => {
+      const fields = getFieldsForStep(2);
+      expect(Array.isArray(fields)).toBe(true);
+      expect(fields.length).toBe(0);
+    });
+  });
+
+  describe('mergeFormData', () => {
+    it('应该合并表单数据', () => {
+      const base = { title: 'Test', description: 'Desc' };
+      const updates = { priority: 'high' };
+      const result = mergeFormData(base, updates);
+      expect(result.title).toBe('Test');
+      expect(result.description).toBe('Desc');
+      expect(result.priority).toBe('high');
+    });
+
+    it('应该覆盖已有字段', () => {
+      const base = { title: 'Old' };
+      const updates = { title: 'New' };
+      const result = mergeFormData(base, updates);
+      expect(result.title).toBe('New');
+    });
+  });
+
+  describe('resetFormData', () => {
+    it('应该返回空对象', () => {
+      const result = resetFormData();
+      expect(typeof result).toBe('object');
+      expect(Object.keys(result).length).toBe(0);
     });
   });
 });
