@@ -667,6 +667,7 @@ const SLADashboardPage = () => {
                             rowKey="id"
                             pagination={{ pageSize: 5, size: 'small' }}
                             size="small"
+                            scroll={{ x: 'max-content' }}
                           />
                         )}
                       </Card>
@@ -689,6 +690,7 @@ const SLADashboardPage = () => {
                             rowKey="id"
                             pagination={{ pageSize: 5, size: 'small' }}
                             size="small"
+                            scroll={{ x: 'max-content' }}
                           />
                         )}
                       </Card>

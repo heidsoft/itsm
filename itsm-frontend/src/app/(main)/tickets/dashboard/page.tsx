@@ -345,6 +345,7 @@ const TicketDashboardPage = () => {
         pagination={false}
         size="small"
         locale={{ emptyText: '暂无团队数据' }}
+        scroll={{ x: 'max-content' }}
       />
     </Card>
   );
