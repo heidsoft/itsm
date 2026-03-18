@@ -688,7 +688,7 @@ const SLADefinitionManagement = () => {
                 name="serviceType"
                 rules={[{ required: true, message: '请选择服务类型' }]}
               >
-                <Select showSearch placeholder="选择或输入服务类型" mode="tags">
+                <Select showSearch optionFilterProp="label" placeholder="选择或输入服务类型" mode="tags">
                   {serviceTypes.map(type => (
                     <Option key={type} value={type}>
                       {type}

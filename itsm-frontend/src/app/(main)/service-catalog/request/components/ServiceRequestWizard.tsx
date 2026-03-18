@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { App, Card, Spin, Result, Button, Input, Select, Form, Row, Col } from 'antd';
+import { App, Card, Spin, Result, Button, Input, Select, Form, Row, Col, DatePicker } from 'antd';
 import {
   ArrowLeft,
   ArrowRight,
@@ -230,7 +230,7 @@ export const ServiceRequestWizard: React.FC<ServiceRequestWizardProps> = ({ serv
                 label="到期时间"
                 rules={[{ required: true, message: '请选择到期时间' }]}
               >
-                <Input type="datetime-local" style={{ width: '100%' }} />
+                <DatePicker style={{ width: '100%' }} showTime placeholder="选择到期时间" />
               </Form.Item>
             </Col>
             <Col span={12}>

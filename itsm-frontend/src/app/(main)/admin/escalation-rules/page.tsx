@@ -658,7 +658,7 @@ const EscalationRuleManagement = () => {
                 name="serviceType"
                 rules={[{ required: true, message: '请输入服务类型' }]}
               >
-                <Select showSearch placeholder="选择或输入服务类型">
+                <Select showSearch optionFilterProp="label" placeholder="选择或输入服务类型">
                   {serviceTypes.map(type => (
                     <Option key={type} value={type}>
                       {type}
