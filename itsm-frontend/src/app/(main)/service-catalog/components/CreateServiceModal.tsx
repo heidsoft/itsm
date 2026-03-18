@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Modal, Form, Input, Select } from 'antd';
+import { Modal, Form, Input, Select, DatePicker } from 'antd';
 import { PlusCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
@@ -75,7 +75,7 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
           name="deliveryTime"
           rules={[{ required: true, message: t('serviceCatalog.serviceDeliveryTimeRequired') }]}
         >
-          <Input placeholder={t('serviceCatalog.deliveryTimePlaceholder')} />
+          <DatePicker style={{ width: '100%' }} placeholder={t('serviceCatalog.deliveryTimePlaceholder')} />
         </Form.Item>
 
         <Form.Item
