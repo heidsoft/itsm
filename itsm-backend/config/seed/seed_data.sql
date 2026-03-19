@@ -126,16 +126,50 @@ BEGIN
     ) AS v(name, description, category, service_type, requires_approval, delivery_time, status, is_active, tenant_id, created_at, updated_at)
     WHERE NOT EXISTS (SELECT 1 FROM service_catalogs WHERE name = '云服务器 ECS' AND tenant_id = tenant_id);
 
+    -- 7. 菜单数据
+    -- 主菜单
+    INSERT INTO menus (name, path, icon, permission_code, sort_order, tenant_id, is_visible, is_enabled, description, created_at, updated_at)
+    SELECT * FROM (VALUES
+        ('仪表盘', '/dashboard', 'LayoutDashboard', 'dashboard:view', 1, tenant_id, true, true, '仪表盘', NOW(), NOW()),
+        ('工单管理', '/tickets', 'FileText', 'ticket:read', 2, tenant_id, true, true, '工单管理', NOW(), NOW()),
+        ('事件管理', '/incidents', 'AlertCircle', 'incident:read', 3, tenant_id, true, true, '事件管理', NOW(), NOW()),
+        ('问题管理', '/problems', 'HelpCircle', 'problem:read', 4, tenant_id, true, true, '问题管理', NOW(), NOW()),
+        ('变更管理', '/changes', 'BarChart3', 'change:read', 5, tenant_id, true, true, '变更管理', NOW(), NOW()),
+        ('CMDB', '/cmdb', 'Database', 'cmdb:read', 6, tenant_id, true, true, 'CMDB', NOW(), NOW()),
+        ('服务目录', '/service-catalog', 'Book', 'service:view', 7, tenant_id, true, true, '服务目录', NOW(), NOW()),
+        ('知识库', '/knowledge', 'HelpCircle', 'knowledge:view', 8, tenant_id, true, true, '知识库', NOW(), NOW()),
+        ('SLA监控', '/sla-dashboard', 'Calendar', 'sla:view', 9, tenant_id, true, true, 'SLA监控', NOW(), NOW()),
+        ('报表中心', '/reports', 'TrendingUp', 'report:view', 10, tenant_id, true, true, '报表中心', NOW(), NOW()),
+        ('发布管理', '/releases', 'Rocket', 'release:view', 11, tenant_id, true, true, '发布管理', NOW(), NOW()),
+        ('资产管理', '/assets', 'Monitor', 'asset:view', 12, tenant_id, true, true, '资产管理', NOW(), NOW()),
+        ('许可证管理', '/licenses', 'Key', 'license:view', 13, tenant_id, true, true, '许可证管理', NOW(), NOW()),
+        ('AI助手', '/ai/chat', 'Bot', 'ai:view', 14, tenant_id, true, true, 'AI智能助手', NOW(), NOW())
+    ) AS v(name, path, icon, permission_code, sort_order, tenant_id, is_visible, is_enabled, description, created_at, updated_at)
+    WHERE NOT EXISTS (SELECT 1 FROM menus WHERE path = '/dashboard' AND tenant_id = tenant_id);
+
+    -- 管理菜单
+    INSERT INTO menus (name, path, icon, permission_code, sort_order, tenant_id, is_visible, is_enabled, description, created_at, updated_at)
+    SELECT * FROM (VALUES
+        ('MSP管理', '/msp', 'Users', 'msp:view', 100, tenant_id, true, true, 'MSP管理', NOW(), NOW()),
+        ('工作流', '/workflow', 'GitMerge', 'workflow:config', 101, tenant_id, true, true, '工作流管理', NOW(), NOW()),
+        ('系统管理', '/admin', 'Shield', 'admin:view', 102, tenant_id, true, true, '系统管理', NOW(), NOW()),
+        ('部门管理', '/enterprise/departments', 'Users', 'admin:write', 103, tenant_id, true, true, '部门管理', NOW(), NOW()),
+        ('团队管理', '/enterprise/teams', 'Users', 'admin:write', 104, tenant_id, true, true, '团队管理', NOW(), NOW()),
+        ('CMDB管理', '/admin/cmdb-types', 'Database', 'cmdb:write', 105, tenant_id, true, true, 'CMDB类型管理', NOW(), NOW())
+    ) AS v(name, path, icon, permission_code, sort_order, tenant_id, is_visible, is_enabled, description, created_at, updated_at)
+    WHERE NOT EXISTS (SELECT 1 FROM menus WHERE path = '/msp' AND tenant_id = tenant_id);
+
     RAISE NOTICE 'Seed data initialized successfully!';
 END $$;
 
--- 7. 验证数据
+-- 8. 验证数据
 SELECT '=== 初始化数据统计 ===' as info;
 SELECT 'departments:', COUNT(*) FROM departments WHERE tenant_id = (SELECT id FROM tenants WHERE code = 'default' LIMIT 1);
 SELECT 'teams:', COUNT(*) FROM teams WHERE tenant_id = (SELECT id FROM tenants WHERE code = 'default' LIMIT 1);
 SELECT 'roles:', COUNT(*) FROM roles WHERE tenant_id = (SELECT id FROM tenants WHERE code = 'default' LIMIT 1);
 SELECT 'sla_definitions:', COUNT(*) FROM sla_definitions WHERE tenant_id = (SELECT id FROM tenants WHERE code = 'default' LIMIT 1);
 SELECT 'service_catalogs:', COUNT(*) FROM service_catalogs WHERE tenant_id = (SELECT id FROM tenants WHERE code = 'default' LIMIT 1);
+SELECT 'menus:', COUNT(*) FROM menus WHERE tenant_id = (SELECT id FROM tenants WHERE code = 'default' LIMIT 1);
 
 \echo '========================================'
 \echo '初始化完成！'

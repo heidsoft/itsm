@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -42,7 +43,7 @@ func (ttc *TicketTagController) CreateTag(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, tag)
+	common.Success(c, dto.ToTicketTagResponse(tag))
 }
 
 // UpdateTag 更新标签
@@ -68,7 +69,7 @@ func (ttc *TicketTagController) UpdateTag(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, tag)
+	common.Success(c, dto.ToTicketTagResponse(tag))
 }
 
 // DeleteTag 删除标签
@@ -104,7 +105,7 @@ func (ttc *TicketTagController) GetTag(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, tag)
+	common.Success(c, dto.ToTicketTagResponse(tag))
 }
 
 // ListTags 获取标签列表
@@ -139,7 +140,7 @@ func (ttc *TicketTagController) ListTags(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"tags":  tags,
+		"tags":  dto.ToTicketTagResponseList(tags),
 		"total": total,
 	})
 }

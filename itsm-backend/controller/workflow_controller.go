@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -66,7 +67,7 @@ func (wc *WorkflowController) CreateWorkflow(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, workflow)
+	common.Success(c, dto.ToWorkflowResponse(workflow))
 }
 
 // UpdateWorkflow 更新工作流
@@ -99,7 +100,7 @@ func (wc *WorkflowController) UpdateWorkflow(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, workflow)
+	common.Success(c, dto.ToWorkflowResponse(workflow))
 }
 
 // DeleteWorkflow 删除工作流
@@ -151,7 +152,7 @@ func (wc *WorkflowController) GetWorkflow(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, workflow)
+	common.Success(c, dto.ToWorkflowResponse(workflow))
 }
 
 // ListWorkflows 获取工作流列表
@@ -197,7 +198,7 @@ func (wc *WorkflowController) ListWorkflows(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"workflows": workflows,
+		"workflows": dto.ToWorkflowResponseList(workflows),
 		"total":     total,
 	})
 }
@@ -220,7 +221,7 @@ func (wc *WorkflowController) StartWorkflow(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, instance)
+	common.Success(c, dto.ToWorkflowInstanceResponse(instance))
 }
 
 // ExecuteWorkflowStep 执行工作流步骤

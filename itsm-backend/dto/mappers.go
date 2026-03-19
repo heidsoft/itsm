@@ -1,6 +1,10 @@
 package dto
 
 import (
+	"encoding/json"
+	"strings"
+	"time"
+
 	"itsm-backend/ent"
 )
 
@@ -144,22 +148,24 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 	}
 
 	response := &IncidentResponse{
-		ID:              incident.ID,
-		Title:           incident.Title,
-		Description:     incident.Description,
-		Status:          incident.Status,
-		Priority:        incident.Priority,
-		Severity:        incident.Severity,
-		IncidentNumber:  incident.IncidentNumber,
-		ReporterID:      incident.ReporterID,
-		Category:        incident.Category,
-		Subcategory:     incident.Subcategory,
-		ImpactAnalysis:  impactAnalysis,
-		RootCause:       rootCause,
-		ResolutionSteps: resolutionSteps,
-		TenantID:        incident.TenantID,
-		CreatedAt:       incident.CreatedAt,
-		UpdatedAt:       incident.UpdatedAt,
+		ID:                incident.ID,
+		Title:             incident.Title,
+		Description:       incident.Description,
+		Status:            incident.Status,
+		Priority:          incident.Priority,
+		Severity:          incident.Severity,
+		IncidentNumber:    incident.IncidentNumber,
+		ReporterID:        incident.ReporterID,
+		Category:          incident.Category,
+		Subcategory:       incident.Subcategory,
+		ImpactAnalysis:    impactAnalysis,
+		RootCause:         rootCause,
+		ResolutionSteps:   resolutionSteps,
+		IsAutomated:       incident.IsAutomated,
+		IsMajorIncident:   incident.IsMajorIncident,
+		TenantID:          incident.TenantID,
+		CreatedAt:         incident.CreatedAt,
+		UpdatedAt:         incident.UpdatedAt,
 	}
 
 	// Add optional fields if present
@@ -263,12 +269,16 @@ func ToKnowledgeArticleResponse(article *ent.KnowledgeArticle) *KnowledgeArticle
 		status = "published"
 	}
 
-	// Parse tags string to slice (assuming comma-separated)
+	// Parse tags string to slice (comma-separated)
 	tags := []string{}
 	if article.Tags != "" {
-		// Simple split by comma, trim spaces
-		// You might want to use a more robust parsing
-		tags = []string{article.Tags}
+		parts := strings.Split(article.Tags, ",")
+		for _, p := range parts {
+			trimmed := strings.TrimSpace(p)
+			if trimmed != "" {
+				tags = append(tags, trimmed)
+			}
+		}
 	}
 
 	response := &KnowledgeArticleResponse{
@@ -315,7 +325,7 @@ func ToTenantResponse(tenant *ent.Tenant) *TenantResponse {
 		return nil
 	}
 
-	return &TenantResponse{
+	response := &TenantResponse{
 		ID:        tenant.ID,
 		Name:      tenant.Name,
 		Code:      tenant.Code,
@@ -324,6 +334,16 @@ func ToTenantResponse(tenant *ent.Tenant) *TenantResponse {
 		CreatedAt: tenant.CreatedAt,
 		UpdatedAt: tenant.UpdatedAt,
 	}
+
+	if tenant.Domain != "" {
+		response.Domain = &tenant.Domain
+	}
+
+	if !tenant.ExpiresAt.IsZero() {
+		response.ExpiresAt = &tenant.ExpiresAt
+	}
+
+	return response
 }
 
 // ToTenantResponseList converts a slice of ent.Tenant to response slice
@@ -335,6 +355,499 @@ func ToTenantResponseList(tenants []*ent.Tenant) []*TenantResponse {
 	for _, tenant := range tenants {
 		if tenant != nil {
 			responses = append(responses, ToTenantResponse(tenant))
+		}
+	}
+	return responses
+}
+
+// ===================================
+// Change Mappers
+// ===================================
+
+// ToChangeResponse converts an ent.Change to ChangeResponse
+func ToChangeResponse(change *ent.Change) *ChangeResponse {
+	if change == nil {
+		return nil
+	}
+
+	response := &ChangeResponse{
+		ID:                 change.ID,
+		Title:              change.Title,
+		Description:        change.Description,
+		Justification:      change.Justification,
+		Type:               ChangeType(change.Type),
+		Status:             ChangeStatus(change.Status),
+		Priority:           ChangePriority(change.Priority),
+		ImpactScope:        ChangeImpact(change.ImpactScope),
+		RiskLevel:          ChangeRisk(change.RiskLevel),
+		CreatedBy:          change.CreatedBy,
+		TenantID:           change.TenantID,
+		ImplementationPlan: change.ImplementationPlan,
+		RollbackPlan:       change.RollbackPlan,
+		AffectedCIs:        change.AffectedCis,
+		RelatedTickets:     change.RelatedTickets,
+		CreatedAt:          change.CreatedAt,
+		UpdatedAt:          change.UpdatedAt,
+		PlannedStartDate:   &change.PlannedStartDate,
+		PlannedEndDate:     &change.PlannedEndDate,
+		ActualStartDate:    &change.ActualStartDate,
+		ActualEndDate:      &change.ActualEndDate,
+	}
+
+	if change.AssigneeID > 0 {
+		response.AssigneeID = &change.AssigneeID
+	}
+
+	return response
+}
+
+// ToChangeResponseList converts a slice of ent.Change to ChangeResponse slice
+func ToChangeResponseList(changes []*ent.Change) []*ChangeResponse {
+	if changes == nil {
+		return nil
+	}
+	responses := make([]*ChangeResponse, 0, len(changes))
+	for _, change := range changes {
+		if change != nil {
+			responses = append(responses, ToChangeResponse(change))
+		}
+	}
+	return responses
+}
+
+// ===================================
+// Problem Mappers
+// ===================================
+
+// ToProblemResponse converts an ent.Problem to ProblemResponse
+func ToProblemResponse(problem *ent.Problem) *ProblemResponse {
+	if problem == nil {
+		return nil
+	}
+
+	response := &ProblemResponse{
+		ID:          problem.ID,
+		Title:       problem.Title,
+		Description: problem.Description,
+		Status:      problem.Status,
+		Priority:    problem.Priority,
+		Category:    problem.Category,
+		RootCause:   problem.RootCause,
+		Impact:      problem.Impact,
+		CreatedBy:   problem.CreatedBy,
+		TenantID:    problem.TenantID,
+		CreatedAt:   problem.CreatedAt,
+		UpdatedAt:   problem.UpdatedAt,
+	}
+
+	if problem.AssigneeID > 0 {
+		response.AssigneeID = &problem.AssigneeID
+	}
+
+	return response
+}
+
+// ToProblemResponseList converts a slice of ent.Problem to ProblemResponse slice
+func ToProblemResponseList(problems []*ent.Problem) []*ProblemResponse {
+	if problems == nil {
+		return nil
+	}
+	responses := make([]*ProblemResponse, 0, len(problems))
+	for _, problem := range problems {
+		if problem != nil {
+			responses = append(responses, ToProblemResponse(problem))
+		}
+	}
+	return responses
+}
+
+// ===================================
+// Project Mappers
+// ===================================
+
+// ToProjectResponse converts an ent.Project to ProjectResponse
+func ToProjectResponse(project *ent.Project) *ProjectResponse {
+	if project == nil {
+		return nil
+	}
+
+	response := &ProjectResponse{
+		ID:          project.ID,
+		Name:        project.Name,
+		Code:       project.Code,
+		Description: project.Description,
+		Status:     project.Status,
+		TenantID:   project.TenantID,
+		CreatedAt:  project.CreatedAt,
+		UpdatedAt:  project.UpdatedAt,
+	}
+
+	if project.ManagerID > 0 {
+		response.ManagerID = &project.ManagerID
+	}
+
+	if project.DepartmentID > 0 {
+		response.DepartmentID = &project.DepartmentID
+	}
+
+	if !project.StartDate.IsZero() {
+		response.StartDate = &project.StartDate
+	}
+
+	if !project.EndDate.IsZero() {
+		response.EndDate = &project.EndDate
+	}
+
+	return response
+}
+
+// ToProjectResponseList converts a slice of ent.Project to ProjectResponse slice
+func ToProjectResponseList(projects []*ent.Project) []*ProjectResponse {
+	if projects == nil {
+		return nil
+	}
+	responses := make([]*ProjectResponse, 0, len(projects))
+	for _, project := range projects {
+		if project != nil {
+			responses = append(responses, ToProjectResponse(project))
+		}
+	}
+	return responses
+}
+
+// ===================================
+// ApprovalChain Mappers
+// ===================================
+
+// ToApprovalChainResponse converts an ent.ApprovalChain to ApprovalChainResponse
+func ToApprovalChainResponse(chain *ent.ApprovalChain) *ApprovalChainResponse {
+	if chain == nil {
+		return nil
+	}
+
+	// Convert schema.ApprovalChainStep to dto.ApprovalChainStepDTO
+	chainDTO := make([]ApprovalChainStepDTO, len(chain.Chain))
+	for i, step := range chain.Chain {
+		chainDTO[i] = ApprovalChainStepDTO{
+			Level:      step.Level,
+			ApproverID: step.ApproverID,
+			Role:       step.Role,
+			Name:       step.Name,
+			IsRequired: step.IsRequired,
+		}
+	}
+
+	return &ApprovalChainResponse{
+		ID:          chain.ID,
+		Name:        chain.Name,
+		Description: chain.Description,
+		EntityType:  chain.EntityType,
+		Chain:       chainDTO,
+		Status:      chain.Status,
+		CreatedBy:   chain.CreatedBy,
+		TenantID:    chain.TenantID,
+		CreatedAt:   chain.CreatedAt,
+		UpdatedAt:   chain.UpdatedAt,
+	}
+}
+
+// ToApprovalChainResponseList converts a slice of ent.ApprovalChain to ApprovalChainResponse slice
+func ToApprovalChainResponseList(chains []*ent.ApprovalChain) []ApprovalChainResponse {
+	if chains == nil {
+		return nil
+	}
+	responses := make([]ApprovalChainResponse, 0, len(chains))
+	for _, chain := range chains {
+		if chain != nil {
+			resp := ToApprovalChainResponse(chain)
+			if resp != nil {
+				responses = append(responses, *resp)
+			}
+		}
+	}
+	return responses
+}
+
+// ===================================
+// Group Mappers
+// ===================================
+
+// ToGroupResponse converts an ent.Group to GroupResponse
+func ToGroupResponse(group *ent.Group) *GroupResponse {
+	if group == nil {
+		return nil
+	}
+
+	return &GroupResponse{
+		ID:          group.ID,
+		Name:        group.Name,
+		Description: group.Description,
+		TenantID:    group.TenantID,
+		CreatedAt:   group.CreatedAt,
+		UpdatedAt:   group.UpdatedAt,
+	}
+}
+
+// ToGroupResponseList converts a slice of ent.Group to GroupResponse slice
+func ToGroupResponseList(groups []*ent.Group) []*GroupResponse {
+	if groups == nil {
+		return nil
+	}
+	responses := make([]*GroupResponse, 0, len(groups))
+	for _, group := range groups {
+		if group != nil {
+			responses = append(responses, ToGroupResponse(group))
+		}
+	}
+	return responses
+}
+
+// ===================================
+// SLAPolicy Mappers
+// ===================================
+
+// ToSLAPolicyResponse converts an ent.SLAPolicy to SLAPolicyResponse
+func ToSLAPolicyResponse(policy *ent.SLAPolicy) *SLAPolicyResponse {
+	if policy == nil {
+		return nil
+	}
+
+	return &SLAPolicyResponse{
+		ID:                    policy.ID,
+		Name:                  policy.Name,
+		Description:           policy.Description,
+		CustomerTier:          policy.CustomerTier,
+		TicketType:            policy.TicketType,
+		Priority:              policy.Priority,
+		ResponseTimeMinutes:   policy.ResponseTimeMinutes,
+		ResolutionTimeMinutes: policy.ResolutionTimeMinutes,
+		BusinessHours:         policy.BusinessHours,
+		ExcludeWeekends:       policy.ExcludeWeekends,
+		ExcludeHolidays:       policy.ExcludeHolidays,
+		IsActive:              policy.IsActive,
+		PriorityScore:         policy.PriorityScore,
+		TenantID:              policy.TenantID,
+		CreatedAt:             policy.CreatedAt,
+		UpdatedAt:             policy.UpdatedAt,
+	}
+}
+
+// ToSLAPolicyResponseList converts a slice of ent.SLAPolicy to SLAPolicyResponse slice
+func ToSLAPolicyResponseList(policies []*ent.SLAPolicy) []*SLAPolicyResponse {
+	if policies == nil {
+		return nil
+	}
+	responses := make([]*SLAPolicyResponse, 0, len(policies))
+	for _, policy := range policies {
+		if policy != nil {
+			responses = append(responses, ToSLAPolicyResponse(policy))
+		}
+	}
+	return responses
+}
+
+// ===================================
+// Workflow Mappers
+// ===================================
+
+// WorkflowResponse 工作流响应
+type WorkflowResponse struct {
+	ID           int                    `json:"id"`
+	Name         string                 `json:"name"`
+	Description  string                 `json:"description"`
+	Type         string                 `json:"type"`
+	Definition   map[string]interface{} `json:"definition"`
+	Version      string                 `json:"version"`
+	IsActive     bool                   `json:"is_active"`
+	TenantID     int                    `json:"tenant_id"`
+	DepartmentID *int                   `json:"department_id,omitempty"`
+	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at"`
+}
+
+// WorkflowInstanceResponse 工作流实例响应
+type WorkflowInstanceResponse struct {
+	ID          int                    `json:"id"`
+	Status      string                 `json:"status"`
+	CurrentStep string                 `json:"current_step"`
+	Context     map[string]interface{} `json:"context"`
+	WorkflowID  int                    `json:"workflow_id"`
+	EntityID    int                    `json:"entity_id"`
+	EntityType  string                 `json:"entity_type"`
+	TenantID    int                    `json:"tenant_id"`
+	StartedAt   time.Time              `json:"started_at"`
+	CompletedAt *time.Time             `json:"completed_at,omitempty"`
+	CreatedAt   time.Time              `json:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at"`
+}
+
+// ToWorkflowResponse converts an ent.Workflow to WorkflowResponse
+func ToWorkflowResponse(workflow *ent.Workflow) *WorkflowResponse {
+	if workflow == nil {
+		return nil
+	}
+
+	// Parse definition JSON bytes to map
+	var definition map[string]interface{}
+	if workflow.Definition != nil {
+		_ = json.Unmarshal(workflow.Definition, &definition)
+	}
+
+	response := &WorkflowResponse{
+		ID:          workflow.ID,
+		Name:        workflow.Name,
+		Description: workflow.Description,
+		Type:        workflow.Type,
+		Definition:  definition,
+		Version:     workflow.Version,
+		IsActive:   workflow.IsActive,
+		TenantID:   workflow.TenantID,
+		CreatedAt:  workflow.CreatedAt,
+		UpdatedAt:  workflow.UpdatedAt,
+	}
+
+	if workflow.DepartmentID > 0 {
+		response.DepartmentID = &workflow.DepartmentID
+	}
+
+	return response
+}
+
+// ToWorkflowResponseList converts a slice of ent.Workflow to WorkflowResponse slice
+func ToWorkflowResponseList(workflows []*ent.Workflow) []*WorkflowResponse {
+	if workflows == nil {
+		return nil
+	}
+	responses := make([]*WorkflowResponse, 0, len(workflows))
+	for _, workflow := range workflows {
+		if workflow != nil {
+			responses = append(responses, ToWorkflowResponse(workflow))
+		}
+	}
+	return responses
+}
+
+// ToWorkflowInstanceResponse converts an ent.WorkflowInstance to WorkflowInstanceResponse
+func ToWorkflowInstanceResponse(instance *ent.WorkflowInstance) *WorkflowInstanceResponse {
+	if instance == nil {
+		return nil
+	}
+
+	// Parse context JSON bytes to map
+	var context map[string]interface{}
+	if instance.Context != nil {
+		_ = json.Unmarshal(instance.Context, &context)
+	}
+
+	response := &WorkflowInstanceResponse{
+		ID:         instance.ID,
+		Status:     instance.Status,
+		CurrentStep: instance.CurrentStep,
+		Context:    context,
+		WorkflowID: instance.WorkflowID,
+		EntityID:   instance.EntityID,
+		EntityType: instance.EntityType,
+		TenantID:   instance.TenantID,
+		StartedAt:  instance.StartedAt,
+		CreatedAt:  instance.CreatedAt,
+		UpdatedAt:  instance.UpdatedAt,
+	}
+
+	if !instance.CompletedAt.IsZero() {
+		response.CompletedAt = &instance.CompletedAt
+	}
+
+	return response
+}
+
+// ToWorkflowInstanceResponseList converts a slice of ent.WorkflowInstance to WorkflowInstanceResponse slice
+func ToWorkflowInstanceResponseList(instances []*ent.WorkflowInstance) []*WorkflowInstanceResponse {
+	if instances == nil {
+		return nil
+	}
+	responses := make([]*WorkflowInstanceResponse, 0, len(instances))
+	for _, instance := range instances {
+		if instance != nil {
+			responses = append(responses, ToWorkflowInstanceResponse(instance))
+		}
+	}
+	return responses
+}
+
+// ===================================
+// TicketTag Mappers
+// ===================================
+
+// ToTicketTagResponse converts an ent.TicketTag to TicketTagResponse
+func ToTicketTagResponse(tag *ent.TicketTag) *TicketTagResponse {
+	if tag == nil {
+		return nil
+	}
+
+	return &TicketTagResponse{
+		ID:          tag.ID,
+		Name:        tag.Name,
+		Color:       tag.Color,
+		Description: tag.Description,
+		IsActive:    tag.IsActive,
+		TenantID:    tag.TenantID,
+		CreatedAt:   tag.CreatedAt,
+		UpdatedAt:   tag.UpdatedAt,
+	}
+}
+
+// ToTicketTagResponseList converts a slice of ent.TicketTag to TicketTagResponse slice
+func ToTicketTagResponseList(tags []*ent.TicketTag) []*TicketTagResponse {
+	if tags == nil {
+		return nil
+	}
+	responses := make([]*TicketTagResponse, 0, len(tags))
+	for _, tag := range tags {
+		if tag != nil {
+			responses = append(responses, ToTicketTagResponse(tag))
+		}
+	}
+	return responses
+}
+
+// ===================================
+// TicketCategory Mappers
+// ===================================
+
+// ToTicketCategoryResponse converts an ent.TicketCategory to TicketCategoryResponse
+func ToTicketCategoryResponse(category *ent.TicketCategory) *TicketCategoryResponse {
+	if category == nil {
+		return nil
+	}
+
+	response := &TicketCategoryResponse{
+		ID:          category.ID,
+		Name:        category.Name,
+		Code:        category.Code,
+		Description: category.Description,
+		SortOrder:   category.SortOrder,
+		IsActive:    category.IsActive,
+		TenantID:    category.TenantID,
+		CreatedAt:   category.CreatedAt,
+		UpdatedAt:   category.UpdatedAt,
+	}
+
+	if category.ParentID > 0 {
+		response.ParentID = &category.ParentID
+	}
+
+	return response
+}
+
+// ToTicketCategoryResponseList converts a slice of ent.TicketCategory to TicketCategoryResponse slice
+func ToTicketCategoryResponseList(categories []*ent.TicketCategory) []*TicketCategoryResponse {
+	if categories == nil {
+		return nil
+	}
+	responses := make([]*TicketCategoryResponse, 0, len(categories))
+	for _, category := range categories {
+		if category != nil {
+			responses = append(responses, ToTicketCategoryResponse(category))
 		}
 	}
 	return responses

@@ -730,6 +730,18 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				org.DELETE("/teams/:id", config.CommonHandler.DeleteTeam)
 			}
 
+			// Projects
+			if config.ProjectController != nil {
+				projects := tenant.(*gin.RouterGroup).Group("/projects")
+				{
+					projects.GET("", config.ProjectController.ListProjects)
+					projects.POST("", config.ProjectController.CreateProject)
+					projects.GET("/:id", config.ProjectController.GetProject)
+					projects.PUT("/:id", config.ProjectController.UpdateProject)
+					projects.DELETE("/:id", config.ProjectController.DeleteProject)
+				}
+			}
+
 			// System
 			sys := tenant.(*gin.RouterGroup).Group("/system")
 			{

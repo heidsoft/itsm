@@ -301,7 +301,7 @@ func (mc *MSPController) AssignMSPTechnician(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticket)
+	common.Success(c, dto.ToTicketResponse(ticket))
 }
 
 // ==================== MSP 报表 ====================

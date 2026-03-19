@@ -82,7 +82,7 @@ func (pc *ProblemController) GetProblem(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, problem)
+	common.Success(c, dto.ToProblemResponse(problem))
 }
 
 // ListProblems 获取问题列表

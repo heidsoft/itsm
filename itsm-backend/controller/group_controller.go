@@ -58,16 +58,7 @@ func (gc *GroupController) CreateGroup(c *gin.Context) {
 		return
 	}
 
-	response := &dto.GroupResponse{
-		ID:          group.ID,
-		Name:        group.Name,
-		Description: group.Description,
-		TenantID:    group.TenantID,
-		CreatedAt:   group.CreatedAt,
-		UpdatedAt:   group.UpdatedAt,
-	}
-
-	common.Success(c, response)
+	common.Success(c, dto.ToGroupResponse(group))
 }
 
 // ListGroups 获取组列表
@@ -241,16 +232,7 @@ func (gc *GroupController) UpdateGroup(c *gin.Context) {
 		return
 	}
 
-	response := &dto.GroupResponse{
-		ID:          group.ID,
-		Name:        group.Name,
-		Description: group.Description,
-		TenantID:    group.TenantID,
-		CreatedAt:   group.CreatedAt,
-		UpdatedAt:   group.UpdatedAt,
-	}
-
-	common.Success(c, response)
+	common.Success(c, dto.ToGroupResponse(group))
 }
 
 // DeleteGroup 删除组

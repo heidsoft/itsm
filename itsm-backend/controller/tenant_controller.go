@@ -48,25 +48,7 @@ func (tc *TenantController) CreateTenant(c *gin.Context) {
 		return
 	}
 
-	// 处理 Domain 字段的指针转换
-	var domain *string
-	if tenant.Domain != "" {
-		domain = &tenant.Domain
-	}
-
-	response := &dto.TenantResponse{
-		ID:        tenant.ID,
-		Name:      tenant.Name,
-		Code:      tenant.Code,
-		Domain:    domain,
-		Type: string(tenant.Type),
-		Status:    tenant.Status,
-		ExpiresAt: &tenant.ExpiresAt,
-		CreatedAt: tenant.CreatedAt,
-		UpdatedAt: tenant.UpdatedAt,
-	}
-
-	common.Success(c, response)
+	common.Success(c, dto.ToTenantResponse(tenant))
 }
 
 // ListTenants 获取租户列表
@@ -197,24 +179,7 @@ func (tc *TenantController) GetTenant(c *gin.Context) {
 		return
 	}
 
-	var domain *string
-	if tenant.Domain != "" {
-		domain = &tenant.Domain
-	}
-
-	response := &dto.TenantResponse{
-		ID:        tenant.ID,
-		Name:      tenant.Name,
-		Code:      tenant.Code,
-		Domain:    domain,
-		Type: string(tenant.Type),
-		Status:    tenant.Status,
-		ExpiresAt: &tenant.ExpiresAt,
-		CreatedAt: tenant.CreatedAt,
-		UpdatedAt: tenant.UpdatedAt,
-	}
-
-	common.Success(c, response)
+	common.Success(c, dto.ToTenantResponse(tenant))
 }
 
 // UpdateTenant 更新租户
@@ -250,24 +215,7 @@ func (tc *TenantController) UpdateTenant(c *gin.Context) {
 		return
 	}
 
-	var domain *string
-	if tenant.Domain != "" {
-		domain = &tenant.Domain
-	}
-
-	response := &dto.TenantResponse{
-		ID:        tenant.ID,
-		Name:      tenant.Name,
-		Code:      tenant.Code,
-		Domain:    domain,
-		Type: string(tenant.Type),
-		Status:    tenant.Status,
-		ExpiresAt: &tenant.ExpiresAt,
-		CreatedAt: tenant.CreatedAt,
-		UpdatedAt: tenant.UpdatedAt,
-	}
-
-	common.Success(c, response)
+	common.Success(c, dto.ToTenantResponse(tenant))
 }
 
 // DeleteTenant 删除租户
