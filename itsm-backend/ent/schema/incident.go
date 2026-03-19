@@ -80,6 +80,9 @@ func (Incident) Fields() []ent.Field {
 		field.Bool("is_automated").
 			Comment("是否自动化处理").
 			Default(false),
+		field.Bool("is_major_incident").
+			Comment("是否重大事件").
+			Default(false),
 		field.String("source").
 			Comment("事件来源").
 			Default("manual"),

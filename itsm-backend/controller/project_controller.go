@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
@@ -54,7 +55,7 @@ func (c *ProjectController) CreateProject(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, project)
+	common.Success(ctx, dto.ToProjectResponse(project))
 }
 
 // ListProjects 获取项目列表
@@ -76,7 +77,7 @@ func (c *ProjectController) ListProjects(ctx *gin.Context) {
 		common.Fail(ctx, common.InternalErrorCode, err.Error())
 		return
 	}
-	common.Success(ctx, projects)
+	common.Success(ctx, dto.ToProjectResponseList(projects))
 }
 
 // UpdateProject 更新项目
@@ -112,7 +113,7 @@ func (c *ProjectController) UpdateProject(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, project)
+	common.Success(ctx, dto.ToProjectResponse(project))
 }
 
 // DeleteProject 删除项目
@@ -137,4 +138,36 @@ func (c *ProjectController) DeleteProject(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, gin.H{"message": "删除成功"})
+}
+
+// GetProject 获取单个项目
+// @Summary 获取单个项目
+// @Description 根据ID获取项目详情
+// @Tags 项目管理
+// @Accept json
+// @Produce json
+// @Param id path int true "项目ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/projects/{id} [get]
+func (c *ProjectController) GetProject(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的项目ID")
+		return
+	}
+
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	project, err := c.service.GetProject(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(ctx, dto.ToProjectResponse(project))
 }

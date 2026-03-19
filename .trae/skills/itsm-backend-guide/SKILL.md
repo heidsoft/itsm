@@ -107,6 +107,58 @@ func (c *TicketController) UpdateTicket(ctx *gin.Context) {
 | **Field Mismatch** | JSON tag in DTO doesn't match Frontend | Ensure `json:"field_name"` matches Frontend interface exactly. |
 | **Enum Error** | Invalid value for `oneof` validation | Verify Frontend sends valid enum values (case-sensitive). |
 | **Cross-Tenant Access** | Missing TenantID check | Always verify `TenantID` matches the context for both main and related entities. |
+| **API Returns 404** | Controller exists but not registered in router | Add route registration in `router/router.go` - see Route Registration section below |
+| **Missing Service Method** | Calling undefined method | Add method to service layer (e.g., `GetProject`) before adding controller handler |
+
+## Route Registration
+
+When adding a new module, you MUST register routes in `router/router.go`:
+
+### 1. Add Controller to RouterConfig
+
+```go
+// In RouterConfig struct (around line 55)
+ProjectController *controller.ProjectController
+```
+
+### 2. Register Routes in SetupRoutes
+
+```go
+// In SetupRoutes function, inside tenant group
+if config.ProjectController != nil {
+    projects := tenant.(*gin.RouterGroup).Group("/projects")
+    {
+        projects.GET("", config.ProjectController.ListProjects)
+        projects.POST("", config.ProjectController.CreateProject)
+        projects.GET("/:id", config.ProjectController.GetProject)
+        projects.PUT("/:id", config.ProjectController.UpdateProject)
+        projects.DELETE("/:id", config.ProjectController.DeleteProject)
+    }
+}
+```
+
+### 3. Verify Service Methods
+
+Before adding controller handlers, ensure service layer has the required methods:
+
+```go
+// service/project_service.go
+func (s *ProjectService) GetProject(ctx context.Context, id int, tenantID int) (*ent.Project, error) {
+    return s.client.Project.Query().
+        Where(
+            project.IDEQ(id),
+            project.TenantIDEQ(tenantID),
+        ).
+        First(ctx)
+}
+```
+
+### 4. Verify Endpoint
+
+```bash
+# Test the endpoint
+curl http://localhost:8080/api/v1/projects
+```
 
 ## Testing Best Practices
 

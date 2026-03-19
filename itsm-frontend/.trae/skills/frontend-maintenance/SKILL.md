@@ -91,8 +91,79 @@ Use these commands to quickly identify issues:
 4. **Fix**: Apply code changes (prop renaming, try-catch wrappers, useApp hook).
 5. **Verify**: Restart dev server (`npm run dev`) and check console again.
 
+## Menu & Route Configuration
+
+### Adding New Menu Items
+
+The ITSM system uses **dynamic menus from database** with a **static fallback**.
+
+#### Database Menu (Production)
+
+1. **Add to seed SQL** (`config/seed/seed_data.sql`):
+   ```sql
+   INSERT INTO menus (name, path, icon, permission_code, sort_order, tenant_id, is_visible, is_enabled, description)
+   VALUES ('AI助手', '/ai/chat', 'Bot', 'ai:view', 14, 1, true, true, 'AI智能助手')
+   ON CONFLICT DO NOTHING;
+   ```
+
+2. **Execute SQL**:
+   ```bash
+   psql -h localhost -U dev -d itsm -f config/seed/seed_data.sql
+   ```
+
+#### Static Fallback (Sidebar.tsx)
+
+```tsx
+// 1. Import icon
+import { Bot, ... } from 'lucide-react';
+
+// 2. Add menu item
+{
+  key: '/ai/chat',
+  icon: <Bot style={iconStyle} />,
+  label: 'AI助手',
+  path: '/ai/chat',
+  permission: 'ai:view',
+}
+
+// 3. Add to iconMap
+const iconMap = {
+  // ... existing
+  Bot: <Bot style={iconStyle} />,
+};
+```
+
+### Route Mismatch (404 Fix)
+
+**Problem**: Sidebar path doesn't match actual page location.
+
+```tsx
+// WRONG - matches /admin/departments but page is at /enterprise/departments
+{ key: '/admin/departments', path: '/admin/departments' }
+
+// CORRECT - matches actual page
+{ key: '/enterprise/departments', path: '/enterprise/departments' }
+```
+
+**Finding actual page path**:
+```bash
+find src/app -name "page.tsx" | xargs grep -l "department" 2>/dev/null
+```
+
+### Database Menu Debug
+
+```bash
+# List menus
+psql -h localhost -U dev -d itsm -c "SELECT id, name, path FROM menus;"
+
+# Add menu manually
+psql -h localhost -U dev -d itsm -c "INSERT INTO menus (name, path, icon, permission_code, sort_order, tenant_id, is_visible, is_enabled) VALUES ('AI助手', '/ai/chat', 'Bot', 'ai:view', 26, 1, true, true);"
+```
+
 ## When to Apply
 
 - When the console is flooded with "Warning: [antd: Component] prop is deprecated".
 - When API endpoints are unstable (500/502) causing white screens.
+- When menu items are missing from sidebar.
+- When clicking menu leads to 404 page.
 - During routine code quality audits.

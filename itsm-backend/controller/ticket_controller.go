@@ -79,7 +79,7 @@ func (tc *TicketController) CreateTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticket)
+	common.Success(c, dto.ToTicketResponse(ticket))
 }
 
 // UpdateTicket 更新工单
@@ -106,7 +106,7 @@ func (tc *TicketController) UpdateTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticket)
+	common.Success(c, dto.ToTicketResponse(ticket))
 }
 
 // GetTicket 获取工单详情
@@ -126,7 +126,7 @@ func (tc *TicketController) GetTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticket)
+	common.Success(c, dto.ToTicketResponse(ticket))
 }
 
 // GetTicketSLAInfo 获取工单SLA信息
@@ -215,7 +215,7 @@ func (tc *TicketController) UpdateTicketStatus(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticket)
+	common.Success(c, dto.ToTicketResponse(ticket))
 }
 
 // BatchDeleteTickets 批量删除工单
@@ -279,7 +279,7 @@ func (tc *TicketController) AssignTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticket)
+	common.Success(c, dto.ToTicketResponse(ticket))
 }
 
 // EscalateTicket 升级工单
@@ -306,7 +306,7 @@ func (tc *TicketController) EscalateTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticket)
+	common.Success(c, dto.ToTicketResponse(ticket))
 }
 
 // ResolveTicket 解决工单
@@ -339,7 +339,7 @@ func (tc *TicketController) ResolveTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticket)
+	common.Success(c, dto.ToTicketResponse(ticket))
 }
 
 // CloseTicket 关闭工单
@@ -366,7 +366,7 @@ func (tc *TicketController) CloseTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticket)
+	common.Success(c, dto.ToTicketResponse(ticket))
 }
 
 // SearchTickets 搜索工单
@@ -386,7 +386,7 @@ func (tc *TicketController) SearchTickets(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, tickets)
+	common.Success(c, dto.ToTicketResponseList(tickets))
 }
 
 // GetOverdueTickets 获取逾期工单
@@ -400,7 +400,7 @@ func (tc *TicketController) GetOverdueTickets(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, tickets)
+	common.Success(c, dto.ToTicketResponseList(tickets))
 }
 
 // GetTicketsByAssignee 获取指定处理人的工单
@@ -420,7 +420,7 @@ func (tc *TicketController) GetTicketsByAssignee(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, tickets)
+	common.Success(c, dto.ToTicketResponseList(tickets))
 }
 
 // GetTicketActivity 获取工单活动日志
@@ -701,7 +701,7 @@ func (tc *TicketController) CreateSubtask(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticket)
+	common.Success(c, dto.ToTicketResponse(ticket))
 }
 
 // UpdateSubtask 更新子任务
@@ -748,7 +748,7 @@ func (tc *TicketController) UpdateSubtask(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, updatedTicket)
+	common.Success(c, dto.ToTicketResponse(updatedTicket))
 }
 
 // DeleteSubtask 删除子任务

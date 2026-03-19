@@ -878,20 +878,24 @@ func init() {
 	incidentDescIsAutomated := incidentFields[20].Descriptor()
 	// incident.DefaultIsAutomated holds the default value on creation for the is_automated field.
 	incident.DefaultIsAutomated = incidentDescIsAutomated.Default.(bool)
+	// incidentDescIsMajorIncident is the schema descriptor for is_major_incident field.
+	incidentDescIsMajorIncident := incidentFields[21].Descriptor()
+	// incident.DefaultIsMajorIncident holds the default value on creation for the is_major_incident field.
+	incident.DefaultIsMajorIncident = incidentDescIsMajorIncident.Default.(bool)
 	// incidentDescSource is the schema descriptor for source field.
-	incidentDescSource := incidentFields[21].Descriptor()
+	incidentDescSource := incidentFields[22].Descriptor()
 	// incident.DefaultSource holds the default value on creation for the source field.
 	incident.DefaultSource = incidentDescSource.Default.(string)
 	// incidentDescTenantID is the schema descriptor for tenant_id field.
-	incidentDescTenantID := incidentFields[23].Descriptor()
+	incidentDescTenantID := incidentFields[24].Descriptor()
 	// incident.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	incident.TenantIDValidator = incidentDescTenantID.Validators[0].(func(int) error)
 	// incidentDescCreatedAt is the schema descriptor for created_at field.
-	incidentDescCreatedAt := incidentFields[24].Descriptor()
+	incidentDescCreatedAt := incidentFields[25].Descriptor()
 	// incident.DefaultCreatedAt holds the default value on creation for the created_at field.
 	incident.DefaultCreatedAt = incidentDescCreatedAt.Default.(func() time.Time)
 	// incidentDescUpdatedAt is the schema descriptor for updated_at field.
-	incidentDescUpdatedAt := incidentFields[25].Descriptor()
+	incidentDescUpdatedAt := incidentFields[26].Descriptor()
 	// incident.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	incident.DefaultUpdatedAt = incidentDescUpdatedAt.Default.(func() time.Time)
 	// incident.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

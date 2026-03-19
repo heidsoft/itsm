@@ -271,6 +271,20 @@ func (_c *IncidentCreate) SetNillableIsAutomated(v *bool) *IncidentCreate {
 	return _c
 }
 
+// SetIsMajorIncident sets the "is_major_incident" field.
+func (_c *IncidentCreate) SetIsMajorIncident(v bool) *IncidentCreate {
+	_c.mutation.SetIsMajorIncident(v)
+	return _c
+}
+
+// SetNillableIsMajorIncident sets the "is_major_incident" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableIsMajorIncident(v *bool) *IncidentCreate {
+	if v != nil {
+		_c.SetIsMajorIncident(*v)
+	}
+	return _c
+}
+
 // SetSource sets the "source" field.
 func (_c *IncidentCreate) SetSource(v string) *IncidentCreate {
 	_c.mutation.SetSource(v)
@@ -493,6 +507,10 @@ func (_c *IncidentCreate) defaults() {
 		v := incident.DefaultIsAutomated
 		_c.mutation.SetIsAutomated(v)
 	}
+	if _, ok := _c.mutation.IsMajorIncident(); !ok {
+		v := incident.DefaultIsMajorIncident
+		_c.mutation.SetIsMajorIncident(v)
+	}
 	if _, ok := _c.mutation.Source(); !ok {
 		v := incident.DefaultSource
 		_c.mutation.SetSource(v)
@@ -553,6 +571,9 @@ func (_c *IncidentCreate) check() error {
 	}
 	if _, ok := _c.mutation.IsAutomated(); !ok {
 		return &ValidationError{Name: "is_automated", err: errors.New(`ent: missing required field "Incident.is_automated"`)}
+	}
+	if _, ok := _c.mutation.IsMajorIncident(); !ok {
+		return &ValidationError{Name: "is_major_incident", err: errors.New(`ent: missing required field "Incident.is_major_incident"`)}
 	}
 	if _, ok := _c.mutation.Source(); !ok {
 		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "Incident.source"`)}
@@ -680,6 +701,10 @@ func (_c *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IsAutomated(); ok {
 		_spec.SetField(incident.FieldIsAutomated, field.TypeBool, value)
 		_node.IsAutomated = value
+	}
+	if value, ok := _c.mutation.IsMajorIncident(); ok {
+		_spec.SetField(incident.FieldIsMajorIncident, field.TypeBool, value)
+		_node.IsMajorIncident = value
 	}
 	if value, ok := _c.mutation.Source(); ok {
 		_spec.SetField(incident.FieldSource, field.TypeString, value)

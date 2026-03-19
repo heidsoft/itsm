@@ -97,6 +97,7 @@ type IncidentResponse struct {
 	EscalatedAt         *time.Time             `json:"escalated_at,omitempty" example:"2024-01-01T06:00:00Z"`
 	EscalationLevel     int                    `json:"escalation_level" example:"1"`
 	IsAutomated         bool                   `json:"is_automated" example:"false"`
+	IsMajorIncident     bool                   `json:"is_major_incident" example:"false"`
 	Source              string                 `json:"source" example:"monitoring"`
 	Metadata            map[string]interface{} `json:"metadata"`
 	TenantID            int                    `json:"tenant_id" example:"1"`

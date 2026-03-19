@@ -30078,6 +30078,7 @@ type IncidentMutation struct {
 	escalation_level           *int
 	addescalation_level        *int
 	is_automated               *bool
+	is_major_incident          *bool
 	source                     *string
 	metadata                   *map[string]interface{}
 	tenant_id                  *int
@@ -31206,6 +31207,42 @@ func (m *IncidentMutation) ResetIsAutomated() {
 	m.is_automated = nil
 }
 
+// SetIsMajorIncident sets the "is_major_incident" field.
+func (m *IncidentMutation) SetIsMajorIncident(b bool) {
+	m.is_major_incident = &b
+}
+
+// IsMajorIncident returns the value of the "is_major_incident" field in the mutation.
+func (m *IncidentMutation) IsMajorIncident() (r bool, exists bool) {
+	v := m.is_major_incident
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsMajorIncident returns the old "is_major_incident" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldIsMajorIncident(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsMajorIncident is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsMajorIncident requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsMajorIncident: %w", err)
+	}
+	return oldValue.IsMajorIncident, nil
+}
+
+// ResetIsMajorIncident resets all changes to the "is_major_incident" field.
+func (m *IncidentMutation) ResetIsMajorIncident() {
+	m.is_major_incident = nil
+}
+
 // SetSource sets the "source" field.
 func (m *IncidentMutation) SetSource(s string) {
 	m.source = &s
@@ -31831,7 +31868,7 @@ func (m *IncidentMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *IncidentMutation) Fields() []string {
-	fields := make([]string, 0, 26)
+	fields := make([]string, 0, 27)
 	if m.title != nil {
 		fields = append(fields, incident.FieldTitle)
 	}
@@ -31894,6 +31931,9 @@ func (m *IncidentMutation) Fields() []string {
 	}
 	if m.is_automated != nil {
 		fields = append(fields, incident.FieldIsAutomated)
+	}
+	if m.is_major_incident != nil {
+		fields = append(fields, incident.FieldIsMajorIncident)
 	}
 	if m.source != nil {
 		fields = append(fields, incident.FieldSource)
@@ -31960,6 +32000,8 @@ func (m *IncidentMutation) Field(name string) (ent.Value, bool) {
 		return m.EscalationLevel()
 	case incident.FieldIsAutomated:
 		return m.IsAutomated()
+	case incident.FieldIsMajorIncident:
+		return m.IsMajorIncident()
 	case incident.FieldSource:
 		return m.Source()
 	case incident.FieldMetadata:
@@ -32021,6 +32063,8 @@ func (m *IncidentMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldEscalationLevel(ctx)
 	case incident.FieldIsAutomated:
 		return m.OldIsAutomated(ctx)
+	case incident.FieldIsMajorIncident:
+		return m.OldIsMajorIncident(ctx)
 	case incident.FieldSource:
 		return m.OldSource(ctx)
 	case incident.FieldMetadata:
@@ -32186,6 +32230,13 @@ func (m *IncidentMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIsAutomated(v)
+		return nil
+	case incident.FieldIsMajorIncident:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsMajorIncident(v)
 		return nil
 	case incident.FieldSource:
 		v, ok := value.(string)
@@ -32471,6 +32522,9 @@ func (m *IncidentMutation) ResetField(name string) error {
 		return nil
 	case incident.FieldIsAutomated:
 		m.ResetIsAutomated()
+		return nil
+	case incident.FieldIsMajorIncident:
+		m.ResetIsMajorIncident()
 		return nil
 	case incident.FieldSource:
 		m.ResetSource()
