@@ -85,3 +85,13 @@ func (s *ProjectService) DeleteProject(ctx context.Context, id int, tenantID int
 	// 删除项目
 	return s.client.Project.DeleteOneID(id).Exec(ctx)
 }
+
+// GetProject 获取单个项目
+func (s *ProjectService) GetProject(ctx context.Context, id int, tenantID int) (*ent.Project, error) {
+	return s.client.Project.Query().
+		Where(
+			project.IDEQ(id),
+			project.TenantIDEQ(tenantID),
+		).
+		First(ctx)
+}

@@ -54,19 +54,7 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	response := &dto.UserDetailResponse{
-		ID:         user.ID,
-		Username:   user.Username,
-		Email:      user.Email,
-		Name:       user.Name,
-		Department: user.Department,
-		Phone:      user.Phone,
-		Active:     user.Active,
-		TenantID:   user.TenantID,
-		Role:       string(user.Role),
-		CreatedAt:  user.CreatedAt,
-		UpdatedAt:  user.UpdatedAt,
-	}
+	response := dto.ToUserDetailResponse(user)
 
 	common.Success(c, response)
 }
@@ -142,19 +130,7 @@ func (uc *UserController) GetUser(c *gin.Context) {
 		return
 	}
 
-	response := &dto.UserDetailResponse{
-		ID:         user.ID,
-		Username:   user.Username,
-		Email:      user.Email,
-		Name:       user.Name,
-		Department: user.Department,
-		Phone:      user.Phone,
-		Active:     user.Active,
-		TenantID:   user.TenantID,
-		Role:       string(user.Role),
-		CreatedAt:  user.CreatedAt,
-		UpdatedAt:  user.UpdatedAt,
-	}
+	response := dto.ToUserDetailResponse(user)
 
 	common.Success(c, response)
 }
@@ -201,19 +177,7 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	response := &dto.UserDetailResponse{
-		ID:         user.ID,
-		Username:   user.Username,
-		Email:      user.Email,
-		Name:       user.Name,
-		Department: user.Department,
-		Phone:      user.Phone,
-		Active:     user.Active,
-		TenantID:   user.TenantID,
-		Role:       string(user.Role),
-		CreatedAt:  user.CreatedAt,
-		UpdatedAt:  user.UpdatedAt,
-	}
+	response := dto.ToUserDetailResponse(user)
 
 	common.Success(c, response)
 }

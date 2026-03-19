@@ -56,6 +56,8 @@ const (
 	FieldEscalationLevel = "escalation_level"
 	// FieldIsAutomated holds the string denoting the is_automated field in the database.
 	FieldIsAutomated = "is_automated"
+	// FieldIsMajorIncident holds the string denoting the is_major_incident field in the database.
+	FieldIsMajorIncident = "is_major_incident"
 	// FieldSource holds the string denoting the source field in the database.
 	FieldSource = "source"
 	// FieldMetadata holds the string denoting the metadata field in the database.
@@ -143,6 +145,7 @@ var Columns = []string{
 	FieldEscalatedAt,
 	FieldEscalationLevel,
 	FieldIsAutomated,
+	FieldIsMajorIncident,
 	FieldSource,
 	FieldMetadata,
 	FieldTenantID,
@@ -196,6 +199,8 @@ var (
 	DefaultEscalationLevel int
 	// DefaultIsAutomated holds the default value on creation for the "is_automated" field.
 	DefaultIsAutomated bool
+	// DefaultIsMajorIncident holds the default value on creation for the "is_major_incident" field.
+	DefaultIsMajorIncident bool
 	// DefaultSource holds the default value on creation for the "source" field.
 	DefaultSource string
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
@@ -304,6 +309,11 @@ func ByEscalationLevel(opts ...sql.OrderTermOption) OrderOption {
 // ByIsAutomated orders the results by the is_automated field.
 func ByIsAutomated(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsAutomated, opts...).ToFunc()
+}
+
+// ByIsMajorIncident orders the results by the is_major_incident field.
+func ByIsMajorIncident(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsMajorIncident, opts...).ToFunc()
 }
 
 // BySource orders the results by the source field.

@@ -2,7 +2,6 @@ package controller
 
 import (
 	"strconv"
-	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -53,24 +52,7 @@ func (kc *KnowledgeController) CreateArticle(c *gin.Context) {
 		return
 	}
 
-	// tags为string转[]string
-	tags := []string{}
-	if article.Tags != "" {
-		tags = strings.Split(article.Tags, ",")
-	}
-
-	response := &dto.KnowledgeArticleResponse{
-		ID:        article.ID,
-		Title:     article.Title,
-		Content:   article.Content,
-		Category:  article.Category,
-		Tags:      tags,
-		TenantID:  article.TenantID,
-		CreatedAt: article.CreatedAt,
-		UpdatedAt: article.UpdatedAt,
-	}
-
-	common.Success(c, response)
+	common.Success(c, dto.ToKnowledgeArticleResponse(article))
 }
 
 // GetArticle 获取知识库文章详情
@@ -100,23 +82,7 @@ func (kc *KnowledgeController) GetArticle(c *gin.Context) {
 		return
 	}
 
-	// tags为string转[]string
-	tags := []string{}
-	if article.Tags != "" {
-		tags = strings.Split(article.Tags, ",")
-	}
-	response := &dto.KnowledgeArticleResponse{
-		ID:        article.ID,
-		Title:     article.Title,
-		Content:   article.Content,
-		Category:  article.Category,
-		Tags:      tags,
-		TenantID:  article.TenantID,
-		CreatedAt: article.CreatedAt,
-		UpdatedAt: article.UpdatedAt,
-	}
-
-	common.Success(c, response)
+	common.Success(c, dto.ToKnowledgeArticleResponse(article))
 }
 
 // ListArticles 获取知识库文章列表
@@ -159,21 +125,11 @@ func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 	}
 
 	// 转换响应格式
-	articleResponses := make([]dto.KnowledgeArticleResponse, len(articles))
-	for i, article := range articles {
-		tags := []string{}
-		if article.Tags != "" {
-			tags = strings.Split(article.Tags, ",")
-		}
-		articleResponses[i] = dto.KnowledgeArticleResponse{
-			ID:        article.ID,
-			Title:     article.Title,
-			Content:   article.Content,
-			Category:  article.Category,
-			Tags:      tags,
-			TenantID:  article.TenantID,
-			CreatedAt: article.CreatedAt,
-			UpdatedAt: article.UpdatedAt,
+	articleResponses := make([]dto.KnowledgeArticleResponse, 0, len(articles))
+	for _, article := range articles {
+		resp := dto.ToKnowledgeArticleResponse(article)
+		if resp != nil {
+			articleResponses = append(articleResponses, *resp)
 		}
 	}
 
@@ -222,23 +178,7 @@ func (kc *KnowledgeController) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	// tags为string转[]string
-	tags := []string{}
-	if article.Tags != "" {
-		tags = strings.Split(article.Tags, ",")
-	}
-	response := &dto.KnowledgeArticleResponse{
-		ID:        article.ID,
-		Title:     article.Title,
-		Content:   article.Content,
-		Category:  article.Category,
-		Tags:      tags,
-		TenantID:  article.TenantID,
-		CreatedAt: article.CreatedAt,
-		UpdatedAt: article.UpdatedAt,
-	}
-
-	common.Success(c, response)
+	common.Success(c, dto.ToKnowledgeArticleResponse(article))
 }
 
 // DeleteArticle 删除知识库文章

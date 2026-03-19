@@ -60,6 +60,8 @@ type Incident struct {
 	EscalationLevel int `json:"escalation_level,omitempty"`
 	// 是否自动化处理
 	IsAutomated bool `json:"is_automated,omitempty"`
+	// 是否重大事件
+	IsMajorIncident bool `json:"is_major_incident,omitempty"`
 	// 事件来源
 	Source string `json:"source,omitempty"`
 	// 元数据
@@ -167,7 +169,7 @@ func (*Incident) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case incident.FieldImpactAnalysis, incident.FieldRootCause, incident.FieldResolutionSteps, incident.FieldMetadata:
 			values[i] = new([]byte)
-		case incident.FieldIsAutomated:
+		case incident.FieldIsAutomated, incident.FieldIsMajorIncident:
 			values[i] = new(sql.NullBool)
 		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldConfigurationItemID, incident.FieldEscalationLevel, incident.FieldTenantID:
 			values[i] = new(sql.NullInt64)
@@ -327,6 +329,12 @@ func (_m *Incident) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_automated", values[i])
 			} else if value.Valid {
 				_m.IsAutomated = value.Bool
+			}
+		case incident.FieldIsMajorIncident:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_major_incident", values[i])
+			} else if value.Valid {
+				_m.IsMajorIncident = value.Bool
 			}
 		case incident.FieldSource:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -493,6 +501,9 @@ func (_m *Incident) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_automated=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsAutomated))
+	builder.WriteString(", ")
+	builder.WriteString("is_major_incident=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsMajorIncident))
 	builder.WriteString(", ")
 	builder.WriteString("source=")
 	builder.WriteString(_m.Source)

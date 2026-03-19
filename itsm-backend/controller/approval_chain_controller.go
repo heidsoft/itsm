@@ -5,7 +5,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/ent/schema"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -27,21 +26,6 @@ func NewApprovalChainController(chainService *service.ApprovalChainService, logg
 	}
 }
 
-// convertChainSteps 将 schema.ApprovalChainStep 转换为 DTO
-func convertChainSteps(steps []schema.ApprovalChainStep) []dto.ApprovalChainStepDTO {
-	result := make([]dto.ApprovalChainStepDTO, len(steps))
-	for i, step := range steps {
-		result[i] = dto.ApprovalChainStepDTO{
-			Level:      step.Level,
-			ApproverID: step.ApproverID,
-			Role:       step.Role,
-			Name:       step.Name,
-			IsRequired: step.IsRequired,
-		}
-	}
-	return result
-}
-
 // ListChains 获取审批链列表
 func (ac *ApprovalChainController) ListChains(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
@@ -61,22 +45,7 @@ func (ac *ApprovalChainController) ListChains(c *gin.Context) {
 		return
 	}
 
-	// 转换响应
-	chainResponses := make([]dto.ApprovalChainResponse, len(chains))
-	for i, chain := range chains {
-		chainResponses[i] = dto.ApprovalChainResponse{
-			ID:          chain.ID,
-			Name:        chain.Name,
-			Description: chain.Description,
-			EntityType:  chain.EntityType,
-			Chain:       convertChainSteps(chain.Chain),
-			Status:      chain.Status,
-			CreatedBy:   chain.CreatedBy,
-			TenantID:    chain.TenantID,
-			CreatedAt:   chain.CreatedAt,
-			UpdatedAt:   chain.UpdatedAt,
-		}
-	}
+	chainResponses := dto.ToApprovalChainResponseList(chains)
 
 	common.Success(c, dto.ApprovalChainListResponse{
 		Data:  chainResponses,
@@ -106,18 +75,7 @@ func (ac *ApprovalChainController) GetChain(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ApprovalChainResponse{
-		ID:          chain.ID,
-		Name:        chain.Name,
-		Description: chain.Description,
-		EntityType:  chain.EntityType,
-		Chain:       convertChainSteps(chain.Chain),
-		Status:      chain.Status,
-		CreatedBy:   chain.CreatedBy,
-		TenantID:    chain.TenantID,
-		CreatedAt:   chain.CreatedAt,
-		UpdatedAt:   chain.UpdatedAt,
-	})
+	common.Success(c, dto.ToApprovalChainResponse(chain))
 }
 
 // CreateChain 创建审批链
@@ -141,18 +99,7 @@ func (ac *ApprovalChainController) CreateChain(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ApprovalChainResponse{
-		ID:          entity.ID,
-		Name:        entity.Name,
-		Description: entity.Description,
-		EntityType:  entity.EntityType,
-		Chain:       convertChainSteps(entity.Chain),
-		Status:      entity.Status,
-		CreatedBy:   entity.CreatedBy,
-		TenantID:    entity.TenantID,
-		CreatedAt:   entity.CreatedAt,
-		UpdatedAt:   entity.UpdatedAt,
-	})
+	common.Success(c, dto.ToApprovalChainResponse(entity))
 }
 
 // UpdateChain 更新审批链
@@ -181,18 +128,7 @@ func (ac *ApprovalChainController) UpdateChain(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ApprovalChainResponse{
-		ID:          entity.ID,
-		Name:        entity.Name,
-		Description: entity.Description,
-		EntityType:  entity.EntityType,
-		Chain:       convertChainSteps(entity.Chain),
-		Status:      entity.Status,
-		CreatedBy:   entity.CreatedBy,
-		TenantID:    entity.TenantID,
-		CreatedAt:   entity.CreatedAt,
-		UpdatedAt:   entity.UpdatedAt,
-	})
+	common.Success(c, dto.ToApprovalChainResponse(entity))
 }
 
 // DeleteChain 删除审批链

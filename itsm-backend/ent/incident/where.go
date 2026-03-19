@@ -145,6 +145,11 @@ func IsAutomated(v bool) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldIsAutomated, v))
 }
 
+// IsMajorIncident applies equality check predicate on the "is_major_incident" field. It's identical to IsMajorIncidentEQ.
+func IsMajorIncident(v bool) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldIsMajorIncident, v))
+}
+
 // Source applies equality check predicate on the "source" field. It's identical to SourceEQ.
 func Source(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldSource, v))
@@ -1188,6 +1193,16 @@ func IsAutomatedEQ(v bool) predicate.Incident {
 // IsAutomatedNEQ applies the NEQ predicate on the "is_automated" field.
 func IsAutomatedNEQ(v bool) predicate.Incident {
 	return predicate.Incident(sql.FieldNEQ(FieldIsAutomated, v))
+}
+
+// IsMajorIncidentEQ applies the EQ predicate on the "is_major_incident" field.
+func IsMajorIncidentEQ(v bool) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldIsMajorIncident, v))
+}
+
+// IsMajorIncidentNEQ applies the NEQ predicate on the "is_major_incident" field.
+func IsMajorIncidentNEQ(v bool) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldIsMajorIncident, v))
 }
 
 // SourceEQ applies the EQ predicate on the "source" field.

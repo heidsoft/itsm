@@ -25,6 +25,7 @@ import {
   Activity,
   Clock,
   ClipboardList,
+  Bot,
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
@@ -163,6 +164,14 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       path: '/licenses',
       permission: 'license:view',
       description: '软件许可证管理',
+    },
+    {
+      key: '/ai/chat',
+      icon: <Bot style={iconStyle} />,
+      label: 'AI 助手',
+      path: '/ai/chat',
+      permission: 'ai:view',
+      description: 'AI 智能助手',
     },
   ],
   admin: [
@@ -322,17 +331,17 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
           permission: 'admin:write',
         },
         {
-          key: '/admin/departments',
+          key: '/enterprise/departments',
           icon: <Users style={iconStyle} />,
           label: '部门管理',
-          path: '/admin/departments',
+          path: '/enterprise/departments',
           permission: 'admin:write',
         },
         {
-          key: '/admin/teams',
+          key: '/enterprise/teams',
           icon: <Users style={iconStyle} />,
           label: '团队管理',
-          path: '/admin/teams',
+          path: '/enterprise/teams',
           permission: 'admin:write',
         },
         {
@@ -449,6 +458,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       Activity: <Activity style={iconStyle} />,
       Clock: <Clock style={iconStyle} />,
       ClipboardList: <ClipboardList style={iconStyle} />,
+      Bot: <Bot style={iconStyle} />,
     };
     return iconMap[iconName];
   };

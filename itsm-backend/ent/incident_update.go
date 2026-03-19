@@ -404,6 +404,20 @@ func (_u *IncidentUpdate) SetNillableIsAutomated(v *bool) *IncidentUpdate {
 	return _u
 }
 
+// SetIsMajorIncident sets the "is_major_incident" field.
+func (_u *IncidentUpdate) SetIsMajorIncident(v bool) *IncidentUpdate {
+	_u.mutation.SetIsMajorIncident(v)
+	return _u
+}
+
+// SetNillableIsMajorIncident sets the "is_major_incident" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableIsMajorIncident(v *bool) *IncidentUpdate {
+	if v != nil {
+		_u.SetIsMajorIncident(*v)
+	}
+	return _u
+}
+
 // SetSource sets the "source" field.
 func (_u *IncidentUpdate) SetSource(v string) *IncidentUpdate {
 	_u.mutation.SetSource(v)
@@ -913,6 +927,9 @@ func (_u *IncidentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.IsAutomated(); ok {
 		_spec.SetField(incident.FieldIsAutomated, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.IsMajorIncident(); ok {
+		_spec.SetField(incident.FieldIsMajorIncident, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Source(); ok {
 		_spec.SetField(incident.FieldSource, field.TypeString, value)
@@ -1640,6 +1657,20 @@ func (_u *IncidentUpdateOne) SetNillableIsAutomated(v *bool) *IncidentUpdateOne 
 	return _u
 }
 
+// SetIsMajorIncident sets the "is_major_incident" field.
+func (_u *IncidentUpdateOne) SetIsMajorIncident(v bool) *IncidentUpdateOne {
+	_u.mutation.SetIsMajorIncident(v)
+	return _u
+}
+
+// SetNillableIsMajorIncident sets the "is_major_incident" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableIsMajorIncident(v *bool) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetIsMajorIncident(*v)
+	}
+	return _u
+}
+
 // SetSource sets the "source" field.
 func (_u *IncidentUpdateOne) SetSource(v string) *IncidentUpdateOne {
 	_u.mutation.SetSource(v)
@@ -2179,6 +2210,9 @@ func (_u *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err 
 	}
 	if value, ok := _u.mutation.IsAutomated(); ok {
 		_spec.SetField(incident.FieldIsAutomated, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.IsMajorIncident(); ok {
+		_spec.SetField(incident.FieldIsMajorIncident, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Source(); ok {
 		_spec.SetField(incident.FieldSource, field.TypeString, value)

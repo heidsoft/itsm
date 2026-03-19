@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -48,7 +49,7 @@ func (tc *TicketCategoryController) CreateCategory(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, category)
+	common.Success(c, dto.ToTicketCategoryResponse(category))
 }
 
 // UpdateCategory 更新工单分类
@@ -81,7 +82,7 @@ func (tc *TicketCategoryController) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, category)
+	common.Success(c, dto.ToTicketCategoryResponse(category))
 }
 
 // DeleteCategory 删除工单分类
@@ -117,7 +118,7 @@ func (tc *TicketCategoryController) GetCategory(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, category)
+	common.Success(c, dto.ToTicketCategoryResponse(category))
 }
 
 // ListCategories 获取分类列表
@@ -166,7 +167,7 @@ func (tc *TicketCategoryController) ListCategories(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"categories": categories,
+		"categories": dto.ToTicketCategoryResponseList(categories),
 		"total":      total,
 	})
 }
