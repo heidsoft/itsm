@@ -976,6 +976,7 @@ var (
 		{Name: "escalated_at", Type: field.TypeTime, Nullable: true},
 		{Name: "escalation_level", Type: field.TypeInt, Default: 0},
 		{Name: "is_automated", Type: field.TypeBool, Default: false},
+		{Name: "is_major_incident", Type: field.TypeBool, Default: false},
 		{Name: "source", Type: field.TypeString, Default: "manual"},
 		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt},

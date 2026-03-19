@@ -109,3 +109,25 @@ All APIs return `{ code: number, message: string, data: any }`:
 ## Testing
 - Backend: Table-driven tests with `stretchr/testify`, use `enttest.NewClient()` for DB
 - Frontend: Jest + React Testing Library, mock API calls
+
+## API 响应规范
+
+### Controller必须返回DTO，禁止直接返回Ent模型
+- ✅ `common.Success(c, dto.ToTicketResponse(ticket))`
+- ❌ `common.Success(c, ticket)` // ticket是*ent.Ticket
+
+### 使用已有的Mapper函数
+- `dto.ToTicketResponse()` / `ToTicketResponseList()`
+- `dto.ToIncidentResponse()` / `ToIncidentResponseList()`
+- `dto.ToUserDetailResponse()` / `ToUserDetailResponseList()`
+- `dto.ToTenantResponse()` / `ToTenantResponseList()`
+
+### List响应必须通过Service层转换
+- Service层返回 `*TicketListResponse` 而非 `[]*ent.Ticket`
+- Controller层使用Mapper包装单个对象
+
+### 字段命名规范
+- 后端Ent模型使用snake_case（assignee_id, ticket_number）
+- 前端期望camelCase（assigneeId, ticketNumber）
+- DTO响应必须使用camelCase字段名
+- Mapper函数负责转换snake_case到camelCase
