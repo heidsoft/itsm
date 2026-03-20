@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	dddcmdb "itsm-backend/internal/domain/cmdb"
+	dddcmdb "itsm-backend/handlers/cmdb"
 	"itsm-backend/service"
 	"strconv"
 	"time"

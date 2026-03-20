@@ -6,7 +6,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/internal/api"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -53,32 +52,32 @@ func (c *IncidentController) CreateIncident(ctx *gin.Context) {
 	var req dto.CreateIncidentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		c.logger.Errorw("Invalid request body", "error", err)
-		api.Error(ctx, common.ParamErrorCode, "请求参数无效")
+		common.Fail(ctx, common.ParamErrorCode, "请求参数无效")
 		return
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil {
 		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		api.Error(ctx, common.InternalErrorCode, "获取租户ID失败")
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
 		return
 	}
 
 	userID, err := middleware.GetUserID(ctx)
 	if err != nil {
 		c.logger.Errorw("Failed to get user ID", "error", err)
-		api.Error(ctx, common.InternalErrorCode, "获取用户ID失败")
+		common.Fail(ctx, common.AuthFailedCode, "获取用户ID失败")
 		return
 	}
 
 	response, err := c.incidentService.CreateIncident(ctx.Request.Context(), &req, tenantID, userID)
 	if err != nil {
 		c.logger.Errorw("Failed to create incident", "error", err)
-		api.Error(ctx, common.InternalErrorCode, "创建事件失败")
+		common.Fail(ctx, common.InternalErrorCode, "创建事件失败")
 		return
 	}
 
-	api.Success(ctx, response)
+	common.Success(ctx, response)
 }
 
 // GetIncident 获取事件详情
@@ -96,13 +95,13 @@ func (c *IncidentController) GetIncident(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		api.Error(ctx, common.ParamErrorCode, "无效的事件ID")
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
 		return
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil {
-		api.Error(ctx, common.InternalErrorCode, "获取租户ID失败")
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
 		return
 	}
 	response, err := c.incidentService.GetIncident(ctx.Request.Context(), id, tenantID)
