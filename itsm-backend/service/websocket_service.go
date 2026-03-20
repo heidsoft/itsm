@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -13,11 +14,71 @@ import (
 	"go.uber.org/zap"
 )
 
+// GetAllowedOrigins returns allowed origins from environment variable, defaults to same-origin only
+func getAllowedOrigins() map[string]bool {
+	origins := make(map[string]bool)
+	originsEnv := os.Getenv("WEBSOCKET_ALLOWED_ORIGINS")
+	if originsEnv == "" || originsEnv == "*" {
+		// Default: only allow same-origin connections for security
+		return origins
+	}
+	// Parse comma-separated list of allowed origins
+	for _, origin := range splitAndTrim(originsEnv, ",") {
+		origins[origin] = true
+	}
+	return origins
+}
+
+func splitAndTrim(s, sep string) []string {
+	if s == "" {
+		return nil
+	}
+	parts := make([]string, 0)
+	start := 0
+	for i := 0; i <= len(s)-len(sep); i++ {
+		if s[i:i+len(sep)] == sep {
+			if part := trimString(s[start:i]); part != "" {
+				parts = append(parts, part)
+			}
+			start = i + len(sep)
+			i += len(sep) - 1
+		}
+	}
+	if part := trimString(s[start:]); part != "" {
+		parts = append(parts, part)
+	}
+	return parts
+}
+
+func trimString(s string) string {
+	start, end := 0, len(s)
+	for start < end && (s[start] == ' ' || s[start] == '\t') {
+		start++
+	}
+	for end > start && (s[end-1] == ' ' || s[end-1] == '\t') {
+		end--
+	}
+	return s[start:end]
+}
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-		return true // 允许所有来源（生产环境应该限制）
+		allowedOrigins := getAllowedOrigins()
+		// If no origins configured (default), only allow same-origin
+		if len(allowedOrigins) == 0 {
+			origin := r.Header.Get("Origin")
+			// Allow same-origin requests
+			if origin == "" {
+				return true // curl or direct connection
+			}
+			// Check if origin matches host
+			return origin == "http://"+r.Host || origin == "https://"+r.Host
+		}
+		// Check against allowed origins list
+		origin := r.Header.Get("Origin")
+		return allowedOrigins[origin]
 	},
 }
 

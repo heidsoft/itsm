@@ -342,9 +342,10 @@ func TestTicketCoreService_DeleteTicket(t *testing.T) {
 		err := coreService.DeleteTicket(ctx, testTicket.ID, testTenant.ID)
 		require.NoError(t, err)
 
-		// 验证已删除
-		_, err = client.Ticket.Get(ctx, testTicket.ID)
-		assert.Error(t, err)
+		// 验证已删除（软删除：检查deleted_at字段）
+		deletedTicket, err := client.Ticket.Get(ctx, testTicket.ID)
+		require.NoError(t, err)
+		assert.NotNil(t, deletedTicket.DeletedAt)
 	})
 
 	t.Run("删除不存在的工单", func(t *testing.T) {
@@ -404,10 +405,11 @@ func TestTicketCoreService_BatchDeleteTickets(t *testing.T) {
 		err := coreService.BatchDeleteTickets(ctx, ticketIDs, testTenant.ID)
 		require.NoError(t, err)
 
-		// 验证所有工单已删除
+		// 验证所有工单已软删除
 		for _, id := range ticketIDs {
-			_, err := client.Ticket.Get(ctx, id)
-			assert.Error(t, err)
+			deletedTicket, err := client.Ticket.Get(ctx, id)
+			require.NoError(t, err)
+			assert.NotNil(t, deletedTicket.DeletedAt)
 		}
 	})
 

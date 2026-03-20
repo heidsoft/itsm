@@ -9,8 +9,8 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
-	"itsm-backend/internal/domain/cmdb"
-	"itsm-backend/internal/domain/service_catalog"
+	"itsm-backend/handlers/cmdb"
+	"itsm-backend/handlers/service_catalog"
 
 	"go.uber.org/zap"
 )

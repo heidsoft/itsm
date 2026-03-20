@@ -75,7 +75,7 @@ func TestIncidentService_CreateIncident(t *testing.T) {
 		Source:      "manual",
 	}
 
-	response, err := service.CreateIncident(ctx, req, testTenant.ID)
+	response, err := service.CreateIncident(ctx, req, testTenant.ID, testTenant.ID)
 	if err != nil {
 		t.Fatalf("创建事件失败: %v", err)
 	}
@@ -631,7 +631,7 @@ func BenchmarkIncidentService_CreateIncident(b *testing.B) {
 			Source:      "manual",
 		}
 
-		response, err := service.CreateIncident(ctx, req, testTenant.ID)
+		response, err := service.CreateIncident(ctx, req, testTenant.ID, testTenant.ID)
 		if err != nil {
 			b.Fatalf("创建事件失败: %v", err)
 		}
