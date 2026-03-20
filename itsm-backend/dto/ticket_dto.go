@@ -2,8 +2,6 @@ package dto
 
 import (
 	"time"
-
-	"itsm-backend/ent"
 )
 
 // UserBasicInfo 用户基本信息
@@ -94,7 +92,7 @@ type ListTicketsResponse struct {
 	Tickets  []*TicketResponse `json:"tickets"`
 	Total    int               `json:"total"`
 	Page     int               `json:"page"`
-	PageSize int               `json:"page_size"`
+	PageSize int               `json:"pageSize"`
 }
 
 // TicketStatsResponse 工单统计响应
@@ -109,7 +107,7 @@ type TicketStatsResponse struct {
 
 // TicketDetailResponse 工单详情响应
 type TicketDetailResponse struct {
-	Ticket     *ent.Ticket       `json:"ticket"`
+	Ticket     *TicketResponse   `json:"ticket"`
 	SLAMetrics *TicketSLAMetrics `json:"sla_metrics"`
 }
 

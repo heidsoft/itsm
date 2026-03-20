@@ -146,7 +146,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}
 	}
 
-	// 触发审批（仅紧急和关键）
+	// 触发审批（仅紧急和关键）- 异步执行，不阻塞主流程
 	if s.approvalService != nil && (req.Priority == "urgent" || req.Priority == "critical") {
 		approvalReq := &ApprovalTriggerRequest{
 			TicketID:     ticket.ID,
@@ -157,50 +157,46 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 			RequesterID:  req.RequesterID,
 			TenantID:     tenantID,
 		}
-		reqCtx := ctx
-		go func() {
+		go func(reqCtx context.Context) {
 			ctx2, cancel := context.WithTimeout(reqCtx, 30*time.Second)
 			defer cancel()
 			if _, err := s.approvalService.TriggerApproval(ctx2, approvalReq); err != nil {
 				s.logger.Warnw("Approval trigger failed", "error", err)
 			}
-		}()
+		}(ctx)
 	}
 
-	// 通知（如果分配了处理人）
+	// 通知（如果分配了处理人）- 异步执行，不阻塞主流程
 	if s.notificationService != nil && ticket.AssigneeID > 0 {
-		reqCtx := ctx
-		go func() {
+		go func(reqCtx context.Context) {
 			ctx2, cancel := context.WithTimeout(reqCtx, 10*time.Second)
 			defer cancel()
 			if err := s.notificationService.NotifyTicketCreated(ctx2, ticket); err != nil {
 				s.logger.Warnw("Notification failed", "error", err)
 			}
-		}()
+		}(ctx)
 	}
 
-	// 自动化规则
+	// 自动化规则 - 异步执行，不阻塞主流程
 	if s.automationRuleService != nil {
-		reqCtx := ctx
-		go func() {
+		go func(reqCtx context.Context) {
 			ctx2, cancel := context.WithTimeout(reqCtx, 30*time.Second)
 			defer cancel()
 			if err := s.automationRuleService.ExecuteRulesForTicket(ctx2, ticket.ID, tenantID); err != nil {
 				s.logger.Warnw("Automation rules failed", "error", err)
 			}
-		}()
+		}(ctx)
 	}
 
-	// 工作流触发
+	// 工作流触发 - 异步执行，不阻塞主流程
 	if s.processTriggerService != nil {
-		reqCtx := ctx
-		go func() {
+		go func(reqCtx context.Context) {
 			ctx2, cancel := context.WithTimeout(reqCtx, 30*time.Second)
 			defer cancel()
 			if err := s.triggerWorkflowForTicket(ctx2, ticket.ID, tenantID, req.WorkflowDefinitionKey); err != nil {
 				s.logger.Warnw("Workflow trigger failed", "error", err)
 			}
-		}()
+		}(ctx)
 	}
 
 	// 审计日志
@@ -414,16 +410,15 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto
 		return nil, err
 	}
 
-	// 执行自动化规则（异步）
+	// 执行自动化规则（异步）- 不阻塞主流程
 	if s.automationRuleService != nil {
-		reqCtx := ctx
-		go func() {
-			ruleCtx, cancel := context.WithTimeout(reqCtx, 30*time.Second)
+		go func(reqCtx context.Context) {
+			ctx2, cancel := context.WithTimeout(reqCtx, 30*time.Second)
 			defer cancel()
-			if err := s.automationRuleService.ExecuteRulesForTicket(ruleCtx, ticket.ID, tenantID); err != nil {
+			if err := s.automationRuleService.ExecuteRulesForTicket(ctx2, ticket.ID, tenantID); err != nil {
 				s.logger.Warnw("Failed to execute automation rules", "error", err, "ticket_id", ticket.ID)
 			}
-		}()
+		}(ctx)
 	}
 
 	// 记录审计日志

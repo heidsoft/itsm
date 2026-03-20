@@ -10,15 +10,16 @@ import (
 	"itsm-backend/controller"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
-	"itsm-backend/internal/domain/ai"
-	"itsm-backend/internal/domain/change"
-	domainCommon "itsm-backend/internal/domain/common"
-	"itsm-backend/internal/domain/knowledge"
-	"itsm-backend/internal/domain/problem"
-	"itsm-backend/internal/domain/service_catalog"
-	"itsm-backend/internal/domain/service_request"
-	"itsm-backend/internal/domain/sla"
+	"itsm-backend/handlers/ai"
+	"itsm-backend/handlers/change"
+	domainCommon "itsm-backend/handlers/common"
+	"itsm-backend/handlers/knowledge"
+	"itsm-backend/handlers/problem"
+	"itsm-backend/handlers/service_catalog"
+	"itsm-backend/handlers/service_request"
+	"itsm-backend/handlers/sla"
 	"itsm-backend/middleware"
+	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -81,8 +82,6 @@ type RouterConfig struct {
 
 	// Additional domain controllers
 	ServiceController        *controller.ServiceController
-	ProblemController        *controller.ProblemController
-	ChangeController         *controller.ChangeController
 	ChangeApprovalController *controller.ChangeApprovalController
 	ProvisioningController   *controller.ProvisioningController
 	AnalyticsController      *controller.AnalyticsController
@@ -102,6 +101,9 @@ type RouterConfig struct {
 	AIHandler        *ai.Handler
 	CommonHandler    *domainCommon.Handler
 	RoleHandler      *common.RoleHandler
+
+	// WebSocket Service
+	WebSocketService *service.WebSocketService
 }
 
 // SetupRoutes 设置路由
@@ -151,6 +153,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	auth := r.Group("/api/v1").Use(middleware.AuthMiddleware(config.JWTSecret))
 	// RBAC 权限控制中间件：保护所有已认证路由
 	auth.Use(middleware.RBACMiddleware(config.Client))
+
+	// WebSocket 路由（需要JWT认证）
+	if config.WebSocketService != nil {
+		auth.GET("/ws/notifications", func(c *gin.Context) {
+			userID := c.GetInt("user_id")
+			tenantID := c.GetInt("tenant_id")
+			config.WebSocketService.HandleWebSocket(c.Writer, c.Request, userID, tenantID)
+		})
+	}
 
 	// MSP Routes (跨租户，不需要租户中间件)
 	if config.MSPController != nil {

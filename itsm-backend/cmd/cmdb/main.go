@@ -10,7 +10,7 @@ import (
 	"itsm-backend/controller"
 	"itsm-backend/ent"
 	"itsm-backend/ent/citype"
-	"itsm-backend/internal/domain/cmdb"
+	"itsm-backend/handlers/cmdb"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"

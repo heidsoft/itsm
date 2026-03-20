@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"itsm-backend/internal/domain/shared"
+	"itsm-backend/handlers/shared"
 )
 
 // Priority represents ticket priority levels

@@ -12,16 +12,16 @@ import (
 	"itsm-backend/database"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
-	"itsm-backend/internal/domain/ai" // Added AI domain import
-	"itsm-backend/internal/domain/change"
-	"itsm-backend/internal/domain/cmdb"
-	domainCommon "itsm-backend/internal/domain/common"
-	"itsm-backend/internal/domain/incident"
-	"itsm-backend/internal/domain/knowledge"
-	"itsm-backend/internal/domain/problem"
-	"itsm-backend/internal/domain/service_catalog"
-	"itsm-backend/internal/domain/service_request"
-	"itsm-backend/internal/domain/sla"
+	"itsm-backend/handlers/ai"
+	"itsm-backend/handlers/change"
+	"itsm-backend/handlers/cmdb"
+	domainCommon "itsm-backend/handlers/common"
+	"itsm-backend/handlers/incident"
+	"itsm-backend/handlers/knowledge"
+	"itsm-backend/handlers/problem"
+	"itsm-backend/handlers/service_catalog"
+	"itsm-backend/handlers/service_request"
+	"itsm-backend/handlers/sla"
 	"itsm-backend/middleware"
 	"itsm-backend/pkg/seeder"
 	"itsm-backend/router"
@@ -98,9 +98,7 @@ func NewApplication() *Application {
 	approvalService := service.NewApprovalService(client, sugar)
 
 	cmdbService := service.NewCMDBService(client)
-	problemService := service.NewProblemService(client, sugar)
-	changeService := service.NewChangeService(client, sugar)
-	changeService.SetApprovalService(approvalService)
+	// problemService and changeService removed - using Handlers with domain services instead
 	changeApprovalService := service.NewChangeApprovalService(client, database.GetRawDB(), sugar)
 
 	// Release & Asset Management Services
@@ -180,8 +178,7 @@ func NewApplication() *Application {
 	provisioningService := service.NewProvisioningService(client, sugar)
 	provisioningController := controller.NewProvisioningController(provisioningService)
 
-	problemController := controller.NewProblemController(sugar, problemService)
-	changeController := controller.NewChangeController(sugar, changeService)
+	// ProblemController and ChangeController removed - using Handlers instead
 	changeApprovalController := controller.NewChangeApprovalController(changeApprovalService, sugar)
 
 	// Release & Asset Management Controllers
@@ -399,8 +396,6 @@ func NewApplication() *Application {
 		// Additional controllers
 		ServiceController:        serviceController,
 		ProvisioningController:   provisioningController,
-		ProblemController:        problemController,
-		ChangeController:         changeController,
 		ChangeApprovalController: changeApprovalController,
 		AnalyticsController:      analyticsController,
 		PredictionController:     predictionController,
