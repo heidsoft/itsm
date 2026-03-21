@@ -35,17 +35,17 @@ type SLADefinitionResponse struct {
 	ID              int                    `json:"id" example:"1"`
 	Name            string                 `json:"name" example:"标准服务SLA"`
 	Description     string                 `json:"description" example:"标准IT服务的SLA定义"`
-	ServiceType     string                 `json:"service_type" example:"standard"`
+	ServiceType     string                 `json:"serviceType" example:"standard"`
 	Priority        string                 `json:"priority" example:"medium"`
-	ResponseTime    int                    `json:"response_time" example:"30"`
-	ResolutionTime  int                    `json:"resolution_time" example:"240"`
-	BusinessHours   map[string]interface{} `json:"business_hours"`
-	EscalationRules map[string]interface{} `json:"escalation_rules"`
+	ResponseTime    int                    `json:"responseTime" example:"30"`
+	ResolutionTime  int                    `json:"resolutionTime" example:"240"`
+	BusinessHours   map[string]interface{} `json:"businessHours"`
+	EscalationRules map[string]interface{} `json:"escalationRules"`
 	Conditions      map[string]interface{} `json:"conditions"`
-	IsActive        bool                   `json:"is_active" example:"true"`
-	TenantID        int                    `json:"tenant_id" example:"1"`
-	CreatedAt       time.Time              `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt       time.Time              `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	IsActive        bool                   `json:"isActive" example:"true"`
+	TenantID        int                    `json:"tenantId" example:"1"`
+	CreatedAt       time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt       time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // SLA违规相关DTO
@@ -66,18 +66,18 @@ type UpdateSLAViolationRequest struct {
 
 type SLAViolationResponse struct {
 	ID              int        `json:"id" example:"1"`
-	SLADefinitionID int        `json:"sla_definition_id" example:"1"`
-	TicketID        int        `json:"ticket_id" example:"1"`
-	ViolationType   string     `json:"violation_type" example:"response_time"`
-	ViolationTime   time.Time  `json:"violation_time" example:"2024-01-01T00:00:00Z"`
+	SLADefinitionID int        `json:"slaDefinitionId" example:"1"`
+	TicketID        int        `json:"ticketId" example:"1"`
+	ViolationType   string     `json:"violationType" example:"response_time"`
+	ViolationTime   time.Time  `json:"violationTime" example:"2024-01-01T00:00:00Z"`
 	Description     string     `json:"description" example:"响应时间超时"`
 	Severity        string     `json:"severity" example:"medium"`
-	IsResolved      bool       `json:"is_resolved" example:"false"`
-	ResolvedAt      *time.Time `json:"resolved_at,omitempty" example:"2024-01-01T00:00:00Z"`
-	ResolutionNotes string     `json:"resolution_notes" example:"已解决"`
-	TenantID        int        `json:"tenant_id" example:"1"`
-	CreatedAt       time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt       time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	IsResolved      bool       `json:"isResolved" example:"false"`
+	ResolvedAt      *time.Time `json:"resolvedAt,omitempty" example:"2024-01-01T00:00:00Z"`
+	ResolutionNotes string     `json:"resolutionNotes" example:"已解决"`
+	TenantID        int        `json:"tenantId" example:"1"`
+	CreatedAt       time.Time  `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt       time.Time  `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // SLA指标相关DTO
@@ -92,16 +92,16 @@ type CreateSLAMetricRequest struct {
 
 type SLAMetricResponse struct {
 	ID              int                    `json:"id" example:"1"`
-	SLADefinitionID int                    `json:"sla_definition_id" example:"1"`
-	MetricType      string                 `json:"metric_type" example:"response_time"`
-	MetricName      string                 `json:"metric_name" example:"平均响应时间"`
-	MetricValue     float64                `json:"metric_value" example:"25.5"`
+	SLADefinitionID int                    `json:"slaDefinitionId" example:"1"`
+	MetricType      string                 `json:"metricType" example:"response_time"`
+	MetricName      string                 `json:"metricName" example:"平均响应时间"`
+	MetricValue     float64                `json:"metricValue" example:"25.5"`
 	Unit            string                 `json:"unit" example:"分钟"`
-	MeasurementTime time.Time              `json:"measurement_time" example:"2024-01-01T00:00:00Z"`
+	MeasurementTime time.Time              `json:"measurementTime" example:"2024-01-01T00:00:00Z"`
 	Metadata        map[string]interface{} `json:"metadata"`
-	TenantID        int                    `json:"tenant_id" example:"1"`
-	CreatedAt       time.Time              `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt       time.Time              `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	TenantID        int                    `json:"tenantId" example:"1"`
+	CreatedAt       time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt       time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // SLA监控相关DTO
@@ -113,61 +113,61 @@ type SLAMonitoringRequest struct {
 }
 
 type SLAMonitoringResponse struct {
-	SLADefinitionID       int                    `json:"sla_definition_id" example:"1"`
-	SLAInfo               SLADefinitionResponse  `json:"sla_info"`
+	SLADefinitionID       int                    `json:"slaDefinitionId" example:"1"`
+	SLAInfo               SLADefinitionResponse  `json:"slaInfo"`
 	Metrics               []SLAMetricResponse    `json:"metrics"`
 	Violations            []SLAViolationResponse `json:"violations"`
-	ComplianceRate        float64                `json:"compliance_rate" example:"95.5"`
-	AverageResponseTime   float64                `json:"average_response_time" example:"28.5"`
-	AverageResolutionTime float64                `json:"average_resolution_time" example:"180.5"`
-	TotalTickets          int                    `json:"total_tickets" example:"100"`
-	ViolatedTickets       int                    `json:"violated_tickets" example:"5"`
+	ComplianceRate        float64                `json:"complianceRate" example:"95.5"`
+	AverageResponseTime   float64                `json:"averageResponseTime" example:"28.5"`
+	AverageResolutionTime float64                `json:"averageResolutionTime" example:"180.5"`
+	TotalTickets          int                    `json:"totalTickets" example:"100"`
+	ViolatedTickets       int                    `json:"violatedTickets" example:"5"`
 }
 
 type SLAReportPeriod struct {
-	StartDate string `json:"start_date" example:"2024-01-01T00:00:00Z"`
-	EndDate   string `json:"end_date" example:"2024-01-31T23:59:59Z"`
+	StartDate string `json:"startDate" example:"2024-01-01T00:00:00Z"`
+	EndDate   string `json:"endDate" example:"2024-01-31T23:59:59Z"`
 }
 
 // SLAComplianceReport represents SLA compliance report
 type SLAComplianceReport struct {
-	TotalTickets      int             `json:"total_tickets" example:"100"`
-	MetSLA            int             `json:"met_sla" example:"95"`
-	ViolatedSLA       int             `json:"violated_sla" example:"5"`
-	ComplianceRate    float64         `json:"compliance_rate" example:"95.0"`
-	AvgResponseTime   float64         `json:"avg_response_time" example:"28.5"`
-	AvgResolutionTime float64         `json:"avg_resolution_time" example:"180.5"`
-	ReportPeriod      SLAReportPeriod `json:"report_period"`
+	TotalTickets      int             `json:"totalTickets" example:"100"`
+	MetSLA            int             `json:"metSla" example:"95"`
+	ViolatedSLA       int             `json:"violatedSla" example:"5"`
+	ComplianceRate    float64         `json:"complianceRate" example:"95.0"`
+	AvgResponseTime   float64         `json:"avgResponseTime" example:"28.5"`
+	AvgResolutionTime float64         `json:"avgResolutionTime" example:"180.5"`
+	ReportPeriod      SLAReportPeriod `json:"reportPeriod"`
 }
 
 // Existing SLA report DTOs remain unchanged...
 
 type SLASummary struct {
-	TotalTickets             int     `json:"total_tickets" example:"100"`
-	CompliantTickets         int     `json:"compliant_tickets" example:"95"`
-	ViolatedTickets          int     `json:"violated_tickets" example:"5"`
-	ComplianceRate           float64 `json:"compliance_rate" example:"95.0"`
-	AverageResponseTime      float64 `json:"average_response_time" example:"28.5"`
-	AverageResolutionTime    float64 `json:"average_resolution_time" example:"180.5"`
-	ResponseTimeCompliance   float64 `json:"response_time_compliance" example:"96.0"`
-	ResolutionTimeCompliance float64 `json:"resolution_time_compliance" example:"94.0"`
+	TotalTickets             int     `json:"totalTickets" example:"100"`
+	CompliantTickets         int     `json:"compliantTickets" example:"95"`
+	ViolatedTickets          int     `json:"violatedTickets" example:"5"`
+	ComplianceRate           float64 `json:"complianceRate" example:"95.0"`
+	AverageResponseTime      float64 `json:"averageResponseTime" example:"28.5"`
+	AverageResolutionTime    float64 `json:"averageResolutionTime" example:"180.5"`
+	ResponseTimeCompliance   float64 `json:"responseTimeCompliance" example:"96.0"`
+	ResolutionTimeCompliance float64 `json:"resolutionTimeCompliance" example:"94.0"`
 }
 
 type SLADailyMetric struct {
 	Date                  string  `json:"date" example:"2024-01-01"`
 	Tickets               int     `json:"tickets" example:"10"`
-	CompliantTickets      int     `json:"compliant_tickets" example:"9"`
-	ViolatedTickets       int     `json:"violated_tickets" example:"1"`
-	ComplianceRate        float64 `json:"compliance_rate" example:"90.0"`
-	AverageResponseTime   float64 `json:"average_response_time" example:"25.5"`
-	AverageResolutionTime float64 `json:"average_resolution_time" example:"200.5"`
+	CompliantTickets      int     `json:"compliantTickets" example:"9"`
+	ViolatedTickets       int     `json:"violatedTickets" example:"1"`
+	ComplianceRate        float64 `json:"complianceRate" example:"90.0"`
+	AverageResponseTime   float64 `json:"averageResponseTime" example:"25.5"`
+	AverageResolutionTime float64 `json:"averageResolutionTime" example:"200.5"`
 }
 
 type SLATrends struct {
-	ComplianceTrend     string  `json:"compliance_trend" example:"improving"` // improving, declining, stable
-	ResponseTimeTrend   string  `json:"response_time_trend" example:"stable"`
-	ResolutionTimeTrend string  `json:"resolution_time_trend" example:"improving"`
-	TrendPercentage     float64 `json:"trend_percentage" example:"5.2"`
+	ComplianceTrend     string  `json:"complianceTrend" example:"improving"` // improving, declining, stable
+	ResponseTimeTrend   string  `json:"responseTimeTrend" example:"stable"`
+	ResolutionTimeTrend string  `json:"resolutionTimeTrend" example:"improving"`
+	TrendPercentage     float64 `json:"trendPercentage" example:"5.2"`
 }
 
 // SLA升级相关DTO
@@ -180,11 +180,11 @@ type SLAEscalationRequest struct {
 
 type SLAEscalationResponse struct {
 	ID              int       `json:"id" example:"1"`
-	TicketID        int       `json:"ticket_id" example:"1"`
-	EscalationLevel int       `json:"escalation_level" example:"1"`
+	TicketID        int       `json:"ticketId" example:"1"`
+	EscalationLevel int       `json:"escalationLevel" example:"1"`
 	Reason          string    `json:"reason" example:"响应时间即将超时"`
 	Status          string    `json:"status" example:"active"`
-	NotifiedUsers   []int     `json:"notified_users" example:"[1,2,3]"`
-	CreatedAt       time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt       time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	NotifiedUsers   []int     `json:"notifiedUsers" example:"[1,2,3]"`
+	CreatedAt       time.Time `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt       time.Time `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
