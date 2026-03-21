@@ -128,9 +128,9 @@ func (h *Handler) List(c *gin.Context) {
 	}
 
 	// Map to DTO response
-	var dtoProblems []dto.ProblemResponse
+	dtoProblems := make([]*dto.ProblemResponse, 0, len(list))
 	for _, p := range list {
-		item := dto.ProblemResponse{
+		item := &dto.ProblemResponse{
 			ID:          p.ID,
 			Title:       p.Title,
 			Description: p.Description,

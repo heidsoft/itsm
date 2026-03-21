@@ -95,23 +95,23 @@ type ChangeResponse struct {
 	Type               ChangeType     `json:"type"`                // 变更类型
 	Status             ChangeStatus   `json:"status"`              // 状态
 	Priority           ChangePriority `json:"priority"`            // 优先级
-	ImpactScope        ChangeImpact   `json:"impact_scope"`        // 影响范围
-	RiskLevel          ChangeRisk     `json:"risk_level"`          // 风险等级
-	AssigneeID         *int           `json:"assignee_id"`         // 处理人ID
-	AssigneeName       *string        `json:"assignee_name"`       // 处理人姓名
-	CreatedBy          int            `json:"created_by"`          // 创建人ID
-	CreatedByName      string         `json:"created_by_name"`     // 创建人姓名
-	TenantID           int            `json:"tenant_id"`           // 租户ID
-	PlannedStartDate   *time.Time     `json:"planned_start_date"`  // 计划开始时间
-	PlannedEndDate     *time.Time     `json:"planned_end_date"`    // 计划结束时间
-	ActualStartDate    *time.Time     `json:"actual_start_date"`   // 实际开始时间
-	ActualEndDate      *time.Time     `json:"actual_end_date"`     // 实际结束时间
-	ImplementationPlan string         `json:"implementation_plan"` // 实施计划
-	RollbackPlan       string         `json:"rollback_plan"`       // 回滚计划
-	AffectedCIs        []string       `json:"affected_cis"`        // 受影响的配置项
-	RelatedTickets     []string       `json:"related_tickets"`     // 相关工单
-	CreatedAt          time.Time      `json:"created_at"`          // 创建时间
-	UpdatedAt          time.Time      `json:"updated_at"`          // 更新时间
+	ImpactScope        ChangeImpact   `json:"impactScope"`        // 影响范围
+	RiskLevel          ChangeRisk     `json:"riskLevel"`          // 风险等级
+	AssigneeID         *int           `json:"assigneeId"`         // 处理人ID
+	AssigneeName       *string        `json:"assigneeName"`       // 处理人姓名
+	CreatedBy          int            `json:"createdBy"`          // 创建人ID
+	CreatedByName      string         `json:"createdByName"`     // 创建人姓名
+	TenantID           int            `json:"tenantId"`           // 租户ID
+	PlannedStartDate   *time.Time     `json:"plannedStartDate"`  // 计划开始时间
+	PlannedEndDate     *time.Time     `json:"plannedEndDate"`    // 计划结束时间
+	ActualStartDate    *time.Time     `json:"actualStartDate"`   // 实际开始时间
+	ActualEndDate      *time.Time     `json:"actualEndDate"`     // 实际结束时间
+	ImplementationPlan string         `json:"implementationPlan"` // 实施计划
+	RollbackPlan       string         `json:"rollbackPlan"`       // 回滚计划
+	AffectedCIs        []string       `json:"affectedCIs"`        // 受影响的配置项
+	RelatedTickets     []string       `json:"relatedTickets"`     // 相关工单
+	CreatedAt          time.Time      `json:"createdAt"`          // 创建时间
+	UpdatedAt          time.Time      `json:"updatedAt"`          // 更新时间
 }
 
 // ChangeListResponse 变更列表响应
@@ -147,91 +147,91 @@ type ChangeStatusUpdateRequest struct {
 // ChangeApproval 变更审批记录
 type ChangeApproval struct {
 	ID           int          `json:"id"`            // 审批ID
-	ChangeID     int          `json:"change_id"`     // 变更ID
-	ApproverID   int          `json:"approver_id"`   // 审批人ID
-	ApproverName string       `json:"approver_name"` // 审批人姓名
+	ChangeID     int          `json:"changeId"`     // 变更ID
+	ApproverID   int          `json:"approverId"`   // 审批人ID
+	ApproverName string       `json:"approverName"` // 审批人姓名
 	Status       ChangeStatus `json:"status"`        // 审批状态
 	Comment      *string      `json:"comment"`       // 审批意见
-	ApprovedAt   *time.Time   `json:"approved_at"`   // 审批时间
-	CreatedAt    time.Time    `json:"created_at"`    // 创建时间
+	ApprovedAt   *time.Time   `json:"approvedAt"`   // 审批时间
+	CreatedAt    time.Time    `json:"createdAt"`    // 创建时间
 }
 
 // ChangeApprovalChain 变更审批链
 type ChangeApprovalChain struct {
 	ID           int       `json:"id"`            // 审批链ID
-	ChangeID     int       `json:"change_id"`     // 变更ID
+	ChangeID     int       `json:"changeId"`     // 变更ID
 	Level        int       `json:"level"`         // 审批级别
-	ApproverID   int       `json:"approver_id"`   // 审批人ID
-	ApproverName string    `json:"approver_name"` // 审批人姓名
+	ApproverID   int       `json:"approverId"`   // 审批人ID
+	ApproverName string    `json:"approverName"` // 审批人姓名
 	Role         string    `json:"role"`          // 审批角色
 	Status       string    `json:"status"`        // 审批状态：pending, approved, rejected
-	IsRequired   bool      `json:"is_required"`   // 是否必需审批
-	CreatedAt    time.Time `json:"created_at"`    // 创建时间
+	IsRequired   bool      `json:"isRequired"`   // 是否必需审批
+	CreatedAt    time.Time `json:"createdAt"`    // 创建时间
 }
 
 // ChangeRiskAssessment 变更风险评估
 type ChangeRiskAssessment struct {
 	ID                 int        `json:"id"`                  // 风险评估ID
-	ChangeID           int        `json:"change_id"`           // 变更ID
-	RiskLevel          ChangeRisk `json:"risk_level"`          // 风险等级
-	RiskDescription    string     `json:"risk_description"`    // 风险描述
-	ImpactAnalysis     string     `json:"impact_analysis"`     // 影响分析
-	MitigationMeasures string     `json:"mitigation_measures"` // 缓解措施
-	ContingencyPlan    string     `json:"contingency_plan"`    // 应急计划
-	RiskOwner          string     `json:"risk_owner"`          // 风险责任人
-	RiskReviewDate     *time.Time `json:"risk_review_date"`    // 风险评审日期
-	CreatedAt          time.Time  `json:"created_at"`          // 创建时间
-	UpdatedAt          time.Time  `json:"updated_at"`          // 更新时间
+	ChangeID           int        `json:"changeId"`           // 变更ID
+	RiskLevel          ChangeRisk `json:"riskLevel"`          // 风险等级
+	RiskDescription    string     `json:"riskDescription"`    // 风险描述
+	ImpactAnalysis     string     `json:"impactAnalysis"`     // 影响分析
+	MitigationMeasures string     `json:"mitigationMeasures"` // 缓解措施
+	ContingencyPlan    string     `json:"contingencyPlan"`    // 应急计划
+	RiskOwner          string     `json:"riskOwner"`          // 风险责任人
+	RiskReviewDate     *time.Time `json:"riskReviewDate"`    // 风险评审日期
+	CreatedAt          time.Time  `json:"createdAt"`          // 创建时间
+	UpdatedAt          time.Time  `json:"updatedAt"`          // 更新时间
 }
 
 // ChangeImplementationPlan 变更实施计划
 type ChangeImplementationPlan struct {
 	ID              int        `json:"id"`               // 实施计划ID
-	ChangeID        int        `json:"change_id"`        // 变更ID
+	ChangeID        int        `json:"changeId"`        // 变更ID
 	Phase           string     `json:"phase"`            // 实施阶段
 	Description     string     `json:"description"`      // 阶段描述
 	Tasks           []string   `json:"tasks"`            // 具体任务
 	Responsible     string     `json:"responsible"`      // 负责人
-	StartDate       *time.Time `json:"start_date"`       // 开始时间
-	EndDate         *time.Time `json:"end_date"`         // 结束时间
+	StartDate       *time.Time `json:"startDate"`       // 开始时间
+	EndDate         *time.Time `json:"endDate"`         // 结束时间
 	Prerequisites   []string   `json:"prerequisites"`    // 前置条件
 	Dependencies    []string   `json:"dependencies"`     // 依赖关系
-	SuccessCriteria string     `json:"success_criteria"` // 成功标准
+	SuccessCriteria string     `json:"successCriteria"` // 成功标准
 	Status          string     `json:"status"`           // 状态：pending, in_progress, completed, failed
-	CreatedAt       time.Time  `json:"created_at"`       // 创建时间
-	UpdatedAt       time.Time  `json:"updated_at"`       // 更新时间
+	CreatedAt       time.Time  `json:"createdAt"`       // 创建时间
+	UpdatedAt       time.Time  `json:"updatedAt"`       // 更新时间
 }
 
 // ChangeRollbackPlan 变更回滚计划
 type ChangeRollbackPlan struct {
 	ID                int       `json:"id"`                 // 回滚计划ID
-	ChangeID          int       `json:"change_id"`          // 变更ID
-	TriggerConditions []string  `json:"trigger_conditions"` // 触发条件
-	RollbackSteps     []string  `json:"rollback_steps"`     // 回滚步骤
+	ChangeID          int       `json:"changeId"`          // 变更ID
+	TriggerConditions []string  `json:"triggerConditions"` // 触发条件
+	RollbackSteps     []string  `json:"rollbackSteps"`     // 回滚步骤
 	Responsible       string    `json:"responsible"`        // 负责人
-	EstimatedTime     string    `json:"estimated_time"`     // 预估时间
-	CommunicationPlan string    `json:"communication_plan"` // 沟通计划
-	TestPlan          string    `json:"test_plan"`          // 测试计划
-	ApprovalRequired  bool      `json:"approval_required"`  // 是否需要审批
-	CreatedAt         time.Time `json:"created_at"`         // 创建时间
-	UpdatedAt         time.Time `json:"updated_at"`         // 更新时间
+	EstimatedTime     string    `json:"estimatedTime"`     // 预估时间
+	CommunicationPlan string    `json:"communicationPlan"` // 沟通计划
+	TestPlan          string    `json:"testPlan"`          // 测试计划
+	ApprovalRequired  bool      `json:"approvalRequired"`  // 是否需要审批
+	CreatedAt         time.Time `json:"createdAt"`         // 创建时间
+	UpdatedAt         time.Time `json:"updatedAt"`         // 更新时间
 }
 
 // ChangeRollbackExecution 变更回滚执行记录
 type ChangeRollbackExecution struct {
 	ID              int        `json:"id"`                // 执行记录ID
-	ChangeID        int        `json:"change_id"`         // 变更ID
-	RollbackPlanID  int        `json:"rollback_plan_id"`  // 回滚计划ID
-	TriggerReason   string     `json:"trigger_reason"`    // 触发原因
-	InitiatedBy     int        `json:"initiated_by"`      // 发起人ID
-	InitiatedByName string     `json:"initiated_by_name"` // 发起人姓名
+	ChangeID        int        `json:"changeId"`         // 变更ID
+	RollbackPlanID  int        `json:"rollbackPlanId"`  // 回滚计划ID
+	TriggerReason   string     `json:"triggerReason"`    // 触发原因
+	InitiatedBy     int        `json:"initiatedBy"`      // 发起人ID
+	InitiatedByName string     `json:"initiatedByName"` // 发起人姓名
 	Status          string     `json:"status"`            // 状态：initiated, in_progress, completed, failed
-	StartTime       *time.Time `json:"start_time"`        // 开始时间
-	EndTime         *time.Time `json:"end_time"`          // 结束时间
+	StartTime       *time.Time `json:"startTime"`        // 开始时间
+	EndTime         *time.Time `json:"endTime"`          // 结束时间
 	Result          string     `json:"result"`            // 执行结果
 	Comments        string     `json:"comments"`          // 备注
-	CreatedAt       time.Time  `json:"created_at"`        // 创建时间
-	UpdatedAt       time.Time  `json:"updated_at"`        // 更新时间
+	CreatedAt       time.Time  `json:"createdAt"`        // 创建时间
+	UpdatedAt       time.Time  `json:"updatedAt"`        // 更新时间
 }
 
 // CreateChangeApprovalRequest 创建变更审批请求
@@ -288,91 +288,91 @@ type CreateChangeRollbackPlanRequest struct {
 // ChangeApprovalResponse 变更审批响应
 type ChangeApprovalResponse struct {
 	ID           int          `json:"id"`            // 审批ID
-	ChangeID     int          `json:"change_id"`     // 变更ID
-	ApproverID   int          `json:"approver_id"`   // 审批人ID
-	ApproverName string       `json:"approver_name"` // 审批人姓名
+	ChangeID     int          `json:"changeId"`     // 变更ID
+	ApproverID   int          `json:"approverId"`   // 审批人ID
+	ApproverName string       `json:"approverName"` // 审批人姓名
 	Status       ChangeStatus `json:"status"`        // 审批状态
 	Comment      *string      `json:"comment"`       // 审批意见
-	ApprovedAt   *time.Time   `json:"approved_at"`   // 审批时间
-	CreatedAt    time.Time    `json:"created_at"`    // 创建时间
+	ApprovedAt   *time.Time   `json:"approvedAt"`   // 审批时间
+	CreatedAt    time.Time    `json:"createdAt"`    // 创建时间
 }
 
 // ChangeApprovalChainResponse 变更审批链响应
 type ChangeApprovalChainResponse struct {
 	ID           int       `json:"id"`            // 审批链ID
-	ChangeID     int       `json:"change_id"`     // 变更ID
+	ChangeID     int       `json:"changeId"`     // 变更ID
 	Level        int       `json:"level"`         // 审批级别
-	ApproverID   int       `json:"approver_id"`   // 审批人ID
-	ApproverName string    `json:"approver_name"` // 审批人姓名
+	ApproverID   int       `json:"approverId"`   // 审批人ID
+	ApproverName string    `json:"approverName"` // 审批人姓名
 	Role         string    `json:"role"`          // 审批角色
 	Status       string    `json:"status"`        // 审批状态
-	IsRequired   bool      `json:"is_required"`   // 是否必需审批
-	CreatedAt    time.Time `json:"created_at"`    // 创建时间
+	IsRequired   bool      `json:"isRequired"`   // 是否必需审批
+	CreatedAt    time.Time `json:"createdAt"`    // 创建时间
 }
 
 // ChangeRiskAssessmentResponse 变更风险评估响应
 type ChangeRiskAssessmentResponse struct {
 	ID                 int        `json:"id"`                  // 风险评估ID
-	ChangeID           int        `json:"change_id"`           // 变更ID
-	RiskLevel          ChangeRisk `json:"risk_level"`          // 风险等级
-	RiskDescription    string     `json:"risk_description"`    // 风险描述
-	ImpactAnalysis     string     `json:"impact_analysis"`     // 影响分析
-	MitigationMeasures string     `json:"mitigation_measures"` // 缓解措施
-	ContingencyPlan    string     `json:"contingency_plan"`    // 应急计划
-	RiskOwner          string     `json:"risk_owner"`          // 风险责任人
-	RiskReviewDate     *time.Time `json:"risk_review_date"`    // 风险评审日期
-	CreatedAt          time.Time  `json:"created_at"`          // 创建时间
-	UpdatedAt          time.Time  `json:"updated_at"`          // 更新时间
+	ChangeID           int        `json:"changeId"`           // 变更ID
+	RiskLevel          ChangeRisk `json:"riskLevel"`          // 风险等级
+	RiskDescription    string     `json:"riskDescription"`    // 风险描述
+	ImpactAnalysis     string     `json:"impactAnalysis"`     // 影响分析
+	MitigationMeasures string     `json:"mitigationMeasures"` // 缓解措施
+	ContingencyPlan    string     `json:"contingencyPlan"`    // 应急计划
+	RiskOwner          string     `json:"riskOwner"`          // 风险责任人
+	RiskReviewDate     *time.Time `json:"riskReviewDate"`    // 风险评审日期
+	CreatedAt          time.Time  `json:"createdAt"`          // 创建时间
+	UpdatedAt          time.Time  `json:"updatedAt"`          // 更新时间
 }
 
 // ChangeImplementationPlanResponse 变更实施计划响应
 type ChangeImplementationPlanResponse struct {
 	ID              int        `json:"id"`               // 实施计划ID
-	ChangeID        int        `json:"change_id"`        // 变更ID
+	ChangeID        int        `json:"changeId"`        // 变更ID
 	Phase           string     `json:"phase"`            // 实施阶段
 	Description     string     `json:"description"`      // 阶段描述
 	Tasks           []string   `json:"tasks"`            // 具体任务
 	Responsible     string     `json:"responsible"`      // 负责人
-	StartDate       *time.Time `json:"start_date"`       // 开始时间
-	EndDate         *time.Time `json:"end_date"`         // 结束时间
+	StartDate       *time.Time `json:"startDate"`       // 开始时间
+	EndDate         *time.Time `json:"endDate"`         // 结束时间
 	Prerequisites   []string   `json:"prerequisites"`    // 前置条件
 	Dependencies    []string   `json:"dependencies"`     // 依赖关系
-	SuccessCriteria string     `json:"success_criteria"` // 成功标准
+	SuccessCriteria string     `json:"successCriteria"` // 成功标准
 	Status          string     `json:"status"`           // 状态
-	CreatedAt       time.Time  `json:"created_at"`       // 创建时间
-	UpdatedAt       time.Time  `json:"updated_at"`       // 更新时间
+	CreatedAt       time.Time  `json:"createdAt"`       // 创建时间
+	UpdatedAt       time.Time  `json:"updatedAt"`       // 更新时间
 }
 
 // ChangeRollbackPlanResponse 变更回滚计划响应
 type ChangeRollbackPlanResponse struct {
 	ID                int       `json:"id"`                 // 回滚计划ID
-	ChangeID          int       `json:"change_id"`          // 变更ID
-	TriggerConditions []string  `json:"trigger_conditions"` // 触发条件
-	RollbackSteps     []string  `json:"rollback_steps"`     // 回滚步骤
+	ChangeID          int       `json:"changeId"`          // 变更ID
+	TriggerConditions []string  `json:"triggerConditions"` // 触发条件
+	RollbackSteps     []string  `json:"rollbackSteps"`     // 回滚步骤
 	Responsible       string    `json:"responsible"`        // 负责人
-	EstimatedTime     string    `json:"estimated_time"`     // 预估时间
-	CommunicationPlan string    `json:"communication_plan"` // 沟通计划
-	TestPlan          string    `json:"test_plan"`          // 测试计划
-	ApprovalRequired  bool      `json:"approval_required"`  // 是否需要审批
-	CreatedAt         time.Time `json:"created_at"`         // 创建时间
-	UpdatedAt         time.Time `json:"updated_at"`         // 更新时间
+	EstimatedTime     string    `json:"estimatedTime"`     // 预估时间
+	CommunicationPlan string    `json:"communicationPlan"` // 沟通计划
+	TestPlan          string    `json:"testPlan"`          // 测试计划
+	ApprovalRequired  bool      `json:"approvalRequired"`  // 是否需要审批
+	CreatedAt         time.Time `json:"createdAt"`         // 创建时间
+	UpdatedAt         time.Time `json:"updatedAt"`         // 更新时间
 }
 
 // ChangeRollbackExecutionResponse 变更回滚执行记录响应
 type ChangeRollbackExecutionResponse struct {
 	ID              int        `json:"id"`                // 执行记录ID
-	ChangeID        int        `json:"change_id"`         // 变更ID
-	RollbackPlanID  int        `json:"rollback_plan_id"`  // 回滚计划ID
-	TriggerReason   string     `json:"trigger_reason"`    // 触发原因
-	InitiatedBy     int        `json:"initiated_by"`      // 发起人ID
-	InitiatedByName string     `json:"initiated_by_name"` // 发起人姓名
+	ChangeID        int        `json:"changeId"`         // 变更ID
+	RollbackPlanID  int        `json:"rollbackPlanId"`  // 回滚计划ID
+	TriggerReason   string     `json:"triggerReason"`    // 触发原因
+	InitiatedBy     int        `json:"initiatedBy"`      // 发起人ID
+	InitiatedByName string     `json:"initiatedByName"` // 发起人姓名
 	Status          string     `json:"status"`            // 状态
-	StartTime       *time.Time `json:"start_time"`        // 开始时间
-	EndTime         *time.Time `json:"end_time"`          // 结束时间
+	StartTime       *time.Time `json:"startTime"`        // 开始时间
+	EndTime         *time.Time `json:"endTime"`          // 结束时间
 	Result          string     `json:"result"`            // 执行结果
 	Comments        string     `json:"comments"`          // 备注
-	CreatedAt       time.Time  `json:"created_at"`        // 创建时间
-	UpdatedAt       time.Time  `json:"updated_at"`        // 更新时间
+	CreatedAt       time.Time  `json:"createdAt"`        // 创建时间
+	UpdatedAt       time.Time  `json:"updatedAt"`        // 更新时间
 }
 
 // ChangeApprovalWorkflowRequest 变更审批工作流请求

@@ -58,36 +58,36 @@ type ServiceCatalogResponse struct {
 	Name           string    `json:"name"`
 	Category       string    `json:"category"`
 	Description    string    `json:"description"`
-	DeliveryTime   string    `json:"delivery_time"`
-	CITypeID       int       `json:"ci_type_id,omitempty"`
-	CloudServiceID int       `json:"cloud_service_id,omitempty"`
+	DeliveryTime   string    `json:"deliveryTime"`
+	CITypeID       int       `json:"ciTypeId,omitempty"`
+	CloudServiceID int       `json:"cloudServiceId,omitempty"`
 	Status         string    `json:"status"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
 }
 
 // ServiceRequestResponse 服务请求响应
 type ServiceRequestResponse struct {
 	ID          int            `json:"id"`
-	CatalogID   int            `json:"catalog_id"`
-	RequesterID int            `json:"requester_id"`
-	CIID        int            `json:"ci_id,omitempty"`
+	CatalogID   int            `json:"catalogId"`
+	RequesterID int            `json:"requesterId"`
+	CIID        int            `json:"ciId,omitempty"`
 	Status      string         `json:"status"`
 	Title       string         `json:"title,omitempty"`
 	Reason      string         `json:"reason,omitempty"`
-	FormData    map[string]any `json:"form_data,omitempty"`
+	FormData    map[string]any `json:"formData,omitempty"`
 
-	CostCenter         string     `json:"cost_center,omitempty"`
-	DataClassification string     `json:"data_classification,omitempty"`
-	NeedsPublicIP      bool       `json:"needs_public_ip"`
-	SourceIPWhitelist  []string   `json:"source_ip_whitelist,omitempty"`
-	ExpireAt           *time.Time `json:"expire_at,omitempty"`
-	ComplianceAck      bool       `json:"compliance_ack"`
+	CostCenter         string     `json:"costCenter,omitempty"`
+	DataClassification string     `json:"dataClassification,omitempty"`
+	NeedsPublicIP      bool       `json:"needsPublicIP"`
+	SourceIPWhitelist  []string   `json:"sourceIPWhitelist,omitempty"`
+	ExpireAt           *time.Time `json:"expireAt,omitempty"`
+	ComplianceAck      bool       `json:"complianceAck"`
 
-	CurrentLevel int       `json:"current_level"`
-	TotalLevels  int       `json:"total_levels"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	CurrentLevel int       `json:"currentLevel"`
+	TotalLevels  int       `json:"totalLevels"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 
 	Approvals []ServiceRequestApprovalResponse `json:"approvals,omitempty"`
 	Catalog   *ServiceCatalogResponse          `json:"catalog,omitempty"`
@@ -97,23 +97,23 @@ type ServiceRequestResponse struct {
 // ServiceRequestApprovalResponse 服务请求审批记录响应
 type ServiceRequestApprovalResponse struct {
 	ID               int        `json:"id"`
-	ServiceRequestID int        `json:"service_request_id"`
+	ServiceRequestID int        `json:"serviceRequestId"`
 	Level            int        `json:"level"`
 	Step             string     `json:"step"`
 	Status           string     `json:"status"`
-	ApproverID       *int       `json:"approver_id,omitempty"`
-	ApproverName     string     `json:"approver_name,omitempty"`
+	ApproverID       *int       `json:"approverId,omitempty"`
+	ApproverName     string     `json:"approverName,omitempty"`
 	Action           string     `json:"action,omitempty"`
 	Comment          string     `json:"comment,omitempty"`
-	CreatedAt        time.Time  `json:"created_at"`
-	ProcessedAt      *time.Time `json:"processed_at,omitempty"`
+	CreatedAt        time.Time  `json:"createdAt"`
+	ProcessedAt      *time.Time `json:"processedAt,omitempty"`
 
 	// V1 新增字段
-	TimeoutHours     int        `json:"timeout_hours,omitempty"`     // 审批时限（小时）
-	DueAt            *time.Time `json:"due_at,omitempty"`            // 到期时间
-	IsEscalated      bool       `json:"is_escalated,omitempty"`      // 是否已升级
-	DelegatedToID    *int       `json:"delegated_to_id,omitempty"`   // 转交审批人ID
-	EscalationReason string     `json:"escalation_reason,omitempty"` // 升级原因
+	TimeoutHours     int        `json:"timeoutHours,omitempty"`     // 审批时限（小时）
+	DueAt            *time.Time `json:"dueAt,omitempty"`            // 到期时间
+	IsEscalated      bool       `json:"isEscalated,omitempty"`      // 是否已升级
+	DelegatedToID    *int       `json:"delegatedToId,omitempty"`   // 转交审批人ID
+	EscalationReason string     `json:"escalationReason,omitempty"` // 升级原因
 }
 
 // ServiceRequestApprovalActionRequest 审批动作请求

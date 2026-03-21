@@ -17,8 +17,8 @@ export interface Incident {
   severity: string;
   source: string;
   type: string;
-  incident_number: string;
-  is_major_incident: boolean;
+  incidentNumber: string;
+  isMajorIncident: boolean;
   reporter?: {
     id: number;
     name: string;
@@ -28,8 +28,8 @@ export interface Incident {
     name: string;
   };
   // 配置项关联
-  configuration_item_id?: number;
-  configuration_item?: {
+  configurationItemId?: number;
+  configurationItem?: {
     id: number;
     name: string;
     type: string;
@@ -37,54 +37,54 @@ export interface Incident {
     description?: string;
   };
   // 阿里云相关字段
-  alibaba_cloud_instance_id?: string;
-  alibaba_cloud_region?: string;
-  alibaba_cloud_service?: string;
-  alibaba_cloud_alert_data?: unknown;
-  alibaba_cloud_metrics?: unknown;
+  alibabaCloudInstanceId?: string;
+  alibabaCloudRegion?: string;
+  alibabaCloudService?: string;
+  alibabaCloudAlertData?: unknown;
+  alibabaCloudMetrics?: unknown;
   // 安全事件相关字段
-  security_event_type?: string;
-  security_event_source_ip?: string;
-  security_event_target?: string;
-  security_event_details?: unknown;
+  securityEventType?: string;
+  securityEventSourceIp?: string;
+  securityEventTarget?: string;
+  securityEventDetails?: unknown;
   // 时间字段
-  detected_at?: string;
-  confirmed_at?: string;
-  resolved_at?: string;
-  closed_at?: string;
-  escalated_at?: string;
-  created_at: string;
-  updated_at: string;
+  detectedAt?: string;
+  confirmedAt?: string;
+  resolvedAt?: string;
+  closedAt?: string;
+  escalatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
   // 新增字段
   category?: string;
   subcategory?: string;
   resolution?: string;
-  escalation_level?: number;
-  impact_analysis?: {
-    business_impact?: {
-      affected_users?: number;
-      revenue_impact?: number;
-      service_availability?: number;
+  escalationLevel?: number;
+  impactAnalysis?: {
+    businessImpact?: {
+      affectedUsers?: number;
+      revenueImpact?: number;
+      serviceAvailability?: number;
     };
-    technical_impact?: string;
-    affected_users?: number;
-    affected_services?: string[];
-    estimated_resolution_time?: number;
-    is_overdue?: boolean;
-    hours_since_creation?: number;
-    time_impact?: {
-      is_overdue?: boolean;
-      hours_since_creation?: number;
-      response_deadline?: string;
-      resolution_deadline?: string;
+    technicalImpact?: string;
+    affectedUsers?: number;
+    affectedServices?: string[];
+    estimatedResolutionTime?: number;
+    isOverdue?: boolean;
+    hoursSinceCreation?: number;
+    timeImpact?: {
+      isOverdue?: boolean;
+      hoursSinceCreation?: number;
+      responseDeadline?: string;
+      resolutionDeadline?: string;
     };
     metrics?: {
-      total_count?: number;
-      critical_count?: number;
-      resolved_count?: number;
-      average_value?: number;
-      max_value?: number;
-      min_value?: number;
+      totalCount?: number;
+      criticalCount?: number;
+      resolvedCount?: number;
+      averageValue?: number;
+      maxValue?: number;
+      minValue?: number;
     };
   };
 }
@@ -95,114 +95,114 @@ export interface CreateIncidentRequest {
   priority: string;
   source: string;
   type: string;
-  is_major_incident?: boolean;
-  assignee_id?: number;
-  assigned_to?: number; // Added for compatibility with UI forms
-  configuration_item_id?: number;
+  isMajorIncident?: boolean;
+  assigneeId?: number;
+  assignedTo?: number; // Added for compatibility with UI forms
+  configurationItemId?: number;
   category?: string;
   subcategory?: string;
   impact?: string; // Added for UI
   urgency?: string; // Added for UI
   // 阿里云相关字段
-  alibaba_cloud_instance_id?: string;
-  alibaba_cloud_region?: string;
-  alibaba_cloud_service?: string;
-  alibaba_cloud_alert_data?: unknown;
-  alibaba_cloud_metrics?: unknown;
+  alibabaCloudInstanceId?: string;
+  alibabaCloudRegion?: string;
+  alibabaCloudService?: string;
+  alibabaCloudAlertData?: unknown;
+  alibabaCloudMetrics?: unknown;
   // 安全事件相关字段
-  security_event_type?: string;
-  security_event_source_ip?: string;
-  security_event_target?: string;
-  security_event_details?: unknown;
+  securityEventType?: string;
+  securityEventSourceIp?: string;
+  securityEventTarget?: string;
+  securityEventDetails?: unknown;
   // 关联的配置项
-  affected_configuration_item_ids?: number[];
-  form_fields?: Record<string, string | number | boolean>;
+  affectedConfigurationItemIds?: number[];
+  formFields?: Record<string, string | number | boolean>;
 }
 
 // 根因分析接口
 export interface RootCauseAnalysis {
   id?: number;
-  incident_id: number;
-  analysis_method: string; // "5-whys" | "fishbone" | "timeline" | "fault-tree"
-  root_cause: string;
-  contributing_factors: string[];
+  incidentId: number;
+  analysisMethod: string; // "5-whys" | "fishbone" | "timeline" | "fault-tree"
+  rootCause: string;
+  contributingFactors: string[];
   evidence: string[];
-  preventive_actions: string[];
+  preventiveActions: string[];
   status: 'draft' | 'in-progress' | 'completed' | 'approved';
-  analyst_id?: number;
-  analyst_name?: string;
-  created_at?: string;
-  updated_at?: string;
+  analystId?: number;
+  analystName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // 影响评估接口
 export interface ImpactAssessment {
   id?: number;
-  incident_id: number;
-  business_impact: 'low' | 'medium' | 'high' | 'critical';
-  technical_impact: 'low' | 'medium' | 'high' | 'critical';
-  affected_services: string[];
-  affected_users_count: number;
-  financial_impact: number;
-  reputation_impact: 'low' | 'medium' | 'high' | 'critical';
-  compliance_impact: boolean;
-  assessment_notes: string;
-  assessor_id?: number;
-  assessor_name?: string;
-  created_at?: string;
-  updated_at?: string;
+  incidentId: number;
+  businessImpact: 'low' | 'medium' | 'high' | 'critical';
+  technicalImpact: 'low' | 'medium' | 'high' | 'critical';
+  affectedServices: string[];
+  affectedUsersCount: number;
+  financialImpact: number;
+  reputationImpact: 'low' | 'medium' | 'high' | 'critical';
+  complianceImpact: boolean;
+  assessmentNotes: string;
+  assessorId?: number;
+  assessorName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // 事件分类接口
 export interface IncidentClassification {
   id?: number;
-  incident_id: number;
+  incidentId: number;
   category: string;
   subcategory: string;
-  service_type: string;
-  failure_type: string;
+  serviceType: string;
+  failureType: string;
   urgency: 'low' | 'medium' | 'high' | 'critical';
   impact: 'low' | 'medium' | 'high' | 'critical';
-  classification_confidence: number; // 0-100
-  auto_classified: boolean;
-  classifier_id?: number;
-  classifier_name?: string;
-  created_at?: string;
-  updated_at?: string;
+  classificationConfidence: number; // 0-100
+  autoClassified: boolean;
+  classifierId?: number;
+  classifierName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateRootCauseAnalysisRequest {
-  incident_id: number;
-  analysis_method: string;
-  root_cause: string;
-  contributing_factors: string[];
+  incidentId: number;
+  analysisMethod: string;
+  rootCause: string;
+  contributingFactors: string[];
   evidence: string[];
-  preventive_actions: string[];
+  preventiveActions: string[];
   status: string;
 }
 
 export interface CreateImpactAssessmentRequest {
-  incident_id: number;
-  business_impact: string;
-  technical_impact: string;
-  affected_services: string[];
-  affected_users_count: number;
-  financial_impact: number;
-  reputation_impact: string;
-  compliance_impact: boolean;
-  assessment_notes: string;
+  incidentId: number;
+  businessImpact: string;
+  technicalImpact: string;
+  affectedServices: string[];
+  affectedUsersCount: number;
+  financialImpact: number;
+  reputationImpact: string;
+  complianceImpact: boolean;
+  assessmentNotes: string;
 }
 
 export interface CreateIncidentClassificationRequest {
-  incident_id: number;
+  incidentId: number;
   category: string;
   subcategory: string;
-  service_type: string;
-  failure_type: string;
+  serviceType: string;
+  failureType: string;
   urgency: string;
   impact: string;
-  classification_confidence?: number;
-  auto_classified?: boolean;
+  classificationConfidence?: number;
+  autoClassified?: boolean;
 }
 
 export interface UpdateIncidentRequest {
@@ -211,22 +211,22 @@ export interface UpdateIncidentRequest {
   priority?: string;
   type?: string;
   status?: string;
-  assignee_id?: number;
-  is_major_incident?: boolean;
+  assigneeId?: number;
+  isMajorIncident?: boolean;
   category?: string;
   subcategory?: string;
   resolution?: string;
-  resolution_notes?: string;
-  suspend_reason?: string;
-  resolved_at?: string;
-  closed_at?: string;
-  form_fields?: Record<string, string | number | boolean>;
+  resolutionNotes?: string;
+  suspendReason?: string;
+  resolvedAt?: string;
+  closedAt?: string;
+  formFields?: Record<string, string | number | boolean>;
 }
 
 export interface UpdateIncidentStatusRequest {
   status: string;
-  resolution_note?: string;
-  suspend_reason?: string;
+  resolutionNote?: string;
+  suspendReason?: string;
 }
 
 export interface ListIncidentsRequest extends ListQueryParams {
@@ -235,11 +235,11 @@ export interface ListIncidentsRequest extends ListQueryParams {
   source?: string;
   type?: string;
   category?: string;
-  assignee_id?: number;
-  is_major_incident?: boolean;
+  assigneeId?: number;
+  isMajorIncident?: boolean;
   keyword?: string;
-  date_from?: string;
-  date_to?: string;
+  dateFrom?: string;
+  dateTo?: string;
   [key: string]: unknown;
 }
 
@@ -248,53 +248,53 @@ export interface ListIncidentsResponse extends PaginationResponse<Incident> {
 }
 
 export interface IncidentMetrics {
-  total_incidents: number;
-  open_incidents: number;
-  critical_incidents: number;
-  major_incidents: number;
-  avg_resolution_time: number;
+  totalIncidents: number;
+  openIncidents: number;
+  criticalIncidents: number;
+  majorIncidents: number;
+  avgResolutionTime: number;
   mtta: number;
   mttr: number;
 }
 
 // 阿里云告警事件
 export interface AlibabaCloudAlertRequest {
-  alert_id: string;
-  alert_name: string;
-  alert_description: string;
-  alert_level: string;
-  instance_id: string;
+  alertId: string;
+  alertName: string;
+  alertDescription: string;
+  alertLevel: string;
+  instanceId: string;
   region: string;
   service: string;
   metrics: unknown;
-  alert_data: unknown;
-  detected_at: string;
+  alertData: unknown;
+  detectedAt: string;
 }
 
 // 安全事件
 export interface SecurityEventRequest {
-  event_id: string;
-  event_type: string;
-  event_name: string;
-  event_description: string;
-  source_ip: string;
+  eventId: string;
+  eventType: string;
+  eventName: string;
+  eventDescription: string;
+  sourceIp: string;
   target: string;
   severity: string;
-  event_details: unknown;
-  detected_at: string;
+  eventDetails: unknown;
+  detectedAt: string;
 }
 
 // 云产品事件
 export interface CloudProductEventRequest {
-  event_id: string;
-  event_type: string;
-  event_name: string;
-  event_description: string;
+  eventId: string;
+  eventType: string;
+  eventName: string;
+  eventDescription: string;
   product: string;
-  instance_id: string;
+  instanceId: string;
   region: string;
-  event_data: unknown;
-  detected_at: string;
+  eventData: unknown;
+  detectedAt: string;
 }
 
 // 事件管理API类
@@ -497,15 +497,15 @@ export class IncidentAPI {
 
   // AI辅助分析
   static async analyzeIncidentWithAI(incidentId: number): Promise<{
-    suggested_classification: Partial<IncidentClassification>;
-    suggested_root_causes: string[];
-    similar_incidents: Incident[];
+    suggestedClassification: Partial<IncidentClassification>;
+    suggestedRootCauses: string[];
+    similarIncidents: Incident[];
   }> {
     try {
       const response = await httpClient.post<{
-        suggested_classification: Partial<IncidentClassification>;
-        suggested_root_causes: string[];
-        similar_incidents: Incident[];
+        suggestedClassification: Partial<IncidentClassification>;
+        suggestedRootCauses: string[];
+        similarIncidents: Incident[];
       }>(`/api/v1/incidents/${incidentId}/ai-analysis`);
       return response;
     } catch (error) {
@@ -570,25 +570,25 @@ export class IncidentAPI {
   // 模拟阿里云告警事件
   static async simulateAlibabaCloudAlert(): Promise<Incident> {
     const mockAlert: AlibabaCloudAlertRequest = {
-      alert_id: `alert_${Date.now()}`,
-      alert_name: 'CPU使用率过高告警',
-      alert_description: '实例 i-bp1abcdefg 的CPU使用率在过去15分钟内持续高于95%',
-      alert_level: 'critical',
-      instance_id: 'i-bp1abcdefg',
+      alertId: `alert_${Date.now()}`,
+      alertName: 'CPU使用率过高告警',
+      alertDescription: '实例 i-bp1abcdefg 的CPU使用率在过去15分钟内持续高于95%',
+      alertLevel: 'critical',
+      instanceId: 'i-bp1abcdefg',
       region: 'cn-hangzhou',
       service: 'ecs',
       metrics: {
-        cpu_usage: 95.5,
-        memory_usage: 78.2,
-        disk_usage: 45.1,
+        cpuUsage: 95.5,
+        memoryUsage: 78.2,
+        diskUsage: 45.1,
       },
-      alert_data: {
-        alert_rule: 'CPU使用率 > 90%',
+      alertData: {
+        alertRule: 'CPU使用率 > 90%',
         threshold: 90,
-        current_value: 95.5,
+        currentValue: 95.5,
         duration: '15分钟',
       },
-      detected_at: new Date().toISOString(),
+      detectedAt: new Date().toISOString(),
     };
 
     return this.createIncidentFromAlibabaCloudAlert(mockAlert);
@@ -597,21 +597,21 @@ export class IncidentAPI {
   // 模拟安全事件
   static async simulateSecurityEvent(): Promise<Incident> {
     const mockSecurityEvent: SecurityEventRequest = {
-      event_id: `security_${Date.now()}`,
-      event_type: 'SSH暴力破解',
-      event_name: '检测到可疑的SSH登录尝试',
-      event_description:
+      eventId: `security_${Date.now()}`,
+      eventType: 'SSH暴力破解',
+      eventName: '检测到可疑的SSH登录尝试',
+      eventDescription:
         '安全系统检测到来自未知IP地址 (47.98.x.x) 对生产环境服务器的多次SSH登录失败尝试',
-      source_ip: '47.98.x.x',
+      sourceIp: '47.98.x.x',
       target: 'PROD-BASTION-HOST',
       severity: 'high',
-      event_details: {
-        failed_attempts: 15,
-        time_window: '10分钟',
-        target_port: 22,
-        attack_type: 'brute_force',
+      eventDetails: {
+        failedAttempts: 15,
+        timeWindow: '10分钟',
+        targetPort: 22,
+        attackType: 'brute_force',
       },
-      detected_at: new Date().toISOString(),
+      detectedAt: new Date().toISOString(),
     };
 
     return this.createIncidentFromSecurityEvent(mockSecurityEvent);
@@ -620,20 +620,20 @@ export class IncidentAPI {
   // 模拟云产品事件
   static async simulateCloudProductEvent(): Promise<Incident> {
     const mockCloudEvent: CloudProductEventRequest = {
-      event_id: `cloud_${Date.now()}`,
-      event_type: 'RDS主备同步延迟',
-      event_name: '数据库主备同步延迟告警',
-      event_description: '监控系统告警，生产数据库（RDS）主备同步延迟超过阈值（30秒）',
+      eventId: `cloud_${Date.now()}`,
+      eventType: 'RDS主备同步延迟',
+      eventName: '数据库主备同步延迟告警',
+      eventDescription: '监控系统告警，生产数据库（RDS）主备同步延迟超过阈值（30秒）',
       product: 'rds',
-      instance_id: 'rm-bp1abcdefg',
+      instanceId: 'rm-bp1abcdefg',
       region: 'cn-hangzhou',
-      event_data: {
-        sync_delay: 45,
+      eventData: {
+        syncDelay: 45,
         threshold: 30,
-        master_status: 'running',
-        slave_status: 'running',
+        masterStatus: 'running',
+        slaveStatus: 'running',
       },
-      detected_at: new Date().toISOString(),
+      detectedAt: new Date().toISOString(),
     };
 
     return this.createIncidentFromCloudProductEvent(mockCloudEvent);
@@ -675,10 +675,10 @@ export class IncidentAPI {
 
   // 事件升级
   static async escalateIncident(id: number, data: {
-    escalation_level: number;
+    escalationLevel: number;
     reason?: string;
-    notify_users?: number[];
-    auto_assign?: boolean;
+    notifyUsers?: number[];
+    autoAssign?: boolean;
   }): Promise<any> {
     const response = await httpClient.post<any>(`/api/v1/incidents/${id}/escalate`, data);
     return response;

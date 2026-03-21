@@ -35,28 +35,28 @@ export interface Incident {
   priority: IncidentPriority;
   severity: string;
   category: string;
-  assignee_id?: number;
+  assigneeId?: number;
   assignee?: {
     id: number;
     name: string;
     username: string;
   };
-  reporter_id: number;
+  reporterId: number;
   reporter?: {
     id: number;
     name: string;
     username: string;
   };
-  created_at: string;
-  updated_at: string;
-  resolved_at?: string;
-  closed_at?: string;
-  tenant_id: number;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+  closedAt?: string;
+  tenantId: number;
   source?: IncidentSource;
   impact?: string;
   urgency?: string;
-  affected_services?: string[];
-  root_cause?: string;
+  affectedServices?: string[];
+  rootCause?: string;
   resolution?: string;
 }
 
@@ -66,11 +66,11 @@ export interface CreateIncidentRequest {
   description: string;
   priority: IncidentPriority;
   category?: string;
-  assignee_id?: number;
+  assigneeId?: number;
   source?: IncidentSource;
   impact?: string;
   urgency?: string;
-  affected_services?: string[];
+  affectedServices?: string[];
 }
 
 // 更新事件请求
@@ -81,30 +81,30 @@ export interface UpdateIncidentRequest {
   priority?: IncidentPriority;
   severity?: string;
   category?: string;
-  assignee_id?: number;
+  assigneeId?: number;
   source?: IncidentSource;
   impact?: string;
   urgency?: string;
-  affected_services?: string[];
-  root_cause?: string;
+  affectedServices?: string[];
+  rootCause?: string;
   resolution?: string;
 }
 
 // 事件列表查询参数
 export interface ListIncidentsParams {
   page?: number;
-  page_size?: number;
+  pageSize?: number;
   status?: IncidentStatus;
   priority?: IncidentPriority;
   category?: string;
-  assignee_id?: number;
-  reporter_id?: number;
+  assigneeId?: number;
+  reporterId?: number;
   keyword?: string;
   query?: string; // 为了兼容 global-search-api
-  date_from?: string;
-  date_to?: string;
-  sort_by?: string;
-  sort_order?: 'asc' | 'desc';
+  dateFrom?: string;
+  dateTo?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 // 事件列表响应
@@ -113,17 +113,17 @@ export interface ListIncidentsResponse {
   items: Incident[]; // 为了兼容 global-search-api
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 // 事件统计响应
 export interface IncidentStatsResponse {
   total: number;
   open: number;
-  in_progress: number;
+  inProgress: number;
   resolved: number;
   closed: number;
-  high_priority: number;
+  highPriority: number;
   critical: number;
   mttr: number; // 平均修复时间
 }

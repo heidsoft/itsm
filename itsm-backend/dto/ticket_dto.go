@@ -76,13 +76,13 @@ type TicketResponse struct {
 	Status       string         `json:"status"`
 	Priority     string         `json:"priority"`
 	Type         string         `json:"type"`
-	TicketNumber string         `json:"ticket_number"`
-	RequesterID  int            `json:"requester_id"`
-	AssigneeID   int            `json:"assignee_id,omitempty"`
-	TenantID     int            `json:"tenant_id"`
-	CategoryID   int            `json:"category_id,omitempty"`
-	CreatedAt    time.Time      `json:"created_at"`
-	UpdatedAt    time.Time      `json:"updated_at"`
+	TicketNumber string         `json:"ticketNumber"`
+	RequesterID  int            `json:"requesterId"`
+	AssigneeID   int            `json:"assigneeId,omitempty"`
+	TenantID     int            `json:"tenantId"`
+	CategoryID   int            `json:"categoryId,omitempty"`
+	CreatedAt    time.Time      `json:"createdAt"`
+	UpdatedAt    time.Time      `json:"updatedAt"`
 	Requester    *UserBasicInfo `json:"requester,omitempty"`
 	Assignee     *UserBasicInfo `json:"assignee,omitempty"`
 }
@@ -99,31 +99,31 @@ type ListTicketsResponse struct {
 type TicketStatsResponse struct {
 	Total        int `json:"total"`
 	Open         int `json:"open"`
-	InProgress   int `json:"in_progress"`
+	InProgress   int `json:"inProgress"`
 	Resolved     int `json:"resolved"`
-	HighPriority int `json:"high_priority"`
+	HighPriority int `json:"highPriority"`
 	Overdue      int `json:"overdue"`
 }
 
 // TicketDetailResponse 工单详情响应
 type TicketDetailResponse struct {
 	Ticket     *TicketResponse   `json:"ticket"`
-	SLAMetrics *TicketSLAMetrics `json:"sla_metrics"`
+	SLAMetrics *TicketSLAMetrics `json:"slaMetrics"`
 }
 
 // TicketSLAMetrics 工单SLA指标
 type TicketSLAMetrics struct {
 	ID              int       `json:"id"`
-	SLADefinitionID int       `json:"sla_definition_id"`
-	TicketID        int       `json:"ticket_id"`
-	MetricType      string    `json:"metric_type"`
-	TargetValue     float64   `json:"target_value"`
-	ActualValue     *float64  `json:"actual_value,omitempty"`
-	IsMet           bool      `json:"is_met"`
-	MeasurementTime time.Time `json:"measurement_time"`
-	TenantID        int       `json:"tenant_id"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	SLADefinitionID int       `json:"slaDefinitionId"`
+	TicketID        int       `json:"ticketId"`
+	MetricType      string    `json:"metricType"`
+	TargetValue     float64   `json:"targetValue"`
+	ActualValue     *float64  `json:"actualValue,omitempty"`
+	IsMet           bool      `json:"isMet"`
+	MeasurementTime time.Time `json:"measurementTime"`
+	TenantID        int       `json:"tenantId"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
 }
 
 // BatchDeleteRequest 批量删除请求
