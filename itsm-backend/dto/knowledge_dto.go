@@ -29,9 +29,9 @@ type KnowledgeArticleResponse struct {
 	Author    string    `json:"author"`
 	Views     int       `json:"views"`
 	Tags      []string  `json:"tags"`
-	TenantID  int       `json:"tenant_id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	TenantID  int       `json:"tenantId"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // 知识库文章列表请求

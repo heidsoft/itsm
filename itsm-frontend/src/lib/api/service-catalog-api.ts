@@ -37,7 +37,7 @@ export class ServiceCatalogApi {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static toServiceItem(raw: any): ServiceItem {
-    // 后端 dto.ServiceCatalogResponse: {id,name,category,description,delivery_time,status,created_at,updated_at}
+    // 后端 dto.ServiceCatalogResponse: {id,name,category,description,deliveryTime,status,ciTypeId,cloudServiceId,createdAt,updatedAt}
     return {
       id: String(raw?.id),
       name: String(raw?.name || ''),
@@ -47,17 +47,17 @@ export class ServiceCatalogApi {
       status: ServiceCatalogApi.toFrontendStatus(raw?.status),
       shortDescription: String(raw?.description || ''),
       fullDescription: String(raw?.description || ''),
-      ciTypeId: typeof raw?.ci_type_id === 'number' ? raw.ci_type_id : undefined,
-      cloudServiceId: typeof raw?.cloud_service_id === 'number' ? raw.cloud_service_id : undefined,
+      ciTypeId: typeof raw?.ciTypeId === 'number' ? raw.ciTypeId : undefined,
+      cloudServiceId: typeof raw?.cloudServiceId === 'number' ? raw.cloudServiceId : undefined,
       tags: [],
       requiresApproval: true,
       createdBy: 0,
       createdByName: '',
-      createdAt: raw?.created_at ? new Date(raw.created_at) : new Date(),
-      updatedAt: raw?.updated_at ? new Date(raw.updated_at) : new Date(),
+      createdAt: raw?.createdAt ? new Date(raw.createdAt) : new Date(),
+      updatedAt: raw?.updatedAt ? new Date(raw.updatedAt) : new Date(),
       availability: {
-        // 后端 delivery_time 为 string（天/小时口径未统一）；V0先用于展示，不做严格含义
-        responseTime: raw?.delivery_time ? Number(raw.delivery_time) : undefined,
+        // 后端 deliveryTime 为 string（天/小时口径未统一）；V0先用于展示，不做严格含义
+        responseTime: raw?.deliveryTime ? Number(raw.deliveryTime) : undefined,
       },
     };
   }

@@ -82,27 +82,27 @@ type IncidentResponse struct {
 	Status              string                 `json:"status" example:"new"`
 	Priority            string                 `json:"priority" example:"high"`
 	Severity            string                 `json:"severity" example:"high"`
-	IncidentNumber      string                 `json:"incident_number" example:"INC-000001"`
-	ReporterID          int                    `json:"reporter_id" example:"1"`
-	AssigneeID          *int                   `json:"assignee_id" example:"2"`
-	ConfigurationItemID *int                   `json:"configuration_item_id" example:"1"`
+	IncidentNumber      string                 `json:"incidentNumber" example:"INC-000001"`
+	ReporterID          int                    `json:"reporterId" example:"1"`
+	AssigneeID          *int                   `json:"assigneeId" example:"2"`
+	ConfigurationItemID *int                   `json:"configurationItemId" example:"1"`
 	Category            string                 `json:"category" example:"performance"`
 	Subcategory         string                 `json:"subcategory" example:"cpu"`
-	ImpactAnalysis      *ImpactAnalysis        `json:"impact_analysis"`
-	RootCause           *RootCause             `json:"root_cause"`
-	ResolutionSteps     []ResolutionStep       `json:"resolution_steps"`
-	DetectedAt          time.Time              `json:"detected_at" example:"2024-01-01T00:00:00Z"`
-	ResolvedAt          *time.Time             `json:"resolved_at,omitempty" example:"2024-01-01T12:00:00Z"`
-	ClosedAt            *time.Time             `json:"closed_at,omitempty" example:"2024-01-01T18:00:00Z"`
-	EscalatedAt         *time.Time             `json:"escalated_at,omitempty" example:"2024-01-01T06:00:00Z"`
-	EscalationLevel     int                    `json:"escalation_level" example:"1"`
-	IsAutomated         bool                   `json:"is_automated" example:"false"`
-	IsMajorIncident     bool                   `json:"is_major_incident" example:"false"`
+	ImpactAnalysis      *ImpactAnalysis        `json:"impactAnalysis"`
+	RootCause           *RootCause             `json:"rootCause"`
+	ResolutionSteps     []ResolutionStep       `json:"resolutionSteps"`
+	DetectedAt          time.Time              `json:"detectedAt" example:"2024-01-01T00:00:00Z"`
+	ResolvedAt          *time.Time             `json:"resolvedAt,omitempty" example:"2024-01-01T12:00:00Z"`
+	ClosedAt            *time.Time             `json:"closedAt,omitempty" example:"2024-01-01T18:00:00Z"`
+	EscalatedAt         *time.Time             `json:"escalatedAt,omitempty" example:"2024-01-01T06:00:00Z"`
+	EscalationLevel     int                    `json:"escalationLevel" example:"1"`
+	IsAutomated         bool                   `json:"isAutomated" example:"false"`
+	IsMajorIncident     bool                   `json:"isMajorIncident" example:"false"`
 	Source              string                 `json:"source" example:"monitoring"`
 	Metadata            map[string]interface{} `json:"metadata"`
-	TenantID            int                    `json:"tenant_id" example:"1"`
-	CreatedAt           time.Time              `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt           time.Time              `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	TenantID            int                    `json:"tenantId" example:"1"`
+	CreatedAt           time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt           time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // 事件活动记录DTO
@@ -122,20 +122,20 @@ type CreateIncidentEventRequest struct {
 
 type IncidentEventResponse struct {
 	ID          int                    `json:"id" example:"1"`
-	IncidentID  int                    `json:"incident_id" example:"1"`
-	EventType   string                 `json:"event_type" example:"status_change"`
-	EventName   string                 `json:"event_name" example:"状态变更"`
+	IncidentID  int                    `json:"incidentId" example:"1"`
+	EventType   string                 `json:"eventType" example:"status_change"`
+	EventName   string                 `json:"eventName" example:"状态变更"`
 	Description string                 `json:"description" example:"事件状态从new变更为in_progress"`
 	Status      string                 `json:"status" example:"active"`
 	Severity    string                 `json:"severity" example:"medium"`
 	Data        map[string]interface{} `json:"data"`
-	OccurredAt  time.Time              `json:"occurred_at" example:"2024-01-01T00:00:00Z"`
-	UserID      *int                   `json:"user_id" example:"1"`
+	OccurredAt  time.Time              `json:"occurredAt" example:"2024-01-01T00:00:00Z"`
+	UserID      *int                   `json:"userId" example:"1"`
 	Source      string                 `json:"source" example:"system"`
 	Metadata    map[string]interface{} `json:"metadata"`
-	TenantID    int                    `json:"tenant_id" example:"1"`
-	CreatedAt   time.Time              `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt   time.Time              `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	TenantID    int                    `json:"tenantId" example:"1"`
+	CreatedAt   time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt   time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // 事件告警DTO
@@ -153,22 +153,22 @@ type CreateIncidentAlertRequest struct {
 
 type IncidentAlertResponse struct {
 	ID             int                    `json:"id" example:"1"`
-	IncidentID     int                    `json:"incident_id" example:"1"`
-	AlertType      string                 `json:"alert_type" example:"escalation"`
-	AlertName      string                 `json:"alert_name" example:"事件升级告警"`
+	IncidentID     int                    `json:"incidentId" example:"1"`
+	AlertType      string                 `json:"alertType" example:"escalation"`
+	AlertName      string                 `json:"alertName" example:"事件升级告警"`
 	Message        string                 `json:"message" example:"事件已升级到下一级别"`
 	Severity       string                 `json:"severity" example:"high"`
 	Status         string                 `json:"status" example:"active"`
 	Channels       []string               `json:"channels" example:"[\"email\",\"sms\"]"`
 	Recipients     []string               `json:"recipients" example:"[\"manager@company.com\"]"`
-	TriggeredAt    time.Time              `json:"triggered_at" example:"2024-01-01T00:00:00Z"`
-	AcknowledgedAt *time.Time             `json:"acknowledged_at,omitempty" example:"2024-01-01T01:00:00Z"`
-	ResolvedAt     *time.Time             `json:"resolved_at,omitempty" example:"2024-01-01T02:00:00Z"`
-	AcknowledgedBy *int                   `json:"acknowledged_by" example:"1"`
+	TriggeredAt    time.Time              `json:"triggeredAt" example:"2024-01-01T00:00:00Z"`
+	AcknowledgedAt *time.Time             `json:"acknowledgedAt,omitempty" example:"2024-01-01T01:00:00Z"`
+	ResolvedAt     *time.Time             `json:"resolvedAt,omitempty" example:"2024-01-01T02:00:00Z"`
+	AcknowledgedBy *int                   `json:"acknowledgedBy" example:"1"`
 	Metadata       map[string]interface{} `json:"metadata"`
-	TenantID       int                    `json:"tenant_id" example:"1"`
-	CreatedAt      time.Time              `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt      time.Time              `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	TenantID       int                    `json:"tenantId" example:"1"`
+	CreatedAt      time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt      time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // 事件指标DTO
@@ -185,17 +185,17 @@ type CreateIncidentMetricRequest struct {
 
 type IncidentMetricResponse struct {
 	ID          int                    `json:"id" example:"1"`
-	IncidentID  int                    `json:"incident_id" example:"1"`
-	MetricType  string                 `json:"metric_type" example:"response_time"`
-	MetricName  string                 `json:"metric_name" example:"平均响应时间"`
-	MetricValue float64                `json:"metric_value" example:"2.5"`
+	IncidentID  int                    `json:"incidentId" example:"1"`
+	MetricType  string                 `json:"metricType" example:"response_time"`
+	MetricName  string                 `json:"metricName" example:"平均响应时间"`
+	MetricValue float64                `json:"metricValue" example:"2.5"`
 	Unit        string                 `json:"unit" example:"秒"`
-	MeasuredAt  time.Time              `json:"measured_at" example:"2024-01-01T00:00:00Z"`
+	MeasuredAt  time.Time              `json:"measuredAt" example:"2024-01-01T00:00:00Z"`
 	Tags        map[string]string      `json:"tags"`
 	Metadata    map[string]interface{} `json:"metadata"`
-	TenantID    int                    `json:"tenant_id" example:"1"`
-	CreatedAt   time.Time              `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt   time.Time              `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	TenantID    int                    `json:"tenantId" example:"1"`
+	CreatedAt   time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt   time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // 事件规则DTO
@@ -225,17 +225,17 @@ type IncidentRuleResponse struct {
 	ID             int                      `json:"id" example:"1"`
 	Name           string                   `json:"name" example:"高优先级事件自动升级"`
 	Description    string                   `json:"description" example:"当事件优先级为high或urgent时，自动升级到下一级别"`
-	RuleType       string                   `json:"rule_type" example:"escalation"`
+	RuleType       string                   `json:"ruleType" example:"escalation"`
 	Conditions     map[string]interface{}   `json:"conditions"`
 	Actions        []map[string]interface{} `json:"actions"`
 	Priority       string                   `json:"priority" example:"high"`
-	IsActive       bool                     `json:"is_active" example:"true"`
-	ExecutionCount int                      `json:"execution_count" example:"5"`
-	LastExecutedAt *time.Time               `json:"last_executed_at,omitempty" example:"2024-01-01T00:00:00Z"`
+	IsActive       bool                     `json:"isActive" example:"true"`
+	ExecutionCount int                      `json:"executionCount" example:"5"`
+	LastExecutedAt *time.Time               `json:"lastExecutedAt,omitempty" example:"2024-01-01T00:00:00Z"`
 	Metadata       map[string]interface{}   `json:"metadata"`
-	TenantID       int                      `json:"tenant_id" example:"1"`
-	CreatedAt      time.Time                `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt      time.Time                `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	TenantID       int                      `json:"tenantId" example:"1"`
+	CreatedAt      time.Time                `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt      time.Time                `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // 事件监控DTO
@@ -274,14 +274,14 @@ type IncidentEscalationRequest struct {
 
 type IncidentEscalationResponse struct {
 	ID              int       `json:"id" example:"1"`
-	IncidentID      int       `json:"incident_id" example:"1"`
-	EscalationLevel int       `json:"escalation_level" example:"1"`
+	IncidentID      int       `json:"incidentId" example:"1"`
+	EscalationLevel int       `json:"escalationLevel" example:"1"`
 	Reason          string    `json:"reason" example:"事件处理时间过长"`
 	Status          string    `json:"status" example:"active"`
-	NotifiedUsers   []int     `json:"notified_users"`
-	AutoAssigned    bool      `json:"auto_assigned" example:"true"`
-	CreatedAt       time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt       time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	NotifiedUsers   []int     `json:"notifiedUsers"`
+	AutoAssigned    bool      `json:"autoAssigned" example:"true"`
+	CreatedAt       time.Time `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt       time.Time `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // 事件关联分析DTO
@@ -293,28 +293,28 @@ type IncidentCorrelationRequest struct {
 }
 
 type IncidentCorrelationResponse struct {
-	IncidentID          int                    `json:"incident_id" example:"1"`
-	CorrelatedIncidents []CorrelatedIncident   `json:"correlated_incidents"`
-	CorrelationScore    float64                `json:"correlation_score" example:"0.85"`
-	AnalysisResult      map[string]interface{} `json:"analysis_result"`
+	IncidentID          int                    `json:"incidentId" example:"1"`
+	CorrelatedIncidents []CorrelatedIncident   `json:"correlatedIncidents"`
+	CorrelationScore    float64                `json:"correlationScore" example:"0.85"`
+	AnalysisResult      map[string]interface{} `json:"analysisResult"`
 }
 
 type CorrelatedIncident struct {
-	IncidentID        int       `json:"incident_id" example:"2"`
-	IncidentNumber    string    `json:"incident_number" example:"INC-000002"`
+	IncidentID        int       `json:"incidentId" example:"2"`
+	IncidentNumber    string    `json:"incidentNumber" example:"INC-000002"`
 	Title             string    `json:"title" example:"数据库连接超时"`
-	SimilarityScore   float64   `json:"similarity_score" example:"0.85"`
-	CorrelationReason string    `json:"correlation_reason" example:"相似的错误模式和影响范围"`
-	CreatedAt         time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`
+	SimilarityScore   float64   `json:"similarityScore" example:"0.85"`
+	CorrelationReason string    `json:"correlationReason" example:"相似的错误模式和影响范围"`
+	CreatedAt         time.Time `json:"createdAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // IncidentStatsResponse 事件统计响应
 type IncidentStatsResponse struct {
-	TotalIncidents    int     `json:"total_incidents"`
-	OpenIncidents     int     `json:"open_incidents"`
-	CriticalIncidents int     `json:"critical_incidents"`
-	MajorIncidents    int     `json:"major_incidents"`
-	AvgResolutionTime float64 `json:"avg_resolution_time"`
+	TotalIncidents    int     `json:"totalIncidents"`
+	OpenIncidents     int     `json:"openIncidents"`
+	CriticalIncidents int     `json:"criticalIncidents"`
+	MajorIncidents    int     `json:"majorIncidents"`
+	AvgResolutionTime float64 `json:"avgResolutionTime"`
 	MTTA              float64 `json:"mtta"` // Mean Time To Acknowledge
 	MTTR              float64 `json:"mttr"` // Mean Time To Resolve
 }
