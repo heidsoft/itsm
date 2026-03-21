@@ -34,7 +34,7 @@ func (s *ProblemService) SetProcessTriggerService(triggerService ProcessTriggerS
 }
 
 // CreateProblem 创建问题
-func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProblemRequest, createdBy, tenantID int) (*ent.Problem, error) {
+func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProblemRequest, createdBy, tenantID int) (*dto.ProblemResponse, error) {
 	s.logger.Infow("Creating problem", "title", req.Title, "tenant_id", tenantID, "created_by", createdBy)
 
 	problem, err := s.client.Problem.Create().
@@ -66,11 +66,11 @@ func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProbl
 		}()
 	}
 
-	return problem, nil
+	return dto.ToProblemResponse(problem), nil
 }
 
 // GetProblem 获取问题详情
-func (s *ProblemService) GetProblem(ctx context.Context, id int, tenantID int) (*ent.Problem, error) {
+func (s *ProblemService) GetProblem(ctx context.Context, id int, tenantID int) (*dto.ProblemResponse, error) {
 	s.logger.Infow("Getting problem", "id", id, "tenant_id", tenantID)
 
 	problem, err := s.client.Problem.Query().
@@ -85,7 +85,7 @@ func (s *ProblemService) GetProblem(ctx context.Context, id int, tenantID int) (
 		return nil, fmt.Errorf("获取问题失败: %v", err)
 	}
 
-	return problem, nil
+	return dto.ToProblemResponse(problem), nil
 }
 
 // ListProblems 获取问题列表
@@ -137,28 +137,7 @@ func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblems
 	}
 
 	// map ent -> dto
-	dtoProblems := make([]dto.ProblemResponse, 0, len(problems))
-	for _, p := range problems {
-		item := dto.ProblemResponse{
-			ID:          p.ID,
-			Title:       p.Title,
-			Description: p.Description,
-			Status:      p.Status,
-			Priority:    p.Priority,
-			Category:    p.Category,
-			RootCause:   p.RootCause,
-			Impact:      p.Impact,
-			CreatedBy:   p.CreatedBy,
-			TenantID:    p.TenantID,
-			CreatedAt:   p.CreatedAt,
-			UpdatedAt:   p.UpdatedAt,
-		}
-		if p.AssigneeID != 0 {
-			val := p.AssigneeID
-			item.AssigneeID = &val
-		}
-		dtoProblems = append(dtoProblems, item)
-	}
+	dtoProblems := dto.ToProblemResponseList(problems)
 
 	return &dto.ListProblemsResponse{
 		Problems: dtoProblems,
@@ -169,7 +148,7 @@ func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblems
 }
 
 // UpdateProblem 更新问题
-func (s *ProblemService) UpdateProblem(ctx context.Context, id int, req *dto.UpdateProblemRequest, tenantID int) (*ent.Problem, error) {
+func (s *ProblemService) UpdateProblem(ctx context.Context, id int, req *dto.UpdateProblemRequest, tenantID int) (*dto.ProblemResponse, error) {
 	s.logger.Infow("Updating problem", "id", id, "tenant_id", tenantID)
 
 	// 检查问题是否存在
@@ -219,14 +198,14 @@ func (s *ProblemService) UpdateProblem(ctx context.Context, id int, req *dto.Upd
 	}
 	update.SetUpdatedAt(time.Now())
 
-	problem, err := update.Save(ctx)
+	updatedProblem, err := update.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update problem", "error", err, "id", id, "tenant_id", tenantID)
 		return nil, fmt.Errorf("更新问题失败: %v", err)
 	}
 
 	s.logger.Infow("Problem updated successfully", "id", id, "tenant_id", tenantID)
-	return problem, nil
+	return dto.ToProblemResponse(updatedProblem), nil
 }
 
 // DeleteProblem 删除问题（软删除）

@@ -12,42 +12,42 @@ export interface Incident {
   status: IncidentStatus;
   priority: IncidentPriority;
   severity: IncidentSeverity;
-  incident_number: string;
-  reporter_id: number;
-  assignee_id?: number;
-  configuration_item_id?: number;
+  incidentNumber: string;
+  reporterId: number;
+  assigneeId?: number;
+  configurationItemId?: number;
   category: string;
   subcategory: string;
-  impact_analysis?: Record<string, any>; // Map<string, interface{}>
-  root_cause?: Record<string, any>;
-  resolution_steps?: Record<string, any>[];
-  detected_at: string; // Time string
-  resolved_at?: string;
-  closed_at?: string;
-  escalated_at?: string;
-  escalation_level: number;
-  is_automated: boolean;
+  impactAnalysis?: Record<string, any>; // Map<string, interface{}>
+  rootCause?: Record<string, any>;
+  resolutionSteps?: Record<string, any>[];
+  detectedAt: string; // Time string
+  resolvedAt?: string;
+  closedAt?: string;
+  escalatedAt?: string;
+  escalationLevel: number;
+  isAutomated: boolean;
   source: string;
   metadata?: Record<string, any>;
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 事件活动记录
 export interface IncidentEvent {
   id: number;
-  incident_id: number;
-  event_type: string;
-  event_name: string;
+  incidentId: number;
+  eventType: string;
+  eventName: string;
   description: string;
   status: string;
   severity: string;
   data?: Record<string, any>;
-  occurred_at: string;
-  user_id?: number;
+  occurredAt: string;
+  userId?: number;
   source: string;
-  created_at: string;
+  createdAt: string;
 }
 
 // 创建事件请求
@@ -58,11 +58,11 @@ export interface CreateIncidentRequest {
   severity?: IncidentSeverity;
   category?: string;
   subcategory?: string;
-  assignee_id?: number;
-  configuration_item_id?: number;
-  impact_analysis?: Record<string, any>;
+  assigneeId?: number;
+  configurationItemId?: number;
+  impactAnalysis?: Record<string, any>;
   source?: string;
-  detected_at?: string;
+  detectedAt?: string;
   metadata?: Record<string, any>;
 }
 
@@ -75,10 +75,10 @@ export interface UpdateIncidentRequest {
   severity?: IncidentSeverity;
   category?: string;
   subcategory?: string;
-  assignee_id?: number;
-  impact_analysis?: Record<string, any>;
-  root_cause?: Record<string, any>;
-  resolution_steps?: Record<string, any>[];
+  assigneeId?: number;
+  impactAnalysis?: Record<string, any>;
+  rootCause?: Record<string, any>;
+  resolutionSteps?: Record<string, any>[];
   metadata?: Record<string, any>;
 }
 

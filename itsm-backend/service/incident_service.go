@@ -316,7 +316,7 @@ func (s *IncidentService) CreateIncidentEvent(ctx context.Context, req *dto.Crea
 		occurredAt = *req.OccurredAt
 	}
 
-	event, err := s.client.IncidentEvent.Create().
+	eventBuilder := s.client.IncidentEvent.Create().
 		SetIncidentID(req.IncidentID).
 		SetEventType(req.EventType).
 		SetEventName(req.EventName).
@@ -325,13 +325,17 @@ func (s *IncidentService) CreateIncidentEvent(ctx context.Context, req *dto.Crea
 		SetSeverity(req.Severity).
 		SetData(req.Data).
 		SetOccurredAt(occurredAt).
-		SetUserID(*req.UserID).
 		SetSource(req.Source).
 		SetMetadata(req.Metadata).
 		SetTenantID(tenantID).
 		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
-		Save(ctx)
+		SetUpdatedAt(time.Now())
+
+	if req.UserID != nil {
+		eventBuilder.SetUserID(*req.UserID)
+	}
+
+	event, err := eventBuilder.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to create incident event", "error", err)
 		return nil, fmt.Errorf("failed to create incident event: %w", err)

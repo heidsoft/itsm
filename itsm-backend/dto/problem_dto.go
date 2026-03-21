@@ -46,31 +46,31 @@ type ProblemResponse struct {
 	Status      string    `json:"status"`
 	Priority    string    `json:"priority"`
 	Category    string    `json:"category"`
-	RootCause   string    `json:"root_cause"`
+	RootCause   string    `json:"rootCause"`
 	Impact      string    `json:"impact"`
-	AssigneeID  *int      `json:"assignee_id,omitempty"`
-	CreatedBy   int       `json:"created_by"`
-	TenantID    int       `json:"tenant_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	AssigneeID  *int      `json:"assigneeId,omitempty"`
+	CreatedBy   int       `json:"createdBy"`
+	TenantID    int       `json:"tenantId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // ListProblemsResponse 问题列表响应
 type ListProblemsResponse struct {
-	Problems []ProblemResponse `json:"problems"`
+	Problems []*ProblemResponse `json:"problems"`
 	Total    int               `json:"total"`
 	Page     int               `json:"page"`
-	PageSize int               `json:"page_size"`
+	PageSize int               `json:"pageSize"`
 }
 
 // ProblemStatsResponse 问题统计响应
 type ProblemStatsResponse struct {
 	Total        int `json:"total"`
 	Open         int `json:"open"`
-	InProgress   int `json:"in_progress"`
+	InProgress   int `json:"inProgress"`
 	Resolved     int `json:"resolved"`
 	Closed       int `json:"closed"`
-	HighPriority int `json:"high_priority"`
+	HighPriority int `json:"highPriority"`
 }
 
 // ProblemDetailResponse 问题详情响应
