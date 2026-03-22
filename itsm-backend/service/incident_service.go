@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
@@ -210,6 +211,21 @@ func (s *IncidentService) ListIncidents(ctx context.Context, tenantID int, page,
 func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.UpdateIncidentRequest, tenantID int) (*dto.IncidentResponse, error) {
 	s.logger.Infow("Updating incident", "id", id, "tenant_id", tenantID)
 
+	// 如果要更新状态，先验证状态转换是否合法
+	if req.Status != nil {
+		currentIncident, err := s.client.Incident.Get(ctx, id)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return nil, fmt.Errorf("incident not found")
+			}
+			return nil, fmt.Errorf("failed to get incident: %w", err)
+		}
+		// 验证状态转换
+		if !isValidIncidentStatusTransition(currentIncident.Status, *req.Status) {
+			return nil, fmt.Errorf("invalid status transition from '%s' to '%s'", currentIncident.Status, *req.Status)
+		}
+	}
+
 	updateQuery := s.client.Incident.UpdateOneID(id).
 		Where(incident.TenantIDEQ(tenantID)).
 		SetUpdatedAt(time.Now())
@@ -223,12 +239,12 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 	if req.Status != nil {
 		updateQuery.SetStatus(*req.Status)
 		// 如果状态变更为resolved，设置解决时间
-		if *req.Status == "resolved" {
+		if *req.Status == common.IncidentStatusResolved {
 			now := time.Now()
 			updateQuery.SetResolvedAt(now)
 		}
 		// 如果状态变更为closed，设置关闭时间
-		if *req.Status == "closed" {
+		if *req.Status == common.IncidentStatusClosed {
 			now := time.Now()
 			updateQuery.SetClosedAt(now)
 		}
@@ -793,6 +809,41 @@ func (s *IncidentService) executeAssignmentAction(ctx context.Context, action ma
 			s.logger.Errorw("Failed to execute assignment action", "error", err)
 		}
 	}
+}
+
+// isValidIncidentStatusTransition 检查事件状态转换是否合法
+// Incident状态转换规则:
+// new -> acknowledged, assigned, in_progress
+// acknowledged -> in_progress, closed
+// assigned -> in_progress, escalated, closed
+// in_progress -> resolved, escalated, pending, closed
+// escalated -> in_progress, closed
+// resolved -> closed, in_progress (reopen)
+// closed -> (不允许转换到其他状态)
+func isValidIncidentStatusTransition(currentStatus, newStatus string) bool {
+	validTransitions := map[string][]string{
+		common.IncidentStatusNew:          {common.IncidentStatusAcknowledged, common.IncidentStatusAssigned, common.IncidentStatusInProgress},
+		common.IncidentStatusAcknowledged: {common.IncidentStatusInProgress, common.IncidentStatusClosed},
+		common.IncidentStatusAssigned:     {common.IncidentStatusInProgress, common.IncidentStatusEscalated, common.IncidentStatusClosed},
+		common.IncidentStatusInProgress:   {common.IncidentStatusResolved, common.IncidentStatusEscalated, common.IncidentStatusClosed},
+		common.IncidentStatusTriaged:     {common.IncidentStatusInProgress, common.IncidentStatusEscalated, common.IncidentStatusClosed},
+		common.IncidentStatusEscalated:   {common.IncidentStatusInProgress, common.IncidentStatusClosed},
+		common.IncidentStatusResolved:    {common.IncidentStatusClosed, common.IncidentStatusInProgress}, // 重新打开
+		common.IncidentStatusClosed:       {}, // 已关闭不允许转换
+	}
+
+	allowed, ok := validTransitions[currentStatus]
+	if !ok {
+		// 未知状态，允许转换（保守策略）
+		return true
+	}
+
+	for _, status := range allowed {
+		if status == newStatus {
+			return true
+		}
+	}
+	return false
 }
 
 // 转换为响应DTO

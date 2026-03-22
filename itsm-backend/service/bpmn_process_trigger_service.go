@@ -73,8 +73,9 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 	// 5. 合并变量
 	variables := s.buildProcessVariables(req, definition)
 
-	// 6. 启动流程
-	instance, err := s.processEngine.StartProcess(ctx, processDefKey, businessKey, variables)
+	// 6. 设置租户上下文并启动流程
+	triggerCtx := context.WithValue(ctx, "bpmn_tenant_id", req.TenantID)
+	instance, err := s.processEngine.StartProcess(triggerCtx, processDefKey, businessKey, variables)
 	if err != nil {
 		return nil, errors.Wrap(err, "启动流程失败")
 	}

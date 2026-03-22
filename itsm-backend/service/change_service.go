@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
@@ -486,17 +487,18 @@ func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.
 
 // UpdateChangeStatus 更新变更状态
 func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status dto.ChangeStatus, tenantID int) error {
-	// 检查变更是否存在
-	exists, err := s.client.Change.Query().
-		Where(change.ID(id), change.TenantID(tenantID)).
-		Exist(ctx)
+	// 获取当前变更状态
+	changeEntity, err := s.client.Change.Get(ctx, id)
 	if err != nil {
-		s.logger.Errorw("Failed to check change existence", "error", err, "change_id", id, "tenant_id", tenantID)
-		return fmt.Errorf("failed to check change existence: %w", err)
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("change not found")
+		}
+		return fmt.Errorf("failed to get change: %w", err)
 	}
 
-	if !exists {
-		return fmt.Errorf("change not found")
+	// 验证状态转换
+	if !isValidChangeStatusTransition(changeEntity.Status, string(status)) {
+		return fmt.Errorf("invalid status transition from '%s' to '%s'", changeEntity.Status, status)
 	}
 
 	// 更新状态
@@ -508,6 +510,44 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 
 	s.logger.Infow("Change status updated successfully", "change_id", id, "status", status, "tenant_id", tenantID)
 	return nil
+}
+
+// isValidChangeStatusTransition 检查变更状态转换是否合法
+// Change状态转换规则:
+// draft -> submitted, cancelled
+// submitted -> approved, rejected, cancelled
+// approved -> scheduled, cancelled
+// rejected -> (不允许转换到其他状态)
+// scheduled -> in_progress, cancelled
+// in_progress -> completed, failed, cancelled
+// completed -> (不允许转换到其他状态)
+// failed -> scheduled, cancelled
+// cancelled -> (不允许转换到其他状态)
+func isValidChangeStatusTransition(currentStatus, newStatus string) bool {
+	validTransitions := map[string][]string{
+		common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusCancelled},
+		common.ChangeStatusSubmitted: {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
+		common.ChangeStatusApproved:  {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+		common.ChangeStatusRejected:   {}, // 被拒绝后不允许转换
+		common.ChangeStatusScheduled:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+		common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, common.ChangeStatusCancelled},
+		common.ChangeStatusCompleted:  {}, // 已完成不允许转换
+		common.ChangeStatusFailed:     {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+		common.ChangeStatusCancelled:   {}, // 已取消不允许转换
+	}
+
+	allowed, ok := validTransitions[currentStatus]
+	if !ok {
+		// 未知状态，允许转换（保守策略）
+		return true
+	}
+
+	for _, status := range allowed {
+		if status == newStatus {
+			return true
+		}
+	}
+	return false
 }
 
 // triggerWorkflowForChange 为变更触发工作流
