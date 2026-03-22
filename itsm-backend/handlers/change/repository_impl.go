@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
+	entuser "itsm-backend/ent/user"
 )
 
 type EntRepository struct {
@@ -364,4 +365,15 @@ func (r *EntRepository) GetRiskAssessment(ctx context.Context, changeID int) (*R
 		ra.RiskReviewDate = &riskReviewDate.Time
 	}
 	return &ra, nil
+}
+
+// ValidateApproverBelongsToTenant validates that an approver belongs to the specified tenant
+func (r *EntRepository) ValidateApproverBelongsToTenant(ctx context.Context, approverID, tenantID int) (bool, error) {
+	exists, err := r.client.User.Query().
+		Where(entuser.ID(approverID), entuser.TenantID(tenantID)).
+		Exist(ctx)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
