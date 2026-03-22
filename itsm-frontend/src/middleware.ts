@@ -73,6 +73,30 @@ function getAuthToken(request: NextRequest): string | null {
 }
 
 /**
+ * 验证 Token 格式是否有效（JWT 应该有3个部分）
+ */
+function isValidToken(token: string | null): boolean {
+  if (!token) return false;
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+
+  try {
+    // 验证 payload 可以被解析
+    const payload = JSON.parse(atob(parts[1]));
+    // 检查是否过期
+    if (payload.exp) {
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (payload.exp < currentTime) {
+        return false;
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Next.js 中间件
  * 处理路由保护和认证检查
  */
@@ -92,21 +116,24 @@ export function middleware(request: NextRequest) {
   // 检查是否为公开路由
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
-  // 如果是受保护的路由但没有token，重定向到登录页
-  if (isProtectedRoute && !token) {
+  // 验证 token 格式有效性（JWT 检查）
+  const isValid = isValidToken(token);
+
+  // 如果是受保护的路由但没有有效token，重定向到登录页
+  if (isProtectedRoute && !isValid) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // 如果已登录用户访问公开路由，重定向到仪表盘
-  if (isPublicRoute && token) {
+  if (isPublicRoute && isValid) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   // 根路径重定向
   if (pathname === '/') {
-    if (token) {
+    if (isValid) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     } else {
       return NextResponse.redirect(new URL('/login', request.url));
