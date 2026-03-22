@@ -78,7 +78,7 @@ export default function IncidentsPage() {
       
       // Enrich incidents with reporter object if user exists
       const enriched = items.map(inc => {
-        const reporterId = inc.reporter_id;
+        const reporterId = inc.reporterId;
         const reporterName = userMap.get(reporterId);
         return {
           ...inc,
@@ -255,7 +255,7 @@ export default function IncidentsPage() {
             getItemId={(incident: Incident) => incident.id}
             getItemStatus={(incident: Incident) => incident.status}
             getItemTitle={(incident: Incident) => incident.title || `事件 #${incident.id}`}
-            getItemNumber={(incident: Incident) => incident.incident_number || String(incident.id)}
+            getItemNumber={(incident: Incident) => incident.incidentNumber || String(incident.id)}
             getItemDescription={(incident: Incident) => incident.description || ''}
             getItemPriority={(incident: Incident) => incident.priority || incident.severity || 'medium'}
             getItemAssignee={(incident: Incident) =>
