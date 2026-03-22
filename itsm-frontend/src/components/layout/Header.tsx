@@ -504,7 +504,7 @@ export const Header: React.FC<HeaderProps> = ({
         size="large"
         open={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
-        styles={{ body: { padding: 0 }, root: { zIndex: 1050 } }}
+        styles={{ body: { padding: 0 }, root: { zIndex: 100 } }}
       >
         <div style={{ maxHeight: 'calc(100vh - 120px)', overflow: 'auto' }}>
           {notifications.length === 0 ? (
@@ -550,7 +550,7 @@ export const Header: React.FC<HeaderProps> = ({
         height={500}
         open={searchModalVisible}
         onClose={() => setSearchModalVisible(false)}
-        styles={{ root: { zIndex: 1050 } }}
+        styles={{ root: { zIndex: 100 } }}
       >
         {searchResults ? (
           <div style={{ padding: '0 20px' }}>
