@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
@@ -23,11 +24,28 @@ type Permission struct {
 	Action   string `json:"action"`   // 操作类型，如 "read", "write", "delete", "admin"
 }
 
-// PermissionCache 权限缓存
+// cachedPermission 带过期时间的缓存条目
+type cachedPermission struct {
+	permissions []Permission
+	expiresAt  time.Time
+}
+
+// DefaultPermissionCacheTTL 默认权限缓存TTL（5分钟）
+const DefaultPermissionCacheTTL = 5 * time.Minute
+
+// PermissionCache 权限缓存（带TTL）
 var (
-	permissionCache     = make(map[string][]Permission)
+	permissionCache     = make(map[string]*cachedPermission)
 	permissionCacheLock sync.RWMutex
+	permissionCacheTTL = DefaultPermissionCacheTTL
 )
+
+// SetPermissionCacheTTL 设置权限缓存TTL
+func SetPermissionCacheTTL(ttl time.Duration) {
+	permissionCacheLock.Lock()
+	permissionCacheTTL = ttl
+	permissionCacheLock.Unlock()
+}
 
 // RolePermissions 角色权限映射
 var RolePermissions = map[string][]Permission{
@@ -309,11 +327,13 @@ func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int
 
 	cacheKey := roleName + "_" + strconv.Itoa(tenantID)
 
-	// 先检查缓存
+	// 先检查缓存（包括TTL检查）
 	permissionCacheLock.RLock()
-	if perms, exists := permissionCache[cacheKey]; exists {
-		permissionCacheLock.RUnlock()
-		return perms
+	if cached, exists := permissionCache[cacheKey]; exists {
+		if time.Now().Before(cached.expiresAt) {
+			permissionCacheLock.RUnlock()
+			return cached.permissions
+		}
 	}
 	permissionCacheLock.RUnlock()
 
@@ -337,9 +357,12 @@ func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int
 		}
 	}
 
-	// 存入缓存
+	// 存入缓存（带TTL）
 	permissionCacheLock.Lock()
-	permissionCache[cacheKey] = perms
+	permissionCache[cacheKey] = &cachedPermission{
+		permissions: perms,
+		expiresAt:  time.Now().Add(permissionCacheTTL),
+	}
 	permissionCacheLock.Unlock()
 
 	return perms

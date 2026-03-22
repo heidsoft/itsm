@@ -15,8 +15,14 @@ import (
 )
 
 type TicketCoreService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client         *ent.Client
+	logger        *zap.SugaredLogger
+	sequenceService *SequenceService
+}
+
+// SetSequenceService 设置序列服务
+func (s *TicketCoreService) SetSequenceService(seqSvc *SequenceService) {
+	s.sequenceService = seqSvc
 }
 
 func NewTicketCoreService(client *ent.Client, logger *zap.SugaredLogger) *TicketCoreService {
@@ -270,17 +276,46 @@ func (s *TicketCoreService) BatchDeleteTickets(ctx context.Context, ticketIDs []
 	return nil
 }
 
+// generateTicketNumber 生成工单编号，优先使用 Redis 序列
 func (s *TicketCoreService) generateTicketNumber(ctx context.Context, tenantID int) (string, error) {
 	now := time.Now()
 	year := now.Year()
-	month := now.Month()
+	month := int(now.Month())
 
-	// 查询当月的工单数量
+	// 优先使用 Redis 序列服务
+	if s.sequenceService != nil {
+		return s.generateTicketNumberWithRedis(ctx, year, month)
+	}
+
+	// 备用方案：数据库查询
+	return s.generateTicketNumberWithDB(ctx, tenantID, year, month)
+}
+
+// generateTicketNumberWithRedis 使用 Redis INCR 生成工单编号
+func (s *TicketCoreService) generateTicketNumberWithRedis(ctx context.Context, year, month int) (string, error) {
+	key := fmt.Sprintf("sequence:ticket:%d%02d", year, month)
+
+	// 计算本月最后一天作为过期时间
+	expiredAt := time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.UTC)
+
+	// 获取序列号（带过期时间）
+	seq, err := s.sequenceService.GetNextSequenceWithExpiry(ctx, key, expiredAt)
+	if err != nil {
+		s.logger.Warnw("Redis sequence failed, fallback to DB", "error", err)
+		return "", err
+	}
+
+	// 格式: TKT-YYYYMM-NNNNNN
+	return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq), nil
+}
+
+// generateTicketNumberWithDB 使用数据库查询生成工单编号（备用方案）
+func (s *TicketCoreService) generateTicketNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
 	count, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.CreatedAtGTE(time.Date(year, month, 1, 0, 0, 0, 0, time.Local)),
-			ticket.CreatedAtLT(time.Date(year, month+1, 1, 0, 0, 0, 0, time.Local)),
+			ticket.CreatedAtGTE(time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)),
+			ticket.CreatedAtLT(time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.Local)),
 		).
 		Count(ctx)
 	if err != nil {
@@ -288,7 +323,6 @@ func (s *TicketCoreService) generateTicketNumber(ctx context.Context, tenantID i
 		return "", fmt.Errorf("查询失败: %w", err)
 	}
 
-	// 格式: TKT-YYYYMM-NNNNNN
 	return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, count+1), nil
 }
 
