@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 
@@ -292,7 +293,7 @@ func (h *TicketServiceTaskHandler) assignTicket(ctx context.Context, ticketID in
 	// 更新工单分配
 	_, err = h.client.Ticket.UpdateOneID(ticketID).
 		SetAssigneeID(assigneeID).
-		SetStatus("assigned").
+		SetStatus(common.TicketStatusAssigned).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {

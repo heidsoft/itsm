@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
@@ -1310,7 +1311,7 @@ func (s *bpmnTaskService) AssignTask(ctx context.Context, taskID string, assigne
 
 	_, err = s.client.ProcessTask.UpdateOne(task).
 		SetAssignee(assignee).
-		SetStatus("assigned").
+		SetStatus(common.ProcessTaskStatusAssigned).
 		SetAssignedTime(time.Now()).
 		Save(ctx)
 
@@ -1331,7 +1332,7 @@ func (s *bpmnTaskService) ClaimTask(ctx context.Context, taskID string, userID s
 
 	_, err = s.client.ProcessTask.UpdateOne(task).
 		SetAssignee(userID).
-		SetStatus("assigned").
+		SetStatus(common.ProcessTaskStatusAssigned).
 		SetAssignedTime(time.Now()).
 		Save(ctx)
 
@@ -1352,7 +1353,7 @@ func (s *bpmnTaskService) ClaimTaskByID(ctx context.Context, id int, userID int)
 
 	_, err = s.client.ProcessTask.UpdateOne(task).
 		SetAssignee(fmt.Sprintf("%d", userID)).
-		SetStatus("assigned").
+		SetStatus(common.ProcessTaskStatusAssigned).
 		SetAssignedTime(time.Now()).
 		Save(ctx)
 
@@ -1497,7 +1498,7 @@ func (s *bpmnTaskService) BatchAssignTasks(ctx context.Context, taskIDs []string
 	_, err := s.client.ProcessTask.Update().
 		Where(processtask.TaskIDIn(taskIDs...)).
 		SetAssignee(assignee).
-		SetStatus("assigned").
+		SetStatus(common.ProcessTaskStatusAssigned).
 		SetAssignedTime(time.Now()).
 		Save(ctx)
 
@@ -1601,7 +1602,7 @@ func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTask
 			SetTaskName(parentTask.TaskName + "_会签").
 			SetTaskType("user_task").
 			SetAssignee(approver).
-			SetStatus("assigned").
+			SetStatus(common.ProcessTaskStatusAssigned).
 			SetPriority(parentTask.Priority).
 			SetParentTaskID(parentTaskID).
 			SetRootTaskID(rootTaskID).
