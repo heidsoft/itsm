@@ -94,7 +94,7 @@ export default function IncidentEditPage() {
 
       <Card
         title={
-          <span className="text-lg font-medium">编辑事件 - {incidentData?.incident_number}</span>
+          <span className="text-lg font-medium">编辑事件 - {incidentData?.incidentNumber}</span>
         }
         loading={fetching}
       >
