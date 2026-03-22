@@ -36,7 +36,7 @@ export default function ServiceRequestsPage() {
         request_no: r.id,
         title: r.title || r.catalog?.name || '服务请求',
         applicant: r.requester?.name || r.requester?.username || '-',
-        date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '-',
+        date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '-',
         priority: '中',
       })));
 

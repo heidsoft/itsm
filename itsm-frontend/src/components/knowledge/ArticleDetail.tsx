@@ -138,7 +138,7 @@ const ArticleDetail: React.FC = () => {
             </Space>
             <Space>
               <CalendarOutlined />
-              <Text type="secondary">{dayjs(article.created_at).format('YYYY-MM-DD HH:mm')}</Text>
+              <Text type="secondary">{dayjs(article.createdAt).format('YYYY-MM-DD HH:mm')}</Text>
             </Space>
             <Space>
               <FolderOutlined />

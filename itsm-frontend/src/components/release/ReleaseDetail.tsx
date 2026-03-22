@@ -209,7 +209,7 @@ const ReleaseDetail: React.FC = () => {
           </Descriptions.Item>
           <Descriptions.Item label="创建人">{release.created_by_name}</Descriptions.Item>
           <Descriptions.Item label="创建时间">
-            {dayjs(release.created_at).format('YYYY-MM-DD HH:mm')}
+            {dayjs(release.createdAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
         </Descriptions>
       </Card>

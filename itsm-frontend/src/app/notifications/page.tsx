@@ -329,8 +329,8 @@ export default function NotificationsPage() {
           return false;
         }
         // 日期范围筛选
-        if (dateRange && item.created_at) {
-          const date = dayjs(item.created_at);
+        if (dateRange && item.createdAt) {
+          const date = dayjs(item.createdAt);
           if (!date.isAfter(dateRange[0]) || !date.isBefore(dateRange[1])) {
             return false;
           }
@@ -462,7 +462,7 @@ export default function NotificationsPage() {
                     </Tag>
                   </div>
                   <Text type="secondary" className="text-xs">
-                    {formatDateTime(notification.created_at)}
+                    {formatDateTime(notification.createdAt)}
                   </Text>
                 </div>
               }

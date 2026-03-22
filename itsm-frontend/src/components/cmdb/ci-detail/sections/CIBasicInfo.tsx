@@ -45,12 +45,12 @@ export const CIBasicInfo: React.FC<CIBasicInfoProps> = ({ ci, typeInfo }) => {
       <Descriptions.Item label="同步时间">
         {ci.cloud_sync_time ? dayjs(ci.cloud_sync_time).format('YYYY-MM-DD HH:mm:ss') : '-'}
       </Descriptions.Item>
-      <Descriptions.Item label="所属租户">{ci.tenant_id}</Descriptions.Item>
+      <Descriptions.Item label="所属租户">{ci.tenantId || ci.tenant_id}</Descriptions.Item>
       <Descriptions.Item label="创建时间">
-        {dayjs(ci.created_at).format('YYYY-MM-DD HH:mm:ss')}
+        {dayjs(ci.createdAt).format('YYYY-MM-DD HH:mm:ss')}
       </Descriptions.Item>
       <Descriptions.Item label="最后更新">
-        {dayjs(ci.updated_at).format('YYYY-MM-DD HH:mm:ss')}
+        {dayjs(ci.updatedAt).format('YYYY-MM-DD HH:mm:ss')}
       </Descriptions.Item>
       <Descriptions.Item label="描述" span={2}>
         {ci.description || '无'}

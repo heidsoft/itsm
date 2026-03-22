@@ -210,8 +210,8 @@ const WorkflowInstancesPage = () => {
         activity_id: task.activity_id || task.nodeId,
         type: task.type || task.nodeType || 'task',
         assignee: task.assigneeName || task.assignee || '',
-        created_at: task.created_at || task.startTime,
-        due_date: task.due_date,
+        createdAt: task.createdAt || task.startTime,
+        dueDate: task.dueDate || task.due_date,
       })) as WorkflowTaskRecord[];
       setTasks(normalized);
     } catch (error) {
@@ -252,8 +252,8 @@ const WorkflowInstancesPage = () => {
           activity_id: task.activity_id || task.nodeId,
           type: task.type || task.nodeType || 'task',
           assignee: task.assigneeName || task.assignee || '',
-          created_at: task.created_at || task.startTime,
-          due_date: task.due_date,
+          createdAt: task.createdAt || task.startTime,
+          dueDate: task.dueDate || task.due_date,
         })) as WorkflowTaskRecord[];
         setTasks(normalized);
       }
@@ -281,11 +281,11 @@ const WorkflowInstancesPage = () => {
         const normalized = (tasksResponse as any[]).map(t => ({
           ...t,
           name: t.name || t.nodeName,
-          activity_id: t.activity_id || t.nodeId,
+          activityId: t.activityId || t.nodeId,
           type: t.type || t.nodeType || 'task',
           assignee: t.assigneeName || t.assignee || '',
-          created_at: t.created_at || t.startTime,
-          due_date: t.due_date,
+          createdAt: t.createdAt || t.startTime,
+          dueDate: t.dueDate || t.due_date,
         })) as WorkflowTaskRecord[];
         setTasks(normalized);
       }
@@ -365,11 +365,11 @@ const WorkflowInstancesPage = () => {
         const normalized = (tasksResponse as any[]).map(t => ({
           ...t,
           name: t.name || t.nodeName,
-          activity_id: t.activity_id || t.nodeId,
+          activityId: t.activityId || t.nodeId,
           type: t.type || t.nodeType || 'task',
           assignee: t.assigneeName || t.assignee || '',
-          created_at: t.created_at || t.startTime,
-          due_date: t.due_date,
+          createdAt: t.createdAt || t.startTime,
+          dueDate: t.dueDate || t.due_date,
         })) as WorkflowTaskRecord[];
         setTasks(normalized);
       }
@@ -868,8 +868,8 @@ const WorkflowInstancesPage = () => {
                 <div>类型：{selectedTask?.type}</div>
                 <div>
                   创建时间：
-                  {selectedTask?.created_at
-                    ? new Date(selectedTask.created_at).toLocaleString('zh-CN')
+                  {selectedTask?.createdAt
+                    ? new Date(selectedTask.createdAt).toLocaleString('zh-CN')
                     : '-'}
                 </div>
               </div>

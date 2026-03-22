@@ -75,7 +75,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         priority: filters.priority as any,
         type: filters.type as any,
         category: filters.category,
-        assignee_id: filters.assignee_id,
+        assigneeId: filters.assigneeId || filters.assignee_id,
         requester_id: filters.requester_id,
         date_from: filters.date_from,
         date_to: filters.date_to,

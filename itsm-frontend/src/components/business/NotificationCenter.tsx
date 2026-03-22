@@ -451,7 +451,7 @@ const NotificationCenter: React.FC<{
             {getChannelIcon(record.channel)}
             <span>{record.recipient}</span>
             <span>•</span>
-            <span>{new Date(record.created_at).toLocaleString()}</span>
+            <span>{new Date(record.createdAt).toLocaleString()}</span>
           </div>
         </div>
       ),

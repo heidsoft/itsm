@@ -195,7 +195,7 @@ const ChangeDetail: React.FC = () => {
                             {ChangeStatusLabels[record.status]}
                           </Tag>
                           <Text type="secondary">
-                            {dayjs(record.created_at).format('YYYY-MM-DD HH:mm')}
+                            {dayjs(record.createdAt).format('YYYY-MM-DD HH:mm')}
                           </Text>
                         </Space>
                       }
