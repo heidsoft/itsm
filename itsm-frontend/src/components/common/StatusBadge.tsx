@@ -18,7 +18,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, showText = tru
       text={
         showText ? (
           <Tag color={config.color} style={{ margin: 0 }}>
-            {config.text}
+            {config.label}
           </Tag>
         ) : null
       }

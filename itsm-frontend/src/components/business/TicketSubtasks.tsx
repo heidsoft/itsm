@@ -181,7 +181,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
       width: 100,
       render: (status: string) => {
         const config = getStatusConfig(status);
-        return <Tag color={config.color}>{config.text}</Tag>;
+        return <Tag color={config.color}>{config.label}</Tag>;
       },
     },
     {
@@ -191,7 +191,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
       width: 100,
       render: (priority: string) => {
         const config = getPriorityConfig(priority);
-        return <Tag color={config.color}>{config.text}</Tag>;
+        return <Tag color={config.color}>{config.label}</Tag>;
       },
     },
     {
@@ -277,7 +277,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
             <div key={subtask.id} className="border rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
+                  <Tag color={statusConfig.color}>{statusConfig.label}</Tag>
                   <span className="font-medium">{subtask.title}</span>
                 </div>
                 <div className="text-sm text-gray-500">
@@ -331,7 +331,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
                   <div className="font-medium">{subtask.title}</div>
                   <div className="text-sm text-gray-500 mt-1">{subtask.description}</div>
                   <div className="flex items-center gap-2 mt-2">
-                    <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
+                    <Tag color={statusConfig.color}>{statusConfig.label}</Tag>
                     {subtask.assignee && (
                       <span className="text-xs text-gray-500">处理人: {subtask.assignee.name}</span>
                     )}
@@ -377,7 +377,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
                       ? 'processing'
                       : 'default'
                 }
-                text={getStatusConfig(parentStatus).text}
+                text={getStatusConfig(parentStatus).label}
               />
             </div>
           </div>

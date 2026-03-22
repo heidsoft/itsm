@@ -17,8 +17,7 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({
 
   return (
     <Tag color={config.color} style={{ margin: 0 }}>
-      <span className="mr-1">{config.icon}</span>
-      {config.text}
+      {config.label}
       {showDescription && <span className="ml-2 text-xs opacity-75">({config.description})</span>}
     </Tag>
   );
