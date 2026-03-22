@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processinstance"
@@ -860,7 +861,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 	ticket, err := s.client.Ticket.UpdateOneID(ticketID).
 		Where(ticket.TenantID(tenantID)).
 		SetAssigneeID(assigneeID).
-		SetStatus("assigned").
+		SetStatus(common.TicketStatusAssigned).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to assign ticket", "error", err)
