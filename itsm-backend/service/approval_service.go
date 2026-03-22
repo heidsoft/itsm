@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"itsm-backend/dto"
@@ -841,12 +842,23 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 			Where(user.RoleEQ(user.Role(assigneeValue)), user.TenantID(tenantID), user.Active(true)).
 			First(ctx)
 		if err != nil || user == nil {
-			// 如果没找到，返回默认管理员
-			return 1, "管理员", nil
+			// 如果没找到，返回错误而不是回退到用户ID 1
+			return 0, "", fmt.Errorf("未找到具有角色 '%s' 的有效用户", assigneeValue)
+		}
+		return user.ID, user.Name, nil
+	case "user":
+		// 根据用户ID查找
+		userID, err := strconv.Atoi(assigneeValue)
+		if err != nil {
+			return 0, "", fmt.Errorf("无效的用户ID: %s", assigneeValue)
+		}
+		user, err := s.client.User.Get(ctx, userID)
+		if err != nil || user == nil {
+			return 0, "", fmt.Errorf("未找到用户ID: %d", userID)
 		}
 		return user.ID, user.Name, nil
 	default:
-		return 1, "管理员", nil
+		return 0, "", fmt.Errorf("不支持的审批人类型: %s", assigneeType)
 	}
 }
 

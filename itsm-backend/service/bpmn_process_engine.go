@@ -188,17 +188,23 @@ func (e *CustomProcessEngine) TaskService() TaskService {
 
 // StartProcess 启动流程实例
 func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitionKey string, businessKey string, variables map[string]interface{}) (*ent.ProcessInstance, error) {
-	// 1. 获取流程定义
-	definition, err := e.client.ProcessDefinition.Query().
+	// 1. 获取租户ID
+	tenantID, _ := ctx.Value("bpmn_tenant_id").(int)
+
+	// 2. 获取流程定义
+	query := e.client.ProcessDefinition.Query().
 		Where(processdefinition.Key(processDefinitionKey)).
 		Where(processdefinition.IsActive(true)).
-		Where(processdefinition.IsLatest(true)).
-		First(ctx)
+		Where(processdefinition.IsLatest(true))
+	if tenantID > 0 {
+		query = query.Where(processdefinition.TenantID(tenantID))
+	}
+	definition, err := query.First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
 
-	// 2. 解析BPMN
+	// 3. 解析BPMN
 	bpmnDefinitions, err := e.parser.ParseXML(definition.BpmnXML)
 	if err != nil {
 		return nil, fmt.Errorf("解析BPMN失败: %w", err)
@@ -267,10 +273,11 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	}
 
 	// 3. 获取流程定义并解析
-	definition, err := e.client.ProcessDefinition.Query().
+	definitionQuery := e.client.ProcessDefinition.Query().
 		Where(processdefinition.Key(task.ProcessDefinitionKey)).
 		Where(processdefinition.IsLatest(true)).
-		First(ctx)
+		Where(processdefinition.TenantID(instance.TenantID))
+	definition, err := definitionQuery.First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取流程定义失败: %w", err)
 	}
@@ -960,10 +967,14 @@ func (s *bpmnProcessDefinitionService) getNextVersion(ctx context.Context, key s
 }
 
 func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context, key string, version string) (*ent.ProcessDefinition, error) {
-	definition, err := s.client.ProcessDefinition.Query().
+	tenantID, _ := ctx.Value("bpmn_tenant_id").(int)
+	query := s.client.ProcessDefinition.Query().
 		Where(processdefinition.Key(key)).
-		Where(processdefinition.Version(version)).
-		First(ctx)
+		Where(processdefinition.Version(version))
+	if tenantID > 0 {
+		query = query.Where(processdefinition.TenantID(tenantID))
+	}
+	definition, err := query.First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
@@ -982,10 +993,14 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinitionByID(ctx context.Cont
 }
 
 func (s *bpmnProcessDefinitionService) GetLatestProcessDefinition(ctx context.Context, key string) (*ent.ProcessDefinition, error) {
-	definition, err := s.client.ProcessDefinition.Query().
+	tenantID, _ := ctx.Value("bpmn_tenant_id").(int)
+	query := s.client.ProcessDefinition.Query().
 		Where(processdefinition.Key(key)).
-		Where(processdefinition.IsLatest(true)).
-		First(ctx)
+		Where(processdefinition.IsLatest(true))
+	if tenantID > 0 {
+		query = query.Where(processdefinition.TenantID(tenantID))
+	}
+	definition, err := query.First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取最新流程定义失败: %w", err)
 	}
