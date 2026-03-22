@@ -112,7 +112,16 @@ func validatePriority(fl validator.FieldLevel) bool {
 // 自定义验证规则：状态
 func validateStatus(fl validator.FieldLevel) bool {
 	status := fl.Field().String()
-	validStatuses := []string{"open", "in_progress", "resolved", "closed", "pending", "cancelled"}
+	validStatuses := []string{
+		// Ticket statuses
+		"new", "open", "in_progress", "pending", "resolved", "closed", "cancelled", "assigned",
+		// Incident statuses
+		"acknowledged", "triaged", "escalated",
+		// Change statuses
+		"draft", "submitted", "approved", "rejected", "scheduled", "failed",
+		// Problem statuses
+		"investigating", "identified",
+	}
 
 	for _, valid := range validStatuses {
 		if status == valid {

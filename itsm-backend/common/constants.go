@@ -54,6 +54,7 @@ const (
 	TicketStatusResolved   = "resolved"
 	TicketStatusClosed     = "closed"
 	TicketStatusCancelled  = "cancelled"
+	TicketStatusAssigned   = "assigned" // 分配中状态
 )
 
 // ===================================
@@ -70,10 +71,36 @@ const (
 // Incident Status Constants
 // ===================================
 const (
-	IncidentStatusNew        = "new"
-	IncidentStatusInProgress = "in_progress"
+	IncidentStatusNew          = "new"
+	IncidentStatusAcknowledged = "acknowledged" // 已确认
+	IncidentStatusAssigned    = "assigned"    // 已分配
+	IncidentStatusInProgress  = "in_progress"
+	IncidentStatusTriaged     = "triaged"     // 已分类
+	IncidentStatusEscalated  = "escalated"   // 已升级
 	IncidentStatusResolved   = "resolved"
 	IncidentStatusClosed     = "closed"
+)
+
+// ===================================
+// Problem Status Constants
+// ===================================
+const (
+	ProblemStatusNew        = "new"
+	ProblemStatusInvestigating = "investigating" //调查中
+	ProblemStatusIdentified = "identified"       //已识别
+	ProblemStatusResolved   = "resolved"
+	ProblemStatusClosed     = "closed"
+)
+
+// ===================================
+// ProcessTask Status Constants (BPMN)
+// ===================================
+const (
+	ProcessTaskStatusCreated    = "created"
+	ProcessTaskStatusAssigned   = "assigned"
+	ProcessTaskStatusStarted   = "started"
+	ProcessTaskStatusCompleted = "completed"
+	ProcessTaskStatusCancelled = "cancelled"
 )
 
 // ===================================
