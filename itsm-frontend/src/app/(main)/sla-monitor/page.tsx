@@ -53,7 +53,7 @@ const SLAMonitorPage = () => {
       if (violationsData?.items) {
         setViolations(violationsData.items.map((v: any) => ({
           id: v.id,
-          ticket_no: v.ticket_number || `#${v.ticket_id}`,
+          ticketNo: v.ticketNumber || v.ticket_number || `#${v.ticketId || v.ticket_id}`,
           title: v.ticket_title || 'Unknown',
           priority: v.priority || 'medium',
           status: v.is_resolved ? '已解决' : '处理中',

@@ -113,7 +113,7 @@ const RequestCard = ({ request }: { request: ServiceRequest }) => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            <span>{formatDate(request.created_at)}</span>
+            <span>{formatDate(request.createdAt)}</span>
           </div>
           <div className="flex items-center gap-1">
             <FileText className="w-4 h-4" />

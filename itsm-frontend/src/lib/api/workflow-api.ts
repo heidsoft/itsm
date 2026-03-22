@@ -82,8 +82,8 @@ export class WorkflowApi {
       },
       createdBy: 0,
       createdByName: '',
-      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
-      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      createdAt: item.createdAt ? new Date(item.createdAt) : (item.created_at ? new Date(item.created_at) : new Date()),
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : (item.updated_at ? new Date(item.updated_at) : new Date()),
       description: item.description,
     })) as WorkflowDefinition[];
     return { workflows, total };
@@ -125,8 +125,8 @@ export class WorkflowApi {
       },
       createdBy: 0,
       createdByName: '',
-      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
-      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      createdAt: item.createdAt ? new Date(item.createdAt) : (item.created_at ? new Date(item.created_at) : new Date()),
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : (item.updated_at ? new Date(item.updated_at) : new Date()),
       description: item.description,
     };
   }
@@ -402,8 +402,8 @@ export class WorkflowApi {
       },
       createdBy: 0,
       createdByName: '',
-      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
-      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      createdAt: item.createdAt ? new Date(item.createdAt) : (item.created_at ? new Date(item.created_at) : new Date()),
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : (item.updated_at ? new Date(item.updated_at) : new Date()),
       description: item.description,
     })) as WorkflowDefinition[];
   }

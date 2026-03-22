@@ -115,7 +115,7 @@ const ServiceRequestDetail: React.FC = () => {
       <Timeline>
         <Timeline.Item color="green">
           <p>提交申请</p>
-          <small>{dayjs(request?.created_at).format('YYYY-MM-DD HH:mm')}</small>
+          <small>{dayjs(request?.createdAt).format('YYYY-MM-DD HH:mm')}</small>
         </Timeline.Item>
         {approvals.map((app, index) => (
           <Timeline.Item
@@ -175,7 +175,7 @@ const ServiceRequestDetail: React.FC = () => {
                 <Tag>{request.catalog?.category}</Tag>
                 <Text type="secondary">ID: {request.id}</Text>
                 <Text type="secondary">
-                  提交于: {dayjs(request.created_at).format('YYYY-MM-DD HH:mm')}
+                  提交于: {dayjs(request.createdAt).format('YYYY-MM-DD HH:mm')}
                 </Text>
               </Space>
             </div>

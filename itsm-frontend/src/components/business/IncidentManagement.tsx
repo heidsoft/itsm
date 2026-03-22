@@ -552,7 +552,7 @@ const IncidentDetailDrawer: React.FC<{
 
   return (
     <Drawer
-      title={`事件详情 - ${incident.incident_number}`}
+      title={`事件详情 - ${incident.incidentNumber || incident.incident_number}`}
       styles={{ wrapper: { width: 800 } }}
       open={visible}
       onClose={onClose}
@@ -635,7 +635,7 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
             <div className="mb-4">
               <Text strong>事件编号</Text>
               <div className="mt-1">
-                <Text code>{incident.incident_number}</Text>
+                <Text code>{incident.incidentNumber || incident.incident_number}</Text>
               </div>
             </div>
           </Col>
@@ -691,7 +691,7 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
             <div className="mb-4">
               <Text strong>检测时间</Text>
               <div className="mt-1">
-                <Text>{dayjs(incident.detected_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                <Text>{dayjs(incident.detectedAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
               </div>
             </div>
           </Col>
@@ -699,26 +699,26 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
             <div className="mb-4">
               <Text strong>创建时间</Text>
               <div className="mt-1">
-                <Text>{dayjs(incident.created_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                <Text>{dayjs(incident.createdAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
               </div>
             </div>
           </Col>
-          {incident.resolved_at && (
+          {incident.resolvedAt || incident.resolved_at && (
             <Col span={12}>
               <div className="mb-4">
                 <Text strong>解决时间</Text>
                 <div className="mt-1">
-                  <Text>{dayjs(incident.resolved_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                  <Text>{dayjs(incident.resolvedAt || incident.resolved_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
                 </div>
               </div>
             </Col>
           )}
-          {incident.closed_at && (
+          {incident.closedAt || incident.closed_at && (
             <Col span={12}>
               <div className="mb-4">
                 <Text strong>关闭时间</Text>
                 <div className="mt-1">
-                  <Text>{dayjs(incident.closed_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                  <Text>{dayjs(incident.closedAt || incident.closed_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
                 </div>
               </div>
             </Col>
@@ -727,7 +727,7 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
       </Card>
 
       {/* 升级信息 */}
-      {(incident.escalation_level ?? 0) > 0 && (
+      {(incident.escalationLevel ?? incident.escalation_level ?? 0) > 0 && (
         <Card title="升级信息">
           <Row gutter={[16, 16]}>
             <Col span={12}>
@@ -735,18 +735,18 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
                 <Text strong>升级级别</Text>
                 <div className="mt-1">
                   <Badge
-                    count={incident.escalation_level ?? 0}
+                    count={incident.escalationLevel ?? incident.escalation_level ?? 0}
                     style={{ backgroundColor: '#f50' }}
                   />
                 </div>
               </div>
             </Col>
-            {incident.escalated_at && (
+            {incident.escalatedAt || incident.escalated_at && (
               <Col span={12}>
                 <div className="mb-4">
                   <Text strong>升级时间</Text>
                   <div className="mt-1">
-                    <Text>{dayjs(incident.escalated_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                    <Text>{dayjs(incident.escalatedAt || incident.escalated_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
                   </div>
                 </div>
               </Col>
@@ -973,7 +973,7 @@ const IncidentMetrics: React.FC<{ metrics: IncidentMetric[]; loading: boolean }>
 
 // 事件影响分析组件
 const IncidentImpactAnalysis: React.FC<{ incident: Incident }> = ({ incident }) => {
-  const impactAnalysis = incident.impact_analysis;
+  const impactAnalysis = incident.impactAnalysis;
 
   if (!impactAnalysis) {
     return <Empty description="暂无影响分析数据" />;
@@ -982,13 +982,13 @@ const IncidentImpactAnalysis: React.FC<{ incident: Incident }> = ({ incident }) 
   return (
     <div className="space-y-6">
       {/* 时间影响 */}
-      {impactAnalysis.time_impact && (
+      {impactAnalysis.timeImpact && (
         <Card title="时间影响">
           <Row gutter={[16, 16]}>
             <Col span={12}>
               <Statistic
                 title="创建后时长"
-                value={impactAnalysis.time_impact.hours_since_creation}
+                value={impactAnalysis.timeImpact?.hoursSinceCreation}
                 suffix="小时"
                 precision={1}
               />
@@ -996,9 +996,9 @@ const IncidentImpactAnalysis: React.FC<{ incident: Incident }> = ({ incident }) 
             <Col span={12}>
               <Statistic
                 title="是否超时"
-                value={impactAnalysis.time_impact.is_overdue ? '是' : '否'}
+                value={impactAnalysis.timeImpact?.isOverdue ? '是' : '否'}
                 style={{
-                  color: impactAnalysis.time_impact.is_overdue ? '#f5222d' : '#52c41a',
+                  color: impactAnalysis.timeImpact?.isOverdue ? '#f5222d' : '#52c41a',
                 }}
               />
             </Col>
@@ -1007,27 +1007,27 @@ const IncidentImpactAnalysis: React.FC<{ incident: Incident }> = ({ incident }) 
       )}
 
       {/* 业务影响 */}
-      {impactAnalysis.business_impact && (
+      {impactAnalysis.businessImpact && (
         <Card title="业务影响">
           <Row gutter={[16, 16]}>
             <Col span={8}>
               <Statistic
                 title="受影响用户"
-                value={impactAnalysis.business_impact.affected_users}
+                value={impactAnalysis.businessImpact?.affectedUsers}
                 suffix="人"
               />
             </Col>
             <Col span={8}>
               <Statistic
                 title="收入影响"
-                value={impactAnalysis.business_impact.revenue_impact}
+                value={impactAnalysis.businessImpact?.revenueImpact}
                 prefix="¥"
               />
             </Col>
             <Col span={8}>
               <Statistic
                 title="服务可用性"
-                value={impactAnalysis.business_impact.service_availability}
+                value={impactAnalysis.businessImpact?.serviceAvailability}
                 suffix="%"
                 precision={1}
               />
@@ -1041,20 +1041,20 @@ const IncidentImpactAnalysis: React.FC<{ incident: Incident }> = ({ incident }) 
         <Card title="指标影响">
           <Row gutter={[16, 16]}>
             <Col span={6}>
-              <Statistic title="指标总数" value={impactAnalysis.metrics.total_count} />
+              <Statistic title="指标总数" value={impactAnalysis.metrics?.totalCount} />
             </Col>
             <Col span={6}>
               <Statistic
                 title="平均值"
-                value={impactAnalysis.metrics.average_value}
+                value={impactAnalysis.metrics?.averageValue}
                 precision={2}
               />
             </Col>
             <Col span={6}>
-              <Statistic title="最大值" value={impactAnalysis.metrics.max_value} precision={2} />
+              <Statistic title="最大值" value={impactAnalysis.metrics?.maxValue} precision={2} />
             </Col>
             <Col span={6}>
-              <Statistic title="最小值" value={impactAnalysis.metrics.min_value} precision={2} />
+              <Statistic title="最小值" value={impactAnalysis.metrics?.minValue} precision={2} />
             </Col>
           </Row>
         </Card>

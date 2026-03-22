@@ -193,13 +193,13 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
             item.is_active = category.is_active ? '是' : '否';
             break;
           case 'tenant_id':
-            item.tenant_id = Number(category.tenant_id) || undefined;
+            item.tenantId = Number(category.tenantId) || Number(category.tenant_id) || undefined;
             break;
-          case 'created_at':
-            item.created_at = category.created_at;
+          case 'createdAt':
+            item.createdAt = category.createdAt;
             break;
-          case 'updated_at':
-            item.updated_at = category.updated_at;
+          case 'updatedAt':
+            item.updatedAt = category.updatedAt;
             break;
           case 'created_by':
             item.created_by = category.created_by || '';

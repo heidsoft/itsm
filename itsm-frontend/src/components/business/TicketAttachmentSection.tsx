@@ -294,7 +294,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
                         {attachment.uploader?.name || '未知用户'}
                       </Text>
                       <Text type="secondary" className="text-xs">
-                        {new Date(attachment.created_at).toLocaleString('zh-CN')}
+                        {new Date(attachment.createdAt).toLocaleString('zh-CN')}
                       </Text>
                     </Space>
                   }

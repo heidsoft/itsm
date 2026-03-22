@@ -82,7 +82,7 @@ export const AIWorkflowAssistant: React.FC<AIWorkflowAssistantProps> = ({
       const workflowSuggestion: WorkflowSuggestion = {
         category: triageResult.category,
         priority: triageResult.priority,
-        assignee: `用户ID: ${triageResult.assignee_id}`,
+        assignee: `用户ID: ${triageResult.assigneeId || triageResult.assignee_id}`,
         estimatedTime: getEstimatedTime(triageResult.priority),
         workflow: generateWorkflow(triageResult.category, triageResult.priority),
         confidence: triageResult.confidence,
