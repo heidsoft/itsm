@@ -282,9 +282,9 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
                         </Tooltip>
                       )}
                       <Text type="secondary" className="text-xs">
-                        {formatTime(comment.created_at)}
+                        {formatTime(comment.createdAt)}
                       </Text>
-                      {comment.updated_at !== comment.created_at && (
+                      {comment.updatedAt !== comment.createdAt && (
                         <Text type="secondary" className="text-xs">
                           （已编辑）
                         </Text>

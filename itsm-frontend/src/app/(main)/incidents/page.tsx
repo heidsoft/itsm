@@ -263,8 +263,8 @@ export default function IncidentsPage() {
                 ? { name: incident.assignee.name || incident.assignee_name || '未分配' }
                 : null
             }
-            getItemCreatedAt={(incident: Incident) => incident.created_at}
-            getItemUpdatedAt={(incident: Incident) => incident.updated_at}
+            getItemCreatedAt={(incident: Incident) => incident.createdAt || incident.created_at}
+            getItemUpdatedAt={(incident: Incident) => incident.updatedAt || incident.updated_at}
             onItemClick={handleView}
             onItemEdit={handleEdit}
             columnConfigs={KANBAN_COLUMNS}

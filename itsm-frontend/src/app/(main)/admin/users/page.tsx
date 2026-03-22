@@ -422,7 +422,7 @@ const UserManagement: React.FC = () => {
                     部门: user.department || '',
                     电话: user.phone || '',
                     状态: user.active ? '激活' : '禁用',
-                    创建时间: user.created_at,
+                    创建时间: user.createdAt,
                   }));
                   const csvContent = [
                     Object.keys(exportData[0] || {}).join(','),

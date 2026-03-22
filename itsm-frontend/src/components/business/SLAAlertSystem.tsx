@@ -392,7 +392,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       title: '状态',
       key: 'status',
       render: (_: unknown, record: AlertHistory) =>
-        record.resolved_at ? <Tag color="green">已解决</Tag> : <Tag color="orange">进行中</Tag>,
+        record.resolvedAt ? <Tag color="green">已解决</Tag> : <Tag color="orange">进行中</Tag>,
     },
   ];
 

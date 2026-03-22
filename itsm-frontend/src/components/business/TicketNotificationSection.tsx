@@ -275,7 +275,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
                       <div className="flex items-center space-x-4 text-xs text-gray-500">
                         <span>
                           <Clock style={{ fontSize: 12, marginRight: 4 }} />
-                          创建时间: {formatDateTime(notification.created_at)}
+                          创建时间: {formatDateTime(notification.createdAt)}
                         </span>
                         {notification.sent_at && (
                           <span>

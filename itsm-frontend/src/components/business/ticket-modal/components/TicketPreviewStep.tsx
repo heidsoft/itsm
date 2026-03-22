@@ -47,11 +47,11 @@ export const TicketPreviewStep: React.FC<TicketPreviewStepProps> = ({
             <span className="text-gray-600 font-medium">优先级：</span>
             <span className="ml-2">{allValues.priority || '未选择'}</span>
           </div>
-          {allValues.assignee_id && (
+          {allValues.assigneeId && (
             <div>
               <span className="text-gray-600 font-medium">处理人：</span>
               <span className="ml-2">
-                {userList.find(u => u.id === allValues.assignee_id)?.name || '未选择'}
+                {userList.find(u => u.id === allValues.assigneeId)?.name || '未选择'}
               </span>
             </div>
           )}

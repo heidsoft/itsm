@@ -182,7 +182,7 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
                         {getMessageIcon(message.type)}
                       </Text>
                       <Text type="secondary" className="text-xs">
-                        {formatDistanceToNow(new Date(message.created_at), {
+                        {formatDistanceToNow(new Date(message.createdAt), {
                           addSuffix: true,
                           locale: zhCN,
                         })}

@@ -203,7 +203,7 @@ const TicketApprovalWorkflowPage = () => {
         nodes: [],
         metadata: {
           version: response.version || '1.0.0',
-          lastModified: response.updated_at || new Date().toISOString(),
+          lastModified: response.updatedAt || response.updated_at || new Date().toISOString(),
           nodeCount: 0,
           approvalCount: 0,
         },

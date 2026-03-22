@@ -390,13 +390,13 @@ export const EnhancedTicketDetail: React.FC<EnhancedTicketDetailProps> = ({
               <div>
                 <Text type="secondary">创建时间</Text>
                 <div className="font-medium">
-                  {new Date(ticket.created_at).toLocaleString('zh-CN')}
+                  {new Date(ticket.createdAt).toLocaleString('zh-CN')}
                 </div>
               </div>
               <div>
                 <Text type="secondary">最后更新</Text>
                 <div className="font-medium">
-                  {new Date(ticket.updated_at).toLocaleString('zh-CN')}
+                  {new Date(ticket.updatedAt).toLocaleString('zh-CN')}
                 </div>
               </div>
             </div>
@@ -707,7 +707,7 @@ export const EnhancedTicketDetail: React.FC<EnhancedTicketDetailProps> = ({
                             <Tag color="blue">{comment.author.role}</Tag>
                             {comment.is_internal && <Tag color="orange">内部</Tag>}
                             <span className="text-sm text-gray-500">
-                              {new Date(comment.created_at).toLocaleString('zh-CN')}
+                              {new Date(comment.createdAt).toLocaleString('zh-CN')}
                             </span>
                           </div>
                           <div className="text-gray-700 mb-3">{comment.content}</div>

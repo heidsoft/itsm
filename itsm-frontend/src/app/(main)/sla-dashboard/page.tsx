@@ -513,7 +513,7 @@ const SLADashboardPage = () => {
                                       }}
                                     />
                                   }
-                                  title={`工单 #${String(alert.ticket_id).padStart(5, '0')}`}
+                                  title={`工单 #${String(alert.ticketId || alert.ticket_id).padStart(5, '0')}`}
                                   description={
                                     <div>
                                       <div>{alert.ticket_title}</div>

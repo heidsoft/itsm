@@ -113,7 +113,7 @@ const WorkflowVersionsPage = () => {
           process_variables: v.process_variables || {},
           status: (v.is_active ? 'active' : 'archived') as 'draft' | 'active' | 'archived',
           created_by: v.created_by || 'System',
-          created_at: v.created_at || new Date().toISOString(),
+          createdAt: v.createdAt || v.created_at || new Date().toISOString(),
           change_log: v.change_log || '',
           is_current: v.is_active || false,
           metadata: v.metadata || {},
@@ -473,7 +473,7 @@ const WorkflowVersionsPage = () => {
               </Descriptions.Item>
               <Descriptions.Item label="创建人">{selectedVersion.created_by}</Descriptions.Item>
               <Descriptions.Item label="创建时间">
-                {new Date(selectedVersion.created_at).toLocaleString('zh-CN')}
+                {new Date(selectedVersion.createdAt).toLocaleString('zh-CN')}
               </Descriptions.Item>
               <Descriptions.Item label="当前版本">
                 {selectedVersion.is_current ? '是' : '否'}
@@ -522,7 +522,7 @@ const WorkflowVersionsPage = () => {
                       {comparison.version1.created_by}
                     </Descriptions.Item>
                     <Descriptions.Item label="创建时间">
-                      {new Date(comparison.version1.created_at).toLocaleDateString('zh-CN')}
+                      {new Date(comparison.version1.createdAt).toLocaleDateString('zh-CN')}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
@@ -539,7 +539,7 @@ const WorkflowVersionsPage = () => {
                       {comparison.version2.created_by}
                     </Descriptions.Item>
                     <Descriptions.Item label="创建时间">
-                      {new Date(comparison.version2.created_at).toLocaleDateString('zh-CN')}
+                      {new Date(comparison.version2.createdAt).toLocaleDateString('zh-CN')}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>

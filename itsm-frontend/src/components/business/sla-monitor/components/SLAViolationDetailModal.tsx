@@ -75,7 +75,7 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
     >
       <Descriptions bordered column={2}>
         <Descriptions.Item label="ID">{violation.id}</Descriptions.Item>
-        <Descriptions.Item label="工单ID">{violation.ticket_id}</Descriptions.Item>
+        <Descriptions.Item label="工单ID">{violation.ticketId || violation.ticket_id}</Descriptions.Item>
         <Descriptions.Item label="SLA定义ID">{violation.sla_def_id}</Descriptions.Item>
         <Descriptions.Item label="违规类型">{violation.violation_type}</Descriptions.Item>
         <Descriptions.Item label="严重程度">
@@ -99,10 +99,10 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
           {violation.description || '-'}
         </Descriptions.Item>
         <Descriptions.Item label="创建时间">
-          {new Date(violation.created_at).toLocaleString()}
+          {new Date(violation.createdAt).toLocaleString()}
         </Descriptions.Item>
         <Descriptions.Item label="更新时间">
-          {new Date(violation.updated_at).toLocaleString()}
+          {new Date(violation.updatedAt).toLocaleString()}
         </Descriptions.Item>
       </Descriptions>
     </Modal>

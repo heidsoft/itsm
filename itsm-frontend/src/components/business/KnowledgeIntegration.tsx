@@ -291,7 +291,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <span>相关度: {item.relevance}%</span>
                         <span>浏览量: {item.view_count}</span>
-                        <span>更新: {item.updated_at}</span>
+                        <span>更新: {item.updatedAt || item.updated_at}</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {(item.tags || []).map(tag => (
@@ -473,7 +473,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                       <p className="text-gray-600">{item.summary}</p>
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <span>浏览量: {item.view_count}</span>
-                        <span>更新: {item.updated_at}</span>
+                        <span>更新: {item.updatedAt || item.updated_at}</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {(item.tags || []).map(tag => (
