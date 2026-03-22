@@ -92,7 +92,11 @@ func (s *ProblemService) GetProblem(ctx context.Context, id int, tenantID int) (
 func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblemsRequest, tenantID int) (*dto.ListProblemsResponse, error) {
 	s.logger.Infow("Listing problems", "tenant_id", tenantID, "page", req.Page, "page_size", req.PageSize)
 
-	query := s.client.Problem.Query().Where(problem.TenantID(tenantID))
+	// 只查询未删除的问题
+	query := s.client.Problem.Query().Where(
+		problem.TenantID(tenantID),
+		problem.DeletedAtIsNil(),
+	)
 
 	// 应用过滤条件
 	if req.Status != "" {

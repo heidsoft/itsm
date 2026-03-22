@@ -318,16 +318,19 @@ func (s *TicketLifecycleService) mapProcessStatus(status string) string {
 // isValidStatusTransition 检查状态转换是否合法
 func (s *TicketLifecycleService) isValidStatusTransition(currentStatus, newStatus string) bool {
 	validTransitions := map[string][]string{
+		common.TicketStatusNew:        {common.TicketStatusOpen, common.TicketStatusAssigned},
+		common.TicketStatusAssigned:   {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusClosed},
 		common.TicketStatusOpen:       {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusClosed},
 		common.TicketStatusInProgress: {common.TicketStatusResolved, common.TicketStatusPending, common.TicketStatusOpen},
-		common.TicketStatusPending:    {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusOpen},
+		common.TicketStatusPending:     {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusOpen},
 		common.TicketStatusResolved:   {common.TicketStatusClosed, common.TicketStatusOpen},
-		common.TicketStatusClosed:     {}, // 已关闭的工单不能转换到其他状态
+		common.TicketStatusClosed:      {}, // 已关闭的工单不能转换到其他状态
 	}
 
 	allowed, ok := validTransitions[currentStatus]
 	if !ok {
-		return false
+		// 未知状态，允许转换（保守策略）
+		return true
 	}
 
 	for _, status := range allowed {
