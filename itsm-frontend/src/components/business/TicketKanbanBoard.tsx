@@ -130,9 +130,9 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
 
           {/* 状态和优先级 */}
           <div className="flex items-center gap-2 flex-wrap">
-            <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
+            <Tag color={statusConfig.color}>{statusConfig.label}</Tag>
             <Tag color={priorityConfig.color}>
-              {priorityConfig.icon} {priorityConfig.text}
+              {priorityConfig.label}
             </Tag>
           </div>
 
