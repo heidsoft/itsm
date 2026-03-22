@@ -191,10 +191,10 @@ const AssetDetail: React.FC = () => {
           <Descriptions.Item label="保修期到期">{asset.warranty_expiry || '-'}</Descriptions.Item>
           <Descriptions.Item label="支持期到期">{asset.support_expiry || '-'}</Descriptions.Item>
           <Descriptions.Item label="创建时间">
-            {dayjs(asset.created_at).format('YYYY-MM-DD HH:mm')}
+            {dayjs(asset.createdAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
           <Descriptions.Item label="更新时间">
-            {dayjs(asset.updated_at).format('YYYY-MM-DD HH:mm')}
+            {dayjs(asset.updatedAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
         </Descriptions>
       </Card>

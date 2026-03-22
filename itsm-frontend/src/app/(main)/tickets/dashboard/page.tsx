@@ -373,9 +373,9 @@ const TicketDashboardPage = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <Text strong>{activity.description || activity.type}</Text>
-                    {'ticket_id' in activity && (activity as any).ticket_id && (
+                    {'ticketId' in activity && (activity as any).ticketId && (
                       <div className="text-sm text-gray-500">
-                        工单 #{(activity as any).ticket_id}
+                        工单 #{(activity as any).ticketId}
                       </div>
                     )}
                   </div>

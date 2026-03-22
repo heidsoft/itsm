@@ -303,7 +303,7 @@ export default function AuditLogsPage() {
               {selectedLog.user_name} (ID: {selectedLog.user_id})
             </Descriptions.Item>
             <Descriptions.Item label="受理人">
-              {selectedLog.assignee_name} (ID: {selectedLog.assignee_id})
+              {selectedLog.assigneeName || selectedLog.assignee_name} (ID: {selectedLog.assigneeId || selectedLog.assignee_id})
             </Descriptions.Item>
             <Descriptions.Item label="流程实例Key" span={2}>
               {selectedLog.process_instance_key}

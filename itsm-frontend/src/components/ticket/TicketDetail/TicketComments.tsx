@@ -172,9 +172,9 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                       </AntTag>
                     )}
                     <Text type="secondary" className="text-sm">
-                      {formatDateTime(comment.created_at)}
+                      {formatDateTime(comment.createdAt)}
                     </Text>
-                    {comment.updated_at !== comment.created_at && (
+                    {comment.updatedAt !== comment.createdAt && (
                       <Text type="secondary" className="text-xs">
                         （已编辑）
                       </Text>

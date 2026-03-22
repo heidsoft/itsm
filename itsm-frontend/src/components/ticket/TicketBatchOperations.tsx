@@ -169,7 +169,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
               case 'assign':
                 const assignParams = values as { assignee_id: number; comment?: string };
                 await TicketAPI.assignTicket(ticket.id, {
-                  assignee_id: assignParams.assignee_id,
+                  assigneeId: assignParams.assigneeId || assignParams.assignee_id,
                   comment: assignParams.comment,
                 });
                 break;

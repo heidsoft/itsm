@@ -306,13 +306,13 @@ export class SLAApi {
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return history.items.map((item: any) => ({
-      ticket_id: item.ticket_id,
-      ticket_title: item.ticket_title || `Ticket #${item.ticket_id}`,
+      ticketId: item.ticketId || item.ticket_id,
+      ticketTitle: item.ticketTitle || item.ticket_title || `Ticket #${item.ticketId || item.ticket_id}`,
       priority: item.priority || 'medium',
-      sla_definition: item.sla_definition_name || 'SLA',
-      time_remaining: 0, // 历史记录可能没有剩余时间
-      alert_level: item.alert_level,
-      created_at: item.created_at,
+      slaDefinition: item.slaDefinition || item.sla_definition_name || 'SLA',
+      timeRemaining: 0, // 历史记录可能没有剩余时间
+      alertLevel: item.alertLevel || item.alert_level,
+      createdAt: item.createdAt || item.created_at,
     }));
   }
 

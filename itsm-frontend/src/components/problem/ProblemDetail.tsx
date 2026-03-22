@@ -90,16 +90,16 @@ const ProblemDetail: React.FC = () => {
         <Card variant="borderless" bodyStyle={{ padding: '16px 24px' }}>
           <Descriptions column={2}>
             <Descriptions.Item label="创建人ID">{data.created_by}</Descriptions.Item>
-            <Descriptions.Item label="负责人ID">{data.assignee_id || '-'}</Descriptions.Item>
+            <Descriptions.Item label="负责人ID">{data.assigneeId || data.assignee_id || '-'}</Descriptions.Item>
             <Descriptions.Item label="优先级">
               {ProblemPriorityLabels[data.priority]}
             </Descriptions.Item>
             <Descriptions.Item label="分类">{data.category}</Descriptions.Item>
             <Descriptions.Item label="创建时间">
-              {dayjs(data.created_at).format('YYYY-MM-DD HH:mm:ss')}
+              {dayjs(data.createdAt).format('YYYY-MM-DD HH:mm:ss')}
             </Descriptions.Item>
             <Descriptions.Item label="更新时间">
-              {dayjs(data.updated_at).format('YYYY-MM-DD HH:mm:ss')}
+              {dayjs(data.updatedAt).format('YYYY-MM-DD HH:mm:ss')}
             </Descriptions.Item>
           </Descriptions>
 

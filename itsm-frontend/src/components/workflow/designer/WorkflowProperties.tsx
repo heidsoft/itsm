@@ -149,7 +149,7 @@ export default function WorkflowProperties({
                   <Text strong>版本 {version.version}</Text>
                   <div className="text-sm text-gray-500 mt-1">{version.change_log}</div>
                   <div className="text-xs text-gray-400 mt-1">
-                    {new Date(version.created_at).toLocaleString()} - {version.created_by}
+                    {new Date(version.createdAt).toLocaleString()} - {version.createdBy}
                   </div>
                 </div>
                 <Space>

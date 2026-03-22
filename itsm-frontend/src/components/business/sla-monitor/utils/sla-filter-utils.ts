@@ -30,7 +30,7 @@ export const filterSLAViolations = (
 
     // 日期范围过滤
     if (filters.dateRange && filters.dateRange[0] && filters.dateRange[1]) {
-      const violationDate = dayjs(violation.created_at);
+      const violationDate = dayjs(violation.createdAt);
       if (
         violationDate.isBefore(filters.dateRange[0], 'day') ||
         violationDate.isAfter(filters.dateRange[1], 'day')
@@ -43,7 +43,7 @@ export const filterSLAViolations = (
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       const matchesDescription = violation.description?.toLowerCase().includes(searchLower);
-      const matchesTicketId = String(violation.ticket_id).includes(searchLower);
+      const matchesTicketId = String(violation.ticketId || violation.ticket_id).includes(searchLower);
       if (!matchesDescription && !matchesTicketId) {
         return false;
       }

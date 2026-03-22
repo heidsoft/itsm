@@ -113,15 +113,15 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         // 转换API响应格式到组件格式
         const convertedAlerts: SLAAlert[] = (data.alerts || []).map((alert: any) => ({
           id: alert.id,
-          ticketId: alert.ticket_id,
-          ticketNumber: alert.ticket_number,
-          ticketTitle: alert.ticket_title,
+          ticketId: alert.ticketId || alert.ticket_id,
+          ticketNumber: alert.ticketNumber || alert.ticket_number,
+          ticketTitle: alert.ticketTitle || alert.ticket_title,
           priority: alert.priority,
-          alertLevel: alert.alert_level,
-          timeRemaining: alert.time_remaining,
-          slaDefinition: alert.sla_definition,
+          alertLevel: alert.alertLevel || alert.alert_level,
+          timeRemaining: alert.timeRemaining || alert.time_remaining,
+          slaDefinition: alert.slaDefinition || alert.sla_definition,
           severity: alert.severity || 'medium',
-          createdAt: alert.created_at,
+          createdAt: alert.createdAt || alert.created_at,
         }));
         setAlerts(convertedAlerts);
         lastUpdateTimeRef.current = new Date();

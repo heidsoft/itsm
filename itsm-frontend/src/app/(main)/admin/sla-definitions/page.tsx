@@ -55,8 +55,8 @@ const transformSLA = (item: SLADefinitionType): SLADefinition => ({
   escalationRules: [],
   applicableServices: [],
   status: item.is_active ? 'active' : 'inactive',
-  createdAt: item.created_at,
-  updatedAt: item.updated_at,
+  createdAt: item.createdAt || item.created_at,
+  updatedAt: item.updatedAt || item.updated_at,
   createdBy: '系统',
 });
 
