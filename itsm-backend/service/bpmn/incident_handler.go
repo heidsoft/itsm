@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 
@@ -85,7 +86,7 @@ func (h *IncidentServiceTaskHandler) createIncident(ctx context.Context, variabl
 		SetType(incidentType).
 		SetPriority(priority).
 		SetSeverity(severity).
-		SetStatus("new").
+		SetStatus(common.IncidentStatusNew).
 		SetReporterID(GetIntFromVars(variables, "reporter_id")).
 		SetTenantID(tenantID).
 		Save(ctx)
@@ -117,7 +118,7 @@ func (h *IncidentServiceTaskHandler) assignIncident(ctx context.Context, variabl
 
 	_, err := h.client.Incident.UpdateOneID(incidentID).
 		SetAssigneeID(assigneeID).
-		SetStatus("assigned").
+		SetStatus(common.IncidentStatusAssigned).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("分配事件失败: %w", err)
@@ -156,7 +157,7 @@ func (h *IncidentServiceTaskHandler) escalateIncident(ctx context.Context, varia
 	_, err = h.client.Incident.UpdateOneID(incidentID).
 		SetEscalationLevel(newLevel).
 		SetEscalatedAt(now).
-		SetStatus("escalated").
+		SetStatus(common.IncidentStatusEscalated).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("升级事件失败: %w", err)
@@ -181,7 +182,7 @@ func (h *IncidentServiceTaskHandler) resolveIncident(ctx context.Context, variab
 
 	now := time.Now()
 	_, err := h.client.Incident.UpdateOneID(incidentID).
-		SetStatus("resolved").
+		SetStatus(common.IncidentStatusResolved).
 		SetResolvedAt(now).
 		Save(ctx)
 	if err != nil {
@@ -207,7 +208,7 @@ func (h *IncidentServiceTaskHandler) closeIncident(ctx context.Context, variable
 
 	now := time.Now()
 	_, err := h.client.Incident.UpdateOneID(incidentID).
-		SetStatus("closed").
+		SetStatus(common.IncidentStatusClosed).
 		SetClosedAt(now).
 		Save(ctx)
 	if err != nil {
@@ -270,7 +271,7 @@ func (h *IncidentServiceTaskHandler) acknowledgeIncident(ctx context.Context, va
 	}
 
 	_, err := h.client.Incident.UpdateOneID(incidentID).
-		SetStatus("acknowledged").
+		SetStatus(common.IncidentStatusAcknowledged).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("确认事件失败: %w", err)
@@ -294,7 +295,7 @@ func (h *IncidentServiceTaskHandler) categorizeIncident(ctx context.Context, var
 		return nil, fmt.Errorf("无效的事件ID")
 	}
 
-	updateQuery := h.client.Incident.UpdateOneID(incidentID).SetStatus("triaged")
+	updateQuery := h.client.Incident.UpdateOneID(incidentID).SetStatus(common.IncidentStatusTriaged)
 	if category != "" {
 		updateQuery.SetCategory(category)
 	}
