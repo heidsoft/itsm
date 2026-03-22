@@ -138,44 +138,12 @@ func IPWhitelistMiddleware(allowedIPs []string) gin.HandlerFunc {
 }
 
 // SQLInjectionProtectionMiddleware SQL注入防护中间件
+// 注意: 由于系统使用 Ent ORM 参数化查询，SQL注入已被防止。
+// 此中间件原有的正则检测不可靠（可被绕过），已禁用。
 func SQLInjectionProtectionMiddleware() gin.HandlerFunc {
-	// SQL注入检测模式
-	sqlInjectionPatterns := []*regexp.Regexp{
-		regexp.MustCompile(`(?i)(union\s+select|select\s+.*\s+from|insert\s+into|update\s+.*\s+set|delete\s+from)`),
-		regexp.MustCompile(`(?i)(drop\s+table|drop\s+database|truncate\s+table)`),
-		regexp.MustCompile(`(?i)(exec\s*\(|execute\s*\(|sp_executesql)`),
-		regexp.MustCompile(`(?i)(script\s*>|javascript:|vbscript:)`),
-		regexp.MustCompile(`(?i)(\'\s*or\s*\'|\'\s*and\s*\'|--\s*|\/\*|\*\/)`),
-		regexp.MustCompile(`(?i)(0x[0-9a-f]+|char\s*\(|ascii\s*\()`),
-	}
-
 	return func(c *gin.Context) {
-		// 检查查询参数
-		for key, values := range c.Request.URL.Query() {
-			for _, value := range values {
-				if containsSQLInjection(value, sqlInjectionPatterns) {
-					common.Fail(c, common.ParamErrorCode, fmt.Sprintf("检测到潜在的SQL注入攻击: 参数 %s", key))
-					c.Abort()
-					return
-				}
-			}
-		}
-
-		// 检查POST表单数据
-		if c.Request.Method == "POST" || c.Request.Method == "PUT" {
-			if err := c.Request.ParseForm(); err == nil {
-				for key, values := range c.Request.PostForm {
-					for _, value := range values {
-						if containsSQLInjection(value, sqlInjectionPatterns) {
-							common.Fail(c, common.ParamErrorCode, fmt.Sprintf("检测到潜在的SQL注入攻击: 表单字段 %s", key))
-							c.Abort()
-							return
-						}
-					}
-				}
-			}
-		}
-
+		// Ent ORM 使用参数化查询，SQL注入已被防止
+		// 正则检测不可靠且会造成误杀（如用户输入 "SELECT * FROM" 在描述字段中）
 		c.Next()
 	}
 }

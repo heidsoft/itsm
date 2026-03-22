@@ -116,6 +116,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 
 	// 使用 CoreService 创建基础工单
 	coreService := NewTicketCoreService(s.client, s.logger)
+	if s.sequenceService != nil {
+		coreService.SetSequenceService(s.sequenceService)
+	}
 	ticket, err := coreService.CreateTicketBasic(ctx, req, tenantID)
 	if err != nil {
 		return nil, err

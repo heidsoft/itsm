@@ -68,7 +68,20 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 		return nil, fmt.Errorf("failed to update change status: %w", err)
 	}
 
-	// 4. Create approval request records for each approver
+	// 4. Validate approvers belong to the same tenant before creating approval records
+	for _, approverID := range req.ApproverIDs {
+		valid, err := s.repo.ValidateApproverBelongsToTenant(ctx, approverID, tenantID)
+		if err != nil {
+			s.logger.Warnw("Failed to validate approver", "error", err, "approver_id", approverID)
+			return nil, fmt.Errorf("验证审批人失败")
+		}
+		if !valid {
+			s.logger.Warnw("Approver does not belong to tenant", "approver_id", approverID, "tenant_id", tenantID)
+			return nil, fmt.Errorf("审批人 %d 不属于当前租户", approverID)
+		}
+	}
+
+	// 5. Create approval request records for each approver
 	for _, approverID := range req.ApproverIDs {
 		record := &ApprovalRecord{
 			ChangeID:   changeID,
