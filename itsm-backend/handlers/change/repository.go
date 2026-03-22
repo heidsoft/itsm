@@ -27,4 +27,7 @@ type Repository interface {
 	// Risk Assessment
 	CreateRiskAssessment(ctx context.Context, ra *RiskAssessment) (*RiskAssessment, error)
 	GetRiskAssessment(ctx context.Context, changeID int) (*RiskAssessment, error)
+
+	// Tenant validation
+	ValidateApproverBelongsToTenant(ctx context.Context, approverID, tenantID int) (bool, error)
 }

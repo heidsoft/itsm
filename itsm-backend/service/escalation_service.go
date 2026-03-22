@@ -198,17 +198,36 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 		return fmt.Errorf("failed to query long pending tickets: %w", err)
 	}
 
+	if len(tickets) == 0 {
+		return nil
+	}
+
+	// 批量加载已有的长等待预警记录，避免N+1查询
+	ticketIDs := make([]int, len(tickets))
+	for i, t := range tickets {
+		ticketIDs[i] = t.ID
+	}
+	existingAlerts, _ := e.client.SLAAlertHistory.Query().
+		Where(
+			slaalerthistory.TicketIDIn(ticketIDs...),
+			slaalerthistory.AlertLevelEQ("long_pending"),
+			slaalerthistory.ResolvedAtIsNil(),
+		).
+		All(ctx)
+
+	// 构建已发送预警的工单集合
+	alertedTickets := make(map[int]bool)
+	for _, alert := range existingAlerts {
+		alertedTickets[alert.TicketID] = true
+	}
+
 	for _, t := range tickets {
 		// 检查是否已发送过长时间未解决通知
-		exists, _ := e.client.SLAAlertHistory.Query().
-			Where(
-				slaalerthistory.TicketIDEQ(t.ID),
-				slaalerthistory.AlertLevelEQ("long_pending"),
-				slaalerthistory.ResolvedAtIsNil(),
-			).
-			Exist(ctx)
+		if alertedTickets[t.ID] {
+			continue
+		}
 
-		if !exists && e.notificationSvc != nil {
+		if e.notificationSvc != nil {
 			// 获取该工单的处理人或创建人
 			userIDs := []int{t.RequesterID}
 			if t.AssigneeID > 0 {
@@ -269,39 +288,56 @@ func (e *EscalationService) processUnassignedTickets(ctx context.Context, tenant
 		return fmt.Errorf("failed to query unassigned tickets: %w", err)
 	}
 
+	if len(tickets) == 0 {
+		return nil
+	}
+
+	// 批量加载已有的未分配预警记录，避免N+1查询
+	ticketIDs := make([]int, len(tickets))
+	for i, t := range tickets {
+		ticketIDs[i] = t.ID
+	}
+	existingAlerts, _ := e.client.SLAAlertHistory.Query().
+		Where(
+			slaalerthistory.TicketIDIn(ticketIDs...),
+			slaalerthistory.AlertLevelEQ("unassigned"),
+			slaalerthistory.ResolvedAtIsNil(),
+		).
+		All(ctx)
+
+	// 构建已发送预警的工单集合
+	alertedTickets := make(map[int]bool)
+	for _, alert := range existingAlerts {
+		alertedTickets[alert.TicketID] = true
+	}
+
+	// 通知管理员
+	admins, _ := e.client.User.Query().
+		Where(user.RoleEQ("admin")).
+		IDs(ctx)
+
 	for _, t := range tickets {
 		// 检查是否已发送过未分配通知
-		exists, _ := e.client.SLAAlertHistory.Query().
-			Where(
-				slaalerthistory.TicketIDEQ(t.ID),
-				slaalerthistory.AlertLevelEQ("unassigned"),
-				slaalerthistory.ResolvedAtIsNil(),
-			).
-			Exist(ctx)
+		if alertedTickets[t.ID] {
+			continue
+		}
 
-		if !exists && e.notificationSvc != nil {
-			// 通知管理员
-			admins, _ := e.client.User.Query().
-				Where(user.RoleEQ("admin")).
-				IDs(ctx)
+		if e.notificationSvc != nil && len(admins) > 0 {
+			content := fmt.Sprintf("【未分配提醒】工单 #%s (%s) 已超过2小时未分配，请及时处理！",
+				t.TicketNumber, t.Title)
 
-			if len(admins) > 0 {
-				content := fmt.Sprintf("【未分配提醒】工单 #%s (%s) 已超过2小时未分配，请及时处理！",
-					t.TicketNumber, t.Title)
-
-				for _, adminID := range admins {
-					if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
-						UserIDs: []int{adminID},
-						Type:    "unassigned",
-						Channel: "in_app",
-						Content: content,
-					}, tenantID); err != nil {
-						e.logger.Errorw("Failed to send unassigned notification", "ticket_id", t.ID, "admin_id", adminID, "error", err)
-					}
+			for _, adminID := range admins {
+				if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
+					UserIDs: []int{adminID},
+					Type:    "unassigned",
+					Channel: "in_app",
+					Content: content,
+				}, tenantID); err != nil {
+					e.logger.Errorw("Failed to send unassigned notification", "ticket_id", t.ID, "admin_id", adminID, "error", err)
 				}
-
-				e.logger.Infow("Unassigned ticket notification sent", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
 			}
+
+			e.logger.Infow("Unassigned ticket notification sent", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
 		}
 	}
 
