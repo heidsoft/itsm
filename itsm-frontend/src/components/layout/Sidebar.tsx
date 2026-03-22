@@ -391,7 +391,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   // 动态菜单状态
   const [dynamicMenus, setDynamicMenus] = useState<MenuTreeResponse | null>(null);
   const [menuLoading, setMenuLoading] = useState(false);
-  const [menuError, setMenuError] = useState(false);
 
   // 加载用户菜单
   useEffect(() => {
@@ -406,7 +405,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
         }
       } catch (error) {
         console.warn('Failed to load dynamic menus, using fallback:', error);
-        setMenuError(true);
       } finally {
         setMenuLoading(false);
       }
@@ -463,8 +461,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
     return iconMap[iconName];
   };
 
-  // 确定使用哪个菜单配置
-  const useDynamicMenu = dynamicMenus && !menuError;
+  // 确定使用哪个菜单配置 - 优先使用数据库动态菜单
+  const useDynamicMenu = !!dynamicMenus;
   const mainMenus = useDynamicMenu ? convertApiMenuToSidebar(dynamicMenus.main) : MENU_CONFIG.main;
   const adminMenus = useDynamicMenu ? convertApiMenuToSidebar(dynamicMenus.admin) : MENU_CONFIG.admin;
 
