@@ -115,7 +115,7 @@ const IncidentDetail: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <span style={{ fontSize: 20, fontWeight: 500, marginRight: 16 }}>
-                {data.incident_number} {data.title}
+                {data.incidentNumber} {data.title}
               </span>
               <Tag color={data.status === IncidentStatus.RESOLVED ? 'success' : 'blue'}>
                 {IncidentStatusLabels[data.status]}
@@ -143,8 +143,8 @@ const IncidentDetail: React.FC = () => {
         {/* 基本信息 */}
         <Card variant="borderless" title="基本信息">
           <Descriptions column={2}>
-            <Descriptions.Item label="报告人ID">{data.reporter_id}</Descriptions.Item>
-            <Descriptions.Item label="负责人ID">{data.assignee_id || '-'}</Descriptions.Item>
+            <Descriptions.Item label="报告人ID">{data.reporterId}</Descriptions.Item>
+            <Descriptions.Item label="负责人ID">{data.assigneeId || '-'}</Descriptions.Item>
             <Descriptions.Item label="优先级">
               {IncidentPriorityLabels[data.priority]}
             </Descriptions.Item>
@@ -154,7 +154,7 @@ const IncidentDetail: React.FC = () => {
             <Descriptions.Item label="分类">{data.category}</Descriptions.Item>
             <Descriptions.Item label="子分类">{data.subcategory}</Descriptions.Item>
             <Descriptions.Item label="检测时间">
-              {dayjs(data.detected_at).format('YYYY-MM-DD HH:mm:ss')}
+              {dayjs(data.detectedAt).format('YYYY-MM-DD HH:mm:ss')}
             </Descriptions.Item>
             <Descriptions.Item label="来源">{data.source}</Descriptions.Item>
           </Descriptions>
@@ -164,12 +164,12 @@ const IncidentDetail: React.FC = () => {
           </Descriptions>
 
           {/* 影响分析 (如果有) */}
-          {data.impact_analysis && (
+          {data.impactAnalysis && (
             <>
               <Divider />
               <Descriptions title="影响分析" column={1}>
                 <Descriptions.Item>
-                  <pre>{JSON.stringify(data.impact_analysis, null, 2)}</pre>
+                  <pre>{JSON.stringify(data.impactAnalysis, null, 2)}</pre>
                 </Descriptions.Item>
               </Descriptions>
             </>
@@ -177,10 +177,10 @@ const IncidentDetail: React.FC = () => {
         </Card>
 
         {/* 解决记录 (如果有) */}
-        {data.resolution_steps && data.resolution_steps.length > 0 && (
+        {data.resolutionSteps && data.resolutionSteps.length > 0 && (
           <Card variant="borderless" title="处理流程">
             <Timeline>
-              {data.resolution_steps.map((step, index) => (
+              {data.resolutionSteps.map((step, index) => (
                 <Timeline.Item key={index}>
                   <p>{(step as any).description || '处理步骤'}</p>
                   <span style={{ fontSize: '12px', color: '#999' }}>{(step as any).timestamp}</span>
