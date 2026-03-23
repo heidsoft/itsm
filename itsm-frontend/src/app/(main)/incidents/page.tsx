@@ -14,6 +14,7 @@ import { UserApi } from '@/lib/api/user-api';
 import { UnifiedKanbanBoard, type KanbanColumnConfig } from '@/components/business/UnifiedKanbanBoard';
 import { useDebounce } from '@/lib/component-utils';
 import dayjs from 'dayjs';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 // Stats data format expected by IncidentStats component
 interface IncidentStatsData {
@@ -43,6 +44,7 @@ const KANBAN_COLUMNS: KanbanColumnConfig<Incident>[] = [
 
 export default function IncidentsPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -91,7 +93,7 @@ export default function IncidentsPage() {
       setTotal(totalCount);
     } catch (error) {
       console.error('Failed to fetch incidents:', error);
-      message.error('加载事件列表失败，请稍后重试');
+      message.error(t('incidents.getFailed') || '加载事件列表失败，请稍后重试');
       setIncidents([]);
       setTotal(0);
     } finally {
