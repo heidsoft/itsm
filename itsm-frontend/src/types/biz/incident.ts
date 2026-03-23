@@ -12,26 +12,43 @@ export interface Incident {
   status: IncidentStatus;
   priority: IncidentPriority;
   severity: IncidentSeverity;
-  incidentNumber: string;
-  reporterId: number;
+  // 同时支持 camelCase 和 snake_case
+  incidentNumber?: string;
+  incident_number?: string;
+  reporterId?: number;
+  reporter_id?: number;
   assigneeId?: number;
+  assignee_id?: number;
   configurationItemId?: number;
+  configuration_item_id?: number;
   category: string;
   subcategory: string;
   impactAnalysis?: Record<string, any>; // Map<string, interface{}>
+  impact_analysis?: Record<string, any>;
   rootCause?: Record<string, any>;
+  root_cause?: Record<string, any>;
   resolutionSteps?: Record<string, any>[];
-  detectedAt: string; // Time string
+  resolution_steps?: Record<string, any>[];
+  detectedAt?: string; // Time string
+  detected_at?: string;
   resolvedAt?: string;
+  resolved_at?: string;
   closedAt?: string;
+  closed_at?: string;
   escalatedAt?: string;
-  escalationLevel: number;
-  isAutomated: boolean;
+  escalated_at?: string;
+  escalationLevel?: number;
+  escalation_level?: number;
+  isAutomated?: boolean;
+  is_automated?: boolean;
   source: string;
   metadata?: Record<string, any>;
-  tenantId: number;
-  createdAt: string;
-  updatedAt: string;
+  tenantId?: number;
+  tenant_id?: number;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
 }
 
 // 事件活动记录

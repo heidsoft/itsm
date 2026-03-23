@@ -75,6 +75,7 @@ import (
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/standardchange"
 	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
@@ -178,6 +179,7 @@ const (
 	TypeServiceCatalog          = "ServiceCatalog"
 	TypeServiceRequest          = "ServiceRequest"
 	TypeServiceRequestApproval  = "ServiceRequestApproval"
+	TypeStandardChange          = "StandardChange"
 	TypeSystemConfig            = "SystemConfig"
 	TypeTag                     = "Tag"
 	TypeTeam                    = "Team"
@@ -87546,6 +87548,1577 @@ func (m *ServiceRequestApprovalMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ServiceRequestApprovalMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown ServiceRequestApproval edge %s", name)
+}
+
+// StandardChangeMutation represents an operation that mutates the StandardChange nodes in the graph.
+type StandardChangeMutation struct {
+	config
+	op                   Op
+	typ                  string
+	id                   *int
+	title                *string
+	description          *string
+	implementation_plan  *string
+	rollback_plan        *string
+	justification        *string
+	category             *string
+	risk_level           *string
+	impact_scope         *string
+	expected_duration    *int
+	addexpected_duration *int
+	approval_required    *bool
+	affected_cis         *[]string
+	appendaffected_cis   []string
+	prerequisites        *[]string
+	appendprerequisites  []string
+	remarks              *string
+	created_by           *int
+	addcreated_by        *int
+	tenant_id            *int
+	addtenant_id         *int
+	is_active            *bool
+	created_at           *time.Time
+	updated_at           *time.Time
+	clearedFields        map[string]struct{}
+	changes              map[int]struct{}
+	removedchanges       map[int]struct{}
+	clearedchanges       bool
+	done                 bool
+	oldValue             func(context.Context) (*StandardChange, error)
+	predicates           []predicate.StandardChange
+}
+
+var _ ent.Mutation = (*StandardChangeMutation)(nil)
+
+// standardchangeOption allows management of the mutation configuration using functional options.
+type standardchangeOption func(*StandardChangeMutation)
+
+// newStandardChangeMutation creates new mutation for the StandardChange entity.
+func newStandardChangeMutation(c config, op Op, opts ...standardchangeOption) *StandardChangeMutation {
+	m := &StandardChangeMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeStandardChange,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withStandardChangeID sets the ID field of the mutation.
+func withStandardChangeID(id int) standardchangeOption {
+	return func(m *StandardChangeMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *StandardChange
+		)
+		m.oldValue = func(ctx context.Context) (*StandardChange, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().StandardChange.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withStandardChange sets the old StandardChange of the mutation.
+func withStandardChange(node *StandardChange) standardchangeOption {
+	return func(m *StandardChangeMutation) {
+		m.oldValue = func(context.Context) (*StandardChange, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m StandardChangeMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m StandardChangeMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *StandardChangeMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *StandardChangeMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().StandardChange.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTitle sets the "title" field.
+func (m *StandardChangeMutation) SetTitle(s string) {
+	m.title = &s
+}
+
+// Title returns the value of the "title" field in the mutation.
+func (m *StandardChangeMutation) Title() (r string, exists bool) {
+	v := m.title
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTitle returns the old "title" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldTitle(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTitle is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTitle requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTitle: %w", err)
+	}
+	return oldValue.Title, nil
+}
+
+// ResetTitle resets all changes to the "title" field.
+func (m *StandardChangeMutation) ResetTitle() {
+	m.title = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *StandardChangeMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *StandardChangeMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *StandardChangeMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[standardchange.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *StandardChangeMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[standardchange.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *StandardChangeMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, standardchange.FieldDescription)
+}
+
+// SetImplementationPlan sets the "implementation_plan" field.
+func (m *StandardChangeMutation) SetImplementationPlan(s string) {
+	m.implementation_plan = &s
+}
+
+// ImplementationPlan returns the value of the "implementation_plan" field in the mutation.
+func (m *StandardChangeMutation) ImplementationPlan() (r string, exists bool) {
+	v := m.implementation_plan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImplementationPlan returns the old "implementation_plan" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldImplementationPlan(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImplementationPlan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImplementationPlan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImplementationPlan: %w", err)
+	}
+	return oldValue.ImplementationPlan, nil
+}
+
+// ResetImplementationPlan resets all changes to the "implementation_plan" field.
+func (m *StandardChangeMutation) ResetImplementationPlan() {
+	m.implementation_plan = nil
+}
+
+// SetRollbackPlan sets the "rollback_plan" field.
+func (m *StandardChangeMutation) SetRollbackPlan(s string) {
+	m.rollback_plan = &s
+}
+
+// RollbackPlan returns the value of the "rollback_plan" field in the mutation.
+func (m *StandardChangeMutation) RollbackPlan() (r string, exists bool) {
+	v := m.rollback_plan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRollbackPlan returns the old "rollback_plan" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldRollbackPlan(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRollbackPlan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRollbackPlan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRollbackPlan: %w", err)
+	}
+	return oldValue.RollbackPlan, nil
+}
+
+// ResetRollbackPlan resets all changes to the "rollback_plan" field.
+func (m *StandardChangeMutation) ResetRollbackPlan() {
+	m.rollback_plan = nil
+}
+
+// SetJustification sets the "justification" field.
+func (m *StandardChangeMutation) SetJustification(s string) {
+	m.justification = &s
+}
+
+// Justification returns the value of the "justification" field in the mutation.
+func (m *StandardChangeMutation) Justification() (r string, exists bool) {
+	v := m.justification
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJustification returns the old "justification" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldJustification(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJustification is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJustification requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJustification: %w", err)
+	}
+	return oldValue.Justification, nil
+}
+
+// ClearJustification clears the value of the "justification" field.
+func (m *StandardChangeMutation) ClearJustification() {
+	m.justification = nil
+	m.clearedFields[standardchange.FieldJustification] = struct{}{}
+}
+
+// JustificationCleared returns if the "justification" field was cleared in this mutation.
+func (m *StandardChangeMutation) JustificationCleared() bool {
+	_, ok := m.clearedFields[standardchange.FieldJustification]
+	return ok
+}
+
+// ResetJustification resets all changes to the "justification" field.
+func (m *StandardChangeMutation) ResetJustification() {
+	m.justification = nil
+	delete(m.clearedFields, standardchange.FieldJustification)
+}
+
+// SetCategory sets the "category" field.
+func (m *StandardChangeMutation) SetCategory(s string) {
+	m.category = &s
+}
+
+// Category returns the value of the "category" field in the mutation.
+func (m *StandardChangeMutation) Category() (r string, exists bool) {
+	v := m.category
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCategory returns the old "category" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldCategory(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCategory is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCategory requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCategory: %w", err)
+	}
+	return oldValue.Category, nil
+}
+
+// ResetCategory resets all changes to the "category" field.
+func (m *StandardChangeMutation) ResetCategory() {
+	m.category = nil
+}
+
+// SetRiskLevel sets the "risk_level" field.
+func (m *StandardChangeMutation) SetRiskLevel(s string) {
+	m.risk_level = &s
+}
+
+// RiskLevel returns the value of the "risk_level" field in the mutation.
+func (m *StandardChangeMutation) RiskLevel() (r string, exists bool) {
+	v := m.risk_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRiskLevel returns the old "risk_level" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldRiskLevel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRiskLevel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRiskLevel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRiskLevel: %w", err)
+	}
+	return oldValue.RiskLevel, nil
+}
+
+// ResetRiskLevel resets all changes to the "risk_level" field.
+func (m *StandardChangeMutation) ResetRiskLevel() {
+	m.risk_level = nil
+}
+
+// SetImpactScope sets the "impact_scope" field.
+func (m *StandardChangeMutation) SetImpactScope(s string) {
+	m.impact_scope = &s
+}
+
+// ImpactScope returns the value of the "impact_scope" field in the mutation.
+func (m *StandardChangeMutation) ImpactScope() (r string, exists bool) {
+	v := m.impact_scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImpactScope returns the old "impact_scope" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldImpactScope(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImpactScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImpactScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImpactScope: %w", err)
+	}
+	return oldValue.ImpactScope, nil
+}
+
+// ResetImpactScope resets all changes to the "impact_scope" field.
+func (m *StandardChangeMutation) ResetImpactScope() {
+	m.impact_scope = nil
+}
+
+// SetExpectedDuration sets the "expected_duration" field.
+func (m *StandardChangeMutation) SetExpectedDuration(i int) {
+	m.expected_duration = &i
+	m.addexpected_duration = nil
+}
+
+// ExpectedDuration returns the value of the "expected_duration" field in the mutation.
+func (m *StandardChangeMutation) ExpectedDuration() (r int, exists bool) {
+	v := m.expected_duration
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpectedDuration returns the old "expected_duration" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldExpectedDuration(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpectedDuration is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpectedDuration requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpectedDuration: %w", err)
+	}
+	return oldValue.ExpectedDuration, nil
+}
+
+// AddExpectedDuration adds i to the "expected_duration" field.
+func (m *StandardChangeMutation) AddExpectedDuration(i int) {
+	if m.addexpected_duration != nil {
+		*m.addexpected_duration += i
+	} else {
+		m.addexpected_duration = &i
+	}
+}
+
+// AddedExpectedDuration returns the value that was added to the "expected_duration" field in this mutation.
+func (m *StandardChangeMutation) AddedExpectedDuration() (r int, exists bool) {
+	v := m.addexpected_duration
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetExpectedDuration resets all changes to the "expected_duration" field.
+func (m *StandardChangeMutation) ResetExpectedDuration() {
+	m.expected_duration = nil
+	m.addexpected_duration = nil
+}
+
+// SetApprovalRequired sets the "approval_required" field.
+func (m *StandardChangeMutation) SetApprovalRequired(b bool) {
+	m.approval_required = &b
+}
+
+// ApprovalRequired returns the value of the "approval_required" field in the mutation.
+func (m *StandardChangeMutation) ApprovalRequired() (r bool, exists bool) {
+	v := m.approval_required
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldApprovalRequired returns the old "approval_required" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldApprovalRequired(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldApprovalRequired is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldApprovalRequired requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldApprovalRequired: %w", err)
+	}
+	return oldValue.ApprovalRequired, nil
+}
+
+// ResetApprovalRequired resets all changes to the "approval_required" field.
+func (m *StandardChangeMutation) ResetApprovalRequired() {
+	m.approval_required = nil
+}
+
+// SetAffectedCis sets the "affected_cis" field.
+func (m *StandardChangeMutation) SetAffectedCis(s []string) {
+	m.affected_cis = &s
+	m.appendaffected_cis = nil
+}
+
+// AffectedCis returns the value of the "affected_cis" field in the mutation.
+func (m *StandardChangeMutation) AffectedCis() (r []string, exists bool) {
+	v := m.affected_cis
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAffectedCis returns the old "affected_cis" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldAffectedCis(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAffectedCis is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAffectedCis requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAffectedCis: %w", err)
+	}
+	return oldValue.AffectedCis, nil
+}
+
+// AppendAffectedCis adds s to the "affected_cis" field.
+func (m *StandardChangeMutation) AppendAffectedCis(s []string) {
+	m.appendaffected_cis = append(m.appendaffected_cis, s...)
+}
+
+// AppendedAffectedCis returns the list of values that were appended to the "affected_cis" field in this mutation.
+func (m *StandardChangeMutation) AppendedAffectedCis() ([]string, bool) {
+	if len(m.appendaffected_cis) == 0 {
+		return nil, false
+	}
+	return m.appendaffected_cis, true
+}
+
+// ClearAffectedCis clears the value of the "affected_cis" field.
+func (m *StandardChangeMutation) ClearAffectedCis() {
+	m.affected_cis = nil
+	m.appendaffected_cis = nil
+	m.clearedFields[standardchange.FieldAffectedCis] = struct{}{}
+}
+
+// AffectedCisCleared returns if the "affected_cis" field was cleared in this mutation.
+func (m *StandardChangeMutation) AffectedCisCleared() bool {
+	_, ok := m.clearedFields[standardchange.FieldAffectedCis]
+	return ok
+}
+
+// ResetAffectedCis resets all changes to the "affected_cis" field.
+func (m *StandardChangeMutation) ResetAffectedCis() {
+	m.affected_cis = nil
+	m.appendaffected_cis = nil
+	delete(m.clearedFields, standardchange.FieldAffectedCis)
+}
+
+// SetPrerequisites sets the "prerequisites" field.
+func (m *StandardChangeMutation) SetPrerequisites(s []string) {
+	m.prerequisites = &s
+	m.appendprerequisites = nil
+}
+
+// Prerequisites returns the value of the "prerequisites" field in the mutation.
+func (m *StandardChangeMutation) Prerequisites() (r []string, exists bool) {
+	v := m.prerequisites
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPrerequisites returns the old "prerequisites" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldPrerequisites(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPrerequisites is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPrerequisites requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPrerequisites: %w", err)
+	}
+	return oldValue.Prerequisites, nil
+}
+
+// AppendPrerequisites adds s to the "prerequisites" field.
+func (m *StandardChangeMutation) AppendPrerequisites(s []string) {
+	m.appendprerequisites = append(m.appendprerequisites, s...)
+}
+
+// AppendedPrerequisites returns the list of values that were appended to the "prerequisites" field in this mutation.
+func (m *StandardChangeMutation) AppendedPrerequisites() ([]string, bool) {
+	if len(m.appendprerequisites) == 0 {
+		return nil, false
+	}
+	return m.appendprerequisites, true
+}
+
+// ClearPrerequisites clears the value of the "prerequisites" field.
+func (m *StandardChangeMutation) ClearPrerequisites() {
+	m.prerequisites = nil
+	m.appendprerequisites = nil
+	m.clearedFields[standardchange.FieldPrerequisites] = struct{}{}
+}
+
+// PrerequisitesCleared returns if the "prerequisites" field was cleared in this mutation.
+func (m *StandardChangeMutation) PrerequisitesCleared() bool {
+	_, ok := m.clearedFields[standardchange.FieldPrerequisites]
+	return ok
+}
+
+// ResetPrerequisites resets all changes to the "prerequisites" field.
+func (m *StandardChangeMutation) ResetPrerequisites() {
+	m.prerequisites = nil
+	m.appendprerequisites = nil
+	delete(m.clearedFields, standardchange.FieldPrerequisites)
+}
+
+// SetRemarks sets the "remarks" field.
+func (m *StandardChangeMutation) SetRemarks(s string) {
+	m.remarks = &s
+}
+
+// Remarks returns the value of the "remarks" field in the mutation.
+func (m *StandardChangeMutation) Remarks() (r string, exists bool) {
+	v := m.remarks
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRemarks returns the old "remarks" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldRemarks(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRemarks is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRemarks requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRemarks: %w", err)
+	}
+	return oldValue.Remarks, nil
+}
+
+// ClearRemarks clears the value of the "remarks" field.
+func (m *StandardChangeMutation) ClearRemarks() {
+	m.remarks = nil
+	m.clearedFields[standardchange.FieldRemarks] = struct{}{}
+}
+
+// RemarksCleared returns if the "remarks" field was cleared in this mutation.
+func (m *StandardChangeMutation) RemarksCleared() bool {
+	_, ok := m.clearedFields[standardchange.FieldRemarks]
+	return ok
+}
+
+// ResetRemarks resets all changes to the "remarks" field.
+func (m *StandardChangeMutation) ResetRemarks() {
+	m.remarks = nil
+	delete(m.clearedFields, standardchange.FieldRemarks)
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *StandardChangeMutation) SetCreatedBy(i int) {
+	m.created_by = &i
+	m.addcreated_by = nil
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *StandardChangeMutation) CreatedBy() (r int, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldCreatedBy(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// AddCreatedBy adds i to the "created_by" field.
+func (m *StandardChangeMutation) AddCreatedBy(i int) {
+	if m.addcreated_by != nil {
+		*m.addcreated_by += i
+	} else {
+		m.addcreated_by = &i
+	}
+}
+
+// AddedCreatedBy returns the value that was added to the "created_by" field in this mutation.
+func (m *StandardChangeMutation) AddedCreatedBy() (r int, exists bool) {
+	v := m.addcreated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *StandardChangeMutation) ResetCreatedBy() {
+	m.created_by = nil
+	m.addcreated_by = nil
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *StandardChangeMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *StandardChangeMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *StandardChangeMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *StandardChangeMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *StandardChangeMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetIsActive sets the "is_active" field.
+func (m *StandardChangeMutation) SetIsActive(b bool) {
+	m.is_active = &b
+}
+
+// IsActive returns the value of the "is_active" field in the mutation.
+func (m *StandardChangeMutation) IsActive() (r bool, exists bool) {
+	v := m.is_active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsActive returns the old "is_active" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldIsActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsActive: %w", err)
+	}
+	return oldValue.IsActive, nil
+}
+
+// ResetIsActive resets all changes to the "is_active" field.
+func (m *StandardChangeMutation) ResetIsActive() {
+	m.is_active = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *StandardChangeMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *StandardChangeMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *StandardChangeMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *StandardChangeMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *StandardChangeMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the StandardChange entity.
+// If the StandardChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StandardChangeMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *StandardChangeMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// AddChangeIDs adds the "changes" edge to the Change entity by ids.
+func (m *StandardChangeMutation) AddChangeIDs(ids ...int) {
+	if m.changes == nil {
+		m.changes = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.changes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChanges clears the "changes" edge to the Change entity.
+func (m *StandardChangeMutation) ClearChanges() {
+	m.clearedchanges = true
+}
+
+// ChangesCleared reports if the "changes" edge to the Change entity was cleared.
+func (m *StandardChangeMutation) ChangesCleared() bool {
+	return m.clearedchanges
+}
+
+// RemoveChangeIDs removes the "changes" edge to the Change entity by IDs.
+func (m *StandardChangeMutation) RemoveChangeIDs(ids ...int) {
+	if m.removedchanges == nil {
+		m.removedchanges = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.changes, ids[i])
+		m.removedchanges[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChanges returns the removed IDs of the "changes" edge to the Change entity.
+func (m *StandardChangeMutation) RemovedChangesIDs() (ids []int) {
+	for id := range m.removedchanges {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChangesIDs returns the "changes" edge IDs in the mutation.
+func (m *StandardChangeMutation) ChangesIDs() (ids []int) {
+	for id := range m.changes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChanges resets all changes to the "changes" edge.
+func (m *StandardChangeMutation) ResetChanges() {
+	m.changes = nil
+	m.clearedchanges = false
+	m.removedchanges = nil
+}
+
+// Where appends a list predicates to the StandardChangeMutation builder.
+func (m *StandardChangeMutation) Where(ps ...predicate.StandardChange) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the StandardChangeMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *StandardChangeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.StandardChange, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *StandardChangeMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *StandardChangeMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (StandardChange).
+func (m *StandardChangeMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *StandardChangeMutation) Fields() []string {
+	fields := make([]string, 0, 18)
+	if m.title != nil {
+		fields = append(fields, standardchange.FieldTitle)
+	}
+	if m.description != nil {
+		fields = append(fields, standardchange.FieldDescription)
+	}
+	if m.implementation_plan != nil {
+		fields = append(fields, standardchange.FieldImplementationPlan)
+	}
+	if m.rollback_plan != nil {
+		fields = append(fields, standardchange.FieldRollbackPlan)
+	}
+	if m.justification != nil {
+		fields = append(fields, standardchange.FieldJustification)
+	}
+	if m.category != nil {
+		fields = append(fields, standardchange.FieldCategory)
+	}
+	if m.risk_level != nil {
+		fields = append(fields, standardchange.FieldRiskLevel)
+	}
+	if m.impact_scope != nil {
+		fields = append(fields, standardchange.FieldImpactScope)
+	}
+	if m.expected_duration != nil {
+		fields = append(fields, standardchange.FieldExpectedDuration)
+	}
+	if m.approval_required != nil {
+		fields = append(fields, standardchange.FieldApprovalRequired)
+	}
+	if m.affected_cis != nil {
+		fields = append(fields, standardchange.FieldAffectedCis)
+	}
+	if m.prerequisites != nil {
+		fields = append(fields, standardchange.FieldPrerequisites)
+	}
+	if m.remarks != nil {
+		fields = append(fields, standardchange.FieldRemarks)
+	}
+	if m.created_by != nil {
+		fields = append(fields, standardchange.FieldCreatedBy)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, standardchange.FieldTenantID)
+	}
+	if m.is_active != nil {
+		fields = append(fields, standardchange.FieldIsActive)
+	}
+	if m.created_at != nil {
+		fields = append(fields, standardchange.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, standardchange.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *StandardChangeMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case standardchange.FieldTitle:
+		return m.Title()
+	case standardchange.FieldDescription:
+		return m.Description()
+	case standardchange.FieldImplementationPlan:
+		return m.ImplementationPlan()
+	case standardchange.FieldRollbackPlan:
+		return m.RollbackPlan()
+	case standardchange.FieldJustification:
+		return m.Justification()
+	case standardchange.FieldCategory:
+		return m.Category()
+	case standardchange.FieldRiskLevel:
+		return m.RiskLevel()
+	case standardchange.FieldImpactScope:
+		return m.ImpactScope()
+	case standardchange.FieldExpectedDuration:
+		return m.ExpectedDuration()
+	case standardchange.FieldApprovalRequired:
+		return m.ApprovalRequired()
+	case standardchange.FieldAffectedCis:
+		return m.AffectedCis()
+	case standardchange.FieldPrerequisites:
+		return m.Prerequisites()
+	case standardchange.FieldRemarks:
+		return m.Remarks()
+	case standardchange.FieldCreatedBy:
+		return m.CreatedBy()
+	case standardchange.FieldTenantID:
+		return m.TenantID()
+	case standardchange.FieldIsActive:
+		return m.IsActive()
+	case standardchange.FieldCreatedAt:
+		return m.CreatedAt()
+	case standardchange.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *StandardChangeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case standardchange.FieldTitle:
+		return m.OldTitle(ctx)
+	case standardchange.FieldDescription:
+		return m.OldDescription(ctx)
+	case standardchange.FieldImplementationPlan:
+		return m.OldImplementationPlan(ctx)
+	case standardchange.FieldRollbackPlan:
+		return m.OldRollbackPlan(ctx)
+	case standardchange.FieldJustification:
+		return m.OldJustification(ctx)
+	case standardchange.FieldCategory:
+		return m.OldCategory(ctx)
+	case standardchange.FieldRiskLevel:
+		return m.OldRiskLevel(ctx)
+	case standardchange.FieldImpactScope:
+		return m.OldImpactScope(ctx)
+	case standardchange.FieldExpectedDuration:
+		return m.OldExpectedDuration(ctx)
+	case standardchange.FieldApprovalRequired:
+		return m.OldApprovalRequired(ctx)
+	case standardchange.FieldAffectedCis:
+		return m.OldAffectedCis(ctx)
+	case standardchange.FieldPrerequisites:
+		return m.OldPrerequisites(ctx)
+	case standardchange.FieldRemarks:
+		return m.OldRemarks(ctx)
+	case standardchange.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case standardchange.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case standardchange.FieldIsActive:
+		return m.OldIsActive(ctx)
+	case standardchange.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case standardchange.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown StandardChange field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *StandardChangeMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case standardchange.FieldTitle:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTitle(v)
+		return nil
+	case standardchange.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case standardchange.FieldImplementationPlan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImplementationPlan(v)
+		return nil
+	case standardchange.FieldRollbackPlan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRollbackPlan(v)
+		return nil
+	case standardchange.FieldJustification:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJustification(v)
+		return nil
+	case standardchange.FieldCategory:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCategory(v)
+		return nil
+	case standardchange.FieldRiskLevel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRiskLevel(v)
+		return nil
+	case standardchange.FieldImpactScope:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImpactScope(v)
+		return nil
+	case standardchange.FieldExpectedDuration:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpectedDuration(v)
+		return nil
+	case standardchange.FieldApprovalRequired:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetApprovalRequired(v)
+		return nil
+	case standardchange.FieldAffectedCis:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAffectedCis(v)
+		return nil
+	case standardchange.FieldPrerequisites:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPrerequisites(v)
+		return nil
+	case standardchange.FieldRemarks:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRemarks(v)
+		return nil
+	case standardchange.FieldCreatedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case standardchange.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case standardchange.FieldIsActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsActive(v)
+		return nil
+	case standardchange.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case standardchange.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown StandardChange field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *StandardChangeMutation) AddedFields() []string {
+	var fields []string
+	if m.addexpected_duration != nil {
+		fields = append(fields, standardchange.FieldExpectedDuration)
+	}
+	if m.addcreated_by != nil {
+		fields = append(fields, standardchange.FieldCreatedBy)
+	}
+	if m.addtenant_id != nil {
+		fields = append(fields, standardchange.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *StandardChangeMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case standardchange.FieldExpectedDuration:
+		return m.AddedExpectedDuration()
+	case standardchange.FieldCreatedBy:
+		return m.AddedCreatedBy()
+	case standardchange.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *StandardChangeMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case standardchange.FieldExpectedDuration:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddExpectedDuration(v)
+		return nil
+	case standardchange.FieldCreatedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCreatedBy(v)
+		return nil
+	case standardchange.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown StandardChange numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *StandardChangeMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(standardchange.FieldDescription) {
+		fields = append(fields, standardchange.FieldDescription)
+	}
+	if m.FieldCleared(standardchange.FieldJustification) {
+		fields = append(fields, standardchange.FieldJustification)
+	}
+	if m.FieldCleared(standardchange.FieldAffectedCis) {
+		fields = append(fields, standardchange.FieldAffectedCis)
+	}
+	if m.FieldCleared(standardchange.FieldPrerequisites) {
+		fields = append(fields, standardchange.FieldPrerequisites)
+	}
+	if m.FieldCleared(standardchange.FieldRemarks) {
+		fields = append(fields, standardchange.FieldRemarks)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *StandardChangeMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *StandardChangeMutation) ClearField(name string) error {
+	switch name {
+	case standardchange.FieldDescription:
+		m.ClearDescription()
+		return nil
+	case standardchange.FieldJustification:
+		m.ClearJustification()
+		return nil
+	case standardchange.FieldAffectedCis:
+		m.ClearAffectedCis()
+		return nil
+	case standardchange.FieldPrerequisites:
+		m.ClearPrerequisites()
+		return nil
+	case standardchange.FieldRemarks:
+		m.ClearRemarks()
+		return nil
+	}
+	return fmt.Errorf("unknown StandardChange nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *StandardChangeMutation) ResetField(name string) error {
+	switch name {
+	case standardchange.FieldTitle:
+		m.ResetTitle()
+		return nil
+	case standardchange.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case standardchange.FieldImplementationPlan:
+		m.ResetImplementationPlan()
+		return nil
+	case standardchange.FieldRollbackPlan:
+		m.ResetRollbackPlan()
+		return nil
+	case standardchange.FieldJustification:
+		m.ResetJustification()
+		return nil
+	case standardchange.FieldCategory:
+		m.ResetCategory()
+		return nil
+	case standardchange.FieldRiskLevel:
+		m.ResetRiskLevel()
+		return nil
+	case standardchange.FieldImpactScope:
+		m.ResetImpactScope()
+		return nil
+	case standardchange.FieldExpectedDuration:
+		m.ResetExpectedDuration()
+		return nil
+	case standardchange.FieldApprovalRequired:
+		m.ResetApprovalRequired()
+		return nil
+	case standardchange.FieldAffectedCis:
+		m.ResetAffectedCis()
+		return nil
+	case standardchange.FieldPrerequisites:
+		m.ResetPrerequisites()
+		return nil
+	case standardchange.FieldRemarks:
+		m.ResetRemarks()
+		return nil
+	case standardchange.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case standardchange.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case standardchange.FieldIsActive:
+		m.ResetIsActive()
+		return nil
+	case standardchange.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case standardchange.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown StandardChange field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *StandardChangeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.changes != nil {
+		edges = append(edges, standardchange.EdgeChanges)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *StandardChangeMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case standardchange.EdgeChanges:
+		ids := make([]ent.Value, 0, len(m.changes))
+		for id := range m.changes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *StandardChangeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedchanges != nil {
+		edges = append(edges, standardchange.EdgeChanges)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *StandardChangeMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case standardchange.EdgeChanges:
+		ids := make([]ent.Value, 0, len(m.removedchanges))
+		for id := range m.removedchanges {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *StandardChangeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedchanges {
+		edges = append(edges, standardchange.EdgeChanges)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *StandardChangeMutation) EdgeCleared(name string) bool {
+	switch name {
+	case standardchange.EdgeChanges:
+		return m.clearedchanges
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *StandardChangeMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown StandardChange unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *StandardChangeMutation) ResetEdge(name string) error {
+	switch name {
+	case standardchange.EdgeChanges:
+		m.ResetChanges()
+		return nil
+	}
+	return fmt.Errorf("unknown StandardChange edge %s", name)
 }
 
 // SystemConfigMutation represents an operation that mutates the SystemConfig nodes in the graph.

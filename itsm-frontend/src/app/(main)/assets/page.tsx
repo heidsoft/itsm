@@ -63,7 +63,7 @@ export default function AssetsPage() {
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="资产总数"
               value={stats.totalAssets}
@@ -73,7 +73,7 @@ export default function AssetsPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="使用中"
               value={stats.inUse}
@@ -83,7 +83,7 @@ export default function AssetsPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="可用"
               value={stats.available}
@@ -93,7 +93,7 @@ export default function AssetsPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="维护中"
               value={stats.maintenance}

@@ -71,6 +71,7 @@ import (
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/standardchange"
 	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
@@ -2468,6 +2469,62 @@ func init() {
 	servicerequestapprovalDescCreatedAt := servicerequestapprovalFields[15].Descriptor()
 	// servicerequestapproval.DefaultCreatedAt holds the default value on creation for the created_at field.
 	servicerequestapproval.DefaultCreatedAt = servicerequestapprovalDescCreatedAt.Default.(func() time.Time)
+	standardchangeFields := schema.StandardChange{}.Fields()
+	_ = standardchangeFields
+	// standardchangeDescTitle is the schema descriptor for title field.
+	standardchangeDescTitle := standardchangeFields[0].Descriptor()
+	// standardchange.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	standardchange.TitleValidator = standardchangeDescTitle.Validators[0].(func(string) error)
+	// standardchangeDescImplementationPlan is the schema descriptor for implementation_plan field.
+	standardchangeDescImplementationPlan := standardchangeFields[2].Descriptor()
+	// standardchange.ImplementationPlanValidator is a validator for the "implementation_plan" field. It is called by the builders before save.
+	standardchange.ImplementationPlanValidator = standardchangeDescImplementationPlan.Validators[0].(func(string) error)
+	// standardchangeDescRollbackPlan is the schema descriptor for rollback_plan field.
+	standardchangeDescRollbackPlan := standardchangeFields[3].Descriptor()
+	// standardchange.RollbackPlanValidator is a validator for the "rollback_plan" field. It is called by the builders before save.
+	standardchange.RollbackPlanValidator = standardchangeDescRollbackPlan.Validators[0].(func(string) error)
+	// standardchangeDescCategory is the schema descriptor for category field.
+	standardchangeDescCategory := standardchangeFields[5].Descriptor()
+	// standardchange.DefaultCategory holds the default value on creation for the category field.
+	standardchange.DefaultCategory = standardchangeDescCategory.Default.(string)
+	// standardchangeDescRiskLevel is the schema descriptor for risk_level field.
+	standardchangeDescRiskLevel := standardchangeFields[6].Descriptor()
+	// standardchange.DefaultRiskLevel holds the default value on creation for the risk_level field.
+	standardchange.DefaultRiskLevel = standardchangeDescRiskLevel.Default.(string)
+	// standardchangeDescImpactScope is the schema descriptor for impact_scope field.
+	standardchangeDescImpactScope := standardchangeFields[7].Descriptor()
+	// standardchange.DefaultImpactScope holds the default value on creation for the impact_scope field.
+	standardchange.DefaultImpactScope = standardchangeDescImpactScope.Default.(string)
+	// standardchangeDescExpectedDuration is the schema descriptor for expected_duration field.
+	standardchangeDescExpectedDuration := standardchangeFields[8].Descriptor()
+	// standardchange.DefaultExpectedDuration holds the default value on creation for the expected_duration field.
+	standardchange.DefaultExpectedDuration = standardchangeDescExpectedDuration.Default.(int)
+	// standardchangeDescApprovalRequired is the schema descriptor for approval_required field.
+	standardchangeDescApprovalRequired := standardchangeFields[9].Descriptor()
+	// standardchange.DefaultApprovalRequired holds the default value on creation for the approval_required field.
+	standardchange.DefaultApprovalRequired = standardchangeDescApprovalRequired.Default.(bool)
+	// standardchangeDescCreatedBy is the schema descriptor for created_by field.
+	standardchangeDescCreatedBy := standardchangeFields[13].Descriptor()
+	// standardchange.CreatedByValidator is a validator for the "created_by" field. It is called by the builders before save.
+	standardchange.CreatedByValidator = standardchangeDescCreatedBy.Validators[0].(func(int) error)
+	// standardchangeDescTenantID is the schema descriptor for tenant_id field.
+	standardchangeDescTenantID := standardchangeFields[14].Descriptor()
+	// standardchange.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	standardchange.TenantIDValidator = standardchangeDescTenantID.Validators[0].(func(int) error)
+	// standardchangeDescIsActive is the schema descriptor for is_active field.
+	standardchangeDescIsActive := standardchangeFields[15].Descriptor()
+	// standardchange.DefaultIsActive holds the default value on creation for the is_active field.
+	standardchange.DefaultIsActive = standardchangeDescIsActive.Default.(bool)
+	// standardchangeDescCreatedAt is the schema descriptor for created_at field.
+	standardchangeDescCreatedAt := standardchangeFields[16].Descriptor()
+	// standardchange.DefaultCreatedAt holds the default value on creation for the created_at field.
+	standardchange.DefaultCreatedAt = standardchangeDescCreatedAt.Default.(func() time.Time)
+	// standardchangeDescUpdatedAt is the schema descriptor for updated_at field.
+	standardchangeDescUpdatedAt := standardchangeFields[17].Descriptor()
+	// standardchange.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	standardchange.DefaultUpdatedAt = standardchangeDescUpdatedAt.Default.(func() time.Time)
+	// standardchange.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	standardchange.UpdateDefaultUpdatedAt = standardchangeDescUpdatedAt.UpdateDefault.(func() time.Time)
 	systemconfigFields := schema.SystemConfig{}.Fields()
 	_ = systemconfigFields
 	// systemconfigDescKey is the schema descriptor for key field.

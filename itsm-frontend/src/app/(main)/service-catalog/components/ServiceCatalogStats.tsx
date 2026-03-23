@@ -20,7 +20,7 @@ export const ServiceCatalogStats: React.FC<ServiceCatalogStatsProps> = ({ stats 
     <div className="mb-6">
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+          <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
               title={t('serviceCatalog.totalServices')}
               value={stats.total}
@@ -29,7 +29,7 @@ export const ServiceCatalogStats: React.FC<ServiceCatalogStatsProps> = ({ stats 
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+          <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
               title={t('serviceCatalog.cloudResources')}
               value={stats.cloudServices}
@@ -39,7 +39,7 @@ export const ServiceCatalogStats: React.FC<ServiceCatalogStatsProps> = ({ stats 
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+          <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
               title={t('serviceCatalog.accountPermissions')}
               value={stats.accountServices}
@@ -49,7 +49,7 @@ export const ServiceCatalogStats: React.FC<ServiceCatalogStatsProps> = ({ stats 
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+          <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
               title={t('serviceCatalog.securityServices')}
               value={stats.securityServices}

@@ -176,7 +176,7 @@ export default function DashboardPage() {
   // 错误状态
   if (error) {
     return (
-      <Card className="text-center py-16 rounded-xl border-0 shadow-sm" variant="borderless">
+      <Card className="text-center py-16 rounded-xl border-0 shadow-sm">
         <div className="text-red-500 mb-4 flex justify-center">
           <LayoutDashboard size={64} />
         </div>
@@ -280,7 +280,7 @@ export default function DashboardPage() {
           <div className="mb-6">
             <Card
               className="rounded-xl border-0 shadow-sm"
-              variant="borderless"
+             
               styles={{ body: { padding: '24px' } }}
             >
               <div className="mb-5">

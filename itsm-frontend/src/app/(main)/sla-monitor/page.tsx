@@ -245,7 +245,7 @@ const SLAMonitorPage = () => {
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="SLA总数"
               value={stats.totalSLA}
@@ -255,7 +255,7 @@ const SLAMonitorPage = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="合规"
               value={stats.compliant}
@@ -266,7 +266,7 @@ const SLAMonitorPage = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="风险中"
               value={stats.atRisk}
@@ -276,7 +276,7 @@ const SLAMonitorPage = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="已超时"
               value={stats.breached}

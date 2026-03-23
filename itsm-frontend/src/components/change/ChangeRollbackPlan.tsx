@@ -85,6 +85,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
   const [form] = Form.useForm();
   const [rollbackSteps, setRollbackSteps] = useState<RollbackStep[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
   // 回滚策略选项
   const rollbackStrategies = {
@@ -178,6 +179,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      setSubmitting(true);
       const rollbackData: RollbackPlanData = {
         ...values,
         rollback_steps: rollbackSteps,
@@ -186,6 +188,8 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       onSave?.(rollbackData);
     } catch (error) {
       message.error('表单验证失败');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -287,7 +291,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       }
       extra={
         !readOnly && (
-          <Button type="primary" onClick={handleSubmit}>
+          <Button type="primary" onClick={handleSubmit} loading={submitting}>
             保存回滚计划
           </Button>
         )

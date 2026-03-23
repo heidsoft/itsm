@@ -13,12 +13,18 @@ export interface Problem {
   priority: ProblemPriority;
   category: string;
   root_cause?: string;
+  rootCause?: string;
   impact?: string;
   assignee_id?: number;
+  assigneeId?: number;
   created_by: number;
+  createdBy?: number;
   tenant_id: number;
+  tenantId?: number;
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 // 创建问题请求

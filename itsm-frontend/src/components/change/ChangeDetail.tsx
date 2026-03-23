@@ -152,63 +152,76 @@ const ChangeDetail: React.FC = () => {
           </Descriptions.Item>
         </Descriptions>
 
-        <Tabs defaultActiveKey="1" style={{ marginTop: 24 }}>
-          <Tabs.TabPane tab="基础信息" key="1">
-            <Title level={5}>变更原因 / 理由</Title>
-            <Paragraph>{change.justification || '无'}</Paragraph>
+        <Tabs
+          defaultActiveKey="1"
+          style={{ marginTop: 24 }}
+          items={[
+            {
+              key: '1',
+              label: '基础信息',
+              children: (
+                <>
+                  <Title level={5}>变更原因 / 理由</Title>
+                  <Paragraph>{change.justification || '无'}</Paragraph>
 
-            <Title level={5}>变更描述</Title>
-            <Paragraph>{change.description || '无'}</Paragraph>
+                  <Title level={5}>变更描述</Title>
+                  <Paragraph>{change.description || '无'}</Paragraph>
 
-            <Divider />
+                  <Divider />
 
-            <Title level={5}>实施计划</Title>
-            <Paragraph style={{ whiteSpace: 'pre-wrap' }}>
-              {change.implementation_plan || '未提供实施计划'}
-            </Paragraph>
+                  <Title level={5}>实施计划</Title>
+                  <Paragraph style={{ whiteSpace: 'pre-wrap' }}>
+                    {change.implementation_plan || '未提供实施计划'}
+                  </Paragraph>
 
-            <Title level={5}>回滚计划</Title>
-            <Paragraph style={{ whiteSpace: 'pre-wrap' }}>
-              {change.rollback_plan || '未提供回滚计划'}
-            </Paragraph>
-          </Tabs.TabPane>
-
-          <Tabs.TabPane tab="审批记录" key="2">
-            {approvals.length > 0 ? (
-              <List
-                itemLayout="horizontal"
-                dataSource={approvals}
-                renderItem={record => (
-                  <List.Item>
-                    <List.Item.Meta
-                      avatar={
-                        record.status === 'approved' ? (
-                          <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 24 }} />
-                        ) : (
-                          <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 24 }} />
-                        )
-                      }
-                      title={
-                        <Space>
-                          <Text strong>{record.approver_name}</Text>
-                          <Tag color={statusColors[record.status]}>
-                            {ChangeStatusLabels[record.status]}
-                          </Tag>
-                          <Text type="secondary">
-                            {dayjs(record.createdAt).format('YYYY-MM-DD HH:mm')}
-                          </Text>
-                        </Space>
-                      }
-                      description={record.comment || '无意见'}
-                    />
-                  </List.Item>
-                )}
-              />
-            ) : (
-              <Empty description="暂无审批记录" />
-            )}
-          </Tabs.TabPane>
-        </Tabs>
+                  <Title level={5}>回滚计划</Title>
+                  <Paragraph style={{ whiteSpace: 'pre-wrap' }}>
+                    {change.rollback_plan || '未提供回滚计划'}
+                  </Paragraph>
+                </>
+              ),
+            },
+            {
+              key: '2',
+              label: '审批记录',
+              children: (
+                approvals.length > 0 ? (
+                  <List
+                    itemLayout="horizontal"
+                    dataSource={approvals}
+                    renderItem={record => (
+                      <List.Item>
+                        <List.Item.Meta
+                          avatar={
+                            record.status === 'approved' ? (
+                              <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 24 }} />
+                            ) : (
+                              <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 24 }} />
+                            )
+                          }
+                          title={
+                            <Space>
+                              <Text strong>{record.approver_name}</Text>
+                              <Tag color={statusColors[record.status]}>
+                                {ChangeStatusLabels[record.status]}
+                              </Tag>
+                              <Text type="secondary">
+                                {dayjs(record.createdAt).format('YYYY-MM-DD HH:mm')}
+                              </Text>
+                            </Space>
+                          }
+                          description={record.comment || '无意见'}
+                        />
+                      </List.Item>
+                    )}
+                  />
+                ) : (
+                  <Empty description="暂无审批记录" />
+                )
+              ),
+            },
+          ]}
+        />
       </Card>
     </Space>
   );

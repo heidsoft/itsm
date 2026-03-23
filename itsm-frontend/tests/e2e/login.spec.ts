@@ -63,7 +63,7 @@ test.describe('Login Page - 无需认证', () => {
 });
 
 test.describe('Dashboard Page - 需要认证', () => {
-  test.use({ storageState: {} });
+  test.use({ storageState: undefined as any });
 
   test('should redirect to login when not authenticated', async ({ page }) => {
     await page.goto('/');

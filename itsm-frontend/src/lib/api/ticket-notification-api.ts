@@ -4,7 +4,9 @@ import { httpClient } from './http-client';
 export interface TicketNotification {
   id: number;
   ticket_id: number;
+  ticketId?: number;
   user_id: number;
+  userId?: number;
   type:
     | 'created'
     | 'assigned'
@@ -16,9 +18,12 @@ export interface TicketNotification {
   channel: 'email' | 'in_app' | 'sms';
   content: string;
   sent_at?: string;
+  sentAt?: string;
   read_at?: string;
+  readAt?: string;
   status: 'pending' | 'sent' | 'read';
   created_at: string;
+  createdAt?: string;
   user?: {
     id: number;
     username: string;
@@ -27,6 +32,7 @@ export interface TicketNotification {
     role?: string;
     department?: string;
     tenant_id?: number;
+    tenantId?: number;
   };
 }
 

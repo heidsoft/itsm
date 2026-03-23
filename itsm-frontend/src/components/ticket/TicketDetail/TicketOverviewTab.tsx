@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
 import { Card, Typography, Space, Button, Badge, Timeline, Input, Divider } from 'antd';
 import { Ticket, WorkflowStep, SLAInfo } from '@/lib/api/api-config';
@@ -48,6 +48,36 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
   formatDateTime,
 }) => {
   const { user } = useAuthStore();
+  const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+
+  const handleApprove = async () => {
+    setApproving(true);
+    try {
+      await onApprove?.();
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  const handleReject = async () => {
+    setRejecting(true);
+    try {
+      await onReject?.();
+    } finally {
+      setRejecting(false);
+    }
+  };
+
+  const handleManualAssign = async () => {
+    setAssigning(true);
+    try {
+      await onManualAssign();
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   return (
     <div className="p-6">
@@ -155,12 +185,13 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
                   <Button
                     type="primary"
                     icon={<CheckCircle />}
-                    onClick={onApprove}
+                    onClick={handleApprove}
+                    loading={approving}
                     className="w-full"
                   >
                     批准
                   </Button>
-                  <Button danger icon={<XCircle />} onClick={onReject} className="w-full">
+                  <Button danger icon={<XCircle />} onClick={handleReject} loading={rejecting} className="w-full">
                     拒绝
                   </Button>
                 </Space>
@@ -185,7 +216,7 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
                 onChange={e => onAssigneeInputChange(e.target.value)}
                 placeholder="输入负责人姓名"
               />
-              <Button onClick={onManualAssign} disabled={!assigneeInput.trim()} className="w-full">
+              <Button onClick={handleManualAssign} disabled={!assigneeInput.trim()} loading={assigning} className="w-full">
                 手动分配
               </Button>
             </Space>

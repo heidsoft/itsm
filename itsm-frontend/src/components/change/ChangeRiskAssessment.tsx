@@ -59,6 +59,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
   const [form] = Form.useForm();
   const [riskScore, setRiskScore] = useState(0);
   const [riskFactors, setRiskFactors] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   // 风险等级配置
   const riskLevels = {
@@ -109,6 +110,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      setSubmitting(true);
       const assessmentData: RiskAssessmentData = {
         ...values,
         risk_score: riskScore,
@@ -118,6 +120,8 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
       onSave?.(assessmentData);
     } catch (error) {
       message.error('表单验证失败');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -156,7 +160,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
       }
       extra={
         !readOnly && (
-          <Button type="primary" onClick={handleSubmit}>
+          <Button type="primary" onClick={handleSubmit} loading={submitting}>
             保存评估
           </Button>
         )

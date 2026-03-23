@@ -101,7 +101,7 @@ export { AIApi } from './ai-api';
 
 export { BatchOperationsApi } from './batch-operations-api';
 export { CollaborationApi } from './collaboration-api';
-export { globalSearchApi } from './global-search-api';
+export { globalSearch } from './global-search-api';
 export {
   listAuditLogs,
   type AuditLog,

@@ -8,9 +8,12 @@ import { httpClient } from './http-client';
 export interface TicketComment {
   id: number;
   ticket_id: number;
+  ticketId?: number;
   user_id: number;
+  userId?: number;
   content: string;
   is_internal: boolean;
+  isInternal?: boolean;
   mentions: number[];
   attachments: number[];
   user?: {
@@ -21,9 +24,12 @@ export interface TicketComment {
     role?: string;
     department?: string;
     tenant_id?: number;
+    tenantId?: number;
   };
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 export interface CreateTicketCommentRequest {

@@ -197,7 +197,7 @@ export default function CloudResourcePage() {
   };
 
   return (
-    <Card variant="borderless">
+    <Card>
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[

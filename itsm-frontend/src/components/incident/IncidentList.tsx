@@ -180,7 +180,7 @@ const IncidentList: React.FC = () => {
   ];
 
   return (
-    <Card variant="borderless">
+    <Card>
       <Form form={form} layout="inline" style={{ marginBottom: 24 }}>
         <Form.Item name="keyword">
           <Input placeholder="搜索编号或标题" allowClear prefix={<SearchOutlined />} />
