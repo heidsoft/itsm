@@ -594,7 +594,6 @@ export class TicketApi {
   }
 }
 
-export default TicketApi;
-
-// 导出别名以支持不同的导入方式
+// 统一导出别名
 export const TicketAPI = TicketApi;
+export default TicketAPI;

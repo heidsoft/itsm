@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
@@ -14,8 +16,9 @@ import (
 )
 
 type RootCauseService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client  *ent.Client
+	logger  *zap.SugaredLogger
+	gateway *LLMGateway
 }
 
 func NewRootCauseService(client *ent.Client, logger *zap.SugaredLogger) *RootCauseService {
@@ -23,6 +26,11 @@ func NewRootCauseService(client *ent.Client, logger *zap.SugaredLogger) *RootCau
 		client: client,
 		logger: logger,
 	}
+}
+
+// SetGateway sets the LLM gateway for AI-powered analysis
+func (s *RootCauseService) SetGateway(gateway *LLMGateway) {
+	s.gateway = gateway
 }
 
 // AnalyzeTicket 执行根因分析
@@ -154,11 +162,22 @@ func (s *RootCauseService) GetAnalysisReport(ctx context.Context, ticketID int, 
 	return response, nil
 }
 
-// performAnalysis 执行分析（简化版）
+// performAnalysis 执行分析
+// 当 LLM Gateway 可用时，使用 AI 进行根因分析；否则回退到基于规则的启发式分析
 func (s *RootCauseService) performAnalysis(ticketEntity *ent.Ticket, tenantID int) []dto.TicketRootCauseResponse {
 	rootCauses := make([]dto.TicketRootCauseResponse, 0)
 
-	// 基于工单信息生成模拟根因
+	// 如果有 LLM Gateway，使用 AI 分析
+	if s.gateway != nil {
+		aiResults, err := s.performAIAnalysis(ticketEntity)
+		if err == nil && len(aiResults) > 0 {
+			return aiResults
+		}
+		// AI 分析失败，记录日志并继续使用启发式分析
+		s.logger.Warnw("AI root cause analysis failed, falling back to heuristic", "error", err)
+	}
+
+	// 基于规则的启发式分析（原有逻辑）
 	if ticketEntity.Priority == "critical" || ticketEntity.Priority == "high" {
 		rootCauses = append(rootCauses, dto.TicketRootCauseResponse{
 			ID:          "rc1",
@@ -186,6 +205,90 @@ func (s *RootCauseService) performAnalysis(ticketEntity *ent.Ticket, tenantID in
 	}
 
 	return rootCauses
+}
+
+// performAIAnalysis 使用 LLM 进行根因分析
+func (s *RootCauseService) performAIAnalysis(ticketEntity *ent.Ticket) ([]dto.TicketRootCauseResponse, error) {
+	ctx := context.Background()
+
+	// 构建分析提示词
+	prompt := fmt.Sprintf(`你是一个资深的 IT 运维专家，负责分析工单的根本原因。
+
+工单信息：
+- 工单编号：%s
+- 标题：%s
+- 描述：%s
+- 优先级：%s
+- 状态：%s
+- 工单类型：%s
+- 创建时间：%s
+
+请分析这个工单，找出可能的根本原因。使用以下 JSON 格式返回结果（只返回 JSON，不要其他内容）：
+{
+  "root_causes": [
+    {
+      "title": "原因标题",
+      "description": "详细描述",
+      "confidence": 0.85,
+      "category": "infrastructure|software|process|network|security|other"
+    }
+  ]
+}
+
+要求：
+- 提供 1-3 个最可能的根本原因
+- confidence 值为 0-1 之间的小数
+- category 必须是指定的值之一`, ticketEntity.TicketNumber, ticketEntity.Title, ticketEntity.Description,
+		ticketEntity.Priority, ticketEntity.Status, ticketEntity.Type, ticketEntity.CreatedAt.Format(time.RFC3339))
+
+	messages := []LLMMessage{
+		{Role: "system", Content: "你是一个专业的 IT 服务管理根因分析助手，擅长分析工单找出根本原因。"},
+		{Role: "user", Content: prompt},
+	}
+
+	response, err := s.gateway.Chat(ctx, "gpt-4o-mini", messages)
+	if err != nil {
+		return nil, fmt.Errorf("LLM analysis failed: %w", err)
+	}
+
+	// 解析 JSON 响应
+	// 提取 JSON 部分（处理可能的 markdown 格式）
+	jsonStr := response
+	if idx := strings.Index(jsonStr, "{"); idx > 0 {
+		jsonStr = jsonStr[idx:]
+	}
+	if idx := strings.LastIndex(jsonStr, "}"); idx >= 0 {
+		jsonStr = jsonStr[:idx+1]
+	}
+
+	var result struct {
+		RootCauses []struct {
+			Title       string  `json:"title"`
+			Description string  `json:"description"`
+			Confidence  float64 `json:"confidence"`
+			Category    string  `json:"category"`
+		} `json:"root_causes"`
+	}
+
+	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
+		return nil, fmt.Errorf("failed to parse LLM response: %w", err)
+	}
+
+	rootCauses := make([]dto.TicketRootCauseResponse, 0)
+	for i, rc := range result.RootCauses {
+		rootCauses = append(rootCauses, dto.TicketRootCauseResponse{
+			ID:          fmt.Sprintf("rc%d", i+1),
+			Title:       rc.Title,
+			Description: rc.Description,
+			Confidence:  rc.Confidence,
+			Category:    rc.Category,
+			Status:      "identified",
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		})
+	}
+
+	return rootCauses, nil
 }
 
 // calculateAverageConfidence 计算平均置信度
