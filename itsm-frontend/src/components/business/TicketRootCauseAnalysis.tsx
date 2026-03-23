@@ -261,7 +261,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
             >
               执行分析
             </Button>
-            <Button icon={<DownloadOutlined />} onClick={() => antMessage.info('导出功能开发中')}>
+            <Button icon={<DownloadOutlined />} onClick={() => antMessage.info('导出功能即将推出，敬请期待')}>
               导出报告
             </Button>
             <Button icon={<ReloadOutlined />} onClick={performAnalysis} loading={analyzing}>

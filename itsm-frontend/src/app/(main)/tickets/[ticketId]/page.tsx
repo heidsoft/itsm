@@ -6,7 +6,7 @@ import { TicketApi } from '@/lib/api/ticket-api';
 import { UserApi } from '@/lib/api/user-api';
 import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
-import { ArrowLeft, AlertCircle, XCircle, UserCheck, Edit, Save, X } from 'lucide-react';
+import { ArrowLeft, AlertCircle, XCircle, UserCheck, Edit, Save, X, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import {
   Button,
@@ -51,6 +51,8 @@ const TicketDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [slaInfo, setSlaInfo] = useState<{
@@ -186,6 +188,27 @@ const TicketDetailPage: React.FC = () => {
       fetchTicket();
     } catch (error) {
       antMessage.error(error instanceof Error ? error.message : '更新失败');
+    }
+  };
+
+  // Handle delete click
+  const handleDeleteClick = () => {
+    setDeleteModalVisible(true);
+  };
+
+  // Handle delete confirm
+  const handleDeleteConfirm = async () => {
+    try {
+      setDeleting(true);
+      await TicketApi.deleteTicket(ticketId);
+      antMessage.success('工单删除成功');
+      setDeleteModalVisible(false);
+      // Navigate back to ticket list
+      window.location.href = '/tickets';
+    } catch (error) {
+      antMessage.error(error instanceof Error ? error.message : '删除失败');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -372,6 +395,9 @@ const TicketDetailPage: React.FC = () => {
             <Button icon={<Edit size={16} />} onClick={handleUpdate}>
               编辑
             </Button>
+            <Button danger icon={<Trash2 size={16} />} onClick={handleDeleteClick}>
+              删除
+            </Button>
           </Space>
 
           {isRequester && (
@@ -557,6 +583,50 @@ const TicketDetailPage: React.FC = () => {
               </Space>
             </Form.Item>
           </Form>
+        </Modal>
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+          title={
+            <Space>
+              <Trash2 className="w-5 h-5 text-red-600" />
+              删除工单
+            </Space>
+          }
+          open={deleteModalVisible}
+          onCancel={() => setDeleteModalVisible(false)}
+          footer={null}
+          width={400}
+        >
+          <div className="py-4">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <Typography.Text strong className="text-lg">
+                  确定要删除此工单吗？
+                </Typography.Text>
+                <Typography.Paragraph type="secondary" className="mb-0 mt-1">
+                  此操作不可恢复，工单编号 #{ticket.id} 将被永久删除。
+                </Typography.Paragraph>
+              </div>
+            </div>
+            <div className="bg-gray-50 rounded p-3 mb-4">
+              <Typography.Text type="secondary" className="text-sm">
+                工单信息：
+              </Typography.Text>
+              <div className="mt-1">
+                <Text strong>{ticket.title}</Text>
+              </div>
+            </div>
+          </div>
+          <Space className="w-full justify-end">
+            <Button onClick={() => setDeleteModalVisible(false)} disabled={deleting}>
+              取消
+            </Button>
+            <Button danger type="primary" onClick={handleDeleteConfirm} loading={deleting} icon={<Trash2 size={14} />}>
+              确认删除
+            </Button>
+          </Space>
         </Modal>
       </Card>
     </div>

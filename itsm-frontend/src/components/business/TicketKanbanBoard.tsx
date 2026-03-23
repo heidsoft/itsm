@@ -378,7 +378,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
       key: 'share',
       label: '共享视图',
       icon: <ShareAltOutlined />,
-      onClick: () => antMessage.info('共享功能开发中'),
+      onClick: () => antMessage.info('共享功能即将推出，敬请期待'),
     },
   ];
 

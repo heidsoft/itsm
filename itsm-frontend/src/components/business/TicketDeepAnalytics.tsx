@@ -224,7 +224,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
   // 导出数据
   const handleExport = useCallback(() => {
     // 注意：导出功能需要后端支持导出API
-    antMessage.info('导出功能开发中');
+    antMessage.info('导出功能即将推出，敬请期待');
   }, [antMessage]);
 
   // 渲染图表

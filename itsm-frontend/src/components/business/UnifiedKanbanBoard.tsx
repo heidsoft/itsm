@@ -396,13 +396,13 @@ export function UnifiedKanbanBoard<T>({
                 key: 'save',
                 label: '保存当前视图',
                 icon: <SaveOutlined />,
-                onClick: () => antMessage.info('保存视图功能开发中'),
+                onClick: () => antMessage.info('保存视图功能即将推出，敬请期待'),
               },
               {
                 key: 'share',
                 label: '共享视图',
                 icon: <ShareAltOutlined />,
-                onClick: () => antMessage.info('共享功能开发中'),
+                onClick: () => antMessage.info('共享功能即将推出，敬请期待'),
               },
             ] }} trigger={['click']}>
               <Button icon={<SettingOutlined />}>视图设置</Button>
