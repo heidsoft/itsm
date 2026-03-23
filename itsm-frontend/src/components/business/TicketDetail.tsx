@@ -144,6 +144,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
       setSubtasks(subtasksData);
     } catch (error) {
       console.error('Failed to fetch subtasks:', error);
+      antMessage.error('获取子任务列表失败');
     } finally {
       setSubtasksLoading(false);
     }
