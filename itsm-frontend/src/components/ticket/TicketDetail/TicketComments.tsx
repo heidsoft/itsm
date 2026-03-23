@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Send, Edit, Trash2, MessageSquare, AtSign, User } from 'lucide-react';
-import { Card, Typography, Button, Input, Avatar, Tag as AntTag, Modal } from 'antd';
+import { Card, Typography, Button, Input, Avatar, Tag as AntTag, Modal, App } from 'antd';
 import { UserSelect } from '@/components/common/UserSelect';
 import { TicketApi } from '@/lib/api/ticket-api';
 import { Comment } from '@/types/comment';
@@ -23,6 +23,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
   onRefresh,
   formatDateTime,
 }) => {
+  const { message } = App.useApp();
   const [newComment, setNewComment] = useState('');
   const [isInternal, setIsInternal] = useState(false);
   const [mentionedUsers, setMentionedUsers] = useState<number[]>([]);
@@ -46,6 +47,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
       onRefresh();
     } catch (error) {
       console.error('添加评论失败:', error);
+      message.error('添加评论失败，请稍后重试');
     } finally {
       setSubmitting(false);
     }
@@ -64,6 +66,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
       onRefresh();
     } catch (error) {
       console.error('更新评论失败:', error);
+      message.error('更新评论失败，请稍后重试');
     } finally {
       setSubmitting(false);
     }
@@ -75,6 +78,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
       onRefresh();
     } catch (error) {
       console.error('删除评论失败:', error);
+      message.error('删除评论失败，请稍后重试');
     }
   };
 

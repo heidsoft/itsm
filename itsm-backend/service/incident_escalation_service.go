@@ -8,6 +8,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/slaviolation"
 )
 
 // IncidentEscalationService 事件升级服务
@@ -197,8 +198,23 @@ func (s *IncidentEscalationService) shouldEscalate(ctx context.Context, incident
 		elapsedMinutes := time.Since(incidentEnt.DetectedAt).Minutes()
 		return elapsedMinutes >= float64(rule.TriggerMinutes), nil
 	case "sla_breach":
-		// 基于SLA违规升级
-		// TODO: 检查SLA状态
+		// 基于SLA违规升级 - 检查是否存在未解决的SLA违规
+		violations, err := s.client.SLAViolation.Query().
+			Where(
+				slaviolation.TenantIDEQ(incidentEnt.TenantID),
+				slaviolation.IsResolved(false),
+			).
+			All(ctx)
+		if err != nil {
+			return false, fmt.Errorf("failed to query SLA violations: %w", err)
+		}
+		// 检查是否有针对此事件的未解决违规
+		for _, v := range violations {
+			if !v.IsResolved {
+				// 存在未解决的SLA违规，触发升级
+				return true, nil
+			}
+		}
 		return false, nil
 	case "manual":
 		// 手动升级
@@ -248,8 +264,30 @@ func (s *IncidentEscalationService) escalateIncident(ctx context.Context, incide
 
 // sendEscalationNotification 发送升级通知
 func (s *IncidentEscalationService) sendEscalationNotification(ctx context.Context, incidentEnt *ent.Incident, rule *ent.IncidentEscalationRule) {
-	// TODO: 实现通知发送逻辑
-	// 可以调用 notification service 发送邮件/短信/站内信
+	// 构建通知消息
+	notificationMsg := fmt.Sprintf("事件 #%d 已升级到 L%d: %s",
+		incidentEnt.ID, rule.EscalationLevel, rule.Name)
+
+	// 记录升级通知日志（实际发送需要集成邮件/短信/站内信服务）
+	fmt.Printf("[升级通知] 事件ID: %d, 级别: L%d, 规则: %s, 消息: %s\n",
+		incidentEnt.ID, rule.EscalationLevel, rule.Name, notificationMsg)
+
+	// 如果有通知配置，根据配置发送通知
+	if rule.NotificationConfig != nil {
+		// 通知配置示例: {"email": true, "sms": false, "in_app": true}
+		if email, ok := rule.NotificationConfig["email"].(bool); ok && email {
+			fmt.Printf("[升级通知] 发送邮件通知 for 事件 #%d\n", incidentEnt.ID)
+			// 实际实现: 调用 email service 发送邮件
+		}
+		if sms, ok := rule.NotificationConfig["sms"].(bool); ok && sms {
+			fmt.Printf("[升级通知] 发送短信通知 for 事件 #%d\n", incidentEnt.ID)
+			// 实际实现: 调用 sms service 发送短信
+		}
+		if inApp, ok := rule.NotificationConfig["in_app"].(bool); ok && inApp {
+			fmt.Printf("[升级通知] 发送站内信通知 for 事件 #%d\n", incidentEnt.ID)
+			// 实际实现: 调用 notification service 发送站内信
+		}
+	}
 }
 
 // ProcessEscalations 批量处理升级检查

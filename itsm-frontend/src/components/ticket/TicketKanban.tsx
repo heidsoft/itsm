@@ -38,6 +38,7 @@ import 'dayjs/locale/zh-cn';
 import { useRouter } from 'next/navigation';
 import type { Ticket } from '@/lib/api/types';
 import { useTickets } from '@/lib/hooks/useTickets';
+import { useDebounce } from '@/lib/component-utils';
 
 dayjs.extend(relativeTime);
 dayjs.locale('zh-cn');
@@ -74,6 +75,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   const { message, modal } = App.useApp();
 
   const [searchValue, setSearchValue] = useState('');
+  const debouncedSearchValue = useDebounce(searchValue, 300);
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('created_at');
@@ -84,13 +86,13 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   const filteredTickets = useMemo(() => {
     let filtered = [...tickets];
 
-    // 搜索过滤
-    if (searchValue) {
+    // 搜索过滤（使用防抖后的值）
+    if (debouncedSearchValue) {
       filtered = filtered.filter(
         ticket =>
-          ticket.title.toLowerCase().includes(searchValue.toLowerCase()) ||
-          ticket.description.toLowerCase().includes(searchValue.toLowerCase()) ||
-          ticket.ticketNumber.toLowerCase().includes(searchValue.toLowerCase())
+          ticket.title.toLowerCase().includes(debouncedSearchValue.toLowerCase()) ||
+          ticket.description.toLowerCase().includes(debouncedSearchValue.toLowerCase()) ||
+          ticket.ticketNumber.toLowerCase().includes(debouncedSearchValue.toLowerCase())
       );
     }
 
@@ -122,7 +124,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
     });
 
     return filtered;
-  }, [tickets, searchValue, selectedStatus, selectedPriority, sortBy]);
+  }, [tickets, debouncedSearchValue, selectedStatus, selectedPriority, sortBy]);
 
   // 按状态分组工单
   const ticketsByStatus = useMemo(() => {
