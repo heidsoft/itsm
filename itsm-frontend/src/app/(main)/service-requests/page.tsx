@@ -29,21 +29,22 @@ export default function ServiceRequestsPage() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      // Fetch pending approvals
-      const pendingData = await serviceRequestAPI.getPendingApprovals({ page: 1, size: 20 });
+      // Use parallel requests with reasonable page sizes
+      const [pendingData, allRequests] = await Promise.all([
+        serviceRequestAPI.getPendingApprovals({ page: 1, size: 20 }).catch(() => ({ requests: [], total: 0 })),
+        serviceRequestAPI.getUserServiceRequests({ page: 1, size: 100 }).catch(() => ({ requests: [], total: 0 })),
+      ]);
+
       setPendingApprovals(pendingData.requests.map((r: any) => ({
         id: r.id,
         request_no: r.id,
         title: r.title || r.catalog?.name || '服务请求',
         applicant: r.requester?.name || r.requester?.username || '-',
-        date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '-',
+        date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '-',
         priority: '中',
       })));
 
-      // Fetch all requests for stats (with large page size)
-      const allRequests = await serviceRequestAPI.getUserServiceRequests({ page: 1, size: 1000 });
       const requests = allRequests.requests || [];
-
       const pending = requests.filter((r: any) => r.status === 'submitted' || r.status === 'manager_approved' || r.status === 'it_approved' || r.status === 'security_approved').length;
       const processing = requests.filter((r: any) => r.status === 'provisioning').length;
       const completed = requests.filter((r: any) => r.status === 'delivered').length;
@@ -56,7 +57,6 @@ export default function ServiceRequestsPage() {
       });
     } catch (error) {
       console.error('Failed to fetch service request stats:', error);
-      message.error('获取服务请求统计数据失败，请稍后重试');
     }
   };
 
@@ -118,7 +118,7 @@ export default function ServiceRequestsPage() {
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="请求总数"
               value={stats.totalRequests}
@@ -128,7 +128,7 @@ export default function ServiceRequestsPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="待审批"
               value={stats.pending}
@@ -138,7 +138,7 @@ export default function ServiceRequestsPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="处理中"
               value={stats.processing}
@@ -148,7 +148,7 @@ export default function ServiceRequestsPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="已完成"
               value={stats.completed}

@@ -65,9 +65,13 @@ interface Notification {
   status: 'pending' | 'sent' | 'failed' | 'read';
   recipient: string;
   sent_at?: string;
+  sentAt?: string;
   read_at?: string;
+  readAt?: string;
   created_at: string;
+  createdAt?: string;
   template_id?: number;
+  templateId?: number;
   metadata?: Record<string, any>;
 }
 
@@ -451,7 +455,7 @@ const NotificationCenter: React.FC<{
             {getChannelIcon(record.channel)}
             <span>{record.recipient}</span>
             <span>•</span>
-            <span>{new Date(record.createdAt).toLocaleString()}</span>
+            <span>{record.createdAt ? new Date(record.createdAt).toLocaleString() : '-'}</span>
           </div>
         </div>
       ),

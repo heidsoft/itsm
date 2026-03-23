@@ -46,6 +46,7 @@ const IncidentDetail: React.FC = () => {
   const [data, setData] = useState<Incident | null>(null);
   const [escalateModalVisible, setEscalateModalVisible] = useState(false);
   const [escalating, setEscalating] = useState(false);
+  const [resolving, setResolving] = useState(false);
   const [form] = Form.useForm();
 
   const loadData = async () => {
@@ -81,9 +82,9 @@ const IncidentDetail: React.FC = () => {
     setEscalating(true);
     try {
       await IncidentAPI.escalateIncident(data.id, {
-        escalation_level: values.escalation_level,
+        escalationLevel: values.escalationLevel || values.escalation_level,
         reason: values.reason,
-        auto_assign: values.auto_assign,
+        autoAssign: values.autoAssign || values.auto_assign,
       });
       message.success('事件升级成功');
       setEscalateModalVisible(false);
@@ -95,23 +96,37 @@ const IncidentDetail: React.FC = () => {
     }
   };
 
+  const handleResolve = async () => {
+    if (!data) return;
+    setResolving(true);
+    try {
+      await IncidentAPI.updateIncidentStatus(data.id, { status: 'resolved' });
+      message.success('事件已解决');
+      loadData();
+    } catch (error) {
+      message.error('解决失败');
+    } finally {
+      setResolving(false);
+    }
+  };
+
   if (loading) {
     return (
-      <Card variant="borderless">
+      <Card>
         <Skeleton active />
       </Card>
     );
   }
 
   if (!data) {
-    return <Card variant="borderless">未找到事件</Card>;
+    return <Card>未找到事件</Card>;
   }
 
   return (
     <>
       <Space orientation="vertical" style={{ width: '100%' }} size="middle">
         {/* 头部操作栏 */}
-        <Card variant="borderless" bodyStyle={{ padding: '16px 24px' }}>
+        <Card bodyStyle={{ padding: '16px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <span style={{ fontSize: 20, fontWeight: 500, marginRight: 16 }}>
@@ -128,11 +143,11 @@ const IncidentDetail: React.FC = () => {
               >
                 编辑
               </Button>
-              <Button icon={<ArrowUpOutlined />} onClick={handleEscalate}>
+              <Button icon={<ArrowUpOutlined />} onClick={handleEscalate} loading={escalating}>
                 升级
               </Button>
               {data.status !== IncidentStatus.RESOLVED && (
-                <Button type="primary" icon={<CheckCircleOutlined />}>
+                <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleResolve} loading={resolving}>
                   解决
                 </Button>
               )}
@@ -141,7 +156,7 @@ const IncidentDetail: React.FC = () => {
         </Card>
 
         {/* 基本信息 */}
-        <Card variant="borderless" title="基本信息">
+        <Card title="基本信息">
           <Descriptions column={2}>
             <Descriptions.Item label="报告人ID">{data.reporterId}</Descriptions.Item>
             <Descriptions.Item label="负责人ID">{data.assigneeId || '-'}</Descriptions.Item>
@@ -178,7 +193,7 @@ const IncidentDetail: React.FC = () => {
 
         {/* 解决记录 (如果有) */}
         {data.resolutionSteps && data.resolutionSteps.length > 0 && (
-          <Card variant="borderless" title="处理流程">
+          <Card title="处理流程">
             <Timeline>
               {data.resolutionSteps.map((step, index) => (
                 <Timeline.Item key={index}>

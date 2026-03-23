@@ -72,7 +72,7 @@ export const DashboardChartCard: React.FC<DashboardChartCardProps> = ({
       title={titleContent}
       extra={extraContent}
       className="h-full rounded-lg shadow-sm border border-gray-200"
-      variant="borderless"
+     
       {...cardProps}
     >
       {children}

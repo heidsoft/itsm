@@ -107,7 +107,7 @@ export default function CloudAccountPage() {
   ];
 
   return (
-    <Card variant="borderless">
+    <Card>
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[

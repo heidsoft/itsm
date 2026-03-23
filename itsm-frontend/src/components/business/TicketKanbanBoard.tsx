@@ -239,6 +239,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [saveViewModalVisible, setSaveViewModalVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
 
   // 拖拽传感器
@@ -354,12 +355,16 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
   const handleSaveView = async () => {
     try {
       const values = await form.validateFields();
+      setSaving(true);
       // 注意：保存视图API尚未实现
       // 未来可通过 ViewAPI.saveView() 保存视图配置
       antMessage.success('视图已保存（模拟）');
       setSaveViewModalVisible(false);
       form.resetFields();
-    } catch (error) {}
+    } catch (error) {
+    } finally {
+      setSaving(false);
+    }
   };
 
   const viewMenuItems: MenuProps['items'] = [
@@ -474,6 +479,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
         title="保存看板视图"
         open={saveViewModalVisible}
         onOk={handleSaveView}
+        confirmLoading={saving}
         onCancel={() => {
           setSaveViewModalVisible(false);
           form.resetFields();

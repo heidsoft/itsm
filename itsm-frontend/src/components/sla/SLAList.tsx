@@ -165,7 +165,7 @@ const SLAList: React.FC = () => {
   ];
 
   return (
-    <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+    <Card className="rounded-lg shadow-sm border border-gray-200">
       <Breadcrumb className="mb-4">
         <Breadcrumb.Item>首页</Breadcrumb.Item>
         <Breadcrumb.Item>服务级别管理</Breadcrumb.Item>

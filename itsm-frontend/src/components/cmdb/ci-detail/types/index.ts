@@ -62,8 +62,11 @@ export interface ChangeLog {
   Method?: string;
   StatusCode?: number | string;
   created_at?: string;
+  createdAt?: string;
   updated_by?: string;
+  updatedBy?: string;
   updated_at?: string;
+  updatedAt?: string;
   description?: string;
   [key: string]: unknown;
 }

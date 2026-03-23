@@ -64,6 +64,7 @@ const { Option } = Select;
 interface EnhancedTicket {
   id: number;
   ticket_number: string;
+  ticketNumber?: string;
   title: string;
   description: string;
   status: string;
@@ -78,6 +79,8 @@ interface EnhancedTicket {
     phone?: string;
     department: string;
   };
+  assignee_id?: number;
+  assigneeId?: number;
   requester: {
     id: number;
     name: string;
@@ -86,21 +89,31 @@ interface EnhancedTicket {
     phone?: string;
     department: string;
   };
+  requester_id?: number;
+  requesterId?: number;
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
   due_date?: string;
+  dueDate?: string;
   sla_deadline?: string;
+  slaDeadline?: string;
   tags: string[];
   impact: 'low' | 'medium' | 'high' | 'critical';
   urgency: 'low' | 'medium' | 'high' | 'critical';
   resolution?: string;
   work_notes?: string;
+  workNotes?: string;
   attachments: Attachment[];
   comments: Comment[];
   activities: Activity[];
   workflow_steps: WorkflowStep[];
+  workflowSteps?: WorkflowStep[];
   related_tickets: RelatedTicket[];
+  relatedTickets?: RelatedTicket[];
   sla_metrics: SLAMetrics;
+  slaMetrics?: SLAMetrics;
 }
 
 interface Attachment {
@@ -122,8 +135,12 @@ interface Comment {
     avatar?: string;
     role: string;
   };
+  author_id?: number;
+  authorId?: number;
   created_at: string;
+  createdAt?: string;
   is_internal: boolean;
+  isInternal?: boolean;
   attachments?: Attachment[];
 }
 
@@ -390,13 +407,13 @@ export const EnhancedTicketDetail: React.FC<EnhancedTicketDetailProps> = ({
               <div>
                 <Text type="secondary">创建时间</Text>
                 <div className="font-medium">
-                  {new Date(ticket.createdAt).toLocaleString('zh-CN')}
+                  {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString('zh-CN') : '-'}
                 </div>
               </div>
               <div>
                 <Text type="secondary">最后更新</Text>
                 <div className="font-medium">
-                  {new Date(ticket.updatedAt).toLocaleString('zh-CN')}
+                  {ticket.updatedAt ? new Date(ticket.updatedAt).toLocaleString('zh-CN') : '-'}
                 </div>
               </div>
             </div>
@@ -707,7 +724,7 @@ export const EnhancedTicketDetail: React.FC<EnhancedTicketDetailProps> = ({
                             <Tag color="blue">{comment.author.role}</Tag>
                             {comment.is_internal && <Tag color="orange">内部</Tag>}
                             <span className="text-sm text-gray-500">
-                              {new Date(comment.createdAt).toLocaleString('zh-CN')}
+                              {comment.createdAt ? new Date(comment.createdAt).toLocaleString('zh-CN') : '-'}
                             </span>
                           </div>
                           <div className="text-gray-700 mb-3">{comment.content}</div>

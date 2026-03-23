@@ -812,6 +812,18 @@ func (f ServiceRequestApprovalFunc) Mutate(ctx context.Context, m ent.Mutation) 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServiceRequestApprovalMutation", m)
 }
 
+// The StandardChangeFunc type is an adapter to allow the use of ordinary
+// function as StandardChange mutator.
+type StandardChangeFunc func(context.Context, *ent.StandardChangeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StandardChangeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StandardChangeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StandardChangeMutation", m)
+}
+
 // The SystemConfigFunc type is an adapter to allow the use of ordinary
 // function as SystemConfig mutator.
 type SystemConfigFunc func(context.Context, *ent.SystemConfigMutation) (ent.Value, error)

@@ -140,7 +140,10 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   const fetchSubtasks = async () => {
     setSubtasksLoading(true);
     try {
-      // 获取子任务逻辑
+      const subtasksData = await TicketApi.getSubtasks(ticket.id);
+      setSubtasks(subtasksData);
+    } catch (error) {
+      console.error('Failed to fetch subtasks:', error);
     } finally {
       setSubtasksLoading(false);
     }
@@ -178,13 +181,39 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   };
 
   // 子任务处理函数
-  const handleCreateSubtask = async (data: Partial<Ticket>) => {};
+  const handleCreateSubtask = async (data: Partial<Ticket>) => {
+    try {
+      await TicketApi.createSubtask(ticket.id, data);
+      antMessage.success('子任务创建成功');
+      fetchSubtasks();
+    } catch (error) {
+      antMessage.error('创建子任务失败');
+    }
+  };
 
-  const handleUpdateSubtask = async (id: number, data: Partial<Ticket>) => {};
+  const handleUpdateSubtask = async (id: number, data: Partial<Ticket>) => {
+    try {
+      await TicketApi.updateSubtask(ticket.id, id, data);
+      antMessage.success('子任务更新成功');
+      fetchSubtasks();
+    } catch (error) {
+      antMessage.error('更新子任务失败');
+    }
+  };
 
-  const handleDeleteSubtask = async (id: number) => {};
+  const handleDeleteSubtask = async (id: number) => {
+    try {
+      await TicketApi.deleteSubtask(ticket.id, id);
+      antMessage.success('子任务删除成功');
+      fetchSubtasks();
+    } catch (error) {
+      antMessage.error('删除子任务失败');
+    }
+  };
 
-  const handleViewSubtask = (subtask: Subtask) => {};
+  const handleViewSubtask = (subtask: Subtask) => {
+    window.open(`/tickets/${subtask.id}`, '_blank');
+  };
 
   return (
     <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen">

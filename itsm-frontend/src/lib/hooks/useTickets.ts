@@ -110,7 +110,7 @@ export const useTickets = (): UseTicketsReturn => {
         priority: currentFilters.priority,
         type: currentFilters.type,
         category: currentFilters.category,
-        assigneeId: currentFilters.assigneeId || currentFilters.assignee_id,
+        assignee_id: currentFilters.assignee_id,
         keyword: currentFilters.keyword,
         date_from: dateRange?.[0],
         date_to: dateRange?.[1],

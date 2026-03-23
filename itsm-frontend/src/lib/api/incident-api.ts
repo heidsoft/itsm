@@ -17,16 +17,20 @@ export interface Incident {
   severity: string;
   source: string;
   type: string;
-  incidentNumber: string;
-  isMajorIncident: boolean;
+  // 支持 camelCase 和 snake_case 两种格式
+  incidentNumber?: string;
+  incident_number?: string;
+  isMajorIncident?: boolean;
   reporter?: {
     id: number;
     name: string;
   };
+  reporter_id?: number;
   assignee?: {
     id: number;
     name: string;
   };
+  assignee_id?: number;
   // 配置项关联
   configurationItemId?: number;
   configurationItem?: {
@@ -47,19 +51,27 @@ export interface Incident {
   securityEventSourceIp?: string;
   securityEventTarget?: string;
   securityEventDetails?: unknown;
-  // 时间字段
+  // 时间字段 - 同时支持两种格式
   detectedAt?: string;
+  detected_at?: string;
   confirmedAt?: string;
+  confirmed_at?: string;
   resolvedAt?: string;
+  resolved_at?: string;
   closedAt?: string;
+  closed_at?: string;
   escalatedAt?: string;
-  createdAt: string;
-  updatedAt: string;
+  escalated_at?: string;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
   // 新增字段
   category?: string;
   subcategory?: string;
   resolution?: string;
   escalationLevel?: number;
+  escalation_level?: number;
   impactAnalysis?: {
     businessImpact?: {
       affectedUsers?: number;
@@ -96,9 +108,13 @@ export interface CreateIncidentRequest {
   source: string;
   type: string;
   isMajorIncident?: boolean;
+  // 同时支持 camelCase 和 snake_case
   assigneeId?: number;
+  assignee_id?: number;
   assignedTo?: number; // Added for compatibility with UI forms
+  assigned_to?: number; // Backend expects this
   configurationItemId?: number;
+  configuration_item_id?: number;
   category?: string;
   subcategory?: string;
   impact?: string; // Added for UI
@@ -248,13 +264,20 @@ export interface ListIncidentsResponse extends PaginationResponse<Incident> {
 }
 
 export interface IncidentMetrics {
-  totalIncidents: number;
-  openIncidents: number;
-  criticalIncidents: number;
-  majorIncidents: number;
-  avgResolutionTime: number;
-  mtta: number;
-  mttr: number;
+  // camelCase
+  totalIncidents?: number;
+  openIncidents?: number;
+  criticalIncidents?: number;
+  majorIncidents?: number;
+  avgResolutionTime?: number;
+  mtta?: number;
+  mttr?: number;
+  // snake_case
+  total_incidents?: number;
+  open_incidents?: number;
+  critical_incidents?: number;
+  major_incidents?: number;
+  avg_resolution_time?: number;
 }
 
 // 阿里云告警事件

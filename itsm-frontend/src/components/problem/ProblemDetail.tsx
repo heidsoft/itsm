@@ -72,14 +72,14 @@ const ProblemDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <Card variant="borderless">
+      <Card>
         <Skeleton active />
       </Card>
     );
   }
 
   if (!data) {
-    return <Card variant="borderless">未找到该问题</Card>;
+    return <Card>未找到该问题</Card>;
   }
 
   const tabItems = [
@@ -87,7 +87,7 @@ const ProblemDetail: React.FC = () => {
       key: 'basic',
       label: '基本信息',
       children: (
-        <Card variant="borderless" bodyStyle={{ padding: '16px 24px' }}>
+        <Card bodyStyle={{ padding: '16px 24px' }}>
           <Descriptions column={2}>
             <Descriptions.Item label="创建人ID">{data.created_by}</Descriptions.Item>
             <Descriptions.Item label="负责人ID">{data.assigneeId || data.assignee_id || '-'}</Descriptions.Item>
@@ -140,7 +140,7 @@ const ProblemDetail: React.FC = () => {
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       {/* 操作栏 */}
-      <Card variant="borderless" bodyStyle={{ padding: '16px 24px' }}>
+      <Card bodyStyle={{ padding: '16px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
             <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/problems')}>
@@ -178,7 +178,7 @@ const ProblemDetail: React.FC = () => {
       </Card>
 
       {/* Tab 内容 */}
-      <Card variant="borderless">
+      <Card>
         <Tabs items={tabItems} defaultActiveKey="basic" />
       </Card>
     </Space>

@@ -126,11 +126,11 @@ const WorkflowManagementPage = () => {
           version: w.version || '1.0.0',
           status: w.status === 'active' || w.deployed ? 'active' : 'draft',
           bpmn_xml: w.bpmn_xml || w.xml || '',
-          createdAt: w.createdAt || w.created_at || new Date().toISOString(),
-          updatedAt: w.updatedAt || w.updated_at || new Date().toISOString(),
+          created_at: w.created_at || new Date().toISOString(),
+          updated_at: w.updated_at || new Date().toISOString(),
           instances_count: w.instances_count || 0,
           running_instances: w.running_instances || 0,
-          created_by: w.createdBy || w.created_by || 'System',
+          created_by: w.created_by || 'System',
         }));
         setWorkflows(adaptedWorkflows);
         // 更新分页信息

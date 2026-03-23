@@ -63,17 +63,29 @@ interface AlertRule {
 interface AlertHistory {
   id: number;
   ticket_id: number;
+  ticketId?: number;
   ticket_number: string;
+  ticketNumber?: string;
   ticket_title: string;
+  ticketTitle?: string;
   alert_rule_id: number;
+  alertRuleId?: number;
   alert_rule_name: string;
+  alertRuleName?: string;
   alert_level: string;
+  alertLevel?: string;
   threshold_percentage: number;
+  thresholdPercentage?: number;
   actual_percentage: number;
+  actualPercentage?: number;
   notification_sent: boolean;
+  notificationSent?: boolean;
   escalation_level: number;
+  escalationLevel?: number;
   created_at: string;
+  createdAt?: string;
   resolved_at?: string;
+  resolvedAt?: string;
 }
 
 interface SLAAlertSystemProps {

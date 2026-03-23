@@ -35,24 +35,35 @@ export interface TicketUser {
 export interface TicketComment {
   id: number;
   ticketId: number;
+  ticket_id?: number;
   content: string;
   author: TicketUser;
+  authorId?: number;
+  author_id?: number;
   isInternal: boolean;
+  is_internal?: boolean;
   createdAt: string;
+  created_at?: string;
   updatedAt?: string;
+  updated_at?: string;
   attachments?: TicketAttachment[];
 }
 
 export interface TicketAttachment {
   id: number;
   ticketId: number;
+  ticket_id?: number;
   filename: string;
   originalName: string;
   fileSize: number;
+  file_size?: number;
   mimeType: string;
+  mime_type?: string;
   url: string;
   uploadedBy: TicketUser;
+  uploaded_by?: number;
   createdAt: string;
+  created_at?: string;
 }
 
 export interface TicketSLA {

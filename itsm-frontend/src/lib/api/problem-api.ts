@@ -14,14 +14,21 @@ export interface Problem {
   severity: string;
   category?: string;
   assignee_id?: number;
+  assigneeId?: number;
   reporter_id?: number;
+  reporterId?: number;
   root_cause?: string;
+  rootCause?: string;
   workaround?: string;
   resolution?: string;
   affected_incidents?: number[];
+  affectedIncidents?: number[];
   related_changes?: number[];
+  relatedChanges?: number[];
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 export interface ProblemListResponse {

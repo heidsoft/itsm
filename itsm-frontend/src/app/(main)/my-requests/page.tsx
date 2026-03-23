@@ -20,7 +20,9 @@ import {
 interface ServiceRequest {
   id: number;
   catalog_id: number;
+  catalogId?: number;
   requester_id: number;
+  requesterId?: number;
   status:
     | 'submitted'
     | 'manager_approved'
@@ -34,6 +36,7 @@ interface ServiceRequest {
     | string;
   reason: string;
   created_at: string;
+  createdAt?: string;
   catalog?: {
     id: number;
     name: string;
@@ -90,7 +93,7 @@ const RequestCard = ({ request }: { request: ServiceRequest }) => {
   return (
     <Card
       className="mb-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
-      variant="borderless"
+     
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
@@ -226,7 +229,7 @@ const MyRequestsPage = () => {
         )}
 
         {/* 搜索和筛选 */}
-        <Card className="mb-6 rounded-lg shadow-sm border border-gray-200" variant="borderless">
+        <Card className="mb-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* 搜索框 */}
             <div className="flex-1">
@@ -278,7 +281,7 @@ const MyRequestsPage = () => {
         ) : (
           <Card
             className="text-center py-12 rounded-lg shadow-sm border border-gray-200"
-            variant="borderless"
+           
           >
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -302,7 +305,7 @@ const MyRequestsPage = () => {
         {totalPages > 1 && (
           <Card
             className="mt-8 rounded-lg shadow-sm border border-gray-200"
-            variant="borderless"
+           
             bodyStyle={{ padding: '16px 24px' }}
           >
             <div className="flex items-center justify-between">

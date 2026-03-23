@@ -49,7 +49,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
   return (
     <Card
       className="h-full rounded-lg shadow-sm border border-gray-200"
-      variant="borderless"
+     
       styles={{
         body: {
           padding: 24,

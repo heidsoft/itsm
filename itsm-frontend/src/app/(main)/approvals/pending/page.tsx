@@ -57,7 +57,7 @@ export default function PendingApprovalsPage() {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <Space orientation="vertical" size={16} className="w-full">
-        <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+        <Card className="rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center justify-between w-full">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-0">我的待办审批</h2>
@@ -69,7 +69,7 @@ export default function PendingApprovalsPage() {
           </div>
         </Card>
 
-        <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+        <Card className="rounded-lg shadow-sm border border-gray-200">
           {rows.length === 0 && !loading ? (
             <Empty description="暂无待审批事项" image={Empty.PRESENTED_IMAGE_SIMPLE}>
               <div className="text-center">
