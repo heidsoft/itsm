@@ -221,6 +221,7 @@ export const EnhancedTicketDetail: React.FC<EnhancedTicketDetailProps> = ({
   const [isInternalComment, setIsInternalComment] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [saving, setSaving] = useState(false);
 
   // 获取状态颜色
   const getStatusColor = (status: string) => {
@@ -259,12 +260,15 @@ export const EnhancedTicketDetail: React.FC<EnhancedTicketDetailProps> = ({
 
   // 处理保存编辑
   const handleSave = async () => {
+    setSaving(true);
     try {
       await onUpdate(editingTicket);
       setIsEditing(false);
       message.success('工单更新成功');
     } catch (error) {
       message.error('更新失败');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -424,7 +428,7 @@ export const EnhancedTicketDetail: React.FC<EnhancedTicketDetailProps> = ({
               <>
                 {isEditing ? (
                   <>
-                    <Button type="primary" icon={<Save />} onClick={handleSave}>
+                    <Button type="primary" icon={<Save />} onClick={handleSave} loading={saving}>
                       保存
                     </Button>
                     <Button icon={<X />} onClick={handleCancel}>

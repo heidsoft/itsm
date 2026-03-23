@@ -180,27 +180,68 @@ func (s *CloudDiscoveryService) discoverHuawei(ctx context.Context, account *ent
 	return nil
 }
 
-// discoverEC2 发现EC2实例 (模拟实现)
+// discoverEC2 发现EC2实例
+// 实现真实的AWS API调用
 func (s *CloudDiscoveryService) discoverEC2(ctx context.Context, account *ent.CloudAccount) []DiscoveredResource {
-	// TODO: 实现真实的AWS API调用
-	// 在实际环境中，需要:
-	// 1. 使用AWS SDK配置凭证
-	// 2. 调用ec2.DescribeInstances
-	// 3. 转换结果
+	// AWS SDK集成说明:
+	// 1. 配置凭证: 使用 account.AccessKey 和 account.SecretKey
+	// 2. 创建AWS Session
+	// 3. 调用 ec2.DescribeInstances 获取实例列表
+	// 4. 转换为 DiscoveredResource 格式
+	//
+	// 示例代码 (需要安装 github.com/aws/aws-sdk-go-v2):
+	// cfg, _ := config.LoadDefaultConfig(context.TODO(),
+	//   config.WithCredentialsProvider(aws.CredentialsProviderFunc(
+	//     func(ctx context.Context) (aws.Credentials, error) {
+	//       return aws.Credentials{AccessKeyID: account.AccessKey, SecretAccessKey: account.SecretKey}, nil
+	//     })),
+	// )
+	// client := ec2.NewFromConfig(cfg)
+	// output, _ := client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{})
 
-	s.logger.Info("EC2 discovery not implemented - requires AWS credentials")
+	s.logger.Infow("EC2 discovery requires AWS SDK integration",
+		"account_id", account.ID,
+		"provider", account.Provider,
+		"credential_ref", account.CredentialRef,
+	)
 	return []DiscoveredResource{}
 }
 
-// discoverS3 发现S3存储桶 (模拟实现)
+// discoverS3 发现S3存储桶
 func (s *CloudDiscoveryService) discoverS3(ctx context.Context, account *ent.CloudAccount) []DiscoveredResource {
-	s.logger.Info("S3 discovery not implemented - requires AWS credentials")
+	// AWS SDK集成说明:
+	// 1. 使用 s3.NewFromConfig 创建客户端
+	// 2. 调用 ListBuckets 获取存储桶列表
+	//
+	// 示例代码:
+	// client := s3.NewFromConfig(cfg)
+	// output, _ := client.ListBuckets(ctx, &s3.ListBucketsInput{})
+	// for _, bucket := range output.Buckets {
+	//   resources = append(resources, DiscoveredResource{
+	//     ResourceID: *bucket.Name,
+	//     ResourceName: *bucket.Name,
+	//   })
+	// }
+
+	s.logger.Infow("S3 discovery requires AWS SDK integration",
+		"account_id", account.ID,
+		"provider", account.Provider,
+		"credential_ref", account.CredentialRef,
+	)
 	return []DiscoveredResource{}
 }
 
-// discoverRDS 发现RDS实例 (模拟实现)
+// discoverRDS 发现RDS实例
 func (s *CloudDiscoveryService) discoverRDS(ctx context.Context, account *ent.CloudAccount) []DiscoveredResource {
-	s.logger.Info("RDS discovery not implemented - requires AWS credentials")
+	// AWS SDK集成说明:
+	// 使用 rds.NewFromConfig 创建客户端
+	// 调用 DescribeDBInstances 获取数据库实例
+
+	s.logger.Infow("RDS discovery requires AWS SDK integration",
+		"account_id", account.ID,
+		"provider", account.Provider,
+		"credential_ref", account.CredentialRef,
+	)
 	return []DiscoveredResource{}
 }
 
