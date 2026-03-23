@@ -30,12 +30,8 @@ import {
   UserOutlined,
   ClockCircleOutlined,
 } from '@ant-design/icons';
-import {
-  ticketService,
-  type Ticket,
-  type TicketFilterParams,
-  type ListTicketsParams,
-} from '../../lib/services/ticket-service';
+import { TicketApi } from '@/lib/api/ticket-api';
+import type { Ticket, TicketFilterParams, ListTicketsParams } from '@/lib/services/ticket-service';
 import { useAuthStore } from '@/lib/store/auth-store';
 import type { TicketListResponse } from '@/lib/api/api-config';
 
@@ -67,25 +63,25 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
 
     setLoading(true);
     try {
-      // 构建符合ListTicketsParams的参数
-      const params: ListTicketsParams = {
+      // 构建符合GetTicketsParams的参数
+      const params = {
         page: currentPage,
-        page_size: pageSize,
+        size: pageSize,
         keyword: searchText || undefined,
         status: filters.status as any,
         priority: filters.priority as any,
         type: filters.type as any,
         category: filters.category,
-        assignee_id: filters.assignee_id,
-        requester_id: filters.requester_id,
-        date_from: filters.date_from,
-        date_to: filters.date_to,
+        assigneeId: filters.assignee_id,
+        requesterId: filters.requester_id,
+        dateFrom: filters.date_from,
+        dateTo: filters.date_to,
         tags: filters.tags,
-        sort_by: filters.sort_by,
-        sort_order: filters.sort_order,
+        sortBy: filters.sort_by,
+        sortOrder: filters.sort_order,
       };
 
-      const response: TicketListResponse = await ticketService.listTickets(params);
+      const response: TicketListResponse = await TicketApi.getTickets(params as any);
       setTickets(response.tickets);
       setTotal(response.total);
     } catch (error) {
@@ -210,7 +206,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
               content: `确定要删除工单 ${record.ticketNumber} 吗？`,
               onOk: async () => {
                 try {
-                  await ticketService.deleteTicket(record.id);
+                  await TicketApi.deleteTicket(record.id);
                   message.success('删除成功');
                   fetchTickets();
                 } catch (error) {
@@ -241,21 +237,22 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
               content: `确定要删除选中的 ${selectedRowKeys.length} 个工单吗？`,
               onOk: async () => {
                 setBatchLoading(true);
-                await Promise.all(
-                  selectedRowKeys.map(id => ticketService.deleteTicket(Number(id)))
-                );
-                message.success('删除成功');
-                setSelectedRowKeys([]);
-                fetchTickets();
-                setBatchLoading(false);
+                try {
+                  await TicketApi.batchDeleteTickets(selectedRowKeys.map(id => Number(id)));
+                  message.success('删除成功');
+                  setSelectedRowKeys([]);
+                  fetchTickets();
+                } finally {
+                  setBatchLoading(false);
+                }
               },
             });
             break;
           case 'export':
             setBatchLoading(true);
-            const blob = await ticketService.exportTickets({
-              ...filters,
-              search: searchText || undefined,
+            const blob = await TicketApi.exportTickets({
+              format: 'csv',
+              filters: { ...filters, search: searchText || undefined },
             });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
