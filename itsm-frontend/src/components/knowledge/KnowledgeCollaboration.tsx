@@ -301,7 +301,7 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
           <Tooltip title="查看版本历史">
             <Button
               icon={<GitBranch className="w-4 h-4" />}
-              onClick={() => message.info('版本历史功能开发中')}
+              onClick={() => message.info('版本历史功能即将推出，敬请期待')}
             />
           </Tooltip>
 
