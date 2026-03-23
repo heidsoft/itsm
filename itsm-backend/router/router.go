@@ -83,9 +83,8 @@ type RouterConfig struct {
 	NotificationController           *controller.NotificationController
 
 	// Additional domain controllers
-	ServiceController        *controller.ServiceController
-	ChangeApprovalController *controller.ChangeApprovalController
-	ProvisioningController   *controller.ProvisioningController
+	ServiceController      *controller.ServiceController
+	ProvisioningController *controller.ProvisioningController
 	AnalyticsController      *controller.AnalyticsController
 	PredictionController     *controller.PredictionController
 	ReleaseController        *controller.ReleaseController
