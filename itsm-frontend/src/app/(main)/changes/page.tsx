@@ -6,11 +6,13 @@ import { GitPullRequest, CheckCircle, Clock, XCircle, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation';
 import ChangeList from '@/components/change/ChangeList';
 import { ChangeApi } from '@/lib/api/change-api';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
 
 export default function ChangesPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -30,7 +32,7 @@ export default function ChangesPage() {
       });
     } catch (error) {
       console.error('Failed to fetch change stats:', error);
-      message.error('获取变更统计失败，请稍后重试');
+      message.error(t('changes.getStatsFailed') || '获取变更统计失败，请稍后重试');
     }
   };
 

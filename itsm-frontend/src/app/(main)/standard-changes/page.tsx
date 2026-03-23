@@ -91,7 +91,7 @@ export default function StandardChangesPage() {
       setTotal(data.total);
     } catch (error) {
       console.error('Failed to fetch templates:', error);
-      message.error('获取模板列表失败');
+      message.error(t('standardChanges.loadFailed') || '获取模板列表失败');
     } finally {
       setLoading(false);
     }
@@ -140,12 +140,12 @@ export default function StandardChangesPage() {
   const handleDelete = async (id: number) => {
     try {
       await StandardChangeApi.deleteTemplate(id);
-      message.success('删除成功');
+      message.success(t('common.deleteSuccess') || '删除成功');
       fetchTemplates();
       fetchCategories();
     } catch (error) {
       console.error('Failed to delete template:', error);
-      message.error('删除失败');
+      message.error(t('common.deleteFailed') || '删除失败');
     }
   };
 
@@ -160,12 +160,12 @@ export default function StandardChangesPage() {
     try {
       const values = instantiateForm.getFieldsValue();
       const result = await StandardChangeApi.instantiate(selectedTemplate.id, values);
-      message.success('已成功从模板创建变更');
+      message.success(t('standardChanges.instantiateSuccess') || '已成功从模板创建变更');
       setInstantiateModalVisible(false);
       router.push(`/changes/${result.change_id}`);
     } catch (error) {
       console.error('Failed to instantiate:', error);
-      message.error('从模板创建变更失败');
+      message.error(t('standardChanges.instantiateFailed') || '从模板创建变更失败');
     }
   };
 
@@ -174,17 +174,17 @@ export default function StandardChangesPage() {
       const values = await form.validateFields();
       if (editingTemplate) {
         await StandardChangeApi.updateTemplate(editingTemplate.id, values);
-        message.success('更新成功');
+        message.success(t('common.saveSuccess') || '更新成功');
       } else {
         await StandardChangeApi.createTemplate(values);
-        message.success('创建成功');
+        message.success(t('common.createSuccess') || '创建成功');
       }
       setModalVisible(false);
       fetchTemplates();
       fetchCategories();
     } catch (error) {
       console.error('Failed to submit:', error);
-      message.error(editingTemplate ? '更新失败' : '创建失败');
+      message.error(editingTemplate ? (t('common.updateFailed') || '更新失败') : (t('common.createFailed') || '创建失败'));
     }
   };
 
