@@ -20,17 +20,26 @@ export interface SLADefinition {
 export interface SLAViolation {
   id: number;
   ticket_id: number;
+  ticketId?: number;
   sla_def_id: number;
+  slaDefId?: number;
   violation_type: string;
+  violationType?: string;
   expected_time: string;
+  expectedTime?: string;
   actual_time: string;
+  actualTime?: string;
   delay_minutes: number;
+  delayMinutes?: number;
   status: string;
   severity: string;
   description: string;
   tenant_id: number;
+  tenantId?: number;
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 // SLA合规报告接口
@@ -287,12 +296,18 @@ export class SLAApi {
   static async getSLAAlerts(): Promise<
     Array<{
       ticket_id: number;
+      ticketId?: number;
       ticket_title: string;
+      ticketTitle?: string;
       priority: string;
       sla_definition: string;
+      slaDefinition?: string;
       time_remaining: number;
+      timeRemaining?: number;
       alert_level: 'warning' | 'critical' | 'severe';
+      alertLevel?: 'warning' | 'critical' | 'severe';
       created_at: string;
+      createdAt?: string;
     }>
   > {
     // 修正: 确保路径与后端一致
@@ -306,12 +321,18 @@ export class SLAApi {
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return history.items.map((item: any) => ({
+      ticket_id: item.ticket_id || item.ticketId,
       ticketId: item.ticketId || item.ticket_id,
-      ticketTitle: item.ticketTitle || item.ticket_title || `Ticket #${item.ticketId || item.ticket_id}`,
+      ticket_title: item.ticket_title || item.ticketTitle || `Ticket #${item.ticket_id || item.ticketId}`,
+      ticketTitle: item.ticketTitle || item.ticket_title || `Ticket #${item.ticket_id || item.ticketId}`,
       priority: item.priority || 'medium',
-      slaDefinition: item.slaDefinition || item.sla_definition_name || 'SLA',
-      timeRemaining: 0, // 历史记录可能没有剩余时间
-      alertLevel: item.alertLevel || item.alert_level,
+      sla_definition: item.sla_definition || item.slaDefinition || 'SLA',
+      slaDefinition: item.slaDefinition || item.sla_definition || 'SLA',
+      time_remaining: item.time_remaining || item.timeRemaining || 0,
+      timeRemaining: item.timeRemaining || item.time_remaining || 0,
+      alert_level: item.alert_level || item.alertLevel || 'warning',
+      alertLevel: item.alertLevel || item.alert_level || 'warning',
+      created_at: item.created_at || item.createdAt,
       createdAt: item.createdAt || item.created_at,
     }));
   }

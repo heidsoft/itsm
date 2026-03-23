@@ -25,6 +25,7 @@ type ChangeQuery struct {
 	inters       []Interceptor
 	predicates   []predicate.Change
 	withProblems *ProblemQuery
+	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -370,11 +371,15 @@ func (_q *ChangeQuery) prepareQuery(ctx context.Context) error {
 func (_q *ChangeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Change, error) {
 	var (
 		nodes       = []*Change{}
+		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
 			_q.withProblems != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, change.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Change).scanValues(nil, columns)
 	}

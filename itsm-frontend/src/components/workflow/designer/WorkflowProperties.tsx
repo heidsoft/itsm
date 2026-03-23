@@ -121,7 +121,7 @@ export default function WorkflowProperties({
   return (
     <div className="h-full">
       {/* 版本历史内容 */}
-      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Card className="rounded-lg shadow-sm border border-gray-200">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-base font-semibold mb-0">版本历史</h3>
           <Button
@@ -149,7 +149,7 @@ export default function WorkflowProperties({
                   <Text strong>版本 {version.version}</Text>
                   <div className="text-sm text-gray-500 mt-1">{version.change_log}</div>
                   <div className="text-xs text-gray-400 mt-1">
-                    {new Date(version.createdAt).toLocaleString()} - {version.createdBy}
+                    {new Date(version.created_at).toLocaleString()} - {version.created_by}
                   </div>
                 </div>
                 <Space>
@@ -182,7 +182,7 @@ export default function WorkflowProperties({
           <Card
             title="审批配置"
             className="h-full rounded-lg shadow-sm border border-gray-200"
-            variant="borderless"
+           
           >
             <div className="space-y-6">
               {/* 审批类型 */}
@@ -251,7 +251,7 @@ export default function WorkflowProperties({
           <Card
             title="SLA配置"
             className="h-full rounded-lg shadow-sm border border-gray-200"
-            variant="borderless"
+           
           >
             <div className="space-y-6">
               {/* 响应时间 */}

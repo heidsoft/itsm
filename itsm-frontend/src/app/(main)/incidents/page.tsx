@@ -78,8 +78,8 @@ export default function IncidentsPage() {
       
       // Enrich incidents with reporter object if user exists
       const enriched = items.map(inc => {
-        const reporterId = inc.reporterId;
-        const reporterName = userMap.get(reporterId);
+        const reporterId = inc.reporter_id || inc.reporterId;
+        const reporterName = reporterId ? userMap.get(reporterId) : undefined;
         return {
           ...inc,
           ...(reporterId && reporterName ? { reporter: { id: reporterId, name: reporterName } } : {}),
@@ -156,7 +156,7 @@ export default function IncidentsPage() {
 
       <IncidentStats metrics={metrics || undefined} />
 
-      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Card className="rounded-lg shadow-sm border border-gray-200">
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
@@ -255,7 +255,7 @@ export default function IncidentsPage() {
             getItemId={(incident: Incident) => incident.id}
             getItemStatus={(incident: Incident) => incident.status}
             getItemTitle={(incident: Incident) => incident.title || `事件 #${incident.id}`}
-            getItemNumber={(incident: Incident) => incident.incidentNumber || String(incident.id)}
+            getItemNumber={(incident: Incident) => incident.incident_number || incident.incidentNumber || String(incident.id)}
             getItemDescription={(incident: Incident) => incident.description || ''}
             getItemPriority={(incident: Incident) => incident.priority || incident.severity || 'medium'}
             getItemAssignee={(incident: Incident) =>

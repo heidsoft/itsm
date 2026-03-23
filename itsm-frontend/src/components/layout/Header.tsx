@@ -42,7 +42,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import styles from './Header.module.css';
 import { useI18n } from '@/lib/i18n';
-import { globalSearchApi, GlobalSearchResult } from '@/lib/api/global-search-api';
+import { globalSearch, GlobalSearchResponse, SearchResult } from '@/lib/api/global-search-api';
 
 const { Header: AntHeader } = Layout;
 const { Text, Title } = Typography;
@@ -131,11 +131,23 @@ export const Header: React.FC<HeaderProps> = ({
   ]);
 
   const [searchModalVisible, setSearchModalVisible] = useState(false);
-  const [searchResults, setSearchResults] = useState<GlobalSearchResult | null>(null);
+  const [searchResults, setSearchResults] = useState<GlobalSearchResponse | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  // Ctrl+K 快捷键打开全局搜索
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchModalVisible(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const displayName = user?.name || user?.username || '';
@@ -152,12 +164,11 @@ export const Header: React.FC<HeaderProps> = ({
   const handleLogout = () => {
     logout();
     router.push('/login');
-    message.success('已退出登录');
   };
 
   const handleSearch = async (value: string) => {
     if (value.trim()) {
-      const results = await globalSearchApi.search(value);
+      const results = await globalSearch(value);
       setSearchResults(results);
       setSearchValue('');
       setSearchModalVisible(true);
@@ -170,7 +181,6 @@ export const Header: React.FC<HeaderProps> = ({
 
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    message.success('已全部标记为已读');
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -195,7 +205,7 @@ export const Header: React.FC<HeaderProps> = ({
   // 用户菜单项
   const userMenuItems = [
     {
-      key: 'profile',
+      key: 'user-info',
       label: (
         <div style={{ padding: '8px 0', minWidth: 160 }}>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>{displayName}</div>
@@ -555,13 +565,13 @@ export const Header: React.FC<HeaderProps> = ({
         {searchResults ? (
           <div style={{ padding: '0 20px' }}>
             <List
-              header={<strong>工单</strong>}
-              dataSource={searchResults.tickets}
-              renderItem={item => (
+              header={<strong>搜索结果</strong>}
+              dataSource={searchResults.results}
+              renderItem={(item: SearchResult) => (
                 <List.Item>
                   <List.Item.Meta
                     avatar={<Ticket size={16} style={{ color: DESIGN.colors.accent }} />}
-                    title={<a onClick={() => { setSearchModalVisible(false); router.push(`/tickets/${item.id}`); }}>{item.title}</a>}
+                    title={<a onClick={() => { setSearchModalVisible(false); router.push(`/${item.type === 'ticket' ? 'tickets' : item.type === 'incident' ? 'incidents' : item.type === 'problem' ? 'problems' : item.type === 'change' ? 'changes' : 'knowledge'}/${item.id}`); }}>{item.title}</a>}
                     description={item.status}
                   />
                 </List.Item>

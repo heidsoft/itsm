@@ -122,8 +122,8 @@ export default function TicketsPage() {
         result.category = filters.category[0];
       }
 
-      if (typeof filters.assigneeId === 'number') {
-        result.assigneeId = filters.assigneeId;
+      if (typeof filters.assignee_id === 'number') {
+        result.assignee_id = filters.assignee_id;
       }
 
       if (filters.created_after && filters.created_before) {

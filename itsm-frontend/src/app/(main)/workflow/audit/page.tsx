@@ -63,10 +63,12 @@ export default function AuditLogsPage() {
         page_size: pageSize,
       };
       const result = await BPMNDashboardApi.queryAuditLogs(request);
-      setLogs(result.list);
-      setTotal(result.total);
+      setLogs(result.list || []);
+      setTotal(result.total || 0);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
+      setLogs([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -303,7 +305,7 @@ export default function AuditLogsPage() {
               {selectedLog.user_name} (ID: {selectedLog.user_id})
             </Descriptions.Item>
             <Descriptions.Item label="受理人">
-              {selectedLog.assigneeName || selectedLog.assignee_name} (ID: {selectedLog.assigneeId || selectedLog.assignee_id})
+              {selectedLog.assignee_name} (ID: {selectedLog.assignee_id})
             </Descriptions.Item>
             <Descriptions.Item label="流程实例Key" span={2}>
               {selectedLog.process_instance_key}

@@ -21,7 +21,9 @@ export enum CommentType {
 export interface Comment {
   id: number;
   ticket_id: number;
+  ticketId?: number;
   user_id: number;
+  userId?: number;
   user?: {
     id: number;
     username: string;
@@ -31,11 +33,14 @@ export interface Comment {
   };
   content: string;
   is_internal: boolean;
+  isInternal?: boolean;
   type?: CommentType;
   mentions?: number[];
   attachments?: number[];
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 /**

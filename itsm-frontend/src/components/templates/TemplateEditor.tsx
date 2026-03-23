@@ -396,93 +396,72 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const renderDefaultsStep = () => (
     <Card>
       <Form form={form} layout="vertical">
-        <Tabs>
-          <Tabs.TabPane tab="工单默认值" key="ticket">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item label="默认类型" name={['defaults', 'type']}>
-                  <Select placeholder="选择工单类型">
-                    <Option value="incident">事件</Option>
-                    <Option value="request">服务请求</Option>
-                    <Option value="problem">问题</Option>
-                    <Option value="change">变更</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="默认优先级" name={['defaults', 'priority']}>
-                  <Select placeholder="选择优先级">
-                    <Option value="low">低</Option>
-                    <Option value="medium">中</Option>
-                    <Option value="high">高</Option>
-                    <Option value="urgent">紧急</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item label="默认处理人" name={['defaults', 'assigneeId']}>
-                  <Select placeholder="选择默认处理人" showSearch allowClear>
-                    {/* 实际应该从用户列表获取 */}
-                    <Option value="user1">张三</Option>
-                    <Option value="user2">李四</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="默认团队" name={['defaults', 'teamId']}>
-                  <Select placeholder="选择默认团队" showSearch allowClear>
-                    {/* 实际应该从团队列表获取 */}
-                    <Option value="team1">技术支持团队</Option>
-                    <Option value="team2">运维团队</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Form.Item label="默认标签" name={['defaults', 'tags']}>
-              <Select mode="tags" placeholder="添加默认标签" />
-            </Form.Item>
-
-            <Form.Item label="SLA配置" name={['defaults', 'slaId']}>
-              <Select placeholder="选择SLA配置" allowClear>
-                <Option value="sla1">标准SLA (4小时响应)</Option>
-                <Option value="sla2">高优先级SLA (1小时响应)</Option>
-              </Select>
-            </Form.Item>
-          </Tabs.TabPane>
-
-          <Tabs.TabPane tab="字段默认值" key="fields">
-            <Alert message="为自定义字段设置默认值" type="info" showIcon className="mb-4" />
-            {fields.length === 0 ? (
-              <Empty description="请先在字段设计步骤中添加字段" />
-            ) : (
-              <Space orientation="vertical" style={{ width: '100%' }}>
-                {fields.map(field => (
-                  <Form.Item key={field.id} label={field.label} name={['defaults', field.name]}>
-                    {field.type === 'text' || field.type === 'textarea' ? (
-                      <Input placeholder={`${field.label}的默认值`} />
-                    ) : field.type === 'number' ? (
-                      <InputNumber style={{ width: '100%' }} />
-                    ) : field.type === 'select' ? (
-                      <Select placeholder={`选择${field.label}默认值`}>
-                        {field.options?.map(opt => (
-                          <Option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </Option>
-                        ))}
+        <Tabs
+          items={[
+            {
+              key: 'ticket',
+              label: '工单默认值',
+              children: (
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item label="默认类型" name={['defaults', 'type']}>
+                      <Select placeholder="选择工单类型">
+                        <Option value="incident">事件</Option>
+                        <Option value="request">服务请求</Option>
+                        <Option value="problem">问题</Option>
+                        <Option value="change">变更</Option>
                       </Select>
-                    ) : (
-                      <Input placeholder={`${field.label}的默认值`} />
-                    )}
-                  </Form.Item>
-                ))}
-              </Space>
-            )}
-          </Tabs.TabPane>
-        </Tabs>
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="默认优先级" name={['defaults', 'priority']}>
+                      <Select placeholder="选择优先级">
+                        <Option value="low">低</Option>
+                        <Option value="medium">中</Option>
+                        <Option value="high">高</Option>
+                        <Option value="urgent">紧急</Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                </Row>
+              ),
+            },
+            {
+              key: 'fields',
+              label: '字段默认值',
+              children: (
+                <>
+                  <Alert message="为自定义字段设置默认值" type="info" showIcon className="mb-4" />
+                  {fields.length === 0 ? (
+                    <Empty description="请先在字段设计步骤中添加字段" />
+                  ) : (
+                    <Space orientation="vertical" style={{ width: '100%' }}>
+                      {fields.map(field => (
+                        <Form.Item key={field.id} label={field.label} name={['defaults', field.name]}>
+                          {field.type === 'text' || field.type === 'textarea' ? (
+                            <Input placeholder={`${field.label}的默认值`} />
+                          ) : field.type === 'number' ? (
+                            <InputNumber style={{ width: '100%' }} />
+                          ) : field.type === 'select' ? (
+                            <Select placeholder={`选择${field.label}默认值`}>
+                              {field.options?.map(opt => (
+                                <Option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </Option>
+                              ))}
+                            </Select>
+                          ) : (
+                            <Input placeholder={`${field.label}的默认值`} />
+                          )}
+                        </Form.Item>
+                      ))}
+                    </Space>
+                  )}
+                </>
+              ),
+            },
+          ]}
+        />
       </Form>
     </Card>
   );

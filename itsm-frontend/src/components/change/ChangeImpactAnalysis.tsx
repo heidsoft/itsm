@@ -76,6 +76,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
   const [form] = Form.useForm();
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
   const [impactScore, setImpactScore] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
   // 预定义的系统列表
   const mockData: SystemItem[] = [
@@ -195,6 +196,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      setSubmitting(true);
       const analysisData: ImpactAnalysisData = {
         ...values,
         affected_systems: targetKeys,
@@ -204,6 +206,8 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
       onSave?.(analysisData);
     } catch (error) {
       message.error('表单验证失败');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -276,7 +280,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
       }
       extra={
         !readOnly && (
-          <Button type="primary" onClick={handleSubmit}>
+          <Button type="primary" onClick={handleSubmit} loading={submitting}>
             保存分析
           </Button>
         )

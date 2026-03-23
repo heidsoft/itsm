@@ -42,12 +42,17 @@ export interface Change {
 export interface ApprovalRecord {
   id: number;
   change_id: number;
+  changeId?: number;
   approver_id: number;
+  approverId?: number;
   approver_name: string;
+  approverName?: string;
   status: ChangeStatus;
   comment?: string;
   approved_at?: string;
+  approvedAt?: string;
   created_at: string;
+  createdAt?: string;
 }
 
 // 审批链/工作流项

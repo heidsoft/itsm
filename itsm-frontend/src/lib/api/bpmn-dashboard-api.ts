@@ -94,13 +94,27 @@ export interface QueryAuditLogsRequest {
 
 export interface SLAViolation {
   resource_type: string;
+  resourceType?: string;
   resource_id: number;
+  resourceId?: number;
   resource_key: string;
+  resourceKey?: string;
   sla_status: string;
+  slaStatus?: string;
   start_time: string;
+  startTime?: string;
   deadline: string;
   elapsed_minutes: number;
+  elapsedMinutes?: number;
   tenant_id: number;
+  tenantId?: number;
+  // 额外字段
+  ticket_id?: number;
+  ticketId?: number;
+  created_at?: string;
+  createdAt?: string;
+  updated_at?: string;
+  updatedAt?: string;
 }
 
 export interface TenantBPMNStats {

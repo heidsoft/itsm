@@ -286,7 +286,7 @@ const TicketDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Card className="rounded-lg shadow-sm border border-gray-200">
         <Space orientation="vertical" size={16} style={{ width: '100%' }}>
           <Descriptions column={2} bordered size="middle">
             <Descriptions.Item label="标题">{ticket.title}</Descriptions.Item>

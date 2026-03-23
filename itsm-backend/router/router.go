@@ -18,6 +18,8 @@ import (
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/sla"
+	"itsm-backend/handlers/standard_change"
+	"itsm-backend/handlers/known_error"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -104,6 +106,15 @@ type RouterConfig struct {
 
 	// WebSocket Service
 	WebSocketService *service.WebSocketService
+
+	// Global Search
+	GlobalSearchController *controller.GlobalSearchController
+
+	// Standard Change Handler (标准变更模板库)
+	StandardChangeHandler *standard_change.Handler
+
+	// Known Error Handler (KEDB)
+	KnownErrorHandler *known_error.Handler
 }
 
 // SetupRoutes 设置路由
@@ -881,6 +892,21 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// A2UI Ticket Controller (AI-driven UI表单)
 		if config.A2UITicketController != nil {
 			config.A2UITicketController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
+		// Global Search Controller (全局搜索)
+		if config.GlobalSearchController != nil {
+			config.GlobalSearchController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
+		// Standard Change Handler (标准变更模板库)
+		if config.StandardChangeHandler != nil {
+			config.StandardChangeHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
+		// Known Error Handler (KEDB)
+		if config.KnownErrorHandler != nil {
+			config.KnownErrorHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
 		if config.DashboardHandler != nil {

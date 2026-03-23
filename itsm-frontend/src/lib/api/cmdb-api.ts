@@ -8,19 +8,28 @@ export interface ConfigurationItem {
   id: number;
   name: string;
   ci_type: string;
+  ciType?: string;
   status: string;
   environment: string;
   criticality: string;
   asset_tag?: string;
+  assetTag?: string;
   serial_number?: string;
+  serialNumber?: string;
   location?: string;
   assigned_to?: string;
+  assignedTo?: string;
   owned_by?: string;
+  ownedBy?: string;
   discovery_source?: string;
+  discoverySource?: string;
   attributes?: Record<string, any>;
   tenant_id: number;
+  tenantId?: number;
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 export interface CIRelationship {

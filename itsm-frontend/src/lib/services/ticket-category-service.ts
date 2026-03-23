@@ -1,5 +1,4 @@
-import { API_BASE_URL } from '@/lib/api/api-config';
-import { getAccessToken } from '@/lib/auth/token-storage';
+import { httpClient } from '@/lib/api/http-client';
 
 // 工单分类接口
 export interface TicketCategory {
@@ -60,14 +59,22 @@ export interface CategoryTreeItem {
   code: string;
   level: number;
   sort_order: number;
+  sortOrder?: number;
   is_active: boolean;
+  isActive?: boolean;
   children: CategoryTreeItem[];
   parent_id?: number;
-  tenant_id?: string;
+  parentId?: number;
+  tenant_id?: number;
+  tenantId?: number;
   created_at?: string;
+  createdAt?: string;
   updated_at?: string;
+  updatedAt?: string;
   created_by?: string;
+  createdBy?: string;
   updated_by?: string;
+  updatedBy?: string;
 }
 
 // 移动分类请求
@@ -85,164 +92,46 @@ export interface BatchUpdateCategoriesRequest {
 }
 
 class TicketCategoryService {
-  private baseUrl = `${API_BASE_URL}/api/v1/ticket-categories`;
+  private readonly baseUrl = '/api/v1/ticket-categories';
 
   // 获取分类列表
   async listCategories(params: ListCategoriesParams = {}): Promise<ListCategoriesResponse> {
-    const queryParams = new URLSearchParams();
-
-    if (params.page) queryParams.append('page', params.page.toString());
-    if (params.page_size) queryParams.append('page_size', params.page_size.toString());
-    if (params.parent_id !== undefined)
-      queryParams.append('parent_id', params.parent_id.toString());
-    if (params.level) queryParams.append('level', params.level.toString());
-    if (params.is_active !== undefined) queryParams.append('active', params.is_active.toString());
-
-    const response = await fetch(`${this.baseUrl}?${queryParams}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.getAuthToken()}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`获取分类列表失败: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    return result.data;
+    return httpClient.get<ListCategoriesResponse>(this.baseUrl, params);
   }
 
   // 获取分类树形结构
   async getCategoryTree(): Promise<CategoryTreeItem[]> {
-    const response = await fetch(`${this.baseUrl}/tree`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.getAuthToken()}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`获取分类树失败: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    return result.data;
+    return httpClient.get<CategoryTreeItem[]>(`${this.baseUrl}/tree`);
   }
 
   // 获取分类详情
   async getCategory(id: number): Promise<TicketCategory> {
-    const response = await fetch(`${this.baseUrl}/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.getAuthToken()}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`获取分类详情失败: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    return result.data;
+    return httpClient.get<TicketCategory>(`${this.baseUrl}/${id}`);
   }
 
   // 创建分类
   async createCategory(data: CreateCategoryRequest): Promise<TicketCategory> {
-    const response = await fetch(this.baseUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.getAuthToken()}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `创建分类失败: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    return result.data;
+    return httpClient.post<TicketCategory>(this.baseUrl, data);
   }
 
   // 更新分类
   async updateCategory(id: number, data: UpdateCategoryRequest): Promise<TicketCategory> {
-    const response = await fetch(`${this.baseUrl}/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.getAuthToken()}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `更新分类失败: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    return result.data;
+    return httpClient.put<TicketCategory>(`${this.baseUrl}/${id}`, data);
   }
 
   // 删除分类
   async deleteCategory(id: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.getAuthToken()}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `删除分类失败: ${response.statusText}`);
-    }
+    return httpClient.delete(`${this.baseUrl}/${id}`);
   }
 
   // 移动分类位置
   async moveCategory(id: number, data: MoveCategoryRequest): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/${id}/move`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.getAuthToken()}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `移动分类失败: ${response.statusText}`);
-    }
+    return httpClient.put(`${this.baseUrl}/${id}/move`, data);
   }
 
   // 批量更新分类
   async batchUpdateCategories(data: BatchUpdateCategoriesRequest[]): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/batch-update`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.getAuthToken()}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `批量更新分类失败: ${response.statusText}`);
-    }
-  }
-
-  // 获取认证token
-  private getAuthToken(): string {
-    return getAccessToken() || '';
+    return httpClient.put(`${this.baseUrl}/batch-update`, data);
   }
 }
 

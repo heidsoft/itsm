@@ -58,6 +58,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState<TicketFilterParams>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [batchLoading, setBatchLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
 
   // 获取工单列表
@@ -75,7 +76,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         priority: filters.priority as any,
         type: filters.type as any,
         category: filters.category,
-        assigneeId: filters.assigneeId || filters.assignee_id,
+        assignee_id: filters.assignee_id,
         requester_id: filters.requester_id,
         date_from: filters.date_from,
         date_to: filters.date_to,
@@ -239,16 +240,19 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
               title: '确认删除',
               content: `确定要删除选中的 ${selectedRowKeys.length} 个工单吗？`,
               onOk: async () => {
+                setBatchLoading(true);
                 await Promise.all(
                   selectedRowKeys.map(id => ticketService.deleteTicket(Number(id)))
                 );
                 message.success('删除成功');
                 setSelectedRowKeys([]);
                 fetchTickets();
+                setBatchLoading(false);
               },
             });
             break;
           case 'export':
+            setBatchLoading(true);
             const blob = await ticketService.exportTickets({
               ...filters,
               search: searchText || undefined,
@@ -260,11 +264,13 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
             a.click();
             window.URL.revokeObjectURL(url);
             message.success('导出成功');
+            setBatchLoading(false);
             break;
         }
       } catch (error) {
         message.error('操作失败');
         console.error('批量操作失败:', error);
+        setBatchLoading(false);
       }
     },
     [selectedRowKeys, filters, searchText, fetchTickets]
@@ -388,10 +394,10 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
           </Button>
           {selectedRowKeys.length > 0 && (
             <>
-              <Button icon={<DownloadOutlined />} onClick={() => handleBatchAction('export')}>
+              <Button icon={<DownloadOutlined />} onClick={() => handleBatchAction('export')} loading={batchLoading}>
                 导出选中
               </Button>
-              <Button danger icon={<DeleteOutlined />} onClick={() => handleBatchAction('delete')}>
+              <Button danger icon={<DeleteOutlined />} onClick={() => handleBatchAction('delete')} loading={batchLoading}>
                 删除选中
               </Button>
             </>

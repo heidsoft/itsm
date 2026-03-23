@@ -41,6 +41,7 @@ export interface AssetRequest {
 export interface Asset {
   id: number;
   asset_number: string;
+  assetNumber?: string;
   name: string;
   description?: string;
   type: AssetType;
@@ -48,28 +49,44 @@ export interface Asset {
   category?: string;
   subcategory?: string;
   tenant_id: number;
+  tenantId?: number;
   ci_id?: number;
+  ciId?: number;
   ci_name?: string;
+  ciName?: string;
   assigned_to?: number;
+  assignedTo?: number;
   assigned_to_name?: string;
+  assignedToName?: string;
   location_id?: number;
+  locationId?: number;
   serial_number?: string;
+  serialNumber?: string;
   model?: string;
   manufacturer?: string;
   vendor?: string;
   purchase_date?: string;
+  purchaseDate?: string;
   purchase_price?: number;
+  purchasePrice?: number;
   warranty_expiry?: string;
+  warrantyExpiry?: string;
   support_expiry?: string;
+  supportExpiry?: string;
   location?: string;
   department?: string;
   parent_asset_id?: number;
+  parentAssetId?: number;
   parent_asset_name?: string;
+  parentAssetName?: string;
   specifications?: Record<string, string>;
   custom_fields?: Record<string, string>;
+  customFields?: Record<string, string>;
   tags?: string[];
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 // 资产列表响应
@@ -139,29 +156,46 @@ export interface LicenseRequest {
 export interface License {
   id: number;
   license_key?: string;
+  licenseKey?: string;
   name: string;
   description?: string;
   vendor?: string;
   license_type: LicenseType;
+  licenseType?: LicenseType;
   total_quantity: number;
+  totalQuantity?: number;
   used_quantity: number;
+  usedQuantity?: number;
   available_quantity: number;
+  availableQuantity?: number;
   tenant_id: number;
+  tenantId?: number;
   asset_id?: number;
+  assetId?: number;
   asset_name?: string;
+  assetName?: string;
   purchase_date?: string;
+  purchaseDate?: string;
   purchase_price?: number;
+  purchasePrice?: number;
   expiry_date?: string;
+  expiryDate?: string;
   support_vendor?: string;
+  supportVendor?: string;
   support_contact?: string;
+  supportContact?: string;
   renewal_cost?: string;
+  renewalCost?: string;
   status: LicenseStatus;
   notes?: string;
   users?: number[];
   user_names?: string[];
+  userNames?: string[];
   tags?: string[];
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 // 许可证列表响应
