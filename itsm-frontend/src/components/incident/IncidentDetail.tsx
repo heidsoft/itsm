@@ -30,7 +30,7 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 import dayjs from 'dayjs';
 
-import { IncidentApi, IncidentAPI } from '@/lib/api/';
+import { IncidentAPI } from '@/lib/api/';
 import {
   IncidentStatus,
   IncidentStatusLabels,
@@ -53,7 +53,7 @@ const IncidentDetail: React.FC = () => {
     if (!id) return;
     setLoading(true);
     try {
-      const resp = await IncidentApi.getIncident(Number(id));
+      const resp = await IncidentAPI.getIncident(Number(id));
       setData(resp as unknown as Incident);
     } catch (error) {
       // console.error(error);

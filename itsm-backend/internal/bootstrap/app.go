@@ -101,7 +101,6 @@ func NewApplication() *Application {
 
 	cmdbService := service.NewCMDBService(client)
 	// problemService and changeService removed - using Handlers with domain services instead
-	changeApprovalService := service.NewChangeApprovalService(client, database.GetRawDB(), sugar)
 
 	// Release & Asset Management Services
 	releaseService := service.NewReleaseService(client, sugar)
@@ -181,7 +180,6 @@ func NewApplication() *Application {
 	provisioningController := controller.NewProvisioningController(provisioningService)
 
 	// ProblemController and ChangeController removed - using Handlers instead
-	changeApprovalController := controller.NewChangeApprovalController(changeApprovalService, sugar)
 
 	// Release & Asset Management Controllers
 	releaseController := controller.NewReleaseController(sugar, releaseService)
@@ -405,10 +403,9 @@ func NewApplication() *Application {
 		CMDBController: cmdbController,
 
 		// Additional controllers
-		ServiceController:        serviceController,
-		ProvisioningController:   provisioningController,
-		ChangeApprovalController: changeApprovalController,
-		AnalyticsController:      analyticsController,
+		ServiceController:      serviceController,
+		ProvisioningController: provisioningController,
+		AnalyticsController:    analyticsController,
 		PredictionController:     predictionController,
 		ReleaseController:        releaseController,
 		AssetController:          assetController,
