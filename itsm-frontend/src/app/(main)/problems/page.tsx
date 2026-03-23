@@ -6,11 +6,13 @@ import { Bug, CheckCircle, Clock, AlertTriangle, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ProblemList from '@/components/problem/ProblemList';
 import { ProblemApi } from '@/lib/api/problem-api';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
 
 export default function ProblemListPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
@@ -30,7 +32,7 @@ export default function ProblemListPage() {
       });
     } catch (error) {
       console.error('Failed to fetch problem stats:', error);
-      message.error('获取问题统计失败，请稍后重试');
+      message.error(t('problems.getStatsFailed') || '获取问题统计失败，请稍后重试');
     }
   };
 

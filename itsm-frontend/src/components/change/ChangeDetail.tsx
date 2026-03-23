@@ -36,6 +36,9 @@ import {
   ChangeRiskLabels,
 } from '@/constants/change';
 import type { Change, ApprovalRecord } from '@/types/biz/change';
+import ChangeRiskAssessment from './ChangeRiskAssessment';
+import ChangeImpactAnalysis from './ChangeImpactAnalysis';
+import ChangeRollbackPlan from './ChangeRollbackPlan';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -55,6 +58,10 @@ const ChangeDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [change, setChange] = useState<Change | null>(null);
   const [approvals, setApprovals] = useState<ApprovalRecord[]>([]);
+  const [riskAssessment, setRiskAssessment] = useState<any>(null);
+  const [impactAnalysis, setImpactAnalysis] = useState<any>(null);
+  const [rollbackPlan, setRollbackPlan] = useState<any>(null);
+  const [assessmentLoading, setAssessmentLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -81,6 +88,70 @@ const ChangeDetail: React.FC = () => {
       message.error('加载变更详情失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 加载风险评估数据
+  const loadRiskAssessment = async () => {
+    if (!id) return;
+    setAssessmentLoading(true);
+    try {
+      const data = await ChangeApi.getRiskAssessment(Number(id));
+      setRiskAssessment(data);
+    } catch (error) {
+      console.error('Failed to load risk assessment:', error);
+    } finally {
+      setAssessmentLoading(false);
+    }
+  };
+
+  // 加载影响分析数据
+  const loadImpactAnalysis = async () => {
+    if (!id) return;
+    setAssessmentLoading(true);
+    try {
+      const data = await ChangeApi.getImpactAnalysis(Number(id));
+      setImpactAnalysis(data);
+    } catch (error) {
+      console.error('Failed to load impact analysis:', error);
+    } finally {
+      setAssessmentLoading(false);
+    }
+  };
+
+  // 保存风险评估
+  const handleSaveRiskAssessment = async (data: any) => {
+    if (!id) return;
+    try {
+      await ChangeApi.updateRiskAssessment(Number(id), data);
+      message.success('风险评估保存成功');
+      loadRiskAssessment();
+    } catch (error) {
+      message.error('保存失败');
+    }
+  };
+
+  // 保存影响分析
+  const handleSaveImpactAnalysis = async (data: any) => {
+    if (!id) return;
+    try {
+      await ChangeApi.updateImpactAnalysis(Number(id), data);
+      message.success('影响分析保存成功');
+      loadImpactAnalysis();
+    } catch (error) {
+      message.error('保存失败');
+    }
+  };
+
+  // 保存回滚计划
+  const handleSaveRollbackPlan = async (data: any) => {
+    if (!id) return;
+    try {
+      // 回滚计划暂时通过更新变更的rollback_plan字段实现
+      await ChangeApi.updateChange(Number(id), { rollback_plan: JSON.stringify(data) });
+      message.success('回滚计划保存成功');
+    } catch (error) {
+      message.error('保存失败');
     }
   };
 
@@ -157,6 +228,10 @@ const ChangeDetail: React.FC = () => {
         <Tabs
           defaultActiveKey="1"
           style={{ marginTop: 24 }}
+          onChange={(activeKey) => {
+            if (activeKey === '3' && !riskAssessment) loadRiskAssessment();
+            if (activeKey === '4' && !impactAnalysis) loadImpactAnalysis();
+          }}
           items={[
             {
               key: '1',
@@ -220,6 +295,45 @@ const ChangeDetail: React.FC = () => {
                 ) : (
                   <Empty description="暂无审批记录" />
                 )
+              ),
+            },
+            {
+              key: '3',
+              label: '风险评估',
+              children: (
+                <Spin spinning={assessmentLoading}>
+                  <ChangeRiskAssessment
+                    changeId={Number(id)}
+                    initialData={riskAssessment}
+                    onSave={handleSaveRiskAssessment}
+                  />
+                </Spin>
+              ),
+            },
+            {
+              key: '4',
+              label: '影响分析',
+              children: (
+                <Spin spinning={assessmentLoading}>
+                  <ChangeImpactAnalysis
+                    changeId={Number(id)}
+                    initialData={impactAnalysis}
+                    onSave={handleSaveImpactAnalysis}
+                  />
+                </Spin>
+              ),
+            },
+            {
+              key: '5',
+              label: '回滚计划',
+              children: (
+                <Spin spinning={assessmentLoading}>
+                  <ChangeRollbackPlan
+                    changeId={Number(id)}
+                    initialData={rollbackPlan}
+                    onSave={handleSaveRollbackPlan}
+                  />
+                </Spin>
               ),
             },
           ]}
