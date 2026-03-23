@@ -60,8 +60,8 @@ export default function IncidentsPage() {
     setLoading(true);
     try {
       const response = await IncidentAPI.listIncidents({
-        page: 1,
-        page_size: 100, // Get more for Kanban view
+        page,  // Use actual page state
+        page_size: pageSize,  // Use actual pageSize state
         search: debouncedSearch || undefined,
       });
       const resp = response as unknown as Record<string, unknown>;
@@ -91,6 +91,7 @@ export default function IncidentsPage() {
       setTotal(totalCount);
     } catch (error) {
       console.error('Failed to fetch incidents:', error);
+      message.error('加载事件列表失败，请稍后重试');
       setIncidents([]);
       setTotal(0);
     } finally {
@@ -127,7 +128,7 @@ export default function IncidentsPage() {
     return () => {
       isMounted = false;
     };
-  }, [debouncedSearch]);
+  }, [debouncedSearch, page, pageSize]);
 
   const handleEdit = (incident: Incident) => {
     router.push(`/incidents/${incident.id}/edit`);
@@ -191,8 +192,9 @@ export default function IncidentsPage() {
               placeholder="搜索事件ID、标题或描述..."
               className="w-64"
               allowClear
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
               onSearch={handleSearch}
-              defaultValue={searchKeyword}
             />
             <Button
               icon={<Filter className="w-4 h-4" />}

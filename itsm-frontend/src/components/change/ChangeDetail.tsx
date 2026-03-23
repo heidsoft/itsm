@@ -20,6 +20,7 @@ import {
   Empty,
   Tabs,
   Space,
+  message,
 } from 'antd';
 import { ArrowLeftOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation';
@@ -77,6 +78,7 @@ const ChangeDetail: React.FC = () => {
       }
     } catch (error) {
       // console.error(error);
+      message.error('加载变更详情失败');
     } finally {
       setLoading(false);
     }
