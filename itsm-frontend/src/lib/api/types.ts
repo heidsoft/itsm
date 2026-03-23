@@ -154,24 +154,32 @@ export type IncidentStatus =
 
 export interface Incident {
   id: number;
+  // 同时支持 snake_case 和 camelCase
   incident_number: string;
+  incidentNumber?: string;
   title: string;
   description: string;
   severity: IncidentSeverity;
   status: IncidentStatus;
   category?: string;
-  priority?: TicketPriority; // Added for compatibility
+  priority?: TicketPriority;
   reporter_id: number;
-  reporter?: UserBasicInfo; // Added for display compatibility
+  reporter?: UserBasicInfo;
+  reporterId?: number;
   assignee_id?: number;
   assignee?: UserBasicInfo;
-  assignee_name?: string; // Added for display compatibility
+  assignee_name?: string;
+  assigneeId?: number;
   impact_analysis?: Record<string, unknown>;
-  impact?: string; // Added for compatibility
+  impact?: string;
   detected_at: string;
+  detectedAt?: string;
   resolved_at?: string;
+  resolvedAt?: string;
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 // ==================== 变更相关类型 ====================
@@ -244,14 +252,19 @@ export interface Attachment {
 export interface Comment {
   id: number;
   ticket_id: number;
+  ticketId?: number;
   user_id: number;
+  userId?: number;
   user?: UserBasicInfo;
   content: string;
   is_internal: boolean;
+  isInternal?: boolean;
   mentions: number[];
   attachments: number[];
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 export interface CommentCreateRequest {
@@ -266,17 +279,25 @@ export interface CommentCreateRequest {
 export interface ServiceRequest {
   id: number;
   request_number: string;
+  requestNumber?: string;
   catalog_id: number;
+  catalogId?: number;
   catalog_name?: string;
+  catalogName?: string;
   title: string;
   reason?: string;
   status: 'pending' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'cancelled';
   requester_id: number;
+  requesterId?: number;
   requester?: UserBasicInfo;
   form_data?: Record<string, unknown>;
+  formData?: Record<string, unknown>;
   approval_status?: string;
+  approvalStatus?: string;
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 export interface ServiceCatalog {
@@ -340,13 +361,17 @@ export interface WorkflowInstance {
 export interface Notification {
   id: number;
   user_id: number;
+  userId?: number;
   title: string;
   content: string;
   type: 'info' | 'warning' | 'success' | 'error';
   is_read: boolean;
+  isRead?: boolean;
   read_at?: string;
+  readAt?: string;
   data?: Record<string, unknown>;
   created_at: string;
+  createdAt?: string;
 }
 
 // ==================== 审批相关类型 ====================

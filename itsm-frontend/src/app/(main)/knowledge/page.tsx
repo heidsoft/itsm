@@ -332,7 +332,7 @@ export default function KnowledgePage() {
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="文章总数"
               value={stats.total}
@@ -342,7 +342,7 @@ export default function KnowledgePage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="已发布"
               value={stats.published}
@@ -352,7 +352,7 @@ export default function KnowledgePage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="草稿"
               value={stats.draft}
@@ -362,7 +362,7 @@ export default function KnowledgePage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="总浏览量"
               value={stats.views}

@@ -22,14 +22,35 @@ export interface SLADefinition {
 export interface SLAViolation {
   id: number;
   ticket_id: number;
+  ticketId?: number;
   sla_definition_id: number;
+  slaDefinitionId?: number;
   violation_type: string;
+  violationType?: string;
   violation_time: string;
+  violationTime?: string;
   description: string;
   severity: string;
   is_resolved: boolean;
+  isResolved?: boolean;
   resolved_at?: string;
+  resolvedAt?: string;
   resolution_notes: string;
+  resolutionNotes?: string;
+  created_at: string;
+  createdAt?: string;
+  updated_at: string;
+  updatedAt?: string;
+  // 时间相关
+  time_remaining?: number;
+  timeRemaining?: number;
+  alert_level?: 'warning' | 'critical' | 'severe';
+  alertLevel?: 'warning' | 'critical' | 'severe';
+  sla_definition?: string;
+  slaDefinition?: string;
+  ticket_title?: string;
+  ticketTitle?: string;
+  priority?: string;
 }
 
 export interface SLAAlertRule {

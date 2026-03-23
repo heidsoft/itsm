@@ -1,137 +1,57 @@
 /**
  * 工单状态和优先级统一配置
- * 用于确保整个应用中状态和优先级的颜色、文本显示一致
+ * @deprecated 请使用 @/constants/taxonomy 中的统一分类系统
  */
 
-// 工单状态配置
+import {
+  TicketStatus,
+  TicketPriority,
+  ITSMMainType,
+  TicketStatusConfig,
+  TicketPriorityConfig,
+  ITSMMainTypeConfig,
+} from '@/constants/taxonomy';
+
+// 保持向后兼容的导出
+export { TicketStatus, TicketPriority, ITSMMainType };
+
+// 工单状态配置 (legacy)
 export const TICKET_STATUS_CONFIG = {
-  new: {
-    color: 'blue',
-    bgColor: '#e6f7ff',
-    textColor: '#1890ff',
-    text: '新建',
-    badgeStatus: 'processing' as const,
-  },
-  open: {
-    color: 'orange',
-    bgColor: '#fff7e6',
-    textColor: '#fa8c16',
-    text: '待处理',
-    badgeStatus: 'warning' as const,
-  },
-  in_progress: {
-    color: 'cyan',
-    bgColor: '#e6fffb',
-    textColor: '#13c2c2',
-    text: '处理中',
-    badgeStatus: 'processing' as const,
-  },
-  pending_approval: {
-    color: 'gold',
-    bgColor: '#fffbe6',
-    textColor: '#faad14',
-    text: '待审批',
-    badgeStatus: 'warning' as const,
-  },
-  resolved: {
-    color: 'green',
-    bgColor: '#f6ffed',
-    textColor: '#52c41a',
-    text: '已解决',
-    badgeStatus: 'success' as const,
-  },
-  closed: {
-    color: 'default',
-    bgColor: '#fafafa',
-    textColor: '#8c8c8c',
-    text: '已关闭',
-    badgeStatus: 'default' as const,
-  },
-  cancelled: {
-    color: 'red',
-    bgColor: '#fff1f0',
-    textColor: '#ff4d4f',
-    text: '已取消',
-    badgeStatus: 'error' as const,
-  },
+  new: TicketStatusConfig[TicketStatus.NEW],
+  open: TicketStatusConfig[TicketStatus.OPEN],
+  in_progress: TicketStatusConfig[TicketStatus.IN_PROGRESS],
+  pending_approval: TicketStatusConfig[TicketStatus.PENDING_APPROVAL],
+  resolved: TicketStatusConfig[TicketStatus.RESOLVED],
+  closed: TicketStatusConfig[TicketStatus.CLOSED],
+  cancelled: TicketStatusConfig[TicketStatus.CANCELLED],
 } as const;
 
-// 工单优先级配置
+// 工单优先级配置 (legacy)
 export const TICKET_PRIORITY_CONFIG = {
-  low: {
-    color: 'blue',
-    bgColor: '#e6f7ff',
-    textColor: '#1890ff',
-    text: '低',
-    icon: '↓',
-    description: '一般问题，可延后处理',
-  },
-  medium: {
-    color: 'orange',
-    bgColor: '#fff7e6',
-    textColor: '#fa8c16',
-    text: '中',
-    icon: '→',
-    description: '正常问题，按序处理',
-  },
-  high: {
-    color: 'red',
-    bgColor: '#fff1f0',
-    textColor: '#ff4d4f',
-    text: '高',
-    icon: '↑',
-    description: '重要问题，优先处理',
-  },
-  urgent: {
-    color: 'red',
-    bgColor: '#fff1f0',
-    textColor: '#ff4d4f',
-    text: '紧急',
-    icon: '↑↑',
-    description: '严重影响业务，立即处理',
-  },
-  critical: {
-    color: 'red',
-    bgColor: '#fff1f0',
-    textColor: '#ff4d4f',
-    text: '紧急',
-    icon: '↑↑',
-    description: '严重影响业务，立即处理',
-  },
+  low: TicketPriorityConfig[TicketPriority.LOW],
+  medium: TicketPriorityConfig[TicketPriority.MEDIUM],
+  high: TicketPriorityConfig[TicketPriority.HIGH],
+  urgent: TicketPriorityConfig[TicketPriority.URGENT],
+  critical: TicketPriorityConfig[TicketPriority.CRITICAL],
 } as const;
 
-// 工单类型配置
+// 工单类型配置 (legacy - 转换 label -> text)
 export const TICKET_TYPE_CONFIG = {
-  incident: {
-    color: 'red',
-    text: '事件',
-    icon: '⚠️',
-  },
-  service_request: {
-    color: 'blue',
-    text: '服务请求',
-    icon: '📋',
-  },
-  problem: {
-    color: 'orange',
-    text: '问题',
-    icon: '🔍',
-  },
-  change: {
-    color: 'green',
-    text: '变更',
-    icon: '🔄',
-  },
+  incident: { ...ITSMMainTypeConfig[ITSMMainType.INCIDENT], text: '事件' },
+  service_request: { ...ITSMMainTypeConfig[ITSMMainType.SERVICE_REQUEST], text: '服务请求' },
+  problem: { ...ITSMMainTypeConfig[ITSMMainType.PROBLEM], text: '问题' },
+  change: { ...ITSMMainTypeConfig[ITSMMainType.CHANGE], text: '变更' },
 } as const;
 
-// 获取状态配置
+// 获取状态配置 (legacy)
 export const getStatusConfig = (status: string) => {
   return (
-    TICKET_STATUS_CONFIG[status as keyof typeof TICKET_STATUS_CONFIG] || TICKET_STATUS_CONFIG.open
+    TICKET_STATUS_CONFIG[status as keyof typeof TICKET_STATUS_CONFIG] ||
+    TICKET_STATUS_CONFIG.open
   );
 };
 
-// 获取优先级配置
+// 获取优先级配置 (legacy)
 export const getPriorityConfig = (priority: string) => {
   return (
     TICKET_PRIORITY_CONFIG[priority as keyof typeof TICKET_PRIORITY_CONFIG] ||
@@ -139,7 +59,7 @@ export const getPriorityConfig = (priority: string) => {
   );
 };
 
-// 获取类型配置
+// 获取类型配置 (legacy)
 export const getTypeConfig = (type: string) => {
   return (
     TICKET_TYPE_CONFIG[type as keyof typeof TICKET_TYPE_CONFIG] ||

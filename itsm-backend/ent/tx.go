@@ -146,6 +146,8 @@ type Tx struct {
 	ServiceRequest *ServiceRequestClient
 	// ServiceRequestApproval is the client for interacting with the ServiceRequestApproval builders.
 	ServiceRequestApproval *ServiceRequestApprovalClient
+	// StandardChange is the client for interacting with the StandardChange builders.
+	StandardChange *StandardChangeClient
 	// SystemConfig is the client for interacting with the SystemConfig builders.
 	SystemConfig *SystemConfigClient
 	// Tag is the client for interacting with the Tag builders.
@@ -384,6 +386,7 @@ func (tx *Tx) init() {
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)
 	tx.ServiceRequestApproval = NewServiceRequestApprovalClient(tx.config)
+	tx.StandardChange = NewStandardChangeClient(tx.config)
 	tx.SystemConfig = NewSystemConfigClient(tx.config)
 	tx.Tag = NewTagClient(tx.config)
 	tx.Team = NewTeamClient(tx.config)

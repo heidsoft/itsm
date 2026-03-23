@@ -239,7 +239,7 @@ const CreateCIPage: React.FC = () => {
   };
 
   return (
-    <Card variant="borderless">
+    <Card>
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[

@@ -1,25 +1,19 @@
-import { ticketService, Ticket } from '@/lib/services/ticket-service';
-import { incidentService, Incident } from '@/lib/services/incident-service';
-import { problemService, Problem } from '@/lib/services/problem-service';
+import { httpClient } from './http-client';
 
-export interface GlobalSearchResult {
-  tickets: Ticket[];
-  incidents: Incident[];
-  problems: Problem[];
+export interface SearchResult {
+  id: number;
+  type: 'ticket' | 'incident' | 'problem' | 'change' | 'knowledge';
+  title: string;
+  description?: string;
+  status?: string;
+  ticketNumber?: string;
 }
 
-export const globalSearchApi = {
-  search: async (query: string): Promise<GlobalSearchResult> => {
-    const [tickets, incidents, problems] = await Promise.all([
-      ticketService.listTickets({ search: query } as any),
-      incidentService.listIncidents({ search: query } as any),
-      problemService.listProblems({ search: query } as any),
-    ]);
+export interface GlobalSearchResponse {
+  results: SearchResult[];
+  total: number;
+}
 
-    return {
-      tickets: (tickets as any).tickets || (tickets as any).items || [],
-      incidents: (incidents as any).incidents || (incidents as any).items || [],
-      problems: (problems as any).problems || (problems as any).items || [],
-    };
-  },
-};
+export async function globalSearch(keyword: string): Promise<GlobalSearchResponse> {
+  return httpClient.get<GlobalSearchResponse>('/api/v1/global-search', { keyword });
+}

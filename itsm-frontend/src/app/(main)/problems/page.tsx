@@ -63,7 +63,7 @@ export default function ProblemListPage() {
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="总问题数"
               value={stats.total}
@@ -73,7 +73,7 @@ export default function ProblemListPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="待处理"
               value={stats.open}
@@ -83,7 +83,7 @@ export default function ProblemListPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="调查中"
               value={stats.inProgress}
@@ -93,7 +93,7 @@ export default function ProblemListPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="已解决"
               value={stats.resolved}

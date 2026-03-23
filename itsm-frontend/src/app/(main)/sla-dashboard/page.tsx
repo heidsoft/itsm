@@ -369,7 +369,7 @@ const SLADashboardPage = () => {
         />
       )}
 
-      <Card className="mb-6 rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Card className="mb-6 rounded-lg shadow-sm border border-gray-200">
         <Row justify="space-between" align="middle">
           <Col>
             <Space>
@@ -398,7 +398,7 @@ const SLADashboardPage = () => {
         </Row>
       </Card>
 
-      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Card className="rounded-lg shadow-sm border border-gray-200">
         <Tabs
           defaultActiveKey="overview"
           items={[
@@ -417,7 +417,7 @@ const SLADashboardPage = () => {
                     <Col xs={24} sm={12} lg={6}>
                       <Card
                         className="rounded-lg shadow-sm border border-gray-200"
-                        variant="borderless"
+                       
                       >
                         <Statistic
                           title="总体合规率"
@@ -442,7 +442,7 @@ const SLADashboardPage = () => {
                     <Col xs={24} sm={12} lg={6}>
                       <Card
                         className="rounded-lg shadow-sm border border-gray-200"
-                        variant="borderless"
+                       
                       >
                         <Statistic
                           title="活跃SLA定义"
@@ -460,7 +460,7 @@ const SLADashboardPage = () => {
                     <Col xs={24} sm={12} lg={6}>
                       <Card
                         className="rounded-lg shadow-sm border border-gray-200"
-                        variant="borderless"
+                       
                       >
                         <Statistic
                           title="待处理违规"
@@ -473,7 +473,7 @@ const SLADashboardPage = () => {
                     <Col xs={24} sm={12} lg={6}>
                       <Card
                         className="rounded-lg shadow-sm border border-gray-200"
-                        variant="borderless"
+                       
                       >
                         <Statistic
                           title="总违规数"
@@ -489,7 +489,7 @@ const SLADashboardPage = () => {
                     <Col xs={24} lg={12}>
                       <Card
                         className="rounded-lg shadow-sm border border-gray-200"
-                        variant="borderless"
+                       
                         title={
                           <Space>
                             <Bell className="w-4 h-4" />
@@ -513,7 +513,7 @@ const SLADashboardPage = () => {
                                       }}
                                     />
                                   }
-                                  title={`工单 #${String(alert.ticketId || alert.ticket_id).padStart(5, '0')}`}
+                                  title={`工单 #${String(alert.ticket_id).padStart(5, '0')}`}
                                   description={
                                     <div>
                                       <div>{alert.ticket_title}</div>
@@ -534,7 +534,7 @@ const SLADashboardPage = () => {
                     <Col xs={24} lg={12}>
                       <Card
                         className="rounded-lg shadow-sm border border-gray-200"
-                        variant="borderless"
+                       
                         title={
                           <Space>
                             <TrendingUp className="w-4 h-4" />
@@ -590,7 +590,7 @@ const SLADashboardPage = () => {
                       <Col span={24}>
                         <Card
                           className="rounded-lg shadow-sm border border-gray-200"
-                          variant="borderless"
+                         
                           title={
                             <Space>
                               <BarChart3 className="w-4 h-4" />
@@ -652,7 +652,7 @@ const SLADashboardPage = () => {
                     <Col xs={24} lg={12}>
                       <Card
                         className="rounded-lg shadow-sm border border-gray-200"
-                        variant="borderless"
+                       
                         title="SLA定义"
                         extra={
                           <Button type="primary" size="small" onClick={() => router.push('/slas')}>
@@ -675,7 +675,7 @@ const SLADashboardPage = () => {
                     <Col xs={24} lg={12}>
                       <Card
                         className="rounded-lg shadow-sm border border-gray-200"
-                        variant="borderless"
+                       
                         title="最近SLA违规"
                         extra={
                           <Button type="primary" size="small">

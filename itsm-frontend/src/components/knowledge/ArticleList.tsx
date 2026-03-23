@@ -209,7 +209,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
         </div>
       )}
 
-      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Card className="rounded-lg shadow-sm border border-gray-200">
         <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">
           <Form.Item name="search" className="mb-0">
             <Input
@@ -224,7 +224,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
               placeholder="分类"
               className="w-36"
               allowClear
-              variant="borderless"
+             
               style={{ backgroundColor: '#fafafa', borderRadius: '6px' }}
             >
               {Array.isArray(categories) &&
@@ -240,7 +240,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
               placeholder="状态"
               className="w-28"
               allowClear
-              variant="borderless"
+             
               style={{ backgroundColor: '#fafafa', borderRadius: '6px' }}
             >
               <Option value="published">已发布</Option>

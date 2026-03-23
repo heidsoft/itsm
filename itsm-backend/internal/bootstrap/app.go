@@ -22,6 +22,8 @@ import (
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/sla"
+	"itsm-backend/handlers/standard_change"
+	"itsm-backend/handlers/known_error"
 	"itsm-backend/middleware"
 	"itsm-backend/pkg/seeder"
 	"itsm-backend/router"
@@ -214,6 +216,15 @@ func NewApplication() *Application {
 	// A2UI Ticket Controller (AI-driven UI表单)
 	a2uiTicketService := service.NewA2UITicketService(nil)
 	a2uiTicketController := controller.NewA2UITicketController(a2uiTicketService)
+
+	// Global Search Controller (全局搜索)
+	globalSearchController := controller.NewGlobalSearchController(client)
+
+	// Standard Change Handler (标准变更模板库)
+	standardChangeHandler := standard_change.NewHandler(client, sugar)
+
+	// Known Error Handler (KEDB)
+	knownErrorHandler := known_error.NewHandler(client, sugar)
 
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)
@@ -413,6 +424,15 @@ func NewApplication() *Application {
 		AIHandler:             aiHandler, // Added AI domain handler
 		CommonHandler:         commonHandler,
 		RoleHandler:           roleHandler,
+
+		// Global Search
+		GlobalSearchController: globalSearchController,
+
+		// Standard Change Handler
+		StandardChangeHandler: standardChangeHandler,
+
+		// Known Error Handler (KEDB)
+		KnownErrorHandler: knownErrorHandler,
 	}
 	router.SetupRoutes(r, routerConfig)
 

@@ -78,6 +78,7 @@ import (
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/standardchange"
 	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
@@ -244,6 +245,8 @@ type Client struct {
 	ServiceRequest *ServiceRequestClient
 	// ServiceRequestApproval is the client for interacting with the ServiceRequestApproval builders.
 	ServiceRequestApproval *ServiceRequestApprovalClient
+	// StandardChange is the client for interacting with the StandardChange builders.
+	StandardChange *StandardChangeClient
 	// SystemConfig is the client for interacting with the SystemConfig builders.
 	SystemConfig *SystemConfigClient
 	// Tag is the client for interacting with the Tag builders.
@@ -362,6 +365,7 @@ func (c *Client) init() {
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
 	c.ServiceRequest = NewServiceRequestClient(c.config)
 	c.ServiceRequestApproval = NewServiceRequestApprovalClient(c.config)
+	c.StandardChange = NewStandardChangeClient(c.config)
 	c.SystemConfig = NewSystemConfigClient(c.config)
 	c.Tag = NewTagClient(c.config)
 	c.Team = NewTeamClient(c.config)
@@ -541,6 +545,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ServiceCatalog:          NewServiceCatalogClient(cfg),
 		ServiceRequest:          NewServiceRequestClient(cfg),
 		ServiceRequestApproval:  NewServiceRequestApprovalClient(cfg),
+		StandardChange:          NewStandardChangeClient(cfg),
 		SystemConfig:            NewSystemConfigClient(cfg),
 		Tag:                     NewTagClient(cfg),
 		Team:                    NewTeamClient(cfg),
@@ -647,6 +652,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ServiceCatalog:          NewServiceCatalogClient(cfg),
 		ServiceRequest:          NewServiceRequestClient(cfg),
 		ServiceRequestApproval:  NewServiceRequestApprovalClient(cfg),
+		StandardChange:          NewStandardChangeClient(cfg),
 		SystemConfig:            NewSystemConfigClient(cfg),
 		Tag:                     NewTagClient(cfg),
 		Team:                    NewTeamClient(cfg),
@@ -711,8 +717,8 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
 		c.Role, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
 		c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceRequest, c.ServiceRequestApproval, c.SystemConfig, c.Tag, c.Team,
-		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
+		c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange, c.SystemConfig,
+		c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
 		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
 		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
 		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance, c.WorkflowTask,
@@ -741,8 +747,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
 		c.Role, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
 		c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceRequest, c.ServiceRequestApproval, c.SystemConfig, c.Tag, c.Team,
-		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
+		c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange, c.SystemConfig,
+		c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
 		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
 		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
 		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance, c.WorkflowTask,
@@ -889,6 +895,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ServiceRequest.mutate(ctx, m)
 	case *ServiceRequestApprovalMutation:
 		return c.ServiceRequestApproval.mutate(ctx, m)
+	case *StandardChangeMutation:
+		return c.StandardChange.mutate(ctx, m)
 	case *SystemConfigMutation:
 		return c.SystemConfig.mutate(ctx, m)
 	case *TagMutation:
@@ -11445,6 +11453,155 @@ func (c *ServiceRequestApprovalClient) mutate(ctx context.Context, m *ServiceReq
 	}
 }
 
+// StandardChangeClient is a client for the StandardChange schema.
+type StandardChangeClient struct {
+	config
+}
+
+// NewStandardChangeClient returns a client for the StandardChange from the given config.
+func NewStandardChangeClient(c config) *StandardChangeClient {
+	return &StandardChangeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `standardchange.Hooks(f(g(h())))`.
+func (c *StandardChangeClient) Use(hooks ...Hook) {
+	c.hooks.StandardChange = append(c.hooks.StandardChange, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `standardchange.Intercept(f(g(h())))`.
+func (c *StandardChangeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.StandardChange = append(c.inters.StandardChange, interceptors...)
+}
+
+// Create returns a builder for creating a StandardChange entity.
+func (c *StandardChangeClient) Create() *StandardChangeCreate {
+	mutation := newStandardChangeMutation(c.config, OpCreate)
+	return &StandardChangeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of StandardChange entities.
+func (c *StandardChangeClient) CreateBulk(builders ...*StandardChangeCreate) *StandardChangeCreateBulk {
+	return &StandardChangeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *StandardChangeClient) MapCreateBulk(slice any, setFunc func(*StandardChangeCreate, int)) *StandardChangeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &StandardChangeCreateBulk{err: fmt.Errorf("calling to StandardChangeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*StandardChangeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &StandardChangeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for StandardChange.
+func (c *StandardChangeClient) Update() *StandardChangeUpdate {
+	mutation := newStandardChangeMutation(c.config, OpUpdate)
+	return &StandardChangeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *StandardChangeClient) UpdateOne(_m *StandardChange) *StandardChangeUpdateOne {
+	mutation := newStandardChangeMutation(c.config, OpUpdateOne, withStandardChange(_m))
+	return &StandardChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *StandardChangeClient) UpdateOneID(id int) *StandardChangeUpdateOne {
+	mutation := newStandardChangeMutation(c.config, OpUpdateOne, withStandardChangeID(id))
+	return &StandardChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for StandardChange.
+func (c *StandardChangeClient) Delete() *StandardChangeDelete {
+	mutation := newStandardChangeMutation(c.config, OpDelete)
+	return &StandardChangeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *StandardChangeClient) DeleteOne(_m *StandardChange) *StandardChangeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *StandardChangeClient) DeleteOneID(id int) *StandardChangeDeleteOne {
+	builder := c.Delete().Where(standardchange.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &StandardChangeDeleteOne{builder}
+}
+
+// Query returns a query builder for StandardChange.
+func (c *StandardChangeClient) Query() *StandardChangeQuery {
+	return &StandardChangeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeStandardChange},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a StandardChange entity by its id.
+func (c *StandardChangeClient) Get(ctx context.Context, id int) (*StandardChange, error) {
+	return c.Query().Where(standardchange.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *StandardChangeClient) GetX(ctx context.Context, id int) *StandardChange {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryChanges queries the changes edge of a StandardChange.
+func (c *StandardChangeClient) QueryChanges(_m *StandardChange) *ChangeQuery {
+	query := (&ChangeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(standardchange.Table, standardchange.FieldID, id),
+			sqlgraph.To(change.Table, change.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, standardchange.ChangesTable, standardchange.ChangesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *StandardChangeClient) Hooks() []Hook {
+	return c.hooks.StandardChange
+}
+
+// Interceptors returns the client interceptors.
+func (c *StandardChangeClient) Interceptors() []Interceptor {
+	return c.inters.StandardChange
+}
+
+func (c *StandardChangeClient) mutate(ctx context.Context, m *StandardChangeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&StandardChangeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&StandardChangeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&StandardChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&StandardChangeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown StandardChange mutation op: %q", m.Op())
+	}
+}
+
 // SystemConfigClient is a client for the SystemConfig schema.
 type SystemConfigClient struct {
 	config
@@ -15066,7 +15223,7 @@ type (
 		ProvisioningTask, RelationshipType, Release, Role, RootCauseAnalysis,
 		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
 		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
+		StandardChange, SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
 		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
 		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
 		User, Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
@@ -15086,7 +15243,7 @@ type (
 		ProvisioningTask, RelationshipType, Release, Role, RootCauseAnalysis,
 		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
 		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
+		StandardChange, SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
 		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
 		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
 		User, Workflow, WorkflowInstance, WorkflowTask,

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Button, Result, Spin, Typography } from 'antd';
 import { RotateCcw, Plus, FileText, AlertTriangle, User, Database, Settings } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Text, Title } = Typography;
 
@@ -40,62 +41,66 @@ interface LoadingEmptyErrorProps {
 }
 
 // 预定义的空状态配置
-const getDefaultEmptyConfig = (context?: string) => {
+const getDefaultEmptyConfig = (context?: string, t?: (key: string) => string) => {
+  const defaultTitle = t ? t('common.noData') : '暂无数据';
+  const defaultDesc = t ? t('common.noData') : '暂无数据';
+  const defaultAction = t ? t('common.create') : '创建';
+
   switch (context) {
     case 'tickets':
       return {
-        title: '暂无工单',
-        description: '当前没有工单数据，点击下方按钮创建第一个工单',
-        actionText: '创建工单',
+        title: defaultTitle,
+        description: t ? t('common.noData') : '当前没有工单数据，点击下方按钮创建第一个工单',
+        actionText: t ? t('common.create') : '创建工单',
         icon: <FileText size={48} />,
       };
     case 'incidents':
       return {
-        title: '暂无事件',
-        description: '当前没有事件数据，点击下方按钮创建第一个事件',
-        actionText: '创建事件',
+        title: defaultTitle,
+        description: t ? t('common.noData') : '当前没有事件数据，点击下方按钮创建第一个事件',
+        actionText: t ? t('common.create') : '创建事件',
         icon: <AlertTriangle size={48} />,
       };
     case 'problems':
       return {
-        title: '暂无问题',
-        description: '当前没有问题数据，点击下方按钮创建第一个问题',
-        actionText: '创建问题',
+        title: defaultTitle,
+        description: t ? t('common.noData') : '当前没有问题数据，点击下方按钮创建第一个问题',
+        actionText: t ? t('common.create') : '创建问题',
         icon: <AlertTriangle size={48} />,
       };
     case 'changes':
       return {
-        title: '暂无变更',
-        description: '当前没有变更数据，点击下方按钮创建第一个变更',
-        actionText: '创建变更',
+        title: defaultTitle,
+        description: t ? t('common.noData') : '当前没有变更数据，点击下方按钮创建第一个变更',
+        actionText: t ? t('common.create') : '创建变更',
         icon: <Settings size={48} />,
       };
     case 'cmdb':
       return {
-        title: '暂无配置项',
-        description: '当前没有配置项数据，点击下方按钮创建第一个配置项',
-        actionText: '创建配置项',
+        title: defaultTitle,
+        description: t ? t('common.noData') : '当前没有配置项数据，点击下方按钮创建第一个配置项',
+        actionText: t ? t('common.create') : '创建配置项',
         icon: <Database size={48} />,
       };
     case 'users':
       return {
-        title: '暂无用户',
-        description: '当前没有用户数据，点击下方按钮创建第一个用户',
-        actionText: '创建用户',
+        title: defaultTitle,
+        description: t ? t('common.noData') : '当前没有用户数据，点击下方按钮创建第一个用户',
+        actionText: t ? t('common.create') : '创建用户',
         icon: <User size={48} />,
       };
     case 'workflows':
       return {
-        title: '暂无工作流',
-        description: '当前没有工作流数据，点击下方按钮创建第一个工作流',
-        actionText: '创建工作流',
+        title: defaultTitle,
+        description: t ? t('common.noData') : '当前没有工作流数据，点击下方按钮创建第一个工作流',
+        actionText: t ? t('common.create') : '创建工作流',
         icon: <Settings size={48} />,
       };
     default:
       return {
-        title: '暂无数据',
-        description: '当前没有数据，点击下方按钮创建第一条记录',
-        actionText: '创建',
+        title: defaultTitle,
+        description: defaultDesc,
+        actionText: defaultAction,
         icon: <FileText size={48} />,
       };
   }
@@ -103,7 +108,7 @@ const getDefaultEmptyConfig = (context?: string) => {
 
 export const LoadingEmptyError: React.FC<LoadingEmptyErrorProps> = ({
   state,
-  loadingText = '加载中...',
+  loadingText,
   empty,
   error,
   success,
@@ -111,6 +116,8 @@ export const LoadingEmptyError: React.FC<LoadingEmptyErrorProps> = ({
   className = '',
   children,
 }) => {
+  const { t } = useI18n();
+  const defaultLoadingText = t('common.loading');
   // 成功状态直接显示内容
   if (state === 'success') {
     return (
@@ -147,14 +154,14 @@ export const LoadingEmptyError: React.FC<LoadingEmptyErrorProps> = ({
         style={{ minHeight }}
       >
         <Spin size="large" />
-        <Text className="mt-4 text-gray-500">{loadingText}</Text>
+        <Text className="mt-4 text-gray-500">{loadingText || defaultLoadingText}</Text>
       </div>
     );
   }
 
   // 空状态
   if (state === 'empty') {
-    const defaultConfig = getDefaultEmptyConfig();
+    const defaultConfig = getDefaultEmptyConfig(undefined, t);
     const config = {
       ...defaultConfig,
       ...empty,
@@ -185,9 +192,9 @@ export const LoadingEmptyError: React.FC<LoadingEmptyErrorProps> = ({
   // 错误状态
   if (state === 'error') {
     const defaultErrorConfig = {
-      title: '加载失败',
-      description: '数据加载失败，请检查网络连接或稍后重试',
-      actionText: '重试',
+      title: t('common.loadFailed'),
+      description: t('common.checkNetwork'),
+      actionText: t('common.retry'),
       showRetry: true,
       showAction: false,
     };
@@ -253,13 +260,13 @@ export const WorkflowsLoadingEmptyError = (props: Omit<LoadingEmptyErrorProps, '
 );
 
 // 简化的状态组件
-export const Loading = ({ text = '加载中...', className = '' }) => (
+export const Loading = ({ text, className = '' }: { text?: string; className?: string }) => (
   <LoadingEmptyError state="loading" loadingText={text} className={className} />
 );
 
 export const Empty = ({
-  title = '暂无数据',
-  description = '当前没有数据',
+  title,
+  description,
   actionText,
   onAction,
   className = '',
@@ -278,9 +285,9 @@ export const Empty = ({
 );
 
 export const Error = ({
-  title = '加载失败',
-  description = '数据加载失败',
-  actionText = '重试',
+  title,
+  description,
+  actionText,
   onAction,
   className = '',
 }: {

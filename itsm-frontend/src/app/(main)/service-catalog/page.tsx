@@ -171,7 +171,7 @@ export default function ServiceCatalogPage() {
       <ServiceCatalogStats stats={stats} />
 
       {/* 分类标签页 */}
-      <Card className="mb-6" variant="borderless">
+      <Card className="mb-6">
         <Tabs
           activeKey={activeCategory}
           onChange={handleCategoryChange}

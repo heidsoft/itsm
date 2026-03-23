@@ -98,7 +98,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
               {record.title}
             </div>
             <div style={{ fontSize: 'small', color: '#666' }}>
-              #{record.incidentNumber} • {record.category}
+              #{(record as any).incident_number || record.incidentNumber} • {record.category}
             </div>
           </div>
         </div>

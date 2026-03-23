@@ -62,8 +62,9 @@ type Change struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ChangeQuery when eager-loading is set.
-	Edges        ChangeEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                   ChangeEdges `json:"edges"`
+	standard_change_changes *int
+	selectValues            sql.SelectValues
 }
 
 // ChangeEdges holds the relations/edges for other nodes in the graph.
@@ -97,6 +98,8 @@ func (*Change) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case change.FieldPlannedStartDate, change.FieldPlannedEndDate, change.FieldActualStartDate, change.FieldActualEndDate, change.FieldCreatedAt, change.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case change.ForeignKeys[0]: // standard_change_changes
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -247,6 +250,13 @@ func (_m *Change) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
+			}
+		case change.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field standard_change_changes", value)
+			} else if value.Valid {
+				_m.standard_change_changes = new(int)
+				*_m.standard_change_changes = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

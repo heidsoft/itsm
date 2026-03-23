@@ -28,10 +28,12 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
   const [mentionedUsers, setMentionedUsers] = useState<number[]>([]);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
+    setSubmitting(true);
     try {
       await TicketApi.addTicketComment(ticketId, {
         content: newComment,
@@ -44,12 +46,15 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
       onRefresh();
     } catch (error) {
       console.error('添加评论失败:', error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleEditComment = async (commentId: number) => {
     if (!editingCommentContent.trim()) return;
 
+    setSubmitting(true);
     try {
       await TicketApi.updateTicketComment(ticketId, commentId, {
         content: editingCommentContent,
@@ -59,6 +64,8 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
       onRefresh();
     } catch (error) {
       console.error('更新评论失败:', error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -127,6 +134,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                 icon={<Send />}
                 onClick={handleAddComment}
                 disabled={!newComment.trim()}
+                loading={submitting}
               >
                 发送评论
               </Button>
@@ -145,6 +153,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                   value={editingCommentContent}
                   onChange={e => setEditingCommentContent(e.target.value)}
                   rows={3}
+                  placeholder="输入编辑后的评论..."
                 />
                 <div className="flex justify-end space-x-2">
                   <Button onClick={cancelEdit}>取消</Button>
@@ -152,6 +161,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                     type="primary"
                     onClick={() => handleEditComment(comment.id)}
                     disabled={!editingCommentContent.trim()}
+                    loading={submitting}
                   >
                     保存
                   </Button>
@@ -172,9 +182,9 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                       </AntTag>
                     )}
                     <Text type="secondary" className="text-sm">
-                      {formatDateTime(comment.createdAt)}
+                      {formatDateTime(comment.createdAt || comment.created_at || '')}
                     </Text>
-                    {comment.updatedAt !== comment.createdAt && (
+                    {comment.updatedAt && comment.createdAt && comment.updatedAt !== comment.createdAt && (
                       <Text type="secondary" className="text-xs">
                         （已编辑）
                       </Text>

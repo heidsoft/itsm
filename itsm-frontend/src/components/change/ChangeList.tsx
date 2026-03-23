@@ -191,7 +191,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true }) => {
         </div>
       )}
 
-      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Card className="rounded-lg shadow-sm border border-gray-200">
         <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">
           <Form.Item name="search" className="mb-0">
             <Input

@@ -868,8 +868,8 @@ const WorkflowInstancesPage = () => {
                 <div>类型：{selectedTask?.type}</div>
                 <div>
                   创建时间：
-                  {selectedTask?.createdAt
-                    ? new Date(selectedTask.createdAt).toLocaleString('zh-CN')
+                  {selectedTask?.created_at
+                    ? new Date(selectedTask.created_at).toLocaleString('zh-CN')
                     : '-'}
                 </div>
               </div>

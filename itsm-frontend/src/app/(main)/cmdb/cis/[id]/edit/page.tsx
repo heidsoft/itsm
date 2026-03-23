@@ -256,7 +256,7 @@ const EditCIPage: React.FC = () => {
   };
 
   return (
-    <Card variant="borderless" loading={loading}>
+    <Card loading={loading}>
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[

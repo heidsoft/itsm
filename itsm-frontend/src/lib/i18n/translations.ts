@@ -87,6 +87,9 @@ export const translations = {
       operationFailed: '操作失败',
       loading: '加载中...',
       noData: '暂无数据',
+      loadFailed: '加载失败',
+      retry: '重试',
+      checkNetwork: '请检查网络连接或稍后重试',
       // 表单
       required: '必填',
       optional: '选填',
@@ -1065,6 +1068,9 @@ export const translations = {
       operationFailed: 'Operation failed',
       loading: 'Loading...',
       noData: 'No data',
+      loadFailed: 'Failed to load',
+      retry: 'Retry',
+      checkNetwork: 'Please check your network connection or try again later',
       // Form
       required: 'Required',
       optional: 'Optional',

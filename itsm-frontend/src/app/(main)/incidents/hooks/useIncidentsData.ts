@@ -54,7 +54,12 @@ export const useIncidentsData = () => {
   const loadMetrics = async () => {
     try {
       const response = await IncidentAPI.getIncidentMetrics();
-      setMetrics(response);
+      setMetrics({
+        total_incidents: response.total_incidents || response.totalIncidents || 0,
+        critical_incidents: response.critical_incidents || response.criticalIncidents || 0,
+        major_incidents: response.major_incidents || response.majorIncidents || 0,
+        avg_resolution_time: response.avg_resolution_time || response.avgResolutionTime || 0,
+      });
     } catch (error) {
       console.error('Failed to load metrics:', error);
       setMetrics({

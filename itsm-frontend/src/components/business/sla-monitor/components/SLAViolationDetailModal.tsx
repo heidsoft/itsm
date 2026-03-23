@@ -99,10 +99,10 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
           {violation.description || '-'}
         </Descriptions.Item>
         <Descriptions.Item label="创建时间">
-          {new Date(violation.createdAt).toLocaleString()}
+          {violation.createdAt ? new Date(violation.createdAt).toLocaleString() : '-'}
         </Descriptions.Item>
         <Descriptions.Item label="更新时间">
-          {new Date(violation.updatedAt).toLocaleString()}
+          {violation.updatedAt ? new Date(violation.updatedAt).toLocaleString() : '-'}
         </Descriptions.Item>
       </Descriptions>
     </Modal>

@@ -43,8 +43,10 @@ interface SolutionRecommendation {
   category: string;
   tags: string[];
   view_count: number;
+  viewCount?: number;
   rating: number;
   updated_at: string;
+  updatedAt?: string;
 }
 
 // 知识库关联接口
@@ -72,20 +74,27 @@ interface KnowledgeArticle {
   content?: string;
   summary?: string;
   category_id?: number;
+  categoryId?: number;
   category_name?: string;
+  categoryName?: string;
   category?: string;
   tags?: string[];
   author_id?: number;
+  authorId?: number;
   author?: {
     id: number;
     username: string;
     name: string;
   };
   view_count: number;
+  viewCount?: number;
   helpful_count?: number;
+  helpfulCount?: number;
   status?: 'draft' | 'published' | 'archived';
   created_at: string;
+  createdAt?: string;
   updated_at?: string;
+  updatedAt?: string;
   rating?: number;
 }
 

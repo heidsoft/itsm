@@ -52,23 +52,36 @@ export interface ServiceRequestApproval {
 export interface ServiceRequest {
   id: number;
   catalog_id: number;
+  catalogId?: number;
   requester_id: number;
+  requesterId?: number;
   status: ServiceRequestStatus | string;
   title?: string;
   reason?: string;
   form_data?: Record<string, any>;
+  formData?: Record<string, any>;
 
   cost_center?: string;
-  data_classification?: string; // public, internal, confidential
+  costCenter?: string;
+  data_classification?: string;
+  dataClassification?: string;
   needs_public_ip?: boolean;
+  needsPublicIp?: boolean;
   source_ip_whitelist?: string[];
+  sourceIpWhitelist?: string[];
   expire_at?: string;
+  expireAt?: string;
   compliance_ack: boolean;
+  complianceAck?: boolean;
 
   current_level: number;
+  currentLevel?: number;
   total_levels: number;
+  totalLevels?: number;
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 
   approvals?: ServiceRequestApproval[];
   catalog?: ServiceCatalogRef; // 后端目前可能未填充，需注意

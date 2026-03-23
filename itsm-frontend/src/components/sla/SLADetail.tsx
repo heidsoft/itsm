@@ -52,14 +52,14 @@ const SLADetail: React.FC = () => {
 
   if (loading)
     return (
-      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Card className="rounded-lg shadow-sm border border-gray-200">
         <Skeleton active />
       </Card>
     );
 
   if (!data) {
     return (
-      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Card className="rounded-lg shadow-sm border border-gray-200">
         <Result
           status="404"
           title="404"
@@ -87,7 +87,7 @@ const SLADetail: React.FC = () => {
 
       <Card
         className="rounded-lg shadow-sm border border-gray-200"
-        variant="borderless"
+       
         title={<span className="text-lg font-bold">{data.name}</span>}
         extra={
           <Button

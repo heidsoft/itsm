@@ -150,7 +150,7 @@ const ServiceRequestList: React.FC = () => {
   ];
 
   return (
-    <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+    <Card className="rounded-lg shadow-sm border border-gray-200">
       <div className="flex justify-between items-center mb-4">
         <Tabs
           activeKey={activeTab}

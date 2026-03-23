@@ -4,6 +4,7 @@ export interface TriageResult {
   category: string;
   priority: string;
   assignee_id: number;
+  assigneeId?: number;
   confidence: number;
   explanation: string;
 }

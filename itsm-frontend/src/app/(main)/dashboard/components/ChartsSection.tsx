@@ -19,7 +19,7 @@ export const ChartsSection: React.FC<ChartsSectionProps> = React.memo(
               <Col key={index} xs={24} lg={12}>
                 <Card
                   className="rounded-lg shadow-sm border border-gray-200 min-h-[420px]"
-                  variant="borderless"
+                 
                 >
                   <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
                     <Spin size="large" />
@@ -38,7 +38,7 @@ export const ChartsSection: React.FC<ChartsSectionProps> = React.memo(
         <div className="mb-6">
           <Card
             className="rounded-lg shadow-sm border border-gray-200 text-center py-16"
-            variant="borderless"
+           
           >
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}

@@ -33,11 +33,15 @@ interface Collaborator {
 interface CollaborationMessage {
   id: string;
   user_id: number;
+  userId?: number;
   user_name: string;
+  userName?: string;
   user_avatar?: string;
+  userAvatar?: string;
   content: string;
   type: 'comment' | 'status_change' | 'assignment' | 'system';
   created_at: string;
+  createdAt?: string;
 }
 
 interface TicketCollaborationProps {
@@ -182,10 +186,10 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
                         {getMessageIcon(message.type)}
                       </Text>
                       <Text type="secondary" className="text-xs">
-                        {formatDistanceToNow(new Date(message.createdAt), {
+                        {message.createdAt ? formatDistanceToNow(new Date(message.createdAt), {
                           addSuffix: true,
                           locale: zhCN,
-                        })}
+                        }) : '-'}
                       </Text>
                     </div>
                     <div className="text-sm text-gray-700 whitespace-pre-wrap">

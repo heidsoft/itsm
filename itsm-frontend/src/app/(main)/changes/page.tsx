@@ -63,7 +63,7 @@ export default function ChangesPage() {
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="总变更数"
               value={stats.total}
@@ -73,7 +73,7 @@ export default function ChangesPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="待审批"
               value={stats.pending}
@@ -83,7 +83,7 @@ export default function ChangesPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="进行中"
               value={stats.inProgress}
@@ -93,7 +93,7 @@ export default function ChangesPage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm" variant="borderless">
+          <Card className="rounded-lg shadow-sm">
             <Statistic
               title="已完成"
               value={stats.completed}
