@@ -3,7 +3,8 @@
 import React from 'react';
 import { Table, Tag, Button, Space, Badge, Tooltip } from 'antd';
 import { Eye, Edit, MoreHorizontal, AlertTriangle } from 'lucide-react';
-import { Problem, ProblemStatus, ProblemPriority } from '@/lib/services/problem-service';
+import { ProblemStatus, ProblemPriority, ProblemStatusLabels, ProblemPriorityLabels } from '@/constants/problem';
+import type { Problem } from '@/lib/api/problem-api';
 import { useRouter } from 'next/navigation';
 
 interface ProblemListProps {

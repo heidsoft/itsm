@@ -4,7 +4,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Form, Input, Select, Button, Card, message, Alert, Spin } from 'antd';
-import { problemService, ProblemPriority } from '@/lib/services/problem-service';
+import { ProblemApi } from '@/lib/api/problem-api';
+import { ProblemPriority } from '@/constants/problem';
 import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
@@ -35,7 +36,7 @@ const CreateProblemPageContent = () => {
   const handleSubmit = async (values: any) => {
     setLoading(true);
     try {
-      await problemService.createProblem({
+      await ProblemApi.createProblem({
         title: values.title,
         description: values.description,
         priority: values.priority,

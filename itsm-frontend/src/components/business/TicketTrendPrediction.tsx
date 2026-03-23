@@ -246,7 +246,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
   // 导出报告
   const handleExport = useCallback(() => {
     // 注意：导出报告功能需要后端支持
-    antMessage.info('导出功能开发中');
+    antMessage.info('导出功能即将推出，敬请期待');
   }, [antMessage]);
 
   return (

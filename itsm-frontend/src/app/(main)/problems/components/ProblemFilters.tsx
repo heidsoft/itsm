@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, Row, Col, Input, Select, Button } from 'antd';
 import { RefreshCw } from 'lucide-react';
-import { ProblemStatus } from '@/lib/services/problem-service';
+import { ProblemStatus } from '@/constants/problem';
 
 const { Search: SearchInput } = Input;
 const { Option } = Select;
