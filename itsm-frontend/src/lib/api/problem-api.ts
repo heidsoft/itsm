@@ -13,6 +13,7 @@ export interface Problem {
   priority: string;
   severity: string;
   category?: string;
+  impact?: string;
   assignee_id?: number;
   assigneeId?: number;
   reporter_id?: number;

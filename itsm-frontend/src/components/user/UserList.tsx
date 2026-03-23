@@ -259,13 +259,13 @@ const UserList: React.FC<UserListProps> = ({
     }
 
     // 批量操作功能需要后端支持
-    message.info(`批量${action}功能开发中`);
+    message.info(`批量${action}功能即将推出，敬请期待`);
   };
 
   // 导出数据
   const handleExport = () => {
     // 导出功能需要后端支持导出API
-    message.info('导出功能开发中');
+    message.info('导出功能即将推出，敬请期待');
   };
 
   // 状态标签渲染

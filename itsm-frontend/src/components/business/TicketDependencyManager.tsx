@@ -704,7 +704,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                   size="small"
                   onClick={() => {
                     // 工单选择器需要单独的Modal组件实现
-                    antMessage.info('工单选择器功能开发中');
+                    antMessage.info('工单选择器功能即将推出，敬请期待');
                   }}
                 >
                   选择工单
