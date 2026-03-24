@@ -82,13 +82,21 @@ func NewApplication() *Application {
 	incidentService := service.NewIncidentService(client, sugar)
 
 	// 初始化 Redis 序列服务（用于工单编号生成）
-	sequenceService := service.NewSequenceService(
+	// 如果 Redis 不可用，使用数据库回退方案
+	var sequenceService *service.SequenceService
+	ss := service.NewSequenceService(
 		cfg.Redis.Host,
 		cfg.Redis.Port,
 		cfg.Redis.Password,
 		cfg.Redis.DB,
 		sugar,
 	)
+	if ss != nil {
+		sequenceService = ss
+		sugar.Infow("Redis sequence service initialized successfully")
+	} else {
+		sugar.Warnw("Redis sequence service not available, will use database fallback for ticket number")
+	}
 	ticketService := service.NewTicketServiceWithSequence(client, sugar, sequenceService)
 
 	// MSP 服务初始化
