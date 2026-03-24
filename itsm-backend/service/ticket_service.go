@@ -1711,7 +1711,7 @@ func (s *TicketService) generateTicketNumberWithRedis(ctx context.Context, year,
 	}
 
 	// 生成请求编号格式: REQ-YYYYMM-XXXXXX
-	ticketNumber := fmt.Sprintf("REQ-%04d%02d-%06d", year, month, seq)
+	ticketNumber := fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq)
 	return ticketNumber, nil
 }
 
@@ -1729,8 +1729,8 @@ func (s *TicketService) generateTicketNumberWithDB(ctx context.Context, tenantID
 		return "", fmt.Errorf("failed to count tickets: %w", err)
 	}
 
-	// 生成请求编号格式: REQ-YYYYMM-XXXXXX
-	ticketNumber := fmt.Sprintf("REQ-%04d%02d-%06d", year, month, count+1)
+	// 生成工单编号格式: TKT-YYYYMM-XXXXXX
+	ticketNumber := fmt.Sprintf("TKT-%04d%02d-%06d", year, month, count+1)
 	return ticketNumber, nil
 }
 
