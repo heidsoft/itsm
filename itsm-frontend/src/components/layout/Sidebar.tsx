@@ -130,9 +130,7 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       description: '事件管理',
       children: [
         { key: '/incidents', icon: <AlertCircle style={iconStyle} />, label: '事件列表', path: '/incidents', permission: 'incident:read' },
-        { key: '/incidents/major', icon: <AlertTriangle style={iconStyle} />, label: '重大事件', path: '/incidents/major', permission: 'incident:read' },
-        { key: '/incidents/analytics', icon: <TrendingUp style={iconStyle} />, label: '事件分析', path: '/incidents/analytics', permission: 'incident:read' },
-        { key: '/incidents/convert', icon: <ArrowRight style={iconStyle} />, label: '事件转问题', path: '/incidents/convert', permission: 'incident:manage' },
+        { key: '/incidents/create', icon: <Plus style={iconStyle} />, label: '新建事件', path: '/incidents/create', permission: 'incident:write' },
       ],
     },
     {
@@ -145,8 +143,6 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       children: [
         { key: '/problems', icon: <HelpCircle style={iconStyle} />, label: '问题列表', path: '/problems', permission: 'problem:read' },
         { key: '/problems/known-errors', icon: <AlertCircle style={iconStyle} />, label: '已知错误', path: '/problems/known-errors', permission: 'problem:read' },
-        { key: '/problems/root-cause', icon: <Search style={iconStyle} />, label: '根因分析', path: '/problems/root-cause', permission: 'problem:analyze' },
-        { key: '/problems/links', icon: <Link style={iconStyle} />, label: '问题链接', path: '/problems/links', permission: 'problem:manage' },
       ],
     },
     {
@@ -158,11 +154,7 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       description: '变更管理',
       children: [
         { key: '/changes', icon: <BarChart3 style={iconStyle} />, label: '变更列表', path: '/changes', permission: 'change:read' },
-        { key: '/changes/standard', icon: <CheckCircle style={iconStyle} />, label: '标准变更', path: '/changes/standard', permission: 'change:read' },
-        { key: '/changes/emergency', icon: <Zap style={iconStyle} />, label: '紧急变更', path: '/changes/emergency', permission: 'change:manage' },
-        { key: '/changes/approvals', icon: <GitMerge style={iconStyle} />, label: '变更审批', path: '/changes/approvals', permission: 'change:approve' },
-        { key: '/changes/cab', icon: <Users style={iconStyle} />, label: 'CAB会议', path: '/changes/cab', permission: 'change:manage' },
-        { key: '/changes/calendar', icon: <Calendar style={iconStyle} />, label: '变更日历', path: '/changes/calendar', permission: 'change:read' },
+        { key: '/changes/new', icon: <Plus style={iconStyle} />, label: '新建变更', path: '/changes/new', permission: 'change:write' },
       ],
     },
     // ===== 服务保障 =====
@@ -176,9 +168,7 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       children: [
         { key: '/knowledge', icon: <Book style={iconStyle} />, label: '知识库', path: '/knowledge', permission: 'knowledge:read' },
         { key: '/knowledge/articles', icon: <FileText style={iconStyle} />, label: '文章管理', path: '/knowledge/articles', permission: 'knowledge:write' },
-        { key: '/knowledge/categories', icon: <Tag style={iconStyle} />, label: '文章分类', path: '/knowledge/categories', permission: 'knowledge:manage' },
-        { key: '/knowledge/review', icon: <CheckSquare style={iconStyle} />, label: '知识审核', path: '/knowledge/review', permission: 'knowledge:approve' },
-        { key: '/knowledge/ai-recommend', icon: <Sparkles style={iconStyle} />, label: 'AI知识推荐', path: '/knowledge/ai-recommend', permission: 'knowledge:read' },
+        { key: '/knowledge/articles/create', icon: <Plus style={iconStyle} />, label: '新建文章', path: '/knowledge/articles/create', permission: 'knowledge:write' },
       ],
     },
     {
@@ -190,9 +180,7 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       description: '服务目录',
       children: [
         { key: '/service-catalog', icon: <BookOpen style={iconStyle} />, label: '服务目录', path: '/service-catalog', permission: 'service:read' },
-        { key: '/service-catalog/items', icon: <List style={iconStyle} />, label: '服务项管理', path: '/service-catalog/items', permission: 'service:write' },
-        { key: '/service-catalog/categories', icon: <Folder style={iconStyle} />, label: '服务类别', path: '/service-catalog/categories', permission: 'service:write' },
-        { key: '/service-catalog/templates', icon: <FileText style={iconStyle} />, label: '服务请求模板', path: '/service-catalog/templates', permission: 'service:write' },
+        { key: '/service-catalog/request', icon: <FileText style={iconStyle} />, label: '服务请求', path: '/service-catalog/request', permission: 'service:read' },
       ],
     },
     {
@@ -204,12 +192,11 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       description: '配置管理数据库',
       children: [
         { key: '/cmdb/cis', icon: <Server style={iconStyle} />, label: '配置项列表', path: '/cmdb/cis', permission: 'cmdb:read' },
-        { key: '/cmdb/types', icon: <Database style={iconStyle} />, label: 'CI类型管理', path: '/cmdb/types', permission: 'cmdb:write' },
+        { key: '/cmdb/cis/create', icon: <Plus style={iconStyle} />, label: '新建CI', path: '/cmdb/cis/create', permission: 'cmdb:write' },
         { key: '/cmdb/cloud-resources', icon: <Cloud style={iconStyle} />, label: '云资源', path: '/cmdb/cloud-resources', permission: 'cmdb:read' },
         { key: '/cmdb/cloud-accounts', icon: <Key style={iconStyle} />, label: '云账号', path: '/cmdb/cloud-accounts', permission: 'cmdb:manage' },
         { key: '/cmdb/cloud-services', icon: <Boxes style={iconStyle} />, label: '云服务', path: '/cmdb/cloud-services', permission: 'cmdb:read' },
         { key: '/cmdb/reconciliation', icon: <RefreshCw style={iconStyle} />, label: '同步对账', path: '/cmdb/reconciliation', permission: 'cmdb:write' },
-        { key: '/cmdb/relationships', icon: <GitBranch style={iconStyle} />, label: '关系图谱', path: '/cmdb/relationships', permission: 'cmdb:read' },
       ],
     },
     {
@@ -220,10 +207,9 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       permission: 'asset:read',
       description: 'IT资产管理',
       children: [
-        { key: '/assets/list', icon: <Server style={iconStyle} />, label: '资产列表', path: '/assets/list', permission: 'asset:read' },
-        { key: '/assets/licenses', icon: <Key style={iconStyle} />, label: '软件许可证', path: '/assets/licenses', permission: 'license:manage' },
-        { key: '/assets/categories', icon: <Tag style={iconStyle} />, label: '资产分类', path: '/assets/categories', permission: 'asset:write' },
-        { key: '/assets/maintenance', icon: <Wrench style={iconStyle} />, label: '维保管理', path: '/assets/maintenance', permission: 'asset:manage' },
+        { key: '/assets', icon: <Server style={iconStyle} />, label: '资产列表', path: '/assets', permission: 'asset:read' },
+        { key: '/assets/new', icon: <Plus style={iconStyle} />, label: '新建资产', path: '/assets/new', permission: 'asset:write' },
+        { key: '/licenses', icon: <Key style={iconStyle} />, label: '软件许可证', path: '/licenses', permission: 'license:manage' },
       ],
     },
     // ===== 报告分析 =====
@@ -235,11 +221,9 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       permission: 'sla:read',
       description: 'SLA监控与配置',
       children: [
-        { key: '/sla/monitor', icon: <Activity style={iconStyle} />, label: 'SLA监控', path: '/sla/monitor', permission: 'sla:read' },
-        { key: '/sla/definitions', icon: <FileText style={iconStyle} />, label: 'SLA定义', path: '/sla/definitions', permission: 'sla:write' },
-        { key: '/sla/escalations', icon: <ArrowUpCircle style={iconStyle} />, label: '升级规则', path: '/sla/escalations', permission: 'sla:write' },
-        { key: '/sla/reports', icon: <BarChart3 style={iconStyle} />, label: 'SLA报表', path: '/sla/reports', permission: 'sla:read' },
-        { key: '/sla/targets', icon: <Target style={iconStyle} />, label: '目标管理', path: '/sla/targets', permission: 'sla:manage' },
+        { key: '/sla', icon: <Activity style={iconStyle} />, label: 'SLA概览', path: '/sla', permission: 'sla:read' },
+        { key: '/sla-dashboard', icon: <BarChart3 style={iconStyle} />, label: 'SLA仪表盘', path: '/sla-dashboard', permission: 'sla:read' },
+        { key: '/sla-monitor', icon: <Activity style={iconStyle} />, label: 'SLA监控', path: '/sla-monitor', permission: 'sla:read' },
       ],
     },
     {
@@ -250,14 +234,12 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       permission: 'report:read',
       description: '报表与分析',
       children: [
-        { key: '/reports/tickets', icon: <FileText style={iconStyle} />, label: '工单报表', path: '/reports/tickets', permission: 'report:read' },
-        { key: '/reports/incidents', icon: <AlertCircle style={iconStyle} />, label: '事件报表', path: '/reports/incidents', permission: 'report:read' },
-        { key: '/reports/problems', icon: <HelpCircle style={iconStyle} />, label: '问题报表', path: '/reports/problems', permission: 'report:read' },
-        { key: '/reports/changes', icon: <BarChart3 style={iconStyle} />, label: '变更报表', path: '/reports/changes', permission: 'report:read' },
-        { key: '/reports/sla', icon: <Calendar style={iconStyle} />, label: 'SLA报表', path: '/reports/sla', permission: 'report:read' },
+        { key: '/reports', icon: <TrendingUp style={iconStyle} />, label: '报表中心', path: '/reports', permission: 'report:read' },
+        { key: '/reports/sla-performance', icon: <Calendar style={iconStyle} />, label: 'SLA性能', path: '/reports/sla-performance', permission: 'report:read' },
         { key: '/reports/cmdb-quality', icon: <Database style={iconStyle} />, label: 'CMDB质量', path: '/reports/cmdb-quality', permission: 'report:read' },
-        { key: '/reports/catalog-usage', icon: <BookOpen style={iconStyle} />, label: '服务目录使用', path: '/reports/catalog-usage', permission: 'report:read' },
-        { key: '/reports/operations', icon: <TrendingUp style={iconStyle} />, label: '运维报表', path: '/reports/operations', permission: 'report:read' },
+        { key: '/reports/incident-trends', icon: <AlertCircle style={iconStyle} />, label: '事件趋势', path: '/reports/incident-trends', permission: 'report:read' },
+        { key: '/reports/change-success', icon: <CheckCircle style={iconStyle} />, label: '变更成功率', path: '/reports/change-success', permission: 'report:read' },
+        { key: '/reports/problem-efficiency', icon: <HelpCircle style={iconStyle} />, label: '问题效率', path: '/reports/problem-efficiency', permission: 'report:read' },
       ],
     },
     // ===== 自动化 =====
@@ -269,12 +251,11 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       permission: 'workflow:read',
       description: '工作流自动化',
       children: [
-        { key: '/workflow/list', icon: <List style={iconStyle} />, label: '工作流列表', path: '/workflow/list', permission: 'workflow:read' },
+        { key: '/workflow', icon: <List style={iconStyle} />, label: '工作流列表', path: '/workflow', permission: 'workflow:read' },
         { key: '/workflow/designer', icon: <Edit style={iconStyle} />, label: '流程设计器', path: '/workflow/designer', permission: 'workflow:write' },
         { key: '/workflow/instances', icon: <Play style={iconStyle} />, label: '流程实例', path: '/workflow/instances', permission: 'workflow:read' },
         { key: '/workflow/versions', icon: <History style={iconStyle} />, label: '版本管理', path: '/workflow/versions', permission: 'workflow:write' },
         { key: '/workflow/dashboard', icon: <Activity style={iconStyle} />, label: '监控仪表盘', path: '/workflow/dashboard', permission: 'workflow:read' },
-        { key: '/workflow/audit', icon: <ClipboardList style={iconStyle} />, label: '审计日志', path: '/workflow/audit', permission: 'workflow:read' },
         { key: '/workflow/automation', icon: <Zap style={iconStyle} />, label: '自动化规则', path: '/workflow/automation', permission: 'workflow:write' },
       ],
     },
@@ -289,37 +270,16 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       children: [
         { key: '/ai/chat', icon: <MessageSquare style={iconStyle} />, label: 'AI对话', path: '/ai/chat', permission: 'ai:use' },
         { key: '/tickets/ai-create', icon: <Sparkles style={iconStyle} />, label: 'AI创建工单', path: '/tickets/ai-create', permission: 'ai:use' },
-        { key: '/ai/analyze', icon: <Search style={iconStyle} />, label: '故障分析', path: '/ai/analyze', permission: 'ai:use' },
-        { key: '/ai/recommend', icon: <Lightbulb style={iconStyle} />, label: '智能推荐', path: '/ai/recommend', permission: 'ai:use' },
       ],
     },
     // ===== 扩展模块 =====
     {
-      key: '/access',
-      icon: <Key style={iconStyle} />,
-      label: '访问管理',
-      path: '/access',
-      permission: 'access:read',
-      description: '访问权限管理',
-      children: [
-        { key: '/access/requests', icon: <Send style={iconStyle} />, label: '权限申请', path: '/access/requests', permission: 'access:request' },
-        { key: '/access/approvals', icon: <CheckCircle style={iconStyle} />, label: '权限审批', path: '/access/approvals', permission: 'access:approve' },
-        { key: '/access/audit', icon: <ClipboardList style={iconStyle} />, label: '权限审计', path: '/access/audit', permission: 'access:audit' },
-        { key: '/access/role-requests', icon: <Shield style={iconStyle} />, label: '角色申请', path: '/access/role-requests', permission: 'access:request' },
-      ],
-    },
-    {
-      key: '/shifts',
-      icon: <Calendar style={iconStyle} />,
-      label: '服务台调度',
-      path: '/shifts',
-      permission: 'helpdesk:manage',
-      description: '服务台调度管理',
-      children: [
-        { key: '/shifts/schedules', icon: <Calendar style={iconStyle} />, label: '班次管理', path: '/shifts/schedules', permission: 'helpdesk:manage' },
-        { key: '/shifts/handoffs', icon: <ArrowLeftRight style={iconStyle} />, label: '交接班', path: '/shifts/handoffs', permission: 'helpdesk:manage' },
-        { key: '/shifts/logs', icon: <FileText style={iconStyle} />, label: '值班记录', path: '/shifts/logs', permission: 'helpdesk:read' },
-      ],
+      key: '/approvals/pending',
+      icon: <CheckCircle style={iconStyle} />,
+      label: '待我审批',
+      path: '/approvals/pending',
+      permission: 'approval:read',
+      description: '待我审批',
     },
     // ===== MSP与发布 =====
     {
@@ -330,10 +290,8 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       permission: 'msp:read',
       description: '客户管理(MSP)',
       children: [
-        { key: '/msp/dashboard', icon: <LayoutDashboard style={iconStyle} />, label: '客户仪表盘', path: '/msp/dashboard', permission: 'msp:read' },
-        { key: '/msp/allocations', icon: <GitBranch style={iconStyle} />, label: '分配管理', path: '/msp/allocations', permission: 'msp:manage' },
-        { key: '/msp/contracts', icon: <FileText style={iconStyle} />, label: '客户合同', path: '/msp/contracts', permission: 'msp:read' },
-        { key: '/msp/sla-reports', icon: <BarChart3 style={iconStyle} />, label: 'SLA报告', path: '/msp/sla-reports', permission: 'msp:read' },
+        { key: '/msp', icon: <Building style={iconStyle} />, label: '客户列表', path: '/msp', permission: 'msp:read' },
+        { key: '/msp/management', icon: <Settings style={iconStyle} />, label: '客户管理', path: '/msp/management', permission: 'msp:manage' },
       ],
     },
     {
@@ -344,11 +302,8 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       permission: 'release:read',
       description: '发布管理',
       children: [
-        { key: '/releases/plans', icon: <Calendar style={iconStyle} />, label: '发布计划', path: '/releases/plans', permission: 'release:read' },
-        { key: '/releases/phases', icon: <GitBranch style={iconStyle} />, label: '发布阶段', path: '/releases/phases', permission: 'release:manage' },
-        { key: '/releases/rollbacks', icon: <RotateCcw style={iconStyle} />, label: '回滚计划', path: '/releases/rollbacks', permission: 'release:manage' },
-        { key: '/releases/reviews', icon: <CheckSquare style={iconStyle} />, label: '发布评审', path: '/releases/reviews', permission: 'release:approve' },
-        { key: '/releases/history', icon: <History style={iconStyle} />, label: '发布历史', path: '/releases/history', permission: 'release:read' },
+        { key: '/releases', icon: <Rocket style={iconStyle} />, label: '发布列表', path: '/releases', permission: 'release:read' },
+        { key: '/releases/new', icon: <Plus style={iconStyle} />, label: '新建发布', path: '/releases/new', permission: 'release:write' },
       ],
     },
   ],

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   Button,
@@ -301,11 +301,7 @@ const TicketTemplatesPage = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  useEffect(() => {
-    loadTemplates();
-  }, []);
-
-  const loadTemplates = async () => {
+  const loadTemplates = useCallback(async () => {
     setLoading(true);
     try {
       // 调用实际API
@@ -315,15 +311,65 @@ const TicketTemplatesPage = () => {
         page_size: 100,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
       });
-      setTemplates(response.items as unknown as TicketTemplate[]);
+
+      // 将API响应转换为组件期望的格式
+      const apiTemplates: TicketTemplate[] = (response.items || []).map((item: {
+        id: number;
+        name: string;
+        description: string;
+        category: string;
+        content?: Record<string, unknown>;
+        created_at?: string;
+        updated_at?: string;
+      }) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        type: (item.content?.type as string) || item.category?.toLowerCase() || 'incident',
+        category: item.category,
+        subcategory: item.content?.subcategory as string || undefined,
+        priority: (item.content?.priority as string) || 'medium',
+        estimatedTime: (item.content?.estimatedTime as string) || '1 hour',
+        sla: (item.content?.sla as string) || '4 hours',
+        slaType: (item.content?.slaType as 'hours' | 'days' | 'business_hours') || 'hours',
+        impact: (item.content?.impact as string) || 'individual',
+        urgency: (item.content?.urgency as string) || 'medium',
+        businessValue: (item.content?.businessValue as string) || 'medium',
+        source: (item.content?.source as string) || 'web',
+        assigneeGroup: item.content?.assigneeGroup as string || undefined,
+        autoAssign: (item.content?.autoAssign as boolean) || false,
+        requiresApproval: (item.content?.requiresApproval as boolean) || false,
+        approvalLevel: (item.content?.approvalLevel as string) || 'none',
+        customFields: (item.content?.customFields as CustomField[]) || [],
+        tags: (item.content?.tags as string[]) || [],
+        isActive: true,
+        isPublic: true,
+        createdBy: 'System',
+        createdAt: item.created_at || new Date().toISOString(),
+        updatedAt: item.updated_at || new Date().toISOString(),
+        usageCount: 0,
+        rating: 4.0,
+        version: '1.0',
+        icon: <FileText size={20} />,
+        color: item.category === 'System Access' ? 'red' : item.category === 'Hardware Equipment' ? 'orange' : 'blue',
+      }));
+
+      setTemplates(apiTemplates);
     } catch (error) {
-      console.error('Failed to load templates:', error);
-      message.error('加载模板失败');
-      setTemplates([]);
+      console.error('Failed to load templates, using local data:', error);
+      // API失败时使用本地静态数据作为fallback
+      const localTemplates = templateCategories
+        .filter(cat => selectedCategory === 'all' || cat.key === selectedCategory)
+        .flatMap(cat => cat.templates);
+      setTemplates(localTemplates as TicketTemplate[]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    loadTemplates();
+  }, [loadTemplates]);
 
   const handleCreateTemplate = () => {
     setEditingTemplate(null);
