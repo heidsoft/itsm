@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, theme, Badge } from 'antd';
+import { Layout, Menu, theme, Badge, message } from 'antd';
 import {
   LayoutDashboard,
   FileText,
@@ -351,11 +351,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   const { t } = useI18n();
   // 手动触发 auth store 的 hydration
   useAuthStoreHydration();
-  const MENU_CONFIG = getMenuConfig(t);
 
   // 动态菜单状态
   const [dynamicMenus, setDynamicMenus] = useState<MenuTreeResponse | null>(null);
   const [menuLoading, setMenuLoading] = useState(false);
+  const [menuError, setMenuError] = useState<string | null>(null);
 
   // 加载用户菜单
   useEffect(() => {
@@ -364,12 +364,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
 
       try {
         setMenuLoading(true);
+        setMenuError(null);
         const menus = await getUserMenus();
         if (menus && (menus.main?.length > 0 || menus.admin?.length > 0)) {
           setDynamicMenus(menus);
+        } else {
+          setMenuError('菜单加载失败，请刷新页面重试');
         }
       } catch (error) {
-        console.warn('Failed to load dynamic menus, using fallback:', error);
+        console.error('Failed to load dynamic menus:', error);
+        setMenuError('菜单加载失败，请刷新页面重试');
       } finally {
         setMenuLoading(false);
       }
@@ -426,16 +430,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
     return iconMap[iconName];
   };
 
-  // 确定使用哪个菜单配置 - 优先使用数据库动态菜单
-  const useDynamicMenu = !!dynamicMenus;
-  const mainMenus = useDynamicMenu ? convertApiMenuToSidebar(dynamicMenus.main) : MENU_CONFIG.main;
-  const adminMenus = useDynamicMenu ? convertApiMenuToSidebar(dynamicMenus.admin) : MENU_CONFIG.admin;
+  // 转换动态菜单
+  const mainMenus = dynamicMenus ? convertApiMenuToSidebar(dynamicMenus.main) : [];
+  const adminMenus = dynamicMenus ? convertApiMenuToSidebar(dynamicMenus.admin) : [];
 
   const handleMenuClick = ({ key }: { key: string }) => {
     router.push(key);
   };
 
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+
+  // 显示错误提示
+  useEffect(() => {
+    if (menuError) {
+      message.error(menuError);
+    }
+  }, [menuError]);
 
   // 渲染菜单项，支持徽章和描述
   const renderMenuItems = (items: MenuItem[]) => {
