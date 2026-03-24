@@ -28,7 +28,8 @@ func NewSequenceService(host string, port int, password string, db int, logger *
 	defer cancel()
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		logger.Warnw("Redis connection failed, sequence service will use fallback", "error", err)
-		// 不返回错误，降级到备用方案
+		rdb.Close()
+		return nil // 返回nil，让上层使用数据库回退
 	}
 
 	return &SequenceService{
