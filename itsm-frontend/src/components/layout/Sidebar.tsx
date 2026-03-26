@@ -430,9 +430,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
     return iconMap[iconName];
   };
 
-  // 转换动态菜单
-  const mainMenus = dynamicMenus ? convertApiMenuToSidebar(dynamicMenus.main) : [];
-  const adminMenus = dynamicMenus ? convertApiMenuToSidebar(dynamicMenus.admin) : [];
+  // 转换动态菜单（当 API 返回空时使用静态配置作为 fallback）
+  const mainMenus = dynamicMenus
+    ? convertApiMenuToSidebar(dynamicMenus.main)
+    : getMenuConfig(t).main;
+  const adminMenus = dynamicMenus
+    ? convertApiMenuToSidebar(dynamicMenus.admin)
+    : getMenuConfig(t).admin;
 
   const handleMenuClick = ({ key }: { key: string }) => {
     router.push(key);
@@ -450,13 +454,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   // 渲染菜单项，支持徽章和描述
   const renderMenuItems = (items: MenuItem[]) => {
     return items.map(item => {
-      // 如果有子菜单
+      // 如果有子菜单，父菜单也可以点击跳转
       if (item.children) {
         return {
           key: item.key,
           icon: item.icon,
           label: (
-            <div className={styles.menuItemLabel} title={typeof item.description === 'string' ? item.description : typeof item.label === 'string' ? item.label : undefined}>
+            <div 
+              className={styles.menuItemLabel} 
+              title={typeof item.description === 'string' ? item.description : typeof item.label === 'string' ? item.label : undefined}
+              onClick={(e) => {
+                if (item.path) {
+                  e.stopPropagation();
+                  handleMenuClick({ key: item.path });
+                }
+              }}
+            >
               <span className="truncate">{item.label}</span>
             </div>
           ),
@@ -520,7 +533,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       <div className={styles.mainMenu} style={{ flex: 1, overflowY: 'auto' }}>
         <Menu
           mode="inline"
-          inlineIndent={24}
+          inlineIndent={16}
           selectedKeys={[pathname]}
           className={styles.customMenu}
           items={renderMenuItems(mainMenus)}
@@ -535,7 +548,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           <div className={styles.adminMenu}>
             <Menu
               mode="inline"
-              inlineIndent={24}
+              inlineIndent={16}
               selectedKeys={[pathname]}
               className={styles.customMenu}
               items={renderMenuItems(adminMenus)}
