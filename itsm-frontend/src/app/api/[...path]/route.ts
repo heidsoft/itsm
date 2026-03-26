@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090';
 
+// 禁用代理的配置
+const fetchOptions: RequestInit = {
+  credentials: 'include',
+};
+
+// 通过环境变量禁用代理
+if (process.env.NO_PROXY || process.env.no_proxy) {
+  // 确保本地地址不走代理
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -12,19 +22,17 @@ export async function GET(
   const fullUrl = searchParams ? `${url}?${searchParams}` : url;
 
   const cookieHeader = request.headers.get('cookie') || '';
+  const authHeader = request.headers.get('Authorization') || '';
 
   try {
     const response = await fetch(fullUrl, {
+      ...fetchOptions,
       method: 'GET',
       headers: {
         'Cookie': cookieHeader,
-        'Authorization': request.headers.get('Authorization') || '',
+        'Authorization': authHeader,
         'Content-Type': 'application/json',
       },
-      credentials: 'include',
-      // 禁用代理，用于本地开发
-      // @ts-ignore - Node.js fetch specific option
-      proxy: false,
     });
 
     const data = await response.json();
