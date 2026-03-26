@@ -212,15 +212,31 @@
   text-transform: capitalize;
 }
 
-/* 修复子菜单缩进问题 */
+/* 修复子菜单缩进问题 - 父子菜单对齐 */
 .customMenu :global(.ant-menu-submenu-title) {
   padding-left: 12px !important;
 }
 
 .customMenu :global(.ant-menu-item) {
-  padding-left: 28px !important;
+  padding-left: 16px !important;
+}
+
+/* 子菜单项缩进 */
+.customMenu :global(.ant-menu-sub) .customMenu :global(.ant-menu-item) {
+  padding-left: 24px !important;
+}
+
+/* 三级菜单进一步缩进 */
+.customMenu :global(.ant-menu-sub-sub) .customMenu :global(.ant-menu-item) {
+  padding-left: 32px !important;
 }
 
 .customMenu :global(.ant-menu-submenu-arrow) {
   right: 8px !important;
+}
+
+/* 菜单项间距 */
+.customMenu :global(.ant-menu-item),
+.customMenu :global(.ant-menu-submenu-title) {
+  margin: 2px 0 !important;
 }
