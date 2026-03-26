@@ -312,6 +312,24 @@ func (s *ProcessBindingService) InitDefaultBindings(ctx context.Context, tenantI
 			IsDefault:            true,
 			IsActive:             true,
 		},
+		// 发布审批流程
+		{
+			BusinessType:         dto.BusinessTypeRelease,
+			BusinessSubType:      "",
+			ProcessDefinitionKey: "release_approval_flow",
+			Priority:             10,
+			IsDefault:            true,
+			IsActive:             true,
+		},
+		// 工单分配流程
+		{
+			BusinessType:         dto.BusinessTypeTicket,
+			BusinessSubType:      "assignment",
+			ProcessDefinitionKey: "ticket_assignment_flow",
+			Priority:             20,
+			IsDefault:            false,
+			IsActive:             true,
+		},
 	}
 
 	for _, binding := range defaultBindings {

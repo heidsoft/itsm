@@ -11,6 +11,7 @@ const (
 	BusinessTypeIncident       BusinessType = "incident"        // 事件
 	BusinessTypeServiceRequest BusinessType = "service_request" // 服务请求
 	BusinessTypeProblem        BusinessType = "problem"         // 问题
+	BusinessTypeRelease        BusinessType = "release"         // 发布
 )
 
 // ProcessStatus 流程状态

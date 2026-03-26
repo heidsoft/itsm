@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="release_approval_flow" name="发布审批流程" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">release</bpmn:metaData>
+      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">软件发布审批管理流程</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- 开始事件：发布申请 -->
+    <bpmn:startEvent id="StartEvent_1" name="发布申请">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- 技术评审 -->
+    <bpmn:userTask id="Activity_TechReview" name="技术评审">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">release_task</bpmn:metaData>
+        <bpmn:metaData name="action">tech_review</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 技术评审结果判断 -->
+    <bpmn:exclusiveGateway id="Gateway_TechResult" name="评审通过?">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_Approval</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 发布审批 -->
+    <bpmn:userTask id="Activity_Approval" name="发布审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">release_task</bpmn:metaData>
+        <bpmn:metaData name="action">approval</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Approval</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 审批结果判断 -->
+    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="审批结果?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_Schedule</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 计划发布 -->
+    <bpmn:userTask id="Activity_Schedule" name="计划发布">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">release_task</bpmn:metaData>
+        <bpmn:metaData name="action">schedule</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Schedule</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 执行发布 -->
+    <bpmn:userTask id="Activity_Execute" name="执行发布">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">release_task</bpmn:metaData>
+        <bpmn:metaData name="action">execute</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 验证确认 -->
+    <bpmn:userTask id="Activity_Verify" name="验证确认">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">release_task</bpmn:metaData>
+        <bpmn:metaData name="action">verify</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_Complete</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 结束事件：发布完成 -->
+    <bpmn:endEvent id="EndEvent_Complete" name="发布完成">
+      <bpmn:incoming>Flow_Complete</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 拒绝发布 -->
+    <bpmn:endEvent id="EndEvent_Reject" name="发布拒绝">
+      <bpmn:incoming>Flow_Reject</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 连线定义 -->
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_TechReview" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_TechReview" targetRef="Gateway_TechResult" />
+    <bpmn:sequenceFlow id="Flow_Approval" sourceRef="Gateway_TechResult" targetRef="Activity_Approval">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <bpmn:body>${variables['tech_review_pass'] == true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Reject" sourceRef="Gateway_TechResult" targetRef="EndEvent_Reject">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <bpmn:body>${variables['tech_review_pass'] != true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Approval" targetRef="Gateway_ApprovalResult" />
+    <bpmn:sequenceFlow id="Flow_Schedule" sourceRef="Gateway_ApprovalResult" targetRef="Activity_Schedule">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <bpmn:body>${variables['approval_pass'] == true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_Schedule" targetRef="Activity_Execute" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Activity_Execute" targetRef="Activity_Verify" />
+    <bpmn:sequenceFlow id="Flow_Complete" sourceRef="Activity_Verify" targetRef="EndEvent_Complete" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="release_approval_flow">
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
