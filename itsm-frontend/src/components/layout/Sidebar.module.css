@@ -211,3 +211,16 @@
   color: #6b7280;
   text-transform: capitalize;
 }
+
+/* 修复子菜单缩进问题 */
+.customMenu :global(.ant-menu-submenu-title) {
+  padding-left: 12px !important;
+}
+
+.customMenu :global(.ant-menu-item) {
+  padding-left: 28px !important;
+}
+
+.customMenu :global(.ant-menu-submenu-arrow) {
+  right: 8px !important;
+}
