@@ -416,6 +416,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 				// 事件操作
 				inc.POST("/:id/escalate", middleware.RequirePermission("incident", "write"), config.IncidentController.EscalateIncident)
+				inc.POST("/:id/convert-to-problem", middleware.RequirePermission("incident", "write"), config.IncidentController.ConvertToProblem)
 				inc.GET("/:id/impact", middleware.RequirePermission("incident", "read"), config.IncidentController.AnalyzeIncidentImpact)
 
 				// 关联数据

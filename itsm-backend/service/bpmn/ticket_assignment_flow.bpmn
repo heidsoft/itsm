@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="ticket_assignment_flow" name="工单分配流程" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">ticket</bpmn:metaData>
+      <bpmn:metaData name="sub_category">assignment</bpmn:metaData>
+      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">工单自动分配处理流程</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- 开始事件：工单创建 -->
+    <bpmn:startEvent id="StartEvent_1" name="工单创建">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- 自动分配任务 -->
+    <bpmn:serviceTask id="Activity_AutoAssign" name="自动分配" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">auto_assign</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 判断分配结果 -->
+    <bpmn:exclusiveGateway id="Gateway_AssignResult" name="分配成功?">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_ManualAssign</bpmn:outgoing>
+      <bpmn:outgoing>Flow_NotifyAssign</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 手动分配 -->
+    <bpmn:userTask id="Activity_ManualAssign" name="手动分配">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">manual_assign</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ManualAssign</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotifyAssign</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 通知处理人 -->
+    <bpmn:serviceTask id="Activity_NotifyAssignee" name="通知处理人" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">notify_assignee</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_NotifyAssign</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- SLA判断 -->
+    <bpmn:exclusiveGateway id="Gateway_SLA" name="是否SLA超时?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_SLAWarn</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Complete</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- SLA告警 -->
+    <bpmn:serviceTask id="Activity_SLAWarn" name="SLA超时告警" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">sla_warning</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SLAWarn</bpmn:incoming>
+      <bpmn:outgoing>Flow_Complete</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 结束事件：分配完成 -->
+    <bpmn:endEvent id="EndEvent_Complete" name="分配完成">
+      <bpmn:incoming>Flow_Complete</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 连线定义 -->
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_AutoAssign" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_AutoAssign" targetRef="Gateway_AssignResult" />
+    <bpmn:sequenceFlow id="Flow_ManualAssign" sourceRef="Gateway_AssignResult" targetRef="Activity_ManualAssign">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <bpmn:body>${variables['assign_success'] == false}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_NotifyAssign" sourceRef="Gateway_AssignResult" targetRef="Activity_NotifyAssignee">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <bpmn:body>${variables['assign_success'] == true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_NotifyAssignee" targetRef="Gateway_SLA" />
+    <bpmn:sequenceFlow id="Flow_SLAWarn" sourceRef="Gateway_SLA" targetRef="Activity_SLAWarn">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <bpmn:body>${variables['sla_warning'] == true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Complete" sourceRef="Gateway_SLA" targetRef="EndEvent_Complete">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <bpmn:body>${variables['sla_warning'] != true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ticket_assignment_flow">
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

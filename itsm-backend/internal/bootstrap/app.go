@@ -180,7 +180,8 @@ func NewApplication() *Application {
 	ticketCommentService.SetNotificationService(ticketNotificationService)
 	ticketRatingService.SetNotificationService(ticketNotificationService)
 
-	incidentController := controller.NewIncidentController(incidentService, incidentRuleEngine, incidentMonitoringService, incidentAlertingService, sugar)
+	rootCauseAnalysisService := service.NewRootCauseAnalysisService(client)
+	incidentController := controller.NewIncidentController(incidentService, incidentRuleEngine, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, sugar)
 	approvalController := controller.NewApprovalController(approvalService)
 
 	serviceController := controller.NewServiceController(serviceCatalogService, serviceRequestService)
