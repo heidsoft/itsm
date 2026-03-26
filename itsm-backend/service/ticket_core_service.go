@@ -302,7 +302,8 @@ func (s *TicketCoreService) generateTicketNumberWithRedis(ctx context.Context, y
 	seq, err := s.sequenceService.GetNextSequenceWithExpiry(ctx, key, expiredAt)
 	if err != nil {
 		s.logger.Warnw("Redis sequence failed, fallback to DB", "error", err)
-		return "", err
+		// 实际 fallback 到 DB
+		return s.generateTicketNumberWithDB(ctx, 1, year, month)
 	}
 
 	// 格式: TKT-YYYYMM-NNNNNN
@@ -311,19 +312,35 @@ func (s *TicketCoreService) generateTicketNumberWithRedis(ctx context.Context, y
 
 // generateTicketNumberWithDB 使用数据库查询生成工单编号（备用方案）
 func (s *TicketCoreService) generateTicketNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
-	count, err := s.client.Ticket.Query().
+	// 获取当月最大工单编号的序列号，避免并发重复
+	tickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
-			ticket.CreatedAtGTE(time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)),
-			ticket.CreatedAtLT(time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.Local)),
+			ticket.TicketNumberContains(fmt.Sprintf("TKT-%04d%02d", year, month)),
 		).
-		Count(ctx)
+		Order(ent.Desc(ticket.FieldTicketNumber)).
+		Limit(1).
+		All(ctx)
+	
+	var maxSeq int
 	if err != nil {
-		s.logger.Errorw("Count failed", "error", err)
-		return "", fmt.Errorf("查询失败: %w", err)
+		s.logger.Warnw("Query max ticket number failed, using 0", "error", err)
+		maxSeq = 0
+	} else if len(tickets) > 0 {
+		// 解析 ticket_number 提取序列号，格式: TKT-YYYYMM-NNNNNN
+		ticketNum := tickets[0].TicketNumber
+		// 找到最后一个 "-" 后的数字部分
+		if idx := len(ticketNum) - 1; idx > 0 {
+			for i := len(ticketNum) - 1; i >= 0; i-- {
+				if ticketNum[i] == '-' {
+					fmt.Sscanf(ticketNum[i+1:], "%d", &maxSeq)
+					break
+				}
+			}
+		}
 	}
 
-	return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, count+1), nil
+	return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, maxSeq+1), nil
 }
 
 func (s *TicketCoreService) validateRequester(ctx context.Context, userID, tenantID int) error {

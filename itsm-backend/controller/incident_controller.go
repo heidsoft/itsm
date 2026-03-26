@@ -14,11 +14,12 @@ import (
 )
 
 type IncidentController struct {
-	incidentService   *service.IncidentService
-	ruleEngine        *service.IncidentRuleEngine
-	monitoringService *service.IncidentMonitoringService
-	alertingService   *service.IncidentAlertingService
-	logger            *zap.SugaredLogger
+	incidentService           *service.IncidentService
+	ruleEngine                *service.IncidentRuleEngine
+	monitoringService         *service.IncidentMonitoringService
+	alertingService            *service.IncidentAlertingService
+	rootCauseAnalysisService  *service.RootCauseAnalysisService
+	logger                    *zap.SugaredLogger
 }
 
 func NewIncidentController(
@@ -26,14 +27,16 @@ func NewIncidentController(
 	ruleEngine *service.IncidentRuleEngine,
 	monitoringService *service.IncidentMonitoringService,
 	alertingService *service.IncidentAlertingService,
+	rootCauseAnalysisService *service.RootCauseAnalysisService,
 	logger *zap.SugaredLogger,
 ) *IncidentController {
 	return &IncidentController{
-		incidentService:   incidentService,
-		ruleEngine:        ruleEngine,
-		monitoringService: monitoringService,
-		alertingService:   alertingService,
-		logger:            logger,
+		incidentService:           incidentService,
+		ruleEngine:                ruleEngine,
+		monitoringService:         monitoringService,
+		alertingService:           alertingService,
+		rootCauseAnalysisService:  rootCauseAnalysisService,
+		logger:                    logger,
 	}
 }
 
@@ -771,4 +774,45 @@ func (c *IncidentController) GetAlertStatistics(ctx *gin.Context) {
 	}
 
 	common.SuccessWithMessage(ctx, "获取告警统计成功", statistics)
+}
+
+// ConvertToProblem 将事件转换为问题
+// @Summary 将事件转换为问题
+// @Description 将指定的事件转换为问题记录
+// @Tags incidents
+// @Accept json
+// @Produce json
+// @Param id path int true "事件ID"
+// @Param request body dto.ConvertIncidentToProblemRequest true "转换请求"
+// @Success 200 {object} common.Response{data=ent.Problem}
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/convert-to-problem [post]
+func (c *IncidentController) ConvertToProblem(ctx *gin.Context) {
+	incidentID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+
+	var req dto.ConvertIncidentToProblemRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取用户ID失败")
+		return
+	}
+
+	problem, err := c.rootCauseAnalysisService.CreateProblemFromIncident(ctx.Request.Context(), incidentID, userID)
+	if err != nil {
+		c.logger.Errorw("Failed to convert incident to problem", "error", err, "incident_id", incidentID)
+		common.Fail(ctx, common.InternalErrorCode, "转换失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, problem)
 }

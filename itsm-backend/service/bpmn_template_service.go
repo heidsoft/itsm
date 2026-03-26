@@ -103,6 +103,11 @@ func (s *BPMNTemplateService) listTemplates() ([]*TemplateInfo, error) {
 			info.Name = "通用工单流程"
 			info.Category = "ticket"
 			info.Description = "通用工单处理流程"
+		case "ticket_assignment_flow":
+			info.Name = "工单分配流程"
+			info.Category = "ticket"
+			info.SubCategory = "assignment"
+			info.Description = "工单自动分配处理流程"
 		case "change_normal_flow":
 			info.Name = "普通变更流程"
 			info.Category = "change"
@@ -125,6 +130,10 @@ func (s *BPMNTemplateService) listTemplates() ([]*TemplateInfo, error) {
 			info.Name = "问题管理流程"
 			info.Category = "problem"
 			info.Description = "问题管理全流程"
+		case "release_approval_flow":
+			info.Name = "发布审批流程"
+			info.Category = "release"
+			info.Description = "软件发布审批管理流程"
 		default:
 			info.Name = key
 			info.Category = "default"
