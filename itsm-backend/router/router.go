@@ -446,6 +446,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				sc.GET("/:id", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.Get)
 				sc.PUT("/:id", middleware.RequirePermission("service_catalog", "write"), config.ServiceCatalogHandler.Update)
 				sc.DELETE("/:id", middleware.RequirePermission("service_catalog", "delete"), config.ServiceCatalogHandler.Delete)
+				// 服务项
+				sc.GET("/:id/services", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.List)
+				sc.POST("/:id/services", middleware.RequirePermission("service_catalog", "write"), config.ServiceCatalogHandler.Create)
+			}
+			// 简化的服务项路由
+			scServices := tenant.(*gin.RouterGroup).Group("/service-catalog-services")
+			{
+				scServices.GET("", config.ServiceCatalogHandler.List)
+				scServices.GET("/:id", config.ServiceCatalogHandler.Get)
 			}
 		}
 
@@ -879,6 +888,21 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			config.BPMNWorkflowController.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
+		// 简化路由：/workflow/* -> /bpmn/*
+		workflow := tenant.(*gin.RouterGroup).Group("/workflow")
+		{
+			workflow.GET("/instances", config.BPMNWorkflowController.ListProcessInstances)
+			workflow.GET("/instances/:id", config.BPMNWorkflowController.GetProcessInstance)
+			workflow.POST("/instances", config.BPMNWorkflowController.StartProcess)
+			workflow.PUT("/instances/:id/terminate", config.BPMNWorkflowController.TerminateProcess)
+			workflow.PUT("/instances/:id/suspend", config.BPMNWorkflowController.SuspendProcess)
+			workflow.PUT("/instances/:id/resume", config.BPMNWorkflowController.ResumeProcess)
+			// 任务
+			workflow.GET("/tasks", config.BPMNWorkflowController.ListUserTasks)
+			workflow.POST("/tasks/:id/complete", config.BPMNWorkflowController.CompleteTask)
+			workflow.POST("/tasks/:id/claim", config.BPMNWorkflowController.ClaimTask)
+		}
+
 		// BPMN Process Trigger Controller (统一流程触发接口)
 		if config.BPMNProcessTriggerController != nil {
 			config.BPMNProcessTriggerController.RegisterRoutes(tenant.(*gin.RouterGroup))
@@ -922,6 +946,29 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				dashboard.GET("/quick-actions", config.DashboardHandler.GetQuickActions)
 				dashboard.GET("/recent-activities", config.DashboardHandler.GetRecentActivities)
 			}
+		}
+
+		// ==================== Reports 报表 ====================
+		reports := tenant.(*gin.RouterGroup).Group("/reports")
+		{
+			reports.GET("", func(c *gin.Context) {
+				common.Success(c, gin.H{
+					"reports": []gin.H{
+						{"id": "tickets", "name": "工单报表", "path": "/reports/tickets"},
+						{"id": "incidents", "name": "事件报表", "path": "/reports/incidents"},
+						{"id": "problems", "name": "问题报表", "path": "/reports/problems"},
+						{"id": "changes", "name": "变更报表", "path": "/reports/changes"},
+						{"id": "sla", "name": "SLA报表", "path": "/reports/sla"},
+						{"id": "cmdb-quality", "name": "CMDB质量报表", "path": "/reports/cmdb-quality"},
+						{"id": "catalog-usage", "name": "服务目录使用报表", "path": "/reports/catalog-usage"},
+					},
+				})
+			})
+			reports.GET("/tickets", config.DashboardHandler.GetStats)
+			reports.GET("/incidents", config.DashboardHandler.GetIncidentDistribution)
+			reports.GET("/problems", config.DashboardHandler.GetTicketTrend)
+			reports.GET("/changes", config.DashboardHandler.GetTicketTrend)
+			reports.GET("/sla", config.DashboardHandler.GetSLAData)
 		}
 	}
 }
