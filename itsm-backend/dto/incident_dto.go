@@ -318,3 +318,10 @@ type IncidentStatsResponse struct {
 	MTTA              float64 `json:"mtta"` // Mean Time To Acknowledge
 	MTTR              float64 `json:"mttr"` // Mean Time To Resolve
 }
+
+// ConvertIncidentToProblemRequest 将事件转换为问题的请求
+type ConvertIncidentToProblemRequest struct {
+	Title       string `json:"title" binding:"omitempty"`       // 可选自定义标题
+	Description string `json:"description" binding:"omitempty"` // 可选自定义描述
+	RootCause   string `json:"root_cause" binding:"omitempty"` // 根因分析
+}

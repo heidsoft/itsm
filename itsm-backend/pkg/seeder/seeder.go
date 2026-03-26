@@ -26,6 +26,11 @@ import (
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
+	"itsm-backend/ent/assetlicense"
+	"itsm-backend/ent/knownerror"
+	"itsm-backend/ent/release"
+	"itsm-backend/ent/standardchange"
+	"itsm-backend/ent/tag"
 	"itsm-backend/service"
 
 	"go.uber.org/zap"
@@ -35,11 +40,16 @@ import (
 
 // Force import usage for ent packages (use predicate functions)
 var (
-	_ = incident.TitleEQ   // Used to ensure incident package is imported
-	_ = problem.TitleEQ     // Used to ensure problem package is imported
-	_ = change.TitleEQ     // Used to ensure change package is imported
+	_ = incident.TitleEQ       // Used to ensure incident package is imported
+	_ = problem.TitleEQ        // Used to ensure problem package is imported
+	_ = change.TitleEQ         // Used to ensure change package is imported
 	_ = knowledgearticle.TitleEQ // Used to ensure knowledgearticle package is imported
-	_ = ticketcategory.NameEQ    // Used to ensure ticketcategory package is imported
+	_ = ticketcategory.NameEQ  // Used to ensure ticketcategory package is imported
+	_ = knownerror.TitleEQ     // Used to ensure knownerror package is imported
+	_ = standardchange.TitleEQ // Used to ensure standardchange package is imported
+	_ = tag.NameEQ             // Used to ensure tag package is imported
+	_ = assetlicense.NameEQ    // Used to ensure assetlicense package is imported
+	_ = release.TitleEQ        // Used to ensure release package is imported
 )
 
 // SeedConfig 种子数据配置结构
@@ -59,6 +69,10 @@ type SeedConfig struct {
 	Changes            []ChangeSeed            `json:"changes"`
 	KnowledgeArticles []KnowledgeArticleSeed  `json:"knowledge_articles"`
 	IncidentCategories []TicketCategorySeed    `json:"incident_categories"`
+	// 新增：标准变更模板、已知错误、标签种子数据
+	StandardChanges   []StandardChangeSeed   `json:"standard_changes"`
+	KnownErrors      []KnownErrorSeed      `json:"known_errors"`
+	TicketTags       []TicketTagSeed       `json:"ticket_tags"`
 	// 工作流种子配置
 	SeedWorkflows      bool                    `json:"seed_workflows"`
 }
@@ -176,6 +190,47 @@ type KnowledgeArticleSeed struct {
 type TicketCategorySeed struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+}
+
+// StandardChangeSeed 标准变更模板种子数据结构
+type StandardChangeSeed struct {
+	Title              string   `json:"title"`
+	Description        string   `json:"description"`
+	ImplementationPlan string   `json:"implementation_plan"`
+	RollbackPlan       string   `json:"rollback_plan"`
+	Justification      string   `json:"justification"`
+	Category           string   `json:"category"`
+	RiskLevel          string   `json:"risk_level"`
+	ImpactScope        string   `json:"impact_scope"`
+	ExpectedDuration    int      `json:"expected_duration"`
+	ApprovalRequired   bool     `json:"approval_required"`
+	AffectedCIs        []string `json:"affected_cis"`
+	Prerequisites      []string `json:"prerequisites"`
+	Remarks            string   `json:"remarks"`
+}
+
+// KnownErrorSeed 已知错误种子数据结构
+type KnownErrorSeed struct {
+	Title            string   `json:"title"`
+	Description      string   `json:"description"`
+	Symptoms         string   `json:"symptoms"`
+	RootCause        string   `json:"root_cause"`
+	Workaround       string   `json:"workaround"`
+	Resolution       string   `json:"resolution"`
+	Status           string   `json:"status"`
+	Category         string   `json:"category"`
+	Severity         string   `json:"severity"`
+	AffectedProducts []string `json:"affected_products"`
+	AffectedCIs      []string `json:"affected_cis"`
+	Keywords         []string `json:"keywords"`
+}
+
+// TicketTagSeed 标签种子数据结构
+type TicketTagSeed struct {
+	Name        string `json:"name"`
+	Code        string `json:"code"`
+	Description string `json:"description"`
+	Color       string `json:"color"`
 }
 
 // Seeder manages database seeding operations
@@ -382,6 +437,9 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedProblems(ctx)           // 新增：初始化问题数据
 	s.seedChanges(ctx)            // 新增：初始化变更数据
 	s.seedKnowledgeArticles(ctx)  // 新增：初始化知识库文章
+	s.seedStandardChanges(ctx)    // 新增：初始化标准变更模板
+	s.seedKnownErrors(ctx)        // 新增：初始化已知错误
+	s.seedTicketTags(ctx)         // 新增：初始化标签
 	s.seedMenuAndPermissionFixes(ctx) // 修复：更新菜单路径和补充缺失权限
 }
 
@@ -649,11 +707,133 @@ func (s *Seeder) seedAssets(ctx context.Context) {
 }
 
 func (s *Seeder) seedAssetLicenses(ctx context.Context) {
-	// 保留原有实现...
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip asset licenses seed", "error", err)
+		return
+	}
+
+	// 检查是否已有许可证数据
+	existing, err := s.client.AssetLicense.Query().Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to query asset licenses; skip seed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("asset licenses already seeded", "count", existing)
+		return
+	}
+
+	// 默认许可证种子数据
+	licenses := []struct {
+		Name            string
+		Vendor         string
+		LicenseType    string
+		TotalQuantity  int
+		UsedQuantity   int
+		Status         string
+		PurchaseDate   string
+		ExpiryDate     string
+		Description    string
+	}{
+		{"Microsoft Office 365 E3", "Microsoft", "subscription", 100, 75, "active", "2024-01-15", "2025-01-15", "Office 365 企业版订阅"},
+		{"Adobe Creative Cloud", "Adobe", "per-seat", 50, 35, "active", "2024-02-20", "2025-02-20", "Adobe创意套件许可证"},
+		{"VMware vSphere Enterprise", "VMware", "perpetual", 10, 8, "active", "2022-06-01", "", "VMware虚拟化平台许可证"},
+		{"Slack Enterprise Grid", "Slack", "per-user", 200, 180, "expiring-soon", "2023-12-01", "2024-12-01", "Slack企业版协作平台"},
+		{"AWS Enterprise Support", "Amazon", "subscription", 1, 1, "active", "2024-03-01", "2025-03-01", "AWS企业级支持服务"},
+		{"Salesforce CRM Enterprise", "Salesforce", "per-user", 30, 28, "active", "2024-01-01", "2025-01-01", "Salesforce客户关系管理系统"},
+		{"Zoom Enterprise", "Zoom", "perpetual", 100, 90, "active", "2023-07-15", "", "Zoom企业视频会议许可证"},
+		{"Jira Software Enterprise", "Atlassian", "perpetual", 50, 42, "expired", "2022-01-01", "2024-01-01", "Jira软件项目管理工具"},
+	}
+
+	for _, lic := range licenses {
+		_, err := s.client.AssetLicense.Create().
+			SetName(lic.Name).
+			SetVendor(lic.Vendor).
+			SetLicenseType(lic.LicenseType).
+			SetTotalQuantity(lic.TotalQuantity).
+			SetUsedQuantity(lic.UsedQuantity).
+			SetStatus(lic.Status).
+			SetPurchaseDate(lic.PurchaseDate).
+			SetExpiryDate(lic.ExpiryDate).
+			SetDescription(lic.Description).
+			SetTenantID(t.ID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed asset license failed", "error", err, "name", lic.Name)
+		}
+	}
+	s.sugar.Infow("asset licenses seeded", "count", len(licenses))
 }
 
 func (s *Seeder) seedReleases(ctx context.Context) {
-	// 保留原有实现...
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip releases seed", "error", err)
+		return
+	}
+
+	// 检查是否已有发布数据
+	existing, err := s.client.Release.Query().Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to query releases; skip seed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("releases already seeded", "count", existing)
+		return
+	}
+
+	// 获取测试用户
+	users, err := s.client.User.Query().Where(user.TenantIDEQ(t.ID)).Limit(1).All(ctx)
+	if err != nil || len(users) == 0 {
+		s.sugar.Warnw("no users found; skip releases seed", "error", err)
+		return
+	}
+	creatorID := users[0].ID
+
+	// 默认发布种子数据
+	releases := []struct {
+		ReleaseNumber   string
+		Title          string
+		Description    string
+		Type           string
+		Status         string
+		Severity       string
+		Environment    string
+		PlannedDate    time.Time
+	}{
+		{"REL-2024-001", "v3.2.0 版本发布", "核心系统版本升级，包含性能优化和新功能", "major", "completed", "high", "production", time.Now().AddDate(0, -1, 0)},
+		{"REL-2024-002", "安全补丁 KB-2024-03", "修复CVE-2024-1234高危漏洞", "hotfix", "completed", "critical", "production", time.Now().AddDate(0, -2, 0)},
+		{"REL-2024-003", "数据库迁移v2.1", "数据库架构升级和索引优化", "minor", "in-progress", "medium", "staging", time.Now().AddDate(0, 0, 7)},
+		{"REL-2024-004", "前端组件库升级", "React组件库升级到最新版本", "minor", "scheduled", "low", "staging", time.Now().AddDate(0, 1, 0)},
+		{"REL-2024-005", "API网关版本更新", "Kong网关升级和配置优化", "patch", "draft", "medium", "dev", time.Now().AddDate(0, 0, 14)},
+	}
+
+	for _, rel := range releases {
+		_, err := s.client.Release.Create().
+			SetReleaseNumber(rel.ReleaseNumber).
+			SetTitle(rel.Title).
+			SetDescription(rel.Description).
+			SetType(rel.Type).
+			SetStatus(rel.Status).
+			SetSeverity(rel.Severity).
+			SetEnvironment(rel.Environment).
+			SetPlannedReleaseDate(rel.PlannedDate).
+			SetCreatedBy(creatorID).
+			SetTenantID(t.ID).
+			SetIsEmergency(false).
+			SetRequiresApproval(true).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed release failed", "error", err, "title", rel.Title)
+		}
+	}
+	s.sugar.Infow("releases seeded", "count", len(releases))
 }
 
 // 以下是使用配置文件的初始化函数
@@ -1122,9 +1302,11 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 
 	// 1. 修复菜单路径
 	menuPathFixes := map[string]string{
-		"/admin/sla":       "/admin/sla-definitions",
-		"/admin/system":   "/admin/system-config",
-		"/admin/workflows": "/workflow",
+		"/admin/sla":               "/admin/sla-definitions",
+		"/admin/system":           "/admin/system-config",
+		"/admin/workflows":        "/workflow",
+		"/admin/tickets/assignment":  "/admin/tickets/assignment-rules",
+		"/admin/tickets/automation":   "/admin/tickets/automation-rules",
 	}
 
 	for oldPath, newPath := range menuPathFixes {
@@ -1585,6 +1767,332 @@ func (s *Seeder) seedChanges(ctx context.Context) {
 		}
 	}
 	s.sugar.Infow("changes seeded", "count", len(changes))
+}
+
+// seedStandardChanges 初始化标准变更模板种子数据
+func (s *Seeder) seedStandardChanges(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip standard changes seed", "error", err)
+		return
+	}
+
+	// 检查是否已有标准变更模板
+	existing, err := s.client.StandardChange.Query().Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to query standard changes; skip seed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("standard changes already seeded", "count", existing)
+		return
+	}
+
+	// 获取测试用户
+	users, err := s.client.User.Query().Where(user.TenantIDEQ(t.ID)).Limit(1).All(ctx)
+	if err != nil || len(users) == 0 {
+		s.sugar.Warnw("no users found; skip standard changes seed", "error", err)
+		return
+	}
+	creatorID := users[0].ID
+
+	// 使用配置中的数据，如果没有配置则使用默认值
+	standardChanges := s.config.StandardChanges
+	if len(standardChanges) == 0 {
+		standardChanges = []StandardChangeSeed{
+			{
+				Title:              "服务器重启",
+				Description:        "标准服务器重启流程，用于常规维护",
+				ImplementationPlan: "1. 通知相关用户\n2. 停止服务\n3. 重启服务器\n4. 验证服务恢复",
+				RollbackPlan:       "如果重启失败，立即回滚到重启前状态",
+				Justification:      "例行维护",
+				Category:           "服务器",
+				RiskLevel:          "low",
+				ImpactScope:        "low",
+				ExpectedDuration:   30,
+				ApprovalRequired:   false,
+				AffectedCIs:        []string{"服务器"},
+				Prerequisites:      []string{"提前通知用户", "备份重要数据"},
+				Remarks:            "仅适用于非关键业务服务器",
+			},
+			{
+				Title:              "SSL证书更新",
+				Description:        "更新即将过期的SSL证书",
+				ImplementationPlan: "1. 申请新证书\n2. 在测试环境验证\n3. 生产环境部署\n4. 验证证书生效",
+				RollbackPlan:       "保留旧证书，发现问题可立即回滚",
+				Justification:      "证书即将过期，必须更新",
+				Category:           "安全",
+				RiskLevel:          "low",
+				ImpactScope:        "low",
+				ExpectedDuration:   60,
+				ApprovalRequired:   false,
+				AffectedCIs:        []string{"负载均衡器", "Web服务器"},
+				Prerequisites:      []string{"新证书已申请", "获取证书文件"},
+				Remarks:            "",
+			},
+			{
+				Title:              "数据库备份",
+				Description:        "执行数据库全量备份",
+				ImplementationPlan: "1. 停止数据库写入\n2. 执行全量备份\n3. 验证备份完整性\n4. 恢复数据库服务",
+				RollbackPlan:       "备份失败时取消备份操作",
+				Justification:      "数据安全要求",
+				Category:           "数据库",
+				RiskLevel:          "low",
+				ImpactScope:        "medium",
+				ExpectedDuration:   120,
+				ApprovalRequired:   false,
+				AffectedCIs:        []string{"数据库服务器"},
+				Prerequisites:      []string{"确认备份存储空间充足", "检查备份工具可用性"},
+				Remarks:            "",
+			},
+			{
+				Title:              "防火墙规则添加",
+				Description:        "添加新的防火墙放行规则",
+				ImplementationPlan: "1. 准备规则变更申请\n2. 在测试环境验证\n3. 生产环境应用新规则\n4. 监控网络流量",
+				RollbackPlan:       "发现异常时立即删除新添加的规则",
+				Justification:      "业务需要开放新端口",
+				Category:           "网络安全",
+				RiskLevel:          "medium",
+				ImpactScope:        "medium",
+				ExpectedDuration:   45,
+				ApprovalRequired:   true,
+				AffectedCIs:        []string{"防火墙", "网络交换机"},
+				Prerequisites:      []string{"已完成安全评估", "相关业务部门确认"},
+				Remarks:            "需安全部门审批",
+			},
+			{
+				Title:              "应用配置更新",
+				Description:        "更新应用程序配置文件中的参数",
+				ImplementationPlan: "1. 备份当前配置\n2. 修改配置参数\n3. 重启应用服务\n4. 验证功能正常",
+				RollbackPlan:       "回滚到备份的配置文件",
+				Justification:      "优化系统性能",
+				Category:           "应用",
+				RiskLevel:          "low",
+				ImpactScope:        "low",
+				ExpectedDuration:   30,
+				ApprovalRequired:   false,
+				AffectedCIs:        []string{"应用服务器"},
+				Prerequisites:      []string{"新配置已测试通过"},
+				Remarks:            "",
+			},
+		}
+	}
+
+	for _, sc := range standardChanges {
+		_, err := s.client.StandardChange.Create().
+			SetTitle(sc.Title).
+			SetDescription(sc.Description).
+			SetImplementationPlan(sc.ImplementationPlan).
+			SetRollbackPlan(sc.RollbackPlan).
+			SetJustification(sc.Justification).
+			SetCategory(sc.Category).
+			SetRiskLevel(sc.RiskLevel).
+			SetImpactScope(sc.ImpactScope).
+			SetExpectedDuration(sc.ExpectedDuration).
+			SetApprovalRequired(sc.ApprovalRequired).
+			SetAffectedCis(sc.AffectedCIs).
+			SetPrerequisites(sc.Prerequisites).
+			SetRemarks(sc.Remarks).
+			SetCreatedBy(creatorID).
+			SetTenantID(t.ID).
+			SetIsActive(true).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed standard change failed", "error", err, "title", sc.Title)
+		}
+	}
+	s.sugar.Infow("standard changes seeded", "count", len(standardChanges))
+}
+
+// seedKnownErrors 初始化已知错误种子数据
+func (s *Seeder) seedKnownErrors(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip known errors seed", "error", err)
+		return
+	}
+
+	// 检查是否已有已知错误
+	existing, err := s.client.KnownError.Query().Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to query known errors; skip seed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("known errors already seeded", "count", existing)
+		return
+	}
+
+	// 获取测试用户
+	users, err := s.client.User.Query().Where(user.TenantIDEQ(t.ID)).Limit(1).All(ctx)
+	if err != nil || len(users) == 0 {
+		s.sugar.Warnw("no users found; skip known errors seed", "error", err)
+		return
+	}
+	creatorID := users[0].ID
+
+	// 使用配置中的数据，如果没有配置则使用默认值
+	knownErrors := s.config.KnownErrors
+	if len(knownErrors) == 0 {
+		knownErrors = []KnownErrorSeed{
+			{
+				Title:            "数据库连接池耗尽",
+				Description:      "应用程序无法获取数据库连接，导致服务不可用",
+				Symptoms:         "错误日志显示 'too many connections'；应用程序响应缓慢或超时",
+				RootCause:        "数据库连接池配置过小，且存在连接泄漏",
+				Workaround:       "1. 重启应用服务释放连接\n2. 临时扩大连接池大小\n3. kill掉泄漏连接的进程",
+				Resolution:       "1. 修复代码中的连接泄漏问题\n2. 调整连接池参数至合理值\n3. 添加连接池监控告警",
+				Status:           "resolved",
+				Category:         "数据库",
+				Severity:         "high",
+				AffectedProducts: []string{"核心业务系统"},
+				AffectedCIs:      []string{"数据库服务器", "应用服务器"},
+				Keywords:         []string{"数据库", "连接池", "too many connections"},
+			},
+			{
+				Title:            "磁盘空间不足",
+				Description:      "服务器磁盘空间不足导致系统无法正常工作",
+				Symptoms:         "写入文件失败；日志报错 'no space left on device'；应用程序崩溃",
+				RootCause:        "日志文件未轮转；临时文件未清理；数据文件增长过快",
+				Workaround:       "1. 清理临时目录\n2. 删除旧日志\n3. 扩容磁盘",
+				Resolution:       "1. 配置日志轮转策略\n2. 设置磁盘空间告警\n3. 定期执行清理任务",
+				Status:           "active",
+				Category:         "系统",
+				Severity:         "critical",
+				AffectedProducts: []string{"所有系统"},
+				AffectedCIs:      []string{"所有服务器"},
+				Keywords:         []string{"磁盘", "空间不足", "no space"},
+			},
+			{
+				Title:            "网络延迟增加",
+				Description:      "网络延迟突然增加，影响业务响应时间",
+				Symptoms:         "用户反馈系统响应慢；监控显示延迟指标上升",
+				RootCause:        "网络设备负载过高；带宽被占用；路由异常",
+				Workaround:       "1. 切换到备份网络链路\n2. 限制非关键业务带宽",
+				Resolution:       "1. 排查网络设备CPU/内存使用率\n2. 检查是否有异常流量\n3. 优化路由配置",
+				Status:           "active",
+				Category:         "网络",
+				Severity:         "medium",
+				AffectedProducts: []string{"所有网络相关服务"},
+				AffectedCIs:      []string{"路由器", "交换机", "防火墙"},
+				Keywords:         []string{"网络", "延迟", "丢包"},
+			},
+			{
+				Title:            "内存泄漏",
+				Description:      "应用程序内存使用持续增长，最终导致OOM",
+				Symptoms:         "内存使用率持续上升；进程被OOM killer终止",
+				RootCause:        "代码中存在内存泄漏；缓存对象未正确释放",
+				Workaround:       "1. 重启应用服务释放内存\n2. 限制单进程最大内存",
+				Resolution:       "1. 使用内存分析工具定位泄漏点\n2. 修复代码中的泄漏问题\n3. 添加内存监控告警",
+				Status:           "resolved",
+				Category:         "应用",
+				Severity:         "high",
+				AffectedProducts: []string{"Java应用", "Node.js应用"},
+				AffectedCIs:      []string{"应用服务器"},
+				Keywords:         []string{"内存", "泄漏", "OOM"},
+			},
+			{
+				Title:            "SSL证书过期",
+				Description:      "SSL证书过期导致HTTPS服务无法访问",
+				Symptoms:         "浏览器显示证书无效警告；HTTPS请求失败",
+				RootCause:        "证书更新流程未执行；证书有效期监控缺失",
+				Workaround:       "使用备份证书或临时HTTP访问",
+				Resolution:       "1. 立即更新SSL证书\n2. 建立证书有效期监控和预警机制\n3. 自动化证书更新流程",
+				Status:           "resolved",
+				Category:         "安全",
+				Severity:         "critical",
+				AffectedProducts: []string{"所有HTTPS服务"},
+				AffectedCIs:      []string{"Web服务器", "负载均衡器"},
+				Keywords:         []string{"SSL", "证书", "过期", "HTTPS"},
+			},
+		}
+	}
+
+	for _, ke := range knownErrors {
+		_, err := s.client.KnownError.Create().
+			SetTitle(ke.Title).
+			SetDescription(ke.Description).
+			SetSymptoms(ke.Symptoms).
+			SetRootCause(ke.RootCause).
+			SetWorkaround(ke.Workaround).
+			SetResolution(ke.Resolution).
+			SetStatus(ke.Status).
+			SetCategory(ke.Category).
+			SetSeverity(ke.Severity).
+			SetAffectedProducts(ke.AffectedProducts).
+			SetAffectedCis(ke.AffectedCIs).
+			SetKeywords(ke.Keywords).
+			SetOccurrenceCount(0).
+			SetCreatedBy(creatorID).
+			SetTenantID(t.ID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed known error failed", "error", err, "title", ke.Title)
+		}
+	}
+	s.sugar.Infow("known errors seeded", "count", len(knownErrors))
+}
+
+// seedTicketTags 初始化标签种子数据
+func (s *Seeder) seedTicketTags(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip ticket tags seed", "error", err)
+		return
+	}
+
+	// 检查是否已有标签
+	existing, err := s.client.Tag.Query().Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to query ticket tags; skip seed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("ticket tags already seeded", "count", existing)
+		return
+	}
+
+	// 使用配置中的数据，如果没有配置则使用默认值
+	ticketTags := s.config.TicketTags
+	if len(ticketTags) == 0 {
+		ticketTags = []TicketTagSeed{
+			{Name: "紧急", Code: "urgent", Description: "紧急处理的问题", Color: "#ff4d4f"},
+			{Name: "重要", Code: "important", Description: "重要但不紧急", Color: "#fa8c16"},
+			{Name: "bug", Code: "bug", Description: "程序缺陷", Color: "#f5222d"},
+			{Name: "功能需求", Code: "feature", Description: "新功能请求", Color: "#1890ff"},
+			{Name: "性能问题", Code: "performance", Description: "系统性能相关", Color: "#722ed1"},
+			{Name: "安全", Code: "security", Description: "安全问题", Color: "#eb2f96"},
+			{Name: "网络", Code: "network", Description: "网络相关问题", Color: "#13c2c2"},
+			{Name: "数据库", Code: "database", Description: "数据库相关问题", Color: "#52c41a"},
+			{Name: "待反馈", Code: "pending-feedback", Description: "等待用户反馈", Color: "#faad14"},
+			{Name: "重复", Code: "duplicate", Description: "重复问题", Color: "#8c8c8c"},
+			{Name: "无法复现", Code: "cannot-reproduce", Description: "无法复现的问题", Color: "#d9d9d9"},
+			{Name: "已解决", Code: "resolved", Description: "已解决的问题", Color: "#52c41a"},
+			{Name: "需要审核", Code: "needs-review", Description: "需要上级审核", Color: "#1677ff"},
+			{Name: "高可用", Code: "high-availability", Description: "高可用相关", Color: "#fa541c"},
+			{Name: "监控告警", Code: "monitoring", Description: "监控和告警相关", Color: "#fa8c16"},
+		}
+	}
+
+	for _, tag := range ticketTags {
+		_, err := s.client.Tag.Create().
+			SetName(tag.Name).
+			SetCode(tag.Code).
+			SetDescription(tag.Description).
+			SetColor(tag.Color).
+			SetTenantID(t.ID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed ticket tag failed", "error", err, "name", tag.Name)
+		}
+	}
+	s.sugar.Infow("ticket tags seeded", "count", len(ticketTags))
 }
 
 // seedKnowledgeArticles 初始化知识库文章种子数据
