@@ -334,7 +334,49 @@ func TestIncidentService_DeleteIncident(t *testing.T) {
 		t.Fatalf("创建测试事件失败: %v", err)
 	}
 
-	// 测试删除事件
+	// 创建关联的 incident_events
+	event1, err := client.IncidentEvent.Create().
+		SetIncidentID(testIncident.ID).
+		SetEventType("creation").
+		SetEventName("事件创建").
+		SetDescription("测试事件已创建").
+		SetStatus("active").
+		SetSeverity("info").
+		SetTenantID(testTenant.ID).
+		SetOccurredAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("创建测试事件记录失败: %v", err)
+	}
+
+	// 创建关联的 incident_alerts
+	alert1, err := client.IncidentAlert.Create().
+		SetIncidentID(testIncident.ID).
+		SetAlertType("sla_breach").
+		SetTitle("SLA告警").
+		SetMessage("即将超过SLA").
+		SetSeverity("high").
+		SetTenantID(testTenant.ID).
+		SetAlertTime(time.Now()).
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("创建测试告警失败: %v", err)
+	}
+
+	// 创建关联的 incident_metrics
+	metric1, err := client.IncidentMetric.Create().
+		SetIncidentID(testIncident.ID).
+		SetMetricType("response_time").
+		SetValue(100).
+		SetUnit("seconds").
+		SetTenantID(testTenant.ID).
+		SetRecordedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("创建测试指标失败: %v", err)
+	}
+
+	// 测试删除事件（应级联删除关联数据）
 	err = service.DeleteIncident(ctx, testIncident.ID, testTenant.ID)
 	if err != nil {
 		t.Fatalf("删除事件失败: %v", err)
@@ -344,6 +386,24 @@ func TestIncidentService_DeleteIncident(t *testing.T) {
 	_, err = service.GetIncident(ctx, testIncident.ID, testTenant.ID)
 	if err == nil {
 		t.Error("期望删除后获取事件时返回错误")
+	}
+
+	// 验证关联的 incident_events 已级联删除
+	_, err = client.IncidentEvent.Get(ctx, event1.ID)
+	if err == nil {
+		t.Error("期望事件记录已被级联删除")
+	}
+
+	// 验证关联的 incident_alerts 已级联删除
+	_, err = client.IncidentAlert.Get(ctx, alert1.ID)
+	if err == nil {
+		t.Error("期望告警已被级联删除")
+	}
+
+	// 验证关联的 incident_metrics 已级联删除
+	_, err = client.IncidentMetric.Get(ctx, metric1.ID)
+	if err == nil {
+		t.Error("期望指标已被级联删除")
 	}
 
 	// 清理测试数据
