@@ -111,7 +111,7 @@ const TicketDashboardPage = () => {
     if (dashboardData?.overview) {
       const o = dashboardData.overview;
       return {
-        totalTickets: o.total_tickets,
+        totalTickets: o.totalTickets,
         pendingTickets: o.pending_tickets,
         resolvedTickets: o.resolved_today,
         avgResponseTime: o.avg_response_time,
