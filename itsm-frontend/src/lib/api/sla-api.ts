@@ -42,17 +42,17 @@ export interface SLAViolation {
   updatedAt?: string;
 }
 
-// SLA合规报告接口
+// SLA合规报告接口 (camelCase - 因为 httpClient 会自动转换)
 export interface SLAComplianceReport {
-  total_tickets: number;
-  met_sla: number;
-  violated_sla: number;
-  compliance_rate: number;
-  avg_response_time: number;
-  avg_resolution_time: number;
-  report_period: {
-    start_date: string;
-    end_date: string;
+  totalTickets: number;
+  metSla: number;
+  violatedSla: number;
+  complianceRate: number;
+  avgResponseTime: number;
+  avgResolutionTime: number;
+  reportPeriod: {
+    startDate: string;
+    endDate: string;
   };
 }
 
@@ -160,33 +160,28 @@ export class SLAApi {
   }
 
   // 获取SLA合规报告
-  // 注意：后端暂无 /api/v1/sla/compliance-report 端点，使用 monitoring 数据转换
+  // 使用后端 /sla/compliance-report 端点
   static async getSLAComplianceReport(params: {
     start_date: string;
     end_date: string;
   }): Promise<SLAComplianceReport> {
-    // 使用监控端点获取汇总数据
-    const monitoring = await httpClient.post('/api/v1/sla/monitoring', {
-      start_time: params.start_date,
-      end_time: params.end_date,
+    // 调用合规报告端点
+    const report = await httpClient.get('/api/v1/sla/compliance-report', {
+      start_date: params.start_date,
+      end_date: params.end_date,
     });
 
-    // 转换为合规报告格式
-    const total_tickets = monitoring.total_tickets || 0;
-    const violated_tickets = monitoring.violated_tickets || 0;
-    const compliant_tickets = total_tickets - violated_tickets;
-    const compliance_rate = total_tickets > 0 ? (compliant_tickets / total_tickets) * 100 : 0;
-
+    // httpClient 会自动将 snake_case 转为 camelCase
     return {
-      total_tickets,
-      met_sla: compliant_tickets,
-      violated_sla: violated_tickets,
-      compliance_rate,
-      avg_response_time: monitoring.average_response_time || 0,
-      avg_resolution_time: monitoring.average_resolution_time || 0,
-      report_period: {
-        start_date: params.start_date,
-        end_date: params.end_date,
+      totalTickets: report.totalTickets || 0,
+      metSla: report.metSla || 0,
+      violatedSla: report.violatedSla || 0,
+      complianceRate: report.complianceRate || 0,
+      avgResponseTime: report.avgResponseTime || 0,
+      avgResolutionTime: report.avgResolutionTime || 0,
+      reportPeriod: {
+        startDate: report.reportPeriod?.startDate || params.start_date,
+        endDate: report.reportPeriod?.endDate || params.end_date,
       },
     };
   }
@@ -197,12 +192,13 @@ export class SLAApi {
   }
 
   // 获取SLA统计信息
+  // 注意：httpClient 会自动将 snake_case 转为 camelCase
   static async getSLAStats(): Promise<{
-    total_definitions: number;
-    active_definitions: number;
-    total_violations: number;
-    open_violations: number;
-    overall_compliance_rate: number;
+    totalDefinitions: number;
+    activeDefinitions: number;
+    totalViolations: number;
+    openViolations: number;
+    overallComplianceRate: number;
   }> {
     return httpClient.get('/api/v1/sla/stats');
   }
@@ -270,6 +266,7 @@ export class SLAApi {
   }
 
   // 获取SLA性能指标
+  // 由于 /sla/metrics 返回空数据，改用 /sla/monitoring 获取
   static async getSLAMetrics(params?: {
     period?: 'day' | 'week' | 'month' | 'quarter';
     service_type?: string;
@@ -277,64 +274,72 @@ export class SLAApi {
     sla_definition_id?: number;
     metric_type?: string;
   }): Promise<{
-    response_time_avg: number;
-    resolution_time_avg: number;
-    compliance_rate: number;
-    violation_count: number;
-    trend_data: Array<{
+    responseTimeAvg: number;
+    resolutionTimeAvg: number;
+    complianceRate: number;
+    violationCount: number;
+    trendData: Array<{
       date: string;
-      compliance_rate: number;
-      avg_response_time: number;
-      avg_resolution_time: number;
+      complianceRate: number;
+      avgResponseTime: number;
+      avgResolutionTime: number;
     }>;
   }> {
-    // 修正: 确保路径与后端一致，后端可能是 /api/v1/sla/metrics
-    return httpClient.get('/api/v1/sla/metrics', params);
+    // 使用 monitoring 端点获取指标数据
+    const monitoring = await httpClient.post('/api/v1/sla/monitoring', {});
+
+    return {
+      responseTimeAvg: monitoring.average_response_time || monitoring.averageResponseTime || 0,
+      resolutionTimeAvg: monitoring.average_resolution_time || monitoring.averageResolutionTime || 0,
+      complianceRate: monitoring.compliance_rate || monitoring.complianceRate || 0,
+      violationCount: monitoring.violated_tickets || monitoring.violatedTickets || 0,
+      trendData: [], // 趋势数据需要从专门的 metrics API 获取
+    };
   }
 
   // 获取SLA预警
+  // 从 monitoring 端点获取实时预警数据
   static async getSLAAlerts(): Promise<
     Array<{
-      ticket_id: number;
       ticketId?: number;
-      ticket_title: string;
+      ticket_id: number;
       ticketTitle?: string;
+      ticket_title: string;
       priority: string;
-      sla_definition: string;
       slaDefinition?: string;
-      time_remaining: number;
+      sla_definition: string;
       timeRemaining?: number;
-      alert_level: 'warning' | 'critical' | 'severe';
+      time_remaining: number;
       alertLevel?: 'warning' | 'critical' | 'severe';
-      created_at: string;
+      alert_level: 'warning' | 'critical' | 'severe';
       createdAt?: string;
+      created_at: string;
     }>
   > {
-    // 修正: 确保路径与后端一致
-    // 注意：后端目前似乎没有直接的 /api/v1/sla/alerts 端点，可能需要从 monitoring 或 alert-history 获取
-    // 这里暂时假设后端会增加此端点，或者我们使用 alert-history 替代
-    // 根据 PRD，告警历史是 /api/v1/sla/alert-history
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const history = await httpClient.get<{ items: unknown[] }>('/api/v1/sla/alert-history', {
-      page: 1,
-      size: 10,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return history.items.map((item: any) => ({
-      ticket_id: item.ticket_id || item.ticketId,
-      ticketId: item.ticketId || item.ticket_id,
-      ticket_title: item.ticket_title || item.ticketTitle || `Ticket #${item.ticket_id || item.ticketId}`,
-      ticketTitle: item.ticketTitle || item.ticket_title || `Ticket #${item.ticket_id || item.ticketId}`,
-      priority: item.priority || 'medium',
-      sla_definition: item.sla_definition || item.slaDefinition || 'SLA',
-      slaDefinition: item.slaDefinition || item.sla_definition || 'SLA',
-      time_remaining: item.time_remaining || item.timeRemaining || 0,
-      timeRemaining: item.timeRemaining || item.time_remaining || 0,
-      alert_level: item.alert_level || item.alertLevel || 'warning',
-      alertLevel: item.alertLevel || item.alert_level || 'warning',
-      created_at: item.created_at || item.createdAt,
-      createdAt: item.createdAt || item.created_at,
-    }));
+    // 从 monitoring 端点获取预警数据
+    const monitoring = await httpClient.post('/api/v1/sla/monitoring', {});
+
+    // 如果有 alerts 则使用，否则返回空数组
+    if (monitoring.alerts && Array.isArray(monitoring.alerts)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return monitoring.alerts.map((item: any) => ({
+        ticket_id: item.ticket_id || item.ticketId || 0,
+        ticketId: item.ticketId || item.ticket_id,
+        ticket_title: item.ticket_title || item.ticketTitle || `Ticket #${item.ticket_id || item.ticketId || 0}`,
+        ticketTitle: item.ticketTitle || item.ticket_title,
+        priority: item.priority || 'medium',
+        sla_definition: item.sla_definition || item.slaDefinition || 'SLA',
+        slaDefinition: item.slaDefinition || item.sla_definition,
+        time_remaining: item.time_remaining || item.timeRemaining || 0,
+        timeRemaining: item.timeRemaining || item.time_remaining,
+        alert_level: item.alert_level || item.alertLevel || 'warning',
+        alertLevel: item.alertLevel || item.alert_level,
+        created_at: item.created_at || item.createdAt || new Date().toISOString(),
+        createdAt: item.createdAt || item.created_at,
+      }));
+    }
+
+    return [];
   }
 
   // 触发SLA监控检查

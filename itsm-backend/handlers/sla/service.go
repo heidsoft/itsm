@@ -140,12 +140,19 @@ func (s *Service) GetSLAStats(ctx context.Context, tenantID int) (map[string]int
 		}
 	}
 
-	// 计算合规率
-	complianceRate := 0.0
-	if len(violations) > 0 {
-		complianceRate = float64(len(violations)-openViolations) / float64(len(violations)) * 100
+	// 计算合规率 - 基于总工单数而非违规数
+	// 从 repository 获取总工单数和达标工单数来计算
+	var complianceRate float64
+	totalTickets, metSLA, err := s.repo.GetTicketStats(ctx, tenantID)
+	if err != nil || totalTickets == 0 {
+		// 如果无法获取工单数据，回退到基于违规的计算
+		if len(violations) > 0 {
+			complianceRate = float64(len(violations)-openViolations) / float64(len(violations)) * 100
+		} else {
+			complianceRate = 100.0
+		}
 	} else {
-		complianceRate = 100.0
+		complianceRate = float64(metSLA) / float64(totalTickets) * 100
 	}
 
 	return map[string]interface{}{
