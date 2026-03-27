@@ -37,4 +37,7 @@ type Repository interface {
 
 	// Compliance Report
 	GetComplianceReportData(ctx context.Context, tenantID int, startDate, endDate time.Time) (totalTickets, metSLA, violatedSLA int, avgResponseTime, avgResolutionTime float64, err error)
+
+	// Ticket Stats - 获取工单统计用于计算合规率
+	GetTicketStats(ctx context.Context, tenantID int) (total int, metSLA int, err error)
 }
