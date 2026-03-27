@@ -51,16 +51,16 @@ const SLADashboardPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [slaStats, setSlaStats] = useState<{
-    total_definitions: number;
-    active_definitions: number;
-    total_violations: number;
-    open_violations: number;
+    totalDefinitions: number;
+    activeDefinitions: number;
+    totalViolations: number;
+    openViolations: number;
     overall_compliance_rate: number;
   }>({
-    total_definitions: 0,
-    active_definitions: 0,
-    total_violations: 0,
-    open_violations: 0,
+    totalDefinitions: 0,
+    activeDefinitions: 0,
+    totalViolations: 0,
+    openViolations: 0,
     overall_compliance_rate: 0,
   });
 
@@ -248,15 +248,15 @@ const SLADashboardPage = () => {
         <div>
           <div className="font-medium">{name}</div>
           <span className="text-xs text-gray-500">
-            {record.service_type} - {record.priority}
+            {record.serviceType} - {record.priority}
           </span>
         </div>
       ),
     },
     {
       title: '响应时间',
-      dataIndex: 'response_time_minutes',
-      key: 'response_time_minutes',
+      dataIndex: 'responseTime',
+      key: 'responseTime',
       render: (minutes?: number) => (
         <Space>
           <Clock className="w-4 h-4" />
@@ -266,8 +266,8 @@ const SLADashboardPage = () => {
     },
     {
       title: '解决时间',
-      dataIndex: 'resolution_time_minutes',
-      key: 'resolution_time_minutes',
+      dataIndex: 'resolutionTime',
+      key: 'resolutionTime',
       render: (minutes?: number) => (
         <Space>
           <Target className="w-4 h-4" />
@@ -277,14 +277,14 @@ const SLADashboardPage = () => {
     },
     {
       title: '可用性目标',
-      dataIndex: 'availability_target',
-      key: 'availability_target',
+      dataIndex: 'availabilityTarget',
+      key: 'availabilityTarget',
       render: (target?: number) => <Tag color="blue">{formatPercent(target)}</Tag>,
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       render: (isActive: boolean) => (
         <Tag color={isActive ? 'green' : 'red'}>{isActive ? '激活' : '禁用'}</Tag>
       ),
@@ -295,16 +295,16 @@ const SLADashboardPage = () => {
   const slaViolationColumns = [
     {
       title: '工单ID',
-      dataIndex: 'ticket_id',
-      key: 'ticket_id',
+      dataIndex: 'ticketId',
+      key: 'ticketId',
       render: (id: number) => (
         <span className="font-mono bg-gray-100 px-1 rounded">#{String(id).padStart(5, '0')}</span>
       ),
     },
     {
       title: '违规类型',
-      dataIndex: 'violation_type',
-      key: 'violation_type',
+      dataIndex: 'violationType',
+      key: 'violationType',
       render: (type: string) => (
         <Tag color={type === 'response_time' ? 'orange' : 'red'}>
           {type === 'response_time' ? '响应超时' : '解决超时'}
@@ -313,8 +313,8 @@ const SLADashboardPage = () => {
     },
     {
       title: '延迟时间',
-      dataIndex: 'delay_minutes',
-      key: 'delay_minutes',
+      dataIndex: 'delayMinutes',
+      key: 'delayMinutes',
       render: (minutes?: number) => <span className="text-red-500">{formatMinutes(minutes)}</span>,
     },
     {
@@ -329,8 +329,8 @@ const SLADashboardPage = () => {
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       render: (date?: string) => <span>{formatDateTime(date)}</span>,
     },
   ];
@@ -421,19 +421,19 @@ const SLADashboardPage = () => {
                       >
                         <Statistic
                           title="总体合规率"
-                          value={slaStats.overall_compliance_rate}
+                          value={slaStats.overallComplianceRate}
                           precision={1}
                           suffix="%"
                           styles={{
                             content: {
-                              color: getComplianceColor(slaStats.overall_compliance_rate),
+                              color: getComplianceColor(slaStats.overallComplianceRate),
                             },
                           }}
                           prefix={<Target className="w-5 h-5" />}
                         />
                         <Progress
-                          percent={slaStats.overall_compliance_rate}
-                          strokeColor={getComplianceColor(slaStats.overall_compliance_rate)}
+                          percent={slaStats.overallComplianceRate}
+                          strokeColor={getComplianceColor(slaStats.overallComplianceRate)}
                           size="small"
                           className="mt-2"
                         />
@@ -446,10 +446,10 @@ const SLADashboardPage = () => {
                       >
                         <Statistic
                           title="活跃SLA定义"
-                          value={slaStats.active_definitions}
+                          value={slaStats.activeDefinitions}
                           suffix={
-                            typeof slaStats.total_definitions === 'number'
-                              ? `/ ${slaStats.total_definitions}`
+                            typeof slaStats.totalDefinitions === 'number'
+                              ? `/ ${slaStats.totalDefinitions}`
                               : undefined
                           }
                           styles={{ content: { color: '#52c41a' } }}
@@ -464,7 +464,7 @@ const SLADashboardPage = () => {
                       >
                         <Statistic
                           title="待处理违规"
-                          value={slaStats.open_violations}
+                          value={slaStats.openViolations}
                           styles={{ content: { color: '#ff4d4f' } }}
                           prefix={<AlertTriangle className="w-5 h-5" />}
                         />
@@ -477,7 +477,7 @@ const SLADashboardPage = () => {
                       >
                         <Statistic
                           title="总违规数"
-                          value={slaStats.total_violations}
+                          value={slaStats.totalViolations}
                           styles={{ content: { color: '#faad14' } }}
                           prefix={<Activity className="w-5 h-5" />}
                         />
