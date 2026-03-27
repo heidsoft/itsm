@@ -88,8 +88,8 @@ export default function MSPDashboardPage() {
     },
     {
       title: '分配时间',
-      dataIndex: 'assigned_at',
-      key: 'assigned_at',
+      dataIndex: 'assignedAt',
+      key: 'assignedAt',
       render: (date: string) => new Date(date).toLocaleString('zh-CN'),
     },
   ];
@@ -102,20 +102,20 @@ export default function MSPDashboardPage() {
     },
     {
       title: '工单总数',
-      dataIndex: 'total_tickets',
-      key: 'total_tickets',
-      sorter: (a: MSPCustomerReport, b: MSPCustomerReport) => a.total_tickets - b.total_tickets,
+      dataIndex: 'totalTickets',
+      key: 'totalTickets',
+      sorter: (a: MSPCustomerReport, b: MSPCustomerReport) => a.totalTickets - b.totalTickets,
     },
     {
       title: '已解决',
-      dataIndex: 'resolved_tickets',
-      key: 'resolved_tickets',
+      dataIndex: 'resolvedTickets',
+      key: 'resolvedTickets',
     },
     {
       title: '解决率',
       key: 'resolution_rate',
       render: (record: MSPCustomerReport) => {
-        const rate = record.total_tickets > 0 ? Number((record.resolved_tickets / record.total_tickets * 100).toFixed(1)) : 0;
+        const rate = record.totalTickets > 0 ? Number((record.resolvedTickets / record.totalTickets * 100).toFixed(1)) : 0;
         return <Tag color={rate >= 90 ? 'green' : rate >= 70 ? 'orange' : 'red'}>{rate}%</Tag>;
       },
     },
@@ -181,7 +181,7 @@ export default function MSPDashboardPage() {
           <Card>
             <Statistic
               title="本月工单"
-              value={reports.reduce((sum, r) => sum + r.total_tickets, 0)}
+              value={reports.reduce((sum, r) => sum + r.totalTickets, 0)}
               prefix={<ClockCircleOutlined />}
             />
           </Card>
@@ -190,7 +190,7 @@ export default function MSPDashboardPage() {
           <Card>
             <Statistic
               title="已解决"
-              value={reports.reduce((sum, r) => sum + r.resolved_tickets, 0)}
+              value={reports.reduce((sum, r) => sum + r.resolvedTickets, 0)}
               prefix={<CheckCircleOutlined />}
             />
           </Card>

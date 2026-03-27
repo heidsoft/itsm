@@ -1,10 +1,12 @@
 'use client';
 
 import React from 'react';
-import { Table, Tag, Button, Space, Badge } from 'antd';
-import { Eye, Edit, MoreHorizontal, AlertTriangle } from 'lucide-react';
+import { Table, Tag, Button, Space, Dropdown, message } from 'antd';
+import { Eye, Edit, MoreHorizontal, AlertTriangle, Trash2 } from 'lucide-react';
+import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import { Incident } from '@/lib/api/types';
+import { IncidentAPI } from '@/lib/api/incident-api';
 import { useI18n } from '@/lib/i18n';
 
 interface IncidentListProps {
@@ -14,6 +16,8 @@ interface IncidentListProps {
   onSelectedRowKeysChange: (keys: React.Key[]) => void;
   onEdit: (incident: Incident) => void;
   onView: (incident: Incident) => void;
+  onDelete?: (incident: Incident) => void;
+  onRefresh?: () => void;
 }
 
 export const IncidentList: React.FC<IncidentListProps> = ({
@@ -23,6 +27,8 @@ export const IncidentList: React.FC<IncidentListProps> = ({
   onSelectedRowKeysChange,
   onEdit,
   onView,
+  onDelete,
+  onRefresh,
 }) => {
   const { t } = useI18n();
 
@@ -187,8 +193,8 @@ export const IncidentList: React.FC<IncidentListProps> = ({
     },
     {
       title: t('incidents.createdAt'),
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 150,
       render: (created_at: string) => (
         <div style={{ fontSize: 'small', color: '#666' }}>
@@ -200,33 +206,63 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       title: t('incidents.operations'),
       key: 'actions',
       width: 150,
-      render: (_: unknown, record: Incident) => (
-        <Space size="small">
-          <Button
-            type="text"
-            size="small"
-            icon={<Eye size={16} />}
-            onClick={() => onView(record)}
-            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-0 rounded-lg transition-all duration-200 p-2"
-            title={t('incidents.viewDetails')}
-          />
-          <Button
-            type="text"
-            size="small"
-            icon={<Edit size={16} />}
-            onClick={() => onEdit(record)}
-            className="text-green-600 hover:text-green-700 hover:bg-green-50 border-0 rounded-lg transition-all duration-200 p-2"
-            title={t('incidents.editIncident')}
-          />
-          <Button
-            type="text"
-            size="small"
-            icon={<MoreHorizontal size={16} />}
-            className="text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-0 rounded-lg transition-all duration-200 p-2"
-            title={t('incidents.moreActions')}
-          />
-        </Space>
-      ),
+      render: (_: unknown, record: Incident) => {
+        const handleDelete = async () => {
+          try {
+            await IncidentAPI.deleteIncident(record.id);
+            message.success(t('incidents.deleteSuccess') || '删除成功');
+            onRefresh?.();
+          } catch (error) {
+            console.error('Failed to delete incident:', error);
+            message.error(t('incidents.deleteFailed') || '删除失败');
+          }
+        };
+
+        const items: MenuProps['items'] = [
+          {
+            key: 'delete',
+            label: t('incidents.delete') || '删除',
+            icon: <Trash2 size={14} />,
+            danger: true,
+            onClick: handleDelete,
+          },
+        ];
+
+        return (
+          <Space size="small">
+            <Button
+              type="text"
+              size="small"
+              icon={<Eye size={16} />}
+              onClick={() => onView(record)}
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-0 rounded-lg transition-all duration-200 p-2"
+              title={t('incidents.viewDetails')}
+            />
+            <Button
+              type="text"
+              size="small"
+              icon={<Edit size={16} />}
+              onClick={() => onEdit(record)}
+              className="text-green-600 hover:text-green-700 hover:bg-green-50 border-0 rounded-lg transition-all duration-200 p-2"
+              title={t('incidents.editIncident')}
+            />
+            <Dropdown
+              menu={{ items }}
+              trigger={['click']}
+              placement="bottomRight"
+            >
+              <Button
+                type="text"
+                size="small"
+                icon={<MoreHorizontal size={16} />}
+                className="text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-0 rounded-lg transition-all duration-200 p-2"
+                title={t('incidents.moreActions')}
+                onClick={(e) => e.preventDefault()}
+              />
+            </Dropdown>
+          </Space>
+        );
+      },
     },
   ];
 

@@ -231,6 +231,7 @@ export default function IncidentsPage() {
                 onSelectedRowKeysChange={setSelectedRowKeys}
                 onEdit={handleEdit}
                 onView={handleView}
+                onRefresh={fetchIncidents}
               />
             )}
 
