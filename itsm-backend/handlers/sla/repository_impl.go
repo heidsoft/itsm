@@ -521,3 +521,36 @@ func (r *EntRepository) GetComplianceReportData(ctx context.Context, tenantID in
 
 	return totalTickets, metSLA, violatedSLA, avgResponseTime, avgResolutionTime, nil
 }
+
+// GetTicketStats retrieves basic ticket statistics for compliance calculation
+func (r *EntRepository) GetTicketStats(ctx context.Context, tenantID int) (total int, metSLA int, err error) {
+	// 获取总工单数
+	total, err = r.client.Ticket.Query().
+		Where(ticket.TenantID(tenantID)).
+		Count(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// 获取有SLA违规的工单数（被视为未达标）
+	violatedTickets, err := r.client.SLAViolation.Query().
+		Where(slaviolation.TenantID(tenantID)).
+		Select(slaviolation.FieldTicketID).
+		All(ctx)
+	if err != nil {
+		return total, 0, err
+	}
+
+	// 使用违规工单的独特ID数量
+	uniqueViolated := make(map[int]bool)
+	for _, v := range violatedTickets {
+		uniqueViolated[v.TicketID] = true
+	}
+
+	metSLA = total - len(uniqueViolated)
+	if metSLA < 0 {
+		metSLA = 0
+	}
+
+	return total, metSLA, nil
+}
