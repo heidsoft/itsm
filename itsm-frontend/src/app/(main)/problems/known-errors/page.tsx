@@ -262,7 +262,7 @@ export default function KnownErrorsPage() {
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
+      dataIndex: 'createdAt',
       width: 160,
       render: (text: string) => new Date(text).toLocaleString(),
     },

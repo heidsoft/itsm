@@ -115,7 +115,7 @@ export default function PendingApprovalsPage() {
                 },
                 {
                   title: '创建时间',
-                  dataIndex: 'created_at',
+                  dataIndex: 'createdAt',
                   width: 220,
                   render: (v: string) => (v ? new Date(v).toLocaleString() : '-'),
                 },
