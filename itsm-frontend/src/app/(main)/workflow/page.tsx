@@ -583,8 +583,8 @@ const WorkflowManagementPage = () => {
     },
     {
       title: t('workflow.createdAt'),
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 150,
       render: (date: string) => (
         <div className="text-sm">{new Date(date).toLocaleDateString()}</div>
