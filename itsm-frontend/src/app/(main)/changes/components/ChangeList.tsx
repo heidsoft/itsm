@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Table, Button, Space, Badge } from 'antd';
+import { Table, Button, Space, Dropdown, Badge, message } from 'antd';
 import type { TablePaginationConfig } from 'antd/es/table';
-import { Eye, Edit, MoreHorizontal } from 'lucide-react';
-import { Change } from '@/lib/services/change-service';
+import type { MenuProps } from 'antd';
+import { Eye, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Change, changeService } from '@/lib/services/change-service';
 
 const getChangeStatusColor = (status: string) => {
   switch (status) {
@@ -105,6 +106,8 @@ interface ChangeListProps {
   selectedRowKeys: React.Key[];
   onSelectedRowKeysChange: (keys: React.Key[]) => void;
   onTableChange: (pagination: TablePaginationConfig) => void;
+  onDelete?: (change: Change) => void;
+  onRefresh?: () => void;
 }
 
 export const ChangeList: React.FC<ChangeListProps> = ({
@@ -114,6 +117,8 @@ export const ChangeList: React.FC<ChangeListProps> = ({
   selectedRowKeys,
   onSelectedRowKeysChange,
   onTableChange,
+  onDelete,
+  onRefresh,
 }) => {
   const columns = [
     {
@@ -228,15 +233,38 @@ export const ChangeList: React.FC<ChangeListProps> = ({
               // 编辑变更处理逻辑
             }}
           />
-          <Button
-            type="text"
-            icon={<MoreHorizontal size={16} />}
-            className="text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-            title="更多操作"
-            onClick={() => {
-              // 更多操作处理逻辑
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'delete',
+                  label: '删除',
+                  icon: <Trash2 size={14} />,
+                  danger: true,
+                  onClick: async () => {
+                    try {
+                      await changeService.deleteChange(record.id);
+                      message.success('删除成功');
+                      onRefresh?.();
+                    } catch (error) {
+                      console.error('Failed to delete change:', error);
+                      message.error('删除失败');
+                    }
+                  },
+                },
+              ],
             }}
-          />
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <Button
+              type="text"
+              icon={<MoreHorizontal size={16} />}
+              className="text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+              title="更多操作"
+              onClick={(e) => e.preventDefault()}
+            />
+          </Dropdown>
         </Space>
       ),
     },

@@ -90,7 +90,7 @@ smtp:
 
 # Redis configuration (for sequence service, cache, etc.)
 redis:
-  host: "not-available"
+  host: "localhost"
   port: 6379
-  password: "1111"  
+  password: "1111"
   db: 0         # Redis database number

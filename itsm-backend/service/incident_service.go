@@ -304,11 +304,39 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 	return s.toIncidentResponse(incidentEntity), nil
 }
 
-// DeleteIncident 删除事件
+// DeleteIncident 删除事件（级联清理关联数据）
 func (s *IncidentService) DeleteIncident(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting incident", "id", id, "tenant_id", tenantID)
 
-	err := s.client.Incident.DeleteOneID(id).
+	// 先删除关联的 incident_events
+	_, err := s.client.IncidentEvent.Delete().
+		Where(incidentevent.IncidentIDEQ(id)).
+		Exec(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		s.logger.Errorw("Failed to delete incident events", "error", err)
+		return fmt.Errorf("failed to delete incident events: %w", err)
+	}
+
+	// 删除关联的 incident_alerts
+	_, err = s.client.IncidentAlert.Delete().
+		Where(incidentalert.IncidentIDEQ(id)).
+		Exec(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		s.logger.Errorw("Failed to delete incident alerts", "error", err)
+		return fmt.Errorf("failed to delete incident alerts: %w", err)
+	}
+
+	// 删除关联的 incident_metrics
+	_, err = s.client.IncidentMetric.Delete().
+		Where(incidentmetric.IncidentIDEQ(id)).
+		Exec(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		s.logger.Errorw("Failed to delete incident metrics", "error", err)
+		return fmt.Errorf("failed to delete incident metrics: %w", err)
+	}
+
+	// 最后删除 incident 本身
+	err = s.client.Incident.DeleteOneID(id).
 		Where(incident.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil {
