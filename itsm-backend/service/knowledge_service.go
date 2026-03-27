@@ -150,11 +150,20 @@ func (ks *KnowledgeService) UpdateArticle(ctx context.Context, id int, req *dto.
 	return article, nil
 }
 
-// DeleteArticle 删除知识库文章
+// DeleteArticle 删除知识库文章（级联删除关联数据）
 func (ks *KnowledgeService) DeleteArticle(ctx context.Context, id, tenantID int) error {
 	ks.logger.Infow("Deleting knowledge article", "id", id, "tenant_id", tenantID)
 
-	err := ks.client.KnowledgeArticle.DeleteOneID(id).
+	// 先删除关联的 user_likes
+	_, err := ks.client.KnowledgeArticleLike.Delete().
+		Where(knowledgearticlelike.ArticleIDEQ(id)).
+		Exec(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		ks.logger.Errorw("Failed to delete article likes", "error", err, "id", id)
+		return fmt.Errorf("删除文章点赞记录失败: %w", err)
+	}
+
+	err = ks.client.KnowledgeArticle.DeleteOneID(id).
 		Where(knowledgearticle.TenantID(tenantID)).
 		Exec(ctx)
 	if err != nil {

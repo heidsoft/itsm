@@ -706,4 +706,9 @@ export class IncidentAPI {
     const response = await httpClient.post<any>(`/api/v1/incidents/${id}/escalate`, data);
     return response;
   }
+
+  // 删除事件
+  static async deleteIncident(id: number): Promise<void> {
+    await httpClient.delete(`/api/v1/incidents/${id}`);
+  }
 }
