@@ -298,8 +298,8 @@ export default function RoleManagement() {
     },
     {
       title: '创建时间',
-      key: 'created_at',
-      dataIndex: 'created_at',
+      key: 'createdAt',
+      dataIndex: 'createdAt',
       render: (createdAt: string) => <span>{createdAt ? new Date(createdAt).toLocaleDateString() : '-'}</span>,
     },
     {

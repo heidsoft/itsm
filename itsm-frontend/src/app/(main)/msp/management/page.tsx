@@ -116,8 +116,8 @@ export default function MSPManagementPage() {
     },
     {
       title: '分配时间',
-      dataIndex: 'assigned_at',
-      key: 'assigned_at',
+      dataIndex: 'assignedAt',
+      key: 'assignedAt',
       render: (date: string) => new Date(date).toLocaleString('zh-CN'),
     },
     {

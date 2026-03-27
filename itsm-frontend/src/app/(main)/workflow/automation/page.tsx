@@ -178,8 +178,8 @@ const WorkflowAutomationPage = () => {
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 150,
       render: (date: string) => (
         <div className="text-sm">{new Date(date).toLocaleDateString('zh-CN')}</div>

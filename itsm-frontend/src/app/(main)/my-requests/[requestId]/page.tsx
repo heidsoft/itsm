@@ -345,7 +345,7 @@ export default function MyRequestDetailPage() {
                     },
                     {
                       title: '创建时间',
-                      dataIndex: 'created_at',
+                      dataIndex: 'createdAt',
                       width: 180,
                       render: (v: string) => (v ? new Date(v).toLocaleString() : '-'),
                     },
