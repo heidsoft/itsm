@@ -1,10 +1,12 @@
 'use client';
 
 import React from 'react';
-import { Table, Tag, Button, Space, Badge, Tooltip } from 'antd';
-import { Eye, Edit, MoreHorizontal, AlertTriangle } from 'lucide-react';
+import { Table, Tag, Button, Space, Dropdown, Tooltip, message } from 'antd';
+import type { MenuProps } from 'antd';
+import { Eye, Edit, MoreHorizontal, AlertTriangle, Trash2 } from 'lucide-react';
 import { ProblemStatus, ProblemPriority, ProblemStatusLabels, ProblemPriorityLabels } from '@/constants/problem';
 import type { Problem } from '@/lib/api/problem-api';
+import { ProblemApi } from '@/lib/api/problem-api';
 import { useRouter } from 'next/navigation';
 
 interface ProblemListProps {
@@ -18,6 +20,8 @@ interface ProblemListProps {
     total: number;
   };
   onTableChange: (page: number, pageSize?: number) => void;
+  onDelete?: (problem: Problem) => void;
+  onRefresh?: () => void;
 }
 
 export const ProblemList: React.FC<ProblemListProps> = ({
@@ -27,6 +31,8 @@ export const ProblemList: React.FC<ProblemListProps> = ({
   onSelectedRowKeysChange,
   pagination,
   onTableChange,
+  onDelete,
+  onRefresh,
 }) => {
   const router = useRouter();
 
@@ -180,8 +186,8 @@ export const ProblemList: React.FC<ProblemListProps> = ({
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 150,
       render: (created_at: string) => (
         <div style={{ fontSize: 'small', color: '#666' }}>
@@ -213,14 +219,39 @@ export const ProblemList: React.FC<ProblemListProps> = ({
               className="text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200"
             />
           </Tooltip>
-          <Tooltip title="更多操作">
-            <Button
-              type="text"
-              size="small"
-              icon={<MoreHorizontal size={16} />}
-              className="text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200"
-            />
-          </Tooltip>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'delete',
+                  label: '删除',
+                  icon: <Trash2 size={14} />,
+                  danger: true,
+                  onClick: async () => {
+                    try {
+                      await ProblemApi.deleteProblem(record.id);
+                      message.success('删除成功');
+                      onRefresh?.();
+                    } catch (error) {
+                      console.error('Failed to delete problem:', error);
+                      message.error('删除失败');
+                    }
+                  },
+                },
+              ],
+            }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <Tooltip title="更多操作">
+              <Button
+                type="text"
+                size="small"
+                icon={<MoreHorizontal size={16} />}
+                className="text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200"
+              />
+            </Tooltip>
+          </Dropdown>
         </Space>
       ),
     },
