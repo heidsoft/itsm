@@ -602,14 +602,14 @@ const SLADashboardPage = () => {
                             <Col xs={24} sm={8}>
                               <Statistic
                                 title="总工单数"
-                                value={complianceReport.total_tickets}
+                                value={complianceReport.totalTickets}
                                 prefix={<FileText className="w-4 h-4" />}
                               />
                             </Col>
                             <Col xs={24} sm={8}>
                               <Statistic
                                 title="达标工单"
-                                value={complianceReport.met_sla}
+                                value={complianceReport.metSla}
                                 styles={{ content: { color: '#52c41a' } }}
                                 prefix={<CheckCircle className="w-4 h-4" />}
                               />
@@ -617,7 +617,7 @@ const SLADashboardPage = () => {
                             <Col xs={24} sm={8}>
                               <Statistic
                                 title="违规工单"
-                                value={complianceReport.violated_sla}
+                                value={complianceReport.violatedSla}
                                 styles={{ content: { color: '#ff4d4f' } }}
                                 prefix={<AlertTriangle className="w-4 h-4" />}
                               />
@@ -628,7 +628,7 @@ const SLADashboardPage = () => {
                             <Col xs={24} sm={12}>
                               <Statistic
                                 title="平均响应时间"
-                                value={complianceReport.avg_response_time}
+                                value={complianceReport.avgResponseTime}
                                 precision={1}
                                 suffix="分钟"
                               />
@@ -636,7 +636,7 @@ const SLADashboardPage = () => {
                             <Col xs={24} sm={12}>
                               <Statistic
                                 title="平均解决时间"
-                                value={complianceReport.avg_resolution_time}
+                                value={complianceReport.avgResolutionTime}
                                 precision={1}
                                 suffix="分钟"
                               />
