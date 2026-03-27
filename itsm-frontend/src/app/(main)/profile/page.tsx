@@ -421,9 +421,10 @@ export default function ProfilePage() {
                 boxShadow: DESIGN.shadows.card,
               }}
             >
-              <Tabs defaultActiveKey="profile" size="large">
+              <Tabs defaultActiveKey="basic" size="large">
                 {/* 基本信息 */}
                 <TabPane
+                  key="basic"
                   tab={
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <User size={16} />
@@ -512,6 +513,7 @@ export default function ProfilePage() {
 
                 {/* 偏好设置 */}
                 <TabPane
+                  key="preferences"
                   tab={
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Settings size={16} />
@@ -577,6 +579,7 @@ export default function ProfilePage() {
 
                 {/* 最近活动 */}
                 <TabPane
+                  key="activities"
                   tab={
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Activity size={16} />
@@ -633,6 +636,7 @@ export default function ProfilePage() {
 
                 {/* 安全设置 */}
                 <TabPane
+                  key="security"
                   tab={
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Lock size={16} />
