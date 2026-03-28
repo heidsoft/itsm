@@ -45,7 +45,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090';
 const API_TIMEOUT = 30000; // 30秒超时
 
 // 统一 token 存储工具
-import { setAccessToken, getAccessToken, clearAuthStorage } from '@/lib/auth/token-storage';
+// 注意：Token 现在存储在 httpOnly cookies 中，由后端设置
+// 这里只保留 clearAuthStorage 用于清理租户信息
+import { clearAuthStorage } from '@/lib/auth/token-storage';
 
 // API端点
 const API_ENDPOINTS = {
@@ -137,28 +139,14 @@ class AuthApiClient {
       // 后端返回格式: { code: 0, message: "success", data: { access_token, refresh_token, user } }
       const responseData = data.data || data;
 
-      // 安全地存储token（仅在成功时）
-      if (responseData.access_token) {
-        // 统一使用 access_token（通过 token-storage 统一管理）
-        setAccessToken(responseData.access_token);
-        // 同时设置 Cookie（用于 middleware 验证）
-        if (typeof window !== 'undefined') {
-          document.cookie = `auth-token=${responseData.access_token}; path=/; max-age=900; SameSite=Lax`;
-        }
-      } else if (responseData.token) {
-        // 兼容旧接口（如果有）
-        setAccessToken(responseData.token);
-      }
-
-      // 同时保存 refresh_token
-      if (responseData.refresh_token && typeof window !== 'undefined') {
-        localStorage.setItem('refresh_token', responseData.refresh_token);
-      }
+      // Token 现在由后端通过 httpOnly cookies 设置，不需要前端存储
+      // 响应体中仍然返回 token 信息，但主要用于兼容性和日志记录
 
       return {
         success: true,
-        token: responseData.access_token || responseData.token,
-        refreshToken: responseData.refresh_token,
+        // Token 在 httpOnly cookie 中，前端无法直接访问
+        token: undefined,
+        refreshToken: undefined,
         requiresMfa: responseData.requires_mfa,
         mfaType: responseData.mfa_type,
         user: responseData.user,
@@ -234,24 +222,16 @@ class AuthApiClient {
    */
   async logout(): Promise<{ success: boolean; error?: string }> {
     try {
-      const token = getAccessToken();
-
       const response = await fetch(`${this.baseURL}${API_ENDPOINTS.LOGOUT}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
 
-      // 清除本地存储的token（统一清理，包含历史键名）
+      // 清除本地存储的租户信息（token 由后端通过 Set-Cookie: max-age=0 清除）
       clearAuthStorage();
-      // 清除 Cookie
-      if (typeof window !== 'undefined') {
-        document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-      }
 
       if (!response.ok) {
         const data = await response.json();
@@ -265,7 +245,7 @@ class AuthApiClient {
     } catch (error) {
       console.error('Logout error:', error);
 
-      // 即使请求失败，也要清除本地token（统一清理，包含历史键名）
+      // 即使请求失败，也要清除本地租户信息
       clearAuthStorage();
 
       return {
@@ -389,20 +369,14 @@ class AuthApiClient {
 
   /**
    * 验证当前token是否有效
+   * 通过调用后端 /api/v1/auth/me 接口来验证 httpOnly cookie 中的 token
    */
   async validateToken(): Promise<{ valid: boolean; user?: WebAuthnUser; error?: string }> {
     try {
-      const token = getAccessToken();
-
-      if (!token) {
-        return { valid: false, error: 'No token found' };
-      }
-
-      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.VALIDATE}`, {
+      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.PROFILE}`, {
         method: 'GET',
-        credentials: 'include',
+        credentials: 'include', // 发送 httpOnly cookie
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -412,9 +386,13 @@ class AuthApiClient {
       }
 
       const data = await response.json();
+      if (data.code !== 0) {
+        return { valid: false, error: data.message || 'Token validation failed' };
+      }
+
       return {
         valid: true,
-        user: data.user,
+        user: data.data,
       };
     } catch (error) {
       console.error('Token validation error:', error);

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"os"
 	"runtime"
 	"strconv"
@@ -28,11 +29,19 @@ import (
 	"go.uber.org/zap"
 )
 
+// RateLimiterInterface 限流器接口（支持 Redis 和内存实现）
+type RateLimiterInterface interface {
+	Allow(ctx context.Context, clientIP string) (bool, error)
+}
+
 // RouterConfig 路由配置
 type RouterConfig struct {
 	JWTSecret string
 	Logger    *zap.SugaredLogger
 	Client    *ent.Client
+
+	// Redis rate limiter (optional - uses memory fallback if nil)
+	RedisRateLimiter RateLimiterInterface
 
 	// Controllers
 	ProblemInvestigationController  *controller.ProblemInvestigationController
@@ -125,15 +134,40 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	r.Use(middleware.PrometheusMetricsMiddleware())
 
 	// 安全中间件
-	// 速率限制：从环境变量读取，默认每分钟500次请求（测试环境可配置为更高）
-	rateLimit := 500
-	if envLimit := os.Getenv("RATE_LIMIT"); envLimit != "" {
-		if parsed, err := strconv.Atoi(envLimit); err == nil && parsed > 0 {
-			rateLimit = parsed
+	// 速率限制：优先使用 Redis 限流器（分布式环境），否则使用内存限流器
+	if config.RedisRateLimiter != nil {
+		// 使用 Redis 限流器（分布式环境）
+		config.Logger.Info("Using Redis-based distributed rate limiter")
+		r.Use(func(limiter RateLimiterInterface) gin.HandlerFunc {
+			return func(c *gin.Context) {
+				clientIP := c.ClientIP()
+				allowed, err := limiter.Allow(c.Request.Context(), clientIP)
+				if err != nil {
+					config.Logger.Warnw("Rate limiter error, allowing request", "error", err)
+					c.Next()
+					return
+				}
+				if !allowed {
+					common.Fail(c, 429, "请求过于频繁，请稍后再试")
+					c.Abort()
+					return
+				}
+				c.Next()
+			}
+		}(config.RedisRateLimiter))
+	} else {
+		// 使用内存限流器（单机环境）
+		config.Logger.Warn("Redis rate limiter not configured, using in-memory rate limiter (not suitable for distributed deployment)")
+		rateLimit := 500
+		if envLimit := os.Getenv("RATE_LIMIT"); envLimit != "" {
+			if parsed, err := strconv.Atoi(envLimit); err == nil && parsed > 0 {
+				rateLimit = parsed
+			}
 		}
+		rateLimiter := middleware.NewRateLimiter(rateLimit, time.Minute)
+		r.Use(middleware.RateLimitMiddleware(rateLimiter))
 	}
-	rateLimiter := middleware.NewRateLimiter(rateLimit, time.Minute)
-	r.Use(middleware.RateLimitMiddleware(rateLimiter))
+
 	r.Use(middleware.SecurityHeadersMiddleware())
 	r.Use(middleware.SQLInjectionProtectionMiddleware())
 	r.Use(middleware.XSSProtectionMiddleware())
