@@ -68,6 +68,7 @@ security:
   token_expiry: 24h
   refresh_token_expiry: 168h
   bcrypt_cost: 10
+  csrf_enabled: true  # Enable CSRF protection
 
 # Admin user settings
 admin:
