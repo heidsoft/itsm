@@ -1,0 +1,151 @@
+# ITSM Alertmanager Configuration
+# Alertmanager handles routing alerts from Prometheus to notification channels
+
+global:
+  # SMTP配置用于邮件告警
+  smtp_smarthost: 'smtp.example.com:587'
+  smtp_from: 'alerts@itsm-system.com'
+  smtp_auth_username: 'alerts@itsm-system.com'
+  smtp_auth_password: '${SMTP_AUTH_PASSWORD}'
+
+  # 微信/钉钉 Webhook 配置（可选）
+  # wechat_api_url: 'https://qyapi.weixin.qq.com/cgi-bin/'
+  # dingtalk_webhook_url: 'https://oapi.dingtalk.com/robot/send?access_token=xxx'
+
+# 路由配置
+route:
+  # 所有告警首先进入根路由
+  receiver: 'default-receiver'
+  group_by: ['alertname', 'cluster', 'service']
+  # 等待30秒合并同组告警
+  group_wait: 30s
+  # 每5分钟发送一次已解决的告警组
+  group_interval: 5m
+  # 告警解决后仍保留5分钟
+  resolve_timeout: 5m
+  # 嵌套路由
+  routes:
+    # 关键告警直接发送到紧急接收者
+    - match:
+        severity: critical
+      receiver: 'critical-receiver'
+      group_wait: 0s
+      continue: true
+
+    # 警告级别告警发送到普通接收者
+    - match:
+        severity: warning
+      receiver: 'warning-receiver'
+      continue: true
+
+    # 前端相关告警
+    - match:
+        component: frontend
+      receiver: 'frontend-receiver'
+      continue: true
+
+    # 后端相关告警
+    - match:
+        component: backend
+      receiver: 'backend-receiver'
+
+    # 数据库相关告警
+    - match:
+        component: database
+      receiver: 'database-receiver'
+
+    # 缓存相关告警
+    - match:
+        component: cache
+      receiver: 'cache-receiver'
+
+# 接收者定义
+receivers:
+  # 默认接收者（邮件）
+  - name: 'default-receiver'
+    email_configs:
+      - send_resolved: true
+        to: 'itsm-team@example.com'
+        headers:
+          subject: '[ITSM Alert] {{ .GroupLabels.alertname }}'
+
+  # 紧急告警接收者（短信+邮件）
+  - name: 'critical-receiver'
+    email_configs:
+      - send_resolved: true
+        to: 'itsm-critical@example.com,pagerduty@itsm-system.com'
+        headers:
+          subject: '[CRITICAL] {{ .GroupLabels.alertname }}'
+    # PagerDuty 配置（可选）
+    # pagerduty_configs:
+    #   - service_key: '${PAGERDUTY_SERVICE_KEY}'
+    #     severity: critical
+
+  # 警告告警接收者（邮件）
+  - name: 'warning-receiver'
+    email_configs:
+      - send_resolved: true
+        to: 'itsm-warnings@example.com'
+        headers:
+          subject: '[WARNING] {{ .GroupLabels.alertname }}'
+
+  # 前端告警接收者
+  - name: 'frontend-receiver'
+    email_configs:
+      - send_resolved: true
+        to: 'frontend-team@example.com'
+        headers:
+          subject: '[FRONTEND] {{ .GroupLabels.alertname }}'
+
+  # 后端告警接收者
+  - name: 'backend-receiver'
+    email_configs:
+      - send_resolved: true
+        to: 'backend-team@example.com'
+        headers:
+          subject: '[BACKEND] {{ .GroupLabels.alertname }}'
+
+  # 数据库告警接收者
+  - name: 'database-receiver'
+    email_configs:
+      - send_resolved: true
+        to: 'dba-team@example.com'
+        headers:
+          subject: '[DATABASE] {{ .GroupLabels.alertname }}'
+
+  # 缓存告警接收者
+  - name: 'cache-receiver'
+    email_configs:
+      - send_resolved: true
+        to: 'ops-team@example.com'
+        headers:
+          subject: '[CACHE] {{ .GroupLabels.alertname }}'
+
+# 抑制规则 - 防止告警风暴
+inhibit_rules:
+  # 当 BackendDown 发生时，抑制其他后端相关告警
+  - source_match:
+      alertname: 'BackendDown'
+    source_match_re:
+      component: 'backend'
+    target_match_re:
+      component: 'backend'
+    equal: ['cluster', 'service']
+
+  # 当 PostgreSQLDown 发生时，抑制数据库相关告警
+  - source_match:
+      alertname: 'PostgreSQLDown'
+    source_match_re:
+      component: 'database'
+    target_match_re:
+      component: 'database'
+    equal: ['cluster']
+
+  # 当 RedisDown 发生时，抑制缓存相关告警
+  - source_match:
+      alertname: 'RedisDown'
+    source_match_re:
+      component: 'cache'
+    target_match_re:
+      component: 'cache'
+    equal: ['cluster']

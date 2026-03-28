@@ -22,6 +22,31 @@ var rawDB *sql.DB
 // GetRawDB returns the underlying *sql.DB for raw SQL operations (e.g., pgvector)
 func GetRawDB() *sql.DB { return rawDB }
 
+// InitDB initializes a raw database connection without Ent-specific setup
+// Used for migrations and other operations that don't need Ent ORM
+func InitDB(cfg *config.DatabaseConfig) (*sql.DB, error) {
+	dsn := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=%s password=%s",
+		cfg.Host, cfg.Port, cfg.User, cfg.DBName, cfg.SSLMode, cfg.Password)
+
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed opening connection to postgres: %w", err)
+	}
+
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := db.PingContext(ctx); err != nil {
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	return db, nil
+}
+
 // InitDatabase 初始化数据库连接
 // 参数：cfg - 数据库配置信息（主机、端口、用户名、密码等）
 // 返回值：*ent.Client - Ent ORM客户端，用于数据库操作
