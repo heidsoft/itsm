@@ -31,6 +31,7 @@ func main() {
 	fresh := flag.Bool("fresh", false, "Drop and recreate database, then run migrations and seed")
 	seed := flag.Bool("seed", false, "Seed database with initial data")
 	seedOnly := flag.Bool("seed-only", false, "Only seed data without running migrations")
+	version := flag.Bool("version", false, "Show current database version")
 	flag.Parse()
 
 	// Load configuration
@@ -104,6 +105,11 @@ func main() {
 
 	if *status {
 		showStatus(migrator, available)
+		return
+	}
+
+	if *version {
+		showVersion(migrator, getAvailableMigrations())
 		return
 	}
 
@@ -328,4 +334,22 @@ func listMigrations(available []migration.Migration) {
 			fmt.Printf("       ↳ rollback: NO\n")
 		}
 	}
+}
+
+func showVersion(migrator *migration.Migrator, available []migration.Migration) {
+	ctx := context.Background()
+	applied, _, err := migrator.Status(ctx, available)
+	if err != nil {
+		log.Fatalf("Failed to get status: %v", err)
+	}
+
+	if len(applied) == 0 {
+		fmt.Println("No migrations applied")
+		return
+	}
+
+	latest := applied[len(applied)-1]
+	fmt.Printf("Current version: %s\n", latest.Version)
+	fmt.Printf("Description: %s\n", latest.Description)
+	fmt.Printf("Applied at: %s\n", latest.AppliedAt.Format("2006-01-02 15:04:05"))
 }
