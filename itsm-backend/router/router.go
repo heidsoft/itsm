@@ -40,6 +40,9 @@ type RouterConfig struct {
 	Logger    *zap.SugaredLogger
 	Client    *ent.Client
 
+	// CSRF configuration
+	CSRFEnabled bool
+
 	// Redis rate limiter (optional - uses memory fallback if nil)
 	RedisRateLimiter RateLimiterInterface
 
@@ -181,6 +184,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			public.POST("/refresh-token", config.CommonHandler.RefreshToken)
 		}
 
+		// CSRF token 获取端点（无需认证）
+		if config.CSRFEnabled {
+			public.GET("/csrf-token", middleware.CSRFTokenEndpoint(middleware.DefaultCSRFConfig()))
+		}
+
 		// 系统状态
 		public.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "ok", "timestamp": time.Now()})
@@ -197,6 +205,13 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	auth := r.Group("/api/v1").Use(middleware.AuthMiddleware(config.JWTSecret))
 	// RBAC 权限控制中间件：保护所有已认证路由
 	auth.Use(middleware.RBACMiddleware(config.Client))
+	// CSRF 保护中间件（仅对状态变更请求生效）
+	if config.CSRFEnabled {
+		csrfConfig := middleware.DefaultCSRFConfig()
+		// CSRF 不验证登录相关的路径
+		csrfConfig.SkipPaths = append(csrfConfig.SkipPaths, "/api/v1/auth/login", "/api/v1/refresh-token")
+		auth.Use(middleware.CSRFProtectionMiddleware(csrfConfig))
+	}
 
 	// WebSocket 路由（需要JWT认证）
 	if config.WebSocketService != nil {

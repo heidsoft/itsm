@@ -41,11 +41,50 @@ export const xssProtection = {
 
 // CSRF防护
 export const csrfProtection = {
-  // 生成CSRF令牌
-  generateToken: (): string => {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  // CSRF token storage
+  privateToken: null as string | null,
+  privateTokenPromise: null as Promise<string> | null,
+
+  // 获取CSRF令牌（从后端获取）
+  getToken: async (): Promise<string | null> => {
+    // 如果已有token，直接返回
+    if (csrfProtection.privateToken) {
+      return csrfProtection.privateToken;
+    }
+
+    // 如果正在获取token，等待它
+    if (csrfProtection.privateTokenPromise) {
+      return csrfProtection.privateTokenPromise;
+    }
+
+    // 发起请求获取新token
+    csrfProtection.privateTokenPromise = (async () => {
+      try {
+        const response = await fetch('/api/v1/csrf-token', {
+          method: 'GET',
+          credentials: 'include', // Include httpOnly cookies
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.code === 0 && data.data?.csrf_token) {
+            csrfProtection.privateToken = data.data.csrf_token;
+            return csrfProtection.privateToken;
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      } finally {
+        csrfProtection.privateTokenPromise = null;
+      }
+    })();
+
+    return csrfProtection.privateTokenPromise;
+  },
+
+  // 清除CSRF令牌
+  clearToken: (): void => {
+    csrfProtection.privateToken = null;
   },
 
   // 验证CSRF令牌
@@ -54,7 +93,7 @@ export const csrfProtection = {
     return token === expectedToken;
   },
 
-  // 从meta标签获取CSRF令牌
+  // 从meta标签获取CSRF令牌（兼容性）
   getTokenFromMeta: (): string | null => {
     const metaTag = document.querySelector('meta[name="csrf-token"]');
     return metaTag ? metaTag.getAttribute('content') : null;
