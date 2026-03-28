@@ -96,9 +96,9 @@ class HttpClient {
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = process.env.NEXT_PUBLIC_API_URL || baseURL;
     this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
-    // Get token from httpOnly cookie (secure), tenant info from localStorage
+    // Get token from cookie (secure, httpOnly from backend) or localStorage (fallback for SPA)
     if (typeof window !== 'undefined') {
-      this.token = getCookie('access_token');
+      this.token = getCookie('access_token') || localStorage.getItem('access_token');
       const storedTenantId = localStorage.getItem('current_tenant_id');
       this.tenantId = storedTenantId ? parseInt(storedTenantId) : null;
       this.tenantCode = localStorage.getItem('current_tenant_code') || null;
