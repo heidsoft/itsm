@@ -1,0 +1,90 @@
+# ITSM Monitoring Stack
+# Docker Compose for Prometheus, Alertmanager, and Grafana
+
+services:
+  # Prometheus - Metrics collection and alerting rules
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: itsm-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/console_libraries'
+      - '--web.enable-lifecycle'
+    networks:
+      - itsm-network
+
+  # Alertmanager - Alert routing and notifications
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: itsm-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - itsm-network
+
+  # Grafana - Metrics visualization and dashboards
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: itsm-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - itsm-network
+
+  # Prometheus Alertmanager Webhook Receiver (ITSM Integration)
+  # 这个服务接收 Alertmanager 的 webhook 并转发到 ITSM 系统的通知服务
+  alert-webhook:
+    image: node:20-alpine
+    container_name: itsm-alert-webhook
+    restart: unless-stopped
+    ports:
+      - "9094:9094"
+    volumes:
+      - ./alert-webhook/alertReceiver.js:/var/app/alertReceiver.js:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=9094
+      - ITSM_BACKEND_URL=http://itsm-backend:8080
+    command: ["node", "/var/app/alertReceiver.js"]
+    depends_on:
+      - alertmanager
+    networks:
+      - itsm-network
+
+networks:
+  itsm-network:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:
