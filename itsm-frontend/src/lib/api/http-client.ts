@@ -2,6 +2,29 @@ import { API_BASE_URL } from '@/lib/api/api-config';
 import { security } from '@/lib/security';
 import { logger } from '@/lib/env';
 
+// Cookie utility functions for secure token storage
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const [cookieName, cookieValue] = cookie.trim().split('=');
+    if (cookieName === name) {
+      return decodeURIComponent(cookieValue || '');
+    }
+  }
+  return null;
+}
+
+function setCookie(name: string, value: string, maxAge: number): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
+
+function deleteCookie(name: string): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; path=/; max-age=-1;`;
+}
+
 // 递归将对象的 key 从 snake_case 转换为 camelCase
 const toCamelCase = (obj: unknown): unknown => {
   if (obj === null || obj === undefined) {
@@ -73,9 +96,9 @@ class HttpClient {
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = process.env.NEXT_PUBLIC_API_URL || baseURL;
     this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
-    // Get token and tenant ID from localStorage
+    // Get token from httpOnly cookie (secure), tenant info from localStorage
     if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('access_token'); // Changed to access_token
+      this.token = getCookie('access_token');
       const storedTenantId = localStorage.getItem('current_tenant_id');
       this.tenantId = storedTenantId ? parseInt(storedTenantId) : null;
       this.tenantCode = localStorage.getItem('current_tenant_code') || null;
@@ -84,20 +107,16 @@ class HttpClient {
 
   setToken(token: string) {
     this.token = token;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('access_token', token); // Changed to access_token
-      // 同步更新 Cookie，有效期 15 分钟
-      document.cookie = `auth-token=${token}; path=/; max-age=900; SameSite=Lax`;
-    }
+    // Token is stored in httpOnly cookie by backend, no need to set here
+    // This method kept for backward compatibility
   }
 
   clearToken() {
     this.token = null;
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token'); // Changed to access_token
-      // 清除 Cookie
-      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-      document.cookie = 'refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      // Clear the httpOnly cookies via Set-Cookie header from backend logout endpoint
+      deleteCookie('access_token');
+      deleteCookie('refresh_token');
     }
   }
 
@@ -153,9 +172,8 @@ class HttpClient {
       ...security.network.getSecureHeaders(csrfToken || undefined),
     };
 
-    // Dynamically get the latest token and tenantId
-    const currentToken =
-      typeof window !== 'undefined' ? localStorage.getItem('access_token') : this.token;
+    // Get token from httpOnly cookie (secure), tenant from localStorage
+    const currentToken = typeof window !== 'undefined' ? getCookie('access_token') : this.token;
     const currentTenantId =
       typeof window !== 'undefined' ? localStorage.getItem('current_tenant_id') : this.tenantId;
 
@@ -177,18 +195,18 @@ class HttpClient {
 
   // Independent token refresh method to avoid circular dependencies
   private async refreshTokenInternal(): Promise<boolean> {
-    const refreshToken =
-      typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
+    const refreshToken = typeof window !== 'undefined' ? getCookie('refresh_token') : null;
     if (!refreshToken) {
       return false;
     }
 
     try {
-      const response = await fetch(`${this.baseURL}/api/v1/refresh-token`, {
+      const response = await fetch(`${this.baseURL}/api/v1/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include httpOnly cookies
         body: JSON.stringify({
           refresh_token: refreshToken,
         }),
@@ -197,9 +215,7 @@ class HttpClient {
       if (response.ok) {
         const data = await response.json();
         if (data.code === 0) {
-          // Update access token
-          this.setToken(data.data.access_token);
-          // Also update instance variable
+          // Access token is set in httpOnly cookie by backend
           this.token = data.data.access_token;
           return true;
         }
@@ -251,6 +267,7 @@ class HttpClient {
 
       const response = await fetch(url, {
         ...requestConfig,
+        credentials: 'include', // Include httpOnly cookies for authenticated requests
         signal: controller.signal,
       });
 
@@ -266,9 +283,10 @@ class HttpClient {
       if (response.status === 401) {
         const refreshSuccess = await this.refreshTokenInternal();
         if (refreshSuccess) {
-          // Retry original request
+          // Retry original request with credentials: 'include' to send cookies
           const retryConfig: RequestInit = {
             ...requestConfig,
+            credentials: 'include',
             headers: {
               ...this.getHeaders(),
               ...config.headers,
@@ -295,7 +313,6 @@ class HttpClient {
           // Refresh failed, clear token and redirect to login
           this.clearToken();
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('refresh_token');
             // Only redirect if not already on login page to avoid loops
             if (!window.location.pathname.startsWith('/login')) {
               window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;

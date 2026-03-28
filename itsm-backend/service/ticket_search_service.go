@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -90,47 +91,127 @@ func (s *TicketSearchService) GetOverdueTickets(ctx context.Context, tenantID in
 
 // GetTicketStats 获取工单统计信息
 func (s *TicketSearchService) GetTicketStats(ctx context.Context, tenantID int) (*dto.TicketStatsResponse, error) {
-	response := &dto.TicketStatsResponse{}
+	// 使用并发查询优化性能（避免串行的 N+1 查询）
+	errCh := make(chan error, 5)
+	resultCh := make(chan *dto.TicketStatsResponse, 1)
+	overdueCh := make(chan []*ent.Ticket, 1)
 
-	// 统计总工单数
-	total, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID)).
-		Count(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("统计总工单数失败: %w", err)
-	}
-	response.Total = total
+	go func() {
+		// 并发查询逾期工单（单独因为需要复杂条件）
+		overdue, err := s.GetOverdueTickets(ctx, tenantID)
+		if err != nil {
+			s.logger.Warnw("Failed to get overdue tickets", "error", err)
+		}
+		overdueCh <- overdue
+	}()
 
-	// 按状态统计
-	openCount, _ := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.StatusEQ("open")).
-		Count(ctx)
-	response.Open = openCount
+	go func() {
+		// 并发执行多个统计查询
+		response := &dto.TicketStatsResponse{}
+		var wg sync.WaitGroup
+		var mu sync.Mutex
 
-	inProgressCount, _ := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.StatusEQ("in_progress")).
-		Count(ctx)
-	response.InProgress = inProgressCount
+		// 总数
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			total, err := s.client.Ticket.Query().
+				Where(ticket.TenantID(tenantID)).
+				Count(ctx)
+			if err != nil {
+				errCh <- fmt.Errorf("统计总工单数失败: %w", err)
+				return
+			}
+			mu.Lock()
+			response.Total = total
+			mu.Unlock()
+		}()
 
-	resolvedCount, _ := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.StatusEQ("resolved")).
-		Count(ctx)
-	response.Resolved = resolvedCount
+		// open 数量
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			count, err := s.client.Ticket.Query().
+				Where(ticket.TenantID(tenantID), ticket.StatusEQ("open")).
+				Count(ctx)
+			if err != nil {
+				errCh <- fmt.Errorf("统计open工单失败: %w", err)
+				return
+			}
+			mu.Lock()
+			response.Open = count
+			mu.Unlock()
+		}()
 
-	// 高优先级工单数 (high + critical)
-	highPriorityCount, _ := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.PriorityIn("high", "critical"),
-		).
-		Count(ctx)
-	response.HighPriority = highPriorityCount
+		// in_progress 数量
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			count, err := s.client.Ticket.Query().
+				Where(ticket.TenantID(tenantID), ticket.StatusEQ("in_progress")).
+				Count(ctx)
+			if err != nil {
+				errCh <- fmt.Errorf("统计in_progress工单失败: %w", err)
+				return
+			}
+			mu.Lock()
+			response.InProgress = count
+			mu.Unlock()
+		}()
 
-	// 逾期工单数（通过GetOverdueTickets获取）
-	overdue, _ := s.GetOverdueTickets(ctx, tenantID)
+		// resolved 数量
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			count, err := s.client.Ticket.Query().
+				Where(ticket.TenantID(tenantID), ticket.StatusEQ("resolved")).
+				Count(ctx)
+			if err != nil {
+				errCh <- fmt.Errorf("统计resolved工单失败: %w", err)
+				return
+			}
+			mu.Lock()
+			response.Resolved = count
+			mu.Unlock()
+		}()
+
+		// high/critical 优先级数量
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			count, err := s.client.Ticket.Query().
+				Where(
+					ticket.TenantID(tenantID),
+					ticket.PriorityIn("high", "critical"),
+				).
+				Count(ctx)
+			if err != nil {
+				errCh <- fmt.Errorf("统计高优先级工单失败: %w", err)
+				return
+			}
+			mu.Lock()
+			response.HighPriority = count
+			mu.Unlock()
+		}()
+
+		wg.Wait()
+		close(errCh)
+		close(resultCh)
+		resultCh <- response
+	}()
+
+	response := <-resultCh
+	overdue := <-overdueCh
 	response.Overdue = len(overdue)
 
-	s.logger.Infow("Ticket stats calculated", "tenant_id", tenantID, "total", total)
+	// 检查错误
+	for err := range errCh {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	s.logger.Infow("Ticket stats calculated", "tenant_id", tenantID, "total", response.Total)
 	return response, nil
 }
 
@@ -143,37 +224,106 @@ func (s *TicketSearchService) GetTicketAnalytics(ctx context.Context, tenantID i
 		GeneratedAt: time.Now(),
 	}
 
-	// 统计时间段内的创建数
-	createdCount, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.CreatedAtGTE(dateFrom),
-			ticket.CreatedAtLTE(dateTo),
-		).
-		Count(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("统计创建数失败: %w", err)
+	// 并发查询统计数据
+	type summaryResult struct {
+		created  int
+		resolved int
 	}
 
-	// 统计时间段内的解决数
-	resolvedCount, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.StatusEQ("resolved"),
-			ticket.UpdatedAtGTE(dateFrom),
-			ticket.UpdatedAtLTE(dateTo),
-		).
-		Count(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("统计解决数失败: %w", err)
+	summaryCh := make(chan summaryResult, 1)
+	errCh := make(chan error, 1)
+
+	go func() {
+		createdCount, err := s.client.Ticket.Query().
+			Where(
+				ticket.TenantID(tenantID),
+				ticket.CreatedAtGTE(dateFrom),
+				ticket.CreatedAtLTE(dateTo),
+			).
+			Count(ctx)
+		if err != nil {
+			errCh <- fmt.Errorf("统计创建数失败: %w", err)
+			return
+		}
+
+		resolvedCount, err := s.client.Ticket.Query().
+			Where(
+				ticket.TenantID(tenantID),
+				ticket.StatusEQ("resolved"),
+				ticket.UpdatedAtGTE(dateFrom),
+				ticket.UpdatedAtLTE(dateTo),
+			).
+			Count(ctx)
+		if err != nil {
+			errCh <- fmt.Errorf("统计解决数失败: %w", err)
+			return
+		}
+
+		summaryCh <- summaryResult{created: createdCount, resolved: resolvedCount}
+	}()
+
+	// 并发获取每日趋势
+	trendsCh := make(chan []map[string]interface{}, 1)
+
+	go func() {
+		// 获取所有工单并按天分组（在内存中计算，避免 N+1）
+		tickets, err := s.client.Ticket.Query().
+			Where(
+				ticket.TenantID(tenantID),
+				ticket.CreatedAtGTE(dateFrom),
+				ticket.CreatedAtLTE(dateTo),
+			).
+			All(ctx)
+		if err != nil {
+			s.logger.Warnw("Failed to get tickets for daily trends", "error", err)
+			trendsCh <- []map[string]interface{}{}
+			return
+		}
+
+		// 按天分组计算
+		dailyMap := make(map[string]map[string]int)
+		for _, t := range tickets {
+			dateKey := t.CreatedAt.Format("2006-01-02")
+			if dailyMap[dateKey] == nil {
+				dailyMap[dateKey] = map[string]int{"created": 0, "resolved": 0}
+			}
+			dailyMap[dateKey]["created"]++
+			if t.Status == "resolved" || t.Status == "closed" {
+				dailyMap[dateKey]["resolved"]++
+			}
+		}
+
+		// 转换为趋势数组
+		trends := make([]map[string]interface{}, 0, len(dailyMap))
+		for date, stats := range dailyMap {
+			trends = append(trends, map[string]interface{}{
+				"date":       date,
+				"created":    stats["created"],
+				"resolved":   stats["resolved"],
+				"net_change": stats["created"] - stats["resolved"],
+			})
+		}
+		trendsCh <- trends
+	}()
+
+	// 等待结果
+	select {
+	case summary := <-summaryCh:
+		response.Summary["tickets_created"] = summary.created
+		response.Summary["tickets_resolved"] = summary.resolved
+		response.Summary["net_change"] = summary.created - summary.resolved
+	case err := <-errCh:
+		return nil, err
 	}
 
-	// 设置摘要
-	response.Summary["tickets_created"] = createdCount
-	response.Summary["tickets_resolved"] = resolvedCount
-	response.Summary["net_change"] = createdCount - resolvedCount
+	response.Trends = <-trendsCh
 
-	// 按日统计趋势（简化）
+	s.logger.Infow("Ticket analytics calculated", "tenant_id", tenantID, "from", dateFrom, "to", dateTo)
+	return response, nil
+}
+
+// getDailyTrendsFallback 降级方案：使用循环查询获取每日趋势
+func (s *TicketSearchService) getDailyTrendsFallback(ctx context.Context, tenantID int, dateFrom, dateTo time.Time) []map[string]interface{} {
 	days := int(dateTo.Sub(dateFrom).Hours()/24) + 1
 	if days < 1 {
 		days = 1
@@ -210,9 +360,5 @@ func (s *TicketSearchService) GetTicketAnalytics(ctx context.Context, tenantID i
 			"net_change": dayCreated - dayResolved,
 		}
 	}
-
-	response.Trends = dailyTrends
-
-	s.logger.Infow("Ticket analytics calculated", "tenant_id", tenantID, "from", dateFrom, "to", dateTo)
-	return response, nil
+	return dailyTrends
 }

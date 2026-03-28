@@ -30,12 +30,9 @@ func NewTicketCoreService(client *ent.Client, logger *zap.SugaredLogger) *Ticket
 }
 
 func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ent.Ticket, error) {
-	if strings.TrimSpace(req.Description) == "" {
-		return nil, fmt.Errorf("描述不能为空")
-	}
-	if strings.ToLower(strings.TrimSpace(req.Priority)) == "" {
-		return nil, fmt.Errorf("优先级不能为空")
-	}
+	// DTO binding validation handles required fields and format checks
+	// Service layer validates business logic (entity existence, permissions, etc.)
+
 	if err := s.validateRequester(ctx, req.RequesterID, tenantID); err != nil {
 		return nil, fmt.Errorf("验证创建人失败: %w", err)
 	}
