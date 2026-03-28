@@ -96,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout } = useAuthStore();
+  const { user, logout, token } = useAuthStore();
   const { t, language, changeLanguage } = useI18n();
   useAuthStoreHydration();
 
