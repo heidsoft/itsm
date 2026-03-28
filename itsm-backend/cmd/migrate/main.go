@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -26,6 +27,7 @@ func main() {
 	status := flag.Bool("status", false, "Show migration status")
 	rollbackVersion := flag.String("rollback-to", "", "Rollback to a specific version")
 	dryRun := flag.Bool("dry-run", false, "Show SQL without executing")
+	fresh := flag.Bool("fresh", false, "Drop and recreate database, then run migrations and seed")
 	seed := flag.Bool("seed", false, "Seed database with initial data")
 	seedOnly := flag.Bool("seed-only", false, "Only seed data without running migrations")
 	flag.Parse()
@@ -60,6 +62,11 @@ func main() {
 
 	// Get available migrations
 	available := getAvailableMigrations()
+
+	if *fresh {
+		freshDatabase(migrator, sugar)
+		return
+	}
 
 	if *seed {
 		seedData(sugar)
@@ -239,4 +246,68 @@ func seedData(sugar *zap.SugaredLogger) {
 	seederInstance := seeder.NewSeeder(client, sugar)
 	seederInstance.SeedAll(context.Background())
 	fmt.Println("Seed completed successfully")
+}
+
+func freshDatabase(migrator *migration.Migrator, sugar *zap.SugaredLogger) {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	// Connect to postgres to drop/create database
+	postgresDSN := fmt.Sprintf("host=%s port=%d user=%s dbname=postgres sslmode=%s password=%s",
+		cfg.Database.Host, cfg.Database.Port, cfg.Database.User, cfg.Database.SSLMode, cfg.Database.Password)
+
+	postgresDB, err := sql.Open("postgres", postgresDSN)
+	if err != nil {
+		log.Fatalf("Failed to connect to postgres: %v", err)
+	}
+	defer postgresDB.Close()
+
+	fmt.Printf("Dropping database %s...\n", cfg.Database.DBName)
+	_, err = postgresDB.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", cfg.Database.DBName))
+	if err != nil {
+		log.Fatalf("Failed to drop database: %v", err)
+	}
+
+	fmt.Printf("Creating database %s...\n", cfg.Database.DBName)
+	_, err = postgresDB.Exec(fmt.Sprintf("CREATE DATABASE %s", cfg.Database.DBName))
+	if err != nil {
+		log.Fatalf("Failed to create database: %v", err)
+	}
+
+	postgresDB.Close()
+
+	// Reconnect to new database
+	db, err := database.InitDB(&cfg.Database)
+	if err != nil {
+		log.Fatalf("Failed to connect to new database: %v", err)
+	}
+	defer db.Close()
+
+	// Update migrator with new connection
+	*migrator = *migration.NewMigrator(db, sugar)
+
+	ctx := context.Background()
+	if err := migrator.EnsureMigrationsTable(ctx); err != nil {
+		log.Fatalf("Failed to ensure migrations table: %v", err)
+	}
+
+	available := getAvailableMigrations()
+	count, err := migrator.RunMigrations(ctx, available)
+	if err != nil {
+		log.Fatalf("Migration failed: %v", err)
+	}
+	fmt.Printf("Applied %d migration(s)\n", count)
+
+	// Seed data
+	client, err := database.InitDatabase(&cfg.Database)
+	if err != nil {
+		log.Fatalf("Failed to connect for seeding: %v", err)
+	}
+	defer client.Close()
+	seederInstance := seeder.NewSeeder(client, sugar)
+	seederInstance.SeedAll(context.Background())
+
+	fmt.Println("Fresh reset completed successfully")
 }
