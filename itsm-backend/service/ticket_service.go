@@ -108,16 +108,8 @@ func (s *TicketService) SetSLAService(slaService *TicketSLAService) {
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ent.Ticket, error) {
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
 
-	// 基础校验
-	if strings.TrimSpace(req.Description) == "" {
-		return nil, fmt.Errorf("描述不能为空")
-	}
-	switch strings.ToLower(strings.TrimSpace(req.Priority)) {
-	case "", "low", "medium", "high", "urgent":
-		// ok
-	default:
-		return nil, fmt.Errorf("无效的优先级")
-	}
+	// DTO binding validation handles required fields and format checks
+	// Service layer validates business logic only
 
 	// 使用 CoreService 创建基础工单
 	coreService := NewTicketCoreService(s.client, s.logger)

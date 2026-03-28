@@ -55,21 +55,18 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
 
       // 登录操作
-      login: (user: User, token: string, tenant?: Tenant) => {
+      // 注意：token 现在存储在 httpOnly cookie 中，由后端设置
+      // 这里只需要更新状态，不需要存储 token
+      login: (user: User, _token: string, tenant?: Tenant) => {
         set({
           user,
-          token,
+          token: 'httpOnly', // Token is in httpOnly cookie, not accessible
           isAuthenticated: true,
           isLoading: false,
           currentTenant: tenant || null,
         });
 
-        // 同步到 localStorage 和 httpClient
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('access_token', token);
-        }
-        httpClient.setToken(token);
-
+        // 只设置租户信息（不存储 token）
         if (tenant) {
           httpClient.setTenantId(tenant.id);
           httpClient.setTenantCode(tenant.code);
