@@ -13,6 +13,7 @@ import (
 	"itsm-backend/config"
 	"itsm-backend/database"
 	"itsm-backend/migration"
+	"itsm-backend/pkg/seeder"
 
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
@@ -25,6 +26,8 @@ func main() {
 	status := flag.Bool("status", false, "Show migration status")
 	rollbackVersion := flag.String("rollback-to", "", "Rollback to a specific version")
 	dryRun := flag.Bool("dry-run", false, "Show SQL without executing")
+	seed := flag.Bool("seed", false, "Seed database with initial data")
+	seedOnly := flag.Bool("seed-only", false, "Only seed data without running migrations")
 	flag.Parse()
 
 	// Load configuration
@@ -57,6 +60,26 @@ func main() {
 
 	// Get available migrations
 	available := getAvailableMigrations()
+
+	if *seed {
+		seedData(sugar)
+		return
+	}
+
+	if *seedOnly {
+		ctx := context.Background()
+		// First ensure migrations table
+		if err := migrator.EnsureMigrationsTable(ctx); err != nil {
+			log.Fatalf("Failed to ensure migrations table: %v", err)
+		}
+		count, err := migrator.RunMigrations(ctx, available)
+		if err != nil {
+			log.Fatalf("Migration failed: %v", err)
+		}
+		fmt.Printf("Applied %d migration(s)\n", count)
+		seedData(sugar)
+		return
+	}
 
 	if *dryRun {
 		ctx := context.Background()
@@ -199,4 +222,21 @@ func rollbackToVersion(migrator *migration.Migrator, available []migration.Migra
 		}
 		fmt.Printf("Rolled back migration: %s\n", m.Version)
 	}
+}
+
+func seedData(sugar *zap.SugaredLogger) {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	client, err := database.InitDatabase(&cfg.Database)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer client.Close()
+
+	seederInstance := seeder.NewSeeder(client, sugar)
+	seederInstance.SeedAll(context.Background())
+	fmt.Println("Seed completed successfully")
 }
