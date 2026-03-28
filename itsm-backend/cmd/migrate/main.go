@@ -32,6 +32,7 @@ func main() {
 	seed := flag.Bool("seed", false, "Seed database with initial data")
 	seedOnly := flag.Bool("seed-only", false, "Only seed data without running migrations")
 	version := flag.Bool("version", false, "Show current database version")
+	reset := flag.Bool("reset", false, "Rollback all migrations")
 	flag.Parse()
 
 	// Load configuration
@@ -110,6 +111,11 @@ func main() {
 
 	if *version {
 		showVersion(migrator, getAvailableMigrations())
+		return
+	}
+
+	if *reset {
+		resetMigrations(migrator, getAvailableMigrations())
 		return
 	}
 
@@ -352,4 +358,31 @@ func showVersion(migrator *migration.Migrator, available []migration.Migration) 
 	fmt.Printf("Current version: %s\n", latest.Version)
 	fmt.Printf("Description: %s\n", latest.Description)
 	fmt.Printf("Applied at: %s\n", latest.AppliedAt.Format("2006-01-02 15:04:05"))
+}
+
+func resetMigrations(migrator *migration.Migrator, available []migration.Migration) {
+	ctx := context.Background()
+	applied, _, err := migrator.Status(ctx, available)
+	if err != nil {
+		log.Fatalf("Failed to get status: %v", err)
+	}
+
+	if len(applied) == 0 {
+		fmt.Println("No migrations to rollback")
+		return
+	}
+
+	fmt.Printf("Rolling back %d migration(s)...\n", len(applied))
+	for i := len(applied) - 1; i >= 0; i-- {
+		m := applied[i]
+		if m.RollbackSQL == "" {
+			fmt.Printf("  Skipping %s (no rollback SQL)\n", m.Version)
+			continue
+		}
+		if err := migrator.RollbackMigration(ctx, m); err != nil {
+			log.Fatalf("Rollback failed at %s: %v", m.Version, err)
+		}
+		fmt.Printf("  Rolled back: %s\n", m.Version)
+	}
+	fmt.Println("Reset completed successfully")
 }
