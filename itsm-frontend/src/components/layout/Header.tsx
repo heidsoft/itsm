@@ -37,6 +37,7 @@ import {
   Phone,
   Building,
   LogIn,
+  Globe,
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
@@ -96,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
-  const { t } = useI18n();
+  const { t, language, changeLanguage } = useI18n();
   useAuthStoreHydration();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -443,6 +444,54 @@ export const Header: React.FC<HeaderProps> = ({
             </Button>
           </Badge>
         </Tooltip>
+
+        {/* 语言切换 */}
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: 'zh-CN',
+                label: (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span>🇨🇳</span>
+                    <span>中文</span>
+                    {language === 'zh-CN' && <span style={{ color: DESIGN.colors.accent }}>✓</span>}
+                  </div>
+                ),
+                onClick: () => changeLanguage('zh-CN'),
+              },
+              {
+                key: 'en-US',
+                label: (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span>🇺🇸</span>
+                    <span>English</span>
+                    {language === 'en-US' && <span style={{ color: DESIGN.colors.accent }}>✓</span>}
+                  </div>
+                ),
+                onClick: () => changeLanguage('en-US'),
+              },
+            ],
+          }}
+          placement="bottomRight"
+          trigger={['click']}
+        >
+          <Tooltip title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}>
+            <Button
+              type="text"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: DESIGN.radius.md,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Globe size={20} style={{ color: DESIGN.colors.textMuted }} />
+            </Button>
+          </Tooltip>
+        </Dropdown>
 
         {/* 用户菜单 */}
         {isClient ? (
