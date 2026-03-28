@@ -399,6 +399,7 @@ func NewApplication() *Application {
 		JWTSecret:                       cfg.JWT.Secret,
 		Logger:                          sugar,
 		Client:                          client,
+		CSRFEnabled:                     cfg.Security.CSRFEnabled,
 		RedisRateLimiter:                redisRateLimiter,
 		TicketController:                ticketController,
 		TicketDependencyController:      ticketDependencyController,
