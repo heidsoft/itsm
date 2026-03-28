@@ -20,6 +20,12 @@ type Config struct {
 	SMTP     SMTPConfig     `mapstructure:"smtp"`
 	Ticket   TicketConfig   `mapstructure:"ticket"`
 	Redis    RedisConfig    `mapstructure:"redis"`
+	Security SecurityConfig `mapstructure:"security"`
+}
+
+// SecurityConfig 安全配置
+type SecurityConfig struct {
+	CSRFEnabled bool `mapstructure:"csrf_enabled"` // 是否启用 CSRF 保护
 }
 
 type RedisConfig struct {

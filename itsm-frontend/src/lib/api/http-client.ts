@@ -167,9 +167,8 @@ class HttpClient {
 
   private getHeaders(): Record<string, string> {
     // Set secure request headers
-    const csrfToken = security.csrf.getTokenFromMeta();
     const headers: Record<string, string> = {
-      ...security.network.getSecureHeaders(csrfToken || undefined),
+      ...security.network.getSecureHeaders(),
     };
 
     // Get token from httpOnly cookie (secure), tenant from localStorage
@@ -190,6 +189,30 @@ class HttpClient {
       headers['X-Tenant-Code'] = currentTenantCode;
     }
 
+    return headers;
+  }
+
+  // 获取CSRF token（用于mutating请求）
+  private async getCSRFToken(): Promise<string | null> {
+    try {
+      return await security.csrf.getToken();
+    } catch {
+      return null;
+    }
+  }
+
+  // 为mutating请求添加CSRF header
+  private async addCSRFHeader(headers: Record<string, string>, method: string): Promise<Record<string, string>> {
+    // 只对mutating请求添加CSRF token
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+      const csrfToken = await this.getCSRFToken();
+      if (csrfToken) {
+        return {
+          ...headers,
+          'X-CSRF-Token': csrfToken,
+        };
+      }
+    }
     return headers;
   }
 
@@ -230,7 +253,9 @@ class HttpClient {
   // Core request method using fetch API (internal)
   private async requestInternal<T>(endpoint: string, config: RequestConfig): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    const headers = this.getHeaders();
+    let headers = this.getHeaders();
+    // 为mutating请求添加CSRF token
+    headers = await this.addCSRFHeader(headers, config.method || 'GET');
     const sanitizedHeaders = { ...headers };
     if (sanitizedHeaders.Authorization) {
       sanitizedHeaders.Authorization = '[REDACTED]';
@@ -284,11 +309,12 @@ class HttpClient {
         const refreshSuccess = await this.refreshTokenInternal();
         if (refreshSuccess) {
           // Retry original request with credentials: 'include' to send cookies
+          let retryHeaders = await this.addCSRFHeader(this.getHeaders(), config.method || 'GET');
           const retryConfig: RequestInit = {
             ...requestConfig,
             credentials: 'include',
             headers: {
-              ...this.getHeaders(),
+              ...retryHeaders,
               ...config.headers,
             },
           };
