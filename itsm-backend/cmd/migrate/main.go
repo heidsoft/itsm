@@ -25,6 +25,7 @@ func main() {
 	up := flag.Bool("up", false, "Apply all pending migrations")
 	down := flag.Bool("down", false, "Rollback the last migration")
 	status := flag.Bool("status", false, "Show migration status")
+	list := flag.Bool("list", false, "List all available migrations")
 	rollbackVersion := flag.String("rollback-to", "", "Rollback to a specific version")
 	dryRun := flag.Bool("dry-run", false, "Show SQL without executing")
 	fresh := flag.Bool("fresh", false, "Drop and recreate database, then run migrations and seed")
@@ -103,6 +104,11 @@ func main() {
 
 	if *status {
 		showStatus(migrator, available)
+		return
+	}
+
+	if *list {
+		listMigrations(getAvailableMigrations())
 		return
 	}
 
@@ -310,4 +316,16 @@ func freshDatabase(migrator *migration.Migrator, sugar *zap.SugaredLogger) {
 	seederInstance.SeedAll(context.Background())
 
 	fmt.Println("Fresh reset completed successfully")
+}
+
+func listMigrations(available []migration.Migration) {
+	fmt.Println("=== Available Migrations ===")
+	for _, mig := range available {
+		fmt.Printf("  [%s] %s\n", mig.Version, mig.Description)
+		if mig.RollbackSQL != "" {
+			fmt.Printf("       ↳ rollback: YES\n")
+		} else {
+			fmt.Printf("       ↳ rollback: NO\n")
+		}
+	}
 }
