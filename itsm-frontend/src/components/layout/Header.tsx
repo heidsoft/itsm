@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Layout,
   Button,
@@ -43,6 +43,8 @@ import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import styles from './Header.module.css';
 import { useI18n } from '@/lib/i18n';
 import { globalSearch, GlobalSearchResponse, SearchResult } from '@/lib/api/global-search-api';
+import { TicketNotificationApi, TicketNotification } from '@/lib/api/ticket-notification-api';
+import { notificationWS } from '@/lib/services/notification-ws';
 
 const { Header: AntHeader } = Layout;
 const { Text, Title } = Typography;
@@ -100,35 +102,8 @@ export const Header: React.FC<HeaderProps> = ({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: '新工单已分配给您',
-      content: '工单 #1234 需要您的处理',
-      time: '2分钟前',
-      read: false,
-      type: 'ticket',
-      priority: 'high',
-    },
-    {
-      id: 2,
-      title: '系统维护通知',
-      content: '系统将于今晚22:00进行维护',
-      time: '1小时前',
-      read: true,
-      type: 'system',
-      priority: 'medium',
-    },
-    {
-      id: 3,
-      title: 'SLA预警',
-      content: '工单 #1234 即将超时，请及时处理',
-      time: '3小时前',
-      read: false,
-      type: 'sla',
-      priority: 'urgent',
-    },
-  ]);
+  const [notifications, setNotifications] = useState<TicketNotification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
 
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [searchResults, setSearchResults] = useState<GlobalSearchResponse | null>(null);
@@ -137,6 +112,54 @@ export const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // 加载通知
+  const loadNotifications = useCallback(async () => {
+    if (!user?.id) return;
+    setNotificationsLoading(true);
+    try {
+      const response = await TicketNotificationApi.getUserNotifications({
+        page: 1,
+        page_size: 10,
+      });
+      setNotifications(response.notifications || []);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, [user?.id]);
+
+  // 初始化通知和WebSocket
+  useEffect(() => {
+    if (user?.id && token) {
+      // 加载初始通知
+      loadNotifications();
+
+      // 连接WebSocket获取实时通知
+      notificationWS.connect(user.id, token).catch(err => {
+        console.error('Notification WebSocket connection failed:', err);
+      });
+
+      // 监听新通知
+      const unsubscribe = notificationWS.onNotification((notification: TicketNotification) => {
+        setNotifications(prev => [notification, ...prev]);
+        message.info(notification.content);
+      });
+
+      return () => {
+        unsubscribe();
+        notificationWS.disconnect();
+      };
+    }
+  }, [user?.id, token, loadNotifications]);
+
+  // 定期刷新通知（每30秒）
+  useEffect(() => {
+    if (!user?.id) return;
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [user?.id, loadNotifications]);
 
   // Ctrl+K 快捷键打开全局搜索
   useEffect(() => {
@@ -175,15 +198,27 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const markAsRead = (id: number) => {
-    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
-  };
+  const markAsRead = useCallback(async (id: number) => {
+    try {
+      await TicketNotificationApi.markNotificationRead(id);
+      setNotifications(prev =>
+        prev.map(n => (n.id === id ? { ...n, status: 'read' as const } : n))
+      );
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  }, []);
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
+  const markAllAsRead = useCallback(async () => {
+    try {
+      await TicketNotificationApi.markAllNotificationsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, status: 'read' as const })));
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  }, []);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => n.status !== 'read').length;
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -249,71 +284,89 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   // 通知项
-  const NotificationItem = ({ item }: { item: typeof notifications[0] }) => (
-    <div
-      onClick={() => markAsRead(item.id)}
-      style={{
-        padding: '16px',
-        borderBottom: `1px solid ${DESIGN.colors.border}`,
-        background: item.read ? 'transparent' : `${DESIGN.colors.accent}08`,
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-      }}
-      className="notification-item"
-    >
-      <div style={{ display: 'flex', gap: 12 }}>
-        {/* 图标 */}
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: DESIGN.radius.md,
-            background: `${getPriorityColor(item.priority)}15`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: getPriorityColor(item.priority),
-            flexShrink: 0,
-          }}
-        >
-          {getNotificationIcon(item.type)}
-        </div>
+  const NotificationItem = ({ item }: { item: TicketNotification }) => {
+    const isRead = item.status === 'read';
+    const priority = item.type === 'sla_warning' ? 'urgent' : item.type === 'assigned' ? 'high' : 'medium';
 
-        {/* 内容 */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-            <Text strong style={{ fontSize: 14, color: item.read ? DESIGN.colors.textMuted : DESIGN.colors.text }}>
-              {item.title}
-            </Text>
-            {!item.read && (
-              <div
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  background: DESIGN.colors.accent,
-                  flexShrink: 0,
-                  marginLeft: 8,
-                }}
-              />
-            )}
+    const getNotificationTitle = (type: string) => {
+      switch (type) {
+        case 'created': return '新工单创建';
+        case 'assigned': return '工单已分配';
+        case 'status_changed': return '工单状态变更';
+        case 'commented': return '工单有新评论';
+        case 'sla_warning': return 'SLA预警';
+        case 'resolved': return '工单已解决';
+        case 'closed': return '工单已关闭';
+        default: return '新通知';
+      }
+    };
+
+    return (
+      <div
+        onClick={() => markAsRead(item.id)}
+        style={{
+          padding: '16px',
+          borderBottom: `1px solid ${DESIGN.colors.border}`,
+          background: isRead ? 'transparent' : `${DESIGN.colors.accent}08`,
+          cursor: 'pointer',
+          transition: 'all 0.2s',
+        }}
+        className="notification-item"
+      >
+        <div style={{ display: 'flex', gap: 12 }}>
+          {/* 图标 */}
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: DESIGN.radius.md,
+              background: `${getPriorityColor(priority)}15`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: getPriorityColor(priority),
+              flexShrink: 0,
+            }}
+          >
+            {getNotificationIcon(item.type)}
           </div>
-          <Text style={{ fontSize: 13, color: DESIGN.colors.textMuted, display: 'block', marginBottom: 4 }}>
-            {item.content}
-          </Text>
-          <Text style={{ fontSize: 12, color: DESIGN.colors.textMuted }}>
-            {item.time}
-          </Text>
-        </div>
-      </div>
 
-      <style>{`
-        .notification-item:hover {
-          background: ${DESIGN.colors.bgSubtle} !important;
-        }
-      `}</style>
-    </div>
-  );
+          {/* 内容 */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+              <Text strong style={{ fontSize: 14, color: isRead ? DESIGN.colors.textMuted : DESIGN.colors.text }}>
+                {getNotificationTitle(item.type)}
+              </Text>
+              {!isRead && (
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: DESIGN.colors.accent,
+                    flexShrink: 0,
+                    marginLeft: 8,
+                  }}
+                />
+              )}
+            </div>
+            <Text style={{ fontSize: 13, color: DESIGN.colors.textMuted, display: 'block', marginBottom: 4 }}>
+              {item.content}
+            </Text>
+            <Text style={{ fontSize: 12, color: DESIGN.colors.textMuted }}>
+              {item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}
+            </Text>
+          </div>
+        </div>
+
+        <style>{`
+          .notification-item:hover {
+            background: ${DESIGN.colors.bgSubtle} !important;
+          }
+        `}</style>
+      </div>
+    );
+  };
 
   return (
     <AntDesignHeader className={styles.header} style={{ background: DESIGN.colors.surface }}>
