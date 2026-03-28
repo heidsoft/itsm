@@ -32,6 +32,7 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -370,10 +371,35 @@ func NewApplication() *Application {
 	if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
 		sugar.Warnw("failed to set trusted proxies, falling back to default", "error", err)
 	}
+
+	// 初始化 Redis 限流器（分布式环境使用）
+	var redisRateLimiter router.RateLimiterInterface
+	if cfg.Redis.Host != "" {
+		redisClient := redis.NewClient(&redis.Options{
+			Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
+			Password: cfg.Redis.Password,
+			DB:       cfg.Redis.DB,
+		})
+		// 测试 Redis 连接
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := redisClient.Ping(ctx).Err(); err != nil {
+			sugar.Warnw("Redis connection failed, rate limiter will use in-memory fallback", "error", err)
+			redisRateLimiter = nil
+		} else {
+			sugar.Info("Redis connection established, using distributed rate limiter")
+			// 默认每分钟 500 次请求
+			redisRateLimiter = middleware.NewRedisRateLimiter(redisClient, 500, time.Minute)
+		}
+	} else {
+		sugar.Warn("Redis not configured, rate limiter will use in-memory fallback (not suitable for distributed deployment)")
+	}
+
 	routerConfig := &router.RouterConfig{
 		JWTSecret:                       cfg.JWT.Secret,
 		Logger:                          sugar,
 		Client:                          client,
+		RedisRateLimiter:                redisRateLimiter,
 		TicketController:                ticketController,
 		TicketDependencyController:      ticketDependencyController,
 		TicketCommentController:         ticketCommentController,

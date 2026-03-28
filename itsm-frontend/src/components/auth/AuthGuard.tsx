@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { getAccessToken } from '@/lib/auth/token-storage';
+import { isAuthenticated as checkCookieAuth } from '@/lib/auth/token-storage';
+import { httpClient } from '@/lib/api/http-client';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -28,35 +29,66 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   redirectTo = '/login',
 }) => {
   const router = useRouter();
-  const { isAuthenticated, user, isLoading, hasPermission, hasRole } = useAuthStore();
+  const { isAuthenticated: storeIsAuth, user, isLoading, hasPermission, hasRole } = useAuthStore();
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // 检查localStorage中是否有认证信息
-        const token = getAccessToken();
+        // 检查 httpOnly cookie 中是否有认证信息
+        const hasAuth = checkCookieAuth();
 
-        if (token) {
-          // 如果有token，尝试恢复状态
-          const userInfo = typeof window !== 'undefined' ? localStorage.getItem('user_info') : null;
-          if (userInfo) {
-            try {
-              const user = JSON.parse(userInfo);
-              // 更新store状态
+        if (hasAuth) {
+          // 从后端获取真实的用户和租户信息
+          try {
+            const [userResponse, tenantsResponse] = await Promise.all([
+              httpClient.get<{
+                id: number;
+                username: string;
+                email: string;
+                name: string;
+                role: string;
+                department: string;
+                tenant_id: number;
+              }>('/api/v1/auth/me'),
+              httpClient.get<{
+                tenants: Array<{
+                  id: number;
+                  name: string;
+                  code: string;
+                  domain: string;
+                  type: string;
+                  status: string;
+                }>;
+              }>('/api/v1/auth/tenants'),
+            ]);
+
+            if (userResponse && tenantsResponse?.tenants?.length > 0) {
+              const currentTenant = tenantsResponse.tenants[0];
               const { login } = useAuthStore.getState();
-              login(user, token, {
-                id: 1,
-                name: '默认租户',
-                code: 'default',
-                type: 'trial' as const,
-                status: 'active' as const,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              });
-            } catch (e) {
-              console.error('Failed to restore user info:', e);
+              login(
+                {
+                  id: userResponse.id,
+                  username: userResponse.username,
+                  email: userResponse.email,
+                  name: userResponse.name,
+                  role: userResponse.role,
+                  department: userResponse.department,
+                },
+                'authenticated', // Token is in httpOnly cookie, not accessible here
+                {
+                  id: currentTenant.id,
+                  name: currentTenant.name,
+                  code: currentTenant.code,
+                  type: currentTenant.type as 'standard' | 'trial' | 'enterprise',
+                  status: currentTenant.status as 'active' | 'suspended' | 'expired',
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                }
+              );
             }
+          } catch (e) {
+            console.error('Failed to restore user info from backend:', e);
           }
         }
 
@@ -68,14 +100,14 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     };
 
     initializeAuth();
-  }, [isAuthenticated, user]);
+  }, []);
 
   // 处理未认证重定向
   useEffect(() => {
-    if (requireAuth && !isAuthenticated && !fallback) {
+    if (requireAuth && !storeIsAuth && !fallback) {
       router.push(redirectTo);
     }
-  }, [requireAuth, isAuthenticated, fallback, router, redirectTo]);
+  }, [requireAuth, storeIsAuth, fallback, router, redirectTo]);
 
   // 正在初始化或加载中
   if (isInitializing || isLoading) {
@@ -91,7 +123,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     return <>{children}</>;
   }
 
-  if (requireAuth && (!isAuthenticated || !user)) {
+  if (requireAuth && (!storeIsAuth || !user)) {
     if (fallback) {
       return <>{fallback}</>;
     }
