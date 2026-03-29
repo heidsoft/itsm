@@ -188,3 +188,38 @@ type SLAEscalationResponse struct {
 	CreatedAt       time.Time `json:"createdAt" example:"2024-01-01T00:00:00Z"`
 	UpdatedAt       time.Time `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
+
+// SLAMonitoringDashboard represents comprehensive SLA monitoring dashboard
+type SLAMonitoringDashboard struct {
+	ComplianceRate    float64             `json:"complianceRate"`
+	ViolationRate     float64            `json:"violationRate"`
+	TotalTickets      int                `json:"totalTickets"`
+	AtRiskTickets     int                `json:"atRiskTickets"`
+	BreachedTickets   int                `json:"breachedTickets"`
+	UpcomingDeadlines []SLADeadline      `json:"upcomingDeadlines"`
+	TopViolations     []SLAViolationItem `json:"topViolations"`
+	SLAByPriority     map[string]float64 `json:"slaByPriority"`
+	TrendData         []SLATrendPoint    `json:"trendData"`
+}
+
+type SLADeadline struct {
+	TicketID    int       `json:"ticketId"`
+	TicketTitle string    `json:"ticketTitle"`
+	Deadline    time.Time `json:"deadline"`
+	SLAPolicy   string    `json:"slaPolicy"`
+	TimeLeft    string    `json:"timeLeft"`
+}
+
+type SLAViolationItem struct {
+	TicketID    int    `json:"ticketId"`
+	TicketTitle string `json:"ticketTitle"`
+	SLAPolicy   string `json:"slaPolicy"`
+	ViolatedAt  string `json:"violatedAt"`
+	Delay       int    `json:"delayMinutes"`
+}
+
+type SLATrendPoint struct {
+	Date           string  `json:"date"`
+	ComplianceRate float64 `json:"complianceRate"`
+	TicketCount    int     `json:"ticketCount"`
+}
