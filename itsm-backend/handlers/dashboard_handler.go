@@ -612,3 +612,40 @@ func (h *DashboardHandler) GetStats(c *gin.Context) {
 	// 直接复用 GetOverview 的逻辑
 	h.GetOverview(c)
 }
+
+// GetUserStats 获取用户统计数据
+// @Summary 获取用户统计数据
+// @Description 获取用户统计包括按角色、部门分布等
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Success 200 {object} UserStatsResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/dashboard/stats/users [get]
+func (h *DashboardHandler) GetUserStats(c *gin.Context) {
+	tenantID, _ := c.Get("tenant_id")
+	stats, err := h.dashboardService.GetUserStats(c.Request.Context(), tenantID.(int))
+	if err != nil {
+		common.Fail(c, 5001, "获取用户统计失败: "+err.Error())
+		return
+	}
+	common.Success(c, stats)
+}
+
+// GetSystemStats 获取系统统计数据
+// @Summary 获取系统统计数据
+// @Description 获取系统性能指标、数据库统计等
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Success 200 {object} SystemStatsResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/dashboard/stats/system [get]
+func (h *DashboardHandler) GetSystemStats(c *gin.Context) {
+	stats, err := h.dashboardService.GetSystemStats(c.Request.Context())
+	if err != nil {
+		common.Fail(c, 5001, "获取系统统计失败: "+err.Error())
+		return
+	}
+	common.Success(c, stats)
+}

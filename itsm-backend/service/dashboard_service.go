@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -1230,4 +1231,50 @@ func (s *DashboardService) getPeakHours(ctx context.Context, tenantID int) ([]Pe
 	}
 
 	return result, nil
+}
+
+// GetUserStats 获取用户统计数据
+func (s *DashboardService) GetUserStats(ctx context.Context, tenantID int) (*dto.UserStatsResponse, error) {
+	users, err := s.client.User.Query().
+		Where(user.TenantID(tenantID)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query users: %w", err)
+	}
+
+	stats := &dto.UserStatsResponse{
+		Total:    len(users),
+		ByRole:   make(map[string]int),
+		ByDepartment: make(map[string]int),
+	}
+
+	for _, u := range users {
+		if u.Active {
+			stats.Active++
+		}
+		stats.ByRole[u.Role.String()]++
+		if u.Department != "" {
+			stats.ByDepartment[u.Department]++
+		}
+	}
+
+	return stats, nil
+}
+
+// GetSystemStats 获取系统统计数据
+func (s *DashboardService) GetSystemStats(ctx context.Context) (*dto.SystemStatsResponse, error) {
+	// 返回模拟的系统统计数据（实际生产环境应从系统监控获取）
+	stats := &dto.SystemStatsResponse{
+		Uptime:            time.Since(time.Now().Add(-24 * time.Hour)).Seconds(),
+		CPUUsage:          35.5,
+		MemoryUsage:       62.3,
+		DiskUsage:         45.8,
+		AvgResponseTime:   125.5,
+		RequestsPerSecond: 45.2,
+		ErrorRate:         0.15,
+		DBConnections:     25,
+		DBSize:            1024 * 1024 * 500, // 500MB
+		CacheHitRate:      89.5,
+	}
+	return stats, nil
 }
