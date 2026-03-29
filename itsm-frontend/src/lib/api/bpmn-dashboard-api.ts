@@ -80,7 +80,7 @@ export interface ProcessAuditLog {
 }
 
 export interface QueryAuditLogsRequest {
-  tenant_id: number;
+  tenant_id?: number;
   process_instance_id?: number;
   process_definition_key?: string;
   action?: string;
