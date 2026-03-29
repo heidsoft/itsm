@@ -54,6 +54,9 @@ type CloudService func(*sql.Selector)
 // ConfigurationItem is the predicate function for configurationitem builders.
 type ConfigurationItem func(*sql.Selector)
 
+// Contract is the predicate function for contract builders.
+type Contract func(*sql.Selector)
+
 // Conversation is the predicate function for conversation builders.
 type Conversation func(*sql.Selector)
 
@@ -263,6 +266,9 @@ type ToolInvocation func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// Vendor is the predicate function for vendor builders.
+type Vendor func(*sql.Selector)
 
 // Workflow is the predicate function for workflow builders.
 type Workflow func(*sql.Selector)

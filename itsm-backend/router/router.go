@@ -101,6 +101,7 @@ type RouterConfig struct {
 	PredictionController     *controller.PredictionController
 	ReleaseController        *controller.ReleaseController
 	AssetController          *controller.AssetController
+	VendorController         *controller.VendorController
 	AssetLicenseController   *controller.AssetLicenseController
 
 	// Domain Handlers
@@ -616,6 +617,17 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				licenses.PUT("/:id", middleware.RequirePermission("license", "write"), config.AssetLicenseController.UpdateLicense)
 				licenses.PUT("/:id/assign", middleware.RequirePermission("license", "write"), config.AssetLicenseController.AssignUsers)
 				licenses.DELETE("/:id", middleware.RequirePermission("license", "delete"), config.AssetLicenseController.DeleteLicense)
+			}
+		}
+
+		// ==================== Vendors ====================
+		if config.VendorController != nil {
+			vendors := tenant.(*gin.RouterGroup).Group("/vendors")
+			{
+				vendors.GET("", middleware.RequirePermission("vendor", "read"), config.VendorController.ListVendors)
+				vendors.POST("", middleware.RequirePermission("vendor", "write"), config.VendorController.CreateVendor)
+				vendors.GET("/:id", middleware.RequirePermission("vendor", "read"), config.VendorController.GetVendor)
+				vendors.DELETE("/:id", middleware.RequirePermission("vendor", "delete"), config.VendorController.DeleteVendor)
 			}
 		}
 
