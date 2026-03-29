@@ -62,6 +62,8 @@ type Repository interface {
 	GetWithApprovals(ctx context.Context, id int) (*ServiceRequest, []*ServiceRequestApproval, error)
 	List(ctx context.Context, tenantID int, filters ListFilters) ([]*ServiceRequest, int, error)
 	UpdateStatus(ctx context.Context, id int, status string) error
+	Update(ctx context.Context, req *ServiceRequest) error
+	Delete(ctx context.Context, id int) error
 
 	// Approval related
 	GetApproval(ctx context.Context, requestID int, level int) (*ServiceRequestApproval, error)
