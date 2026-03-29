@@ -271,3 +271,83 @@ func (h *Handler) ListPending(c *gin.Context) {
 		"size":     req.Size,
 	})
 }
+
+func (h *Handler) Update(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, 1001, "Invalid ID")
+		return
+	}
+
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "Tenant ID missing")
+		return
+	}
+
+	var req dto.CreateServiceRequestRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, 1001, "Invalid parameters: "+err.Error())
+		return
+	}
+
+	domainReq := &ServiceRequest{
+		Title:              req.Title,
+		Reason:             req.Reason,
+		FormData:           req.FormData,
+		CostCenter:         req.CostCenter,
+		DataClassification: req.DataClassification,
+		NeedsPublicIP:      req.NeedsPublicIP,
+		SourceIPWhitelist:  req.SourceIPWhitelist,
+		ExpireAt:           req.ExpireAt,
+	}
+
+	updated, err := h.service.Update(c.Request.Context(), id, tenantID.(int), domainReq)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, 404, "Service request not found")
+		} else if appErr, ok := common.AsAppError(err); ok && appErr.Code == common.ErrCodeNotFound {
+			common.Fail(c, 404, "Service request not found")
+		} else if common.IsAppError(err) {
+			common.Fail(c, 5001, err.Error())
+		} else {
+			common.Fail(c, 5001, err.Error())
+		}
+		return
+	}
+
+	fullReq, approvals, _ := h.service.Get(c.Request.Context(), updated.ID, tenantID.(int))
+	common.Success(c, h.toDTO(fullReq, approvals))
+}
+
+func (h *Handler) Delete(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, 1001, "Invalid ID")
+		return
+	}
+
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "Tenant ID missing")
+		return
+	}
+
+	err = h.service.Delete(c.Request.Context(), id, tenantID.(int))
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, 404, "Service request not found")
+		} else if appErr, ok := common.AsAppError(err); ok && appErr.Code == common.ErrCodeNotFound {
+			common.Fail(c, 404, "Service request not found")
+		} else if common.IsAppError(err) {
+			common.Fail(c, 5001, err.Error())
+		} else {
+			common.Fail(c, 5001, err.Error())
+		}
+		return
+	}
+
+	common.Success(c, nil)
+}
