@@ -64,6 +64,12 @@ func (c *CMDBController) CreateCI(ctx *gin.Context) {
 		}
 	}
 
+	// 验证 ciType 不为空
+	if ciType == "" {
+		common.Fail(ctx, common.ParamErrorCode, "CI类型不能为空，请提供有效的 type 或 ci_type_id")
+		return
+	}
+
 	assetTag := dtoReq.AssetTag
 	serialNumber := dtoReq.SerialNumber
 	location := dtoReq.Location
