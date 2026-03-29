@@ -309,7 +309,7 @@ class HttpClient {
         const refreshSuccess = await this.refreshTokenInternal();
         if (refreshSuccess) {
           // Retry original request with credentials: 'include' to send cookies
-          let retryHeaders = await this.addCSRFHeader(this.getHeaders(), config.method || 'GET');
+          const retryHeaders = await this.addCSRFHeader(this.getHeaders(), config.method || 'GET');
           const retryConfig: RequestInit = {
             ...requestConfig,
             credentials: 'include',

@@ -37,7 +37,7 @@ export default function ServiceRequestsPage() {
 
       setPendingApprovals(pendingData.requests.map((r: any) => ({
         id: r.id,
-        request_no: r.id,
+        requestNo: r.id,
         title: r.title || r.catalog?.name || '服务请求',
         applicant: r.requester?.name || r.requester?.username || '-',
         date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '-',
@@ -67,8 +67,8 @@ export default function ServiceRequestsPage() {
   const approvalColumns = [
     {
       title: '请求号',
-      dataIndex: 'request_no',
-      key: 'request_no',
+      dataIndex: 'requestNo',
+      key: 'requestNo',
       render: (text: string) => <a>{text}</a>,
     },
     {
@@ -95,8 +95,14 @@ export default function ServiceRequestsPage() {
     {
       title: '操作',
       key: 'action',
-      render: () => (
-        <Button size="small" type="link">审批</Button>
+      render: (_: any, record: any) => (
+        <Button
+          size="small"
+          type="link"
+          onClick={() => router.push(`/service-requests/${record.id}`)}
+        >
+          审批
+        </Button>
       ),
     },
   ];
