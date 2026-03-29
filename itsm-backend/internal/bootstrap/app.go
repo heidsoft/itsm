@@ -360,6 +360,10 @@ func NewApplication() *Application {
 	slaAlertService.SetNotificationService(ticketNotificationService)
 	escalationService.SetNotificationService(ticketNotificationService)
 
+	// Survey Service & Controller
+	surveyService := service.NewSurveyService(client, sugar)
+	surveyController := controller.NewSurveyController(surveyService)
+
 	// 7. 设置路由
 	// 根据配置设置 Gin 运行模式
 	if cfg.Server.Mode == "release" {
@@ -446,6 +450,7 @@ func NewApplication() *Application {
 		ReleaseController:        releaseController,
 		AssetController:          assetController,
 		AssetLicenseController:   assetLicenseController,
+		SurveyController:         surveyController,
 
 		// Domain Handlers
 		ServiceCatalogHandler: scHandler,
