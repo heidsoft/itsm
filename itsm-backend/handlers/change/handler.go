@@ -332,6 +332,8 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 	}
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
+	userIDVal, _ := c.Get("user_id")
+	userID := userIDVal.(int)
 
 	// Determine target status from the last path segment
 	path := c.FullPath() // e.g. /api/v1/changes/:id/approve
@@ -357,7 +359,7 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 	}
 	_ = c.ShouldBindJSON(&body)
 
-	res, err := h.svc.TransitionStatus(c.Request.Context(), id, tenantID, targetStatus)
+	res, err := h.svc.TransitionStatus(c.Request.Context(), id, tenantID, userID, targetStatus)
 	if err != nil {
 		common.Fail(c, http.StatusInternalServerError, err.Error())
 		return
