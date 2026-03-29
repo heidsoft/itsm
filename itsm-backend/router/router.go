@@ -519,6 +519,18 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				sr.DELETE("/:id", middleware.RequirePermission("service_request", "delete"), config.ServiceRequestHandler.Delete)
 				sr.POST("/:id/approval", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.ApplyApproval)
 			}
+
+		// Provisioning routes
+		if config.ProvisioningController != nil {
+			sr.POST("/:id/provision", middleware.RequirePermission("service_request", "write"), config.ProvisioningController.StartProvisioning)
+			sr.GET("/:id/provisioning-tasks", middleware.RequirePermission("service_request", "read"), config.ProvisioningController.ListProvisioningTasks)
+		}
+
+		// Provisioning task routes (separate path)
+		provisioning := tenant.(*gin.RouterGroup).Group("/provisioning-tasks")
+		{
+			provisioning.POST("/:id/execute", middleware.RequirePermission("service_request", "write"), config.ProvisioningController.ExecuteProvisioningTask)
+		}
 		}
 
 		// ==================== Problems (DDD) ====================
