@@ -694,7 +694,10 @@ func (s *IncidentService) executeIncidentRules(ctx context.Context, incidentID i
 
 	// 获取事件信息
 	incidentEntity, err := s.client.Incident.Query().
-		Where(incident.IDEQ(incidentID)).
+		Where(
+			incident.IDEQ(incidentID),
+			incident.TenantIDEQ(tenantID),
+	).
 		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get incident", "error", err)
@@ -1201,7 +1204,12 @@ func (s *IncidentService) GetIncidentMetrics(ctx context.Context, incidentID int
 // triggerWorkflowForIncident 为事件触发工作流
 func (s *IncidentService) triggerWorkflowForIncident(ctx context.Context, incidentID int, tenantID int) error {
 	// 获取事件信息
-	inc, err := s.client.Incident.Get(ctx, incidentID)
+	inc, err := s.client.Incident.Query().
+		Where(
+			incident.IDEQ(incidentID),
+			incident.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get incident: %w", err)
 	}
