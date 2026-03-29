@@ -223,6 +223,11 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		return nil, fmt.Errorf("change not found")
 	}
 
+	// Validate state transition
+	if !isValidChangeStatusTransition(c.Status, targetStatus) {
+		return nil, fmt.Errorf("无效的状态转换: 从 '%s' 到 '%s'", c.Status, targetStatus)
+	}
+
 	// For approval actions, verify user is the approver
 	if targetStatus == "approved" || targetStatus == "rejected" {
 		history, err := s.repo.GetApprovalHistory(ctx, id, tenantID)
@@ -244,6 +249,32 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 
 	c.Status = targetStatus
 	return s.repo.Update(ctx, c)
+}
+
+// isValidChangeStatusTransition validates state transitions for Change entities
+func isValidChangeStatusTransition(currentStatus, newStatus string) bool {
+	validTransitions := map[string][]string{
+		"draft":      {"pending", "cancelled"},
+		"pending":    {"approved", "rejected", "cancelled"},
+		"approved":   {"in_progress", "cancelled"},
+		"rejected":   {},
+		"in_progress": {"completed", "failed", "cancelled"},
+		"completed":  {},
+		"failed":     {"in_progress", "cancelled"},
+		"cancelled":  {},
+	}
+
+	allowed, ok := validTransitions[currentStatus]
+	if !ok {
+		return true
+	}
+
+	for _, status := range allowed {
+		if status == newStatus {
+			return true
+		}
+	}
+	return false
 }
 
 // GetApprovalHistory returns approval records for a change
