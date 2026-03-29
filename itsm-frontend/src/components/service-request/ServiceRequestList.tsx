@@ -104,18 +104,18 @@ const ServiceRequestList: React.FC = () => {
     },
     {
       title: '当前步骤',
-      dataIndex: 'current_level',
+      dataIndex: 'currentLevel',
       width: 120,
       render: (level: number, record: ServiceRequest) => (
         <span>
-          Level {level} / {record.total_levels}
+          Level {level} / {record.totalLevels}
         </span>
       ),
       responsive: ['md'],
     },
     {
       title: '提交时间',
-      dataIndex: 'created_at',
+      dataIndex: 'createdAt',
       width: 180,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
       responsive: ['sm'],

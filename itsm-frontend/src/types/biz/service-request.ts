@@ -29,23 +29,23 @@ export interface RequesterRef {
 // 服务请求审批记录
 export interface ServiceRequestApproval {
   id: number;
-  service_request_id: number;
+  serviceRequestId: number;
   level: number;
   step: ApprovalStep | string;
   status: ApprovalStatus | string;
-  approver_id?: number;
-  approver_name?: string;
+  approverId?: number;
+  approverName?: string;
   action?: ApprovalAction | string;
   comment?: string;
-  created_at: string;
-  processed_at?: string;
+  createdAt: string;
+  processedAt?: string;
 
   // V1 新增字段
-  timeout_hours?: number;
-  due_at?: string;
-  is_escalated?: boolean;
-  delegated_to_id?: number;
-  escalation_reason?: string;
+  timeoutHours?: number;
+  dueAt?: string;
+  isEscalated?: boolean;
+  delegatedToId?: number;
+  escalationReason?: string;
 }
 
 // 服务请求实体 (对应后端 DTO)

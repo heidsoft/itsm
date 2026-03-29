@@ -34,14 +34,14 @@ export interface ChangeRequest {
   justification: string;
   type: ChangeType;
   priority: ChangePriority;
-  impact_scope: ChangeImpact;
-  risk_level: ChangeRisk;
-  planned_start_date?: string;
-  planned_end_date?: string;
-  implementation_plan: string;
-  rollback_plan: string;
-  affected_cis: string[];
-  related_tickets: string[];
+  impactScope: ChangeImpact;
+  riskLevel: ChangeRisk;
+  plannedStartDate?: string;
+  plannedEndDate?: string;
+  implementationPlan: string;
+  rollbackPlan: string;
+  affectedCis: string[];
+  relatedTickets: string[];
 }
 
 // 变更响应接口
@@ -53,23 +53,23 @@ export interface Change {
   type: ChangeType;
   status: ChangeStatus;
   priority: ChangePriority;
-  impact_scope: ChangeImpact;
-  risk_level: ChangeRisk;
-  assignee_id?: number;
-  assignee_name?: string;
-  created_by: number;
-  created_by_name: string;
-  tenant_id: number;
-  planned_start_date?: string;
-  planned_end_date?: string;
-  actual_start_date?: string;
-  actual_end_date?: string;
-  implementation_plan: string;
-  rollback_plan: string;
-  affected_cis: string[];
-  related_tickets: string[];
-  created_at: string;
-  updated_at: string;
+  impactScope: ChangeImpact;
+  riskLevel: ChangeRisk;
+  assigneeId?: number;
+  assigneeName?: string;
+  createdBy: number;
+  createdByName: string;
+  tenantId: number;
+  plannedStartDate?: string;
+  plannedEndDate?: string;
+  actualStartDate?: string;
+  actualEndDate?: string;
+  implementationPlan: string;
+  rollbackPlan: string;
+  affectedCis: string[];
+  relatedTickets: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 变更列表响应
@@ -83,7 +83,7 @@ export interface ChangeStatsResponse {
   total: number;
   pending: number;
   approved: number;
-  in_progress: number;
+  inProgress: number;
   completed: number;
   rolled_back: number;
   rejected: number;

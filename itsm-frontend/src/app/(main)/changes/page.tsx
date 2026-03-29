@@ -27,7 +27,7 @@ export default function ChangesPage() {
       setStats({
         total: stats.total || 0,
         pending: stats.pending || 0,
-        inProgress: stats.in_progress || 0,
+        inProgress: stats.inProgress || 0,
         completed: stats.completed || 0,
       });
     } catch (error) {

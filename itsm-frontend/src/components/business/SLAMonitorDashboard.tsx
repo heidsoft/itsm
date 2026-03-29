@@ -99,16 +99,16 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
 
       if (data) {
         setMetrics({
-          totalTickets: data.total_tickets,
-          compliantTickets: data.compliant_tickets,
-          violatedTickets: data.violated_tickets,
-          atRiskTickets: data.at_risk_tickets,
-          complianceRate: data.compliance_rate,
-          violationRate: data.violation_rate,
-          averageResponseTime: data.average_response_time,
-          averageResolutionTime: data.average_resolution_time,
-          responseTimeCompliance: data.response_time_compliance,
-          resolutionTimeCompliance: data.resolution_time_compliance,
+          totalTickets: data.totalTickets,
+          compliantTickets: data.compliantTickets,
+          violatedTickets: data.violatedTickets,
+          atRiskTickets: data.atRiskTickets,
+          complianceRate: data.complianceRate,
+          violationRate: data.violationRate,
+          averageResponseTime: data.averageResponseTime,
+          averageResolutionTime: data.averageResolutionTime,
+          responseTimeCompliance: data.responseTimeCompliance,
+          resolutionTimeCompliance: data.resolutionTimeCompliance,
         });
         // 转换API响应格式到组件格式
         const convertedAlerts: SLAAlert[] = (data.alerts || []).map((alert: any) => ({
