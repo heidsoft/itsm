@@ -44,6 +44,7 @@ import (
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
+	"itsm-backend/ent/permissiondefinition"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processauditlog"
 	"itsm-backend/ent/processbinding"
@@ -1427,6 +1428,16 @@ func init() {
 	permission.DefaultUpdatedAt = permissionDescUpdatedAt.Default.(func() time.Time)
 	// permission.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	permission.UpdateDefaultUpdatedAt = permissionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	permissiondefinitionFields := schema.PermissionDefinition{}.Fields()
+	_ = permissiondefinitionFields
+	// permissiondefinitionDescResource is the schema descriptor for resource field.
+	permissiondefinitionDescResource := permissiondefinitionFields[0].Descriptor()
+	// permissiondefinition.ResourceValidator is a validator for the "resource" field. It is called by the builders before save.
+	permissiondefinition.ResourceValidator = permissiondefinitionDescResource.Validators[0].(func(string) error)
+	// permissiondefinitionDescAction is the schema descriptor for action field.
+	permissiondefinitionDescAction := permissiondefinitionFields[1].Descriptor()
+	// permissiondefinition.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	permissiondefinition.ActionValidator = permissiondefinitionDescAction.Validators[0].(func(string) error)
 	problemFields := schema.Problem{}.Fields()
 	_ = problemFields
 	// problemDescTitle is the schema descriptor for title field.

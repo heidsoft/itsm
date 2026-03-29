@@ -94,6 +94,8 @@ type Tx struct {
 	PasswordResetToken *PasswordResetTokenClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
+	// PermissionDefinition is the client for interacting with the PermissionDefinition builders.
+	PermissionDefinition *PermissionDefinitionClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
 	// ProcessAuditLog is the client for interacting with the ProcessAuditLog builders.
@@ -126,6 +128,8 @@ type Tx struct {
 	Release *ReleaseClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// RolePermission is the client for interacting with the RolePermission builders.
+	RolePermission *RolePermissionClient
 	// RootCauseAnalysis is the client for interacting with the RootCauseAnalysis builders.
 	RootCauseAnalysis *RootCauseAnalysisClient
 	// SLAAlertHistory is the client for interacting with the SLAAlertHistory builders.
@@ -360,6 +364,7 @@ func (tx *Tx) init() {
 	tx.NotificationPreference = NewNotificationPreferenceClient(tx.config)
 	tx.PasswordResetToken = NewPasswordResetTokenClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
+	tx.PermissionDefinition = NewPermissionDefinitionClient(tx.config)
 	tx.Problem = NewProblemClient(tx.config)
 	tx.ProcessAuditLog = NewProcessAuditLogClient(tx.config)
 	tx.ProcessBinding = NewProcessBindingClient(tx.config)
@@ -376,6 +381,7 @@ func (tx *Tx) init() {
 	tx.RelationshipType = NewRelationshipTypeClient(tx.config)
 	tx.Release = NewReleaseClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
+	tx.RolePermission = NewRolePermissionClient(tx.config)
 	tx.RootCauseAnalysis = NewRootCauseAnalysisClient(tx.config)
 	tx.SLAAlertHistory = NewSLAAlertHistoryClient(tx.config)
 	tx.SLAAlertRule = NewSLAAlertRuleClient(tx.config)

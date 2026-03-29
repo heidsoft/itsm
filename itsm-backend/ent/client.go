@@ -52,6 +52,7 @@ import (
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
+	"itsm-backend/ent/permissiondefinition"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processauditlog"
 	"itsm-backend/ent/processbinding"
@@ -68,6 +69,7 @@ import (
 	"itsm-backend/ent/relationshiptype"
 	"itsm-backend/ent/release"
 	"itsm-backend/ent/role"
+	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -193,6 +195,8 @@ type Client struct {
 	PasswordResetToken *PasswordResetTokenClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
+	// PermissionDefinition is the client for interacting with the PermissionDefinition builders.
+	PermissionDefinition *PermissionDefinitionClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
 	// ProcessAuditLog is the client for interacting with the ProcessAuditLog builders.
@@ -225,6 +229,8 @@ type Client struct {
 	Release *ReleaseClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// RolePermission is the client for interacting with the RolePermission builders.
+	RolePermission *RolePermissionClient
 	// RootCauseAnalysis is the client for interacting with the RootCauseAnalysis builders.
 	RootCauseAnalysis *RootCauseAnalysisClient
 	// SLAAlertHistory is the client for interacting with the SLAAlertHistory builders.
@@ -339,6 +345,7 @@ func (c *Client) init() {
 	c.NotificationPreference = NewNotificationPreferenceClient(c.config)
 	c.PasswordResetToken = NewPasswordResetTokenClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
+	c.PermissionDefinition = NewPermissionDefinitionClient(c.config)
 	c.Problem = NewProblemClient(c.config)
 	c.ProcessAuditLog = NewProcessAuditLogClient(c.config)
 	c.ProcessBinding = NewProcessBindingClient(c.config)
@@ -355,6 +362,7 @@ func (c *Client) init() {
 	c.RelationshipType = NewRelationshipTypeClient(c.config)
 	c.Release = NewReleaseClient(c.config)
 	c.Role = NewRoleClient(c.config)
+	c.RolePermission = NewRolePermissionClient(c.config)
 	c.RootCauseAnalysis = NewRootCauseAnalysisClient(c.config)
 	c.SLAAlertHistory = NewSLAAlertHistoryClient(c.config)
 	c.SLAAlertRule = NewSLAAlertRuleClient(c.config)
@@ -519,6 +527,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		NotificationPreference:  NewNotificationPreferenceClient(cfg),
 		PasswordResetToken:      NewPasswordResetTokenClient(cfg),
 		Permission:              NewPermissionClient(cfg),
+		PermissionDefinition:    NewPermissionDefinitionClient(cfg),
 		Problem:                 NewProblemClient(cfg),
 		ProcessAuditLog:         NewProcessAuditLogClient(cfg),
 		ProcessBinding:          NewProcessBindingClient(cfg),
@@ -535,6 +544,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		RelationshipType:        NewRelationshipTypeClient(cfg),
 		Release:                 NewReleaseClient(cfg),
 		Role:                    NewRoleClient(cfg),
+		RolePermission:          NewRolePermissionClient(cfg),
 		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
 		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
 		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
@@ -626,6 +636,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		NotificationPreference:  NewNotificationPreferenceClient(cfg),
 		PasswordResetToken:      NewPasswordResetTokenClient(cfg),
 		Permission:              NewPermissionClient(cfg),
+		PermissionDefinition:    NewPermissionDefinitionClient(cfg),
 		Problem:                 NewProblemClient(cfg),
 		ProcessAuditLog:         NewProcessAuditLogClient(cfg),
 		ProcessBinding:          NewProcessBindingClient(cfg),
@@ -642,6 +653,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		RelationshipType:        NewRelationshipTypeClient(cfg),
 		Release:                 NewReleaseClient(cfg),
 		Role:                    NewRoleClient(cfg),
+		RolePermission:          NewRolePermissionClient(cfg),
 		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
 		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
 		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
@@ -711,18 +723,18 @@ func (c *Client) Use(hooks ...Hook) {
 		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
 		c.KnowledgeArticleLike, c.KnownError, c.MSPAllocation, c.Menu, c.Message,
 		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
-		c.Permission, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
-		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
-		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
-		c.Role, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
-		c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange, c.SystemConfig,
-		c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance, c.WorkflowTask,
-		c.WorkflowVersion,
+		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessAuditLog,
+		c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
+		c.StandardChange, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -741,18 +753,18 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
 		c.KnowledgeArticleLike, c.KnownError, c.MSPAllocation, c.Menu, c.Message,
 		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
-		c.Permission, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
-		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
-		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
-		c.Role, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
-		c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange, c.SystemConfig,
-		c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance, c.WorkflowTask,
-		c.WorkflowVersion,
+		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessAuditLog,
+		c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
+		c.StandardChange, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -843,6 +855,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.PasswordResetToken.mutate(ctx, m)
 	case *PermissionMutation:
 		return c.Permission.mutate(ctx, m)
+	case *PermissionDefinitionMutation:
+		return c.PermissionDefinition.mutate(ctx, m)
 	case *ProblemMutation:
 		return c.Problem.mutate(ctx, m)
 	case *ProcessAuditLogMutation:
@@ -875,6 +889,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Release.mutate(ctx, m)
 	case *RoleMutation:
 		return c.Role.mutate(ctx, m)
+	case *RolePermissionMutation:
+		return c.RolePermission.mutate(ctx, m)
 	case *RootCauseAnalysisMutation:
 		return c.RootCauseAnalysis.mutate(ctx, m)
 	case *SLAAlertHistoryMutation:
@@ -7403,6 +7419,155 @@ func (c *PermissionClient) mutate(ctx context.Context, m *PermissionMutation) (V
 	}
 }
 
+// PermissionDefinitionClient is a client for the PermissionDefinition schema.
+type PermissionDefinitionClient struct {
+	config
+}
+
+// NewPermissionDefinitionClient returns a client for the PermissionDefinition from the given config.
+func NewPermissionDefinitionClient(c config) *PermissionDefinitionClient {
+	return &PermissionDefinitionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `permissiondefinition.Hooks(f(g(h())))`.
+func (c *PermissionDefinitionClient) Use(hooks ...Hook) {
+	c.hooks.PermissionDefinition = append(c.hooks.PermissionDefinition, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `permissiondefinition.Intercept(f(g(h())))`.
+func (c *PermissionDefinitionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PermissionDefinition = append(c.inters.PermissionDefinition, interceptors...)
+}
+
+// Create returns a builder for creating a PermissionDefinition entity.
+func (c *PermissionDefinitionClient) Create() *PermissionDefinitionCreate {
+	mutation := newPermissionDefinitionMutation(c.config, OpCreate)
+	return &PermissionDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PermissionDefinition entities.
+func (c *PermissionDefinitionClient) CreateBulk(builders ...*PermissionDefinitionCreate) *PermissionDefinitionCreateBulk {
+	return &PermissionDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PermissionDefinitionClient) MapCreateBulk(slice any, setFunc func(*PermissionDefinitionCreate, int)) *PermissionDefinitionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PermissionDefinitionCreateBulk{err: fmt.Errorf("calling to PermissionDefinitionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PermissionDefinitionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PermissionDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PermissionDefinition.
+func (c *PermissionDefinitionClient) Update() *PermissionDefinitionUpdate {
+	mutation := newPermissionDefinitionMutation(c.config, OpUpdate)
+	return &PermissionDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PermissionDefinitionClient) UpdateOne(_m *PermissionDefinition) *PermissionDefinitionUpdateOne {
+	mutation := newPermissionDefinitionMutation(c.config, OpUpdateOne, withPermissionDefinition(_m))
+	return &PermissionDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PermissionDefinitionClient) UpdateOneID(id int) *PermissionDefinitionUpdateOne {
+	mutation := newPermissionDefinitionMutation(c.config, OpUpdateOne, withPermissionDefinitionID(id))
+	return &PermissionDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PermissionDefinition.
+func (c *PermissionDefinitionClient) Delete() *PermissionDefinitionDelete {
+	mutation := newPermissionDefinitionMutation(c.config, OpDelete)
+	return &PermissionDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PermissionDefinitionClient) DeleteOne(_m *PermissionDefinition) *PermissionDefinitionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PermissionDefinitionClient) DeleteOneID(id int) *PermissionDefinitionDeleteOne {
+	builder := c.Delete().Where(permissiondefinition.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PermissionDefinitionDeleteOne{builder}
+}
+
+// Query returns a query builder for PermissionDefinition.
+func (c *PermissionDefinitionClient) Query() *PermissionDefinitionQuery {
+	return &PermissionDefinitionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePermissionDefinition},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PermissionDefinition entity by its id.
+func (c *PermissionDefinitionClient) Get(ctx context.Context, id int) (*PermissionDefinition, error) {
+	return c.Query().Where(permissiondefinition.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PermissionDefinitionClient) GetX(ctx context.Context, id int) *PermissionDefinition {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRolePermissions queries the role_permissions edge of a PermissionDefinition.
+func (c *PermissionDefinitionClient) QueryRolePermissions(_m *PermissionDefinition) *RolePermissionQuery {
+	query := (&RolePermissionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(permissiondefinition.Table, permissiondefinition.FieldID, id),
+			sqlgraph.To(rolepermission.Table, rolepermission.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, permissiondefinition.RolePermissionsTable, permissiondefinition.RolePermissionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PermissionDefinitionClient) Hooks() []Hook {
+	return c.hooks.PermissionDefinition
+}
+
+// Interceptors returns the client interceptors.
+func (c *PermissionDefinitionClient) Interceptors() []Interceptor {
+	return c.inters.PermissionDefinition
+}
+
+func (c *PermissionDefinitionClient) mutate(ctx context.Context, m *PermissionDefinitionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PermissionDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PermissionDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PermissionDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PermissionDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PermissionDefinition mutation op: %q", m.Op())
+	}
+}
+
 // ProblemClient is a client for the Problem schema.
 type ProblemClient struct {
 	config
@@ -9896,6 +10061,139 @@ func (c *RoleClient) mutate(ctx context.Context, m *RoleMutation) (Value, error)
 		return (&RoleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Role mutation op: %q", m.Op())
+	}
+}
+
+// RolePermissionClient is a client for the RolePermission schema.
+type RolePermissionClient struct {
+	config
+}
+
+// NewRolePermissionClient returns a client for the RolePermission from the given config.
+func NewRolePermissionClient(c config) *RolePermissionClient {
+	return &RolePermissionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `rolepermission.Hooks(f(g(h())))`.
+func (c *RolePermissionClient) Use(hooks ...Hook) {
+	c.hooks.RolePermission = append(c.hooks.RolePermission, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `rolepermission.Intercept(f(g(h())))`.
+func (c *RolePermissionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.RolePermission = append(c.inters.RolePermission, interceptors...)
+}
+
+// Create returns a builder for creating a RolePermission entity.
+func (c *RolePermissionClient) Create() *RolePermissionCreate {
+	mutation := newRolePermissionMutation(c.config, OpCreate)
+	return &RolePermissionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RolePermission entities.
+func (c *RolePermissionClient) CreateBulk(builders ...*RolePermissionCreate) *RolePermissionCreateBulk {
+	return &RolePermissionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RolePermissionClient) MapCreateBulk(slice any, setFunc func(*RolePermissionCreate, int)) *RolePermissionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RolePermissionCreateBulk{err: fmt.Errorf("calling to RolePermissionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RolePermissionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RolePermissionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RolePermission.
+func (c *RolePermissionClient) Update() *RolePermissionUpdate {
+	mutation := newRolePermissionMutation(c.config, OpUpdate)
+	return &RolePermissionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RolePermissionClient) UpdateOne(_m *RolePermission) *RolePermissionUpdateOne {
+	mutation := newRolePermissionMutation(c.config, OpUpdateOne, withRolePermission(_m))
+	return &RolePermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RolePermissionClient) UpdateOneID(id int) *RolePermissionUpdateOne {
+	mutation := newRolePermissionMutation(c.config, OpUpdateOne, withRolePermissionID(id))
+	return &RolePermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RolePermission.
+func (c *RolePermissionClient) Delete() *RolePermissionDelete {
+	mutation := newRolePermissionMutation(c.config, OpDelete)
+	return &RolePermissionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RolePermissionClient) DeleteOne(_m *RolePermission) *RolePermissionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RolePermissionClient) DeleteOneID(id int) *RolePermissionDeleteOne {
+	builder := c.Delete().Where(rolepermission.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RolePermissionDeleteOne{builder}
+}
+
+// Query returns a query builder for RolePermission.
+func (c *RolePermissionClient) Query() *RolePermissionQuery {
+	return &RolePermissionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRolePermission},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a RolePermission entity by its id.
+func (c *RolePermissionClient) Get(ctx context.Context, id int) (*RolePermission, error) {
+	return c.Query().Where(rolepermission.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RolePermissionClient) GetX(ctx context.Context, id int) *RolePermission {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *RolePermissionClient) Hooks() []Hook {
+	return c.hooks.RolePermission
+}
+
+// Interceptors returns the client interceptors.
+func (c *RolePermissionClient) Interceptors() []Interceptor {
+	return c.inters.RolePermission
+}
+
+func (c *RolePermissionClient) mutate(ctx context.Context, m *RolePermissionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RolePermissionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RolePermissionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RolePermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RolePermissionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown RolePermission mutation op: %q", m.Op())
 	}
 }
 
@@ -15217,16 +15515,17 @@ type (
 		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
 		KnowledgeArticle, KnowledgeArticleLike, KnownError, MSPAllocation, Menu,
 		Message, Microservice, Notification, NotificationPreference,
-		PasswordResetToken, Permission, Problem, ProcessAuditLog, ProcessBinding,
-		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
-		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
-		ProvisioningTask, RelationshipType, Release, Role, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
-		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		StandardChange, SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
-		User, Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
+		PasswordResetToken, Permission, PermissionDefinition, Problem, ProcessAuditLog,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
+		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
+		ServiceRequest, ServiceRequestApproval, StandardChange, SystemConfig, Tag,
+		Team, Tenant, Ticket, TicketAssignmentRule, TicketAttachment,
+		TicketAutomationRule, TicketCategory, TicketComment, TicketNotification,
+		TicketTag, TicketTemplate, TicketView, ToolInvocation, User, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
@@ -15237,16 +15536,16 @@ type (
 		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
 		KnowledgeArticle, KnowledgeArticleLike, KnownError, MSPAllocation, Menu,
 		Message, Microservice, Notification, NotificationPreference,
-		PasswordResetToken, Permission, Problem, ProcessAuditLog, ProcessBinding,
-		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
-		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
-		ProvisioningTask, RelationshipType, Release, Role, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
-		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		StandardChange, SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
-		User, Workflow, WorkflowInstance, WorkflowTask,
-		WorkflowVersion []ent.Interceptor
+		PasswordResetToken, Permission, PermissionDefinition, Problem, ProcessAuditLog,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
+		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
+		ServiceRequest, ServiceRequestApproval, StandardChange, SystemConfig, Tag,
+		Team, Tenant, Ticket, TicketAssignmentRule, TicketAttachment,
+		TicketAutomationRule, TicketCategory, TicketComment, TicketNotification,
+		TicketTag, TicketTemplate, TicketView, ToolInvocation, User, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
 	}
 )

@@ -500,6 +500,18 @@ func (f PermissionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PermissionMutation", m)
 }
 
+// The PermissionDefinitionFunc type is an adapter to allow the use of ordinary
+// function as PermissionDefinition mutator.
+type PermissionDefinitionFunc func(context.Context, *ent.PermissionDefinitionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PermissionDefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PermissionDefinitionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PermissionDefinitionMutation", m)
+}
+
 // The ProblemFunc type is an adapter to allow the use of ordinary
 // function as Problem mutator.
 type ProblemFunc func(context.Context, *ent.ProblemMutation) (ent.Value, error)
@@ -690,6 +702,18 @@ func (f RoleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoleMutation", m)
+}
+
+// The RolePermissionFunc type is an adapter to allow the use of ordinary
+// function as RolePermission mutator.
+type RolePermissionFunc func(context.Context, *ent.RolePermissionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RolePermissionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RolePermissionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RolePermissionMutation", m)
 }
 
 // The RootCauseAnalysisFunc type is an adapter to allow the use of ordinary
