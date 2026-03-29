@@ -248,7 +248,10 @@ func (c *BPMNDashboardController) GetProcessTimeline(ctx *gin.Context) {
 		return
 	}
 
-	timeline, err := c.auditService.GetProcessTimeline(ctx.Request.Context(), processInstanceKey)
+	tenantIDVal, _ := ctx.Get("tenant_id")
+	tenantID, _ := tenantIDVal.(int)
+
+	timeline, err := c.auditService.GetProcessTimeline(ctx.Request.Context(), processInstanceKey, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, "获取流程时间线失败: "+err.Error())
 		return

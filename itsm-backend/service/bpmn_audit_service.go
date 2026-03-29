@@ -357,9 +357,15 @@ func (s *BPMNAuditService) QueryAuditLogs(ctx context.Context, req *QueryAuditLo
 }
 
 // GetProcessTimeline 获取流程时间线
-func (s *BPMNAuditService) GetProcessTimeline(ctx context.Context, processInstanceKey string) ([]*ent.ProcessAuditLog, error) {
-	logs, err := s.client.ProcessAuditLog.Query().
-		Where(processauditlog.ProcessInstanceKey(processInstanceKey)).
+func (s *BPMNAuditService) GetProcessTimeline(ctx context.Context, processInstanceKey string, tenantID int) ([]*ent.ProcessAuditLog, error) {
+	query := s.client.ProcessAuditLog.Query().
+		Where(processauditlog.ProcessInstanceKey(processInstanceKey))
+
+	if tenantID > 0 {
+		query = query.Where(processauditlog.TenantID(tenantID))
+	}
+
+	logs, err := query.
 		Order(ent.Asc(processauditlog.FieldTimestamp)).
 		All(ctx)
 	if err != nil {
