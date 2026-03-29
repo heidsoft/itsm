@@ -1454,6 +1454,21 @@ var (
 			},
 		},
 	}
+	// PermissionDefinitionsColumns holds the columns for the "permission_definitions" table.
+	PermissionDefinitionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "resource", Type: field.TypeString},
+		{Name: "action", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "display_name", Type: field.TypeString, Nullable: true},
+		{Name: "category", Type: field.TypeInt, Nullable: true},
+	}
+	// PermissionDefinitionsTable holds the schema information for the "permission_definitions" table.
+	PermissionDefinitionsTable = &schema.Table{
+		Name:       "permission_definitions",
+		Columns:    PermissionDefinitionsColumns,
+		PrimaryKey: []*schema.Column{PermissionDefinitionsColumns[0]},
+	}
 	// ProblemsColumns holds the columns for the "problems" table.
 	ProblemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -2340,6 +2355,27 @@ var (
 				Symbol:     "roles_permissions_roles",
 				Columns:    []*schema.Column{RolesColumns[8]},
 				RefColumns: []*schema.Column{PermissionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// RolePermissionsColumns holds the columns for the "role_permissions" table.
+	RolePermissionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "role_id", Type: field.TypeInt},
+		{Name: "permission_id", Type: field.TypeInt},
+		{Name: "permission_definition_role_permissions", Type: field.TypeInt, Nullable: true},
+	}
+	// RolePermissionsTable holds the schema information for the "role_permissions" table.
+	RolePermissionsTable = &schema.Table{
+		Name:       "role_permissions",
+		Columns:    RolePermissionsColumns,
+		PrimaryKey: []*schema.Column{RolePermissionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "role_permissions_permission_definitions_role_permissions",
+				Columns:    []*schema.Column{RolePermissionsColumns[3]},
+				RefColumns: []*schema.Column{PermissionDefinitionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -3851,6 +3887,7 @@ var (
 		NotificationPreferencesTable,
 		PasswordResetTokensTable,
 		PermissionsTable,
+		PermissionDefinitionsTable,
 		ProblemsTable,
 		ProcessAuditLogsTable,
 		ProcessBindingsTable,
@@ -3867,6 +3904,7 @@ var (
 		RelationshipTypesTable,
 		ReleasesTable,
 		RolesTable,
+		RolePermissionsTable,
 		RootCauseAnalysesTable,
 		SLAAlertHistoriesTable,
 		SLAAlertRulesTable,
@@ -3953,6 +3991,7 @@ func init() {
 	ProcessVersionChangelogsTable.ForeignKeys[1].RefTable = UsersTable
 	ProjectsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	RolesTable.ForeignKeys[0].RefTable = PermissionsTable
+	RolePermissionsTable.ForeignKeys[0].RefTable = PermissionDefinitionsTable
 	RootCauseAnalysesTable.ForeignKeys[0].RefTable = TicketsTable
 	SLAAlertHistoriesTable.ForeignKeys[0].RefTable = SLAAlertRulesTable
 	SLAAlertHistoriesTable.ForeignKeys[1].RefTable = TicketsTable

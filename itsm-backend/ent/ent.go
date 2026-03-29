@@ -47,6 +47,7 @@ import (
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
+	"itsm-backend/ent/permissiondefinition"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processauditlog"
 	"itsm-backend/ent/processbinding"
@@ -63,6 +64,7 @@ import (
 	"itsm-backend/ent/relationshiptype"
 	"itsm-backend/ent/release"
 	"itsm-backend/ent/role"
+	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -201,6 +203,7 @@ func checkColumn(t, c string) error {
 			notificationpreference.Table:  notificationpreference.ValidColumn,
 			passwordresettoken.Table:      passwordresettoken.ValidColumn,
 			permission.Table:              permission.ValidColumn,
+			permissiondefinition.Table:    permissiondefinition.ValidColumn,
 			problem.Table:                 problem.ValidColumn,
 			processauditlog.Table:         processauditlog.ValidColumn,
 			processbinding.Table:          processbinding.ValidColumn,
@@ -217,6 +220,7 @@ func checkColumn(t, c string) error {
 			relationshiptype.Table:        relationshiptype.ValidColumn,
 			release.Table:                 release.ValidColumn,
 			role.Table:                    role.ValidColumn,
+			rolepermission.Table:          rolepermission.ValidColumn,
 			rootcauseanalysis.Table:       rootcauseanalysis.ValidColumn,
 			slaalerthistory.Table:         slaalerthistory.ValidColumn,
 			slaalertrule.Table:            slaalertrule.ValidColumn,

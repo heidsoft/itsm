@@ -10,7 +10,9 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
+	"itsm-backend/ent/permissiondefinition"
 	"itsm-backend/ent/role"
+	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 
@@ -381,6 +383,84 @@ func InvalidateAllPermissionCaches() {
 	permissionCacheLock.Lock()
 	clear(permissionCache)
 	permissionCacheLock.Unlock()
+}
+
+// loadPermissionsFromDB 从新的permission_definition和role_permission表加载权限
+// 如果新表没有数据，则fallback到旧的Permission表
+func loadPermissionsFromDB(client *ent.Client, roleName string, tenantID int) []Permission {
+	// 如果 client 为 nil，直接返回空权限（将使用默认权限）
+	if client == nil {
+		return nil
+	}
+
+	cacheKey := roleName + "_" + strconv.Itoa(tenantID)
+
+	// 先检查缓存（包括TTL检查）
+	permissionCacheLock.RLock()
+	if cached, exists := permissionCache[cacheKey]; exists {
+		if time.Now().Before(cached.expiresAt) {
+			permissionCacheLock.RUnlock()
+			return cached.permissions
+		}
+	}
+	permissionCacheLock.RUnlock()
+
+	// 从新的permission_definition + role_permission表加载
+	var perms []Permission
+
+	// 首先查找角色ID
+	roleEntity, err := client.Role.Query().
+		Where(
+			role.Code(roleName),
+			role.TenantID(tenantID),
+		).
+		Only(context.Background())
+
+	if err == nil && roleEntity != nil {
+		roleID := roleEntity.ID
+
+		// 查询role_permission表获取该角色的权限定义ID
+		rolePerms, err := client.RolePermission.Query().
+			Where(rolepermission.RoleIDEQ(roleID)).
+			All(context.Background())
+
+		if err == nil && len(rolePerms) > 0 {
+			// 提取permission_id列表
+			permIDs := make([]int, len(rolePerms))
+			for i, rp := range rolePerms {
+				permIDs[i] = rp.PermissionID
+			}
+
+			// 查询permission_definition表获取权限详情
+			permDefs, err := client.PermissionDefinition.Query().
+				Where(permissiondefinition.IDIn(permIDs...)).
+				All(context.Background())
+
+			if err == nil {
+				for _, pd := range permDefs {
+					perms = append(perms, Permission{
+						Resource: pd.Resource,
+						Action:   pd.Action,
+					})
+				}
+			}
+		}
+	}
+
+	// 如果新的role_permission表没有数据，fallback到旧的Permission表
+	if len(perms) == 0 {
+		perms = loadRolePermissionsFromDB(client, roleName, tenantID)
+	}
+
+	// 存入缓存（带TTL）
+	permissionCacheLock.Lock()
+	permissionCache[cacheKey] = &cachedPermission{
+		permissions: perms,
+		expiresAt:  time.Now().Add(permissionCacheTTL),
+	}
+	permissionCacheLock.Unlock()
+
+	return perms
 }
 
 var ResourceActionMap = map[string]map[string]Permission{
@@ -773,7 +853,7 @@ func hasResourcePermission(client *ent.Client, role, resource, action string, te
 func loadPermissionsByMode(client *ent.Client, role string, tenantID int) []Permission {
 	switch PermissionConfig.Mode {
 	case PermissionConfigModeDBOnly:
-		return loadRolePermissionsFromDB(client, role, tenantID)
+		return loadPermissionsFromDB(client, role, tenantID)
 	case PermissionConfigModeHardcodeOnly:
 		if perms, ok := RolePermissions[role]; ok {
 			return perms
@@ -781,7 +861,7 @@ func loadPermissionsByMode(client *ent.Client, role string, tenantID int) []Perm
 		return nil
 	case PermissionConfigModeMerge:
 		// 合并数据库和硬编码权限（并集）
-		dbPerms := loadRolePermissionsFromDB(client, role, tenantID)
+		dbPerms := loadPermissionsFromDB(client, role, tenantID)
 		hardcodePerms, hasHardcode := RolePermissions[role]
 		if !hasHardcode {
 			return dbPerms
@@ -808,8 +888,8 @@ func loadPermissionsByMode(client *ent.Client, role string, tenantID int) []Perm
 	case PermissionConfigModeFallback:
 		fallthrough
 	default:
-		// 默认：先数据库，失败则使用硬编码
-		dbPerms := loadRolePermissionsFromDB(client, role, tenantID)
+		// 默认：先数据库（新的permission_definition+role_permission表，fallback到旧的Permission表），失败则使用硬编码
+		dbPerms := loadPermissionsFromDB(client, role, tenantID)
 		if len(dbPerms) > 0 {
 			return dbPerms
 		}
