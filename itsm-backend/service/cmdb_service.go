@@ -22,6 +22,7 @@ func (s *CMDBService) CreateCI(ctx context.Context, req *CreateCIRequest) (*ent.
 		Create().
 		SetName(req.Name).
 		SetCiType(req.CiType).
+		SetCiTypeID(req.CiTypeID).
 		SetStatus(req.Status).
 		SetEnvironment(req.Environment).
 		SetCriticality(req.Criticality).
@@ -193,6 +194,7 @@ func (s *CMDBService) GetCITopology(ctx context.Context, ciID int, depth int) (*
 type CreateCIRequest struct {
 	Name            string                  `json:"name"`
 	CiType          string                  `json:"ci_type"`
+	CiTypeID        int                     `json:"ci_type_id"`
 	Status          string                  `json:"status"`
 	Environment     string                  `json:"environment"`
 	Criticality     string                  `json:"criticality"`
