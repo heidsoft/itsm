@@ -277,7 +277,12 @@ func (s *ProblemService) GetProblemStats(ctx context.Context, tenantID int) (*dt
 // triggerWorkflowForProblem 为问题触发工作流
 func (s *ProblemService) triggerWorkflowForProblem(ctx context.Context, problemID int, tenantID int) error {
 	// 获取问题信息
-	p, err := s.client.Problem.Get(ctx, problemID)
+	p, err := s.client.Problem.Query().
+		Where(
+			problem.ID(problemID),
+			problem.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get problem: %w", err)
 	}

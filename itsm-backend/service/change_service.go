@@ -488,7 +488,12 @@ func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.
 // UpdateChangeStatus 更新变更状态
 func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status dto.ChangeStatus, tenantID int) error {
 	// 获取当前变更状态
-	changeEntity, err := s.client.Change.Get(ctx, id)
+	changeEntity, err := s.client.Change.Query().
+		Where(
+			change.ID(id),
+			change.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return fmt.Errorf("change not found")
@@ -553,7 +558,12 @@ func isValidChangeStatusTransition(currentStatus, newStatus string) bool {
 // triggerWorkflowForChange 为变更触发工作流
 func (s *ChangeService) triggerWorkflowForChange(ctx context.Context, changeID int, tenantID int) error {
 	// 获取变更信息
-	ch, err := s.client.Change.Get(ctx, changeID)
+	ch, err := s.client.Change.Query().
+		Where(
+			change.ID(changeID),
+			change.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get change: %w", err)
 	}

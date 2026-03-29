@@ -1160,7 +1160,12 @@ func (s *TicketService) GetTicketActivity(ctx context.Context, ticketID int, ten
 	s.logger.Infow("Getting ticket activity", "ticket_id", ticketID, "tenant_id", tenantID)
 
 	// 验证工单存在
-	ticket, err := s.client.Ticket.Get(ctx, ticketID)
+	ticket, err := s.client.Ticket.Query().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantID(tenantID),
+		).
+		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("工单不存在: %w", err)
 	}
