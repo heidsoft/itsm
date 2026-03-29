@@ -8,9 +8,9 @@ type CreateProblemRequest struct {
 	Description string `json:"description" binding:"required,min=10,max=5000"`
 	Priority    string `json:"priority" binding:"required"`
 	Category    string `json:"category"`
-	RootCause   string `json:"root_cause"`
+	RootCause   string `json:"rootCause"`
 	Impact      string `json:"impact"`
-	ImpactScope string `json:"impact_scope"` // 影响范围
+	ImpactScope string `json:"impactScope"` // 影响范围
 }
 
 // UpdateProblemRequest 更新问题请求
@@ -20,22 +20,22 @@ type UpdateProblemRequest struct {
 	Priority    *string `json:"priority" binding:"omitempty"`
 	Status      *string `json:"status" binding:"omitempty"`
 	Category    *string `json:"category" binding:"omitempty"`
-	RootCause   *string `json:"root_cause" binding:"omitempty"`
+	RootCause   *string `json:"rootCause" binding:"omitempty"`
 	Impact      *string `json:"impact" binding:"omitempty"`
 }
 
 // ListProblemsRequest 获取问题列表请求
 type ListProblemsRequest struct {
 	Page      int        `json:"page" form:"page"`
-	PageSize  int        `json:"page_size" form:"page_size"`
+	PageSize  int        `json:"pageSize" form:"pageSize"`
 	Status    string     `json:"status" form:"status"`
 	Priority  string     `json:"priority" form:"priority"`
 	Category  string     `json:"category" form:"category"`
 	Keyword   string     `json:"keyword" form:"keyword"`
-	DateFrom  *time.Time `json:"date_from" form:"date_from"`
-	DateTo    *time.Time `json:"date_to" form:"date_to"`
-	SortBy    string     `json:"sort_by" form:"sort_by"`
-	SortOrder string     `json:"sort_order" form:"sort_order"`
+	DateFrom  *time.Time `json:"dateFrom" form:"dateFrom"`
+	DateTo    *time.Time `json:"dateTo" form:"dateTo"`
+	SortBy    string     `json:"sortBy" form:"sortBy"`
+	SortOrder string     `json:"sortOrder" form:"sortOrder"`
 }
 
 // ProblemResponse 问题响应
