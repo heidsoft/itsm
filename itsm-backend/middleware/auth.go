@@ -83,6 +83,16 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			"auth_header_prefix", strings.HasPrefix(authHeader, "Bearer "),
 		)
 
+		// 如果没有 Authorization header，尝试从 cookie 中获取 (支持 httpOnly cookie)
+		if authHeader == "" {
+			if cookieToken, err := c.Cookie("access_token"); err == nil && cookieToken != "" {
+				authHeader = "Bearer " + cookieToken
+				zap.S().Infow("AuthMiddleware: using token from cookie",
+					"path", c.Request.URL.Path,
+				)
+			}
+		}
+
 		if authHeader == "" {
 			zap.S().Warnw("AuthMiddleware: missing Authorization header",
 				"path", c.Request.URL.Path,
