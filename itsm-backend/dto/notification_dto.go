@@ -40,12 +40,12 @@ type UpdateNotificationRequest struct {
 
 // GetNotificationsRequest 获取通知列表请求
 type GetNotificationsRequest struct {
-	Page     int    `form:"page" binding:"min=1"`
-	Size     int    `form:"size" binding:"min=1,max=100"`
+	Page     int    `form:"page" binding:"min=0"`
+	Size     int    `form:"size" binding:"min=0,max=100"`
 	Type     string `form:"type"`
 	Read     *bool  `form:"read"`
-	UserID   int    `form:"user_id" binding:"required"`
-	TenantID int    `form:"tenant_id" binding:"required"`
+	UserID   int    `form:"user_id"`
+	TenantID int    `form:"tenant_id"`
 }
 
 // NotificationListResponse 通知列表响应
