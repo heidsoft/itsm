@@ -1014,6 +1014,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			{
 				dashboard.GET("/overview", config.DashboardHandler.GetOverview)
 				dashboard.GET("/stats", config.DashboardHandler.GetStats)
+				dashboard.GET("/stats/users", config.DashboardHandler.GetUserStats)
+				dashboard.GET("/stats/system", config.DashboardHandler.GetSystemStats)
 				dashboard.GET("/kpi-metrics", config.DashboardHandler.GetKPIMetrics)
 				dashboard.GET("/ticket-trend", config.DashboardHandler.GetTicketTrend)
 				dashboard.GET("/incident-distribution", config.DashboardHandler.GetIncidentDistribution)

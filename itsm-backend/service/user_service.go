@@ -348,16 +348,16 @@ func (s *UserService) GetUserStats(ctx context.Context, tenantID int) (*dto.User
 		return nil, fmt.Errorf("统计活跃用户数失败: %w", err)
 	}
 
-	// 非活跃用户数
-	inactive := total - active
+	// 在线用户数（非活跃 = total - active）
+	online := active
 
 	response := &dto.UserStatsResponse{
 		Total:    total,
 		Active:   active,
-		Inactive: inactive,
+		Online:   online,
 	}
 
-	s.logger.Infof("用户统计获取成功: total=%d, active=%d, inactive=%d", total, active, inactive)
+	s.logger.Infof("用户统计获取成功: total=%d, active=%d, online=%d", total, active, online)
 	return response, nil
 }
 
