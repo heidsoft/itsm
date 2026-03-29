@@ -389,14 +389,19 @@ func (s *BPMNAuditService) GetUserActivity(ctx context.Context, userID int, tena
 }
 
 // GetActivityStatistics 获取活动统计
-func (s *BPMNAuditService) GetActivityStatistics(ctx context.Context, processDefinitionKey string, startTime, endTime time.Time) (map[string]int, error) {
+func (s *BPMNAuditService) GetActivityStatistics(ctx context.Context, processDefinitionKey string, tenantID int, startTime, endTime time.Time) (map[string]int, error) {
 	stats := make(map[string]int)
 
-	logs, err := s.client.ProcessAuditLog.Query().
+	query := s.client.ProcessAuditLog.Query().
 		Where(processauditlog.ProcessDefinitionKey(processDefinitionKey)).
 		Where(processauditlog.TimestampGTE(startTime)).
-		Where(processauditlog.TimestampLTE(endTime)).
-		All(ctx)
+		Where(processauditlog.TimestampLTE(endTime))
+
+	if tenantID > 0 {
+		query = query.Where(processauditlog.TenantID(tenantID))
+	}
+
+	logs, err := query.All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取活动统计失败: %w", err)
 	}
