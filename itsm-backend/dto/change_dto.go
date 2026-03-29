@@ -122,14 +122,14 @@ type ChangeListResponse struct {
 
 // ChangeStatsResponse 变更统计响应
 type ChangeStatsResponse struct {
-	Total      int `json:"total"`       // 总变更数
-	Pending    int `json:"pending"`     // 待审批
-	Approved   int `json:"approved"`    // 已批准
-	InProgress int `json:"in_progress"` // 实施中
-	Completed  int `json:"completed"`   // 已完成
-	RolledBack int `json:"rolled_back"` // 已回滚
-	Rejected   int `json:"rejected"`    // 已拒绝
-	Cancelled  int `json:"cancelled"`   // 已取消
+	Total      int `json:"total"`        // 总变更数
+	Pending    int `json:"pending"`      // 待审批
+	Approved   int `json:"approved"`     // 已批准
+	InProgress int `json:"inProgress"`   // 实施中
+	Completed  int `json:"completed"`    // 已完成
+	RolledBack int `json:"rolledBack"`   // 已回滚
+	Rejected   int `json:"rejected"`     // 已拒绝
+	Cancelled  int `json:"cancelled"`    // 已取消
 }
 
 // ChangeApprovalRequest 变更审批请求
@@ -236,8 +236,8 @@ type ChangeRollbackExecution struct {
 
 // CreateChangeApprovalRequest 创建变更审批请求
 type CreateChangeApprovalRequest struct {
-	ChangeID   int     `json:"change_id" binding:"required"`   // 变更ID
-	ApproverID int     `json:"approver_id" binding:"required"` // 审批人ID
+	ChangeID   int     `json:"changeId" binding:"required"`    // 变更ID
+	ApproverID int     `json:"approverId" binding:"required"`  // 审批人ID
 	Comment    *string `json:"comment"`                        // 审批意见
 }
 
@@ -249,40 +249,40 @@ type UpdateChangeApprovalRequest struct {
 
 // CreateChangeRiskAssessmentRequest 创建变更风险评估请求
 type CreateChangeRiskAssessmentRequest struct {
-	ChangeID           int        `json:"change_id" binding:"required"`           // 变更ID
-	RiskLevel          ChangeRisk `json:"risk_level" binding:"required"`          // 风险等级
-	RiskDescription    string     `json:"risk_description" binding:"required"`    // 风险描述
-	ImpactAnalysis     string     `json:"impact_analysis" binding:"required"`     // 影响分析
-	MitigationMeasures string     `json:"mitigation_measures" binding:"required"` // 缓解措施
-	ContingencyPlan    string     `json:"contingency_plan"`                       // 应急计划
-	RiskOwner          string     `json:"risk_owner" binding:"required"`          // 风险责任人
-	RiskReviewDate     *time.Time `json:"risk_review_date"`                       // 风险评审日期
+	ChangeID           int        `json:"changeId" binding:"required"`             // 变更ID
+	RiskLevel          ChangeRisk `json:"riskLevel" binding:"required"`            // 风险等级
+	RiskDescription    string     `json:"riskDescription" binding:"required"`      // 风险描述
+	ImpactAnalysis     string     `json:"impactAnalysis" binding:"required"`       // 影响分析
+	MitigationMeasures string     `json:"mitigationMeasures" binding:"required"`  // 缓解措施
+	ContingencyPlan    string     `json:"contingencyPlan"`                        // 应急计划
+	RiskOwner          string     `json:"riskOwner" binding:"required"`            // 风险责任人
+	RiskReviewDate     *time.Time `json:"riskReviewDate"`                          // 风险评审日期
 }
 
 // CreateChangeImplementationPlanRequest 创建变更实施计划请求
 type CreateChangeImplementationPlanRequest struct {
-	ChangeID        int        `json:"change_id" binding:"required"`        // 变更ID
+	ChangeID        int        `json:"changeId" binding:"required"`         // 变更ID
 	Phase           string     `json:"phase" binding:"required"`            // 实施阶段
-	Description     string     `json:"description" binding:"required"`      // 阶段描述
+	Description     string     `json:"description" binding:"required"`       // 阶段描述
 	Tasks           []string   `json:"tasks" binding:"required"`            // 具体任务
 	Responsible     string     `json:"responsible" binding:"required"`      // 负责人
-	StartDate       *time.Time `json:"start_date"`                          // 开始时间
-	EndDate         *time.Time `json:"end_date"`                            // 结束时间
-	Prerequisites   []string   `json:"prerequisites"`                       // 前置条件
+	StartDate       *time.Time `json:"startDate"`                           // 开始时间
+	EndDate         *time.Time `json:"endDate"`                             // 结束时间
+	Prerequisites   []string   `json:"prerequisites"`                      // 前置条件
 	Dependencies    []string   `json:"dependencies"`                        // 依赖关系
-	SuccessCriteria string     `json:"success_criteria" binding:"required"` // 成功标准
+	SuccessCriteria string     `json:"successCriteria" binding:"required"` // 成功标准
 }
 
 // CreateChangeRollbackPlanRequest 创建变更回滚计划请求
 type CreateChangeRollbackPlanRequest struct {
-	ChangeID          int      `json:"change_id" binding:"required"`          // 变更ID
-	TriggerConditions []string `json:"trigger_conditions" binding:"required"` // 触发条件
-	RollbackSteps     []string `json:"rollback_steps" binding:"required"`     // 回滚步骤
-	Responsible       string   `json:"responsible" binding:"required"`        // 负责人
-	EstimatedTime     string   `json:"estimated_time" binding:"required"`     // 预估时间
-	CommunicationPlan string   `json:"communication_plan"`                    // 沟通计划
-	TestPlan          string   `json:"test_plan"`                             // 测试计划
-	ApprovalRequired  bool     `json:"approval_required"`                     // 是否需要审批
+	ChangeID          int      `json:"changeId" binding:"required"`           // 变更ID
+	TriggerConditions []string `json:"triggerConditions" binding:"required"`  // 触发条件
+	RollbackSteps     []string `json:"rollbackSteps" binding:"required"`       // 回滚步骤
+	Responsible       string   `json:"responsible" binding:"required"`          // 负责人
+	EstimatedTime     string   `json:"estimatedTime" binding:"required"`      // 预估时间
+	CommunicationPlan string   `json:"communicationPlan"`                       // 沟通计划
+	TestPlan          string   `json:"testPlan"`                              // 测试计划
+	ApprovalRequired  bool     `json:"approvalRequired"`                       // 是否需要审批
 }
 
 // ChangeApprovalResponse 变更审批响应
@@ -377,31 +377,31 @@ type ChangeRollbackExecutionResponse struct {
 
 // ChangeApprovalWorkflowRequest 变更审批工作流请求
 type ChangeApprovalWorkflowRequest struct {
-	ChangeID      int                       `json:"change_id" binding:"required"`      // 变更ID
-	ApprovalChain []ChangeApprovalChainItem `json:"approval_chain" binding:"required"` // 审批链
+	ChangeID      int                       `json:"changeId" binding:"required"`        // 变更ID
+	ApprovalChain []ChangeApprovalChainItem `json:"approvalChain" binding:"required"`   // 审批链
 }
 
 // ChangeApprovalChainItem 变更审批链项目
 type ChangeApprovalChainItem struct {
-	Level      int    `json:"level" binding:"required"`       // 审批级别
-	ApproverID int    `json:"approver_id" binding:"required"` // 审批人ID
-	Role       string `json:"role" binding:"required"`        // 审批角色
-	IsRequired bool   `json:"is_required"`                    // 是否必需审批
+	Level      int    `json:"level" binding:"required"`      // 审批级别
+	ApproverID int    `json:"approverId" binding:"required"` // 审批人ID
+	Role       string `json:"role" binding:"required"`       // 审批角色
+	IsRequired bool   `json:"isRequired"`                    // 是否必需审批
 }
 
 // ChangeApprovalSummary 变更审批摘要
 type ChangeApprovalSummary struct {
-	ChangeID         int                           `json:"change_id"`         // 变更ID
-	CurrentLevel     int                           `json:"current_level"`     // 当前审批级别
-	TotalLevels      int                           `json:"total_levels"`      // 总审批级别
-	ApprovalStatus   string                        `json:"approval_status"`   // 审批状态
-	NextApprover     *string                       `json:"next_approver"`     // 下一个审批人
-	ApprovalHistory  []ChangeApprovalResponse      `json:"approval_history"`  // 审批历史
-	PendingApprovals []ChangeApprovalChainResponse `json:"pending_approvals"` // 待审批项目
+	ChangeID         int                           `json:"changeId"`          // 变更ID
+	CurrentLevel      int                           `json:"currentLevel"`      // 当前审批级别
+	TotalLevels       int                           `json:"totalLevels"`       // 总审批级别
+	ApprovalStatus   string                        `json:"approvalStatus"`   // 审批状态
+	NextApprover     *string                       `json:"nextApprover"`      // 下一个审批人
+	ApprovalHistory  []ChangeApprovalResponse      `json:"approvalHistory"`  // 审批历史
+	PendingApprovals []ChangeApprovalChainResponse `json:"pendingApprovals"`  // 待审批项目
 }
 
 // SubmitChangeRequest 提交变更审批请求
 type SubmitChangeRequest struct {
-	ApproverIDs []int  `json:"approver_ids"` // 审批人ID列表
-	Comment     string `json:"comment"`      // 提交说明（可选）
+	ApproverIDs []int  `json:"approverIds"` // 审批人ID列表
+	Comment     string `json:"comment"`     // 提交说明（可选）
 }

@@ -8,27 +8,27 @@ import (
 type CreateSLADefinitionRequest struct {
 	Name            string                 `json:"name" binding:"required" example:"标准服务SLA"`
 	Description     string                 `json:"description" example:"标准IT服务的SLA定义"`
-	ServiceType     string                 `json:"service_type" example:"standard"`
+	ServiceType     string                 `json:"serviceType" example:"standard"`
 	Priority        string                 `json:"priority" example:"medium"`
-	ResponseTime    int                    `json:"response_time" binding:"required,min=1" example:"30"`
-	ResolutionTime  int                    `json:"resolution_time" binding:"required,min=1" example:"240"`
-	BusinessHours   map[string]interface{} `json:"business_hours" example:"{\"timezone\":\"Asia/Shanghai\"}"`
-	EscalationRules map[string]interface{} `json:"escalation_rules" example:"{\"levels\":[]}"`
+	ResponseTime    int                    `json:"responseTime" binding:"required,min=1" example:"30"`
+	ResolutionTime  int                    `json:"resolutionTime" binding:"required,min=1" example:"240"`
+	BusinessHours   map[string]interface{} `json:"businessHours" example:"{\"timezone\":\"Asia/Shanghai\"}"`
+	EscalationRules map[string]interface{} `json:"escalationRules" example:"{\"levels\":[]}"`
 	Conditions      map[string]interface{} `json:"conditions" example:"{\"priority\":[\"low\",\"medium\"]}"`
-	IsActive        bool                   `json:"is_active" example:"true"`
+	IsActive        bool                   `json:"isActive" example:"true"`
 }
 
 type UpdateSLADefinitionRequest struct {
 	Name            *string                `json:"name,omitempty"`
 	Description     *string                `json:"description,omitempty"`
-	ServiceType     *string                `json:"service_type,omitempty"`
+	ServiceType     *string                `json:"serviceType,omitempty"`
 	Priority        *string                `json:"priority,omitempty"`
-	ResponseTime    *int                   `json:"response_time,omitempty"`
-	ResolutionTime  *int                   `json:"resolution_time,omitempty"`
-	BusinessHours   map[string]interface{} `json:"business_hours,omitempty"`
-	EscalationRules map[string]interface{} `json:"escalation_rules,omitempty"`
+	ResponseTime    *int                   `json:"responseTime,omitempty"`
+	ResolutionTime  *int                   `json:"resolutionTime,omitempty"`
+	BusinessHours   map[string]interface{} `json:"businessHours,omitempty"`
+	EscalationRules map[string]interface{} `json:"escalationRules,omitempty"`
 	Conditions      map[string]interface{} `json:"conditions,omitempty"`
-	IsActive        *bool                  `json:"is_active,omitempty"`
+	IsActive        *bool                  `json:"isActive,omitempty"`
 }
 
 type SLADefinitionResponse struct {
@@ -50,9 +50,9 @@ type SLADefinitionResponse struct {
 
 // SLA违规相关DTO
 type CreateSLAViolationRequest struct {
-	SLADefinitionID int    `json:"sla_definition_id" binding:"required" example:"1"`
-	TicketID        int    `json:"ticket_id" binding:"required" example:"1"`
-	ViolationType   string `json:"violation_type" binding:"required" example:"response_time"`
+	SLADefinitionID int    `json:"slaDefinitionId" binding:"required" example:"1"`
+	TicketID        int    `json:"ticketId" binding:"required" example:"1"`
+	ViolationType   string `json:"violationType" binding:"required" example:"response_time"`
 	Description     string `json:"description" example:"响应时间超时"`
 	Severity        string `json:"severity" example:"medium"`
 }
@@ -60,8 +60,8 @@ type CreateSLAViolationRequest struct {
 type UpdateSLAViolationRequest struct {
 	Description     *string `json:"description,omitempty"`
 	Severity        *string `json:"severity,omitempty"`
-	IsResolved      *bool   `json:"is_resolved,omitempty"`
-	ResolutionNotes *string `json:"resolution_notes,omitempty"`
+	IsResolved      *bool   `json:"isResolved,omitempty"`
+	ResolutionNotes *string `json:"resolutionNotes,omitempty"`
 }
 
 type SLAViolationResponse struct {
@@ -82,10 +82,10 @@ type SLAViolationResponse struct {
 
 // SLA指标相关DTO
 type CreateSLAMetricRequest struct {
-	SLADefinitionID int                    `json:"sla_definition_id" binding:"required" example:"1"`
-	MetricType      string                 `json:"metric_type" binding:"required" example:"response_time"`
-	MetricName      string                 `json:"metric_name" binding:"required" example:"平均响应时间"`
-	MetricValue     float64                `json:"metric_value" binding:"required" example:"25.5"`
+	SLADefinitionID int                    `json:"slaDefinitionId" binding:"required" example:"1"`
+	MetricType      string                 `json:"metricType" binding:"required" example:"response_time"`
+	MetricName      string                 `json:"metricName" binding:"required" example:"平均响应时间"`
+	MetricValue     float64                `json:"metricValue" binding:"required" example:"25.5"`
 	Unit            string                 `json:"unit" example:"分钟"`
 	Metadata        map[string]interface{} `json:"metadata" example:"{\"source\":\"system\"}"`
 }
@@ -106,10 +106,10 @@ type SLAMetricResponse struct {
 
 // SLA监控相关DTO
 type SLAMonitoringRequest struct {
-	SLADefinitionID *int   `json:"sla_definition_id,omitempty" example:"1"`
-	TicketID        *int   `json:"ticket_id,omitempty" example:"1"`
-	StartTime       string `json:"start_time" example:"2024-01-01T00:00:00Z"`
-	EndTime         string `json:"end_time" example:"2024-01-31T23:59:59Z"`
+	SLADefinitionID *int   `json:"slaDefinitionId,omitempty" example:"1"`
+	TicketID        *int   `json:"ticketId,omitempty" example:"1"`
+	StartTime       string `json:"startTime" example:"2024-01-01T00:00:00Z"`
+	EndTime         string `json:"endTime" example:"2024-01-31T23:59:59Z"`
 }
 
 type SLAMonitoringResponse struct {
@@ -172,10 +172,10 @@ type SLATrends struct {
 
 // SLA升级相关DTO
 type SLAEscalationRequest struct {
-	TicketID        int    `json:"ticket_id" binding:"required" example:"1"`
-	EscalationLevel int    `json:"escalation_level" binding:"required" example:"1"`
+	TicketID        int    `json:"ticketId" binding:"required" example:"1"`
+	EscalationLevel int    `json:"escalationLevel" binding:"required" example:"1"`
 	Reason          string `json:"reason" example:"响应时间即将超时"`
-	NotifyUsers     []int  `json:"notify_users" example:"[1,2,3]"`
+	NotifyUsers     []int  `json:"notifyUsers" example:"[1,2,3]"`
 }
 
 type SLAEscalationResponse struct {
