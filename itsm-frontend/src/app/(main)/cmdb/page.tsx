@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Tabs, Table, Tag, Button, Progress, Space, Input, Select, App, Spin } from 'antd';
+import { Card, Row, Col, Statistic, Typography, Tabs, Table, Tag, Button, Progress, Space, Input, Select, App, Spin, message } from 'antd';
 import { Database, Server, Cloud, Shield, Plus, AlertTriangle, CheckCircle, Search, Filter, RefreshCw, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import CIList from '@/components/cmdb/CIList';
@@ -240,10 +240,10 @@ export default function CMDBPage() {
     {
       title: '操作',
       key: 'action',
-      render: () => (
+      render: (_: any, record: any) => (
         <Space>
-          <Button size="small" type="link">详情</Button>
-          <Button size="small" type="link">同步</Button>
+          <Button size="small" type="link" onClick={() => router.push(`/cmdb/cis/${record.id}`)}>详情</Button>
+          <Button size="small" type="link" onClick={() => message.info(`同步资源 ${record.resource_id}`)}>同步</Button>
         </Space>
       ),
     },
@@ -256,7 +256,7 @@ export default function CMDBPage() {
       key: 'ci_name',
       render: (text: string, record: any) => (
         <div>
-          <a>{text}</a>
+          <a onClick={() => router.push(`/cmdb/cis/${record.id}`)}>{text}</a>
           <div className="text-xs text-gray-400">{record.ci_type}</div>
         </div>
       ),
@@ -300,10 +300,10 @@ export default function CMDBPage() {
     {
       title: '操作',
       key: 'action',
-      render: () => (
+      render: (_: any, record: any) => (
         <Space>
-          <Button size="small" type="link">同步</Button>
-          <Button size="small" type="link">忽略</Button>
+          <Button size="small" type="link" onClick={() => message.info(`同步配置项 ${record.ci_name}`)}>同步</Button>
+          <Button size="small" type="link" onClick={() => message.info(`忽略配置项 ${record.ci_name}`)}>忽略</Button>
         </Space>
       ),
     },
