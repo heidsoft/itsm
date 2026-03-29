@@ -19,6 +19,7 @@ import (
 	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/cloudservice"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/contract"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/discoveryjob"
@@ -89,6 +90,7 @@ import (
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
+	"itsm-backend/ent/vendor"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
 	"itsm-backend/ent/workflowtask"
@@ -652,6 +654,28 @@ func init() {
 	configurationitem.DefaultUpdatedAt = configurationitemDescUpdatedAt.Default.(func() time.Time)
 	// configurationitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	configurationitem.UpdateDefaultUpdatedAt = configurationitemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	contractFields := schema.Contract{}.Fields()
+	_ = contractFields
+	// contractDescContractNumber is the schema descriptor for contract_number field.
+	contractDescContractNumber := contractFields[0].Descriptor()
+	// contract.ContractNumberValidator is a validator for the "contract_number" field. It is called by the builders before save.
+	contract.ContractNumberValidator = contractDescContractNumber.Validators[0].(func(string) error)
+	// contractDescValue is the schema descriptor for value field.
+	contractDescValue := contractFields[3].Descriptor()
+	// contract.DefaultValue holds the default value on creation for the value field.
+	contract.DefaultValue = contractDescValue.Default.(float64)
+	// contractDescStatus is the schema descriptor for status field.
+	contractDescStatus := contractFields[6].Descriptor()
+	// contract.DefaultStatus holds the default value on creation for the status field.
+	contract.DefaultStatus = contractDescStatus.Default.(string)
+	// contractDescCreatedAt is the schema descriptor for created_at field.
+	contractDescCreatedAt := contractFields[10].Descriptor()
+	// contract.DefaultCreatedAt holds the default value on creation for the created_at field.
+	contract.DefaultCreatedAt = contractDescCreatedAt.Default.(func() time.Time)
+	// contractDescUpdatedAt is the schema descriptor for updated_at field.
+	contractDescUpdatedAt := contractFields[11].Descriptor()
+	// contract.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	contract.DefaultUpdatedAt = contractDescUpdatedAt.Default.(func() time.Time)
 	conversationFields := schema.Conversation{}.Fields()
 	_ = conversationFields
 	// conversationDescCreatedAt is the schema descriptor for created_at field.
@@ -3046,6 +3070,32 @@ func init() {
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	vendorFields := schema.Vendor{}.Fields()
+	_ = vendorFields
+	// vendorDescName is the schema descriptor for name field.
+	vendorDescName := vendorFields[0].Descriptor()
+	// vendor.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	vendor.NameValidator = vendorDescName.Validators[0].(func(string) error)
+	// vendorDescCode is the schema descriptor for code field.
+	vendorDescCode := vendorFields[1].Descriptor()
+	// vendor.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	vendor.CodeValidator = vendorDescCode.Validators[0].(func(string) error)
+	// vendorDescRating is the schema descriptor for rating field.
+	vendorDescRating := vendorFields[8].Descriptor()
+	// vendor.DefaultRating holds the default value on creation for the rating field.
+	vendor.DefaultRating = vendorDescRating.Default.(float64)
+	// vendorDescStatus is the schema descriptor for status field.
+	vendorDescStatus := vendorFields[9].Descriptor()
+	// vendor.DefaultStatus holds the default value on creation for the status field.
+	vendor.DefaultStatus = vendorDescStatus.Default.(string)
+	// vendorDescCreatedAt is the schema descriptor for created_at field.
+	vendorDescCreatedAt := vendorFields[11].Descriptor()
+	// vendor.DefaultCreatedAt holds the default value on creation for the created_at field.
+	vendor.DefaultCreatedAt = vendorDescCreatedAt.Default.(func() time.Time)
+	// vendorDescUpdatedAt is the schema descriptor for updated_at field.
+	vendorDescUpdatedAt := vendorFields[12].Descriptor()
+	// vendor.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	vendor.DefaultUpdatedAt = vendorDescUpdatedAt.Default.(func() time.Time)
 	workflowFields := schema.Workflow{}.Fields()
 	_ = workflowFields
 	// workflowDescName is the schema descriptor for name field.
