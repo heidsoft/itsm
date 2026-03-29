@@ -22,11 +22,12 @@ const SLAMonitorPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
-    totalSLA: 0,
-    compliant: 0,
-    atRisk: 0,
-    breached: 0,
-    complianceRate: 0,
+    totalDefinitions: 0,
+    activeDefinitions: 0,
+    atRiskTickets: 0,
+    totalViolations: 0,
+    openViolations: 0,
+    overallComplianceRate: 0,
   });
   const [violations, setViolations] = useState<any[]>([]);
   const [serviceSLA, setServiceSLA] = useState<any[]>([]);
@@ -42,11 +43,12 @@ const SLAMonitorPage = () => {
       ]);
 
       setStats({
-        totalSLA: statsData.total_definitions || 0,
-        compliant: statsData.active_definitions || 0,
-        atRisk: Math.round((monitoringData.at_risk_tickets) || 0),
-        breached: statsData.open_violations || 0,
-        complianceRate: statsData.overall_compliance_rate || 0,
+        totalDefinitions: statsData.totalDefinitions || 0,
+        activeDefinitions: statsData.activeDefinitions || 0,
+        atRiskTickets: Math.round((monitoringData.at_risk_tickets) || 0),
+        totalViolations: statsData.totalViolations || 0,
+        openViolations: statsData.openViolations || 0,
+        overallComplianceRate: statsData.overallComplianceRate || 0,
       });
 
       // Set violations for ticket SLA table
@@ -205,9 +207,9 @@ const SLAMonitorPage = () => {
   const serviceSummary = React.useMemo(() => {
     const total = serviceSLA.reduce((sum, s) => sum + s.total_requests, 0);
     const compliant = serviceSLA.reduce((sum, s) => sum + s.compliant, 0);
-    const rate = total > 0 ? (compliant / total * 100).toFixed(1) : (stats.complianceRate || 0).toString();
+    const rate = total > 0 ? (compliant / total * 100).toFixed(1) : (stats.overallComplianceRate || 0).toString();
     return { total, compliant, rate };
-  }, [serviceSLA, stats.complianceRate]);
+  }, [serviceSLA, stats.overallComplianceRate]);
 
   return (
     <div className="p-6 min-h-screen bg-gray-50">
@@ -248,7 +250,7 @@ const SLAMonitorPage = () => {
           <Card className="rounded-lg shadow-sm">
             <Statistic
               title="SLA总数"
-              value={stats.totalSLA}
+              value={stats.totalDefinitions}
               prefix={<Clock className="text-blue-500 mr-2" />}
               valueStyle={{ color: '#1890ff' }}
             />
@@ -258,10 +260,10 @@ const SLAMonitorPage = () => {
           <Card className="rounded-lg shadow-sm">
             <Statistic
               title="合规"
-              value={stats.compliant}
+              value={stats.activeDefinitions}
               prefix={<CheckCircle className="text-green-500 mr-2" />}
               valueStyle={{ color: '#52c41a' }}
-              suffix={`/ ${stats.totalSLA}`}
+              suffix={`/ ${stats.totalDefinitions}`}
             />
           </Card>
         </Col>
@@ -269,7 +271,7 @@ const SLAMonitorPage = () => {
           <Card className="rounded-lg shadow-sm">
             <Statistic
               title="风险中"
-              value={stats.atRisk}
+              value={stats.atRiskTickets}
               prefix={<WarningOutlined className="text-orange-500 mr-2" />}
               valueStyle={{ color: '#fa8c16' }}
             />
@@ -279,7 +281,7 @@ const SLAMonitorPage = () => {
           <Card className="rounded-lg shadow-sm">
             <Statistic
               title="已超时"
-              value={stats.breached}
+              value={stats.openViolations}
               prefix={<AlertTriangle className="text-red-500 mr-2" />}
               valueStyle={{ color: '#ff4d4f' }}
             />

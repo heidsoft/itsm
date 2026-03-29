@@ -54,10 +54,10 @@ func (s *CMDBService) CreateCI(ctx context.Context, req *CreateCIRequest) (*ent.
 }
 
 // GetCI 获取配置项
-func (s *CMDBService) GetCI(ctx context.Context, id int) (*ent.ConfigurationItem, error) {
+func (s *CMDBService) GetCI(ctx context.Context, id int, tenantID int) (*ent.ConfigurationItem, error) {
 	return s.client.ConfigurationItem.
 		Query().
-		Where(configurationitem.ID(id)).
+		Where(configurationitem.ID(id), configurationitem.TenantID(tenantID)).
 		WithOutgoingRelations().
 		WithIncomingRelations().
 		Only(ctx)
@@ -155,8 +155,8 @@ func (s *CMDBService) ListRelationships(ctx context.Context, tenantID int, ciID 
 }
 
 // GetCITopology 获取CI拓扑
-func (s *CMDBService) GetCITopology(ctx context.Context, ciID int, depth int) (*CITopology, error) {
-	ci, err := s.GetCI(ctx, ciID)
+func (s *CMDBService) GetCITopology(ctx context.Context, ciID int, tenantID int, depth int) (*CITopology, error) {
+	ci, err := s.GetCI(ctx, ciID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func (s *CMDBService) GetCITopology(ctx context.Context, ciID int, depth int) (*
 
 		for _, rel := range children {
 			if rel.Edges.TargetCi != nil {
-				childTopology, err := s.GetCITopology(ctx, rel.Edges.TargetCi.ID, depth-1)
+				childTopology, err := s.GetCITopology(ctx, rel.Edges.TargetCi.ID, tenantID, depth-1)
 				if err != nil {
 					continue
 				}

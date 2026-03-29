@@ -43,7 +43,7 @@ export const xssProtection = {
 export const csrfProtection = {
   // CSRF token storage
   privateToken: null as string | null,
-  privateTokenPromise: null as Promise<string> | null,
+  privateTokenPromise: null as Promise<string | null> | null,
 
   // 获取CSRF令牌（从后端获取）
   getToken: async (): Promise<string | null> => {

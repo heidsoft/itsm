@@ -232,15 +232,16 @@ func (r *EntRepository) UpdateApprovalRecord(ctx context.Context, rec *ApprovalR
 	return rec, nil
 }
 
-func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int) ([]*ApprovalRecord, error) {
+func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
 	query := `
 		SELECT a.id, a.approver_id, u.name as approver_name, a.status, a.comment, a.approved_at, a.created_at
 		FROM change_approvals a
 		LEFT JOIN users u ON a.approver_id = u.id
-		WHERE a.change_id = $1
+		LEFT JOIN changes c ON a.change_id = c.id
+		WHERE a.change_id = $1 AND c.tenant_id = $2
 		ORDER BY a.created_at ASC
 	`
-	rows, err := r.db.QueryContext(ctx, query, changeID)
+	rows, err := r.db.QueryContext(ctx, query, changeID, tenantID)
 	if err != nil {
 		return nil, err
 	}

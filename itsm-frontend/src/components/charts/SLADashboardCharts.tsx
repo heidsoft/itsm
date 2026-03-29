@@ -87,12 +87,12 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
         period: selectedPeriod === '7d' ? 'day' : selectedPeriod === '30d' ? 'week' : 'month',
       });
 
-      if (metrics.trend_data && metrics.trend_data.length > 0) {
-        const formattedData: SLAChartData[] = metrics.trend_data.map(item => ({
+      if (metrics.trendData && metrics.trendData.length > 0) {
+        const formattedData: SLAChartData[] = metrics.trendData.map(item => ({
           date: dayjs(item.date).format('MM-DD'),
-          compliance_rate: Number(item.compliance_rate?.toFixed(1) || 0),
-          avg_response_time: Number(item.avg_response_time?.toFixed(2) || 0),
-          avg_resolution_time: Number(item.avg_resolution_time?.toFixed(2) || 0),
+          compliance_rate: Number(item.complianceRate?.toFixed(1) || 0),
+          avg_response_time: Number(item.avgResponseTime?.toFixed(2) || 0),
+          avg_resolution_time: Number(item.avgResolutionTime?.toFixed(2) || 0),
           ticket_count: 0, // API 未返回此字段，设为 0
           violation_count: 0, // API 未返回此字段，设为 0
         }));

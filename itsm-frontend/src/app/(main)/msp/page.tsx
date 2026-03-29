@@ -102,20 +102,20 @@ export default function MSPDashboardPage() {
     },
     {
       title: '工单总数',
-      dataIndex: 'totalTickets',
-      key: 'totalTickets',
-      sorter: (a: MSPCustomerReport, b: MSPCustomerReport) => a.totalTickets - b.totalTickets,
+      dataIndex: 'total_tickets',
+      key: 'total_tickets',
+      sorter: (a: MSPCustomerReport, b: MSPCustomerReport) => a.total_tickets - b.total_tickets,
     },
     {
       title: '已解决',
-      dataIndex: 'resolvedTickets',
-      key: 'resolvedTickets',
+      dataIndex: 'resolved_tickets',
+      key: 'resolved_tickets',
     },
     {
       title: '解决率',
       key: 'resolution_rate',
       render: (record: MSPCustomerReport) => {
-        const rate = record.totalTickets > 0 ? Number((record.resolvedTickets / record.totalTickets * 100).toFixed(1)) : 0;
+        const rate = record.total_tickets > 0 ? Number((record.resolved_tickets / record.total_tickets * 100).toFixed(1)) : 0;
         return <Tag color={rate >= 90 ? 'green' : rate >= 70 ? 'orange' : 'red'}>{rate}%</Tag>;
       },
     },
@@ -181,7 +181,7 @@ export default function MSPDashboardPage() {
           <Card>
             <Statistic
               title="本月工单"
-              value={reports.reduce((sum, r) => sum + r.totalTickets, 0)}
+              value={reports.reduce((sum, r) => sum + r.total_tickets, 0)}
               prefix={<ClockCircleOutlined />}
             />
           </Card>
@@ -190,7 +190,7 @@ export default function MSPDashboardPage() {
           <Card>
             <Statistic
               title="已解决"
-              value={reports.reduce((sum, r) => sum + r.resolvedTickets, 0)}
+              value={reports.reduce((sum, r) => sum + r.resolved_tickets, 0)}
               prefix={<CheckCircleOutlined />}
             />
           </Card>
