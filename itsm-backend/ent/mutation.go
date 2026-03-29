@@ -79,6 +79,8 @@ import (
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/standardchange"
+	"itsm-backend/ent/survey"
+	"itsm-backend/ent/surveyresponse"
 	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
@@ -187,6 +189,8 @@ const (
 	TypeServiceRequest          = "ServiceRequest"
 	TypeServiceRequestApproval  = "ServiceRequestApproval"
 	TypeStandardChange          = "StandardChange"
+	TypeSurvey                  = "Survey"
+	TypeSurveyResponse          = "SurveyResponse"
 	TypeSystemConfig            = "SystemConfig"
 	TypeTag                     = "Tag"
 	TypeTeam                    = "Team"
@@ -91373,6 +91377,1994 @@ func (m *StandardChangeMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown StandardChange edge %s", name)
+}
+
+// SurveyMutation represents an operation that mutates the Survey nodes in the graph.
+type SurveyMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *int
+	title            *string
+	description      *string
+	survey_type      *string
+	is_active        *bool
+	start_date       *time.Time
+	end_date         *time.Time
+	questions        *[]schema.SurveyQuestion
+	appendquestions  []schema.SurveyQuestion
+	tenant_id        *int
+	addtenant_id     *int
+	created_at       *time.Time
+	updated_at       *time.Time
+	clearedFields    map[string]struct{}
+	responses        map[int]struct{}
+	removedresponses map[int]struct{}
+	clearedresponses bool
+	done             bool
+	oldValue         func(context.Context) (*Survey, error)
+	predicates       []predicate.Survey
+}
+
+var _ ent.Mutation = (*SurveyMutation)(nil)
+
+// surveyOption allows management of the mutation configuration using functional options.
+type surveyOption func(*SurveyMutation)
+
+// newSurveyMutation creates new mutation for the Survey entity.
+func newSurveyMutation(c config, op Op, opts ...surveyOption) *SurveyMutation {
+	m := &SurveyMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSurvey,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSurveyID sets the ID field of the mutation.
+func withSurveyID(id int) surveyOption {
+	return func(m *SurveyMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Survey
+		)
+		m.oldValue = func(ctx context.Context) (*Survey, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Survey.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSurvey sets the old Survey of the mutation.
+func withSurvey(node *Survey) surveyOption {
+	return func(m *SurveyMutation) {
+		m.oldValue = func(context.Context) (*Survey, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SurveyMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SurveyMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SurveyMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SurveyMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Survey.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTitle sets the "title" field.
+func (m *SurveyMutation) SetTitle(s string) {
+	m.title = &s
+}
+
+// Title returns the value of the "title" field in the mutation.
+func (m *SurveyMutation) Title() (r string, exists bool) {
+	v := m.title
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTitle returns the old "title" field's value of the Survey entity.
+// If the Survey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyMutation) OldTitle(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTitle is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTitle requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTitle: %w", err)
+	}
+	return oldValue.Title, nil
+}
+
+// ResetTitle resets all changes to the "title" field.
+func (m *SurveyMutation) ResetTitle() {
+	m.title = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *SurveyMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *SurveyMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Survey entity.
+// If the Survey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *SurveyMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[survey.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *SurveyMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[survey.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *SurveyMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, survey.FieldDescription)
+}
+
+// SetSurveyType sets the "survey_type" field.
+func (m *SurveyMutation) SetSurveyType(s string) {
+	m.survey_type = &s
+}
+
+// SurveyType returns the value of the "survey_type" field in the mutation.
+func (m *SurveyMutation) SurveyType() (r string, exists bool) {
+	v := m.survey_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSurveyType returns the old "survey_type" field's value of the Survey entity.
+// If the Survey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyMutation) OldSurveyType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSurveyType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSurveyType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSurveyType: %w", err)
+	}
+	return oldValue.SurveyType, nil
+}
+
+// ResetSurveyType resets all changes to the "survey_type" field.
+func (m *SurveyMutation) ResetSurveyType() {
+	m.survey_type = nil
+}
+
+// SetIsActive sets the "is_active" field.
+func (m *SurveyMutation) SetIsActive(b bool) {
+	m.is_active = &b
+}
+
+// IsActive returns the value of the "is_active" field in the mutation.
+func (m *SurveyMutation) IsActive() (r bool, exists bool) {
+	v := m.is_active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsActive returns the old "is_active" field's value of the Survey entity.
+// If the Survey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyMutation) OldIsActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsActive: %w", err)
+	}
+	return oldValue.IsActive, nil
+}
+
+// ResetIsActive resets all changes to the "is_active" field.
+func (m *SurveyMutation) ResetIsActive() {
+	m.is_active = nil
+}
+
+// SetStartDate sets the "start_date" field.
+func (m *SurveyMutation) SetStartDate(t time.Time) {
+	m.start_date = &t
+}
+
+// StartDate returns the value of the "start_date" field in the mutation.
+func (m *SurveyMutation) StartDate() (r time.Time, exists bool) {
+	v := m.start_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartDate returns the old "start_date" field's value of the Survey entity.
+// If the Survey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyMutation) OldStartDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartDate: %w", err)
+	}
+	return oldValue.StartDate, nil
+}
+
+// ClearStartDate clears the value of the "start_date" field.
+func (m *SurveyMutation) ClearStartDate() {
+	m.start_date = nil
+	m.clearedFields[survey.FieldStartDate] = struct{}{}
+}
+
+// StartDateCleared returns if the "start_date" field was cleared in this mutation.
+func (m *SurveyMutation) StartDateCleared() bool {
+	_, ok := m.clearedFields[survey.FieldStartDate]
+	return ok
+}
+
+// ResetStartDate resets all changes to the "start_date" field.
+func (m *SurveyMutation) ResetStartDate() {
+	m.start_date = nil
+	delete(m.clearedFields, survey.FieldStartDate)
+}
+
+// SetEndDate sets the "end_date" field.
+func (m *SurveyMutation) SetEndDate(t time.Time) {
+	m.end_date = &t
+}
+
+// EndDate returns the value of the "end_date" field in the mutation.
+func (m *SurveyMutation) EndDate() (r time.Time, exists bool) {
+	v := m.end_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndDate returns the old "end_date" field's value of the Survey entity.
+// If the Survey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyMutation) OldEndDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndDate: %w", err)
+	}
+	return oldValue.EndDate, nil
+}
+
+// ClearEndDate clears the value of the "end_date" field.
+func (m *SurveyMutation) ClearEndDate() {
+	m.end_date = nil
+	m.clearedFields[survey.FieldEndDate] = struct{}{}
+}
+
+// EndDateCleared returns if the "end_date" field was cleared in this mutation.
+func (m *SurveyMutation) EndDateCleared() bool {
+	_, ok := m.clearedFields[survey.FieldEndDate]
+	return ok
+}
+
+// ResetEndDate resets all changes to the "end_date" field.
+func (m *SurveyMutation) ResetEndDate() {
+	m.end_date = nil
+	delete(m.clearedFields, survey.FieldEndDate)
+}
+
+// SetQuestions sets the "questions" field.
+func (m *SurveyMutation) SetQuestions(sq []schema.SurveyQuestion) {
+	m.questions = &sq
+	m.appendquestions = nil
+}
+
+// Questions returns the value of the "questions" field in the mutation.
+func (m *SurveyMutation) Questions() (r []schema.SurveyQuestion, exists bool) {
+	v := m.questions
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestions returns the old "questions" field's value of the Survey entity.
+// If the Survey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyMutation) OldQuestions(ctx context.Context) (v []schema.SurveyQuestion, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestions is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestions requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestions: %w", err)
+	}
+	return oldValue.Questions, nil
+}
+
+// AppendQuestions adds sq to the "questions" field.
+func (m *SurveyMutation) AppendQuestions(sq []schema.SurveyQuestion) {
+	m.appendquestions = append(m.appendquestions, sq...)
+}
+
+// AppendedQuestions returns the list of values that were appended to the "questions" field in this mutation.
+func (m *SurveyMutation) AppendedQuestions() ([]schema.SurveyQuestion, bool) {
+	if len(m.appendquestions) == 0 {
+		return nil, false
+	}
+	return m.appendquestions, true
+}
+
+// ResetQuestions resets all changes to the "questions" field.
+func (m *SurveyMutation) ResetQuestions() {
+	m.questions = nil
+	m.appendquestions = nil
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *SurveyMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *SurveyMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the Survey entity.
+// If the Survey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *SurveyMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *SurveyMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *SurveyMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *SurveyMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *SurveyMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Survey entity.
+// If the Survey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *SurveyMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *SurveyMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *SurveyMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Survey entity.
+// If the Survey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *SurveyMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// AddResponseIDs adds the "responses" edge to the SurveyResponse entity by ids.
+func (m *SurveyMutation) AddResponseIDs(ids ...int) {
+	if m.responses == nil {
+		m.responses = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.responses[ids[i]] = struct{}{}
+	}
+}
+
+// ClearResponses clears the "responses" edge to the SurveyResponse entity.
+func (m *SurveyMutation) ClearResponses() {
+	m.clearedresponses = true
+}
+
+// ResponsesCleared reports if the "responses" edge to the SurveyResponse entity was cleared.
+func (m *SurveyMutation) ResponsesCleared() bool {
+	return m.clearedresponses
+}
+
+// RemoveResponseIDs removes the "responses" edge to the SurveyResponse entity by IDs.
+func (m *SurveyMutation) RemoveResponseIDs(ids ...int) {
+	if m.removedresponses == nil {
+		m.removedresponses = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.responses, ids[i])
+		m.removedresponses[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedResponses returns the removed IDs of the "responses" edge to the SurveyResponse entity.
+func (m *SurveyMutation) RemovedResponsesIDs() (ids []int) {
+	for id := range m.removedresponses {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResponsesIDs returns the "responses" edge IDs in the mutation.
+func (m *SurveyMutation) ResponsesIDs() (ids []int) {
+	for id := range m.responses {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetResponses resets all changes to the "responses" edge.
+func (m *SurveyMutation) ResetResponses() {
+	m.responses = nil
+	m.clearedresponses = false
+	m.removedresponses = nil
+}
+
+// Where appends a list predicates to the SurveyMutation builder.
+func (m *SurveyMutation) Where(ps ...predicate.Survey) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SurveyMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SurveyMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Survey, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SurveyMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SurveyMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Survey).
+func (m *SurveyMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SurveyMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.title != nil {
+		fields = append(fields, survey.FieldTitle)
+	}
+	if m.description != nil {
+		fields = append(fields, survey.FieldDescription)
+	}
+	if m.survey_type != nil {
+		fields = append(fields, survey.FieldSurveyType)
+	}
+	if m.is_active != nil {
+		fields = append(fields, survey.FieldIsActive)
+	}
+	if m.start_date != nil {
+		fields = append(fields, survey.FieldStartDate)
+	}
+	if m.end_date != nil {
+		fields = append(fields, survey.FieldEndDate)
+	}
+	if m.questions != nil {
+		fields = append(fields, survey.FieldQuestions)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, survey.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, survey.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, survey.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SurveyMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case survey.FieldTitle:
+		return m.Title()
+	case survey.FieldDescription:
+		return m.Description()
+	case survey.FieldSurveyType:
+		return m.SurveyType()
+	case survey.FieldIsActive:
+		return m.IsActive()
+	case survey.FieldStartDate:
+		return m.StartDate()
+	case survey.FieldEndDate:
+		return m.EndDate()
+	case survey.FieldQuestions:
+		return m.Questions()
+	case survey.FieldTenantID:
+		return m.TenantID()
+	case survey.FieldCreatedAt:
+		return m.CreatedAt()
+	case survey.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SurveyMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case survey.FieldTitle:
+		return m.OldTitle(ctx)
+	case survey.FieldDescription:
+		return m.OldDescription(ctx)
+	case survey.FieldSurveyType:
+		return m.OldSurveyType(ctx)
+	case survey.FieldIsActive:
+		return m.OldIsActive(ctx)
+	case survey.FieldStartDate:
+		return m.OldStartDate(ctx)
+	case survey.FieldEndDate:
+		return m.OldEndDate(ctx)
+	case survey.FieldQuestions:
+		return m.OldQuestions(ctx)
+	case survey.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case survey.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case survey.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Survey field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SurveyMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case survey.FieldTitle:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTitle(v)
+		return nil
+	case survey.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case survey.FieldSurveyType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSurveyType(v)
+		return nil
+	case survey.FieldIsActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsActive(v)
+		return nil
+	case survey.FieldStartDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartDate(v)
+		return nil
+	case survey.FieldEndDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndDate(v)
+		return nil
+	case survey.FieldQuestions:
+		v, ok := value.([]schema.SurveyQuestion)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestions(v)
+		return nil
+	case survey.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case survey.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case survey.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Survey field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SurveyMutation) AddedFields() []string {
+	var fields []string
+	if m.addtenant_id != nil {
+		fields = append(fields, survey.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SurveyMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case survey.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SurveyMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case survey.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Survey numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SurveyMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(survey.FieldDescription) {
+		fields = append(fields, survey.FieldDescription)
+	}
+	if m.FieldCleared(survey.FieldStartDate) {
+		fields = append(fields, survey.FieldStartDate)
+	}
+	if m.FieldCleared(survey.FieldEndDate) {
+		fields = append(fields, survey.FieldEndDate)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SurveyMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SurveyMutation) ClearField(name string) error {
+	switch name {
+	case survey.FieldDescription:
+		m.ClearDescription()
+		return nil
+	case survey.FieldStartDate:
+		m.ClearStartDate()
+		return nil
+	case survey.FieldEndDate:
+		m.ClearEndDate()
+		return nil
+	}
+	return fmt.Errorf("unknown Survey nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SurveyMutation) ResetField(name string) error {
+	switch name {
+	case survey.FieldTitle:
+		m.ResetTitle()
+		return nil
+	case survey.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case survey.FieldSurveyType:
+		m.ResetSurveyType()
+		return nil
+	case survey.FieldIsActive:
+		m.ResetIsActive()
+		return nil
+	case survey.FieldStartDate:
+		m.ResetStartDate()
+		return nil
+	case survey.FieldEndDate:
+		m.ResetEndDate()
+		return nil
+	case survey.FieldQuestions:
+		m.ResetQuestions()
+		return nil
+	case survey.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case survey.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case survey.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Survey field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SurveyMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.responses != nil {
+		edges = append(edges, survey.EdgeResponses)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SurveyMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case survey.EdgeResponses:
+		ids := make([]ent.Value, 0, len(m.responses))
+		for id := range m.responses {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SurveyMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedresponses != nil {
+		edges = append(edges, survey.EdgeResponses)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SurveyMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case survey.EdgeResponses:
+		ids := make([]ent.Value, 0, len(m.removedresponses))
+		for id := range m.removedresponses {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SurveyMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedresponses {
+		edges = append(edges, survey.EdgeResponses)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SurveyMutation) EdgeCleared(name string) bool {
+	switch name {
+	case survey.EdgeResponses:
+		return m.clearedresponses
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SurveyMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Survey unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SurveyMutation) ResetEdge(name string) error {
+	switch name {
+	case survey.EdgeResponses:
+		m.ResetResponses()
+		return nil
+	}
+	return fmt.Errorf("unknown Survey edge %s", name)
+}
+
+// SurveyResponseMutation represents an operation that mutates the SurveyResponse nodes in the graph.
+type SurveyResponseMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *int
+	ticket_id        *int
+	addticket_id     *int
+	respondent_id    *int
+	addrespondent_id *int
+	answers          *[]schema.Answer
+	appendanswers    []schema.Answer
+	score            *int
+	addscore         *int
+	comment          *string
+	tenant_id        *int
+	addtenant_id     *int
+	submitted_at     *time.Time
+	clearedFields    map[string]struct{}
+	survey           *int
+	clearedsurvey    bool
+	done             bool
+	oldValue         func(context.Context) (*SurveyResponse, error)
+	predicates       []predicate.SurveyResponse
+}
+
+var _ ent.Mutation = (*SurveyResponseMutation)(nil)
+
+// surveyresponseOption allows management of the mutation configuration using functional options.
+type surveyresponseOption func(*SurveyResponseMutation)
+
+// newSurveyResponseMutation creates new mutation for the SurveyResponse entity.
+func newSurveyResponseMutation(c config, op Op, opts ...surveyresponseOption) *SurveyResponseMutation {
+	m := &SurveyResponseMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSurveyResponse,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSurveyResponseID sets the ID field of the mutation.
+func withSurveyResponseID(id int) surveyresponseOption {
+	return func(m *SurveyResponseMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *SurveyResponse
+		)
+		m.oldValue = func(ctx context.Context) (*SurveyResponse, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().SurveyResponse.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSurveyResponse sets the old SurveyResponse of the mutation.
+func withSurveyResponse(node *SurveyResponse) surveyresponseOption {
+	return func(m *SurveyResponseMutation) {
+		m.oldValue = func(context.Context) (*SurveyResponse, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SurveyResponseMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SurveyResponseMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SurveyResponseMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SurveyResponseMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().SurveyResponse.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetSurveyID sets the "survey_id" field.
+func (m *SurveyResponseMutation) SetSurveyID(i int) {
+	m.survey = &i
+}
+
+// SurveyID returns the value of the "survey_id" field in the mutation.
+func (m *SurveyResponseMutation) SurveyID() (r int, exists bool) {
+	v := m.survey
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSurveyID returns the old "survey_id" field's value of the SurveyResponse entity.
+// If the SurveyResponse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyResponseMutation) OldSurveyID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSurveyID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSurveyID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSurveyID: %w", err)
+	}
+	return oldValue.SurveyID, nil
+}
+
+// ResetSurveyID resets all changes to the "survey_id" field.
+func (m *SurveyResponseMutation) ResetSurveyID() {
+	m.survey = nil
+}
+
+// SetTicketID sets the "ticket_id" field.
+func (m *SurveyResponseMutation) SetTicketID(i int) {
+	m.ticket_id = &i
+	m.addticket_id = nil
+}
+
+// TicketID returns the value of the "ticket_id" field in the mutation.
+func (m *SurveyResponseMutation) TicketID() (r int, exists bool) {
+	v := m.ticket_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTicketID returns the old "ticket_id" field's value of the SurveyResponse entity.
+// If the SurveyResponse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyResponseMutation) OldTicketID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTicketID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTicketID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTicketID: %w", err)
+	}
+	return oldValue.TicketID, nil
+}
+
+// AddTicketID adds i to the "ticket_id" field.
+func (m *SurveyResponseMutation) AddTicketID(i int) {
+	if m.addticket_id != nil {
+		*m.addticket_id += i
+	} else {
+		m.addticket_id = &i
+	}
+}
+
+// AddedTicketID returns the value that was added to the "ticket_id" field in this mutation.
+func (m *SurveyResponseMutation) AddedTicketID() (r int, exists bool) {
+	v := m.addticket_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTicketID clears the value of the "ticket_id" field.
+func (m *SurveyResponseMutation) ClearTicketID() {
+	m.ticket_id = nil
+	m.addticket_id = nil
+	m.clearedFields[surveyresponse.FieldTicketID] = struct{}{}
+}
+
+// TicketIDCleared returns if the "ticket_id" field was cleared in this mutation.
+func (m *SurveyResponseMutation) TicketIDCleared() bool {
+	_, ok := m.clearedFields[surveyresponse.FieldTicketID]
+	return ok
+}
+
+// ResetTicketID resets all changes to the "ticket_id" field.
+func (m *SurveyResponseMutation) ResetTicketID() {
+	m.ticket_id = nil
+	m.addticket_id = nil
+	delete(m.clearedFields, surveyresponse.FieldTicketID)
+}
+
+// SetRespondentID sets the "respondent_id" field.
+func (m *SurveyResponseMutation) SetRespondentID(i int) {
+	m.respondent_id = &i
+	m.addrespondent_id = nil
+}
+
+// RespondentID returns the value of the "respondent_id" field in the mutation.
+func (m *SurveyResponseMutation) RespondentID() (r int, exists bool) {
+	v := m.respondent_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRespondentID returns the old "respondent_id" field's value of the SurveyResponse entity.
+// If the SurveyResponse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyResponseMutation) OldRespondentID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRespondentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRespondentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRespondentID: %w", err)
+	}
+	return oldValue.RespondentID, nil
+}
+
+// AddRespondentID adds i to the "respondent_id" field.
+func (m *SurveyResponseMutation) AddRespondentID(i int) {
+	if m.addrespondent_id != nil {
+		*m.addrespondent_id += i
+	} else {
+		m.addrespondent_id = &i
+	}
+}
+
+// AddedRespondentID returns the value that was added to the "respondent_id" field in this mutation.
+func (m *SurveyResponseMutation) AddedRespondentID() (r int, exists bool) {
+	v := m.addrespondent_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearRespondentID clears the value of the "respondent_id" field.
+func (m *SurveyResponseMutation) ClearRespondentID() {
+	m.respondent_id = nil
+	m.addrespondent_id = nil
+	m.clearedFields[surveyresponse.FieldRespondentID] = struct{}{}
+}
+
+// RespondentIDCleared returns if the "respondent_id" field was cleared in this mutation.
+func (m *SurveyResponseMutation) RespondentIDCleared() bool {
+	_, ok := m.clearedFields[surveyresponse.FieldRespondentID]
+	return ok
+}
+
+// ResetRespondentID resets all changes to the "respondent_id" field.
+func (m *SurveyResponseMutation) ResetRespondentID() {
+	m.respondent_id = nil
+	m.addrespondent_id = nil
+	delete(m.clearedFields, surveyresponse.FieldRespondentID)
+}
+
+// SetAnswers sets the "answers" field.
+func (m *SurveyResponseMutation) SetAnswers(s []schema.Answer) {
+	m.answers = &s
+	m.appendanswers = nil
+}
+
+// Answers returns the value of the "answers" field in the mutation.
+func (m *SurveyResponseMutation) Answers() (r []schema.Answer, exists bool) {
+	v := m.answers
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAnswers returns the old "answers" field's value of the SurveyResponse entity.
+// If the SurveyResponse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyResponseMutation) OldAnswers(ctx context.Context) (v []schema.Answer, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAnswers is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAnswers requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAnswers: %w", err)
+	}
+	return oldValue.Answers, nil
+}
+
+// AppendAnswers adds s to the "answers" field.
+func (m *SurveyResponseMutation) AppendAnswers(s []schema.Answer) {
+	m.appendanswers = append(m.appendanswers, s...)
+}
+
+// AppendedAnswers returns the list of values that were appended to the "answers" field in this mutation.
+func (m *SurveyResponseMutation) AppendedAnswers() ([]schema.Answer, bool) {
+	if len(m.appendanswers) == 0 {
+		return nil, false
+	}
+	return m.appendanswers, true
+}
+
+// ResetAnswers resets all changes to the "answers" field.
+func (m *SurveyResponseMutation) ResetAnswers() {
+	m.answers = nil
+	m.appendanswers = nil
+}
+
+// SetScore sets the "score" field.
+func (m *SurveyResponseMutation) SetScore(i int) {
+	m.score = &i
+	m.addscore = nil
+}
+
+// Score returns the value of the "score" field in the mutation.
+func (m *SurveyResponseMutation) Score() (r int, exists bool) {
+	v := m.score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScore returns the old "score" field's value of the SurveyResponse entity.
+// If the SurveyResponse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyResponseMutation) OldScore(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScore is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScore requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScore: %w", err)
+	}
+	return oldValue.Score, nil
+}
+
+// AddScore adds i to the "score" field.
+func (m *SurveyResponseMutation) AddScore(i int) {
+	if m.addscore != nil {
+		*m.addscore += i
+	} else {
+		m.addscore = &i
+	}
+}
+
+// AddedScore returns the value that was added to the "score" field in this mutation.
+func (m *SurveyResponseMutation) AddedScore() (r int, exists bool) {
+	v := m.addscore
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetScore resets all changes to the "score" field.
+func (m *SurveyResponseMutation) ResetScore() {
+	m.score = nil
+	m.addscore = nil
+}
+
+// SetComment sets the "comment" field.
+func (m *SurveyResponseMutation) SetComment(s string) {
+	m.comment = &s
+}
+
+// Comment returns the value of the "comment" field in the mutation.
+func (m *SurveyResponseMutation) Comment() (r string, exists bool) {
+	v := m.comment
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldComment returns the old "comment" field's value of the SurveyResponse entity.
+// If the SurveyResponse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyResponseMutation) OldComment(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldComment is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldComment requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldComment: %w", err)
+	}
+	return oldValue.Comment, nil
+}
+
+// ClearComment clears the value of the "comment" field.
+func (m *SurveyResponseMutation) ClearComment() {
+	m.comment = nil
+	m.clearedFields[surveyresponse.FieldComment] = struct{}{}
+}
+
+// CommentCleared returns if the "comment" field was cleared in this mutation.
+func (m *SurveyResponseMutation) CommentCleared() bool {
+	_, ok := m.clearedFields[surveyresponse.FieldComment]
+	return ok
+}
+
+// ResetComment resets all changes to the "comment" field.
+func (m *SurveyResponseMutation) ResetComment() {
+	m.comment = nil
+	delete(m.clearedFields, surveyresponse.FieldComment)
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *SurveyResponseMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *SurveyResponseMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the SurveyResponse entity.
+// If the SurveyResponse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyResponseMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *SurveyResponseMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *SurveyResponseMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *SurveyResponseMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetSubmittedAt sets the "submitted_at" field.
+func (m *SurveyResponseMutation) SetSubmittedAt(t time.Time) {
+	m.submitted_at = &t
+}
+
+// SubmittedAt returns the value of the "submitted_at" field in the mutation.
+func (m *SurveyResponseMutation) SubmittedAt() (r time.Time, exists bool) {
+	v := m.submitted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubmittedAt returns the old "submitted_at" field's value of the SurveyResponse entity.
+// If the SurveyResponse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SurveyResponseMutation) OldSubmittedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubmittedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubmittedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubmittedAt: %w", err)
+	}
+	return oldValue.SubmittedAt, nil
+}
+
+// ResetSubmittedAt resets all changes to the "submitted_at" field.
+func (m *SurveyResponseMutation) ResetSubmittedAt() {
+	m.submitted_at = nil
+}
+
+// ClearSurvey clears the "survey" edge to the Survey entity.
+func (m *SurveyResponseMutation) ClearSurvey() {
+	m.clearedsurvey = true
+	m.clearedFields[surveyresponse.FieldSurveyID] = struct{}{}
+}
+
+// SurveyCleared reports if the "survey" edge to the Survey entity was cleared.
+func (m *SurveyResponseMutation) SurveyCleared() bool {
+	return m.clearedsurvey
+}
+
+// SurveyIDs returns the "survey" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// SurveyID instead. It exists only for internal usage by the builders.
+func (m *SurveyResponseMutation) SurveyIDs() (ids []int) {
+	if id := m.survey; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetSurvey resets all changes to the "survey" edge.
+func (m *SurveyResponseMutation) ResetSurvey() {
+	m.survey = nil
+	m.clearedsurvey = false
+}
+
+// Where appends a list predicates to the SurveyResponseMutation builder.
+func (m *SurveyResponseMutation) Where(ps ...predicate.SurveyResponse) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SurveyResponseMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SurveyResponseMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.SurveyResponse, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SurveyResponseMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SurveyResponseMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (SurveyResponse).
+func (m *SurveyResponseMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SurveyResponseMutation) Fields() []string {
+	fields := make([]string, 0, 8)
+	if m.survey != nil {
+		fields = append(fields, surveyresponse.FieldSurveyID)
+	}
+	if m.ticket_id != nil {
+		fields = append(fields, surveyresponse.FieldTicketID)
+	}
+	if m.respondent_id != nil {
+		fields = append(fields, surveyresponse.FieldRespondentID)
+	}
+	if m.answers != nil {
+		fields = append(fields, surveyresponse.FieldAnswers)
+	}
+	if m.score != nil {
+		fields = append(fields, surveyresponse.FieldScore)
+	}
+	if m.comment != nil {
+		fields = append(fields, surveyresponse.FieldComment)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, surveyresponse.FieldTenantID)
+	}
+	if m.submitted_at != nil {
+		fields = append(fields, surveyresponse.FieldSubmittedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SurveyResponseMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case surveyresponse.FieldSurveyID:
+		return m.SurveyID()
+	case surveyresponse.FieldTicketID:
+		return m.TicketID()
+	case surveyresponse.FieldRespondentID:
+		return m.RespondentID()
+	case surveyresponse.FieldAnswers:
+		return m.Answers()
+	case surveyresponse.FieldScore:
+		return m.Score()
+	case surveyresponse.FieldComment:
+		return m.Comment()
+	case surveyresponse.FieldTenantID:
+		return m.TenantID()
+	case surveyresponse.FieldSubmittedAt:
+		return m.SubmittedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SurveyResponseMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case surveyresponse.FieldSurveyID:
+		return m.OldSurveyID(ctx)
+	case surveyresponse.FieldTicketID:
+		return m.OldTicketID(ctx)
+	case surveyresponse.FieldRespondentID:
+		return m.OldRespondentID(ctx)
+	case surveyresponse.FieldAnswers:
+		return m.OldAnswers(ctx)
+	case surveyresponse.FieldScore:
+		return m.OldScore(ctx)
+	case surveyresponse.FieldComment:
+		return m.OldComment(ctx)
+	case surveyresponse.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case surveyresponse.FieldSubmittedAt:
+		return m.OldSubmittedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown SurveyResponse field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SurveyResponseMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case surveyresponse.FieldSurveyID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSurveyID(v)
+		return nil
+	case surveyresponse.FieldTicketID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTicketID(v)
+		return nil
+	case surveyresponse.FieldRespondentID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRespondentID(v)
+		return nil
+	case surveyresponse.FieldAnswers:
+		v, ok := value.([]schema.Answer)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAnswers(v)
+		return nil
+	case surveyresponse.FieldScore:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScore(v)
+		return nil
+	case surveyresponse.FieldComment:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetComment(v)
+		return nil
+	case surveyresponse.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case surveyresponse.FieldSubmittedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubmittedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SurveyResponse field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SurveyResponseMutation) AddedFields() []string {
+	var fields []string
+	if m.addticket_id != nil {
+		fields = append(fields, surveyresponse.FieldTicketID)
+	}
+	if m.addrespondent_id != nil {
+		fields = append(fields, surveyresponse.FieldRespondentID)
+	}
+	if m.addscore != nil {
+		fields = append(fields, surveyresponse.FieldScore)
+	}
+	if m.addtenant_id != nil {
+		fields = append(fields, surveyresponse.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SurveyResponseMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case surveyresponse.FieldTicketID:
+		return m.AddedTicketID()
+	case surveyresponse.FieldRespondentID:
+		return m.AddedRespondentID()
+	case surveyresponse.FieldScore:
+		return m.AddedScore()
+	case surveyresponse.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SurveyResponseMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case surveyresponse.FieldTicketID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTicketID(v)
+		return nil
+	case surveyresponse.FieldRespondentID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRespondentID(v)
+		return nil
+	case surveyresponse.FieldScore:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddScore(v)
+		return nil
+	case surveyresponse.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SurveyResponse numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SurveyResponseMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(surveyresponse.FieldTicketID) {
+		fields = append(fields, surveyresponse.FieldTicketID)
+	}
+	if m.FieldCleared(surveyresponse.FieldRespondentID) {
+		fields = append(fields, surveyresponse.FieldRespondentID)
+	}
+	if m.FieldCleared(surveyresponse.FieldComment) {
+		fields = append(fields, surveyresponse.FieldComment)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SurveyResponseMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SurveyResponseMutation) ClearField(name string) error {
+	switch name {
+	case surveyresponse.FieldTicketID:
+		m.ClearTicketID()
+		return nil
+	case surveyresponse.FieldRespondentID:
+		m.ClearRespondentID()
+		return nil
+	case surveyresponse.FieldComment:
+		m.ClearComment()
+		return nil
+	}
+	return fmt.Errorf("unknown SurveyResponse nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SurveyResponseMutation) ResetField(name string) error {
+	switch name {
+	case surveyresponse.FieldSurveyID:
+		m.ResetSurveyID()
+		return nil
+	case surveyresponse.FieldTicketID:
+		m.ResetTicketID()
+		return nil
+	case surveyresponse.FieldRespondentID:
+		m.ResetRespondentID()
+		return nil
+	case surveyresponse.FieldAnswers:
+		m.ResetAnswers()
+		return nil
+	case surveyresponse.FieldScore:
+		m.ResetScore()
+		return nil
+	case surveyresponse.FieldComment:
+		m.ResetComment()
+		return nil
+	case surveyresponse.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case surveyresponse.FieldSubmittedAt:
+		m.ResetSubmittedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown SurveyResponse field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SurveyResponseMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.survey != nil {
+		edges = append(edges, surveyresponse.EdgeSurvey)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SurveyResponseMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case surveyresponse.EdgeSurvey:
+		if id := m.survey; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SurveyResponseMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SurveyResponseMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SurveyResponseMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedsurvey {
+		edges = append(edges, surveyresponse.EdgeSurvey)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SurveyResponseMutation) EdgeCleared(name string) bool {
+	switch name {
+	case surveyresponse.EdgeSurvey:
+		return m.clearedsurvey
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SurveyResponseMutation) ClearEdge(name string) error {
+	switch name {
+	case surveyresponse.EdgeSurvey:
+		m.ClearSurvey()
+		return nil
+	}
+	return fmt.Errorf("unknown SurveyResponse unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SurveyResponseMutation) ResetEdge(name string) error {
+	switch name {
+	case surveyresponse.EdgeSurvey:
+		m.ResetSurvey()
+		return nil
+	}
+	return fmt.Errorf("unknown SurveyResponse edge %s", name)
 }
 
 // SystemConfigMutation represents an operation that mutates the SystemConfig nodes in the graph.

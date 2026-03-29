@@ -860,6 +860,30 @@ func (f StandardChangeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StandardChangeMutation", m)
 }
 
+// The SurveyFunc type is an adapter to allow the use of ordinary
+// function as Survey mutator.
+type SurveyFunc func(context.Context, *ent.SurveyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SurveyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SurveyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SurveyMutation", m)
+}
+
+// The SurveyResponseFunc type is an adapter to allow the use of ordinary
+// function as SurveyResponse mutator.
+type SurveyResponseFunc func(context.Context, *ent.SurveyResponseMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SurveyResponseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SurveyResponseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SurveyResponseMutation", m)
+}
+
 // The SystemConfigFunc type is an adapter to allow the use of ordinary
 // function as SystemConfig mutator.
 type SystemConfigFunc func(context.Context, *ent.SystemConfigMutation) (ent.Value, error)

@@ -219,6 +219,12 @@ type ServiceRequestApproval func(*sql.Selector)
 // StandardChange is the predicate function for standardchange builders.
 type StandardChange func(*sql.Selector)
 
+// Survey is the predicate function for survey builders.
+type Survey func(*sql.Selector)
+
+// SurveyResponse is the predicate function for surveyresponse builders.
+type SurveyResponse func(*sql.Selector)
+
 // SystemConfig is the predicate function for systemconfig builders.
 type SystemConfig func(*sql.Selector)
 
