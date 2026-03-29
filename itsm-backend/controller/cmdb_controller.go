@@ -126,7 +126,15 @@ func (c *CMDBController) GetCI(ctx *gin.Context) {
 		return
 	}
 
-	ci, err := c.cmdbService.GetCI(ctx.Request.Context(), id)
+	tenantIDVal, _ := ctx.Get("tenant_id")
+	tenantID, _ := tenantIDVal.(int)
+	if tenantID == 0 {
+		common.Fail(ctx, common.AuthFailedCode, "租户ID无效")
+		ctx.Abort()
+		return
+	}
+
+	ci, err := c.cmdbService.GetCI(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(ctx, common.NotFoundCode, "CI not found")
 		return
@@ -391,7 +399,15 @@ func (c *CMDBController) GetCITopology(ctx *gin.Context) {
 		}
 	}
 
-	topology, err := c.cmdbService.GetCITopology(ctx.Request.Context(), id, depth)
+	tenantIDVal, _ := ctx.Get("tenant_id")
+	tenantID, _ := tenantIDVal.(int)
+	if tenantID == 0 {
+		common.Fail(ctx, common.AuthFailedCode, "租户ID无效")
+		ctx.Abort()
+		return
+	}
+
+	topology, err := c.cmdbService.GetCITopology(ctx.Request.Context(), id, tenantID, depth)
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "操作失败，请稍后重试")
 		return

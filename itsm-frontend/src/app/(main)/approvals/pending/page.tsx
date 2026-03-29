@@ -111,7 +111,7 @@ export default function PendingApprovalsPage() {
                   key: 'requester',
                   width: 160,
                   render: (_, r) =>
-                    r.requester?.name || r.requester?.username || String(r.requester_id || '-'),
+                    r.requester?.name || r.requester?.username || String(r.requesterId || '-'),
                 },
                 {
                   title: '创建时间',

@@ -234,8 +234,11 @@ func (r *EntRepository) Update(ctx context.Context, req *ServiceRequest) error {
 		SetCostCenter(req.CostCenter).
 		SetDataClassification(req.DataClassification).
 		SetNeedsPublicIP(req.NeedsPublicIP).
-		SetSourceIPWhitelist(req.SourceIPWhitelist).
-		SetExpireAt(*req.ExpireAt)
+		SetSourceIPWhitelist(req.SourceIPWhitelist)
+
+	if req.ExpireAt != nil {
+		update.SetExpireAt(*req.ExpireAt)
+	}
 
 	return update.Exec(ctx)
 }

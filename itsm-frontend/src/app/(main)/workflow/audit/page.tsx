@@ -54,9 +54,14 @@ export default function AuditLogsPage() {
   });
 
   const { currentTenant } = useAuthStore();
-  const tenantId = currentTenant?.id || 1;
+  const tenantId = currentTenant?.id;
 
   const fetchLogs = async () => {
+    if (!tenantId) {
+      message.error('无法获取租户信息，请重新登录');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const request: QueryAuditLogsRequest = {
