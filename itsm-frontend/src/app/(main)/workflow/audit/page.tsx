@@ -14,6 +14,7 @@ import {
   Spin,
   Descriptions,
   Timeline,
+  message,
 } from 'antd';
 import {
   Search,
@@ -44,6 +45,7 @@ export default function AuditLogsPage() {
   const [selectedLog, setSelectedLog] = useState<ProcessAuditLog | null>(null);
   const [timelineVisible, setTimelineVisible] = useState(false);
   const [timeline, setTimeline] = useState<ProcessAuditLog[]>([]);
+  const [timelineLoading, setTimelineLoading] = useState(false);
 
   // 筛选条件
   const [filters, setFilters] = useState<QueryAuditLogsRequest>({
@@ -80,12 +82,16 @@ export default function AuditLogsPage() {
   }, [page, pageSize, filters]);
 
   const fetchTimeline = async (processInstanceKey: string) => {
+    setTimelineLoading(true);
     try {
       const data = await BPMNDashboardApi.getProcessTimeline(processInstanceKey);
       setTimeline(data);
       setTimelineVisible(true);
     } catch (error) {
       console.error('Failed to fetch timeline:', error);
+      message.error('加载时间线失败');
+    } finally {
+      setTimelineLoading(false);
     }
   };
 
@@ -342,25 +348,31 @@ export default function AuditLogsPage() {
         footer={null}
         width={800}
       >
-        <Timeline
-          items={timeline.map((log) => ({
-            color: getActionColor(log.action),
-            children: (
-              <div>
-                <Space>
-                  <Tag color={getActionColor(log.action)}>{log.action}</Tag>
-                  <span>{log.activity_name}</span>
-                </Space>
-                <div className="text-sm text-gray-500 mt-1">
+        {timelineLoading ? (
+          <div className="flex justify-center py-8">
+            <Spin />
+          </div>
+        ) : (
+          <Timeline
+            items={timeline.map((log) => ({
+              color: getActionColor(log.action),
+              children: (
+                <div>
                   <Space>
-                    <User size={12} /> {log.user_name}
-                    <Clock size={12} /> {new Date(log.timestamp).toLocaleString()}
+                    <Tag color={getActionColor(log.action)}>{log.action}</Tag>
+                    <span>{log.activity_name}</span>
                   </Space>
+                  <div className="text-sm text-gray-500 mt-1">
+                    <Space>
+                      <User size={12} /> {log.user_name}
+                      <Clock size={12} /> {new Date(log.timestamp).toLocaleString()}
+                    </Space>
+                  </div>
                 </div>
-              </div>
-            ),
-          }))}
-        />
+              ),
+            }))}
+          />
+        )}
       </Modal>
     </div>
   );
