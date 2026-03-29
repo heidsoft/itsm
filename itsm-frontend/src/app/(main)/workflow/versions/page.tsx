@@ -21,6 +21,7 @@ import {
   Badge,
   Statistic,
   App,
+  message,
 } from 'antd';
 import {
   Plus,
@@ -389,9 +390,9 @@ const WorkflowVersionsPage = () => {
               >
                 新建版本
               </Button>
-              <Button icon={<Upload className="w-4 h-4" />}>导入版本</Button>
-              <Button icon={<Download className="w-4 h-4" />}>导出版本</Button>
-              <Button icon={<History className="w-4 h-4" />}>版本历史</Button>
+              <Button icon={<Upload className="w-4 h-4" />} onClick={() => message.info('导入版本功能开发中')}>导入版本</Button>
+              <Button icon={<Download className="w-4 h-4" />} onClick={() => message.info('导出版本功能开发中')}>导出版本</Button>
+              <Button icon={<History className="w-4 h-4" />} onClick={() => message.info('版本历史功能开发中')}>版本历史</Button>
             </Space>
           </Col>
         </Row>

@@ -30,6 +30,7 @@ import BPMNDashboardApi, {
   QueryAuditLogsRequest,
 } from '@/lib/api/bpmn-dashboard-api';
 import { useI18n } from '@/lib/i18n';
+import { useAuthStore } from '@/lib/store/auth-store';
 
 const { RangePicker } = DatePicker;
 
@@ -46,12 +47,12 @@ export default function AuditLogsPage() {
 
   // 筛选条件
   const [filters, setFilters] = useState<QueryAuditLogsRequest>({
-    tenant_id: 1,
     page: 1,
     page_size: 20,
   });
 
-  const tenantId = 1;
+  const { currentTenant } = useAuthStore();
+  const tenantId = currentTenant?.id || 1;
 
   const fetchLogs = async () => {
     setLoading(true);
