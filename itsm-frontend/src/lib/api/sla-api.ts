@@ -166,7 +166,7 @@ export class SLAApi {
     end_date: string;
   }): Promise<SLAComplianceReport> {
     // 调用合规报告端点
-    const report = await httpClient.get('/api/v1/sla/compliance-report', {
+    const report = await httpClient.get<SLAComplianceReport>('/api/v1/sla/compliance-report', {
       start_date: params.start_date,
       end_date: params.end_date,
     });

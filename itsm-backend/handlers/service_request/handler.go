@@ -300,6 +300,7 @@ func (h *Handler) Update(c *gin.Context) {
 		DataClassification: req.DataClassification,
 		NeedsPublicIP:      req.NeedsPublicIP,
 		SourceIPWhitelist:  req.SourceIPWhitelist,
+		ComplianceAck:      req.ComplianceAck,
 		ExpireAt:           req.ExpireAt,
 	}
 

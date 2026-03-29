@@ -55,13 +55,13 @@ const SLADashboardPage = () => {
     activeDefinitions: number;
     totalViolations: number;
     openViolations: number;
-    overall_compliance_rate: number;
+    overallComplianceRate: number;
   }>({
     totalDefinitions: 0,
     activeDefinitions: 0,
     totalViolations: 0,
     openViolations: 0,
-    overall_compliance_rate: 0,
+    overallComplianceRate: 0,
   });
 
   const [slaDefinitions, setSlaDefinitions] = useState<SLADefinition[]>([]);
@@ -79,10 +79,10 @@ const SLADashboardPage = () => {
     }>
   >([]);
   const [slaMetrics, setSlaMetrics] = useState<{
-    response_time_avg: number;
-    resolution_time_avg: number;
-    compliance_rate: number;
-    violation_count: number;
+    responseTimeAvg: number;
+    resolutionTimeAvg: number;
+    complianceRate: number;
+    violationCount: number;
   } | null>(null);
 
   // 加载SLA统计数据
@@ -248,7 +248,7 @@ const SLADashboardPage = () => {
         <div>
           <div className="font-medium">{name}</div>
           <span className="text-xs text-gray-500">
-            {record.serviceType} - {record.priority}
+            {record.service_type} - {record.priority}
           </span>
         </div>
       ),
@@ -550,7 +550,7 @@ const SLADashboardPage = () => {
                               <Col span={12}>
                                 <Statistic
                                   title="平均响应时间"
-                                  value={slaMetrics.response_time_avg}
+                                  value={slaMetrics.responseTimeAvg}
                                   precision={1}
                                   suffix="分钟"
                                   styles={{ content: { fontSize: 16 } }}
@@ -559,7 +559,7 @@ const SLADashboardPage = () => {
                               <Col span={12}>
                                 <Statistic
                                   title="平均解决时间"
-                                  value={slaMetrics.resolution_time_avg}
+                                  value={slaMetrics.resolutionTimeAvg}
                                   precision={1}
                                   suffix="分钟"
                                   styles={{ content: { fontSize: 16 } }}
@@ -569,7 +569,7 @@ const SLADashboardPage = () => {
                             <div className="h-px bg-gray-200 my-4" />
                             <div className="text-center">
                               <span className="text-gray-500">
-                                近7天违规: {slaMetrics.violation_count} 次
+                                近7天违规: {slaMetrics.violationCount} 次
                               </span>
                             </div>
                           </div>

@@ -17,7 +17,7 @@ type Repository interface {
 	// Approvals
 	CreateApprovalRecord(ctx context.Context, r *ApprovalRecord) (*ApprovalRecord, error)
 	UpdateApprovalRecord(ctx context.Context, r *ApprovalRecord) (*ApprovalRecord, error)
-	GetApprovalHistory(ctx context.Context, changeID int) ([]*ApprovalRecord, error)
+	GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error)
 
 	// Approval Workflow/Chain
 	CreateApprovalChain(ctx context.Context, chain []*ApprovalChain) error

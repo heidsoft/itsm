@@ -159,7 +159,7 @@ func (s *Service) ProcessApproval(ctx context.Context, recordID int, status stri
 
 func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenantID int) {
 	chain, _ := s.repo.GetApprovalChain(ctx, changeID)
-	history, _ := s.repo.GetApprovalHistory(ctx, changeID)
+	history, _ := s.repo.GetApprovalHistory(ctx, changeID, tenantID)
 
 	// Simple logic: if all required members approved, transition to 'approved'
 	allApproved := true
@@ -198,7 +198,7 @@ func (s *Service) ConfigureWorkflow(ctx context.Context, changeID int, items []*
 
 func (s *Service) GetApprovalSummary(ctx context.Context, changeID, tenantID int) (interface{}, error) {
 	chain, _ := s.repo.GetApprovalChain(ctx, changeID)
-	history, _ := s.repo.GetApprovalHistory(ctx, changeID)
+	history, _ := s.repo.GetApprovalHistory(ctx, changeID, tenantID)
 
 	return map[string]interface{}{
 		"chain":   chain,
@@ -226,6 +226,6 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID int, target
 }
 
 // GetApprovalHistory returns approval records for a change
-func (s *Service) GetApprovalHistory(ctx context.Context, changeID int) ([]*ApprovalRecord, error) {
-	return s.repo.GetApprovalHistory(ctx, changeID)
+func (s *Service) GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
+	return s.repo.GetApprovalHistory(ctx, changeID, tenantID)
 }
