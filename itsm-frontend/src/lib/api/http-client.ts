@@ -171,8 +171,9 @@ class HttpClient {
       ...security.network.getSecureHeaders(),
     };
 
-    // Get token from httpOnly cookie (secure), tenant from localStorage
-    const currentToken = typeof window !== 'undefined' ? getCookie('access_token') : this.token;
+    // Get token from localStorage (set by auth-service after login) or fallback to cookie
+    // Prefer localStorage since cookie may be httpOnly or cross-origin
+    const currentToken = typeof window !== 'undefined' ? (localStorage.getItem('access_token') || getCookie('access_token')) : this.token;
     const currentTenantId =
       typeof window !== 'undefined' ? localStorage.getItem('current_tenant_id') : this.tenantId;
 
