@@ -19,64 +19,59 @@ export interface Change {
   type: ChangeType;
   status: ChangeStatus;
   priority: ChangePriority;
-  impact_scope: ChangeImpact;
-  risk_level: ChangeRisk;
-  assignee_id?: number;
-  assignee_name?: string;
-  created_by: number;
-  created_by_name: string;
-  tenant_id: number;
-  planned_start_date?: string;
-  planned_end_date?: string;
-  actual_start_date?: string;
-  actual_end_date?: string;
-  implementation_plan: string;
-  rollback_plan: string;
-  affected_cis?: string[];
-  related_tickets?: string[];
-  created_at: string;
-  updated_at: string;
+  impactScope: ChangeImpact;
+  riskLevel: ChangeRisk;
+  assigneeId?: number;
+  assigneeName?: string;
+  createdBy: number;
+  createdByName: string;
+  tenantId: number;
+  plannedStartDate?: string;
+  plannedEndDate?: string;
+  actualStartDate?: string;
+  actualEndDate?: string;
+  implementationPlan: string;
+  rollbackPlan: string;
+  affectedCis?: string[];
+  relatedTickets?: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 审批记录
 export interface ApprovalRecord {
   id: number;
-  change_id: number;
-  changeId?: number;
-  approver_id: number;
-  approverId?: number;
-  approver_name: string;
-  approverName?: string;
+  changeId: number;
+  approverId: number;
+  approverName: string;
   status: ChangeStatus;
   comment?: string;
-  approved_at?: string;
   approvedAt?: string;
-  created_at: string;
-  createdAt?: string;
+  createdAt: string;
 }
 
 // 审批链/工作流项
 export interface ApprovalChainItem {
   id: number;
   level: number;
-  approver_id: number;
-  approver_name: string;
+  approverId: number;
+  approverName: string;
   role: string;
   status: string;
-  is_required: boolean;
+  isRequired: boolean;
 }
 
 // 风险评估
 export interface RiskAssessment {
   id: number;
-  change_id: number;
-  risk_level: ChangeRisk;
-  risk_description: string;
-  impact_analysis: string;
-  mitigation_measures: string;
-  contingency_plan?: string;
-  risk_owner: string;
-  risk_review_date?: string;
+  changeId: number;
+  riskLevel: ChangeRisk;
+  riskDescription: string;
+  impactAnalysis: string;
+  mitigationMeasures: string;
+  contingencyPlan?: string;
+  riskOwner: string;
+  riskReviewDate?: string;
 }
 
 // 创建变更请求
@@ -86,20 +81,20 @@ export interface CreateChangeRequest {
   justification: string;
   type: ChangeType;
   priority: ChangePriority;
-  impact_scope: ChangeImpact;
-  risk_level: ChangeRisk;
-  planned_start_date?: string;
-  planned_end_date?: string;
-  implementation_plan: string;
-  rollback_plan: string;
-  affected_cis?: string[];
-  related_tickets?: string[];
+  impactScope: ChangeImpact;
+  riskLevel: ChangeRisk;
+  plannedStartDate?: string;
+  plannedEndDate?: string;
+  implementationPlan: string;
+  rollbackPlan: string;
+  affectedCis?: string[];
+  relatedTickets?: string[];
 }
 
 // 列表查询参数
 export interface ChangeQuery {
   page?: number;
-  page_size?: number;
+  pageSize?: number;
   status?: string;
   type?: string;
   search?: string;
@@ -118,9 +113,9 @@ export interface ChangeStats {
   total: number;
   pending: number;
   approved: number;
-  in_progress: number;
+  inProgress: number;
   completed: number;
-  rolled_back: number;
+  rolledBack: number;
   rejected: number;
   cancelled: number;
 }

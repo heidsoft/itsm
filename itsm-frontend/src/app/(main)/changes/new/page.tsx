@@ -54,20 +54,20 @@ const CreateChangePage = () => {
       type: (typeMap[formData.get('type') as string] || 'normal') as ChangeRequest['type'],
       priority: (priorityMap[formData.get('priority') as string] ||
         'medium') as ChangeRequest['priority'],
-      impact_scope: (impactMap[formData.get('impactScope') as string] ||
-        'medium') as ChangeRequest['impact_scope'],
-      risk_level: (riskMap[formData.get('riskLevel') as string] ||
-        'medium') as ChangeRequest['risk_level'],
-      planned_start_date: (formData.get('plannedStartDate') as string) || undefined,
-      planned_end_date: (formData.get('plannedEndDate') as string) || undefined,
-      implementation_plan: formData.get('implementationPlan') as string,
-      rollback_plan: formData.get('rollbackPlan') as string,
-      affected_cis:
+      impactScope: (impactMap[formData.get('impactScope') as string] ||
+        'medium') as ChangeRequest['impactScope'],
+      riskLevel: (riskMap[formData.get('riskLevel') as string] ||
+        'medium') as ChangeRequest['riskLevel'],
+      plannedStartDate: (formData.get('plannedStartDate') as string) || undefined,
+      plannedEndDate: (formData.get('plannedEndDate') as string) || undefined,
+      implementationPlan: formData.get('implementationPlan') as string,
+      rollbackPlan: formData.get('rollbackPlan') as string,
+      affectedCis:
         (formData.get('affectedCIs') as string)
           ?.split(',')
           .map(ci => ci.trim())
           .filter(Boolean) || [],
-      related_tickets: [],
+      relatedTickets: [],
     };
 
     try {

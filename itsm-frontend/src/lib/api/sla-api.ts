@@ -210,26 +210,26 @@ export class SLAApi {
     end_time?: string;
     sla_definition_id?: number;
   }): Promise<{
-    compliance_rate: number;
-    violation_rate: number;
-    total_tickets: number;
-    compliant_tickets: number;
-    violated_tickets: number;
-    at_risk_tickets: number;
-    average_response_time: number;
-    average_resolution_time: number;
-    response_time_compliance: number;
-    resolution_time_compliance: number;
+    complianceRate: number;
+    violationRate: number;
+    totalTickets: number;
+    compliantTickets: number;
+    violatedTickets: number;
+    atRiskTickets: number;
+    averageResponseTime: number;
+    averageResolutionTime: number;
+    responseTimeCompliance: number;
+    resolutionTimeCompliance: number;
     alerts: Array<{
       id: string;
-      ticket_id: number;
-      ticket_number: string;
-      ticket_title: string;
+      ticketId: number;
+      ticketNumber: string;
+      ticketTitle: string;
       priority: string;
-      alert_level: string;
-      time_remaining: number;
-      sla_definition: string;
-      created_at: string;
+      alertLevel: string;
+      timeRemaining: number;
+      slaDefinition: string;
+      createdAt: string;
     }>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }> {
@@ -249,18 +249,18 @@ export class SLAApi {
     const atRiskTickets = response.at_risk_tickets ?? Math.floor(response.total_tickets * 0.15);
 
     return {
-      compliance_rate:
+      complianceRate:
         response.compliance_rate ??
         (response.total_tickets > 0 ? (compliantTickets / response.total_tickets) * 100 : 0),
-      violation_rate: violationRate,
-      total_tickets: response.total_tickets,
-      compliant_tickets: compliantTickets,
-      violated_tickets: response.violated_tickets,
-      at_risk_tickets: atRiskTickets,
-      average_response_time: response.average_response_time ?? 0,
-      average_resolution_time: response.average_resolution_time ?? 0,
-      response_time_compliance: response.response_time_compliance ?? 0,
-      resolution_time_compliance: response.resolution_time_compliance ?? 0,
+      violationRate: violationRate,
+      totalTickets: response.total_tickets,
+      compliantTickets: compliantTickets,
+      violatedTickets: response.violated_tickets,
+      atRiskTickets: atRiskTickets,
+      averageResponseTime: response.average_response_time ?? 0,
+      averageResolutionTime: response.average_resolution_time ?? 0,
+      responseTimeCompliance: response.response_time_compliance ?? 0,
+      resolutionTimeCompliance: response.resolution_time_compliance ?? 0,
       alerts: response.alerts ?? [],
     };
   }
