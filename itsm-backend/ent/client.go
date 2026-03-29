@@ -27,6 +27,7 @@ import (
 	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/cloudservice"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/contract"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/discoveryjob"
@@ -97,6 +98,7 @@ import (
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
+	"itsm-backend/ent/vendor"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
 	"itsm-backend/ent/workflowtask"
@@ -145,6 +147,8 @@ type Client struct {
 	CloudService *CloudServiceClient
 	// ConfigurationItem is the client for interacting with the ConfigurationItem builders.
 	ConfigurationItem *ConfigurationItemClient
+	// Contract is the client for interacting with the Contract builders.
+	Contract *ContractClient
 	// Conversation is the client for interacting with the Conversation builders.
 	Conversation *ConversationClient
 	// Department is the client for interacting with the Department builders.
@@ -285,6 +289,8 @@ type Client struct {
 	ToolInvocation *ToolInvocationClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// Vendor is the client for interacting with the Vendor builders.
+	Vendor *VendorClient
 	// Workflow is the client for interacting with the Workflow builders.
 	Workflow *WorkflowClient
 	// WorkflowInstance is the client for interacting with the WorkflowInstance builders.
@@ -320,6 +326,7 @@ func (c *Client) init() {
 	c.CloudResource = NewCloudResourceClient(c.config)
 	c.CloudService = NewCloudServiceClient(c.config)
 	c.ConfigurationItem = NewConfigurationItemClient(c.config)
+	c.Contract = NewContractClient(c.config)
 	c.Conversation = NewConversationClient(c.config)
 	c.Department = NewDepartmentClient(c.config)
 	c.DiscoveryJob = NewDiscoveryJobClient(c.config)
@@ -390,6 +397,7 @@ func (c *Client) init() {
 	c.TicketView = NewTicketViewClient(c.config)
 	c.ToolInvocation = NewToolInvocationClient(c.config)
 	c.User = NewUserClient(c.config)
+	c.Vendor = NewVendorClient(c.config)
 	c.Workflow = NewWorkflowClient(c.config)
 	c.WorkflowInstance = NewWorkflowInstanceClient(c.config)
 	c.WorkflowTask = NewWorkflowTaskClient(c.config)
@@ -502,6 +510,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		CloudResource:           NewCloudResourceClient(cfg),
 		CloudService:            NewCloudServiceClient(cfg),
 		ConfigurationItem:       NewConfigurationItemClient(cfg),
+		Contract:                NewContractClient(cfg),
 		Conversation:            NewConversationClient(cfg),
 		Department:              NewDepartmentClient(cfg),
 		DiscoveryJob:            NewDiscoveryJobClient(cfg),
@@ -572,6 +581,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		TicketView:              NewTicketViewClient(cfg),
 		ToolInvocation:          NewToolInvocationClient(cfg),
 		User:                    NewUserClient(cfg),
+		Vendor:                  NewVendorClient(cfg),
 		Workflow:                NewWorkflowClient(cfg),
 		WorkflowInstance:        NewWorkflowInstanceClient(cfg),
 		WorkflowTask:            NewWorkflowTaskClient(cfg),
@@ -611,6 +621,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		CloudResource:           NewCloudResourceClient(cfg),
 		CloudService:            NewCloudServiceClient(cfg),
 		ConfigurationItem:       NewConfigurationItemClient(cfg),
+		Contract:                NewContractClient(cfg),
 		Conversation:            NewConversationClient(cfg),
 		Department:              NewDepartmentClient(cfg),
 		DiscoveryJob:            NewDiscoveryJobClient(cfg),
@@ -681,6 +692,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		TicketView:              NewTicketViewClient(cfg),
 		ToolInvocation:          NewToolInvocationClient(cfg),
 		User:                    NewUserClient(cfg),
+		Vendor:                  NewVendorClient(cfg),
 		Workflow:                NewWorkflowClient(cfg),
 		WorkflowInstance:        NewWorkflowInstanceClient(cfg),
 		WorkflowTask:            NewWorkflowTaskClient(cfg),
@@ -717,7 +729,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset,
 		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CIAttributeDefinition,
 		c.CIRelationship, c.CIType, c.Change, c.CloudAccount, c.CloudResource,
-		c.CloudService, c.ConfigurationItem, c.Conversation, c.Department,
+		c.CloudService, c.ConfigurationItem, c.Contract, c.Conversation, c.Department,
 		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.EngineerSkill, c.Group,
 		c.Incident, c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent,
 		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
@@ -733,7 +745,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.StandardChange, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
 		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
 		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
 		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
@@ -747,7 +759,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset,
 		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CIAttributeDefinition,
 		c.CIRelationship, c.CIType, c.Change, c.CloudAccount, c.CloudResource,
-		c.CloudService, c.ConfigurationItem, c.Conversation, c.Department,
+		c.CloudService, c.ConfigurationItem, c.Contract, c.Conversation, c.Department,
 		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.EngineerSkill, c.Group,
 		c.Incident, c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent,
 		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
@@ -763,7 +775,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.StandardChange, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
 		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
 		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
 		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
@@ -805,6 +817,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.CloudService.mutate(ctx, m)
 	case *ConfigurationItemMutation:
 		return c.ConfigurationItem.mutate(ctx, m)
+	case *ContractMutation:
+		return c.Contract.mutate(ctx, m)
 	case *ConversationMutation:
 		return c.Conversation.mutate(ctx, m)
 	case *DepartmentMutation:
@@ -945,6 +959,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ToolInvocation.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
+	case *VendorMutation:
+		return c.Vendor.mutate(ctx, m)
 	case *WorkflowMutation:
 		return c.Workflow.mutate(ctx, m)
 	case *WorkflowInstanceMutation:
@@ -3451,6 +3467,155 @@ func (c *ConfigurationItemClient) mutate(ctx context.Context, m *ConfigurationIt
 		return (&ConfigurationItemDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ConfigurationItem mutation op: %q", m.Op())
+	}
+}
+
+// ContractClient is a client for the Contract schema.
+type ContractClient struct {
+	config
+}
+
+// NewContractClient returns a client for the Contract from the given config.
+func NewContractClient(c config) *ContractClient {
+	return &ContractClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `contract.Hooks(f(g(h())))`.
+func (c *ContractClient) Use(hooks ...Hook) {
+	c.hooks.Contract = append(c.hooks.Contract, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `contract.Intercept(f(g(h())))`.
+func (c *ContractClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Contract = append(c.inters.Contract, interceptors...)
+}
+
+// Create returns a builder for creating a Contract entity.
+func (c *ContractClient) Create() *ContractCreate {
+	mutation := newContractMutation(c.config, OpCreate)
+	return &ContractCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Contract entities.
+func (c *ContractClient) CreateBulk(builders ...*ContractCreate) *ContractCreateBulk {
+	return &ContractCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ContractClient) MapCreateBulk(slice any, setFunc func(*ContractCreate, int)) *ContractCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ContractCreateBulk{err: fmt.Errorf("calling to ContractClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ContractCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ContractCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Contract.
+func (c *ContractClient) Update() *ContractUpdate {
+	mutation := newContractMutation(c.config, OpUpdate)
+	return &ContractUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ContractClient) UpdateOne(_m *Contract) *ContractUpdateOne {
+	mutation := newContractMutation(c.config, OpUpdateOne, withContract(_m))
+	return &ContractUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ContractClient) UpdateOneID(id int) *ContractUpdateOne {
+	mutation := newContractMutation(c.config, OpUpdateOne, withContractID(id))
+	return &ContractUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Contract.
+func (c *ContractClient) Delete() *ContractDelete {
+	mutation := newContractMutation(c.config, OpDelete)
+	return &ContractDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ContractClient) DeleteOne(_m *Contract) *ContractDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ContractClient) DeleteOneID(id int) *ContractDeleteOne {
+	builder := c.Delete().Where(contract.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ContractDeleteOne{builder}
+}
+
+// Query returns a query builder for Contract.
+func (c *ContractClient) Query() *ContractQuery {
+	return &ContractQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeContract},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Contract entity by its id.
+func (c *ContractClient) Get(ctx context.Context, id int) (*Contract, error) {
+	return c.Query().Where(contract.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ContractClient) GetX(ctx context.Context, id int) *Contract {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryVendor queries the vendor edge of a Contract.
+func (c *ContractClient) QueryVendor(_m *Contract) *VendorQuery {
+	query := (&VendorClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(contract.Table, contract.FieldID, id),
+			sqlgraph.To(vendor.Table, vendor.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, contract.VendorTable, contract.VendorColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ContractClient) Hooks() []Hook {
+	return c.hooks.Contract
+}
+
+// Interceptors returns the client interceptors.
+func (c *ContractClient) Interceptors() []Interceptor {
+	return c.inters.Contract
+}
+
+func (c *ContractClient) mutate(ctx context.Context, m *ContractMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ContractCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ContractUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ContractUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ContractDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Contract mutation op: %q", m.Op())
 	}
 }
 
@@ -14860,6 +15025,171 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 	}
 }
 
+// VendorClient is a client for the Vendor schema.
+type VendorClient struct {
+	config
+}
+
+// NewVendorClient returns a client for the Vendor from the given config.
+func NewVendorClient(c config) *VendorClient {
+	return &VendorClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `vendor.Hooks(f(g(h())))`.
+func (c *VendorClient) Use(hooks ...Hook) {
+	c.hooks.Vendor = append(c.hooks.Vendor, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `vendor.Intercept(f(g(h())))`.
+func (c *VendorClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Vendor = append(c.inters.Vendor, interceptors...)
+}
+
+// Create returns a builder for creating a Vendor entity.
+func (c *VendorClient) Create() *VendorCreate {
+	mutation := newVendorMutation(c.config, OpCreate)
+	return &VendorCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Vendor entities.
+func (c *VendorClient) CreateBulk(builders ...*VendorCreate) *VendorCreateBulk {
+	return &VendorCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *VendorClient) MapCreateBulk(slice any, setFunc func(*VendorCreate, int)) *VendorCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &VendorCreateBulk{err: fmt.Errorf("calling to VendorClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*VendorCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &VendorCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Vendor.
+func (c *VendorClient) Update() *VendorUpdate {
+	mutation := newVendorMutation(c.config, OpUpdate)
+	return &VendorUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *VendorClient) UpdateOne(_m *Vendor) *VendorUpdateOne {
+	mutation := newVendorMutation(c.config, OpUpdateOne, withVendor(_m))
+	return &VendorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *VendorClient) UpdateOneID(id int) *VendorUpdateOne {
+	mutation := newVendorMutation(c.config, OpUpdateOne, withVendorID(id))
+	return &VendorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Vendor.
+func (c *VendorClient) Delete() *VendorDelete {
+	mutation := newVendorMutation(c.config, OpDelete)
+	return &VendorDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *VendorClient) DeleteOne(_m *Vendor) *VendorDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *VendorClient) DeleteOneID(id int) *VendorDeleteOne {
+	builder := c.Delete().Where(vendor.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &VendorDeleteOne{builder}
+}
+
+// Query returns a query builder for Vendor.
+func (c *VendorClient) Query() *VendorQuery {
+	return &VendorQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeVendor},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Vendor entity by its id.
+func (c *VendorClient) Get(ctx context.Context, id int) (*Vendor, error) {
+	return c.Query().Where(vendor.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *VendorClient) GetX(ctx context.Context, id int) *Vendor {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryContracts queries the contracts edge of a Vendor.
+func (c *VendorClient) QueryContracts(_m *Vendor) *ContractQuery {
+	query := (&ContractClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vendor.Table, vendor.FieldID, id),
+			sqlgraph.To(contract.Table, contract.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, vendor.ContractsTable, vendor.ContractsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAssets queries the assets edge of a Vendor.
+func (c *VendorClient) QueryAssets(_m *Vendor) *AssetQuery {
+	query := (&AssetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(vendor.Table, vendor.FieldID, id),
+			sqlgraph.To(asset.Table, asset.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, vendor.AssetsTable, vendor.AssetsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *VendorClient) Hooks() []Hook {
+	return c.hooks.Vendor
+}
+
+// Interceptors returns the client interceptors.
+func (c *VendorClient) Interceptors() []Interceptor {
+	return c.inters.Vendor
+}
+
+func (c *VendorClient) mutate(ctx context.Context, m *VendorMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&VendorCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&VendorUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&VendorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&VendorDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Vendor mutation op: %q", m.Op())
+	}
+}
+
 // WorkflowClient is a client for the Workflow schema.
 type WorkflowClient struct {
 	config
@@ -15510,42 +15840,44 @@ type (
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
 		AssetLicense, AuditLog, BPMNPermission, CIAttributeDefinition, CIRelationship,
 		CIType, Change, CloudAccount, CloudResource, CloudService, ConfigurationItem,
-		Conversation, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
-		EngineerSkill, Group, Incident, IncidentAlert, IncidentEscalationRule,
-		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
-		KnowledgeArticle, KnowledgeArticleLike, KnownError, MSPAllocation, Menu,
-		Message, Microservice, Notification, NotificationPreference,
-		PasswordResetToken, Permission, PermissionDefinition, Problem, ProcessAuditLog,
-		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
-		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
-		ServiceRequest, ServiceRequestApproval, StandardChange, SystemConfig, Tag,
-		Team, Tenant, Ticket, TicketAssignmentRule, TicketAttachment,
-		TicketAutomationRule, TicketCategory, TicketComment, TicketNotification,
-		TicketTag, TicketTemplate, TicketView, ToolInvocation, User, Workflow,
-		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
+		Contract, Conversation, Department, DiscoveryJob, DiscoveryResult,
+		DiscoverySource, EngineerSkill, Group, Incident, IncidentAlert,
+		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
+		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike, KnownError,
+		MSPAllocation, Menu, Message, Microservice, Notification,
+		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,
+		Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition, ProcessDeployment,
+		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
+		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
+		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
+		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
+		StandardChange, SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
+		User, Vendor, Workflow, WorkflowInstance, WorkflowTask,
+		WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
 		AssetLicense, AuditLog, BPMNPermission, CIAttributeDefinition, CIRelationship,
 		CIType, Change, CloudAccount, CloudResource, CloudService, ConfigurationItem,
-		Conversation, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
-		EngineerSkill, Group, Incident, IncidentAlert, IncidentEscalationRule,
-		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
-		KnowledgeArticle, KnowledgeArticleLike, KnownError, MSPAllocation, Menu,
-		Message, Microservice, Notification, NotificationPreference,
-		PasswordResetToken, Permission, PermissionDefinition, Problem, ProcessAuditLog,
-		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
-		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
-		ServiceRequest, ServiceRequestApproval, StandardChange, SystemConfig, Tag,
-		Team, Tenant, Ticket, TicketAssignmentRule, TicketAttachment,
-		TicketAutomationRule, TicketCategory, TicketComment, TicketNotification,
-		TicketTag, TicketTemplate, TicketView, ToolInvocation, User, Workflow,
-		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
+		Contract, Conversation, Department, DiscoveryJob, DiscoveryResult,
+		DiscoverySource, EngineerSkill, Group, Incident, IncidentAlert,
+		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
+		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike, KnownError,
+		MSPAllocation, Menu, Message, Microservice, Notification,
+		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,
+		Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition, ProcessDeployment,
+		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
+		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
+		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
+		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
+		StandardChange, SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
+		User, Vendor, Workflow, WorkflowInstance, WorkflowTask,
+		WorkflowVersion []ent.Interceptor
 	}
 )

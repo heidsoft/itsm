@@ -44,6 +44,8 @@ type Tx struct {
 	CloudService *CloudServiceClient
 	// ConfigurationItem is the client for interacting with the ConfigurationItem builders.
 	ConfigurationItem *ConfigurationItemClient
+	// Contract is the client for interacting with the Contract builders.
+	Contract *ContractClient
 	// Conversation is the client for interacting with the Conversation builders.
 	Conversation *ConversationClient
 	// Department is the client for interacting with the Department builders.
@@ -184,6 +186,8 @@ type Tx struct {
 	ToolInvocation *ToolInvocationClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// Vendor is the client for interacting with the Vendor builders.
+	Vendor *VendorClient
 	// Workflow is the client for interacting with the Workflow builders.
 	Workflow *WorkflowClient
 	// WorkflowInstance is the client for interacting with the WorkflowInstance builders.
@@ -339,6 +343,7 @@ func (tx *Tx) init() {
 	tx.CloudResource = NewCloudResourceClient(tx.config)
 	tx.CloudService = NewCloudServiceClient(tx.config)
 	tx.ConfigurationItem = NewConfigurationItemClient(tx.config)
+	tx.Contract = NewContractClient(tx.config)
 	tx.Conversation = NewConversationClient(tx.config)
 	tx.Department = NewDepartmentClient(tx.config)
 	tx.DiscoveryJob = NewDiscoveryJobClient(tx.config)
@@ -409,6 +414,7 @@ func (tx *Tx) init() {
 	tx.TicketView = NewTicketViewClient(tx.config)
 	tx.ToolInvocation = NewToolInvocationClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.Vendor = NewVendorClient(tx.config)
 	tx.Workflow = NewWorkflowClient(tx.config)
 	tx.WorkflowInstance = NewWorkflowInstanceClient(tx.config)
 	tx.WorkflowTask = NewWorkflowTaskClient(tx.config)

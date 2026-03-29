@@ -22,6 +22,7 @@ type AssetQuery struct {
 	order      []asset.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Asset
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -332,9 +333,13 @@ func (_q *AssetQuery) prepareQuery(ctx context.Context) error {
 
 func (_q *AssetQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Asset, error) {
 	var (
-		nodes = []*Asset{}
-		_spec = _q.querySpec()
+		nodes   = []*Asset{}
+		withFKs = _q.withFKs
+		_spec   = _q.querySpec()
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, asset.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Asset).scanValues(nil, columns)
 	}
