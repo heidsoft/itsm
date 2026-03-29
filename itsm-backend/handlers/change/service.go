@@ -216,11 +216,32 @@ func (s *Service) GetRisk(ctx context.Context, changeID int) (*RiskAssessment, e
 }
 
 // TransitionStatus transitions a change to a new status
-func (s *Service) TransitionStatus(ctx context.Context, id, tenantID int, targetStatus string) (*Change, error) {
+// For approve/reject actions, verifies user is the designated approver
+func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int, targetStatus string) (*Change, error) {
 	c, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("change not found")
 	}
+
+	// For approval actions, verify user is the approver
+	if targetStatus == "approved" || targetStatus == "rejected" {
+		history, err := s.repo.GetApprovalHistory(ctx, id, tenantID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get approval history")
+		}
+		// Find if this user has a pending approval
+		isApprover := false
+		for _, h := range history {
+			if h.ApproverID == userID && h.Status == "pending" {
+				isApprover = true
+				break
+			}
+		}
+		if !isApprover {
+			return nil, fmt.Errorf("用户不是该变更的审批人，无权执行此操作")
+		}
+	}
+
 	c.Status = targetStatus
 	return s.repo.Update(ctx, c)
 }
