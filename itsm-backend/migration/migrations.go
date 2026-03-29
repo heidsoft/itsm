@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS change_approvals (
     approver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
     comment TEXT,
-    decided_at TIMESTAMP,
+    approved_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
