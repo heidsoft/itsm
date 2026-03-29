@@ -28,6 +28,11 @@ var RegisteredMigrations = []Migration{
 		Description: "Add external system ID mapping table",
 		RollbackSQL: `DROP TABLE IF EXISTS external_id_mappings;`,
 	},
+	{
+		Version:     "006_add_change_approvals",
+		Description: "Add change approvals table for change workflow",
+		RollbackSQL: `DROP TABLE IF EXISTS change_approvals;`,
+	},
 }
 
 // GetMigrationSQL returns the SQL for a specific migration
@@ -90,6 +95,23 @@ CREATE TABLE IF NOT EXISTS external_id_mappings (
 
 CREATE INDEX IF NOT EXISTS idx_ext_mapping_tenant ON external_id_mappings(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_ext_mapping_external ON external_id_mappings(external_system, external_id);
+`
+	case "006_add_change_approvals":
+		return `
+CREATE TABLE IF NOT EXISTS change_approvals (
+    id SERIAL PRIMARY KEY,
+    change_id INTEGER NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+    approver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    comment TEXT,
+    decided_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_change_approvals_change ON change_approvals(change_id);
+CREATE INDEX IF NOT EXISTS idx_change_approvals_approver ON change_approvals(approver_id);
+CREATE INDEX IF NOT EXISTS idx_change_approvals_status ON change_approvals(status);
 `
 	default:
 		return ""
