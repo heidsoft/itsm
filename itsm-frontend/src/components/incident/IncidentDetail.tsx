@@ -70,7 +70,7 @@ const IncidentDetail: React.FC = () => {
 
   const handleEscalate = () => {
     form.setFieldsValue({
-      escalation_level: (data?.escalation_level || 0) + 1,
+      escalationLevel: (data?.escalationLevel || 0) + 1,
       reason: '',
       auto_assign: true,
     });

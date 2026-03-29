@@ -12,19 +12,13 @@ export interface Problem {
   status: ProblemStatus;
   priority: ProblemPriority;
   category: string;
-  root_cause?: string;
   rootCause?: string;
   impact?: string;
-  assignee_id?: number;
   assigneeId?: number;
-  created_by: number;
-  createdBy?: number;
-  tenant_id: number;
-  tenantId?: number;
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  createdBy: number;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 创建问题请求
@@ -33,7 +27,7 @@ export interface CreateProblemRequest {
   description: string;
   priority: ProblemPriority;
   category: string;
-  root_cause?: string;
+  rootCause?: string;
   impact?: string;
 }
 
@@ -44,15 +38,15 @@ export interface UpdateProblemRequest {
   status?: ProblemStatus;
   priority?: ProblemPriority;
   category?: string;
-  root_cause?: string;
+  rootCause?: string;
   impact?: string;
-  assignee_id?: number;
+  assigneeId?: number;
 }
 
 // 列表查询参数
 export interface ProblemQuery {
   page?: number;
-  page_size?: number;
+  pageSize?: number;
   status?: string;
   priority?: string;
   category?: string;
@@ -64,15 +58,15 @@ export interface ProblemListResponse {
   problems: Problem[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 // 统计响应
 export interface ProblemStats {
   total: number;
   open: number;
-  in_progress: number;
+  inProgress: number;
   resolved: number;
   closed: number;
-  high_priority: number;
+  highPriority: number;
 }

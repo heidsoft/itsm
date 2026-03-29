@@ -89,8 +89,8 @@ const ProblemDetail: React.FC = () => {
       children: (
         <Card bodyStyle={{ padding: '16px 24px' }}>
           <Descriptions column={2}>
-            <Descriptions.Item label="创建人ID">{data.created_by}</Descriptions.Item>
-            <Descriptions.Item label="负责人ID">{data.assigneeId || data.assignee_id || '-'}</Descriptions.Item>
+            <Descriptions.Item label="创建人ID">{data.createdBy}</Descriptions.Item>
+            <Descriptions.Item label="负责人ID">{data.assigneeId || '-'}</Descriptions.Item>
             <Descriptions.Item label="优先级">
               {ProblemPriorityLabels[data.priority]}
             </Descriptions.Item>
@@ -111,7 +111,7 @@ const ProblemDetail: React.FC = () => {
           <Divider />
 
           <Title level={5}>根本原因</Title>
-          <Paragraph>{data.root_cause || '暂无分析'}</Paragraph>
+          <Paragraph>{data.rootCause || '暂无分析'}</Paragraph>
 
           <Divider />
 
