@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
@@ -482,4 +483,228 @@ func (s *SLAMonitorService) CheckAllTenantsSLA(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// GetDashboardMetrics 获取SLA监控仪表板完整指标
+func (s *SLAMonitorService) GetDashboardMetrics(ctx context.Context, tenantID int) (*dto.SLAMonitoringDashboard, error) {
+	s.logger.Infow("Getting SLA dashboard metrics", "tenant_id", tenantID)
+
+	now := time.Now()
+	dashboard := &dto.SLAMonitoringDashboard{
+		UpcomingDeadlines: make([]dto.SLADeadline, 0),
+		TopViolations:     make([]dto.SLAViolationItem, 0),
+		SLAByPriority:     make(map[string]float64),
+		TrendData:         make([]dto.SLATrendPoint, 0),
+	}
+
+	// 获取所有活跃工单（带有SLA定义的）
+	tickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+			ticket.SLADefinitionIDNEQ(0),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query tickets: %w", err)
+	}
+
+	dashboard.TotalTickets = len(tickets)
+
+	// 获取未解决的违规
+	violations, err := s.client.SLAViolation.Query().
+		Where(
+			slaviolation.TenantIDEQ(tenantID),
+			slaviolation.ResolvedAtIsNil(),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query violations: %w", err)
+	}
+
+	violationMap := make(map[int][]*ent.SLAViolation)
+	for _, v := range violations {
+		violationMap[v.TicketID] = append(violationMap[v.TicketID], v)
+	}
+
+	// 遍历工单进行分类统计
+	atRiskCount := 0
+	breachedCount := 0
+	priorityMap := make(map[string]int)
+	priorityViolationMap := make(map[string]int)
+
+	for _, t := range tickets {
+		ticketViolations := violationMap[t.ID]
+		hasViolation := len(ticketViolations) > 0
+
+		// 按优先级统计
+		priority := t.Priority
+		if priority == "" {
+			priority = "unknown"
+		}
+		priorityMap[priority]++
+
+		if hasViolation {
+			breachedCount++
+			priorityViolationMap[priority]++
+		} else if !t.FirstResponseAt.IsZero() || (!t.SLAResponseDeadline.IsZero() && now.After(t.SLAResponseDeadline)) {
+			// 检查是否处于风险中（接近SLA截止时间）
+			if !t.SLAResponseDeadline.IsZero() && now.Before(t.SLAResponseDeadline) {
+				timeLeft := t.SLAResponseDeadline.Sub(now)
+				if timeLeft <= 30*time.Minute {
+					atRiskCount++
+				}
+			}
+			if !t.SLAResolutionDeadline.IsZero() && now.Before(t.SLAResolutionDeadline) {
+				timeLeft := t.SLAResolutionDeadline.Sub(now)
+				if timeLeft <= 30*time.Minute {
+					atRiskCount++
+				}
+			}
+		}
+	}
+
+	dashboard.AtRiskTickets = atRiskCount
+	dashboard.BreachedTickets = breachedCount
+
+	// 计算合规率和违规率
+	if dashboard.TotalTickets > 0 {
+		compliantCount := dashboard.TotalTickets - breachedCount
+		dashboard.ComplianceRate = float64(compliantCount) / float64(dashboard.TotalTickets) * 100
+		dashboard.ViolationRate = float64(breachedCount) / float64(dashboard.TotalTickets) * 100
+	}
+
+	// 按优先级计算SLA达成率
+	for priority, total := range priorityMap {
+		violated := priorityViolationMap[priority]
+		if total > 0 {
+			dashboard.SLAByPriority[priority] = float64(total-violated) / float64(total) * 100
+		}
+	}
+
+	// 获取即将到期的工单（未来24小时内）
+	upcomingDeadline := now.Add(24 * time.Hour)
+	upcomingTickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+			ticket.SLADefinitionIDNEQ(0),
+			ticket.ResolvedAtIsNil(),
+			ticket.SLAResolutionDeadlineGT(now),
+			ticket.SLAResolutionDeadlineLT(upcomingDeadline),
+		).
+		All(ctx)
+	if err == nil {
+		for _, t := range upcomingTickets {
+			timeLeft := time.Until(t.SLAResolutionDeadline)
+			timeLeftStr := formatDuration(timeLeft)
+
+			slaName := "Default SLA"
+			if t.SLADefinitionID != 0 {
+				slaDef, err := s.client.SLADefinition.Get(ctx, t.SLADefinitionID)
+				if err == nil && slaDef != nil {
+					slaName = slaDef.Name
+				}
+			}
+
+			dashboard.UpcomingDeadlines = append(dashboard.UpcomingDeadlines, dto.SLADeadline{
+				TicketID:    t.ID,
+				TicketTitle: t.Title,
+				Deadline:    t.SLAResolutionDeadline,
+				SLAPolicy:   slaName,
+				TimeLeft:    timeLeftStr,
+			})
+		}
+	}
+
+	// 获取最新的违规记录作为Top Violations
+	recentViolations, err := s.client.SLAViolation.Query().
+		Where(
+			slaviolation.TenantIDEQ(tenantID),
+			slaviolation.ResolvedAtIsNil(),
+		).
+		Order(ent.Desc(slaviolation.FieldViolationTime)).
+		Limit(10).
+		All(ctx)
+	if err == nil {
+		for _, v := range recentViolations {
+			ticket, err := s.client.Ticket.Get(ctx, v.TicketID)
+			ticketTitle := fmt.Sprintf("Ticket #%d", v.TicketID)
+			if err == nil && ticket != nil {
+				ticketTitle = ticket.Title
+			}
+
+			// 计算延迟分钟数
+			delayMinutes := 0
+			if !v.ViolationTime.IsZero() {
+				delayMinutes = int(time.Since(v.ViolationTime).Minutes())
+			}
+
+			dashboard.TopViolations = append(dashboard.TopViolations, dto.SLAViolationItem{
+				TicketID:    v.TicketID,
+				TicketTitle: ticketTitle,
+				SLAPolicy:   v.SLAName,
+				ViolatedAt:  v.ViolationTime.Format(time.RFC3339),
+				Delay:       delayMinutes,
+			})
+		}
+	}
+
+	// 生成趋势数据（最近7天）
+	for i := 6; i >= 0; i-- {
+		day := now.AddDate(0, 0, -i)
+		startOfDay := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, day.Location())
+		endOfDay := startOfDay.Add(24 * time.Hour)
+
+		dayTickets, err := s.client.Ticket.Query().
+			Where(
+				ticket.TenantIDEQ(tenantID),
+				ticket.CreatedAtGTE(startOfDay),
+				ticket.CreatedAtLT(endOfDay),
+			).
+			All(ctx)
+		if err != nil {
+			continue
+		}
+
+		dayViolations, _ := s.client.SLAViolation.Query().
+			Where(
+				slaviolation.TenantIDEQ(tenantID),
+				slaviolation.ViolationTimeGTE(startOfDay),
+				slaviolation.ViolationTimeLT(endOfDay),
+			).
+			Count(ctx)
+
+		ticketCount := len(dayTickets)
+		complianceRate := 100.0
+		if ticketCount > 0 {
+			compliant := ticketCount - dayViolations
+			complianceRate = float64(compliant) / float64(ticketCount) * 100
+		}
+
+		dashboard.TrendData = append(dashboard.TrendData, dto.SLATrendPoint{
+			Date:           startOfDay.Format("2006-01-02"),
+			ComplianceRate: complianceRate,
+			TicketCount:    ticketCount,
+		})
+	}
+
+	s.logger.Infow("SLA dashboard metrics generated",
+		"tenant_id", tenantID,
+		"total_tickets", dashboard.TotalTickets,
+		"compliance_rate", dashboard.ComplianceRate,
+		"breached_tickets", dashboard.BreachedTickets)
+
+	return dashboard, nil
+}
+
+// formatDuration 格式化时间间隔为可读字符串
+func formatDuration(d time.Duration) string {
+	if d < 0 {
+		return "overdue"
+	}
+	hours := int(d.Hours())
+	minutes := int(d.Minutes()) % 60
+	if hours > 0 {
+		return fmt.Sprintf("%dh %dm", hours, minutes)
+	}
+	return fmt.Sprintf("%dm", minutes)
 }
