@@ -9,9 +9,9 @@ export interface User {
   department: string;
   phone: string;
   active: boolean;
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateUserRequest {

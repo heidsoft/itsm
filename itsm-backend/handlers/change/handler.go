@@ -406,7 +406,9 @@ func (h *Handler) GetApprovals(c *gin.Context) {
 		common.Fail(c, http.StatusBadRequest, "Invalid change id")
 		return
 	}
-	history, err := h.svc.GetApprovalHistory(c.Request.Context(), id)
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	history, err := h.svc.GetApprovalHistory(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, http.StatusInternalServerError, err.Error())
 		return

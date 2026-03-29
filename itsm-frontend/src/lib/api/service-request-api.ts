@@ -3,8 +3,8 @@ import { getAccessToken, getTenantCode } from '@/lib/auth/token-storage';
 
 export interface ServiceRequest {
   id: number;
-  catalog_id: number;
-  requester_id: number;
+  catalogId: number;
+  requesterId: number;
   status:
     | 'submitted'
     | 'manager_approved'
@@ -17,22 +17,22 @@ export interface ServiceRequest {
     | 'cancelled';
   title?: string;
   reason?: string;
-  form_data?: Record<string, unknown>;
-  cost_center?: string;
-  data_classification?: 'public' | 'internal' | 'confidential';
-  needs_public_ip?: boolean;
-  source_ip_whitelist?: string[];
-  expire_at?: string | null;
-  compliance_ack?: boolean;
-  current_level?: number;
-  total_levels?: number;
-  created_at: string;
+  formData?: Record<string, unknown>;
+  costCenter?: string;
+  dataClassification?: 'public' | 'internal' | 'confidential';
+  needsPublicIp?: boolean;
+  sourceIpWhitelist?: string[];
+  expireAt?: string | null;
+  complianceAck?: boolean;
+  currentLevel?: number;
+  totalLevels?: number;
+  createdAt: string;
   catalog?: {
     id: number;
     name: string;
     category: string;
     description: string;
-    delivery_time: string;
+    deliveryTime: string;
   };
   requester?: {
     id: number;
@@ -51,16 +51,16 @@ export interface ServiceRequestListResponse {
 }
 
 export interface CreateServiceRequestRequest {
-  catalog_id: number;
+  catalogId: number;
   title?: string;
   reason?: string;
-  form_data?: Record<string, unknown>;
-  cost_center?: string;
-  data_classification?: 'public' | 'internal' | 'confidential';
-  needs_public_ip?: boolean;
-  source_ip_whitelist?: string[];
-  expire_at?: string;
-  compliance_ack: boolean;
+  formData?: Record<string, unknown>;
+  costCenter?: string;
+  dataClassification?: 'public' | 'internal' | 'confidential';
+  needsPublicIp?: boolean;
+  sourceIpWhitelist?: string[];
+  expireAt?: string;
+  complianceAck: boolean;
 }
 
 export interface UpdateServiceRequestStatusRequest {
@@ -242,15 +242,15 @@ class ServiceRequestAPI {
 
 export interface ProvisioningTask {
   id: number;
-  service_request_id: number;
+  serviceRequestId: number;
   provider: string;
-  resource_type: string;
+  resourceType: string;
   status: 'pending' | 'running' | 'succeeded' | 'failed';
   payload?: Record<string, unknown>;
   result?: Record<string, unknown>;
-  error_message?: string;
-  created_at: string;
-  updated_at: string;
+  errorMessage?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const serviceRequestAPI = new ServiceRequestAPI();

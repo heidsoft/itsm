@@ -7,11 +7,11 @@ import { useI18n } from '@/lib/i18n/useI18n';
 import { SLAApi } from '@/lib/api/sla-api';
 
 interface SLAStats {
-  total_definitions: number;
-  active_definitions: number;
-  total_violations: number;
-  open_violations: number;
-  overall_compliance_rate: number;
+  totalDefinitions: number;
+  activeDefinitions: number;
+  totalViolations: number;
+  openViolations: number;
+  overallComplianceRate: number;
 }
 
 export default function SLAPage() {
@@ -19,11 +19,11 @@ export default function SLAPage() {
   const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<SLAStats>({
-    total_definitions: 0,
-    active_definitions: 0,
-    total_violations: 0,
-    open_violations: 0,
-    overall_compliance_rate: 0,
+    totalDefinitions: 0,
+    activeDefinitions: 0,
+    totalViolations: 0,
+    openViolations: 0,
+    overallComplianceRate: 0,
   });
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function SLAPage() {
               <Card>
                 <Statistic
                   title="总SLA数量"
-                  value={stats.total_definitions}
+                  value={stats.totalDefinitions}
                   valueStyle={{ color: '#1890ff' }}
                 />
               </Card>
@@ -62,7 +62,7 @@ export default function SLAPage() {
               <Card>
                 <Statistic
                   title="生效中"
-                  value={stats.active_definitions}
+                  value={stats.activeDefinitions}
                   valueStyle={{ color: '#52c41a' }}
                 />
               </Card>
@@ -71,7 +71,7 @@ export default function SLAPage() {
               <Card>
                 <Statistic
                   title="违规数量"
-                  value={stats.open_violations}
+                  value={stats.openViolations}
                   valueStyle={{ color: '#ff4d4f' }}
                 />
               </Card>
@@ -80,14 +80,14 @@ export default function SLAPage() {
               <Card>
                 <Statistic
                   title="合规率"
-                  value={stats.overall_compliance_rate}
+                  value={stats.overallComplianceRate}
                   suffix="%"
                   precision={1}
-                  valueStyle={{ color: stats.overall_compliance_rate >= 95 ? '#52c41a' : '#faad14' }}
+                  valueStyle={{ color: stats.overallComplianceRate >= 95 ? '#52c41a' : '#faad14' }}
                 />
                 <Statistic
                   title="总违规"
-                  value={stats.total_violations}
+                  value={stats.totalViolations}
                   valueStyle={{ color: '#ff4d4f', fontSize: 14 }}
                 />
               </Card>
