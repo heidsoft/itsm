@@ -390,3 +390,67 @@ func (s *Service) ListPendingApprovals(ctx context.Context, tenantID, userID int
 func (s *Service) List(ctx context.Context, tenantID int, filters ListFilters) ([]*ServiceRequest, int, error) {
 	return s.repo.List(ctx, tenantID, filters)
 }
+
+// Update updates a service request
+func (s *Service) Update(ctx context.Context, id, tenantID int, reqData *ServiceRequest) (*ServiceRequest, error) {
+	// 1. Get existing request
+	req, _, err := s.repo.GetWithApprovals(ctx, id)
+	if err != nil {
+		return nil, common.NewNotFoundError("Service Request not found")
+	}
+	if req.TenantID != tenantID {
+		return nil, common.NewNotFoundError("Service Request not found")
+	}
+
+	// 2. Update fields
+	if reqData.Title != "" {
+		req.Title = reqData.Title
+	}
+	if reqData.Reason != "" {
+		req.Reason = reqData.Reason
+	}
+	if reqData.FormData != nil {
+		req.FormData = reqData.FormData
+	}
+	if reqData.CostCenter != "" {
+		req.CostCenter = reqData.CostCenter
+	}
+	if reqData.DataClassification != "" {
+		req.DataClassification = reqData.DataClassification
+	}
+	req.NeedsPublicIP = reqData.NeedsPublicIP
+	if reqData.SourceIPWhitelist != nil {
+		req.SourceIPWhitelist = reqData.SourceIPWhitelist
+	}
+	if reqData.ExpireAt != nil {
+		req.ExpireAt = reqData.ExpireAt
+	}
+
+	// 3. Save
+	if err := s.repo.Update(ctx, req); err != nil {
+		s.logger.Errorw("Failed to update service request", "error", err)
+		return nil, common.NewInternalError("Failed to update service request", err)
+	}
+
+	return req, nil
+}
+
+// Delete deletes a service request
+func (s *Service) Delete(ctx context.Context, id, tenantID int) error {
+	// 1. Get existing request
+	req, _, err := s.repo.GetWithApprovals(ctx, id)
+	if err != nil {
+		return common.NewNotFoundError("Service Request not found")
+	}
+	if req.TenantID != tenantID {
+		return common.NewNotFoundError("Service Request not found")
+	}
+
+	// 2. Delete
+	if err := s.repo.Delete(ctx, id); err != nil {
+		s.logger.Errorw("Failed to delete service request", "error", err)
+		return common.NewInternalError("Failed to delete service request", err)
+	}
+
+	return nil
+}
