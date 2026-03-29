@@ -55,12 +55,13 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
 
       // 登录操作
-      // 注意：token 现在存储在 httpOnly cookie 中，由后端设置
-      // 这里只需要更新状态，不需要存储 token
+      // 注意：token 存储在 localStorage 中，前端需要使用
       login: (user: User, _token: string, tenant?: Tenant) => {
+        // 从 localStorage 获取实际 token，因为后端返回的 token 存在 localStorage 中
+        const storedToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : _token;
         set({
           user,
-          token: 'httpOnly', // Token is in httpOnly cookie, not accessible
+          token: storedToken,
           isAuthenticated: true,
           isLoading: false,
           currentTenant: tenant || null,
