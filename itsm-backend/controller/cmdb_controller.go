@@ -80,6 +80,7 @@ func (c *CMDBController) CreateCI(ctx *gin.Context) {
 	req := &service.CreateCIRequest{
 		Name:        dtoReq.Name,
 		CiType:      ciType,
+		CiTypeID:    dtoReq.CITypeID,
 		Status:      dtoReq.Status,
 		Environment: dtoReq.Environment,
 		Criticality: dtoReq.Criticality,

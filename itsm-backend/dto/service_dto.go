@@ -36,6 +36,20 @@ type UpdateServiceRequestStatusRequest struct {
 	Status string `json:"status" binding:"required,oneof=submitted manager_approved it_approved security_approved provisioning delivered failed rejected cancelled"`
 }
 
+// UpdateServiceRequestRequest 更新服务请求请求
+type UpdateServiceRequestRequest struct {
+	Title     string         `json:"title" binding:"omitempty,max=255"`
+	Reason    string         `json:"reason" binding:"omitempty,max=500"`
+	FormData  map[string]any `json:"form_data" binding:"omitempty"`
+
+	CostCenter         string     `json:"cost_center" binding:"omitempty,max=100"`
+	DataClassification string     `json:"data_classification" binding:"omitempty,oneof=public internal confidential"`
+	NeedsPublicIP      bool       `json:"needs_public_ip"`
+	SourceIPWhitelist  []string   `json:"source_ip_whitelist" binding:"omitempty"`
+	ExpireAt          *time.Time `json:"expire_at" binding:"omitempty"`
+	ComplianceAck      bool       `json:"compliance_ack"`
+}
+
 // GetServiceCatalogsRequest 获取服务目录请求
 type GetServiceCatalogsRequest struct {
 	Page     int    `json:"page" form:"page" binding:"omitempty,min=1"`
