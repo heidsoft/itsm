@@ -226,6 +226,24 @@ func (r *EntRepository) UpdateStatus(ctx context.Context, id int, status string)
 	return r.client.ServiceRequest.UpdateOneID(id).SetStatus(status).Exec(ctx)
 }
 
+func (r *EntRepository) Update(ctx context.Context, req *ServiceRequest) error {
+	update := r.client.ServiceRequest.UpdateOneID(req.ID).
+		SetTitle(req.Title).
+		SetReason(req.Reason).
+		SetFormData(req.FormData).
+		SetCostCenter(req.CostCenter).
+		SetDataClassification(req.DataClassification).
+		SetNeedsPublicIP(req.NeedsPublicIP).
+		SetSourceIPWhitelist(req.SourceIPWhitelist).
+		SetExpireAt(*req.ExpireAt)
+
+	return update.Exec(ctx)
+}
+
+func (r *EntRepository) Delete(ctx context.Context, id int) error {
+	return r.client.ServiceRequest.DeleteOneID(id).Exec(ctx)
+}
+
 func (r *EntRepository) GetApproval(ctx context.Context, requestID int, level int) (*ServiceRequestApproval, error) {
 	app, err := r.client.ServiceRequestApproval.Query().
 		Where(servicerequestapproval.ServiceRequestID(requestID)).
