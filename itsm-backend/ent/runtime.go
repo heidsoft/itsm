@@ -74,6 +74,8 @@ import (
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/standardchange"
+	"itsm-backend/ent/survey"
+	"itsm-backend/ent/surveyresponse"
 	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
@@ -2560,6 +2562,48 @@ func init() {
 	standardchange.DefaultUpdatedAt = standardchangeDescUpdatedAt.Default.(func() time.Time)
 	// standardchange.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	standardchange.UpdateDefaultUpdatedAt = standardchangeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	surveyFields := schema.Survey{}.Fields()
+	_ = surveyFields
+	// surveyDescTitle is the schema descriptor for title field.
+	surveyDescTitle := surveyFields[0].Descriptor()
+	// survey.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	survey.TitleValidator = surveyDescTitle.Validators[0].(func(string) error)
+	// surveyDescSurveyType is the schema descriptor for survey_type field.
+	surveyDescSurveyType := surveyFields[2].Descriptor()
+	// survey.DefaultSurveyType holds the default value on creation for the survey_type field.
+	survey.DefaultSurveyType = surveyDescSurveyType.Default.(string)
+	// surveyDescIsActive is the schema descriptor for is_active field.
+	surveyDescIsActive := surveyFields[3].Descriptor()
+	// survey.DefaultIsActive holds the default value on creation for the is_active field.
+	survey.DefaultIsActive = surveyDescIsActive.Default.(bool)
+	// surveyDescTenantID is the schema descriptor for tenant_id field.
+	surveyDescTenantID := surveyFields[7].Descriptor()
+	// survey.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	survey.TenantIDValidator = surveyDescTenantID.Validators[0].(func(int) error)
+	// surveyDescCreatedAt is the schema descriptor for created_at field.
+	surveyDescCreatedAt := surveyFields[8].Descriptor()
+	// survey.DefaultCreatedAt holds the default value on creation for the created_at field.
+	survey.DefaultCreatedAt = surveyDescCreatedAt.Default.(func() time.Time)
+	// surveyDescUpdatedAt is the schema descriptor for updated_at field.
+	surveyDescUpdatedAt := surveyFields[9].Descriptor()
+	// survey.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	survey.DefaultUpdatedAt = surveyDescUpdatedAt.Default.(func() time.Time)
+	// survey.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	survey.UpdateDefaultUpdatedAt = surveyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	surveyresponseFields := schema.SurveyResponse{}.Fields()
+	_ = surveyresponseFields
+	// surveyresponseDescScore is the schema descriptor for score field.
+	surveyresponseDescScore := surveyresponseFields[4].Descriptor()
+	// surveyresponse.DefaultScore holds the default value on creation for the score field.
+	surveyresponse.DefaultScore = surveyresponseDescScore.Default.(int)
+	// surveyresponseDescTenantID is the schema descriptor for tenant_id field.
+	surveyresponseDescTenantID := surveyresponseFields[6].Descriptor()
+	// surveyresponse.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	surveyresponse.TenantIDValidator = surveyresponseDescTenantID.Validators[0].(func(int) error)
+	// surveyresponseDescSubmittedAt is the schema descriptor for submitted_at field.
+	surveyresponseDescSubmittedAt := surveyresponseFields[7].Descriptor()
+	// surveyresponse.DefaultSubmittedAt holds the default value on creation for the submitted_at field.
+	surveyresponse.DefaultSubmittedAt = surveyresponseDescSubmittedAt.Default.(func() time.Time)
 	systemconfigFields := schema.SystemConfig{}.Fields()
 	_ = systemconfigFields
 	// systemconfigDescKey is the schema descriptor for key field.
