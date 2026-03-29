@@ -103,6 +103,7 @@ type RouterConfig struct {
 	AssetController          *controller.AssetController
 	VendorController         *controller.VendorController
 	AssetLicenseController   *controller.AssetLicenseController
+	SurveyController         *controller.SurveyController
 
 	// Domain Handlers
 	ServiceCatalogHandler *service_catalog.Handler
@@ -1044,6 +1045,20 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			reports.GET("/problems", config.DashboardHandler.GetTicketTrend)
 			reports.GET("/changes", config.DashboardHandler.GetTicketTrend)
 			reports.GET("/sla", config.DashboardHandler.GetSLAData)
+		}
+
+		// ==================== Surveys 客户满意度调查 ====================
+		if config.SurveyController != nil {
+			surveys := tenant.(*gin.RouterGroup).Group("/surveys")
+			{
+				surveys.GET("", config.SurveyController.ListSurveys)
+				surveys.POST("", middleware.RequirePermission("survey", "write"), config.SurveyController.CreateSurvey)
+				surveys.GET("/:id", config.SurveyController.GetSurvey)
+				surveys.PUT("/:id", middleware.RequirePermission("survey", "write"), config.SurveyController.UpdateSurvey)
+				surveys.GET("/:id/responses", config.SurveyController.GetSurveyResponses)
+				surveys.GET("/:id/analytics", config.SurveyController.GetAnalytics)
+				surveys.POST("/responses", config.SurveyController.SubmitResponse)
+			}
 		}
 	}
 }

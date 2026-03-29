@@ -82,6 +82,8 @@ import (
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/standardchange"
+	"itsm-backend/ent/survey"
+	"itsm-backend/ent/surveyresponse"
 	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
@@ -257,6 +259,10 @@ type Client struct {
 	ServiceRequestApproval *ServiceRequestApprovalClient
 	// StandardChange is the client for interacting with the StandardChange builders.
 	StandardChange *StandardChangeClient
+	// Survey is the client for interacting with the Survey builders.
+	Survey *SurveyClient
+	// SurveyResponse is the client for interacting with the SurveyResponse builders.
+	SurveyResponse *SurveyResponseClient
 	// SystemConfig is the client for interacting with the SystemConfig builders.
 	SystemConfig *SystemConfigClient
 	// Tag is the client for interacting with the Tag builders.
@@ -381,6 +387,8 @@ func (c *Client) init() {
 	c.ServiceRequest = NewServiceRequestClient(c.config)
 	c.ServiceRequestApproval = NewServiceRequestApprovalClient(c.config)
 	c.StandardChange = NewStandardChangeClient(c.config)
+	c.Survey = NewSurveyClient(c.config)
+	c.SurveyResponse = NewSurveyResponseClient(c.config)
 	c.SystemConfig = NewSystemConfigClient(c.config)
 	c.Tag = NewTagClient(c.config)
 	c.Team = NewTeamClient(c.config)
@@ -565,6 +573,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ServiceRequest:          NewServiceRequestClient(cfg),
 		ServiceRequestApproval:  NewServiceRequestApprovalClient(cfg),
 		StandardChange:          NewStandardChangeClient(cfg),
+		Survey:                  NewSurveyClient(cfg),
+		SurveyResponse:          NewSurveyResponseClient(cfg),
 		SystemConfig:            NewSystemConfigClient(cfg),
 		Tag:                     NewTagClient(cfg),
 		Team:                    NewTeamClient(cfg),
@@ -676,6 +686,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ServiceRequest:          NewServiceRequestClient(cfg),
 		ServiceRequestApproval:  NewServiceRequestApprovalClient(cfg),
 		StandardChange:          NewStandardChangeClient(cfg),
+		Survey:                  NewSurveyClient(cfg),
+		SurveyResponse:          NewSurveyResponseClient(cfg),
 		SystemConfig:            NewSystemConfigClient(cfg),
 		Tag:                     NewTagClient(cfg),
 		Team:                    NewTeamClient(cfg),
@@ -742,11 +754,12 @@ func (c *Client) Use(hooks ...Hook) {
 		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
 		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
 		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
-		c.StandardChange, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
-		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
-		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.StandardChange, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
+		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
+		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
+		c.ToolInvocation, c.User, c.Vendor, c.Workflow, c.WorkflowInstance,
+		c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -772,11 +785,12 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
 		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
 		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
-		c.StandardChange, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
-		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
-		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.StandardChange, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
+		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
+		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
+		c.ToolInvocation, c.User, c.Vendor, c.Workflow, c.WorkflowInstance,
+		c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -927,6 +941,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ServiceRequestApproval.mutate(ctx, m)
 	case *StandardChangeMutation:
 		return c.StandardChange.mutate(ctx, m)
+	case *SurveyMutation:
+		return c.Survey.mutate(ctx, m)
+	case *SurveyResponseMutation:
+		return c.SurveyResponse.mutate(ctx, m)
 	case *SystemConfigMutation:
 		return c.SystemConfig.mutate(ctx, m)
 	case *TagMutation:
@@ -12065,6 +12083,304 @@ func (c *StandardChangeClient) mutate(ctx context.Context, m *StandardChangeMuta
 	}
 }
 
+// SurveyClient is a client for the Survey schema.
+type SurveyClient struct {
+	config
+}
+
+// NewSurveyClient returns a client for the Survey from the given config.
+func NewSurveyClient(c config) *SurveyClient {
+	return &SurveyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `survey.Hooks(f(g(h())))`.
+func (c *SurveyClient) Use(hooks ...Hook) {
+	c.hooks.Survey = append(c.hooks.Survey, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `survey.Intercept(f(g(h())))`.
+func (c *SurveyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Survey = append(c.inters.Survey, interceptors...)
+}
+
+// Create returns a builder for creating a Survey entity.
+func (c *SurveyClient) Create() *SurveyCreate {
+	mutation := newSurveyMutation(c.config, OpCreate)
+	return &SurveyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Survey entities.
+func (c *SurveyClient) CreateBulk(builders ...*SurveyCreate) *SurveyCreateBulk {
+	return &SurveyCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SurveyClient) MapCreateBulk(slice any, setFunc func(*SurveyCreate, int)) *SurveyCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SurveyCreateBulk{err: fmt.Errorf("calling to SurveyClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SurveyCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SurveyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Survey.
+func (c *SurveyClient) Update() *SurveyUpdate {
+	mutation := newSurveyMutation(c.config, OpUpdate)
+	return &SurveyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SurveyClient) UpdateOne(_m *Survey) *SurveyUpdateOne {
+	mutation := newSurveyMutation(c.config, OpUpdateOne, withSurvey(_m))
+	return &SurveyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SurveyClient) UpdateOneID(id int) *SurveyUpdateOne {
+	mutation := newSurveyMutation(c.config, OpUpdateOne, withSurveyID(id))
+	return &SurveyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Survey.
+func (c *SurveyClient) Delete() *SurveyDelete {
+	mutation := newSurveyMutation(c.config, OpDelete)
+	return &SurveyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SurveyClient) DeleteOne(_m *Survey) *SurveyDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SurveyClient) DeleteOneID(id int) *SurveyDeleteOne {
+	builder := c.Delete().Where(survey.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SurveyDeleteOne{builder}
+}
+
+// Query returns a query builder for Survey.
+func (c *SurveyClient) Query() *SurveyQuery {
+	return &SurveyQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSurvey},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Survey entity by its id.
+func (c *SurveyClient) Get(ctx context.Context, id int) (*Survey, error) {
+	return c.Query().Where(survey.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SurveyClient) GetX(ctx context.Context, id int) *Survey {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryResponses queries the responses edge of a Survey.
+func (c *SurveyClient) QueryResponses(_m *Survey) *SurveyResponseQuery {
+	query := (&SurveyResponseClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(survey.Table, survey.FieldID, id),
+			sqlgraph.To(surveyresponse.Table, surveyresponse.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, survey.ResponsesTable, survey.ResponsesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SurveyClient) Hooks() []Hook {
+	return c.hooks.Survey
+}
+
+// Interceptors returns the client interceptors.
+func (c *SurveyClient) Interceptors() []Interceptor {
+	return c.inters.Survey
+}
+
+func (c *SurveyClient) mutate(ctx context.Context, m *SurveyMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SurveyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SurveyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SurveyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SurveyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Survey mutation op: %q", m.Op())
+	}
+}
+
+// SurveyResponseClient is a client for the SurveyResponse schema.
+type SurveyResponseClient struct {
+	config
+}
+
+// NewSurveyResponseClient returns a client for the SurveyResponse from the given config.
+func NewSurveyResponseClient(c config) *SurveyResponseClient {
+	return &SurveyResponseClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `surveyresponse.Hooks(f(g(h())))`.
+func (c *SurveyResponseClient) Use(hooks ...Hook) {
+	c.hooks.SurveyResponse = append(c.hooks.SurveyResponse, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `surveyresponse.Intercept(f(g(h())))`.
+func (c *SurveyResponseClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SurveyResponse = append(c.inters.SurveyResponse, interceptors...)
+}
+
+// Create returns a builder for creating a SurveyResponse entity.
+func (c *SurveyResponseClient) Create() *SurveyResponseCreate {
+	mutation := newSurveyResponseMutation(c.config, OpCreate)
+	return &SurveyResponseCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SurveyResponse entities.
+func (c *SurveyResponseClient) CreateBulk(builders ...*SurveyResponseCreate) *SurveyResponseCreateBulk {
+	return &SurveyResponseCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SurveyResponseClient) MapCreateBulk(slice any, setFunc func(*SurveyResponseCreate, int)) *SurveyResponseCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SurveyResponseCreateBulk{err: fmt.Errorf("calling to SurveyResponseClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SurveyResponseCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SurveyResponseCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SurveyResponse.
+func (c *SurveyResponseClient) Update() *SurveyResponseUpdate {
+	mutation := newSurveyResponseMutation(c.config, OpUpdate)
+	return &SurveyResponseUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SurveyResponseClient) UpdateOne(_m *SurveyResponse) *SurveyResponseUpdateOne {
+	mutation := newSurveyResponseMutation(c.config, OpUpdateOne, withSurveyResponse(_m))
+	return &SurveyResponseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SurveyResponseClient) UpdateOneID(id int) *SurveyResponseUpdateOne {
+	mutation := newSurveyResponseMutation(c.config, OpUpdateOne, withSurveyResponseID(id))
+	return &SurveyResponseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SurveyResponse.
+func (c *SurveyResponseClient) Delete() *SurveyResponseDelete {
+	mutation := newSurveyResponseMutation(c.config, OpDelete)
+	return &SurveyResponseDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SurveyResponseClient) DeleteOne(_m *SurveyResponse) *SurveyResponseDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SurveyResponseClient) DeleteOneID(id int) *SurveyResponseDeleteOne {
+	builder := c.Delete().Where(surveyresponse.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SurveyResponseDeleteOne{builder}
+}
+
+// Query returns a query builder for SurveyResponse.
+func (c *SurveyResponseClient) Query() *SurveyResponseQuery {
+	return &SurveyResponseQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSurveyResponse},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SurveyResponse entity by its id.
+func (c *SurveyResponseClient) Get(ctx context.Context, id int) (*SurveyResponse, error) {
+	return c.Query().Where(surveyresponse.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SurveyResponseClient) GetX(ctx context.Context, id int) *SurveyResponse {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySurvey queries the survey edge of a SurveyResponse.
+func (c *SurveyResponseClient) QuerySurvey(_m *SurveyResponse) *SurveyQuery {
+	query := (&SurveyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(surveyresponse.Table, surveyresponse.FieldID, id),
+			sqlgraph.To(survey.Table, survey.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, surveyresponse.SurveyTable, surveyresponse.SurveyColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SurveyResponseClient) Hooks() []Hook {
+	return c.hooks.SurveyResponse
+}
+
+// Interceptors returns the client interceptors.
+func (c *SurveyResponseClient) Interceptors() []Interceptor {
+	return c.inters.SurveyResponse
+}
+
+func (c *SurveyResponseClient) mutate(ctx context.Context, m *SurveyResponseMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SurveyResponseCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SurveyResponseUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SurveyResponseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SurveyResponseDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SurveyResponse mutation op: %q", m.Op())
+	}
+}
+
 // SystemConfigClient is a client for the SystemConfig schema.
 type SystemConfigClient struct {
 	config
@@ -15852,11 +16168,11 @@ type (
 		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
 		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
 		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		StandardChange, SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
-		User, Vendor, Workflow, WorkflowInstance, WorkflowTask,
-		WorkflowVersion []ent.Hook
+		StandardChange, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
+		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
+		WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
@@ -15874,10 +16190,10 @@ type (
 		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
 		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
 		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		StandardChange, SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
-		User, Vendor, Workflow, WorkflowInstance, WorkflowTask,
-		WorkflowVersion []ent.Interceptor
+		StandardChange, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
+		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
+		WorkflowTask, WorkflowVersion []ent.Interceptor
 	}
 )

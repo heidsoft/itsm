@@ -77,6 +77,8 @@ import (
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/standardchange"
+	"itsm-backend/ent/survey"
+	"itsm-backend/ent/surveyresponse"
 	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
@@ -235,6 +237,8 @@ func checkColumn(t, c string) error {
 			servicerequest.Table:          servicerequest.ValidColumn,
 			servicerequestapproval.Table:  servicerequestapproval.ValidColumn,
 			standardchange.Table:          standardchange.ValidColumn,
+			survey.Table:                  survey.ValidColumn,
+			surveyresponse.Table:          surveyresponse.ValidColumn,
 			systemconfig.Table:            systemconfig.ValidColumn,
 			tag.Table:                     tag.ValidColumn,
 			team.Table:                    team.ValidColumn,
