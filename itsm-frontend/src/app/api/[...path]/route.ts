@@ -22,7 +22,9 @@ export async function GET(
   const fullUrl = searchParams ? `${url}?${searchParams}` : url;
 
   const cookieHeader = request.headers.get('cookie') || '';
-  const authHeader = request.headers.get('Authorization') || '';
+  // Get auth from header first, then fallback to localStorage (for cross-origin proxy)
+  const authHeader = request.headers.get('Authorization') ||
+    (request.cookies.get('access_token')?.value ? `Bearer ${request.cookies.get('access_token').value}` : '');
 
   try {
     const response = await fetch(fullUrl, {
