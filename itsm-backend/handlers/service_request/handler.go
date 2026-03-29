@@ -286,7 +286,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	var req dto.CreateServiceRequestRequest
+	var req dto.UpdateServiceRequestRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, 1001, "Invalid parameters: "+err.Error())
 		return
