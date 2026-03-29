@@ -70,7 +70,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true }) => {
 
   const [query, setQuery] = useState<ChangeQuery>({
     page: 1,
-    page_size: 10,
+    pageSize: 10,
   });
 
   const loadData = async () => {
@@ -102,7 +102,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true }) => {
 
   const handleReset = () => {
     form.resetFields();
-    setQuery({ page: 1, page_size: 10 });
+    setQuery({ page: 1, pageSize: 10 });
   };
 
   const columns = [
@@ -243,11 +243,11 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true }) => {
             loading={loading}
             pagination={{
               current: query.page,
-              pageSize: query.page_size,
+              pageSize: query.pageSize,
               total: total,
               showSizeChanger: true,
               showTotal: total => `共 ${total} 条记录`,
-              onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
+              onChange: (page, pageSize) => setQuery(prev => ({ ...prev, page, pageSize })),
             }}
             scroll={{ x: 1000 }}
             getPopupContainer={node => node.parentElement || document.body}

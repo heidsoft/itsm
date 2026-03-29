@@ -137,15 +137,15 @@ export const PredictiveAnalytics: React.FC = () => {
         },
         slaBreachRisk: {
           riskLevel:
-            slaMonitoring.violation_rate > 20
+            slaMonitoring.violationRate > 20
               ? 'high'
-              : slaMonitoring.violation_rate > 10
+              : slaMonitoring.violationRate > 10
                 ? 'medium'
                 : 'low',
-          probability: slaMonitoring.violation_rate || 0,
-          affectedTickets: slaMonitoring.at_risk_tickets || 0,
+          probability: slaMonitoring.violationRate || 0,
+          affectedTickets: slaMonitoring.atRiskTickets || 0,
           mitigation:
-            slaMonitoring.at_risk_tickets > 0 ? '建议优先处理即将违约的工单' : '当前SLA风险较低',
+            slaMonitoring.atRiskTickets > 0 ? '建议优先处理即将违约的工单' : '当前SLA风险较低',
         },
         seasonalPatterns: {
           peakPeriods: [], // API暂不支持

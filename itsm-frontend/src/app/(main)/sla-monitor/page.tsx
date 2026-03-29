@@ -45,7 +45,7 @@ const SLAMonitorPage = () => {
       setStats({
         totalDefinitions: statsData.totalDefinitions || 0,
         activeDefinitions: statsData.activeDefinitions || 0,
-        atRiskTickets: Math.round((monitoringData.at_risk_tickets) || 0),
+        atRiskTickets: Math.round((monitoringData.atRiskTickets) || 0),
         totalViolations: statsData.totalViolations || 0,
         openViolations: statsData.openViolations || 0,
         overallComplianceRate: statsData.overallComplianceRate || 0,
@@ -56,12 +56,12 @@ const SLAMonitorPage = () => {
         setViolations(violationsData.items.map((v: any) => ({
           id: v.id,
           ticketNo: v.ticketNumber || v.ticket_number || `#${v.ticketId || v.ticket_id}`,
-          title: v.ticket_title || 'Unknown',
+          title: v.ticketTitle || 'Unknown',
           priority: v.priority || 'medium',
-          status: v.is_resolved ? '已解决' : '处理中',
-          sla_target: v.sla_name || 'SLA',
-          remaining: v.is_resolved ? '已解决' : `${v.delay_minutes || 0}分钟`,
-          progress: Math.min(100, Math.round((v.delay_minutes || 0) / 60 * 100)),
+          status: v.isResolved ? '已解决' : '处理中',
+          slaTarget: v.slaName || 'SLA',
+          remaining: v.isResolved ? '已解决' : `${v.delayMinutes || 0}分钟`,
+          progress: Math.min(100, Math.round((v.delayMinutes || 0) / 60 * 100)),
         })));
       }
 
@@ -70,13 +70,13 @@ const SLAMonitorPage = () => {
       if (slaDefinitions?.items) {
         const services = slaDefinitions.items.map((sla: any) => ({
           id: sla.id,
-          service_name: sla.name,
-          total_requests: 0,
+          serviceName: sla.name,
+          totalRequests: 0,
           compliant: 0,
-          at_risk: 0,
+          atRisk: 0,
           breached: 0,
-          compliance_rate: sla.is_active ? 95 : 0,
-          avg_response: `${sla.response_time_minutes || 0}分钟`,
+          complianceRate: sla.isActive ? 95 : 0,
+          avgResponse: `${sla.responseTimeMinutes || 0}分钟`,
         }));
         setServiceSLA(services);
       }
@@ -95,8 +95,8 @@ const SLAMonitorPage = () => {
   const ticketColumns = [
     {
       title: '工单号',
-      dataIndex: 'ticket_no',
-      key: 'ticket_no',
+      dataIndex: 'ticketNo',
+      key: 'ticketNo',
       render: (text: string) => <a>{text}</a>,
     },
     {
@@ -118,8 +118,8 @@ const SLAMonitorPage = () => {
     },
     {
       title: 'SLA目标',
-      dataIndex: 'sla_target',
-      key: 'sla_target',
+      dataIndex: 'slaTarget',
+      key: 'slaTarget',
     },
     {
       title: '剩余时间',
@@ -148,15 +148,15 @@ const SLAMonitorPage = () => {
   const serviceColumns = [
     {
       title: '服务名称',
-      dataIndex: 'service_name',
-      key: 'service_name',
+      dataIndex: 'serviceName',
+      key: 'serviceName',
       render: (text: string) => <a>{text}</a>,
     },
     {
       title: '总请求数',
-      dataIndex: 'total_requests',
-      key: 'total_requests',
-      sorter: (a: any, b: any) => a.total_requests - b.total_requests,
+      dataIndex: 'totalRequests',
+      key: 'totalRequests',
+      sorter: (a: any, b: any) => a.totalRequests - b.totalRequests,
     },
     {
       title: '合规',
@@ -166,8 +166,8 @@ const SLAMonitorPage = () => {
     },
     {
       title: '风险中',
-      dataIndex: 'at_risk',
-      key: 'at_risk',
+      dataIndex: 'atRisk',
+      key: 'atRisk',
       render: (val: number) => <span className="text-orange-600">{val}</span>,
     },
     {
@@ -178,8 +178,8 @@ const SLAMonitorPage = () => {
     },
     {
       title: '合规率',
-      dataIndex: 'compliance_rate',
-      key: 'compliance_rate',
+      dataIndex: 'complianceRate',
+      key: 'complianceRate',
       render: (rate: number) => (
         <Progress
           percent={rate}
@@ -191,8 +191,8 @@ const SLAMonitorPage = () => {
     },
     {
       title: '平均响应时间',
-      dataIndex: 'avg_response',
-      key: 'avg_response',
+      dataIndex: 'avgResponse',
+      key: 'avgResponse',
     },
     {
       title: '操作',
@@ -205,7 +205,7 @@ const SLAMonitorPage = () => {
 
   // Calculate summary stats for service SLA
   const serviceSummary = React.useMemo(() => {
-    const total = serviceSLA.reduce((sum, s) => sum + s.total_requests, 0);
+    const total = serviceSLA.reduce((sum, s) => sum + s.totalRequests, 0);
     const compliant = serviceSLA.reduce((sum, s) => sum + s.compliant, 0);
     const rate = total > 0 ? (compliant / total * 100).toFixed(1) : (stats.overallComplianceRate || 0).toString();
     return { total, compliant, rate };
