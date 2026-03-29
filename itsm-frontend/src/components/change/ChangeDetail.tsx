@@ -148,7 +148,7 @@ const ChangeDetail: React.FC = () => {
     if (!id) return;
     try {
       // 回滚计划暂时通过更新变更的rollback_plan字段实现
-      await ChangeApi.updateChange(Number(id), { rollback_plan: JSON.stringify(data) });
+      await ChangeApi.updateChange(Number(id), { rollbackPlan: JSON.stringify(data) });
       message.success('回滚计划保存成功');
     } catch (error) {
       message.error('保存失败');
@@ -207,20 +207,20 @@ const ChangeDetail: React.FC = () => {
             {ChangePriorityLabels[change.priority]}
           </Descriptions.Item>
           <Descriptions.Item label="风险等级">
-            {ChangeRiskLabels[change.risk_level]}
+            {ChangeRiskLabels[change.riskLevel]}
           </Descriptions.Item>
           <Descriptions.Item label="影响范围">
-            {ChangeImpactLabels[change.impact_scope]}
+            {ChangeImpactLabels[change.impactScope]}
           </Descriptions.Item>
-          <Descriptions.Item label="负责人">{change.assignee_name || '未分配'}</Descriptions.Item>
+          <Descriptions.Item label="负责人">{change.assigneeName || '未分配'}</Descriptions.Item>
           <Descriptions.Item label="计划起始">
-            {change.planned_start_date
-              ? dayjs(change.planned_start_date).format('YYYY-MM-DD HH:mm')
+            {change.plannedStartDate
+              ? dayjs(change.plannedStartDate).format('YYYY-MM-DD HH:mm')
               : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="计划截止">
-            {change.planned_end_date
-              ? dayjs(change.planned_end_date).format('YYYY-MM-DD HH:mm')
+            {change.plannedEndDate
+              ? dayjs(change.plannedEndDate).format('YYYY-MM-DD HH:mm')
               : '-'}
           </Descriptions.Item>
         </Descriptions>
@@ -248,12 +248,12 @@ const ChangeDetail: React.FC = () => {
 
                   <Title level={5}>实施计划</Title>
                   <Paragraph style={{ whiteSpace: 'pre-wrap' }}>
-                    {change.implementation_plan || '未提供实施计划'}
+                    {change.implementationPlan || '未提供实施计划'}
                   </Paragraph>
 
                   <Title level={5}>回滚计划</Title>
                   <Paragraph style={{ whiteSpace: 'pre-wrap' }}>
-                    {change.rollback_plan || '未提供回滚计划'}
+                    {change.rollbackPlan || '未提供回滚计划'}
                   </Paragraph>
                 </>
               ),
@@ -278,7 +278,7 @@ const ChangeDetail: React.FC = () => {
                           }
                           title={
                             <Space>
-                              <Text strong>{record.approver_name}</Text>
+                              <Text strong>{record.approverName}</Text>
                               <Tag color={statusColors[record.status]}>
                                 {ChangeStatusLabels[record.status]}
                               </Tag>

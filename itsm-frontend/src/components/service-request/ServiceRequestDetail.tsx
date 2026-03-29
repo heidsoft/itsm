@@ -135,16 +135,16 @@ const ServiceRequestDetail: React.FC = () => {
               <Text strong>{`${app.level}. ${app.step.toUpperCase()} 审批`}</Text>
               <div>
                 <Tag color={approvalStatusColors[app.status]}>{app.status}</Tag>
-                {app.approver_name && <Text type="secondary">by {app.approver_name}</Text>}
+                {app.approverName && <Text type="secondary">by {app.approverName}</Text>}
               </div>
               {app.comment && (
                 <Text type="secondary" italic>
                   &quot;{app.comment}&quot;
                 </Text>
               )}
-              {app.processed_at && (
+              {app.processedAt && (
                 <div style={{ fontSize: '12px', color: '#999' }}>
-                  {dayjs(app.processed_at).format('YYYY-MM-DD HH:mm')}
+                  {dayjs(app.processedAt).format('YYYY-MM-DD HH:mm')}
                 </div>
               )}
             </Space>
@@ -157,7 +157,7 @@ const ServiceRequestDetail: React.FC = () => {
   // 判断当前用户是否可以审批 (简化逻辑：只要有 pending 状态且页面显示了按钮，前端暂不深度校验 user role，依赖后端拦截)
   // 实际生产中应结合当前 userInfo 判断
   const canApprove = approvals.some(
-    a => a.status === ApprovalStatus.PENDING && a.level === request?.current_level
+    a => a.status === ApprovalStatus.PENDING && a.level === request?.currentLevel
   );
 
   if (loading) return <Spin size="large" style={{ display: 'block', margin: '50px auto' }} />;
@@ -196,17 +196,17 @@ const ServiceRequestDetail: React.FC = () => {
               <Descriptions column={1} bordered>
                 <Descriptions.Item label="服务名称">{request.catalog?.name}</Descriptions.Item>
                 <Descriptions.Item label="申请原因">{request.reason}</Descriptions.Item>
-                <Descriptions.Item label="成本中心">{request.cost_center || '-'}</Descriptions.Item>
+                <Descriptions.Item label="成本中心">{request.costCenter || '-'}</Descriptions.Item>
                 <Descriptions.Item label="数据分类">
-                  {request.data_classification || 'Public'}
+                  {request.dataClassification || 'Public'}
                 </Descriptions.Item>
                 <Descriptions.Item label="需要公网IP">
-                  {request.needs_public_ip ? '是' : '否'}
+                  {request.needsPublicIp ? '是' : '否'}
                 </Descriptions.Item>
-                {request.form_data && (
+                {request.formData && (
                   <Descriptions.Item label="表单数据">
                     <pre style={{ margin: 0, fontSize: '12px' }}>
-                      {JSON.stringify(request.form_data, null, 2)}
+                      {JSON.stringify(request.formData, null, 2)}
                     </pre>
                   </Descriptions.Item>
                 )}
