@@ -22,6 +22,7 @@ import (
 	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/cloudservice"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/contract"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/discoveryjob"
@@ -92,6 +93,7 @@ import (
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
+	"itsm-backend/ent/vendor"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
 	"itsm-backend/ent/workflowtask"
@@ -178,6 +180,7 @@ func checkColumn(t, c string) error {
 			cloudresource.Table:           cloudresource.ValidColumn,
 			cloudservice.Table:            cloudservice.ValidColumn,
 			configurationitem.Table:       configurationitem.ValidColumn,
+			contract.Table:                contract.ValidColumn,
 			conversation.Table:            conversation.ValidColumn,
 			department.Table:              department.ValidColumn,
 			discoveryjob.Table:            discoveryjob.ValidColumn,
@@ -248,6 +251,7 @@ func checkColumn(t, c string) error {
 			ticketview.Table:              ticketview.ValidColumn,
 			toolinvocation.Table:          toolinvocation.ValidColumn,
 			user.Table:                    user.ValidColumn,
+			vendor.Table:                  vendor.ValidColumn,
 			workflow.Table:                workflow.ValidColumn,
 			workflowinstance.Table:        workflowinstance.ValidColumn,
 			workflowtask.Table:            workflowtask.ValidColumn,

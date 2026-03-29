@@ -159,12 +159,21 @@ var (
 		{Name: "tags", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "vendor_assets", Type: field.TypeInt, Nullable: true},
 	}
 	// AssetsTable holds the schema information for the "assets" table.
 	AssetsTable = &schema.Table{
 		Name:       "assets",
 		Columns:    AssetsColumns,
 		PrimaryKey: []*schema.Column{AssetsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "assets_vendors_assets",
+				Columns:    []*schema.Column{AssetsColumns[28]},
+				RefColumns: []*schema.Column{VendorsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "asset_asset_number",
@@ -752,6 +761,36 @@ var (
 				Name:    "configurationitem_serial_number",
 				Unique:  true,
 				Columns: []*schema.Column{ConfigurationItemsColumns[7]},
+			},
+		},
+	}
+	// ContractsColumns holds the columns for the "contracts" table.
+	ContractsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "contract_number", Type: field.TypeString, Unique: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "contract_type", Type: field.TypeString},
+		{Name: "value", Type: field.TypeFloat64, Default: 0},
+		{Name: "start_date", Type: field.TypeTime},
+		{Name: "end_date", Type: field.TypeTime},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "description", Type: field.TypeString},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "vendor_id", Type: field.TypeInt, Nullable: true},
+	}
+	// ContractsTable holds the schema information for the "contracts" table.
+	ContractsTable = &schema.Table{
+		Name:       "contracts",
+		Columns:    ContractsColumns,
+		PrimaryKey: []*schema.Column{ContractsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "contracts_vendors_contracts",
+				Columns:    []*schema.Column{ContractsColumns[12]},
+				RefColumns: []*schema.Column{VendorsColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 	}
@@ -3389,6 +3428,29 @@ var (
 			},
 		},
 	}
+	// VendorsColumns holds the columns for the "vendors" table.
+	VendorsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "vendor_type", Type: field.TypeString},
+		{Name: "contact_name", Type: field.TypeString},
+		{Name: "contact_email", Type: field.TypeString},
+		{Name: "contact_phone", Type: field.TypeString},
+		{Name: "address", Type: field.TypeString},
+		{Name: "website", Type: field.TypeString},
+		{Name: "rating", Type: field.TypeFloat64, Default: 0},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// VendorsTable holds the schema information for the "vendors" table.
+	VendorsTable = &schema.Table{
+		Name:       "vendors",
+		Columns:    VendorsColumns,
+		PrimaryKey: []*schema.Column{VendorsColumns[0]},
+	}
 	// WorkflowsColumns holds the columns for the "workflows" table.
 	WorkflowsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -3862,6 +3924,7 @@ var (
 		CloudResourcesTable,
 		CloudServicesTable,
 		ConfigurationItemsTable,
+		ContractsTable,
 		ConversationsTable,
 		DepartmentsTable,
 		DiscoveryJobsTable,
@@ -3932,6 +3995,7 @@ var (
 		TicketViewsTable,
 		ToolInvocationsTable,
 		UsersTable,
+		VendorsTable,
 		WorkflowsTable,
 		WorkflowInstancesTable,
 		WorkflowTasksTable,
@@ -3956,6 +4020,7 @@ func init() {
 	ApplicationsTable.ForeignKeys[0].RefTable = ProjectsTable
 	ApprovalRecordsTable.ForeignKeys[0].RefTable = ApprovalWorkflowsTable
 	ApprovalRecordsTable.ForeignKeys[1].RefTable = TicketsTable
+	AssetsTable.ForeignKeys[0].RefTable = VendorsTable
 	CiRelationshipsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
 	CiRelationshipsTable.ForeignKeys[1].RefTable = ConfigurationItemsTable
 	ChangesTable.ForeignKeys[0].RefTable = StandardChangesTable
@@ -3964,6 +4029,7 @@ func init() {
 	CloudServicesTable.ForeignKeys[0].RefTable = CloudServicesTable
 	ConfigurationItemsTable.ForeignKeys[0].RefTable = CiTypesTable
 	ConfigurationItemsTable.ForeignKeys[1].RefTable = CloudResourcesTable
+	ContractsTable.ForeignKeys[0].RefTable = VendorsTable
 	DepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	DiscoveryJobsTable.ForeignKeys[0].RefTable = DiscoverySourcesTable
 	DiscoveryResultsTable.ForeignKeys[0].RefTable = DiscoveryJobsTable

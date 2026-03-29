@@ -200,6 +200,18 @@ func (f ConfigurationItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ConfigurationItemMutation", m)
 }
 
+// The ContractFunc type is an adapter to allow the use of ordinary
+// function as Contract mutator.
+type ContractFunc func(context.Context, *ent.ContractMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ContractFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ContractMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ContractMutation", m)
+}
+
 // The ConversationFunc type is an adapter to allow the use of ordinary
 // function as Conversation mutator.
 type ConversationFunc func(context.Context, *ent.ConversationMutation) (ent.Value, error)
@@ -1038,6 +1050,18 @@ func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+}
+
+// The VendorFunc type is an adapter to allow the use of ordinary
+// function as Vendor mutator.
+type VendorFunc func(context.Context, *ent.VendorMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f VendorFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.VendorMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VendorMutation", m)
 }
 
 // The WorkflowFunc type is an adapter to allow the use of ordinary
