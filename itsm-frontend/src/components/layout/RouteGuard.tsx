@@ -113,6 +113,12 @@ class AuthService {
     username: string,
     password: string
   ): Promise<{ user: User; token: string } | null> {
+    // Only allow mock login in development mode
+    if (process.env.NODE_ENV !== 'development') {
+      console.error('Mock login is only available in development mode');
+      return null;
+    }
+
     try {
       // 模拟登录API调用
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -276,7 +282,6 @@ const LoginPage: React.FC<{
                 required
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="请输入用户名"
-                defaultValue="admin"
               />
             </div>
 
@@ -291,7 +296,6 @@ const LoginPage: React.FC<{
                 required
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="请输入密码"
-                defaultValue="admin123"
               />
             </div>
           </div>
@@ -309,9 +313,11 @@ const LoginPage: React.FC<{
             </button>
           </div>
 
-          <div className="text-xs text-gray-500 text-center">
-            <p>测试账号: admin / admin123</p>
-          </div>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="text-xs text-gray-500 text-center">
+              <p>开发模式: admin / admin123</p>
+            </div>
+          )}
         </form>
       </div>
     </div>
