@@ -139,6 +139,38 @@ describe('Auth Token Refresh Mechanism', () => {
       expect(localStorageMock.setItem).toHaveBeenCalledWith('access_token', mockNewAccessToken);
     });
 
+    it('should rotate refresh token when backend returns new refresh_token', async () => {
+      const mockOldRefreshToken = 'old-refresh-token-123';
+      const mockNewAccessToken = 'new-access-token-456';
+      const mockNewRefreshToken = 'new-refresh-token-789';
+
+      localStorageMock.store['refresh_token'] = mockOldRefreshToken;
+
+      // Backend returns both access_token and refresh_token (rotation)
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          code: 0,
+          message: 'success',
+          data: {
+            access_token: mockNewAccessToken,
+            refresh_token: mockNewRefreshToken,
+          },
+        }),
+      });
+
+      const result = await AuthService.refreshToken();
+
+      expect(result).toBe(true);
+      // Verify new access_token is stored
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('access_token', mockNewAccessToken);
+      // Verify new refresh_token is stored (rotation)
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('refresh_token', mockNewRefreshToken);
+      // Verify old refresh_token was NOT called with old value
+      expect(localStorageMock.setItem).not.toHaveBeenCalledWith('refresh_token', mockOldRefreshToken);
+    });
+
     it('should return false when no refresh token exists', async () => {
       delete localStorageMock.store['refresh_token'];
 
@@ -342,6 +374,35 @@ describe('Auth Token Refresh Mechanism', () => {
 
       expect(result).toBe(true);
       expect(localStorageMock.setItem).toHaveBeenCalledWith('access_token', mockNewAccessToken);
+    });
+
+    it('should rotate refresh token when HttpClient refresh returns new refresh_token', async () => {
+      const mockOldRefreshToken = 'http-old-refresh-token';
+      const mockNewAccessToken = 'http-new-access-token';
+      const mockNewRefreshToken = 'http-new-refresh-token';
+
+      localStorageMock.store['refresh_token'] = mockOldRefreshToken;
+
+      // Backend returns both access_token and refresh_token (rotation)
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          code: 0,
+          message: 'success',
+          data: {
+            access_token: mockNewAccessToken,
+            refresh_token: mockNewRefreshToken,
+          },
+        }),
+      });
+
+      const client = httpClient;
+      const result = await (client as any).refreshTokenInternal();
+
+      expect(result).toBe(true);
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('access_token', mockNewAccessToken);
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('refresh_token', mockNewRefreshToken);
     });
 
     it('should return false when no refresh token exists', async () => {
