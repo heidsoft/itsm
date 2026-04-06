@@ -177,18 +177,18 @@ export interface CMDBStats {
 }
 
 export interface ReconciliationSummary {
-  resource_total: number;
-  bound_resource_count: number;
-  unbound_resource_count: number;
-  orphan_ci_count: number;
-  unlinked_ci_count: number;
+  resourceTotal: number;
+  boundResourceCount: number;
+  unboundResourceCount: number;
+  orphanCICount: number;
+  unlinkedCICount: number;
 }
 
 export interface ReconciliationResponse {
   summary: ReconciliationSummary;
-  unbound_resources: CloudResource[];
-  orphan_cis: ConfigurationItem[];
-  unlinked_cis: ConfigurationItem[];
+  unboundResources: CloudResource[];
+  orphanCIs: ConfigurationItem[];
+  unlinkedCIs: ConfigurationItem[];
 }
 
 // 列表响应
