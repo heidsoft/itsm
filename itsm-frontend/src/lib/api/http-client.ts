@@ -34,11 +34,14 @@ const toCamelCase = (obj: unknown): unknown => {
     return obj.map(v => toCamelCase(v));
   } else if (obj && typeof obj === 'object' && obj.constructor === Object) {
     const typedObj = obj as Record<string, unknown>;
-    return Object.keys(typedObj).reduce((result, key) => {
-      const camelKey = key.replace(/_([a-z])/g, g => g[1].toUpperCase());
-      result[camelKey] = toCamelCase(typedObj[key]);
-      return result;
-    }, {} as Record<string, unknown>);
+    return Object.keys(typedObj).reduce(
+      (result, key) => {
+        const camelKey = key.replace(/_([a-z])/g, g => g[1].toUpperCase());
+        result[camelKey] = toCamelCase(typedObj[key]);
+        return result;
+      },
+      {} as Record<string, unknown>
+    );
   }
   return obj;
 };
@@ -52,11 +55,14 @@ const toSnakeCase = (obj: unknown): unknown => {
     return obj.map(v => toSnakeCase(v));
   } else if (obj && typeof obj === 'object' && obj.constructor === Object) {
     const typedObj = obj as Record<string, unknown>;
-    return Object.keys(typedObj).reduce((result, key) => {
-      const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-      result[snakeKey] = toSnakeCase(typedObj[key]);
-      return result;
-    }, {} as Record<string, unknown>);
+    return Object.keys(typedObj).reduce(
+      (result, key) => {
+        const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+        result[snakeKey] = toSnakeCase(typedObj[key]);
+        return result;
+      },
+      {} as Record<string, unknown>
+    );
   }
   return obj;
 };
@@ -173,7 +179,10 @@ class HttpClient {
 
     // Get token from localStorage (set by auth-service after login) or fallback to cookie
     // Prefer localStorage since cookie may be httpOnly or cross-origin
-    const currentToken = typeof window !== 'undefined' ? (localStorage.getItem('access_token') || getCookie('access_token')) : this.token;
+    const currentToken =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('access_token') || getCookie('access_token')
+        : this.token;
     const currentTenantId =
       typeof window !== 'undefined' ? localStorage.getItem('current_tenant_id') : this.tenantId;
 
@@ -203,7 +212,10 @@ class HttpClient {
   }
 
   // 为mutating请求添加CSRF header
-  private async addCSRFHeader(headers: Record<string, string>, method: string): Promise<Record<string, string>> {
+  private async addCSRFHeader(
+    headers: Record<string, string>,
+    method: string
+  ): Promise<Record<string, string>> {
     // 只对mutating请求添加CSRF token
     if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
       const csrfToken = await this.getCSRFToken();
@@ -220,9 +232,10 @@ class HttpClient {
   // Independent token refresh method to avoid circular dependencies
   private async refreshTokenInternal(): Promise<boolean> {
     // Try cookie first (httpOnly), then fall back to localStorage
-    const refreshToken = typeof window !== 'undefined'
-      ? (getCookie('refresh_token') || localStorage.getItem('refresh_token'))
-      : null;
+    const refreshToken =
+      typeof window !== 'undefined'
+        ? getCookie('refresh_token') || localStorage.getItem('refresh_token')
+        : null;
     if (!refreshToken) {
       return false;
     }

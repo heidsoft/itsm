@@ -168,7 +168,10 @@ describe('Auth Token Refresh Mechanism', () => {
       // Verify new refresh_token is stored (rotation)
       expect(localStorageMock.setItem).toHaveBeenCalledWith('refresh_token', mockNewRefreshToken);
       // Verify old refresh_token was NOT called with old value
-      expect(localStorageMock.setItem).not.toHaveBeenCalledWith('refresh_token', mockOldRefreshToken);
+      expect(localStorageMock.setItem).not.toHaveBeenCalledWith(
+        'refresh_token',
+        mockOldRefreshToken
+      );
     });
 
     it('should return false when no refresh token exists', async () => {
