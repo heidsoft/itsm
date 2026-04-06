@@ -25,11 +25,11 @@ import type {
 } from '@/types/biz/cmdb';
 
 const summaryLabels = [
-  { key: 'resource_total', label: '资源总数' },
-  { key: 'bound_resource_count', label: '已绑定资源' },
-  { key: 'unbound_resource_count', label: '待绑定资源' },
-  { key: 'orphan_ci_count', label: '孤儿CI' },
-  { key: 'unlinked_ci_count', label: '未关联CI' },
+  { key: 'resourceTotal', label: '资源总数' },
+  { key: 'boundResourceCount', label: '已绑定资源' },
+  { key: 'unboundResourceCount', label: '待绑定资源' },
+  { key: 'orphanCICount', label: '孤儿CI' },
+  { key: 'unlinkedCICount', label: '未关联CI' },
 ];
 
 export default function ReconciliationPage() {
@@ -54,9 +54,9 @@ export default function ReconciliationPage() {
         CMDBApi.getCloudServices(),
       ]);
       setSummary(recon.summary);
-      setUnboundResources(recon.unbound_resources || []);
-      setOrphanCIs(recon.orphan_cis || []);
-      setUnlinkedCIs(recon.unlinked_cis || []);
+      setUnboundResources(recon.unboundResources || []);
+      setOrphanCIs(recon.orphanCIs || []);
+      setUnlinkedCIs(recon.unlinkedCIs || []);
       setServices(serviceList || []);
     } catch (error) {
       message.error('加载对账数据失败');
