@@ -353,11 +353,11 @@ func TestIncidentService_DeleteIncident(t *testing.T) {
 	alert1, err := client.IncidentAlert.Create().
 		SetIncidentID(testIncident.ID).
 		SetAlertType("sla_breach").
-		SetTitle("SLA告警").
+		SetAlertName("SLA告警").
 		SetMessage("即将超过SLA").
 		SetSeverity("high").
 		SetTenantID(testTenant.ID).
-		SetAlertTime(time.Now()).
+		SetTriggeredAt(time.Now()).
 		Save(ctx)
 	if err != nil {
 		t.Fatalf("创建测试告警失败: %v", err)
@@ -367,10 +367,10 @@ func TestIncidentService_DeleteIncident(t *testing.T) {
 	metric1, err := client.IncidentMetric.Create().
 		SetIncidentID(testIncident.ID).
 		SetMetricType("response_time").
-		SetValue(100).
+		SetMetricValue(100).
 		SetUnit("seconds").
 		SetTenantID(testTenant.ID).
-		SetRecordedAt(time.Now()).
+		SetMeasuredAt(time.Now()).
 		Save(ctx)
 	if err != nil {
 		t.Fatalf("创建测试指标失败: %v", err)
