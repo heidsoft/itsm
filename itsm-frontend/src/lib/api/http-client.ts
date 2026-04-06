@@ -219,13 +219,16 @@ class HttpClient {
 
   // Independent token refresh method to avoid circular dependencies
   private async refreshTokenInternal(): Promise<boolean> {
-    const refreshToken = typeof window !== 'undefined' ? getCookie('refresh_token') : null;
+    // Try cookie first (httpOnly), then fall back to localStorage
+    const refreshToken = typeof window !== 'undefined'
+      ? (getCookie('refresh_token') || localStorage.getItem('refresh_token'))
+      : null;
     if (!refreshToken) {
       return false;
     }
 
     try {
-      const response = await fetch(`${this.baseURL}/api/v1/auth/refresh`, {
+      const response = await fetch(`${this.baseURL}/api/v1/refresh-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -239,8 +242,21 @@ class HttpClient {
       if (response.ok) {
         const data = await response.json();
         if (data.code === 0) {
-          // Access token is set in httpOnly cookie by backend
+          // Update access token
           this.token = data.data.access_token;
+          // Also update localStorage for consistency with AuthService
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('access_token', data.data.access_token);
+          }
+          // Handle refresh token rotation if new refresh_token is returned
+          if (data.data.refresh_token) {
+            // Update the refresh token cookie for next refresh
+            if (typeof window !== 'undefined') {
+              document.cookie = `refresh_token=${data.data.refresh_token}; path=/; max-age=604800`;
+              // Also update localStorage for consistency with AuthService
+              localStorage.setItem('refresh_token', data.data.refresh_token);
+            }
+          }
           return true;
         }
       }
