@@ -25,14 +25,16 @@ type JWTClaims struct {
 type TokenBlacklistService struct {
 	redisClient *redis.Client
 	logger      *zap.SugaredLogger
+	jwtSecret   string
 	prefix      string
 }
 
 // NewTokenBlacklistService 创建Token黑名单服务
-func NewTokenBlacklistService(redisClient *redis.Client, logger *zap.SugaredLogger) *TokenBlacklistService {
+func NewTokenBlacklistService(redisClient *redis.Client, logger *zap.SugaredLogger, jwtSecret string) *TokenBlacklistService {
 	return &TokenBlacklistService{
 		redisClient: redisClient,
 		logger:      logger,
+		jwtSecret:   jwtSecret,
 		prefix:      "jwt:blacklist:",
 	}
 }
@@ -167,7 +169,7 @@ func (s *TokenBlacklistService) GetBlacklistedClaims(tokenString string) (*JWTCl
 // parseToken 解析并验证Token
 func (s *TokenBlacklistService) parseToken(tokenString string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte("your-secret-key"), nil // 实际应该从配置获取
+		return []byte(s.jwtSecret), nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse token: %w", err)
