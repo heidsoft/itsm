@@ -213,6 +213,10 @@ func (s *TicketCoreService) UpdateTicketBasic(ctx context.Context, ticketID int,
 		update = update.SetPriority(req.Priority)
 	}
 	if req.Status != "" {
+		// 验证状态转换是否合法
+		if !IsValidTicketStatusTransition(t.Status, req.Status) {
+			return nil, fmt.Errorf("无效的状态转换: 从 %s 到 %s", t.Status, req.Status)
+		}
 		update = update.SetStatus(req.Status)
 	}
 	if req.RequesterID > 0 {
