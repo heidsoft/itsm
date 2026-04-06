@@ -315,8 +315,9 @@ func (s *TicketLifecycleService) mapProcessStatus(status string) string {
 	}
 }
 
-// isValidStatusTransition 检查状态转换是否合法
-func (s *TicketLifecycleService) isValidStatusTransition(currentStatus, newStatus string) bool {
+// IsValidTicketStatusTransition 检查状态转换是否合法
+// 导出的函数供其他服务使用（如 TicketCoreService）
+func IsValidTicketStatusTransition(currentStatus, newStatus string) bool {
 	validTransitions := map[string][]string{
 		common.TicketStatusNew:        {common.TicketStatusOpen, common.TicketStatusAssigned},
 		common.TicketStatusAssigned:   {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusClosed},
@@ -340,6 +341,11 @@ func (s *TicketLifecycleService) isValidStatusTransition(currentStatus, newStatu
 	}
 
 	return false
+}
+
+// isValidStatusTransition 检查状态转换是否合法 (内部调用)
+func (s *TicketLifecycleService) isValidStatusTransition(currentStatus, newStatus string) bool {
+	return IsValidTicketStatusTransition(currentStatus, newStatus)
 }
 
 // getEscalatedPriority 获取升级后的优先级
