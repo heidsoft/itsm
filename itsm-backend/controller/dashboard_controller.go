@@ -32,7 +32,8 @@ func NewDashboardController(dashboardService *service.DashboardService, logger *
 // @Security BearerAuth
 // @RouterIgnore /api/dashboard [get]
 func (dc *DashboardController) GetDashboardData(c *gin.Context) {
-	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context())
+	tenantID := c.GetInt("tenant_id")
+	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get dashboard data", "error", err)
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -52,7 +53,8 @@ func (dc *DashboardController) GetDashboardData(c *gin.Context) {
 // @Security BearerAuth
 // @RouterIgnore /api/dashboard/kpis [get]
 func (dc *DashboardController) GetKPIMetrics(c *gin.Context) {
-	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context())
+	tenantID := c.GetInt("tenant_id")
+	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get KPI metrics", "error", err)
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -72,7 +74,8 @@ func (dc *DashboardController) GetKPIMetrics(c *gin.Context) {
 // @Security BearerAuth
 // @RouterIgnore /api/dashboard/resources/distribution [get]
 func (dc *DashboardController) GetResourceDistribution(c *gin.Context) {
-	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context())
+	tenantID := c.GetInt("tenant_id")
+	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get resource distribution", "error", err)
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -92,7 +95,8 @@ func (dc *DashboardController) GetResourceDistribution(c *gin.Context) {
 // @Security BearerAuth
 // @RouterIgnore /api/dashboard/resources/health [get]
 func (dc *DashboardController) GetResourceHealth(c *gin.Context) {
-	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context())
+	tenantID := c.GetInt("tenant_id")
+	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get resource health", "error", err)
 		common.Fail(c, common.InternalErrorCode, err.Error())
