@@ -321,11 +321,77 @@ func (s *MenuService) filterMenusByPermission(menus []*ent.Menu, permissions map
 			wildcard := parts[0] + ":*"
 			if permissions[wildcard] || permissions["*"] {
 				filtered = append(filtered, m)
+				continue
+			}
+
+			// 尝试 Action 别名映射（如 dashboard:view → dashboard:read）
+			resolvedAction := resolveActionAliases(parts[1])
+			if resolvedAction != parts[1] {
+				// 使用别名后的权限代码进行精确匹配
+				aliasPermCode := parts[0] + ":" + resolvedAction
+				if permissions[aliasPermCode] {
+					filtered = append(filtered, m)
+					continue
+				}
+				// 尝试别名后的通配符权限
+				aliasWildcard := parts[0] + ":*"
+				if permissions[aliasWildcard] {
+					filtered = append(filtered, m)
+					continue
+				}
+			}
+
+			// 尝试 Resource 别名映射（如 service:read → service_catalog:read）
+			resolvedResource := resolveResourceAliases(parts[0])
+			resolvedActionForResource := resolveActionAliases(parts[1])
+			if resolvedResource != parts[0] || resolvedActionForResource != parts[1] {
+				// 使用别名后的权限代码进行精确匹配
+				finalPermCode := resolvedResource + ":" + resolvedActionForResource
+				if permissions[finalPermCode] {
+					filtered = append(filtered, m)
+					continue
+				}
+				// 尝试别名后的通配符权限
+				finalWildcard := resolvedResource + ":*"
+				if permissions[finalWildcard] || permissions["*"] {
+					filtered = append(filtered, m)
+					continue
+				}
 			}
 		}
 	}
 
 	return filtered
+}
+
+// actionAliasMap 权限 Action 别名映射：前端使用的 action → 后端定义的 action
+var actionAliasMap = map[string]string{
+	"view":   "read",   // view 是 read 的别名
+	"use":    "read",   // use 是 read 的别名
+	"manage": "admin",  // manage 是 admin 的别名
+}
+
+// resourceAliasMap 权限 Resource 别名映射：前端使用的 resource → 后端定义的 resource
+var resourceAliasMap = map[string]string{
+	"service":  "service_catalog", // service 是 service_catalog 的别名
+	"workflow": "bpmn",            // workflow 是 bpmn 的别名
+	"report":   "report",          // report 没有对应资源，保持不变
+}
+
+// resolveActionAliases 解析 Action 别名，返回后端定义的 Action
+func resolveActionAliases(action string) string {
+	if resolved, ok := actionAliasMap[action]; ok {
+		return resolved
+	}
+	return action
+}
+
+// resolveResourceAliases 解析 Resource 别名，返回后端定义的 Resource
+func resolveResourceAliases(resource string) string {
+	if resolved, ok := resourceAliasMap[resource]; ok {
+		return resolved
+	}
+	return resource
 }
 
 // splitPermission 拆分权限代码
