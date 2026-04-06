@@ -617,6 +617,29 @@ export const routes: RouteConfig[] = [
   },
 ];
 
+// 资源别名映射：前端使用的资源名 → 后端定义的资源名
+const resourceAliasMap: Record<string, string> = {
+  service: 'service_catalog', // 前端 service:read → 后端 service_catalog:read
+  workflow: 'bpmn', // 前端 workflow:read → 后端 bpmn:read
+};
+
+// Action 别名映射：前端使用的 action → 后端定义的 action
+const actionAliasMap: Record<string, string> = {
+  view: 'read', // view 是 read 的别名
+  use: 'read', // use 是 read 的别名
+  manage: 'admin', // manage 是 admin 的别名
+};
+
+// 解析资源别名
+function resolveResourceAlias(resource: string): string {
+  return resourceAliasMap[resource] || resource;
+}
+
+// 解析 Action 别名
+function resolveActionAlias(action: string): string {
+  return actionAliasMap[action] || action;
+}
+
 // 权限检查工具函数
 export class RoutePermissionChecker {
   /**
@@ -637,13 +660,32 @@ export class RoutePermissionChecker {
 
     // 检查资源权限
     if (route.permissions && route.permissions.length > 0) {
-      return route.permissions.every(requiredPermission =>
-        userPermissions.some(
-          userPermission =>
+      return route.permissions.every(requiredPermission => {
+        const resolvedResource = resolveResourceAlias(requiredPermission.resource);
+        const resolvedAction = resolveActionAlias(requiredPermission.action);
+
+        return userPermissions.some(userPermission => {
+          // 检查精确匹配（后端返回的权限已经是解析后的）
+          if (
+            userPermission.resource === resolvedResource &&
+            userPermission.action === resolvedAction
+          ) {
+            return true;
+          }
+          // 检查通配符权限（如 service_catalog:* 可以访问 service_catalog:read）
+          if (userPermission.resource === resolvedResource && userPermission.action === '*') {
+            return true;
+          }
+          // 检查原始格式匹配（未经过别名解析的权限）
+          if (
             userPermission.resource === requiredPermission.resource &&
             userPermission.action === requiredPermission.action
-        )
-      );
+          ) {
+            return true;
+          }
+          return false;
+        });
+      });
     }
 
     return true;

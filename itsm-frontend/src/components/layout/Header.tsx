@@ -154,11 +154,7 @@ export const Header: React.FC<HeaderProps> = ({
   const displayName = user?.name || user?.username || '';
   const userInitial = displayName.charAt(0).toUpperCase() || 'U';
   const roleText =
-    user?.role === 'admin'
-      ? '管理员'
-      : user?.role === 'super_admin'
-        ? '超级管理员'
-        : '用户';
+    user?.role === 'admin' ? '管理员' : user?.role === 'super_admin' ? '超级管理员' : '用户';
 
   const roleColor = user?.role === 'admin' || user?.role === 'super_admin' ? '#3b82f6' : '#64748b';
 
@@ -200,18 +196,25 @@ export const Header: React.FC<HeaderProps> = ({
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return DESIGN.colors.danger;
-      case 'high': return DESIGN.colors.warning;
-      case 'medium': return DESIGN.colors.accent;
-      default: return DESIGN.colors.textMuted;
+      case 'urgent':
+        return DESIGN.colors.danger;
+      case 'high':
+        return DESIGN.colors.warning;
+      case 'medium':
+        return DESIGN.colors.accent;
+      default:
+        return DESIGN.colors.textMuted;
     }
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'ticket': return <Ticket size={16} />;
-      case 'sla': return <AlertTriangle size={16} />;
-      default: return <Zap size={16} />;
+      case 'ticket':
+        return <Ticket size={16} />;
+      case 'sla':
+        return <AlertTriangle size={16} />;
+      default:
+        return <Zap size={16} />;
     }
   };
 
@@ -252,7 +255,9 @@ export const Header: React.FC<HeaderProps> = ({
     {
       key: 'logout',
       label: (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: DESIGN.colors.danger }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 12, color: DESIGN.colors.danger }}
+        >
           <LogOut size={16} />
           <span>退出登录</span>
         </div>
@@ -264,18 +269,27 @@ export const Header: React.FC<HeaderProps> = ({
   // 通知项
   const NotificationItem = ({ item }: { item: TicketNotification }) => {
     const isRead = item.status === 'read';
-    const priority = item.type === 'sla_warning' ? 'urgent' : item.type === 'assigned' ? 'high' : 'medium';
+    const priority =
+      item.type === 'sla_warning' ? 'urgent' : item.type === 'assigned' ? 'high' : 'medium';
 
     const getNotificationTitle = (type: string) => {
       switch (type) {
-        case 'created': return '新工单创建';
-        case 'assigned': return '工单已分配';
-        case 'status_changed': return '工单状态变更';
-        case 'commented': return '工单有新评论';
-        case 'sla_warning': return 'SLA预警';
-        case 'resolved': return '工单已解决';
-        case 'closed': return '工单已关闭';
-        default: return '新通知';
+        case 'created':
+          return '新工单创建';
+        case 'assigned':
+          return '工单已分配';
+        case 'status_changed':
+          return '工单状态变更';
+        case 'commented':
+          return '工单有新评论';
+        case 'sla_warning':
+          return 'SLA预警';
+        case 'resolved':
+          return '工单已解决';
+        case 'closed':
+          return '工单已关闭';
+        default:
+          return '新通知';
       }
     };
 
@@ -311,8 +325,21 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* 内容 */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-              <Text strong style={{ fontSize: 14, color: isRead ? DESIGN.colors.textMuted : DESIGN.colors.text }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: 4,
+              }}
+            >
+              <Text
+                strong
+                style={{
+                  fontSize: 14,
+                  color: isRead ? DESIGN.colors.textMuted : DESIGN.colors.text,
+                }}
+              >
                 {getNotificationTitle(item.type)}
               </Text>
               {!isRead && (
@@ -328,7 +355,14 @@ export const Header: React.FC<HeaderProps> = ({
                 />
               )}
             </div>
-            <Text style={{ fontSize: 13, color: DESIGN.colors.textMuted, display: 'block', marginBottom: 4 }}>
+            <Text
+              style={{
+                fontSize: 13,
+                color: DESIGN.colors.textMuted,
+                display: 'block',
+                marginBottom: 4,
+              }}
+            >
               {item.content}
             </Text>
             <Text style={{ fontSize: 12, color: DESIGN.colors.textMuted }}>
@@ -547,7 +581,14 @@ export const Header: React.FC<HeaderProps> = ({
             </Button>
           )
         ) : (
-          <div style={{ width: 120, height: 36, background: DESIGN.colors.bgSubtle, borderRadius: DESIGN.radius.full }} />
+          <div
+            style={{
+              width: 120,
+              height: 36,
+              background: DESIGN.colors.bgSubtle,
+              borderRadius: DESIGN.radius.full,
+            }}
+          />
         )}
       </div>
 
@@ -571,7 +612,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <Bell size={18} />
               </div>
               <div>
-                <Title level={5} style={{ margin: 0, fontSize: 16 }}>通知中心</Title>
+                <Title level={5} style={{ margin: 0, fontSize: 16 }}>
+                  通知中心
+                </Title>
                 <Text style={{ fontSize: 12, color: DESIGN.colors.textMuted }}>
                   {unreadCount > 0 ? `${unreadCount} 条未读` : '暂无未读'}
                 </Text>
@@ -650,7 +693,18 @@ export const Header: React.FC<HeaderProps> = ({
                 <List.Item>
                   <List.Item.Meta
                     avatar={<Ticket size={16} style={{ color: DESIGN.colors.accent }} />}
-                    title={<a onClick={() => { setSearchModalVisible(false); router.push(`/${item.type === 'ticket' ? 'tickets' : item.type === 'incident' ? 'incidents' : item.type === 'problem' ? 'problems' : item.type === 'change' ? 'changes' : 'knowledge'}/${item.id}`); }}>{item.title}</a>}
+                    title={
+                      <a
+                        onClick={() => {
+                          setSearchModalVisible(false);
+                          router.push(
+                            `/${item.type === 'ticket' ? 'tickets' : item.type === 'incident' ? 'incidents' : item.type === 'problem' ? 'problems' : item.type === 'change' ? 'changes' : 'knowledge'}/${item.id}`
+                          );
+                        }}
+                      >
+                        {item.title}
+                      </a>
+                    }
                     description={item.status}
                   />
                 </List.Item>
