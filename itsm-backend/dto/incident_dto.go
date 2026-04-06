@@ -7,39 +7,39 @@ import (
 // 结构化字段定义
 
 type ImpactAnalysis struct {
-	BusinessImpact  *BusinessImpact `json:"business_impact,omitempty"`
-	TechnicalImpact string          `json:"technical_impact,omitempty"`
-	AffectedUsers   int             `json:"affected_users,omitempty"`
-	TimeImpact      *TimeImpact     `json:"time_impact,omitempty"`
+	BusinessImpact  *BusinessImpact `json:"businessImpact,omitempty"`
+	TechnicalImpact string          `json:"technicalImpact,omitempty"`
+	AffectedUsers   int             `json:"affectedUsers,omitempty"`
+	TimeImpact      *TimeImpact     `json:"timeImpact,omitempty"`
 }
 
 type BusinessImpact struct {
-	AffectedUsers       int     `json:"affected_users,omitempty"`
-	RevenueImpact       float64 `json:"revenue_impact,omitempty"`
-	ServiceAvailability float64 `json:"service_availability,omitempty"`
+	AffectedUsers       int     `json:"affectedUsers,omitempty"`
+	RevenueImpact       float64 `json:"revenueImpact,omitempty"`
+	ServiceAvailability float64 `json:"serviceAvailability,omitempty"`
 }
 
 type TimeImpact struct {
-	IsOverdue          bool   `json:"is_overdue,omitempty"`
-	HoursSinceCreation int    `json:"hours_since_creation,omitempty"`
-	ResponseDeadline   string `json:"response_deadline,omitempty"`
-	ResolutionDeadline string `json:"resolution_deadline,omitempty"`
+	IsOverdue          bool   `json:"isOverdue,omitempty"`
+	HoursSinceCreation int    `json:"hoursSinceCreation,omitempty"`
+	ResponseDeadline   string `json:"responseDeadline,omitempty"`
+	ResolutionDeadline string `json:"resolutionDeadline,omitempty"`
 }
 
 type RootCause struct {
-	AnalysisMethod      string   `json:"analysis_method,omitempty"`
-	RootCause           string   `json:"root_cause,omitempty"`
-	ContributingFactors []string `json:"contributing_factors,omitempty"`
+	AnalysisMethod      string   `json:"analysisMethod,omitempty"`
+	RootCause           string   `json:"rootCause,omitempty"`
+	ContributingFactors []string `json:"contributingFactors,omitempty"`
 	Evidence            []string `json:"evidence,omitempty"`
-	PreventiveActions   []string `json:"preventive_actions,omitempty"`
+	PreventiveActions   []string `json:"preventiveActions,omitempty"`
 	Status              string   `json:"status,omitempty"`
 }
 
 type ResolutionStep struct {
 	Step        int       `json:"step"`
 	Description string    `json:"description"`
-	ExecutedBy  string    `json:"executed_by"`
-	ExecutedAt  time.Time `json:"executed_at"`
+	ExecutedBy  string    `json:"executedBy"`
+	ExecutedAt  time.Time `json:"executedAt"`
 	Status      string    `json:"status"` // pending, in_progress, completed, failed
 }
 

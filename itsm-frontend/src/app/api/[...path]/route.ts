@@ -23,8 +23,9 @@ export async function GET(
 
   const cookieHeader = request.headers.get('cookie') || '';
   // Get auth from header first, then fallback to localStorage (for cross-origin proxy)
+  const token = request.cookies.get('access_token')?.value;
   const authHeader = request.headers.get('Authorization') ||
-    (request.cookies.get('access_token')?.value ? `Bearer ${request.cookies.get('access_token').value}` : '');
+    (token ? `Bearer ${token}` : '');
 
   try {
     const response = await fetch(fullUrl, {

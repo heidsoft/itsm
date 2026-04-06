@@ -2,21 +2,21 @@ package dto
 
 // AutoAssignRequest 自动分配请求
 type AutoAssignRequest struct {
-	TicketID int `json:"ticket_id" binding:"required"`
+	TicketID int `json:"ticketId" binding:"required"`
 }
 
 // AutoAssignResponse 自动分配响应
 type AutoAssignResponse struct {
-	TicketID       int     `json:"ticket_id"`
-	AssignedTo     *int    `json:"assigned_to,omitempty"`
-	AssignmentType string  `json:"assignment_type"` // auto, rule, manual
+	TicketID       int     `json:"ticketId"`
+	AssignedTo     *int    `json:"assignedTo,omitempty"`
+	AssignmentType string  `json:"assignmentType"` // auto, rule, manual
 	Reason         string  `json:"reason"`
 	Score          float64 `json:"score,omitempty"`
 }
 
 // AssignmentRecommendation 分配推荐
 type AssignmentRecommendation struct {
-	UserID     int      `json:"user_id"`
+	UserID     int      `json:"userId"`
 	Username   string   `json:"username"`
 	Name       string   `json:"name"`
 	Email      string   `json:"email"`
@@ -41,11 +41,11 @@ type AssignmentRuleResponse struct {
 	Priority       int                      `json:"priority"`
 	Conditions     []map[string]interface{} `json:"conditions"`
 	Actions        map[string]interface{}   `json:"actions"`
-	IsActive       bool                     `json:"is_active"`
-	ExecutionCount int                      `json:"execution_count"`
-	LastExecutedAt *string                  `json:"last_executed_at,omitempty"`
-	CreatedAt      string                   `json:"created_at"`
-	UpdatedAt      string                   `json:"updated_at"`
+	IsActive       bool                     `json:"isActive"`
+	ExecutionCount int                      `json:"executionCount"`
+	LastExecutedAt *string                  `json:"lastExecutedAt,omitempty"`
+	CreatedAt      string                   `json:"createdAt"`
+	UpdatedAt      string                   `json:"updatedAt"`
 }
 
 // CreateAssignmentRuleRequest 创建分配规则请求
@@ -55,7 +55,7 @@ type CreateAssignmentRuleRequest struct {
 	Priority    int                      `json:"priority"`
 	Conditions  []map[string]interface{} `json:"conditions" binding:"required"`
 	Actions     map[string]interface{}   `json:"actions" binding:"required"`
-	IsActive    bool                     `json:"is_active"`
+	IsActive    bool                     `json:"isActive"`
 }
 
 // UpdateAssignmentRuleRequest 更新分配规则请求
@@ -65,7 +65,7 @@ type UpdateAssignmentRuleRequest struct {
 	Priority    *int                     `json:"priority,omitempty"`
 	Conditions  []map[string]interface{} `json:"conditions,omitempty"`
 	Actions     map[string]interface{}   `json:"actions,omitempty"`
-	IsActive    *bool                    `json:"is_active,omitempty"`
+	IsActive    *bool                    `json:"isActive,omitempty"`
 }
 
 // ListAssignmentRulesResponse 分配规则列表响应
@@ -76,14 +76,14 @@ type ListAssignmentRulesResponse struct {
 
 // TestAssignmentRuleRequest 测试分配规则请求
 type TestAssignmentRuleRequest struct {
-	TicketID int `json:"ticket_id" binding:"required"`
-	RuleID   int `json:"rule_id" binding:"required"`
+	TicketID int `json:"ticketId" binding:"required"`
+	RuleID   int `json:"ruleId" binding:"required"`
 }
 
 // TestAssignmentRuleResponse 测试分配规则响应
 type TestAssignmentRuleResponse struct {
 	Matched    bool    `json:"matched"`
-	AssignedTo *int    `json:"assigned_to,omitempty"`
+	AssignedTo *int    `json:"assignedTo,omitempty"`
 	Reason     string  `json:"reason"`
 	Score      float64 `json:"score,omitempty"`
 }
