@@ -31,23 +31,23 @@ func NewDashboardService(client *ent.Client, logger *zap.SugaredLogger) *Dashboa
 }
 
 // GetDashboardData 获取仪表盘数据
-func (s *DashboardService) GetDashboardData(ctx context.Context) (*dto.DashboardResponse, error) {
+func (s *DashboardService) GetDashboardData(ctx context.Context, tenantID int) (*dto.DashboardResponse, error) {
 	// 获取SLA指标
-	slaMetrics, err := s.getSLAMetrics(ctx)
+	slaMetrics, err := s.getSLAMetrics(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get SLA metrics", "error", err)
 		return nil, fmt.Errorf("获取SLA指标失败: %w", err)
 	}
 
 	// 获取事件指标
-	incidentMetrics, err := s.getIncidentMetrics(ctx)
+	incidentMetrics, err := s.getIncidentMetrics(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get incident metrics", "error", err)
 		return nil, fmt.Errorf("获取事件指标失败: %w", err)
 	}
 
 	// 获取变更指标
-	changeMetrics, err := s.getChangeMetrics(ctx)
+	changeMetrics, err := s.getChangeMetrics(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get change metrics", "error", err)
 		return nil, fmt.Errorf("获取变更指标失败: %w", err)
@@ -101,12 +101,15 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dto.Dashboard
 }
 
 // getSLAMetrics 获取SLA指标
-func (s *DashboardService) getSLAMetrics(ctx context.Context) (*dto.SLAMetrics, error) {
+func (s *DashboardService) getSLAMetrics(ctx context.Context, tenantID int) (*dto.SLAMetrics, error) {
 	// 获取最近30天的工单数据
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
 
 	totalTickets, err := s.client.Ticket.Query().
-		Where(ticket.CreatedAtGTE(thirtyDaysAgo)).
+		Where(
+			ticket.TenantID(tenantID),
+			ticket.CreatedAtGTE(thirtyDaysAgo),
+		).
 		Count(ctx)
 	if err != nil {
 		return nil, err
@@ -115,6 +118,7 @@ func (s *DashboardService) getSLAMetrics(ctx context.Context) (*dto.SLAMetrics, 
 	// 计算按时解决的工单数（这里简化处理，实际需要根据SLA时间计算）
 	resolvedOnTime, err := s.client.Ticket.Query().
 		Where(
+			ticket.TenantID(tenantID),
 			ticket.CreatedAtGTE(thirtyDaysAgo),
 			ticket.StatusEQ("closed"),
 		).
@@ -138,10 +142,11 @@ func (s *DashboardService) getSLAMetrics(ctx context.Context) (*dto.SLAMetrics, 
 }
 
 // getIncidentMetrics 获取事件指标
-func (s *DashboardService) getIncidentMetrics(ctx context.Context) (*dto.IncidentMetrics, error) {
+func (s *DashboardService) getIncidentMetrics(ctx context.Context, tenantID int) (*dto.IncidentMetrics, error) {
 	// 获取高优先级事件数量
 	highPriorityCount, err := s.client.Ticket.Query().
 		Where(
+			ticket.TenantID(tenantID),
 			ticket.PriorityIn("high", "critical"),
 			ticket.StatusNEQ("closed"),
 		).
@@ -151,7 +156,9 @@ func (s *DashboardService) getIncidentMetrics(ctx context.Context) (*dto.Inciden
 	}
 
 	// 获取总事件数
-	totalIncidents, err := s.client.Ticket.Query().Count(ctx)
+	totalIncidents, err := s.client.Ticket.Query().
+		Where(ticket.TenantID(tenantID)).
+		Count(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -164,17 +171,22 @@ func (s *DashboardService) getIncidentMetrics(ctx context.Context) (*dto.Inciden
 }
 
 // getChangeMetrics 获取变更指标
-func (s *DashboardService) getChangeMetrics(ctx context.Context) (*dto.ChangeMetrics, error) {
+func (s *DashboardService) getChangeMetrics(ctx context.Context, tenantID int) (*dto.ChangeMetrics, error) {
 	// 获取待审批的变更数量
 	pendingApproval, err := s.client.Ticket.Query().
-		Where(ticket.StatusEQ("pending")).
+		Where(
+			ticket.TenantID(tenantID),
+			ticket.StatusEQ("pending"),
+		).
 		Count(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// 获取总变更数
-	totalChanges, err := s.client.Ticket.Query().Count(ctx)
+	totalChanges, err := s.client.Ticket.Query().
+		Where(ticket.TenantID(tenantID)).
+		Count(ctx)
 	if err != nil {
 		return nil, err
 	}

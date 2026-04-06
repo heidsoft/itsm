@@ -28,30 +28,30 @@ type ResourceHealthData struct {
 // DashboardResponse 仪表盘完整响应
 type DashboardResponse struct {
 	KPIs                []DashboardKPIResponse   `json:"kpis"`
-	MultiCloudResources []MultiCloudResourceData `json:"multi_cloud_resources"`
-	ResourceHealth      []ResourceHealthData     `json:"resource_health"`
-	LastUpdated         time.Time                `json:"last_updated"`
+	MultiCloudResources []MultiCloudResourceData `json:"multiCloudResources"`
+	ResourceHealth      []ResourceHealthData     `json:"resourceHealth"`
+	LastUpdated         time.Time                `json:"lastUpdated"`
 }
 
 // SLAMetrics SLA指标
 type SLAMetrics struct {
-	AchievementRate float64 `json:"achievement_rate"`
-	TotalTickets    int     `json:"total_tickets"`
-	ResolvedOnTime  int     `json:"resolved_on_time"`
+	AchievementRate float64 `json:"achievementRate"`
+	TotalTickets    int     `json:"totalTickets"`
+	ResolvedOnTime  int     `json:"resolvedOnTime"`
 }
 
 // IncidentMetrics 事件指标
 type IncidentMetrics struct {
-	HighPriorityCount int `json:"high_priority_count"`
-	TotalIncidents    int `json:"total_incidents"`
-	AvgResolutionTime int `json:"avg_resolution_time"` // 分钟
+	HighPriorityCount int `json:"highPriorityCount"`
+	TotalIncidents    int `json:"totalIncidents"`
+	AvgResolutionTime int `json:"avgResolutionTime"` // 分钟
 }
 
 // ChangeMetrics 变更指标
 type ChangeMetrics struct {
-	PendingApproval int     `json:"pending_approval"`
-	SuccessRate     float64 `json:"success_rate"`
-	TotalChanges    int     `json:"total_changes"`
+	PendingApproval int     `json:"pendingApproval"`
+	SuccessRate     float64 `json:"successRate"`
+	TotalChanges    int     `json:"totalChanges"`
 }
 
 // ResourceMetrics 资源指标
