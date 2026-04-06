@@ -369,6 +369,8 @@ var actionAliasMap = map[string]string{
 	"view":   "read",   // view 是 read 的别名
 	"use":    "read",   // use 是 read 的别名
 	"manage": "admin",  // manage 是 admin 的别名
+	"create": "write",  // create 是 write 的别名
+	"update": "write",  // update 是 write 的别名
 }
 
 // resourceAliasMap 权限 Resource 别名映射：前端使用的 resource → 后端定义的 resource

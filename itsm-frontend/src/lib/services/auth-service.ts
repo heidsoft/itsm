@@ -3,13 +3,14 @@ import { useAuthStore } from '@/lib/store/auth-store';
 
 export class AuthService {
   // 设置tokens
+  // 注意: access_token存储在localStorage用于Authorization header
+  // 同时后端也会设置httpOnly cookie作为安全备份
   static setTokens(accessToken: string, refreshToken: string) {
     if (typeof window !== 'undefined') {
+      // 存储access_token用于Authorization header
       localStorage.setItem('access_token', accessToken);
+      // 存储refresh_token用于刷新流程
       localStorage.setItem('refresh_token', refreshToken);
-      // 同时设置 Cookie（用于 middleware 验证）
-      document.cookie = `auth-token=${accessToken}; path=/; max-age=900; SameSite=Lax`;
-      document.cookie = `access_token=${accessToken}; path=/; max-age=900; SameSite=Lax`;
     }
   }
 
@@ -89,6 +90,7 @@ export class AuthService {
         'Content-Type': 'application/json',
         ...options.headers,
       },
+      credentials: options.credentials || 'include', // 默认包含cookies
       ...options,
     });
 
@@ -116,16 +118,22 @@ export class AuthService {
     try {
       const data = await this.makeRequest<{
         access_token: string;
+        refresh_token?: string;
       }>('/api/v1/refresh-token', {
         method: 'POST',
+        credentials: 'include', // Include httpOnly cookies
         body: JSON.stringify({
           refresh_token: refreshToken,
         }),
       });
 
-      // 更新access token
+      // 更新localStorage中的tokens
       if (typeof window !== 'undefined') {
         localStorage.setItem('access_token', data.access_token);
+        // 如果返回了新的refresh_token，更新它(实现token rotation)
+        if (data.refresh_token) {
+          localStorage.setItem('refresh_token', data.refresh_token);
+        }
       }
       return true;
     } catch (error) {
@@ -140,9 +148,6 @@ export class AuthService {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      // 清除 Cookies
-      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-      document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     }
   }
 
@@ -182,7 +187,11 @@ export class AuthService {
           role: String(u?.role || 'end_user'),
           email: String(u?.email || ''),
           name: String(u?.name || u?.full_name || ''),
-          tenantId: u?.tenantId ? Number(u.tenantId) : (u?.tenant_id ? Number(u.tenant_id) : undefined),
+          tenantId: u?.tenantId
+            ? Number(u.tenantId)
+            : u?.tenant_id
+              ? Number(u.tenant_id)
+              : undefined,
           department: u?.department,
           permissions: u?.permissions,
           createdAt: u?.createdAt || u?.created_at,

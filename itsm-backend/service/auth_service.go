@@ -132,7 +132,7 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	}, nil
 }
 
-// RefreshToken 刷新token
+// RefreshToken 刷新token (实现token rotation安全机制)
 func (s *AuthService) RefreshToken(ctx context.Context, req *dto.RefreshTokenRequest) (*dto.RefreshTokenResponse, error) {
 	// 验证refresh token
 	claims, err := middleware.ValidateRefreshToken(req.RefreshToken, s.jwtSecret)
@@ -168,10 +168,22 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *dto.RefreshTokenReq
 		return nil, fmt.Errorf("生成新令牌失败")
 	}
 
-	s.logger.Infow("Token refreshed successfully", "user_id", userEntity.ID)
+	// 生成新的refresh token（实现rotation，防止replay攻击）
+	newRefreshToken, err := middleware.GenerateRefreshToken(
+		userEntity.ID,
+		s.jwtSecret,
+		time.Duration(7*24)*time.Hour,
+	)
+	if err != nil {
+		s.logger.Errorw("Failed to generate new refresh token", "user_id", userEntity.ID, "error", err)
+		return nil, fmt.Errorf("生成刷新令牌失败")
+	}
+
+	s.logger.Infow("Token refreshed successfully with rotation", "user_id", userEntity.ID)
 
 	return &dto.RefreshTokenResponse{
-		AccessToken: newAccessToken,
+		AccessToken:  newAccessToken,
+		RefreshToken: newRefreshToken,
 	}, nil
 }
 
