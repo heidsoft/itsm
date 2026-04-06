@@ -46,35 +46,12 @@ import { useI18n } from '@/lib/i18n';
 import { globalSearch, GlobalSearchResponse, SearchResult } from '@/lib/api/global-search-api';
 import { TicketNotificationApi, TicketNotification } from '@/lib/api/ticket-notification-api';
 import { notificationWS } from '@/lib/services/notification-ws';
+import { DESIGN } from '@/design-system/tokens';
 
 const { Header: AntHeader } = Layout;
 const { Text, Title } = Typography;
 
-// 独特的设计系统
-const DESIGN = {
-  colors: {
-    primary: '#0f172a',
-    accent: '#3b82f6',
-    success: '#10b981',
-    warning: '#f59e0b',
-    danger: '#ef4444',
-    surface: '#ffffff',
-    border: '#e2e8f0',
-    text: '#1e293b',
-    textMuted: '#64748b',
-    bgSubtle: '#f8fafc',
-  },
-  shadows: {
-    dropdown: '0 10px 40px -10px rgba(0,0,0,0.15)',
-    glow: (color: string) => `0 0 20px ${color}20`,
-  },
-  radius: {
-    sm: '8px',
-    md: '12px',
-    lg: '16px',
-    full: '9999px',
-  },
-};
+// DESIGN is imported from @/design-system/tokens
 
 const { Header: AntDesignHeader } = Layout;
 
