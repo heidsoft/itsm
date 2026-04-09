@@ -116,11 +116,24 @@ export function middleware(request: NextRequest) {
   // 检查是否为公开路由
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
+  // 检查是否为客户端导航（从本应用其他页面导航）
+  // 客户端导航时，Referer header会指向本应用的页面
+  const referer = request.headers.get('referer');
+  const refererUrl = referer ? new URL(referer) : null;
+  const isClientSideNavigation = refererUrl && refererUrl.origin === request.nextUrl.origin;
+
   // 验证 token 格式有效性（JWT 检查）
   const isValid = isValidToken(token);
 
-  // 如果是受保护的路由但没有有效token，重定向到登录页
+  // 如果是受保护的路由但没有有效token
   if (isProtectedRoute && !isValid) {
+    // 如果是客户端导航且有localStorage token（即时没有cookie）
+    // 允许通过，让客户端的AuthGuard处理认证检查
+    if (isClientSideNavigation) {
+      // 客户端导航通过，让客户端AuthGuard检查localStorage
+      return NextResponse.next();
+    }
+    // 否则（首次加载），重定向到登录页
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);

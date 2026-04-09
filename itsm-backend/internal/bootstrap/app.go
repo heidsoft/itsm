@@ -364,6 +364,9 @@ func NewApplication() *Application {
 	surveyService := service.NewSurveyService(client, sugar)
 	surveyController := controller.NewSurveyController(surveyService)
 
+	// WebSocket Service
+	wsService := service.NewWebSocketService(sugar)
+
 	// 7. 设置路由
 	// 根据配置设置 Gin 运行模式
 	if cfg.Server.Mode == "release" {
@@ -471,6 +474,9 @@ func NewApplication() *Application {
 
 		// Known Error Handler (KEDB)
 		KnownErrorHandler: knownErrorHandler,
+
+		// WebSocket Service
+		WebSocketService: wsService,
 	}
 	router.SetupRoutes(r, routerConfig)
 
