@@ -54,7 +54,7 @@ export default function SLAPage() {
                 <Statistic
                   title="总SLA数量"
                   value={stats.totalDefinitions}
-                  valueStyle={{ color: '#1890ff' }}
+                  styles={{ content: { color: '#1890ff' } }}
                 />
               </Card>
             </Col>
@@ -63,7 +63,7 @@ export default function SLAPage() {
                 <Statistic
                   title="生效中"
                   value={stats.activeDefinitions}
-                  valueStyle={{ color: '#52c41a' }}
+                  styles={{ content: { color: '#52c41a' } }}
                 />
               </Card>
             </Col>
@@ -72,7 +72,7 @@ export default function SLAPage() {
                 <Statistic
                   title="违规数量"
                   value={stats.openViolations}
-                  valueStyle={{ color: '#ff4d4f' }}
+                  styles={{ content: { color: '#ff4d4f' } }}
                 />
               </Card>
             </Col>
@@ -83,12 +83,14 @@ export default function SLAPage() {
                   value={stats.overallComplianceRate}
                   suffix="%"
                   precision={1}
-                  valueStyle={{ color: stats.overallComplianceRate >= 95 ? '#52c41a' : '#faad14' }}
+                  styles={{
+                    content: { color: stats.overallComplianceRate >= 95 ? '#52c41a' : '#faad14' },
+                  }}
                 />
                 <Statistic
                   title="总违规"
                   value={stats.totalViolations}
-                  valueStyle={{ color: '#ff4d4f', fontSize: 14 }}
+                  styles={{ content: { color: '#ff4d4f', fontSize: 14 } }}
                 />
               </Card>
             </Col>
@@ -99,12 +101,8 @@ export default function SLAPage() {
               <Button type="primary" onClick={() => router.push('/sla-dashboard')}>
                 SLA仪表盘
               </Button>
-              <Button onClick={() => router.push('/sla-monitor')}>
-                SLA监控
-              </Button>
-              <Button onClick={() => router.push('/sla/definitions')}>
-                SLA定义
-              </Button>
+              <Button onClick={() => router.push('/sla-monitor')}>SLA监控</Button>
+              <Button onClick={() => router.push('/sla/definitions')}>SLA定义</Button>
             </Space>
           </Card>
         </div>

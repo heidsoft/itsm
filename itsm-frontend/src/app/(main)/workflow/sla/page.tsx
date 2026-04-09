@@ -17,13 +17,7 @@ import {
   Alert,
 } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
-import {
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  RefreshCw,
-  BarChart3,
-} from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, RefreshCw, BarChart3 } from 'lucide-react';
 
 import BPMNDashboardApi, { SLAViolation, ProcessMetrics } from '@/lib/api/bpmn-dashboard-api';
 import { useI18n } from '@/lib/i18n';
@@ -38,10 +32,7 @@ export default function SLAMonitoringPage() {
   const [selectedProcess, setSelectedProcess] = useState<string>('');
   const [processes, setProcesses] = useState<{ key: string; name: string }[]>([]);
   const [processMetrics, setProcessMetrics] = useState<ProcessMetrics | null>(null);
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
-    dayjs().subtract(7, 'day'),
-    dayjs(),
-  ]);
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([dayjs().subtract(7, 'day'), dayjs()]);
 
   const tenantId = 1;
 
@@ -49,14 +40,16 @@ export default function SLAMonitoringPage() {
     try {
       // 获取BPMN流程定义列表
       const response = await fetch('/api/v1/bpmn/process-definitions?page=1&page_size=100', {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
       const data = await response.json();
       if (data.code === 0 && data.data?.list) {
-        setProcesses(data.data.list.map((p: any) => ({
-          key: p.key,
-          name: p.name || p.key,
-        })));
+        setProcesses(
+          data.data.list.map((p: any) => ({
+            key: p.key,
+            name: p.name || p.key,
+          }))
+        );
       }
     } catch (error) {
       console.error('Failed to fetch processes:', error);
@@ -136,9 +129,7 @@ export default function SLAMonitoringPage() {
       dataIndex: 'resource_type',
       key: 'resource_type',
       width: 120,
-      render: (val: string) => (
-        <Tag>{val}</Tag>
-      ),
+      render: (val: string) => <Tag>{val}</Tag>,
     },
     {
       title: t('bpmn.sla.resource_key') || '资源Key',
@@ -175,11 +166,7 @@ export default function SLAMonitoringPage() {
       dataIndex: 'elapsed_minutes',
       key: 'elapsed_minutes',
       width: 120,
-      render: (val: number) => (
-        <span className={val > 480 ? 'text-red-500' : ''}>
-          {val}
-        </span>
-      ),
+      render: (val: number) => <span className={val > 480 ? 'text-red-500' : ''}>{val}</span>,
     },
   ];
 
@@ -187,10 +174,14 @@ export default function SLAMonitoringPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">
-          {t('bpmn.sla.title') || 'BPMN SLA监控'}
-        </h1>
-        <Button icon={<RefreshCw size={16} />} onClick={() => { fetchViolations(); fetchProcessMetrics(); }}>
+        <h1 className="text-2xl font-bold">{t('bpmn.sla.title') || 'BPMN SLA监控'}</h1>
+        <Button
+          icon={<RefreshCw size={16} />}
+          onClick={() => {
+            fetchViolations();
+            fetchProcessMetrics();
+          }}
+        >
           {t('common.refresh') || '刷新'}
         </Button>
       </div>
@@ -208,7 +199,7 @@ export default function SLAMonitoringPage() {
           />
           <RangePicker
             value={[dateRange[0], dateRange[1]]}
-            onChange={(dates) => {
+            onChange={dates => {
               if (dates && dates[0] && dates[1]) {
                 setDateRange([dates[0], dates[1]]);
               }
@@ -228,14 +219,14 @@ export default function SLAMonitoringPage() {
               <Statistic
                 title={t('bpmn.sla.running_instances') || '进行中'}
                 value={processMetrics.running_instances}
-                valueStyle={{ color: '#1890ff' }}
+                styles={{ content: { color: '#1890ff' } }}
               />
             </Col>
             <Col xs={12} sm={8}>
               <Statistic
                 title={t('bpmn.sla.completed_instances') || '已完成'}
                 value={processMetrics.completed_instances}
-                valueStyle={{ color: '#52c41a' }}
+                styles={{ content: { color: '#52c41a' } }}
               />
             </Col>
             <Col xs={12} sm={8}>
@@ -250,9 +241,15 @@ export default function SLAMonitoringPage() {
                 title={t('bpmn.sla.sla_compliance_rate') || 'SLA合规率'}
                 value={processMetrics.sla_compliance_rate}
                 suffix="%"
-                valueStyle={{
-                  color: processMetrics.sla_compliance_rate >= 90 ? '#52c41a' :
-                         processMetrics.sla_compliance_rate >= 70 ? '#faad14' : '#ff4d4f'
+                styles={{
+                  content: {
+                    color:
+                      processMetrics.sla_compliance_rate >= 90
+                        ? '#52c41a'
+                        : processMetrics.sla_compliance_rate >= 70
+                          ? '#faad14'
+                          : '#ff4d4f',
+                  },
                 }}
               />
             </Col>
@@ -277,16 +274,12 @@ export default function SLAMonitoringPage() {
         }
       >
         {violations.length === 0 ? (
-          <Alert
-            message={t('bpmn.sla.no_violations') || '暂无SLA违规'}
-            type="success"
-            showIcon
-          />
+          <Alert message={t('bpmn.sla.no_violations') || '暂无SLA违规'} type="success" showIcon />
         ) : (
           <Table
             dataSource={violations}
             columns={violationColumns}
-            rowKey={(record) => `${record.resource_type}-${record.resource_id}`}
+            rowKey={record => `${record.resource_type}-${record.resource_id}`}
             loading={loading}
             pagination={false}
             size="small"
@@ -302,7 +295,7 @@ export default function SLAMonitoringPage() {
               title={t('bpmn.sla.breached') || '已逾期'}
               value={violations.filter(v => v.sla_status === 'breached').length}
               prefix={<AlertTriangle size={20} />}
-              valueStyle={{ color: '#ff4d4f' }}
+              styles={{ content: { color: '#ff4d4f' } }}
             />
           </Card>
         </Col>
@@ -312,7 +305,7 @@ export default function SLAMonitoringPage() {
               title={t('bpmn.sla.warning') || '预警中'}
               value={violations.filter(v => v.sla_status === 'warning').length}
               prefix={<Clock size={20} />}
-              valueStyle={{ color: '#faad14' }}
+              styles={{ content: { color: '#faad14' } }}
             />
           </Card>
         </Col>
@@ -322,7 +315,7 @@ export default function SLAMonitoringPage() {
               title={t('bpmn.sla.ok') || '正常'}
               value={violations.filter(v => v.sla_status === 'ok').length}
               prefix={<CheckCircle size={20} />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>

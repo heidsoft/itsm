@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     description: '专业的IT服务管理平台，提供工单管理、事件管理、问题管理、变更管理等核心功能',
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon-32x32.png',
     shortcut: '/favicon-16x16.png',
     apple: '/apple-touch-icon.png',
   },

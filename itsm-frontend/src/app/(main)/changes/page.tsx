@@ -70,7 +70,7 @@ export default function ChangesPage() {
               title="总变更数"
               value={stats.total}
               prefix={<GitPullRequest className="text-blue-500 mr-2" />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -80,7 +80,7 @@ export default function ChangesPage() {
               title="待审批"
               value={stats.pending}
               prefix={<Clock className="text-orange-500 mr-2" />}
-              valueStyle={{ color: '#fa8c16' }}
+              styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
         </Col>
@@ -90,7 +90,7 @@ export default function ChangesPage() {
               title="进行中"
               value={stats.inProgress}
               prefix={<GitPullRequest className="text-blue-500 mr-2" />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -100,7 +100,7 @@ export default function ChangesPage() {
               title="已完成"
               value={stats.completed}
               prefix={<CheckCircle className="text-green-500 mr-2" />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>

@@ -25,6 +25,7 @@ import (
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 )
@@ -216,10 +217,43 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	}
 
 	// WebSocket 路由（需要JWT认证）
+	// 注意: WebSocket无法使用标准Authorization header，需要从query参数获取token
+	// 放在 auth group 之外，避免 AuthMiddleware 拦截
 	if config.WebSocketService != nil {
-		auth.GET("/ws/notifications", func(c *gin.Context) {
-			userID := c.GetInt("user_id")
-			tenantID := c.GetInt("tenant_id")
+		wsGroup := r.Group("/api/v1")
+		wsGroup.GET("/ws/notifications", func(c *gin.Context) {
+			// 从query参数获取token (前端使用 ?token=xxx&user_id=1)
+			tokenStr := c.Query("token")
+			if tokenStr == "" {
+				common.Fail(c, common.AuthFailedCode, "缺少认证token")
+				c.Abort()
+				return
+			}
+
+			// 解析JWT获取用户信息
+			token, err := jwt.ParseWithClaims(tokenStr, &middleware.Claims{}, func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, jwt.ErrSignatureInvalid
+				}
+				return []byte(config.JWTSecret), nil
+			})
+
+			if err != nil || !token.Valid {
+				zap.S().Warnw("WebSocket auth: token parse failed", "error", err, "token_length", len(tokenStr))
+				common.Fail(c, common.AuthFailedCode, "token无效")
+				c.Abort()
+				return
+			}
+
+			claims, ok := token.Claims.(*middleware.Claims)
+			if !ok {
+				common.Fail(c, common.AuthFailedCode, "token解析失败")
+				c.Abort()
+				return
+			}
+
+			userID := claims.UserID
+			tenantID := claims.TenantID
 			config.WebSocketService.HandleWebSocket(c.Writer, c.Request, userID, tenantID)
 		})
 	}

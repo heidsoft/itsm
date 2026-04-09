@@ -1,0 +1,27 @@
+{
+  "name": "itsm-cli",
+  "version": "1.0.0",
+  "description": "ITSM Command-Line Interface built with Ink (React for CLI)",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "itsm": "./bin/itsm.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc && node bin/itsm.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "ink": "^6.2.0",
+    "meow": "^14.0.0",
+    "got": "^14.0.0",
+    "ora": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.3.0"
+  }
+}
