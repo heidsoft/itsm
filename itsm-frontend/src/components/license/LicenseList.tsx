@@ -255,7 +255,11 @@ const LicenseList: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="有效" value={stats.active || 0} valueStyle={{ color: '#52c41a' }} />
+            <Statistic
+              title="有效"
+              value={stats.active || 0}
+              styles={{ content: { color: '#52c41a' } }}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -263,7 +267,7 @@ const LicenseList: React.FC = () => {
             <Statistic
               title="即将过期"
               value={stats.expiring_soon || 0}
-              valueStyle={{ color: '#faad14' }}
+              styles={{ content: { color: '#faad14' } }}
             />
           </Card>
         </Col>
@@ -272,7 +276,7 @@ const LicenseList: React.FC = () => {
             <Statistic
               title="已过期"
               value={stats.expired || 0}
-              valueStyle={{ color: '#ff4d4f' }}
+              styles={{ content: { color: '#ff4d4f' } }}
             />
           </Card>
         </Col>
@@ -282,7 +286,9 @@ const LicenseList: React.FC = () => {
               title="合规率"
               value={stats.compliance_rate || 0}
               suffix="%"
-              valueStyle={{ color: (stats.compliance_rate || 0) >= 80 ? '#52c41a' : '#ff4d4f' }}
+              styles={{
+                content: { color: (stats.compliance_rate || 0) >= 80 ? '#52c41a' : '#ff4d4f' },
+              }}
             />
           </Card>
         </Col>

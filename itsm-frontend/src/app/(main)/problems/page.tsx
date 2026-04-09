@@ -70,7 +70,7 @@ export default function ProblemListPage() {
               title="总问题数"
               value={stats.total}
               prefix={<Bug className="text-blue-500 mr-2" />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -80,7 +80,7 @@ export default function ProblemListPage() {
               title="待处理"
               value={stats.open}
               prefix={<AlertTriangle className="text-red-500 mr-2" />}
-              valueStyle={{ color: '#ff4d4f' }}
+              styles={{ content: { color: '#ff4d4f' } }}
             />
           </Card>
         </Col>
@@ -90,7 +90,7 @@ export default function ProblemListPage() {
               title="调查中"
               value={stats.inProgress}
               prefix={<Clock className="text-orange-500 mr-2" />}
-              valueStyle={{ color: '#fa8c16' }}
+              styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
         </Col>
@@ -100,7 +100,7 @@ export default function ProblemListPage() {
               title="已解决"
               value={stats.resolved}
               prefix={<CheckCircle className="text-green-500 mr-2" />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>

@@ -27,7 +27,12 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-import BPMNDashboardApi, { DashboardMetrics, ProcessStat, TaskStat, TrendPoint } from '@/lib/api/bpmn-dashboard-api';
+import BPMNDashboardApi, {
+  DashboardMetrics,
+  ProcessStat,
+  TaskStat,
+  TrendPoint,
+} from '@/lib/api/bpmn-dashboard-api';
 import { useI18n } from '@/lib/i18n';
 
 const { RangePicker } = DatePicker;
@@ -36,10 +41,7 @@ export default function BPMNDashboardPage() {
   const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
-    dayjs().subtract(7, 'day'),
-    dayjs(),
-  ]);
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([dayjs().subtract(7, 'day'), dayjs()]);
 
   // 默认租户ID
   const tenantId = 1;
@@ -47,7 +49,11 @@ export default function BPMNDashboardPage() {
   const fetchMetrics = async () => {
     setLoading(true);
     try {
-      const data = await BPMNDashboardApi.getDashboardMetrics(tenantId, dateRange[0].format('YYYY-MM-DD'), dateRange[1].format('YYYY-MM-DD'));
+      const data = await BPMNDashboardApi.getDashboardMetrics(
+        tenantId,
+        dateRange[0].format('YYYY-MM-DD'),
+        dateRange[1].format('YYYY-MM-DD')
+      );
       setMetrics(data);
     } catch (error) {
       console.error('Failed to fetch dashboard metrics:', error);
@@ -68,12 +74,18 @@ export default function BPMNDashboardPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'running': return 'blue';
-      case 'completed': return 'green';
-      case 'assigned': return 'cyan';
-      case 'created': return 'default';
-      case 'cancelled': return 'red';
-      default: return 'default';
+      case 'running':
+        return 'blue';
+      case 'completed':
+        return 'green';
+      case 'assigned':
+        return 'cyan';
+      case 'created':
+        return 'default';
+      case 'cancelled':
+        return 'red';
+      default:
+        return 'default';
     }
   };
 
@@ -111,9 +123,7 @@ export default function BPMNDashboardPage() {
       title: t('workflow.status') || '状态',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{status}</Tag>
-      ),
+      render: (status: string) => <Tag color={getStatusColor(status)}>{status}</Tag>,
     },
     {
       title: t('workflow.count') || '数量',
@@ -140,9 +150,7 @@ export default function BPMNDashboardPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">
-          {t('bpmn.dashboard.title') || 'BPMN流程监控仪表盘'}
-        </h1>
+        <h1 className="text-2xl font-bold">{t('bpmn.dashboard.title') || 'BPMN流程监控仪表盘'}</h1>
         <Space>
           <RangePicker
             onChange={(dates, dateStrings) => {
@@ -175,7 +183,7 @@ export default function BPMNDashboardPage() {
               title={t('bpmn.dashboard.active_instances') || '运行实例'}
               value={metrics?.active_instances || 0}
               prefix={<Activity size={20} />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -185,7 +193,7 @@ export default function BPMNDashboardPage() {
               title={t('bpmn.dashboard.completed_today') || '今日完成'}
               value={metrics?.completed_today || 0}
               prefix={<CheckCircle size={20} />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -195,7 +203,7 @@ export default function BPMNDashboardPage() {
               title={t('bpmn.dashboard.open_tasks') || '待处理任务'}
               value={metrics?.open_tasks || 0}
               prefix={<Clock size={20} />}
-              valueStyle={{ color: '#faad14' }}
+              styles={{ content: { color: '#faad14' } }}
             />
           </Card>
         </Col>
@@ -204,16 +212,14 @@ export default function BPMNDashboardPage() {
       {/* Health & SLA */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card
-            title={t('bpmn.dashboard.process_health') || '流程健康度'}
-          >
+          <Card title={t('bpmn.dashboard.process_health') || '流程健康度'}>
             <Row gutter={16}>
               <Col span={8}>
                 <Statistic
                   title={t('bpmn.dashboard.healthy') || '健康'}
                   value={metrics?.process_health?.healthy || 0}
                   prefix={<CheckCircle size={16} />}
-                  valueStyle={{ color: '#52c41a' }}
+                  styles={{ content: { color: '#52c41a' } }}
                 />
               </Col>
               <Col span={8}>
@@ -221,7 +227,7 @@ export default function BPMNDashboardPage() {
                   title={t('bpmn.dashboard.warning') || '警告'}
                   value={metrics?.process_health?.warning || 0}
                   prefix={<AlertTriangle size={16} />}
-                  valueStyle={{ color: '#faad14' }}
+                  styles={{ content: { color: '#faad14' } }}
                 />
               </Col>
               <Col span={8}>
@@ -229,7 +235,7 @@ export default function BPMNDashboardPage() {
                   title={t('bpmn.dashboard.critical') || '严重'}
                   value={metrics?.process_health?.critical || 0}
                   prefix={<XCircle size={16} />}
-                  valueStyle={{ color: '#ff4d4f' }}
+                  styles={{ content: { color: '#ff4d4f' } }}
                 />
               </Col>
             </Row>
@@ -238,22 +244,29 @@ export default function BPMNDashboardPage() {
                 title={t('bpmn.dashboard.health_score') || '健康度评分'}
                 value={metrics?.process_health?.health_score || 0}
                 suffix="/100"
-                valueStyle={{ color: getHealthColor(metrics?.process_health?.health_score || 0) }}
+                styles={{
+                  content: { color: getHealthColor(metrics?.process_health?.health_score || 0) },
+                }}
               />
             </div>
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card
-            title={t('bpmn.dashboard.sla_compliance') || 'SLA合规率'}
-          >
+          <Card title={t('bpmn.dashboard.sla_compliance') || 'SLA合规率'}>
             <div className="text-center py-8">
               <Statistic
                 value={metrics?.sla_compliance_rate || 0}
                 suffix="%"
-                valueStyle={{
-                  fontSize: 48,
-                  color: (metrics?.sla_compliance_rate || 0) >= 90 ? '#52c41a' : (metrics?.sla_compliance_rate || 0) >= 70 ? '#faad14' : '#ff4d4f'
+                styles={{
+                  content: {
+                    fontSize: 48,
+                    color:
+                      (metrics?.sla_compliance_rate || 0) >= 90
+                        ? '#52c41a'
+                        : (metrics?.sla_compliance_rate || 0) >= 70
+                          ? '#faad14'
+                          : '#ff4d4f',
+                  },
                 }}
               />
               <p className="text-gray-500 mt-2">
@@ -267,9 +280,7 @@ export default function BPMNDashboardPage() {
       {/* Top Processes & Task Distribution */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card
-            title={t('bpmn.dashboard.top_processes') || '热门流程'}
-          >
+          <Card title={t('bpmn.dashboard.top_processes') || '热门流程'}>
             <Table
               dataSource={metrics?.top_processes || []}
               columns={topProcessColumns}
@@ -280,9 +291,7 @@ export default function BPMNDashboardPage() {
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card
-            title={t('bpmn.dashboard.task_distribution') || '任务分布'}
-          >
+          <Card title={t('bpmn.dashboard.task_distribution') || '任务分布'}>
             <Table
               dataSource={metrics?.task_distribution || []}
               columns={taskDistColumns}
@@ -295,9 +304,7 @@ export default function BPMNDashboardPage() {
       </Row>
 
       {/* Trend Chart Placeholder */}
-      <Card
-        title={t('bpmn.dashboard.trend') || '流程趋势'}
-      >
+      <Card title={t('bpmn.dashboard.trend') || '流程趋势'}>
         <div className="h-48 flex items-center justify-center text-gray-400">
           <Space>
             <TrendingUp size={24} />

@@ -266,13 +266,13 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
             <Statistic
               title="可用"
               value={stats.available || 0}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="使用中" value={stats.in_use || 0} valueStyle={{ color: '#1890ff' }} />
+            <Statistic title="使用中" value={stats.in_use || 0} styles={{ content: { color: '#1890ff' } }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -280,7 +280,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
             <Statistic
               title="维护中"
               value={stats.maintenance || 0}
-              valueStyle={{ color: '#faad14' }}
+              styles={{ content: { color: '#faad14' } }}
             />
           </Card>
         </Col>

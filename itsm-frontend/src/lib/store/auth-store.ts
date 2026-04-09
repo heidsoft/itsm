@@ -58,7 +58,8 @@ export const useAuthStore = create<AuthState>()(
       // 注意：token 存储在 localStorage 中，前端需要使用
       login: (user: User, _token: string, tenant?: Tenant) => {
         // 从 localStorage 获取实际 token，因为后端返回的 token 存在 localStorage 中
-        const storedToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : _token;
+        const storedToken =
+          typeof window !== 'undefined' ? localStorage.getItem('access_token') : _token;
         set({
           user,
           token: storedToken,
@@ -302,8 +303,13 @@ import { useEffect } from 'react';
 
 export const useAuthStoreHydration = () => {
   useEffect(() => {
-    // 触发 persist hydration
-    useAuthStore.persist.rehydrate();
+    // 触发 persist hydration - rehydrate may return void or Promise
+    const result = useAuthStore.persist.rehydrate();
+    if (result instanceof Promise) {
+      result.catch((err: unknown) => {
+        console.error('Auth store hydration failed:', err);
+      });
+    }
   }, []);
 };
 

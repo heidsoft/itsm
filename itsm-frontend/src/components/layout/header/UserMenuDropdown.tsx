@@ -82,7 +82,9 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
     {
       key: 'logout',
       label: (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: DESIGN.colors.danger }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 12, color: DESIGN.colors.danger }}
+        >
           <LogOut size={16} />
           <span>退出登录</span>
         </div>
@@ -98,7 +100,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
       trigger={['click']}
       open={open}
       onOpenChange={onOpenChange}
-      overlayStyle={{ padding: 0 }}
+      styles={{ root: { padding: 0 } }}
     >
       <div
         style={{

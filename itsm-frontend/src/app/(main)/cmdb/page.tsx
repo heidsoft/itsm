@@ -1,8 +1,37 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Tabs, Table, Tag, Button, Progress, Space, Input, Select, App, Spin, message } from 'antd';
-import { Database, Server, Cloud, Shield, Plus, AlertTriangle, CheckCircle, Search, Filter, RefreshCw, Sparkles } from 'lucide-react';
+import {
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Typography,
+  Tabs,
+  Table,
+  Tag,
+  Button,
+  Progress,
+  Space,
+  Input,
+  Select,
+  App,
+  Spin,
+  message,
+} from 'antd';
+import {
+  Database,
+  Server,
+  Cloud,
+  Shield,
+  Plus,
+  AlertTriangle,
+  CheckCircle,
+  Search,
+  Filter,
+  RefreshCw,
+  Sparkles,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import CIList from '@/components/cmdb/CIList';
 import { CMDBApi } from '@/lib/api/cmdb-api';
@@ -11,23 +40,23 @@ import { httpClient } from '@/lib/api/http-client';
 const { Title, Text } = Typography;
 
 const providerColors: Record<string, string> = {
-  '阿里云': 'blue',
-  '腾讯云': 'red',
-  '华为云': 'orange',
-  'AWS': 'yellow',
+  阿里云: 'blue',
+  腾讯云: 'red',
+  华为云: 'orange',
+  AWS: 'yellow',
 };
 
 const resourceStatusColors: Record<string, string> = {
-  'running': 'green',
-  'stopped': 'red',
-  'maintenance': 'orange',
+  running: 'green',
+  stopped: 'red',
+  maintenance: 'orange',
 };
 
 const reconciliationStatusColors: Record<string, string> = {
-  'matched': 'green',
-  'mismatch': 'red',
-  'missing': 'orange',
-  'extra': 'blue',
+  matched: 'green',
+  mismatch: 'red',
+  missing: 'orange',
+  extra: 'blue',
 };
 
 export default function CMDBPage() {
@@ -158,7 +187,17 @@ export default function CMDBPage() {
       dataIndex: 'type',
       key: 'type',
       render: (type: string, record: any) => (
-        <Tag icon={record.type === '服务器' ? <Server /> : record.type === '云资源' ? <Cloud /> : <Database />}>
+        <Tag
+          icon={
+            record.type === '服务器' ? (
+              <Server />
+            ) : record.type === '云资源' ? (
+              <Cloud />
+            ) : (
+              <Database />
+            )
+          }
+        >
           {type}
         </Tag>
       ),
@@ -183,7 +222,9 @@ export default function CMDBPage() {
       title: '操作',
       key: 'action',
       render: () => (
-        <Button size="small" type="link">查看</Button>
+        <Button size="small" type="link">
+          查看
+        </Button>
       ),
     },
   ];
@@ -230,7 +271,8 @@ export default function CMDBPage() {
       title: 'IP地址',
       dataIndex: 'ip',
       key: 'ip',
-      render: (ip: string) => ip === '-' ? <span className="text-gray-400">-</span> : <code>{ip}</code>,
+      render: (ip: string) =>
+        ip === '-' ? <span className="text-gray-400">-</span> : <code>{ip}</code>,
     },
     {
       title: '创建时间',
@@ -242,8 +284,16 @@ export default function CMDBPage() {
       key: 'action',
       render: (_: any, record: any) => (
         <Space>
-          <Button size="small" type="link" onClick={() => router.push(`/cmdb/cis/${record.id}`)}>详情</Button>
-          <Button size="small" type="link" onClick={() => message.info(`同步资源 ${record.resource_id}`)}>同步</Button>
+          <Button size="small" type="link" onClick={() => router.push(`/cmdb/cis/${record.id}`)}>
+            详情
+          </Button>
+          <Button
+            size="small"
+            type="link"
+            onClick={() => message.info(`同步资源 ${record.resource_id}`)}
+          >
+            同步
+          </Button>
         </Space>
       ),
     },
@@ -288,7 +338,13 @@ export default function CMDBPage() {
       key: 'status',
       render: (status: string) => (
         <Tag color={reconciliationStatusColors[status]}>
-          {status === 'matched' ? '匹配' : status === 'mismatch' ? '不匹配' : status === 'missing' ? '缺失' : '多余'}
+          {status === 'matched'
+            ? '匹配'
+            : status === 'mismatch'
+              ? '不匹配'
+              : status === 'missing'
+                ? '缺失'
+                : '多余'}
         </Tag>
       ),
     },
@@ -302,8 +358,20 @@ export default function CMDBPage() {
       key: 'action',
       render: (_: any, record: any) => (
         <Space>
-          <Button size="small" type="link" onClick={() => message.info(`同步配置项 ${record.ci_name}`)}>同步</Button>
-          <Button size="small" type="link" onClick={() => message.info(`忽略配置项 ${record.ci_name}`)}>忽略</Button>
+          <Button
+            size="small"
+            type="link"
+            onClick={() => message.info(`同步配置项 ${record.ci_name}`)}
+          >
+            同步
+          </Button>
+          <Button
+            size="small"
+            type="link"
+            onClick={() => message.info(`忽略配置项 ${record.ci_name}`)}
+          >
+            忽略
+          </Button>
         </Space>
       ),
     },
@@ -326,9 +394,7 @@ export default function CMDBPage() {
           <Title level={2} style={{ marginBottom: 4 }}>
             配置管理数据库 (CMDB)
           </Title>
-          <Text type="secondary">
-            管理IT基础设施的配置项和关系
-          </Text>
+          <Text type="secondary">管理IT基础设施的配置项和关系</Text>
         </div>
         <Space>
           <Button
@@ -367,7 +433,7 @@ export default function CMDBPage() {
               title="配置项总数"
               value={stats.totalCIs}
               prefix={<Database className="text-blue-500 mr-2" />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -377,7 +443,7 @@ export default function CMDBPage() {
               title="在线"
               value={stats.online}
               prefix={<CheckCircle className="text-green-500 mr-2" />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -387,7 +453,7 @@ export default function CMDBPage() {
               title="离线"
               value={stats.offline}
               prefix={<AlertTriangle className="text-red-500 mr-2" />}
-              valueStyle={{ color: '#ff4d4f' }}
+              styles={{ content: { color: '#ff4d4f' } }}
             />
           </Card>
         </Col>
@@ -397,29 +463,33 @@ export default function CMDBPage() {
               title="维护中"
               value={stats.maintenance}
               prefix={<Server className="text-orange-500 mr-2" />}
-              valueStyle={{ color: '#fa8c16' }}
+              styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
         </Col>
       </Row>
 
       {/* 云资源同步状态卡片 */}
-      <Card className="mb-6" title={
-        <span className="flex items-center gap-2">
-          <Cloud className="w-4 h-4" />
-          云资源同步状态
-        </span>
-      } extra={
-        <Button
-          type="primary"
-          icon={<Sparkles className="w-4 h-4" />}
-          onClick={triggerCloudDiscovery}
-          loading={syncLoading}
-          size="small"
-        >
-          立即同步
-        </Button>
-      }>
+      <Card
+        className="mb-6"
+        title={
+          <span className="flex items-center gap-2">
+            <Cloud className="w-4 h-4" />
+            云资源同步状态
+          </span>
+        }
+        extra={
+          <Button
+            type="primary"
+            icon={<Sparkles className="w-4 h-4" />}
+            onClick={triggerCloudDiscovery}
+            loading={syncLoading}
+            size="small"
+          >
+            立即同步
+          </Button>
+        }
+      >
         <Spin spinning={syncLoading}>
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={8}>
@@ -434,7 +504,7 @@ export default function CMDBPage() {
                 title="活跃账号"
                 value={cloudSyncStatus?.active_accounts ?? 0}
                 prefix={<CheckCircle className="text-green-500" />}
-                valueStyle={{ color: '#52c41a' }}
+                styles={{ content: { color: '#52c41a' } }}
               />
             </Col>
             <Col xs={24} sm={8}>
@@ -442,7 +512,7 @@ export default function CMDBPage() {
                 title="已发现资源"
                 value={cloudSyncStatus?.discovered_count ?? 0}
                 prefix={<Server />}
-                valueStyle={{ color: '#1890ff' }}
+                styles={{ content: { color: '#1890ff' } }}
               />
             </Col>
           </Row>
@@ -501,39 +571,69 @@ export default function CMDBPage() {
                   <Row gutter={16} className="mb-4">
                     <Col span={6}>
                       <Card size="small">
-                        <Statistic title="ECS" value={cloudResources.filter(r => r.resource_type === 'ECS').length} prefix={<Server />} />
+                        <Statistic
+                          title="ECS"
+                          value={cloudResources.filter(r => r.resource_type === 'ECS').length}
+                          prefix={<Server />}
+                        />
                       </Card>
                     </Col>
                     <Col span={6}>
                       <Card size="small">
-                        <Statistic title="RDS" value={cloudResources.filter(r => r.resource_type === 'RDS').length} prefix={<Database />} />
+                        <Statistic
+                          title="RDS"
+                          value={cloudResources.filter(r => r.resource_type === 'RDS').length}
+                          prefix={<Database />}
+                        />
                       </Card>
                     </Col>
                     <Col span={6}>
                       <Card size="small">
-                        <Statistic title="OSS" value={cloudResources.filter(r => r.resource_type === 'OSS').length} prefix={<Cloud />} />
+                        <Statistic
+                          title="OSS"
+                          value={cloudResources.filter(r => r.resource_type === 'OSS').length}
+                          prefix={<Cloud />}
+                        />
                       </Card>
                     </Col>
                     <Col span={6}>
                       <Card size="small">
-                        <Statistic title="SLB" value={cloudResources.filter(r => r.resource_type === 'SLB').length} prefix={<Shield />} />
+                        <Statistic
+                          title="SLB"
+                          value={cloudResources.filter(r => r.resource_type === 'SLB').length}
+                          prefix={<Shield />}
+                        />
                       </Card>
                     </Col>
                   </Row>
 
                   {/* 筛选栏 */}
                   <div className="mb-4 flex gap-2">
-                    <Input placeholder="搜索资源名称" prefix={<Search className="w-4 h-4" />} style={{ width: 200 }} />
-                    <Select placeholder="资源类型" style={{ width: 120 }} allowClear options={[
-                      { value: 'ECS', label: 'ECS' },
-                      { value: 'RDS', label: 'RDS' },
-                      { value: 'OSS', label: 'OSS' },
-                      { value: 'SLB', label: 'SLB' },
-                    ]} />
-                    <Select placeholder="状态" style={{ width: 100 }} allowClear options={[
-                      { value: 'running', label: '运行中' },
-                      { value: 'stopped', label: '已停止' },
-                    ]} />
+                    <Input
+                      placeholder="搜索资源名称"
+                      prefix={<Search className="w-4 h-4" />}
+                      style={{ width: 200 }}
+                    />
+                    <Select
+                      placeholder="资源类型"
+                      style={{ width: 120 }}
+                      allowClear
+                      options={[
+                        { value: 'ECS', label: 'ECS' },
+                        { value: 'RDS', label: 'RDS' },
+                        { value: 'OSS', label: 'OSS' },
+                        { value: 'SLB', label: 'SLB' },
+                      ]}
+                    />
+                    <Select
+                      placeholder="状态"
+                      style={{ width: 100 }}
+                      allowClear
+                      options={[
+                        { value: 'running', label: '运行中' },
+                        { value: 'stopped', label: '已停止' },
+                      ]}
+                    />
                     <Button icon={<Filter className="w-4 h-4" />}>筛选</Button>
                   </div>
 
@@ -564,7 +664,7 @@ export default function CMDBPage() {
                           title="匹配"
                           value={reconciliationSummary.matched}
                           prefix={<CheckCircle className="text-green-500" />}
-                          valueStyle={{ color: '#52c41a' }}
+                          styles={{ content: { color: '#52c41a' } }}
                         />
                       </Card>
                     </Col>
@@ -574,7 +674,7 @@ export default function CMDBPage() {
                           title="不匹配"
                           value={reconciliationSummary.mismatch}
                           prefix={<AlertTriangle className="text-red-500" />}
-                          valueStyle={{ color: '#ff4d4f' }}
+                          styles={{ content: { color: '#ff4d4f' } }}
                         />
                       </Card>
                     </Col>
@@ -584,7 +684,7 @@ export default function CMDBPage() {
                           title="缺失"
                           value={reconciliationSummary.missing}
                           prefix={<AlertTriangle className="text-orange-500" />}
-                          valueStyle={{ color: '#fa8c16' }}
+                          styles={{ content: { color: '#fa8c16' } }}
                         />
                       </Card>
                     </Col>
@@ -592,7 +692,10 @@ export default function CMDBPage() {
                       <Card size="small">
                         <Statistic
                           title="匹配率"
-                          value={(reconciliationSummary.matched / reconciliationSummary.total * 100).toFixed(1)}
+                          value={(
+                            (reconciliationSummary.matched / reconciliationSummary.total) *
+                            100
+                          ).toFixed(1)}
                           suffix="%"
                           prefix={<CheckCircle />}
                         />
@@ -603,16 +706,22 @@ export default function CMDBPage() {
                   {/* 核对操作栏 */}
                   <div className="mb-4 flex justify-between">
                     <Space>
-                      <Button type="primary" icon={<RefreshCw className="w-4 h-4" />} onClick={async () => {
-                        message.loading({ content: '正在执行全量核对...', key: 'reconcile' });
-                        try {
-                          await CMDBApi.runReconciliation();
-                          await fetchReconciliationData();
-                          message.success({ content: '核对完成', key: 'reconcile' });
-                        } catch (error) {
-                          message.error({ content: '核对失败', key: 'reconcile' });
-                        }
-                      }}>执行全量核对</Button>
+                      <Button
+                        type="primary"
+                        icon={<RefreshCw className="w-4 h-4" />}
+                        onClick={async () => {
+                          message.loading({ content: '正在执行全量核对...', key: 'reconcile' });
+                          try {
+                            await CMDBApi.runReconciliation();
+                            await fetchReconciliationData();
+                            message.success({ content: '核对完成', key: 'reconcile' });
+                          } catch (error) {
+                            message.error({ content: '核对失败', key: 'reconcile' });
+                          }
+                        }}
+                      >
+                        执行全量核对
+                      </Button>
                       <Button icon={<RefreshCw className="w-4 h-4" />}>增量同步</Button>
                     </Space>
                     <Text type="secondary">最后同步: {new Date().toLocaleString('zh-CN')}</Text>

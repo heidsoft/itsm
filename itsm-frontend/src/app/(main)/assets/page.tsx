@@ -68,7 +68,7 @@ export default function AssetsPage() {
               title="资产总数"
               value={stats.totalAssets}
               prefix={<Package className="text-blue-500 mr-2" />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -78,7 +78,7 @@ export default function AssetsPage() {
               title="使用中"
               value={stats.inUse}
               prefix={<CheckCircle className="text-green-500 mr-2" />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -88,7 +88,7 @@ export default function AssetsPage() {
               title="可用"
               value={stats.available}
               prefix={<Package className="text-blue-500 mr-2" />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -98,7 +98,7 @@ export default function AssetsPage() {
               title="维护中"
               value={stats.maintenance}
               prefix={<Clock className="text-orange-500 mr-2" />}
-              valueStyle={{ color: '#fa8c16' }}
+              styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
         </Col>

@@ -14,7 +14,11 @@ import styles from './Sidebar.module.css';
 import { getMenuConfig, type MenuItem } from './menu-config';
 import { getIconByName } from './icons';
 import { MenuItems, renderMenuItems } from './MenuItems';
-import { getUserMenus, type MenuItem as MenuItemType, type MenuTreeResponse } from '@/lib/api/menu-api';
+import {
+  getUserMenus,
+  type MenuItem as MenuItemType,
+  type MenuTreeResponse,
+} from '@/lib/api/menu-api';
 
 const { Sider } = Layout;
 
@@ -97,12 +101,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   };
 
   // 转换动态菜单（当 API 返回空时使用静态配置作为 fallback）
-  const mainMenus = dynamicMenus
-    ? convertApiMenuToSidebar(dynamicMenus.main)
-    : getMenuConfig().main;
-  const adminMenus = dynamicMenus
-    ? convertApiMenuToSidebar(dynamicMenus.admin)
-    : getMenuConfig().admin;
+  // TODO: 后端修复菜单数据后，移除 FORCE_STATIC_MENU 标志
+  const FORCE_STATIC_MENU = true; // 临时强制使用静态菜单，避免后端数据重复key问题
+  const mainMenus =
+    dynamicMenus && !FORCE_STATIC_MENU
+      ? convertApiMenuToSidebar(dynamicMenus.main)
+      : getMenuConfig().main;
+  const adminMenus =
+    dynamicMenus && !FORCE_STATIC_MENU
+      ? convertApiMenuToSidebar(dynamicMenus.admin)
+      : getMenuConfig().admin;
 
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 

@@ -252,7 +252,7 @@ const SLAMonitorPage = () => {
               title="SLA总数"
               value={stats.totalDefinitions}
               prefix={<Clock className="text-blue-500 mr-2" />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -262,7 +262,7 @@ const SLAMonitorPage = () => {
               title="合规"
               value={stats.activeDefinitions}
               prefix={<CheckCircle className="text-green-500 mr-2" />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
               suffix={`/ ${stats.totalDefinitions}`}
             />
           </Card>
@@ -273,7 +273,7 @@ const SLAMonitorPage = () => {
               title="风险中"
               value={stats.atRiskTickets}
               prefix={<WarningOutlined className="text-orange-500 mr-2" />}
-              valueStyle={{ color: '#fa8c16' }}
+              styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
         </Col>
@@ -283,7 +283,7 @@ const SLAMonitorPage = () => {
               title="已超时"
               value={stats.openViolations}
               prefix={<AlertTriangle className="text-red-500 mr-2" />}
-              valueStyle={{ color: '#ff4d4f' }}
+              styles={{ content: { color: '#ff4d4f' } }}
             />
           </Card>
         </Col>
@@ -367,7 +367,7 @@ const SLAMonitorPage = () => {
                           value={Number(serviceSummary.rate)}
                           suffix="%"
                           prefix={<CheckCircle className="text-purple-500" />}
-                          valueStyle={{ color: '#722ed1' }}
+                          styles={{ content: { color: '#722ed1' } }}
                         />
                       </Card>
                     </Col>

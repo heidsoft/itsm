@@ -1,11 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-  Drawer,
-  Typography,
-  Button,
-} from 'antd';
+import { Drawer, Typography, Button } from 'antd';
 import { Bell, CheckCheck, ArrowRight, Ticket, AlertTriangle, Zap } from 'lucide-react';
 import type { TicketNotification } from '@/lib/api/ticket-notification-api';
 import { DESIGN } from '@/design-system/tokens';
@@ -231,11 +227,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
           textAlign: 'center',
         }}
       >
-        <Button
-          type="link"
-          onClick={onViewAll}
-          style={{ color: DESIGN.colors.accent }}
-        >
+        <Button type="link" onClick={onViewAll} style={{ color: DESIGN.colors.accent }}>
           查看全部通知 <ArrowRight size={14} />
         </Button>
       </div>

@@ -239,7 +239,7 @@ const ReleaseList: React.FC = () => {
             <Statistic
               title="进行中"
               value={stats.in_progress || 0}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -248,7 +248,7 @@ const ReleaseList: React.FC = () => {
             <Statistic
               title="已完成"
               value={stats.completed || 0}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -259,7 +259,7 @@ const ReleaseList: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="失败" value={stats.failed || 0} valueStyle={{ color: '#ff4d4f' }} />
+            <Statistic title="失败" value={stats.failed || 0} styles={{ content: { color: '#ff4d4f' } }} />
           </Card>
         </Col>
       </Row>
