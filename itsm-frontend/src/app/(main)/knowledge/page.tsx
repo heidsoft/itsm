@@ -337,7 +337,7 @@ export default function KnowledgePage() {
               title="文章总数"
               value={stats.total}
               prefix={<BookOpen className="text-blue-500 mr-2" />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -347,7 +347,7 @@ export default function KnowledgePage() {
               title="已发布"
               value={stats.published}
               prefix={<CheckCircle className="text-green-500 mr-2" />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -357,7 +357,7 @@ export default function KnowledgePage() {
               title="草稿"
               value={stats.draft}
               prefix={<FileText className="text-orange-500 mr-2" />}
-              valueStyle={{ color: '#fa8c16' }}
+              styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
         </Col>
@@ -367,7 +367,7 @@ export default function KnowledgePage() {
               title="总浏览量"
               value={stats.views}
               prefix={<Eye className="text-purple-500 mr-2" />}
-              valueStyle={{ color: '#722ed1' }}
+              styles={{ content: { color: '#722ed1' } }}
             />
           </Card>
         </Col>

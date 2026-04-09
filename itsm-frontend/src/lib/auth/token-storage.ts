@@ -89,24 +89,40 @@ export function migrateLegacyAuthStorage(): void {
 
 /**
  * 检查用户是否已认证
- * 通过检查 httpOnly cookie 是否存在来判断
+ * 优先检查 localStorage（前端实际存储 token 的位置）
+ * 降级检查 httpOnly cookie（后端备用）
  */
 export function isAuthenticated(): boolean {
   migrateLegacyAuthStorage();
+  // 优先检查 localStorage - 这是 AuthService.login() 存储 token 的地方
+  const localToken = safeGet(STORAGE_KEYS.ACCESS_TOKEN);
+  if (localToken && localToken !== 'httpOnly') {
+    return true;
+  }
+  // 降级检查 cookie
   return hasTokenCookie();
 }
 
 /**
  * 获取 Access Token
- * 注意：由于 token 现在存储在 httpOnly cookie 中，无法从 JavaScript 直接读取
- * 此函数仅用于向后兼容，实际返回 null
- * @deprecated Use httpOnly cookies instead
+ * 注意：优先从 localStorage 获取实际token值，因为这是前端实际存储的位置
+ * httpOnly cookie 仅用于安全验证，不适合前端读取
+ * @deprecated Use httpOnly cookies for secure storage; this returns localStorage token
  */
 export function getAccessToken(): string | null {
   migrateLegacyAuthStorage();
-  // Token 在 httpOnly cookie 中，JavaScript 无法读取
-  // 但我们保留此函数以避免破坏依赖它的代码
-  return hasTokenCookie() ? 'httpOnly' : null;
+  // 优先从 localStorage 获取实际 token
+  const localToken = safeGet(STORAGE_KEYS.ACCESS_TOKEN);
+  if (localToken) {
+    return localToken;
+  }
+  // 如果 localStorage 没有，但 cookie 存在（表示后端已设置 httpOnly cookie）
+  // 返回一个标记值表示已认证，但不返回实际token（因为是httpOnly）
+  // 注意：这可能导致 isAuthenticated() 检查失败，因为不是有效 JWT
+  if (hasTokenCookie()) {
+    return 'httpOnly';
+  }
+  return null;
 }
 
 /**

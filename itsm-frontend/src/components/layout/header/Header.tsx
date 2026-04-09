@@ -27,10 +27,7 @@ interface HeaderProps {
   showBreadcrumb?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({
-  collapsed,
-  onCollapse,
-}) => {
+export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout, token } = useAuthStore();
@@ -264,10 +261,7 @@ export const Header: React.FC<HeaderProps> = ({
       />
 
       {/* 全局搜索 */}
-      <GlobalSearch
-        open={searchModalVisible}
-        onClose={() => setSearchModalVisible(false)}
-      />
+      <GlobalSearch open={searchModalVisible} onClose={() => setSearchModalVisible(false)} />
     </AntHeader>
   );
 };

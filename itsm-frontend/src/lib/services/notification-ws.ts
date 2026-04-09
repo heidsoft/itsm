@@ -69,7 +69,7 @@ class NotificationWSService {
       this.isManualDisconnect = false;
 
       // 获取 WebSocket URL
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080/ws/notifications';
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8090/api/v1/ws/notifications';
       const url = `${wsUrl}?user_id=${userId}&token=${token}`;
 
       // 清理旧连接

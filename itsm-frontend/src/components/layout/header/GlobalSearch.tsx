@@ -4,7 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { Input, Drawer, List, Typography } from 'antd';
 import { Search, Ticket } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { globalSearch, type GlobalSearchResponse, type SearchResult } from '@/lib/api/global-search-api';
+import {
+  globalSearch,
+  type GlobalSearchResponse,
+  type SearchResult,
+} from '@/lib/api/global-search-api';
 import { DESIGN } from '@/design-system/tokens';
 
 const { Text } = Typography;
@@ -73,10 +77,9 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         </div>
       }
       placement="top"
-      height={500}
       open={open}
       onClose={onClose}
-      styles={{ root: { zIndex: 100 } }}
+      styles={{ root: { zIndex: 100 }, body: { height: 500 } }}
     >
       <div style={{ padding: '0 20px' }}>
         <Input
@@ -104,11 +107,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
               <List.Item>
                 <List.Item.Meta
                   avatar={<Ticket size={16} style={{ color: DESIGN.colors.accent }} />}
-                  title={
-                    <a onClick={() => handleItemClick(item)}>
-                      {item.title}
-                    </a>
-                  }
+                  title={<a onClick={() => handleItemClick(item)}>{item.title}</a>}
                   description={item.status}
                 />
               </List.Item>
@@ -136,12 +135,7 @@ interface SearchInputProps {
   onFocus?: () => void;
 }
 
-export const SearchInput: React.FC<SearchInputProps> = ({
-  value,
-  onChange,
-  onSearch,
-  onFocus,
-}) => {
+export const SearchInput: React.FC<SearchInputProps> = ({ value, onChange, onSearch, onFocus }) => {
   return (
     <div style={{ position: 'relative' }}>
       <Input
