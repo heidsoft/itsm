@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
-import { SLAApi, SLADefinition as SLADefinitionType } from '@/lib/api/sla-api';
+import { SLAApi, SLADefinition as APISLADefinition } from '@/lib/api/sla-api';
 import {
   Card,
   Table,
@@ -38,118 +38,11 @@ import {
   Tag,
   Alert,
 } from 'antd';
+import type { SLADefinition } from './types';
+import { transformSLA, getPriorityColor, getStatusColor, getStatusText } from './utils';
+
 const { Title, Text } = Typography;
 const { Option } = Select;
-
-// 转换API数据格式为页面格式
-const transformSLA = (item: SLADefinitionType): SLADefinition => ({
-  id: String(item.id),
-  name: item.name,
-  description: item.description,
-  serviceType: item.service_type,
-  priority: item.priority as SLADefinition['priority'],
-  responseTime: `${item.response_time_minutes}分钟`,
-  resolutionTime: `${item.resolution_time_minutes}分钟`,
-  availability: `${item.availability_target}%`,
-  businessHours: '7x24',
-  escalationRules: [],
-  applicableServices: [],
-  status: item.is_active ? 'active' : 'inactive',
-  createdAt: item.created_at,
-  updatedAt: item.updated_at,
-  createdBy: '系统',
-});
-
-// SLA定义数据类型
-interface SLADefinition {
-  id: string;
-  name: string;
-  description: string;
-  serviceType: string;
-  priority: 'P1' | 'P2' | 'P3' | 'P4';
-  responseTime: string;
-  resolutionTime: string;
-  availability: string;
-  businessHours: string;
-  escalationRules: string[];
-  applicableServices: string[];
-  status: 'active' | 'inactive' | 'draft';
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-}
-
-// 模拟SLA定义数据
-const mockSLADefinitions: SLADefinition[] = [
-  {
-    id: 'SLA-DEF-001',
-    name: '关键业务系统SLA',
-    description: '针对关键业务系统的服务级别协议，包括ERP、CRM等核心业务系统',
-    serviceType: '关键业务系统',
-    priority: 'P1',
-    responseTime: '15分钟',
-    resolutionTime: '4小时',
-    availability: '99.9%',
-    businessHours: '7x24',
-    escalationRules: ['15分钟升级至高级工程师', '1小时升级至技术经理', '4小时升级至CTO'],
-    applicableServices: ['ERP系统', 'CRM系统', '财务系统'],
-    status: 'active',
-    createdAt: '2024-01-15',
-    updatedAt: '2024-06-01',
-    createdBy: '张三',
-  },
-  {
-    id: 'SLA-DEF-002',
-    name: '一般业务系统SLA',
-    description: '针对一般业务系统的服务级别协议，包括OA、HR等支撑系统',
-    serviceType: '一般业务系统',
-    priority: 'P2',
-    responseTime: '30分钟',
-    resolutionTime: '8小时',
-    availability: '99.5%',
-    businessHours: '工作时间',
-    escalationRules: ['30分钟升级至高级工程师', '2小时升级至技术经理'],
-    applicableServices: ['OA系统', 'HR系统', '采购系统'],
-    status: 'active',
-    createdAt: '2024-01-20',
-    updatedAt: '2024-05-15',
-    createdBy: '李四',
-  },
-  {
-    id: 'SLA-DEF-003',
-    name: '基础设施SLA',
-    description: '针对基础设施服务的服务级别协议，包括网络、服务器等',
-    serviceType: '基础设施',
-    priority: 'P1',
-    responseTime: '10分钟',
-    resolutionTime: '2小时',
-    availability: '99.95%',
-    businessHours: '7x24',
-    escalationRules: ['10分钟升级至网络工程师', '30分钟升级至基础设施经理'],
-    applicableServices: ['网络服务', '服务器', '存储系统'],
-    status: 'active',
-    createdAt: '2024-02-01',
-    updatedAt: '2024-06-10',
-    createdBy: '王五',
-  },
-  {
-    id: 'SLA-DEF-004',
-    name: '开发测试环境SLA',
-    description: '针对开发测试环境的服务级别协议',
-    serviceType: '开发测试',
-    priority: 'P3',
-    responseTime: '2小时',
-    resolutionTime: '1工作日',
-    availability: '95%',
-    businessHours: '工作时间',
-    escalationRules: ['4小时升级至开发经理'],
-    applicableServices: ['开发环境', '测试环境', 'CI/CD平台'],
-    status: 'draft',
-    createdAt: '2024-06-01',
-    updatedAt: '2024-06-15',
-    createdBy: '赵六',
-  },
-];
 
 // 优先级配置
 const PRIORITY_CONFIG = {

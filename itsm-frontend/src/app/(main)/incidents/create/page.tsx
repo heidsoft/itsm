@@ -6,6 +6,7 @@ import { ArrowLeftOutlined, UploadOutlined, SearchOutlined, CloseOutlined } from
 import { useRouter } from 'next/navigation';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import { CMDBApi, ConfigurationItem } from '@/lib/api/cmdb-api';
+import { UserApi, User } from '@/lib/api/user-api';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 
 const { Title, Text } = Typography;
@@ -36,7 +37,26 @@ export default function CreateIncidentPage() {
   const [ciSearchTerm, setCISearchTerm] = useState('');
   const [ciSearchResults, setCISearchResults] = useState<ConfigurationItem[]>([]);
   const [ciSearching, setCISearching] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const { handleError } = useErrorHandler();
+
+  // 加载用户列表
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setUsersLoading(true);
+      try {
+        const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+        setUsers(response.users || []);
+      } catch (error) {
+        // 用户列表加载失败不阻塞页面，使用空列表
+        setUsers([]);
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   // CI配置项搜索
   useEffect(() => {
@@ -228,10 +248,12 @@ export default function CreateIncidentPage() {
                               name="assigned_to"
                               label="指派给"
                             >
-                              <Select placeholder="选择负责人" allowClear>
-                                <Option value={1}>张三</Option>
-                                <Option value={2}>李四</Option>
-                                <Option value={3}>王五</Option>
+                              <Select placeholder="选择负责人" allowClear loading={usersLoading} showSearch optionFilterProp="children">
+                                {users.map(user => (
+                                  <Option key={user.id} value={user.id}>
+                                    {user.name || user.username}
+                                  </Option>
+                                ))}
                               </Select>
                             </Form.Item>
                           </Col>
