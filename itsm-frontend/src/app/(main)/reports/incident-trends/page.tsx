@@ -242,7 +242,7 @@ const IncidentTrendsPage = () => {
 
       {loading && trendData.length === 0 ? (
         <div className="flex items-center justify-center h-96">
-          <Spin size="large" tip="加载报表数据..." />
+          <Spin size="large" description="加载报表数据..." />
         </div>
       ) : (
         <>

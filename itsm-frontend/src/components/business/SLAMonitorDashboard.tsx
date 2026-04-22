@@ -336,7 +336,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
   if (loading && !metrics) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Spin size="large" tip="加载SLA监控数据..." />
+        <Spin size="large" description="加载SLA监控数据..." />
       </div>
     );
   }

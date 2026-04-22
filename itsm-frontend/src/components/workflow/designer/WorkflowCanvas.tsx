@@ -12,7 +12,7 @@ const BPMNDesigner = dynamic(() => import('@/components/workflow/BPMNDesigner'),
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full">
-      <Spin size="large" tip="加载流程设计器..." />
+      <Spin size="large" description="加载流程设计器..." />
     </div>
   ),
 });
