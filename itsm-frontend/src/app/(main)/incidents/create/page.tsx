@@ -6,10 +6,26 @@ import { ArrowLeftOutlined, UploadOutlined, SearchOutlined, CloseOutlined } from
 import { useRouter } from 'next/navigation';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import { CMDBApi, ConfigurationItem } from '@/lib/api/cmdb-api';
+import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
+
+// 表单值类型定义
+interface IncidentFormValues {
+  title: string;
+  description: string;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  source: 'manual' | 'monitoring' | 'email' | 'phone' | 'portal';
+  type: 'incident' | 'service_request' | 'problem' | 'change';
+  category?: string;
+  impact?: 'critical' | 'high' | 'medium' | 'low';
+  urgency?: 'critical' | 'high' | 'medium' | 'low';
+  assigned_to?: number;
+  affected_systems?: string[];
+  root_cause?: string;
+}
 
 export default function CreateIncidentPage() {
   const router = useRouter();
@@ -20,6 +36,7 @@ export default function CreateIncidentPage() {
   const [ciSearchTerm, setCISearchTerm] = useState('');
   const [ciSearchResults, setCISearchResults] = useState<ConfigurationItem[]>([]);
   const [ciSearching, setCISearching] = useState(false);
+  const { handleError } = useErrorHandler();
 
   // CI配置项搜索
   useEffect(() => {
@@ -30,7 +47,7 @@ export default function CreateIncidentPage() {
           const results = await CMDBApi.searchCIs({ keyword: ciSearchTerm });
           setCISearchResults(results.items || []);
         } catch (error) {
-          console.error('Failed to search CIs:', error);
+          handleError(error, 'searchCIs', '搜索配置项失败');
           setCISearchResults([]);
         } finally {
           setCISearching(false);
@@ -42,7 +59,7 @@ export default function CreateIncidentPage() {
     } else {
       setCISearchResults([]);
     }
-  }, [ciSearchTerm]);
+  }, [ciSearchTerm, handleError]);
 
   const handleAddCI = (ci: ConfigurationItem) => {
     if (!selectedCIs.find(item => item.id === ci.id)) {
@@ -56,7 +73,7 @@ export default function CreateIncidentPage() {
     setSelectedCIs(selectedCIs.filter(ci => ci.id !== ciId));
   };
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: IncidentFormValues) => {
     setLoading(true);
     try {
       await IncidentAPI.createIncident({
@@ -75,8 +92,7 @@ export default function CreateIncidentPage() {
       message.success('事件创建成功');
       router.push('/incidents');
     } catch (error) {
-      console.error('Failed to create incident:', error);
-      message.error('创建失败，请重试');
+      handleError(error, 'createIncident', '创建失败，请重试');
     } finally {
       setLoading(false);
     }

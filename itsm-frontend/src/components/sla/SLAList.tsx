@@ -28,9 +28,9 @@ import {
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
-import { SLAApi } from '@/lib/api/';
+import { SLAApi } from '@/lib/api/sla-api';
+import type { SLADefinition } from '@/lib/api/sla-api';
 import { SLAPriorityLabels, SLAPriorityColors } from '@/constants/sla';
-import type { SLADefinition } from '@/types/biz/sla';
 
 const SLAList: React.FC = () => {
   const router = useRouter();
@@ -44,10 +44,9 @@ const SLAList: React.FC = () => {
     setLoading(true);
     try {
       const resp = await SLAApi.getDefinitions(pagination);
-      setData((resp.items || []) as unknown as SLADefinition[]);
-      setTotal((resp as any).total || 0);
+      setData(resp.items || []);
+      setTotal(resp.total || 0);
     } catch (error) {
-      // console.error(error);
       message.error('加载 SLA 列表失败');
     } finally {
       setLoading(false);

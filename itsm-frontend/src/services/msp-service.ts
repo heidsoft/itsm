@@ -7,6 +7,7 @@ import type {
   MSPCustomerReport,
   MSPAllocationHistory,
   MSPContext,
+  TicketMSPInfo,
 } from '@/types/msp';
 
 export class MSPService {
@@ -76,13 +77,22 @@ export class MSPService {
     customerTenantId: number,
     params?: { status?: string; page?: number; pageSize?: number }
   ): Promise<{
-    tickets: any[];
+    tickets: Array<TicketMSPInfo & {
+      id: number;
+      title: string;
+      status: string;
+      assignee_id?: number;
+      assignee_name?: string;
+      created_at: string;
+      tenant: { id: number; code: string; name: string };
+    }>;
     total: number;
   }> {
     const res = await MSPAPI.getCustomerTickets(customerTenantId, params);
     if (res.data && res.data.tickets) {
+      const tickets = Array.isArray(res.data.tickets) ? res.data.tickets : [res.data.tickets];
       return {
-        tickets: Array.isArray(res.data.tickets) ? res.data.tickets : [res.data.tickets],
+        tickets,
         total: res.data.total || 0,
       };
     }
