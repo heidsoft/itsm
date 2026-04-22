@@ -17,6 +17,10 @@ import styles from './Header.module.css';
 
 const { Header: AntHeader } = Layout;
 
+// 常量定义
+const NOTIFICATION_REFRESH_INTERVAL_MS = 30000; // 30秒
+const NOTIFICATION_PAGE_SIZE = 10;
+
 interface HeaderProps {
   collapsed: boolean;
   onCollapse: (collapsed: boolean) => void;
@@ -56,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
     try {
       const response = await TicketNotificationApi.getUserNotifications({
         page: 1,
-        page_size: 10,
+        page_size: NOTIFICATION_PAGE_SIZE,
       });
       setNotifications(response.notifications || []);
     } catch (error) {
@@ -86,10 +90,10 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
     }
   }, [user?.id, token, loadNotifications]);
 
-  // 定期刷新通知（每30秒）
+  // 定期刷新通知
   useEffect(() => {
     if (!user?.id) return;
-    const interval = setInterval(loadNotifications, 30000);
+    const interval = setInterval(loadNotifications, NOTIFICATION_REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [user?.id, loadNotifications]);
 
