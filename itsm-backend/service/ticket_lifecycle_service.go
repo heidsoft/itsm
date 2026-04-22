@@ -330,8 +330,8 @@ func IsValidTicketStatusTransition(currentStatus, newStatus string) bool {
 
 	allowed, ok := validTransitions[currentStatus]
 	if !ok {
-		// 未知状态，允许转换（保守策略）
-		return true
+		// 未知状态，不允许转换到任何状态
+		return false
 	}
 
 	for _, status := range allowed {

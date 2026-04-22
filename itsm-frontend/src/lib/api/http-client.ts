@@ -252,7 +252,7 @@ class HttpClient {
         }),
       });
 
-      if (response.ok) {
+      if (response?.ok) {
         const data = await response.json();
         if (data.code === 0) {
           // Update access token
@@ -329,13 +329,13 @@ class HttpClient {
       clearTimeout(timeoutId);
 
       logger.debug('HTTP Client Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers ? Object.fromEntries(response.headers.entries()) : {},
+        status: response?.status,
+        statusText: response?.statusText,
+        headers: response?.headers ? Object.fromEntries(response.headers.entries()) : {},
       });
 
       // If 401 error, try to refresh token
-      if (response.status === 401) {
+      if (response?.status === 401) {
         const refreshSuccess = await this.refreshTokenInternal();
         if (refreshSuccess) {
           // Retry original request with credentials: 'include' to send cookies
@@ -352,7 +352,7 @@ class HttpClient {
           if (!retryResponse.ok) {
             const rid = retryResponse.headers.get('X-Request-Id') || '';
             const suffix = rid ? ` [RID: ${rid}]` : '';
-            throw new Error(`HTTP error! status: ${retryResponse.status}${suffix}`);
+            throw new Error(`HTTP error! status: ${retryResponse?.status}${suffix}`);
           }
           const retryData = (await retryResponse.json()) as ApiResponse<T>;
           logger.debug('HTTP Client Retry Response Data:', retryData);
@@ -378,10 +378,10 @@ class HttpClient {
         }
       }
 
-      if (!response.ok) {
-        const rid = response.headers.get('X-Request-Id') || '';
+      if (!response?.ok) {
+        const rid = response?.headers?.get('X-Request-Id') || '';
         const suffix = rid ? ` [RID: ${rid}]` : '';
-        throw new Error(`HTTP error! status: ${response.status}${suffix}`);
+        throw new Error(`HTTP error! status: ${response?.status}${suffix}`);
       }
 
       const responseData = (await response.json()) as ApiResponse<T>;
@@ -457,7 +457,7 @@ class HttpClient {
               if (body instanceof FormData) delete (headers as any)['Content-Type'];
               else headers['Content-Type'] = headers['Content-Type'] || 'application/json';
               const res = await fetch(url, { method, headers, body: body as any });
-              if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+              if (!res.ok) throw new Error(`HTTP error! status: ${res?.status}`);
               return (await res.blob()) as any;
             })()
           : await this.requestInternal<T>(endpoint, {
@@ -566,8 +566,8 @@ class HttpClient {
         body: data,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response?.ok) {
+        throw new Error(`HTTP error! status: ${response?.status}`);
       }
 
       if (config?.responseType === 'blob') {

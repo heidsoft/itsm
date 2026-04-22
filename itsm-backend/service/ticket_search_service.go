@@ -98,6 +98,7 @@ func (s *TicketSearchService) GetTicketStats(ctx context.Context, tenantID int) 
 
 	go func() {
 		// 并发查询逾期工单（单独因为需要复杂条件）
+		defer close(overdueCh)
 		overdue, err := s.GetOverdueTickets(ctx, tenantID)
 		if err != nil {
 			s.logger.Warnw("Failed to get overdue tickets", "error", err)
@@ -196,7 +197,6 @@ func (s *TicketSearchService) GetTicketStats(ctx context.Context, tenantID int) 
 
 		wg.Wait()
 		close(errCh)
-		close(resultCh)
 		resultCh <- response
 	}()
 
