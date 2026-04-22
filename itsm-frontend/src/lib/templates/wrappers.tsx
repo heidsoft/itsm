@@ -6,18 +6,18 @@ import { Spin, Alert, Button, Result } from 'antd';
 interface LoadingWrapperProps {
   loading: boolean;
   children: ReactNode;
-  tip?: string;
+  description?: string;
   size?: 'small' | 'default' | 'large';
 }
 
 export function LoadingWrapper({
   loading,
   children,
-  tip = '加载中...',
+  description: desc = '加载中...',
   size = 'default',
 }: LoadingWrapperProps) {
   return (
-    <Spin spinning={loading} tip={tip} size={size}>
+    <Spin spinning={loading} description={desc} size={size}>
       {children}
     </Spin>
   );
@@ -43,7 +43,7 @@ export function AsyncDataWrapper<T>({
   emptyFallback,
 }: AsyncDataWrapperProps<T>) {
   if (isLoading) {
-    return <>{loadingFallback ?? <Spin tip="加载中..." spinning />}</>;
+    return <>{loadingFallback ?? <Spin description="加载中..." spinning />}</>;
   }
 
   if (error) {
