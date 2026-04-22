@@ -49,7 +49,7 @@ export function getMenuConfig(): MenuConfig {
           {
             key: '/service-requests/list',
             icon: getIconByName('FileText')!,
-            label: '服务请求',
+            label: '服务请求列表',
             path: '/service-requests',
             permission: 'ticket:read',
           },
@@ -214,7 +214,7 @@ export function getMenuConfig(): MenuConfig {
         description: '配置管理数据库',
         children: [
           {
-            key: '/cmdb/cis',
+            key: '/cmdb/cis/list',
             icon: getIconByName('Server')!,
             label: '配置项列表',
             path: '/cmdb/cis',
@@ -298,7 +298,7 @@ export function getMenuConfig(): MenuConfig {
         description: 'SLA监控与配置',
         children: [
           {
-            key: '/sla/list',
+            key: '/sla/overview',
             icon: getIconByName('Activity')!,
             label: 'SLA概览',
             path: '/sla',
@@ -329,7 +329,7 @@ export function getMenuConfig(): MenuConfig {
         description: '报表与分析',
         children: [
           {
-            key: '/reports/list',
+            key: '/reports/overview',
             icon: getIconByName('TrendingUp')!,
             label: '报表中心',
             path: '/reports',

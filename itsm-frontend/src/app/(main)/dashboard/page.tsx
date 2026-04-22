@@ -78,7 +78,7 @@ export default function DashboardPage() {
     isConnected,
   } = useDashboardData();
 
-  const [activeChartTab, setActiveChartTab] = useState('all');
+  const [activeChartTab, setActiveChartTab] = useState('tickets');
 
   // 处理快速操作点击
   const handleQuickActionClick = useCallback(
@@ -212,7 +212,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="p-6 min-h-screen bg-gray-50">
+    <div className="p-6 min-h-screen" style={{ backgroundColor: 'var(--color-bg-secondary, #f9fafb)' }}>
       {/* 简化顶部工具栏 */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
         <div>

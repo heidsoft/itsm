@@ -6,25 +6,27 @@ import { Card, Space, Button, Table, Tag, App, Empty } from 'antd';
 import { ReloadOutlined, CheckCircleOutlined } from '@ant-design/icons';
 
 import { serviceRequestAPI, ServiceRequest } from '@/lib/api/service-request-api';
+import { useI18n } from '@/lib/i18n';
 
-function statusTag(status: string) {
-  const map: Record<string, { color: string; label: string }> = {
-    submitted: { color: 'gold', label: '已提交（待主管）' },
-    manager_approved: { color: 'blue', label: '主管已批（待IT）' },
-    it_approved: { color: 'geekblue', label: 'IT已批（待安全）' },
-    security_approved: { color: 'green', label: '安全已批' },
-    provisioning: { color: 'cyan', label: '交付中' },
-    delivered: { color: 'green', label: '已交付' },
-    failed: { color: 'red', label: '交付失败' },
-    rejected: { color: 'red', label: '已拒绝' },
-    cancelled: { color: 'default', label: '已取消' },
+function statusTag(status: string, t: (key: string) => string) {
+  const cfg: Record<string, { color: string; label: string }> = {
+    submitted: { color: 'gold', label: t('serviceRequestStatus.submitted') },
+    manager_approved: { color: 'blue', label: t('serviceRequestStatus.manager_approved') },
+    it_approved: { color: 'geekblue', label: t('serviceRequestStatus.it_approved') },
+    security_approved: { color: 'green', label: t('serviceRequestStatus.security_approved') },
+    provisioning: { color: 'cyan', label: t('serviceRequestStatus.provisioning') },
+    delivered: { color: 'green', label: t('serviceRequestStatus.delivered') },
+    failed: { color: 'red', label: t('serviceRequestStatus.failed') },
+    rejected: { color: 'red', label: t('serviceRequestStatus.rejected') },
+    cancelled: { color: 'default', label: t('serviceRequestStatus.cancelled') },
   };
-  const cfg = map[status] || { color: 'default', label: status || '-' };
-  return <Tag color={cfg.color}>{cfg.label}</Tag>;
+  const map = cfg[status] || { color: 'default', label: status || '-' };
+  return <Tag color={map.color}>{map.label}</Tag>;
 }
 
 export default function PendingApprovalsPage() {
   const { message } = App.useApp();
+  const { t: i18nT } = useI18n();
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ServiceRequest[]>([]);
   const [page, setPage] = useState(1);
@@ -104,7 +106,7 @@ export default function PendingApprovalsPage() {
                   title: '状态',
                   dataIndex: 'status',
                   width: 180,
-                  render: (v: string) => statusTag(String(v)),
+                  render: (v: string) => statusTag(String(v), i18nT),
                 },
                 {
                   title: '申请人',

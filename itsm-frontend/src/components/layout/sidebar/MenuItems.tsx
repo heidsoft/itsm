@@ -28,8 +28,10 @@ export function renderMenuItems(
   return items.map(item => {
     // 如果有子菜单
     if (item.children) {
+      // 确保父菜单 key 与子菜单不重复：添加 "-group" 后缀
+      const parentKey = item.key.endsWith('-group') ? item.key : `${item.key}-group`;
       return {
-        key: item.key,
+        key: parentKey,
         icon: item.icon,
         label: (
           <div

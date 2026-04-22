@@ -12,6 +12,7 @@ import {
 // 企业级页面模板接口
 interface EnterprisePageTemplateProps {
   title: string;
+  description?: string;
   breadcrumb?: Array<{ title: string; href?: string }>;
   showBackButton?: boolean;
   extra?: React.ReactNode;
@@ -30,6 +31,7 @@ interface EnterprisePageTemplateProps {
 // 页面容器组件
 export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
   title,
+  description,
   breadcrumb = [],
   showBackButton = false,
   extra,
@@ -51,13 +53,24 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
         type="primary"
         icon={<PlusOutlined />}
         className="enterprise-btn enterprise-btn-primary"
+        onClick={() => (window.location.href = '/tickets/create')}
       >
         新建
       </Button>
-      <Button icon={<ReloadOutlined />} className="enterprise-btn enterprise-btn-ghost">
+      <Button
+        icon={<ReloadOutlined />}
+        className="enterprise-btn enterprise-btn-ghost"
+        onClick={() => window.location.reload()}
+      >
         刷新
       </Button>
-      <Button icon={<DownloadOutlined />} className="enterprise-btn enterprise-btn-ghost">
+      <Button
+        icon={<DownloadOutlined />}
+        className="enterprise-btn enterprise-btn-ghost"
+        onClick={() => {
+          // 导出功能由子组件通过 props 覆盖
+        }}
+      >
         导出
       </Button>
     </Space>
@@ -129,6 +142,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 mb-1">{title}</h1>
+            {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
           </div>
           {extra && <div>{extra}</div>}
         </div>

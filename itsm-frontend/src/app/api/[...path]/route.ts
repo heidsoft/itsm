@@ -17,23 +17,22 @@ export async function GET(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const url = `${API_BASE_URL}/${path.join('/')}`;
+  const url = `${API_BASE_URL}/api/${path.join('/')}`;
   const searchParams = request.nextUrl.searchParams.toString();
   const fullUrl = searchParams ? `${url}?${searchParams}` : url;
 
   const cookieHeader = request.headers.get('cookie') || '';
   // Get auth from header first, then fallback to localStorage (for cross-origin proxy)
   const token = request.cookies.get('access_token')?.value;
-  const authHeader = request.headers.get('Authorization') ||
-    (token ? `Bearer ${token}` : '');
+  const authHeader = request.headers.get('Authorization') || (token ? `Bearer ${token}` : '');
 
   try {
     const response = await fetch(fullUrl, {
       ...fetchOptions,
       method: 'GET',
       headers: {
-        'Cookie': cookieHeader,
-        'Authorization': authHeader,
+        Cookie: cookieHeader,
+        Authorization: authHeader,
         'Content-Type': 'application/json',
       },
     });
@@ -48,10 +47,7 @@ export async function GET(
 
     return NextResponse.json(data, { status: response.status, headers });
   } catch (error) {
-    return NextResponse.json(
-      { code: 500, message: 'Backend request failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ code: 500, message: 'Backend request failed' }, { status: 500 });
   }
 }
 
@@ -60,7 +56,7 @@ export async function POST(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const url = `${API_BASE_URL}/${path.join('/')}`;
+  const url = `${API_BASE_URL}/api/${path.join('/')}`;
 
   const cookieHeader = request.headers.get('cookie') || '';
   const body = await request.json();
@@ -69,8 +65,8 @@ export async function POST(
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Cookie': cookieHeader,
-        'Authorization': request.headers.get('Authorization') || '',
+        Cookie: cookieHeader,
+        Authorization: request.headers.get('Authorization') || '',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
@@ -87,10 +83,7 @@ export async function POST(
 
     return NextResponse.json(data, { status: response.status, headers });
   } catch (error) {
-    return NextResponse.json(
-      { code: 500, message: 'Backend request failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ code: 500, message: 'Backend request failed' }, { status: 500 });
   }
 }
 
@@ -99,7 +92,7 @@ export async function PUT(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const url = `${API_BASE_URL}/${path.join('/')}`;
+  const url = `${API_BASE_URL}/api/${path.join('/')}`;
 
   const cookieHeader = request.headers.get('cookie') || '';
   const body = await request.json();
@@ -108,8 +101,8 @@ export async function PUT(
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Cookie': cookieHeader,
-        'Authorization': request.headers.get('Authorization') || '',
+        Cookie: cookieHeader,
+        Authorization: request.headers.get('Authorization') || '',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
@@ -126,10 +119,7 @@ export async function PUT(
 
     return NextResponse.json(data, { status: response.status, headers });
   } catch (error) {
-    return NextResponse.json(
-      { code: 500, message: 'Backend request failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ code: 500, message: 'Backend request failed' }, { status: 500 });
   }
 }
 
@@ -138,7 +128,7 @@ export async function DELETE(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const url = `${API_BASE_URL}/${path.join('/')}`;
+  const url = `${API_BASE_URL}/api/${path.join('/')}`;
 
   const cookieHeader = request.headers.get('cookie') || '';
 
@@ -146,8 +136,8 @@ export async function DELETE(
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {
-        'Cookie': cookieHeader,
-        'Authorization': request.headers.get('Authorization') || '',
+        Cookie: cookieHeader,
+        Authorization: request.headers.get('Authorization') || '',
         'Content-Type': 'application/json',
       },
       credentials: 'include',
@@ -163,9 +153,42 @@ export async function DELETE(
 
     return NextResponse.json(data, { status: response.status, headers });
   } catch (error) {
-    return NextResponse.json(
-      { code: 500, message: 'Backend request failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ code: 500, message: 'Backend request failed' }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  const url = `${API_BASE_URL}/api/${path.join('/')}`;
+
+  const cookieHeader = request.headers.get('cookie') || '';
+  const body = await request.json();
+
+  try {
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        Cookie: cookieHeader,
+        Authorization: request.headers.get('Authorization') || '',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+    const newCookies = response.headers.get('set-cookie');
+
+    const headers = new Headers();
+    if (newCookies) {
+      headers.set('Set-Cookie', newCookies);
+    }
+
+    return NextResponse.json(data, { status: response.status, headers });
+  } catch (error) {
+    return NextResponse.json({ code: 500, message: 'Backend request failed' }, { status: 500 });
   }
 }
