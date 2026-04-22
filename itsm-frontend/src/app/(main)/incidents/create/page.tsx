@@ -90,7 +90,7 @@ export default function CreateIncidentPage() {
                           label="事件标题"
                           rules={[{ required: true, message: '请输入事件标题' }]}
                         >
-                          <Input placeholder="简要描述事件" maxLength={200} showCount />
+                          <Input placeholder="简要描述事件" maxLength={200} showCount data-testid="incident-title-input" />
                         </Form.Item>
 
                         <Form.Item
@@ -101,6 +101,7 @@ export default function CreateIncidentPage() {
                           <TextArea
                             rows={6}
                             placeholder="详细描述事件的发生情况、影响范围、错误信息等"
+                            data-testid="incident-description-input"
                           />
                         </Form.Item>
 
