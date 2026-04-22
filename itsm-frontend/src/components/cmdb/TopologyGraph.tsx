@@ -304,7 +304,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
             <div
               style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height }}
             >
-              <Spin size="large" tip="加载拓扑图..." />
+              <Spin size="large" description="加载拓扑图..." />
             </div>
           ) : (
             <ReactFlow
@@ -490,7 +490,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
             )}
           </div>
         ) : (
-          <Spin tip="加载影响分析..." />
+          <Spin description="加载影响分析..." />
         )}
       </Drawer>
     </>

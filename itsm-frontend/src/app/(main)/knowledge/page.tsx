@@ -221,7 +221,7 @@ export default function KnowledgePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Spin size="large" tip="加载知识库数据..." />
+        <Spin size="large" description="加载知识库数据..." />
       </div>
     );
   }

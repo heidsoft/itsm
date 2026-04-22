@@ -327,13 +327,13 @@ export function EmptyState({ description = '暂无数据', action, image }: Empt
 // ============ 加载状态组件 ============
 
 interface LoadingStateProps {
-  tip?: string;
+  description?: string;
   children?: React.ReactNode;
 }
 
-export function LoadingState({ tip = '加载中...', children }: LoadingStateProps) {
+export function LoadingState({ description: desc = '加载中...', children }: LoadingStateProps) {
   return (
-    <Spin tip={tip} size="large">
+    <Spin description={desc} size="large">
       <div style={{ padding: 50 }}>{children}</div>
     </Spin>
   );
