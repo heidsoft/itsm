@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Card, Row, Col, Statistic, Table, Tag, Button, Alert, Tabs, List, Avatar } from 'antd';
 import { UserOutlined, FileTextOutlined, ClockCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import MBPService from '@/services/msp-service';
+import MSPService from '@/services/msp-service';
 import type { MSPAllocation, MSPCustomerReport, MSPContext } from '@/types/msp';
 
 export default function MSPDashboardPage() {
@@ -27,7 +27,7 @@ export default function MSPDashboardPage() {
 
   const checkMSPAccess = async () => {
     try {
-      const mspFlag = await MBPService.isMSPUser();
+      const mspFlag = await MSPService.isMSPUser();
       setIsMSP(mspFlag);
       if (!mspFlag) {
         setError('您不是 MSP 员工，无法访问此页面');
@@ -42,9 +42,9 @@ export default function MSPDashboardPage() {
     try {
       // 并行加载所有数据
       const [allocRes, custRes, ctxRes] = await Promise.all([
-        MBPService.getAllocations(),
-        MBPService.getCustomers(),
-        MBPService.getMSPContext(),
+        MSPService.getAllocations(),
+        MSPService.getCustomers(),
+        MSPService.getMSPContext(),
       ]);
 
       setAllocations(allocRes.allocations);
@@ -54,7 +54,7 @@ export default function MSPDashboardPage() {
       // 获取最近30天报表
       const endDate = new Date().toISOString().split('T')[0];
       const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const reportsData = await MBPService.getCustomerReports({
+      const reportsData = await MSPService.getCustomerReports({
         start_date: startDate,
         end_date: endDate,
       });
@@ -139,7 +139,7 @@ export default function MSPDashboardPage() {
     return (
       <div style={{ padding: 24 }}>
         <Alert
-          message="访问受限"
+          title="访问受限"
           description="您没有 MSP 员工权限，无法访问此页面。"
           type="warning"
           showIcon

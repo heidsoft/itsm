@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Button, message } from 'antd';
-import { Bug, CheckCircle, Clock, AlertTriangle, Plus } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, Row, Col, Statistic, Button, message, Input, Select, Space, Tabs } from 'antd';
+import { Bug, CheckCircle, Clock, AlertTriangle, Plus, Search, Filter, Table as TableIcon } from 'lucide-react';
+import { AppstoreOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import ProblemList from '@/components/problem/ProblemList';
 import { ProblemApi } from '@/lib/api/problem-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 import { PageContainer } from '@/components/layout/PageContainer';
+import { useDebounce } from '@/lib/component-utils';
 
 export default function ProblemListPage() {
   const router = useRouter();
@@ -18,6 +20,14 @@ export default function ProblemListPage() {
     inProgress: 0,
     resolved: 0,
   });
+
+  // 搜索和筛选状态
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [priorityFilter, setPriorityFilter] = useState<string | undefined>(undefined);
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState('list');
+  const debouncedSearch = useDebounce(searchKeyword, 300);
 
   const fetchStats = async () => {
     try {
@@ -37,6 +47,28 @@ export default function ProblemListPage() {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  // 筛选器配置
+  const statusOptions = [
+    { value: 'open', label: '待处理' },
+    { value: 'investigating', label: '调查中' },
+    { value: 'identified', label: '已识别' },
+    { value: 'resolved', label: '已解决' },
+    { value: 'closed', label: '已关闭' },
+  ];
+
+  const priorityOptions = [
+    { value: 'critical', label: '紧急' },
+    { value: 'high', label: '高' },
+    { value: 'medium', label: '中' },
+    { value: 'low', label: '低' },
+  ];
+
+  const handleResetFilters = () => {
+    setSearchKeyword('');
+    setStatusFilter(undefined);
+    setPriorityFilter(undefined);
+  };
 
   const statsContent = (
     <Row gutter={[16, 16]} className="mb-6">
@@ -83,24 +115,94 @@ export default function ProblemListPage() {
     </Row>
   );
 
+  const filterContent = showFilters && (
+    <Card className="mb-4 rounded-lg shadow-sm">
+      <Space wrap size="middle">
+        <Input
+          placeholder="搜索问题标题或描述..."
+          prefix={<Search className="w-4 h-4 text-gray-400" />}
+          value={searchKeyword}
+          onChange={e => setSearchKeyword(e.target.value)}
+          allowClear
+          style={{ width: 250 }}
+        />
+        <Select
+          placeholder="状态筛选"
+          value={statusFilter}
+          onChange={setStatusFilter}
+          allowClear
+          options={statusOptions}
+          style={{ width: 150 }}
+        />
+        <Select
+          placeholder="优先级筛选"
+          value={priorityFilter}
+          onChange={setPriorityFilter}
+          allowClear
+          options={priorityOptions}
+          style={{ width: 150 }}
+        />
+        <Button onClick={handleResetFilters}>重置</Button>
+      </Space>
+    </Card>
+  );
+
   return (
     <div className="p-6 min-h-screen" style={{ backgroundColor: 'var(--color-bg-secondary, #f9fafb)' }}>
       <PageContainer
         title="问题管理"
         description="识别、分析和消除事件发生的根本原因"
         extra={
-          <Button
-            type="primary"
-            icon={<Plus className="w-4 h-4" />}
-            size="large"
-            onClick={() => router.push('/problems/new')}
-          >
-            新建问题
-          </Button>
+          <Space>
+            <Button
+              icon={<Search className="w-4 h-4" />}
+              onClick={() => setShowFilters(!showFilters)}
+              type={showFilters ? 'primary' : 'default'}
+            >
+              搜索筛选
+            </Button>
+            <Button
+              type="primary"
+              icon={<Plus className="w-4 h-4" />}
+              size="large"
+              onClick={() => router.push('/problems/new')}
+            >
+              新建问题
+            </Button>
+          </Space>
         }
         showStats
         stats={statsContent}
       >
+        {filterContent}
+
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          size="large"
+          className="mb-4"
+          items={[
+            {
+              key: 'list',
+              label: (
+                <span className="flex items-center gap-2">
+                  <TableIcon className="w-4 h-4" />
+                  列表视图
+                </span>
+              ),
+            },
+            {
+              key: 'kanban',
+              label: (
+                <span className="flex items-center gap-2">
+                  <AppstoreOutlined />
+                  看板视图
+                </span>
+              ),
+            },
+          ]}
+        />
+
         <ProblemList showHeader={false} />
       </PageContainer>
     </div>

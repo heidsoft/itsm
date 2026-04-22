@@ -307,7 +307,9 @@ const CIList: React.FC = () => {
             pageSize: query.limit,
             total: total,
             showSizeChanger: true,
+            showQuickJumper: true,
             showTotal: total => `共 ${total} 条记录`,
+            pageSizeOptions: ['10', '20', '50', '100'],
             onChange: (page, pageSize) => setQuery({ offset: (page - 1) * pageSize, limit: pageSize }),
           }}
           scroll={{ x: 1200 }}

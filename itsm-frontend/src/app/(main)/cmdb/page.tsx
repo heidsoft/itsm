@@ -73,6 +73,10 @@ export default function CMDBPage() {
   const [ciTypeStats, setCiTypeStats] = useState<any[]>([]);
   const [cloudResources, setCloudResources] = useState<any[]>([]);
   const [reconciliationData, setReconciliationData] = useState<any[]>([]);
+  // 云资源筛选状态
+  const [cloudSearchKeyword, setCloudSearchKeyword] = useState('');
+  const [cloudTypeFilter, setCloudTypeFilter] = useState<string | undefined>(undefined);
+  const [cloudStatusFilter, setCloudStatusFilter] = useState<string | undefined>(undefined);
   // 云资源同步状态
   const [cloudSyncStatus, setCloudSyncStatus] = useState<{
     total_accounts: number;
@@ -222,9 +226,7 @@ export default function CMDBPage() {
       dataIndex: 'is_active',
       key: 'is_active',
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'red'}>
-          {isActive ? '启用' : '禁用'}
-        </Tag>
+        <Tag color={isActive ? 'green' : 'red'}>{isActive ? '启用' : '禁用'}</Tag>
       ),
     },
     {
@@ -394,6 +396,25 @@ export default function CMDBPage() {
     const missing = reconciliationData.filter(r => r.status === 'missing').length;
     return { total, matched, mismatch, missing };
   }, [reconciliationData]);
+
+  // 云资源筛选后的数据
+  const filteredCloudResources = React.useMemo(() => {
+    return cloudResources.filter(resource => {
+      const matchesSearch = !cloudSearchKeyword ||
+        resource.resource_name?.toLowerCase().includes(cloudSearchKeyword.toLowerCase()) ||
+        resource.resource_id?.toLowerCase().includes(cloudSearchKeyword.toLowerCase());
+      const matchesType = !cloudTypeFilter || resource.resource_type === cloudTypeFilter;
+      const matchesStatus = !cloudStatusFilter || resource.status === cloudStatusFilter;
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [cloudResources, cloudSearchKeyword, cloudTypeFilter, cloudStatusFilter]);
+
+  // 云资源筛选重置
+  const handleResetCloudFilters = () => {
+    setCloudSearchKeyword('');
+    setCloudTypeFilter(undefined);
+    setCloudStatusFilter(undefined);
+  };
 
   return (
     <div className="p-6 min-h-screen bg-gray-50">
@@ -622,11 +643,16 @@ export default function CMDBPage() {
                       placeholder="搜索资源名称"
                       prefix={<Search className="w-4 h-4" />}
                       style={{ width: 200 }}
+                      value={cloudSearchKeyword}
+                      onChange={e => setCloudSearchKeyword(e.target.value)}
+                      allowClear
                     />
                     <Select
                       placeholder="资源类型"
                       style={{ width: 120 }}
                       allowClear
+                      value={cloudTypeFilter}
+                      onChange={setCloudTypeFilter}
                       options={[
                         { value: 'ECS', label: 'ECS' },
                         { value: 'RDS', label: 'RDS' },
@@ -638,17 +664,21 @@ export default function CMDBPage() {
                       placeholder="状态"
                       style={{ width: 100 }}
                       allowClear
+                      value={cloudStatusFilter}
+                      onChange={setCloudStatusFilter}
                       options={[
                         { value: 'running', label: '运行中' },
                         { value: 'stopped', label: '已停止' },
                       ]}
                     />
-                    <Button icon={<Filter className="w-4 h-4" />}>筛选</Button>
+                    <Button icon={<Filter className="w-4 h-4" />} onClick={handleResetCloudFilters}>
+                      重置
+                    </Button>
                   </div>
 
                   <Table
                     columns={cloudResourceColumns}
-                    dataSource={cloudResources}
+                    dataSource={filteredCloudResources}
                     rowKey="id"
                     pagination={{ pageSize: 10 }}
                   />

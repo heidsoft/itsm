@@ -267,7 +267,9 @@ const ProblemList: React.FC<ProblemListProps> = ({ showHeader = true }) => {
               total: total,
               onChange: (page, pageSize) => setQuery(prev => ({ ...prev, page, pageSize })),
               showSizeChanger: true,
-              showTotal: t => `共 ${t} 条记录`,
+              showQuickJumper: true,
+              showTotal: total => `共 ${total} 条记录`,
+              pageSizeOptions: ['10', '20', '50', '100'],
             }}
             scroll={{ x: 1000 }}
             getPopupContainer={node => node.parentElement || document.body}
