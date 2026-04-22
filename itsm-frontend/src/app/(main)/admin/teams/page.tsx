@@ -166,7 +166,7 @@ export default function TeamManagement() {
       render: (_: unknown, record: Team) => {
         const members = record.edges?.users || [];
         return (
-          <Avatar.Group maxCount={3} size="small">
+          <Avatar.Group max={{ count: 3 }} size="small">
             {members.map(member => (
               <Tooltip key={member.id} title={member.name || member.username}>
                 <Avatar style={{ backgroundColor: '#87d068' }} icon={<User />}>

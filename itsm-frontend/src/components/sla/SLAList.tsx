@@ -204,6 +204,10 @@ const SLAList: React.FC = () => {
           current: pagination.page,
           pageSize: pagination.size,
           total: total,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: total => `共 ${total} 条记录`,
+          pageSizeOptions: ['10', '20', '50', '100'],
           onChange: (page, size) => setPagination({ page, size }),
         }}
         getPopupContainer={node => node.parentElement || document.body}

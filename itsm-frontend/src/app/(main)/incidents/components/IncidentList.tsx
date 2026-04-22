@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Table, Tag, Button, Space, Dropdown, message } from 'antd';
+import { Table, Tag, Button, Space, Dropdown, message, Modal } from 'antd';
 import { Eye, Edit, MoreHorizontal, AlertTriangle, Trash2 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
@@ -207,15 +207,29 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       key: 'actions',
       width: 150,
       render: (_: unknown, record: Incident) => {
-        const handleDelete = async () => {
-          try {
-            await IncidentAPI.deleteIncident(record.id);
-            message.success(t('incidents.deleteSuccess') || '删除成功');
-            onRefresh?.();
-          } catch (error) {
-            console.error('Failed to delete incident:', error);
-            message.error(t('incidents.deleteFailed') || '删除失败');
-          }
+        const handleDelete = () => {
+          Modal.confirm({
+            title: '确认删除',
+            content: (
+              <div>
+                <p>确定要删除事件「{record.title}」吗？</p>
+                <p style={{ color: '#ff4d4f' }}>此操作不可撤销。</p>
+              </div>
+            ),
+            okText: '确认删除',
+            okType: 'danger',
+            cancelText: '取消',
+            onOk: async () => {
+              try {
+                await IncidentAPI.deleteIncident(record.id);
+                message.success(t('incidents.deleteSuccess') || '删除成功');
+                onRefresh?.();
+              } catch (error) {
+                console.error('Failed to delete incident:', error);
+                message.error(t('incidents.deleteFailed') || '删除失败');
+              }
+            },
+          });
         };
 
         const items: MenuProps['items'] = [

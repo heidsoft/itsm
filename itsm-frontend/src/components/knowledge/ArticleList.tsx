@@ -274,7 +274,9 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
               pageSize: query.pageSize,
               total: total,
               showSizeChanger: true,
+              showQuickJumper: true,
               showTotal: total => `共 ${total} 条记录`,
+              pageSizeOptions: ['10', '20', '50', '100'],
               onChange: (page, pageSize) => setQuery(prev => ({ ...prev, page, pageSize })),
             }}
             scroll={{ x: 1000 }}
