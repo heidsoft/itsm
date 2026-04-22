@@ -33,6 +33,14 @@ func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.Crea
 	// DTO binding validation handles required fields and format checks
 	// Service layer validates business logic (entity existence, permissions, etc.)
 
+	// 验证必填字段
+	if req.Description == "" {
+		return nil, fmt.Errorf("description不能为空")
+	}
+	if req.Priority == "" {
+		return nil, fmt.Errorf("priority不能为空")
+	}
+
 	if err := s.validateRequester(ctx, req.RequesterID, tenantID); err != nil {
 		return nil, fmt.Errorf("验证创建人失败: %w", err)
 	}

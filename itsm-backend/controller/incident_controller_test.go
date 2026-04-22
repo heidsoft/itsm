@@ -30,7 +30,7 @@ func setupTestIncidentController(t *testing.T) (*gin.Engine, *IncidentController
 	incidentService := service.NewIncidentService(client, logger)
 
 	// 创建控制器
-	incidentController := NewIncidentController(incidentService, nil, nil, nil, logger)
+	incidentController := NewIncidentController(incidentService, nil, nil, nil, nil, logger)
 
 	// 创建路由
 	r := gin.New()

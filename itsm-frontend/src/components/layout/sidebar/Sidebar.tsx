@@ -102,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
 
   // 转换动态菜单（当 API 返回空时使用静态配置作为 fallback）
   // TODO: 后端修复菜单数据后，移除 FORCE_STATIC_MENU 标志
-  const FORCE_STATIC_MENU = true; // 临时强制使用静态菜单，避免后端数据重复key问题
+  const FORCE_STATIC_MENU = false; // 临时强制使用静态菜单，避免后端数据重复key问题
   const mainMenus =
     dynamicMenus && !FORCE_STATIC_MENU
       ? convertApiMenuToSidebar(dynamicMenus.main)

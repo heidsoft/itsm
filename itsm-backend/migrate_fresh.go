@@ -86,7 +86,7 @@ func createDefaultTenant(ctx context.Context, client *ent.Client) (*ent.Tenant, 
 		SetCode("default").
 		SetDomain("localhost").
 		SetStatus("active").
-		SetType("enterprise").
+		SetType("standard").
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
