@@ -102,11 +102,20 @@ export default function CMDBPage() {
   const fetchCiTypeStats = async () => {
     try {
       const typesData = await CMDBApi.getCITypes();
-      if (typesData.data && Array.isArray(typesData.data)) {
-        setCiTypeStats(typesData.data);
+      let typesArray: any[] = [];
+      if (typesData?.data && Array.isArray(typesData.data)) {
+        typesArray = typesData.data;
       } else if (Array.isArray(typesData)) {
-        setCiTypeStats(typesData);
+        typesArray = typesData;
+      } else if (typesData?.items && Array.isArray(typesData.items)) {
+        typesArray = typesData.items;
       }
+      // Ensure each item has a unique id for React keys
+      const typesWithIds = typesArray.map((item, index) => ({
+        ...item,
+        id: item.id ?? item.type ?? `type-${index}`,
+      }));
+      setCiTypeStats(typesWithIds);
     } catch (error) {
       console.error('Failed to fetch CI types:', error);
     }
@@ -184,37 +193,37 @@ export default function CMDBPage() {
   const ciTypeColumns = [
     {
       title: '类型',
-      dataIndex: 'type',
-      key: 'type',
-      render: (type: string, record: any) => (
+      dataIndex: 'name',
+      key: 'name',
+      render: (name: string, record: any) => (
         <Tag
           icon={
-            record.type === '服务器' ? (
+            record.name === '服务器' ? (
               <Server />
-            ) : record.type === '云资源' ? (
+            ) : record.name === '云资源' ? (
               <Cloud />
             ) : (
               <Database />
             )
           }
         >
-          {type}
+          {name}
         </Tag>
       ),
     },
     {
-      title: '数量',
-      dataIndex: 'count',
-      key: 'count',
-      render: (count: number) => <strong>{count}</strong>,
+      title: '描述',
+      dataIndex: 'description',
+      key: 'description',
+      render: (description: string) => description || '-',
     },
     {
       title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'online' ? 'green' : status === 'offline' ? 'red' : 'blue'}>
-          {status === 'online' ? '在线' : status === 'offline' ? '离线' : '活跃'}
+      dataIndex: 'is_active',
+      key: 'is_active',
+      render: (isActive: boolean) => (
+        <Tag color={isActive ? 'green' : 'red'}>
+          {isActive ? '启用' : '禁用'}
         </Tag>
       ),
     },
@@ -552,7 +561,7 @@ export default function CMDBPage() {
                 <Table
                   columns={ciTypeColumns}
                   dataSource={ciTypeStats}
-                  rowKey="type"
+                  rowKey="id"
                   pagination={false}
                 />
               ),
