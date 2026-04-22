@@ -511,6 +511,7 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/org/*":                 {Resource: "org", Action: "read"},
 		"/api/v1/auth/me":               {Resource: "user", Action: "read"},
 		"/api/v1/auth/profile":          {Resource: "user", Action: "read"},
+		"/api/v1/auth/menus":            {Resource: "user", Action: "read"},
 		// BPMN Workflow permissions
 		"/api/v1/bpmn/*":             {Resource: "bpmn", Action: "read"},
 		"/api/v1/process-trigger/*":  {Resource: "bpmn", Action: "read"},
@@ -816,6 +817,12 @@ func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 func hasPermission(client *ent.Client, role, method, path string, userID, tenantID int, c *gin.Context) bool {
 	// 超级管理员拥有所有权限
 	if role == "super_admin" {
+		return true
+	}
+
+	// 特殊路径：允许所有认证用户访问自己的菜单
+	// 菜单服务会根据用户权限过滤菜单，这里不需要额外权限检查
+	if method == "GET" && (path == "/api/v1/auth/menus" || strings.HasPrefix(path, "/api/v1/auth/menus?")) {
 		return true
 	}
 

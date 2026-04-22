@@ -31,6 +31,33 @@ func NewService(repo Repository, jwtSecret string, logger *zap.SugaredLogger, cl
 
 // Auth
 
+// getUserPermissions 获取用户的权限列表
+func (s *Service) getUserPermissions(role string) []string {
+	permissions := make([]string, 0)
+
+	// 超级管理员拥有所有权限
+	if role == "super_admin" {
+		return []string{"*"}
+	}
+
+	// 从 middleware.RolePermissions 获取角色权限
+	rolePerms, ok := middleware.RolePermissions[role]
+	if !ok {
+		return permissions
+	}
+
+	seen := make(map[string]bool)
+	for _, p := range rolePerms {
+		key := p.Resource + ":" + p.Action
+		if !seen[key] {
+			seen[key] = true
+			permissions = append(permissions, key)
+		}
+	}
+
+	return permissions
+}
+
 func (s *Service) Login(ctx context.Context, username, password string, tenantID int, tenantCode string) (*AuthResult, error) {
 	// Resolve tenant
 	if tenantID == 0 && tenantCode != "" {
@@ -75,6 +102,9 @@ func (s *Service) Login(ctx context.Context, username, password string, tenantID
 	if err != nil {
 		return nil, err
 	}
+
+	// 获取用户权限
+	u.Permissions = s.getUserPermissions(u.Role)
 
 	return &AuthResult{
 		AccessToken:  accessToken,

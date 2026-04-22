@@ -18,6 +18,7 @@ type User struct {
 	TenantID     int       `json:"tenant_id"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
+	Permissions  []string  `json:"permissions,omitempty"` // 用户权限列表
 }
 
 // Department represents a spatial or organizational unit
