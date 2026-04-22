@@ -15,7 +15,7 @@ import {
   Alert,
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import MBPService from '@/services/msp-service';
+import MSPService from '@/services/msp-service';
 import type { MSPAllocation, CreateAllocationRequest } from '@/types/msp';
 
 const { Option } = Select;
@@ -38,8 +38,8 @@ export default function MSPManagementPage() {
     setLoading(true);
     try {
       const [allocRes, custRes] = await Promise.all([
-        MBPService.getAllocations(),
-        MBPService.getCustomers(),
+        MSPService.getAllocations(),
+        MSPService.getCustomers(),
       ]);
       setAllocations(allocRes.allocations);
       setCustomers(custRes.customers);
@@ -60,7 +60,7 @@ export default function MSPManagementPage() {
 
   const handleCreate = async (values: CreateAllocationRequest) => {
     try {
-      await MBPService.createAllocation(values);
+      await MSPService.createAllocation(values);
       message.success('分配创建成功');
       setModalVisible(false);
       form.resetFields();
@@ -77,7 +77,7 @@ export default function MSPManagementPage() {
       onOk: async () => {
         setDeallocateLoading(true);
         try {
-          await MBPService.deallocate(allocation.msp_user_id, allocation.customer_tenant_id);
+          await MSPService.deallocate(allocation.msp_user_id, allocation.customer_tenant_id);
           message.success('分配已解除');
           loadData();
         } catch (err: any) {

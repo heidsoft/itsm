@@ -25,6 +25,7 @@ import {
   EditOutlined,
   PlusOutlined,
   SyncOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
@@ -105,6 +106,30 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true }) => {
     setQuery({ page: 1, pageSize: 10 });
   };
 
+  const handleDelete = (id: number, title: string) => {
+    Modal.confirm({
+      title: '确认删除',
+      content: (
+        <div>
+          <p>确定要删除变更请求「{title}」吗？</p>
+          <p style={{ color: '#ff4d4f' }}>此操作不可撤销。</p>
+        </div>
+      ),
+      okText: '确认删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await ChangeApi.deleteChange(id);
+          message.success('删除成功');
+          loadData();
+        } catch (error) {
+          message.error('删除失败');
+        }
+      },
+    });
+  };
+
   const columns = [
     {
       title: 'ID',
@@ -150,7 +175,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true }) => {
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 150,
       render: (_: unknown, record: Change) => (
         <Space size="small">
           <Tooltip title="查看详情">
@@ -165,6 +190,14 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true }) => {
               type="text"
               icon={<EditOutlined />}
               onClick={() => router.push(`/changes/${record.id}/edit`)}
+            />
+          </Tooltip>
+          <Tooltip title="删除">
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record.id, record.title)}
             />
           </Tooltip>
         </Space>
@@ -246,7 +279,9 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true }) => {
               pageSize: query.pageSize,
               total: total,
               showSizeChanger: true,
+              showQuickJumper: true,
               showTotal: total => `共 ${total} 条记录`,
+              pageSizeOptions: ['10', '20', '50', '100'],
               onChange: (page, pageSize) => setQuery(prev => ({ ...prev, page, pageSize })),
             }}
             scroll={{ x: 1000 }}

@@ -23,7 +23,7 @@ import { antdTheme } from '@/lib/antd-theme';
 import { AuthService } from '@/lib/services/auth-service';
 import { logger } from '@/lib/env';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
-import MBPService from '@/services/msp-service';
+import MSPService from '@/services/msp-service';
 
 const { Text, Title } = Typography;
 
@@ -56,7 +56,7 @@ export default function LoginPage() {
       if (success) {
         logger.info('认证信息已存储，准备跳转');
         // 清除MSP缓存，确保重新检查MSP权限
-        MBPService.refreshCache();
+        MSPService.refreshCache();
         router.push('/dashboard');
         logger.info('已执行跳转命令');
       } else {

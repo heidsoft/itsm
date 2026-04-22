@@ -220,7 +220,7 @@ const SLADefinitionManagement = () => {
   };
 
   // 获取所有服务类型
-  const serviceTypes = Array.from(new Set(slaDefinitions.map(sla => sla.serviceType)));
+  const serviceTypes = Array.from(new Set(slaDefinitions.map(sla => sla.serviceType).filter(Boolean)));
 
   // 过滤SLA定义
   const filteredSLAs = slaDefinitions.filter(sla => {

@@ -1,8 +1,35 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Tabs, Button, Space, Tag, Table, message, Spin, Alert, Input, Empty } from 'antd';
-import { BookOpen, FileText, Eye, CheckCircle, Plus, Clock, Star, MessageCircle, Search, Sparkles } from 'lucide-react';
+import {
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Typography,
+  Tabs,
+  Button,
+  Space,
+  Tag,
+  Table,
+  message,
+  Spin,
+  Alert,
+  Input,
+  Empty,
+} from 'antd';
+import {
+  BookOpen,
+  FileText,
+  Eye,
+  CheckCircle,
+  Plus,
+  Clock,
+  Star,
+  MessageCircle,
+  Search,
+  Sparkles,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ArticleList from '@/components/knowledge/ArticleList';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
@@ -24,24 +51,28 @@ export default function KnowledgePage() {
   const [aiSearchError, setAiSearchError] = useState<string | null>(null);
   const [showAiSearch, setShowAiSearch] = useState(false);
 
-  const [recentArticles, setRecentArticles] = useState<Array<{
-    id: string;
-    title: string;
-    views: number;
-    author: string;
-    date: string;
-    category: string;
-  }>>([]);
+  const [recentArticles, setRecentArticles] = useState<
+    Array<{
+      id: string;
+      title: string;
+      views: number;
+      author: string;
+      date: string;
+      category: string;
+    }>
+  >([]);
 
-  const [popularArticles, setPopularArticles] = useState<Array<{
-    id: string;
-    title: string;
-    views: number;
-    author: string;
-    date: string;
-    category: string;
-    rating: number;
-  }>>([]);
+  const [popularArticles, setPopularArticles] = useState<
+    Array<{
+      id: string;
+      title: string;
+      views: number;
+      author: string;
+      date: string;
+      category: string;
+      rating: number;
+    }>
+  >([]);
 
   const [stats, setStats] = useState<{
     total: number;
@@ -66,7 +97,7 @@ export default function KnowledgePage() {
     try {
       const [kbStats, articlesData] = await Promise.all([
         KnowledgeBaseApi.getStats(),
-        KnowledgeBaseApi.getArticles({ page: 1, pageSize: 20, status: ArticleStatus.PUBLISHED })
+        KnowledgeBaseApi.getArticles({ page: 1, pageSize: 20, status: ArticleStatus.PUBLISHED }),
       ]);
 
       // Map backend stats to frontend state
@@ -180,7 +211,9 @@ export default function KnowledgePage() {
       title: '排名',
       key: 'rank',
       width: 60,
-      render: (_: any, __: any, index: number) => <span className="font-bold text-blue-500">#{index + 1}</span>,
+      render: (_: any, __: any, index: number) => (
+        <span className="font-bold text-blue-500">#{index + 1}</span>
+      ),
     },
     {
       title: '标题',
@@ -234,16 +267,14 @@ export default function KnowledgePage() {
           <Title level={2} style={{ marginBottom: 4 }}>
             知识库
           </Title>
-          <Text type="secondary">
-            创建、维护和分享解决方案与最佳实践
-          </Text>
+          <Text type="secondary">创建、维护和分享解决方案与最佳实践</Text>
         </div>
         <div className="flex items-center gap-2">
           {/* AI 智能搜索 */}
           <Input.Search
             placeholder="AI 智能搜索..."
             value={aiSearchQuery}
-            onChange={(e) => setAiSearchQuery(e.target.value)}
+            onChange={e => setAiSearchQuery(e.target.value)}
             onSearch={handleAISearch}
             loading={aiSearchLoading}
             enterButton={
@@ -265,12 +296,15 @@ export default function KnowledgePage() {
 
       {/* AI 搜索结果展示 */}
       {showAiSearch && (
-        <Card className="mb-6" title={
-          <span className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-yellow-500" />
-            智能搜索结果
-          </span>
-        }>
+        <Card
+          className="mb-6"
+          title={
+            <span className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-yellow-500" />
+              智能搜索结果
+            </span>
+          }
+        >
           {aiSearchError && (
             <Alert message={aiSearchError} type="warning" showIcon className="mb-4" />
           )}
@@ -288,7 +322,9 @@ export default function KnowledgePage() {
                       <Text strong>{result.title || '未命名'}</Text>
                       {result.category && <Tag className="ml-2">{result.category}</Tag>}
                     </div>
-                    <Tag color={result.score > 0.8 ? 'green' : result.score > 0.5 ? 'blue' : 'default'}>
+                    <Tag
+                      color={result.score > 0.8 ? 'green' : result.score > 0.5 ? 'blue' : 'default'}
+                    >
                       匹配度: {Math.round((result.score || 0) * 100)}%
                     </Tag>
                   </div>
@@ -303,11 +339,7 @@ export default function KnowledgePage() {
           ) : (
             <Empty description="未找到相关内容" />
           )}
-          <Button
-            type="link"
-            onClick={() => setShowAiSearch(false)}
-            className="mt-2"
-          >
+          <Button type="link" onClick={() => setShowAiSearch(false)} className="mt-2">
             关闭搜索结果
           </Button>
         </Card>

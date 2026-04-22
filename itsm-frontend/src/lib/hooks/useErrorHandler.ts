@@ -1,6 +1,12 @@
 import { useCallback } from 'react';
 import { message } from 'antd';
 
+// React ErrorBoundary 错误信息类型
+interface ErrorInfo {
+  componentStack?: string;
+  digest?: string;
+}
+
 // 错误类型定义
 export interface AppError {
   code?: string;
@@ -144,9 +150,9 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
   // 处理表单验证错误
   const handleValidationError = useCallback(
     (errors: unknown[], context?: string) => {
-      const errorMessages = errors.map(err => 
-        err instanceof Error ? err.message : String(err)
-      ).join('; ');
+      const errorMessages = errors
+        .map(err => (err instanceof Error ? err.message : String(err)))
+        .join('; ');
       handleError(new Error(errorMessages), context, '表单验证失败');
     },
     [handleError]
