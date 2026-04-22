@@ -1,7 +1,19 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button, Input, Space, Card, Pagination, message, Empty, Tabs, Badge, Tag, Avatar } from 'antd';
+import {
+  Button,
+  Input,
+  Space,
+  Card,
+  Pagination,
+  message,
+  Empty,
+  Tabs,
+  Badge,
+  Tag,
+  Avatar,
+} from 'antd';
 import { Plus, Search, Filter, Table as TableIcon } from 'lucide-react';
 import { AppstoreOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
@@ -11,7 +23,10 @@ import { IncidentStats } from './components/IncidentStats';
 import { Incident } from '@/lib/api/types';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import { UserApi } from '@/lib/api/user-api';
-import { UnifiedKanbanBoard, type KanbanColumnConfig } from '@/components/business/UnifiedKanbanBoard';
+import {
+  UnifiedKanbanBoard,
+  type KanbanColumnConfig,
+} from '@/components/business/UnifiedKanbanBoard';
 import { useDebounce } from '@/lib/component-utils';
 import dayjs from 'dayjs';
 import { useI18n } from '@/lib/i18n/useI18n';
@@ -62,32 +77,34 @@ export default function IncidentsPage() {
     setLoading(true);
     try {
       const response = await IncidentAPI.listIncidents({
-        page,  // Use actual page state
-        page_size: pageSize,  // Use actual pageSize state
+        page, // Use actual page state
+        page_size: pageSize, // Use actual pageSize state
         search: debouncedSearch || undefined,
       });
       const resp = response as unknown as Record<string, unknown>;
       const items = (resp.items || resp.incidents || []) as Incident[];
-      
+
       // Fetch users to map reporter names
       const userMap = new Map<number, string>();
       try {
-        const usersResponse = await UserApi.getUsers({ page_size: 1000 });
+        const usersResponse = await UserApi.getUsers({ page_size: 100 });
         usersResponse.users.forEach(user => userMap.set(user.id, user.name));
       } catch (e) {
         console.warn('Failed to fetch users for reporter names', e);
       }
-      
+
       // Enrich incidents with reporter object if user exists
       const enriched = items.map(inc => {
         const reporterId = inc.reporter_id || inc.reporterId;
         const reporterName = reporterId ? userMap.get(reporterId) : undefined;
         return {
           ...inc,
-          ...(reporterId && reporterName ? { reporter: { id: reporterId, name: reporterName } } : {}),
+          ...(reporterId && reporterName
+            ? { reporter: { id: reporterId, name: reporterName } }
+            : {}),
         };
       });
-      
+
       setIncidents(enriched);
       const totalCount = (resp as any).total || enriched.length;
       setTotal(totalCount);
@@ -195,7 +212,7 @@ export default function IncidentsPage() {
               className="w-64"
               allowClear
               value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
+              onChange={e => setSearchKeyword(e.target.value)}
               onSearch={handleSearch}
             />
             <Button
@@ -261,9 +278,13 @@ export default function IncidentsPage() {
             getItemId={(incident: Incident) => incident.id}
             getItemStatus={(incident: Incident) => incident.status}
             getItemTitle={(incident: Incident) => incident.title || `事件 #${incident.id}`}
-            getItemNumber={(incident: Incident) => incident.incident_number || incident.incidentNumber || String(incident.id)}
+            getItemNumber={(incident: Incident) =>
+              incident.incident_number || incident.incidentNumber || String(incident.id)
+            }
             getItemDescription={(incident: Incident) => incident.description || ''}
-            getItemPriority={(incident: Incident) => incident.priority || incident.severity || 'medium'}
+            getItemPriority={(incident: Incident) =>
+              incident.priority || incident.severity || 'medium'
+            }
             getItemAssignee={(incident: Incident) =>
               incident.assignee
                 ? { name: incident.assignee.name || incident.assignee_name || '未分配' }

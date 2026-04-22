@@ -2,8 +2,8 @@ database:
   host: localhost
   port: 5432
   user: dev
-  password: "${DB_PASSWORD}"  # Required: set DB_PASSWORD env var
-  dbname: itsm
+  password: "dev123"
+  dbname: itsm_dev
   sslmode: disable
 
 # pgvector configuration (optional, for RAG/AI features)
