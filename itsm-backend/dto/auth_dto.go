@@ -13,10 +13,27 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	AccessToken  string      `json:"access_token"`
-	RefreshToken string      `json:"refresh_token"`
-	User         *ent.User   `json:"user"`
-	Tenant       *ent.Tenant `json:"tenant"`
+	AccessToken  string          `json:"access_token"`
+	RefreshToken string          `json:"refresh_token"`
+	User         *LoginUserResponse `json:"user"`
+	Tenant       *ent.Tenant     `json:"tenant"`
+}
+
+// LoginUserResponse 登录返回的用户信息（包含权限列表）
+type LoginUserResponse struct {
+	ID           int       `json:"id"`
+	Username     string    `json:"username"`
+	Email        string    `json:"email"`
+	Name         string    `json:"name"`
+	Role         string    `json:"role"`
+	Department   string    `json:"department"`
+	DepartmentID int       `json:"department_id"`
+	Phone        string    `json:"phone"`
+	Active       bool      `json:"active"`
+	TenantID     int       `json:"tenant_id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	Permissions  []string  `json:"permissions"` // 用户权限列表
 }
 
 type RefreshTokenRequest struct {
