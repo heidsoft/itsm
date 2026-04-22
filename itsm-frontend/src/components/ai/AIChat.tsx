@@ -134,7 +134,7 @@ const AIChat: React.FC = () => {
         />
         {loading && (
           <div style={{ textAlign: 'center', margin: '20px 0' }}>
-            <Spin tip="思考中..." />
+            <Spin description="思考中..." />
           </div>
         )}
       </div>

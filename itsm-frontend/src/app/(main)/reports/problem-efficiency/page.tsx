@@ -231,7 +231,7 @@ const ProblemEfficiencyPage = () => {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Spin size="large" tip="加载报表数据..." />
+          <Spin size="large" description="加载报表数据..." />
         </div>
       ) : (
         <>
