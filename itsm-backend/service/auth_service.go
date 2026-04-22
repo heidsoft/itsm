@@ -124,12 +124,57 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 
 	s.logger.Infow("User login successful", "user_id", userEntity.ID, "username", userEntity.Username, "tenant_id", userEntity.TenantID)
 
+	// 获取用户权限列表
+	permissions := s.getUserPermissions(userEntity)
+
 	return &dto.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		User:         userEntity,
-		Tenant:       tenantEntity,
+		User: &dto.LoginUserResponse{
+			ID:           userEntity.ID,
+			Username:     userEntity.Username,
+			Email:        userEntity.Email,
+			Name:         userEntity.Name,
+			Role:         string(userEntity.Role),
+			Department:   userEntity.Department,
+			DepartmentID: userEntity.DepartmentID,
+			Phone:        userEntity.Phone,
+			Active:       userEntity.Active,
+			TenantID:     userEntity.TenantID,
+			CreatedAt:    userEntity.CreatedAt,
+			UpdatedAt:    userEntity.UpdatedAt,
+			Permissions:  permissions,
+		},
+		Tenant: tenantEntity,
 	}, nil
+}
+
+// getUserPermissions 获取用户的权限列表（从 middleware.RolePermissions）
+func (s *AuthService) getUserPermissions(userEntity *ent.User) []string {
+	permissions := make([]string, 0)
+
+	// 超级管理员拥有所有权限
+	if userEntity.Role == user.RoleSuperAdmin {
+		return []string{"*"}
+	}
+
+	// 从 middleware.RolePermissions 获取角色权限
+	roleCode := string(userEntity.Role)
+	rolePerms, ok := middleware.RolePermissions[roleCode]
+	if !ok {
+		return permissions
+	}
+
+	seen := make(map[string]bool)
+	for _, p := range rolePerms {
+		key := p.Resource + ":" + p.Action
+		if !seen[key] {
+			seen[key] = true
+			permissions = append(permissions, key)
+		}
+	}
+
+	return permissions
 }
 
 // RefreshToken 刷新token (实现token rotation安全机制)
@@ -269,11 +314,28 @@ func (s *AuthService) SwitchTenant(ctx context.Context, userID, tenantID int) (*
 
 	s.logger.Infow("Tenant switched successfully", "user_id", userEntity.ID, "tenant_id", tenantID)
 
+	// 获取用户权限列表
+	permissions := s.getUserPermissions(userEntity)
+
 	return &dto.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		User:         userEntity,
-		Tenant:       tenantEntity,
+		User: &dto.LoginUserResponse{
+			ID:           userEntity.ID,
+			Username:     userEntity.Username,
+			Email:        userEntity.Email,
+			Name:         userEntity.Name,
+			Role:         string(userEntity.Role),
+			Department:   userEntity.Department,
+			DepartmentID: userEntity.DepartmentID,
+			Phone:        userEntity.Phone,
+			Active:       userEntity.Active,
+			TenantID:     userEntity.TenantID,
+			CreatedAt:    userEntity.CreatedAt,
+			UpdatedAt:    userEntity.UpdatedAt,
+			Permissions:  permissions,
+		},
+		Tenant: tenantEntity,
 	}, nil
 }
 
