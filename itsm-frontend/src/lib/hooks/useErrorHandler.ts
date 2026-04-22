@@ -199,10 +199,18 @@ export const handleGlobalError = (error: unknown, context?: string, customMessag
 
 // 错误边界组件使用的错误处理
 export const handleErrorBoundary = (error: Error, errorInfo: unknown) => {
+  // 安全地提取错误信息，避免序列化问题
+  const errorDetails = {
+    errorMessage: error?.message || String(error),
+    errorStack: error?.stack,
+    componentStack: (errorInfo as ErrorInfo)?.componentStack,
+    digest: (errorInfo as ErrorInfo)?.digest,
+  };
+
   const appError: AppError = {
     code: 'COMPONENT_ERROR',
-    message: '组件渲染错误',
-    details: { error, errorInfo },
+    message: error?.message || '组件渲染错误',
+    details: errorDetails,
     context: 'ErrorBoundary',
   };
 
