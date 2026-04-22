@@ -21,6 +21,8 @@
     "test:unit": "jest --coverage=false --passWithNoTests",
     "test:integration": "jest --coverage=false --passWithNoTests",
     "test:e2e": "playwright test",
+    "test:e2e:business": "playwright test --project=business-flows",
+    "test:smoke": "playwright test tests/e2e/business-flows/smoke-test.spec.ts --project=chromium",
     "test:ux": "jest src/app/__tests__/ux --coverage=false",
     "test:performance": "jest src/app/__tests__/performance --coverage=false",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e && npm run test:ux && npm run test:performance",
