@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Button, Card, Form, Input, Select, DatePicker, Upload, Space, Row, Col, message, Tabs, Typography, Divider } from 'antd';
-import { ArrowLeftOutlined, UploadOutlined, PlusOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Button, Card, Form, Input, Select, Upload, Space, Row, Col, message, Tabs, Typography, Divider, Tag, Spin } from 'antd';
+import { ArrowLeftOutlined, UploadOutlined, SearchOutlined, CloseOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { IncidentAPI } from '@/lib/api/incident-api';
+import { CMDBApi, ConfigurationItem } from '@/lib/api/cmdb-api';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -15,6 +16,45 @@ export default function CreateIncidentPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
+  const [selectedCIs, setSelectedCIs] = useState<ConfigurationItem[]>([]);
+  const [ciSearchTerm, setCISearchTerm] = useState('');
+  const [ciSearchResults, setCISearchResults] = useState<ConfigurationItem[]>([]);
+  const [ciSearching, setCISearching] = useState(false);
+
+  // CI配置项搜索
+  useEffect(() => {
+    if (ciSearchTerm.trim()) {
+      const fetchCIs = async () => {
+        setCISearching(true);
+        try {
+          const results = await CMDBApi.searchCIs({ keyword: ciSearchTerm });
+          setCISearchResults(results.items || []);
+        } catch (error) {
+          console.error('Failed to search CIs:', error);
+          setCISearchResults([]);
+        } finally {
+          setCISearching(false);
+        }
+      };
+
+      const timeoutId = setTimeout(fetchCIs, 300);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setCISearchResults([]);
+    }
+  }, [ciSearchTerm]);
+
+  const handleAddCI = (ci: ConfigurationItem) => {
+    if (!selectedCIs.find(item => item.id === ci.id)) {
+      setSelectedCIs([...selectedCIs, ci]);
+    }
+    setCISearchTerm('');
+    setCISearchResults([]);
+  };
+
+  const handleRemoveCI = (ciId: number) => {
+    setSelectedCIs(selectedCIs.filter(ci => ci.id !== ciId));
+  };
 
   const handleSubmit = async (values: any) => {
     setLoading(true);
@@ -23,12 +63,14 @@ export default function CreateIncidentPage() {
         title: values.title,
         description: values.description,
         priority: values.priority,
-        source: values.source || 'manual', // Add default source
-        type: values.type || 'incident', // Add default type
+        source: values.source || 'manual',
+        type: values.type || 'incident',
         category: values.category,
         impact: values.impact,
         urgency: values.urgency,
         assigned_to: values.assigned_to,
+        // 关联第一个CI（后续可扩展支持多个CI）
+        configurationItemId: selectedCIs.length > 0 ? selectedCIs[0].id : undefined,
       });
       message.success('事件创建成功');
       router.push('/incidents');
@@ -178,6 +220,59 @@ export default function CreateIncidentPage() {
                             </Form.Item>
                           </Col>
                         </Row>
+
+                        {/* CI配置项关联 */}
+                        <Form.Item label="关联配置项">
+                          <div className="space-y-3">
+                            {/* 已选择的CI列表 */}
+                            {selectedCIs.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {selectedCIs.map(ci => (
+                                  <Tag
+                                    key={ci.id}
+                                    closable
+                                    onClose={() => handleRemoveCI(ci.id)}
+                                    color="blue"
+                                  >
+                                    {ci.name} ({ci.ci_type || ci.ciType || 'CI'})
+                                  </Tag>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* CI搜索框 */}
+                            <div className="relative">
+                              <Input
+                                placeholder="搜索配置项名称或编号"
+                                prefix={<SearchOutlined />}
+                                value={ciSearchTerm}
+                                onChange={e => setCISearchTerm(e.target.value)}
+                                suffix={ciSearching ? <Spin size="small" /> : null}
+                              />
+
+                              {/* 搜索结果下拉 */}
+                              {ciSearchResults.length > 0 && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                                  {ciSearchResults.map(ci => (
+                                    <div
+                                      key={ci.id}
+                                      className="px-3 py-2 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+                                      onClick={() => handleAddCI(ci)}
+                                    >
+                                      <div>
+                                        <div className="font-medium">{ci.name}</div>
+                                        <div className="text-xs text-gray-500">{ci.ci_type || ci.ciType || 'CI'} - {ci.status}</div>
+                                      </div>
+                                      {selectedCIs.find(item => item.id === ci.id) && (
+                                        <Tag color="green">已选择</Tag>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </Form.Item>
                       </>
                     ),
                   },

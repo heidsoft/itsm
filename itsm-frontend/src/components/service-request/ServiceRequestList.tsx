@@ -188,7 +188,9 @@ const ServiceRequestList: React.FC = () => {
           total: total,
           onChange: (page, size) => setQuery(prev => ({ ...prev, page, size })),
           showSizeChanger: true,
-          showTotal: t => `共 ${t} 条记录`,
+          showQuickJumper: true,
+          showTotal: total => `共 ${total} 条记录`,
+          pageSizeOptions: ['10', '20', '50', '100'],
         }}
       />
     </Card>

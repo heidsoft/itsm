@@ -70,8 +70,8 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
   useEffect(() => {
     if (user?.id && token) {
       loadNotifications();
-      notificationWS.connect(user.id, token).catch(err => {
-        console.error('Notification WebSocket connection failed:', err);
+      notificationWS.connect(user.id, token).catch(() => {
+        // WebSocket server not available, ignore silently
       });
 
       const unsubscribe = notificationWS.onNotification((notification: TicketNotification) => {

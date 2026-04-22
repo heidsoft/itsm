@@ -9,7 +9,7 @@ import type {
   MSPContext,
 } from '@/types/msp';
 
-export class MBPService {
+export class MSPService {
   // 缓存当前用户 MSP 状态
   private static _isMSPUser: boolean | null = null;
   private static mspContext: MSPContext | null = null;
@@ -164,4 +164,4 @@ export class MBPService {
   }
 }
 
-export default MBPService;
+export default MSPService;

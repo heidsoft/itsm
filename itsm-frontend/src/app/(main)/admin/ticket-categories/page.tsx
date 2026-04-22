@@ -88,7 +88,7 @@ const TicketCategoryManagementPage = () => {
     setLoading(true);
     try {
       const data = await TicketCategoryApi.getCategories();
-      const list = data.items || data || [];
+      const list = Array.isArray(data) ? data : (data.items || data || []);
       setCategories(list);
     } catch (error) {
       console.error('Failed to load categories:', error);
@@ -300,7 +300,7 @@ const TicketCategoryManagementPage = () => {
     },
   ];
 
-  const treeData = categories.map(category => ({
+  const treeData = (categories || []).map(category => ({
     key: category.id,
     title: (
       <div className="flex items-center justify-between w-full">
