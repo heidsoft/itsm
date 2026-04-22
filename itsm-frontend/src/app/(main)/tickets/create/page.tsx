@@ -446,23 +446,25 @@ export default function CreateTicketPage() {
                 </Card>
               ) : (
                 /* 无自定义字段：显示基础表单 */
-                <Card 
-                  title="工单信息" 
+                <Card
+                  title="工单信息"
                   style={{ marginBottom: 16 }}
                   aria-label="基础工单信息表单"
+                  data-testid="ticket-form"
                 >
                   <Form.Item
                     name="title"
                     label="标题"
                     rules={[
-                      { required: true, message: '请输入标题' }, 
+                      { required: true, message: '请输入标题' },
                       { min: 2, message: '标题至少需要2个字符' }
                     ]}
                   >
-                    <Input 
-                      placeholder="例如：VPN 无法连接" 
+                    <Input
+                      placeholder="例如：VPN 无法连接"
                       aria-required="true"
                       aria-describedby="title-help"
+                      data-testid="ticket-title-input"
                     />
                   </Form.Item>
 
@@ -475,10 +477,11 @@ export default function CreateTicketPage() {
                     ]}
                     help="请详细描述问题现象、影响范围、期望结果等信息"
                   >
-                    <TextArea 
-                      rows={6} 
+                    <TextArea
+                      rows={6}
                       placeholder="请详细描述问题/需求与影响范围..."
                       aria-required="true"
+                      data-testid="ticket-description-input"
                     />
                   </Form.Item>
 
@@ -531,6 +534,7 @@ export default function CreateTicketPage() {
                   size="large"
                   block
                   aria-busy={loading}
+                  data-testid="ticket-submit-button"
                 >
                   创建工单
                 </Button>
