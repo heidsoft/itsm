@@ -24,6 +24,8 @@ import {
 } from 'antd';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
+import { SafeTextBlock } from '@/components/common/SafeContent';
+import { isValidTransition, getAllowedTransitions } from '@/lib/utils/workflow-state-machine';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -192,7 +194,21 @@ const TicketDetailPage: React.FC = () => {
   // Handle edit submit
   const handleEditSubmit = async (values: Partial<Ticket>) => {
     try {
-      await TicketApi.updateTicket(ticketId, values);
+      // 状态转换验证
+      if (values.status && ticket?.status && values.status !== ticket.status) {
+        if (!isValidTransition(ticket.status as any, values.status as any)) {
+          antMessage.error(`不允许从 "${statusMap[ticket.status]?.text || ticket.status}" 转换到 "${statusMap[values.status]?.text || values.status}"`);
+          return;
+        }
+      }
+
+      // 添加版本号用于乐观锁
+      const updatePayload = {
+        ...values,
+        version: ticket?.version,
+      };
+
+      await TicketApi.updateTicket(ticketId, updatePayload);
       antMessage.success('工单更新成功');
       setEditModalVisible(false);
       fetchTicket();
@@ -329,7 +345,7 @@ const TicketDetailPage: React.FC = () => {
             <Descriptions.Item label="创建时间">{ticket.createdAt}</Descriptions.Item>
             <Descriptions.Item label="更新时间">{ticket.updatedAt}</Descriptions.Item>
             <Descriptions.Item label="描述" span={2}>
-              {ticket.description}
+              <SafeTextBlock content={ticket.description} fallback="暂无描述" />
             </Descriptions.Item>
           </Descriptions>
 
@@ -567,6 +583,7 @@ const TicketDetailPage: React.FC = () => {
                 label="状态"
                 name="status"
                 rules={[{ required: true, message: '请选择状态' }]}
+                extra={ticket ? `当前状态: ${statusMap[ticket.status]?.text || ticket.status}` : ''}
               >
                 <Select
                   placeholder="请选择状态"
