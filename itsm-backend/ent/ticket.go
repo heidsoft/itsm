@@ -67,6 +67,8 @@ type Ticket struct {
 	RatedAt time.Time `json:"rated_at,omitempty"`
 	// 评分人ID
 	RatedBy int `json:"rated_by,omitempty"`
+	// 版本号（乐观锁）
+	Version int `json:"version,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -300,7 +302,7 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case ticket.FieldIsManagedByMsp:
 			values[i] = new(sql.NullBool)
-		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID, ticket.FieldRating, ticket.FieldRatedBy, ticket.FieldMspProviderID, ticket.FieldManagedByUserID:
+		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID, ticket.FieldRating, ticket.FieldRatedBy, ticket.FieldVersion, ticket.FieldMspProviderID, ticket.FieldManagedByUserID:
 			values[i] = new(sql.NullInt64)
 		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldType, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldResolution, ticket.FieldRatingComment, ticket.FieldMspTicketID:
 			values[i] = new(sql.NullString)
@@ -468,6 +470,12 @@ func (_m *Ticket) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field rated_by", values[i])
 			} else if value.Valid {
 				_m.RatedBy = int(value.Int64)
+			}
+		case ticket.FieldVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field version", values[i])
+			} else if value.Valid {
+				_m.Version = int(value.Int64)
 			}
 		case ticket.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -715,6 +723,9 @@ func (_m *Ticket) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("rated_by=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RatedBy))
+	builder.WriteString(", ")
+	builder.WriteString("version=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Version))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

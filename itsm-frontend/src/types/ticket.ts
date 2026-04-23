@@ -88,6 +88,9 @@ export interface Ticket {
   requester: TicketUser;
   assignee?: TicketUser;
 
+  // 版本控制（乐观锁）
+  version: number;
+
   // 时间相关
   createdAt: string;
   updatedAt: string;
@@ -151,6 +154,8 @@ export interface UpdateTicketRequest {
   dueDate?: string;
   customFields?: Record<string, unknown>;
   tags?: string[];
+  /** 版本号（用于乐观锁冲突检测） */
+  version?: number;
 }
 
 export interface TicketFilters {

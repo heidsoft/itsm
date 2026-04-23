@@ -160,6 +160,11 @@ func TenantID(v int) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldTenantID, v))
 }
 
+// Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
+func Version(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldVersion, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldCreatedAt, v))
@@ -1318,6 +1323,46 @@ func TenantIDLT(v int) predicate.Incident {
 // TenantIDLTE applies the LTE predicate on the "tenant_id" field.
 func TenantIDLTE(v int) predicate.Incident {
 	return predicate.Incident(sql.FieldLTE(FieldTenantID, v))
+}
+
+// VersionEQ applies the EQ predicate on the "version" field.
+func VersionEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldVersion, v))
+}
+
+// VersionNEQ applies the NEQ predicate on the "version" field.
+func VersionNEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldVersion, v))
+}
+
+// VersionIn applies the In predicate on the "version" field.
+func VersionIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldVersion, vs...))
+}
+
+// VersionNotIn applies the NotIn predicate on the "version" field.
+func VersionNotIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldVersion, vs...))
+}
+
+// VersionGT applies the GT predicate on the "version" field.
+func VersionGT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldVersion, v))
+}
+
+// VersionGTE applies the GTE predicate on the "version" field.
+func VersionGTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldVersion, v))
+}
+
+// VersionLT applies the LT predicate on the "version" field.
+func VersionLT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldVersion, v))
+}
+
+// VersionLTE applies the LTE predicate on the "version" field.
+func VersionLTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldVersion, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

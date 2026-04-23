@@ -45,7 +45,9 @@ type UpdateTicketRequest struct {
 	Tags        []string               `json:"tags"`
 	Resolution  string                 `json:"resolution" binding:"omitempty"`
 	FormFields  map[string]interface{} `json:"formFields"`
-	UserID      int                    `json:"userId" binding:"omitempty"` // 操作用户ID (后端自动填充)
+	UserID      int                    `json:"userId" binding:"omitempty"`  // 操作用户ID (后端自动填充)
+	Version     int                    `json:"version"`                     // 版本号（乐观锁）
+	Force       bool                   `json:"force"`                       // 是否强制更新（忽略版本检查）
 }
 
 // ListTicketsRequest 获取工单列表请求
@@ -81,6 +83,7 @@ type TicketResponse struct {
 	AssigneeID   int            `json:"assigneeId,omitempty"`
 	TenantID     int            `json:"tenantId"`
 	CategoryID   int            `json:"categoryId,omitempty"`
+	Version      int            `json:"version"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
 	Requester    *UserBasicInfo `json:"requester,omitempty"`

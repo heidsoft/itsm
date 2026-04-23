@@ -2,11 +2,13 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
 
 	"go.uber.org/zap"
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
@@ -15,9 +17,10 @@ import (
 )
 
 type TicketCoreService struct {
-	client         *ent.Client
-	logger        *zap.SugaredLogger
-	sequenceService *SequenceService
+	client           *ent.Client
+	rawDB            *sql.DB // for transactional SELECT FOR UPDATE
+	logger           *zap.SugaredLogger
+	sequenceService  *SequenceService
 }
 
 // SetSequenceService 设置序列服务
@@ -27,6 +30,11 @@ func (s *TicketCoreService) SetSequenceService(seqSvc *SequenceService) {
 
 func NewTicketCoreService(client *ent.Client, logger *zap.SugaredLogger) *TicketCoreService {
 	return &TicketCoreService{client: client, logger: logger}
+}
+
+// SetRawDB 设置原生数据库连接（用于事务性编号生成）
+func (s *TicketCoreService) SetRawDB(db *sql.DB) {
+	s.rawDB = db
 }
 
 func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ent.Ticket, error) {
@@ -209,6 +217,16 @@ func (s *TicketCoreService) UpdateTicketBasic(ctx context.Context, ticketID int,
 		return nil, fmt.Errorf("工单不存在: %w", err)
 	}
 
+	// 版本检查（乐观锁）- 除非明确强制更新
+	if !req.Force && req.Version > 0 && t.Version != req.Version {
+		return nil, common.NewVersionConflictError(
+			"工单",
+			ticketID,
+			req.Version,
+			t.Version,
+		)
+	}
+
 	update := s.client.Ticket.UpdateOne(t)
 
 	if req.Title != "" {
@@ -241,6 +259,9 @@ func (s *TicketCoreService) UpdateTicketBasic(ctx context.Context, ticketID int,
 		}
 		update = update.SetAssigneeID(req.AssigneeID)
 	}
+
+	// 自动增加版本号
+	update = update.AddVersion(1)
 
 	ticket, err := update.Save(ctx)
 	if err != nil {
@@ -319,37 +340,93 @@ func (s *TicketCoreService) generateTicketNumberWithRedis(ctx context.Context, y
 	return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq), nil
 }
 
-// generateTicketNumberWithDB 使用数据库查询生成工单编号（备用方案）
+// generateTicketNumberWithDB 使用数据库事务+SELECT FOR UPDATE 生成工单编号（备用方案）
+// 解决了并发时多个请求生成相同编号的问题
 func (s *TicketCoreService) generateTicketNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
-	// 获取当月最大工单编号的序列号，避免并发重复
-	tickets, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.TicketNumberContains(fmt.Sprintf("TKT-%04d%02d", year, month)),
-		).
-		Order(ent.Desc(ticket.FieldTicketNumber)).
-		Limit(1).
-		All(ctx)
-	
-	var maxSeq int
-	if err != nil {
-		s.logger.Warnw("Query max ticket number failed, using 0", "error", err)
-		maxSeq = 0
-	} else if len(tickets) > 0 {
-		// 解析 ticket_number 提取序列号，格式: TKT-YYYYMM-NNNNNN
-		ticketNum := tickets[0].TicketNumber
-		// 找到最后一个 "-" 后的数字部分
-		if idx := len(ticketNum) - 1; idx > 0 {
-			for i := len(ticketNum) - 1; i >= 0; i-- {
-				if ticketNum[i] == '-' {
-					fmt.Sscanf(ticketNum[i+1:], "%d", &maxSeq)
-					break
+	prefix := fmt.Sprintf("TKT-%04d%02d-", year, month)
+	const maxRetries = 5
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		var candidate string
+
+		// 开启事务，使用 SELECT FOR UPDATE 锁定最大编号行
+		if s.rawDB != nil {
+			tx, err := s.rawDB.BeginTx(ctx, nil)
+			if err != nil {
+				s.logger.Warnw("BeginTx failed, falling back to non-transactional", "error", err)
+			} else {
+				// 使用原生 SQL 查询最大编号
+				query := `SELECT ticket_number FROM ticket WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE`
+				var maxTicketNum string
+				err := tx.QueryRowContext(ctx, query, tenantID, prefix+"%").Scan(&maxTicketNum)
+				if err != nil && err != sql.ErrNoRows {
+					s.logger.Warnw("SELECT FOR UPDATE failed", "error", err)
+				}
+
+				// 计算下一个序列号
+				var seq int = 0
+				if err == nil && maxTicketNum != "" {
+					if idx := strings.LastIndex(maxTicketNum, "-"); idx >= 0 {
+						fmt.Sscanf(maxTicketNum[idx+1:], "%d", &seq)
+					}
+				}
+
+				candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq+1)
+				s.logger.Infow("DB transaction generated ticket number",
+					"number", candidate, "attempt", attempt, "tenant", tenantID)
+
+				// 提交事务（编号唯一性由外层 CreateTicket 唯一约束保证）
+				tx.Commit()
+				return candidate, nil
+			}
+		}
+
+		// Fallback: 非事务方式（仅用于没有 rawDB 的场景）
+		tickets, err := s.client.Ticket.Query().
+			Where(
+				ticket.TenantID(tenantID),
+				ticket.TicketNumberContains(prefix[:len(prefix)-1]),
+			).
+			Order(ent.Desc(ticket.FieldTicketNumber)).
+			Limit(1).
+			All(ctx)
+
+		var maxSeq int
+		parseErr := false
+		if err != nil {
+			s.logger.Warnw("Query max ticket number failed, using 0", "error", err)
+			maxSeq = 0
+		} else if len(tickets) > 0 {
+			ticketNum := tickets[0].TicketNumber
+			if ticketNum == "" {
+				parseErr = true
+			} else {
+				parsed := false
+				for i := len(ticketNum) - 1; i >= 0; i-- {
+					if ticketNum[i] == '-' {
+						if _, err := fmt.Sscanf(ticketNum[i+1:], "%d", &maxSeq); err == nil {
+							parsed = true
+						}
+						break
+					}
+				}
+				if !parsed {
+					parseErr = true
 				}
 			}
 		}
+
+		if parseErr || (err == nil && len(tickets) == 0) {
+			maxSeq = 0
+		}
+
+		candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, maxSeq+1)
+		s.logger.Infow("DB fallback generated ticket number",
+			"number", candidate, "attempt", attempt, "tenant", tenantID)
+		return candidate, nil
 	}
 
-	return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, maxSeq+1), nil
+	return "", fmt.Errorf("failed to generate unique ticket number after %d attempts", maxRetries)
 }
 
 func (s *TicketCoreService) validateRequester(ctx context.Context, userID, tenantID int) error {

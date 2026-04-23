@@ -68,6 +68,8 @@ type Incident struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
+	// 版本号（乐观锁）
+	Version int `json:"version,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -171,7 +173,7 @@ func (*Incident) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case incident.FieldIsAutomated, incident.FieldIsMajorIncident:
 			values[i] = new(sql.NullBool)
-		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldConfigurationItemID, incident.FieldEscalationLevel, incident.FieldTenantID:
+		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldConfigurationItemID, incident.FieldEscalationLevel, incident.FieldTenantID, incident.FieldVersion:
 			values[i] = new(sql.NullInt64)
 		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldType, incident.FieldPriority, incident.FieldSeverity, incident.FieldIncidentNumber, incident.FieldCategory, incident.FieldSubcategory, incident.FieldSource:
 			values[i] = new(sql.NullString)
@@ -356,6 +358,12 @@ func (_m *Incident) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.TenantID = int(value.Int64)
 			}
+		case incident.FieldVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field version", values[i])
+			} else if value.Valid {
+				_m.Version = int(value.Int64)
+			}
 		case incident.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -513,6 +521,9 @@ func (_m *Incident) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
+	builder.WriteString(", ")
+	builder.WriteString("version=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Version))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
