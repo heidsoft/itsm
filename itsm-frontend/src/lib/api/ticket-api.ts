@@ -37,7 +37,10 @@ export class TicketApi {
   }
 
   // Update ticket information
-  static async updateTicket(id: number, data: Partial<Ticket>): Promise<Ticket> {
+  static async updateTicket(
+    id: number,
+    data: Partial<Ticket> & { version?: number; force?: boolean }
+  ): Promise<Ticket> {
     return handleApiRequest(httpClient.put<Ticket>(`/api/v1/tickets/${id}`, data), {
       errorMessage: 'Failed to update ticket',
       showSuccess: true,

@@ -6,8 +6,8 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { httpClient } from '@/lib/api/http-client';
 import { clearAuthStorage } from '@/lib/auth/token-storage';
+import { setTenant, clearTenant } from '@/lib/auth/tenant-context';
 import { User, Tenant } from '@/lib/api/api-config';
 
 // ===================================
@@ -55,14 +55,11 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
 
       // 登录操作
-      // 注意：token 存储在 localStorage 中，前端需要使用
+      // 注意：token 存储在 httpOnly cookie 中，前端不需要存储
       login: (user: User, _token: string, tenant?: Tenant) => {
-        // 从 localStorage 获取实际 token，因为后端返回的 token 存在 localStorage 中
-        const storedToken =
-          typeof window !== 'undefined' ? localStorage.getItem('access_token') : _token;
         set({
           user,
-          token: storedToken,
+          token: null, // token 在 httpOnly cookie 中，不存储在前端
           isAuthenticated: true,
           isLoading: false,
           currentTenant: tenant || null,
@@ -154,7 +151,7 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
       partialize: state => ({
         user: state.user,
-        token: state.token,
+        token: null, // token 在 httpOnly cookie 中，不持久化
         currentTenant: state.currentTenant,
         isAuthenticated: state.isAuthenticated,
       }),

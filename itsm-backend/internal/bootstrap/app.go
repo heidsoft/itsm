@@ -99,6 +99,9 @@ func NewApplication() *Application {
 		sugar.Warnw("Redis sequence service not available, will use database fallback for ticket number")
 	}
 	ticketService := service.NewTicketServiceWithSequence(client, sugar, sequenceService)
+	ticketService.SetRawDB(database.GetRawDB())
+	// 为 IncidentService 注入序列服务
+	incidentService.SetSequenceService(sequenceService)
 
 	// MSP 服务初始化
 	mspAllocationService := service.NewMSPAllocationService(client, sugar)
@@ -347,6 +350,10 @@ func NewApplication() *Application {
 	systemConfigService := service.NewSystemConfigService(client, sugar)
 	systemConfigController := controller.NewSystemConfigController(systemConfigService, sugar)
 
+	// Vendor Controller
+	vendorService := service.NewVendorService(client, sugar)
+	vendorController := controller.NewVendorController(vendorService)
+
 	// Approval Chain Controller
 	approvalChainService := service.NewApprovalChainService(client, sugar)
 	approvalChainController := controller.NewApprovalChainController(approvalChainService, sugar)
@@ -444,6 +451,9 @@ func NewApplication() *Application {
 
 		// CMDB Controller (新增)
 		CMDBController: cmdbController,
+
+		// Vendor Controller
+		VendorController: vendorController,
 
 		// Additional controllers
 		ServiceController:      serviceController,

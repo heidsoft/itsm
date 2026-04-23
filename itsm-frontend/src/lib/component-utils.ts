@@ -8,8 +8,10 @@ import { message, notification } from 'antd';
 import { debounce as _debounce, throttle as _throttle } from 'lodash-es';
 import { logger } from '@/lib/env';
 
-// Cast lodash functions to any to avoid strict type issues
+// Cast lodash functions - lodash-es debounce/throttle have known TS generic limitations
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const debounce = _debounce as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const throttle = _throttle as any;
 
 // 防抖Hook

@@ -15,15 +15,16 @@ type Response struct {
 
 // 响应码定义
 const (
-	SuccessCode       = 0
-	ParamErrorCode    = 1001
-	ValidationError   = 1002
-	AuthFailedCode    = 2001
-	UnauthorizedCode  = 2002
-	ForbiddenCode     = 2003
-	NotFoundCode      = 4004
-	BadRequestCode    = 4000
-	InternalErrorCode = 5001
+	SuccessCode         = 0
+	ParamErrorCode      = 1001
+	ValidationError     = 1002
+	AuthFailedCode      = 2001
+	UnauthorizedCode    = 2002
+	ForbiddenCode       = 2003
+	NotFoundCode        = 4004
+	BadRequestCode      = 4000
+	ConflictCode        = 4090 // 版本冲突
+	InternalErrorCode   = 5001
 
 	// Aliases for compatibility
 	NotFoundErrorCode  = NotFoundCode
@@ -52,6 +53,8 @@ func Fail(c *gin.Context, code int, message string) {
 		statusCode = http.StatusForbidden
 	case NotFoundCode:
 		statusCode = http.StatusNotFound
+	case ConflictCode:
+		statusCode = http.StatusConflict
 	case InternalErrorCode:
 		statusCode = http.StatusInternalServerError
 	}
@@ -74,12 +77,23 @@ func FailWithData(c *gin.Context, code int, message string, data interface{}) {
 		statusCode = http.StatusForbidden
 	case NotFoundCode:
 		statusCode = http.StatusNotFound
+	case ConflictCode:
+		statusCode = http.StatusConflict
 	case InternalErrorCode:
 		statusCode = http.StatusInternalServerError
 	}
 
 	c.JSON(statusCode, Response{
 		Code:    code,
+		Message: message,
+		Data:    data,
+	})
+}
+
+// Conflict 版本冲突响应
+func Conflict(c *gin.Context, message string, data interface{}) {
+	c.JSON(http.StatusConflict, Response{
+		Code:    ConflictCode,
 		Message: message,
 		Data:    data,
 	})

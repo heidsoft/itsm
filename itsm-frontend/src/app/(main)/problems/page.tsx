@@ -203,7 +203,12 @@ export default function ProblemListPage() {
           ]}
         />
 
-        <ProblemList showHeader={false} />
+        <ProblemList
+          showHeader={false}
+          keyword={debouncedSearch}
+          status={statusFilter}
+          priority={priorityFilter}
+        />
       </PageContainer>
     </div>
   );

@@ -88,6 +88,10 @@ func (Ticket) Fields() []ent.Field {
 		field.Int("rated_by").
 			Comment("评分人ID").
 			Optional(),
+		field.Int("version").
+			Comment("版本号（乐观锁）").
+			Default(1).
+			Positive(),
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),

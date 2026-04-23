@@ -60,6 +60,8 @@ const (
 	FieldRatedAt = "rated_at"
 	// FieldRatedBy holds the string denoting the rated_by field in the database.
 	FieldRatedBy = "rated_by"
+	// FieldVersion holds the string denoting the version field in the database.
+	FieldVersion = "version"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -247,6 +249,7 @@ var Columns = []string{
 	FieldRatingComment,
 	FieldRatedAt,
 	FieldRatedBy,
+	FieldVersion,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldIsManagedByMsp,
@@ -304,6 +307,10 @@ var (
 	TenantIDValidator func(int) error
 	// RatingValidator is a validator for the "rating" field. It is called by the builders before save.
 	RatingValidator func(int) error
+	// DefaultVersion holds the default value on creation for the "version" field.
+	DefaultVersion int
+	// VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	VersionValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -435,6 +442,11 @@ func ByRatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByRatedBy orders the results by the rated_by field.
 func ByRatedBy(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRatedBy, opts...).ToFunc()
+}
+
+// ByVersion orders the results by the version field.
+func ByVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVersion, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

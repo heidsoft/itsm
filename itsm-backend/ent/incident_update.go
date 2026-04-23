@@ -465,6 +465,27 @@ func (_u *IncidentUpdate) AddTenantID(v int) *IncidentUpdate {
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *IncidentUpdate) SetVersion(v int) *IncidentUpdate {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableVersion(v *int) *IncidentUpdate {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *IncidentUpdate) AddVersion(v int) *IncidentUpdate {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *IncidentUpdate) SetCreatedAt(v time.Time) *IncidentUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -800,6 +821,11 @@ func (_u *IncidentUpdate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Incident.tenant_id": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Version(); ok {
+		if err := incident.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Incident.version": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -945,6 +971,12 @@ func (_u *IncidentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incident.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(incident.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(incident.FieldVersion, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incident.FieldCreatedAt, field.TypeTime, value)
@@ -1718,6 +1750,27 @@ func (_u *IncidentUpdateOne) AddTenantID(v int) *IncidentUpdateOne {
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *IncidentUpdateOne) SetVersion(v int) *IncidentUpdateOne {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableVersion(v *int) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *IncidentUpdateOne) AddVersion(v int) *IncidentUpdateOne {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *IncidentUpdateOne) SetCreatedAt(v time.Time) *IncidentUpdateOne {
 	_u.mutation.SetCreatedAt(v)
@@ -2066,6 +2119,11 @@ func (_u *IncidentUpdateOne) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Incident.tenant_id": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Version(); ok {
+		if err := incident.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Incident.version": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -2228,6 +2286,12 @@ func (_u *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err 
 	}
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incident.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(incident.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(incident.FieldVersion, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incident.FieldCreatedAt, field.TypeTime, value)

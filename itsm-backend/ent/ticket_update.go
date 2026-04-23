@@ -496,6 +496,27 @@ func (_u *TicketUpdate) ClearRatedBy() *TicketUpdate {
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *TicketUpdate) SetVersion(v int) *TicketUpdate {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *TicketUpdate) SetNillableVersion(v *int) *TicketUpdate {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *TicketUpdate) AddVersion(v int) *TicketUpdate {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *TicketUpdate) SetCreatedAt(v time.Time) *TicketUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -1179,6 +1200,11 @@ func (_u *TicketUpdate) check() error {
 			return &ValidationError{Name: "rating", err: fmt.Errorf(`ent: validator failed for field "Ticket.rating": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Version(); ok {
+		if err := ticket.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Ticket.version": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -1295,6 +1321,12 @@ func (_u *TicketUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.RatedByCleared() {
 		_spec.ClearField(ticket.FieldRatedBy, field.TypeInt)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(ticket.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(ticket.FieldVersion, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticket.FieldCreatedAt, field.TypeTime, value)
@@ -2493,6 +2525,27 @@ func (_u *TicketUpdateOne) ClearRatedBy() *TicketUpdateOne {
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *TicketUpdateOne) SetVersion(v int) *TicketUpdateOne {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *TicketUpdateOne) SetNillableVersion(v *int) *TicketUpdateOne {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *TicketUpdateOne) AddVersion(v int) *TicketUpdateOne {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *TicketUpdateOne) SetCreatedAt(v time.Time) *TicketUpdateOne {
 	_u.mutation.SetCreatedAt(v)
@@ -3189,6 +3242,11 @@ func (_u *TicketUpdateOne) check() error {
 			return &ValidationError{Name: "rating", err: fmt.Errorf(`ent: validator failed for field "Ticket.rating": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Version(); ok {
+		if err := ticket.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Ticket.version": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -3322,6 +3380,12 @@ func (_u *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err erro
 	}
 	if _u.mutation.RatedByCleared() {
 		_spec.ClearField(ticket.FieldRatedBy, field.TypeInt)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(ticket.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(ticket.FieldVersion, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticket.FieldCreatedAt, field.TypeTime, value)
