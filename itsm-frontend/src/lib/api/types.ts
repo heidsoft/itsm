@@ -84,6 +84,8 @@ export interface Ticket {
   updatedAt: string;
   dueTime?: string;
   closedAt?: string;
+  /** 版本号（用于乐观锁冲突检测） */
+  version?: number;
 }
 
 export interface TicketListResponse {
