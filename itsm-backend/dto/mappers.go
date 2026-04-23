@@ -68,6 +68,7 @@ func ToTicketResponse(ticket *ent.Ticket) *TicketResponse {
 		AssigneeID:   ticket.AssigneeID,
 		TenantID:     ticket.TenantID,
 		CategoryID:   ticket.CategoryID,
+		Version:      ticket.Version, // 乐观锁版本号，前端用于并发冲突检测
 		CreatedAt:    ticket.CreatedAt,
 		UpdatedAt:    ticket.UpdatedAt,
 	}
@@ -164,6 +165,7 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 		IsAutomated:       incident.IsAutomated,
 		IsMajorIncident:   incident.IsMajorIncident,
 		TenantID:          incident.TenantID,
+		Version:           incident.Version, // 乐观锁版本号
 		CreatedAt:         incident.CreatedAt,
 		UpdatedAt:         incident.UpdatedAt,
 	}
