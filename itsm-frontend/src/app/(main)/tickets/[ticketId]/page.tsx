@@ -25,7 +25,7 @@ import {
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { SafeTextBlock } from '@/components/common/SafeContent';
-import { isValidTransition, getAllowedTransitions } from '@/lib/utils/workflow-state-machine';
+import { isValidTransition, getAllowedTransitions, isFinalStatus } from '@/lib/utils/workflow-state-machine';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -57,6 +57,7 @@ const TicketDetailPage: React.FC = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [assigning, setAssigning] = useState(false);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
@@ -76,6 +77,9 @@ const TicketDetailPage: React.FC = () => {
 
   // 判断当前用户是否是工单申请人
   const isRequester = ticket?.requesterId === currentUser?.id;
+
+  // 判断工单是否处于终态（不可再操作）
+  const isTicketFinal = ticket ? isFinalStatus(ticket.status as any) : false;
 
   // Get ticket details
   const fetchTicket = useCallback(async () => {
@@ -168,6 +172,7 @@ const TicketDetailPage: React.FC = () => {
   // Handle assignment submit
   const handleAssignSubmit = async (values: { assignee_id: number; comment?: string }) => {
     try {
+      setAssigning(true);
       await TicketApi.assignTicket(ticketId, values);
       antMessage.success('工单分配成功');
       setAssignModalVisible(false);
@@ -175,6 +180,8 @@ const TicketDetailPage: React.FC = () => {
       fetchTicket();
     } catch (error) {
       handleError(error, 'assignTicket', '分配失败');
+    } finally {
+      setAssigning(false);
     }
   };
 
@@ -404,8 +411,8 @@ const TicketDetailPage: React.FC = () => {
               icon={<Check size={16} />}
               onClick={handleApprove}
               loading={approving}
-              disabled={isRequester}
-              title={isRequester ? '不能审批自己提交的工单' : ''}
+              disabled={isRequester || isTicketFinal}
+              title={isRequester ? '不能审批自己提交的工单' : isTicketFinal ? '工单已结束，无法操作' : ''}
             >
               批准
             </Button>
@@ -414,15 +421,26 @@ const TicketDetailPage: React.FC = () => {
               icon={<XIcon size={16} />}
               onClick={handleReject}
               loading={rejecting}
-              disabled={isRequester}
-              title={isRequester ? '不能拒绝自己提交的工单' : ''}
+              disabled={isRequester || isTicketFinal}
+              title={isRequester ? '不能拒绝自己提交的工单' : isTicketFinal ? '工单已结束，无法操作' : ''}
             >
               拒绝
             </Button>
-            <Button icon={<UserCheck size={16} />} onClick={handleAssign} loading={loadingUsers}>
+            <Button
+              icon={<UserCheck size={16} />}
+              onClick={handleAssign}
+              loading={loadingUsers}
+              disabled={isTicketFinal}
+              title={isTicketFinal ? '工单已结束，无法分配' : ''}
+            >
               分配
             </Button>
-            <Button icon={<Edit size={16} />} onClick={handleUpdate}>
+            <Button
+              icon={<Edit size={16} />}
+              onClick={handleUpdate}
+              disabled={isTicketFinal}
+              title={isTicketFinal ? '工单已结束，无法编辑' : ''}
+            >
               编辑
             </Button>
             <Button danger icon={<Trash2 size={16} />} onClick={handleDeleteClick}>
@@ -430,13 +448,19 @@ const TicketDetailPage: React.FC = () => {
             </Button>
           </Space>
 
-          {isRequester && (
+          {isTicketFinal && (
+            <Text type="secondary" className="block mt-2">
+              工单已结束，无法进行操作
+            </Text>
+          )}
+
+          {isRequester && !isTicketFinal && (
             <Text type="secondary" className="block mt-2">
               您是此工单的申请人，无法进行审批操作
             </Text>
           )}
 
-          {!isRequester && (
+          {!isRequester && !isTicketFinal && (
             <Text type="secondary">支持状态变更、审批流程、分配处理人等完整工单操作</Text>
           )}
         </Space>
@@ -498,7 +522,7 @@ const TicketDetailPage: React.FC = () => {
                 >
                   取消
                 </Button>
-                <Button type="primary" htmlType="submit" icon={<Save />}>
+                <Button type="primary" htmlType="submit" icon={<Save />} loading={assigning}>
                   确认分配
                 </Button>
               </Space>
