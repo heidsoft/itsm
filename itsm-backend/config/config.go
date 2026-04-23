@@ -50,8 +50,9 @@ type DatabaseConfig struct {
 }
 
 type ServerConfig struct {
-	Port int    `mapstructure:"port"`
-	Mode string `mapstructure:"mode"`
+	Port          int    `mapstructure:"port"`
+	Mode          string `mapstructure:"mode"`
+	CookieSecure  bool   `mapstructure:"cookie_secure"`  // Secure flag for cookies (set true only behind HTTPS)
 }
 
 type JWTConfig struct {

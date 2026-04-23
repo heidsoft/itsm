@@ -1022,11 +1022,10 @@ func TestAuthController_RefreshTokenResponseFormat(t *testing.T) {
 	data, ok := response.Data.(map[string]interface{})
 	require.True(t, ok)
 
-	// RefreshTokenResponse 仅返回 access_token
+	// RefreshTokenResponse 返回 access_token 和 refresh_token（实现 token rotation 安全机制）
 	assert.NotEmpty(t, data["access_token"])
-	// 不应该返回 refresh_token（不做轮换）
-	_, hasRefreshToken := data["refresh_token"]
-	assert.False(t, hasRefreshToken, "RefreshTokenResponse 不应该返回新的 refresh_token")
+	// 应该返回新的 refresh_token（token rotation 防止 replay 攻击）
+	assert.NotEmpty(t, data["refresh_token"], "RefreshTokenResponse 应该返回新的 refresh_token (token rotation)")
 }
 
 func TestAuthController_RefreshTokenWithDifferentUserTokens(t *testing.T) {

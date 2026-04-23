@@ -58,9 +58,15 @@ const priorityColors: Record<string, string> = {
 
 interface ProblemListProps {
   showHeader?: boolean;
+  /** 外部传入的关键词筛选 */
+  keyword?: string;
+  /** 外部传入的状态筛选 */
+  status?: string;
+  /** 外部传入的优先级筛选 */
+  priority?: string;
 }
 
-const ProblemList: React.FC<ProblemListProps> = ({ showHeader = true }) => {
+const ProblemList: React.FC<ProblemListProps> = ({ showHeader = true, keyword, status, priority }) => {
   const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
@@ -72,6 +78,18 @@ const ProblemList: React.FC<ProblemListProps> = ({ showHeader = true }) => {
     page: 1,
     pageSize: 10,
   });
+
+  // 当外部筛选条件变化时，同步到表单并重新加载
+  useEffect(() => {
+    if (keyword !== undefined || status !== undefined || priority !== undefined) {
+      form.setFieldsValue({
+        keyword: keyword || undefined,
+        status: status || undefined,
+        priority: priority || undefined,
+      });
+      setQuery(prev => ({ ...prev, page: 1 }));
+    }
+  }, [keyword, status, priority, form]);
 
   const loadData = async () => {
     setLoading(true);

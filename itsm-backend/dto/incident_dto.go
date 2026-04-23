@@ -73,6 +73,8 @@ type UpdateIncidentRequest struct {
 	RootCause       *RootCause             `json:"rootCause,omitempty"`
 	ResolutionSteps []ResolutionStep       `json:"resolutionSteps,omitempty"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+	Version         int                    `json:"version"`  // 版本号（乐观锁）
+	Force           bool                   `json:"force"`    // 是否强制更新（忽略版本检查）
 }
 
 type IncidentResponse struct {
@@ -91,6 +93,7 @@ type IncidentResponse struct {
 	ImpactAnalysis      *ImpactAnalysis        `json:"impactAnalysis"`
 	RootCause           *RootCause             `json:"rootCause"`
 	ResolutionSteps     []ResolutionStep       `json:"resolutionSteps"`
+	Version             int                    `json:"version" example:"1"`
 	DetectedAt          time.Time              `json:"detectedAt" example:"2024-01-01T00:00:00Z"`
 	ResolvedAt          *time.Time             `json:"resolvedAt,omitempty" example:"2024-01-01T12:00:00Z"`
 	ClosedAt            *time.Time             `json:"closedAt,omitempty" example:"2024-01-01T18:00:00Z"`

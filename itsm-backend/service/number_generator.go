@@ -92,10 +92,19 @@ func (ng *NumberGenerator) GenerateChangeNumber() string {
 	return fmt.Sprintf("CHG-%s-%04d", ng.sequenceDate, seq)
 }
 
-// 全局号码生成器实例
+// Deprecated: 全局号码生成器仅用于单机模式，多实例部署会生成重复编号！
+// 请使用 SequenceService (service/sequence_service.go) 的 Redis INCR 原子操作。
+// Ticket/Incident/Problem/Change 编号生成已迁移到各自 Service 的 generateXxxNumber 方法。
+var _globalGeneratorUsed = false // Set to true if any code calls the deprecated functions
+
 var globalGenerator = NewNumberGenerator()
 
-// GenerateTicketNumberGlobal 全局工单编号生成
+// Deprecated: 多实例部署时会导致编号冲突！
+// 已迁移到:
+//   - TicketCoreService.generateTicketNumber() 使用 Redis SequenceService
+//   - IncidentService.generateIncidentNumber() 使用 Redis SequenceService
+//   - ProblemService.generateProblemNumber() 使用 Redis SequenceService
+//   - ChangeService.generateChangeNumber() 使用 Redis SequenceService
 func GenerateTicketNumberGlobal() string {
 	return globalGenerator.GenerateTicketNumber()
 }

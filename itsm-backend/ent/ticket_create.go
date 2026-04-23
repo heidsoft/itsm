@@ -325,6 +325,20 @@ func (_c *TicketCreate) SetNillableRatedBy(v *int) *TicketCreate {
 	return _c
 }
 
+// SetVersion sets the "version" field.
+func (_c *TicketCreate) SetVersion(v int) *TicketCreate {
+	_c.mutation.SetVersion(v)
+	return _c
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_c *TicketCreate) SetNillableVersion(v *int) *TicketCreate {
+	if v != nil {
+		_c.SetVersion(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *TicketCreate) SetCreatedAt(v time.Time) *TicketCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -675,6 +689,10 @@ func (_c *TicketCreate) defaults() {
 		v := ticket.DefaultPriority
 		_c.mutation.SetPriority(v)
 	}
+	if _, ok := _c.mutation.Version(); !ok {
+		v := ticket.DefaultVersion
+		_c.mutation.SetVersion(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := ticket.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -735,6 +753,14 @@ func (_c *TicketCreate) check() error {
 	if v, ok := _c.mutation.Rating(); ok {
 		if err := ticket.RatingValidator(v); err != nil {
 			return &ValidationError{Name: "rating", err: fmt.Errorf(`ent: validator failed for field "Ticket.rating": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Version(); !ok {
+		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "Ticket.version"`)}
+	}
+	if v, ok := _c.mutation.Version(); ok {
+		if err := ticket.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Ticket.version": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
@@ -843,6 +869,10 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.RatedBy(); ok {
 		_spec.SetField(ticket.FieldRatedBy, field.TypeInt, value)
 		_node.RatedBy = value
+	}
+	if value, ok := _c.mutation.Version(); ok {
+		_spec.SetField(ticket.FieldVersion, field.TypeInt, value)
+		_node.Version = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(ticket.FieldCreatedAt, field.TypeTime, value)

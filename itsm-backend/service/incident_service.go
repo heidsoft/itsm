@@ -21,6 +21,7 @@ import (
 type IncidentService struct {
 	client                *ent.Client
 	logger                *zap.SugaredLogger
+	sequenceService       *SequenceService
 	processTriggerService ProcessTriggerServiceInterface
 }
 
@@ -34,6 +35,11 @@ func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger) *Incident
 // SetProcessTriggerService 设置流程触发服务
 func (s *IncidentService) SetProcessTriggerService(triggerService ProcessTriggerServiceInterface) {
 	s.processTriggerService = triggerService
+}
+
+// SetSequenceService 设置序列服务（用于 incident_number 生成）
+func (s *IncidentService) SetSequenceService(seq *SequenceService) {
+	s.sequenceService = seq
 }
 
 // CreateIncident 创建事件
@@ -211,15 +217,29 @@ func (s *IncidentService) ListIncidents(ctx context.Context, tenantID int, page,
 func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.UpdateIncidentRequest, tenantID int) (*dto.IncidentResponse, error) {
 	s.logger.Infow("Updating incident", "id", id, "tenant_id", tenantID)
 
-	// 如果要更新状态，先验证状态转换是否合法
-	if req.Status != nil {
-		currentIncident, err := s.client.Incident.Get(ctx, id)
-		if err != nil {
-			if ent.IsNotFound(err) {
-				return nil, fmt.Errorf("incident not found")
-			}
-			return nil, fmt.Errorf("failed to get incident: %w", err)
+	// 获取当前事件实体
+	currentIncident, err := s.client.Incident.Query().
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("incident not found")
 		}
+		return nil, fmt.Errorf("failed to get incident: %w", err)
+	}
+
+	// 版本检查（乐观锁）- 除非明确强制更新
+	if !req.Force && req.Version > 0 && currentIncident.Version != req.Version {
+		return nil, common.NewVersionConflictError(
+			"事件",
+			id,
+			req.Version,
+			currentIncident.Version,
+		)
+	}
+
+	// 如果要更新状态，验证状态转换是否合法
+	if req.Status != nil {
 		// 验证状态转换
 		if !isValidIncidentStatusTransition(currentIncident.Status, *req.Status) {
 			return nil, fmt.Errorf("invalid status transition from '%s' to '%s'", currentIncident.Status, *req.Status)
@@ -276,6 +296,9 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 	if req.Metadata != nil {
 		updateQuery.SetMetadata(req.Metadata)
 	}
+
+	// 自动增加版本号
+	updateQuery.AddVersion(1)
 
 	incidentEntity, err := updateQuery.Save(ctx)
 	if err != nil {
@@ -653,28 +676,63 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 	return response, nil
 }
 
-// 辅助方法
+// generateIncidentNumber 生成事件编号，优先使用 Redis 序列
 func (s *IncidentService) generateIncidentNumber(ctx context.Context, tenantID int) (string, error) {
-	// 获取当前年份和月份
 	now := time.Now()
 	year := now.Year()
 	month := int(now.Month())
+	expiredAt := time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.UTC)
+	key := fmt.Sprintf("sequence:incident:%d%02d", year, month)
 
-	// 查询当月的事件数量
-	count, err := s.client.Incident.Query().
-		Where(
-			incident.TenantIDEQ(tenantID),
-			incident.CreatedAtGTE(time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)),
-			incident.CreatedAtLT(time.Date(year, time.Month(month+1), 1, 0, 0, 0, 0, time.UTC)),
-		).
-		Count(ctx)
-	if err != nil {
-		return "", fmt.Errorf("failed to count incidents: %w", err)
+	// 优先使用 Redis 序列（原子递增，避免并发重复）
+	if s.sequenceService != nil {
+		seq, err := s.sequenceService.GetNextSequenceWithExpiry(ctx, key, expiredAt)
+		if err != nil {
+			s.logger.Warnw("Redis sequence failed for incident, fallback to DB", "error", err)
+		} else {
+			return fmt.Sprintf("INC-%04d%02d-%06d", year, month, seq), nil
+		}
 	}
 
-	// 生成事件编号
-	incidentNumber := fmt.Sprintf("INC-%04d%02d-%06d", year, month, count+1)
-	return incidentNumber, nil
+	// 备用方案：数据库查询
+	return s.generateIncidentNumberWithDB(ctx, tenantID, year, month)
+}
+
+// generateIncidentNumberWithDB 使用数据库查询生成事件编号（备用方案）
+// 修复：使用 IncidentNumberContains 过滤标准格式（INC-YYYYMM-NNNNNN），
+// 避免旧格式（INC-001 等）干扰序列计算
+func (s *IncidentService) generateIncidentNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
+	prefix := fmt.Sprintf("INC-%04d%02d-", year, month)
+
+	incidents, err := s.client.Incident.Query().
+		Where(
+			incident.TenantIDEQ(tenantID),
+			incident.IncidentNumberContains(prefix),
+		).
+		All(ctx)
+
+	maxSeq := 0
+	if err != nil {
+		s.logger.Warnw("Query incident numbers failed, starting from 0", "error", err)
+	} else {
+		for _, inc := range incidents {
+			num := inc.IncidentNumber
+			// 解析 INC-YYYYMM-NNNNNN 格式，只取最后的数字序列
+			for i := len(num) - 1; i >= 0; i-- {
+				if num[i] == '-' {
+					var seq int
+					if _, err := fmt.Sscanf(num[i+1:], "%d", &seq); err == nil {
+						if seq > maxSeq {
+							maxSeq = seq
+						}
+					}
+					break
+				}
+			}
+		}
+	}
+
+	return fmt.Sprintf("INC-%04d%02d-%06d", year, month, maxSeq+1), nil
 }
 
 func (s *IncidentService) executeIncidentRules(ctx context.Context, incidentID int, tenantID int) {
@@ -912,6 +970,7 @@ func (s *IncidentService) toIncidentResponse(incident *ent.Incident) *dto.Incide
 		ImpactAnalysis:      impactAnalysis,
 		RootCause:           rootCause,
 		ResolutionSteps:     resolutionSteps,
+		Version:             incident.Version,
 		DetectedAt:          incident.DetectedAt,
 		ResolvedAt:          &incident.ResolvedAt,
 		ClosedAt:            &incident.ClosedAt,

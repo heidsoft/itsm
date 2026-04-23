@@ -372,15 +372,14 @@ export const validateConfig = () => {
   }
 
   // 验证权限配置
-  const requiredPermissions = Object.values(PERMISSION_CONFIG.PERMISSIONS);
-  const allPermissions = Object.values(PERMISSION_CONFIG.ROLE_PERMISSIONS).flat();
+  const requiredPermissions = Object.values<string>(PERMISSION_CONFIG.PERMISSIONS);
+  const allPermissions = Object.values(PERMISSION_CONFIG.ROLE_PERMISSIONS).flat() as string[];
 
-  for (const permission of requiredPermissions) {
-    const permissionValue = permission as string;
+  for (const permissionValue of requiredPermissions) {
     if (
       permissionValue !== '*' &&
-      !allPermissions.includes(permission as any) &&
-      !allPermissions.includes('*' as any)
+      !allPermissions.includes(permissionValue) &&
+      !allPermissions.includes('*')
     ) {
       errors.push(`Permission ${permissionValue} is not assigned to any role`);
     }

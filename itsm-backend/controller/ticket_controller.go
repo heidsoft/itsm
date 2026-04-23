@@ -101,6 +101,17 @@ func (tc *TicketController) UpdateTicket(c *gin.Context) {
 
 	ticket, err := tc.ticketService.UpdateTicket(c.Request.Context(), ticketID, &req, tenantID)
 	if err != nil {
+		// 处理版本冲突错误
+		if common.IsVersionConflictError(err) {
+			conflictErr := err.(*common.VersionConflictError)
+			tc.logger.Warnw("Version conflict", "error", err, "ticket_id", ticketID)
+			common.Conflict(c, conflictErr.Error(), gin.H{
+				"ticketId":       conflictErr.ResourceID,
+				"currentVersion": conflictErr.CurrentVersion,
+				"serverVersion":  conflictErr.ServerVersion,
+			})
+			return
+		}
 		tc.logger.Errorw("Failed to update ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return

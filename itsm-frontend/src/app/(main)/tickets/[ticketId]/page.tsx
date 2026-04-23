@@ -6,7 +6,7 @@ import { TicketApi } from '@/lib/api/ticket-api';
 import { UserApi } from '@/lib/api/user-api';
 import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
-import { ArrowLeft, AlertCircle, XCircle, UserCheck, Edit, Save, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, AlertCircle, XCircle, UserCheck, Edit, Save, X, Trash2, Check, XIcon } from 'lucide-react';
 import Link from 'next/link';
 import {
   Button,
@@ -23,6 +23,7 @@ import {
   Input,
 } from 'antd';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -46,6 +47,7 @@ const TicketDetailPage: React.FC = () => {
   const params = useParams();
   const { message: antMessage } = App.useApp();
   const { user: currentUser } = useAuthStore();
+  const { handleError } = useErrorHandler();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +55,8 @@ const TicketDetailPage: React.FC = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [slaInfo, setSlaInfo] = useState<{
@@ -129,22 +133,28 @@ const TicketDetailPage: React.FC = () => {
   // Handle approval (轻量版：仅改状态)
   const handleApprove = async () => {
     try {
+      setApproving(true);
       await TicketApi.updateTicketStatus(ticketId, 'approved');
       antMessage.success('批准成功');
       fetchTicket();
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : '网络错误');
+      handleError(error, 'approveTicket', '批准失败');
+    } finally {
+      setApproving(false);
     }
   };
 
   // Handle rejection (轻量版：仅改状态)
   const handleReject = async () => {
     try {
+      setRejecting(true);
       await TicketApi.updateTicketStatus(ticketId, 'rejected');
       antMessage.success('已拒绝');
       fetchTicket();
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : '网络错误');
+      handleError(error, 'rejectTicket', '拒绝失败');
+    } finally {
+      setRejecting(false);
     }
   };
 
@@ -162,7 +172,7 @@ const TicketDetailPage: React.FC = () => {
       assignForm.resetFields();
       fetchTicket();
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : '分配失败');
+      handleError(error, 'assignTicket', '分配失败');
     }
   };
 
@@ -187,7 +197,7 @@ const TicketDetailPage: React.FC = () => {
       setEditModalVisible(false);
       fetchTicket();
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : '更新失败');
+      handleError(error, 'updateTicket', '更新失败');
     }
   };
 
@@ -206,7 +216,7 @@ const TicketDetailPage: React.FC = () => {
       // Navigate back to ticket list
       window.location.href = '/tickets';
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : '删除失败');
+      handleError(error, 'deleteTicket', '删除失败');
     } finally {
       setDeleting(false);
     }
@@ -375,7 +385,9 @@ const TicketDetailPage: React.FC = () => {
           <Space>
             <Button
               type="primary"
+              icon={<Check size={16} />}
               onClick={handleApprove}
+              loading={approving}
               disabled={isRequester}
               title={isRequester ? '不能审批自己提交的工单' : ''}
             >
@@ -383,7 +395,9 @@ const TicketDetailPage: React.FC = () => {
             </Button>
             <Button
               danger
+              icon={<XIcon size={16} />}
               onClick={handleReject}
+              loading={rejecting}
               disabled={isRequester}
               title={isRequester ? '不能拒绝自己提交的工单' : ''}
             >

@@ -245,6 +245,17 @@ func (c *IncidentController) UpdateIncident(ctx *gin.Context) {
 	}
 	response, err := c.incidentService.UpdateIncident(ctx.Request.Context(), id, &req, tenantID)
 	if err != nil {
+		// 处理版本冲突错误
+		if common.IsVersionConflictError(err) {
+			conflictErr := err.(*common.VersionConflictError)
+			c.logger.Warnw("Version conflict", "error", err, "incident_id", id)
+			common.Conflict(ctx, conflictErr.Error(), gin.H{
+				"incidentId":     conflictErr.ResourceID,
+				"currentVersion": conflictErr.CurrentVersion,
+				"serverVersion":  conflictErr.ServerVersion,
+			})
+			return
+		}
 		if err.Error() == "incident not found" {
 			common.Fail(ctx, common.ParamErrorCode, "事件不存在")
 			return

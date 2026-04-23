@@ -213,7 +213,12 @@ export default function ChangesPage() {
           ]}
         />
 
-        <ChangeList showHeader={false} />
+        <ChangeList
+          showHeader={false}
+          search={debouncedSearch}
+          status={statusFilter}
+          risk={riskFilter}
+        />
       </PageContainer>
     </div>
   );

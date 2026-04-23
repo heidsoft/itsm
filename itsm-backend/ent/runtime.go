@@ -918,12 +918,18 @@ func init() {
 	incidentDescTenantID := incidentFields[24].Descriptor()
 	// incident.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	incident.TenantIDValidator = incidentDescTenantID.Validators[0].(func(int) error)
+	// incidentDescVersion is the schema descriptor for version field.
+	incidentDescVersion := incidentFields[25].Descriptor()
+	// incident.DefaultVersion holds the default value on creation for the version field.
+	incident.DefaultVersion = incidentDescVersion.Default.(int)
+	// incident.VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	incident.VersionValidator = incidentDescVersion.Validators[0].(func(int) error)
 	// incidentDescCreatedAt is the schema descriptor for created_at field.
-	incidentDescCreatedAt := incidentFields[25].Descriptor()
+	incidentDescCreatedAt := incidentFields[26].Descriptor()
 	// incident.DefaultCreatedAt holds the default value on creation for the created_at field.
 	incident.DefaultCreatedAt = incidentDescCreatedAt.Default.(func() time.Time)
 	// incidentDescUpdatedAt is the schema descriptor for updated_at field.
-	incidentDescUpdatedAt := incidentFields[26].Descriptor()
+	incidentDescUpdatedAt := incidentFields[27].Descriptor()
 	// incident.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	incident.DefaultUpdatedAt = incidentDescUpdatedAt.Default.(func() time.Time)
 	// incident.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -2742,18 +2748,24 @@ func init() {
 	ticketDescRating := ticketFields[19].Descriptor()
 	// ticket.RatingValidator is a validator for the "rating" field. It is called by the builders before save.
 	ticket.RatingValidator = ticketDescRating.Validators[0].(func(int) error)
+	// ticketDescVersion is the schema descriptor for version field.
+	ticketDescVersion := ticketFields[23].Descriptor()
+	// ticket.DefaultVersion holds the default value on creation for the version field.
+	ticket.DefaultVersion = ticketDescVersion.Default.(int)
+	// ticket.VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	ticket.VersionValidator = ticketDescVersion.Validators[0].(func(int) error)
 	// ticketDescCreatedAt is the schema descriptor for created_at field.
-	ticketDescCreatedAt := ticketFields[23].Descriptor()
+	ticketDescCreatedAt := ticketFields[24].Descriptor()
 	// ticket.DefaultCreatedAt holds the default value on creation for the created_at field.
 	ticket.DefaultCreatedAt = ticketDescCreatedAt.Default.(func() time.Time)
 	// ticketDescUpdatedAt is the schema descriptor for updated_at field.
-	ticketDescUpdatedAt := ticketFields[24].Descriptor()
+	ticketDescUpdatedAt := ticketFields[25].Descriptor()
 	// ticket.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	ticket.DefaultUpdatedAt = ticketDescUpdatedAt.Default.(func() time.Time)
 	// ticket.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	ticket.UpdateDefaultUpdatedAt = ticketDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// ticketDescIsManagedByMsp is the schema descriptor for is_managed_by_msp field.
-	ticketDescIsManagedByMsp := ticketFields[25].Descriptor()
+	ticketDescIsManagedByMsp := ticketFields[26].Descriptor()
 	// ticket.DefaultIsManagedByMsp holds the default value on creation for the is_managed_by_msp field.
 	ticket.DefaultIsManagedByMsp = ticketDescIsManagedByMsp.Default.(bool)
 	ticketassignmentruleFields := schema.TicketAssignmentRule{}.Fields()

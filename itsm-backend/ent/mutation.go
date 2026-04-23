@@ -31162,6 +31162,8 @@ type IncidentMutation struct {
 	metadata                   *map[string]interface{}
 	tenant_id                  *int
 	addtenant_id               *int
+	version                    *int
+	addversion                 *int
 	created_at                 *time.Time
 	updated_at                 *time.Time
 	clearedFields              map[string]struct{}
@@ -32463,6 +32465,62 @@ func (m *IncidentMutation) ResetTenantID() {
 	m.addtenant_id = nil
 }
 
+// SetVersion sets the "version" field.
+func (m *IncidentMutation) SetVersion(i int) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *IncidentMutation) Version() (r int, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldVersion(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *IncidentMutation) AddVersion(i int) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *IncidentMutation) AddedVersion() (r int, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *IncidentMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *IncidentMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -32947,7 +33005,7 @@ func (m *IncidentMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *IncidentMutation) Fields() []string {
-	fields := make([]string, 0, 27)
+	fields := make([]string, 0, 28)
 	if m.title != nil {
 		fields = append(fields, incident.FieldTitle)
 	}
@@ -33023,6 +33081,9 @@ func (m *IncidentMutation) Fields() []string {
 	if m.tenant_id != nil {
 		fields = append(fields, incident.FieldTenantID)
 	}
+	if m.version != nil {
+		fields = append(fields, incident.FieldVersion)
+	}
 	if m.created_at != nil {
 		fields = append(fields, incident.FieldCreatedAt)
 	}
@@ -33087,6 +33148,8 @@ func (m *IncidentMutation) Field(name string) (ent.Value, bool) {
 		return m.Metadata()
 	case incident.FieldTenantID:
 		return m.TenantID()
+	case incident.FieldVersion:
+		return m.Version()
 	case incident.FieldCreatedAt:
 		return m.CreatedAt()
 	case incident.FieldUpdatedAt:
@@ -33150,6 +33213,8 @@ func (m *IncidentMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldMetadata(ctx)
 	case incident.FieldTenantID:
 		return m.OldTenantID(ctx)
+	case incident.FieldVersion:
+		return m.OldVersion(ctx)
 	case incident.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case incident.FieldUpdatedAt:
@@ -33338,6 +33403,13 @@ func (m *IncidentMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetTenantID(v)
 		return nil
+	case incident.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
 	case incident.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -33375,6 +33447,9 @@ func (m *IncidentMutation) AddedFields() []string {
 	if m.addtenant_id != nil {
 		fields = append(fields, incident.FieldTenantID)
 	}
+	if m.addversion != nil {
+		fields = append(fields, incident.FieldVersion)
+	}
 	return fields
 }
 
@@ -33393,6 +33468,8 @@ func (m *IncidentMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedEscalationLevel()
 	case incident.FieldTenantID:
 		return m.AddedTenantID()
+	case incident.FieldVersion:
+		return m.AddedVersion()
 	}
 	return nil, false
 }
@@ -33436,6 +33513,13 @@ func (m *IncidentMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddTenantID(v)
+		return nil
+	case incident.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Incident numeric field %s", name)
@@ -33613,6 +33697,9 @@ func (m *IncidentMutation) ResetField(name string) error {
 		return nil
 	case incident.FieldTenantID:
 		m.ResetTenantID()
+		return nil
+	case incident.FieldVersion:
+		m.ResetVersion()
 		return nil
 	case incident.FieldCreatedAt:
 		m.ResetCreatedAt()
@@ -97532,6 +97619,8 @@ type TicketMutation struct {
 	rated_at                   *time.Time
 	rated_by                   *int
 	addrated_by                *int
+	version                    *int
+	addversion                 *int
 	created_at                 *time.Time
 	updated_at                 *time.Time
 	is_managed_by_msp          *bool
@@ -98830,6 +98919,62 @@ func (m *TicketMutation) ResetRatedBy() {
 	delete(m.clearedFields, ticket.FieldRatedBy)
 }
 
+// SetVersion sets the "version" field.
+func (m *TicketMutation) SetVersion(i int) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *TicketMutation) Version() (r int, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldVersion(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *TicketMutation) AddVersion(i int) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *TicketMutation) AddedVersion() (r int, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *TicketMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *TicketMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -99993,7 +100138,7 @@ func (m *TicketMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TicketMutation) Fields() []string {
-	fields := make([]string, 0, 30)
+	fields := make([]string, 0, 31)
 	if m.title != nil {
 		fields = append(fields, ticket.FieldTitle)
 	}
@@ -100062,6 +100207,9 @@ func (m *TicketMutation) Fields() []string {
 	}
 	if m.rated_by != nil {
 		fields = append(fields, ticket.FieldRatedBy)
+	}
+	if m.version != nil {
+		fields = append(fields, ticket.FieldVersion)
 	}
 	if m.created_at != nil {
 		fields = append(fields, ticket.FieldCreatedAt)
@@ -100138,6 +100286,8 @@ func (m *TicketMutation) Field(name string) (ent.Value, bool) {
 		return m.RatedAt()
 	case ticket.FieldRatedBy:
 		return m.RatedBy()
+	case ticket.FieldVersion:
+		return m.Version()
 	case ticket.FieldCreatedAt:
 		return m.CreatedAt()
 	case ticket.FieldUpdatedAt:
@@ -100207,6 +100357,8 @@ func (m *TicketMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldRatedAt(ctx)
 	case ticket.FieldRatedBy:
 		return m.OldRatedBy(ctx)
+	case ticket.FieldVersion:
+		return m.OldVersion(ctx)
 	case ticket.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case ticket.FieldUpdatedAt:
@@ -100391,6 +100543,13 @@ func (m *TicketMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRatedBy(v)
 		return nil
+	case ticket.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
 	case ticket.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -100463,6 +100622,9 @@ func (m *TicketMutation) AddedFields() []string {
 	if m.addrated_by != nil {
 		fields = append(fields, ticket.FieldRatedBy)
 	}
+	if m.addversion != nil {
+		fields = append(fields, ticket.FieldVersion)
+	}
 	if m.addmsp_provider_id != nil {
 		fields = append(fields, ticket.FieldMspProviderID)
 	}
@@ -100487,6 +100649,8 @@ func (m *TicketMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedRating()
 	case ticket.FieldRatedBy:
 		return m.AddedRatedBy()
+	case ticket.FieldVersion:
+		return m.AddedVersion()
 	case ticket.FieldMspProviderID:
 		return m.AddedMspProviderID()
 	case ticket.FieldManagedByUserID:
@@ -100534,6 +100698,13 @@ func (m *TicketMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddRatedBy(v)
+		return nil
+	case ticket.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
 		return nil
 	case ticket.FieldMspProviderID:
 		v, ok := value.(int)
@@ -100767,6 +100938,9 @@ func (m *TicketMutation) ResetField(name string) error {
 		return nil
 	case ticket.FieldRatedBy:
 		m.ResetRatedBy()
+		return nil
+	case ticket.FieldVersion:
+		m.ResetVersion()
 		return nil
 	case ticket.FieldCreatedAt:
 		m.ResetCreatedAt()

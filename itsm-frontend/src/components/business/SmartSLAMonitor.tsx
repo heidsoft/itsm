@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Card,
   Progress,
@@ -15,6 +15,7 @@ import {
   Statistic,
   Row,
   Col,
+  Spin,
 } from 'antd';
 import {
   Clock,
@@ -26,7 +27,11 @@ import {
   Settings,
   Eye,
   Zap,
+  RefreshCw,
+  Pause,
+  Play,
 } from 'lucide-react';
+import { useSLARealTime, formatSLARemainingTime, getSLAStatusColor } from '@/lib/hooks/useSLARealTime';
 
 const { Title, Text } = Typography;
 
@@ -68,13 +73,19 @@ export const SmartSLAMonitor: React.FC = () => {
   const [alerts, setAlerts] = useState<SLAAlert[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadSLAData();
-    const interval = setInterval(loadSLAData, 30000); // 30秒更新一次
-    return () => clearInterval(interval);
-  }, []);
+  // 计算最高优先级（用于智能刷新间隔）
+  const highestPriority = useMemo(() => {
+    if (breachedTickets.length > 0) return 'critical';
+    if (atRiskTickets.some(t => t.priority === 'urgent')) return 'urgent';
+    if (atRiskTickets.some(t => t.priority === 'high')) return 'high';
+    return 'medium';
+  }, [atRiskTickets, breachedTickets]);
 
-  const loadSLAData = async () => {
+  // 是否有即将超时的工单
+  const hasAtRiskTickets = atRiskTickets.length > 0 || breachedTickets.length > 0;
+
+  // 加载 SLA 数据
+  const loadSLAData = useCallback(async () => {
     try {
       // 模拟API调用
       const mockMetrics: SLAMetrics = {
@@ -149,12 +160,37 @@ export const SmartSLAMonitor: React.FC = () => {
       setAtRiskTickets(mockAtRisk);
       setBreachedTickets(mockBreached);
       setAlerts(mockAlerts);
+      setLoading(false);
     } catch (error) {
       console.error('加载SLA数据失败:', error);
-    } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // 使用智能实时刷新 Hook
+  const {
+    isRefreshing,
+    lastRefresh,
+    currentInterval,
+    refreshNow,
+    pause,
+    resume,
+    isPaused,
+    isPageVisible,
+  } = useSLARealTime(
+    {
+      highestPriority,
+      hasAtRiskTickets,
+      enabled: true,
+      refreshOnHidden: false,
+    },
+    loadSLAData
+  );
+
+  // 初始加载
+  useEffect(() => {
+    loadSLAData();
+  }, [loadSLAData]);
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -198,26 +234,18 @@ export const SmartSLAMonitor: React.FC = () => {
   };
 
   const formatTimeRemaining = (hours: number): string => {
-    if (hours < 0) {
-      return `超时 ${Math.abs(hours).toFixed(1)} 小时`;
-    }
-    if (hours < 1) {
-      return `${Math.round(hours * 60)} 分钟`;
-    }
-    return `${hours.toFixed(1)} 小时`;
+    // 转换小时为秒
+    const seconds = hours * 3600;
+    const { text } = formatSLARemainingTime(seconds);
+    return text;
   };
 
   if (loading) {
     return (
       <Card>
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-3 bg-gray-200 rounded w-5/6"></div>
-            ))}
-          </div>
-        </div>
+        <Spin tip="加载 SLA 数据...">
+          <div style={{ height: 200 }} />
+        </Spin>
       </Card>
     );
   }
@@ -230,12 +258,42 @@ export const SmartSLAMonitor: React.FC = () => {
           <Space>
             <Clock className="text-blue-600" />
             <span>SLA概览</span>
+            {isRefreshing && <Spin size="small" />}
           </Space>
         }
         extra={
-          <Button icon={<Settings />} size="small">
-            配置
-          </Button>
+          <Space>
+            {!isPageVisible && (
+              <Tag color="default">页面不可见时暂停</Tag>
+            )}
+            <Tooltip title={isPaused ? '恢复自动刷新' : '暂停自动刷新'}>
+              <Button
+                icon={isPaused ? <Play size={16} /> : <Pause size={16} />}
+                size="small"
+                onClick={isPaused ? resume : pause}
+              >
+                {isPaused ? '恢复' : '暂停'}
+              </Button>
+            </Tooltip>
+            <Tooltip title={`立即刷新 (当前间隔: ${Math.round(currentInterval / 1000)}秒)`}>
+              <Button
+                icon={<RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />}
+                size="small"
+                onClick={() => refreshNow()}
+                loading={isRefreshing}
+              >
+                刷新
+              </Button>
+            </Tooltip>
+            {lastRefresh && (
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                上次更新: {lastRefresh.toLocaleTimeString()}
+              </Text>
+            )}
+            <Button icon={<Settings size={16} />} size="small">
+              配置
+            </Button>
+          </Space>
         }
       >
         <Row gutter={16}>
