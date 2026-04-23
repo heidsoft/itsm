@@ -311,6 +311,20 @@ func (_c *IncidentCreate) SetTenantID(v int) *IncidentCreate {
 	return _c
 }
 
+// SetVersion sets the "version" field.
+func (_c *IncidentCreate) SetVersion(v int) *IncidentCreate {
+	_c.mutation.SetVersion(v)
+	return _c
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableVersion(v *int) *IncidentCreate {
+	if v != nil {
+		_c.SetVersion(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *IncidentCreate) SetCreatedAt(v time.Time) *IncidentCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -515,6 +529,10 @@ func (_c *IncidentCreate) defaults() {
 		v := incident.DefaultSource
 		_c.mutation.SetSource(v)
 	}
+	if _, ok := _c.mutation.Version(); !ok {
+		v := incident.DefaultVersion
+		_c.mutation.SetVersion(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := incident.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -584,6 +602,14 @@ func (_c *IncidentCreate) check() error {
 	if v, ok := _c.mutation.TenantID(); ok {
 		if err := incident.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Incident.tenant_id": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Version(); !ok {
+		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "Incident.version"`)}
+	}
+	if v, ok := _c.mutation.Version(); ok {
+		if err := incident.VersionValidator(v); err != nil {
+			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Incident.version": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
@@ -717,6 +743,10 @@ func (_c *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(incident.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
+	}
+	if value, ok := _c.mutation.Version(); ok {
+		_spec.SetField(incident.FieldVersion, field.TypeInt, value)
+		_node.Version = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(incident.FieldCreatedAt, field.TypeTime, value)

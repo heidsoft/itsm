@@ -1,6 +1,11 @@
 import { API_BASE_URL } from '@/lib/api/api-config';
 import { security } from '@/lib/security';
 import { logger } from '@/lib/env';
+import {
+  getTenantId,
+  getTenantCode,
+  subscribe,
+} from '@/lib/auth/tenant-context';
 
 // Cookie utility functions for secure token storage
 function getCookie(name: string): string | null {
@@ -95,19 +100,14 @@ interface ApiResponse<T> {
 class HttpClient {
   private baseURL: string;
   private token: string | null = null;
-  private tenantId: number | null = null;
-  private tenantCode: string | null = null;
   private readonly timeout: number;
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = process.env.NEXT_PUBLIC_API_URL || baseURL;
     this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
-    // Get token from cookie (secure, httpOnly from backend) or localStorage (fallback for SPA)
+    // Token is read from cookie only (httpOnly from backend) — never stored in localStorage
     if (typeof window !== 'undefined') {
-      this.token = getCookie('access_token') || localStorage.getItem('access_token');
-      const storedTenantId = localStorage.getItem('current_tenant_id');
-      this.tenantId = storedTenantId ? parseInt(storedTenantId) : null;
-      this.tenantCode = localStorage.getItem('current_tenant_code') || null;
+      this.token = getCookie('access_token');
     }
   }
 
@@ -127,35 +127,22 @@ class HttpClient {
   }
 
   setTenantId(tenantId: number | null) {
-    this.tenantId = tenantId;
-    if (typeof window !== 'undefined') {
-      if (tenantId) {
-        localStorage.setItem('current_tenant_id', tenantId.toString());
-      } else {
-        localStorage.removeItem('current_tenant_id');
-      }
-    }
+    // Tenant state is now managed by TenantContext — kept for backward compat
+    // New code should use tenant-context.ts directly
+    logger.debug('HttpClient.setTenantId called (deprecated — use tenant-context.ts)');
   }
 
   setTenantCode(code: string | null) {
-    this.tenantCode = code;
-    logger.info('HttpClient.setTenantCode:', code);
-    if (typeof window !== 'undefined') {
-      if (code) {
-        localStorage.setItem('current_tenant_code', code);
-      } else {
-        localStorage.removeItem('current_tenant_code');
-      }
-    }
+    logger.debug('HttpClient.setTenantCode called (deprecated — use tenant-context.ts)');
   }
 
-  // Get tenant code
+  // Get tenant code — now reads from TenantContext (single source of truth)
   getTenantCode(): string | null {
-    return this.tenantCode;
+    return getTenantCode();
   }
 
   getTenantId(): number | null {
-    return this.tenantId;
+    return getTenantId();
   }
 
   getAuthToken(): string | null {
@@ -177,14 +164,15 @@ class HttpClient {
       ...security.network.getSecureHeaders(),
     };
 
-    // Get token from localStorage (set by auth-service after login) or fallback to cookie
-    // Prefer localStorage since cookie may be httpOnly or cross-origin
+    // Get token from cookie only (backend sets httpOnly cookies)
+    // localStorage does NOT store tokens (security policy)
     const currentToken =
       typeof window !== 'undefined'
-        ? localStorage.getItem('access_token') || getCookie('access_token')
+        ? getCookie('access_token')
         : this.token;
-    const currentTenantId =
-      typeof window !== 'undefined' ? localStorage.getItem('current_tenant_id') : this.tenantId;
+    // Tenant state — read from TenantContext (single source of truth)
+    const currentTenantId = getTenantId();
+    const currentTenantCode = getTenantCode();
 
     if (currentToken) {
       headers['Authorization'] = `Bearer ${currentToken}`;
@@ -193,8 +181,6 @@ class HttpClient {
     if (currentTenantId) {
       headers['X-Tenant-ID'] = currentTenantId.toString();
     }
-    const currentTenantCode =
-      typeof window !== 'undefined' ? localStorage.getItem('current_tenant_code') : this.tenantCode;
     if (currentTenantCode) {
       headers['X-Tenant-Code'] = currentTenantCode;
     }
@@ -231,10 +217,10 @@ class HttpClient {
 
   // Independent token refresh method to avoid circular dependencies
   private async refreshTokenInternal(): Promise<boolean> {
-    // Try cookie first (httpOnly), then fall back to localStorage
+    // Get refresh token from cookie only (httpOnly)
     const refreshToken =
       typeof window !== 'undefined'
-        ? getCookie('refresh_token') || localStorage.getItem('refresh_token')
+        ? getCookie('refresh_token')
         : null;
     if (!refreshToken) {
       return false;
@@ -255,21 +241,8 @@ class HttpClient {
       if (response?.ok) {
         const data = await response.json();
         if (data.code === 0) {
-          // Update access token
-          this.token = data.data.access_token;
-          // Also update localStorage for consistency with AuthService
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('access_token', data.data.access_token);
-          }
-          // Handle refresh token rotation if new refresh_token is returned
-          if (data.data.refresh_token) {
-            // Update the refresh token cookie for next refresh
-            if (typeof window !== 'undefined') {
-              document.cookie = `refresh_token=${data.data.refresh_token}; path=/; max-age=604800`;
-              // Also update localStorage for consistency with AuthService
-              localStorage.setItem('refresh_token', data.data.refresh_token);
-            }
-          }
+          // Token is stored in httpOnly cookie by backend
+          // Nothing to update in localStorage
           return true;
         }
       }
@@ -422,9 +395,9 @@ class HttpClient {
    * - request('/path', { method, headers, body })
    * - request({ method, url, data, headers, responseType })
    */
-  async request<T = any>(endpoint: string, config?: Partial<RequestConfig>): Promise<T>;
-  async request<T = any>(config: AxiosLikeRequestConfig): Promise<T>;
-  async request<T = any>(
+  async request<T>(endpoint: string, config?: Partial<RequestConfig>): Promise<T>;
+  async request<T>(config: AxiosLikeRequestConfig): Promise<T>;
+  async request<T>(
     arg1: string | AxiosLikeRequestConfig,
     arg2?: Partial<RequestConfig>
   ): Promise<T> {
@@ -497,7 +470,7 @@ class HttpClient {
     });
   }
 
-  async post<T = any>(
+  async post<T>(
     endpoint: string,
     data?: unknown,
     config?: {
@@ -608,7 +581,7 @@ class HttpClient {
     });
   }
 
-  async delete<T = any>(endpoint: string, data?: unknown): Promise<T> {
+  async delete<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.requestInternal<T>(endpoint, {
       method: 'DELETE',
       body: data ? JSON.stringify(data) : undefined,
@@ -623,7 +596,7 @@ class HttpClient {
       pageSize?: number;
       sortBy?: string;
       sortOrder?: 'asc' | 'desc';
-      filters?: Record<string, any>;
+      filters?: Record<string, unknown>;
     }
   ): Promise<{
     data: T[];

@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -33,6 +34,7 @@ import (
 type TicketService struct {
 	config                *config.Config
 	client                *ent.Client
+	rawDB                 *sql.DB // for transactional number generation
 	logger                *zap.SugaredLogger
 	notificationService   *TicketNotificationService
 	automationRuleService *TicketAutomationRuleService
@@ -64,6 +66,11 @@ func NewTicketServiceWithSequence(client *ent.Client, logger *zap.SugaredLogger,
 	svc := NewTicketService(client, logger)
 	svc.sequenceService = sequenceService
 	return svc
+}
+
+// SetRawDB 设置原生数据库连接（用于事务性编号生成）
+func (s *TicketService) SetRawDB(db *sql.DB) {
+	s.rawDB = db
 }
 
 // SetNotificationService 设置通知服务（用于依赖注入）
@@ -115,6 +122,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	coreService := NewTicketCoreService(s.client, s.logger)
 	if s.sequenceService != nil {
 		coreService.SetSequenceService(s.sequenceService)
+	}
+	if s.rawDB != nil {
+		coreService.SetRawDB(s.rawDB)
 	}
 	ticket, err := coreService.CreateTicketBasic(ctx, req, tenantID)
 	if err != nil {

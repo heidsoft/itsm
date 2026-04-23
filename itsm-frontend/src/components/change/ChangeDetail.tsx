@@ -39,6 +39,7 @@ import type { Change, ApprovalRecord } from '@/types/biz/change';
 import ChangeRiskAssessment from './ChangeRiskAssessment';
 import ChangeImpactAnalysis from './ChangeImpactAnalysis';
 import ChangeRollbackPlan from './ChangeRollbackPlan';
+import { SafeTextBlock } from '@/components/common/SafeContent';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -239,22 +240,26 @@ const ChangeDetail: React.FC = () => {
               children: (
                 <>
                   <Title level={5}>变更原因 / 理由</Title>
-                  <Paragraph>{change.justification || '无'}</Paragraph>
+                  <SafeTextBlock content={change.justification} fallback="无" />
 
                   <Title level={5}>变更描述</Title>
-                  <Paragraph>{change.description || '无'}</Paragraph>
+                  <SafeTextBlock content={change.description} fallback="无" />
 
                   <Divider />
 
                   <Title level={5}>实施计划</Title>
-                  <Paragraph style={{ whiteSpace: 'pre-wrap' }}>
-                    {change.implementationPlan || '未提供实施计划'}
-                  </Paragraph>
+                  <SafeTextBlock
+                    content={change.implementationPlan}
+                    fallback="未提供实施计划"
+                    preserveNewlines
+                  />
 
                   <Title level={5}>回滚计划</Title>
-                  <Paragraph style={{ whiteSpace: 'pre-wrap' }}>
-                    {change.rollbackPlan || '未提供回滚计划'}
-                  </Paragraph>
+                  <SafeTextBlock
+                    content={change.rollbackPlan}
+                    fallback="未提供回滚计划"
+                    preserveNewlines
+                  />
                 </>
               ),
             },

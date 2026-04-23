@@ -6,748 +6,772 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
+
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/incident"
-	"itsm-backend/ent/incidentruleexecution"
+	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/incidentevent"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
-	"golang.org/x/crypto/bcrypt"
 )
 
-// 测试辅助函数
-func setupTestDB(t *testing.T) *ent.Client {
-	// 这里应该设置测试数据库连接
-	// 简化实现，实际应该使用测试数据库
-	return nil
+// ==================== 测试设置辅助函数 ====================
+
+func setupIncidentTest(t *testing.T) (*ent.Client, *IncidentService, context.Context) {
+	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	logger := zaptest.NewLogger(t).Sugar()
+	service := NewIncidentService(client, logger)
+	ctx := context.Background()
+	return client, service, ctx
 }
 
-func createTestTenant(ctx context.Context, client *ent.Client) (*ent.Tenant, error) {
+func createIncidentTestTenant(ctx context.Context, client *ent.Client, suffix string) (*ent.Tenant, error) {
 	return client.Tenant.Create().
-		SetName("测试租户").
-		SetCode("test").
+		SetName("Test Tenant " + suffix).
+		SetCode("test" + suffix).
+		SetDomain("test" + suffix + ".com").
 		SetStatus("active").
 		Save(ctx)
 }
 
-func createTestUser(ctx context.Context, client *ent.Client, tenantID int) (*ent.User, error) {
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+func createIncidentTestUser(ctx context.Context, client *ent.Client, tenantID int, suffix string) (*ent.User, error) {
 	return client.User.Create().
-		SetUsername("testuser").
-		SetEmail("test@example.com").
-		SetName("测试用户").
-		SetPasswordHash(string(hashedPassword)).
-		SetRole("user").
+		SetUsername("testuser" + suffix).
+		SetEmail("test" + suffix + "@example.com").
+		SetName("Test User").
+		SetPasswordHash("hashedpassword").
+		SetRole("agent").
 		SetActive(true).
 		SetTenantID(tenantID).
 		Save(ctx)
 }
 
-// 事件服务测试
-func TestIncidentService_CreateIncident(t *testing.T) {
-	ctx := context.Background()
-	client := setupTestDB(t)
-	if client == nil {
-		t.Skip("测试数据库未配置")
-	}
+// ==================== 创建事件测试 ====================
 
-	logger := zaptest.NewLogger(t).Sugar()
-	service := NewIncidentService(client, logger)
+func TestIncidentService_CreateIncident_Success(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
 
 	// 创建测试租户和用户
-	testTenant, err := createTestTenant(ctx, client)
-	if err != nil {
-		t.Fatalf("创建测试租户失败: %v", err)
-	}
+	testTenant, err := createIncidentTestTenant(ctx, client, "create")
+	require.NoError(t, err)
 
-	testUser, err := createTestUser(ctx, client, testTenant.ID)
-	if err != nil {
-		t.Fatalf("创建测试用户失败: %v", err)
-	}
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "create")
+	require.NoError(t, err)
 
 	// 测试创建事件
 	req := &dto.CreateIncidentRequest{
 		Title:       "测试事件",
-		Description: "这是一个测试事件",
+		Description: "这是一个测试事件的描述",
 		Priority:    "high",
 		Severity:    "medium",
 		Category:    "performance",
 		Source:      "manual",
 	}
 
-	response, err := service.CreateIncident(ctx, req, testTenant.ID, testTenant.ID)
-	if err != nil {
-		t.Fatalf("创建事件失败: %v", err)
-	}
-
-	// 验证响应
-	if response.Title != req.Title {
-		t.Errorf("期望标题 %s，实际 %s", req.Title, response.Title)
-	}
-	if response.Priority != req.Priority {
-		t.Errorf("期望优先级 %s，实际 %s", req.Priority, response.Priority)
-	}
-	if response.Severity != req.Severity {
-		t.Errorf("期望严重程度 %s，实际 %s", req.Severity, response.Severity)
-	}
-	if response.Status != "new" {
-		t.Errorf("期望状态 new，实际 %s", response.Status)
-	}
-	if response.TenantID != testTenant.ID {
-		t.Errorf("期望租户ID %d，实际 %d", testTenant.ID, response.TenantID)
-	}
-
-	// 验证事件编号格式
-	if response.IncidentNumber == "" {
-		t.Error("事件编号不应为空")
-	}
-
-	// 清理测试数据
-	client.Incident.DeleteOneID(response.ID).Exec(ctx)
-	client.User.DeleteOneID(testUser.ID).Exec(ctx)
-	client.Tenant.DeleteOneID(testTenant.ID).Exec(ctx)
+	response, err := service.CreateIncident(ctx, req, testTenant.ID, testUser.ID)
+	require.NoError(t, err)
+	assert.NotNil(t, response)
+	assert.Equal(t, req.Title, response.Title)
+	assert.Equal(t, req.Priority, response.Priority)
+	assert.Equal(t, req.Severity, response.Severity)
+	assert.Equal(t, "new", response.Status)
+	assert.NotEmpty(t, response.IncidentNumber)
+	assert.Contains(t, response.IncidentNumber, "INC-")
+	assert.Equal(t, testTenant.ID, response.TenantID)
 }
 
-func TestIncidentService_GetIncident(t *testing.T) {
-	ctx := context.Background()
-	client := setupTestDB(t)
-	if client == nil {
-		t.Skip("测试数据库未配置")
+func TestIncidentService_CreateIncident_WithOptionalFields(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "optional")
+	require.NoError(t, err)
+
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "optional")
+	require.NoError(t, err)
+
+	assignee, err := createIncidentTestUser(ctx, client, testTenant.ID, "assignee")
+	require.NoError(t, err)
+
+	detectedAt := time.Now().Add(-1 * time.Hour)
+
+	req := &dto.CreateIncidentRequest{
+		Title:       "带可选字段的事件",
+		Description: "描述",
+		Priority:    "critical",
+		Severity:    "high",
+		Category:    "security",
+		Subcategory: "intrusion",
+		AssigneeID:  &assignee.ID,
+		Source:      "monitoring",
+		DetectedAt:  &detectedAt,
+		Metadata: map[string]interface{}{
+			"source_ip":  "192.168.1.100",
+			"alert_id":   "ALT-001",
+			"automated":  true,
+		},
 	}
 
-	logger := zaptest.NewLogger(t).Sugar()
-	service := NewIncidentService(client, logger)
+	response, err := service.CreateIncident(ctx, req, testTenant.ID, testUser.ID)
+	require.NoError(t, err)
+	assert.NotNil(t, response)
+	assert.Equal(t, "security", response.Category)
+	assert.NotNil(t, response.AssigneeID)
+	assert.Equal(t, assignee.ID, *response.AssigneeID)
+}
 
-	// 创建测试数据
-	testTenant, _ := createTestTenant(ctx, client)
-	testUser, _ := createTestUser(ctx, client, testTenant.ID)
+// ==================== 获取事件测试 ====================
 
+func TestIncidentService_GetIncident_Success(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "get")
+	require.NoError(t, err)
+
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "get")
+	require.NoError(t, err)
+
+	// 创建测试事件
 	testIncident, err := client.Incident.Create().
-		SetTitle("测试事件").
-		SetDescription("测试描述").
+		SetTitle("Test Incident").
+		SetDescription("Test description").
 		SetStatus("new").
 		SetPriority("high").
 		SetSeverity("medium").
 		SetIncidentNumber("INC-202401-000001").
 		SetReporterID(testUser.ID).
 		SetTenantID(testTenant.ID).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
+		SetDetectedAt(time.Now()).
 		Save(ctx)
-	if err != nil {
-		t.Fatalf("创建测试事件失败: %v", err)
-	}
+	require.NoError(t, err)
 
 	// 测试获取事件
 	response, err := service.GetIncident(ctx, testIncident.ID, testTenant.ID)
-	if err != nil {
-		t.Fatalf("获取事件失败: %v", err)
-	}
-
-	// 验证响应
-	if response.ID != testIncident.ID {
-		t.Errorf("期望ID %d，实际 %d", testIncident.ID, response.ID)
-	}
-	if response.Title != testIncident.Title {
-		t.Errorf("期望标题 %s，实际 %s", testIncident.Title, response.Title)
-	}
-
-	// 测试不存在的ID
-	_, err = service.GetIncident(ctx, 99999, testTenant.ID)
-	if err == nil {
-		t.Error("期望获取不存在的事件时返回错误")
-	}
-
-	// 清理测试数据
-	client.Incident.DeleteOneID(testIncident.ID).Exec(ctx)
-	client.User.DeleteOneID(testUser.ID).Exec(ctx)
-	client.Tenant.DeleteOneID(testTenant.ID).Exec(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, testIncident.ID, response.ID)
+	assert.Equal(t, testIncident.Title, response.Title)
+	assert.Equal(t, testIncident.Status, response.Status)
 }
 
-func TestIncidentService_ListIncidents(t *testing.T) {
-	ctx := context.Background()
-	client := setupTestDB(t)
-	if client == nil {
-		t.Skip("测试数据库未配置")
-	}
+func TestIncidentService_GetIncident_NotFound(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
 
-	logger := zaptest.NewLogger(t).Sugar()
-	service := NewIncidentService(client, logger)
+	testTenant, err := createIncidentTestTenant(ctx, client, "notfound")
+	require.NoError(t, err)
 
-	// 创建测试数据
-	testTenant, _ := createTestTenant(ctx, client)
-	testUser, _ := createTestUser(ctx, client, testTenant.ID)
+	// 测试获取不存在的事件
+	_, err = service.GetIncident(ctx, 99999, testTenant.ID)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "incident not found")
+}
+
+func TestIncidentService_GetIncident_TenantMismatch(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant1, err := createIncidentTestTenant(ctx, client, "tenant1")
+	require.NoError(t, err)
+
+	testTenant2, err := createIncidentTestTenant(ctx, client, "tenant2")
+	require.NoError(t, err)
+
+	testUser, err := createIncidentTestUser(ctx, client, testTenant1.ID, "tenant")
+	require.NoError(t, err)
+
+	// 在 tenant1 下创建事件
+	testIncident, err := client.Incident.Create().
+		SetTitle("Test Incident").
+		SetDescription("Test description").
+		SetStatus("new").
+		SetPriority("high").
+		SetSeverity("medium").
+		SetIncidentNumber("INC-TENANT-001").
+		SetReporterID(testUser.ID).
+		SetTenantID(testTenant1.ID).
+		SetDetectedAt(time.Now()).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 尝试用 tenant2 获取事件，应该失败
+	_, err = service.GetIncident(ctx, testIncident.ID, testTenant2.ID)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "incident not found")
+}
+
+// ==================== 列出事件测试 ====================
+
+func TestIncidentService_ListIncidents_Pagination(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "list")
+	require.NoError(t, err)
+
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "list")
+	require.NoError(t, err)
 
 	// 创建多个测试事件
-	incidents := make([]*ent.Incident, 3)
-	for i := 0; i < 3; i++ {
-		incident, err := client.Incident.Create().
-			SetTitle(fmt.Sprintf("测试事件 %d", i+1)).
-			SetDescription("测试描述").
+	for i := 0; i < 15; i++ {
+		_, err := client.Incident.Create().
+			SetTitle(fmt.Sprintf("Test Incident %d", i+1)).
+			SetDescription("Test description").
 			SetStatus("new").
 			SetPriority("medium").
 			SetSeverity("low").
-			SetIncidentNumber(fmt.Sprintf("INC-202401-%06d", i+1)).
+			SetIncidentNumber(fmt.Sprintf("INC-LIST-%03d", i+1)).
 			SetReporterID(testUser.ID).
 			SetTenantID(testTenant.ID).
-			SetCreatedAt(time.Now()).
-			SetUpdatedAt(time.Now()).
+			SetDetectedAt(time.Now()).
 			Save(ctx)
-		if err != nil {
-			t.Fatalf("创建测试事件失败: %v", err)
-		}
-		incidents[i] = incident
+		require.NoError(t, err)
 	}
 
-	// 测试获取事件列表
+	// 测试第一页
 	responses, total, err := service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{})
-	if err != nil {
-		t.Fatalf("获取事件列表失败: %v", err)
+	require.NoError(t, err)
+	assert.Equal(t, 15, total)
+	assert.Len(t, responses, 10)
+
+	// 测试第二页
+	responses, total, err = service.ListIncidents(ctx, testTenant.ID, 2, 10, map[string]interface{}{})
+	require.NoError(t, err)
+	assert.Equal(t, 15, total)
+	assert.Len(t, responses, 5)
+}
+
+func TestIncidentService_ListIncidents_Filters(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "filter")
+	require.NoError(t, err)
+
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "filter")
+	require.NoError(t, err)
+
+	// 创建不同状态和优先级的事件
+	statuses := []string{"new", "in_progress", "resolved"}
+	priorities := []string{"low", "medium", "high"}
+
+	for i, status := range statuses {
+		for j, priority := range priorities {
+			_, err := client.Incident.Create().
+				SetTitle(fmt.Sprintf("Incident %s-%s", status, priority)).
+				SetDescription("Test description").
+				SetStatus(status).
+				SetPriority(priority).
+				SetSeverity("medium").
+				SetIncidentNumber(fmt.Sprintf("INC-FLT-%d%d", i, j)).
+				SetReporterID(testUser.ID).
+				SetTenantID(testTenant.ID).
+				SetDetectedAt(time.Now()).
+				Save(ctx)
+			require.NoError(t, err)
+		}
 	}
 
-	// 验证响应
-	if total != 3 {
-		t.Errorf("期望总数 3，实际 %d", total)
-	}
-	if len(responses) != 3 {
-		t.Errorf("期望返回 3 个事件，实际 %d", len(responses))
-	}
-
-	// 测试状态筛选
-	responses, total, err = service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
+	// 测试状态过滤
+	responses, total, err := service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
 		"status": "new",
 	})
-	if err != nil {
-		t.Fatalf("获取筛选后的事件列表失败: %v", err)
-	}
-	if total != 3 {
-		t.Errorf("期望筛选后总数 3，实际 %d", total)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, 3, total) // 3 个优先级 × 1 个状态
+	assert.Len(t, responses, 3)
 
-	// 测试优先级筛选
+	// 测试优先级过滤
 	responses, total, err = service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
 		"priority": "high",
 	})
-	if err != nil {
-		t.Fatalf("获取筛选后的事件列表失败: %v", err)
-	}
-	if total != 0 {
-		t.Errorf("期望筛选后总数 0，实际 %d", total)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, 3, total) // 3 个状态 × 1 个优先级
 
-	// 清理测试数据
-	for _, incident := range incidents {
-		client.Incident.DeleteOneID(incident.ID).Exec(ctx)
-	}
-	client.User.DeleteOneID(testUser.ID).Exec(ctx)
-	client.Tenant.DeleteOneID(testTenant.ID).Exec(ctx)
+	// 测试组合过滤
+	responses, total, err = service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
+		"status":   "in_progress",
+		"priority": "high",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 1, total)
 }
 
-func TestIncidentService_UpdateIncident(t *testing.T) {
-	ctx := context.Background()
-	client := setupTestDB(t)
-	if client == nil {
-		t.Skip("测试数据库未配置")
-	}
+func TestIncidentService_ListIncidents_KeywordSearch(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
 
-	logger := zaptest.NewLogger(t).Sugar()
-	service := NewIncidentService(client, logger)
+	testTenant, err := createIncidentTestTenant(ctx, client, "search")
+	require.NoError(t, err)
 
-	// 创建测试数据
-	testTenant, _ := createTestTenant(ctx, client)
-	testUser, _ := createTestUser(ctx, client, testTenant.ID)
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "search")
+	require.NoError(t, err)
 
-	testIncident, err := client.Incident.Create().
-		SetTitle("测试事件").
-		SetDescription("测试描述").
+	// 创建带有关键词的事件
+	_, err = client.Incident.Create().
+		SetTitle("数据库连接失败").
+		SetDescription("生产环境数据库无法连接").
 		SetStatus("new").
-		SetPriority("medium").
-		SetSeverity("low").
-		SetIncidentNumber("INC-202401-000001").
+		SetPriority("critical").
+		SetSeverity("high").
+		SetIncidentNumber("INC-DB-001").
 		SetReporterID(testUser.ID).
 		SetTenantID(testTenant.ID).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
+		SetDetectedAt(time.Now()).
 		Save(ctx)
-	if err != nil {
-		t.Fatalf("创建测试事件失败: %v", err)
-	}
+	require.NoError(t, err)
 
-	// 测试更新事件
-	newTitle := "更新后的标题"
+	_, err = client.Incident.Create().
+		SetTitle("网络延迟问题").
+		SetDescription("用户反馈网络响应缓慢").
+		SetStatus("new").
+		SetPriority("medium").
+		SetSeverity("medium").
+		SetIncidentNumber("INC-NET-001").
+		SetReporterID(testUser.ID).
+		SetTenantID(testTenant.ID).
+		SetDetectedAt(time.Now()).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 搜索关键词 "数据库"
+	responses, total, err := service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
+		"keyword": "数据库",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 1, total)
+	assert.Contains(t, responses[0].Title, "数据库")
+
+	// 搜索关键词 "网络"
+	responses, total, err = service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
+		"keyword": "网络",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 1, total)
+	assert.Contains(t, responses[0].Title, "网络")
+}
+
+// ==================== 更新事件测试 ====================
+
+func TestIncidentService_UpdateIncident_Success(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "update")
+	require.NoError(t, err)
+
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "update")
+	require.NoError(t, err)
+
+	testIncident, err := client.Incident.Create().
+		SetTitle("Original Title").
+		SetDescription("Original description").
+		SetStatus("new").
+		SetPriority("low").
+		SetSeverity("low").
+		SetIncidentNumber("INC-UPD-001").
+		SetReporterID(testUser.ID).
+		SetTenantID(testTenant.ID).
+		SetVersion(1).
+		SetDetectedAt(time.Now()).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 测试更新
+	newTitle := "Updated Title"
 	newPriority := "high"
-	req := &dto.UpdateIncidentRequest{
+
+	response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
 		Title:    &newTitle,
 		Priority: &newPriority,
-		Status:   stringPtr("in_progress"),
-	}
+		Version:  0, // 跳过版本检查
+	}, testTenant.ID)
 
-	response, err := service.UpdateIncident(ctx, testIncident.ID, req, testTenant.ID)
-	if err != nil {
-		t.Fatalf("更新事件失败: %v", err)
-	}
-
-	// 验证响应
-	if response.Title != newTitle {
-		t.Errorf("期望标题 %s，实际 %s", newTitle, response.Title)
-	}
-	if response.Priority != newPriority {
-		t.Errorf("期望优先级 %s，实际 %s", newPriority, response.Priority)
-	}
-	if response.Status != "in_progress" {
-		t.Errorf("期望状态 in_progress，实际 %s", response.Status)
-	}
-
-	// 清理测试数据
-	client.Incident.DeleteOneID(testIncident.ID).Exec(ctx)
-	client.User.DeleteOneID(testUser.ID).Exec(ctx)
-	client.Tenant.DeleteOneID(testTenant.ID).Exec(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, newTitle, response.Title)
+	assert.Equal(t, newPriority, response.Priority)
+	assert.Equal(t, 2, response.Version) // 版本号自动 +1
 }
 
-func TestIncidentService_DeleteIncident(t *testing.T) {
-	ctx := context.Background()
-	client := setupTestDB(t)
-	if client == nil {
-		t.Skip("测试数据库未配置")
-	}
+// ==================== 乐观锁版本控制测试 ====================
 
-	logger := zaptest.NewLogger(t).Sugar()
-	service := NewIncidentService(client, logger)
+func TestIncidentService_UpdateIncident_VersionControl(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
 
-	// 创建测试数据
-	testTenant, _ := createTestTenant(ctx, client)
-	testUser, _ := createTestUser(ctx, client, testTenant.ID)
+	testTenant, err := createIncidentTestTenant(ctx, client, "version")
+	require.NoError(t, err)
+
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "version")
+	require.NoError(t, err)
 
 	testIncident, err := client.Incident.Create().
-		SetTitle("测试事件").
-		SetDescription("测试描述").
+		SetTitle("Version Test").
+		SetDescription("Test description").
 		SetStatus("new").
 		SetPriority("medium").
-		SetSeverity("low").
-		SetIncidentNumber("INC-202401-000001").
+		SetSeverity("medium").
+		SetIncidentNumber("INC-VER-001").
 		SetReporterID(testUser.ID).
 		SetTenantID(testTenant.ID).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
+		SetVersion(1).
+		SetDetectedAt(time.Now()).
 		Save(ctx)
-	if err != nil {
-		t.Fatalf("创建测试事件失败: %v", err)
-	}
+	require.NoError(t, err)
 
-	// 创建关联的 incident_events
-	event1, err := client.IncidentEvent.Create().
+	t.Run("版本匹配时更新成功", func(t *testing.T) {
+		newTitle := "Updated with correct version"
+		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
+			Title:   &newTitle,
+			Version: 1, // 匹配当前版本
+			Force:   false,
+		}, testTenant.ID)
+
+		require.NoError(t, err)
+		assert.Equal(t, newTitle, response.Title)
+		assert.Equal(t, 2, response.Version) // 版本号自动 +1
+	})
+
+	t.Run("版本不匹配时返回冲突错误", func(t *testing.T) {
+		// 当前版本应该是 2
+		newTitle := "Should fail"
+		_, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
+			Title:   &newTitle,
+			Version: 1, // 使用旧版本号
+			Force:   false,
+		}, testTenant.ID)
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "版本冲突")
+
+		// 检查是否是 VersionConflictError 类型
+		var conflictErr *common.VersionConflictError
+		assert.ErrorAs(t, err, &conflictErr)
+		assert.Equal(t, testIncident.ID, conflictErr.ResourceID)
+		assert.Equal(t, 1, conflictErr.CurrentVersion)
+		assert.Equal(t, 2, conflictErr.ServerVersion)
+	})
+
+	t.Run("Force=true 忽略版本检查", func(t *testing.T) {
+		newTitle := "Force Update"
+		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
+			Title:   &newTitle,
+			Version: 1, // 旧版本号
+			Force:   true, // 强制更新
+		}, testTenant.ID)
+
+		require.NoError(t, err)
+		assert.Equal(t, newTitle, response.Title)
+	})
+
+	t.Run("Version=0 跳过版本检查", func(t *testing.T) {
+		newTitle := "No Version Check"
+		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
+			Title:   &newTitle,
+			Version: 0, // 跳过版本检查
+			Force:   false,
+		}, testTenant.ID)
+
+		require.NoError(t, err)
+		assert.Equal(t, newTitle, response.Title)
+	})
+}
+
+// ==================== 状态转换测试 ====================
+
+func TestIncidentService_UpdateIncident_StatusTransition(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "status")
+	require.NoError(t, err)
+
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "status")
+	require.NoError(t, err)
+
+	t.Run("有效状态转换 new -> in_progress", func(t *testing.T) {
+		testIncident, err := client.Incident.Create().
+			SetTitle("Status Test 1").
+			SetDescription("Test description").
+			SetStatus("new").
+			SetPriority("medium").
+			SetSeverity("medium").
+			SetIncidentNumber("INC-ST-001").
+			SetReporterID(testUser.ID).
+			SetTenantID(testTenant.ID).
+			SetDetectedAt(time.Now()).
+			Save(ctx)
+		require.NoError(t, err)
+
+		newStatus := "in_progress"
+		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
+			Status:  &newStatus,
+			Version: 0,
+		}, testTenant.ID)
+
+		require.NoError(t, err)
+		assert.Equal(t, newStatus, response.Status)
+	})
+
+	t.Run("有效状态转换 in_progress -> resolved", func(t *testing.T) {
+		testIncident, err := client.Incident.Create().
+			SetTitle("Status Test 2").
+			SetDescription("Test description").
+			SetStatus("in_progress").
+			SetPriority("medium").
+			SetSeverity("medium").
+			SetIncidentNumber("INC-ST-002").
+			SetReporterID(testUser.ID).
+			SetTenantID(testTenant.ID).
+			SetDetectedAt(time.Now()).
+			Save(ctx)
+		require.NoError(t, err)
+
+		newStatus := "resolved"
+		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
+			Status:  &newStatus,
+			Version: 0,
+		}, testTenant.ID)
+
+		require.NoError(t, err)
+		assert.Equal(t, newStatus, response.Status)
+		assert.NotNil(t, response.ResolvedAt)
+	})
+
+	t.Run("有效状态转换 resolved -> closed", func(t *testing.T) {
+		resolvedAt := time.Now().Add(-1 * time.Hour)
+		testIncident, err := client.Incident.Create().
+			SetTitle("Status Test 3").
+			SetDescription("Test description").
+			SetStatus("resolved").
+			SetPriority("medium").
+			SetSeverity("medium").
+			SetIncidentNumber("INC-ST-003").
+			SetReporterID(testUser.ID).
+			SetTenantID(testTenant.ID).
+			SetDetectedAt(time.Now()).
+			SetResolvedAt(resolvedAt).
+			Save(ctx)
+		require.NoError(t, err)
+
+		newStatus := "closed"
+		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
+			Status:  &newStatus,
+			Version: 0,
+		}, testTenant.ID)
+
+		require.NoError(t, err)
+		assert.Equal(t, newStatus, response.Status)
+		assert.NotNil(t, response.ClosedAt)
+	})
+
+	t.Run("无效状态转换", func(t *testing.T) {
+		testIncident, err := client.Incident.Create().
+			SetTitle("Status Test 4").
+			SetDescription("Test description").
+			SetStatus("new").
+			SetPriority("medium").
+			SetSeverity("medium").
+			SetIncidentNumber("INC-ST-004").
+			SetReporterID(testUser.ID).
+			SetTenantID(testTenant.ID).
+			SetDetectedAt(time.Now()).
+			Save(ctx)
+		require.NoError(t, err)
+
+		newStatus := "closed" // new 不能直接到 closed
+		_, err = service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
+			Status:  &newStatus,
+			Version: 0,
+		}, testTenant.ID)
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid status transition")
+	})
+}
+
+// ==================== 删除事件测试 ====================
+
+func TestIncidentService_DeleteIncident_Success(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "delete")
+	require.NoError(t, err)
+
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "delete")
+	require.NoError(t, err)
+
+	testIncident, err := client.Incident.Create().
+		SetTitle("To Be Deleted").
+		SetDescription("Test description").
+		SetStatus("new").
+		SetPriority("medium").
+		SetSeverity("medium").
+		SetIncidentNumber("INC-DEL-001").
+		SetReporterID(testUser.ID).
+		SetTenantID(testTenant.ID).
+		SetDetectedAt(time.Now()).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 创建关联的事件记录
+	_, err = client.IncidentEvent.Create().
 		SetIncidentID(testIncident.ID).
 		SetEventType("creation").
 		SetEventName("事件创建").
-		SetDescription("测试事件已创建").
+		SetDescription("Test event created").
 		SetStatus("active").
 		SetSeverity("info").
 		SetTenantID(testTenant.ID).
 		SetOccurredAt(time.Now()).
 		Save(ctx)
-	if err != nil {
-		t.Fatalf("创建测试事件记录失败: %v", err)
-	}
+	require.NoError(t, err)
 
-	// 创建关联的 incident_alerts
-	alert1, err := client.IncidentAlert.Create().
-		SetIncidentID(testIncident.ID).
-		SetAlertType("sla_breach").
-		SetAlertName("SLA告警").
-		SetMessage("即将超过SLA").
-		SetSeverity("high").
-		SetTenantID(testTenant.ID).
-		SetTriggeredAt(time.Now()).
-		Save(ctx)
-	if err != nil {
-		t.Fatalf("创建测试告警失败: %v", err)
-	}
-
-	// 创建关联的 incident_metrics
-	metric1, err := client.IncidentMetric.Create().
-		SetIncidentID(testIncident.ID).
-		SetMetricType("response_time").
-		SetMetricValue(100).
-		SetUnit("seconds").
-		SetTenantID(testTenant.ID).
-		SetMeasuredAt(time.Now()).
-		Save(ctx)
-	if err != nil {
-		t.Fatalf("创建测试指标失败: %v", err)
-	}
-
-	// 测试删除事件（应级联删除关联数据）
+	// 测试删除
 	err = service.DeleteIncident(ctx, testIncident.ID, testTenant.ID)
-	if err != nil {
-		t.Fatalf("删除事件失败: %v", err)
-	}
+	require.NoError(t, err)
 
-	// 验证事件已被删除
-	_, err = service.GetIncident(ctx, testIncident.ID, testTenant.ID)
-	if err == nil {
-		t.Error("期望删除后获取事件时返回错误")
-	}
+	// 验证已删除
+	_, err = client.Incident.Get(ctx, testIncident.ID)
+	require.Error(t, err)
+	assert.True(t, ent.IsNotFound(err))
 
-	// 验证关联的 incident_events 已级联删除
-	_, err = client.IncidentEvent.Get(ctx, event1.ID)
-	if err == nil {
-		t.Error("期望事件记录已被级联删除")
-	}
-
-	// 验证关联的 incident_alerts 已级联删除
-	_, err = client.IncidentAlert.Get(ctx, alert1.ID)
-	if err == nil {
-		t.Error("期望告警已被级联删除")
-	}
-
-	// 验证关联的 incident_metrics 已级联删除
-	_, err = client.IncidentMetric.Get(ctx, metric1.ID)
-	if err == nil {
-		t.Error("期望指标已被级联删除")
-	}
-
-	// 清理测试数据
-	client.User.DeleteOneID(testUser.ID).Exec(ctx)
-	client.Tenant.DeleteOneID(testTenant.ID).Exec(ctx)
-}
-
-// 事件规则引擎测试
-func TestIncidentRuleEngine_ExecuteRule(t *testing.T) {
-	ctx := context.Background()
-	client := setupTestDB(t)
-	if client == nil {
-		t.Skip("测试数据库未配置")
-	}
-
-	logger := zaptest.NewLogger(t).Sugar()
-	engine := NewIncidentRuleEngine(client, logger)
-
-	// 创建测试数据
-	testTenant, _ := createTestTenant(ctx, client)
-	testUser, _ := createTestUser(ctx, client, testTenant.ID)
-
-	testIncident, err := client.Incident.Create().
-		SetTitle("测试事件").
-		SetDescription("测试描述").
-		SetStatus("new").
-		SetPriority("high").
-		SetSeverity("medium").
-		SetIncidentNumber("INC-202401-000001").
-		SetReporterID(testUser.ID).
-		SetTenantID(testTenant.ID).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
-		Save(ctx)
-	if err != nil {
-		t.Fatalf("创建测试事件失败: %v", err)
-	}
-
-	// 创建测试规则
-	testRule, err := client.IncidentRule.Create().
-		SetName("测试规则").
-		SetDescription("测试规则描述").
-		SetRuleType("escalation").
-		SetConditions(map[string]interface{}{
-			"priority": []string{"high", "urgent"},
-		}).
-		SetActions([]map[string]interface{}{
-			{
-				"type":   "escalate",
-				"level":  1,
-				"reason": "优先级较高",
-			},
-		}).
-		SetPriority("high").
-		SetIsActive(true).
-		SetTenantID(testTenant.ID).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
-		Save(ctx)
-	if err != nil {
-		t.Fatalf("创建测试规则失败: %v", err)
-	}
-
-	// 测试执行规则
-	err = engine.ExecuteRule(ctx, testRule, testIncident, testTenant.ID)
-	if err != nil {
-		t.Fatalf("执行规则失败: %v", err)
-	}
-
-	// 验证规则执行记录
-	executions, err := client.IncidentRuleExecution.Query().
-		Where(incidentruleexecution.RuleIDEQ(testRule.ID)).
+	// 验证关联的事件记录也被删除
+	events, err := client.IncidentEvent.Query().
+		Where(incidentevent.IncidentIDEQ(testIncident.ID)).
 		All(ctx)
-	if err != nil {
-		t.Fatalf("获取规则执行记录失败: %v", err)
-	}
-	if len(executions) == 0 {
-		t.Error("期望有规则执行记录")
-	}
-
-	// 验证规则执行次数更新
-	updatedRule, err := client.IncidentRule.Get(ctx, testRule.ID)
-	if err != nil {
-		t.Fatalf("获取更新后的规则失败: %v", err)
-	}
-	if updatedRule.ExecutionCount != 1 {
-		t.Errorf("期望执行次数 1，实际 %d", updatedRule.ExecutionCount)
-	}
-
-	// 清理测试数据
-	client.IncidentRuleExecution.Delete().Exec(ctx)
-	client.IncidentRule.DeleteOneID(testRule.ID).Exec(ctx)
-	client.Incident.DeleteOneID(testIncident.ID).Exec(ctx)
-	client.User.DeleteOneID(testUser.ID).Exec(ctx)
-	client.Tenant.DeleteOneID(testTenant.ID).Exec(ctx)
+	require.NoError(t, err)
+	assert.Empty(t, events)
 }
 
-// 事件告警服务测试
-func TestIncidentAlertingService_CreateIncidentAlert(t *testing.T) {
-	ctx := context.Background()
-	client := setupTestDB(t)
-	if client == nil {
-		t.Skip("测试数据库未配置")
-	}
+func TestIncidentService_DeleteIncident_NotFound(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
 
-	logger := zaptest.NewLogger(t).Sugar()
-	service := NewIncidentAlertingService(client, logger)
+	testTenant, err := createIncidentTestTenant(ctx, client, "delnotfound")
+	require.NoError(t, err)
 
-	// 创建测试数据
-	testTenant, _ := createTestTenant(ctx, client)
-	testUser, _ := createTestUser(ctx, client, testTenant.ID)
+	// 测试删除不存在的事件
+	err = service.DeleteIncident(ctx, 99999, testTenant.ID)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "incident not found")
+}
+
+// ==================== 事件活动记录测试 ====================
+
+func TestIncidentService_CreateIncidentEvent_Success(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "event")
+	require.NoError(t, err)
+
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "event")
+	require.NoError(t, err)
 
 	testIncident, err := client.Incident.Create().
-		SetTitle("测试事件").
-		SetDescription("测试描述").
+		SetTitle("Event Test").
+		SetDescription("Test description").
 		SetStatus("new").
-		SetPriority("high").
+		SetPriority("medium").
 		SetSeverity("medium").
-		SetIncidentNumber("INC-202401-000001").
+		SetIncidentNumber("INC-EVT-001").
 		SetReporterID(testUser.ID).
 		SetTenantID(testTenant.ID).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
+		SetDetectedAt(time.Now()).
 		Save(ctx)
-	if err != nil {
-		t.Fatalf("创建测试事件失败: %v", err)
-	}
+	require.NoError(t, err)
 
-	// 测试创建告警
-	req := &dto.CreateIncidentAlertRequest{
-		IncidentID: testIncident.ID,
-		AlertType:  "escalation",
-		AlertName:  "测试告警",
-		Message:    "这是一个测试告警",
-		Severity:   "high",
-		Channels:   []string{"email", "slack"},
-		Recipients: []string{"test@example.com"},
-	}
+	// 创建事件记录
+	response, err := service.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+		IncidentID:  testIncident.ID,
+		EventType:   "status_change",
+		EventName:   "状态变更",
+		Description: "事件状态从 new 变更为 in_progress",
+		Status:      "active",
+		Severity:    "info",
+		Source:      "system",
+		Data: map[string]interface{}{
+			"old_status": "new",
+			"new_status": "in_progress",
+		},
+	}, testTenant.ID)
 
-	response, err := service.CreateIncidentAlert(ctx, req, testTenant.ID)
-	if err != nil {
-		t.Fatalf("创建告警失败: %v", err)
-	}
-
-	// 验证响应
-	if response.IncidentID != testIncident.ID {
-		t.Errorf("期望事件ID %d，实际 %d", testIncident.ID, response.IncidentID)
-	}
-	if response.AlertType != req.AlertType {
-		t.Errorf("期望告警类型 %s，实际 %s", req.AlertType, response.AlertType)
-	}
-	if response.AlertName != req.AlertName {
-		t.Errorf("期望告警名称 %s，实际 %s", req.AlertName, response.AlertName)
-	}
-	if response.Message != req.Message {
-		t.Errorf("期望告警消息 %s，实际 %s", req.Message, response.Message)
-	}
-	if response.Severity != req.Severity {
-		t.Errorf("期望严重程度 %s，实际 %s", req.Severity, response.Severity)
-	}
-	if response.Status != "active" {
-		t.Errorf("期望状态 active，实际 %s", response.Status)
-	}
-
-	// 验证告警记录
-	alert, err := client.IncidentAlert.Get(ctx, response.ID)
-	if err != nil {
-		t.Fatalf("获取告警记录失败: %v", err)
-	}
-	if alert.IncidentID != testIncident.ID {
-		t.Errorf("期望事件ID %d，实际 %d", testIncident.ID, alert.IncidentID)
-	}
-
-	// 清理测试数据
-	client.IncidentAlert.DeleteOneID(response.ID).Exec(ctx)
-	client.Incident.DeleteOneID(testIncident.ID).Exec(ctx)
-	client.User.DeleteOneID(testUser.ID).Exec(ctx)
-	client.Tenant.DeleteOneID(testTenant.ID).Exec(ctx)
+	require.NoError(t, err)
+	assert.NotNil(t, response)
+	assert.Equal(t, testIncident.ID, response.IncidentID)
+	assert.Equal(t, "status_change", response.EventType)
+	assert.Equal(t, "状态变更", response.EventName)
 }
 
-func TestIncidentAlertingService_AcknowledgeAlert(t *testing.T) {
-	ctx := context.Background()
-	client := setupTestDB(t)
-	if client == nil {
-		t.Skip("测试数据库未配置")
+// ==================== 事件统计测试 ====================
+
+func TestIncidentService_GetIncidentStats(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant, err := createIncidentTestTenant(ctx, client, "stats")
+	require.NoError(t, err)
+
+	testUser, err := createIncidentTestUser(ctx, client, testTenant.ID, "stats")
+	require.NoError(t, err)
+
+	// 创建不同状态的事件
+	statuses := []struct {
+		status   string
+		priority string
+		severity string
+		count    int
+	}{
+		{"new", "critical", "critical", 2},
+		{"in_progress", "high", "high", 3},
+		{"resolved", "medium", "medium", 4},
+		{"closed", "low", "low", 1},
 	}
 
-	logger := zaptest.NewLogger(t).Sugar()
-	service := NewIncidentAlertingService(client, logger)
+	for _, s := range statuses {
+		for i := 0; i < s.count; i++ {
+			incidentBuilder := client.Incident.Create().
+				SetTitle(fmt.Sprintf("Stats Test %s %d", s.status, i)).
+				SetDescription("Test description").
+				SetStatus(s.status).
+				SetPriority(s.priority).
+				SetSeverity(s.severity).
+				SetIncidentNumber(fmt.Sprintf("INC-STATS-%s-%d", s.status, i)).
+				SetReporterID(testUser.ID).
+				SetTenantID(testTenant.ID).
+				SetDetectedAt(time.Now())
 
-	// 创建测试数据
-	testTenant, _ := createTestTenant(ctx, client)
-	testUser, _ := createTestUser(ctx, client, testTenant.ID)
+			if s.status == "resolved" {
+				incidentBuilder.SetResolvedAt(time.Now())
+			} else if s.status == "closed" {
+				incidentBuilder.SetResolvedAt(time.Now().Add(-1 * time.Hour))
+				incidentBuilder.SetClosedAt(time.Now())
+			}
 
-	testIncident, err := client.Incident.Create().
-		SetTitle("测试事件").
-		SetDescription("测试描述").
-		SetStatus("new").
-		SetPriority("high").
-		SetSeverity("medium").
-		SetIncidentNumber("INC-202401-000001").
-		SetReporterID(testUser.ID).
-		SetTenantID(testTenant.ID).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
-		Save(ctx)
-	if err != nil {
-		t.Fatalf("创建测试事件失败: %v", err)
-	}
-
-	testAlert, err := client.IncidentAlert.Create().
-		SetIncidentID(testIncident.ID).
-		SetAlertType("escalation").
-		SetAlertName("测试告警").
-		SetMessage("测试告警消息").
-		SetSeverity("high").
-		SetStatus("active").
-		SetChannels([]string{"email"}).
-		SetRecipients([]string{"test@example.com"}).
-		SetTriggeredAt(time.Now()).
-		SetTenantID(testTenant.ID).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
-		Save(ctx)
-	if err != nil {
-		t.Fatalf("创建测试告警失败: %v", err)
-	}
-
-	// 测试确认告警
-	err = service.AcknowledgeAlert(ctx, testAlert.ID, testUser.ID, testTenant.ID)
-	if err != nil {
-		t.Fatalf("确认告警失败: %v", err)
-	}
-
-	// 验证告警状态更新
-	updatedAlert, err := client.IncidentAlert.Get(ctx, testAlert.ID)
-	if err != nil {
-		t.Fatalf("获取更新后的告警失败: %v", err)
-	}
-	if updatedAlert.Status != "acknowledged" {
-		t.Errorf("期望状态 acknowledged，实际 %s", updatedAlert.Status)
-	}
-	if updatedAlert.AcknowledgedBy == 0 || updatedAlert.AcknowledgedBy != testUser.ID {
-		t.Errorf("期望确认人ID %d，实际 %d", testUser.ID, updatedAlert.AcknowledgedBy)
-	}
-	if updatedAlert.AcknowledgedAt.IsZero() {
-		t.Error("期望确认时间不为空")
-	}
-
-	// 清理测试数据
-	client.IncidentAlert.DeleteOneID(testAlert.ID).Exec(ctx)
-	client.Incident.DeleteOneID(testIncident.ID).Exec(ctx)
-	client.User.DeleteOneID(testUser.ID).Exec(ctx)
-	client.Tenant.DeleteOneID(testTenant.ID).Exec(ctx)
-}
-
-// 辅助函数
-func stringPtr(s string) *string {
-	return &s
-}
-
-// 基准测试
-func BenchmarkIncidentService_CreateIncident(b *testing.B) {
-	ctx := context.Background()
-	client := setupTestDB(&testing.T{})
-	if client == nil {
-		b.Skip("测试数据库未配置")
-	}
-
-	logger := zaptest.NewLogger(b).Sugar()
-	service := NewIncidentService(client, logger)
-
-	// 创建测试数据
-	testTenant, _ := createTestTenant(ctx, client)
-	testUser, _ := createTestUser(ctx, client, testTenant.ID)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		req := &dto.CreateIncidentRequest{
-			Title:       fmt.Sprintf("基准测试事件 %d", i),
-			Description: "基准测试描述",
-			Priority:    "medium",
-			Severity:    "low",
-			Category:    "performance",
-			Source:      "manual",
-		}
-
-		response, err := service.CreateIncident(ctx, req, testTenant.ID, testTenant.ID)
-		if err != nil {
-			b.Fatalf("创建事件失败: %v", err)
-		}
-
-		// 清理
-		client.Incident.DeleteOneID(response.ID).Exec(ctx)
-	}
-
-	// 清理测试数据
-	client.User.DeleteOneID(testUser.ID).Exec(ctx)
-	client.Tenant.DeleteOneID(testTenant.ID).Exec(ctx)
-}
-
-func BenchmarkIncidentService_ListIncidents(b *testing.B) {
-	ctx := context.Background()
-	client := setupTestDB(&testing.T{})
-	if client == nil {
-		b.Skip("测试数据库未配置")
-	}
-
-	logger := zaptest.NewLogger(b).Sugar()
-	service := NewIncidentService(client, logger)
-
-	// 创建测试数据
-	testTenant, _ := createTestTenant(ctx, client)
-	testUser, _ := createTestUser(ctx, client, testTenant.ID)
-
-	// 创建测试事件
-	for i := 0; i < 100; i++ {
-		_, err := client.Incident.Create().
-			SetTitle(fmt.Sprintf("基准测试事件 %d", i)).
-			SetDescription("基准测试描述").
-			SetStatus("new").
-			SetPriority("medium").
-			SetSeverity("low").
-			SetIncidentNumber(fmt.Sprintf("INC-202401-%06d", i)).
-			SetReporterID(testUser.ID).
-			SetTenantID(testTenant.ID).
-			SetCreatedAt(time.Now()).
-			SetUpdatedAt(time.Now()).
-			Save(ctx)
-		if err != nil {
-			b.Fatalf("创建测试事件失败: %v", err)
+			_, err := incidentBuilder.Save(ctx)
+			require.NoError(t, err)
 		}
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _, err := service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{})
-		if err != nil {
-			b.Fatalf("获取事件列表失败: %v", err)
-		}
-	}
+	// 获取统计
+	stats, err := service.GetIncidentStats(ctx, testTenant.ID)
+	require.NoError(t, err)
+	assert.NotNil(t, stats)
 
-	// 清理测试数据
-	client.Incident.Delete().Where(incident.TenantIDEQ(testTenant.ID)).Exec(ctx)
-	client.User.DeleteOneID(testUser.ID).Exec(ctx)
-	client.Tenant.DeleteOneID(testTenant.ID).Exec(ctx)
+	// 验证统计数据
+	totalExpected := 2 + 3 + 4 + 1 // 10
+	assert.Equal(t, totalExpected, stats.TotalIncidents)
+
+	// open incidents = new + in_progress
+	openExpected := 2 + 3 // 5
+	assert.Equal(t, openExpected, stats.OpenIncidents)
+
+	// critical incidents
+	assert.Equal(t, 2, stats.CriticalIncidents)
 }

@@ -59,9 +59,15 @@ const statusColors: Record<string, string> = {
 
 interface ChangeListProps {
   showHeader?: boolean;
+  /** 外部传入的搜索关键词 */
+  search?: string;
+  /** 外部传入的状态筛选 */
+  status?: string;
+  /** 外部传入的风险等级筛选 */
+  risk?: string;
 }
 
-const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true }) => {
+const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, status, risk }) => {
   const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
@@ -73,6 +79,18 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true }) => {
     page: 1,
     pageSize: 10,
   });
+
+  // 当外部筛选条件变化时，同步到表单并重新加载
+  useEffect(() => {
+    if (search !== undefined || status !== undefined || risk !== undefined) {
+      form.setFieldsValue({
+        search: search || undefined,
+        status: status || undefined,
+        type: undefined, // risk在API中可能对应type，这里先不处理
+      });
+      setQuery(prev => ({ ...prev, page: 1 }));
+    }
+  }, [search, status, risk, form]);
 
   const loadData = async () => {
     setLoading(true);

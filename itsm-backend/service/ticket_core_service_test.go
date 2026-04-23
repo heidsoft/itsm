@@ -496,3 +496,161 @@ func TestTicketCoreService_addTagsToTicket(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+// ==================== 乐观锁版本控制测试 ====================
+
+func TestTicketCoreService_UpdateTicketBasic_VersionControl(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	coreService := NewTicketCoreService(client, logger)
+
+	ctx := context.Background()
+
+	// 创建测试租户和用户
+	testTenant, err := client.Tenant.Create().
+		SetName("Test Tenant").
+		SetCode("test-version").
+		SetDomain("test.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	testUser, err := client.User.Create().
+		SetUsername("testuser-version").
+		SetEmail("test-version@example.com").
+		SetName("Test User").
+		SetPasswordHash("hashedpassword").
+		SetRole("end_user").
+		SetActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 创建测试工单
+	testTicket, err := client.Ticket.Create().
+		SetTitle("Version Control Test").
+		SetDescription("Test description").
+		SetPriority("medium").
+		SetType("ticket").
+		SetStatus("open").
+		SetTicketNumber("TKT-VERSION-001").
+		SetTenantID(testTenant.ID).
+		SetRequesterID(testUser.ID).
+		SetVersion(1). // 初始版本
+		Save(ctx)
+	require.NoError(t, err)
+
+	t.Run("版本匹配时更新成功", func(t *testing.T) {
+		updated, err := coreService.UpdateTicketBasic(ctx, testTicket.ID, &dto.UpdateTicketRequest{
+			Title:       "Updated Title",
+			Version:     1, // 匹配当前版本
+			Force:       false,
+		}, testTenant.ID)
+
+		require.NoError(t, err)
+		assert.NotNil(t, updated)
+		assert.Equal(t, "Updated Title", updated.Title)
+		assert.Equal(t, 2, updated.Version) // 版本号自动+1
+	})
+
+	t.Run("版本不匹配时返回冲突错误", func(t *testing.T) {
+		// 当前版本应该是 2
+		_, err := coreService.UpdateTicketBasic(ctx, testTicket.ID, &dto.UpdateTicketRequest{
+			Title:       "Should Fail",
+			Version:     1, // 使用旧版本号
+			Force:       false,
+		}, testTenant.ID)
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "版本冲突")
+	})
+
+	t.Run("Force=true 忽略版本检查", func(t *testing.T) {
+		updated, err := coreService.UpdateTicketBasic(ctx, testTicket.ID, &dto.UpdateTicketRequest{
+			Title:       "Force Update",
+			Version:     1, // 旧版本号
+			Force:       true, // 强制更新
+		}, testTenant.ID)
+
+		require.NoError(t, err)
+		assert.NotNil(t, updated)
+		assert.Equal(t, "Force Update", updated.Title)
+	})
+
+	t.Run("Version=0 跳过版本检查", func(t *testing.T) {
+		updated, err := coreService.UpdateTicketBasic(ctx, testTicket.ID, &dto.UpdateTicketRequest{
+			Title:       "No Version Check",
+			Version:     0, // 跳过版本检查
+			Force:       false,
+		}, testTenant.ID)
+
+		require.NoError(t, err)
+		assert.NotNil(t, updated)
+		assert.Equal(t, "No Version Check", updated.Title)
+	})
+}
+
+func TestTicketCoreService_UpdateTicketBasic_StatusTransition(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	coreService := NewTicketCoreService(client, logger)
+
+	ctx := context.Background()
+
+	// 创建测试数据
+	testTenant, err := client.Tenant.Create().
+		SetName("Test Tenant").
+		SetCode("test-status").
+		SetDomain("test.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	testUser, err := client.User.Create().
+		SetUsername("testuser-status").
+		SetEmail("test-status@example.com").
+		SetName("Test User").
+		SetPasswordHash("hashedpassword").
+		SetRole("agent").
+		SetActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	testTicket, err := client.Ticket.Create().
+		SetTitle("Status Test").
+		SetDescription("Test description").
+		SetPriority("medium").
+		SetType("ticket").
+		SetStatus("open").
+		SetTicketNumber("TKT-STATUS-001").
+		SetTenantID(testTenant.ID).
+		SetRequesterID(testUser.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	t.Run("有效状态转换", func(t *testing.T) {
+		updated, err := coreService.UpdateTicketBasic(ctx, testTicket.ID, &dto.UpdateTicketRequest{
+			Status:  "in_progress",
+			Version: 0,
+		}, testTenant.ID)
+
+		require.NoError(t, err)
+		assert.Equal(t, "in_progress", updated.Status)
+	})
+
+	t.Run("无效状态转换", func(t *testing.T) {
+		// 当前状态是 in_progress，尝试转换到无效状态
+		_, err := coreService.UpdateTicketBasic(ctx, testTicket.ID, &dto.UpdateTicketRequest{
+			Status:  "invalid_status",
+			Version: 0,
+		}, testTenant.ID)
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "无效的状态转换")
+	})
+}

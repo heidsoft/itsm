@@ -10,8 +10,8 @@ import { CMDBApi } from '@/lib/api/';
  * 获取 CI 详情和类型列表
  */
 export const fetchCIDetail = async (ciId: string | number): Promise<{
-  ci: any; // ConfigurationItem 类型在不同模块中不兼容，使用 any
-  types: any[]; // CIType[]
+  ci: ConfigurationItem;
+  types: CIType[];
 }> => {
   const [ciData, typeData] = await Promise.all([
     CMDBApi.getCI(String(ciId)),

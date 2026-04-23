@@ -70,6 +70,10 @@ export interface Incident {
   category?: string;
   subcategory?: string;
   resolution?: string;
+  resolutionCode?: string;
+  resolution_code?: string;
+  problemId?: number; // 关联的问题ID
+  problem_id?: number;
   escalationLevel?: number;
   escalation_level?: number;
   impactAnalysis?: {
@@ -237,6 +241,8 @@ export interface UpdateIncidentRequest {
   resolvedAt?: string;
   closedAt?: string;
   formFields?: Record<string, string | number | boolean>;
+  /** 版本号（用于乐观锁冲突检测） */
+  version?: number;
 }
 
 export interface UpdateIncidentStatusRequest {
@@ -371,6 +377,24 @@ export class IncidentAPI {
     data: UpdateIncidentStatusRequest
   ): Promise<Incident> {
     const response = await httpClient.put<Incident>(`/api/v1/incidents/${id}/status`, data);
+    return response;
+  }
+
+  /**
+   * 解决事件（ITIL 合规）
+   * 使用专门的 resolve 端点，而非直接更新状态
+   * 要求填写解决方案
+   */
+  static async resolveIncident(
+    id: number,
+    data: {
+      resolution: string;
+      resolution_code?: string;
+      root_cause?: string;
+      problem_id?: number;
+    }
+  ): Promise<Incident> {
+    const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/resolve`, data);
     return response;
   }
 

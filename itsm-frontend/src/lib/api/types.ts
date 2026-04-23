@@ -57,7 +57,8 @@ export interface UserBasicInfo {
 
 // ==================== 工单相关类型 ====================
 
-export type TicketPriority = 'low' | 'medium' | 'high' | 'critical';
+/** 工单优先级 - 与 @/constants/taxonomy 保持一致 */
+export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent' | 'critical';
 export type TicketStatus = 'new' | 'open' | 'in_progress' | 'pending' | 'resolved' | 'closed';
 export type TicketType = 'incident' | 'problem' | 'change' | 'service_request';
 

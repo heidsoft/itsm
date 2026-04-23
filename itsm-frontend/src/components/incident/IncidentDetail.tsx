@@ -38,16 +38,22 @@ import {
   IncidentSeverityLabels,
 } from '@/constants/incident';
 import type { Incident } from '@/types/biz/incident';
+import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
+import { SafeContent, SafeTextBlock } from '@/components/common/SafeContent';
+import { isValidIncidentTransition } from '@/lib/utils/workflow-state-machine';
 
 const IncidentDetail: React.FC = () => {
   const { id } = useParams() as { id: string };
   const router = useRouter();
+  const { handleError } = useErrorHandler();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Incident | null>(null);
   const [escalateModalVisible, setEscalateModalVisible] = useState(false);
+  const [resolveModalVisible, setResolveModalVisible] = useState(false);
   const [escalating, setEscalating] = useState(false);
   const [resolving, setResolving] = useState(false);
   const [form] = Form.useForm();
+  const [resolveForm] = Form.useForm();
 
   const loadData = async () => {
     if (!id) return;
@@ -56,8 +62,7 @@ const IncidentDetail: React.FC = () => {
       const resp = await IncidentAPI.getIncident(Number(id));
       setData(resp as unknown as Incident);
     } catch (error) {
-      // console.error(error);
-      message.error('加载事件详情失败');
+      handleError(error, 'loadIncident', '加载事件详情失败');
     } finally {
       setLoading(false);
     }
@@ -90,21 +95,40 @@ const IncidentDetail: React.FC = () => {
       setEscalateModalVisible(false);
       loadData(); // 刷新数据
     } catch (error) {
-      message.error('升级失败');
+      handleError(error, 'escalateIncident', '升级失败');
     } finally {
       setEscalating(false);
     }
   };
 
-  const handleResolve = async () => {
+  // 打开解决确认弹窗
+  const handleResolveClick = () => {
+    resolveForm.resetFields();
+    setResolveModalVisible(true);
+  };
+
+  // 提交解决方案（ITIL 合规：要求填写解决方案）
+  const handleResolveSubmit = async (values: { resolution: string; resolutionCode?: string }) => {
     if (!data) return;
+
+    // 状态转换验证
+    if (!isValidIncidentTransition(data.status, 'resolved')) {
+      message.error('当前状态不允许直接解决');
+      return;
+    }
+
     setResolving(true);
     try {
-      await IncidentAPI.updateIncidentStatus(data.id, { status: 'resolved' });
+      // 使用专门的 resolve 端点，而非直接更新状态
+      await IncidentAPI.resolveIncident(data.id, {
+        resolution: values.resolution,
+        resolution_code: values.resolutionCode,
+      });
       message.success('事件已解决');
+      setResolveModalVisible(false);
       loadData();
     } catch (error) {
-      message.error('解决失败');
+      handleError(error, 'resolveIncident', '解决失败');
     } finally {
       setResolving(false);
     }
@@ -147,7 +171,7 @@ const IncidentDetail: React.FC = () => {
                 升级
               </Button>
               {data.status !== IncidentStatus.RESOLVED && (
-                <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleResolve} loading={resolving}>
+                <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleResolveClick} loading={resolving}>
                   解决
                 </Button>
               )}
@@ -175,7 +199,9 @@ const IncidentDetail: React.FC = () => {
           </Descriptions>
           <Divider />
           <Descriptions title="详细描述" column={1}>
-            <Descriptions.Item label="描述">{data.description}</Descriptions.Item>
+            <Descriptions.Item label="描述">
+              <SafeTextBlock content={data.description} fallback="暂无描述" />
+            </Descriptions.Item>
           </Descriptions>
 
           {/* 影响分析 (如果有) */}
@@ -243,6 +269,59 @@ const IncidentDetail: React.FC = () => {
           </Form>
         </Modal>
       )}
+
+      {/* 解决确认弹窗 (ITIL 合规：要求填写解决方案) */}
+      <Modal
+        title={
+          <Space>
+            <CheckCircleOutlined style={{ color: '#52c41a' }} />
+            解决事件
+          </Space>
+        }
+        open={resolveModalVisible}
+        onCancel={() => setResolveModalVisible(false)}
+        confirmLoading={resolving}
+        onOk={() => resolveForm.submit()}
+        okText="确认解决"
+        cancelText="取消"
+        width={500}
+      >
+        <Form form={resolveForm} layout="vertical" onFinish={handleResolveSubmit}>
+          <Form.Item
+            name="resolution"
+            label="解决方案"
+            rules={[
+              { required: true, message: '请填写解决方案' },
+              { min: 10, message: '解决方案至少需要10个字符' },
+            ]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="请详细描述问题的解决方案和处理步骤..."
+              showCount
+              maxLength={2000}
+            />
+          </Form.Item>
+          <Form.Item
+            name="resolutionCode"
+            label="解决分类"
+          >
+            <Select placeholder="选择解决分类（可选）">
+              <Select.Option value="fixed">已修复</Select.Option>
+              <Select.Option value="workaround">临时解决方案</Select.Option>
+              <Select.Option value="no_action">无需操作</Select.Option>
+              <Select.Option value="third_party">第三方解决</Select.Option>
+              <Select.Option value="user_error">用户错误</Select.Option>
+            </Select>
+          </Form.Item>
+          {data?.problemId && (
+            <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>
+              <ExclamationCircleOutlined style={{ marginRight: 8, color: '#faad14' }} />
+              <span>此事件已关联问题记录 #{data.problemId}</span>
+            </div>
+          )}
+        </Form>
+      </Modal>
     </>
   );
 };

@@ -21,6 +21,9 @@ export interface Incident {
   impactAnalysis?: Record<string, any>;
   rootCause?: Record<string, any>;
   resolutionSteps?: Record<string, any>[];
+  problemId?: number; // 关联的问题记录ID
+  /** 版本号（乐观锁） */
+  version?: number;
   detectedAt?: string;
   resolvedAt?: string;
   closedAt?: string;
@@ -80,6 +83,8 @@ export interface UpdateIncidentRequest {
   rootCause?: Record<string, any>;
   resolutionSteps?: Record<string, any>[];
   metadata?: Record<string, any>;
+  /** 版本号（用于乐观锁冲突检测） */
+  version?: number;
 }
 
 // 列表查询参数

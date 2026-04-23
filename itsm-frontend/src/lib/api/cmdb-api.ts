@@ -3,6 +3,7 @@
  */
 
 import { httpClient } from './http-client';
+import type { CIType, CloudService, CloudAccount } from '@/types/biz/cmdb';
 
 export interface ConfigurationItem {
   id: number;
@@ -23,7 +24,7 @@ export interface ConfigurationItem {
   ownedBy?: string;
   discovery_source?: string;
   discoverySource?: string;
-  attributes?: Record<string, any>;
+  attributes?: Record<string, unknown>;
   tenant_id: number;
   tenantId?: number;
   created_at: string;
@@ -54,7 +55,7 @@ export interface CreateCIRequest {
   assigned_to?: string;
   owned_by?: string;
   discovery_source?: string;
-  attributes?: Record<string, any>;
+  attributes?: Record<string, unknown>;
 }
 
 export interface CITopology {
@@ -115,15 +116,15 @@ export class CMDBApi {
 
   // ==================== Stats & Types ====================
 
-  static async getCMDBStats(params?: Record<string, unknown>): Promise<any> {
+  static async getCMDBStats(params?: Record<string, unknown>): Promise<Record<string, unknown>> {
     return httpClient.get(`${BASE}/stats`, params);
   }
 
-  static async getCITypes(): Promise<any> {
+  static async getCITypes(): Promise<CIType[]> {
     return httpClient.get(`${BASE}/types`);
   }
 
-  static async getCMDBTypes(): Promise<any> {
+  static async getCMDBTypes(): Promise<CIType[]> {
     return this.getCITypes();
   }
 
@@ -134,7 +135,7 @@ export class CMDBApi {
     color?: string;
     attribute_schema?: string;
     is_active?: boolean;
-  }): Promise<any> {
+  }): Promise<CIType> {
     return httpClient.post(`${BASE}/types`, data);
   }
 
@@ -145,7 +146,7 @@ export class CMDBApi {
     color?: string;
     attribute_schema?: string;
     is_active?: boolean;
-  }): Promise<any> {
+  }): Promise<CIType> {
     return httpClient.put(`${BASE}/types/${id}`, data);
   }
 
@@ -159,19 +160,19 @@ export class CMDBApi {
     return httpClient.get(`${BASE}/${id}/topology`, { depth });
   }
 
-  static async getCIImpactAnalysis(id: number): Promise<any> {
+  static async getCIImpactAnalysis(id: number): Promise<Record<string, unknown>> {
     return httpClient.get(`${BASE}/${id}/impact-analysis`);
   }
 
-  static async analyzeImpact(request: { ciId: string; analysisType?: string; maxDepth?: number }): Promise<any> {
+  static async analyzeImpact(request: { ciId: string; analysisType?: string; maxDepth?: number }): Promise<Record<string, unknown>> {
     return httpClient.get(`${BASE}/${request.ciId}/impact-analysis`);
   }
 
-  static async getCIHealth(id: string | number): Promise<any> {
+  static async getCIHealth(id: string | number): Promise<Record<string, unknown>> {
     return httpClient.get(`${BASE}/${id}/health`);
   }
 
-  static async getCIChangeHistory(id: number, params?: { page?: number; page_size?: number }): Promise<any> {
+  static async getCIChangeHistory(id: number, params?: { page?: number; page_size?: number }): Promise<{ items?: Array<Record<string, unknown>>; data?: Array<Record<string, unknown>>; total?: number }> {
     return httpClient.get(`${BASE}/${id}/change-history`, params);
   }
 
@@ -218,29 +219,29 @@ export class CMDBApi {
 
   // ==================== Reconciliation ====================
 
-  static async getReconciliationResults(params?: any): Promise<any> {
+  static async getReconciliationResults(params?: Record<string, unknown>): Promise<Record<string, unknown>> {
     return httpClient.get(`${BASE}/reconciliation`, params);
   }
 
-  static async runReconciliation(params?: any): Promise<any> {
+  static async runReconciliation(params?: Record<string, unknown>): Promise<Record<string, unknown>> {
     return httpClient.post(`${BASE}/reconciliation/run`, params);
   }
 
   // ==================== Cloud ====================
 
-  static async getCloudServices(provider?: string): Promise<any[]> {
+  static async getCloudServices(provider?: string): Promise<CloudService[]> {
     return httpClient.get(`${BASE}/cloud-services`, provider ? { provider } : undefined);
   }
 
-  static async createCloudService(data: unknown): Promise<any> {
+  static async createCloudService(data: Record<string, unknown>): Promise<CloudService> {
     return httpClient.post(`${BASE}/cloud-services`, data);
   }
 
-  static async getCloudAccounts(): Promise<any[]> {
+  static async getCloudAccounts(): Promise<CloudAccount[]> {
     return httpClient.get(`${BASE}/cloud-accounts`);
   }
 
-  static async createCloudAccount(data: unknown): Promise<any> {
+  static async createCloudAccount(data: Record<string, unknown>): Promise<CloudAccount> {
     return httpClient.post(`${BASE}/cloud-accounts`, data);
   }
 
@@ -248,17 +249,17 @@ export class CMDBApi {
     return httpClient.delete(`${BASE}/cloud-accounts/${id}`);
   }
 
-  static async getCloudResources(params?: any): Promise<any> {
+  static async getCloudResources(params?: Record<string, unknown>): Promise<Record<string, unknown>> {
     return httpClient.get(`${BASE}/cloud-resources`, params);
   }
 
   // ==================== Discovery ====================
 
-  static async getDiscoveryRules(): Promise<any[]> {
+  static async getDiscoveryRules(): Promise<Array<Record<string, unknown>>> {
     return httpClient.get(`${BASE}/discovery-sources`);
   }
 
-  static async getDiscoveryHistory(ruleId?: string): Promise<any[]> {
+  static async getDiscoveryHistory(ruleId?: string): Promise<Array<Record<string, unknown>>> {
     return httpClient.get(`${BASE}/discovery/results`, ruleId ? { source_id: ruleId } : undefined);
   }
 

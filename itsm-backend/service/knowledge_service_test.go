@@ -832,3 +832,8 @@ func BenchmarkKnowledgeService_ListArticles(b *testing.B) {
 		_, _, _ = knowledgeService.ListArticles(ctx, req, testTenant.ID)
 	}
 }
+
+// 辅助函数
+func stringPtr(s string) *string {
+	return &s
+}

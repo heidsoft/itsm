@@ -92,6 +92,10 @@ func (Incident) Fields() []ent.Field {
 		field.Int("tenant_id").
 			Comment("租户ID").
 			Positive(),
+		field.Int("version").
+			Comment("版本号（乐观锁）").
+			Default(1).
+			Positive(),
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),
