@@ -72,6 +72,27 @@ const getUserFriendlyMessage = (error: unknown): string => {
       return '请求的资源不存在';
     }
 
+    // 版本冲突（乐观锁）
+    if (
+      message.includes('409') ||
+      message.includes('Conflict') ||
+      message.includes('version') ||
+      message.includes('版本冲突') ||
+      message.includes('已被修改')
+    ) {
+      return '数据已被其他用户修改，请刷新页面后重试';
+    }
+
+    // 状态转换错误
+    if (
+      message.includes('invalid state transition') ||
+      message.includes('InvalidStateTransition') ||
+      message.includes('不允许') ||
+      message.includes('状态转换')
+    ) {
+      return '当前状态不允许此操作，请刷新页面查看最新状态';
+    }
+
     // 服务器错误
     if (message.includes('500') || message.includes('Internal Server Error')) {
       return '服务器内部错误，请联系管理员';
