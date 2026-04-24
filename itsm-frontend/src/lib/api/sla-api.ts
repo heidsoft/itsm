@@ -238,7 +238,27 @@ export class SLAApi {
     if (params?.end_time) requestBody.end_time = params.end_time;
     if (params?.sla_definition_id) requestBody.sla_definition_id = params.sla_definition_id;
 
-    const response = await httpClient.post('/api/v1/sla/monitoring', requestBody);
+    const response = await httpClient.post<{
+      total_tickets: number;
+      violated_tickets: number;
+      at_risk_tickets?: number;
+      compliance_rate?: number;
+      average_response_time?: number;
+      average_resolution_time?: number;
+      response_time_compliance?: number;
+      resolution_time_compliance?: number;
+      alerts?: Array<{
+        id: string;
+        ticketId: number;
+        ticketNumber: string;
+        ticketTitle: string;
+        priority: string;
+        alertLevel: string;
+        timeRemaining: number;
+        slaDefinition: string;
+        createdAt: string;
+      }>;
+    }>('/api/v1/sla/monitoring', requestBody);
 
     // 转换后端响应格式到前端格式
     const violationRate =
@@ -286,10 +306,33 @@ export class SLAApi {
     }>;
   }> {
     // 使用 monitoring 端点获取指标数据
-    const monitoring = await httpClient.post('/api/v1/sla/monitoring', {});
+    const monitoring = await httpClient.post<{
+      average_response_time?: number;
+      averageResolutionTime?: number;
+      average_resolution_time?: number;
+      compliance_rate?: number;
+      complianceRate?: number;
+      violated_tickets?: number;
+      violatedTickets?: number;
+      alerts?: Array<{
+        ticket_id?: number;
+        ticketId?: number;
+        ticket_title?: string;
+        ticketTitle?: string;
+        priority?: string;
+        sla_definition?: string;
+        slaDefinition?: string;
+        time_remaining?: number;
+        timeRemaining?: number;
+        alert_level?: 'warning' | 'critical' | 'severe';
+        alertLevel?: 'warning' | 'critical' | 'severe';
+        created_at?: string;
+        createdAt?: string;
+      }>;
+    }>('/api/v1/sla/monitoring', {});
 
     return {
-      responseTimeAvg: monitoring.average_response_time || monitoring.averageResponseTime || 0,
+      responseTimeAvg: monitoring.average_response_time || monitoring.averageResolutionTime || 0,
       resolutionTimeAvg: monitoring.average_resolution_time || monitoring.averageResolutionTime || 0,
       complianceRate: monitoring.compliance_rate || monitoring.complianceRate || 0,
       violationCount: monitoring.violated_tickets || monitoring.violatedTickets || 0,
@@ -317,12 +360,27 @@ export class SLAApi {
     }>
   > {
     // 从 monitoring 端点获取预警数据
-    const monitoring = await httpClient.post('/api/v1/sla/monitoring', {});
+    const monitoring = await httpClient.post<{
+      alerts?: Array<{
+        ticket_id?: number;
+        ticketId?: number;
+        ticket_title?: string;
+        ticketTitle?: string;
+        priority?: string;
+        sla_definition?: string;
+        slaDefinition?: string;
+        time_remaining?: number;
+        timeRemaining?: number;
+        alert_level?: 'warning' | 'critical' | 'severe';
+        alertLevel?: 'warning' | 'critical' | 'severe';
+        created_at?: string;
+        createdAt?: string;
+      }>;
+    }>('/api/v1/sla/monitoring', {});
 
     // 如果有 alerts 则使用，否则返回空数组
     if (monitoring.alerts && Array.isArray(monitoring.alerts)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return monitoring.alerts.map((item: any) => ({
+      return monitoring.alerts.map((item) => ({
         ticket_id: item.ticket_id || item.ticketId || 0,
         ticketId: item.ticketId || item.ticket_id,
         ticket_title: item.ticket_title || item.ticketTitle || `Ticket #${item.ticket_id || item.ticketId || 0}`,
