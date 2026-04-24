@@ -189,6 +189,7 @@ type KnowledgeArticleSeed struct {
 // TicketCategorySeed 工单分类种子数据结构（用于事件分类）
 type TicketCategorySeed struct {
 	Name        string `json:"name"`
+	Code        string `json:"code"`
 	Description string `json:"description"`
 }
 
@@ -2248,20 +2249,25 @@ func (s *Seeder) seedIncidentCategories(ctx context.Context) {
 	categories := s.config.IncidentCategories
 	if len(categories) == 0 {
 		categories = []TicketCategorySeed{
-			{Name: "硬件故障", Description: "服务器、存储、网络设备等硬件故障"},
-			{Name: "软件故障", Description: "操作系统、应用软件故障"},
-			{Name: "网络故障", Description: "网络连接、网络设备问题"},
-			{Name: "数据库问题", Description: "数据库性能、连接问题"},
-			{Name: "安全问题", Description: "安全事件、漏洞"},
-			{Name: "性能问题", Description: "系统响应慢、卡顿"},
-			{Name: "配置问题", Description: "系统配置错误"},
-			{Name: "其他", Description: "其他类型事件"},
+			{Name: "硬件故障", Code: "hardware", Description: "服务器、存储、网络设备等硬件故障"},
+			{Name: "软件故障", Code: "software", Description: "操作系统、应用软件故障"},
+			{Name: "网络故障", Code: "network", Description: "网络连接、网络设备问题"},
+			{Name: "数据库问题", Code: "database", Description: "数据库性能、连接问题"},
+			{Name: "安全问题", Code: "security", Description: "安全事件、漏洞"},
+			{Name: "性能问题", Code: "performance", Description: "系统响应慢、卡顿"},
+			{Name: "配置问题", Code: "config", Description: "系统配置错误"},
+			{Name: "其他", Code: "other", Description: "其他类型事件"},
 		}
 	}
 
 	for _, cat := range categories {
+		code := cat.Code
+		if code == "" {
+			code = strings.ToLower(strings.ReplaceAll(cat.Name, " ", "_"))
+		}
 		_, err := s.client.TicketCategory.Create().
 			SetName(cat.Name).
+			SetCode(code).
 			SetDescription(cat.Description).
 			SetTenantID(t.ID).
 			SetCreatedAt(time.Now()).
