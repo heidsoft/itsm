@@ -6,6 +6,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/repository/base"
 	"itsm-backend/repository/ticket"
 
 	"go.uber.org/zap"
@@ -66,8 +67,8 @@ func (s *TicketServiceV2) CreateTicket(ctx context.Context, req *dto.CreateTicke
 		RequesterID: req.RequesterID,
 	}
 
-	if req.AssigneeID != nil {
-		params.AssigneeID = req.AssigneeID
+	if req.AssigneeID != 0 {
+		params.AssigneeID = &req.AssigneeID
 	}
 	if req.CategoryID != nil {
 		params.CategoryID = req.CategoryID
@@ -177,11 +178,11 @@ func (s *TicketServiceV2) UpdateTicket(ctx context.Context, id int, req *dto.Upd
 		Version: current.Version, // 乐观锁
 	}
 
-	if req.Title != nil {
-		params.Title = req.Title
+	if req.Title != "" {
+		params.Title = &req.Title
 	}
-	if req.Description != nil {
-		params.Description = req.Description
+	if req.Description != "" {
+		params.Description = &req.Description
 	}
 	if req.Status != "" {
 		status := ticket.Status(req.Status)
@@ -191,11 +192,11 @@ func (s *TicketServiceV2) UpdateTicket(ctx context.Context, id int, req *dto.Upd
 		priority := ticket.Priority(req.Priority)
 		params.Priority = &priority
 	}
-	if req.AssigneeID != nil {
-		params.AssigneeID = req.AssigneeID
+	if req.AssigneeID != 0 {
+		params.AssigneeID = &req.AssigneeID
 	}
-	if req.Resolution != nil {
-		params.Resolution = req.Resolution
+	if req.Resolution != "" {
+		params.Resolution = &req.Resolution
 	}
 
 	// 更新工单
@@ -243,7 +244,7 @@ func (s *TicketServiceV2) ListTickets(ctx context.Context, req *dto.ListTicketsR
 	}
 
 	// 分页参数
-	pagination := &QueryParams{
+	pagination := &base.QueryParams{
 		Page:     req.Page,
 		PageSize: req.PageSize,
 		OrderBy:  req.SortBy,
@@ -397,13 +398,10 @@ func (s *TicketServiceV2) toTicketResponse(t *ticket.Ticket) *dto.TicketResponse
 	}
 
 	if t.AssigneeID != nil {
-		resp.AssigneeID = t.AssigneeID
+		resp.AssigneeID = *t.AssigneeID
 	}
 	if t.CategoryID != nil {
-		resp.CategoryID = t.CategoryID
-	}
-	if t.ResolvedAt != nil {
-		resp.ResolvedAt = t.ResolvedAt
+		resp.CategoryID = *t.CategoryID
 	}
 
 	return resp
@@ -425,31 +423,4 @@ func (s *TicketServiceV2) toEntTicket(t *ticket.Ticket) *ent.Ticket {
 		CreatedAt:    t.CreatedAt,
 		UpdatedAt:    t.UpdatedAt,
 	}
-}
-
-// QueryParams 查询参数（从 repository/base 引用）
-type QueryParams struct {
-	Page     int
-	PageSize int
-	OrderBy  string
-	OrderDir string
-}
-
-// CalculateOffset 计算分页偏移量
-func (p QueryParams) CalculateOffset() int {
-	if p.Page <= 0 {
-		p.Page = 1
-	}
-	if p.PageSize <= 0 {
-		p.PageSize = 20
-	}
-	return (p.Page - 1) * p.PageSize
-}
-
-// GetLimit 获取分页大小
-func (p QueryParams) GetLimit() int {
-	if p.PageSize <= 0 {
-		return 20
-	}
-	return p.PageSize
 }

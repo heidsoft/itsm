@@ -186,6 +186,13 @@ export abstract class BaseService<T, CreateDTO = Partial<T>, UpdateDTO = Partial
   protected async del<R>(endpoint: string, data?: unknown): Promise<R> {
     return httpClient.delete<R>(`${this.basePath}${endpoint}`, data);
   }
+
+  /**
+   * 执行自定义 PATCH 请求
+   */
+  protected async patchEndpoint<R>(endpoint: string, data?: unknown): Promise<R> {
+    return httpClient.patch<R>(`${this.basePath}${endpoint}`, data);
+  }
 }
 
 // ==================== 工具函数 ====================
