@@ -5,7 +5,7 @@
  * 整合了原有 TicketApi 和 ticketService 的功能。
  */
 
-import { BaseService, PaginatedResponse } from './base-service';
+import { BaseService, PaginatedResponse, ListParams } from './base-service';
 import type { Ticket, TicketPriority, TicketStatus } from '@/lib/api/types';
 
 // ==================== 类型定义 ====================
@@ -142,7 +142,7 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
    * 获取工单列表
    */
   async getTickets(params?: TicketQueryParams): Promise<PaginatedResponse<Ticket>> {
-    return this.list(params);
+    return this.list(params as ListParams);
   }
 
   /**
@@ -370,7 +370,9 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.post(`/${id}/attachments`, formData, {
+    // 使用 httpClient 直接调用以支持上传进度
+    const httpClient = (await import('@/lib/api/http-client')).httpClient;
+    return httpClient.post<TicketAttachment>(`${this.basePath}/${id}/attachments`, formData, {
       onUploadProgress: onProgress,
     } as any);
   }
@@ -463,7 +465,7 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
     subtaskId: number,
     data: Partial<Ticket>
   ): Promise<Ticket> {
-    return this.patch(`/${parentTicketId}/subtasks/${subtaskId}`, data);
+    return this.patchEndpoint(`/${parentTicketId}/subtasks/${subtaskId}`, data);
   }
 
   /**

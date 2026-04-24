@@ -520,14 +520,14 @@ func toDomainModel(e *ent.Ticket) *Ticket {
 	}
 
 	// MSP 相关
-	if e.MSPProviderID != 0 {
-		t.MSPProviderID = &e.MSPProviderID
+	if e.MspProviderID != 0 {
+		t.MSPProviderID = &e.MspProviderID
 	}
 	if e.ManagedByUserID != 0 {
 		t.ManagedByUserID = &e.ManagedByUserID
 	}
-	if e.MSPTicketID != nil && *e.MSPTicketID != "" {
-		t.MSPTicketID = e.MSPTicketID
+	if e.MspTicketID != "" {
+		t.MSPTicketID = &e.MspTicketID
 	}
 
 	return t
