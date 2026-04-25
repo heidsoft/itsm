@@ -474,6 +474,68 @@ func TestChangeService_DeleteChange_NotFound(t *testing.T) {
 	require.Error(t, err)
 }
 
+// ==================== 状态转换边界测试 ====================
+
+func TestChangeService_UpdateChangeStatus_InvalidTransition(t *testing.T) {
+	client, service, ctx := setupChangeTest(t)
+	defer client.Close()
+
+	testTenant, err := createChangeTestTenant(ctx, client, "invalid")
+	require.NoError(t, err)
+
+	testUser, err := createChangeTestUser(ctx, client, testTenant.ID, "invalid")
+	require.NoError(t, err)
+
+	// 创建一个 draft 状态的变更
+	testChange, err := client.Change.Create().
+		SetTitle("Invalid Transition Test").
+		SetDescription("Test").
+		SetType("normal").
+		SetStatus("draft").
+		SetPriority("medium").
+		SetImpactScope("medium").
+		SetRiskLevel("low").
+		SetCreatedBy(testUser.ID).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 尝试直接从 draft 转换到 approved（跳过 submitted），应该失败
+	err = service.UpdateChangeStatus(ctx, testChange.ID, "approved", testTenant.ID)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid status transition")
+}
+
+func TestChangeService_UpdateChangeStatus_CancelledCannotTransition(t *testing.T) {
+	client, service, ctx := setupChangeTest(t)
+	defer client.Close()
+
+	testTenant, err := createChangeTestTenant(ctx, client, "cancelled")
+	require.NoError(t, err)
+
+	testUser, err := createChangeTestUser(ctx, client, testTenant.ID, "cancelled")
+	require.NoError(t, err)
+
+	// 创建一个 cancelled 状态的变更
+	testChange, err := client.Change.Create().
+		SetTitle("Cancelled Change Test").
+		SetDescription("Test").
+		SetType("normal").
+		SetStatus("cancelled").
+		SetPriority("medium").
+		SetImpactScope("medium").
+		SetRiskLevel("low").
+		SetCreatedBy(testUser.ID).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 尝试从 cancelled 转换到 draft，应该失败
+	err = service.UpdateChangeStatus(ctx, testChange.ID, "draft", testTenant.ID)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid status transition")
+}
+
 // ==================== 变更统计测试 ====================
 
 func TestChangeService_GetChangeStats(t *testing.T) {
