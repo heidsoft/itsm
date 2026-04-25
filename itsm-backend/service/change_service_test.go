@@ -474,6 +474,49 @@ func TestChangeService_DeleteChange_NotFound(t *testing.T) {
 	require.Error(t, err)
 }
 
+// ==================== 审批工作流测试 ====================
+
+func TestChangeService_SubmitChange_Success(t *testing.T) {
+	client, service, ctx := setupChangeTest(t)
+	defer client.Close()
+
+	testTenant, err := createChangeTestTenant(ctx, client, "submit")
+	require.NoError(t, err)
+
+	testUser, err := createChangeTestUser(ctx, client, testTenant.ID, "submit")
+	require.NoError(t, err)
+
+	// 创建一个 draft 状态的变更
+	testChange, err := client.Change.Create().
+		SetTitle("提交审批测试").
+		SetDescription("测试提交变更审批流程").
+		SetType("normal").
+		SetStatus("draft").
+		SetPriority("medium").
+		SetImpactScope("medium").
+		SetRiskLevel("low").
+		SetCreatedBy(testUser.ID).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 验证初始状态为 draft
+	assert.Equal(t, dto.ChangeStatus("draft"), dto.ChangeStatus(testChange.Status))
+
+	// 调用 UpdateChangeStatus 提交变更
+	err = service.UpdateChangeStatus(ctx, testChange.ID, "submitted", testTenant.ID)
+	require.NoError(t, err, "提交变更应该成功")
+
+	// 调用 GetChange 获取更新后的变更
+	response, err := service.GetChange(ctx, testChange.ID, testTenant.ID)
+	require.NoError(t, err, "获取变更应该成功")
+
+	// 验证状态已变为 submitted
+	assert.Equal(t, dto.ChangeStatus("submitted"), response.Status, "状态应已更新为 submitted")
+	assert.Equal(t, testChange.ID, response.ID, "变更ID应保持不变")
+	assert.Equal(t, testChange.Title, response.Title, "变更标题应保持不变")
+}
+
 // ==================== 状态转换边界测试 ====================
 
 func TestChangeService_UpdateChangeStatus_InvalidTransition(t *testing.T) {
