@@ -140,9 +140,12 @@ func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRol
 func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting role", "id", id, "tenant_id", tenantID)
 
-	// 检查是否为系统角色
+	// 检查是否为系统角色，并且验证角色属于当前租户
 	roleEntity, err := s.client.Role.Query().
-		Where(role.IDEQ(id)).
+		Where(
+			role.IDEQ(id),
+			role.TenantID(tenantID),
+		).
 		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("角色不存在: %w", err)
@@ -169,8 +172,13 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 	// 保存角色code用于缓存失效
 	roleCode := roleEntity.Code
 
-	// 删除角色的权限关联
-	_, err = s.client.Role.Delete().Where(role.IDEQ(id)).Exec(ctx)
+	// 删除角色的权限关联，使用tenant过滤防止跨租户删除
+	_, err = s.client.Role.Delete().
+		Where(
+			role.IDEQ(id),
+			role.TenantID(tenantID),
+		).
+		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("删除角色失败: %w", err)
 	}
