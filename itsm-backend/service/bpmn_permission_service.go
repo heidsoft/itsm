@@ -95,13 +95,25 @@ func (s *BPMNPermissionService) GrantPermission(ctx context.Context, req *GrantP
 
 // RevokePermission 撤销权限
 func (s *BPMNPermissionService) RevokePermission(ctx context.Context, req *RevokePermissionRequest) error {
-	_, err := s.client.BPMNPermission.Delete().
+	tenantID, ok := ctx.Value("bpmn_tenant_id").(int)
+	if !ok {
+		return fmt.Errorf("tenant_id not found in context")
+	}
+
+	// First verify the permission exists for this tenant
+	existing, err := s.client.BPMNPermission.Query().
 		Where(bpmnpermission.ResourceType(req.ResourceType)).
 		Where(bpmnpermission.ResourceID(req.ResourceID)).
 		Where(bpmnpermission.PrincipalType(req.PrincipalType)).
 		Where(bpmnpermission.PrincipalID(req.PrincipalID)).
 		Where(bpmnpermission.PermissionType(req.PermissionType)).
-		Exec(ctx)
+		Where(bpmnpermission.TenantID(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("permission not found or access denied: %w", err)
+	}
+
+	err = s.client.BPMNPermission.DeleteOne(existing).Exec(ctx)
 	return err
 }
 
