@@ -631,3 +631,46 @@ func TestChangeService_GetChangeStats(t *testing.T) {
 	assert.Equal(t, 4, stats.Approved)
 	assert.Equal(t, 1, stats.Completed)
 }
+
+// ==================== 租户隔离测试 ====================
+
+func TestChangeService_UpdateChangeStatus_TenantIsolation(t *testing.T) {
+	client, service, ctx := setupChangeTest(t)
+	defer client.Close()
+
+	// Create tenant 1
+	testTenant1, err := createChangeTestTenant(ctx, client, "iso1")
+	require.NoError(t, err)
+
+	// Create tenant 2
+	testTenant2, err := createChangeTestTenant(ctx, client, "iso2")
+	require.NoError(t, err)
+
+	// Create user for tenant 1
+	testUser1, err := createChangeTestUser(ctx, client, testTenant1.ID, "iso1")
+	require.NoError(t, err)
+
+	// Create a change for tenant 1 (status: submitted to allow approval transition)
+	change, err := client.Change.Create().
+		SetTitle("Tenant 1 Change").
+		SetDescription("Should not be updatable by Tenant 2").
+		SetType("normal").
+		SetStatus(string(dto.ChangeStatusPending)). // Need submitted to transition to approved
+		SetPriority("medium").
+		SetImpactScope("medium").
+		SetRiskLevel("low").
+		SetCreatedBy(testUser1.ID).
+		SetTenantID(testTenant1.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Tenant 2 tries to update status to approved - should fail with cross-tenant error
+	err = service.UpdateChangeStatus(ctx, change.ID, dto.ChangeStatusApproved, testTenant2.ID)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "cross-tenant access denied", "Expected cross-tenant access denied error")
+
+	// Verify change status was NOT updated (still submitted)
+	updatedChange, err := client.Change.Get(ctx, change.ID)
+	require.NoError(t, err)
+	assert.Equal(t, string(dto.ChangeStatusPending), updatedChange.Status, "Change status should not have been updated by Tenant 2")
+}
