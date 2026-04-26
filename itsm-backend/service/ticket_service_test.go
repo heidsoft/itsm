@@ -8,6 +8,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/user"
 
 	"github.com/stretchr/testify/assert"
@@ -532,6 +533,95 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTicketService_DeleteTicket_CascadeTenantIsolation(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	ticketService := NewTicketService(client, logger)
+
+	ctx := context.Background()
+
+	// Create tenant 1
+	tenant1, err := client.Tenant.Create().
+		SetName("Tenant 1").
+		SetCode("tenant1").
+		SetDomain("tenant1.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Create tenant 2
+	tenant2, err := client.Tenant.Create().
+		SetName("Tenant 2").
+		SetCode("tenant2").
+		SetDomain("tenant2.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Create user for tenant 1
+	user1, err := client.User.Create().
+		SetUsername("user1").
+		SetEmail("user1@tenant1.com").
+		SetName("User 1").
+		SetPasswordHash("hashedpassword").
+		SetRole("end_user").
+		SetActive(true).
+		SetTenantID(tenant1.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Create ticket for tenant 1 with a comment
+	ticket1, err := client.Ticket.Create().
+		SetTitle("Tenant 1 Ticket").
+		SetDescription("Test ticket").
+		SetPriority("low").
+		SetStatus("open").
+		SetTicketNumber("TICKET-T1-001").
+		SetRequesterID(user1.ID).
+		SetTenantID(tenant1.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Create a comment for the ticket
+	_, err = client.TicketComment.Create().
+		SetTicketID(ticket1.ID).
+		SetUserID(user1.ID).
+		SetContent("Test comment").
+		SetTenantID(tenant1.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Create an attachment for the ticket
+	_, err = client.TicketAttachment.Create().
+		SetTicketID(ticket1.ID).
+		SetFileName("test.txt").
+		SetFilePath("/uploads/test.txt").
+		SetFileURL("/uploads/test.txt").
+		SetFileSize(1024).
+		SetFileType("text/plain").
+		SetMimeType("text/plain").
+		SetUploadedBy(user1.ID).
+		SetTenantID(tenant1.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Tenant 2 tries to delete tenant 1's ticket - should fail
+	err = ticketService.DeleteTicket(ctx, ticket1.ID, tenant2.ID)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ticket not found")
+
+	// Verify ticket still exists (未被删除)
+	_, err = client.Ticket.Get(ctx, ticket1.ID)
+	assert.NoError(t, err)
+
+	// Verify cascade comments were NOT deleted
+	comments, err := client.TicketComment.Query().Where(ticketcomment.TicketIDEQ(ticket1.ID)).Count(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, comments, "comment should still exist after failed cross-tenant delete attempt")
 }
 
 func TestTicketService_SearchTickets(t *testing.T) {
