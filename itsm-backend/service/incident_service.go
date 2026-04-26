@@ -327,45 +327,55 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 	return s.toIncidentResponse(incidentEntity), nil
 }
 
-// DeleteIncident 删除事件（级联清理关联数据）
+// DeleteIncident deletes an incident with cascade cleanup of related data.
+// Tenant validation is performed before any deletion to prevent cross-tenant access.
 func (s *IncidentService) DeleteIncident(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting incident", "id", id, "tenant_id", tenantID)
 
-	// 先删除关联的 incident_events
-	_, err := s.client.IncidentEvent.Delete().
-		Where(incidentevent.IncidentIDEQ(id)).
+	// First verify the incident belongs to the current tenant
+	incidentEntity, err := s.client.Incident.Query().
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("cross-tenant access denied: incident not found")
+		}
+		return fmt.Errorf("failed to query incident: %w", err)
+	}
+
+	// Delete cascade records with tenant filter to prevent cross-tenant deletion
+	// Delete incident_events
+	_, err = s.client.IncidentEvent.Delete().
+		Where(incidentevent.IncidentIDEQ(id), incidentevent.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		s.logger.Errorw("Failed to delete incident events", "error", err)
 		return fmt.Errorf("failed to delete incident events: %w", err)
 	}
 
-	// 删除关联的 incident_alerts
+	// Delete incident_alerts
 	_, err = s.client.IncidentAlert.Delete().
-		Where(incidentalert.IncidentIDEQ(id)).
+		Where(incidentalert.IncidentIDEQ(id), incidentalert.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		s.logger.Errorw("Failed to delete incident alerts", "error", err)
 		return fmt.Errorf("failed to delete incident alerts: %w", err)
 	}
 
-	// 删除关联的 incident_metrics
+	// Delete incident_metrics
 	_, err = s.client.IncidentMetric.Delete().
-		Where(incidentmetric.IncidentIDEQ(id)).
+		Where(incidentmetric.IncidentIDEQ(id), incidentmetric.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		s.logger.Errorw("Failed to delete incident metrics", "error", err)
 		return fmt.Errorf("failed to delete incident metrics: %w", err)
 	}
 
-	// 最后删除 incident 本身
-	err = s.client.Incident.DeleteOneID(id).
+	// Delete the incident itself
+	err = s.client.Incident.DeleteOne(incidentEntity).
 		Where(incident.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			return fmt.Errorf("incident not found")
-		}
 		s.logger.Errorw("Failed to delete incident", "error", err)
 		return fmt.Errorf("failed to delete incident: %w", err)
 	}
