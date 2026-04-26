@@ -102,20 +102,12 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		// 3. 判断是否为 MSP 员工
 		// 条件：租户类型为 "msp" 且用户有 msp_role 字段
-		// 注意：超级管理员 (super_admin) 也可使用 MSP 功能进行测试
+		// 注意：admin 权限不能绕过 MSP 访问控制，MSP 客户数据访问需要有效的分配验证
 		isMSP := false
 		var mspRole string
 
-		// 检查用户角色
-		roleVal, _ := c.Get("role")
-		role, _ := roleVal.(string)
-
-		// 超级管理员可以直接使用 MSP 功能进行测试
-		// admin 角色也允许访问 MSP 功能（用于测试）
-		if role == "super_admin" || role == "sysadmin" || role == "admin" {
-			isMSP = true
-			mspRole = "msp_manager" // 默认为 manager 角色
-		} else if tenantObj.Type == TenantTypeMSP && u.MspRole != "" {
+		// MSP 员工判断：用户必须属于 MSP 租户且有 msp_role 字段
+		if tenantObj.Type == TenantTypeMSP && u.MspRole != "" {
 			isMSP = true
 			mspRole = string(u.MspRole)
 		}
