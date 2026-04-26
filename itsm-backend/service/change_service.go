@@ -487,7 +487,7 @@ func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.
 
 // UpdateChangeStatus 更新变更状态
 func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status dto.ChangeStatus, tenantID int) error {
-	// 获取当前变更状态
+	// 获取当前变更状态，验证租户所有权
 	changeEntity, err := s.client.Change.Query().
 		Where(
 			change.ID(id),
@@ -496,7 +496,7 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("change not found")
+			return fmt.Errorf("cross-tenant access denied: change not found")
 		}
 		return fmt.Errorf("failed to get change: %w", err)
 	}
@@ -506,11 +506,21 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 		return fmt.Errorf("invalid status transition from '%s' to '%s'", changeEntity.Status, status)
 	}
 
-	// 更新状态
-	_, err = s.client.Change.UpdateOneID(id).SetStatus(string(status)).Save(ctx)
+	// 使用租户过滤进行更新，防止跨租户更新
+	result, err := s.client.Change.Update().
+		Where(
+			change.ID(id),
+			change.TenantID(tenantID),
+		).
+		SetStatus(string(status)).
+		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update change status", "error", err, "change_id", id, "status", status, "tenant_id", tenantID)
 		return fmt.Errorf("failed to update change status: %w", err)
+	}
+
+	if result == 0 {
+		return fmt.Errorf("cross-tenant access denied: change not found or access denied")
 	}
 
 	s.logger.Infow("Change status updated successfully", "change_id", id, "status", status, "tenant_id", tenantID)
