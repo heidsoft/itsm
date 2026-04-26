@@ -729,6 +729,69 @@ func TestTicketService_SearchTickets(t *testing.T) {
 	}
 }
 
+func TestTicketService_GetMSPCustomerReports_AllocationAware(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	ticketService := NewTicketService(client, logger)
+	mspValidator := NewMSPAccessValidator(client)
+	ticketService.SetMSPAccessValidator(mspValidator)
+
+	ctx := context.Background()
+
+	// Setup: Create MSP tenant and multiple customer tenants
+	mspTenant, _ := client.Tenant.Create().
+		SetName("MSP").
+		SetCode("msp").
+		SetType("msp").
+		Save(ctx)
+
+	allocatedTenant, _ := client.Tenant.Create().
+		SetName("AllocatedCustomer").
+		SetCode("alloc_cust").
+		SetType("customer").
+		Save(ctx)
+
+	unallocatedTenant, _ := client.Tenant.Create().
+		SetName("UnallocatedCustomer").
+		SetCode("unalloc_cust").
+		SetType("customer").
+		Save(ctx)
+
+	// Create MSP user
+	mspUser, _ := client.User.Create().
+		SetUsername("msp_user").
+		SetEmail("msp@example.com").
+		SetName("MSP User").
+		SetPasswordHash("hash").
+		SetTenantID(mspTenant.ID).
+		Save(ctx)
+
+	// Create allocation ONLY to allocatedTenant
+	client.MSPAllocation.Create().
+		SetMspUserID(mspUser.ID).
+		AddCustomerTenantIDs(allocatedTenant.ID).
+		SetRole("provider_agent").
+		Save(ctx)
+
+	// Test: When customerTenantID is nil, should only get reports for allocated customers
+	reports, err := ticketService.GetMSPCustomerReports(ctx, mspUser.ID, "2024-01-01", "2024-12-31", nil)
+	assert.NoError(t, err)
+	assert.Len(t, reports, 1)
+	assert.Equal(t, allocatedTenant.ID, reports[0].CustomerTenantID)
+
+	// Test: When requesting specific allocated customer, should succeed
+	reports, err = ticketService.GetMSPCustomerReports(ctx, mspUser.ID, "2024-01-01", "2024-12-31", &allocatedTenant.ID)
+	assert.NoError(t, err)
+	assert.Len(t, reports, 1)
+
+	// Test: When requesting unallocated customer, should fail
+	_, err = ticketService.GetMSPCustomerReports(ctx, mspUser.ID, "2024-01-01", "2024-12-31", &unallocatedTenant.ID)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "访问被拒绝")
+}
+
 // 基准测试
 func BenchmarkTicketService_CreateTicket(b *testing.B) {
 	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")

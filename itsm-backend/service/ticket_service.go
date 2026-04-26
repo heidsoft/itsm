@@ -47,6 +47,8 @@ type TicketService struct {
 	assignmentService *TicketAssignmentService
 	slaService        *TicketSLAService
 	sequenceService   *SequenceService // Redis 序列服务
+	// MSP访问验证器
+	mspValidator *MSPAccessValidator
 }
 
 func NewTicketService(client *ent.Client, logger *zap.SugaredLogger) *TicketService {
@@ -86,6 +88,11 @@ func (s *TicketService) SetAutomationRuleService(automationRuleService *TicketAu
 // SetProcessTriggerService 设置流程触发服务（用于工单创建时自动触发工作流）
 func (s *TicketService) SetProcessTriggerService(triggerService ProcessTriggerServiceInterface) {
 	s.processTriggerService = triggerService
+}
+
+// SetMSPAccessValidator 设置MSP访问验证器（用于MSP客户数据隔离）
+func (s *TicketService) SetMSPAccessValidator(validator *MSPAccessValidator) {
+	s.mspValidator = validator
 }
 
 // SetApprovalService 设置审批服务
@@ -1879,8 +1886,8 @@ func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, custo
 }
 
 // GetMSPCustomerReports 获取MSP客户服务报表
-func (s *TicketService) GetMSPCustomerReports(ctx context.Context, startDate, endDate string, customerTenantID *int) ([]dto.MSPCustomerReport, error) {
-	s.logger.Infow("GetMSPCustomerReports", "start_date", startDate, "end_date", endDate, "customer_tenant_id", customerTenantID)
+func (s *TicketService) GetMSPCustomerReports(ctx context.Context, mspUserID int, startDate, endDate string, customerTenantID *int) ([]dto.MSPCustomerReport, error) {
+	s.logger.Infow("GetMSPCustomerReports", "msp_user_id", mspUserID, "start_date", startDate, "end_date", endDate, "customer_tenant_id", customerTenantID)
 
 	start, err := time.Parse("2006-01-02", startDate)
 	if err != nil {
@@ -1895,7 +1902,13 @@ func (s *TicketService) GetMSPCustomerReports(ctx context.Context, startDate, en
 	var reports []dto.MSPCustomerReport
 
 	if customerTenantID != nil {
-		// 单个客户报表
+		// 单个客户报表 - 验证MSP用户对该客户的访问权限
+		if s.mspValidator != nil {
+			err := s.mspValidator.ValidateCustomerAccess(ctx, mspUserID, *customerTenantID)
+			if err != nil {
+				return nil, fmt.Errorf("访问被拒绝: %w", err)
+			}
+		}
 		tenant, err := s.client.Tenant.Get(ctx, *customerTenantID)
 		if err != nil {
 			return nil, fmt.Errorf("客户租户不存在")
@@ -1904,16 +1917,34 @@ func (s *TicketService) GetMSPCustomerReports(ctx context.Context, startDate, en
 		report := s.buildCustomerReport(ctx, *customerTenantID, tenant.Name, start, end)
 		reports = append(reports, report)
 	} else {
-		// 所有客户报表 - 需要获取所有客户租户
-		tenants, err := s.client.Tenant.Query().
-			Where(tenant.TypeEQ("customer")).
-			All(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("获取客户列表失败: %w", err)
+		// 所有客户报表 - 仅获取MSP用户有权限访问的客户
+		var allowedCustomerIDs []int
+		var err error
+
+		if s.mspValidator != nil {
+			allowedCustomerIDs, err = s.mspValidator.GetAllowedCustomerIDs(ctx, mspUserID)
+			if err != nil {
+				return nil, fmt.Errorf("获取可访问客户列表失败: %w", err)
+			}
+		} else {
+			// 如果没有设置mspValidator，回退到原有行为（但这不应该发生在MSP上下文中）
+			tenants, err := s.client.Tenant.Query().
+				Where(tenant.TypeEQ("customer")).
+				All(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("获取客户列表失败: %w", err)
+			}
+			for _, t := range tenants {
+				allowedCustomerIDs = append(allowedCustomerIDs, t.ID)
+			}
 		}
 
-		for _, t := range tenants {
-			report := s.buildCustomerReport(ctx, t.ID, t.Name, start, end)
+		for _, custID := range allowedCustomerIDs {
+			tenant, err := s.client.Tenant.Get(ctx, custID)
+			if err != nil {
+				continue // 跳过无法访问的客户
+			}
+			report := s.buildCustomerReport(ctx, custID, tenant.Name, start, end)
 			reports = append(reports, report)
 		}
 	}
