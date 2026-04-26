@@ -13,6 +13,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/incidentevent"
+	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentmetric"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -660,6 +662,91 @@ func TestIncidentService_DeleteIncident_NotFound(t *testing.T) {
 	err = service.DeleteIncident(ctx, 99999, testTenant.ID)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "incident not found")
+}
+
+// TestIncidentService_DeleteIncident_CascadeTenantIsolation verifies that
+// tenant 2 cannot delete an incident belonging to tenant 1 (cross-tenant access denied)
+func TestIncidentService_DeleteIncident_CascadeTenantIsolation(t *testing.T) {
+	client, service, ctx := setupIncidentTest(t)
+	defer client.Close()
+
+	testTenant1, err := createIncidentTestTenant(ctx, client, "cascade1")
+	require.NoError(t, err)
+
+	testTenant2, err := createIncidentTestTenant(ctx, client, "cascade2")
+	require.NoError(t, err)
+
+	testUser1, err := createIncidentTestUser(ctx, client, testTenant1.ID, "cascade1")
+	require.NoError(t, err)
+
+	testIncident, err := client.Incident.Create().
+		SetTitle("Tenant 1 Incident").
+		SetDescription("Should not be deletable by Tenant 2").
+		SetStatus("new").
+		SetPriority("medium").
+		SetSeverity("medium").
+		SetIncidentNumber("INC-CASCADE-001").
+		SetReporterID(testUser1.ID).
+		SetTenantID(testTenant1.ID).
+		SetDetectedAt(time.Now()).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Create cascade records (IncidentEvent, IncidentAlert, IncidentMetric)
+	_, err = client.IncidentEvent.Create().
+		SetIncidentID(testIncident.ID).
+		SetEventType("creation").
+		SetEventName("事件创建").
+		SetDescription("Test event").
+		SetStatus("active").
+		SetSeverity("info").
+		SetTenantID(testTenant1.ID).
+		SetOccurredAt(time.Now()).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.IncidentAlert.Create().
+		SetIncidentID(testIncident.ID).
+		SetAlertType("warning").
+		SetAlertName("Test Alert").
+		SetMessage("Test alert message").
+		SetStatus("triggered").
+		SetSeverity("medium").
+		SetTenantID(testTenant1.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.IncidentMetric.Create().
+		SetIncidentID(testIncident.ID).
+		SetMetricType("test").
+		SetMetricName("test_metric").
+		SetMetricValue(100.0).
+		SetTenantID(testTenant1.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Tenant 2 tries to delete Tenant 1's incident - should fail with cross-tenant error
+	err = service.DeleteIncident(ctx, testIncident.ID, testTenant2.ID)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "cross-tenant access denied", "Expected cross-tenant access denied error")
+
+	// Verify incident still exists (not deleted)
+	incident, err := client.Incident.Get(ctx, testIncident.ID)
+	require.NoError(t, err)
+	assert.Equal(t, testTenant1.ID, incident.TenantID, "Incident should still belong to Tenant 1")
+
+	// Verify cascade records still exist
+	events, err := client.IncidentEvent.Query().Where(incidentevent.IncidentIDEQ(testIncident.ID)).All(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, events, "IncidentEvent should not be deleted")
+
+	alerts, err := client.IncidentAlert.Query().Where(incidentalert.IncidentIDEQ(testIncident.ID)).All(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, alerts, "IncidentAlert should not be deleted")
+
+	metrics, err := client.IncidentMetric.Query().Where(incidentmetric.IncidentIDEQ(testIncident.ID)).All(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, metrics, "IncidentMetric should not be deleted")
 }
 
 // ==================== 事件活动记录测试 ====================
