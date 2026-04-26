@@ -337,8 +337,12 @@ func (mc *MSPController) GetCustomerReports(c *gin.Context) {
 		customerTenantID = &id
 	}
 
+	userID, _ := c.Get("user_id")
+	mspUserID, _ := userID.(int)
+
 	reports, err := mc.ticketService.GetMSPCustomerReports(
 		c.Request.Context(),
+		mspUserID,
 		startDate,
 		endDate,
 		customerTenantID,
