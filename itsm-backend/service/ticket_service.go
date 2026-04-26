@@ -737,11 +737,11 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID int, tenantID
 		return fmt.Errorf("ticket not found")
 	}
 
-	// 级联删除关联数据
+	// 级联删除关联数据（带租户过滤）
 
 	// 1. 删除关联的 comments
 	_, err = s.client.TicketComment.Delete().
-		Where(ticketcomment.TicketIDEQ(ticketID)).
+		Where(ticketcomment.TicketIDEQ(ticketID), ticketcomment.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		s.logger.Errorw("Failed to delete ticket comments", "error", err)
@@ -750,7 +750,7 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID int, tenantID
 
 	// 2. 删除关联的 attachments
 	_, err = s.client.TicketAttachment.Delete().
-		Where(ticketattachment.TicketIDEQ(ticketID)).
+		Where(ticketattachment.TicketIDEQ(ticketID), ticketattachment.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		s.logger.Errorw("Failed to delete ticket attachments", "error", err)
@@ -759,7 +759,7 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID int, tenantID
 
 	// 3. 删除关联的 notifications
 	_, err = s.client.TicketNotification.Delete().
-		Where(ticketnotification.TicketIDEQ(ticketID)).
+		Where(ticketnotification.TicketIDEQ(ticketID), ticketnotification.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		s.logger.Errorw("Failed to delete ticket notifications", "error", err)
@@ -768,7 +768,7 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID int, tenantID
 
 	// 4. 删除关联的 sla_violations
 	_, err = s.client.SLAViolation.Delete().
-		Where(slaviolation.TicketIDEQ(ticketID)).
+		Where(slaviolation.TicketIDEQ(ticketID), slaviolation.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		s.logger.Errorw("Failed to delete sla violations", "error", err)
@@ -777,7 +777,7 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID int, tenantID
 
 	// 5. 删除关联的 sla_alert_history
 	_, err = s.client.SLAAlertHistory.Delete().
-		Where(slaalerthistory.TicketIDEQ(ticketID)).
+		Where(slaalerthistory.TicketIDEQ(ticketID), slaalerthistory.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		s.logger.Errorw("Failed to delete sla alert history", "error", err)
@@ -786,7 +786,7 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID int, tenantID
 
 	// 6. 删除关联的 approval_records
 	_, err = s.client.ApprovalRecord.Delete().
-		Where(approvalrecord.TicketIDEQ(ticketID)).
+		Where(approvalrecord.TicketIDEQ(ticketID), approvalrecord.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		s.logger.Errorw("Failed to delete approval records", "error", err)
@@ -795,15 +795,17 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID int, tenantID
 
 	// 7. 删除关联的 root_cause_analyses
 	_, err = s.client.RootCauseAnalysis.Delete().
-		Where(rootcauseanalysis.TicketIDEQ(ticketID)).
+		Where(rootcauseanalysis.TicketIDEQ(ticketID), rootcauseanalysis.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		s.logger.Errorw("Failed to delete root cause analyses", "error", err)
 		return fmt.Errorf("failed to delete root cause analyses: %w", err)
 	}
 
-	// 最后删除工单本身
-	err = s.client.Ticket.DeleteOneID(ticketID).Exec(ctx)
+	// 最后删除工单本身（带租户过滤）
+	_, err = s.client.Ticket.Delete().
+		Where(ticket.IDEQ(ticketID), ticket.TenantIDEQ(tenantID)).
+		Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to delete ticket", "error", err)
 		return fmt.Errorf("failed to delete ticket: %w", err)
@@ -832,7 +834,9 @@ func (s *TicketService) BatchDeleteTickets(ctx context.Context, ticketIDs []int,
 	}
 
 	// 批量硬删除（注意：生产环境通常建议软删除）
-	_, err = s.client.Ticket.Delete().Where(ticket.IDIn(ticketIDs...)).Exec(ctx)
+	_, err = s.client.Ticket.Delete().
+		Where(ticket.IDIn(ticketIDs...), ticket.TenantID(tenantID)).
+		Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to batch delete tickets", "error", err)
 		return fmt.Errorf("failed to batch delete tickets: %w", err)
