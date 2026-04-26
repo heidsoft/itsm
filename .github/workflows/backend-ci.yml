@@ -130,9 +130,20 @@ jobs:
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
-      - name: Run tests
-        continue-on-error: true
-        run: cd itsm-backend && go test ./... -v -short 2>&1 | head -100
+      - name: Download dependencies
+        run: cd itsm-backend && go mod download
+
+      - name: Run tests with coverage
+        run: |
+          cd itsm-backend
+          go test ./... -coverprofile=coverage.out -covermode=atomic
+          go tool cover -html=coverage.out -o coverage.html
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: itsm-backend/coverage.html
 
   dependency-review:
     runs-on: ubuntu-latest
