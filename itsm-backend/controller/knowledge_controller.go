@@ -5,6 +5,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -42,10 +43,15 @@ func (kc *KnowledgeController) CreateArticle(c *gin.Context) {
 	}
 
 	// 从上下文获取租户ID和用户信息（与中间件键名保持一致）
-	tenantID, _ := c.Get("tenant_id")
+	tenantIDValue, exists := c.Get("tenant_id")
+	if !exists || tenantIDValue == nil {
+		common.Fail(c, 1001, "租户上下文不存在")
+		return
+	}
+	tenantID := tenantIDValue.(int)
 	userId, _ := c.Get("user_id")
 
-	article, err := kc.knowledgeService.CreateArticle(c.Request.Context(), &req, tenantID.(int), userId.(int))
+	article, err := kc.knowledgeService.CreateArticle(c.Request.Context(), &req, tenantID, userId.(int))
 	if err != nil {
 		kc.logger.Errorf("创建知识库文章失败: %v", err)
 		common.Fail(c, 5001, "创建文章失败: "+err.Error())
@@ -73,9 +79,20 @@ func (kc *KnowledgeController) GetArticle(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantIDValue, exists := c.Get("tenant_id")
+	if !exists || tenantIDValue == nil {
+		common.Fail(c, 1001, "租户上下文不存在")
+		return
+	}
+	tenantID := tenantIDValue.(int)
 
-	article, err := kc.knowledgeService.GetArticle(c.Request.Context(), id, tenantID.(int))
+	// Get MSP context for MSP user validation
+	mspUserID := 0
+	if mspCtx, exists := middleware.GetMSPContext(c); exists && mspCtx.IsMSP {
+		mspUserID = mspCtx.MSPUserID
+	}
+
+	article, err := kc.knowledgeService.GetArticle(c.Request.Context(), id, tenantID, mspUserID)
 	if err != nil {
 		kc.logger.Errorf("获取知识库文章失败: %v", err)
 		common.Fail(c, 5001, "获取文章失败: "+err.Error())
@@ -115,9 +132,20 @@ func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 		req.PageSize = 10
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantIDValue, exists := c.Get("tenant_id")
+	if !exists || tenantIDValue == nil {
+		common.Fail(c, 1001, "租户上下文不存在")
+		return
+	}
+	tenantID := tenantIDValue.(int)
 
-	articles, total, err := kc.knowledgeService.ListArticles(c.Request.Context(), &req, tenantID.(int))
+	// Get MSP context for MSP user validation
+	mspUserID := 0
+	if mspCtx, exists := middleware.GetMSPContext(c); exists && mspCtx.IsMSP {
+		mspUserID = mspCtx.MSPUserID
+	}
+
+	articles, total, err := kc.knowledgeService.ListArticles(c.Request.Context(), &req, tenantID, mspUserID)
 	if err != nil {
 		kc.logger.Errorf("获取知识库文章列表失败: %v", err)
 		common.Fail(c, 5001, "获取文章列表失败: "+err.Error())
@@ -169,9 +197,20 @@ func (kc *KnowledgeController) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantIDValue, exists := c.Get("tenant_id")
+	if !exists || tenantIDValue == nil {
+		common.Fail(c, 1001, "租户上下文不存在")
+		return
+	}
+	tenantID := tenantIDValue.(int)
 
-	article, err := kc.knowledgeService.UpdateArticle(c.Request.Context(), id, &req, tenantID.(int))
+	// Get MSP context for MSP user validation
+	mspUserID := 0
+	if mspCtx, exists := middleware.GetMSPContext(c); exists && mspCtx.IsMSP {
+		mspUserID = mspCtx.MSPUserID
+	}
+
+	article, err := kc.knowledgeService.UpdateArticle(c.Request.Context(), id, &req, tenantID, mspUserID)
 	if err != nil {
 		kc.logger.Errorf("更新知识库文章失败: %v", err)
 		common.Fail(c, 5001, "更新文章失败: "+err.Error())
@@ -199,9 +238,20 @@ func (kc *KnowledgeController) DeleteArticle(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantIDValue, exists := c.Get("tenant_id")
+	if !exists || tenantIDValue == nil {
+		common.Fail(c, 1001, "租户上下文不存在")
+		return
+	}
+	tenantID := tenantIDValue.(int)
 
-	err = kc.knowledgeService.DeleteArticle(c.Request.Context(), id, tenantID.(int))
+	// Get MSP context for MSP user validation
+	mspUserID := 0
+	if mspCtx, exists := middleware.GetMSPContext(c); exists && mspCtx.IsMSP {
+		mspUserID = mspCtx.MSPUserID
+	}
+
+	err = kc.knowledgeService.DeleteArticle(c.Request.Context(), id, tenantID, mspUserID)
 	if err != nil {
 		kc.logger.Errorf("删除知识库文章失败: %v", err)
 		common.Fail(c, 5001, "删除文章失败: "+err.Error())
@@ -221,9 +271,14 @@ func (kc *KnowledgeController) DeleteArticle(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Router /api/v1/knowledge-articles/categories [get]
 func (kc *KnowledgeController) GetCategories(c *gin.Context) {
-	tenantID, _ := c.Get("tenant_id")
+	tenantIDValue, exists := c.Get("tenant_id")
+	if !exists || tenantIDValue == nil {
+		common.Fail(c, 1001, "租户上下文不存在")
+		return
+	}
+	tenantID := tenantIDValue.(int)
 
-	categories, err := kc.knowledgeService.GetCategories(c.Request.Context(), tenantID.(int))
+	categories, err := kc.knowledgeService.GetCategories(c.Request.Context(), tenantID)
 	if err != nil {
 		kc.logger.Errorf("获取知识库分类失败: %v", err)
 		common.Fail(c, 5001, "获取分类失败: "+err.Error())
