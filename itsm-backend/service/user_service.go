@@ -181,13 +181,21 @@ func (s *UserService) GetUserByID(ctx context.Context, id int) (*ent.User, error
 func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUserRequest) (*ent.User, error) {
 	s.logger.Infof("更新用户: ID=%d", id)
 
-	// 检查用户是否存在
-	existingUser, err := s.GetUserByID(ctx, id)
-	if err != nil {
-		return nil, err
+	// 提取 tenant_id 并验证用户属于当前租户
+	tenantID, ok := ctx.Value("tenant_id").(int)
+	if !ok {
+		return nil, fmt.Errorf("tenant_id not found in context")
 	}
 
-	update := s.client.User.UpdateOneID(id)
+	// 验证用户属于当前租户，防止跨租户访问
+	existingUser, err := s.client.User.Query().
+		Where(user.IDEQ(id), user.TenantID(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("cross-tenant access denied: user not found or access denied")
+	}
+
+	update := s.client.User.UpdateOneID(id).Where(user.TenantID(tenantID))
 
 	// 检查用户名是否已被其他用户使用
 	if req.Username != "" && req.Username != existingUser.Username {
