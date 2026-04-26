@@ -79,19 +79,10 @@ jobs:
       - name: Run lint
         working-directory: ./itsm-frontend
         run: npm run lint:check
-        continue-on-error: true
 
       - name: Upload lint results
-        uses: actions/upload-artifact@v4
         if: always()
-        with:
-          name: lint-results
-          path: itsm-frontend/*.log
-          retention-days: 3
-
-      - name: Upload lint results
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: lint-results
           path: itsm-frontend/*.log
@@ -121,11 +112,10 @@ jobs:
       - name: Run type check
         working-directory: ./itsm-frontend
         run: npm run type-check
-        continue-on-error: true
 
       - name: Upload type check results
-        uses: actions/upload-artifact@v4
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: type-check-results
           path: itsm-frontend/*.log
@@ -152,14 +142,19 @@ jobs:
         working-directory: ./itsm-frontend
         run: npm ci
 
-      - name: Run unit tests
+      - name: Run unit tests with coverage
         working-directory: ./itsm-frontend
-        run: npm run test:unit -- --passWithNoTests --coverage=false
-        continue-on-error: true
+        run: npm run test:ci
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: itsm-frontend/coverage/
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
           path: itsm-frontend/junit.xml
@@ -188,12 +183,11 @@ jobs:
 
       - name: Run integration tests
         working-directory: ./itsm-frontend
-        run: npm run test:integration -- --passWithNoTests --coverage=false
-        continue-on-error: true
+        run: npm run test:integration -- --passWithNoTests
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: integration-test-results
           path: itsm-frontend/junit.xml
@@ -203,7 +197,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [lint, type-check]
+    needs: [lint, type-check, unit-tests, integration-tests]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -227,11 +221,10 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8080
           NODE_OPTIONS: --max-old-space-size=4096
-        continue-on-error: true
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
         if: success()
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-build
           path: |
@@ -240,8 +233,8 @@ jobs:
           retention-days: 7
 
       - name: Upload build stats
-        uses: actions/upload-artifact@v4
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: build-stats
           path: itsm-frontend/.next/stats.json
