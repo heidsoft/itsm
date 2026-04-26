@@ -183,6 +183,9 @@ func TestUserService_UpdateUser(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
+	// 创建带 tenant_id 上下文的 ctx
+	tenantCtx := context.WithValue(ctx, "tenant_id", testTenant.ID)
+
 	// 创建测试用户
 	testUser, err := client.User.Create().
 		SetUsername("testuser").
@@ -193,7 +196,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 		SetPhone("1234567890").
 		SetActive(true).
 		SetTenantID(testTenant.ID).
-		Save(ctx)
+		Save(tenantCtx)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -233,7 +236,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := userService.UpdateUser(ctx, tt.userID, tt.request)
+			user, err := userService.UpdateUser(tenantCtx, tt.userID, tt.request)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -580,6 +583,66 @@ func TestUserService_ChangeUserStatus(t *testing.T) {
 }
 
 // 基准测试
+func TestUserService_UpdateUser_TenantIsolation(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	userService := NewUserService(client, logger)
+	ctx := context.Background()
+
+	// Create two tenants
+	tenant1, err := client.Tenant.Create().
+		SetName("Tenant 1").
+		SetCode("T1").
+		SetDomain("t1.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	tenant2, err := client.Tenant.Create().
+		SetName("Tenant 2").
+		SetCode("T2").
+		SetDomain("t2.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Create user for tenant 1
+	tenant1Ctx := context.WithValue(ctx, "tenant_id", tenant1.ID)
+	user1, err := client.User.Create().
+		SetUsername("testuser").
+		SetEmail("test@t1.com").
+		SetPasswordHash("hashedpassword").
+		SetName("Tenant 1 User").
+		SetDepartment("IT").
+		SetPhone("1234567890").
+		SetActive(true).
+		SetTenantID(tenant1.ID).
+		Save(tenant1Ctx)
+	require.NoError(t, err)
+
+	// Create user for tenant 2
+	tenant2Ctx := context.WithValue(ctx, "tenant_id", tenant2.ID)
+	_, err = client.User.Create().
+		SetUsername("testuser2").
+		SetEmail("test@t2.com").
+		SetPasswordHash("hashedpassword").
+		SetName("Tenant 2 User").
+		SetDepartment("IT").
+		SetPhone("0987654321").
+		SetActive(true).
+		SetTenantID(tenant2.ID).
+		Save(tenant2Ctx)
+	require.NoError(t, err)
+
+	// Tenant 2 tries to update tenant 1's user - should fail
+	_, err = userService.UpdateUser(tenant2Ctx, user1.ID, &dto.UpdateUserRequest{Name: "Hacked"})
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cross-tenant access denied")
+}
+
 func BenchmarkUserService_CreateUser(b *testing.B) {
 	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
