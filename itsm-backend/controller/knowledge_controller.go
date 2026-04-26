@@ -5,7 +5,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -86,13 +85,7 @@ func (kc *KnowledgeController) GetArticle(c *gin.Context) {
 	}
 	tenantID := tenantIDValue.(int)
 
-	// Get MSP context for MSP user validation
-	mspUserID := 0
-	if mspCtx, exists := middleware.GetMSPContext(c); exists && mspCtx.IsMSP {
-		mspUserID = mspCtx.MSPUserID
-	}
-
-	article, err := kc.knowledgeService.GetArticle(c.Request.Context(), id, tenantID, mspUserID)
+	article, err := kc.knowledgeService.GetArticle(c.Request.Context(), id, tenantID)
 	if err != nil {
 		kc.logger.Errorf("获取知识库文章失败: %v", err)
 		common.Fail(c, 5001, "获取文章失败: "+err.Error())
@@ -139,13 +132,7 @@ func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 	}
 	tenantID := tenantIDValue.(int)
 
-	// Get MSP context for MSP user validation
-	mspUserID := 0
-	if mspCtx, exists := middleware.GetMSPContext(c); exists && mspCtx.IsMSP {
-		mspUserID = mspCtx.MSPUserID
-	}
-
-	articles, total, err := kc.knowledgeService.ListArticles(c.Request.Context(), &req, tenantID, mspUserID)
+	articles, total, err := kc.knowledgeService.ListArticles(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		kc.logger.Errorf("获取知识库文章列表失败: %v", err)
 		common.Fail(c, 5001, "获取文章列表失败: "+err.Error())
@@ -204,13 +191,7 @@ func (kc *KnowledgeController) UpdateArticle(c *gin.Context) {
 	}
 	tenantID := tenantIDValue.(int)
 
-	// Get MSP context for MSP user validation
-	mspUserID := 0
-	if mspCtx, exists := middleware.GetMSPContext(c); exists && mspCtx.IsMSP {
-		mspUserID = mspCtx.MSPUserID
-	}
-
-	article, err := kc.knowledgeService.UpdateArticle(c.Request.Context(), id, &req, tenantID, mspUserID)
+	article, err := kc.knowledgeService.UpdateArticle(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
 		kc.logger.Errorf("更新知识库文章失败: %v", err)
 		common.Fail(c, 5001, "更新文章失败: "+err.Error())
@@ -245,13 +226,7 @@ func (kc *KnowledgeController) DeleteArticle(c *gin.Context) {
 	}
 	tenantID := tenantIDValue.(int)
 
-	// Get MSP context for MSP user validation
-	mspUserID := 0
-	if mspCtx, exists := middleware.GetMSPContext(c); exists && mspCtx.IsMSP {
-		mspUserID = mspCtx.MSPUserID
-	}
-
-	err = kc.knowledgeService.DeleteArticle(c.Request.Context(), id, tenantID, mspUserID)
+	err = kc.knowledgeService.DeleteArticle(c.Request.Context(), id, tenantID)
 	if err != nil {
 		kc.logger.Errorf("删除知识库文章失败: %v", err)
 		common.Fail(c, 5001, "删除文章失败: "+err.Error())
