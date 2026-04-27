@@ -42,7 +42,7 @@ const { Title, Text } = Typography;
 
 const STATUS_COLORS: Record<string, string> = {
   open: '#1890ff',
-  in_progress: '#faad14',
+  inProgress: '#faad14',
   resolved: '#52c41a',
   closed: '#d9d9d9',
 };
@@ -83,10 +83,10 @@ const ProblemEfficiencyPage = () => {
         statsData = {
           total: 156,
           open: 23,
-          in_progress: 45,
+          inProgress: 45,
           resolved: 67,
           closed: 21,
-          high_priority: 18,
+          highPriority: 18,
         };
         setStats(statsData);
       }
@@ -122,7 +122,7 @@ const ProblemEfficiencyPage = () => {
         // 演示数据
         setProblemsByStatus([
           { name: '待处理', value: 23, color: STATUS_COLORS.open },
-          { name: '处理中', value: 45, color: STATUS_COLORS.in_progress },
+          { name: '处理中', value: 45, color: STATUS_COLORS.inProgress },
           { name: '已解决', value: 67, color: STATUS_COLORS.resolved },
           { name: '已关闭', value: 21, color: STATUS_COLORS.closed },
         ]);
@@ -142,15 +142,15 @@ const ProblemEfficiencyPage = () => {
       setStats({
         total: 156,
         open: 23,
-        in_progress: 45,
+        inProgress: 45,
         resolved: 67,
         closed: 21,
-        high_priority: 18,
+        highPriority: 18,
       });
 
       setProblemsByStatus([
         { name: '待处理', value: 23, color: STATUS_COLORS.open },
-        { name: '处理中', value: 45, color: STATUS_COLORS.in_progress },
+        { name: '处理中', value: 45, color: STATUS_COLORS.inProgress },
         { name: '已解决', value: 67, color: STATUS_COLORS.resolved },
         { name: '已关闭', value: 21, color: STATUS_COLORS.closed },
       ]);
@@ -171,12 +171,12 @@ const ProblemEfficiencyPage = () => {
   }, []);
 
   const resolutionRate = stats ? (stats.resolved / stats.total) * 100 : 0;
-  const inProgressRate = stats ? (stats.in_progress / stats.total) * 100 : 0;
+  const inProgressRate = stats ? (stats.inProgress / stats.total) * 100 : 0;
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       open: 'processing',
-      in_progress: 'processing',
+      inProgress: 'processing',
       resolved: 'success',
       closed: 'default',
     };
@@ -260,7 +260,7 @@ const ProblemEfficiencyPage = () => {
               <Card>
                 <Statistic
                   title="处理中"
-                  value={stats?.in_progress || 0}
+                  value={stats?.inProgress || 0}
                   styles={{ content: { color: '#faad14' } }}
                   prefix={<Clock size={20} />}
                 />
@@ -270,7 +270,7 @@ const ProblemEfficiencyPage = () => {
               <Card>
                 <Statistic
                   title="高优先级"
-                  value={stats?.high_priority || 0}
+                  value={stats?.highPriority || 0}
                   styles={{ content: { color: '#ff4d4f' } }}
                   prefix={<XCircle size={20} />}
                 />
@@ -308,7 +308,7 @@ const ProblemEfficiencyPage = () => {
                   </div>
                   <Progress percent={inProgressRate} strokeColor="#1890ff" showInfo={false} />
                   <Text type="secondary" className="mt-2 block">
-                    处理中 {stats?.in_progress || 0} / 总数 {stats?.total || 0}
+                    处理中 {stats?.inProgress || 0} / 总数 {stats?.total || 0}
                   </Text>
                 </div>
               </Card>
@@ -317,15 +317,15 @@ const ProblemEfficiencyPage = () => {
               <Card title="高优先级占比">
                 <div className="text-center py-4">
                   <div className="text-4xl font-bold mb-2" style={{ color: '#ff4d4f' }}>
-                    {stats ? ((stats.high_priority / stats.total) * 100).toFixed(1) : 0}%
+                    {stats ? ((stats.highPriority / stats.total) * 100).toFixed(1) : 0}%
                   </div>
                   <Progress
-                    percent={stats ? (stats.high_priority / stats.total) * 100 : 0}
+                    percent={stats ? (stats.highPriority / stats.total) * 100 : 0}
                     strokeColor="#ff4d4f"
                     showInfo={false}
                   />
                   <Text type="secondary" className="mt-2 block">
-                    高优先级 {stats?.high_priority || 0} / 总数 {stats?.total || 0}
+                    高优先级 {stats?.highPriority || 0} / 总数 {stats?.total || 0}
                   </Text>
                 </div>
               </Card>

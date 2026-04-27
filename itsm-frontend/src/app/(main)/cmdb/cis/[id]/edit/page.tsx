@@ -108,8 +108,8 @@ const EditCIPage: React.FC = () => {
           CMDBApi.getCloudResources(),
           CMDBApi.getCloudServices(),
         ]);
-        setCloudResources(resources || []);
-        setCloudServices(services || []);
+        setCloudResources((resources as any).items || (resources as any).data || []);
+        setCloudServices((services as any).items || (services as any).data || []);
       } catch (error) {
         message.error('加载云资源数据失败');
       } finally {

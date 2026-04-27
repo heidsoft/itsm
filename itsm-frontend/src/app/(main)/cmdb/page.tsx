@@ -106,16 +106,8 @@ export default function CMDBPage() {
   const fetchCiTypeStats = async () => {
     try {
       const typesData = await CMDBApi.getCITypes();
-      let typesArray: any[] = [];
-      if (typesData?.data && Array.isArray(typesData.data)) {
-        typesArray = typesData.data;
-      } else if (Array.isArray(typesData)) {
-        typesArray = typesData;
-      } else if (typesData?.items && Array.isArray(typesData.items)) {
-        typesArray = typesData.items;
-      }
-      // Ensure each item has a unique id for React keys
-      const typesWithIds = typesArray.map((item, index) => ({
+      // typesData is CIType[] - ensure each item has a unique id for React keys
+      const typesWithIds = (typesData || []).map((item: any, index: number) => ({
         ...item,
         id: item.id ?? item.type ?? `type-${index}`,
       }));
@@ -400,7 +392,8 @@ export default function CMDBPage() {
   // 云资源筛选后的数据
   const filteredCloudResources = React.useMemo(() => {
     return cloudResources.filter(resource => {
-      const matchesSearch = !cloudSearchKeyword ||
+      const matchesSearch =
+        !cloudSearchKeyword ||
         resource.resource_name?.toLowerCase().includes(cloudSearchKeyword.toLowerCase()) ||
         resource.resource_id?.toLowerCase().includes(cloudSearchKeyword.toLowerCase());
       const matchesType = !cloudTypeFilter || resource.resource_type === cloudTypeFilter;

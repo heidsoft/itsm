@@ -136,7 +136,7 @@ export const useTickets = (): UseTicketsReturn => {
         total: response.total,
         open: response.open,
         resolved: response.resolved,
-        highPriority: response.high_priority,
+        highPriority: response.highPriority,
       });
     } catch (err) {
       console.error('Failed to load statistics:', err);

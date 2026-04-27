@@ -63,7 +63,7 @@ export const useProblemsData = () => {
       setStats({
         total: statsData.total || 0,
         open: statsData.open || 0,
-        inProgress: statsData.in_progress || 0,
+        inProgress: statsData.inProgress || 0,
         resolved: statsData.resolved || 0,
       });
     } catch {

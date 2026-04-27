@@ -100,7 +100,7 @@ const TicketAnalytics: React.FC = () => {
         total_tickets: statsRes.total || analyticsRes.total_tickets || 0,
         open_tickets: statsRes.open || analyticsRes.open_tickets || 0,
         resolved_tickets: statsRes.resolved || analyticsRes.resolved_tickets || 0,
-        closed_tickets: statsRes.closed || analyticsRes.closed_tickets || 0,
+        closed_tickets: analyticsRes.closed_tickets || 0,
         overdue_tickets: statsRes.overdue || analyticsRes.overdue_tickets || 0,
         daily_trend: analyticsRes.daily_trend || [],
         status_distribution: analyticsRes.status_distribution || [],
