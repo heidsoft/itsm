@@ -8,6 +8,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
 import { useResponsive } from '@/hooks/useResponsive';
+import { useLayoutStore } from '@/lib/store/layout-store';
 
 const { Content, Sider } = Layout;
 
@@ -34,7 +35,7 @@ export function AppLayout({
 }: AppLayoutProps) {
   const router = useRouter();
   const { isMobile, isTablet } = useResponsive();
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, setCollapsed } = useLayoutStore();
   const [mobileDrawerVisible, setMobileDrawerVisible] = useState(false);
 
   // 移动端自动折叠侧边栏

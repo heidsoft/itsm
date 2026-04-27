@@ -178,7 +178,15 @@ export default function TicketsPage() {
                 高级搜索
               </Button>
               <Badge count={ticketStats.overdue} size="small">
-                <Button icon={<BellOutlined />}>SLA 预警</Button>
+                <Button
+                  icon={<BellOutlined />}
+                  onClick={() => {
+                    setActiveTab('list');
+                    router.push('/tickets?tab=list', { scroll: false });
+                  }}
+                >
+                  SLA 预警
+                </Button>
               </Badge>
               <Link href="/tickets/create">
                 <Button type="primary" icon={<PlusOutlined />}>

@@ -9,6 +9,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { AuthService } from '@/lib/services/auth-service';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useLayoutStore } from '@/lib/store/layout-store';
 
 const { Content } = Layout;
 
@@ -22,7 +23,7 @@ export default function MainLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, setCollapsed } = useLayoutStore();
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
