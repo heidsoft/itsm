@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Row, Col, Statistic, Button, message, Input, Select, Space, Tabs } from 'antd';
-import { Bug, CheckCircle, Clock, AlertTriangle, Plus, Search, Filter, Table as TableIcon } from 'lucide-react';
+import {
+  Bug,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  Plus,
+  Search,
+  Filter,
+  Table as TableIcon,
+} from 'lucide-react';
 import { AppstoreOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import ProblemList from '@/components/problem/ProblemList';
@@ -35,7 +44,7 @@ export default function ProblemListPage() {
       setStats({
         total: stats.total || 0,
         open: stats.open || 0,
-        inProgress: stats.in_progress || 0,
+        inProgress: stats.inProgress || 0,
         resolved: stats.resolved || 0,
       });
     } catch (error) {
@@ -148,7 +157,10 @@ export default function ProblemListPage() {
   );
 
   return (
-    <div className="p-6 min-h-screen" style={{ backgroundColor: 'var(--color-bg-secondary, #f9fafb)' }}>
+    <div
+      className="p-6 min-h-screen"
+      style={{ backgroundColor: 'var(--color-bg-secondary, #f9fafb)' }}
+    >
       <PageContainer
         title="问题管理"
         description="识别、分析和消除事件发生的根本原因"

@@ -53,10 +53,11 @@ export default function ReconciliationPage() {
         CMDBApi.getReconciliationResults(),
         CMDBApi.getCloudServices(),
       ]);
-      setSummary(recon.summary);
-      setUnboundResources(recon.unboundResources || []);
-      setOrphanCIs(recon.orphanCIs || []);
-      setUnlinkedCIs(recon.unlinkedCIs || []);
+      const r = recon as any;
+      setSummary(r.summary || null);
+      setUnboundResources(r.unboundResources || []);
+      setOrphanCIs(r.orphanCIs || []);
+      setUnlinkedCIs(r.unlinkedCIs || []);
       setServices(serviceList || []);
     } catch (error) {
       message.error('加载对账数据失败');

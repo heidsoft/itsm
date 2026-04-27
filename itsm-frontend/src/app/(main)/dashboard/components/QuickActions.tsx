@@ -110,6 +110,14 @@ const EnterpriseQuickActionCard: React.FC<{
               }}
               icon={<ArrowRightOutlined />}
               iconPlacement="end"
+              onClick={e => {
+                e.stopPropagation();
+                if (onClick) {
+                  onClick(action);
+                } else {
+                  router.push(action.path);
+                }
+              }}
             >
               <span className="group-hover/btn:mr-1 transition-all duration-300">立即开始</span>
             </Button>

@@ -98,7 +98,7 @@ export const useTicketStatsQuery = () => {
           total: response?.total || 0,
           open: response?.open || 0,
           resolved: response?.resolved || 0,
-          highPriority: response?.high_priority || 0,
+          highPriority: response?.highPriority || 0,
         };
       } catch (error) {
         console.error('Failed to fetch ticket stats:', error);

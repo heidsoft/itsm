@@ -109,14 +109,10 @@ export interface ListTicketsParams {
 export interface TicketStatsResponse {
   total: number;
   open: number;
-  in_progress: number;
-  pending: number;
+  inProgress: number;
   resolved: number;
-  closed: number;
-  high_priority: number;
-  urgent: number;
+  highPriority: number;
   overdue: number;
-  sla_breach: number;
 }
 
 // 工单分配请求
@@ -214,14 +210,10 @@ class TicketService {
       return {
         total: 0,
         open: 0,
-        in_progress: 0,
-        pending: 0,
+        inProgress: 0,
         resolved: 0,
-        closed: 0,
-        high_priority: 0,
-        urgent: 0,
+        highPriority: 0,
         overdue: 0,
-        sla_breach: 0,
       };
     }
   }

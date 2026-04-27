@@ -88,7 +88,8 @@ const TicketCategoryManagementPage = () => {
     setLoading(true);
     try {
       const data = await TicketCategoryApi.getCategories();
-      const list = Array.isArray(data) ? data : (data.items || data || []);
+      // Handle backend response format: {items: [...], total: X}
+      const list = data.items || [];
       setCategories(list);
     } catch (error) {
       console.error('Failed to load categories:', error);
