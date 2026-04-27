@@ -1,0 +1,163 @@
+{
+  "dashboard": {
+    "title": "ITSM Business Metrics",
+    "tags": ["itsm", "business"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "工单概览",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(itsm_tickets_by_status)",
+            "legendFormat": "总工单数",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "事件概览",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(increase(itsm_incidents_created_total[24h]))",
+            "legendFormat": "24小时事件数",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "SLA合规率",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "avg(itsm_sla_compliance_ratio) * 100",
+            "legendFormat": "SLA合规率",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "max": 100,
+            "min": 0,
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "title": "活跃用户",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(itsm_active_users)",
+            "legendFormat": "活跃用户",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "工单创建趋势",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "rate(itsm_tickets_created_total[5m])",
+            "legendFormat": "{{category}} - {{priority}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "title": "工单解决时间分布",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "rate(itsm_ticket_resolution_time_seconds_bucket[5m])",
+            "legendFormat": "{{le}}",
+            "refId": "A"
+          }
+        ],
+        "dataFormat": "tsbuckets"
+      },
+      {
+        "title": "事件MTTR",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(itsm_incident_mttr_seconds_bucket[5m]))",
+            "legendFormat": "50分位",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(itsm_incident_mttr_seconds_bucket[5m]))",
+            "legendFormat": "95分位",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "s"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "title": "变更成功率",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(increase(itsm_changes_success_total[24h]))",
+            "legendFormat": "成功",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(increase(itsm_changes_failed_total[24h]))",
+            "legendFormat": "失败",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "title": "知识库使用趋势",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "rate(itsm_knowledge_searches_total[5m])",
+            "legendFormat": "搜索次数",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(itsm_knowledge_articles_created_total[5m])",
+            "legendFormat": "新文章数",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "title": "SLA违规趋势",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "rate(itsm_sla_violations_total[1h])",
+            "legendFormat": "SLA违规次数",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "30s"
+  }
+}
