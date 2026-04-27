@@ -3,7 +3,7 @@
  * 管理 CI 详情页面的所有数据和状态
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { message } from 'antd';
 import { useParams } from 'next/navigation';
 
@@ -29,6 +29,16 @@ export const useCIDetail = (): UseCIDetailReturn => {
   const [changeHistory, setChangeHistory] = useState<any>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // 用于取消异步操作的 ref
+  const cancelledRef = useRef(false);
+
+  // 组件卸载时设置取消标志
+  useEffect(() => {
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, []);
+
   /**
    * 加载 CI 详情
    */
@@ -38,12 +48,18 @@ export const useCIDetail = (): UseCIDetailReturn => {
     setLoading(true);
     try {
       const { ci: ciData, types: typeData } = await fetchCIDetail(id);
-      setCi(ciData);
-      setTypes(typeData);
+      if (!cancelledRef.current) {
+        setCi(ciData);
+        setTypes(typeData);
+      }
     } catch (error) {
-      message.error('加载资产详情失败');
+      if (!cancelledRef.current) {
+        message.error('加载资产详情失败');
+      }
     } finally {
-      setLoading(false);
+      if (!cancelledRef.current) {
+        setLoading(false);
+      }
     }
   }, [id]);
 
@@ -53,19 +69,18 @@ export const useCIDetail = (): UseCIDetailReturn => {
   const loadImpactAnalysis = useCallback(async () => {
     if (!id) return;
 
-    const isMounted = true; // 简化处理，实际应使用 useEffect cleanup
     setImpactLoading(true);
     try {
       const data = await fetchCIImpactAnalysis(id);
-      if (isMounted) {
+      if (!cancelledRef.current) {
         setImpactAnalysis(data);
       }
     } catch (error) {
-      if (isMounted) {
+      if (!cancelledRef.current) {
         message.error('加载影响分析失败，请稍后重试');
       }
     } finally {
-      if (isMounted) {
+      if (!cancelledRef.current) {
         setImpactLoading(false);
       }
     }
@@ -77,19 +92,18 @@ export const useCIDetail = (): UseCIDetailReturn => {
   const loadChangeHistory = useCallback(async () => {
     if (!id) return;
 
-    const isMounted = true;
     setHistoryLoading(true);
     try {
       const data = await fetchCIChangeHistory(id);
-      if (isMounted) {
+      if (!cancelledRef.current) {
         setChangeHistory(data);
       }
     } catch (error) {
-      if (isMounted) {
+      if (!cancelledRef.current) {
         message.error('加载变更历史失败，请稍后重试');
       }
     } finally {
-      if (isMounted) {
+      if (!cancelledRef.current) {
         setHistoryLoading(false);
       }
     }
@@ -100,8 +114,7 @@ export const useCIDetail = (): UseCIDetailReturn => {
    */
   useEffect(() => {
     loadDetail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [loadDetail]);
 
   /**
    * 计算类型信息
