@@ -87,10 +87,10 @@ export interface ListProblemsResponse {
 export interface ProblemStatsResponse {
   total: number;
   open: number;
-  in_progress: number;
+  inProgress: number;
   resolved: number;
   closed: number;
-  high_priority: number;
+  highPriority: number;
 }
 
 // 问题管理API服务类

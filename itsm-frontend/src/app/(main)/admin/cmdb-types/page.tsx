@@ -33,23 +33,10 @@ import {
   Switch,
 } from 'antd';
 import { CMDBApi } from '@/lib/api/cmdb-api';
+import type { CIType } from '@/types/biz/cmdb';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-
-// CI类型定义
-interface CIType {
-  id: number;
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-  attribute_schema: string;
-  is_active: boolean;
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
-}
 
 const CMDBTypesManagement = () => {
   const { message } = App.useApp();
@@ -100,8 +87,7 @@ const CMDBTypesManagement = () => {
   const fetchCITypes = async () => {
     try {
       setLoading(true);
-      const response = await CMDBApi.getCMDBTypes();
-      const types = response.data || response || [];
+      const types = await CMDBApi.getCMDBTypes();
       setCiTypes(types);
 
       // 计算统计数据
@@ -184,8 +170,7 @@ const CMDBTypesManagement = () => {
       type.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      !statusFilter ||
-      (statusFilter === 'active' ? type.is_active : !type.is_active);
+      !statusFilter || (statusFilter === 'active' ? type.is_active : !type.is_active);
 
     return matchesSearch && matchesStatus;
   });
@@ -222,9 +207,7 @@ const CMDBTypesManagement = () => {
       dataIndex: 'icon',
       key: 'icon',
       width: 100,
-      render: (icon: string) => (
-        <Tag color="default">{icon || '-'}</Tag>
-      ),
+      render: (icon: string) => <Tag color="default">{icon || '-'}</Tag>,
     },
     {
       title: '颜色',
@@ -233,10 +216,7 @@ const CMDBTypesManagement = () => {
       width: 100,
       render: (color: string) => (
         <div className="flex items-center">
-          <div
-            className="w-4 h-4 rounded mr-2"
-            style={{ backgroundColor: color || '#1890ff' }}
-          />
+          <div className="w-4 h-4 rounded mr-2" style={{ backgroundColor: color || '#1890ff' }} />
           <span className="text-sm">{color || '-'}</span>
         </div>
       ),
@@ -249,7 +229,9 @@ const CMDBTypesManagement = () => {
       render: (isActive: boolean) => (
         <Tag
           color={isActive ? 'green' : 'default'}
-          icon={isActive ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+          icon={
+            isActive ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />
+          }
         >
           {isActive ? '激活' : '停用'}
         </Tag>
@@ -476,16 +458,8 @@ const CMDBTypesManagement = () => {
             </Col>
           </Row>
 
-          <Form.Item
-            name="is_active"
-            label="状态"
-            valuePropName="checked"
-            initialValue={true}
-          >
-            <Switch
-              checkedChildren="激活"
-              unCheckedChildren="停用"
-            />
+          <Form.Item name="is_active" label="状态" valuePropName="checked" initialValue={true}>
+            <Switch checkedChildren="激活" unCheckedChildren="停用" />
           </Form.Item>
 
           <Form.Item className="mb-0 mt-6">

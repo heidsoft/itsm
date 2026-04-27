@@ -3,20 +3,19 @@
  * 封装与 CI 详情相关的 API 调用
  */
 
-import type { ConfigurationItem, CIType } from '@/types/biz/cmdb';
-import { CMDBApi } from '@/lib/api/';
+import type { CIType } from '@/types/biz/cmdb';
+import { CMDBApi, ConfigurationItem } from '@/lib/api/cmdb-api';
 
 /**
  * 获取 CI 详情和类型列表
  */
-export const fetchCIDetail = async (ciId: string | number): Promise<{
+export const fetchCIDetail = async (
+  ciId: string | number
+): Promise<{
   ci: ConfigurationItem;
   types: CIType[];
 }> => {
-  const [ciData, typeData] = await Promise.all([
-    CMDBApi.getCI(String(ciId)),
-    CMDBApi.getTypes(),
-  ]);
+  const [ciData, typeData] = await Promise.all([CMDBApi.getCI(String(ciId)), CMDBApi.getTypes()]);
 
   return {
     ci: ciData,
