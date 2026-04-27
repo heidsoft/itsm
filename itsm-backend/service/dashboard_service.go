@@ -510,6 +510,19 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 		return nil, err
 	}
 
+	// 上月处理中工单
+	lastMonthInProgress, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantID(tenantID),
+			ticket.StatusEQ("in_progress"),
+			ticket.CreatedAtGTE(lastMonthStart),
+			ticket.CreatedAtLTE(lastMonthEnd),
+		).
+		Count(ctx)
+	if err != nil {
+		lastMonthInProgress = 0
+	}
+
 	// 已完成工单（本月）
 	thisMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
 	completedTickets, err := s.client.Ticket.Query().
@@ -537,14 +550,30 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 	}
 
 	// 计算变化百分比
-	var totalChange, pendingChange, completedChange float64
+	var totalChange, pendingChange, inProgressChange, completedChange float64
+	var pendingChangeType, inProgressChangeType string = "increase", "increase"
 	if lastMonthTotal > 0 {
 		totalChange = float64(totalTickets-lastMonthTotal) / float64(lastMonthTotal) * 100
 	}
+	// 待处理工单变化：上月为0时，新增显示100%增长
 	if lastMonthPending > 0 {
 		pendingChange = float64(pendingTickets-lastMonthPending) / float64(lastMonthPending) * 100
+		if pendingChange < 0 {
+			pendingChangeType = "decrease"
+		}
 	} else if pendingTickets > 0 {
-		pendingChange = 100
+		pendingChange = 100 // 上月为0，本月有值，视为新增100%
+		pendingChangeType = "increase"
+	}
+	// 处理中工单变化
+	if lastMonthInProgress > 0 {
+		inProgressChange = float64(inProgressTickets-lastMonthInProgress) / float64(lastMonthInProgress) * 100
+		if inProgressChange < 0 {
+			inProgressChangeType = "decrease"
+		}
+	} else if inProgressTickets > 0 {
+		inProgressChange = 100
+		inProgressChangeType = "increase"
 	}
 	if lastMonthCompleted > 0 {
 		completedChange = float64(completedTickets-lastMonthCompleted) / float64(lastMonthCompleted) * 100
@@ -591,9 +620,9 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 			Value:       float64(pendingTickets),
 			Unit:        "个",
 			Color:       "#f59e0b",
-			Trend:       "down",
+			Trend:       "up",
 			Change:      pendingChange,
-			ChangeType:  "decrease",
+			ChangeType:  pendingChangeType,
 			Description: "需要立即处理",
 			Alert: func() string {
 				if pendingTickets > 200 {
@@ -609,8 +638,8 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 			Unit:        "个",
 			Color:       "#06b6d4",
 			Trend:       "up",
-			Change:      15.2,
-			ChangeType:  "increase",
+			Change:      inProgressChange,
+			ChangeType:  inProgressChangeType,
 			Description: "正在处理中",
 		},
 		{

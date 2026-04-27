@@ -1,0 +1,131 @@
+/* 看板拖拽交互增强样式 */
+
+.kanbanColumn {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.kanbanColumn:hover {
+  background: #f0f0f0;
+}
+
+.kanbanColumnDragOver {
+  background: #e6f7ff;
+  border: 2px dashed #1890ff;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+}
+
+.ticketCard {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: grab;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+}
+
+.ticketCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  border-color: #1890ff;
+}
+
+.ticketCardDragging {
+  opacity: 0.7;
+  transform: rotate(3deg) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  cursor: grabbing;
+  z-index: 1000;
+}
+
+.ticketCardDropTarget {
+  border: 2px dashed #52c41a;
+  background: #f6ffed;
+}
+
+.priorityHigh {
+  border-left: 4px solid #ff4d4f;
+}
+
+.priorityMedium {
+  border-left: 4px solid #faad14;
+}
+
+.priorityLow {
+  border-left: 4px solid #52c41a;
+}
+
+.priorityUrgent {
+  border-left: 4px solid #722ed1;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.slaWarning {
+  position: relative;
+  overflow: hidden;
+}
+
+.slaWarning::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #faad14 0%, #ff4d4f 50%, #faad14 100%);
+  animation: slideX 2s linear infinite;
+}
+
+@keyframes slideX {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.columnHeader {
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.columnCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 12px;
+  background: #1890ff;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.dropZone {
+  min-height: 100px;
+  border: 2px dashed transparent;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.dropZoneActive {
+  border-color: #1890ff;
+  background: rgba(24, 144, 255, 0.05);
+}
+
