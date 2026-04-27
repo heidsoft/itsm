@@ -154,7 +154,7 @@ export const useErrorHandler = () => {
  * };
  */
 export const useAsyncOperation = (defaultOptions?: ErrorHandlerOptions) => {
-  const { handleError, handleSuccess, getErrorMessage } = useErrorHandler();
+  const { handleError, handleSuccess, handleInfo, getErrorMessage } = useErrorHandler();
   const [loading, setLoading] = useState(false);
 
   const exec = async <T>(
@@ -167,7 +167,6 @@ export const useAsyncOperation = (defaultOptions?: ErrorHandlerOptions) => {
       completeMessage?: string; // 不管成功失败都显示的消息
     } = {}
   ): Promise<T | undefined> => {
-    const { message } = App.useApp();
     const {
       onSuccess,
       onError,
@@ -192,7 +191,7 @@ export const useAsyncOperation = (defaultOptions?: ErrorHandlerOptions) => {
     } finally {
       setLoading(false);
       if (completeMessage) {
-        message.info(completeMessage);
+        handleInfo(completeMessage);
       }
     }
   };

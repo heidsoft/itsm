@@ -190,8 +190,8 @@ export function useVersionControl<T extends { version?: number; id?: number }>(
               </p>
               <p>请选择操作：</p>
               <ul>
-                <li>点击"刷新"放弃您的更改，加载最新版本</li>
-                <li>点击"覆盖"使用您的更改覆盖服务器版本（可能导致数据丢失）</li>
+                <li>点击&quot;刷新&quot;放弃您的更改，加载最新版本</li>
+                <li>点击&quot;覆盖&quot;使用您的更改覆盖服务器版本（可能导致数据丢失）</li>
               </ul>
             </div>
           ),
