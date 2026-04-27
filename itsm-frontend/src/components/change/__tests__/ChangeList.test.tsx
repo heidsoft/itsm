@@ -131,9 +131,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         expect(screen.getByText('Database Migration')).toBeInTheDocument();
         expect(screen.getByText('Emergency Patch')).toBeInTheDocument();
@@ -148,9 +151,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         // Check column headers
         expect(screen.getByText('ID')).toBeInTheDocument();
@@ -171,9 +177,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('草稿')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('草稿')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         expect(screen.getByText('待审批')).toBeInTheDocument();
         expect(screen.getByText('已批准')).toBeInTheDocument();
@@ -188,9 +197,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('普通变更')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('普通变更')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         expect(screen.getByText('标准变更')).toBeInTheDocument();
         expect(screen.getByText('紧急变更')).toBeInTheDocument();
@@ -205,9 +217,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('高')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('高')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         expect(screen.getByText('中')).toBeInTheDocument();
         expect(screen.getByText('极高')).toBeInTheDocument();
@@ -227,9 +242,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('暂无变更记录')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('暂无变更记录')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         expect(screen.getByText('创建第一个变更')).toBeInTheDocument();
       } finally {
@@ -243,9 +261,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('变更管理')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('变更管理')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         expect(screen.getByText(/管理IT基础架构和服务的变更请求/)).toBeInTheDocument();
       } finally {
@@ -259,9 +280,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList showHeader={false} />);
 
-        await waitFor(() => {
-          expect(screen.queryByText('变更管理')).not.toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.queryByText('变更管理')).not.toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
       } finally {
         spy.mockRestore();
       }
@@ -273,9 +297,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('新建变更')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('新建变更')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
       } finally {
         spy.mockRestore();
       }
@@ -285,7 +312,7 @@ describe('ChangeList', () => {
   describe('Loading State', () => {
     it('shows loading spinner while fetching data', async () => {
       let resolvePromise: (value: unknown) => void;
-      const loadingPromise = new Promise((resolve) => {
+      const loadingPromise = new Promise(resolve => {
         resolvePromise = resolve;
       });
       (ChangeApi.getChanges as jest.Mock).mockReturnValue(loadingPromise);
@@ -302,9 +329,12 @@ describe('ChangeList', () => {
         // Resolve the promise
         resolvePromise!(mockChangeListResponse);
 
-        await waitFor(() => {
-          expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
       } finally {
         spy.mockRestore();
       }
@@ -316,9 +346,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         const loadingSpinner = document.querySelector('.ant-spin-spinning');
         expect(loadingSpinner).not.toBeInTheDocument();
@@ -335,9 +368,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText(/共 3 条记录/)).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText(/共 3 条记录/)).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
       } finally {
         spy.mockRestore();
       }
@@ -360,9 +396,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('Change 1')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('Change 1')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         expect(ChangeApi.getChanges).toHaveBeenCalledWith(
           expect.objectContaining({ page: 1, pageSize: 10 })
@@ -377,11 +416,12 @@ describe('ChangeList', () => {
         const page2Button = screen.getByTitle('2');
         fireEvent.click(page2Button);
 
-        await waitFor(() => {
-          expect(ChangeApi.getChanges).toHaveBeenCalledWith(
-            expect.objectContaining({ page: 2 })
-          );
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(ChangeApi.getChanges).toHaveBeenCalledWith(expect.objectContaining({ page: 2 }));
+          },
+          { timeout: 5000 }
+        );
       } finally {
         spy.mockRestore();
       }
@@ -395,9 +435,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         expect(screen.getByText('状态')).toBeInTheDocument();
       } finally {
@@ -411,9 +454,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         expect(screen.getByPlaceholderText('搜索标题')).toBeInTheDocument();
       } finally {
@@ -429,13 +475,16 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
-        }, { timeout: 5000 });
-
-        const viewButtons = screen.getAllByRole('button').filter((btn) =>
-          btn.querySelector('.anticon-eye')
+        await waitFor(
+          () => {
+            expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
         );
+
+        const viewButtons = screen
+          .getAllByRole('button')
+          .filter(btn => btn.querySelector('.anticon-eye'));
 
         fireEvent.click(viewButtons[0]);
 
@@ -451,9 +500,12 @@ describe('ChangeList', () => {
       try {
         render(<ChangeList />);
 
-        await waitFor(() => {
-          expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
-        }, { timeout: 5000 });
+        await waitFor(
+          () => {
+            expect(screen.getByText('Server Upgrade')).toBeInTheDocument();
+          },
+          { timeout: 5000 }
+        );
 
         const newButton = screen.getByText('新建变更');
         fireEvent.click(newButton);

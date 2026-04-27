@@ -1,0 +1,160 @@
+/* 通用工具类 - 替换内联样式 */
+
+/* 布局工具类 */
+.fullWidth {
+  width: 100%;
+}
+
+.fullHeight {
+  height: 100%;
+}
+
+.flex1 {
+  flex: 1;
+}
+
+.flexColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.flexCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 间距工具类 */
+.paddingMd {
+  padding: var(--spacing-md);
+}
+
+.paddingLg {
+  padding: var(--spacing-lg);
+}
+
+.marginBottomMd {
+  margin-bottom: var(--spacing-md);
+}
+
+.marginBottomLg {
+  margin-bottom: var(--spacing-lg);
+}
+
+.marginTopMd {
+  margin-top: var(--spacing-md);
+}
+
+.marginTopLg {
+  margin-top: var(--spacing-lg);
+}
+
+.margin0 {
+  margin: 0;
+}
+
+/* 文本工具类 */
+.textPrimary {
+  color: var(--color-primary);
+}
+
+.textAccent {
+  color: var(--color-accent);
+}
+
+.textSuccess {
+  color: var(--color-success);
+}
+
+.textWarning {
+  color: var(--color-warning);
+}
+
+.textDanger {
+  color: var(--color-danger);
+}
+
+.textMuted {
+  color: var(--color-text-muted);
+}
+
+.fontSizeXs {
+  font-size: var(--font-size-xs);
+}
+
+.fontSizeSm {
+  font-size: var(--font-size-sm);
+}
+
+.fontSizeBase {
+  font-size: var(--font-size-base);
+}
+
+.fontSizeLg {
+  font-size: var(--font-size-lg);
+}
+
+.fontSizeXl {
+  font-size: var(--font-size-xl);
+}
+
+/* 背景工具类 */
+.bgSurface {
+  background: var(--color-surface);
+}
+
+.bgSubtle {
+  background: var(--color-bg-subtle);
+}
+
+.bgAccent {
+  background: var(--color-accent);
+}
+
+/* 边框工具类 */
+.borderDefault {
+  border: 1px solid var(--color-border);
+}
+
+.borderRadiusMd {
+  border-radius: var(--radius-md);
+}
+
+.borderRadiusLg {
+  border-radius: var(--radius-lg);
+}
+
+/* 阴影工具类 */
+.shadowSm {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadowMd {
+  box-shadow: var(--shadow-md);
+}
+
+.shadowLg {
+  box-shadow: var(--shadow-lg);
+}
+
+/* 过渡工具类 */
+.transitionFast {
+  transition: var(--transition-fast);
+}
+
+.transitionNormal {
+  transition: var(--transition-normal);
+}
+
+.transitionSlow {
+  transition: var(--transition-slow);
+}
+
+/* 显示工具类 */
+.minHeight100 {
+  min-height: 100%;
+}
+
+.minHeight100vh {
+  min-height: 100vh;
+}
