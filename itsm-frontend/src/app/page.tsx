@@ -136,9 +136,9 @@ export default function HomePage() {
                   ))}
                 </ul>
                 <div className="flex gap-4">
-                  <a href="/tickets" className="flex-1 bg-purple-500 text-white text-center py-3 rounded-lg font-semibold hover:bg-purple-600 transition">
+                  <Link href="/tickets" className="flex-1 bg-purple-500 text-white text-center py-3 rounded-lg font-semibold hover:bg-purple-600 transition">
                     立即体验
-                  </a>
+                  </Link>
                   <a href="#contact" className="flex-1 border-2 border-purple-500 text-purple-500 text-center py-3 rounded-lg font-semibold hover:bg-purple-50 transition">
                     预约演示
                   </a>
@@ -299,7 +299,7 @@ export default function HomePage() {
               <h4 className="font-bold mb-4">产品</h4>
               <ul className="space-y-2 text-gray-400">
                 <li><a href="/deploy" className="hover:text-white transition">OpenClaw</a></li>
-                <li><a href="/tickets" className="hover:text-white transition">ITSM</a></li>
+                <li><Link href="/tickets" className="hover:text-white transition">ITSM</Link></li>
                 <li><a href="#pricing" className="hover:text-white transition">定价</a></li>
               </ul>
             </div>
@@ -307,7 +307,7 @@ export default function HomePage() {
               <h4 className="font-bold mb-4">资源</h4>
               <ul className="space-y-2 text-gray-400">
                 <li><a href="/docs" className="hover:text-white transition">文档</a></li>
-                <li><a href="/api" className="hover:text-white transition">API</a></li>
+                <li><Link href="/api" className="hover:text-white transition">API</Link></li>
                 <li><a href="/blog" className="hover:text-white transition">博客</a></li>
               </ul>
             </div>
