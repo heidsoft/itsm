@@ -1,0 +1,172 @@
+groups:
+  - name: itsm_business_rules
+    interval: 30s
+    rules:
+      # 工单告警规则
+      - alert: HighTicketVolume
+        expr: increase(itsm_tickets_created_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          category: tickets
+        annotations:
+          summary: "工单量异常增长"
+          description: "过去5分钟内创建的工单数量超过10个，当前值: {{ $value }}"
+
+      - alert: TicketResolutionTimeHigh
+        expr: histogram_quantile(0.95, rate(itsm_ticket_resolution_time_seconds_bucket[5m])) > 3600
+        for: 5m
+        labels:
+          severity: warning
+          category: tickets
+        annotations:
+          summary: "工单解决时间过长"
+          description: "95分位工单解决时间超过1小时，当前值: {{ $value }}秒"
+
+      - alert: TicketBacklogHigh
+        expr: itsm_tickets_by_status{status="open"} > 100
+        for: 10m
+        labels:
+          severity: warning
+          category: tickets
+        annotations:
+          summary: "待处理工单积压过多"
+          description: "待处理工单数量超过100个，当前值: {{ $value }}"
+
+      # 事件告警规则
+      - alert: HighIncidentRate
+        expr: increase(itsm_incidents_created_total[10m]) > 5
+        for: 3m
+        labels:
+          severity: critical
+          category: incidents
+        annotations:
+          summary: "事件发生频率异常"
+          description: "过去10分钟内创建了超过5个事件，当前值: {{ $value }}"
+
+      - alert: CriticalIncidentNotResolved
+        expr: itsm_incidents_by_category{priority="critical"} > 0 and on() (time() - itsm_incident_created_timestamp) > 1800
+        for: 1m
+        labels:
+          severity: critical
+          category: incidents
+        annotations:
+          summary: "紧急事件未及时解决"
+          description: "存在超过30分钟未解决的紧急事件"
+
+      # SLA告警规则
+      - alert: SLAComplianceLow
+        expr: itsm_sla_compliance_ratio < 0.95
+        for: 5m
+        labels:
+          severity: warning
+          category: sla
+        annotations:
+          summary: "SLA合规率低于标准"
+          description: "SLA合规率低于95%，当前值: {{ $value | humanizePercentage }}"
+
+      - alert: SLAViolationRateHigh
+        expr: increase(itsm_sla_violations_total[1h]) > 3
+        for: 2m
+        labels:
+          severity: warning
+          category: sla
+        annotations:
+          summary: "SLA违规次数过多"
+          description: "过去1小时内发生超过3次SLA违规，当前值: {{ $value }}"
+
+      # 变更告警规则
+      - alert: ChangeFailureRateHigh
+        expr: rate(itsm_changes_failed_total[1h]) / rate(itsm_changes_created_total[1h]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: changes
+        annotations:
+          summary: "变更失败率过高"
+          description: "变更失败率超过10%，当前值: {{ $value | humanizePercentage }}"
+
+      # 系统性能告警
+      - alert: APIResponseTimeSlow
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 3m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "API响应时间过慢"
+          description: "95分位API响应时间超过2秒，当前值: {{ $value }}秒"
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: db_connection_pool_used / db_connection_pool_max > 0.9
+        for: 2m
+        labels:
+          severity: critical
+          category: database
+        annotations:
+          summary: "数据库连接池即将耗尽"
+          description: "数据库连接池使用率超过90%，当前值: {{ $value | humanizePercentage }}"
+
+      # 业务指标告警
+      - alert: LowActiveUsers
+        expr: itsm_active_users < 5
+        for: 10m
+        labels:
+          severity: info
+          category: business
+        annotations:
+          summary: "活跃用户数量异常低"
+          description: "活跃用户数量少于5个，当前值: {{ $value }}"
+
+      - alert: KnowledgeBaseNotUsed
+        expr: increase(itsm_knowledge_searches_total[1h]) == 0
+        for: 2h
+        labels:
+          severity: info
+          category: knowledge
+        annotations:
+          summary: "知识库使用率过低"
+          description: "过去2小时内没有知识库搜索记录"
+
+  - name: itsm_system_rules
+    interval: 15s
+    rules:
+      - alert: ServiceDown
+        expr: up{job="itsm-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: system
+        annotations:
+          summary: "ITSM服务不可用"
+          description: "ITSM后端服务已停止响应超过1分钟"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 3m
+        labels:
+          severity: warning
+          category: system
+        annotations:
+          summary: "内存使用率过高"
+          description: "内存使用率超过90%，当前值: {{ $value | humanizePercentage }}"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: system
+        annotations:
+          summary: "CPU使用率过高"
+          description: "CPU使用率超过80%，当前值: {{ $value }}%"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          category: system
+        annotations:
+          summary: "磁盘空间不足"
+          description: "根分区剩余空间少于10%，当前值: {{ $value | humanizePercentage }}"
