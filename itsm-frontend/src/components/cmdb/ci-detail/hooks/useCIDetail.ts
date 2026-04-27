@@ -7,22 +7,26 @@ import { useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
 import { useParams } from 'next/navigation';
 
-import type { UseCIDetailReturn } from '../types';
+import type { UseCIDetailReturn, ImpactAnalysisData, ChangeHistoryData } from '../types';
 import type { ConfigurationItem } from '@/types/biz/cmdb';
 import type { CIType } from '@/types/biz/cmdb'; // Keep as any-compatible
-import { fetchCIDetail, fetchCIImpactAnalysis, fetchCIChangeHistory } from '../services/ci-detail-service';
+import {
+  fetchCIDetail,
+  fetchCIImpactAnalysis,
+  fetchCIChangeHistory,
+} from '../services/ci-detail-service';
 
 export const useCIDetail = (): UseCIDetailReturn => {
   const { id } = useParams() as { id: string };
 
-  const [ci, setCi] = useState<ConfigurationItem | null>(null);
+  const [ci, setCi] = useState<any>(null);
   const [types, setTypes] = useState<CIType[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [impactAnalysis, setImpactAnalysis] = useState<null>(null);
+  const [impactAnalysis, setImpactAnalysis] = useState<any>(null);
   const [impactLoading, setImpactLoading] = useState(false);
 
-  const [changeHistory, setChangeHistory] = useState<null>(null);
+  const [changeHistory, setChangeHistory] = useState<any>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   /**

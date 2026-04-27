@@ -60,7 +60,7 @@ export default function CloudResourcePage() {
         region: values.region,
       });
       if (isMounted) {
-        setResources(list || []);
+        setResources((list as any).items || (list as any).data || []);
       }
     } catch (error) {
       if (isMounted) {

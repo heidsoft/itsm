@@ -127,13 +127,13 @@ export default function IncidentsPage() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      const stats = (await IncidentAPI.getIncidentMetrics()) as unknown as Record<string, unknown>;
+      const stats = await IncidentAPI.getIncidentMetrics();
       setMetrics({
-        totalIncidents: Number(stats.total_incidents) || 0,
-        openIncidents: Number(stats.open_incidents) || 0,
-        criticalIncidents: Number(stats.critical_incidents) || 0,
-        majorIncidents: Number(stats.major_incidents) || 0,
-        avgResolutionTime: Number(stats.avg_resolution_time) || 0,
+        totalIncidents: stats.totalIncidents || stats.total_incidents || 0,
+        openIncidents: stats.openIncidents || stats.open_incidents || 0,
+        criticalIncidents: stats.criticalIncidents || stats.critical_incidents || 0,
+        majorIncidents: stats.majorIncidents || stats.major_incidents || 0,
+        avgResolutionTime: stats.avgResolutionTime || stats.avg_resolution_time || 0,
       });
     } catch (error) {
       console.error('Failed to fetch incident stats:', error);

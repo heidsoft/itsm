@@ -107,8 +107,8 @@ const CreateCIPage: React.FC = () => {
           CMDBApi.getCloudResources(),
           CMDBApi.getCloudServices(),
         ]);
-        setCloudResources(resources || []);
-        setCloudServices(services || []);
+        setCloudResources((resources as any).items || (resources as any).data || []);
+        setCloudServices((services as any).items || (services as any).data || []);
       } catch (error) {
         message.error(t('cmdb.loadCloudResourcesFailed'));
       } finally {
