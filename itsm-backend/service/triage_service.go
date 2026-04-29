@@ -104,6 +104,19 @@ func (t *TriageService) Suggest(ctx context.Context, title, description string) 
 		return result
 	}
 
+	// LLM-first: use LLM result if confidence is acceptable
+	// If LLM confidence is low (< 0.5), consult keyword as secondary check
+	if llmResult.Confidence < 0.5 && t.keywordFallback {
+		keywordResult := t.keywordBasedSuggest(text)
+		// Use keyword result if it has higher confidence
+		if keywordResult.Confidence > llmResult.Confidence {
+			t.logger.Info("TriageService: keyword result has higher confidence",
+				zap.Float64("llm_confidence", llmResult.Confidence),
+				zap.Float64("keyword_confidence", keywordResult.Confidence))
+			return keywordResult
+		}
+	}
+
 	return llmResult
 }
 
