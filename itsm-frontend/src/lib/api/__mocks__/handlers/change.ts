@@ -134,7 +134,7 @@ function initializeSampleChanges(): void {
     }),
   ];
 
-  changes.forEach((change) => {
+  changes.forEach(change => {
     mockChanges.set(change.id, change);
   });
 }
@@ -166,18 +166,18 @@ export const changeHandlers = {
 
     // Apply filters
     if (params?.status) {
-      changes = changes.filter((c) => c.status === params.status);
+      changes = changes.filter(c => c.status === params.status);
     }
     if (params?.type) {
-      changes = changes.filter((c) => c.type === params.type);
+      changes = changes.filter(c => c.type === params.type);
     }
     if (params?.priority) {
-      changes = changes.filter((c) => c.priority === params.priority);
+      changes = changes.filter(c => c.priority === params.priority);
     }
     if (params?.search) {
       const searchLower = params.search.toLowerCase();
       changes = changes.filter(
-        (c) =>
+        c =>
           c.title.toLowerCase().includes(searchLower) ||
           c.description.toLowerCase().includes(searchLower)
       );
@@ -283,13 +283,13 @@ export const changeHandlers = {
     const changes = Array.from(mockChanges.values());
     return {
       total: changes.length,
-      pending: changes.filter((c) => c.status === 'pending').length,
-      approved: changes.filter((c) => c.status === 'approved').length,
-      inProgress: changes.filter((c) => c.status === 'in_progress').length,
-      completed: changes.filter((c) => c.status === 'completed').length,
-      rolled_back: changes.filter((c) => c.status === 'rolled_back').length,
-      rejected: changes.filter((c) => c.status === 'rejected').length,
-      cancelled: changes.filter((c) => c.status === 'cancelled').length,
+      pending: changes.filter(c => c.status === 'pending').length,
+      approved: changes.filter(c => c.status === 'approved').length,
+      inProgress: changes.filter(c => c.status === 'in_progress').length,
+      completed: changes.filter(c => c.status === 'completed').length,
+      rolled_back: changes.filter(c => c.status === 'rolled_back').length,
+      rejected: changes.filter(c => c.status === 'rejected').length,
+      cancelled: changes.filter(c => c.status === 'cancelled').length,
     };
   },
 
@@ -363,7 +363,11 @@ export const changeHandlers = {
     // Return mock approval history
     const approvals: ChangeApproval[] = [];
 
-    if (change.status === 'approved' || change.status === 'in_progress' || change.status === 'completed') {
+    if (
+      change.status === 'approved' ||
+      change.status === 'in_progress' ||
+      change.status === 'completed'
+    ) {
       approvals.push({
         id: 1,
         changeId: id,

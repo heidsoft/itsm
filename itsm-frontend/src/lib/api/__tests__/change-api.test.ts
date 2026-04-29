@@ -33,7 +33,7 @@ describe('ChangeApi', () => {
   });
 
   afterAll(() => {
-    Object.values(consoleSpy).forEach((spy) => spy.mockRestore());
+    Object.values(consoleSpy).forEach(spy => spy.mockRestore());
   });
 
   describe('getChanges', () => {
