@@ -135,6 +135,46 @@ func TestTriage_containsAny(t *testing.T) {
 	assert.True(t, containsAny("mysql is down", "mysql"))
 }
 
+func TestTriage_Suggest_LLM_LowConfidence_FallbackToKeyword(t *testing.T) {
+	// LLM returns low confidence (< 0.5), keyword should be consulted
+	// and used since it has higher confidence for "mysql" keyword
+	mockLLM := &MockLLMGateway{
+		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+			// LLM returns "general" with low confidence
+			return `{"category":"general","priority":"medium","confidence":0.35,"explanation":"unclear ticket"}`, nil
+		},
+	}
+	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
+	svc := NewTriageService(gateway, zap.NewNop())
+
+	// "mysql connection failed" should trigger keyword fallback to database category
+	result := svc.Suggest(context.Background(), "mysql connection failed", "cannot connect to database")
+
+	// Should fallback to keyword because keyword confidence (0.7 for database) > LLM confidence (0.35)
+	assert.Equal(t, "database", result.Category)
+	assert.Equal(t, 101, result.AssigneeID)
+	assert.Greater(t, result.Confidence, 0.5)
+}
+
+func TestTriage_Suggest_LLM_HighConfidence_NoKeywordFallback(t *testing.T) {
+	// LLM returns high confidence (>= 0.5), keyword should NOT be consulted
+	mockLLM := &MockLLMGateway{
+		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+			// LLM returns specific category with high confidence
+			return `{"category":"network","priority":"high","confidence":0.85,"explanation":"wifi keywords detected"}`, nil
+		},
+	}
+	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
+	svc := NewTriageService(gateway, zap.NewNop())
+
+	result := svc.Suggest(context.Background(), "WiFi connection issues", "")
+
+	// Should use LLM result directly
+	assert.Equal(t, "network", result.Category)
+	assert.Equal(t, 102, result.AssigneeID)
+	assert.Equal(t, 0.85, result.Confidence)
+}
+
 func TestTriage_Suggest_LLM_JSONWithMarkdown(t *testing.T) {
 	mockLLM := &MockLLMGateway{
 		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
