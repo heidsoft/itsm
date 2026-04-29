@@ -1,41 +1,104 @@
 <div align="center">
 
-# 🤖 AI-Driven ITSM
+# 🤖 AI-Native ITSM
 
-## 企业级IT服务管理平台
+## 企业级IT服务管理平台 | AI First, Not AI After
 
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?style=flat&logo=nextdotjs)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat&logo=typescript)](https://typescriptlang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791?style=flat&logo=postgresql)](https://postgresql.org)
 [![License](https://img.shields.io/badge/License-Apache_2.0-yellowgreen?style=flat)](LICENSE)
-[![AI Powered](https://img.shields.io/badge/AI-Powered-FF6B6B?style=flat&logo=openai)](https://openai.com)
+[![AI-Native](https://img.shields.io/badge/AI-Native-FF6B6B?style=flat&logo=openai)](https://openai.com)
 
-**🚀 基于 ITIL 最佳实践 | AI 智能驱动 | 开源免费**
+**🚀 LLM-first 智能分诊 | Guidance-Harness-Skill 工程体系 | 开源免费**
 
-**[🌐 官网](https://cloudmesh.top/)**
-
-[English](./README_EN.md) · [快速开始](#快速开始) · [功能特性](#核心功能) · [AI 智能](#ai-智能功能) · [贡献代码](#参与贡献)
+**[🌐 官网](https://cloudmesh.top/)** · **[📖 架构解析](./docs/articles/07-AI-Native-ITSM的架构进化论：Guidance-Harness-Skill三层体系设计.md)**
 
 </div>
 
 ---
 
-## ⭐ 项目简介
+## ⭐ AI-Native 是什么
 
-> 企业级 IT 服务管理平台的全新定义 - 让 AI 成为您的智能 IT 助手
+> **AI-Native ≠ AI附加**
+>
+> 传统ITSM + AI = "在马车后面加个发动机"
+> AI-Native = "从一开始就是为自动驾驶设计的"
 
-ITSM 是一个现代化的 **AI 驱动**企业级 IT 服务管理平台，采用 Go/Gin 后端 + Next.js/React 前端架构，深度集成 AI 能力，助力企业实现 IT 服务的智能化转型。
+### 一句话定义
 
-### 核心优势
+**AI-Native** 是指系统从设计之初就把 AI 能力作为核心引擎，而非后期附加的功能模块。
 
-<div align="center">
+### 核心区别
 
-| 🤖 AI 智能 | ⚡ 自动化 | 🌍 多租户 | 📈 企业级 |
-|:---:|:---:|:---:|:---:|
-| 智能分类 · RAG 知识库 · 自动摘要 | BPMN 工作流 · 智能分配 · 自动告警 | MSP 模式 · 租户隔离 · 资源配额 | 高可用 · 可扩展 · 安全合规 |
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    传统 ITSM + AI                               │
+│                                                                 │
+│   ┌──────────────┐      ┌──────────────┐      ┌──────────────┐ │
+│   │   传统ITSM   │ ───► │   AI模块    │ ───► │   人工兜底   │ │
+│   │  (核心系统)   │      │  (附加层)    │      │  (LLM失败时) │ │
+│   └──────────────┘      └──────────────┘      └──────────────┘ │
+│                                                                 │
+│   特点：AI 是配角，系统挂了 AI 还能跑                            │
+└─────────────────────────────────────────────────────────────────┘
 
-</div>
+┌─────────────────────────────────────────────────────────────────┐
+│                    AI-Native ITSM                               │
+│                                                                 │
+│   ┌──────────────┐      ┌──────────────┐      ┌──────────────┐ │
+│   │   AI 引擎    │ ◄──► │   ITSM流程   │ ◄──► │  关键词兜底  │ │
+│   │  (核心系统)   │      │  (AI驱动)    │      │  (低置信时)  │ │
+│   └──────────────┘      └──────────────┘      └──────────────┘ │
+│                                                                 │
+│   特点：AI 是主角，系统依赖 AI 才能跑得好                        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 四个判断标准
+
+| 判断维度 | AI附加 | AI-Native |
+|:---|:---|:---|
+| **架构位置** | 边缘层/附加层 | 核心引擎层 |
+| **数据流向** | 系统 → AI → 人工 | AI → 系统 → 反馈闭环 |
+| **质量保障** | AI不可测、不可控 | Harness评估、Guidance约束 |
+| **扩展方式** | 硬编码新增AI | Skill插拔、流水线编排 |
+
+### 代码对比
+
+**传统 AI附加** - 关键词优先，LLM备选：
+
+```go
+// 先用关键词，命中不了才调LLM
+result := keywordMatch(text)
+if result == nil {
+    result = llmClassify(text)  // LLM是备胎
+}
+```
+
+**AI-Native** - LLM优先，关键词兜底：
+
+```go
+// 先用LLM，置信度低才降级到关键词
+result, err := llmClassify(text)
+if err != nil || result.Confidence < 0.5 {
+    keywordResult := keywordMatch(text)
+    if keywordResult.Confidence > result.Confidence {
+        return keywordResult  // 关键词更准就用关键词
+    }
+}
+return result
+```
+
+### 实际效果差异
+
+| 场景 | AI附加 | AI-Native |
+|:---|:---|:---|
+| 新类型工单 | LLM没训练过，分错 | LLM理解语义，分类正确 |
+| 边界case | 关键词匹配失败，无答案 | 置信度低时自动降级 |
+| AI挂了 | 系统降级到纯人工 | 系统降级到关键词，仍有AI能力 |
+| 新增AI能力 | 改核心代码 | 新增Skill插拔即可 |
 
 ---
 
@@ -58,25 +121,6 @@ make dev-up
 ```
 
 > **👤 首次登录**: 用户名 `admin`，密码 `admin123`
-
-### 本地开发
-
-```bash
-# 前置要求: Go 1.25+ | Node.js 22+ | PostgreSQL 14+ | Redis 7+
-
-# 1. 启动数据库
-docker compose up -d postgres redis
-
-# 2. 启动后端
-cd itsm-backend
-cp .env.example .env
-go run main.go
-
-# 3. 启动前端 (新终端)
-cd itsm-frontend
-cp .env.example .env.local
-npm run dev
-```
 
 ---
 
@@ -110,11 +154,63 @@ npm run dev
 
 ---
 
-## ✨ 核心功能
+## ✨ AI-Native 核心能力
+
+### 🤖 Guidance-Harness-Skill 架构
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Skill Orchestrator                               │
+│    流水线编排 │ 输入输出转换 │ 错误处理 │ 降级策略                     │
+└─────────────────────────────────────────────────────────────────────┘
+              │                   │               │
+              ▼                   ▼               ▼
+    ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+    │ TriageSkill    │ │ SummarizeSkill  │ │ KBSkill        │
+    │ (Guidance程序) │ │ (Guidance程序)  │ │ (Guidance程序) │
+    └─────────────────┘ └─────────────────┘ └─────────────────┘
+              │                   │               │
+              └───────────────────┴───────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      Harness Controller                              │
+│    Prompt管理 │ 参数配置 │ 执行控制 │ 结果解析                        │
+└─────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                 Evaluator (质量评估闭环)                             │
+│    准确性评估 │ 性能监控 │ 回归测试 │ Bad Case 积累                  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### 🎯 AI 智能功能
+
+| 功能 | 说明 | 效果 |
+|:---|:---|:---|
+| 🎯 **LLM-first 智能分类** | 优先用 LLM 判断，关键词兜底 | 分类准确率 95%+ |
+| 📝 **自动摘要** | LLM 生成工单/事件摘要 | 节省 70% 阅读时间 |
+| 🔍 **RAG 知识库** | 向量检索 + 大模型问答 | 知识查找秒级响应 |
+| 💡 **智能推荐** | 推荐解决方案、相似工单 | 提升解决效率 50%+ |
+| 👷 **智能分配** | 基于技能/负载的自动派单 | 派单准确率 90%+ |
+
+### 🔧 Skill 扩展体系
+
+| Skill | 功能 | 状态 |
+|:---|:---|:---|
+| TriageSkill | 工单智能分类 | ✅ 已实现 |
+| SummarizeSkill | 工单/事件摘要 | ✅ 已实现 |
+| KBSkill | RAG 知识库问答 | ✅ 已实现 |
+| SecurityTriageSkill | 安全事件专项分类 | 🔜 待开发 |
+| ImpactAnalysisSkill | 变更影响范围分析 | 🔜 待开发 |
+| SLAForecastSkill | SLA 达成率预测 | 🔜 待开发 |
+
+---
+
+## 🔀 传统 ITSM 功能
 
 ### 🎫 服务管理
-
-<div align="center">
 
 | 工单管理 | 事件管理 | 问题管理 | 变更管理 |
 |:---:|:---:|:---:|:---:|
@@ -123,8 +219,6 @@ npm run dev
 | 发布管理 | 服务请求 | 服务目录 | 知识库 |
 |:---:|:---:|:---:|:---:|
 | 发布计划<br>阶段控制<br>回滚支持 | 自助门户<br>审批流程<br>进度追踪 | 服务Offering<br>SLA 定义<br>自助申请 | RAG 检索<br>智能问答<br>知识推荐 |
-
-</div>
 
 ### 🔀 BPMN 工作流引擎
 
@@ -138,20 +232,7 @@ npm run dev
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### 🤖 AI 智能核心
-
-| 功能 | 说明 | 效果 |
-|:---|:---|:---|
-| 🎯 **智能分类** | ML 自动识别工单类型、优先级 | 分类准确率 95%+ |
-| 📝 **自动摘要** | LLM 生成工单/事件摘要 | 节省 70% 阅读时间 |
-| 🔍 **RAG 知识库** | 向量检索 + 大模型问答 | 知识查找秒级响应 |
-| 💡 **智能推荐** | 推荐解决方案、相似工单 | 提升解决效率 50%+ |
-| 👷 **智能分配** | 基于技能/负载的自动派单 | 派单准确率 90%+ |
-| 📊 **趋势预测** | 时序预测事件趋势 | 提前预警容量风险 |
-
 ### 🌍 MSP 多租户
-
-<div align="center">
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -162,13 +243,6 @@ npm run dev
 │  📊 资源配额    │  💰 计费管理    │  🔍 监控告警     │
 └─────────────────────────────────────────────────────────┘
 ```
-
-</div>
-
-- 服务商 (MSP) 视角的全局管理
-- 租户资源分配与配额控制
-- 跨租户服务目录
-- 统一监控与报表
 
 ### 📊 SLA 监控体系
 
@@ -188,6 +262,8 @@ npm run dev
 **后端** | Go 1.25+ | Gin | Ent ORM | PostgreSQL | Redis | BPMN Engine
 
 **前端** | Next.js 15 | React 19 | TypeScript | Ant Design 6 | Tailwind CSS | Zustand
+
+**AI** | OpenAI | Claude | Ollama (私有化) | Guidance
 
 </div>
 
@@ -222,7 +298,8 @@ npm run dev
               │                               ▼
               │                    ┌─────────────────────────┐
               │                    │     🤖 AI 服务层        │
-              │                    │  RAG / 分类 / 摘要     │
+              │                    │  Guidance-Harness-Skill │
+              │                    │     LLM Gateway         │
               │                    └─────────────────────────┘
               ▼
 ┌─────────────────────────────────────────────────────────────────┐
@@ -257,9 +334,9 @@ npm run dev
 |:---:|:---:|:---:|
 | 迁移与备份 | 日志与监控 | 权限与审计 |
 
-| 🛠️ [自动化测试](./itsm-frontend/tests/e2e) |
+| 🤖 [AI架构解析](./docs/articles/07-AI-Native-ITSM的架构进化论：Guidance-Harness-Skill三层体系设计.md) |
 |:---:|
-| E2E 测试 |
+| Guidance-Harness-Skill 三层体系设计 |
 
 ---
 
@@ -288,7 +365,7 @@ cd itsm-backend && go test ./...        # 后端测试
 git checkout -b feature/amazing-feature
 
 # 3. 提交更改
-git commit -m "feat: add amazing feature"
+git commit -m "feat: add amazing-feature"
 
 # 4. 推送分支
 git push origin feature/amazing-feature
@@ -330,6 +407,8 @@ Apache License 2.0 - 开源免费，企业级商用首选
 <div align="center">
 
 **⭐ 如果这个项目对您有帮助，请 Star 支持！**
+
+**🤖 AI-Native ITSM: AI First, Not AI After**
 
 Made with ❤️ by ITSM Team
 
