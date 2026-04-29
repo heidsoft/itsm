@@ -104,6 +104,53 @@ func (r *EntRepository) Delete(ctx context.Context, id int) error {
 	return r.client.ServiceCatalog.DeleteOneID(id).Exec(ctx)
 }
 
+func (r *EntRepository) Search(ctx context.Context, tenantID int, keyword string, filters ListFilters) ([]*ServiceCatalog, int, error) {
+	query := r.client.ServiceCatalog.Query().
+		Where(
+			servicecatalog.TenantID(tenantID),
+			servicecatalog.StatusEQ("enabled"),
+		)
+
+	// 关键词搜索：name OR description
+	if keyword != "" {
+		query = query.Where(
+			servicecatalog.Or(
+				servicecatalog.NameContains(keyword),
+				servicecatalog.DescriptionContains(keyword),
+			),
+		)
+	}
+
+	// 分类过滤
+	if filters.Category != "" {
+		query = query.Where(servicecatalog.Category(filters.Category))
+	}
+
+	// 获取总数
+	total, err := query.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// 分页
+	offset := (filters.Page - 1) * filters.Size
+	catalogs, err := query.
+		Order(ent.Desc(servicecatalog.FieldCreatedAt)).
+		Offset(offset).
+		Limit(filters.Size).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var list []*ServiceCatalog
+	for _, item := range catalogs {
+		list = append(list, r.toDomain(item))
+	}
+
+	return list, total, nil
+}
+
 func (r *EntRepository) toDomain(e *ent.ServiceCatalog) *ServiceCatalog {
 	return &ServiceCatalog{
 		ID:             e.ID,
