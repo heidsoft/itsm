@@ -203,6 +203,13 @@ export function getMenuConfig(): MenuConfig {
             path: '/service-catalog/request',
             permission: 'service:read',
           },
+          {
+            key: '/service-catalog/approvals',
+            icon: getIconByName('CheckCircle')!,
+            label: '待我审批',
+            path: '/service-catalog/approvals',
+            permission: 'service:read',
+          },
         ],
       },
       {
