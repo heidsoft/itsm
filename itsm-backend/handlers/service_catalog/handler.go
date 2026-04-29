@@ -229,6 +229,23 @@ func (h *Handler) Search(c *gin.Context) {
 	})
 }
 
+// Stats handles GET /api/v1/service-catalogs/stats
+func (h *Handler) Stats(c *gin.Context) {
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	stats, err := h.service.GetStats(c.Request.Context(), tenantID.(int))
+	if err != nil {
+		common.Fail(c, 5001, err.Error())
+		return
+	}
+
+	common.Success(c, stats)
+}
+
 func (h *Handler) toDTO(c *ServiceCatalog) dto.ServiceCatalogResponse {
 	return dto.ServiceCatalogResponse{
 		ID:             c.ID,
