@@ -6,7 +6,18 @@ import { TicketApi } from '@/lib/api/ticket-api';
 import { UserApi } from '@/lib/api/user-api';
 import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
-import { ArrowLeft, AlertCircle, XCircle, UserCheck, Edit, Save, X, Trash2, Check, XIcon } from 'lucide-react';
+import {
+  ArrowLeft,
+  AlertCircle,
+  XCircle,
+  UserCheck,
+  Edit,
+  Save,
+  X,
+  Trash2,
+  Check,
+  XIcon,
+} from 'lucide-react';
 import Link from 'next/link';
 import {
   Button,
@@ -26,7 +37,11 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { SafeTextBlock } from '@/components/common/SafeContent';
 import { AISuggestionPanel } from '@/components/business/AISuggestionPanel';
-import { isValidTransition, getAllowedTransitions, isFinalStatus } from '@/lib/utils/workflow-state-machine';
+import {
+  isValidTransition,
+  getAllowedTransitions,
+  isFinalStatus,
+} from '@/lib/utils/workflow-state-machine';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -205,7 +220,9 @@ const TicketDetailPage: React.FC = () => {
       // 状态转换验证
       if (values.status && ticket?.status && values.status !== ticket.status) {
         if (!isValidTransition(ticket.status as any, values.status as any)) {
-          antMessage.error(`不允许从 "${statusMap[ticket.status]?.text || ticket.status}" 转换到 "${statusMap[values.status]?.text || values.status}"`);
+          antMessage.error(
+            `不允许从 "${statusMap[ticket.status]?.text || ticket.status}" 转换到 "${statusMap[values.status]?.text || values.status}"`
+          );
           return;
         }
       }
@@ -348,14 +365,19 @@ const TicketDetailPage: React.FC = () => {
         <AISuggestionPanel
           title={ticket.title}
           description={ticket.description}
-          onAccept={(suggestion) => {
+          onAccept={suggestion => {
             // Apply AI suggestion to ticket
-            if (suggestion.priority !== ticket.priority || suggestion.category !== ticket.category) {
+            if (
+              suggestion.priority !== ticket.priority ||
+              suggestion.category !== ticket.category
+            ) {
               editForm.setFieldsValue({
                 priority: suggestion.priority,
               });
               handleUpdate();
-              antMessage.success(`已采纳AI建议：优先级调整为${suggestion.priority === 'high' ? '高' : suggestion.priority === 'medium' ? '中' : '低'}`);
+              antMessage.success(
+                `已采纳AI建议：优先级调整为${suggestion.priority === 'high' ? '高' : suggestion.priority === 'medium' ? '中' : '低'}`
+              );
             }
           }}
         />
@@ -431,7 +453,9 @@ const TicketDetailPage: React.FC = () => {
               onClick={handleApprove}
               loading={approving}
               disabled={isRequester || isTicketFinal}
-              title={isRequester ? '不能审批自己提交的工单' : isTicketFinal ? '工单已结束，无法操作' : ''}
+              title={
+                isRequester ? '不能审批自己提交的工单' : isTicketFinal ? '工单已结束，无法操作' : ''
+              }
             >
               批准
             </Button>
@@ -441,7 +465,9 @@ const TicketDetailPage: React.FC = () => {
               onClick={handleReject}
               loading={rejecting}
               disabled={isRequester || isTicketFinal}
-              title={isRequester ? '不能拒绝自己提交的工单' : isTicketFinal ? '工单已结束，无法操作' : ''}
+              title={
+                isRequester ? '不能拒绝自己提交的工单' : isTicketFinal ? '工单已结束，无法操作' : ''
+              }
             >
               拒绝
             </Button>
@@ -697,7 +723,13 @@ const TicketDetailPage: React.FC = () => {
             <Button onClick={() => setDeleteModalVisible(false)} disabled={deleting}>
               取消
             </Button>
-            <Button danger type="primary" onClick={handleDeleteConfirm} loading={deleting} icon={<Trash2 size={14} />}>
+            <Button
+              danger
+              type="primary"
+              onClick={handleDeleteConfirm}
+              loading={deleting}
+              icon={<Trash2 size={14} />}
+            >
               确认删除
             </Button>
           </Space>

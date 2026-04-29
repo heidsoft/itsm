@@ -123,9 +123,16 @@ export function AISuggestionPanel({
         <div className="flex items-center justify-between">
           <Space>
             <Sparkles className="w-4 h-4 text-gray-400" />
-            <Text type="secondary" className="text-sm">AI建议已忽略</Text>
+            <Text type="secondary" className="text-sm">
+              AI建议已忽略
+            </Text>
           </Space>
-          <Button type="link" size="small" icon={<RefreshCw className="w-3 h-3" />} onClick={handleRefresh}>
+          <Button
+            type="link"
+            size="small"
+            icon={<RefreshCw className="w-3 h-3" />}
+            onClick={handleRefresh}
+          >
             重新分析
           </Button>
         </div>
@@ -136,7 +143,11 @@ export function AISuggestionPanel({
   // Loading state
   if (loading) {
     return (
-      <Card size="small" className="mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200" bodyStyle={{ padding: '12px' }}>
+      <Card
+        size="small"
+        className="mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
+        bodyStyle={{ padding: '12px' }}
+      >
         <div className="flex items-center gap-3">
           <Spin size="small" />
           <div>
@@ -153,13 +164,24 @@ export function AISuggestionPanel({
   // Error state
   if (error) {
     return (
-      <Card size="small" className="mb-4 bg-gray-50 border-gray-200" bodyStyle={{ padding: '12px' }}>
+      <Card
+        size="small"
+        className="mb-4 bg-gray-50 border-gray-200"
+        bodyStyle={{ padding: '12px' }}
+      >
         <div className="flex items-center justify-between">
           <Space>
             <AlertCircle className="w-4 h-4 text-gray-400" />
-            <Text type="secondary" className="text-sm">AI分析暂不可用</Text>
+            <Text type="secondary" className="text-sm">
+              AI分析暂不可用
+            </Text>
           </Space>
-          <Button type="link" size="small" icon={<RefreshCw className="w-3 h-3" />} onClick={handleRefresh}>
+          <Button
+            type="link"
+            size="small"
+            icon={<RefreshCw className="w-3 h-3" />}
+            onClick={handleRefresh}
+          >
             重试
           </Button>
         </div>
@@ -173,7 +195,8 @@ export function AISuggestionPanel({
   }
 
   const confidencePercent = Math.round(suggestion.confidence * 100);
-  const confidenceStatus = confidencePercent >= 70 ? 'success' : confidencePercent >= 40 ? 'normal' : 'exception';
+  const confidenceStatus =
+    confidencePercent >= 70 ? 'success' : confidencePercent >= 40 ? 'normal' : 'exception';
 
   return (
     <Card
@@ -196,13 +219,17 @@ export function AISuggestionPanel({
       }
     >
       {collapsed ? (
-        <Text type="secondary" className="text-xs">点击展开查看AI分析详情</Text>
+        <Text type="secondary" className="text-xs">
+          点击展开查看AI分析详情
+        </Text>
       ) : (
         <>
           <div className="grid grid-cols-3 gap-3 mb-3">
             {/* Category */}
             <div className="text-center">
-              <Text type="secondary" className="text-xs block mb-1">建议分类</Text>
+              <Text type="secondary" className="text-xs block mb-1">
+                建议分类
+              </Text>
               <Tag color={categoryColors[suggestion.category] || 'default'} className="text-sm">
                 {categoryLabels[suggestion.category] || suggestion.category}
               </Tag>
@@ -210,7 +237,9 @@ export function AISuggestionPanel({
 
             {/* Priority */}
             <div className="text-center">
-              <Text type="secondary" className="text-xs block mb-1">建议优先级</Text>
+              <Text type="secondary" className="text-xs block mb-1">
+                建议优先级
+              </Text>
               <Tag color={priorityColors[suggestion.priority] || 'default'} className="text-sm">
                 {priorityLabels[suggestion.priority] || suggestion.priority}
               </Tag>
@@ -218,12 +247,20 @@ export function AISuggestionPanel({
 
             {/* Confidence */}
             <div className="text-center">
-              <Text type="secondary" className="text-xs block mb-1">置信度</Text>
+              <Text type="secondary" className="text-xs block mb-1">
+                置信度
+              </Text>
               <Progress
                 percent={confidencePercent}
                 size="small"
                 status={confidenceStatus as 'success' | 'normal' | 'exception'}
-                strokeColor={confidencePercent >= 70 ? '#52c41a' : confidencePercent >= 40 ? '#1890ff' : '#ff4d4f'}
+                strokeColor={
+                  confidencePercent >= 70
+                    ? '#52c41a'
+                    : confidencePercent >= 40
+                      ? '#1890ff'
+                      : '#ff4d4f'
+                }
                 className="mb-0"
               />
             </div>
@@ -238,11 +275,7 @@ export function AISuggestionPanel({
 
           {/* Action buttons */}
           <div className="flex justify-end gap-2">
-            <Button
-              size="small"
-              icon={<X className="w-3 h-3" />}
-              onClick={handleDismiss}
-            >
+            <Button size="small" icon={<X className="w-3 h-3" />} onClick={handleDismiss}>
               忽略
             </Button>
             <Button

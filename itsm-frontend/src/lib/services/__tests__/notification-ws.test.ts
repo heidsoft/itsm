@@ -11,11 +11,7 @@ jest.mock('@/lib/env', () => ({
   },
 }));
 
-import {
-  NotificationWSService,
-  notificationWS,
-  NotificationWSMessage,
-} from '../notification-ws';
+import { NotificationWSService, notificationWS, NotificationWSMessage } from '../notification-ws';
 import { TicketNotification } from '@/lib/api/ticket-notification-api';
 
 describe('NotificationWSService', () => {
@@ -60,7 +56,9 @@ describe('NotificationWSService', () => {
       };
 
       // Access private method for testing
-      (service as unknown as { handleMessage: (msg: NotificationWSMessage) => void }).handleMessage(message);
+      (service as unknown as { handleMessage: (msg: NotificationWSMessage) => void }).handleMessage(
+        message
+      );
 
       expect(callback).toHaveBeenCalledWith(notification);
     });
