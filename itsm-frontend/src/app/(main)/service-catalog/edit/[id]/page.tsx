@@ -5,6 +5,7 @@ import { Card, Form, Input, InputNumber, Switch, Button, App, Spin } from 'antd'
 import { useParams, useRouter } from 'next/navigation';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { useI18n } from '@/lib/i18n';
+import { ServiceStatus as ServiceStatusType } from '@/types/service-catalog';
 
 const { TextArea } = Input;
 
@@ -48,7 +49,7 @@ export default function EditServicePage() {
         category: values.category,
         shortDescription: values.description,
         availability: { responseTime: values.deliveryTime },
-        status: values.status ? 'published' : 'disabled',
+        status: values.status ? ServiceStatusType.PUBLISHED : ServiceStatusType.DRAFT,
       });
       appMessage.success(t('common.saveSuccess'));
       router.push('/service-catalog');
@@ -87,9 +88,7 @@ export default function EditServicePage() {
               <Button type="primary" htmlType="submit" loading={loading}>
                 {t('common.save')}
               </Button>
-              <Button onClick={() => router.push('/service-catalog')}>
-                {t('common.cancel')}
-              </Button>
+              <Button onClick={() => router.push('/service-catalog')}>{t('common.cancel')}</Button>
             </div>
           </Form.Item>
         </Form>

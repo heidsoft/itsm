@@ -6,6 +6,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CIImpactAnalysisTab } from '../sections/CIImpactAnalysisTab';
+import type { ImpactAnalysisData } from '../types';
 
 jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({
@@ -14,7 +15,7 @@ jest.mock('@/lib/i18n', () => ({
 }));
 
 describe('CIImpactAnalysisTab', () => {
-  const mockImpactAnalysis = {
+  const mockImpactAnalysis: ImpactAnalysisData = {
     target_ci: {
       id: 'ci-001',
       name: 'Web Server 1',
