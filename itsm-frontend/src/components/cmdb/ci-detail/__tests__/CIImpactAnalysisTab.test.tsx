@@ -139,12 +139,7 @@ describe('CIImpactAnalysisTab', () => {
   });
 
   it('加载状态应显示加载指示器', () => {
-    render(
-      <CIImpactAnalysisTab
-        {...defaultProps}
-        impactLoading={true}
-      />
-    );
+    render(<CIImpactAnalysisTab {...defaultProps} impactLoading={true} />);
 
     // 检查按钮存在
     const analyzeButton = screen.getByRole('button');

@@ -128,12 +128,7 @@ describe('CIChangeHistoryTab', () => {
   });
 
   it('加载状态应显示加载指示器', () => {
-    render(
-      <CIChangeHistoryTab
-        {...defaultProps}
-        historyLoading={true}
-      />
-    );
+    render(<CIChangeHistoryTab {...defaultProps} historyLoading={true} />);
 
     // 检查按钮是否有 loading 属性
     const loadButton = screen.getByRole('button');
