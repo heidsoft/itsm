@@ -48,6 +48,7 @@ export default function EditServicePage() {
         category: values.category,
         shortDescription: values.description,
         availability: { responseTime: values.deliveryTime },
+        status: values.status ? 'published' : 'disabled',
       });
       appMessage.success(t('common.saveSuccess'));
       router.push('/service-catalog');
