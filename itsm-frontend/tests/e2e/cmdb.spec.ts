@@ -12,47 +12,6 @@ test.describe('CMDB - 配置管理', () => {
   });
 
   test.describe('CI List - 配置项列表', () => {
-    test.beforeEach(async ({ page }) => {
-      // Mock API routes
-      await page.route(/\/api\/v1\/cmdb\/cis/, async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            code: 0,
-            message: 'success',
-            data: {
-              items: [
-                {
-                  id: 1,
-                  name: '应用服务器-01',
-                  description: '测试资产',
-                  type: 'server',
-                  status: 'active',
-                  ci_type_id: 1,
-                },
-              ],
-              total: 1,
-              page: 1,
-              size: 10,
-            },
-          }),
-        });
-      });
-
-      await page.route(/\/api\/v1\/cmdb\/types/, async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            code: 0,
-            message: 'success',
-            data: [{ id: 1, name: '服务器' }],
-          }),
-        });
-      });
-    });
-
     test('should navigate to CMDB page', async ({ page }) => {
       await page.goto('/cmdb', { timeout: 30000 });
       await page.waitForLoadState('domcontentloaded');

@@ -143,7 +143,7 @@ type ApproveTicketRequest struct {
 	TicketID         int    `json:"ticket_id" binding:"required"`
 	ApprovalID       int    `json:"approval_id" binding:"required"`
 	Action           string `json:"action" binding:"required,oneof=approve reject delegate"`
-	Comment          string `json:"comment" binding:"required"`
+	Comment          string `json:"comment"`
 	DelegateToUserID *int   `json:"delegate_to_user_id"`
 }
 

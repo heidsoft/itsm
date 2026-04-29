@@ -150,7 +150,7 @@ const IncidentDetail: React.FC = () => {
     <>
       <Space orientation="vertical" style={{ width: '100%' }} size="middle">
         {/* 头部操作栏 */}
-        <Card bodyStyle={{ padding: '16px 24px' }}>
+        <Card styles={{ body: { padding: '16px 24px' } }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <span style={{ fontSize: 20, fontWeight: 500, marginRight: 16 }}>

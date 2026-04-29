@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/approvalworkflow"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
@@ -369,8 +370,20 @@ func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, user
 	}
 
 	// 更新审批记录
+	var newStatus string
+	switch action {
+	case "approve":
+		newStatus = "approved"
+	case "reject":
+		newStatus = "rejected"
+	case "delegate":
+		newStatus = "delegated"
+	default:
+		return fmt.Errorf("invalid action: %s", action)
+	}
+
 	update := s.client.ApprovalRecord.UpdateOneID(recordID).
-		SetStatus(action).
+		SetStatus(newStatus).
 		SetAction(action).
 		SetProcessedAt(time.Now())
 
@@ -413,10 +426,12 @@ func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, user
 
 // handleApprovalApproved 处理审批通过
 func (s *ApprovalService) handleApprovalApproved(ctx context.Context, record *ent.ApprovalRecord) error {
-	// 检查是否还有其他待审批的记录在同一个审批工作流中
+	// 检查该工单在该工作流下是否还有待审批项
 	remainingApprovals, err := s.client.ApprovalRecord.Query().
 		Where(
 			approvalrecord.WorkflowIDEQ(record.WorkflowID),
+			approvalrecord.TicketIDEQ(record.TicketID),
+			approvalrecord.TenantIDEQ(record.TenantID),
 			approvalrecord.StatusEQ("pending"),
 		).
 		Count(ctx)
@@ -424,18 +439,15 @@ func (s *ApprovalService) handleApprovalApproved(ctx context.Context, record *en
 		return fmt.Errorf("failed to count remaining approvals: %w", err)
 	}
 
-	// 如果没有剩余的待审批项，标记整个工作流为完成
+	// 如果没有剩余的待审批项，标记工单为已审批
 	if remainingApprovals == 0 {
-		_, err := s.client.ApprovalWorkflow.UpdateOneID(record.WorkflowID).
+		_, err := s.client.Ticket.UpdateOneID(record.TicketID).
+			Where(ticket.TenantIDEQ(record.TenantID)).
 			SetStatus("approved").
-			SetCompletedAt(time.Now()).
 			Save(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to update workflow status: %w", err)
+			return fmt.Errorf("failed to update ticket status to approved: %w", err)
 		}
-
-		// 可以在这里触发后续的业务逻辑，比如通知相关人员等
-		s.logger.Infow("Approval workflow completed", "workflowID", record.WorkflowID)
 	}
 
 	return nil
@@ -446,19 +458,12 @@ func (s *ApprovalService) handleApprovalRejected(ctx context.Context, record *en
 	// 根据拒绝动作处理
 	switch rejectAction {
 	case "terminate":
-		// 终止整个工作流
-		_, err := s.client.ApprovalWorkflow.UpdateOneID(record.WorkflowID).
-			SetStatus("rejected").
-			SetCompletedAt(time.Now()).
-			Save(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to update workflow status to rejected: %w", err)
-		}
-
-		// 取消同一工作流中的其他待审批项
-		_, err = s.client.ApprovalRecord.Update().
+		// 取消同一工单、同一工作流中的其他待审批项
+		_, err := s.client.ApprovalRecord.Update().
 			Where(
 				approvalrecord.WorkflowIDEQ(record.WorkflowID),
+				approvalrecord.TicketIDEQ(record.TicketID),
+				approvalrecord.TenantIDEQ(record.TenantID),
 				approvalrecord.StatusEQ("pending"),
 			).
 			SetStatus("cancelled").
@@ -467,14 +472,16 @@ func (s *ApprovalService) handleApprovalRejected(ctx context.Context, record *en
 			return fmt.Errorf("failed to cancel remaining approvals: %w", err)
 		}
 
-	case "return_to_submitter":
-		// 返回给提交人
-		_, err := s.client.ApprovalWorkflow.UpdateOneID(record.WorkflowID).
-			SetStatus("returned").
+		_, err = s.client.Ticket.UpdateOneID(record.TicketID).
+			Where(ticket.TenantIDEQ(record.TenantID)).
+			SetStatus("rejected").
 			Save(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to update workflow status to returned: %w", err)
+			return fmt.Errorf("failed to update ticket status to rejected: %w", err)
 		}
+
+	case "return_to_submitter":
+		return nil
 
 	default:
 		// 默认行为：终止工作流
@@ -517,8 +524,18 @@ func (s *ApprovalService) canPerformAction(workflow *ent.ApprovalWorkflow, level
 
 // handleApprovalDelegated 处理审批委托
 func (s *ApprovalService) handleApprovalDelegated(ctx context.Context, record *ent.ApprovalRecord, delegateTo int) error {
+	delegateUser, err := s.client.User.Query().
+		Where(
+			user.IDEQ(delegateTo),
+			user.TenantIDEQ(record.TenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get delegate user: %w", err)
+	}
+
 	// 创建新的审批记录给被委托人
-	_, err := s.client.ApprovalRecord.Create().
+	_, err = s.client.ApprovalRecord.Create().
 		SetWorkflowID(record.WorkflowID).
 		SetWorkflowName(record.WorkflowName).
 		SetTicketID(record.TicketID).
@@ -527,7 +544,7 @@ func (s *ApprovalService) handleApprovalDelegated(ctx context.Context, record *e
 		SetCurrentLevel(record.CurrentLevel).
 		SetTotalLevels(record.TotalLevels).
 		SetApproverID(delegateTo).
-		SetApproverName(record.ApproverName).
+		SetApproverName(delegateUser.Name).
 		SetStepOrder(record.StepOrder).
 		SetStatus("pending").
 		SetNillableDueDate(record.DueDate).
@@ -563,7 +580,8 @@ func (s *ApprovalService) toWorkflowResponse(ctx context.Context, workflow *ent.
 				RejectAction:  getStringValue(nodeMap["reject_action"]),
 			}
 
-			if approverIDs, ok := nodeMap["approver_ids"].([]interface{}); ok {
+			switch approverIDs := nodeMap["approver_ids"].(type) {
+			case []interface{}:
 				node.ApproverIDs = make([]int, 0, len(approverIDs))
 				for _, id := range approverIDs {
 					if idVal, ok := id.(float64); ok {
@@ -572,6 +590,8 @@ func (s *ApprovalService) toWorkflowResponse(ctx context.Context, workflow *ent.
 						node.ApproverIDs = append(node.ApproverIDs, idVal)
 					}
 				}
+			case []int:
+				node.ApproverIDs = append(node.ApproverIDs, approverIDs...)
 			}
 
 			if minApprovals, ok := nodeMap["minimum_approvals"].(float64); ok {
@@ -601,13 +621,19 @@ func (s *ApprovalService) toWorkflowResponse(ctx context.Context, workflow *ent.
 			}
 
 			// 获取审批人姓名
+			node.ApproverNames = make([]string, len(node.ApproverIDs))
 			for i, id := range node.ApproverIDs {
-				userEntity, _ := s.client.User.Get(ctx, id)
-				if userEntity != nil {
-					node.ApproverNames[i] = userEntity.Name
-				} else {
+				userEntity, err := s.client.User.Query().
+					Where(
+						user.IDEQ(id),
+						user.TenantIDEQ(workflow.TenantID),
+					).
+					Only(ctx)
+				if err != nil {
 					node.ApproverNames[i] = fmt.Sprintf("用户%d", id)
+					continue
 				}
+				node.ApproverNames[i] = userEntity.Name
 			}
 
 			nodes = append(nodes, node)
@@ -691,6 +717,20 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 		return nil, nil
 	}
 
+	existing, err := s.client.ApprovalRecord.Query().
+		Where(
+			approvalrecord.TicketIDEQ(req.TicketID),
+			approvalrecord.WorkflowIDEQ(workflow.ID),
+			approvalrecord.TenantIDEQ(req.TenantID),
+		).
+		Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check existing approval records: %w", err)
+	}
+	if existing > 0 {
+		return nil, nil
+	}
+
 	// 解析工作流节点
 	nodes, err := s.parseWorkflowNodes(workflow.Nodes)
 	if err != nil {
@@ -706,42 +746,70 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 	// 创建审批记录
 	records := make([]*ent.ApprovalRecord, 0)
 	for i, node := range nodes {
+		level := node.Level
+		if level < 1 {
+			level = i + 1
+		}
+
 		// 计算截止时间
 		dueDate := time.Now()
 		if node.TimeoutHours > 0 {
 			dueDate = dueDate.Add(time.Duration(node.TimeoutHours) * time.Hour)
 		}
 
-		// 获取审批人
-		approverID, approverName, err := s.resolveApprover(ctx, node.AssigneeType, node.AssigneeValue, req.TenantID)
-		if err != nil {
-			s.logger.Warnw("Failed to resolve approver", "error", err, "node", i)
+		approverIDs := node.ApproverIDs
+		if len(approverIDs) == 0 && node.AssigneeType != "" && node.AssigneeValue != "" {
+			approverID, _, err := s.resolveApprover(ctx, node.AssigneeType, node.AssigneeValue, req.TenantID)
+			if err != nil {
+				s.logger.Warnw("Failed to resolve approver", "error", err, "node", i)
+				continue
+			}
+			approverIDs = []int{approverID}
+		}
+
+		if len(approverIDs) == 0 {
 			continue
 		}
 
-		record, err := s.client.ApprovalRecord.Create().
-			SetTicketNumber(req.TicketNumber).
-			SetTicketTitle(req.TicketTitle).
-			SetWorkflowName(workflow.Name).
-			SetCurrentLevel(i + 1).
-			SetTotalLevels(len(nodes)).
-			SetApproverID(approverID).
-			SetApproverName(approverName).
-			SetStatus("pending").
-			SetWorkflowID(workflow.ID).
-			SetTicketID(req.TicketID).
-			SetStepOrder(i + 1).
-			SetDueDate(dueDate).
-			SetTenantID(req.TenantID).
-			SetCreatedAt(time.Now()).
-			Save(ctx)
-		if err != nil {
-			s.logger.Errorw("Failed to create approval record", "error", err, "node", i)
-			continue
+		if node.ApprovalMode != "all" {
+			approverIDs = approverIDs[:1]
 		}
 
-		records = append(records, record)
-		s.logger.Infow("Created approval record", "record_id", record.ID, "approver", approverName, "level", i+1)
+		for _, approverID := range approverIDs {
+			userEntity, err := s.client.User.Query().
+				Where(
+					user.IDEQ(approverID),
+					user.TenantIDEQ(req.TenantID),
+				).
+				Only(ctx)
+			if err != nil {
+				continue
+			}
+
+			record, err := s.client.ApprovalRecord.Create().
+				SetTicketNumber(req.TicketNumber).
+				SetTicketTitle(req.TicketTitle).
+				SetWorkflowName(workflow.Name).
+				SetCurrentLevel(level).
+				SetTotalLevels(len(nodes)).
+				SetApproverID(approverID).
+				SetApproverName(userEntity.Name).
+				SetStatus("pending").
+				SetWorkflowID(workflow.ID).
+				SetTicketID(req.TicketID).
+				SetStepOrder(level).
+				SetDueDate(dueDate).
+				SetTenantID(req.TenantID).
+				SetCreatedAt(time.Now()).
+				Save(ctx)
+			if err != nil {
+				s.logger.Errorw("Failed to create approval record", "error", err, "node", i)
+				continue
+			}
+
+			records = append(records, record)
+			s.logger.Infow("Created approval record", "record_id", record.ID, "approver", userEntity.Name, "level", level)
+		}
 	}
 
 	return records, nil
@@ -752,10 +820,10 @@ func (s *ApprovalService) findMatchingWorkflow(ctx context.Context, ticketType, 
 	// 先尝试精确匹配（类型+优先级）
 	workflow, err := s.client.ApprovalWorkflow.Query().
 		Where(
-			approvalworkflow.TenantID(tenantID),
-			approvalworkflow.Status("active"),
-			approvalworkflow.TicketType(ticketType),
-			approvalworkflow.Priority(priority),
+			approvalworkflow.TenantIDEQ(tenantID),
+			approvalworkflow.IsActiveEQ(true),
+			approvalworkflow.TicketTypeEQ(ticketType),
+			approvalworkflow.PriorityEQ(priority),
 		).
 		First(ctx)
 
@@ -766,9 +834,9 @@ func (s *ApprovalService) findMatchingWorkflow(ctx context.Context, ticketType, 
 	// 尝试匹配类型（不带优先级）
 	workflow, err = s.client.ApprovalWorkflow.Query().
 		Where(
-			approvalworkflow.TenantID(tenantID),
-			approvalworkflow.Status("active"),
-			approvalworkflow.TicketType(ticketType),
+			approvalworkflow.TenantIDEQ(tenantID),
+			approvalworkflow.IsActiveEQ(true),
+			approvalworkflow.TicketTypeEQ(ticketType),
 		).
 		First(ctx)
 
@@ -782,8 +850,11 @@ func (s *ApprovalService) findMatchingWorkflow(ctx context.Context, ticketType, 
 
 // workflowNode 审批节点
 type workflowNode struct {
+	Level         int
 	Name          string
-	AssigneeType  string // role, user
+	ApproverIDs   []int
+	ApprovalMode  string
+	AssigneeType  string
 	AssigneeValue string
 	TimeoutHours  int
 }
@@ -794,37 +865,65 @@ func (s *ApprovalService) parseWorkflowNodes(nodesJSON interface{}) ([]workflowN
 		return nil, nil
 	}
 
-	// 尝试解析为数组
-	nodesArray, ok := nodesJSON.([]interface{})
-	if !ok {
+	var nodesArray []map[string]interface{}
+	switch v := nodesJSON.(type) {
+	case []map[string]interface{}:
+		nodesArray = v
+	case []interface{}:
+		nodesArray = make([]map[string]interface{}, 0, len(v))
+		for _, raw := range v {
+			if m, ok := raw.(map[string]interface{}); ok {
+				nodesArray = append(nodesArray, m)
+			}
+		}
+	default:
 		return nil, fmt.Errorf("invalid nodes format")
 	}
 
 	nodes := make([]workflowNode, 0, len(nodesArray))
-	for i, nodeRaw := range nodesArray {
-		nodeMap, ok := nodeRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
+	for i, nodeMap := range nodesArray {
 		node := workflowNode{
-			Name:          fmt.Sprintf("Step %d", i+1),
-			AssigneeType:  "role",
-			AssigneeValue: "admin",
-			TimeoutHours:  24,
+			Level:        i + 1,
+			Name:         fmt.Sprintf("Step %d", i+1),
+			ApprovalMode: "any",
 		}
 
+		if level, ok := nodeMap["level"].(float64); ok {
+			node.Level = int(level)
+		} else if level, ok := nodeMap["level"].(int); ok {
+			node.Level = level
+		}
 		if name, ok := nodeMap["name"].(string); ok {
 			node.Name = name
 		}
+		if approvalMode, ok := nodeMap["approval_mode"].(string); ok && approvalMode != "" {
+			node.ApprovalMode = approvalMode
+		}
+		if timeout, ok := nodeMap["timeout_hours"].(float64); ok {
+			node.TimeoutHours = int(timeout)
+		} else if timeout, ok := nodeMap["timeout_hours"].(int); ok {
+			node.TimeoutHours = timeout
+		}
+
+		switch ids := nodeMap["approver_ids"].(type) {
+		case []interface{}:
+			node.ApproverIDs = make([]int, 0, len(ids))
+			for _, id := range ids {
+				if idVal, ok := id.(float64); ok {
+					node.ApproverIDs = append(node.ApproverIDs, int(idVal))
+				} else if idVal, ok := id.(int); ok {
+					node.ApproverIDs = append(node.ApproverIDs, idVal)
+				}
+			}
+		case []int:
+			node.ApproverIDs = append(node.ApproverIDs, ids...)
+		}
+
 		if assigneeType, ok := nodeMap["assignee_type"].(string); ok {
 			node.AssigneeType = assigneeType
 		}
 		if assigneeValue, ok := nodeMap["assignee_value"].(string); ok {
 			node.AssigneeValue = assigneeValue
-		}
-		if timeout, ok := nodeMap["timeout_hours"].(float64); ok {
-			node.TimeoutHours = int(timeout)
 		}
 
 		nodes = append(nodes, node)
@@ -852,7 +951,9 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 		if err != nil {
 			return 0, "", fmt.Errorf("无效的用户ID: %s", assigneeValue)
 		}
-		user, err := s.client.User.Get(ctx, userID)
+		user, err := s.client.User.Query().
+			Where(user.ID(userID), user.TenantID(tenantID)).
+			Only(ctx)
 		if err != nil || user == nil {
 			return 0, "", fmt.Errorf("未找到用户ID: %d", userID)
 		}

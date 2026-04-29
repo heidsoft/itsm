@@ -589,6 +589,10 @@ func (tc *TicketController) CreateTicketTemplate(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 
 	// 实现创建工单模板功能
 	_, err := tc.ticketService.CreateTicketTemplate(c.Request.Context(), tenantID, template)
@@ -607,6 +611,13 @@ func (tc *TicketController) CreateTicketTemplate(c *gin.Context) {
 
 // UpdateTicketTemplate 更新工单模板
 func (tc *TicketController) UpdateTicketTemplate(c *gin.Context) {
+	templateIDStr := c.Param("id")
+	templateID, err := strconv.Atoi(templateIDStr)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的模板ID")
+		return
+	}
+
 	var template dto.TicketTemplate
 	if err := c.ShouldBindJSON(&template); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -614,19 +625,23 @@ func (tc *TicketController) UpdateTicketTemplate(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 
 	// 实现更新工单模板功能
-	_, err := tc.ticketService.UpdateTicketTemplate(c.Request.Context(), template.ID, template)
+	_, err = tc.ticketService.UpdateTicketTemplate(c.Request.Context(), tenantID, templateID, template)
 	if err != nil {
-		tc.logger.Errorw("Update ticket template failed", "error", err, "template_id", template.ID, "tenant_id", tenantID)
+		tc.logger.Errorw("Update ticket template failed", "error", err, "template_id", templateID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, "更新模板失败: "+err.Error())
 		return
 	}
 
-	tc.logger.Infow("Update ticket template successful", "template_id", template.ID, "tenant_id", tenantID)
+	tc.logger.Infow("Update ticket template successful", "template_id", templateID, "tenant_id", tenantID)
 	common.Success(c, gin.H{
 		"message":     "工单模板更新成功",
-		"template_id": template.ID,
+		"template_id": templateID,
 	})
 }
 
@@ -645,9 +660,13 @@ func (tc *TicketController) DeleteTicketTemplate(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 
 	// 实现删除工单模板功能
-	err = tc.ticketService.DeleteTicketTemplate(c.Request.Context(), id)
+	err = tc.ticketService.DeleteTicketTemplate(c.Request.Context(), tenantID, id)
 	if err != nil {
 		tc.logger.Errorw("Delete ticket template failed", "error", err, "template_id", id, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, "删除模板失败: "+err.Error())

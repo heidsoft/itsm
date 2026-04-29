@@ -52,8 +52,7 @@ export function AppLayout({
       onClose={() => setMobileDrawerVisible(false)}
       open={mobileDrawerVisible}
       width={280}
-      bodyStyle={{ padding: 0 }}
-      headerStyle={{ display: 'none' }}
+      styles={{ body: { padding: 0 }, header: { display: 'none' } }}
     >
       <Sidebar
         collapsed={false}

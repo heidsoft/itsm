@@ -40,6 +40,10 @@ func (tc *TicketCategoryController) CreateCategory(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 	req.TenantID = tenantID
 
 	category, err := tc.categoryService.CreateCategory(c.Request.Context(), &req)
@@ -75,7 +79,13 @@ func (tc *TicketCategoryController) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	category, err := tc.categoryService.UpdateCategory(c.Request.Context(), categoryID, &req)
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	category, err := tc.categoryService.UpdateCategory(c.Request.Context(), categoryID, &req, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to update ticket category", "error", err, "category_id", categoryID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -93,7 +103,13 @@ func (tc *TicketCategoryController) DeleteCategory(c *gin.Context) {
 		return
 	}
 
-	err = tc.categoryService.DeleteCategory(c.Request.Context(), categoryID)
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	err = tc.categoryService.DeleteCategory(c.Request.Context(), categoryID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to delete ticket category", "error", err, "category_id", categoryID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -111,7 +127,13 @@ func (tc *TicketCategoryController) GetCategory(c *gin.Context) {
 		return
 	}
 
-	category, err := tc.categoryService.GetCategory(c.Request.Context(), categoryID)
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	category, err := tc.categoryService.GetCategory(c.Request.Context(), categoryID, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to get ticket category", "error", err, "category_id", categoryID)
 		common.Fail(c, common.NotFoundCode, "分类不存在")

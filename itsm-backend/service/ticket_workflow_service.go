@@ -244,14 +244,19 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 	// 检查审批记录是否存在
 	var approvalLevel int
 	var approvalStatus string
-	approvalQuery := "SELECT level, status FROM ticket_approvals WHERE id = $1 AND ticket_id = $2 AND tenant_id = $3"
-	err = s.rawDB.QueryRowContext(ctx, approvalQuery, req.ApprovalID, req.TicketID, tenantID).Scan(&approvalLevel, &approvalStatus)
+	var approvalApproverID int
+	approvalQuery := "SELECT level, status, approver_id FROM ticket_approvals WHERE id = $1 AND ticket_id = $2 AND tenant_id = $3"
+	err = s.rawDB.QueryRowContext(ctx, approvalQuery, req.ApprovalID, req.TicketID, tenantID).Scan(&approvalLevel, &approvalStatus, &approvalApproverID)
 	if err != nil {
 		return fmt.Errorf("审批记录不存在")
 	}
 
 	if approvalStatus != string(dto.ApprovalStatusPending) {
 		return fmt.Errorf("审批已处理，当前状态: %s", approvalStatus)
+	}
+
+	if approvalApproverID != userID {
+		return fmt.Errorf("无权限审批该记录")
 	}
 
 	// 更新审批记录
@@ -265,18 +270,18 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 		if req.DelegateToUserID == nil {
 			return fmt.Errorf("委派时必须指定委派人")
 		}
-		newApprovalStatus = string(dto.ApprovalStatusPending)
+		newApprovalStatus = string(dto.ApprovalStatusCancelled)
 	default:
 		return fmt.Errorf("无效的审批操作: %s", req.Action)
 	}
 
 	updateApprovalQuery := `
 		UPDATE ticket_approvals 
-		SET status = $1, action = $2, comment = $3, processed_at = $4, updated_at = $5
-		WHERE id = $6 AND tenant_id = $7
+		SET status = $1, action = $2, comment = $3, delegate_to_user_id = $4, processed_at = $5, updated_at = $6
+		WHERE id = $7 AND tenant_id = $8
 	`
 	_, err = s.rawDB.ExecContext(ctx, updateApprovalQuery,
-		newApprovalStatus, req.Action, req.Comment, time.Now(), time.Now(),
+		newApprovalStatus, req.Action, req.Comment, req.DelegateToUserID, time.Now(), time.Now(),
 		req.ApprovalID, tenantID)
 	if err != nil {
 		return fmt.Errorf("failed to update approval: %w", err)
@@ -291,30 +296,24 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 			WHERE id = $5
 		`
 		_, err = s.rawDB.ExecContext(ctx, insertApprovalQuery,
-			*req.DelegateToUserID, dto.ApprovalStatusPending, time.Now(), time.Now(),
+			*req.DelegateToUserID, string(dto.ApprovalStatusPending), time.Now(), time.Now(),
 			req.ApprovalID)
 		if err != nil {
 			s.logger.Warnw("Failed to create delegated approval", "error", err)
 		}
 	}
 
-	// 检查是否所有审批都已完成
 	if req.Action == "approve" {
-		// 检查是否还有下一级审批
-		nextLevelQuery := `
-			SELECT id, level, level_name, approver_id FROM ticket_approvals
-			WHERE ticket_id = $1 AND tenant_id = $2 AND level > $3 AND status = $4
-			ORDER BY level ASC LIMIT 1
+		pendingCountQuery := `
+			SELECT COUNT(1)
+			FROM ticket_approvals
+			WHERE ticket_id = $1 AND tenant_id = $2 AND status = $3
 		`
-		var nextApprovalID int
-		var nextLevel int
-		var nextLevelName string
-		var nextApproverID int
-		err = s.rawDB.QueryRowContext(ctx, nextLevelQuery, req.TicketID, tenantID, approvalLevel, dto.ApprovalStatusPending).Scan(&nextApprovalID, &nextLevel, &nextLevelName, &nextApproverID)
-
-		if err == sql.ErrNoRows {
-			// 没有下一级审批，所有审批都已完成
-			// 更新工单状态为已审批
+		var pendingCount int
+		err = s.rawDB.QueryRowContext(ctx, pendingCountQuery, req.TicketID, tenantID, string(dto.ApprovalStatusPending)).Scan(&pendingCount)
+		if err != nil {
+			s.logger.Warnw("Failed to count pending approvals", "error", err)
+		} else if pendingCount == 0 {
 			updateTicketQuery := `
 				UPDATE tickets
 				SET status = 'approved', updated_at = $1
@@ -324,20 +323,6 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 			if err != nil {
 				s.logger.Warnw("Failed to update ticket status to approved", "error", err)
 			}
-		} else if err == nil {
-			// 有下一级审批，激活下一级审批
-			activateQuery := `
-				UPDATE ticket_approvals
-				SET status = $1, updated_at = $2
-				WHERE id = $3 AND tenant_id = $4
-			`
-			_, err = s.rawDB.ExecContext(ctx, activateQuery, dto.ApprovalStatusPending, time.Now(), nextApprovalID, tenantID)
-			if err != nil {
-				s.logger.Warnw("Failed to activate next level approval", "error", err)
-			}
-			s.logger.Infow("Activated next level approval", "ticket_id", req.TicketID, "next_level", nextLevel)
-		} else {
-			s.logger.Warnw("Failed to check next level approval", "error", err)
 		}
 	} else if req.Action == "reject" {
 		// 审批拒绝，更新工单状态
@@ -349,6 +334,16 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 		_, err = s.rawDB.ExecContext(ctx, updateTicketQuery, time.Now(), req.TicketID, tenantID)
 		if err != nil {
 			s.logger.Warnw("Failed to update ticket status", "error", err)
+		}
+
+		cancelPendingQuery := `
+			UPDATE ticket_approvals
+			SET status = $1, updated_at = $2
+			WHERE ticket_id = $3 AND tenant_id = $4 AND status = $5 AND id <> $6
+		`
+		_, err = s.rawDB.ExecContext(ctx, cancelPendingQuery, string(dto.ApprovalStatusCancelled), time.Now(), req.TicketID, tenantID, string(dto.ApprovalStatusPending), req.ApprovalID)
+		if err != nil {
+			s.logger.Warnw("Failed to cancel pending approvals", "error", err)
 		}
 	}
 

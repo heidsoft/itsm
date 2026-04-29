@@ -79,7 +79,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := userService.CreateUser(ctx, tt.request)
+			user, err := userService.CreateUser(ctx, tt.request, testTenant.ID)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -148,7 +148,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := userService.GetUserByID(ctx, tt.userID)
+			user, err := userService.GetUserByID(ctx, tt.userID, testTenant.ID)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -183,9 +183,6 @@ func TestUserService_UpdateUser(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	// 创建带 tenant_id 上下文的 ctx
-	tenantCtx := context.WithValue(ctx, "tenant_id", testTenant.ID)
-
 	// 创建测试用户
 	testUser, err := client.User.Create().
 		SetUsername("testuser").
@@ -196,7 +193,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 		SetPhone("1234567890").
 		SetActive(true).
 		SetTenantID(testTenant.ID).
-		Save(tenantCtx)
+		Save(ctx)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -236,7 +233,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := userService.UpdateUser(tenantCtx, tt.userID, tt.request)
+			user, err := userService.UpdateUser(ctx, tt.userID, tt.request, testTenant.ID)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -312,7 +309,7 @@ func TestUserService_DeleteUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := userService.DeleteUser(ctx, tt.userID)
+			err := userService.DeleteUser(ctx, tt.userID, testTenant.ID)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -421,7 +418,7 @@ func TestUserService_SearchUsers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			users, err := userService.SearchUsers(ctx, tt.request)
+			users, err := userService.SearchUsers(ctx, tt.request, testTenant.ID)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -487,7 +484,7 @@ func TestUserService_ResetPassword(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := userService.ResetPassword(ctx, tt.userID, tt.newPassword)
+			err := userService.ResetPassword(ctx, tt.userID, tt.newPassword, testTenant.ID)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -567,7 +564,7 @@ func TestUserService_ChangeUserStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := userService.ChangeUserStatus(ctx, tt.userID, tt.active, tt.currentUserID)
+			err := userService.ChangeUserStatus(ctx, tt.userID, tt.active, tt.currentUserID, testTenant.ID)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -609,7 +606,6 @@ func TestUserService_UpdateUser_TenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create user for tenant 1
-	tenant1Ctx := context.WithValue(ctx, "tenant_id", tenant1.ID)
 	user1, err := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@t1.com").
@@ -619,11 +615,10 @@ func TestUserService_UpdateUser_TenantIsolation(t *testing.T) {
 		SetPhone("1234567890").
 		SetActive(true).
 		SetTenantID(tenant1.ID).
-		Save(tenant1Ctx)
+		Save(ctx)
 	require.NoError(t, err)
 
 	// Create user for tenant 2
-	tenant2Ctx := context.WithValue(ctx, "tenant_id", tenant2.ID)
 	_, err = client.User.Create().
 		SetUsername("testuser2").
 		SetEmail("test@t2.com").
@@ -633,11 +628,11 @@ func TestUserService_UpdateUser_TenantIsolation(t *testing.T) {
 		SetPhone("0987654321").
 		SetActive(true).
 		SetTenantID(tenant2.ID).
-		Save(tenant2Ctx)
+		Save(ctx)
 	require.NoError(t, err)
 
 	// Tenant 2 tries to update tenant 1's user - should fail
-	_, err = userService.UpdateUser(tenant2Ctx, user1.ID, &dto.UpdateUserRequest{Name: "Hacked"})
+	_, err = userService.UpdateUser(ctx, user1.ID, &dto.UpdateUserRequest{Name: "Hacked"}, tenant2.ID)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "cross-tenant access denied")
@@ -672,7 +667,7 @@ func BenchmarkUserService_CreateUser(b *testing.B) {
 			Password:   "password123",
 			TenantID:   testTenant.ID,
 		}
-		_, _ = userService.CreateUser(ctx, req)
+		_, _ = userService.CreateUser(ctx, req, testTenant.ID)
 	}
 }
 
@@ -709,6 +704,6 @@ func BenchmarkUserService_GetUserByID(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = userService.GetUserByID(ctx, testUser.ID)
+		_, _ = userService.GetUserByID(ctx, testUser.ID, testTenant.ID)
 	}
 }

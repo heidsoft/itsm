@@ -147,7 +147,8 @@ func (s *TicketViewService) UpdateTicketView(
 		return nil, fmt.Errorf("permission denied: only creator can update this view")
 	}
 
-	updateQuery := s.client.TicketView.UpdateOneID(viewID)
+	updateQuery := s.client.TicketView.UpdateOneID(viewID).
+		Where(ticketview.TenantID(tenantID))
 
 	if req.Name != nil {
 		updateQuery.SetName(*req.Name)
@@ -208,7 +209,9 @@ func (s *TicketViewService) DeleteTicketView(
 		return fmt.Errorf("permission denied: only creator can delete this view")
 	}
 
-	err = s.client.TicketView.DeleteOneID(viewID).Exec(ctx)
+	err = s.client.TicketView.DeleteOneID(viewID).
+		Where(ticketview.TenantID(tenantID)).
+		Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to delete ticket view", "error", err)
 		return fmt.Errorf("failed to delete ticket view: %w", err)
@@ -244,6 +247,7 @@ func (s *TicketViewService) ShareTicketView(
 
 	// 更新共享状态
 	_, err = s.client.TicketView.UpdateOneID(viewID).
+		Where(ticketview.TenantID(tenantID)).
 		SetIsShared(true).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)

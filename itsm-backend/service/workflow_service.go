@@ -51,8 +51,13 @@ func (s *WorkflowService) CreateWorkflow(ctx context.Context, req *CreateWorkflo
 }
 
 // GetWorkflow 获取工作流
-func (s *WorkflowService) GetWorkflow(ctx context.Context, id int) (*ent.Workflow, error) {
-	return s.client.Workflow.Get(ctx, id)
+func (s *WorkflowService) GetWorkflow(ctx context.Context, id int, tenantID int) (*ent.Workflow, error) {
+	return s.client.Workflow.Query().
+		Where(
+			workflow.IDEQ(id),
+			workflow.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
 }
 
 // ListWorkflows 获取工作流列表
@@ -108,8 +113,9 @@ func (s *WorkflowService) ListWorkflows(ctx context.Context, req *ListWorkflowsR
 }
 
 // UpdateWorkflow 更新工作流
-func (s *WorkflowService) UpdateWorkflow(ctx context.Context, id int, req *UpdateWorkflowRequest) (*ent.Workflow, error) {
-	update := s.client.Workflow.UpdateOneID(id)
+func (s *WorkflowService) UpdateWorkflow(ctx context.Context, id int, req *UpdateWorkflowRequest, tenantID int) (*ent.Workflow, error) {
+	update := s.client.Workflow.UpdateOneID(id).
+		Where(workflow.TenantIDEQ(tenantID))
 
 	if req.Name != "" {
 		update.SetName(req.Name)
@@ -143,10 +149,26 @@ func (s *WorkflowService) UpdateWorkflow(ctx context.Context, id int, req *Updat
 }
 
 // DeleteWorkflow 删除工作流
-func (s *WorkflowService) DeleteWorkflow(ctx context.Context, id int) error {
+func (s *WorkflowService) DeleteWorkflow(ctx context.Context, id int, tenantID int) error {
+	exists, err := s.client.Workflow.Query().
+		Where(
+			workflow.IDEQ(id),
+			workflow.TenantIDEQ(tenantID),
+		).
+		Exist(ctx)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return errors.New("工作流不存在")
+	}
+
 	// 检查是否有工作流实例使用此工作流
 	count, err := s.client.WorkflowInstance.Query().
-		Where(workflowinstance.WorkflowIDEQ(id)).
+		Where(
+			workflowinstance.WorkflowIDEQ(id),
+			workflowinstance.TenantIDEQ(tenantID),
+		).
 		Count(ctx)
 	if err != nil {
 		return err
@@ -155,13 +177,20 @@ func (s *WorkflowService) DeleteWorkflow(ctx context.Context, id int) error {
 		return errors.New("无法删除正在使用的工作流")
 	}
 
-	return s.client.Workflow.DeleteOneID(id).Exec(ctx)
+	return s.client.Workflow.DeleteOneID(id).
+		Where(workflow.TenantIDEQ(tenantID)).
+		Exec(ctx)
 }
 
 // StartWorkflow 启动工作流实例
 func (s *WorkflowService) StartWorkflow(ctx context.Context, req *StartWorkflowRequest) (*ent.WorkflowInstance, error) {
 	// 获取工作流定义
-	workflow, err := s.client.Workflow.Get(ctx, req.WorkflowID)
+	workflow, err := s.client.Workflow.Query().
+		Where(
+			workflow.IDEQ(req.WorkflowID),
+			workflow.TenantIDEQ(req.TenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -199,16 +228,30 @@ func (s *WorkflowService) StartWorkflow(ctx context.Context, req *StartWorkflowR
 	return instance, nil
 }
 
+func (s *WorkflowService) GetWorkflowInstance(ctx context.Context, instanceID int, tenantID int) (*ent.WorkflowInstance, error) {
+	return s.client.WorkflowInstance.Query().
+		Where(
+			workflowinstance.IDEQ(instanceID),
+			workflowinstance.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
+}
+
 // ExecuteWorkflowStep 执行工作流步骤
-func (s *WorkflowService) ExecuteWorkflowStep(ctx context.Context, req *ExecuteWorkflowStepRequest) error {
+func (s *WorkflowService) ExecuteWorkflowStep(ctx context.Context, req *ExecuteWorkflowStepRequest, tenantID int) error {
 	// 获取工作流实例
-	instance, err := s.client.WorkflowInstance.Get(ctx, req.InstanceID)
+	instance, err := s.GetWorkflowInstance(ctx, req.InstanceID, tenantID)
 	if err != nil {
 		return err
 	}
 
 	// 获取工作流定义
-	workflow, err := s.client.Workflow.Get(ctx, instance.WorkflowID)
+	workflow, err := s.client.Workflow.Query().
+		Where(
+			workflow.IDEQ(instance.WorkflowID),
+			workflow.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		return err
 	}
@@ -224,7 +267,8 @@ func (s *WorkflowService) ExecuteWorkflowStep(ctx context.Context, req *ExecuteW
 	// 例如：发送通知、更新状态、分配任务等
 
 	// 更新实例状态
-	update := s.client.WorkflowInstance.UpdateOneID(req.InstanceID)
+	update := s.client.WorkflowInstance.UpdateOneID(req.InstanceID).
+		Where(workflowinstance.TenantIDEQ(tenantID))
 	if req.NextStep != "" {
 		update.SetCurrentStep(req.NextStep)
 	}
