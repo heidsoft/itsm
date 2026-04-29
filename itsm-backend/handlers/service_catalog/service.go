@@ -95,3 +95,29 @@ func (s *Service) Search(ctx context.Context, tenantID int, keyword string, filt
 	}
 	return s.repo.Search(ctx, tenantID, keyword, filters)
 }
+
+func (s *Service) GetStats(ctx context.Context, tenantID int) (*ServiceStats, error) {
+	// Count total services
+	total, err := s.repo.Count(ctx, tenantID, ListFilters{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Count published (enabled) services
+	enabled, err := s.repo.Count(ctx, tenantID, ListFilters{Status: "enabled"})
+	if err != nil {
+		return nil, err
+	}
+
+	// Count by category
+	byCategory, err := s.repo.CountByCategory(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ServiceStats{
+		TotalServices:     total,
+		PublishedServices: enabled,
+		Categories:        byCategory,
+	}, nil
+}

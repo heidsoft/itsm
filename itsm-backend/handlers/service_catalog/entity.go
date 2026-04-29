@@ -28,6 +28,8 @@ type Repository interface {
 	Search(ctx context.Context, tenantID int, keyword string, filters ListFilters) ([]*ServiceCatalog, int, error)
 	Update(ctx context.Context, catalog *ServiceCatalog) (*ServiceCatalog, error)
 	Delete(ctx context.Context, id int) error
+	Count(ctx context.Context, tenantID int, filters ListFilters) (int, error)
+	CountByCategory(ctx context.Context, tenantID int) (map[string]int, error)
 }
 
 // ListFilters defines available filters for listing catalogs
@@ -36,4 +38,11 @@ type ListFilters struct {
 	Status   string
 	Page     int
 	Size     int
+}
+
+// ServiceStats holds statistics for service catalog
+type ServiceStats struct {
+	TotalServices     int            `json:"totalServices"`
+	PublishedServices int            `json:"publishedServices"`
+	Categories        map[string]int `json:"categories"`
 }
