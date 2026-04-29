@@ -166,7 +166,7 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
           </div>
         }
         className="flex-1"
-        bodyStyle={{ maxHeight: '500px', overflowY: 'auto' }}
+        styles={{ body: { maxHeight: '500px', overflowY: 'auto' } }}
       >
         {messages.length > 0 ? (
           <List

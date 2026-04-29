@@ -80,11 +80,20 @@ function safeRemove(key: string): void {
 export function migrateLegacyAuthStorage(): void {
   if (typeof window === 'undefined') return;
 
-  // 清理旧的 token 键名（token 现在在 httpOnly cookie 中）
+  const currentAccessToken = safeGet(STORAGE_KEYS.ACCESS_TOKEN);
+  if (!currentAccessToken) {
+    const legacyAuthToken = safeGet(STORAGE_KEYS.LEGACY_AUTH_TOKEN);
+    const legacyItsmToken = safeGet(STORAGE_KEYS.LEGACY_ITSM_TOKEN);
+    const legacyToken = safeGet(STORAGE_KEYS.LEGACY_TOKEN);
+    const legacy = legacyAuthToken || legacyItsmToken || legacyToken;
+    if (legacy) {
+      safeSet(STORAGE_KEYS.ACCESS_TOKEN, legacy);
+    }
+  }
+
   safeRemove(STORAGE_KEYS.LEGACY_AUTH_TOKEN);
   safeRemove(STORAGE_KEYS.LEGACY_ITSM_TOKEN);
   safeRemove(STORAGE_KEYS.LEGACY_TOKEN);
-  safeRemove(STORAGE_KEYS.ACCESS_TOKEN);
 
   // 迁移租户代码
   const currentTenantCode = safeGet(STORAGE_KEYS.TENANT_CODE);
@@ -103,7 +112,7 @@ export function migrateLegacyAuthStorage(): void {
  */
 export function isAuthenticated(): boolean {
   migrateLegacyAuthStorage();
-  return hasAuthCookie() || hasAccessTokenCookie();
+  return hasAuthCookie() || hasAccessTokenCookie() || !!getAccessToken();
 }
 
 /**
@@ -114,8 +123,7 @@ export function isAuthenticated(): boolean {
  */
 export function getAccessToken(): string | null {
   migrateLegacyAuthStorage();
-  // Token 在 httpOnly cookie 中，无法读取
-  return null;
+  return safeGet(STORAGE_KEYS.ACCESS_TOKEN);
 }
 
 /**
@@ -124,7 +132,7 @@ export function getAccessToken(): string | null {
  */
 export function getRefreshToken(): string | null {
   migrateLegacyAuthStorage();
-  return null;
+  return safeGet(STORAGE_KEYS.REFRESH_TOKEN);
 }
 
 export function getTenantCode(): string | null {
@@ -138,20 +146,20 @@ export function getTenantId(): string | null {
 }
 
 export function setAccessToken(token: string): void {
-  // Token 在 httpOnly cookie 中，不存储到 localStorage
+  safeSet(STORAGE_KEYS.ACCESS_TOKEN, token);
 }
 
 export function setRefreshToken(token: string): void {
-  // Token 在 httpOnly cookie 中，不存储到 localStorage
+  safeSet(STORAGE_KEYS.REFRESH_TOKEN, token);
 }
 
 export function clearAuthStorage(): void {
-  // 只清理租户信息，token 通过 Set-Cookie: max-age=0 由后端清除
+  safeRemove(STORAGE_KEYS.ACCESS_TOKEN);
+  safeRemove(STORAGE_KEYS.REFRESH_TOKEN);
   safeRemove(STORAGE_KEYS.TENANT_ID);
   safeRemove(STORAGE_KEYS.TENANT_CODE);
   safeRemove(STORAGE_KEYS.LEGACY_AUTH_TOKEN);
   safeRemove(STORAGE_KEYS.LEGACY_ITSM_TOKEN);
   safeRemove(STORAGE_KEYS.LEGACY_TOKEN);
   safeRemove(STORAGE_KEYS.LEGACY_TENANT_CODE);
-  safeRemove(STORAGE_KEYS.ACCESS_TOKEN);
 }

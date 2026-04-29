@@ -8,6 +8,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
 )
@@ -60,11 +61,42 @@ func (h *TicketServiceTaskHandler) GetHandlerID() string {
 	return "ticket_service_handler"
 }
 
+func (h *TicketServiceTaskHandler) getTenantID(ctx context.Context, variables map[string]interface{}) int {
+	if tenantID, ok := ctx.Value("bpmn_tenant_id").(int); ok && tenantID > 0 {
+		return tenantID
+	}
+	if variables == nil {
+		return 0
+	}
+	switch v := variables["tenant_id"].(type) {
+	case int:
+		return v
+	case float64:
+		return int(v)
+	default:
+		return 0
+	}
+}
+
+func (h *TicketServiceTaskHandler) getTicket(ctx context.Context, ticketID int, tenantID int) (*ent.Ticket, error) {
+	if tenantID > 0 {
+		return h.client.Ticket.Query().
+			Where(ticket.ID(ticketID), ticket.TenantID(tenantID)).
+			Only(ctx)
+	}
+	return h.client.Ticket.Get(ctx, ticketID)
+}
+
 // Execute 执行工单服务任务
 func (h *TicketServiceTaskHandler) Execute(ctx context.Context, task *ent.ProcessTask, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	// 提取业务ID
-	businessID, ok := variables["business_id"].(int)
-	if !ok {
+	var businessID int
+	switch v := variables["business_id"].(type) {
+	case int:
+		businessID = v
+	case float64:
+		businessID = int(v)
+	default:
 		return nil, fmt.Errorf("无效的 business_id")
 	}
 
@@ -113,19 +145,16 @@ func (h *TicketServiceTaskHandler) updateTicketStatus(ctx context.Context, ticke
 		additionalData["form_fields"] = formFields
 	}
 
-	// 更新工单状态
-	updates := map[string]interface{}{
-		"status": newStatus,
-	}
-
-	// 如果有解决时间，设置解决时间
-	if newStatus == "resolved" || newStatus == "closed" {
-		now := time.Now()
-		updates["resolved_at"] = now
-	}
-
 	// 执行更新
-	_, err := h.client.Ticket.UpdateOneID(ticketID).
+	tenantID := h.getTenantID(ctx, variables)
+	update := h.client.Ticket.UpdateOneID(ticketID)
+	if tenantID > 0 {
+		update = update.Where(ticket.TenantID(tenantID))
+	}
+	if newStatus == "resolved" || newStatus == "closed" {
+		update = update.SetResolvedAt(time.Now())
+	}
+	_, err := update.
 		SetStatus(newStatus).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
@@ -157,7 +186,8 @@ func (h *TicketServiceTaskHandler) notifyRequester(ctx context.Context, ticketID
 	}
 
 	// 获取工单信息
-	ticketEntity, err := h.client.Ticket.Get(ctx, ticketID)
+	tenantID := h.getTenantID(ctx, variables)
+	ticketEntity, err := h.getTicket(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("工单不存在: %w", err)
 	}
@@ -197,7 +227,8 @@ func (h *TicketServiceTaskHandler) notifyHandler(ctx context.Context, ticketID i
 	}
 
 	// 获取工单信息
-	ticketEntity, err := h.client.Ticket.Get(ctx, ticketID)
+	tenantID := h.getTenantID(ctx, variables)
+	ticketEntity, err := h.getTicket(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("工单不存在: %w", err)
 	}
@@ -233,13 +264,18 @@ func (h *TicketServiceTaskHandler) escalateTicket(ctx context.Context, ticketID 
 	escalationReason, _ := variables["escalation_reason"].(string)
 
 	// 获取工单信息
-	ticketEntity, err := h.client.Ticket.Get(ctx, ticketID)
+	tenantID := h.getTenantID(ctx, variables)
+	ticketEntity, err := h.getTicket(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("工单不存在: %w", err)
 	}
 
 	// 升级工单：更新优先级和状态
-	_, err = h.client.Ticket.UpdateOneID(ticketID).
+	update := h.client.Ticket.UpdateOneID(ticketID)
+	if tenantID > 0 {
+		update = update.Where(ticket.TenantID(tenantID))
+	}
+	_, err = update.
 		SetPriority(escalateTo).
 		SetStatus("escalated").
 		SetUpdatedAt(time.Now()).
@@ -285,13 +321,18 @@ func (h *TicketServiceTaskHandler) assignTicket(ctx context.Context, ticketID in
 	}
 
 	// 获取工单信息
-	ticketEntity, err := h.client.Ticket.Get(ctx, ticketID)
+	tenantID := h.getTenantID(ctx, variables)
+	ticketEntity, err := h.getTicket(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("工单不存在: %w", err)
 	}
 
 	// 更新工单分配
-	_, err = h.client.Ticket.UpdateOneID(ticketID).
+	update := h.client.Ticket.UpdateOneID(ticketID)
+	if tenantID > 0 {
+		update = update.Where(ticket.TenantID(tenantID))
+	}
+	_, err = update.
 		SetAssigneeID(assigneeID).
 		SetStatus(common.TicketStatusAssigned).
 		SetUpdatedAt(time.Now()).

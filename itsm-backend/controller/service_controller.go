@@ -440,7 +440,13 @@ func (sc *ServiceController) DeleteServiceCatalog(c *gin.Context) {
 		return
 	}
 
-	err = sc.serviceCatalogService.DeleteServiceCatalog(c.Request.Context(), id)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	err = sc.serviceCatalogService.DeleteServiceCatalog(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -457,7 +463,13 @@ func (sc *ServiceController) GetServiceCatalogByID(c *gin.Context) {
 		return
 	}
 
-	catalog, err := sc.serviceCatalogService.GetServiceCatalogByID(c.Request.Context(), id)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	catalog, err := sc.serviceCatalogService.GetServiceCatalogByID(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return

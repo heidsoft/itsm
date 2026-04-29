@@ -12,8 +12,8 @@ const STATIC_CACHE_NAME = 'itsm-static-cache-v1';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/icon-192x192.png',
-  '/icon-512x512.png',
+  '/file.svg',
+  '/window.svg',
   '/offline.html',
 ];
 
@@ -250,8 +250,8 @@ self.addEventListener('push', (event) => {
   
   const options = {
     body: '您有新的工单需要处理',
-    icon: '/icon-192x192.png',
-    badge: '/badge-72x72.png',
+    icon: '/file.svg',
+    badge: '/file.svg',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -261,12 +261,12 @@ self.addEventListener('push', (event) => {
       {
         action: 'explore',
         title: '查看详情',
-        icon: '/icon-192x192.png',
+        icon: '/file.svg',
       },
       {
         action: 'close',
         title: '关闭',
-        icon: '/icon-192x192.png',
+        icon: '/file.svg',
       },
     ],
   };

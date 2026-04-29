@@ -95,7 +95,7 @@ func (s *ServiceCatalogService) CreateServiceCatalog(ctx context.Context, req *d
 
 // UpdateServiceCatalog 更新服务目录
 func (s *ServiceCatalogService) UpdateServiceCatalog(ctx context.Context, id int, req *dto.UpdateServiceCatalogRequest, tenantID int) (*dto.ServiceCatalogResponse, error) {
-	update := s.client.ServiceCatalog.UpdateOneID(id)
+	update := s.client.ServiceCatalog.UpdateOneID(id).Where(servicecatalog.TenantID(tenantID))
 
 	if req.Name != "" {
 		update = update.SetName(req.Name)
@@ -125,13 +125,24 @@ func (s *ServiceCatalogService) UpdateServiceCatalog(ctx context.Context, id int
 }
 
 // DeleteServiceCatalog 删除服务目录
-func (s *ServiceCatalogService) DeleteServiceCatalog(ctx context.Context, id int) error {
-	return s.client.ServiceCatalog.DeleteOneID(id).Exec(ctx)
+func (s *ServiceCatalogService) DeleteServiceCatalog(ctx context.Context, id int, tenantID int) error {
+	_, err := s.client.ServiceCatalog.Delete().
+		Where(
+			servicecatalog.IDEQ(id),
+			servicecatalog.TenantID(tenantID),
+		).
+		Exec(ctx)
+	return err
 }
 
 // GetServiceCatalogByID 根据ID获取服务目录
-func (s *ServiceCatalogService) GetServiceCatalogByID(ctx context.Context, id int) (*dto.ServiceCatalogResponse, error) {
-	catalog, err := s.client.ServiceCatalog.Get(ctx, id)
+func (s *ServiceCatalogService) GetServiceCatalogByID(ctx context.Context, id int, tenantID int) (*dto.ServiceCatalogResponse, error) {
+	catalog, err := s.client.ServiceCatalog.Query().
+		Where(
+			servicecatalog.IDEQ(id),
+			servicecatalog.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		return nil, err
 	}

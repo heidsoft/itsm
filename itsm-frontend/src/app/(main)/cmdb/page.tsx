@@ -121,7 +121,7 @@ export default function CMDBPage() {
   const fetchCloudSyncStatus = async () => {
     try {
       // 模拟获取同步状态 - 后端需要实现实际API
-      const response = await httpClient.get<any>('/api/cmdb/discovery/status');
+      const response = await httpClient.get<any>('/api/v1/configuration-items/discovery/status');
       if (response) {
         setCloudSyncStatus(response);
       }
@@ -134,7 +134,7 @@ export default function CMDBPage() {
   const triggerCloudDiscovery = async () => {
     setSyncLoading(true);
     try {
-      await httpClient.post('/api/cmdb/discovery/run', {});
+      await httpClient.post('/api/v1/configuration-items/discovery/run', {});
       message.success('云资源发现任务已启动');
       // 延迟刷新状态
       setTimeout(() => fetchCloudSyncStatus(), 3000);

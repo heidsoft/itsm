@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Noto_Sans_SC } from 'next/font/google';
 import './globals.css';
 import dayjs from 'dayjs';
@@ -60,18 +60,18 @@ export const metadata: Metadata = {
     description: '专业的IT服务管理平台，提供工单管理、事件管理、问题管理、变更管理等核心功能',
   },
   icons: {
-    icon: '/favicon-32x32.png',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png',
+    icon: '/file.svg',
+    shortcut: '/file.svg',
+    apple: '/file.svg',
   },
   manifest: '/site.webmanifest',
 };
 
-export const viewport = {
+export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default function RootLayout({
@@ -122,13 +122,20 @@ export default function RootLayout({
                   try {
                     const perfData = performance.getEntriesByType('navigation')[0];
                     if (perfData) {
-                        'DNS查询': perfData.domainLookupEnd - perfData.domainLookupStart + 'ms',
+                      const metrics = {
+                        'DNS查询':
+                          perfData.domainLookupEnd - perfData.domainLookupStart + 'ms',
                         'TCP连接': perfData.connectEnd - perfData.connectStart + 'ms',
                         '请求响应': perfData.responseEnd - perfData.requestStart + 'ms',
-                        'DOM解析': perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart + 'ms',
-                        '页面完全加载': perfData.loadEventEnd - perfData.loadEventStart + 'ms',
-                        '总加载时间': perfData.loadEventEnd - perfData.fetchStart + 'ms'
-                      });
+                        'DOM解析':
+                          perfData.domContentLoadedEventEnd -
+                          perfData.domContentLoadedEventStart +
+                          'ms',
+                        '页面完全加载':
+                          perfData.loadEventEnd - perfData.loadEventStart + 'ms',
+                        '总加载时间': perfData.loadEventEnd - perfData.fetchStart + 'ms',
+                      };
+                      console.log('性能指标:', metrics);
                     }
                   } catch (e) {
                     // Ignore monitoring errors

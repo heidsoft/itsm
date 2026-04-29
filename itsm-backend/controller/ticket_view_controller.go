@@ -28,6 +28,10 @@ func NewTicketViewController(viewService *service.TicketViewService, logger *zap
 func (tvc *TicketViewController) ListTicketViews(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	views, err := tvc.viewService.ListTicketViews(c.Request.Context(), tenantID, &userID)
 	if err != nil {
@@ -52,6 +56,10 @@ func (tvc *TicketViewController) GetTicketView(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 
 	view, err := tvc.viewService.GetTicketView(c.Request.Context(), viewID, tenantID)
 	if err != nil {
@@ -74,6 +82,10 @@ func (tvc *TicketViewController) CreateTicketView(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	view, err := tvc.viewService.CreateTicketView(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
@@ -102,6 +114,10 @@ func (tvc *TicketViewController) UpdateTicketView(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	view, err := tvc.viewService.UpdateTicketView(c.Request.Context(), viewID, &req, userID, tenantID)
 	if err != nil {
@@ -124,6 +140,10 @@ func (tvc *TicketViewController) DeleteTicketView(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	err = tvc.viewService.DeleteTicketView(c.Request.Context(), viewID, userID, tenantID)
 	if err != nil {
@@ -152,6 +172,10 @@ func (tvc *TicketViewController) ShareTicketView(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	err = tvc.viewService.ShareTicketView(c.Request.Context(), viewID, &req, userID, tenantID)
 	if err != nil {

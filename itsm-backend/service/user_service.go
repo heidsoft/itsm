@@ -26,7 +26,7 @@ func NewUserService(client *ent.Client, logger *zap.SugaredLogger) *UserService 
 }
 
 // CreateUser 创建用户
-func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*ent.User, error) {
+func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest, tenantID int) (*ent.User, error) {
 	s.logger.Infof("创建用户: %s", req.Username)
 
 	// 检查用户名是否已存在
@@ -66,7 +66,7 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		SetPhone(req.Phone).
 		SetPasswordHash(string(hashedPassword)).
 		SetActive(true).
-		SetTenantID(req.TenantID)
+		SetTenantID(tenantID)
 	// 如果请求中提供了角色，则设置角色；否则使用Schema默认值（end_user）
 	if strings.TrimSpace(req.Role) != "" {
 		uc = uc.SetRole(user.Role(strings.ToLower(strings.TrimSpace(req.Role))))
@@ -81,15 +81,11 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 }
 
 // ListUsers 获取用户列表
-func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest) (*dto.PagedUsersResponse, error) {
+func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, tenantID int) (*dto.PagedUsersResponse, error) {
 	s.logger.Infof("获取用户列表: page=%d, pageSize=%d", req.Page, req.PageSize)
 
-	query := s.client.User.Query()
-
-	// 按租户过滤
-	if req.TenantID > 0 {
-		query = query.Where(user.TenantIDEQ(req.TenantID))
-	}
+	query := s.client.User.Query().
+		Where(user.TenantIDEQ(tenantID))
 
 	// 按状态过滤
 	if req.Status != "" {
@@ -163,10 +159,15 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest) 
 }
 
 // GetUserByID 根据ID获取用户
-func (s *UserService) GetUserByID(ctx context.Context, id int) (*ent.User, error) {
+func (s *UserService) GetUserByID(ctx context.Context, id int, tenantID int) (*ent.User, error) {
 	s.logger.Infof("获取用户详情: ID=%d", id)
 
-	userEntity, err := s.client.User.Get(ctx, id)
+	userEntity, err := s.client.User.Query().
+		Where(
+			user.IDEQ(id),
+			user.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, fmt.Errorf("用户不存在: ID=%d", id)
@@ -178,24 +179,18 @@ func (s *UserService) GetUserByID(ctx context.Context, id int) (*ent.User, error
 }
 
 // UpdateUser 更新用户信息
-func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUserRequest) (*ent.User, error) {
+func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUserRequest, tenantID int) (*ent.User, error) {
 	s.logger.Infof("更新用户: ID=%d", id)
-
-	// 提取 tenant_id 并验证用户属于当前租户
-	tenantID, ok := ctx.Value("tenant_id").(int)
-	if !ok {
-		return nil, fmt.Errorf("tenant_id not found in context")
-	}
 
 	// 验证用户属于当前租户，防止跨租户访问
 	existingUser, err := s.client.User.Query().
-		Where(user.IDEQ(id), user.TenantID(tenantID)).
+		Where(user.IDEQ(id), user.TenantIDEQ(tenantID)).
 		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("cross-tenant access denied: user not found or access denied")
 	}
 
-	update := s.client.User.UpdateOneID(id).Where(user.TenantID(tenantID))
+	update := s.client.User.UpdateOneID(id).Where(user.TenantIDEQ(tenantID))
 
 	// 检查用户名是否已被其他用户使用
 	if req.Username != "" && req.Username != existingUser.Username {
@@ -260,17 +255,18 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 }
 
 // DeleteUser 删除用户
-func (s *UserService) DeleteUser(ctx context.Context, id int) error {
+func (s *UserService) DeleteUser(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infof("删除用户: ID=%d", id)
 
 	// 检查用户是否存在
-	_, err := s.GetUserByID(ctx, id)
+	_, err := s.GetUserByID(ctx, id, tenantID)
 	if err != nil {
 		return err
 	}
 
 	// 软删除 - 设置为非激活状态
 	err = s.client.User.UpdateOneID(id).
+		Where(user.TenantIDEQ(tenantID)).
 		SetActive(false).
 		Exec(ctx)
 	if err != nil {
@@ -283,11 +279,11 @@ func (s *UserService) DeleteUser(ctx context.Context, id int) error {
 
 // ChangeUserStatus 更改用户状态
 // currentUserID 是当前操作的用户ID，用于防止用户停用自己
-func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool, currentUserID int) error {
+func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool, currentUserID int, tenantID int) error {
 	s.logger.Infof("更改用户状态: ID=%d, active=%t, currentUserID=%d", id, active, currentUserID)
 
 	// 检查用户是否存在
-	_, err := s.GetUserByID(ctx, id)
+	_, err := s.GetUserByID(ctx, id, tenantID)
 	if err != nil {
 		return err
 	}
@@ -298,6 +294,7 @@ func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool,
 	}
 
 	err = s.client.User.UpdateOneID(id).
+		Where(user.TenantIDEQ(tenantID)).
 		SetActive(active).
 		Exec(ctx)
 	if err != nil {
@@ -309,11 +306,11 @@ func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool,
 }
 
 // ResetPassword 重置用户密码
-func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword string) error {
+func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword string, tenantID int) error {
 	s.logger.Infof("重置用户密码: ID=%d", id)
 
 	// 检查用户是否存在
-	_, err := s.GetUserByID(ctx, id)
+	_, err := s.GetUserByID(ctx, id, tenantID)
 	if err != nil {
 		return err
 	}
@@ -325,6 +322,7 @@ func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword str
 	}
 
 	err = s.client.User.UpdateOneID(id).
+		Where(user.TenantIDEQ(tenantID)).
 		SetPasswordHash(string(hashedPassword)).
 		Exec(ctx)
 	if err != nil {
@@ -360,9 +358,9 @@ func (s *UserService) GetUserStats(ctx context.Context, tenantID int) (*dto.User
 	online := active
 
 	response := &dto.UserStatsResponse{
-		Total:    total,
-		Active:   active,
-		Online:   online,
+		Total:  total,
+		Active: active,
+		Online: online,
 	}
 
 	s.logger.Infof("用户统计获取成功: total=%d, active=%d, online=%d", total, active, online)
@@ -370,14 +368,18 @@ func (s *UserService) GetUserStats(ctx context.Context, tenantID int) (*dto.User
 }
 
 // BatchUpdateUsers 批量更新用户
-func (s *UserService) BatchUpdateUsers(ctx context.Context, req *dto.BatchUpdateUsersRequest) error {
+func (s *UserService) BatchUpdateUsers(ctx context.Context, req *dto.BatchUpdateUsersRequest, tenantID int) error {
 	s.logger.Infof("批量更新用户: count=%d", len(req.UserIDs))
 
 	if len(req.UserIDs) == 0 {
 		return fmt.Errorf("用户ID列表不能为空")
 	}
 
-	update := s.client.User.Update().Where(user.IDIn(req.UserIDs...))
+	update := s.client.User.Update().
+		Where(
+			user.IDIn(req.UserIDs...),
+			user.TenantIDEQ(tenantID),
+		)
 
 	// 根据操作类型更新
 	switch req.Action {
@@ -404,7 +406,7 @@ func (s *UserService) BatchUpdateUsers(ctx context.Context, req *dto.BatchUpdate
 }
 
 // SearchUsers 搜索用户
-func (s *UserService) SearchUsers(ctx context.Context, req *dto.SearchUsersRequest) ([]*dto.UserDetailResponse, error) {
+func (s *UserService) SearchUsers(ctx context.Context, req *dto.SearchUsersRequest, tenantID int) ([]*dto.UserDetailResponse, error) {
 	s.logger.Infof("搜索用户: keyword=%s", req.Keyword)
 
 	if req.Keyword == "" {
@@ -420,10 +422,7 @@ func (s *UserService) SearchUsers(ctx context.Context, req *dto.SearchUsersReque
 			),
 		)
 
-	// 按租户过滤
-	if req.TenantID > 0 {
-		query = query.Where(user.TenantIDEQ(req.TenantID))
-	}
+	query = query.Where(user.TenantIDEQ(tenantID))
 
 	// 只返回活跃用户
 	query = query.Where(user.ActiveEQ(true))

@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/enttest"
 
 	"github.com/stretchr/testify/assert"
@@ -408,4 +410,283 @@ func TestApprovalService_GetApprovalRecords(t *testing.T) {
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, total, 1)
 	assert.GreaterOrEqual(t, len(records), 1)
+}
+
+func TestApprovalService_TriggerApproval_CreateRecords_FromApproverIDs(t *testing.T) {
+	client, service, ctx := setupApprovalTest(t)
+	defer client.Close()
+
+	testTenant, err := createApprovalTestTenant(ctx, client, "trigger1")
+	require.NoError(t, err)
+
+	approver1, err := createApprovalTestUser(ctx, client, testTenant.ID, "trigger1a")
+	require.NoError(t, err)
+	approver2, err := createApprovalTestUser(ctx, client, testTenant.ID, "trigger1b")
+	require.NoError(t, err)
+
+	workflow, err := client.ApprovalWorkflow.Create().
+		SetName("Urgent Ticket Workflow").
+		SetTicketType("ticket").
+		SetPriority("urgent").
+		SetIsActive(true).
+		SetTenantID(testTenant.ID).
+		SetNodes([]map[string]interface{}{
+			{
+				"level":         1,
+				"name":          "L1",
+				"approver_type": "user",
+				"approver_ids":  []int{approver1.ID, approver2.ID},
+				"approval_mode": "all",
+				"timeout_hours": 1,
+			},
+		}).
+		Save(ctx)
+	require.NoError(t, err)
+
+	ticketEntity, err := client.Ticket.Create().
+		SetTitle("Need approval").
+		SetDescription("desc").
+		SetPriority("urgent").
+		SetType("ticket").
+		SetStatus("open").
+		SetTicketNumber("TKT-TRIGGER-001").
+		SetTenantID(testTenant.ID).
+		SetRequesterID(approver1.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	records, err := service.TriggerApproval(ctx, &ApprovalTriggerRequest{
+		TicketID:     ticketEntity.ID,
+		TicketNumber: ticketEntity.TicketNumber,
+		TicketTitle:  ticketEntity.Title,
+		TicketType:   "ticket",
+		Priority:     "urgent",
+		RequesterID:  approver1.ID,
+		TenantID:     testTenant.ID,
+	})
+	require.NoError(t, err)
+	require.Len(t, records, 2)
+
+	count, err := client.ApprovalRecord.Query().
+		Where(
+			approvalrecord.TenantIDEQ(testTenant.ID),
+			approvalrecord.WorkflowIDEQ(workflow.ID),
+			approvalrecord.TicketIDEQ(ticketEntity.ID),
+		).
+		Count(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 2, count)
+}
+
+func TestApprovalService_TriggerApproval_IsIdempotent(t *testing.T) {
+	client, service, ctx := setupApprovalTest(t)
+	defer client.Close()
+
+	testTenant, err := createApprovalTestTenant(ctx, client, "trigger2")
+	require.NoError(t, err)
+
+	approver, err := createApprovalTestUser(ctx, client, testTenant.ID, "trigger2a")
+	require.NoError(t, err)
+
+	_, err = client.ApprovalWorkflow.Create().
+		SetName("Urgent Ticket Workflow").
+		SetTicketType("ticket").
+		SetPriority("urgent").
+		SetIsActive(true).
+		SetTenantID(testTenant.ID).
+		SetNodes([]map[string]interface{}{
+			{
+				"level":         1,
+				"name":          "L1",
+				"approver_type": "user",
+				"approver_ids":  []int{approver.ID},
+				"approval_mode": "any",
+			},
+		}).
+		Save(ctx)
+	require.NoError(t, err)
+
+	ticketEntity, err := client.Ticket.Create().
+		SetTitle("Need approval").
+		SetDescription("desc").
+		SetPriority("urgent").
+		SetType("ticket").
+		SetStatus("open").
+		SetTicketNumber("TKT-TRIGGER-002").
+		SetTenantID(testTenant.ID).
+		SetRequesterID(approver.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	req := &ApprovalTriggerRequest{
+		TicketID:     ticketEntity.ID,
+		TicketNumber: ticketEntity.TicketNumber,
+		TicketTitle:  ticketEntity.Title,
+		TicketType:   "ticket",
+		Priority:     "urgent",
+		RequesterID:  approver.ID,
+		TenantID:     testTenant.ID,
+	}
+
+	records1, err := service.TriggerApproval(ctx, req)
+	require.NoError(t, err)
+	require.Len(t, records1, 1)
+
+	records2, err := service.TriggerApproval(ctx, req)
+	require.NoError(t, err)
+	require.Nil(t, records2)
+
+	recordCount, err := client.ApprovalRecord.Query().
+		Where(
+			approvalrecord.TenantIDEQ(testTenant.ID),
+			approvalrecord.TicketIDEQ(ticketEntity.ID),
+		).
+		Count(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 1, recordCount)
+}
+
+func TestApprovalService_SubmitApproval_Approve_UpdatesTicketWhenLastPending(t *testing.T) {
+	client, service, ctx := setupApprovalTest(t)
+	defer client.Close()
+
+	testTenant, err := createApprovalTestTenant(ctx, client, "submit1")
+	require.NoError(t, err)
+
+	approver, err := createApprovalTestUser(ctx, client, testTenant.ID, "submit1a")
+	require.NoError(t, err)
+
+	workflow, err := client.ApprovalWorkflow.Create().
+		SetName("Workflow").
+		SetIsActive(true).
+		SetTenantID(testTenant.ID).
+		SetNodes([]map[string]interface{}{
+			{
+				"level":         1,
+				"name":          "L1",
+				"approver_type": "user",
+				"approver_ids":  []int{approver.ID},
+				"approval_mode": "any",
+			},
+		}).
+		Save(ctx)
+	require.NoError(t, err)
+
+	ticketEntity, err := client.Ticket.Create().
+		SetTitle("Need approval").
+		SetDescription("desc").
+		SetPriority("urgent").
+		SetType("ticket").
+		SetStatus("open").
+		SetTicketNumber("TKT-SUBMIT-001").
+		SetTenantID(testTenant.ID).
+		SetRequesterID(approver.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	record, err := client.ApprovalRecord.Create().
+		SetTicketID(ticketEntity.ID).
+		SetTicketNumber(ticketEntity.TicketNumber).
+		SetTicketTitle(ticketEntity.Title).
+		SetWorkflowID(workflow.ID).
+		SetWorkflowName(workflow.Name).
+		SetCurrentLevel(1).
+		SetTotalLevels(1).
+		SetApproverID(approver.ID).
+		SetApproverName(approver.Name).
+		SetStepOrder(1).
+		SetStatus("pending").
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	err = service.SubmitApproval(ctx, record.ID, approver.ID, "approve", "ok", nil, testTenant.ID)
+	require.NoError(t, err)
+
+	updatedRecord, err := client.ApprovalRecord.Get(ctx, record.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "approved", updatedRecord.Status)
+	assert.Equal(t, "approve", updatedRecord.Action)
+	assert.False(t, updatedRecord.ProcessedAt.IsZero())
+
+	updatedTicket, err := client.Ticket.Get(ctx, ticketEntity.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "approved", updatedTicket.Status)
+}
+
+func TestApprovalService_SubmitApproval_Delegate_CreatesNewPendingRecord(t *testing.T) {
+	client, service, ctx := setupApprovalTest(t)
+	defer client.Close()
+
+	testTenant, err := createApprovalTestTenant(ctx, client, "submit2")
+	require.NoError(t, err)
+
+	approver, err := createApprovalTestUser(ctx, client, testTenant.ID, "submit2a")
+	require.NoError(t, err)
+	delegate, err := createApprovalTestUser(ctx, client, testTenant.ID, "submit2b")
+	require.NoError(t, err)
+
+	workflow, err := client.ApprovalWorkflow.Create().
+		SetName("Workflow").
+		SetIsActive(true).
+		SetTenantID(testTenant.ID).
+		SetNodes([]map[string]interface{}{}).
+		Save(ctx)
+	require.NoError(t, err)
+
+	ticketEntity, err := client.Ticket.Create().
+		SetTitle("Need approval").
+		SetDescription("desc").
+		SetPriority("urgent").
+		SetType("ticket").
+		SetStatus("open").
+		SetTicketNumber("TKT-SUBMIT-002").
+		SetTenantID(testTenant.ID).
+		SetRequesterID(approver.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	record, err := client.ApprovalRecord.Create().
+		SetTicketID(ticketEntity.ID).
+		SetTicketNumber(ticketEntity.TicketNumber).
+		SetTicketTitle(ticketEntity.Title).
+		SetWorkflowID(workflow.ID).
+		SetWorkflowName(workflow.Name).
+		SetCurrentLevel(1).
+		SetTotalLevels(1).
+		SetApproverID(approver.ID).
+		SetApproverName(approver.Name).
+		SetStepOrder(1).
+		SetStatus("pending").
+		SetDueDate(time.Now().Add(time.Hour)).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	err = service.SubmitApproval(ctx, record.ID, approver.ID, "delegate", "", &delegate.ID, testTenant.ID)
+	require.NoError(t, err)
+
+	updatedRecord, err := client.ApprovalRecord.Get(ctx, record.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "delegated", updatedRecord.Status)
+
+	records, err := client.ApprovalRecord.Query().
+		Where(
+			approvalrecord.TenantIDEQ(testTenant.ID),
+			approvalrecord.TicketIDEQ(ticketEntity.ID),
+			approvalrecord.WorkflowIDEQ(workflow.ID),
+		).
+		All(ctx)
+	require.NoError(t, err)
+	require.Len(t, records, 2)
+
+	var pendingCount int
+	for _, r := range records {
+		if r.Status == "pending" {
+			pendingCount++
+			assert.Equal(t, delegate.ID, r.ApproverID)
+			assert.Equal(t, delegate.Name, r.ApproverName)
+		}
+	}
+	assert.Equal(t, 1, pendingCount)
 }

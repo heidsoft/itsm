@@ -103,7 +103,7 @@ class HttpClient {
   private readonly timeout: number;
 
   constructor(baseURL: string = API_BASE_URL) {
-    this.baseURL = process.env.NEXT_PUBLIC_API_URL || baseURL;
+    this.baseURL = typeof window === 'undefined' ? process.env.NEXT_PUBLIC_API_URL || baseURL : baseURL;
     this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
     // Token is read from cookie only (httpOnly from backend) — never stored in localStorage
     if (typeof window !== 'undefined') {

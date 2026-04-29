@@ -230,7 +230,12 @@ func (s *TicketAttachmentService) DeleteAttachment(ctx context.Context, ticketID
 	}
 
 	// 权限检查：只有上传人或工单处理人可以删除
-	ticketInfo, err := s.client.Ticket.Get(ctx, ticketID)
+	ticketInfo, err := s.client.Ticket.Query().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get ticket", "error", err)
 		return fmt.Errorf("failed to get ticket: %w", err)
@@ -250,7 +255,12 @@ func (s *TicketAttachmentService) DeleteAttachment(ctx context.Context, ticketID
 	}
 
 	// 删除数据库记录
-	err = s.client.TicketAttachment.DeleteOneID(attachmentID).Exec(ctx)
+	err = s.client.TicketAttachment.DeleteOneID(attachmentID).
+		Where(
+			ticketattachment.TicketID(ticketID),
+			ticketattachment.TenantID(tenantID),
+		).
+		Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to delete attachment", "error", err)
 		return fmt.Errorf("failed to delete attachment: %w", err)

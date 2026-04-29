@@ -41,6 +41,10 @@ func (tcc *TicketCommentController) ListTicketComments(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	comments, err := tcc.commentService.ListTicketComments(c.Request.Context(), ticketID, tenantID, userID)
 	if err != nil {
@@ -80,6 +84,10 @@ func (tcc *TicketCommentController) CreateTicketComment(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	comment, err := tcc.commentService.CreateTicketComment(c.Request.Context(), ticketID, &req, userID, tenantID)
 	if err != nil {
@@ -114,6 +122,10 @@ func (tcc *TicketCommentController) UpdateTicketComment(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	comment, err := tcc.commentService.UpdateTicketComment(c.Request.Context(), ticketID, commentID, &req, userID, tenantID)
 	if err != nil {
@@ -142,6 +154,10 @@ func (tcc *TicketCommentController) DeleteTicketComment(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	err = tcc.commentService.DeleteTicketComment(c.Request.Context(), ticketID, commentID, userID, tenantID)
 	if err != nil {
