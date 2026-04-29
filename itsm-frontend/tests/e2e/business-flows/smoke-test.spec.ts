@@ -35,6 +35,67 @@ test.describe('冒烟测试 - 快速验证所有主要页面', () => {
     expect(bodyContent?.length).toBeGreaterThan(100);
   });
 
+  test('工单创建功能正常（真实后端）', async ({ page }) => {
+    await loginAs(page, 'admin');
+    await page.goto('/tickets/create');
+    await expect(page.getByRole('main', { name: '创建工单页面' })).toBeVisible({ timeout: 15000 });
+
+    const createResponsePromise = page.waitForResponse((resp) => {
+      return resp.url().includes('/api/v1/tickets') && resp.request().method() === 'POST';
+    });
+
+    await page.getByTestId('ticket-title-input').fill(`E2E 工单 - ${Date.now()}`);
+    await page.getByTestId('ticket-description-input').fill('这是一个用于 E2E 的创建工单测试描述，长度超过 10 个字符。');
+    await page.getByTestId('ticket-submit-button').click();
+
+    const createResp = await createResponsePromise;
+    expect(createResp.status()).toBeGreaterThanOrEqual(200);
+    expect(createResp.status()).toBeLessThan(300);
+
+    await page.waitForURL(/\/tickets\/\d+$/, { timeout: 20000 });
+  });
+
+  test('CMDB 云资源发现可触发（真实后端）', async ({ page }) => {
+    await loginAs(page, 'admin');
+    await page.goto('/cmdb');
+    await expect(page.getByRole('heading', { name: '配置管理数据库' })).toBeVisible({ timeout: 15000 });
+
+    const statusResp = await page.waitForResponse((resp) => {
+      return resp.url().includes('/api/v1/configuration-items/discovery/status') && resp.request().method() === 'GET';
+    }, { timeout: 20000 });
+    expect(statusResp.status()).toBeGreaterThanOrEqual(200);
+    expect(statusResp.status()).toBeLessThan(300);
+
+    const runPromise = page.waitForResponse((resp) => {
+      return resp.url().includes('/api/v1/configuration-items/discovery/run') && resp.request().method() === 'POST';
+    });
+    await page.getByRole('button', { name: '立即同步' }).click();
+
+    const runResp = await runPromise;
+    expect(runResp.status()).toBeGreaterThanOrEqual(200);
+    expect(runResp.status()).toBeLessThan(300);
+  });
+
+  test('SLA 监控数据加载与刷新正常（真实后端）', async ({ page }) => {
+    await loginAs(page, 'admin');
+    await page.goto('/sla-monitor');
+    await expect(page.getByRole('heading', { name: 'SLA实时监控' })).toBeVisible({ timeout: 15000 });
+
+    const initialMonitoringResp = await page.waitForResponse((resp) => {
+      return resp.url().includes('/api/v1/sla/monitoring') && resp.request().method() === 'POST';
+    }, { timeout: 20000 });
+    expect(initialMonitoringResp.status()).toBeGreaterThanOrEqual(200);
+    expect(initialMonitoringResp.status()).toBeLessThan(300);
+
+    const refreshPromise = page.waitForResponse((resp) => {
+      return resp.url().includes('/api/v1/sla/monitoring') && resp.request().method() === 'POST';
+    });
+    await page.getByRole('button', { name: '刷新' }).click();
+    const refreshResp = await refreshPromise;
+    expect(refreshResp.status()).toBeGreaterThanOrEqual(200);
+    expect(refreshResp.status()).toBeLessThan(300);
+  });
+
   test('所有主要页面可访问', async ({ page }) => {
     await loginAs(page, 'admin');
     const baseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';

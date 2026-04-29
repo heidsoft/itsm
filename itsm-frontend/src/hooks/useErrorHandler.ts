@@ -19,7 +19,10 @@ interface ErrorHandlerOptions {
  * 统一的错误处理函数
  * 自动从 AxiosError 提取有意义的错误信息
  */
-export const getErrorMessage = (error: unknown, fallback: string = '操作失败，请稍后重试'): string => {
+export const getErrorMessage = (
+  error: unknown,
+  fallback: string = '操作失败，请稍后重试'
+): string => {
   if (error instanceof AxiosError) {
     // API 返回的业务错误
     if (error.response?.data?.message) {
@@ -77,11 +80,7 @@ export const useErrorHandler = () => {
   const { message } = App.useApp();
 
   const handleError = (error: unknown, options: ErrorHandlerOptions = {}) => {
-    const {
-      onError,
-      customMessage,
-      showMessage = true,
-    } = options;
+    const { onError, customMessage, showMessage = true } = options;
 
     // 1. 记录日志
     console.error('Error occurred:', error);
@@ -167,13 +166,7 @@ export const useAsyncOperation = (defaultOptions?: ErrorHandlerOptions) => {
       completeMessage?: string; // 不管成功失败都显示的消息
     } = {}
   ): Promise<T | undefined> => {
-    const {
-      onSuccess,
-      onError,
-      successMessage,
-      errorMessage,
-      completeMessage,
-    } = options;
+    const { onSuccess, onError, successMessage, errorMessage, completeMessage } = options;
 
     setLoading(true);
     try {

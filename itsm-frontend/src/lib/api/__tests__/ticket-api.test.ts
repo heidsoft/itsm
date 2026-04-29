@@ -1,5 +1,20 @@
 import { TicketApi } from '@/lib/api/ticket-api';
 
+jest.mock('@/lib/security', () => ({
+  security: {
+    csrf: {
+      getToken: jest.fn().mockResolvedValue('mock-csrf-token'),
+      clearToken: jest.fn(),
+    },
+    network: {
+      getSecureHeaders: jest.fn().mockReturnValue({
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      }),
+    },
+  },
+}));
+
 // Mock fetch globally
 global.fetch = jest.fn();
 

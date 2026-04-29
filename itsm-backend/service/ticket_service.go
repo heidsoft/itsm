@@ -1608,7 +1608,7 @@ func (s *TicketService) CreateTicketTemplate(ctx context.Context, tenantID int, 
 }
 
 // UpdateTicketTemplate 更新工单模板
-func (s *TicketService) UpdateTicketTemplate(ctx context.Context, templateID int, req interface{}) (interface{}, error) {
+func (s *TicketService) UpdateTicketTemplate(ctx context.Context, tenantID int, templateID int, req interface{}) (interface{}, error) {
 	// 调用专门的工单模板服务
 	templateService := NewTicketTemplateService(s.client)
 
@@ -1629,7 +1629,7 @@ func (s *TicketService) UpdateTicketTemplate(ctx context.Context, templateID int
 		IsActive:      &updateReq.IsActive,
 	}
 
-	template, err := templateService.UpdateTemplate(ctx, templateID, serviceReq)
+	template, err := templateService.UpdateTemplate(ctx, templateID, serviceReq, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -1638,10 +1638,10 @@ func (s *TicketService) UpdateTicketTemplate(ctx context.Context, templateID int
 }
 
 // DeleteTicketTemplate 删除工单模板
-func (s *TicketService) DeleteTicketTemplate(ctx context.Context, templateID int) error {
+func (s *TicketService) DeleteTicketTemplate(ctx context.Context, tenantID int, templateID int) error {
 	// 调用专门的工单模板服务
 	templateService := NewTicketTemplateService(s.client)
-	return templateService.DeleteTemplate(ctx, templateID)
+	return templateService.DeleteTemplate(ctx, templateID, tenantID)
 }
 
 // GetTicketTemplates 获取工单模板列表

@@ -87,7 +87,7 @@ const ProblemDetail: React.FC = () => {
       key: 'basic',
       label: '基本信息',
       children: (
-        <Card bodyStyle={{ padding: '16px 24px' }}>
+        <Card styles={{ body: { padding: '16px 24px' } }}>
           <Descriptions column={2}>
             <Descriptions.Item label="创建人ID">{data.createdBy}</Descriptions.Item>
             <Descriptions.Item label="负责人ID">{data.assigneeId || '-'}</Descriptions.Item>
@@ -140,7 +140,7 @@ const ProblemDetail: React.FC = () => {
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="middle">
       {/* 操作栏 */}
-      <Card bodyStyle={{ padding: '16px 24px' }}>
+      <Card styles={{ body: { padding: '16px 24px' } }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
             <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/problems')}>

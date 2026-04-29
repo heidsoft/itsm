@@ -2,8 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Card, Tag, Button, Typography, Rate } from 'antd';
-import { HardDrive, UserCog, ShieldCheck, Clock, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Card, Tag, Button, Typography, Rate, Space, Dropdown } from 'antd';
+import type { MenuProps } from 'antd';
+import { HardDrive, UserCog, ShieldCheck, Clock, ArrowRight, MoreHorizontal, Edit, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
 import { ServiceItem, ServiceCategory } from '@/types/service-catalog';
 import { useI18n } from '@/lib/i18n';
 
@@ -30,6 +32,7 @@ interface ServiceItemCardProps {
 
 export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => {
   const { t } = useI18n();
+  const router = useRouter();
   const categoryKey = String(catalog.category);
   const IconComponent = categoryIcons[categoryKey] || HardDrive;
 
@@ -46,10 +49,44 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on buttons/dropdown
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('.ant-dropdown')) {
+      return;
+    }
+    router.push(`/service-catalog/detail/${catalog.id}`);
+  };
+
+  const isPublished = catalog.status === 'published';
+
+  const actionItems: MenuProps['items'] = [
+    {
+      key: 'detail',
+      icon: <Eye size={14} />,
+      label: t('common.view') || '查看',
+      onClick: () => router.push(`/service-catalog/detail/${catalog.id}`),
+    },
+    {
+      key: 'edit',
+      icon: <Edit size={14} />,
+      label: t('common.edit') || '编辑',
+      onClick: () => router.push(`/service-catalog/edit/${catalog.id}`),
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'toggle',
+      icon: isPublished ? <ToggleLeft size={14} /> : <ToggleRight size={14} />,
+      label: isPublished ? (t('service.disable') || '停用') : (t('service.publish') || '发布'),
+    },
+  ];
+
   return (
     <Card
-      className="h-full rounded-lg shadow-sm border border-gray-200"
-     
+      className="h-full rounded-lg shadow-sm border border-gray-200 cursor-pointer transition-shadow hover:shadow-md"
+      onClick={handleCardClick}
       styles={{
         body: {
           padding: 24,
@@ -92,11 +129,19 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
       </div>
 
       <div className="mt-4 pt-4 border-t border-gray-100">
-        <Link href={`/service-catalog/request/${catalog.id}`} className="no-underline">
-          <Button type="primary" block icon={<ArrowRight size={16} />}>
-            {t('serviceCatalog.applyService')}
-          </Button>
-        </Link>
+        <div className="flex items-center justify-between gap-2">
+          <Link href={`/service-catalog/request/${catalog.id}`} className="no-underline flex-1">
+            <Button type="primary" block icon={<ArrowRight size={16} />}>
+              {t('serviceCatalog.applyService')}
+            </Button>
+          </Link>
+          <Dropdown menu={{ items: actionItems }} trigger={['click']} placement="bottomRight">
+            <Button
+              icon={<MoreHorizontal size={16} />}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </Dropdown>
+        </div>
       </div>
     </Card>
   );

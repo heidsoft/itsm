@@ -120,7 +120,6 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           alertLevel: alert.alertLevel || alert.alert_level,
           timeRemaining: alert.timeRemaining || alert.time_remaining,
           slaDefinition: alert.slaDefinition || alert.sla_definition,
-          severity: alert.severity || 'medium',
           createdAt: alert.createdAt || alert.created_at,
         }));
         setAlerts(convertedAlerts);
@@ -128,58 +127,8 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         return;
       }
 
-      // 如果API返回空，使用模拟数据
-      const mockMetrics: SLAMetrics = {
-        totalTickets: 1256,
-        compliantTickets: 1123,
-        violatedTickets: 89,
-        atRiskTickets: 44,
-        complianceRate: 89.4,
-        violationRate: 7.1,
-        averageResponseTime: 2.3,
-        averageResolutionTime: 8.7,
-        responseTimeCompliance: 92.5,
-        resolutionTimeCompliance: 88.2,
-      };
-
-      const mockAlerts: SLAAlert[] = [
-        {
-          id: '1',
-          ticketId: 1001,
-          ticketNumber: 'T-2024-001',
-          ticketTitle: '数据库连接超时',
-          priority: 'high',
-          alertLevel: 'critical',
-          timeRemaining: 0.5,
-          slaDefinition: 'P1-4小时响应',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          ticketId: 1002,
-          ticketNumber: 'T-2024-002',
-          ticketTitle: '网络设备故障',
-          priority: 'urgent',
-          alertLevel: 'warning',
-          timeRemaining: 1.2,
-          slaDefinition: 'P1-4小时响应',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          ticketId: 1003,
-          ticketNumber: 'T-2024-003',
-          ticketTitle: '系统登录异常',
-          priority: 'medium',
-          alertLevel: 'warning',
-          timeRemaining: 2.8,
-          slaDefinition: 'P2-8小时响应',
-          createdAt: new Date().toISOString(),
-        },
-      ];
-
-      setMetrics(mockMetrics);
-      setAlerts(mockAlerts);
+      setMetrics(null);
+      setAlerts([]);
       lastUpdateTimeRef.current = new Date();
     } catch (error) {
       antMessage.error('加载SLA数据失败');
@@ -594,9 +543,11 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           backgroundColor: isFullscreen ? 'rgba(255,255,255,0.05)' : '#fff',
           border: isFullscreen ? '1px solid rgba(255,255,255,0.1)' : undefined,
         }}
-        bodyStyle={{
-          maxHeight: isFullscreen ? '500px' : '400px',
-          overflowY: 'auto',
+        styles={{
+          body: {
+            maxHeight: isFullscreen ? '500px' : '400px',
+            overflowY: 'auto',
+          },
         }}
       >
         {alerts.length > 0 ? (

@@ -92,12 +92,14 @@ const AIChat: React.FC = () => {
         </Button>
       }
       style={{ height: 'calc(100vh - 150px)', display: 'flex', flexDirection: 'column' }}
-      bodyStyle={{
-        flex: 1,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: 0,
+      styles={{
+        body: {
+          flex: 1,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: 0,
+        },
       }}
     >
       <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>

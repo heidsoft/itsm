@@ -49,8 +49,13 @@ func (s *TicketTagService) CreateTag(ctx context.Context, req *CreateTagRequest)
 }
 
 // GetTag 获取工单标签
-func (s *TicketTagService) GetTag(ctx context.Context, id int) (*ent.TicketTag, error) {
-	return s.client.TicketTag.Get(ctx, id)
+func (s *TicketTagService) GetTag(ctx context.Context, id int, tenantID int) (*ent.TicketTag, error) {
+	return s.client.TicketTag.Query().
+		Where(
+			tickettag.ID(id),
+			tickettag.TenantID(tenantID),
+		).
+		Only(ctx)
 }
 
 // ListTags 获取工单标签列表
@@ -90,7 +95,8 @@ func (s *TicketTagService) ListTags(ctx context.Context, req *ListTagsRequest) (
 
 // UpdateTag 更新工单标签
 func (s *TicketTagService) UpdateTag(ctx context.Context, id int, req *UpdateTagRequest, tenantID int) (*ent.TicketTag, error) {
-	update := s.client.TicketTag.UpdateOneID(id)
+	update := s.client.TicketTag.UpdateOneID(id).
+		Where(tickettag.TenantID(tenantID))
 
 	if req.Name != "" {
 		// 验证标签名称唯一性
@@ -123,10 +129,13 @@ func (s *TicketTagService) UpdateTag(ctx context.Context, id int, req *UpdateTag
 }
 
 // DeleteTag 删除工单标签
-func (s *TicketTagService) DeleteTag(ctx context.Context, id int) error {
+func (s *TicketTagService) DeleteTag(ctx context.Context, id int, tenantID int) error {
 	// 检查是否有工单使用此标签
 	ticketsCount, err := s.client.Ticket.Query().
-		Where(ticket.HasTagsWith(tickettag.ID(id))).
+		Where(
+			ticket.HasTagsWith(tickettag.ID(id)),
+			ticket.TenantID(tenantID),
+		).
 		Count(ctx)
 	if err != nil {
 		return err
@@ -135,23 +144,36 @@ func (s *TicketTagService) DeleteTag(ctx context.Context, id int) error {
 		return errors.New("无法删除正在使用的标签")
 	}
 
-	return s.client.TicketTag.DeleteOneID(id).Exec(ctx)
+	return s.client.TicketTag.DeleteOneID(id).
+		Where(tickettag.TenantID(tenantID)).
+		Exec(ctx)
 }
 
 // AssignTagsToTicket 为工单分配标签
-func (s *TicketTagService) AssignTagsToTicket(ctx context.Context, ticketID int, tagIDs []int) error {
+func (s *TicketTagService) AssignTagsToTicket(ctx context.Context, ticketID int, tagIDs []int, tenantID int) error {
 	// 获取工单
-	ticket, err := s.client.Ticket.Get(ctx, ticketID)
+	ticket, err := s.client.Ticket.Query().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		return err
 	}
 
 	// 获取标签
 	tags, err := s.client.TicketTag.Query().
-		Where(tickettag.IDIn(tagIDs...)).
+		Where(
+			tickettag.IDIn(tagIDs...),
+			tickettag.TenantID(tenantID),
+		).
 		All(ctx)
 	if err != nil {
 		return err
+	}
+	if len(tags) != len(tagIDs) {
+		return errors.New("部分标签不存在")
 	}
 
 	// 更新工单标签关联
@@ -163,19 +185,30 @@ func (s *TicketTagService) AssignTagsToTicket(ctx context.Context, ticketID int,
 }
 
 // RemoveTagsFromTicket 从工单移除标签
-func (s *TicketTagService) RemoveTagsFromTicket(ctx context.Context, ticketID int, tagIDs []int) error {
+func (s *TicketTagService) RemoveTagsFromTicket(ctx context.Context, ticketID int, tagIDs []int, tenantID int) error {
 	// 获取工单
-	ticket, err := s.client.Ticket.Get(ctx, ticketID)
+	ticket, err := s.client.Ticket.Query().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		return err
 	}
 
 	// 获取标签
 	tags, err := s.client.TicketTag.Query().
-		Where(tickettag.IDIn(tagIDs...)).
+		Where(
+			tickettag.IDIn(tagIDs...),
+			tickettag.TenantID(tenantID),
+		).
 		All(ctx)
 	if err != nil {
 		return err
+	}
+	if len(tags) != len(tagIDs) {
+		return errors.New("部分标签不存在")
 	}
 
 	// 更新工单标签关联

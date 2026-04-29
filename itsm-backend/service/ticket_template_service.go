@@ -27,7 +27,10 @@ func (s *TicketTemplateService) CreateTemplate(ctx context.Context, req *CreateT
 	// 验证分类是否存在
 	if req.Category != "" {
 		_, err := s.client.TicketCategory.Query().
-			Where(ticketcategory.NameEQ(req.Category)).
+			Where(
+				ticketcategory.NameEQ(req.Category),
+				ticketcategory.TenantIDEQ(req.TenantID),
+			).
 			First(ctx)
 		if err != nil {
 			return nil, errors.New("指定的分类不存在")
@@ -64,8 +67,13 @@ func (s *TicketTemplateService) CreateTemplate(ctx context.Context, req *CreateT
 }
 
 // GetTemplate 获取工单模板
-func (s *TicketTemplateService) GetTemplate(ctx context.Context, id int) (*ent.TicketTemplate, error) {
-	return s.client.TicketTemplate.Get(ctx, id)
+func (s *TicketTemplateService) GetTemplate(ctx context.Context, id int, tenantID int) (*ent.TicketTemplate, error) {
+	return s.client.TicketTemplate.Query().
+		Where(
+			tickettemplate.IDEQ(id),
+			tickettemplate.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
 }
 
 // ListTemplates 获取工单模板列表
@@ -121,8 +129,9 @@ func (s *TicketTemplateService) ListTemplates(ctx context.Context, req *ListTemp
 }
 
 // UpdateTemplate 更新工单模板
-func (s *TicketTemplateService) UpdateTemplate(ctx context.Context, id int, req *UpdateTemplateRequest) (*ent.TicketTemplate, error) {
-	update := s.client.TicketTemplate.UpdateOneID(id)
+func (s *TicketTemplateService) UpdateTemplate(ctx context.Context, id int, req *UpdateTemplateRequest, tenantID int) (*ent.TicketTemplate, error) {
+	update := s.client.TicketTemplate.UpdateOneID(id).
+		Where(tickettemplate.TenantIDEQ(tenantID))
 
 	if req.Name != "" {
 		update.SetName(req.Name)
@@ -160,10 +169,13 @@ func (s *TicketTemplateService) UpdateTemplate(ctx context.Context, id int, req 
 }
 
 // DeleteTemplate 删除工单模板
-func (s *TicketTemplateService) DeleteTemplate(ctx context.Context, id int) error {
+func (s *TicketTemplateService) DeleteTemplate(ctx context.Context, id int, tenantID int) error {
 	// 检查是否有工单使用此模板
 	count, err := s.client.Ticket.Query().
-		Where(ticket.TemplateIDEQ(id)).
+		Where(
+			ticket.TemplateIDEQ(id),
+			ticket.TenantIDEQ(tenantID),
+		).
 		Count(ctx)
 	if err != nil {
 		return err
@@ -172,7 +184,9 @@ func (s *TicketTemplateService) DeleteTemplate(ctx context.Context, id int) erro
 		return errors.New("无法删除正在使用的模板")
 	}
 
-	return s.client.TicketTemplate.DeleteOneID(id).Exec(ctx)
+	return s.client.TicketTemplate.DeleteOneID(id).
+		Where(tickettemplate.TenantIDEQ(tenantID)).
+		Exec(ctx)
 }
 
 // CreateTemplateRequest 创建模板请求

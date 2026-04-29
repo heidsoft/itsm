@@ -41,6 +41,10 @@ func (tac *TicketAttachmentController) ListTicketAttachments(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 
 	attachments, err := tac.attachmentService.ListAttachments(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
@@ -90,6 +94,10 @@ func (tac *TicketAttachmentController) UploadAttachment(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	attachment, err := tac.attachmentService.UploadAttachment(c.Request.Context(), ticketID, fileHeader, userID, tenantID)
 	if err != nil {
@@ -117,6 +125,10 @@ func (tac *TicketAttachmentController) DownloadAttachment(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 
 	attachmentFile, err := tac.attachmentService.GetAttachmentFile(c.Request.Context(), ticketID, attachmentID, tenantID)
 	if err != nil {
@@ -159,6 +171,10 @@ func (tac *TicketAttachmentController) PreviewAttachment(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 
 	attachmentFile, err := tac.attachmentService.GetAttachmentFile(c.Request.Context(), ticketID, attachmentID, tenantID)
 	if err != nil {
@@ -202,6 +218,10 @@ func (tac *TicketAttachmentController) DeleteAttachment(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	err = tac.attachmentService.DeleteAttachment(c.Request.Context(), ticketID, attachmentID, tenantID, userID)
 	if err != nil {

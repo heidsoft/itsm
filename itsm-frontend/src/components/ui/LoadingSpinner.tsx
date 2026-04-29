@@ -9,6 +9,8 @@ interface LoadingSpinnerProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   color?: 'primary' | 'secondary' | 'white';
+  tip?: string;
+  ariaLabel?: string;
 }
 
 /**
@@ -19,6 +21,8 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'md',
   className,
   color = 'primary',
+  tip,
+  ariaLabel = '加载中',
 }) => {
   const getSize = () => {
     switch (size) {
@@ -51,15 +55,18 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   };
 
   return (
-    <Spin
-      indicator={
-        <LoadingOutlined
-          style={{ fontSize: getSize() }}
-          spin
-          className={cn(getColorClass(), className)}
-        />
-      }
-    />
+    <span role="status" aria-label={ariaLabel} className="inline-flex items-center">
+      <Spin
+        indicator={
+          <LoadingOutlined
+            style={{ fontSize: getSize() }}
+            spin
+            className={cn(getColorClass(), className)}
+          />
+        }
+      />
+      {tip ? <span className="ml-2">{tip}</span> : null}
+    </span>
   );
 };
 

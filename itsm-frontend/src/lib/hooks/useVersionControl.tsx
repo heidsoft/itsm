@@ -16,9 +16,7 @@ export class VersionConflictError extends Error {
     public serverVersion: number,
     public serverData?: unknown
   ) {
-    super(
-      `版本冲突：当前版本 ${currentVersion}，服务器版本 ${serverVersion}`
-    );
+    super(`版本冲突：当前版本 ${currentVersion}，服务器版本 ${serverVersion}`);
     this.name = 'VersionConflictError';
   }
 }
@@ -174,7 +172,7 @@ export function useVersionControl<T extends { version?: number; id?: number }>(
   // 显示冲突对话框
   const showConflictDialog = useCallback(
     async (serverData?: T, serverVersion?: number) => {
-      return new Promise<boolean>((resolve) => {
+      return new Promise<boolean>(resolve => {
         Modal.confirm({
           title: (
             <span>
@@ -185,8 +183,8 @@ export function useVersionControl<T extends { version?: number; id?: number }>(
           content: (
             <div>
               <p>
-                该{dataName}已被其他用户修改（服务器版本: {serverVersion ?? '?'}，
-                您的版本: {version}）。
+                该{dataName}已被其他用户修改（服务器版本: {serverVersion ?? '?'}， 您的版本:{' '}
+                {version}）。
               </p>
               <p>请选择操作：</p>
               <ul>
@@ -413,18 +411,24 @@ export function useVersionTracker(initialVersion: number = 0) {
   const [hasChanges, setHasChanges] = useState(false);
 
   // 更新版本
-  const updateVersion = useCallback((newVersion: number) => {
-    setVersion(newVersion);
-    setHasChanges(newVersion !== baseVersion);
-  }, [baseVersion]);
+  const updateVersion = useCallback(
+    (newVersion: number) => {
+      setVersion(newVersion);
+      setHasChanges(newVersion !== baseVersion);
+    },
+    [baseVersion]
+  );
 
   // 标记为已保存
-  const markSaved = useCallback((newVersion?: number) => {
-    const v = newVersion ?? version;
-    setBaseVersion(v);
-    setVersion(v);
-    setHasChanges(false);
-  }, [version]);
+  const markSaved = useCallback(
+    (newVersion?: number) => {
+      const v = newVersion ?? version;
+      setBaseVersion(v);
+      setVersion(v);
+      setHasChanges(false);
+    },
+    [version]
+  );
 
   // 重置
   const reset = useCallback((newVersion: number = 0) => {
@@ -434,9 +438,12 @@ export function useVersionTracker(initialVersion: number = 0) {
   }, []);
 
   // 检查是否过期
-  const checkStale = useCallback((serverVersion: number): boolean => {
-    return serverVersion > baseVersion;
-  }, [baseVersion]);
+  const checkStale = useCallback(
+    (serverVersion: number): boolean => {
+      return serverVersion > baseVersion;
+    },
+    [baseVersion]
+  );
 
   return {
     version,
