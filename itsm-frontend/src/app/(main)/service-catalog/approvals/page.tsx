@@ -31,7 +31,9 @@ export default function ServiceApprovalsPage() {
   const loadApprovals = async () => {
     setLoading(true);
     try {
-      const data = await ServiceCatalogApi.getServiceRequests({ status: ServiceRequestStatus.PENDING_APPROVAL });
+      const data = await ServiceCatalogApi.getServiceRequests({
+        status: ServiceRequestStatus.PENDING_APPROVAL,
+      });
       setRequests((data.requests || []) as ServiceRequestRecord[]);
     } catch (error) {
       message.error(t('common.getFailed'));
@@ -83,10 +85,23 @@ export default function ServiceApprovalsPage() {
           <Button size="small" type="primary" onClick={() => handleApprove(record.id)}>
             {t('service.approve')}
           </Button>
-          <Button size="small" onClick={() => { setSelectedRequest(record); setDetailModalVisible(true); }}>
+          <Button
+            size="small"
+            onClick={() => {
+              setSelectedRequest(record);
+              setDetailModalVisible(true);
+            }}
+          >
             {t('common.view')}
           </Button>
-          <Button size="small" danger onClick={() => { setSelectedRequest(record); setRejectModalVisible(true); }}>
+          <Button
+            size="small"
+            danger
+            onClick={() => {
+              setSelectedRequest(record);
+              setRejectModalVisible(true);
+            }}
+          >
             {t('service.reject')}
           </Button>
         </Space>
@@ -101,12 +116,23 @@ export default function ServiceApprovalsPage() {
       </Card>
 
       {/* Detail Modal */}
-      <Modal title={t('service.requestDetail')} open={detailModalVisible} onCancel={() => setDetailModalVisible(false)} footer={null}>
+      <Modal
+        title={t('service.requestDetail')}
+        open={detailModalVisible}
+        onCancel={() => setDetailModalVisible(false)}
+        footer={null}
+      >
         {selectedRequest && (
           <div>
-            <p><strong>{t('service.serviceName')}:</strong> {selectedRequest.serviceName}</p>
-            <p><strong>{t('service.requester')}:</strong> {selectedRequest.requesterName}</p>
-            <p><strong>{t('service.reason')}:</strong> {selectedRequest.reason}</p>
+            <p>
+              <strong>{t('service.serviceName')}:</strong> {selectedRequest.serviceName}
+            </p>
+            <p>
+              <strong>{t('service.requester')}:</strong> {selectedRequest.requesterName}
+            </p>
+            <p>
+              <strong>{t('service.reason')}:</strong> {selectedRequest.reason}
+            </p>
           </div>
         )}
       </Modal>
@@ -116,10 +142,16 @@ export default function ServiceApprovalsPage() {
         title={t('service.rejectRequest')}
         open={rejectModalVisible}
         onCancel={() => setRejectModalVisible(false)}
-        onOk={() => { if (selectedRequest?.id) handleReject(selectedRequest.id); }}
+        onOk={() => {
+          if (selectedRequest?.id) handleReject(selectedRequest.id);
+        }}
       >
         <p>{t('service.rejectReason')}</p>
-        <Input.TextArea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={4} />
+        <Input.TextArea
+          value={rejectReason}
+          onChange={e => setRejectReason(e.target.value)}
+          rows={4}
+        />
       </Modal>
     </div>
   );
