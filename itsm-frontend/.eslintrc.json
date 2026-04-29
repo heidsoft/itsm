@@ -30,6 +30,9 @@
   "overrides": [
     {
       "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+      "parserOptions": {
+        "project": null
+      },
       "rules": {
         "@typescript-eslint/no-explicit-any": "off",
         "no-console": "off"

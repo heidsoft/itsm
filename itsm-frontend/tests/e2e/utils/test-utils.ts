@@ -259,21 +259,3 @@ export async function waitForNotification(page: Page, text?: string): Promise<vo
     : page.locator('.ant-message-success, .ant-message-error, [class*="notification"]');
   await notification.first().waitFor({ timeout: 5000 });
 }
-
-/**
- * Mock API response for testing
- */
-export async function mockApiResponse(
-  page: Page,
-  urlPattern: string | RegExp,
-  response: unknown,
-  status = 200
-): Promise<void> {
-  await page.route(urlPattern, async (route) => {
-    await route.fulfill({
-      status,
-      contentType: 'application/json',
-      body: JSON.stringify(response),
-    });
-  });
-}

@@ -181,6 +181,8 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
           type="text"
           icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
           onClick={() => onCollapse(!collapsed)}
+          aria-label={collapsed ? '展开侧边栏' : '收起侧边栏'}
+          title={collapsed ? '展开侧边栏' : '收起侧边栏'}
           className={styles.collapseButton}
           style={{
             width: 40,
@@ -206,6 +208,8 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
             <Button
               type="text"
               onClick={() => setNotificationsOpen(true)}
+              aria-label="通知中心"
+              title="通知中心"
               style={{
                 width: 40,
                 height: 40,
@@ -225,6 +229,8 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
           <Tooltip title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}>
             <Button
               type="text"
+              aria-label={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
+              title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
               style={{
                 width: 40,
                 height: 40,

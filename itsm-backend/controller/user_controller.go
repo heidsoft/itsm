@@ -42,7 +42,13 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := uc.userService.CreateUser(c.Request.Context(), &req)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	user, err := uc.userService.CreateUser(c.Request.Context(), &req, tenantID.(int))
 	if err != nil {
 		uc.logger.Errorf("创建用户失败: %v", err)
 		// 业务错误：用户名/邮箱重复
@@ -90,7 +96,13 @@ func (uc *UserController) ListUsers(c *gin.Context) {
 		req.PageSize = 10
 	}
 
-	result, err := uc.userService.ListUsers(c.Request.Context(), &req)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	result, err := uc.userService.ListUsers(c.Request.Context(), &req, tenantID.(int))
 	if err != nil {
 		uc.logger.Errorf("获取用户列表失败: %v", err)
 		common.Fail(c, 5001, "获取用户列表失败: "+err.Error())
@@ -119,7 +131,13 @@ func (uc *UserController) GetUser(c *gin.Context) {
 		return
 	}
 
-	user, err := uc.userService.GetUserByID(c.Request.Context(), id)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	user, err := uc.userService.GetUserByID(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
 		uc.logger.Errorf("获取用户详情失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
@@ -162,7 +180,13 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := uc.userService.UpdateUser(c.Request.Context(), id, &req)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	user, err := uc.userService.UpdateUser(c.Request.Context(), id, &req, tenantID.(int))
 	if err != nil {
 		uc.logger.Errorf("更新用户失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
@@ -201,7 +225,13 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	err = uc.userService.DeleteUser(c.Request.Context(), id)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	err = uc.userService.DeleteUser(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
 		uc.logger.Errorf("删除用户失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
@@ -244,7 +274,13 @@ func (uc *UserController) ChangeUserStatus(c *gin.Context) {
 
 	// 获取当前登录用户ID
 	currentUserID := c.GetInt("user_id")
-	err = uc.userService.ChangeUserStatus(c.Request.Context(), id, req.Active, currentUserID)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	err = uc.userService.ChangeUserStatus(c.Request.Context(), id, req.Active, currentUserID, tenantID.(int))
 	if err != nil {
 		uc.logger.Errorf("更改用户状态失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
@@ -285,7 +321,13 @@ func (uc *UserController) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	err = uc.userService.ResetPassword(c.Request.Context(), id, req.NewPassword)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	err = uc.userService.ResetPassword(c.Request.Context(), id, req.NewPassword, tenantID.(int))
 	if err != nil {
 		uc.logger.Errorf("重置密码失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
@@ -310,18 +352,13 @@ func (uc *UserController) ResetPassword(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Router /api/v1/users/stats [get]
 func (uc *UserController) GetUserStats(c *gin.Context) {
-	tenantIDStr := c.Query("tenant_id")
-	var tenantID int
-	if tenantIDStr != "" {
-		var err error
-		tenantID, err = strconv.Atoi(tenantIDStr)
-		if err != nil {
-			common.Fail(c, 1001, "租户ID格式错误")
-			return
-		}
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
 	}
 
-	stats, err := uc.userService.GetUserStats(c.Request.Context(), tenantID)
+	stats, err := uc.userService.GetUserStats(c.Request.Context(), tenantID.(int))
 	if err != nil {
 		uc.logger.Errorf("获取用户统计失败: %v", err)
 		common.Fail(c, 5001, "获取用户统计失败: "+err.Error())
@@ -349,7 +386,13 @@ func (uc *UserController) BatchUpdateUsers(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.BatchUpdateUsers(c.Request.Context(), &req)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	err := uc.userService.BatchUpdateUsers(c.Request.Context(), &req, tenantID.(int))
 	if err != nil {
 		uc.logger.Errorf("批量更新用户失败: %v", err)
 		common.Fail(c, 5001, "批量更新用户失败: "+err.Error())
@@ -388,9 +431,8 @@ func (uc *UserController) SearchUsers(c *gin.Context) {
 		}
 	}
 
-	// 至少提供一个条件
-	if strings.TrimSpace(req.Keyword) == "" && req.TenantID == 0 {
-		common.Fail(c, 1001, "搜索条件不能为空")
+	if strings.TrimSpace(req.Keyword) == "" {
+		common.Fail(c, 1001, "搜索关键词不能为空")
 		return
 	}
 
@@ -399,7 +441,13 @@ func (uc *UserController) SearchUsers(c *gin.Context) {
 		req.Limit = 10
 	}
 
-	users, err := uc.userService.SearchUsers(c.Request.Context(), &req)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	users, err := uc.userService.SearchUsers(c.Request.Context(), &req, tenantID.(int))
 	if err != nil {
 		uc.logger.Errorf("搜索用户失败: %v", err)
 		common.Fail(c, 5001, "搜索用户失败: "+err.Error())

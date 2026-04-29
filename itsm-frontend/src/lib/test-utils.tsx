@@ -4,7 +4,7 @@
  */
 
 import { render, RenderOptions } from '@testing-library/react';
-import { ConfigProvider } from 'antd';
+import { App, ConfigProvider } from 'antd';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactElement } from 'react';
 import antdTheme from '@/lib/antd-theme';
@@ -29,7 +29,9 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <ConfigProvider theme={antdTheme}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <App>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </App>
     </ConfigProvider>
   );
 };

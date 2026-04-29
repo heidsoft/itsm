@@ -167,10 +167,10 @@ func (s *BPMNTenantService) GetTenantStatistics(ctx context.Context, tenantID in
 	}
 
 	return &TenantBPMNStats{
-		TotalDefinitions:    definitionsCount,
-		TotalInstances:      instancesCount,
-		RunningInstances:    runningInstances,
-		CompletedInstances:  completedInstances,
+		TotalDefinitions:   definitionsCount,
+		TotalInstances:     instancesCount,
+		RunningInstances:   runningInstances,
+		CompletedInstances: completedInstances,
 		TotalTasks:         tasksCount,
 		OpenTasks:          openTasks,
 	}, nil
@@ -190,27 +190,24 @@ type TenantBPMNStats struct {
 func (s *BPMNTenantService) ValidateTenantAccess(ctx context.Context, resourceType string, resourceID int, tenantID int) error {
 	switch resourceType {
 	case "process_definition":
-		definition, err := s.client.ProcessDefinition.Get(ctx, resourceID)
+		_, err := s.client.ProcessDefinition.Query().
+			Where(processdefinition.ID(resourceID), processdefinition.TenantID(tenantID)).
+			Only(ctx)
 		if err != nil {
-			return fmt.Errorf("获取流程定义失败: %w", err)
-		}
-		if definition.TenantID != tenantID {
 			return fmt.Errorf("无权访问该流程定义")
 		}
 	case "process_instance":
-		instance, err := s.client.ProcessInstance.Get(ctx, resourceID)
+		_, err := s.client.ProcessInstance.Query().
+			Where(processinstance.ID(resourceID), processinstance.TenantID(tenantID)).
+			Only(ctx)
 		if err != nil {
-			return fmt.Errorf("获取流程实例失败: %w", err)
-		}
-		if instance.TenantID != tenantID {
 			return fmt.Errorf("无权访问该流程实例")
 		}
 	case "task":
-		task, err := s.client.ProcessTask.Get(ctx, resourceID)
+		_, err := s.client.ProcessTask.Query().
+			Where(processtask.ID(resourceID), processtask.TenantID(tenantID)).
+			Only(ctx)
 		if err != nil {
-			return fmt.Errorf("获取任务失败: %w", err)
-		}
-		if task.TenantID != tenantID {
 			return fmt.Errorf("无权访问该任务")
 		}
 	}

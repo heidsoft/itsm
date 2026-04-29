@@ -25,6 +25,7 @@ func (s *TicketCategoryService) CreateCategory(ctx context.Context, req *CreateC
 	// 验证分类代码唯一性
 	exists, err := s.client.TicketCategory.Query().
 		Where(ticketcategory.CodeEQ(req.Code)).
+		Where(ticketcategory.TenantID(req.TenantID)).
 		Exist(ctx)
 	if err != nil {
 		return nil, err
@@ -36,7 +37,9 @@ func (s *TicketCategoryService) CreateCategory(ctx context.Context, req *CreateC
 	// 验证父分类
 	var level int = 1
 	if req.ParentID > 0 {
-		parent, err := s.client.TicketCategory.Get(ctx, req.ParentID)
+		parent, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.ID(req.ParentID), ticketcategory.TenantID(req.TenantID)).
+			Only(ctx)
 		if err != nil {
 			return nil, errors.New("父分类不存在")
 		}
@@ -61,8 +64,10 @@ func (s *TicketCategoryService) CreateCategory(ctx context.Context, req *CreateC
 }
 
 // GetCategory 获取工单分类
-func (s *TicketCategoryService) GetCategory(ctx context.Context, id int) (*ent.TicketCategory, error) {
-	return s.client.TicketCategory.Get(ctx, id)
+func (s *TicketCategoryService) GetCategory(ctx context.Context, id int, tenantID int) (*ent.TicketCategory, error) {
+	return s.client.TicketCategory.Query().
+		Where(ticketcategory.ID(id), ticketcategory.TenantID(tenantID)).
+		Only(ctx)
 }
 
 // ListCategories 获取工单分类列表
@@ -153,8 +158,9 @@ func (s *TicketCategoryService) GetCategoryTree(ctx context.Context, tenantID in
 }
 
 // UpdateCategory 更新工单分类
-func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req *UpdateCategoryRequest) (*ent.TicketCategory, error) {
-	update := s.client.TicketCategory.UpdateOneID(id)
+func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req *UpdateCategoryRequest, tenantID int) (*ent.TicketCategory, error) {
+	update := s.client.TicketCategory.UpdateOneID(id).
+		Where(ticketcategory.TenantID(tenantID))
 
 	if req.Name != "" {
 		update.SetName(req.Name)
@@ -166,6 +172,7 @@ func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req 
 		// 验证分类代码唯一性
 		exists, err := s.client.TicketCategory.Query().
 			Where(ticketcategory.CodeEQ(req.Code)).
+			Where(ticketcategory.TenantID(tenantID)).
 			Where(ticketcategory.IDNEQ(id)).
 			Exist(ctx)
 		if err != nil {
@@ -179,7 +186,9 @@ func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req 
 	if req.ParentID != nil {
 		if *req.ParentID > 0 {
 			// 验证父分类
-			parent, err := s.client.TicketCategory.Get(ctx, *req.ParentID)
+			parent, err := s.client.TicketCategory.Query().
+				Where(ticketcategory.ID(*req.ParentID), ticketcategory.TenantID(tenantID)).
+				Only(ctx)
 			if err != nil {
 				return nil, errors.New("父分类不存在")
 			}
@@ -203,10 +212,13 @@ func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req 
 }
 
 // DeleteCategory 删除工单分类
-func (s *TicketCategoryService) DeleteCategory(ctx context.Context, id int) error {
+func (s *TicketCategoryService) DeleteCategory(ctx context.Context, id int, tenantID int) error {
 	// 检查是否有子分类
 	childrenCount, err := s.client.TicketCategory.Query().
-		Where(ticketcategory.ParentIDEQ(id)).
+		Where(
+			ticketcategory.ParentIDEQ(id),
+			ticketcategory.TenantID(tenantID),
+		).
 		Count(ctx)
 	if err != nil {
 		return err
@@ -217,7 +229,10 @@ func (s *TicketCategoryService) DeleteCategory(ctx context.Context, id int) erro
 
 	// 检查是否有工单使用此分类
 	ticketsCount, err := s.client.Ticket.Query().
-		Where(ticket.CategoryIDEQ(id)).
+		Where(
+			ticket.CategoryIDEQ(id),
+			ticket.TenantID(tenantID),
+		).
 		Count(ctx)
 	if err != nil {
 		return err
@@ -226,7 +241,9 @@ func (s *TicketCategoryService) DeleteCategory(ctx context.Context, id int) erro
 		return errors.New("无法删除正在使用的分类")
 	}
 
-	return s.client.TicketCategory.DeleteOneID(id).Exec(ctx)
+	return s.client.TicketCategory.DeleteOneID(id).
+		Where(ticketcategory.TenantID(tenantID)).
+		Exec(ctx)
 }
 
 // CreateCategoryRequest 创建分类请求

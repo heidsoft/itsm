@@ -93,7 +93,13 @@ func (wc *WorkflowController) UpdateWorkflow(c *gin.Context) {
 		return
 	}
 
-	workflow, err := wc.workflowService.UpdateWorkflow(c.Request.Context(), workflowID, &req)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	workflow, err := wc.workflowService.UpdateWorkflow(c.Request.Context(), workflowID, &req, tenantID.(int))
 	if err != nil {
 		wc.logger.Error("Failed to update workflow", zap.Error(err), zap.Int("workflow_id", workflowID))
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -119,7 +125,13 @@ func (wc *WorkflowController) DeleteWorkflow(c *gin.Context) {
 		return
 	}
 
-	err = wc.workflowService.DeleteWorkflow(c.Request.Context(), workflowID)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	err = wc.workflowService.DeleteWorkflow(c.Request.Context(), workflowID, tenantID.(int))
 	if err != nil {
 		wc.logger.Error("Failed to delete workflow", zap.Error(err), zap.Int("workflow_id", workflowID))
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -145,7 +157,13 @@ func (wc *WorkflowController) GetWorkflow(c *gin.Context) {
 		return
 	}
 
-	workflow, err := wc.workflowService.GetWorkflow(c.Request.Context(), workflowID)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	workflow, err := wc.workflowService.GetWorkflow(c.Request.Context(), workflowID, tenantID.(int))
 	if err != nil {
 		wc.logger.Error("Failed to get workflow", zap.Error(err), zap.Int("workflow_id", workflowID))
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -232,7 +250,13 @@ func (wc *WorkflowController) ExecuteWorkflowStep(c *gin.Context) {
 		return
 	}
 
-	err := wc.workflowService.ExecuteWorkflowStep(c.Request.Context(), &req)
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	err := wc.workflowService.ExecuteWorkflowStep(c.Request.Context(), &req, tenantID.(int))
 	if err != nil {
 		wc.logger.Error("Failed to execute workflow step", zap.Error(err), zap.Int("instance_id", req.InstanceID))
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -247,6 +271,18 @@ func (wc *WorkflowController) CompleteWorkflowStep(c *gin.Context) {
 	var req service.CompleteWorkflowStepRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	if _, err := wc.workflowService.GetWorkflowInstance(c.Request.Context(), req.InstanceID, tenantID.(int)); err != nil {
+		wc.logger.Error("Failed to get workflow instance", zap.Error(err), zap.Int("instance_id", req.InstanceID))
+		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 

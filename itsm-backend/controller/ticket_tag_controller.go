@@ -34,6 +34,10 @@ func (ttc *TicketTagController) CreateTag(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 	req.TenantID = tenantID
 
 	tag, err := ttc.tagService.CreateTag(c.Request.Context(), &req)
@@ -61,6 +65,10 @@ func (ttc *TicketTagController) UpdateTag(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 
 	tag, err := ttc.tagService.UpdateTag(c.Request.Context(), tagID, &req, tenantID)
 	if err != nil {
@@ -80,7 +88,13 @@ func (ttc *TicketTagController) DeleteTag(c *gin.Context) {
 		return
 	}
 
-	err = ttc.tagService.DeleteTag(c.Request.Context(), tagID)
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	err = ttc.tagService.DeleteTag(c.Request.Context(), tagID, tenantID)
 	if err != nil {
 		ttc.logger.Error("Failed to delete tag", zap.Error(err), zap.Int("tag_id", tagID))
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -98,7 +112,13 @@ func (ttc *TicketTagController) GetTag(c *gin.Context) {
 		return
 	}
 
-	tag, err := ttc.tagService.GetTag(c.Request.Context(), tagID)
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	tag, err := ttc.tagService.GetTag(c.Request.Context(), tagID, tenantID)
 	if err != nil {
 		ttc.logger.Error("Failed to get tag", zap.Error(err), zap.Int("tag_id", tagID))
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -161,7 +181,13 @@ func (ttc *TicketTagController) AssignTagsToTicket(c *gin.Context) {
 		return
 	}
 
-	err = ttc.tagService.AssignTagsToTicket(c.Request.Context(), ticketID, req.TagIDs)
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	err = ttc.tagService.AssignTagsToTicket(c.Request.Context(), ticketID, req.TagIDs, tenantID)
 	if err != nil {
 		ttc.logger.Error("Failed to assign tags to ticket", zap.Error(err), zap.Int("ticket_id", ticketID))
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -187,7 +213,13 @@ func (ttc *TicketTagController) RemoveTagsFromTicket(c *gin.Context) {
 		return
 	}
 
-	err = ttc.tagService.RemoveTagsFromTicket(c.Request.Context(), ticketID, req.TagIDs)
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	err = ttc.tagService.RemoveTagsFromTicket(c.Request.Context(), ticketID, req.TagIDs, tenantID)
 	if err != nil {
 		ttc.logger.Error("Failed to remove tags from ticket", zap.Error(err), zap.Int("ticket_id", ticketID))
 		common.Fail(c, common.InternalErrorCode, err.Error())

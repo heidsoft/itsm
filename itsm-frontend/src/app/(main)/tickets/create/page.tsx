@@ -274,7 +274,7 @@ export default function CreateTicketPage() {
                   <Tag color="blue">{filteredTypes.length} 种</Tag>
                 </Space>
               }
-              bodyStyle={{ padding: '12px' }}
+              styles={{ body: { padding: '12px' } }}
               aria-label="工单类型选择区域"
             >
               {/* 分类筛选 */}

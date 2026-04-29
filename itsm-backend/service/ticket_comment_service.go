@@ -103,7 +103,12 @@ func (s *TicketCommentService) ListTicketComments(ctx context.Context, ticketID,
 	}
 
 	// 查询工单信息，判断当前用户是否有权限查看内部备注
-	ticketInfo, err := s.client.Ticket.Get(ctx, ticketID)
+	ticketInfo, err := s.client.Ticket.Query().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get ticket", "error", err)
 		return nil, fmt.Errorf("failed to get ticket: %w", err)
@@ -169,7 +174,12 @@ func (s *TicketCommentService) UpdateTicketComment(ctx context.Context, ticketID
 	}
 
 	// 权限检查：只有评论作者或工单处理人可以编辑
-	ticketInfo, err := s.client.Ticket.Get(ctx, ticketID)
+	ticketInfo, err := s.client.Ticket.Query().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get ticket", "error", err)
 		return nil, fmt.Errorf("failed to get ticket: %w", err)
@@ -182,7 +192,11 @@ func (s *TicketCommentService) UpdateTicketComment(ctx context.Context, ticketID
 	}
 
 	// 更新评论
-	update := s.client.TicketComment.UpdateOneID(commentID)
+	update := s.client.TicketComment.UpdateOneID(commentID).
+		Where(
+			ticketcomment.TicketID(ticketID),
+			ticketcomment.TenantID(tenantID),
+		)
 	if req.Content != "" {
 		update = update.SetContent(req.Content)
 	}
@@ -228,7 +242,12 @@ func (s *TicketCommentService) DeleteTicketComment(ctx context.Context, ticketID
 	}
 
 	// 权限检查：只有评论作者或工单处理人可以删除
-	ticketInfo, err := s.client.Ticket.Get(ctx, ticketID)
+	ticketInfo, err := s.client.Ticket.Query().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get ticket", "error", err)
 		return fmt.Errorf("failed to get ticket: %w", err)
@@ -241,7 +260,12 @@ func (s *TicketCommentService) DeleteTicketComment(ctx context.Context, ticketID
 	}
 
 	// 删除评论
-	err = s.client.TicketComment.DeleteOneID(commentID).Exec(ctx)
+	err = s.client.TicketComment.DeleteOneID(commentID).
+		Where(
+			ticketcomment.TicketID(ticketID),
+			ticketcomment.TenantID(tenantID),
+		).
+		Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to delete ticket comment", "error", err)
 		return fmt.Errorf("failed to delete ticket comment: %w", err)

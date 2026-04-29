@@ -24,33 +24,35 @@ export const StatCard: React.FC<StatCardProps> = ({
   loading = false,
 }) => {
   return (
-    <Card
-      className="rounded-lg shadow-sm"
-      loading={loading}
-      styles={{
-        body: { padding: '20px' },
-      }}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="text-sm text-gray-500 mb-1">{title}</div>
-          <Statistic
-            value={value}
-            prefix={prefix}
-            suffix={suffix}
-            valueStyle={{ color, fontSize: '24px', fontWeight: 'bold' }}
-          />
-        </div>
-        {icon && (
-          <div
-            className="w-12 h-12 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: `${color}15`, color }}
-          >
-            {icon}
+    <div role={loading ? 'status' : undefined} aria-label={loading ? '加载中' : undefined}>
+      <Card
+        className="rounded-lg shadow-sm"
+        loading={loading}
+        styles={{
+          body: { padding: '20px' },
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <div className="text-sm text-gray-500 mb-1">{title}</div>
+            <Statistic
+              value={value}
+              prefix={prefix}
+              suffix={suffix}
+              valueStyle={{ color, fontSize: '24px', fontWeight: 'bold' }}
+            />
           </div>
-        )}
-      </div>
-    </Card>
+          {icon && (
+            <div
+              className="w-12 h-12 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: `${color}15`, color }}
+            >
+              {icon}
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
   );
 };
 

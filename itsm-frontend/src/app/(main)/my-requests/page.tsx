@@ -306,7 +306,7 @@ const MyRequestsPage = () => {
           <Card
             className="mt-8 rounded-lg shadow-sm border border-gray-200"
            
-            bodyStyle={{ padding: '16px 24px' }}
+            styles={{ body: { padding: '16px 24px' } }}
           >
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-500">

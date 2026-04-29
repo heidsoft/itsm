@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/workflow"
+	"itsm-backend/ent/workflowinstance"
 )
 
 // WorkflowEngine 工作流执行引擎
@@ -69,6 +71,7 @@ type WorkflowCondition struct {
 type WorkflowExecutionContext struct {
 	InstanceID  int                    `json:"instance_id"`
 	WorkflowID  int                    `json:"workflow_id"`
+	TenantID    int                    `json:"tenant_id"`
 	CurrentStep string                 `json:"current_step"`
 	Variables   map[string]interface{} `json:"variables"`
 	History     []WorkflowHistory      `json:"history"`
@@ -112,6 +115,7 @@ func (e *WorkflowEngine) ExecuteWorkflow(ctx context.Context, instanceID int) er
 	execCtx := &WorkflowExecutionContext{
 		InstanceID:  instance.ID,
 		WorkflowID:  instance.WorkflowID,
+		TenantID:    instance.TenantID,
 		CurrentStep: instance.CurrentStep,
 		Variables:   make(map[string]interface{}),
 		History:     []WorkflowHistory{},
@@ -360,7 +364,11 @@ func (e *WorkflowEngine) updateInstanceStatus(ctx context.Context, execCtx *Work
 	}
 
 	// 更新实例
-	update := e.client.WorkflowInstance.UpdateOneID(execCtx.InstanceID).
+	update := e.client.WorkflowInstance.UpdateOneID(execCtx.InstanceID)
+	if execCtx.TenantID > 0 {
+		update = update.Where(workflowinstance.TenantID(execCtx.TenantID))
+	}
+	update = update.
 		SetStatus(execCtx.Status).
 		SetCurrentStep(execCtx.CurrentStep).
 		SetContext(contextBytes).
@@ -377,20 +385,41 @@ func (e *WorkflowEngine) updateInstanceStatus(ctx context.Context, execCtx *Work
 // CompleteWorkflowStep 完成工作流步骤
 func (e *WorkflowEngine) CompleteWorkflowStep(ctx context.Context, req *CompleteWorkflowStepRequest) error {
 	// 获取工作流实例
-	instance, err := e.client.WorkflowInstance.Get(ctx, req.InstanceID)
+	var instance *ent.WorkflowInstance
+	var err error
+	if req.TenantID > 0 {
+		instance, err = e.client.WorkflowInstance.Query().
+			Where(
+				workflowinstance.ID(req.InstanceID),
+				workflowinstance.TenantID(req.TenantID),
+			).
+			Only(ctx)
+	} else {
+		instance, err = e.client.WorkflowInstance.Get(ctx, req.InstanceID)
+	}
 	if err != nil {
 		return fmt.Errorf("获取工作流实例失败: %w", err)
 	}
 
 	// 获取工作流定义
-	workflow, err := e.client.Workflow.Get(ctx, instance.WorkflowID)
+	var workflowEntity *ent.Workflow
+	if req.TenantID > 0 {
+		workflowEntity, err = e.client.Workflow.Query().
+			Where(
+				workflow.ID(instance.WorkflowID),
+				workflow.TenantID(req.TenantID),
+			).
+			Only(ctx)
+	} else {
+		workflowEntity, err = e.client.Workflow.Get(ctx, instance.WorkflowID)
+	}
 	if err != nil {
 		return fmt.Errorf("获取工作流定义失败: %w", err)
 	}
 
 	// 解析工作流定义
 	var definition WorkflowDefinition
-	if err := json.Unmarshal(workflow.Definition, &definition); err != nil {
+	if err := json.Unmarshal(workflowEntity.Definition, &definition); err != nil {
 		return fmt.Errorf("解析工作流定义失败: %w", err)
 	}
 
@@ -398,6 +427,7 @@ func (e *WorkflowEngine) CompleteWorkflowStep(ctx context.Context, req *Complete
 	execCtx := &WorkflowExecutionContext{
 		InstanceID:  instance.ID,
 		WorkflowID:  instance.WorkflowID,
+		TenantID:    instance.TenantID,
 		CurrentStep: instance.CurrentStep,
 		Variables:   make(map[string]interface{}),
 		History:     []WorkflowHistory{},
@@ -474,4 +504,5 @@ type CompleteWorkflowStepRequest struct {
 	Data       map[string]interface{} `json:"data"`
 	Comment    string                 `json:"comment"`
 	UserID     int                    `json:"user_id" binding:"required"`
+	TenantID   int                    `json:"tenant_id"`
 }

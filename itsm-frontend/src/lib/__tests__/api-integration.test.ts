@@ -1,6 +1,21 @@
 import { TicketApi } from '@/lib/api/ticket-api';
 import { DashboardAPI } from '@/lib/api/dashboard-api';
 
+jest.mock('@/lib/security', () => ({
+  security: {
+    csrf: {
+      getToken: jest.fn().mockResolvedValue('mock-csrf-token'),
+      clearToken: jest.fn(),
+    },
+    network: {
+      getSecureHeaders: jest.fn().mockReturnValue({
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      }),
+    },
+  },
+}));
+
 // Mock fetch globally
 global.fetch = jest.fn();
 
@@ -325,15 +340,18 @@ describe('API Integration Tests', () => {
 
   describe('Authentication Integration', () => {
     it('should include authorization header when token exists', async () => {
-      // Mock localStorage
       const mockToken = 'mock-jwt-token';
-      Object.defineProperty(window, 'localStorage', {
-        value: {
-          getItem: jest.fn(() => mockToken),
-          setItem: jest.fn(),
-          removeItem: jest.fn(),
+      const originalCookieDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
+      let cookieValue = `access_token=${encodeURIComponent(mockToken)}`;
+      Object.defineProperty(document, 'cookie', {
+        configurable: true,
+        get: () => cookieValue,
+        set: value => {
+          const key = value.split(';')[0]?.trim() || '';
+          if (key) {
+            cookieValue = key;
+          }
         },
-        writable: true,
       });
 
       const mockResponse = {
@@ -358,6 +376,9 @@ describe('API Integration Tests', () => {
           }),
         })
       );
+      if (originalCookieDescriptor) {
+        Object.defineProperty(document, 'cookie', originalCookieDescriptor);
+      }
     });
 
     it('should handle token expiration', async () => {

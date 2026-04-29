@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@/lib/test-utils';
 import userEvent from '@testing-library/user-event';
 
 // Mock next/navigation first
@@ -117,6 +117,20 @@ beforeAll(async () => {
   ChangeList = module.default;
 });
 
+function renderChangeList(ui: React.ReactElement) {
+  try {
+    return render(ui);
+  } catch (error) {
+    if (error instanceof AggregateError) {
+      const details = (error.errors || [])
+        .map(e => (e instanceof Error ? e.stack || e.message : String(e)))
+        .join('\n\n');
+      throw new Error(details || 'AggregateError');
+    }
+    throw error;
+  }
+}
+
 describe('ChangeList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -129,7 +143,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -149,7 +163,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -159,13 +173,16 @@ describe('ChangeList', () => {
         );
 
         // Check column headers
-        expect(screen.getByText('ID')).toBeInTheDocument();
-        expect(screen.getByText('标题')).toBeInTheDocument();
-        expect(screen.getByText('模型')).toBeInTheDocument();
-        expect(screen.getByText('状态')).toBeInTheDocument();
-        expect(screen.getByText('优先级')).toBeInTheDocument();
-        expect(screen.getByText('创建人')).toBeInTheDocument();
-        expect(screen.getByText('创建时间')).toBeInTheDocument();
+        const tableHeader = document.querySelector('.ant-table thead');
+        expect(tableHeader).toBeTruthy();
+        const headerQueries = within(tableHeader as HTMLElement);
+        expect(headerQueries.getByText('ID')).toBeInTheDocument();
+        expect(headerQueries.getByText('标题')).toBeInTheDocument();
+        expect(headerQueries.getByText('模型')).toBeInTheDocument();
+        expect(headerQueries.getByText('状态')).toBeInTheDocument();
+        expect(headerQueries.getByText('优先级')).toBeInTheDocument();
+        expect(headerQueries.getByText('创建人')).toBeInTheDocument();
+        expect(headerQueries.getByText('创建时间')).toBeInTheDocument();
       } finally {
         spy.mockRestore();
       }
@@ -175,7 +192,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -195,7 +212,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -215,7 +232,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -240,7 +257,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -259,7 +276,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -278,7 +295,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList showHeader={false} />);
+        renderChangeList(<ChangeList showHeader={false} />);
 
         await waitFor(
           () => {
@@ -295,7 +312,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -320,7 +337,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         // Check for loading indicator
         const loadingSpinner = document.querySelector('.ant-spin');
@@ -344,7 +361,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -366,7 +383,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -394,7 +411,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -433,7 +450,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -442,7 +459,9 @@ describe('ChangeList', () => {
           { timeout: 5000 }
         );
 
-        expect(screen.getByText('状态')).toBeInTheDocument();
+        const form = document.querySelector('form.ant-form');
+        expect(form).toBeTruthy();
+        expect(within(form as HTMLElement).getByText('状态')).toBeInTheDocument();
       } finally {
         spy.mockRestore();
       }
@@ -452,7 +471,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -473,7 +492,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
@@ -498,7 +517,7 @@ describe('ChangeList', () => {
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
-        render(<ChangeList />);
+        renderChangeList(<ChangeList />);
 
         await waitFor(
           () => {
