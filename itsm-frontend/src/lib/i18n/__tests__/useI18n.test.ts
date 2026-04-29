@@ -8,13 +8,16 @@ import { useI18n } from '../useI18n';
 // Mock user-preferences
 const mockGet = jest.fn(() => ({ language: 'zh-CN' }));
 const mockUpdate = jest.fn();
-const mockSubscribe = jest.fn((_listener: (preferences: Record<string, unknown>) => void) => jest.fn());
+const mockSubscribe = jest.fn((_listener: (preferences: Record<string, unknown>) => void) =>
+  jest.fn()
+);
 
 jest.mock('@/lib/user-preferences', () => ({
   userPreferences: {
     get: () => mockGet(),
     update: (updates: Record<string, unknown>) => mockUpdate(updates),
-    subscribe: (listener: (preferences: Record<string, unknown>) => void) => mockSubscribe(listener),
+    subscribe: (listener: (preferences: Record<string, unknown>) => void) =>
+      mockSubscribe(listener),
   },
 }));
 
