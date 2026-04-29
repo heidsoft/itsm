@@ -83,10 +83,12 @@ itsm-frontend/.swc/
 *.backup
 
 # Debug files (generated during development)
-*.png
+# Note: docs/images/*.png are product screenshots and should NOT be ignored
 debug*.log
 debug*.txt
 debug*.png
+*.png
+!docs/images/*.png
 test_result*.log
 server.log
 
