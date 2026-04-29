@@ -366,13 +366,13 @@ export const changeHandlers = {
     if (change.status === 'approved' || change.status === 'in_progress' || change.status === 'completed') {
       approvals.push({
         id: 1,
-        change_id: id,
-        approver_id: 10,
-        approver_name: 'CAB Chair',
+        changeId: id,
+        approverId: 10,
+        approverName: 'CAB Chair',
         status: 'approved',
         comment: 'Approved with conditions',
-        approved_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
+        approvedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       });
     }
 

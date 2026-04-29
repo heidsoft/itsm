@@ -6,6 +6,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CIChangeHistoryTab } from '../sections/CIChangeHistoryTab';
+import type { ChangeHistoryData } from '../types';
 
 jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({
@@ -14,7 +15,7 @@ jest.mock('@/lib/i18n', () => ({
 }));
 
 describe('CIChangeHistoryTab', () => {
-  const mockChangeHistory = {
+  const mockChangeHistory: ChangeHistoryData = {
     logs: [
       {
         id: 1,
