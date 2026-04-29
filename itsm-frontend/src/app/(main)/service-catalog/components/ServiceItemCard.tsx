@@ -5,7 +5,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, Tag, Button, Typography, Rate, Space, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
-import { HardDrive, UserCog, ShieldCheck, Clock, ArrowRight, MoreHorizontal, Edit, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
+import {
+  HardDrive,
+  UserCog,
+  ShieldCheck,
+  Clock,
+  ArrowRight,
+  MoreHorizontal,
+  Edit,
+  Eye,
+  ToggleLeft,
+  ToggleRight,
+} from 'lucide-react';
 import { ServiceItem, ServiceCategory } from '@/types/service-catalog';
 import { useI18n } from '@/lib/i18n';
 
@@ -79,7 +90,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
     {
       key: 'toggle',
       icon: isPublished ? <ToggleLeft size={14} /> : <ToggleRight size={14} />,
-      label: isPublished ? (t('service.disable') || '停用') : (t('service.publish') || '发布'),
+      label: isPublished ? t('service.disable') || '停用' : t('service.publish') || '发布',
     },
   ];
 
@@ -136,10 +147,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
             </Button>
           </Link>
           <Dropdown menu={{ items: actionItems }} trigger={['click']} placement="bottomRight">
-            <Button
-              icon={<MoreHorizontal size={16} />}
-              onClick={(e) => e.stopPropagation()}
-            />
+            <Button icon={<MoreHorizontal size={16} />} onClick={e => e.stopPropagation()} />
           </Dropdown>
         </div>
       </div>
