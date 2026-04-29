@@ -45,13 +45,13 @@ describe('NotificationWSService', () => {
 
       const notification: TicketNotification = {
         id: 1,
-        userId: 1,
-        tenantId: 1,
-        type: 'ticket_created',
-        title: 'Test',
+        user_id: 1,
+        ticket_id: 1,
+        type: 'created',
+        channel: 'in_app',
         content: 'Test content',
-        isRead: false,
-        createdAt: '2024-01-01T00:00:00Z',
+        status: 'sent',
+        created_at: '2024-01-01T00:00:00Z',
       };
 
       const message: NotificationWSMessage = {

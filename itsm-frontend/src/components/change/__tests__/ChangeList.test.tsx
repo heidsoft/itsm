@@ -29,7 +29,7 @@ jest.mock('dayjs', () => {
     format: jest.fn(() => '2024-01-01 12:00'),
     isValid: () => true,
   };
-  const mockDayjs = jest.fn(() => mockDate);
+  const mockDayjs: any = jest.fn(() => mockDate);
   mockDayjs.extend = jest.fn();
   mockDayjs.locale = jest.fn();
   return mockDayjs;
