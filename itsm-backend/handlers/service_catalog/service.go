@@ -85,3 +85,13 @@ func (s *Service) Update(ctx context.Context, id int, name, category, descriptio
 func (s *Service) Delete(ctx context.Context, id int) error {
 	return s.repo.Delete(ctx, id)
 }
+
+func (s *Service) Search(ctx context.Context, tenantID int, keyword string, filters ListFilters) ([]*ServiceCatalog, int, error) {
+	if filters.Page < 1 {
+		filters.Page = 1
+	}
+	if filters.Size < 1 {
+		filters.Size = 20
+	}
+	return s.repo.Search(ctx, tenantID, keyword, filters)
+}

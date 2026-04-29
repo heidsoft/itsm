@@ -194,6 +194,41 @@ func (h *Handler) Delete(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// Search handles GET /api/v1/service-catalogs/search?q=xxx
+func (h *Handler) Search(c *gin.Context) {
+	keyword := c.Query("q")
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	filters := ListFilters{
+		Category: c.Query("category"),
+		Status:   "enabled",
+		Page:     1,
+		Size:     20,
+	}
+
+	catalogs, total, err := h.service.Search(c.Request.Context(), tenantID.(int), keyword, filters)
+	if err != nil {
+		common.Fail(c, 5001, err.Error())
+		return
+	}
+
+	var responses []dto.ServiceCatalogResponse
+	for _, cat := range catalogs {
+		responses = append(responses, h.toDTO(cat))
+	}
+
+	common.Success(c, dto.ServiceCatalogListResponse{
+		Catalogs: responses,
+		Total:    total,
+		Page:     filters.Page,
+		Size:     filters.Size,
+	})
+}
+
 func (h *Handler) toDTO(c *ServiceCatalog) dto.ServiceCatalogResponse {
 	return dto.ServiceCatalogResponse{
 		ID:             c.ID,

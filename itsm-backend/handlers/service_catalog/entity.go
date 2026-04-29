@@ -25,6 +25,7 @@ type Repository interface {
 	Create(ctx context.Context, catalog *ServiceCatalog) (*ServiceCatalog, error)
 	Get(ctx context.Context, id int) (*ServiceCatalog, error)
 	List(ctx context.Context, tenantID int, filters ListFilters) ([]*ServiceCatalog, int, error)
+	Search(ctx context.Context, tenantID int, keyword string, filters ListFilters) ([]*ServiceCatalog, int, error)
 	Update(ctx context.Context, catalog *ServiceCatalog) (*ServiceCatalog, error)
 	Delete(ctx context.Context, id int) error
 }
