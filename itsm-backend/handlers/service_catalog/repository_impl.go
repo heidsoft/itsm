@@ -104,6 +104,29 @@ func (r *EntRepository) Delete(ctx context.Context, id int) error {
 	return r.client.ServiceCatalog.DeleteOneID(id).Exec(ctx)
 }
 
+func (r *EntRepository) Count(ctx context.Context, tenantID int, filters ListFilters) (int, error) {
+	query := r.client.ServiceCatalog.Query().Where(servicecatalog.TenantID(tenantID))
+	if filters.Status != "" {
+		query = query.Where(servicecatalog.Status(filters.Status))
+	}
+	return query.Count(ctx)
+}
+
+func (r *EntRepository) CountByCategory(ctx context.Context, tenantID int) (map[string]int, error) {
+	catalogs, err := r.client.ServiceCatalog.Query().
+		Where(servicecatalog.TenantID(tenantID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]int)
+	for _, cat := range catalogs {
+		result[cat.Category]++
+	}
+	return result, nil
+}
+
 func (r *EntRepository) Search(ctx context.Context, tenantID int, keyword string, filters ListFilters) ([]*ServiceCatalog, int, error) {
 	query := r.client.ServiceCatalog.Query().
 		Where(
