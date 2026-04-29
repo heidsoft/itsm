@@ -25,6 +25,7 @@ import {
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { SafeTextBlock } from '@/components/common/SafeContent';
+import { AISuggestionPanel } from '@/components/business/AISuggestionPanel';
 import { isValidTransition, getAllowedTransitions, isFinalStatus } from '@/lib/utils/workflow-state-machine';
 
 const { Title, Text } = Typography;
@@ -341,6 +342,24 @@ const TicketDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* AI Suggestion Panel */}
+      {ticket && (
+        <AISuggestionPanel
+          title={ticket.title}
+          description={ticket.description}
+          onAccept={(suggestion) => {
+            // Apply AI suggestion to ticket
+            if (suggestion.priority !== ticket.priority || suggestion.category !== ticket.category) {
+              editForm.setFieldsValue({
+                priority: suggestion.priority,
+              });
+              handleUpdate();
+              antMessage.success(`已采纳AI建议：优先级调整为${suggestion.priority === 'high' ? '高' : suggestion.priority === 'medium' ? '中' : '低'}`);
+            }
+          }}
+        />
+      )}
 
       <Card className="rounded-lg shadow-sm border border-gray-200">
         <Space orientation="vertical" size={16} style={{ width: '100%' }}>
