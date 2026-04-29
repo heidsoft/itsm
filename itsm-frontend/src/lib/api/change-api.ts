@@ -99,40 +99,40 @@ export interface ChangeApprovalRequest {
 // 变更审批记录
 export interface ChangeApproval {
   id: number;
-  change_id: number;
-  approver_id: number;
-  approver_name: string;
+  changeId: number;
+  approverId: number;
+  approverName: string;
   status: ChangeStatus;
   comment?: string;
-  approved_at?: string;
-  created_at: string;
+  approvedAt?: string;
+  createdAt: string;
 }
 
 // 变更风险评估数据
 export interface RiskAssessmentData {
-  risk_level: ChangeRisk;
-  risk_description: string;
-  impact_analysis: string;
-  mitigation_measures: string;
-  contingency_plan: string;
-  risk_owner: string;
-  risk_score?: number;
-  risk_factors?: string[];
+  riskLevel: ChangeRisk;
+  riskDescription: string;
+  impactAnalysis: string;
+  mitigationMeasures: string;
+  contingencyPlan: string;
+  riskOwner: string;
+  riskScore?: number;
+  riskFactors?: string[];
 }
 
 // 影响分析数据
 export interface ImpactAnalysisData {
-  business_impact: string;
-  technical_impact: string;
-  user_impact: string;
-  affected_systems: string[];
-  affected_users: number;
-  estimated_downtime: number;
-  data_risk_level: string;
-  service_dependencies: string[];
-  backup_strategy: string;
-  recovery_plan: string;
-  impact_score?: number;
+  businessImpact: string;
+  technicalImpact: string;
+  userImpact: string;
+  affectedSystems: string[];
+  affectedUsers: number;
+  estimatedDowntime: number;
+  dataRiskLevel: string;
+  serviceDependencies: string[];
+  backupStrategy: string;
+  recoveryPlan: string;
+  impactScore?: number;
 }
 
 // 变更API类
