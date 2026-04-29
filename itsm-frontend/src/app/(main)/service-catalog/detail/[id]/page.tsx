@@ -45,13 +45,9 @@ export default function ServiceDetailPage() {
     <div className="p-6">
       <Card>
         <Descriptions title={service.name} bordered column={2}>
-          <Descriptions.Item label={t('service.category')}>
-            {service.category}
-          </Descriptions.Item>
+          <Descriptions.Item label={t('service.category')}>{service.category}</Descriptions.Item>
           <Descriptions.Item label={t('service.status')}>
-            <Tag color={service.status === 'published' ? 'green' : 'default'}>
-              {service.status}
-            </Tag>
+            <Tag color={service.status === 'published' ? 'green' : 'default'}>{service.status}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label={t('service.description')} span={2}>
             {service.shortDescription || service.fullDescription}
@@ -64,12 +60,13 @@ export default function ServiceDetailPage() {
         </Descriptions>
 
         <div className="mt-6 flex gap-4">
-          <Button type="primary" onClick={() => router.push(`/service-catalog/request/${serviceId}`)}>
+          <Button
+            type="primary"
+            onClick={() => router.push(`/service-catalog/request/${serviceId}`)}
+          >
             {t('service.request')}
           </Button>
-          <Button onClick={() => router.push('/service-catalog')}>
-            {t('common.back')}
-          </Button>
+          <Button onClick={() => router.push('/service-catalog')}>{t('common.back')}</Button>
         </div>
       </Card>
     </div>
