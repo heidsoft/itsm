@@ -202,7 +202,7 @@ type MiniMaxProvider struct {
 
 func NewMiniMaxProvider(apiKey, groupID, model string) *MiniMaxProvider {
 	config := openai.DefaultConfig(apiKey)
-	config.BaseURL = "https://api.minimax.io/v1"
+	config.BaseURL = "https://api.minimaxi.com/anthropic/v1"
 	client := openai.NewClientWithConfig(config)
 	return &MiniMaxProvider{
 		client:  client,
