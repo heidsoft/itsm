@@ -192,6 +192,56 @@ func NewLocalProvider(baseURL string) *LocalProvider {
 	}
 }
 
+// MiniMaxProvider implements LLMProvider using MiniMax API (OpenAI-compatible)
+type MiniMaxProvider struct {
+	client    *openai.Client
+	model     string
+	groupID   string
+	apiKey    string
+}
+
+func NewMiniMaxProvider(apiKey, groupID, model string) *MiniMaxProvider {
+	config := openai.DefaultConfig(apiKey)
+	config.BaseURL = "https://api.minimax.io/v1"
+	client := openai.NewClientWithConfig(config)
+	return &MiniMaxProvider{
+		client:  client,
+		model:   model,
+		groupID: groupID,
+		apiKey:  apiKey,
+	}
+}
+
+func (p *MiniMaxProvider) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+	if model != "" {
+		p.model = model
+	}
+
+	msgs := make([]openai.ChatCompletionMessage, len(messages))
+	for i, m := range messages {
+		msgs[i] = openai.ChatCompletionMessage{
+			Role:    m.Role,
+			Content: m.Content,
+		}
+	}
+
+	resp, err := p.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model:       p.model,
+		Messages:    msgs,
+		MaxTokens:   4096,
+		Temperature: 0.3,
+	})
+	if err != nil {
+		return "", fmt.Errorf("MiniMax API error: %w", err)
+	}
+
+	if len(resp.Choices) == 0 {
+		return "", fmt.Errorf("no response from MiniMax")
+	}
+
+	return resp.Choices[0].Message.Content, nil
+}
+
 // OllamaChatRequest for Ollama-compatible APIs
 type OllamaChatRequest struct {
 	Model    string `json:"model"`
@@ -267,6 +317,7 @@ type ProviderConfig struct {
 	APIKey     string
 	Endpoint   string
 	Deployment string
+	GroupID    string // MiniMax requires group_id
 	TokenCap   int
 }
 
@@ -278,6 +329,7 @@ func LoadLLMConfig() ProviderConfig {
 		APIKey:     viper.GetString("llm.api_key"),
 		Endpoint:   viper.GetString("llm.endpoint"),
 		Deployment: viper.GetString("llm.deployment"),
+		GroupID:    viper.GetString("llm.group_id"),
 		TokenCap:   viper.GetInt("llm.token_cap"),
 	}
 }
@@ -292,6 +344,9 @@ func NewProviderFromConfig(cfg ProviderConfig) LLMProvider {
 	if envKey := os.Getenv("AZURE_OPENAI_API_KEY"); envKey != "" && apiKey == "" {
 		apiKey = envKey
 	}
+	if envKey := os.Getenv("MINIMAX_API_KEY"); envKey != "" && apiKey == "" {
+		apiKey = envKey
+	}
 
 	switch cfg.Provider {
 	case "openai":
@@ -300,6 +355,8 @@ func NewProviderFromConfig(cfg ProviderConfig) LLMProvider {
 		return NewAzureProvider(apiKey, cfg.Endpoint, cfg.Deployment)
 	case "local":
 		return NewLocalProvider(cfg.Endpoint)
+	case "minimax":
+		return NewMiniMaxProvider(apiKey, cfg.GroupID, cfg.Model)
 	default:
 		// Default to OpenAI
 		return NewOpenAIProvider(apiKey, cfg.Endpoint, cfg.Model)
