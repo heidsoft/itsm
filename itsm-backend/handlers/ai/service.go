@@ -20,6 +20,7 @@ type Service struct {
 	queue              *service.ToolQueue
 	analytics          *service.AnalyticsService
 	prediction         *service.PredictionService
+	slaForecastSkill   *service.SLAForecastSkill
 	rca                *service.RootCauseService
 	aiTelemetryService *service.AITelemetryService
 }
@@ -32,6 +33,7 @@ func NewService(
 	queue *service.ToolQueue,
 	analytics *service.AnalyticsService,
 	prediction *service.PredictionService,
+	slaForecastSkill *service.SLAForecastSkill,
 	rca *service.RootCauseService,
 	aiTelemetryService *service.AITelemetryService,
 ) *Service {
@@ -43,6 +45,7 @@ func NewService(
 		queue:              queue,
 		analytics:          analytics,
 		prediction:         prediction,
+		slaForecastSkill:   slaForecastSkill,
 		rca:                rca,
 		aiTelemetryService: aiTelemetryService,
 	}
@@ -180,7 +183,51 @@ func (s *Service) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRe
 }
 
 func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int) (interface{}, error) {
+	// Try to use AI-Native SLAForecastSkill first
+	if s.slaForecastSkill != nil {
+		input := &service.ForecastInput{
+			TenantID:  tenantID,
+			StartDate: parseDate(req.TimeRange[0]),
+			EndDate:   parseDate(req.TimeRange[1]),
+			Metrics:   []string{req.PredictionType},
+		}
+		output, err := s.slaForecastSkill.Execute(ctx, input)
+		if err == nil {
+			return output, nil
+		}
+		// Fall back to legacy prediction service on error
+		s.logger.Warnw("SLAForecastSkill failed, falling back to legacy", "error", err)
+	}
 	return s.prediction.GetTrendPrediction(ctx, req, tenantID)
+}
+
+// GetForecastInsights returns AI-generated insights for SLA forecasting
+func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int) (interface{}, error) {
+	if s.slaForecastSkill == nil {
+		return nil, fmt.Errorf("SLAForecastSkill not initialized")
+	}
+
+	input := &service.ForecastInput{
+		TenantID:  tenantID,
+		StartDate: parseDate(req.TimeRange[0]),
+		EndDate:   parseDate(req.TimeRange[1]),
+		Metrics:   []string{req.PredictionType},
+	}
+
+	output, err := s.slaForecastSkill.Execute(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return insights-focused response
+	return map[string]interface{}{
+		"confidence":   output.Confidence,
+		"model":        output.Model,
+		"insights":     output.Insights,
+		"seasonality":  output.Seasonality,
+		"trend":        output.Trend,
+		"anomaly_dates": output.AnomalyDates,
+	}, nil
 }
 
 // Telemetry
@@ -299,4 +346,13 @@ func containsAny(s string, keywords ...string) bool {
 		}
 	}
 	return false
+}
+
+// parseDate parses date string in YYYY-MM-DD format
+func parseDate(s string) time.Time {
+	t, err := time.Parse("2006-01-02", s)
+	if err != nil {
+		return time.Now()
+	}
+	return t
 }

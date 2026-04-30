@@ -137,6 +137,7 @@ func NewApplication() *Application {
 	ticketDependencyService := service.NewTicketDependencyService(client, sugar)
 	analyticsService := service.NewAnalyticsService(client, sugar)
 	predictionService := service.NewPredictionService(client, sugar)
+	slaForecastSkill := service.NewSLAForecastSkill(client, nil, sugar)
 	rootCauseService := service.NewRootCauseService(client, sugar)
 	// LLM/Embedding/VectorStore
 
@@ -313,7 +314,7 @@ func NewApplication() *Application {
 
 	// AI Domain
 	aiRepo := ai.NewEntRepository(client)
-	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, toolQueue, analyticsService, predictionService, rootCauseService, aiTelemetryService)
+	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, toolQueue, analyticsService, predictionService, slaForecastSkill, rootCauseService, aiTelemetryService)
 	aiHandler := ai.NewHandler(aiServiceDomain)
 
 	// Common Domain
