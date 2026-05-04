@@ -52,7 +52,9 @@ func (c *CMDBController) CreateCI(ctx *gin.Context) {
 	// 使用 dto.CreateCIRequest 解析，支持 ci_type_id 字段
 	var dtoReq dto.CreateCIRequest
 	if err := ctx.ShouldBindJSON(&dtoReq); err != nil {
-		common.ParamError(ctx, "Invalid request body")
+		// 将验证错误信息返回给前端，便于调试
+		errMsg := err.Error()
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+errMsg)
 		return
 	}
 

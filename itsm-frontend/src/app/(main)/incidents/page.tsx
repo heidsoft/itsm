@@ -51,8 +51,9 @@ const PRIORITY_CONFIG = {
 // Kanban column configurations (与Tickets看板保持一致的视觉风格)
 const KANBAN_COLUMNS: KanbanColumnConfig<Incident>[] = [
   { key: 'new', title: '新建', color: '#1890ff' },
-  { key: 'investigating', title: '调查中', color: '#722ed1' },
-  { key: 'identified', title: '已识别', color: '#fa8c16' },
+  { key: 'acknowledged', title: '已确认', color: '#722ed1' },
+  { key: 'assigned', title: '已分配', color: '#13c2c2' },
+  { key: 'in_progress', title: '处理中', color: '#1890ff' },
   { key: 'resolved', title: '已解决', color: '#52c41a' },
   { key: 'closed', title: '已关闭', color: '#d9d9d9' },
 ];

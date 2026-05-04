@@ -354,6 +354,15 @@ class HttpClient {
       if (!response?.ok) {
         const rid = response?.headers?.get('X-Request-Id') || '';
         const suffix = rid ? ` [RID: ${rid}]` : '';
+        // 尝试从响应中获取更详细的错误信息
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.message) {
+            throw new Error(errorData.message + suffix);
+          }
+        } catch {
+          // Ignore JSON parse errors, use default message
+        }
         throw new Error(`HTTP error! status: ${response?.status}${suffix}`);
       }
 

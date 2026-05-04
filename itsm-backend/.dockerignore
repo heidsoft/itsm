@@ -1,0 +1,8 @@
+.git
+logs
+uploads
+tmp
+temp
+coverage
+*.log
+.DS_Store

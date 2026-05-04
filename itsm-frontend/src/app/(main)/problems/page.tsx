@@ -15,10 +15,14 @@ import {
 import { AppstoreOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import ProblemList from '@/components/problem/ProblemList';
-import { ProblemApi } from '@/lib/api/problem-api';
+import { ProblemApi, type Problem } from '@/lib/api/problem-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { useDebounce } from '@/lib/component-utils';
+import {
+  UnifiedKanbanBoard,
+  type KanbanColumnConfig,
+} from '@/components/business/UnifiedKanbanBoard';
 
 export default function ProblemListPage() {
   const router = useRouter();
@@ -36,7 +40,45 @@ export default function ProblemListPage() {
   const [priorityFilter, setPriorityFilter] = useState<string | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState('list');
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(false);
   const debouncedSearch = useDebounce(searchKeyword, 300);
+
+  // 看板列配置
+  const KANBAN_COLUMNS: KanbanColumnConfig<Problem>[] = [
+    { key: 'open', title: '待处理', color: '#ff4d4f' },
+    { key: 'investigating', title: '调查中', color: '#722ed1' },
+    { key: 'identified', title: '已识别', color: '#fa8c16' },
+    { key: 'resolved', title: '已解决', color: '#52c41a' },
+    { key: 'closed', title: '已关闭', color: '#d9d9d9' },
+  ];
+
+  // 获取问题列表用于看板视图
+  const fetchProblemsForKanban = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await ProblemApi.getProblems({
+        page: 1,
+        page_size: 100, // 获取足够的数据用于看板
+        status: statusFilter,
+        priority: priorityFilter,
+        search: debouncedSearch,
+      });
+      const items = (response as any).problems || [];
+      setProblems(items as Problem[]);
+    } catch (error) {
+      console.error('Failed to fetch problems for kanban:', error);
+      setProblems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, priorityFilter, debouncedSearch]);
+
+  useEffect(() => {
+    if (activeTab === 'kanban') {
+      fetchProblemsForKanban();
+    }
+  }, [activeTab, fetchProblemsForKanban]);
 
   const fetchStats = async () => {
     try {
@@ -202,6 +244,14 @@ export default function ProblemListPage() {
                   列表视图
                 </span>
               ),
+              children: (
+                <ProblemList
+                  showHeader={false}
+                  keyword={debouncedSearch}
+                  status={statusFilter}
+                  priority={priorityFilter}
+                />
+              ),
             },
             {
               key: 'kanban',
@@ -211,15 +261,49 @@ export default function ProblemListPage() {
                   看板视图
                 </span>
               ),
+              children: (
+                <UnifiedKanbanBoard<Problem>
+                  items={problems}
+                  loading={loading}
+                  getItemId={(problem: Problem) => problem.id}
+                  getItemStatus={(problem: Problem) => problem.status || 'open'}
+                  getItemTitle={(problem: Problem) => problem.title || `问题 #${problem.id}`}
+                  getItemNumber={(problem: Problem) => {
+                    const data = problem as unknown as Record<string, unknown>;
+                    return (
+                      (data.problem_number as string) ||
+                      (data.problemNumber as string) ||
+                      `P-${problem.id}`
+                    );
+                  }}
+                  getItemDescription={(problem: Problem) => problem.description || ''}
+                  getItemPriority={(problem: Problem) =>
+                    problem.priority || problem.severity || 'medium'
+                  }
+                  getItemAssignee={(problem: Problem) => {
+                    const assigneeId = problem.assigneeId || (problem as any).assignee_id;
+                    if (!assigneeId) return null;
+                    const data = problem as unknown as Record<string, unknown>;
+                    const assigneeName =
+                      (data.assignee_name as string) || (data.assigneeName as string);
+                    return { name: assigneeName || `用户 #${assigneeId}` };
+                  }}
+                  getItemCreatedAt={(problem: Problem) => problem.createdAt || problem.created_at}
+                  getItemUpdatedAt={(problem: Problem) => problem.updatedAt || problem.updated_at}
+                  onItemClick={(problem: Problem) => router.push(`/problems/${problem.id}`)}
+                  onItemEdit={(problem: Problem) => router.push(`/problems/${problem.id}/edit`)}
+                  columnConfigs={KANBAN_COLUMNS}
+                  searchPlaceholder="搜索问题标题或描述..."
+                  priorityOptions={[
+                    { value: 'critical', label: '紧急', color: 'red' },
+                    { value: 'high', label: '高', color: 'orange' },
+                    { value: 'medium', label: '中', color: 'blue' },
+                    { value: 'low', label: '低', color: 'green' },
+                  ]}
+                />
+              ),
             },
           ]}
-        />
-
-        <ProblemList
-          showHeader={false}
-          keyword={debouncedSearch}
-          status={statusFilter}
-          priority={priorityFilter}
         />
       </PageContainer>
     </div>

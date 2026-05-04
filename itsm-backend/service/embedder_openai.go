@@ -46,7 +46,7 @@ type embeddingResponse struct {
 
 func (e *OpenAIEmbedder) Embed(text string) ([]float32, error) {
 	if e.apiKey == "" {
-		return make([]float32, 1536), nil
+		return nil, errors.New("OpenAI API key not configured, embedder unavailable")
 	}
 	payload := embeddingRequest{Input: text, Model: e.model}
 	body, _ := json.Marshal(payload)

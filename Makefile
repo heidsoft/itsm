@@ -111,13 +111,34 @@ build: build-backend build-frontend ## 构建所有镜像
 
 build-backend: ## 构建后端镜像
 	@echo "$(BLUE)🔨 构建后端镜像...$(NC)"
-	docker build -t itsm-backend:dev -f Dockerfile.backend ./$(BACKEND_DIR)
+	docker build -t itsm-backend:dev -f $(BACKEND_DIR)/Dockerfile.backend ./$(BACKEND_DIR)
 	@echo "$(GREEN)✅ 后端镜像构建完成$(NC)"
 
 build-frontend: ## 构建前端镜像
 	@echo "$(BLUE)🔨 构建前端镜像...$(NC)"
-	docker build -t itsm-frontend:dev -f Dockerfile.frontend ./$(FRONTEND_DIR)
+	docker build -t itsm-frontend:dev -f $(FRONTEND_DIR)/Dockerfile.frontend ./$(FRONTEND_DIR)
 	@echo "$(GREEN)✅ 前端镜像构建完成$(NC)"
+
+# ============================================
+# 开箱即用（0→1）验收：一键启动 + 验收测试
+# ============================================
+oob-up: ## 启动开箱即用环境（docker-compose.yml）
+	@echo "$(BLUE)🚀 启动开箱即用环境...$(NC)"
+	docker compose -p itsm_oob -f docker-compose.yml up -d --build
+	@echo "$(GREEN)✅ 环境已启动$(NC)"
+	@echo "   前端: http://localhost:3000"
+	@echo "   后端: http://localhost:8090"
+
+oob-down: ## 停止并清理开箱即用环境（包含 volumes）
+	@echo "$(YELLOW)⏹  停止并清理开箱即用环境...$(NC)"
+	docker compose -p itsm_oob -f docker-compose.yml down -v
+	@echo "$(GREEN)✅ 已清理$(NC)"
+
+oob-test: ## 运行开箱即用验收测试（E2E：smoke + business-flows）
+	@echo "$(BLUE)🧪 运行开箱即用验收测试...$(NC)"
+	cd $(FRONTEND_DIR) && PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run test:smoke
+	cd $(FRONTEND_DIR) && PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run test:e2e:business
+	@echo "$(GREEN)✅ 开箱即用验收通过$(NC)"
 
 # ============================================
 # 本地运行（不使用 Docker）

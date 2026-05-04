@@ -1,20 +1,28 @@
 # 前端Dockerfile
-FROM node:18-alpine AS base
+FROM node:22-alpine AS base
 
 # 安装依赖阶段
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # 复制package文件
-COPY itsm-frontend/package.json itsm-frontend/package-lock.json* ./
-RUN npm ci --only=production
+COPY package.json package-lock.json* ./
+RUN npm ci
 
-# 构建阶段
+# 开发阶段
+FROM base AS development
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . ./
+ENV NEXT_TELEMETRY_DISABLED 1
+EXPOSE 3000
+CMD ["npm", "run", "dev"]
+
+# 构建阶段（生产）
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY itsm-frontend/ ./
+COPY . ./
 
 # 设置环境变量
 ENV NEXT_TELEMETRY_DISABLED 1
@@ -22,8 +30,8 @@ ENV NEXT_TELEMETRY_DISABLED 1
 # 构建应用
 RUN npm run build
 
-# 运行阶段
-FROM base AS runner
+# 运行阶段（生产）
+FROM base AS production
 WORKDIR /app
 
 ENV NODE_ENV production

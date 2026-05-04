@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '@/lib/api/api-config';
-import { getAccessToken, getTenantCode } from '@/lib/auth/token-storage';
+import { getTenantCode } from '@/lib/auth/token-storage';
 
 export interface ServiceRequest {
   id: number;
@@ -89,15 +89,14 @@ class ServiceRequestAPI {
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const token = getAccessToken();
     const tenantCode = getTenantCode();
 
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         ...options,
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
           ...(tenantCode && { 'X-Tenant-Code': tenantCode }),
           ...options.headers,
         },

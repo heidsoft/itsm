@@ -54,7 +54,7 @@ const AIChat: React.FC = () => {
       setConvId(res.conversation_id);
 
       // Format answers from list to string for display
-      const assistantContent = res.answers
+      const assistantContent = (Array.isArray(res.answers) ? res.answers : [])
         .map((a: unknown) => (typeof a === 'string' ? a : JSON.stringify(a)))
         .join('\n\n');
 

@@ -15,12 +15,12 @@ import (
 	"itsm-backend/handlers/change"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/knowledge"
+	"itsm-backend/handlers/known_error"
 	"itsm-backend/handlers/problem"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
-	"itsm-backend/handlers/known_error"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -98,13 +98,13 @@ type RouterConfig struct {
 	// Additional domain controllers
 	ServiceController      *controller.ServiceController
 	ProvisioningController *controller.ProvisioningController
-	AnalyticsController      *controller.AnalyticsController
-	PredictionController     *controller.PredictionController
-	ReleaseController        *controller.ReleaseController
-	AssetController          *controller.AssetController
-	VendorController         *controller.VendorController
-	AssetLicenseController   *controller.AssetLicenseController
-	SurveyController         *controller.SurveyController
+	AnalyticsController    *controller.AnalyticsController
+	PredictionController   *controller.PredictionController
+	ReleaseController      *controller.ReleaseController
+	AssetController        *controller.AssetController
+	VendorController       *controller.VendorController
+	AssetLicenseController *controller.AssetLicenseController
+	SurveyController       *controller.SurveyController
 
 	// Domain Handlers
 	ServiceCatalogHandler *service_catalog.Handler
@@ -533,9 +533,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				sc.GET("/:id", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.Get)
 				sc.PUT("/:id", middleware.RequirePermission("service_catalog", "write"), config.ServiceCatalogHandler.Update)
 				sc.DELETE("/:id", middleware.RequirePermission("service_catalog", "delete"), config.ServiceCatalogHandler.Delete)
-				// 服务项
-				sc.GET("/:id/services", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.List)
-				sc.POST("/:id/services", middleware.RequirePermission("service_catalog", "write"), config.ServiceCatalogHandler.Create)
 			}
 			// 简化的服务项路由
 			scServices := tenant.(*gin.RouterGroup).Group("/service-catalog-services")
@@ -558,17 +555,17 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				sr.POST("/:id/approval", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.ApplyApproval)
 			}
 
-		// Provisioning routes
-		if config.ProvisioningController != nil {
-			sr.POST("/:id/provision", middleware.RequirePermission("service_request", "write"), config.ProvisioningController.StartProvisioning)
-			sr.GET("/:id/provisioning-tasks", middleware.RequirePermission("service_request", "read"), config.ProvisioningController.ListProvisioningTasks)
-		}
+			// Provisioning routes
+			if config.ProvisioningController != nil {
+				sr.POST("/:id/provision", middleware.RequirePermission("service_request", "write"), config.ProvisioningController.StartProvisioning)
+				sr.GET("/:id/provisioning-tasks", middleware.RequirePermission("service_request", "read"), config.ProvisioningController.ListProvisioningTasks)
+			}
 
-		// Provisioning task routes (separate path)
-		provisioning := tenant.(*gin.RouterGroup).Group("/provisioning-tasks")
-		{
-			provisioning.POST("/:id/execute", middleware.RequirePermission("service_request", "write"), config.ProvisioningController.ExecuteProvisioningTask)
-		}
+			// Provisioning task routes (separate path)
+			provisioning := tenant.(*gin.RouterGroup).Group("/provisioning-tasks")
+			{
+				provisioning.POST("/:id/execute", middleware.RequirePermission("service_request", "write"), config.ProvisioningController.ExecuteProvisioningTask)
+			}
 		}
 
 		// ==================== Problems (DDD) ====================
@@ -700,8 +697,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				cmdb.POST("/discovery-sources", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateDiscoverySource)
 				cmdb.POST("/discovery/jobs", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateDiscoveryJob)
 				cmdb.GET("/discovery/results", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListDiscoveryResults)
-			cmdb.GET("/discovery/status", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetDiscoveryStatus)
-			cmdb.POST("/discovery/run", middleware.RequirePermission("cmdb", "write"), config.CMDBController.RunDiscovery)
+				cmdb.GET("/discovery/status", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetDiscoveryStatus)
+				cmdb.POST("/discovery/run", middleware.RequirePermission("cmdb", "write"), config.CMDBController.RunDiscovery)
 				// Per-CI routes (must come after static routes)
 				cmdb.GET("/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCI)
 				cmdb.PUT("/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateCI)
@@ -817,12 +814,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			authGrp := tenant.(*gin.RouterGroup).Group("/auth")
 			{
 				authGrp.GET("/me", config.CommonHandler.GetMe)
+				authGrp.GET("/tenants", config.CommonHandler.GetUserTenants) // For frontend: /api/v1/auth/tenants
 			}
 
 			// User Menu (no permission required, will be filtered by role)
 			if config.MenuController != nil {
 				authGrp.GET("/menus", config.MenuController.GetUserMenus)
 			}
+
+			// Audit Logs (short path for frontend compatibility)
+			tenant.GET("/audit-logs", config.CommonHandler.GetAuditLogs)
 
 			// Users
 			if config.UserController != nil {

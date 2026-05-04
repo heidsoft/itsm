@@ -426,15 +426,15 @@ func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.
 	// 获取各状态的变更数
 	stats := &dto.ChangeStatsResponse{Total: total}
 
-	// 待审批
+	// 待审批 - 包含 pending 和 review
 	pending, err := s.client.Change.Query().
-		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusPending))).
+		Where(change.TenantID(tenantID), change.StatusIn(string(dto.ChangeStatusPending), "review", "pending")).
 		Count(ctx)
 	if err == nil {
 		stats.Pending = pending
 	}
 
-	// 已批准
+	// 已批准 - 包含 approved
 	approved, err := s.client.Change.Query().
 		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusApproved))).
 		Count(ctx)
@@ -442,21 +442,27 @@ func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.
 		stats.Approved = approved
 	}
 
-	// 实施中
-	inProgress, err := s.client.Change.Query().
+
+	// 实施中 - 包含 in_progress 和 implementing, implemented (数据库使用 implementing/implemented)
+	inProgressDB, err := s.client.Change.Query().
 		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusInProgress))).
 		Count(ctx)
+	implementing, err := s.client.Change.Query().
+		Where(change.TenantID(tenantID), change.StatusIn("implementing", "implemented")).
+		Count(ctx)
 	if err == nil {
-		stats.InProgress = inProgress
+		stats.InProgress = inProgressDB + implementing
 	}
 
-	// 已完成
+
+	// 已完成 - 包含 completed
 	completed, err := s.client.Change.Query().
 		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusCompleted))).
 		Count(ctx)
 	if err == nil {
 		stats.Completed = completed
 	}
+
 
 	// 已回滚
 	rolledBack, err := s.client.Change.Query().

@@ -99,12 +99,22 @@ const TicketDetailPage: React.FC = () => {
 
   // Get ticket details
   const fetchTicket = useCallback(async () => {
+    // Skip if ticketId is not a valid number
+    if (!ticketId || isNaN(ticketId) || ticketId <= 0) {
+      setError('无效的工单ID');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
+      console.log('[TicketDetail] Fetching ticket:', ticketId);
       const data = await TicketApi.getTicket(ticketId);
+      console.log('[TicketDetail] Received ticket data:', data);
       setTicket(data as Ticket);
     } catch (error) {
+      console.error('[TicketDetail] Fetch error:', error);
       setError(error instanceof Error ? error.message : 'Network error');
     } finally {
       setLoading(false);

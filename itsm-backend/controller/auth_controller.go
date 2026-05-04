@@ -43,12 +43,10 @@ func (ac *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	// 设置 httpOnly cookies 用于安全存储 token
-	// 前端通过 Authorization header 发送 token，cookie 仅用于 httpOnly 存储
-	// Access token: 15分钟
-	c.SetCookie("access_token", response.AccessToken, 900, "/", "", true, false)
+	// 设置 httpOnly cookies (secure=false for HTTP localhost, httpOnly=true)
+	c.SetCookie("access_token", response.AccessToken, 900, "/", "", false, true)
 	// Refresh token: 7天
-	c.SetCookie("refresh_token", response.RefreshToken, 604800, "/", "", true, false)
+	c.SetCookie("refresh_token", response.RefreshToken, 604800, "/", "", false, true)
 
 	common.Success(c, response)
 }
@@ -78,12 +76,12 @@ func (ac *AuthController) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	// 更新 httpOnly cookie 中的 access token
-	c.SetCookie("access_token", response.AccessToken, 900, "/", "", true, false)
+	// 更新 httpOnly cookie (secure=false, httpOnly=true)
+	c.SetCookie("access_token", response.AccessToken, 900, "/", "", false, true)
 
 	// 如果实现了 refresh token rotation，更新 refresh_token cookie
 	if response.RefreshToken != "" {
-		c.SetCookie("refresh_token", response.RefreshToken, 604800, "/", "", true, false)
+		c.SetCookie("refresh_token", response.RefreshToken, 604800, "/", "", false, true)
 	}
 
 	common.Success(c, response)
@@ -149,9 +147,9 @@ func (ac *AuthController) SwitchTenant(c *gin.Context) {
 		return
 	}
 
-	// 更新 httpOnly cookies
-	c.SetCookie("access_token", response.AccessToken, 900, "/", "", true, false)
-	c.SetCookie("refresh_token", response.RefreshToken, 604800, "/", "", true, false)
+	// 更新 httpOnly cookies (secure=false, httpOnly=true)
+	c.SetCookie("access_token", response.AccessToken, 900, "/", "", false, true)
+	c.SetCookie("refresh_token", response.RefreshToken, 604800, "/", "", false, true)
 
 	common.Success(c, response)
 }
@@ -207,9 +205,9 @@ func (ac *AuthController) Logout(c *gin.Context) {
 		return
 	}
 
-	// 清除 httpOnly cookies
-	c.SetCookie("access_token", "", -1, "/", "", true, false)
-	c.SetCookie("refresh_token", "", -1, "/", "", true, false)
+	// 清除 httpOnly cookies (设置过期时间为 -1, secure=false, httpOnly=true)
+	c.SetCookie("access_token", "", -1, "/", "", false, true)
+	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
 
 	common.Success(c, nil)
 }

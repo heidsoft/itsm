@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # PostgreSQL 数据库（开发环境）
@@ -14,16 +14,15 @@ services:
       - "5432:5432"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
-      - ./scripts/init-db-dev.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - itsm-dev-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dev -d itsm_dev"]
+      test: [ "CMD-SHELL", "pg_isready -U dev -d itsm_dev" ]
       interval: 5s
       timeout: 3s
       retries: 10
     restart: unless-stopped
-    profiles: ["dev"]
+    profiles: [ "dev" ]
 
   # Redis 缓存（开发环境）
   redis:
@@ -37,12 +36,12 @@ services:
     networks:
       - itsm-dev-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
     restart: unless-stopped
-    profiles: ["dev"]
+    profiles: [ "dev" ]
 
   # MinIO 对象存储（开发环境，可选）
   minio:
@@ -61,12 +60,12 @@ services:
     networks:
       - itsm-dev-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
-    profiles: ["dev"]
+    profiles: [ "dev" ]
 
   # ITSM 后端服务（开发环境）
   itsm-backend:
@@ -117,7 +116,7 @@ services:
       # LLM 配置（开发用本地模型）
       - LLM_PROVIDER=ollama
       - LLM_MODEL=llama2
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434  # 指向宿主机（开发用）
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434 # 指向宿主机（开发用）
       # 或者使用本地运行的 Ollama 容器:
       # - OLLAMA_BASE_URL=http://ollama:11434
 
@@ -130,7 +129,7 @@ services:
       - ENABLE_CORS=true
     ports:
       - "8090:8090"
-      - "9090:9090"  # metrics 端口
+      - "9090:9090" # metrics 端口
     depends_on:
       postgres:
         condition: service_healthy
@@ -139,16 +138,23 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./uploads:/app/uploads
-      - ./itsm-backend:/app  # 开发模式挂载代码（热重载）
     networks:
       - itsm-dev-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8090/health",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
-    profiles: ["dev"]
+    profiles: [ "dev" ]
 
   # ITSM 前端服务（开发环境）
   itsm-frontend:
@@ -162,12 +168,13 @@ services:
     hostname: frontend
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:8090
+      - ITSM_BACKEND_URL=http://itsm-backend:8090
+      - NEXT_PUBLIC_API_URL=http://itsm-backend:8090
       - NEXT_PUBLIC_ENABLE_AI=true
       - NEXT_PUBLIC_ENABLE_SWAGGER=true
     ports:
       - "3000:3000"
-      - "9229:9229"  # Node.js debug 端口
+      - "9229:9229" # Node.js debug 端口
     depends_on:
       - itsm-backend
     volumes:
@@ -178,7 +185,7 @@ services:
       - itsm-dev-network
     command: npm run dev
     restart: unless-stopped
-    profiles: ["dev"]
+    profiles: [ "dev" ]
 
   # Ollama（本地 LLM 服务，可选）
   ollama:
@@ -192,11 +199,11 @@ services:
     networks:
       - itsm-dev-network
     restart: unless-stopped
-    profiles: ["dev"]
+    profiles: [ "dev" ]
     # 首次启动后需要拉取模型:
     # docker exec itsm-ollama-dev ollama pull llama2
 
-  # Prometheus（监控，可选）
+    # Prometheus（监控，可选）
   prometheus:
     image: prom/prometheus:latest
     container_name: itsm-prometheus-dev
@@ -209,7 +216,7 @@ services:
     networks:
       - itsm-dev-network
     restart: unless-stopped
-    profiles: ["dev"]
+    profiles: [ "dev" ]
 
   # Grafana（监控面板，可选）
   grafana:
@@ -226,7 +233,7 @@ services:
     networks:
       - itsm-dev-network
     restart: unless-stopped
-    profiles: ["dev"]
+    profiles: [ "dev" ]
 
 volumes:
   postgres_dev_data:

@@ -236,7 +236,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
             ))}
           </div>
         ) : (
-          <Alert message="无差异" description="两个版本之间没有发现差异" type="success" showIcon />
+          <Alert title="无差异" description="两个版本之间没有发现差异" type="success" showIcon />
         )}
 
         {compareResult.diff && (

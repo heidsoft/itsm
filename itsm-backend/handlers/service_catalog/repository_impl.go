@@ -39,8 +39,13 @@ func (r *EntRepository) Create(ctx context.Context, catalog *ServiceCatalog) (*S
 	return r.toDomain(res), nil
 }
 
-func (r *EntRepository) Get(ctx context.Context, id int) (*ServiceCatalog, error) {
-	res, err := r.client.ServiceCatalog.Get(ctx, id)
+func (r *EntRepository) Get(ctx context.Context, tenantID int, id int) (*ServiceCatalog, error) {
+	res, err := r.client.ServiceCatalog.Query().
+		Where(
+			servicecatalog.ID(id),
+			servicecatalog.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +60,14 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters ListFilt
 		query = query.Where(servicecatalog.Category(filters.Category))
 	}
 	if filters.Status != "" {
-		query = query.Where(servicecatalog.Status(filters.Status))
+		switch filters.Status {
+		case "enabled":
+			query = query.Where(servicecatalog.StatusIn("enabled", "active"))
+		case "disabled":
+			query = query.Where(servicecatalog.StatusIn("disabled", "inactive"))
+		default:
+			query = query.Where(servicecatalog.Status(filters.Status))
+		}
 	}
 
 	total, err := query.Count(ctx)
@@ -79,8 +91,9 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters ListFilt
 	return list, total, nil
 }
 
-func (r *EntRepository) Update(ctx context.Context, catalog *ServiceCatalog) (*ServiceCatalog, error) {
+func (r *EntRepository) Update(ctx context.Context, tenantID int, catalog *ServiceCatalog) (*ServiceCatalog, error) {
 	update := r.client.ServiceCatalog.UpdateOneID(catalog.ID).
+		Where(servicecatalog.TenantID(tenantID)).
 		SetName(catalog.Name).
 		SetCategory(catalog.Category).
 		SetDescription(catalog.Description).
@@ -100,14 +113,23 @@ func (r *EntRepository) Update(ctx context.Context, catalog *ServiceCatalog) (*S
 	return r.toDomain(res), nil
 }
 
-func (r *EntRepository) Delete(ctx context.Context, id int) error {
-	return r.client.ServiceCatalog.DeleteOneID(id).Exec(ctx)
+func (r *EntRepository) Delete(ctx context.Context, tenantID int, id int) error {
+	return r.client.ServiceCatalog.DeleteOneID(id).
+		Where(servicecatalog.TenantID(tenantID)).
+		Exec(ctx)
 }
 
 func (r *EntRepository) Count(ctx context.Context, tenantID int, filters ListFilters) (int, error) {
 	query := r.client.ServiceCatalog.Query().Where(servicecatalog.TenantID(tenantID))
 	if filters.Status != "" {
-		query = query.Where(servicecatalog.Status(filters.Status))
+		switch filters.Status {
+		case "enabled":
+			query = query.Where(servicecatalog.StatusIn("enabled", "active"))
+		case "disabled":
+			query = query.Where(servicecatalog.StatusIn("disabled", "inactive"))
+		default:
+			query = query.Where(servicecatalog.Status(filters.Status))
+		}
 	}
 	return query.Count(ctx)
 }
@@ -131,7 +153,7 @@ func (r *EntRepository) Search(ctx context.Context, tenantID int, keyword string
 	query := r.client.ServiceCatalog.Query().
 		Where(
 			servicecatalog.TenantID(tenantID),
-			servicecatalog.StatusEQ("enabled"),
+			servicecatalog.StatusIn("enabled", "active"),
 		)
 
 	// 关键词搜索：name OR description

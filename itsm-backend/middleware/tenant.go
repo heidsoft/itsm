@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
 
@@ -81,6 +82,13 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 			}
 		}
 
+		claimedTenantID := c.GetInt("tenant_id")
+		if claimedTenantID > 0 && claimedTenantID != tenantEntity.ID {
+			common.Fail(c, common.AuthFailedCode, "租户不匹配")
+			c.Abort()
+			return
+		}
+
 		// 检查租户状态
 		if tenantEntity.Status != "active" {
 			c.JSON(http.StatusForbidden, gin.H{
@@ -109,6 +117,7 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 			Tenant:   tenantEntity,
 		}
 		c.Set(TenantContextKey, tenantCtx)
+		c.Set("tenant_id", tenantEntity.ID)
 
 		c.Next()
 	}

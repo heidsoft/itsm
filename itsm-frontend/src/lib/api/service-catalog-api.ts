@@ -442,17 +442,22 @@ export class ServiceCatalogApi {
    * 获取服务目录统计
    */
   static async getCatalogStats(): Promise<ServiceCatalogStats> {
-    // V0：后端未提供 stats；前端可用 getServices + 本地统计
-    const { services, total } = await ServiceCatalogApi.getServices({
-      page: 1,
-      pageSize: 1000,
-    } as any);
+    // 调用后端实际统计接口
+    const resp = await httpClient.get<{
+      totalServices: number;
+      publishedServices: number;
+      categories: Record<string, number>;
+    }>('/api/v1/service-catalogs/stats');
+
     return {
-      totalServices: total,
-      publishedServices: services.filter(s => String((s as any).status) === 'published').length,
+      totalServices: resp.totalServices || 0,
+      publishedServices: resp.publishedServices || 0,
       totalRequests: 0,
       avgRating: 0,
-      topCategories: [],
+      topCategories: Object.entries(resp.categories || {}).map(([name, count]) => ({
+        name,
+        count: count as number,
+      })),
       requestsByStatus: {},
       servicesByStatus: {},
     } as any;

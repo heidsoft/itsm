@@ -115,12 +115,13 @@ func (s *DashboardService) getSLAMetrics(ctx context.Context, tenantID int) (*dt
 		return nil, err
 	}
 
-	// 计算按时解决的工单数（这里简化处理，实际需要根据SLA时间计算）
+	// 计算按时解决的工单数
+	// 统计最近30天创建的、状态为resolved或closed的工单（视为已完成）
 	resolvedOnTime, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
 			ticket.CreatedAtGTE(thirtyDaysAgo),
-			ticket.StatusEQ("closed"),
+			ticket.StatusIn("resolved", "closed"),
 		).
 		Count(ctx)
 	if err != nil {

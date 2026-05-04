@@ -202,20 +202,25 @@ class TicketService {
 
   // 获取工单统计
   async getTicketStats(): Promise<TicketStatsResponse> {
-    try {
-      return await httpClient.get<TicketStatsResponse>(`${this.baseUrl}/stats`);
-    } catch (error) {
-      console.warn('Failed to fetch ticket stats, using fallback mock data:', error);
-      // 返回 Mock 数据作为降级方案
-      return {
-        total: 0,
-        open: 0,
-        inProgress: 0,
-        resolved: 0,
-        highPriority: 0,
-        overdue: 0,
-      };
-    }
+    const response = await httpClient.get<{
+      total?: number;
+      open?: number;
+      in_progress?: number;
+      inProgress?: number;
+      resolved?: number;
+      high_priority?: number;
+      highPriority?: number;
+      overdue?: number;
+    }>(`${this.baseUrl}/stats`);
+
+    return {
+      total: response.total ?? 0,
+      open: response.open ?? 0,
+      inProgress: response.inProgress ?? response.in_progress ?? 0,
+      resolved: response.resolved ?? 0,
+      highPriority: response.highPriority ?? response.high_priority ?? 0,
+      overdue: response.overdue ?? 0,
+    };
   }
 
   // 分配工单

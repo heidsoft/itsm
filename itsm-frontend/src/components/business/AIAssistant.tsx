@@ -14,15 +14,12 @@ import {
   Typography,
   Space,
   Divider,
-  List,
-  Avatar,
   message,
 } from 'antd';
-import { Bot, Lightbulb, Users, Search, CheckCircle, Clock, Target } from 'lucide-react';
+import { Bot, Lightbulb, Search, CheckCircle, Clock, Target } from 'lucide-react';
 import {
   AIService,
   type TicketAnalysisRequest,
-  type AssigneeRecommendation,
   type SolutionSuggestion,
 } from '@/lib/services/ai-service';
 
@@ -37,7 +34,7 @@ interface AIAssistantProps {
     description?: string;
     category?: string;
   };
-  onRecommendationSelect?: (recommendation: AssigneeRecommendation | SolutionSuggestion) => void;
+  onRecommendationSelect?: (recommendation: SolutionSuggestion) => void;
   className?: string;
 }
 
@@ -50,7 +47,6 @@ interface AIAnalysisState {
     reasoning: string;
     suggestions?: string[];
   } | null;
-  assigneeRecommendations: AssigneeRecommendation[];
   solutionSuggestions: SolutionSuggestion[];
   loading: boolean;
   error: string | null;
@@ -63,7 +59,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 }) => {
   const [analysisState, setAnalysisState] = useState<AIAnalysisState>({
     classification: null,
-    assigneeRecommendations: [],
     solutionSuggestions: [],
     loading: false,
     error: null,
@@ -106,15 +101,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         },
       };
 
-      // 并行执行多个AI分析
-      const [classification, assigneeRecommendations, solutionSuggestions] = await Promise.all([
+      const [classification, solutionSuggestions] = await Promise.all([
         AIService.classifyTicket(request),
-        AIService.recommendAssignee({
-          category: inputData.category || 'general',
-          priority: 'medium',
-          description: inputData.description,
-          requiredSkills: [],
-        }),
         AIService.suggestSolutions({
           query: `${inputData.title} ${inputData.description}`,
           category: inputData.category,
@@ -124,7 +112,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 
       setAnalysisState({
         classification,
-        assigneeRecommendations,
         solutionSuggestions,
         loading: false,
         error: null,
@@ -217,78 +204,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     );
   };
 
-  // 渲染处理人推荐
-  const renderAssigneeRecommendations = () => {
-    if (analysisState.assigneeRecommendations.length === 0) return null;
-
-    return (
-      <Card size="small" className="mb-4">
-        <div className="flex items-center space-x-2 mb-3">
-          <Users size={16} className="text-green-600" />
-          <Text className="font-semibold">推荐处理人</Text>
-        </div>
-
-        <List
-          size="small"
-          dataSource={analysisState.assigneeRecommendations}
-          renderItem={item => (
-            <List.Item
-              actions={[
-                <Button
-                  key="select"
-                  type="link"
-                  size="small"
-                  onClick={() => onRecommendationSelect?.(item)}
-                >
-                  选择
-                </Button>,
-              ]}
-            >
-              <List.Item.Meta
-                avatar={<Avatar className="bg-blue-500">{item.userName.charAt(0)}</Avatar>}
-                title={
-                  <div className="flex items-center space-x-2">
-                    <span>{item.userName}</span>
-                    <Tag
-                      color={
-                        item.availability === 'available'
-                          ? 'green'
-                          : item.availability === 'busy'
-                            ? 'orange'
-                            : 'red'
-                      }
-                    >
-                      {item.availability === 'available'
-                        ? '空闲'
-                        : item.availability === 'busy'
-                          ? '忙碌'
-                          : '不可用'}
-                    </Tag>
-                    <Progress
-                      size="small"
-                      percent={Math.round(item.confidence * 100)}
-                      showInfo={false}
-                      strokeWidth={4}
-                    />
-                  </div>
-                }
-                description={
-                  <div className="text-xs space-y-1">
-                    <div>
-                      部门: {item.department} | 工作负载: {item.workload}%
-                    </div>
-                    <div>专长: {item.expertise.join(', ')}</div>
-                    <div className="text-gray-500">{item.reasoning}</div>
-                  </div>
-                }
-              />
-            </List.Item>
-          )}
-        />
-      </Card>
-    );
-  };
-
   // 渲染解决方案建议
   const renderSolutionSuggestions = () => {
     if (analysisState.solutionSuggestions.length === 0) return null;
@@ -308,11 +223,15 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                 <div className="flex items-center justify-between w-full pr-4">
                   <span className="font-medium">{solution.title}</span>
                   <div className="flex items-center space-x-2">
-                    <Tag color="blue">成功率: {Math.round(solution.successRate * 100)}%</Tag>
-                    <Tag color="green">
-                      <Clock size={10} className="mr-1" />
-                      {solution.estimatedTime}分钟
-                    </Tag>
+                    {typeof solution.successRate === 'number' && (
+                      <Tag color="blue">成功率: {Math.round(solution.successRate * 100)}%</Tag>
+                    )}
+                    {typeof solution.estimatedTime === 'number' && (
+                      <Tag color="green">
+                        <Clock size={10} className="mr-1" />
+                        {solution.estimatedTime}分钟
+                      </Tag>
+                    )}
                   </div>
                 </div>
               }
@@ -323,17 +242,17 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                 <div>
                   <Text className="text-sm font-medium block mb-2">处理步骤:</Text>
                   <ol className="text-sm space-y-1 pl-4">
-                    {solution.steps.map((step, stepIndex) => (
+                    {(solution.steps || []).map((step, stepIndex) => (
                       <li key={stepIndex}>{step}</li>
                     ))}
                   </ol>
                 </div>
 
-                {solution.relatedKnowledge.length > 0 && (
+                {(solution.relatedKnowledge || []).length > 0 && (
                   <div>
                     <Text className="text-sm font-medium block mb-2">相关知识:</Text>
                     <Space wrap>
-                      {solution.relatedKnowledge.map((knowledge, knowledgeIndex) => (
+                      {(solution.relatedKnowledge || []).map((knowledge, knowledgeIndex) => (
                         <Tag key={knowledgeIndex} color="cyan" className="cursor-pointer">
                           {knowledge}
                         </Tag>
@@ -436,7 +355,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         {!analysisState.loading && (
           <div>
             {renderClassification()}
-            {renderAssigneeRecommendations()}
             {renderSolutionSuggestions()}
           </div>
         )}

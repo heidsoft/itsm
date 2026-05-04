@@ -6,10 +6,11 @@ import zhCN from 'antd/locale/zh_CN';
 import { usePathname, useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { AuthService } from '@/lib/services/auth-service';
+import { httpClient } from '@/lib/api/http-client';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useLayoutStore } from '@/lib/store/layout-store';
+import { useAuthStore } from '@/lib/store/auth-store';
 
 const { Content } = Layout;
 
@@ -33,19 +34,82 @@ export default function MainLayout({
 
   // 处理客户端挂载和认证检查
   useEffect(() => {
-    const checkAuth = () => {
-      const authenticated = AuthService.isAuthenticated();
-      setIsAuthenticated(authenticated);
-      setCheckingAuth(false);
-
-      if (!authenticated && mounted) {
-        router.push('/login');
-      }
-    };
-
     setMounted(true);
+    const checkAuth = async () => {
+      // 分别请求用户信息和租户信息，避免一个失败导致整体失败
+      let userInfo = null;
+      let tenantInfo = null;
+
+      try {
+        userInfo = await httpClient.get<any>('/api/v1/auth/me');
+      } catch (e) {
+        console.error('Failed to fetch user info:', e);
+      }
+
+      try {
+        tenantInfo = await httpClient.get<any>('/api/v1/auth/tenants');
+      } catch (e) {
+        console.error('Failed to fetch tenant info:', e);
+      }
+
+      // 如果两个都失败，则认为未认证
+      if (!userInfo && !tenantInfo) {
+        setIsAuthenticated(false);
+        router.push(`/login?redirect=${encodeURIComponent(pathname || '/')}`);
+        setCheckingAuth(false);
+        return;
+      }
+
+      const tenants = Array.isArray(tenantInfo?.tenants) ? tenantInfo.tenants : [];
+      const currentTenant = tenants[0];
+
+      const { login, setCurrentTenant } = useAuthStore.getState();
+      login(
+        {
+          id: Number(userInfo?.id || 0),
+          username: String(userInfo?.username || ''),
+          email: String(userInfo?.email || ''),
+          name: String(userInfo?.name || ''),
+          role: String(userInfo?.role || 'end_user'),
+          department: userInfo?.department,
+          tenantId: userInfo?.tenantId
+            ? Number(userInfo.tenantId)
+            : userInfo?.tenant_id
+              ? Number(userInfo.tenant_id)
+              : undefined,
+          permissions: userInfo?.permissions,
+          createdAt: userInfo?.createdAt || userInfo?.created_at,
+          updatedAt: userInfo?.updatedAt || userInfo?.updated_at,
+        },
+        'authenticated',
+        currentTenant
+          ? {
+              id: Number(currentTenant.id),
+              name: String(currentTenant.name),
+              code: String(currentTenant.code),
+              type: currentTenant.type,
+              status: currentTenant.status,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
+          : undefined
+      );
+      if (currentTenant) {
+        setCurrentTenant({
+          id: Number(currentTenant.id),
+          name: String(currentTenant.name),
+          code: String(currentTenant.code),
+          type: currentTenant.type,
+          status: currentTenant.status,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } as any);
+      }
+      setIsAuthenticated(true);
+      setCheckingAuth(false);
+    };
     checkAuth();
-  }, [router]);
+  }, [router, pathname]);
 
   // 响应式布局：在移动端自动折叠侧边栏
   useEffect(() => {

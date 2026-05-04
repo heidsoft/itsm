@@ -199,40 +199,58 @@ const CreateCIPage: React.FC = () => {
         }
       }
       setSaving(true);
+      // 后端dto.CreateCIRequest期望camelCase格式
       await CMDBApi.createCI({
         name: values.name,
-        ci_type: String(values.ci_type_id),
+        ciTypeId: Number(values.ci_type_id),
         status: values.status,
         attributes,
-        serial_number: values.serial_number,
-        model: values.model,
-        vendor: values.vendor,
+        serialNumber: values.serial_number,
+        assetTag: values.asset_tag,
         location: values.location,
-        asset_tag: values.asset_tag,
-        assigned_to: values.assigned_to,
-        owned_by: values.owned_by,
+        assignedTo: values.assigned_to,
+        ownedBy: values.owned_by,
         environment: values.environment || '',
         criticality: values.criticality || '',
-        discovery_source: values.discovery_source,
+        discoverySource: values.discovery_source,
         source: values.source,
-        cloud_provider: values.cloud_provider,
-        cloud_account_id: values.cloud_account_id,
-        cloud_region: values.cloud_region,
-        cloud_zone: values.cloud_zone,
-        cloud_resource_id: values.cloud_resource_id,
-        cloud_resource_type: values.cloud_resource_type,
-        cloud_sync_status: values.cloud_sync_status,
-        cloud_resource_ref_id: values.cloud_resource_ref_id,
-        cloud_metadata: values.cloud_metadata,
+        cloudProvider: values.cloud_provider,
+        cloudAccountId: values.cloud_account_id,
+        cloudRegion: values.cloud_region,
+        cloudZone: values.cloud_zone,
+        cloudResourceId: values.cloud_resource_id,
+        cloudResourceType: values.cloud_resource_type,
+        cloudSyncStatus: values.cloud_sync_status,
+        cloudResourceRefId: values.cloud_resource_ref_id,
+        cloudMetadata: values.cloud_metadata,
       } as any);
       message.success(t('cmdb.createCISuccess'));
       router.push('/cmdb');
     } catch (error) {
-      if (error instanceof Error) {
-        message.error(error.message || t('cmdb.createCIFailed'));
-      } else {
-        message.error(t('cmdb.createCIFailed'));
+      console.error('Create CI error:', error);
+      // Try to extract more detailed error message
+      let errorMessage = t('cmdb.createCIFailed');
+      if (error && typeof error === 'object') {
+        const errObj = error as Record<string, unknown>;
+        // Check for API response error structure
+        if (errObj.message && typeof errObj.message === 'string') {
+          errorMessage = errObj.message;
+        }
+        // Check for response data with error details
+        if (errObj.response) {
+          const response = errObj.response as Record<string, unknown>;
+          if (response.data) {
+            const data = response.data as Record<string, unknown>;
+            if (data.message) {
+              errorMessage = String(data.message);
+            }
+          }
+          if (response.status) {
+            errorMessage = `HTTP ${response.status}: ${errorMessage}`;
+          }
+        }
       }
+      message.error(errorMessage);
     } finally {
       setSaving(false);
     }

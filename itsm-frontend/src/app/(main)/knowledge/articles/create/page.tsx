@@ -43,7 +43,7 @@ export default function CreateArticlePage() {
       await KnowledgeBaseApi.createArticle({
         title: values.title,
         content: values.content,
-        categoryId: values.category,
+        category: values.category,
         tags: values.tags || [],
       });
       message.success('文章创建成功');

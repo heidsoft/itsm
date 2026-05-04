@@ -23,6 +23,7 @@ type TriageResult struct {
 // TriageService provides LLM-powered ticket triage and classification
 type TriageService struct {
 	gateway          *LLMGateway
+	guidanceClient   *GuidanceClient
 	logger           *zap.Logger
 	keywordFallback  bool
 	defaultAssignees map[string]int
@@ -62,6 +63,38 @@ func NewTriageService(gateway *LLMGateway, logger *zap.Logger) *TriageService {
 	}
 }
 
+// NewTriageServiceWithSugaredLogger creates a new LLM-powered triage service with SugaredLogger
+func NewTriageServiceWithSugaredLogger(gateway *LLMGateway, logger *zap.SugaredLogger) *TriageService {
+	return &TriageService{
+		gateway:          gateway,
+		logger:           logger.Desugar(),
+		keywordFallback:  true,
+		defaultAssignees: defaultAssignees,
+	}
+}
+
+// NewTriageServiceWithGuidance creates a triage service with Guidance sidecar
+func NewTriageServiceWithGuidance(gateway *LLMGateway, guidanceClient *GuidanceClient, logger *zap.Logger) *TriageService {
+	return &TriageService{
+		gateway:          gateway,
+		guidanceClient:   guidanceClient,
+		logger:           logger,
+		keywordFallback:  true,
+		defaultAssignees: defaultAssignees,
+	}
+}
+
+// NewTriageServiceWithGuidanceAndSugaredLogger creates with SugaredLogger
+func NewTriageServiceWithGuidanceAndSugaredLogger(gateway *LLMGateway, guidanceClient *GuidanceClient, logger *zap.SugaredLogger) *TriageService {
+	return &TriageService{
+		gateway:          gateway,
+		guidanceClient:   guidanceClient,
+		logger:           logger.Desugar(),
+		keywordFallback:  true,
+		defaultAssignees: defaultAssignees,
+	}
+}
+
 // NewTriageServiceWithConfig creates a service with custom configuration
 func NewTriageServiceWithConfig(gateway *LLMGateway, logger *zap.Logger, fallback bool, assignees map[string]int) *TriageService {
 	svc := &TriageService{
@@ -88,64 +121,97 @@ func (t *TriageService) Suggest(ctx context.Context, title, description string) 
 		Explanation: "keyword heuristic",
 	}
 
-	if t.gateway == nil {
-		if t.keywordFallback {
-			return t.keywordBasedSuggest(text)
-		}
-		return result
-	}
-
-	llmResult, err := t.llmClassify(ctx, title, description)
-	if err != nil {
-		t.logger.Warn("TriageService: LLM classification failed, using fallback", zap.Error(err))
-		if t.keywordFallback {
-			return t.keywordBasedSuggest(text)
-		}
-		return result
-	}
-
-	// LLM-first: use LLM result if confidence is acceptable
-	// If LLM confidence is low (< 0.5), consult keyword as secondary check
-	if llmResult.Confidence < 0.5 && t.keywordFallback {
-		keywordResult := t.keywordBasedSuggest(text)
-		// Use keyword result if it has higher confidence
-		if keywordResult.Confidence > llmResult.Confidence {
-			t.logger.Info("TriageService: keyword result has higher confidence",
-				zap.Float64("llm_confidence", llmResult.Confidence),
-				zap.Float64("keyword_confidence", keywordResult.Confidence))
-			return keywordResult
+	// Priority 1: Use Guidance sidecar for constrained generation
+	if t.guidanceClient != nil {
+		guidanceResult, err := t.guidanceClient.Triage(ctx, title, description, 1)
+		if err != nil {
+			t.logger.Warn("TriageService: Guidance sidecar failed, falling back", zap.Error(err))
+		} else {
+			t.logger.Info("TriageService: Guidance-constrained classification",
+				zap.String("category", guidanceResult.Category),
+				zap.String("priority", guidanceResult.Priority),
+				zap.Float64("confidence", guidanceResult.Confidence),
+				zap.Float64("latency_ms", guidanceResult.LatencyMs))
+			return TriageResult{
+				Category:     guidanceResult.Category,
+				Priority:     guidanceResult.Priority,
+				AssigneeID:   guidanceResult.AssigneeID,
+				Confidence:   guidanceResult.Confidence,
+				Explanation:  guidanceResult.Explanation,
+				SuggestedFix: guidanceResult.SuggestedFix,
+			}
 		}
 	}
 
-	return llmResult
+	// Priority 2: Use LLM gateway directly
+	if t.gateway != nil {
+		llmResult, err := t.llmClassify(ctx, title, description)
+		if err != nil {
+			t.logger.Warn("TriageService: LLM classification failed, using fallback", zap.Error(err))
+			if t.keywordFallback {
+				return t.keywordBasedSuggest(text)
+			}
+			return result
+		}
+
+		// LLM-first: use LLM result if confidence is acceptable
+		if llmResult.Confidence < 0.5 && t.keywordFallback {
+			keywordResult := t.keywordBasedSuggest(text)
+			if keywordResult.Confidence > llmResult.Confidence {
+				t.logger.Info("TriageService: keyword result has higher confidence",
+					zap.Float64("llm_confidence", llmResult.Confidence),
+					zap.Float64("keyword_confidence", keywordResult.Confidence))
+				return keywordResult
+			}
+		}
+
+		return llmResult
+	}
+
+	// Priority 3: Use keyword-based fallback
+	if t.keywordFallback {
+		return t.keywordBasedSuggest(text)
+	}
+
+	return result
 }
 
 // llmClassify uses LLM for intelligent ticket classification
+// Uses Guidance-style constrained prompting to ensure valid JSON output
 func (t *TriageService) llmClassify(ctx context.Context, title, description string) (TriageResult, error) {
-	prompt := fmt.Sprintf(`Analyze the following IT ticket and provide classification:
+	// Guidance-style constrained prompt: explicit schema with strict enum values
+	// This guides the model to output valid JSON matching our schema
+	prompt := fmt.Sprintf(`You are an expert IT service management triage assistant.
+Your task is to classify IT tickets into exactly ONE of these categories:
+- database (MySQL, PostgreSQL, MongoDB, Redis, Oracle, SQL issues)
+- network (WiFi, router, switch, firewall, connectivity issues)
+- server (CPU, memory, disk, Linux, Windows Server, hardware)
+- application (software, app, API, deployment, code bugs)
+- security (vulnerability, attack, permission, authentication issues)
+- storage (disk space, backup, snapshot, storage capacity)
+- user_access (account, login, password, access control)
+- general (everything else)
+
+Priority levels (choose ONE):
+- critical (system down, security breach, data loss)
+- high (major feature broken, many users impacted)
+- medium (degraded functionality, some users impacted)
+- low (minor issue, cosmetic problems)
 
 Title: %s
 
 Description:
 %s
 
-Please return JSON with:
-{
-  "category": "database|network|server|application|security|storage|user_access|general",
-  "priority": "critical|high|medium|low",
-  "confidence": 0.0-1.0,
-  "explanation": "reason for classification",
-  "suggested_fix": "brief suggested solution"
-}
-
-Only return JSON, no other content.`, title, description)
+IMPORTANT: Respond with ONLY valid JSON in this exact format, no other text:
+{"category": "EXACT_CATEGORY_FROM_LIST", "priority": "EXACT_PRIORITY_FROM_LIST", "confidence": 0.0-1.0, "explanation": "brief reason", "suggested_fix": "brief solution or null"}`, title, description)
 
 	messages := []LLMMessage{
-		{Role: "system", Content: "You are an IT service management triage assistant."},
+		{Role: "system", Content: "You are an IT service management triage assistant. Always output valid JSON."},
 		{Role: "user", Content: prompt},
 	}
 
-	resp, err := t.gateway.Chat(ctx, "gpt-4o-mini", messages)
+	resp, err := t.gateway.Chat(ctx, "", messages)
 	if err != nil {
 		return TriageResult{}, fmt.Errorf("LLM classification failed: %w", err)
 	}
@@ -158,6 +224,7 @@ Only return JSON, no other content.`, title, description)
 
 	var classification TriageResult
 	if err := json.Unmarshal([]byte(resp), &classification); err != nil {
+		// Fallback: try to find JSON in response
 		start := strings.Index(resp, "{")
 		end := strings.LastIndex(resp, "}")
 		if start >= 0 && end >= start {
@@ -169,13 +236,18 @@ Only return JSON, no other content.`, title, description)
 		}
 	}
 
-	if classification.Category == "" {
+	// Validate and normalize enum values
+	if classification.Category == "" || !isValidCategory(classification.Category) {
 		classification.Category = "general"
 	}
-	if classification.Priority == "" {
+	if classification.Priority == "" || !isValidPriority(classification.Priority) {
 		classification.Priority = "medium"
 	}
 	if classification.Confidence == 0 {
+		classification.Confidence = 0.6
+	}
+	// Clamp confidence to valid range
+	if classification.Confidence < 0 || classification.Confidence > 1 {
 		classification.Confidence = 0.6
 	}
 
@@ -184,6 +256,28 @@ Only return JSON, no other content.`, title, description)
 	}
 
 	return classification, nil
+}
+
+// isValidCategory checks if category is a valid enum value
+func isValidCategory(cat string) bool {
+	validCategories := []string{"database", "network", "server", "application", "security", "storage", "user_access", "general"}
+	for _, v := range validCategories {
+		if cat == v {
+			return true
+		}
+	}
+	return false
+}
+
+// isValidPriority checks if priority is a valid enum value
+func isValidPriority(pri string) bool {
+	validPriorities := []string{"critical", "high", "medium", "low"}
+	for _, v := range validPriorities {
+		if pri == v {
+			return true
+		}
+	}
+	return false
 }
 
 // keywordBasedSuggest provides fallback classification using keywords
@@ -359,7 +453,7 @@ Return only the ID number, or 0 if unsure.`, category, title, description)
 			{Role: "user", Content: prompt},
 		}
 
-		resp, err := t.gateway.Chat(ctx, "gpt-4o-mini", messages)
+		resp, err := t.gateway.Chat(ctx, "", messages)
 		if err != nil {
 			t.logger.Warn("TriageService: assignee suggestion failed", zap.Error(err))
 		} else {

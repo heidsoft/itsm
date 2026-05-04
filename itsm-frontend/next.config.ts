@@ -7,10 +7,15 @@ const nextConfig: NextConfig = {
 
   // 配置代理以避免跨域问题
   async rewrites() {
+    const backendBase =
+      process.env.ITSM_BACKEND_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'http://localhost:8090';
+
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:8090/api/:path*',
+        destination: `${backendBase}/api/:path*`,
       },
     ];
   },

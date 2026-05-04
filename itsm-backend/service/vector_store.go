@@ -10,6 +10,14 @@ type VectorStore struct{ db *sql.DB }
 
 func NewVectorStore(db *sql.DB) *VectorStore { return &VectorStore{db: db} }
 
+// TestConnection checks if the vectors table exists and is accessible
+func (s *VectorStore) TestConnection() error {
+	// Simple query to verify the vectors table exists
+	var count int
+	err := s.db.QueryRow("SELECT COUNT(*) FROM vectors LIMIT 1").Scan(&count)
+	return err
+}
+
 func (s *VectorStore) Upsert(ctx context.Context, tenantID int, objectType string, objectID int, embedding []float32, content string, source string) error {
 	// pgx prefers []float32 -> vector; with database/sql we build string literal
 	// Convert to SQL literal: '['1,2,3']' style for pgvector (space-separated)
