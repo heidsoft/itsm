@@ -42,9 +42,11 @@ import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { SafeContent, SafeTextBlock } from '@/components/common/SafeContent';
 import { isValidIncidentTransition } from '@/lib/utils/workflow-state-machine';
 
-const IncidentDetail: React.FC = () => {
-  const { id } = useParams() as { id: string };
+const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
+  const params = useParams();
   const router = useRouter();
+  // 支持通过props传入id，或通过useParams获取
+  const id = propId || (params?.id as string);
   const { handleError } = useErrorHandler();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Incident | null>(null);
@@ -171,7 +173,12 @@ const IncidentDetail: React.FC = () => {
                 升级
               </Button>
               {data.status !== IncidentStatus.RESOLVED && (
-                <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleResolveClick} loading={resolving}>
+                <Button
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  onClick={handleResolveClick}
+                  loading={resolving}
+                >
                   解决
                 </Button>
               )}
@@ -302,10 +309,7 @@ const IncidentDetail: React.FC = () => {
               maxLength={2000}
             />
           </Form.Item>
-          <Form.Item
-            name="resolutionCode"
-            label="解决分类"
-          >
+          <Form.Item name="resolutionCode" label="解决分类">
             <Select placeholder="选择解决分类（可选）">
               <Select.Option value="fixed">已修复</Select.Option>
               <Select.Option value="workaround">临时解决方案</Select.Option>

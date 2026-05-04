@@ -80,21 +80,6 @@ function safeRemove(key: string): void {
 export function migrateLegacyAuthStorage(): void {
   if (typeof window === 'undefined') return;
 
-  const currentAccessToken = safeGet(STORAGE_KEYS.ACCESS_TOKEN);
-  if (!currentAccessToken) {
-    const legacyAuthToken = safeGet(STORAGE_KEYS.LEGACY_AUTH_TOKEN);
-    const legacyItsmToken = safeGet(STORAGE_KEYS.LEGACY_ITSM_TOKEN);
-    const legacyToken = safeGet(STORAGE_KEYS.LEGACY_TOKEN);
-    const legacy = legacyAuthToken || legacyItsmToken || legacyToken;
-    if (legacy) {
-      safeSet(STORAGE_KEYS.ACCESS_TOKEN, legacy);
-    }
-  }
-
-  safeRemove(STORAGE_KEYS.LEGACY_AUTH_TOKEN);
-  safeRemove(STORAGE_KEYS.LEGACY_ITSM_TOKEN);
-  safeRemove(STORAGE_KEYS.LEGACY_TOKEN);
-
   // 迁移租户代码
   const currentTenantCode = safeGet(STORAGE_KEYS.TENANT_CODE);
   if (!currentTenantCode) {
@@ -112,7 +97,7 @@ export function migrateLegacyAuthStorage(): void {
  */
 export function isAuthenticated(): boolean {
   migrateLegacyAuthStorage();
-  return hasAuthCookie() || hasAccessTokenCookie() || !!getAccessToken();
+  return hasAuthCookie() || hasAccessTokenCookie();
 }
 
 /**
@@ -123,7 +108,7 @@ export function isAuthenticated(): boolean {
  */
 export function getAccessToken(): string | null {
   migrateLegacyAuthStorage();
-  return safeGet(STORAGE_KEYS.ACCESS_TOKEN);
+  return null;
 }
 
 /**
@@ -132,7 +117,7 @@ export function getAccessToken(): string | null {
  */
 export function getRefreshToken(): string | null {
   migrateLegacyAuthStorage();
-  return safeGet(STORAGE_KEYS.REFRESH_TOKEN);
+  return null;
 }
 
 export function getTenantCode(): string | null {
@@ -146,16 +131,14 @@ export function getTenantId(): string | null {
 }
 
 export function setAccessToken(token: string): void {
-  safeSet(STORAGE_KEYS.ACCESS_TOKEN, token);
+  void token;
 }
 
 export function setRefreshToken(token: string): void {
-  safeSet(STORAGE_KEYS.REFRESH_TOKEN, token);
+  void token;
 }
 
 export function clearAuthStorage(): void {
-  safeRemove(STORAGE_KEYS.ACCESS_TOKEN);
-  safeRemove(STORAGE_KEYS.REFRESH_TOKEN);
   safeRemove(STORAGE_KEYS.TENANT_ID);
   safeRemove(STORAGE_KEYS.TENANT_CODE);
   safeRemove(STORAGE_KEYS.LEGACY_AUTH_TOKEN);

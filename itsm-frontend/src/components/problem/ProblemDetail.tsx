@@ -5,38 +5,23 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  Descriptions,
-  Tag,
-  Button,
-  Space,
-  Skeleton,
-  message,
-  Divider,
-  Typography,
-  Tabs,
-} from 'antd';
-import {
-  EditOutlined,
-  ArrowLeftOutlined,
-  CheckCircleOutlined,
-  SyncOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+import { Card, Tag, Button, Space, Skeleton, message, Typography, Tabs } from 'antd';
+import { EditOutlined, ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons';
 import { useRouter, useParams } from 'next/navigation';
-import dayjs from 'dayjs';
 
 import { ProblemApi } from '@/lib/api/';
-import { ProblemStatus, ProblemStatusLabels, ProblemPriorityLabels } from '@/constants/problem';
+import { ProblemStatus, ProblemStatusLabels } from '@/constants/problem';
 import type { Problem } from '@/types/biz/problem';
 import ProblemInvestigationTab from './ProblemInvestigationTab';
+import BasicInfoCard from './BasicInfoCard';
 
-const { Title, Paragraph } = Typography;
+const { Title } = Typography;
 
-const ProblemDetail: React.FC = () => {
-  const { id } = useParams() as { id: string };
+const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
+  const params = useParams();
   const router = useRouter();
+  // 支持通过props传入id，或通过useParams获取
+  const id = propId || (params?.id as string);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Problem | null>(null);
 
@@ -47,7 +32,6 @@ const ProblemDetail: React.FC = () => {
       const problem = await ProblemApi.getProblem(Number(id));
       setData(problem as unknown as Problem);
     } catch (error) {
-      // console.error(error);
       message.error('加载问题详情失败');
     } finally {
       setLoading(false);
@@ -56,7 +40,6 @@ const ProblemDetail: React.FC = () => {
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleUpdateStatus = async (status: ProblemStatus) => {
@@ -86,39 +69,7 @@ const ProblemDetail: React.FC = () => {
     {
       key: 'basic',
       label: '基本信息',
-      children: (
-        <Card styles={{ body: { padding: '16px 24px' } }}>
-          <Descriptions column={2}>
-            <Descriptions.Item label="创建人ID">{data.createdBy}</Descriptions.Item>
-            <Descriptions.Item label="负责人ID">{data.assigneeId || '-'}</Descriptions.Item>
-            <Descriptions.Item label="优先级">
-              {ProblemPriorityLabels[data.priority]}
-            </Descriptions.Item>
-            <Descriptions.Item label="分类">{data.category}</Descriptions.Item>
-            <Descriptions.Item label="创建时间">
-              {dayjs(data.createdAt).format('YYYY-MM-DD HH:mm:ss')}
-            </Descriptions.Item>
-            <Descriptions.Item label="更新时间">
-              {dayjs(data.updatedAt).format('YYYY-MM-DD HH:mm:ss')}
-            </Descriptions.Item>
-          </Descriptions>
-
-          <Divider />
-
-          <Title level={5}>描述</Title>
-          <Paragraph>{data.description}</Paragraph>
-
-          <Divider />
-
-          <Title level={5}>根本原因</Title>
-          <Paragraph>{data.rootCause || '暂无分析'}</Paragraph>
-
-          <Divider />
-
-          <Title level={5}>影响范围</Title>
-          <Paragraph>{data.impact || '暂无描述'}</Paragraph>
-        </Card>
-      ),
+      children: <BasicInfoCard data={data} />,
     },
     {
       key: 'investigation',

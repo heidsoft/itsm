@@ -34,10 +34,11 @@ func (s *ProblemInvestigationService) GetRootCauseAnalysis(ctx context.Context, 
 		       prca.analysis_date, prca.reviewed_by, u2.name, prca.review_date,
 		       prca.created_at, prca.updated_at
 		FROM problem_root_cause_analyses prca
+		JOIN problems p ON prca.problem_id = p.id
 		JOIN users u1 ON prca.analyst_id = u1.id
 		LEFT JOIN users u2 ON prca.reviewed_by = u2.id
-		WHERE prca.id = $1
-	`, id).Scan(
+		WHERE prca.id = $1 AND p.tenant_id = $2 AND u1.tenant_id = p.tenant_id AND (u2.id IS NULL OR u2.tenant_id = p.tenant_id)
+	`, id, tenantID).Scan(
 		&analysis.ID, &analysis.ProblemID, &analysis.AnalystID, &analysis.AnalystName,
 		&analysis.AnalysisMethod, &analysis.RootCauseDescription, &analysis.ContributingFactors,
 		&analysis.Evidence, &analysis.ConfidenceLevel, &analysis.AnalysisDate,
@@ -62,10 +63,11 @@ func (s *ProblemInvestigationService) GetProblemSolution(ctx context.Context, id
 		       ps.risk_assessment, ps.approval_status, ps.approved_by, u2.name, ps.approval_date,
 		       ps.created_at, ps.updated_at
 		FROM problem_solutions ps
+		JOIN problems p ON ps.problem_id = p.id
 		JOIN users u1 ON ps.proposed_by = u1.id
 		LEFT JOIN users u2 ON ps.approved_by = u2.id
-		WHERE ps.id = $1
-	`, id).Scan(
+		WHERE ps.id = $1 AND p.tenant_id = $2 AND u1.tenant_id = p.tenant_id AND (u2.id IS NULL OR u2.tenant_id = p.tenant_id)
+	`, id, tenantID).Scan(
 		&solution.ID, &solution.ProblemID, &solution.SolutionType, &solution.SolutionDescription,
 		&solution.ProposedBy, &solution.ProposedByName, &solution.ProposedDate, &solution.Status,
 		&solution.Priority, &solution.EstimatedEffortHours, &solution.EstimatedCost,
@@ -95,7 +97,12 @@ func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Con
 
 	// 检查是否已存在调查记录
 	var existingID int
-	err = s.db.QueryRowContext(ctx, "SELECT id FROM problem_investigations WHERE problem_id = $1", req.ProblemID).Scan(&existingID)
+	err = s.db.QueryRowContext(ctx, `
+		SELECT pi.id
+		FROM problem_investigations pi
+		JOIN problems p ON pi.problem_id = p.id
+		WHERE pi.problem_id = $1 AND p.tenant_id = $2
+	`, req.ProblemID, tenantID).Scan(&existingID)
 	if err == nil {
 		return nil, fmt.Errorf("该问题已存在调查记录")
 	}
@@ -113,13 +120,13 @@ func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Con
 
 	// 获取调查者姓名
 	var investigatorName string
-	err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1", req.InvestigatorID).Scan(&investigatorName)
+	err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1 AND tenant_id = $2", req.InvestigatorID, tenantID).Scan(&investigatorName)
 	if err != nil {
 		investigatorName = "未知用户"
 	}
 
 	// 更新问题状态为"调查中"
-	_, err = s.db.ExecContext(ctx, "UPDATE problems SET status = 'in_progress' WHERE id = $1", req.ProblemID)
+	_, err = s.db.ExecContext(ctx, "UPDATE problems SET status = 'in_progress' WHERE id = $1 AND tenant_id = $2", req.ProblemID, tenantID)
 	if err != nil {
 		s.logger.Warnw("Failed to update problem status", "problem_id", req.ProblemID, "error", err)
 	}
@@ -209,7 +216,7 @@ func (s *ProblemInvestigationService) UpdateProblemInvestigation(ctx context.Con
 
 	// 如果状态更新为完成，同时更新问题状态
 	if req.Status != nil && *req.Status == dto.InvestigationStatusCompleted {
-		_, err = s.db.ExecContext(ctx, "UPDATE problems SET status = 'resolved' WHERE id = $1", investigation.ProblemID)
+		_, err = s.db.ExecContext(ctx, "UPDATE problems SET status = 'resolved' WHERE id = $1 AND tenant_id = $2", investigation.ProblemID, tenantID)
 		if err != nil {
 			s.logger.Warnw("Failed to update problem status", "problem_id", investigation.ProblemID, "error", err)
 		}

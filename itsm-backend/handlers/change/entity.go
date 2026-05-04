@@ -72,12 +72,17 @@ type RiskAssessment struct {
 
 // Stats represents change statistics
 type Stats struct {
-	Total      int
-	Pending    int
-	Approved   int
-	InProgress int
-	Completed  int
-	RolledBack int
-	Rejected   int
-	Cancelled  int
+	Total        int `json:"total"`
+	Draft        int `json:"draft"`
+	Review       int `json:"review"`
+	Pending      int `json:"pending"`
+	Approved     int `json:"approved"`
+	Scheduled    int `json:"scheduled"`
+	Implementing int `json:"implementing"`
+	Implemented  int `json:"implemented"`
+	Completed    int `json:"completed"`
+	RolledBack   int `json:"rolledBack"`
+	Rejected     int `json:"rejected"`
+	Cancelled    int `json:"cancelled"`
+	InProgress   int `json:"inProgress"` // Computed: Scheduled + Implementing
 }

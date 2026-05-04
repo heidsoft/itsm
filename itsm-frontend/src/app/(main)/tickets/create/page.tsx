@@ -154,7 +154,8 @@ export default function CreateTicketPage() {
     } catch (e: unknown) {
       console.error('Create ticket error:', e);
       const errorObj = e as { message?: string; error?: { message?: string } };
-      const errorMsg = errorObj?.message || errorObj?.error?.message || '创建工单失败，请检查输入或重新登录';
+      const errorMsg =
+        errorObj?.message || errorObj?.error?.message || '创建工单失败，请检查输入或重新登录';
       message.error(errorMsg);
     } finally {
       setLoading(false);
@@ -176,7 +177,7 @@ export default function CreateTicketPage() {
       setAiLoading(true);
       setAiError(null);
 
-      const response = await httpClient.post<any>('/api/ai/triage', {
+      const response = await httpClient.post<any>('/api/v1/ai/triage', {
         title,
         description,
         category: values.category,
@@ -248,8 +249,8 @@ export default function CreateTicketPage() {
         {/* 页面头部 */}
         <Card>
           <Space align="center" style={{ width: '100%' }}>
-            <Button 
-              icon={<ArrowLeft className="w-4 h-4" />} 
+            <Button
+              icon={<ArrowLeft className="w-4 h-4" />}
               onClick={() => router.back()}
               aria-label="返回上一页"
             >
@@ -284,7 +285,7 @@ export default function CreateTicketPage() {
                     <Tag
                       key={cat.key}
                       color={categoryFilter === cat.key ? 'blue' : 'default'}
-                      style={{ 
+                      style={{
                         cursor: 'pointer',
                         borderWidth: categoryFilter === cat.key ? '2px' : '1px',
                         borderStyle: 'solid',
@@ -308,7 +309,12 @@ export default function CreateTicketPage() {
                 role="list"
                 aria-label="可用工单类型列表"
               >
-                <Space direction="vertical" style={{ width: '100%' }} size={8} role="presentation">
+                <Space
+                  orientation="vertical"
+                  style={{ width: '100%' }}
+                  size={8}
+                  role="presentation"
+                >
                   {filteredTypes.map(type => renderTypeCard(type))}
                 </Space>
               </div>
@@ -317,12 +323,7 @@ export default function CreateTicketPage() {
 
           {/* 右侧：表单 */}
           <Col xs={24} md={14}>
-            <Form 
-              form={form} 
-              layout="vertical"
-              aria-label="工单表单"
-              requiredMark="optional"
-            >
+            <Form form={form} layout="vertical" aria-label="工单表单" requiredMark="optional">
               {/* 已选类型提示 */}
               {selectedType && (
                 <Card
@@ -334,7 +335,7 @@ export default function CreateTicketPage() {
                   role="region"
                   aria-label={`已选工单类型：${selectedType.name}`}
                 >
-                  <Space direction="vertical" style={{ width: '100%' }}>
+                  <Space orientation="vertical" style={{ width: '100%' }}>
                     <Space>
                       <div style={{ color: selectedType.color }} aria-hidden="true">
                         {iconMap[selectedType.icon] || <FileText className="w-5 h-5" />}
@@ -343,8 +344,8 @@ export default function CreateTicketPage() {
                         <div className="font-medium">{selectedType.name}</div>
                         <Text type="secondary">{selectedType.description}</Text>
                       </div>
-                      <Button 
-                        type="link" 
+                      <Button
+                        type="link"
                         size="small"
                         onClick={() => setSelectedType(null)}
                         aria-label="更换工单类型"
@@ -393,8 +394,8 @@ export default function CreateTicketPage() {
               {/* 智能显示表单：已选类型有字段→自定义表单 | 已选类型无字段或未选择→基础表单 */}
               {selectedType?.fields && selectedType.fields.length > 0 ? (
                 /* 有自定义字段：只显示自定义表单（已包含所有必要信息） */
-                <Card 
-                  title={`${selectedType.name} - 详细信息`} 
+                <Card
+                  title={`${selectedType.name} - 详细信息`}
                   style={{ marginBottom: 16 }}
                   aria-label={`${selectedType.name} 自定义表单`}
                 >
@@ -411,8 +412,8 @@ export default function CreateTicketPage() {
                           }
                         >
                           {field.type === 'textarea' ? (
-                            <TextArea 
-                              rows={3} 
+                            <TextArea
+                              rows={3}
                               placeholder={field.placeholder}
                               aria-label={field.label}
                             />
@@ -423,21 +424,15 @@ export default function CreateTicketPage() {
                               aria-label={field.label}
                             />
                           ) : field.type === 'number' ? (
-                            <Input 
-                              type="number" 
+                            <Input
+                              type="number"
                               placeholder={field.placeholder}
                               aria-label={field.label}
                             />
                           ) : field.type === 'date' ? (
-                            <Input 
-                              type="date" 
-                              aria-label={field.label}
-                            />
+                            <Input type="date" aria-label={field.label} />
                           ) : (
-                            <Input 
-                              placeholder={field.placeholder}
-                              aria-label={field.label}
-                            />
+                            <Input placeholder={field.placeholder} aria-label={field.label} />
                           )}
                         </Form.Item>
                       </Col>
@@ -457,7 +452,7 @@ export default function CreateTicketPage() {
                     label="标题"
                     rules={[
                       { required: true, message: '请输入标题' },
-                      { min: 2, message: '标题至少需要2个字符' }
+                      { min: 2, message: '标题至少需要2个字符' },
                     ]}
                   >
                     <Input
@@ -521,7 +516,7 @@ export default function CreateTicketPage() {
               )}
 
               <Space
-                direction="vertical"
+                orientation="vertical"
                 size="middle"
                 style={{ width: '100%' }}
                 role="group"
@@ -560,9 +555,7 @@ export default function CreateTicketPage() {
                 }
               >
                 <Spin spinning={aiLoading}>
-                  {aiError && (
-                    <Alert message={aiError} type="warning" showIcon className="mb-2" />
-                  )}
+                  {aiError && <Alert title={aiError} type="warning" showIcon className="mb-2" />}
                   {aiSuggestions ? (
                     <div className="space-y-2">
                       <div className="flex flex-wrap gap-2">
@@ -590,9 +583,7 @@ export default function CreateTicketPage() {
                       )}
                     </div>
                   ) : (
-                    <Text type="secondary">
-                      点击下方按钮获取AI智能分类建议
-                    </Text>
+                    <Text type="secondary">点击下方按钮获取AI智能分类建议</Text>
                   )}
                 </Spin>
                 <Button

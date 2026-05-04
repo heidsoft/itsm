@@ -246,7 +246,7 @@ func (s *RootCauseService) performAIAnalysis(ticketEntity *ent.Ticket) ([]dto.Ti
 		{Role: "user", Content: prompt},
 	}
 
-	response, err := s.gateway.Chat(ctx, "gpt-4o-mini", messages)
+	response, err := s.gateway.Chat(ctx, "", messages)
 	if err != nil {
 		return nil, fmt.Errorf("LLM analysis failed: %w", err)
 	}

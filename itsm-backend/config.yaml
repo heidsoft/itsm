@@ -1,10 +1,10 @@
 database:
-  host: localhost
+  host: "localhost"
   port: 5432
-  user: dev
+  user: "dev"
   password: "dev123"
-  dbname: itsm_dev
-  sslmode: disable
+  dbname: "itsm_dev"
+  sslmode: "disable"
 
 # pgvector configuration (optional, for RAG/AI features)
 # Install extension: CREATE EXTENSION IF NOT EXISTS vector;
@@ -18,7 +18,7 @@ server:
   mode: "${SERVER_MODE:release}"  # Use env: SERVER_MODE, default release
 
 jwt:
-  secret: "${JWT_SECRET}"  # Required: set JWT_SECRET env var
+  secret: "${JWT_SECRET:dev-secret-key-change-in-production-minimum-32-characters-long}"
   expire_time: 900        # 15分钟 (access token)
   refresh_expire_time: 604800  # 7天 (refresh token)
 
@@ -33,11 +33,11 @@ log:
   development: false          # 开发模式(输出到console)
 
 llm:
-  provider: openai        # openai, azure, local
-  model: gpt-4o-mini
-  api_key: "${OPENAI_API_KEY:}"             # Use env: OPENAI_API_KEY
-  endpoint: ""            # For Azure: https://{resource}.openai.azure.com/
-  deployment: ""          # Azure deployment ID
+  provider: "${LLM_PROVIDER:openai}"        # openai, azure, local, minimax
+  model: "${LLM_MODEL:gpt-4o-mini}"
+  api_key: "${LLM_API_KEY:}"                # Recommended: set LLM_API_KEY; provider-specific envs also supported in code
+  endpoint: "${LLM_ENDPOINT:}"              # For Azure/Custom endpoints
+  deployment: "${LLM_DEPLOYMENT:}"          # Azure deployment ID
   token_cap: 8000         # Rate limit
 
 # Embedding configuration for RAG
@@ -68,7 +68,7 @@ security:
   token_expiry: 24h
   refresh_token_expiry: 168h
   bcrypt_cost: 10
-  csrf_enabled: true  # Enable CSRF protection
+  csrf_enabled: false  # Disable CSRF protection for development
 
 # Admin user settings
 admin:
@@ -93,5 +93,5 @@ smtp:
 redis:
   host: "localhost"
   port: 6379
-  password: "1111"
-  db: 0         # Redis database number
+  password: ""
+  db: 0

@@ -57,16 +57,34 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                 onChange={value => onFilterChange?.('status', value)}
                 className="w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
               >
-                <Option value="open">
+                <Option value="new">
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <span>{t('incidents.statusOpen')}</span>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span>{t('incidents.statusNew')}</span>
                   </div>
                 </Option>
-                <Option value="in-progress">
+                <Option value="acknowledged">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    <span>{t('incidents.statusAcknowledged')}</span>
+                  </div>
+                </Option>
+                <Option value="assigned">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+                    <span>{t('incidents.statusAssigned')}</span>
+                  </div>
+                </Option>
+                <Option value="in_progress">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     <span>{t('incidents.statusInProgress')}</span>
+                  </div>
+                </Option>
+                <Option value="escalated">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span>{t('incidents.statusEscalated')}</span>
                   </div>
                 </Option>
                 <Option value="resolved">

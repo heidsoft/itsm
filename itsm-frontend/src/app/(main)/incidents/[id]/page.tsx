@@ -3,11 +3,14 @@
 import React from 'react';
 import { Button } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import IncidentDetail from '@/components/incident/IncidentDetail';
 
+// 动态路由参数类型
 export default function IncidentDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params?.id as string;
 
   return (
     <div style={{ padding: 24 }}>
@@ -21,7 +24,8 @@ export default function IncidentDetailPage() {
           返回列表
         </Button>
       </div>
-      <IncidentDetail />
+      {/* 将ID传递给IncidentDetail组件 */}
+      <IncidentDetail id={id} />
     </div>
   );
 }

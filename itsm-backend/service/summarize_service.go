@@ -54,7 +54,7 @@ func (s *SummarizeService) Summarize(ctx context.Context, text string, maxLen in
 		{Role: "user", Content: prompt},
 	}
 
-	result, err := s.gateway.Chat(ctx, "gpt-4o-mini", messages)
+	result, err := s.gateway.Chat(ctx, "", messages)
 	if err != nil {
 		s.logger.Error("SummarizeService: LLM call failed", zap.Error(err))
 		// Fallback to simple truncation on error
@@ -103,7 +103,7 @@ func (s *SummarizeService) SummarizeWithContext(ctx context.Context, text, conte
 		{Role: "user", Content: prompt},
 	}
 
-	result, err := s.gateway.Chat(ctx, "gpt-4o-mini", messages)
+	result, err := s.gateway.Chat(ctx, "", messages)
 	if err != nil {
 		s.logger.Error("SummarizeService: LLM call with context failed", zap.Error(err))
 		return s.Summarize(ctx, text, maxLen)
@@ -140,7 +140,7 @@ func (s *SummarizeService) GenerateActionItems(ctx context.Context, text string)
 		{Role: "user", Content: prompt},
 	}
 
-	result, err := s.gateway.Chat(ctx, "gpt-4o-mini", messages)
+	result, err := s.gateway.Chat(ctx, "", messages)
 	if err != nil {
 		s.logger.Error("SummarizeService: action items extraction failed", zap.Error(err))
 		return []string{}, nil
@@ -220,7 +220,7 @@ func (s *SummarizeService) SummarizeWithMetadata(ctx context.Context, text strin
 		{Role: "user", Content: prompt},
 	}
 
-	summary, err := s.gateway.Chat(ctx, "gpt-4o-mini", messages)
+	summary, err := s.gateway.Chat(ctx, "", messages)
 	if err != nil {
 		s.logger.Error("SummarizeService: LLM call failed", zap.Error(err))
 		result.Summary = simpleTruncate(text, maxLen)

@@ -7,20 +7,21 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/user"
+
+	"go.uber.org/zap"
 )
 
 type TicketCoreService struct {
-	client           *ent.Client
-	rawDB            *sql.DB // for transactional SELECT FOR UPDATE
-	logger           *zap.SugaredLogger
-	sequenceService  *SequenceService
+	client          *ent.Client
+	rawDB           *sql.DB // for transactional SELECT FOR UPDATE
+	logger          *zap.SugaredLogger
+	sequenceService *SequenceService
 }
 
 // SetSequenceService 设置序列服务
@@ -102,8 +103,42 @@ func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.Crea
 
 	ticket, err := createBuilder.Save(ctx)
 	if err != nil {
+		// 检查是否是唯一约束冲突，如果是则重试（最多3次）
+		if strings.Contains(err.Error(), "unique constraint") ||
+			strings.Contains(err.Error(), "duplicate key") ||
+			strings.Contains(err.Error(), "23505") {
+			for retry := 0; retry < 3; retry++ {
+				s.logger.Warnw("Ticket number collision, retrying", "ticketNumber", ticketNumber, "retry", retry)
+				time.Sleep(time.Millisecond * 100 * time.Duration(retry+1))
+				newTicketNumber, err := s.generateTicketNumber(ctx, tenantID)
+				if err != nil {
+					break
+				}
+				ticket, err = s.client.Ticket.Create().
+					SetTitle(req.Title).
+					SetDescription(req.Description).
+					SetPriority(req.Priority).
+					SetType(ticketType).
+					SetStatus("open").
+					SetTicketNumber(newTicketNumber).
+					SetTenantID(tenantID).
+					SetRequesterID(req.RequesterID).
+					Save(ctx)
+				if err == nil {
+					goto created
+				}
+				if !strings.Contains(err.Error(), "unique constraint") &&
+					!strings.Contains(err.Error(), "duplicate key") &&
+					!strings.Contains(err.Error(), "23505") {
+					break
+				}
+				ticketNumber = newTicketNumber
+			}
+		}
 		return nil, fmt.Errorf("创建失败: %w", err)
 	}
+
+created:
 
 	if len(req.TagIDs) > 0 {
 		_, _ = ticket.Update().AddTagIDs(req.TagIDs...).Save(ctx)
@@ -356,7 +391,7 @@ func (s *TicketCoreService) generateTicketNumberWithDB(ctx context.Context, tena
 				s.logger.Warnw("BeginTx failed, falling back to non-transactional", "error", err)
 			} else {
 				// 使用原生 SQL 查询最大编号
-				query := `SELECT ticket_number FROM ticket WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE`
+				query := `SELECT ticket_number FROM tickets WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE`
 				var maxTicketNum string
 				err := tx.QueryRowContext(ctx, query, tenantID, prefix+"%").Scan(&maxTicketNum)
 				if err != nil && err != sql.ErrNoRows {

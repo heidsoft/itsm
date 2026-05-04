@@ -7,16 +7,20 @@ import type { SLADefinition as APISLADefinition } from '@/lib/api/sla-api';
 
 /**
  * 转换API数据格式为页面格式
+ * 后端 SLADefinitionResponse 返回 camelCase: responseTime, resolutionTime
  */
 export const transformSLA = (item: APISLADefinition): SLADefinition => ({
   id: String(item.id),
   name: item.name,
   description: item.description,
-  serviceType: item.service_type,
-  priority: item.priority as SLADefinition['priority'],
-  responseTime: `${item.response_time_minutes}分钟`,
-  resolutionTime: `${item.resolution_time_minutes}分钟`,
-  availability: `${item.availability_target}%`,
+  // 兼容 service_type 和 serviceType
+  serviceType: item.serviceType || item.service_type || '',
+  priority: (item.priority || 'P3') as SLADefinition['priority'],
+  // 后端返回 camelCase 格式: responseTime, resolutionTime
+  responseTime: `${item.responseTime || 0}分钟`,
+  resolutionTime: `${item.resolutionTime || 0}分钟`,
+  // 可用性字段
+  availability: `${item.availability_target || item.availability || 99.9}%`,
   businessHours: '7x24',
   escalationRules: [],
   applicableServices: [],

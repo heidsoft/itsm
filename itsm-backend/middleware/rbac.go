@@ -647,15 +647,49 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		}
 
 		// 获取租户ID
+		// 特殊路径：认证相关端点不需要租户ID检查
+		authPaths := map[string]bool{
+			"/api/v1/auth/me":      true,
+			"/api/v1/auth/tenants":  true,
+			"/api/v1/auth/menus":    true,
+			"/api/v1/auth/profile":  true,
+		}
+		isAuthPath := authPaths[c.Request.URL.Path]
+
 		tenantIDInterface, exists := c.Get("tenant_id")
 		if !exists {
-			zap.S().Warnw("RBACMiddleware: tenant_id not found in context",
-				"path", c.Request.URL.Path,
-				"user_id", userID,
-			)
-			common.Fail(c, common.AuthFailedCode, "租户信息缺失")
-			c.Abort()
-			return
+			// 对于认证端点，从JWT claim或其他方式获取租户ID
+			if isAuthPath {
+				// 尝试从JWT的tenant_id claim获取
+				if jwtTenantID, ok := c.Get("tenant_id"); ok {
+					if tid, ok := jwtTenantID.(int); ok && tid > 0 {
+						c.Set("tenant_id", tid)
+						tenantIDInterface = tid
+					}
+				}
+				// 如果仍然没有，从X-Tenant-ID header获取
+				if tenantIDInterface == nil {
+					if tenantIDStr := c.GetHeader("X-Tenant-ID"); tenantIDStr != "" {
+						if tid, err := strconv.Atoi(tenantIDStr); err == nil {
+							c.Set("tenant_id", tid)
+							tenantIDInterface = tid
+						}
+					}
+				}
+				// 如果还是没有租户ID，设置默认租户ID=1
+				if tenantIDInterface == nil {
+					c.Set("tenant_id", 1)
+					tenantIDInterface = 1
+				}
+			} else {
+				zap.S().Warnw("RBACMiddleware: tenant_id not found in context",
+					"path", c.Request.URL.Path,
+					"user_id", userID,
+				)
+				common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+				c.Abort()
+				return
+			}
 		}
 		tenantID, ok := tenantIDInterface.(int)
 		if !ok {

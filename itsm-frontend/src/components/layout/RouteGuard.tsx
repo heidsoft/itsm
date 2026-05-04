@@ -3,13 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Spin, Result, Button } from 'antd';
-import { Lock, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import {
   RoutePermissionChecker,
   type RouteConfig,
   type RoutePermission,
 } from '../../lib/router/route-config';
-import { STORAGE_KEYS, migrateLegacyAuthStorage } from '@/lib/auth/token-storage';
+import { httpClient } from '@/lib/api/http-client';
+import { AuthService as RealAuthService } from '@/lib/services/auth-service';
 
 interface User {
   id: number;
@@ -33,182 +34,6 @@ interface RouteGuardProps {
   fallback?: React.ReactNode;
 }
 
-// 模拟认证服务
-class AuthService {
-  private static readonly TOKEN_KEY = STORAGE_KEYS.ACCESS_TOKEN;
-  private static readonly USER_KEY = 'itsm_user';
-
-  static getToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    migrateLegacyAuthStorage();
-    return localStorage.getItem(this.TOKEN_KEY);
-  }
-
-  static setToken(token: string): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(this.TOKEN_KEY, token);
-  }
-
-  static removeToken(): void {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
-  }
-
-  static getUser(): User | null {
-    if (typeof window === 'undefined') return null;
-    const userStr = localStorage.getItem(this.USER_KEY);
-    if (!userStr) return null;
-
-    try {
-      return JSON.parse(userStr);
-    } catch {
-      return null;
-    }
-  }
-
-  static setUser(user: User): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-  }
-
-  static async validateToken(_token: string): Promise<User | null> {
-    try {
-      // 模拟API调用验证token
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // 模拟用户数据
-      const mockUser: User = {
-        id: 1,
-        username: 'admin',
-        email: 'admin@example.com',
-        roles: ['admin', 'super_admin'],
-        permissions: [
-          { resource: 'dashboard', action: 'read' },
-          { resource: 'ticket', action: 'read' },
-          { resource: 'ticket', action: 'create' },
-          { resource: 'ticket', action: 'update' },
-          { resource: 'ticket', action: 'delete' },
-          { resource: 'ticket', action: 'admin' },
-          { resource: 'incident', action: 'read' },
-          { resource: 'incident', action: 'create' },
-          { resource: 'incident', action: 'update' },
-          { resource: 'incident', action: 'delete' },
-          { resource: 'incident', action: 'admin' },
-          { resource: 'problem', action: 'read' },
-          { resource: 'problem', action: 'create' },
-          { resource: 'problem', action: 'update' },
-          { resource: 'problem', action: 'delete' },
-          { resource: 'change', action: 'read' },
-          { resource: 'change', action: 'create' },
-          { resource: 'change', action: 'update' },
-          { resource: 'change', action: 'delete' },
-          { resource: 'service_catalog', action: 'read' },
-          { resource: 'service_catalog', action: 'create' },
-          { resource: 'service_catalog', action: 'update' },
-          { resource: 'service_catalog', action: 'delete' },
-          { resource: 'service_request', action: 'read' },
-          { resource: 'service_request', action: 'create' },
-          { resource: 'service_request', action: 'update' },
-          { resource: 'knowledge', action: 'read' },
-          { resource: 'knowledge', action: 'create' },
-          { resource: 'knowledge', action: 'update' },
-          { resource: 'knowledge', action: 'delete' },
-          { resource: 'cmdb', action: 'read' },
-          { resource: 'cmdb', action: 'create' },
-          { resource: 'cmdb', action: 'update' },
-          { resource: 'cmdb', action: 'delete' },
-          { resource: 'sla', action: 'read' },
-          { resource: 'sla', action: 'create' },
-          { resource: 'sla', action: 'update' },
-          { resource: 'sla', action: 'delete' },
-          { resource: 'report', action: 'read' },
-          { resource: 'report', action: 'create' },
-          { resource: 'report', action: 'update' },
-          { resource: 'report', action: 'delete' },
-          { resource: 'release', action: 'read' },
-          { resource: 'release', action: 'create' },
-          { resource: 'release', action: 'update' },
-          { resource: 'release', action: 'delete' },
-          { resource: 'asset', action: 'read' },
-          { resource: 'asset', action: 'create' },
-          { resource: 'asset', action: 'update' },
-          { resource: 'asset', action: 'delete' },
-          { resource: 'license', action: 'read' },
-          { resource: 'license', action: 'create' },
-          { resource: 'license', action: 'update' },
-          { resource: 'license', action: 'delete' },
-          { resource: 'bpmn', action: 'read' },
-          { resource: 'bpmn', action: 'create' },
-          { resource: 'bpmn', action: 'update' },
-          { resource: 'bpmn', action: 'delete' },
-          { resource: 'groups', action: 'read' },
-          { resource: 'groups', action: 'create' },
-          { resource: 'groups', action: 'update' },
-          { resource: 'groups', action: 'delete' },
-          { resource: 'org', action: 'read' },
-          { resource: 'org', action: 'update' },
-          { resource: 'role', action: 'read' },
-          { resource: 'role', action: 'create' },
-          { resource: 'role', action: 'update' },
-          { resource: 'role', action: 'delete' },
-          { resource: 'permission', action: 'read' },
-          { resource: 'user', action: 'read' },
-          { resource: 'user', action: 'create' },
-          { resource: 'user', action: 'update' },
-          { resource: 'user', action: 'delete' },
-          { resource: 'admin', action: 'read' },
-          { resource: 'ai', action: 'read' },
-          { resource: 'ai', action: 'write' },
-          { resource: 'audit_logs', action: 'read' },
-        ],
-        isActive: true,
-      };
-
-      return mockUser;
-    } catch {
-      console.error('Token validation failed');
-      return null;
-    }
-  }
-
-  static async login(
-    username: string,
-    password: string
-  ): Promise<{ user: User; token: string } | null> {
-    // Only allow mock login in development mode
-    if (process.env.NODE_ENV !== 'development') {
-      console.error('Mock login is only available in development mode');
-      return null;
-    }
-
-    try {
-      // 模拟登录API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (username === 'admin' && password === 'admin123') {
-        const token = 'mock_jwt_token_' + Date.now();
-        const user = await this.validateToken(token);
-
-        if (user) {
-          this.setToken(token);
-          this.setUser(user);
-          return { user, token };
-        }
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Login failed:', error);
-      return null;
-    }
-  }
-
-  static logout(): void {
-    this.removeToken();
-  }
-}
-
 // 认证Hook
 export const useAuth = () => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -222,30 +47,39 @@ export const useAuth = () => {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = AuthService.getToken();
-      const cachedUser = AuthService.getUser();
+      try {
+        const me = await httpClient.get<{
+          id: number;
+          username: string;
+          email: string;
+          role: string;
+          active: boolean;
+          permissions?: string[];
+        }>('/api/v1/auth/me');
 
-      if (token && cachedUser) {
-        // 验证token是否仍然有效
-        const user = await AuthService.validateToken(token);
-        if (user) {
-          setAuthState({
-            user,
-            token,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-        } else {
-          // Token无效，清除本地存储
-          AuthService.logout();
-          setAuthState({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-        }
-      } else {
+        const perms = Array.isArray(me?.permissions) ? me.permissions : [];
+        const routePerms: RoutePermission[] = perms
+          .map(p => {
+            const [resource, action] = String(p).split(':');
+            if (!resource || !action) return null;
+            return { resource, action } as RoutePermission;
+          })
+          .filter(Boolean) as RoutePermission[];
+
+        setAuthState({
+          user: {
+            id: Number(me?.id || 0),
+            username: String(me?.username || ''),
+            email: String(me?.email || ''),
+            roles: [String(me?.role || '')].filter(Boolean),
+            permissions: routePerms,
+            isActive: Boolean(me?.active),
+          },
+          token: 'authenticated',
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      } catch {
         setAuthState({
           user: null,
           token: null,
@@ -258,27 +92,8 @@ export const useAuth = () => {
     initAuth();
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    setAuthState(prev => ({ ...prev, isLoading: true }));
-
-    const result = await AuthService.login(username, password);
-
-    if (result) {
-      setAuthState({
-        user: result.user,
-        token: result.token,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-      return true;
-    } else {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-      return false;
-    }
-  };
-
   const logout = () => {
-    AuthService.logout();
+    RealAuthService.logout();
     setAuthState({
       user: null,
       token: null,
@@ -290,101 +105,8 @@ export const useAuth = () => {
 
   return {
     ...authState,
-    login,
     logout,
   };
-};
-
-// 登录页面组件
-const LoginPage: React.FC<{
-  onLogin: (username: string, password: string) => Promise<boolean>;
-}> = ({ onLogin }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const formData = new FormData(e.currentTarget);
-    const username = formData.get('username') as string;
-    const password = formData.get('password') as string;
-
-    try {
-      const success = await onLogin(username, password);
-      if (!success) {
-        setError('用户名或密码错误');
-      }
-    } catch (error) {
-      setError('登录失败，请稍后重试');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <Lock size={48} className="mx-auto text-blue-600" />
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">ITSM 系统登录</h2>
-          <p className="mt-2 text-sm text-gray-600">请输入您的账号和密码</p>
-        </div>
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                用户名
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="请输入用户名"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                密码
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="请输入密码"
-              />
-            </div>
-          </div>
-
-          {error && <div className="text-red-600 text-sm text-center">{error}</div>}
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? <Spin size="small" className="mr-2" /> : null}
-              {loading ? '登录中...' : '登录'}
-            </button>
-          </div>
-
-          {process.env.NODE_ENV === 'development' && (
-            <div className="text-xs text-gray-500 text-center">
-              <p>开发模式: admin / admin123</p>
-            </div>
-          )}
-        </form>
-      </div>
-    </div>
-  );
 };
 
 // 权限检查组件
@@ -422,8 +144,9 @@ const PermissionGuard: React.FC<{
 
 // 主路由守卫组件
 export const RouteGuard: React.FC<RouteGuardProps> = ({ children, route, fallback }) => {
-  const { user, isAuthenticated, isLoading, login } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   // 公共路由，不需要认证
   const publicRoutes = ['/login', '/register', '/forgot-password'];
@@ -442,7 +165,8 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children, route, fallbac
 
   // 未认证且不是公共路由
   if (!isAuthenticated && !isPublicRoute) {
-    return <LoginPage onLogin={login} />;
+    router.push(`/login?redirect=${encodeURIComponent(pathname || '/')}`);
+    return null;
   }
 
   // 已认证但访问登录页面，重定向到首页

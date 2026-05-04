@@ -21,6 +21,7 @@ type Service struct {
 	analytics          *service.AnalyticsService
 	prediction         *service.PredictionService
 	slaForecastSkill   *service.SLAForecastSkill
+	triageService      *service.TriageService
 	rca                *service.RootCauseService
 	aiTelemetryService *service.AITelemetryService
 }
@@ -34,6 +35,7 @@ func NewService(
 	analytics *service.AnalyticsService,
 	prediction *service.PredictionService,
 	slaForecastSkill *service.SLAForecastSkill,
+	triageService *service.TriageService,
 	rca *service.RootCauseService,
 	aiTelemetryService *service.AITelemetryService,
 ) *Service {
@@ -46,6 +48,7 @@ func NewService(
 		analytics:          analytics,
 		prediction:         prediction,
 		slaForecastSkill:   slaForecastSkill,
+		triageService:      triageService,
 		rca:                rca,
 		aiTelemetryService: aiTelemetryService,
 	}
@@ -258,23 +261,37 @@ func (s *Service) SearchKnowledge(ctx context.Context, tenantID int, query strin
 	return results, nil
 }
 
-// TriageTicket provides ticket classification and recommendations
+// TriageTicket provides ticket classification and recommendations using LLM
 func (s *Service) TriageTicket(ctx context.Context, tenantID int, title, description, category, priority string) (interface{}, error) {
-	s.logger.Infow("Ticket Triage", "title", title, "tenantID", tenantID)
+	s.logger.Infow("Ticket Triage with LLM", "title", title, "tenantID", tenantID)
 
-	// Build triage result based on title/description analysis
+	// Use LLM-powered TriageService if available
+	if s.triageService != nil {
+		result := s.triageService.Suggest(ctx, title, description)
+		return map[string]interface{}{
+			"title":       title,
+			"description": description,
+			"suggestions": map[string]interface{}{
+				"category":   result.Category,
+				"priority":   result.Priority,
+				"confidence": result.Confidence,
+				"reasoning":  result.Explanation,
+				"urgency":    s.determineUrgency(result.Priority),
+			},
+		}, nil
+	}
+
+	// Fallback to keyword-based classification
 	result := map[string]interface{}{
 		"title":       title,
 		"description": description,
 		"suggestions":  make(map[string]interface{}),
 	}
 
-	// Simple keyword-based classification (fallback when LLM is not available)
 	suggestedCategory := category
 	suggestedPriority := priority
 	suggestedUrgency := "medium"
 
-	// Analyze title for category hints
 	titleLower := title
 	if len(titleLower) > 0 {
 		switch {
@@ -295,7 +312,6 @@ func (s *Service) TriageTicket(ctx context.Context, tenantID int, title, descrip
 		}
 	}
 
-	// Analyze for priority
 	descLower := description
 	if containsAny(descLower, "紧急", "严重", "无法工作", "critical", "urgent", "emergency") {
 		suggestedPriority = "critical"
@@ -308,17 +324,31 @@ func (s *Service) TriageTicket(ctx context.Context, tenantID int, title, descrip
 		suggestedUrgency = "low"
 	}
 
-	// Build suggestions
 	suggestions := make(map[string]interface{})
 	suggestions["category"] = suggestedCategory
 	suggestions["priority"] = suggestedPriority
 	suggestions["urgency"] = suggestedUrgency
 	suggestions["confidence"] = 0.7
-	suggestions["reasoning"] = "Based on keyword analysis of title and description"
+	suggestions["reasoning"] = "Based on keyword analysis"
 
 	result["suggestions"] = suggestions
 
 	return result, nil
+}
+
+func (s *Service) determineUrgency(priority string) string {
+	switch priority {
+	case "critical":
+		return "high"
+	case "high":
+		return "high"
+	case "medium":
+		return "medium"
+	case "low":
+		return "low"
+	default:
+		return "medium"
+	}
 }
 
 // containsAny checks if string contains any of the keywords

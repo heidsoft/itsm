@@ -399,8 +399,24 @@ const CMDBTypesManagement = () => {
           setEditingType(null);
           form.resetFields();
         }}
-        footer={null}
+        footer={
+          <Space>
+            <Button
+              onClick={() => {
+                setShowModal(false);
+                setEditingType(null);
+                form.resetFields();
+              }}
+            >
+              取消
+            </Button>
+            <Button type="primary" htmlType="submit">
+              {editingType ? '更新' : '创建'}
+            </Button>
+          </Space>
+        }
         width={600}
+        destroyOnClose
       >
         <Form
           form={form}
