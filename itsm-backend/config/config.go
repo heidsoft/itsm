@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"log"
 	"os"
 	"regexp"
@@ -50,9 +52,9 @@ type DatabaseConfig struct {
 }
 
 type ServerConfig struct {
-	Port          int    `mapstructure:"port"`
-	Mode          string `mapstructure:"mode"`
-	CookieSecure  bool   `mapstructure:"cookie_secure"`  // Secure flag for cookies (set true only behind HTTPS)
+	Port         int    `mapstructure:"port"`
+	Mode         string `mapstructure:"mode"`
+	CookieSecure bool   `mapstructure:"cookie_secure"` // Secure flag for cookies (set true only behind HTTPS)
 }
 
 type JWTConfig struct {
@@ -202,6 +204,14 @@ func LoadConfig() (*Config, error) {
 	config.Log.Path = getEnvWithDefault("LOG_PATH", config.Log.Path)
 	config.Log.Development = os.Getenv("LOG_DEVELOPMENT") == "true"
 	config.LLM.APIKey = getEnvWithDefault("OPENAI_API_KEY", config.LLM.APIKey)
+
+	if config.JWT.Secret == "" {
+		secretBytes := make([]byte, 32)
+		if _, err := rand.Read(secretBytes); err != nil {
+			return nil, err
+		}
+		config.JWT.Secret = base64.RawURLEncoding.EncodeToString(secretBytes)
+	}
 
 	// SMS 环境变量
 	if config.SMS.Provider == "" {

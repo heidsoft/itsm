@@ -46,14 +46,16 @@ func DefaultRAGConfig() RAGConfig {
 
 // NewRAGService creates a new RAG service with configuration
 func NewRAGService(client *ent.Client, vectors *VectorStore, embedder Embedder, logger *zap.SugaredLogger, cfg RAGConfig) *RAGService {
+	useVector := cfg.UseVector && vectors != nil && embedder != nil
 	return &RAGService{
-		client:       client,
-		vectors:      vectors,
-		embedder:     embedder,
-		logger:       logger,
-		useVector:    cfg.UseVector && vectors != nil && embedder != nil,
-		useKeyword:   cfg.UseKeyword,
-		hybridSearch: cfg.HybridSearch,
+		client:     client,
+		vectors:    vectors,
+		embedder:   embedder,
+		logger:     logger,
+		useVector:  useVector,
+		useKeyword: cfg.UseKeyword,
+		// hybridSearch only makes sense if vector search is available
+		hybridSearch: cfg.HybridSearch && useVector,
 	}
 }
 
@@ -61,10 +63,30 @@ func NewRAGService(client *ent.Client, vectors *VectorStore, embedder Embedder, 
 func NewRAGServiceWithAutoConfig(client *ent.Client, vectors *VectorStore, embedder Embedder, logger *zap.SugaredLogger) *RAGService {
 	cfg := DefaultRAGConfig()
 	// Check if vector store is actually available
-	if vectors == nil || embedder == nil {
+	// vectors is never nil but may be non-functional if the vectors table doesn't exist
+	// embedder may be valid but fail if no API key is configured
+	vectorAvailable := vectors != nil && embedder != nil
+	if vectorAvailable {
+		// Test if embedder works (requires valid API key)
+		if testEmbed, ok := embedder.(interface{ Embed(string) ([]float32, error) }); ok {
+			if _, err := testEmbed.Embed("test"); err != nil {
+				logger.Warnw("RAGService: embedder not functional", "error", err)
+				vectorAvailable = false
+			}
+		}
+	}
+	if !vectorAvailable {
 		cfg.UseVector = false
 		cfg.HybridSearch = false
 		logger.Warn("RAGService: vector store or embedder not available, falling back to keyword search")
+	}
+	// Test if vector search is actually functional
+	if cfg.UseVector && vectors != nil {
+		if err := vectors.TestConnection(); err != nil {
+			logger.Warnw("RAGService: vector table not available, disabling vector search", "error", err)
+			cfg.UseVector = false
+			cfg.HybridSearch = false
+		}
 	}
 	return NewRAGService(client, vectors, embedder, logger, cfg)
 }
@@ -74,6 +96,14 @@ func (r *RAGService) Ask(ctx context.Context, tenantID int, query string, limit 
 	if limit <= 0 {
 		limit = 5
 	}
+
+	r.logger.Debugw("RAGService Ask called",
+		"query", query,
+		"tenantID", tenantID,
+		"hybridSearch", r.hybridSearch,
+		"useVector", r.useVector,
+		"useKeyword", r.useKeyword,
+		"limit", limit)
 
 	results := []map[string]any{}
 	seen := map[string]struct{}{}
@@ -270,7 +300,7 @@ func (r *RAGService) AskWithLLM(ctx context.Context, tenantID int, query string,
 		{Role: "user", Content: prompt},
 	}
 
-	response, err := gateway.Chat(ctx, "gpt-4o-mini", messages)
+	response, err := gateway.Chat(ctx, "", messages)
 	if err != nil {
 		return "", fmt.Errorf("LLM response generation failed: %w", err)
 	}

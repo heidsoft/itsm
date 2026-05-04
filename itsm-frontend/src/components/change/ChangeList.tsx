@@ -95,7 +95,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
   const loadData = async () => {
     setLoading(true);
     try {
-      const values = await form.validateFields();
+      const values = await form.validateFields().catch(() => ({}));
       const resp = await ChangeApi.getChanges({
         ...query,
         ...values,
@@ -103,8 +103,15 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
       setData((resp.changes || []) as any);
       setTotal(resp.total || 0);
     } catch (error) {
-      // console.error('Failed to load changes:', error);
-      message.error('加载变更列表失败');
+      // 只在有实际错误时显示失败消息，不是因为表单验证导致的
+      if (
+        error &&
+        typeof error === 'object' &&
+        !('name' in error && (error as any).name === 'ValidationError')
+      ) {
+        console.error('Failed to load changes:', error);
+        message.error('加载变更列表失败');
+      }
     } finally {
       setLoading(false);
     }

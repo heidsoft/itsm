@@ -64,11 +64,8 @@ func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmd
 // Create submits a new service request
 func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalogID int, reqData *ServiceRequest) (*ServiceRequest, error) {
 	// 1. Validate Service Catalog
-	cat, err := s.scRepo.Get(ctx, catalogID)
+	cat, err := s.scRepo.Get(ctx, tenantID, catalogID)
 	if err != nil {
-		return nil, common.NewNotFoundError("Service Catalog not found")
-	}
-	if cat.TenantID != tenantID {
 		return nil, common.NewNotFoundError("Service Catalog not found")
 	}
 	if cat.CloudServiceID > 0 && cat.CITypeID == 0 {

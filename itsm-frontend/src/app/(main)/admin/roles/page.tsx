@@ -165,9 +165,13 @@ export default function RoleManagement() {
       setRoles(rolesResponse.roles);
 
       // 计算统计数据
+      // 注意: 后端角色实体没有 status 字段，所以 activeRoles/inactiveRoles 无法准确计算
+      // 这里我们使用 totalRoles 作为总角色数，并说明状态统计的限制
       const totalRoles = rolesResponse.roles.length;
-      const activeRoles = rolesResponse.roles.filter((r: Role) => r.status === 'active').length;
-      const inactiveRoles = rolesResponse.roles.filter((r: Role) => r.status === 'inactive').length;
+      // 由于后端 Role 实体没有 status 字段，所有角色默认为启用状态
+      // 实际应用中可能需要通过 is_system 或其他字段来判断
+      const activeRoles = totalRoles; // 所有非系统角色视为启用
+      const inactiveRoles = 0; // 无法从后端获取此信息
 
       setStats({
         totalRoles,
@@ -283,12 +287,13 @@ export default function RoleManagement() {
     {
       title: '状态',
       key: 'status',
-      render: (_: unknown, record: RoleItem) => (
-        <Badge
-          status={record.status === 'active' ? 'success' : 'default'}
-          text={record.status === 'active' ? '启用' : '禁用'}
-        />
-      ),
+      render: (_: unknown, record: RoleItem) => {
+        // 后端 Role 实体没有 status 字段，默认所有角色为启用状态
+        const isActive = record.status === 'active';
+        return (
+          <Badge status={isActive ? 'success' : 'default'} text={isActive ? '启用' : '启用'} />
+        );
+      },
     },
     {
       title: '权限数量',
@@ -300,7 +305,9 @@ export default function RoleManagement() {
       title: '创建时间',
       key: 'createdAt',
       dataIndex: 'createdAt',
-      render: (createdAt: string) => <span>{createdAt ? new Date(createdAt).toLocaleDateString() : '-'}</span>,
+      render: (createdAt: string) => (
+        <span>{createdAt ? new Date(createdAt).toLocaleDateString() : '-'}</span>
+      ),
     },
     {
       title: '操作',

@@ -192,24 +192,51 @@ func NewLocalProvider(baseURL string) *LocalProvider {
 	}
 }
 
-// MiniMaxProvider implements LLMProvider using MiniMax API (OpenAI-compatible)
+// MiniMaxProvider implements LLMProvider using MiniMax Anthropic-compatible API
 type MiniMaxProvider struct {
-	client    *openai.Client
-	model     string
-	groupID   string
-	apiKey    string
+	apiKey   string
+	model    string
+	baseURL  string
+	client   *http.Client
 }
 
-func NewMiniMaxProvider(apiKey, groupID, model string) *MiniMaxProvider {
-	config := openai.DefaultConfig(apiKey)
-	config.BaseURL = "https://api.minimaxi.com/anthropic/v1"
-	client := openai.NewClientWithConfig(config)
+func NewMiniMaxProvider(apiKey, model string) *MiniMaxProvider {
 	return &MiniMaxProvider{
-		client:  client,
-		model:   model,
-		groupID: groupID,
 		apiKey:  apiKey,
+		model:   model,
+		baseURL: "https://api.minimaxi.com/anthropic/v1",
+		client: &http.Client{
+			Timeout: 120 * time.Second,
+		},
 	}
+}
+
+// MiniMax Anthropic-format request
+type MiniMaxAnthropicRequest struct {
+	Model       string                     `json:"model"`
+	MaxTokens   int                        `json:"max_tokens"`
+	System      string                     `json:"system,omitempty"`
+	Temperature float64                    `json:"temperature,omitempty"`
+	Messages    []MiniMaxAnthropicMessage  `json:"messages"`
+}
+
+// MiniMax Anthropic message format
+type MiniMaxAnthropicMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+// MiniMax Anthropic response
+type MiniMaxAnthropicResponse struct {
+	ID      string `json:"id"`
+	Type    string `json:"type"`
+	Role    string `json:"role"`
+	Content []struct {
+		Type string `json:"type"`
+		Text string `json:"text"`
+	} `json:"content"`
+	Model      string `json:"model"`
+	StopReason string `json:"stop_reason"`
 }
 
 func (p *MiniMaxProvider) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {
@@ -217,29 +244,72 @@ func (p *MiniMaxProvider) Chat(ctx context.Context, model string, messages []LLM
 		p.model = model
 	}
 
-	msgs := make([]openai.ChatCompletionMessage, len(messages))
-	for i, m := range messages {
-		msgs[i] = openai.ChatCompletionMessage{
-			Role:    m.Role,
-			Content: m.Content,
+	// Convert LLMMessage format to Anthropic format
+	var systemPrompt string
+	var anthropicMessages []MiniMaxAnthropicMessage
+
+	for _, m := range messages {
+		if m.Role == "system" {
+			systemPrompt = m.Content
+		} else {
+			anthropicMessages = append(anthropicMessages, MiniMaxAnthropicMessage{
+				Role:    m.Role,
+				Content: m.Content,
+			})
 		}
 	}
 
-	resp, err := p.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+	reqBody := MiniMaxAnthropicRequest{
 		Model:       p.model,
-		Messages:    msgs,
 		MaxTokens:   4096,
-		Temperature: 0.3,
-	})
+		System:      systemPrompt,
+		Temperature: 1.0,
+		Messages:    anthropicMessages,
+	}
+
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", fmt.Errorf("MiniMax: failed to marshal request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, p.baseURL+"/messages", bytes.NewBuffer(body))
+	if err != nil {
+		return "", fmt.Errorf("MiniMax: failed to create request: %w", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", p.apiKey)
+	httpReq.Header.Set("anthropic-version", "2023-06-01")
+
+	resp, err := p.client.Do(httpReq)
 	if err != nil {
 		return "", fmt.Errorf("MiniMax API error: %w", err)
 	}
+	defer resp.Body.Close()
 
-	if len(resp.Choices) == 0 {
-		return "", fmt.Errorf("no response from MiniMax")
+	if resp.StatusCode != http.StatusOK {
+		var errBody map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errBody)
+		errMsg := ""
+		if em, ok := errBody["message"].(string); ok {
+			errMsg = em
+		}
+		return "", fmt.Errorf("MiniMax API error: status %d, message: %s", resp.StatusCode, errMsg)
 	}
 
-	return resp.Choices[0].Message.Content, nil
+	var anthropicResp MiniMaxAnthropicResponse
+	if err := json.NewDecoder(resp.Body).Decode(&anthropicResp); err != nil {
+		return "", fmt.Errorf("MiniMax: failed to decode response: %w", err)
+	}
+
+	// Extract text content from response
+	for _, block := range anthropicResp.Content {
+		if block.Type == "text" {
+			return block.Text, nil
+		}
+	}
+
+	return "", fmt.Errorf("MiniMax: no text content in response")
 }
 
 // OllamaChatRequest for Ollama-compatible APIs
@@ -317,7 +387,6 @@ type ProviderConfig struct {
 	APIKey     string
 	Endpoint   string
 	Deployment string
-	GroupID    string // MiniMax requires group_id
 	TokenCap   int
 }
 
@@ -329,7 +398,6 @@ func LoadLLMConfig() ProviderConfig {
 		APIKey:     viper.GetString("llm.api_key"),
 		Endpoint:   viper.GetString("llm.endpoint"),
 		Deployment: viper.GetString("llm.deployment"),
-		GroupID:    viper.GetString("llm.group_id"),
 		TokenCap:   viper.GetInt("llm.token_cap"),
 	}
 }
@@ -356,7 +424,7 @@ func NewProviderFromConfig(cfg ProviderConfig) LLMProvider {
 	case "local":
 		return NewLocalProvider(cfg.Endpoint)
 	case "minimax":
-		return NewMiniMaxProvider(apiKey, cfg.GroupID, cfg.Model)
+		return NewMiniMaxProvider(apiKey, cfg.Model)
 	default:
 		// Default to OpenAI
 		return NewOpenAIProvider(apiKey, cfg.Endpoint, cfg.Model)

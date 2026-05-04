@@ -126,6 +126,12 @@ func NewApplication() *Application {
 	} else {
 		embedder = service.NewOpenAIEmbedder()
 	}
+
+	// Create LLM Gateway for AI services
+	llmConfig := service.LoadLLMConfig()
+	llmProvider := service.NewProviderFromConfig(llmConfig)
+	llmGateway := service.NewLLMGateway(llmProvider, nil, nil, llmConfig.Provider)
+
 	vectorStore := service.NewVectorStore(database.GetRawDB())
 	ragService := service.NewRAGServiceWithAutoConfig(client, vectorStore, embedder, sugar)
 	aiTelemetryService := service.NewAITelemetryService(database.GetRawDB())
@@ -137,7 +143,12 @@ func NewApplication() *Application {
 	ticketDependencyService := service.NewTicketDependencyService(client, sugar)
 	analyticsService := service.NewAnalyticsService(client, sugar)
 	predictionService := service.NewPredictionService(client, sugar)
-	slaForecastSkill := service.NewSLAForecastSkill(client, nil, sugar)
+	slaForecastSkill := service.NewSLAForecastSkill(client, llmGateway, sugar)
+
+	// Guidance sidecar for constrained JSON generation
+	guidanceClient := service.NewGuidanceClient("http://localhost:8091", sugar)
+	triageService := service.NewTriageServiceWithGuidanceAndSugaredLogger(llmGateway, guidanceClient, sugar)
+
 	rootCauseService := service.NewRootCauseService(client, sugar)
 	// LLM/Embedding/VectorStore
 
@@ -314,7 +325,7 @@ func NewApplication() *Application {
 
 	// AI Domain
 	aiRepo := ai.NewEntRepository(client)
-	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, toolQueue, analyticsService, predictionService, slaForecastSkill, rootCauseService, aiTelemetryService)
+	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, toolQueue, analyticsService, predictionService, slaForecastSkill, triageService, rootCauseService, aiTelemetryService)
 	aiHandler := ai.NewHandler(aiServiceDomain)
 
 	// Common Domain

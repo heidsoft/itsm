@@ -113,7 +113,9 @@ const SLADefinitionManagement = () => {
   };
 
   // 获取所有服务类型
-  const serviceTypes = Array.from(new Set(slaDefinitions.map(sla => sla.serviceType).filter(Boolean)));
+  const serviceTypes = Array.from(
+    new Set(slaDefinitions.map(sla => sla.serviceType).filter(Boolean))
+  );
 
   // 过滤SLA定义
   const filteredSLAs = slaDefinitions.filter(sla => {
@@ -172,36 +174,19 @@ const SLADefinitionManagement = () => {
       const values = await form.validateFields();
       setLoading(true);
 
-      // 转换时间值和单位为分钟数
-      const convertToMinutes = (value: number, unit: string): number => {
-        switch (unit) {
-          case 'hours':
-            return value * 60;
-          case 'days':
-            return value * 24 * 60;
-          default:
-            return value;
-        }
-      };
+      // 直接使用分钟值，响应时间固定为分钟，解决时间转换为分钟
+      const responseTimeMinutes = values.responseTimeValue || 60;
+      const resolutionTimeMinutes = (values.resolutionTimeValue || 4) * 60; // 小时转分钟
 
-      const responseTimeMinutes = convertToMinutes(
-        values.responseTimeValue || 60,
-        values.responseTimeUnit || 'minutes'
-      );
-      const resolutionTimeMinutes = convertToMinutes(
-        values.resolutionTimeValue || 240,
-        values.resolutionTimeUnit || 'hours'
-      );
-
-      // 转换表单值格式
+      // 转换表单值格式 - 后端使用 camelCase 格式
       const apiData = {
         name: values.name,
         description: values.description,
-        service_type: values.serviceType,
+        serviceType: values.serviceType,
         priority: values.priority,
-        response_time_minutes: responseTimeMinutes,
-        resolution_time_minutes: resolutionTimeMinutes,
-        availability_target: parseInt(values.availability) || 99,
+        responseTime: responseTimeMinutes,
+        resolutionTime: resolutionTimeMinutes,
+        availability: parseFloat(String(values.availability).replace('%', '')) || 99.9,
       };
 
       if (selectedSLA) {
@@ -581,7 +566,12 @@ const SLADefinitionManagement = () => {
                 name="serviceType"
                 rules={[{ required: true, message: '请选择服务类型' }]}
               >
-                <Select showSearch optionFilterProp="label" placeholder="选择或输入服务类型" mode="tags">
+                <Select
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="选择或输入服务类型"
+                  mode="tags"
+                >
                   {serviceTypes.map(type => (
                     <Option key={type} value={type}>
                       {type}
@@ -617,40 +607,22 @@ const SLADefinitionManagement = () => {
             </Col>
             <Col span={8}>
               <Form.Item
-                label="响应时间"
-                required
+                label="响应时间(分钟)"
+                name="responseTimeValue"
+                rules={[{ required: true, message: '请输入响应时间' }]}
+                initialValue={60}
               >
-                <Space.Compact>
-                  <Form.Item name="responseTimeValue" noStyle rules={[{ required: true, message: '请输入数值' }]}>
-                    <InputNumber min={1} placeholder="30" style={{ width: '60%' }} />
-                  </Form.Item>
-                  <Form.Item name="responseTimeUnit" initialValue="minutes">
-                    <Select style={{ width: '40%' }}>
-                      <Option value="minutes">分钟</Option>
-                      <Option value="hours">小时</Option>
-                      <Option value="days">天</Option>
-                    </Select>
-                  </Form.Item>
-                </Space.Compact>
+                <InputNumber min={1} placeholder="60" style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label="解决时间"
-                required
+                label="解决时间(小时)"
+                name="resolutionTimeValue"
+                rules={[{ required: true, message: '请输入解决时间' }]}
+                initialValue={4}
               >
-                <Space.Compact>
-                  <Form.Item name="resolutionTimeValue" noStyle rules={[{ required: true, message: '请输入数值' }]}>
-                    <InputNumber min={1} placeholder="4" style={{ width: '60%' }} />
-                  </Form.Item>
-                  <Form.Item name="resolutionTimeUnit" initialValue="hours">
-                    <Select style={{ width: '40%' }}>
-                      <Option value="minutes">分钟</Option>
-                      <Option value="hours">小时</Option>
-                      <Option value="days">天</Option>
-                    </Select>
-                  </Form.Item>
-                </Space.Compact>
+                <InputNumber min={1} placeholder="4" style={{ width: '100%' }} />
               </Form.Item>
             </Col>
           </Row>

@@ -35,8 +35,8 @@ func (s *Service) Create(ctx context.Context, name, category, description string
 	return s.repo.Create(ctx, catalog)
 }
 
-func (s *Service) Get(ctx context.Context, id int) (*ServiceCatalog, error) {
-	return s.repo.Get(ctx, id)
+func (s *Service) Get(ctx context.Context, tenantID int, id int) (*ServiceCatalog, error) {
+	return s.repo.Get(ctx, tenantID, id)
 }
 
 func (s *Service) List(ctx context.Context, tenantID int, filters ListFilters) ([]*ServiceCatalog, int, error) {
@@ -49,9 +49,9 @@ func (s *Service) List(ctx context.Context, tenantID int, filters ListFilters) (
 	return s.repo.List(ctx, tenantID, filters)
 }
 
-func (s *Service) Update(ctx context.Context, id int, name, category, description string, deliveryTime int, status string, ciTypeID, cloudServiceID int) (*ServiceCatalog, error) {
+func (s *Service) Update(ctx context.Context, tenantID int, id int, name, category, description string, deliveryTime int, status string, ciTypeID, cloudServiceID int) (*ServiceCatalog, error) {
 	// First check if exists
-	current, err := s.repo.Get(ctx, id)
+	current, err := s.repo.Get(ctx, tenantID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -79,11 +79,11 @@ func (s *Service) Update(ctx context.Context, id int, name, category, descriptio
 		current.CloudServiceID = cloudServiceID
 	}
 
-	return s.repo.Update(ctx, current)
+	return s.repo.Update(ctx, tenantID, current)
 }
 
-func (s *Service) Delete(ctx context.Context, id int) error {
-	return s.repo.Delete(ctx, id)
+func (s *Service) Delete(ctx context.Context, tenantID int, id int) error {
+	return s.repo.Delete(ctx, tenantID, id)
 }
 
 func (s *Service) Search(ctx context.Context, tenantID int, keyword string, filters ListFilters) ([]*ServiceCatalog, int, error) {

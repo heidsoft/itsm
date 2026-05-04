@@ -724,10 +724,14 @@ export default function CMDBPage() {
                       <Card size="small">
                         <Statistic
                           title="匹配率"
-                          value={(
-                            (reconciliationSummary.matched / reconciliationSummary.total) *
-                            100
-                          ).toFixed(1)}
+                          value={
+                            reconciliationSummary.total > 0
+                              ? (
+                                  (reconciliationSummary.matched / reconciliationSummary.total) *
+                                  100
+                                ).toFixed(1)
+                              : '0'
+                          }
                           suffix="%"
                           prefix={<CheckCircle />}
                         />

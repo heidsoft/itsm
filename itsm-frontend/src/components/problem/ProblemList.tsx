@@ -66,7 +66,12 @@ interface ProblemListProps {
   priority?: string;
 }
 
-const ProblemList: React.FC<ProblemListProps> = ({ showHeader = true, keyword, status, priority }) => {
+const ProblemList: React.FC<ProblemListProps> = ({
+  showHeader = true,
+  keyword,
+  status,
+  priority,
+}) => {
   const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
@@ -94,7 +99,7 @@ const ProblemList: React.FC<ProblemListProps> = ({ showHeader = true, keyword, s
   const loadData = async () => {
     setLoading(true);
     try {
-      const values = await form.validateFields();
+      const values = await form.validateFields().catch(() => ({}));
       const resp = await ProblemApi.getProblems({
         ...query,
         ...values,
@@ -102,8 +107,15 @@ const ProblemList: React.FC<ProblemListProps> = ({ showHeader = true, keyword, s
       setData((resp.problems || []) as unknown as Problem[]);
       setTotal((resp as any).total || 0);
     } catch (error) {
-      // console.error('Failed to load problems:', error);
-      message.error('加载问题列表失败');
+      // 只在有实际错误时显示失败消息，不是因为表单验证导致的
+      if (
+        error &&
+        typeof error === 'object' &&
+        !('name' in error && (error as any).name === 'ValidationError')
+      ) {
+        console.error('Failed to load problems:', error);
+        message.error('加载问题列表失败');
+      }
     } finally {
       setLoading(false);
     }

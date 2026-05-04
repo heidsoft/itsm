@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: itsm
       POSTGRES_USER: dev
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-StrongPassword123!}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -35,11 +35,11 @@ services:
       - ./deploy/itsm:/app/itsm
       - ./deploy/config.yaml:/app/config.yaml
     environment:
-      - DATABASE_URL=postgres://dev:${DB_PASSWORD:-StrongPassword123!}@postgres:5432/itsm?sslmode=disable
+      - DATABASE_URL=postgres://dev:${DB_PASSWORD}@postgres:5432/itsm?sslmode=disable
       - REDIS_URL=redis://redis:6379
       - LOG_LEVEL=info
-      - JWT_SECRET=${JWT_SECRET:-itsm-jwt-secret-2024}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     ports:
       - "8080:8080"
     depends_on:
@@ -48,23 +48,6 @@ services:
       redis:
         condition: service_started
     entrypoint: ["/bin/sh", "-c", "chmod +x /app/itsm && cd /app && /app/itsm"]
-
-  # 前端服务（暂时跳过，需要修复 Next.js standalone 构建）
-  # frontend:
-  #   image: node:22-alpine
-  #   container_name: itsm-frontend
-  #   working_dir: /app
-  #   volumes:
-  #     - ./deploy/frontend/standalone:/app
-  #   environment:
-  #     - PORT=3000
-  #     - HOSTNAME=0.0.0.0
-  #     - NEXT_PUBLIC_API_URL=http://localhost:8080
-  #   ports:
-  #     - "3000:3000"
-  #   command: node server.js
-  #   depends_on:
-  #     - itsm-backend
 
 volumes:
   postgres_data:

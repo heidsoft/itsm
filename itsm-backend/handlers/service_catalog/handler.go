@@ -27,9 +27,9 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
 
@@ -40,7 +40,7 @@ func (h *Handler) List(c *gin.Context) {
 		Size:     req.Size,
 	}
 
-	catalogs, total, err := h.service.List(c.Request.Context(), tenantID.(int), filters)
+	catalogs, total, err := h.service.List(c.Request.Context(), tenantID, filters)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -67,7 +67,13 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 
-	catalog, err := h.service.Get(c.Request.Context(), id)
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	catalog, err := h.service.Get(c.Request.Context(), tenantID, id)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -88,9 +94,9 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
 
@@ -107,7 +113,7 @@ func (h *Handler) Create(c *gin.Context) {
 		req.Category,
 		req.Description,
 		deliveryTime,
-		tenantID.(int),
+		tenantID,
 		req.Status,
 		req.CITypeID,
 		req.CloudServiceID,
@@ -138,12 +144,11 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	// tenantID unused for delete currently, maybe needed for permission check refinement
-	// tenantID, exists := c.Get("tenant_id")
-	// if !exists {
-	// 	common.Fail(c, 2001, "租户信息缺失")
-	// 	return
-	// }
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 
 	deliveryTime := 0
 	if req.DeliveryTime != "" {
@@ -154,6 +159,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	_, err = h.service.Update(
 		c.Request.Context(),
+		tenantID,
 		id,
 		req.Name,
 		req.Category,
@@ -169,7 +175,7 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	// Fetch updated to return full object
-	updated, err := h.service.Get(c.Request.Context(), id)
+	updated, err := h.service.Get(c.Request.Context(), tenantID, id)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -186,7 +192,13 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Delete(c.Request.Context(), id); err != nil {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	if err := h.service.Delete(c.Request.Context(), tenantID, id); err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
 	}
@@ -197,9 +209,9 @@ func (h *Handler) Delete(c *gin.Context) {
 // Search handles GET /api/v1/service-catalogs/search?q=xxx
 func (h *Handler) Search(c *gin.Context) {
 	keyword := c.Query("q")
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
 
@@ -210,7 +222,7 @@ func (h *Handler) Search(c *gin.Context) {
 		Size:     20,
 	}
 
-	catalogs, total, err := h.service.Search(c.Request.Context(), tenantID.(int), keyword, filters)
+	catalogs, total, err := h.service.Search(c.Request.Context(), tenantID, keyword, filters)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -231,13 +243,13 @@ func (h *Handler) Search(c *gin.Context) {
 
 // Stats handles GET /api/v1/service-catalogs/stats
 func (h *Handler) Stats(c *gin.Context) {
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
 
-	stats, err := h.service.GetStats(c.Request.Context(), tenantID.(int))
+	stats, err := h.service.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return

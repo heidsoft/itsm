@@ -33,25 +33,65 @@ export const IncidentList: React.FC<IncidentListProps> = ({
   const { t } = useI18n();
 
   const statusConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
-    open: {
-      color: '#fa8c16',
-      text: t('incidents.statusOpen'),
-      backgroundColor: '#fff7e6',
+    // 新建/待处理状态
+    new: {
+      color: '#1890ff',
+      text: t('incidents.statusNew') || '新建',
+      backgroundColor: '#e6f7ff',
     },
-    'in-progress': {
+    // 已确认状态
+    acknowledged: {
+      color: '#722ed1',
+      text: t('incidents.statusAcknowledged') || '已确认',
+      backgroundColor: '#f9f0ff',
+    },
+    // 已分配状态
+    assigned: {
+      color: '#13c2c2',
+      text: t('incidents.statusAssigned') || '已分配',
+      backgroundColor: '#e6fffb',
+    },
+    // 调查中状态
+    investigating: {
+      color: '#722ed1',
+      text: t('incidents.statusInvestigating') || '调查中',
+      backgroundColor: '#f9f0ff',
+    },
+    // 处理中状态
+    in_progress: {
       color: '#1890ff',
       text: t('incidents.statusInProgress'),
       backgroundColor: '#e6f7ff',
     },
+    // 已分类状态
+    triaged: {
+      color: '#faad14',
+      text: t('incidents.statusTriaged') || '已分类',
+      backgroundColor: '#fffbe6',
+    },
+    // 已升级状态
+    escalated: {
+      color: '#ff4d4f',
+      text: t('incidents.statusEscalated') || '已升级',
+      backgroundColor: '#fff2f0',
+    },
+    // 已解决状态
     resolved: {
       color: '#52c41a',
       text: t('incidents.statusResolved'),
       backgroundColor: '#f6ffed',
     },
+    // 已关闭状态
     closed: {
       color: '#00000073',
       text: t('incidents.statusClosed'),
       backgroundColor: '#fafafa',
+    },
+    // 兼容旧的前端状态值
+    open: {
+      color: '#fa8c16',
+      text: t('incidents.statusOpen'),
+      backgroundColor: '#fff7e6',
     },
   };
 
@@ -260,18 +300,14 @@ export const IncidentList: React.FC<IncidentListProps> = ({
               className="text-green-600 hover:text-green-700 hover:bg-green-50 border-0 rounded-lg transition-all duration-200 p-2"
               title={t('incidents.editIncident')}
             />
-            <Dropdown
-              menu={{ items }}
-              trigger={['click']}
-              placement="bottomRight"
-            >
+            <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
               <Button
                 type="text"
                 size="small"
                 icon={<MoreHorizontal size={16} />}
                 className="text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-0 rounded-lg transition-all duration-200 p-2"
                 title={t('incidents.moreActions')}
-                onClick={(e) => e.preventDefault()}
+                onClick={e => e.preventDefault()}
               />
             </Dropdown>
           </Space>

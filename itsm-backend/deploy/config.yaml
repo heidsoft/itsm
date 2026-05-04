@@ -2,14 +2,14 @@ database:
   host: postgres
   port: 5432
   user: dev
-  password: "StrongPassword123!"
+  password: "${DB_PASSWORD:}"
   dbname: itsm
   sslmode: disable
 
 server:
   port: 8080
   mode: release
-  jwt_secret: "itsm-jwt-secret-2024"
+  jwt_secret: "${JWT_SECRET:}"
   cors_origins:
     - "http://localhost:3000"
     - "http://localhost:8080"

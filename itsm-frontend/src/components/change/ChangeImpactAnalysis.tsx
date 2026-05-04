@@ -9,7 +9,6 @@ import {
   Button,
   Space,
   Typography,
-  Table,
   Tag,
   Row,
   Col,
@@ -32,7 +31,7 @@ import {
   CheckCircle,
   TrendingUp,
 } from 'lucide-react';
-import type { ChangeImpact } from '@/lib/api/change-api';
+import { CMDBApi } from '@/lib/api/cmdb-api';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -77,66 +76,61 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
   const [impactScore, setImpactScore] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [systemOptions, setSystemOptions] = useState<SystemItem[]>([]);
+  const [systemLoading, setSystemLoading] = useState(false);
+  const [systemLoadError, setSystemLoadError] = useState<string | null>(null);
 
-  // 预定义的系统列表
-  const mockData: SystemItem[] = [
-    {
-      key: 'web-server-01',
-      title: 'Web服务器01',
-      description: '主Web服务器',
-      category: '服务器',
-      criticality: 'high',
-    },
-    {
-      key: 'db-primary',
-      title: '主数据库',
-      description: 'MySQL主库',
-      category: '数据库',
-      criticality: 'high',
-    },
-    {
-      key: 'db-replica',
-      title: '数据库从库',
-      description: 'MySQL从库',
-      category: '数据库',
-      criticality: 'medium',
-    },
-    {
-      key: 'cache-redis',
-      title: 'Redis缓存',
-      description: 'Redis缓存服务器',
-      category: '缓存',
-      criticality: 'medium',
-    },
-    {
-      key: 'api-gateway',
-      title: 'API网关',
-      description: '微服务网关',
-      category: '网络',
-      criticality: 'high',
-    },
-    {
-      key: 'file-storage',
-      title: '文件存储',
-      description: '对象存储服务',
-      category: '存储',
-      criticality: 'medium',
-    },
-    {
-      key: 'monitoring',
-      title: '监控系统',
-      description: 'Zabbix监控系统',
-      category: '监控',
-      criticality: 'low',
-    },
-    {
-      key: 'backup-server',
-      title: '备份服务器',
-      description: '数据备份服务',
-      category: '备份',
-      criticality: 'medium',
-    },
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setSystemLoading(true);
+      try {
+        const result = await CMDBApi.getCIs({ limit: 200, offset: 0 });
+        const items = result.items ?? result.cis ?? [];
+        const mapped: SystemItem[] = items.map(ci => {
+          const ciType = ci.ci_type ?? ci.ciType ?? '配置项';
+          const criticality =
+            ci.criticality === 'high' || ci.criticality === 'medium' || ci.criticality === 'low'
+              ? ci.criticality
+              : 'medium';
+
+          return {
+            key: String(ci.id),
+            title: ci.name,
+            description: ciType,
+            category: ciType,
+            criticality,
+          };
+        });
+
+        if (cancelled) return;
+        setSystemOptions(mapped);
+        setSystemLoadError(null);
+        setTargetKeys(prevKeys => {
+          if (prevKeys.length === 0) return prevKeys;
+          const keySet = new Set(mapped.map(i => i.key));
+          if (prevKeys.every(k => keySet.has(k))) return prevKeys;
+
+          const titleToKey = new Map(mapped.map(i => [i.title, i.key]));
+          const nextKeys = prevKeys.map(k => titleToKey.get(k) ?? k).filter(k => keySet.has(k));
+          return nextKeys.length > 0 ? nextKeys : prevKeys;
+        });
+      } catch (error) {
+        console.error('Failed to load configuration items:', error);
+        if (cancelled) return;
+        setSystemOptions([]);
+        setSystemLoadError('加载配置项失败');
+        message.error('加载配置项失败');
+      } finally {
+        if (!cancelled) setSystemLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 影响程度选项
   const impactLevels = {
@@ -186,6 +180,12 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
       }
     }
   }, [initialData, form]);
+
+  useEffect(() => {
+    const values = form.getFieldsValue();
+    const score = calculateImpactScore(values);
+    setImpactScore(score);
+  }, [form, targetKeys]);
 
   // 监听表单变化计算影响分数
   const onValuesChange = (changedValues: unknown, allValues: unknown) => {
@@ -388,8 +388,17 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           {/* 受影响系统选择 */}
           <Col xs={24} lg={12}>
             <Form.Item label="受影响系统">
+              {systemLoadError && (
+                <Alert
+                  title="系统列表加载失败"
+                  description={systemLoadError}
+                  type="error"
+                  showIcon
+                  className="mb-3"
+                />
+              )}
               <Transfer
-                dataSource={mockData}
+                dataSource={systemOptions}
                 titles={['可用系统', '受影响系统']}
                 targetKeys={targetKeys}
                 onChange={keys => setTargetKeys(keys as string[])}
@@ -399,7 +408,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
                   height: 300,
                 }}
                 showSearch
-                disabled={readOnly}
+                disabled={readOnly || systemLoading}
               />
             </Form.Item>
           </Col>
@@ -493,7 +502,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
         {/* 影响程度提示 */}
         {impactScore >= 80 && (
           <Alert
-            message="关键影响警告"
+            title="关键影响警告"
             description="该变更被评定为关键影响，建议：1. 安排在业务低峰期实施 2. 准备完整的回滚方案 3. 通知所有相关方 4. 准备应急预案 5. 增加监控和巡检"
             type="error"
             showIcon
@@ -504,7 +513,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
 
         {impactScore >= 60 && impactScore < 80 && (
           <Alert
-            message="高影响提示"
+            title="高影响提示"
             description="该变更具有较高影响，建议仔细评估实施时间和风险控制措施。"
             type="warning"
             showIcon
@@ -514,7 +523,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
 
         {impactScore < 30 && (
           <Alert
-            message="低影响确认"
+            title="低影响确认"
             description="该变更影响较小，可按标准流程实施。"
             type="success"
             showIcon

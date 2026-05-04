@@ -39,44 +39,59 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
         const hasAuth = checkCookieAuth();
 
         if (hasAuth) {
-          // 从后端获取真实的用户和租户信息
-          try {
-            const [userResponse, tenantsResponse] = await Promise.all([
-              httpClient.get<{
-                id: number;
-                username: string;
-                email: string;
-                name: string;
-                role: string;
-                department: string;
-                tenant_id: number;
-              }>('/api/v1/auth/me'),
-              httpClient.get<{
-                tenants: Array<{
-                  id: number;
-                  name: string;
-                  code: string;
-                  domain: string;
-                  type: string;
-                  status: string;
-                }>;
-              }>('/api/v1/auth/tenants'),
-            ]);
+          // 分别获取用户信息和租户信息，避免一个失败导致整体失败
+          let userResponse = null;
+          let tenantsResponse = null;
 
-            if (userResponse && tenantsResponse?.tenants?.length > 0) {
-              const currentTenant = tenantsResponse.tenants[0];
-              const { login } = useAuthStore.getState();
-              login(
-                {
-                  id: userResponse.id,
-                  username: userResponse.username,
-                  email: userResponse.email,
-                  name: userResponse.name,
-                  role: userResponse.role,
-                  department: userResponse.department,
-                },
-                'authenticated', // Token is in httpOnly cookie, not accessible here
-                {
+          try {
+            userResponse = await httpClient.get<{
+              id: number;
+              username: string;
+              email: string;
+              name: string;
+              role: string;
+              department: string;
+              tenant_id: number;
+            }>('/api/v1/auth/me');
+          } catch (e) {
+            console.error('Failed to fetch user info:', e);
+          }
+
+          try {
+            tenantsResponse = await httpClient.get<{
+              tenants: Array<{
+                id: number;
+                name: string;
+                code: string;
+                domain: string;
+                type: string;
+                status: string;
+              }>;
+            }>('/api/v1/auth/tenants');
+          } catch (e) {
+            console.error('Failed to fetch tenants:', e);
+          }
+
+          // 如果两个都失败，则认为未认证
+          if (!userResponse && !tenantsResponse) {
+            setIsInitializing(false);
+            return;
+          }
+
+          const currentTenant = tenantsResponse?.tenants?.[0];
+          const { login } = useAuthStore.getState();
+          login(
+            {
+              id: userResponse?.id || 0,
+              username: userResponse?.username || '',
+              email: userResponse?.email || '',
+              name: userResponse?.name || '',
+              role: userResponse?.role || 'end_user',
+              department: userResponse?.department,
+            },
+            'authenticated', // Token is in httpOnly cookie, not accessible here
+            currentTenant
+              ? {
                   id: currentTenant.id,
                   name: currentTenant.name,
                   code: currentTenant.code,
@@ -85,11 +100,8 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
                   createdAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString(),
                 }
-              );
-            }
-          } catch (e) {
-            console.error('Failed to restore user info from backend:', e);
-          }
+              : undefined
+          );
         }
 
         setIsInitializing(false);
