@@ -44,18 +44,30 @@ export interface CIRelationship {
 
 export interface CreateCIRequest {
   name: string;
-  ci_type?: string;
-  ci_type_id?: number;
+  ciTypeId: number;
   status: string;
-  environment: string;
-  criticality: string;
-  asset_tag?: string;
-  serial_number?: string;
+  environment?: string;
+  criticality?: string;
+  assetTag?: string;
+  serialNumber?: string;
+  model?: string;
+  vendor?: string;
   location?: string;
-  assigned_to?: string;
-  owned_by?: string;
-  discovery_source?: string;
+  assignedTo?: string;
+  ownedBy?: string;
+  discoverySource?: string;
+  source?: string;
+  description?: string;
   attributes?: Record<string, unknown>;
+  cloudProvider?: string;
+  cloudAccountId?: string;
+  cloudRegion?: string;
+  cloudZone?: string;
+  cloudResourceId?: string;
+  cloudResourceType?: string;
+  cloudSyncStatus?: string;
+  cloudResourceRefId?: number;
+  cloudMetadata?: Record<string, unknown>;
 }
 
 export interface CITopology {

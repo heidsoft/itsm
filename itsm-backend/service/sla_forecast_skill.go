@@ -16,40 +16,40 @@ import (
 
 // ForecastInput 输入结构
 type ForecastInput struct {
-	TenantID   int
-	StartDate  time.Time
+	TenantID  int
+	StartDate time.Time
 	EndDate   time.Time
 	Metrics   []string // ["volume", "response_time", "sla_compliance"]
 }
 
 // PredictionPoint 单个预测点
 type PredictionPoint struct {
-	Date        time.Time `json:"date"`
+	Date       time.Time `json:"date"`
 	Predicted  float64   `json:"predicted"`
 	LowerBound float64   `json:"lower_bound"`
 	UpperBound float64   `json:"upper_bound"`
 	Confidence float64   `json:"confidence"`
-	Anomaly   bool      `json:"anomaly"`
+	Anomaly    bool      `json:"anomaly"`
 }
 
 // ForecastOutput 预测输出结构
 type ForecastOutput struct {
-	Predictions   []PredictionPoint `json:"predictions"`
-	Confidence    float64           `json:"confidence"`    // 真实计算
-	Model         string            `json:"model"`        // "statistical" | "llm_insight"
-	Insights      string            `json:"insights"`      // LLM生成的洞察
-	Seasonality  map[string]bool  `json:"seasonality"`  // 检测到的季节性
-	Trend         string            `json:"trend"`        // "increasing" | "decreasing" | "stable"
-	AnomalyDates  []string         `json:"anomaly_dates"` // 异常日期
+	Predictions  []PredictionPoint `json:"predictions"`
+	Confidence   float64           `json:"confidence"`    // 真实计算
+	Model        string            `json:"model"`         // "statistical" | "llm_insight"
+	Insights     string            `json:"insights"`      // LLM生成的洞察
+	Seasonality  map[string]bool   `json:"seasonality"`   // 检测到的季节性
+	Trend        string            `json:"trend"`         // "increasing" | "decreasing" | "stable"
+	AnomalyDates []string          `json:"anomaly_dates"` // 异常日期
 }
 
 // ForecastData 内部使用的数据结构
 type ForecastData struct {
 	HistoricalCounts []int           // 历史数据序列
-	Dates           []time.Time    // 对应日期
-	Mean            float64        // 均值
-	StdDev          float64        // 标准差
-	Seasonality     map[string]bool // 季节性
+	Dates            []time.Time     // 对应日期
+	Mean             float64         // 均值
+	StdDev           float64         // 标准差
+	Seasonality      map[string]bool // 季节性
 }
 
 // SLAForecastSkill AI-Native SLA 预测 Skill
@@ -159,10 +159,10 @@ func (s *SLAForecastSkill) buildTimeSeries(tickets []*ent.Ticket, startDate, end
 
 	return &ForecastData{
 		HistoricalCounts: counts,
-		Dates:           dates,
-		Mean:            mean,
-		StdDev:          stdDev,
-		Seasonality:     make(map[string]bool),
+		Dates:            dates,
+		Mean:             mean,
+		StdDev:           stdDev,
+		Seasonality:      make(map[string]bool),
 	}
 }
 
@@ -301,12 +301,12 @@ func (s *SLAForecastSkill) generatePredictions(data *ForecastData, startDate, en
 		isAnomaly := predicted < lower || predicted > upper
 
 		predictions = append(predictions, PredictionPoint{
-			Date:        current,
-			Predicted:   math.Round(predicted*100) / 100,
-			LowerBound:  math.Round(pointLower*100) / 100,
-			UpperBound:  math.Round(pointUpper*100) / 100,
-			Confidence:  math.Round((1.0-timeFactor*0.02)*100) / 100,
-			Anomaly:     isAnomaly,
+			Date:       current,
+			Predicted:  math.Round(predicted*100) / 100,
+			LowerBound: math.Round(pointLower*100) / 100,
+			UpperBound: math.Round(pointUpper*100) / 100,
+			Confidence: math.Round((1.0-timeFactor*0.02)*100) / 100,
+			Anomaly:    isAnomaly,
 		})
 
 		current = current.AddDate(0, 0, 7)
@@ -402,7 +402,7 @@ func (s *SLAForecastSkill) generateInsights(ctx context.Context, mean float64, p
 		{Role: "user", Content: prompt},
 	}
 
-	resp, err := s.gateway.Chat(ctx, "gpt-4o-mini", messages)
+	resp, err := s.gateway.Chat(ctx, "", messages)
 	if err != nil {
 		return "", err
 	}

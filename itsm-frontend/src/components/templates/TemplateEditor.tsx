@@ -431,7 +431,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               label: '字段默认值',
               children: (
                 <>
-                  <Alert message="为自定义字段设置默认值" type="info" showIcon className="mb-4" />
+                  <Alert title="为自定义字段设置默认值" type="info" showIcon className="mb-4" />
                   {fields.length === 0 ? (
                     <Empty description="请先在字段设计步骤中添加字段" />
                   ) : (

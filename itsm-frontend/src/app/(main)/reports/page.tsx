@@ -134,19 +134,32 @@ const ReportsPage: React.FC = () => {
         filters: {},
       };
 
-      const blob = await TicketAnalyticsApi.exportAnalytics(config, fileFormat);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `report-${format(new Date(), 'yyyy-MM-dd')}.${fileFormat}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      message.success(`报告导出成功 (${fileFormat.toUpperCase()})`);
+      try {
+        const blob = await TicketAnalyticsApi.exportAnalytics(config, fileFormat);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report-${format(new Date(), 'yyyy-MM-dd')}.${fileFormat}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        message.success(`报告导出成功 (${fileFormat.toUpperCase()})`);
+      } catch (exportError: any) {
+        console.error('Export failed:', exportError);
+        // 显示友好错误消息
+        if (
+          exportError?.message?.includes('not implemented') ||
+          exportError?.message?.includes('暂未实现')
+        ) {
+          message.warning('导出功能正在开发中，请稍后再试');
+        } else {
+          message.error(`导出失败: ${exportError?.message || '请检查后端服务是否运行'}`);
+        }
+      }
     } catch (error) {
-      message.error('导出失败');
+      console.error('Export error:', error);
+      message.error('导出失败，请稍后重试');
     }
   };
 

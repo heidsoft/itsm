@@ -1,8 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, Row, Col, Statistic, Table, Tag, Button, Alert, Tabs, List, Avatar } from 'antd';
-import { UserOutlined, FileTextOutlined, ClockCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import {
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Table,
+  Tag,
+  Button,
+  Alert,
+  Tabs,
+  List,
+  Avatar,
+  Spin,
+} from 'antd';
+import {
+  UserOutlined,
+  FileTextOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+} from '@ant-design/icons';
 import MSPService from '@/services/msp-service';
 import type { MSPAllocation, MSPCustomerReport, MSPContext } from '@/types/msp';
 
@@ -115,7 +134,10 @@ export default function MSPDashboardPage() {
       title: '解决率',
       key: 'resolution_rate',
       render: (record: MSPCustomerReport) => {
-        const rate = record.total_tickets > 0 ? Number((record.resolved_tickets / record.total_tickets * 100).toFixed(1)) : 0;
+        const rate =
+          record.total_tickets > 0
+            ? Number(((record.resolved_tickets / record.total_tickets) * 100).toFixed(1))
+            : 0;
         return <Tag color={rate >= 90 ? 'green' : rate >= 70 ? 'orange' : 'red'}>{rate}%</Tag>;
       },
     },
@@ -135,15 +157,42 @@ export default function MSPDashboardPage() {
     },
   ];
 
+  // 对于非 MSP 用户，显示欢迎页面
   if (!isMSP) {
     return (
       <div style={{ padding: 24 }}>
-        <Alert
-          title="访问受限"
-          description="您没有 MSP 员工权限，无法访问此页面。"
-          type="warning"
-          showIcon
-        />
+        <Card>
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <div style={{ marginBottom: 24 }}>
+              <Avatar size={80} icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
+            </div>
+            <Alert
+              message="MSP 管理控制台"
+              description={
+                <div>
+                  <p>您当前不是 MSP 员工，无法访问 MSP 管理功能。</p>
+                  <p style={{ marginTop: 8, color: '#888' }}>
+                    MSP（Managed Service Provider）管理控制台用于管理多租户服务。
+                  </p>
+                  <p style={{ marginTop: 16, fontSize: 12, color: '#999' }}>
+                    如需访问，请联系系统管理员为您分配 MSP 员工角色。
+                  </p>
+                </div>
+              }
+              type="info"
+              showIcon
+              style={{ maxWidth: 500, margin: '0 auto' }}
+            />
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: 24, textAlign: 'center' }}>
+        <Spin size="large" tip="加载 MSP 数据..." />
       </div>
     );
   }
@@ -151,7 +200,17 @@ export default function MSPDashboardPage() {
   if (error) {
     return (
       <div style={{ padding: 24 }}>
-        <Alert message="错误" description={error} type="error" showIcon />
+        <Alert
+          message="加载错误"
+          description={error}
+          type="error"
+          showIcon
+          action={
+            <Button size="small" onClick={() => window.location.reload()}>
+              重试
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -161,20 +220,12 @@ export default function MSPDashboardPage() {
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col span={6}>
           <Card>
-            <Statistic
-              title="负责客户数"
-              value={customers.length}
-              prefix={<UserOutlined />}
-            />
+            <Statistic title="负责客户数" value={customers.length} prefix={<UserOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic
-              title="分配数量"
-              value={allocations.length}
-              prefix={<FileTextOutlined />}
-            />
+            <Statistic title="分配数量" value={allocations.length} prefix={<FileTextOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
@@ -244,7 +295,7 @@ export default function MSPDashboardPage() {
                         : '无',
                     },
                   ]}
-                  renderItem={(item) => (
+                  renderItem={item => (
                     <List.Item>
                       <List.Item.Meta title={item.label} description={String(item.value)} />
                     </List.Item>

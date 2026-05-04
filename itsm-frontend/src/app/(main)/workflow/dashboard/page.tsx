@@ -150,7 +150,9 @@ export default function BPMNDashboardPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{t('bpmn.dashboard.title') || 'BPMN流程监控仪表盘'}</h1>
+        <h1 className="text-2xl font-bold">
+          {t('workflow.bpmnDashboard.title') || 'BPMN流程监控仪表盘'}
+        </h1>
         <Space>
           <RangePicker
             onChange={(dates, dateStrings) => {
@@ -171,7 +173,7 @@ export default function BPMNDashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={t('bpmn.dashboard.total_processes') || '流程定义'}
+              title={t('workflow.bpmnDashboard.totalProcesses') || '流程定义'}
               value={metrics?.total_processes || 0}
               prefix={<BarChart3 size={20} />}
             />
@@ -180,7 +182,7 @@ export default function BPMNDashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={t('bpmn.dashboard.active_instances') || '运行实例'}
+              title={t('workflow.bpmnDashboard.activeInstances') || '运行实例'}
               value={metrics?.active_instances || 0}
               prefix={<Activity size={20} />}
               styles={{ content: { color: '#1890ff' } }}
@@ -190,7 +192,7 @@ export default function BPMNDashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={t('bpmn.dashboard.completed_today') || '今日完成'}
+              title={t('workflow.bpmnDashboard.completedToday') || '今日完成'}
               value={metrics?.completed_today || 0}
               prefix={<CheckCircle size={20} />}
               styles={{ content: { color: '#52c41a' } }}
@@ -200,7 +202,7 @@ export default function BPMNDashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={t('bpmn.dashboard.open_tasks') || '待处理任务'}
+              title={t('workflow.bpmnDashboard.openTasks') || '待处理任务'}
               value={metrics?.open_tasks || 0}
               prefix={<Clock size={20} />}
               styles={{ content: { color: '#faad14' } }}
@@ -212,11 +214,11 @@ export default function BPMNDashboardPage() {
       {/* Health & SLA */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title={t('bpmn.dashboard.process_health') || '流程健康度'}>
+          <Card title={t('workflow.bpmnDashboard.processHealth') || '流程健康度'}>
             <Row gutter={16}>
               <Col span={8}>
                 <Statistic
-                  title={t('bpmn.dashboard.healthy') || '健康'}
+                  title={t('workflow.bpmnDashboard.healthy') || '健康'}
                   value={metrics?.process_health?.healthy || 0}
                   prefix={<CheckCircle size={16} />}
                   styles={{ content: { color: '#52c41a' } }}
@@ -224,7 +226,7 @@ export default function BPMNDashboardPage() {
               </Col>
               <Col span={8}>
                 <Statistic
-                  title={t('bpmn.dashboard.warning') || '警告'}
+                  title={t('workflow.bpmnDashboard.warning') || '警告'}
                   value={metrics?.process_health?.warning || 0}
                   prefix={<AlertTriangle size={16} />}
                   styles={{ content: { color: '#faad14' } }}
@@ -232,7 +234,7 @@ export default function BPMNDashboardPage() {
               </Col>
               <Col span={8}>
                 <Statistic
-                  title={t('bpmn.dashboard.critical') || '严重'}
+                  title={t('workflow.bpmnDashboard.critical') || '严重'}
                   value={metrics?.process_health?.critical || 0}
                   prefix={<XCircle size={16} />}
                   styles={{ content: { color: '#ff4d4f' } }}
@@ -241,7 +243,7 @@ export default function BPMNDashboardPage() {
             </Row>
             <div className="mt-4 text-center">
               <Statistic
-                title={t('bpmn.dashboard.health_score') || '健康度评分'}
+                title={t('workflow.bpmnDashboard.healthScore') || '健康度评分'}
                 value={metrics?.process_health?.health_score || 0}
                 suffix="/100"
                 styles={{
@@ -252,7 +254,7 @@ export default function BPMNDashboardPage() {
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card title={t('bpmn.dashboard.sla_compliance') || 'SLA合规率'}>
+          <Card title={t('workflow.bpmnDashboard.slaCompliance') || 'SLA合规率'}>
             <div className="text-center py-8">
               <Statistic
                 value={metrics?.sla_compliance_rate || 0}
@@ -270,7 +272,7 @@ export default function BPMNDashboardPage() {
                 }}
               />
               <p className="text-gray-500 mt-2">
-                {t('bpmn.dashboard.sla_compliance_rate') || 'SLA合规率'}
+                {t('workflow.bpmnDashboard.slaComplianceRate') || 'SLA合规率'}
               </p>
             </div>
           </Card>
@@ -280,7 +282,7 @@ export default function BPMNDashboardPage() {
       {/* Top Processes & Task Distribution */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title={t('bpmn.dashboard.top_processes') || '热门流程'}>
+          <Card title={t('workflow.bpmnDashboard.topProcesses') || '热门流程'}>
             <Table
               dataSource={metrics?.top_processes || []}
               columns={topProcessColumns}
@@ -291,7 +293,7 @@ export default function BPMNDashboardPage() {
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card title={t('bpmn.dashboard.task_distribution') || '任务分布'}>
+          <Card title={t('workflow.bpmnDashboard.taskDistribution') || '任务分布'}>
             <Table
               dataSource={metrics?.task_distribution || []}
               columns={taskDistColumns}
@@ -304,11 +306,11 @@ export default function BPMNDashboardPage() {
       </Row>
 
       {/* Trend Chart Placeholder */}
-      <Card title={t('bpmn.dashboard.trend') || '流程趋势'}>
+      <Card title={t('workflow.bpmnDashboard.trend') || '流程趋势'}>
         <div className="h-48 flex items-center justify-center text-gray-400">
           <Space>
             <TrendingUp size={24} />
-            <span>{t('bpmn.dashboard.trend_chart') || '趋势图表（待开发）'}</span>
+            <span>{t('workflow.bpmnDashboard.trend_chart') || '趋势图表（待开发）'}</span>
           </Space>
         </div>
       </Card>

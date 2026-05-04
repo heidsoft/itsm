@@ -69,6 +69,12 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		return
 	}
 
+	// 设置 httpOnly cookies (secure=false for HTTP localhost, httpOnly=true)
+	c.SetCookie("access_token", res.AccessToken, 900, "/", "localhost", false, true)
+	if res.RefreshToken != "" {
+		c.SetCookie("refresh_token", res.RefreshToken, 604800, "/", "localhost", false, true)
+	}
+
 	common.Success(c, res)
 }
 
@@ -82,6 +88,17 @@ func (h *Handler) GetMe(c *gin.Context) {
 		return
 	}
 	common.Success(c, u)
+}
+
+// GetUserTenants 获取用户所属的租户列表（前端登录后需要）
+func (h *Handler) GetUserTenants(c *gin.Context) {
+	userID := c.GetInt("user_id")
+	tenants, err := h.svc.GetUserTenants(c.Request.Context(), userID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, gin.H{"tenants": tenants})
 }
 
 func (h *Handler) ListUsers(c *gin.Context) {

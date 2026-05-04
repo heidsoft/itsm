@@ -2,14 +2,27 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Row, Col, Statistic, Button, message, Input, Select, Space, Tabs } from 'antd';
-import { GitPullRequest, CheckCircle, Clock, Plus, Search, Filter, Table as TableIcon, Calendar } from 'lucide-react';
+import {
+  GitPullRequest,
+  CheckCircle,
+  Clock,
+  Plus,
+  Search,
+  Filter,
+  Table as TableIcon,
+  Calendar,
+} from 'lucide-react';
 import { AppstoreOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import ChangeList from '@/components/change/ChangeList';
-import { ChangeApi } from '@/lib/api/change-api';
+import { ChangeApi, type Change } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { useDebounce } from '@/lib/component-utils';
+import {
+  UnifiedKanbanBoard,
+  type KanbanColumnConfig,
+} from '@/components/business/UnifiedKanbanBoard';
 
 export default function ChangesPage() {
   const router = useRouter();
@@ -27,7 +40,46 @@ export default function ChangesPage() {
   const [riskFilter, setRiskFilter] = useState<string | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState('list');
+  const [changes, setChanges] = useState<Change[]>([]);
+  const [kanbanLoading, setKanbanLoading] = useState(false);
   const debouncedSearch = useDebounce(searchKeyword, 300);
+
+  // 看板列配置
+  const KANBAN_COLUMNS: KanbanColumnConfig<Change>[] = [
+    { key: 'draft', title: '草稿', color: '#d9d9d9' },
+    { key: 'pending', title: '待审批', color: '#fa8c16' },
+    { key: 'approved', title: '已批准', color: '#1890ff' },
+    { key: 'scheduled', title: '已排期', color: '#722ed1' },
+    { key: 'implementing', title: '实施中', color: '#13c2c2' },
+    { key: 'completed', title: '已完成', color: '#52c41a' },
+    { key: 'cancelled', title: '已取消', color: '#ff4d4f' },
+  ];
+
+  // 获取变更列表用于看板视图
+  const fetchChangesForKanban = useCallback(async () => {
+    setKanbanLoading(true);
+    try {
+      const response = await ChangeApi.getChanges({
+        page: 1,
+        page_size: 100,
+        status: statusFilter,
+        search: debouncedSearch,
+      });
+      const items = (response as any).items || (response as any).changes || [];
+      setChanges(items as Change[]);
+    } catch (error) {
+      console.error('Failed to fetch changes for kanban:', error);
+      setChanges([]);
+    } finally {
+      setKanbanLoading(false);
+    }
+  }, [statusFilter, debouncedSearch]);
+
+  useEffect(() => {
+    if (activeTab === 'kanban') {
+      fetchChangesForKanban();
+    }
+  }, [activeTab, fetchChangesForKanban]);
 
   const fetchStats = async () => {
     try {
@@ -149,7 +201,10 @@ export default function ChangesPage() {
   );
 
   return (
-    <div className="p-6 min-h-screen" style={{ backgroundColor: 'var(--color-bg-secondary, #f9fafb)' }}>
+    <div
+      className="p-6 min-h-screen"
+      style={{ backgroundColor: 'var(--color-bg-secondary, #f9fafb)' }}
+    >
       <PageContainer
         title="变更管理"
         description="管理IT基础架构和服务的变更请求，最小化变更风险"
@@ -191,6 +246,14 @@ export default function ChangesPage() {
                   列表视图
                 </span>
               ),
+              children: (
+                <ChangeList
+                  showHeader={false}
+                  search={debouncedSearch}
+                  status={statusFilter}
+                  risk={riskFilter}
+                />
+              ),
             },
             {
               key: 'kanban',
@@ -199,6 +262,49 @@ export default function ChangesPage() {
                   <AppstoreOutlined />
                   看板视图
                 </span>
+              ),
+              children: (
+                <UnifiedKanbanBoard<Change>
+                  items={changes}
+                  loading={kanbanLoading}
+                  getItemId={(change: Change) => change.id}
+                  getItemStatus={(change: Change) => change.status || 'draft'}
+                  getItemTitle={(change: Change) => change.title || `变更 #${change.id}`}
+                  getItemNumber={(change: Change) => {
+                    const data = change as unknown as Record<string, unknown>;
+                    return (
+                      (data.change_number as string) ||
+                      (data.changeNumber as string) ||
+                      `C-${change.id}`
+                    );
+                  }}
+                  getItemDescription={(change: Change) => change.description || ''}
+                  getItemPriority={(change: Change) => change.priority || 'medium'}
+                  getItemAssignee={(change: Change) => {
+                    const assigneeId = change.assigneeId || (change as any).assignee_id;
+                    if (!assigneeId) return null;
+                    const data = change as unknown as Record<string, unknown>;
+                    const assigneeName =
+                      (data.assignee_name as string) || (data.assigneeName as string);
+                    return { name: assigneeName || `用户 #${assigneeId}` };
+                  }}
+                  getItemCreatedAt={(change: Change) =>
+                    change.createdAt || (change as any).created_at || ''
+                  }
+                  getItemUpdatedAt={(change: Change) =>
+                    change.updatedAt || (change as any).updated_at || ''
+                  }
+                  onItemClick={(change: Change) => router.push(`/changes/${change.id}`)}
+                  onItemEdit={(change: Change) => router.push(`/changes/${change.id}/edit`)}
+                  columnConfigs={KANBAN_COLUMNS}
+                  searchPlaceholder="搜索变更标题或描述..."
+                  priorityOptions={[
+                    { value: 'critical', label: '紧急', color: 'red' },
+                    { value: 'high', label: '高', color: 'orange' },
+                    { value: 'medium', label: '中', color: 'blue' },
+                    { value: 'low', label: '低', color: 'green' },
+                  ]}
+                />
               ),
             },
             {
@@ -209,15 +315,14 @@ export default function ChangesPage() {
                   日历视图
                 </span>
               ),
+              children: (
+                <Card className="text-center py-12">
+                  <Calendar className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-500">日历视图开发中，敬请期待...</p>
+                </Card>
+              ),
             },
           ]}
-        />
-
-        <ChangeList
-          showHeader={false}
-          search={debouncedSearch}
-          status={statusFilter}
-          risk={riskFilter}
         />
       </PageContainer>
     </div>

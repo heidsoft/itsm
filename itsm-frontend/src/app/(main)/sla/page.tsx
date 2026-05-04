@@ -109,14 +109,64 @@ export default function SLAPage() {
       ),
     },
     {
+      key: 'monitor',
+      label: 'SLA监控',
+      children: (
+        <div className="space-y-4">
+          <Card title="实时SLA监控">
+            <p className="text-gray-500">监控正在运行的SLA实例和违规情况</p>
+            <Row gutter={[16, 16]} className="mt-4">
+              <Col xs={24} sm={12} lg={6}>
+                <Card>
+                  <Statistic
+                    title="运行中实例"
+                    value={0}
+                    styles={{ content: { color: '#52c41a' } }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={24} sm={12} lg={6}>
+                <Card>
+                  <Statistic
+                    title="即将超时"
+                    value={0}
+                    styles={{ content: { color: '#faad14' } }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={24} sm={12} lg={6}>
+                <Card>
+                  <Statistic title="已超时" value={0} styles={{ content: { color: '#f5222d' } }} />
+                </Card>
+              </Col>
+              <Col xs={24} sm={12} lg={6}>
+                <Card>
+                  <Statistic
+                    title="完成率"
+                    value={'0%'}
+                    suffix=""
+                    styles={{ content: { color: '#1890ff' } }}
+                  />
+                </Card>
+              </Col>
+            </Row>
+          </Card>
+        </div>
+      ),
+    },
+    {
       key: 'definitions',
       label: 'SLA定义',
       children: (
         <Card title="SLA定义管理">
-          <Button type="primary" className="mb-4">
-            新建SLA
+          <Button
+            type="primary"
+            className="mb-4"
+            onClick={() => router.push('/admin/sla-definitions')}
+          >
+            前往SLA定义管理
           </Button>
-          <p>暂无SLA定义，请创建第一个SLA定义。</p>
+          <p>点击上方按钮前往SLA定义管理页面创建和管理SLA定义。</p>
         </Card>
       ),
     },

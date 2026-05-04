@@ -3,10 +3,11 @@ import { httpClient } from './http-client';
 export interface TriageResult {
   category: string;
   priority: string;
-  assignee_id: number;
+  assignee_id?: number;
   assigneeId?: number;
   confidence: number;
   explanation: string;
+  urgency?: string;
 }
 
 export interface RagAnswer {
@@ -39,29 +40,62 @@ export interface AIMetrics {
 }
 
 export async function aiTriage(title: string, description: string): Promise<TriageResult> {
-  return httpClient.post<TriageResult>(`/api/v1/ai/triage`, { title, description });
+  const res = await httpClient.post<{
+    title: string;
+    description: string;
+    suggestions?: {
+      category?: string;
+      priority?: string;
+      confidence?: number;
+      reasoning?: string;
+      urgency?: string;
+    };
+  }>(`/api/v1/ai/triage`, { title, description });
+
+  const suggestions = res?.suggestions || {};
+  return {
+    category: suggestions.category || 'general',
+    priority: suggestions.priority || 'medium',
+    confidence: typeof suggestions.confidence === 'number' ? suggestions.confidence : 0,
+    explanation: suggestions.reasoning || '',
+    urgency: suggestions.urgency,
+    assignee_id: 0,
+    assigneeId: undefined,
+  };
 }
 
 export async function aiSearchKB(query: string, limit = 5): Promise<{ answers: RagAnswer[] }> {
-  return httpClient.post<{ answers: RagAnswer[] }>(`/api/v1/ai/search`, {
+  const answers = await httpClient.post<RagAnswer[]>(`/api/v1/ai/knowledge/search`, {
     query,
     limit,
     type: 'kb',
   });
+  return { answers: Array.isArray(answers) ? answers : [] };
 }
 
 export async function aiSimilarIncidents(
   query: string,
   limit = 5
 ): Promise<{ incidents: RagAnswer[] }> {
-  return httpClient.post<{ incidents: RagAnswer[] }>(`/api/v1/ai/similar-incidents`, {
+  const incidents = await httpClient.post<RagAnswer[]>(`/api/v1/ai/knowledge/search`, {
     query,
     limit,
+    type: 'incident',
   });
+  return { incidents: Array.isArray(incidents) ? incidents : [] };
 }
 
 export async function aiSummarize(text: string, maxLen = 200): Promise<{ summary: string }> {
-  return httpClient.post<{ summary: string }>(`/api/v1/ai/summarize`, { text, max_len: maxLen });
+  const res = await httpClient.post<{ answers: unknown[] }>(`/api/v1/ai/chat`, {
+    query: `请在${maxLen}字以内总结以下内容：\n\n${text}`,
+    limit: 1,
+  });
+  const answers = Array.isArray(res?.answers) ? res.answers : [];
+  const summary = answers
+    .map(a => (typeof a === 'string' ? a : JSON.stringify(a)))
+    .join('\n')
+    .trim();
+  return { summary };
 }
 
 export async function aiSaveFeedback(feedback: AIFeedbackRequest): Promise<{ message: string }> {
@@ -84,7 +118,11 @@ export class AIApi {
     conversation_id?: number;
     limit?: number;
   }): Promise<any> {
-    return aiSearchKB(params.query, params.limit);
+    return httpClient.post(`/api/v1/ai/chat`, {
+      query: params.query,
+      limit: params.limit,
+      conversation_id: params.conversation_id,
+    });
   }
 
   static async searchKB(query: string, limit = 5): Promise<{ answers: RagAnswer[] }> {

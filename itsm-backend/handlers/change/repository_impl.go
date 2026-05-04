@@ -173,17 +173,25 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 	total, _ := r.client.Change.Query().Where(change.TenantID(tenantID)).Count(ctx)
 	stats.Total = total
 
-	// By Status
-	statuses := []string{"pending", "approved", "in_progress", "completed", "rolled_back", "rejected", "cancelled"}
+	// By Status - include all possible statuses
+	statuses := []string{"draft", "review", "pending", "approved", "scheduled", "implementing", "implemented", "completed", "rolled_back", "rejected", "cancelled"}
 	for _, s := range statuses {
 		count, _ := r.client.Change.Query().Where(change.TenantID(tenantID), change.Status(s)).Count(ctx)
 		switch s {
+		case "draft":
+			stats.Draft = count
+		case "review":
+			stats.Review = count
 		case "pending":
 			stats.Pending = count
 		case "approved":
 			stats.Approved = count
-		case "in_progress":
-			stats.InProgress = count
+		case "scheduled":
+			stats.Scheduled = count
+		case "implementing":
+			stats.Implementing = count
+		case "implemented":
+			stats.Implemented = count
 		case "completed":
 			stats.Completed = count
 		case "rolled_back":
@@ -194,6 +202,12 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 			stats.Cancelled = count
 		}
 	}
+
+	// Map to frontend-compatible structure
+	// pending = changes awaiting approval
+	// inProgress = scheduled + implementing
+	// completed = completed + implemented
+	stats.InProgress = stats.Scheduled + stats.Implementing
 
 	return stats, nil
 }

@@ -464,7 +464,7 @@ export interface CreateArticleRequest {
   title: string;
   content: string;
   summary?: string;
-  categoryId?: string;
+  category?: string;
   tags?: string[];
   visibility?: ArticleVisibility;
   featuredImage?: string;

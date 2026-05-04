@@ -1,10 +1,9 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # PostgreSQL 数据库
   postgres:
     image: postgres:17-alpine
-    container_name: itsm-postgres
     environment:
       POSTGRES_DB: itsm
       POSTGRES_USER: itsm
@@ -13,11 +12,10 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - itsm-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U itsm -d itsm"]
+      test: [ "CMD-SHELL", "pg_isready -U itsm -d itsm" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,7 +24,6 @@ services:
   # Redis 缓存
   redis:
     image: redis:7-alpine
-    container_name: itsm-redis
     ports:
       - "6379:6379"
     volumes:
@@ -34,7 +31,7 @@ services:
     networks:
       - itsm-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -44,13 +41,23 @@ services:
   itsm-backend:
     build:
       context: ./itsm-backend
-      dockerfile: Dockerfile
-    container_name: itsm-backend
+      dockerfile: Dockerfile.backend
     environment:
-      - DATABASE_URL=postgres://itsm:itsm_password_2026@postgres:5432/itsm?sslmode=disable
-      - REDIS_URL=redis://redis:6379
-      - PORT=8090
-      - GIN_MODE=release
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=itsm
+      - DB_PASSWORD=itsm_password_2026
+      - DB_NAME=itsm
+      - DB_SSLMODE=disable
+
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+
+      - JWT_SECRET=dev-secret-key-change-in-production-minimum-32-characters-long
+      - SERVER_MODE=release
+      - LOG_LEVEL=info
     ports:
       - "8090:8090"
     depends_on:
@@ -64,7 +71,15 @@ services:
       - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8090/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -73,12 +88,14 @@ services:
   itsm-frontend:
     build:
       context: ./itsm-frontend
-      dockerfile: Dockerfile
-    container_name: itsm-frontend
+      dockerfile: Dockerfile.frontend
+      target: production
     environment:
-      - REACT_APP_API_URL=http://localhost:8090/api/v1
+      - NODE_ENV=production
+      - ITSM_BACKEND_URL=http://itsm-backend:8090
+      - NEXT_PUBLIC_API_URL=http://itsm-backend:8090
     ports:
-      - "3000:80"
+      - "3000:3000"
     depends_on:
       - itsm-backend
     networks:

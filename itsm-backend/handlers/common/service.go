@@ -209,3 +209,32 @@ func (s *Service) LogActivity(ctx context.Context, log *AuditLog) error {
 func (s *Service) GetAuditLogs(ctx context.Context, tenantID int, userID int) ([]*AuditLog, error) {
 	return s.repo.ListAuditLogs(ctx, tenantID, userID, 100)
 }
+
+// GetUserTenants 获取用户所属的租户列表
+func (s *Service) GetUserTenants(ctx context.Context, userID int) ([]interface{}, error) {
+	// 直接使用 ent client 查询用户关联的租户
+	user, err := s.client.User.Get(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+
+	// 通过 tenant_id 直接查询租户
+	tenant, err := s.client.Tenant.Get(ctx, user.TenantID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tenant: %w", err)
+	}
+
+	if tenant == nil {
+		return []interface{}{}, nil
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"id":     tenant.ID,
+			"name":   tenant.Name,
+			"code":   tenant.Code,
+			"type":   tenant.Type,
+			"status": tenant.Status,
+		},
+	}, nil
+}

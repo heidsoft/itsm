@@ -2,24 +2,29 @@ import { API_BASE_URL, Tenant } from '@/lib/api/api-config';
 import { useAuthStore } from '@/lib/store/auth-store';
 
 export class AuthService {
+  private static getCookie(name: string): string | null {
+    if (typeof document === 'undefined') return null;
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [cookieName, cookieValue] = cookie.trim().split('=');
+      if (cookieName === name) {
+        return decodeURIComponent(cookieValue || '');
+      }
+    }
+    return null;
+  }
+
   // 设置tokens
   // 注意: access_token存储在localStorage用于Authorization header
   // 同时后端也会设置httpOnly cookie作为安全备份
   static setTokens(accessToken: string, refreshToken: string) {
-    if (typeof window !== 'undefined') {
-      // 存储access_token用于Authorization header
-      localStorage.setItem('access_token', accessToken);
-      // 存储refresh_token用于刷新流程
-      localStorage.setItem('refresh_token', refreshToken);
-    }
+    void accessToken;
+    void refreshToken;
   }
 
   // 获取access token
   static getAccessToken(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('access_token');
-    }
-    return null;
+    return this.getCookie('access_token');
   }
 
   // Backward-compatible helpers used by some UI providers
@@ -34,51 +39,14 @@ export class AuthService {
 
   // 获取refresh token
   static getRefreshToken(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('refresh_token');
-    }
-    return null;
+    return this.getCookie('refresh_token');
   }
 
   // 检查是否已认证
   static isAuthenticated(): boolean {
-    // 首先检查localStorage中的token（这个是同步的，不依赖hydration）
-    const token = this.getAccessToken();
-    if (!token) {
-      // 即使没有token，也要检查store的持久化状态
-      const { isAuthenticated } = useAuthStore.getState();
-      return isAuthenticated;
-    }
-
-    // 对于开发环境，允许mock token
-    if (token.startsWith('mock_')) {
-      return true;
-    }
-
-    try {
-      // 简单检查token格式（JWT应该有3个部分）
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        return false;
-      }
-
-      // 检查token是否过期
-      const payload = JSON.parse(atob(parts[1]));
-      const currentTime = Math.floor(Date.now() / 1000);
-
-      if (payload.exp && payload.exp < currentTime) {
-        // Token已过期，清除它
-        this.clearTokens();
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      // Token格式无效
-      console.error('Invalid token format:', error);
-      this.clearTokens();
-      return false;
-    }
+    const { isAuthenticated } = useAuthStore.getState();
+    if (isAuthenticated) return true;
+    return !!this.getAccessToken();
   }
 
   // 直接使用fetch进行HTTP请求，避免循环依赖
@@ -119,7 +87,7 @@ export class AuthService {
       const data = await this.makeRequest<{
         access_token: string;
         refresh_token?: string;
-      }>('/api/v1/refresh-token', {
+      }>('/api/v1/auth/refresh', {
         method: 'POST',
         credentials: 'include', // Include httpOnly cookies
         body: JSON.stringify({
@@ -127,14 +95,7 @@ export class AuthService {
         }),
       });
 
-      // 更新localStorage中的tokens
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', data.access_token);
-        // 如果返回了新的refresh_token，更新它(实现token rotation)
-        if (data.refresh_token) {
-          localStorage.setItem('refresh_token', data.refresh_token);
-        }
-      }
+      void data;
       return true;
     } catch (error) {
       console.error('Token refresh failed:', error);
@@ -145,17 +106,21 @@ export class AuthService {
 
   // 清除所有tokens
   static clearTokens() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-    }
+    const { logout } = useAuthStore.getState();
+    logout();
   }
 
   // 登出方法
   static logout() {
-    this.clearTokens();
     const { logout } = useAuthStore.getState();
-    logout();
+    try {
+      fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      }).catch(() => {});
+    } finally {
+      logout();
+    }
   }
 
   // 修改login方法
@@ -165,6 +130,7 @@ export class AuthService {
         access_token: string;
         refresh_token: string;
         user: unknown;
+        tenant?: unknown;
       }>('/api/v1/auth/login', {
         method: 'POST',
         body: JSON.stringify({
@@ -174,12 +140,10 @@ export class AuthService {
         }),
       });
 
-      // 存储tokens
-      this.setTokens(data.access_token, data.refresh_token);
-
       // 使用store管理登录状态
       const { login } = useAuthStore.getState();
       const u = data.user as any;
+      const t = data.tenant as any;
       login(
         {
           id: Number(u?.id || 0),
@@ -197,13 +161,13 @@ export class AuthService {
           createdAt: u?.createdAt || u?.created_at,
           updatedAt: u?.updatedAt || u?.updated_at,
         },
-        data.access_token,
+        data.access_token || 'authenticated',
         {
-          id: 1,
-          name: '默认租户',
-          code: 'default',
-          type: 'standard',
-          status: 'active',
+          id: Number(t?.id || u?.tenant_id || 1),
+          name: String(t?.name || '默认租户'),
+          code: String(t?.code || tenantCode || 'default'),
+          type: (t?.type || 'standard') as any,
+          status: (t?.status || 'active') as any,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         } as Tenant

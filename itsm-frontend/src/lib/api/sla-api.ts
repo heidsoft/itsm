@@ -1,15 +1,20 @@
 import { httpClient } from './http-client';
 
-// SLA定义接口
+// SLA定义接口 - 与后端 SLADefinitionResponse 对应
+// 后端返回 camelCase 格式: responseTime, resolutionTime
 export interface SLADefinition {
   id: number;
   name: string;
   description: string;
-  service_type: string;
+  serviceType?: string; // 后端返回 serviceType
+  service_type?: string; // 兼容旧格式
   priority: string;
-  response_time_minutes: number;
-  resolution_time_minutes: number;
-  availability_target: number;
+  // 后端返回 camelCase 格式
+  responseTime: number;
+  resolutionTime: number;
+  // 可选字段：后端可能不返回 availability
+  availability_target?: number;
+  availability?: number;
   is_active: boolean;
   tenant_id: number;
   created_at: string;
