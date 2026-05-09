@@ -202,7 +202,8 @@ const LicenseList: React.FC = () => {
       key: 'expiry_date',
       width: 120,
       render: (date: string) => {
-        if (!date) return '-';
+        // 处理空值和空白字符串
+        if (!date || date.trim() === '') return '永久';
         const days = dayjs(date).diff(dayjs(), 'day');
         return (
           <span style={{ color: days < 30 ? '#ff4d4f' : undefined }}>

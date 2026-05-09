@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <!-- ======================================================== -->
+  <!-- 国内企业ITSM - 标准变更流程                              -->
+  <!-- 特点: 审批层级清晰、分级授权、风险评估                   -->
+  <!-- ======================================================== -->
+
+  <bpmn:process id="change_normal_flow_cn" name="标准变更流程(国内企业版)" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">change</bpmn:metaData>
+      <bpmn:metaData name="version">2.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">国内企业标准变更流程，包含多级审批和风险评估</bpmn:metaData>
+      <bpmn:metaData name="enterprise_type">cn_enterprise</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- ========== 开始节点 ========== -->
+    <bpmn:startEvent id="StartEvent_RFC" name="变更申请提交">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="form_required">true</bpmn:metaData>
+        <bpmn:metaData name="auto_assign">false</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_C1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- ========== 阶段1: 变更经理初审 ========== -->
+    <bpmn:userTask id="Activity_CMReview" name="变更经理初审">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">cm_initial_review</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">sd_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
+        <bpmn:metaData name="risk_assessment_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C1</bpmn:incoming>
+      <bpmn:outgoing>Flow_C2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 变更类型判定网关 -->
+    <bpmn:exclusiveGateway id="Gateway_ChangeType" name="变更类型判定">
+      <bpmn:incoming>Flow_C2</bpmn:incoming>
+      <bpmn:outgoing>Flow_LowRisk</bpmn:outgoing>
+      <bpmn:outgoing>Flow_MediumRisk</bpmn:outgoing>
+      <bpmn:outgoing>Flow_HighRisk</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ========== 低风险变更路径 ========== -->
+    <bpmn:userTask id="Activity_LowRiskApprove" name="低风险审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">low_risk_approve</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
+        <bpmn:metaData name="auto_approve_threshold">low</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_LowRisk</bpmn:incoming>
+      <bpmn:outgoing>Flow_LowRiskApproved</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_LowRisk" name="低风险审批结果">
+      <bpmn:incoming>Flow_LowRiskApproved</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToImplementation_Low</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Rejected_Low</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ========== 中风险变更路径 ========== -->
+    <bpmn:userTask id="Activity_MediumRiskTechReview" name="技术评审">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">technical_review</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+        <bpmn:metaData name="tech_approval_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_MediumRisk</bpmn:incoming>
+      <bpmn:outgoing>Flow_C3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_MediumRiskManagerApprove" name="运维经理审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">ops_manager_approve</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">12</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C3</bpmn:incoming>
+      <bpmn:outgoing>Flow_C4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_MediumRisk" name="中风险审批结果">
+      <bpmn:incoming>Flow_C4</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToImplementation_Medium</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Rejected_Medium</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ========== 高风险变更路径 ========== -->
+    <bpmn:userTask id="Activity_HighRiskTechReview" name="专家技术评审">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">expert_technical_review</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">48</bpmn:metaData>
+        <bpmn:metaData name="multiple_expert_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_HighRisk</bpmn:incoming>
+      <bpmn:outgoing>Flow_C5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_HighRiskSecurityCheck" name="安全合规检查">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">security_compliance_check</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">security_admin</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+        <bpmn:metaData name="security_approval_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C5</bpmn:incoming>
+      <bpmn:outgoing>Flow_C6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_HighRiskOpsDirectorApprove" name="运维总监审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">ops_director_approve</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_director</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C6</bpmn:incoming>
+      <bpmn:outgoing>Flow_C7</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_HighRiskITDirectorApprove" name="IT总监审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">it_director_approve</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_director</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+        <bpmn:metaData name="budget_check_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C7</bpmn:incoming>
+      <bpmn:outgoing>Flow_C8</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_HighRisk" name="高风险审批结果">
+      <bpmn:incoming>Flow_C8</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToImplementation_High</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Rejected_High</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ========== 实施阶段 ========== -->
+    <bpmn:userTask id="Activity_Implementation_Low" name="低风险变更实施">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">implement_change</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
+        <bpmn:metaData name="maintenance_window_check">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToImplementation_Low</bpmn:incoming>
+      <bpmn:outgoing>Flow_Verify_Low</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_Implementation_Medium" name="中风险变更实施">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">implement_change</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
+        <bpmn:metaData name="backup_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToImplementation_Medium</bpmn:incoming>
+      <bpmn:outgoing>Flow_Verify_Medium</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_Implementation_High" name="高风险变更实施">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">implement_change</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+        <bpmn:metaData name="rollback_plan_required">true</bpmn:metaData>
+        <bpmn:metaData name="monitoring_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToImplementation_High</bpmn:incoming>
+      <bpmn:outgoing>Flow_Verify_High</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 验证阶段 ========== -->
+    <bpmn:userTask id="Activity_Verify_Low" name="低风险验证">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">verify_change</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">2</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Verify_Low</bpmn:incoming>
+      <bpmn:outgoing>Flow_Close_Low</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_Verify_Medium" name="中风险验证">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">verify_change</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Verify_Medium</bpmn:incoming>
+      <bpmn:outgoing>Flow_Close_Medium</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_Verify_High" name="高风险验证">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">verify_change</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_director</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
+        <bpmn:metaData name="post_implementation_review">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Verify_High</bpmn:incoming>
+      <bpmn:outgoing>Flow_Close_High</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 关闭与后评估 ========== -->
+    <bpmn:userTask id="Activity_ChangeClose" name="变更关闭">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">change_close</bpmn:metaData>
+        <bpmn:metaData name="require_review_result">true</bpmn:metaData>
+        <bpmn:metaData name="create_knowledge_base">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Close_Low</bpmn:incoming>
+      <bpmn:incoming>Flow_Close_Medium</bpmn:incoming>
+      <bpmn:incoming>Flow_Close_High</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 结束事件 -->
+    <bpmn:endEvent id="EndEvent_ChangeComplete" name="变更完成">
+      <bpmn:incoming>Flow_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ========== 拒绝路径 ========== -->
+    <bpmn:serviceTask id="Activity_NotifyRejection" name="通知申请被拒绝">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">notify_rejection</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">requester</bpmn:metaData>
+        <bpmn:metaData name="reason_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Rejected_Low</bpmn:incoming>
+      <bpmn:incoming>Flow_Rejected_Medium</bpmn:incoming>
+      <bpmn:incoming>Flow_Rejected_High</bpmn:incoming>
+      <bpmn:outgoing>Flow_EndRejected</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_ChangeRejected" name="变更被拒绝">
+      <bpmn:incoming>Flow_EndRejected</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ========== 流程连线 ========== -->
+    <bpmn:sequenceFlow id="Flow_C1" sourceRef="StartEvent_RFC" targetRef="Activity_CMReview" />
+    <bpmn:sequenceFlow id="Flow_C2" sourceRef="Activity_CMReview" targetRef="Gateway_ChangeType" />
+    
+    <!-- 变更类型分流 -->
+    <bpmn:sequenceFlow id="Flow_LowRisk" sourceRef="Gateway_ChangeType" targetRef="Activity_LowRiskApprove">
+      <bpmn:conditionExpression><![CDATA[${variables['risk_level'] == 'low'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_MediumRisk" sourceRef="Gateway_ChangeType" targetRef="Activity_MediumRiskTechReview">
+      <bpmn:conditionExpression><![CDATA[${variables['risk_level'] == 'medium'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_HighRisk" sourceRef="Gateway_ChangeType" targetRef="Activity_HighRiskTechReview">
+      <bpmn:conditionExpression><![CDATA[${variables['risk_level'] == 'high'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- 低风险路径 -->
+    <bpmn:sequenceFlow id="Flow_LowRiskApproved" sourceRef="Activity_LowRiskApprove" targetRef="Gateway_LowRisk" />
+    <bpmn:sequenceFlow id="Flow_ToImplementation_Low" sourceRef="Gateway_LowRisk" targetRef="Activity_Implementation_Low">
+      <bpmn:conditionExpression><![CDATA[${variables['approved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Rejected_Low" sourceRef="Gateway_LowRisk" targetRef="Activity_NotifyRejection">
+      <bpmn:conditionExpression><![CDATA[${variables['approved'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Verify_Low" sourceRef="Activity_Implementation_Low" targetRef="Activity_Verify_Low" />
+    <bpmn:sequenceFlow id="Flow_Close_Low" sourceRef="Activity_Verify_Low" targetRef="Activity_ChangeClose" />
+
+    <!-- 中风险路径 -->
+    <bpmn:sequenceFlow id="Flow_C3" sourceRef="Activity_MediumRiskTechReview" targetRef="Activity_MediumRiskManagerApprove" />
+    <bpmn:sequenceFlow id="Flow_C4" sourceRef="Activity_MediumRiskManagerApprove" targetRef="Gateway_MediumRisk" />
+    <bpmn:sequenceFlow id="Flow_ToImplementation_Medium" sourceRef="Gateway_MediumRisk" targetRef="Activity_Implementation_Medium">
+      <bpmn:conditionExpression><![CDATA[${variables['approved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Rejected_Medium" sourceRef="Gateway_MediumRisk" targetRef="Activity_NotifyRejection">
+      <bpmn:conditionExpression><![CDATA[${variables['approved'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Verify_Medium" sourceRef="Activity_Implementation_Medium" targetRef="Activity_Verify_Medium" />
+    <bpmn:sequenceFlow id="Flow_Close_Medium" sourceRef="Activity_Verify_Medium" targetRef="Activity_ChangeClose" />
+
+    <!-- 高风险路径 -->
+    <bpmn:sequenceFlow id="Flow_C5" sourceRef="Activity_HighRiskTechReview" targetRef="Activity_HighRiskSecurityCheck" />
+    <bpmn:sequenceFlow id="Flow_C6" sourceRef="Activity_HighRiskSecurityCheck" targetRef="Activity_HighRiskOpsDirectorApprove" />
+    <bpmn:sequenceFlow id="Flow_C7" sourceRef="Activity_HighRiskOpsDirectorApprove" targetRef="Activity_HighRiskITDirectorApprove" />
+    <bpmn:sequenceFlow id="Flow_C8" sourceRef="Activity_HighRiskITDirectorApprove" targetRef="Gateway_HighRisk" />
+    <bpmn:sequenceFlow id="Flow_ToImplementation_High" sourceRef="Gateway_HighRisk" targetRef="Activity_Implementation_High">
+      <bpmn:conditionExpression><![CDATA[${variables['approved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Rejected_High" sourceRef="Gateway_HighRisk" targetRef="Activity_NotifyRejection">
+      <bpmn:conditionExpression><![CDATA[${variables['approved'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Verify_High" sourceRef="Activity_Implementation_High" targetRef="Activity_Verify_High" />
+    <bpmn:sequenceFlow id="Flow_Close_High" sourceRef="Activity_Verify_High" targetRef="Activity_ChangeClose" />
+
+    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_ChangeClose" targetRef="EndEvent_ChangeComplete" />
+    <bpmn:sequenceFlow id="Flow_EndRejected" sourceRef="Activity_NotifyRejection" targetRef="EndEvent_ChangeRejected" />
+
+  </bpmn:process>
+</bpmn:definitions>
