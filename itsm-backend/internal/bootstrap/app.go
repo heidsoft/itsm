@@ -18,21 +18,21 @@ import (
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
+	"itsm-backend/handlers/known_error"
 	"itsm-backend/handlers/problem"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
-	"itsm-backend/handlers/known_error"
 	"itsm-backend/middleware"
 	"itsm-backend/pkg/seeder"
 	"itsm-backend/router"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -251,6 +251,7 @@ func NewApplication() *Application {
 
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)
+	incidentService.SetProcessTriggerService(processTriggerService)
 
 	// Set approval service for ticket workflow integration
 	ticketService.SetApprovalService(approvalService)

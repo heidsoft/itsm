@@ -28,6 +28,7 @@ import (
 	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
+	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
@@ -140,6 +141,7 @@ const (
 	TypeDiscoveryJob            = "DiscoveryJob"
 	TypeDiscoveryResult         = "DiscoveryResult"
 	TypeDiscoverySource         = "DiscoverySource"
+	TypeEndpointACL             = "EndpointACL"
 	TypeEngineerSkill           = "EngineerSkill"
 	TypeGroup                   = "Group"
 	TypeIncident                = "Incident"
@@ -29124,6 +29126,982 @@ func (m *DiscoverySourceMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown DiscoverySource edge %s", name)
+}
+
+// EndpointACLMutation represents an operation that mutates the EndpointACL nodes in the graph.
+type EndpointACLMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	tenant_id     *int
+	addtenant_id  *int
+	path_pattern  *string
+	method        *string
+	resource      *string
+	action        *string
+	description   *string
+	priority      *int
+	addpriority   *int
+	is_active     *bool
+	is_whitelist  *bool
+	created_at    *time.Time
+	updated_at    *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*EndpointACL, error)
+	predicates    []predicate.EndpointACL
+}
+
+var _ ent.Mutation = (*EndpointACLMutation)(nil)
+
+// endpointaclOption allows management of the mutation configuration using functional options.
+type endpointaclOption func(*EndpointACLMutation)
+
+// newEndpointACLMutation creates new mutation for the EndpointACL entity.
+func newEndpointACLMutation(c config, op Op, opts ...endpointaclOption) *EndpointACLMutation {
+	m := &EndpointACLMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeEndpointACL,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withEndpointACLID sets the ID field of the mutation.
+func withEndpointACLID(id int) endpointaclOption {
+	return func(m *EndpointACLMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *EndpointACL
+		)
+		m.oldValue = func(ctx context.Context) (*EndpointACL, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().EndpointACL.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withEndpointACL sets the old EndpointACL of the mutation.
+func withEndpointACL(node *EndpointACL) endpointaclOption {
+	return func(m *EndpointACLMutation) {
+		m.oldValue = func(context.Context) (*EndpointACL, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m EndpointACLMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m EndpointACLMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *EndpointACLMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *EndpointACLMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().EndpointACL.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *EndpointACLMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *EndpointACLMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the EndpointACL entity.
+// If the EndpointACL object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EndpointACLMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *EndpointACLMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *EndpointACLMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *EndpointACLMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetPathPattern sets the "path_pattern" field.
+func (m *EndpointACLMutation) SetPathPattern(s string) {
+	m.path_pattern = &s
+}
+
+// PathPattern returns the value of the "path_pattern" field in the mutation.
+func (m *EndpointACLMutation) PathPattern() (r string, exists bool) {
+	v := m.path_pattern
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPathPattern returns the old "path_pattern" field's value of the EndpointACL entity.
+// If the EndpointACL object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EndpointACLMutation) OldPathPattern(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPathPattern is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPathPattern requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPathPattern: %w", err)
+	}
+	return oldValue.PathPattern, nil
+}
+
+// ResetPathPattern resets all changes to the "path_pattern" field.
+func (m *EndpointACLMutation) ResetPathPattern() {
+	m.path_pattern = nil
+}
+
+// SetMethod sets the "method" field.
+func (m *EndpointACLMutation) SetMethod(s string) {
+	m.method = &s
+}
+
+// Method returns the value of the "method" field in the mutation.
+func (m *EndpointACLMutation) Method() (r string, exists bool) {
+	v := m.method
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMethod returns the old "method" field's value of the EndpointACL entity.
+// If the EndpointACL object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EndpointACLMutation) OldMethod(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMethod is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMethod requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMethod: %w", err)
+	}
+	return oldValue.Method, nil
+}
+
+// ClearMethod clears the value of the "method" field.
+func (m *EndpointACLMutation) ClearMethod() {
+	m.method = nil
+	m.clearedFields[endpointacl.FieldMethod] = struct{}{}
+}
+
+// MethodCleared returns if the "method" field was cleared in this mutation.
+func (m *EndpointACLMutation) MethodCleared() bool {
+	_, ok := m.clearedFields[endpointacl.FieldMethod]
+	return ok
+}
+
+// ResetMethod resets all changes to the "method" field.
+func (m *EndpointACLMutation) ResetMethod() {
+	m.method = nil
+	delete(m.clearedFields, endpointacl.FieldMethod)
+}
+
+// SetResource sets the "resource" field.
+func (m *EndpointACLMutation) SetResource(s string) {
+	m.resource = &s
+}
+
+// Resource returns the value of the "resource" field in the mutation.
+func (m *EndpointACLMutation) Resource() (r string, exists bool) {
+	v := m.resource
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResource returns the old "resource" field's value of the EndpointACL entity.
+// If the EndpointACL object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EndpointACLMutation) OldResource(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResource: %w", err)
+	}
+	return oldValue.Resource, nil
+}
+
+// ResetResource resets all changes to the "resource" field.
+func (m *EndpointACLMutation) ResetResource() {
+	m.resource = nil
+}
+
+// SetAction sets the "action" field.
+func (m *EndpointACLMutation) SetAction(s string) {
+	m.action = &s
+}
+
+// Action returns the value of the "action" field in the mutation.
+func (m *EndpointACLMutation) Action() (r string, exists bool) {
+	v := m.action
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAction returns the old "action" field's value of the EndpointACL entity.
+// If the EndpointACL object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EndpointACLMutation) OldAction(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAction is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAction requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAction: %w", err)
+	}
+	return oldValue.Action, nil
+}
+
+// ResetAction resets all changes to the "action" field.
+func (m *EndpointACLMutation) ResetAction() {
+	m.action = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *EndpointACLMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *EndpointACLMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the EndpointACL entity.
+// If the EndpointACL object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EndpointACLMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *EndpointACLMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[endpointacl.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *EndpointACLMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[endpointacl.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *EndpointACLMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, endpointacl.FieldDescription)
+}
+
+// SetPriority sets the "priority" field.
+func (m *EndpointACLMutation) SetPriority(i int) {
+	m.priority = &i
+	m.addpriority = nil
+}
+
+// Priority returns the value of the "priority" field in the mutation.
+func (m *EndpointACLMutation) Priority() (r int, exists bool) {
+	v := m.priority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPriority returns the old "priority" field's value of the EndpointACL entity.
+// If the EndpointACL object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EndpointACLMutation) OldPriority(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPriority is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPriority requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPriority: %w", err)
+	}
+	return oldValue.Priority, nil
+}
+
+// AddPriority adds i to the "priority" field.
+func (m *EndpointACLMutation) AddPriority(i int) {
+	if m.addpriority != nil {
+		*m.addpriority += i
+	} else {
+		m.addpriority = &i
+	}
+}
+
+// AddedPriority returns the value that was added to the "priority" field in this mutation.
+func (m *EndpointACLMutation) AddedPriority() (r int, exists bool) {
+	v := m.addpriority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPriority resets all changes to the "priority" field.
+func (m *EndpointACLMutation) ResetPriority() {
+	m.priority = nil
+	m.addpriority = nil
+}
+
+// SetIsActive sets the "is_active" field.
+func (m *EndpointACLMutation) SetIsActive(b bool) {
+	m.is_active = &b
+}
+
+// IsActive returns the value of the "is_active" field in the mutation.
+func (m *EndpointACLMutation) IsActive() (r bool, exists bool) {
+	v := m.is_active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsActive returns the old "is_active" field's value of the EndpointACL entity.
+// If the EndpointACL object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EndpointACLMutation) OldIsActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsActive: %w", err)
+	}
+	return oldValue.IsActive, nil
+}
+
+// ResetIsActive resets all changes to the "is_active" field.
+func (m *EndpointACLMutation) ResetIsActive() {
+	m.is_active = nil
+}
+
+// SetIsWhitelist sets the "is_whitelist" field.
+func (m *EndpointACLMutation) SetIsWhitelist(b bool) {
+	m.is_whitelist = &b
+}
+
+// IsWhitelist returns the value of the "is_whitelist" field in the mutation.
+func (m *EndpointACLMutation) IsWhitelist() (r bool, exists bool) {
+	v := m.is_whitelist
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsWhitelist returns the old "is_whitelist" field's value of the EndpointACL entity.
+// If the EndpointACL object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EndpointACLMutation) OldIsWhitelist(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsWhitelist is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsWhitelist requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsWhitelist: %w", err)
+	}
+	return oldValue.IsWhitelist, nil
+}
+
+// ResetIsWhitelist resets all changes to the "is_whitelist" field.
+func (m *EndpointACLMutation) ResetIsWhitelist() {
+	m.is_whitelist = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *EndpointACLMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *EndpointACLMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the EndpointACL entity.
+// If the EndpointACL object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EndpointACLMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *EndpointACLMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *EndpointACLMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *EndpointACLMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the EndpointACL entity.
+// If the EndpointACL object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EndpointACLMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *EndpointACLMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the EndpointACLMutation builder.
+func (m *EndpointACLMutation) Where(ps ...predicate.EndpointACL) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the EndpointACLMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *EndpointACLMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.EndpointACL, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *EndpointACLMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *EndpointACLMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (EndpointACL).
+func (m *EndpointACLMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *EndpointACLMutation) Fields() []string {
+	fields := make([]string, 0, 11)
+	if m.tenant_id != nil {
+		fields = append(fields, endpointacl.FieldTenantID)
+	}
+	if m.path_pattern != nil {
+		fields = append(fields, endpointacl.FieldPathPattern)
+	}
+	if m.method != nil {
+		fields = append(fields, endpointacl.FieldMethod)
+	}
+	if m.resource != nil {
+		fields = append(fields, endpointacl.FieldResource)
+	}
+	if m.action != nil {
+		fields = append(fields, endpointacl.FieldAction)
+	}
+	if m.description != nil {
+		fields = append(fields, endpointacl.FieldDescription)
+	}
+	if m.priority != nil {
+		fields = append(fields, endpointacl.FieldPriority)
+	}
+	if m.is_active != nil {
+		fields = append(fields, endpointacl.FieldIsActive)
+	}
+	if m.is_whitelist != nil {
+		fields = append(fields, endpointacl.FieldIsWhitelist)
+	}
+	if m.created_at != nil {
+		fields = append(fields, endpointacl.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, endpointacl.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *EndpointACLMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case endpointacl.FieldTenantID:
+		return m.TenantID()
+	case endpointacl.FieldPathPattern:
+		return m.PathPattern()
+	case endpointacl.FieldMethod:
+		return m.Method()
+	case endpointacl.FieldResource:
+		return m.Resource()
+	case endpointacl.FieldAction:
+		return m.Action()
+	case endpointacl.FieldDescription:
+		return m.Description()
+	case endpointacl.FieldPriority:
+		return m.Priority()
+	case endpointacl.FieldIsActive:
+		return m.IsActive()
+	case endpointacl.FieldIsWhitelist:
+		return m.IsWhitelist()
+	case endpointacl.FieldCreatedAt:
+		return m.CreatedAt()
+	case endpointacl.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *EndpointACLMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case endpointacl.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case endpointacl.FieldPathPattern:
+		return m.OldPathPattern(ctx)
+	case endpointacl.FieldMethod:
+		return m.OldMethod(ctx)
+	case endpointacl.FieldResource:
+		return m.OldResource(ctx)
+	case endpointacl.FieldAction:
+		return m.OldAction(ctx)
+	case endpointacl.FieldDescription:
+		return m.OldDescription(ctx)
+	case endpointacl.FieldPriority:
+		return m.OldPriority(ctx)
+	case endpointacl.FieldIsActive:
+		return m.OldIsActive(ctx)
+	case endpointacl.FieldIsWhitelist:
+		return m.OldIsWhitelist(ctx)
+	case endpointacl.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case endpointacl.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown EndpointACL field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *EndpointACLMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case endpointacl.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case endpointacl.FieldPathPattern:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPathPattern(v)
+		return nil
+	case endpointacl.FieldMethod:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMethod(v)
+		return nil
+	case endpointacl.FieldResource:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResource(v)
+		return nil
+	case endpointacl.FieldAction:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAction(v)
+		return nil
+	case endpointacl.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case endpointacl.FieldPriority:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPriority(v)
+		return nil
+	case endpointacl.FieldIsActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsActive(v)
+		return nil
+	case endpointacl.FieldIsWhitelist:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsWhitelist(v)
+		return nil
+	case endpointacl.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case endpointacl.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown EndpointACL field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *EndpointACLMutation) AddedFields() []string {
+	var fields []string
+	if m.addtenant_id != nil {
+		fields = append(fields, endpointacl.FieldTenantID)
+	}
+	if m.addpriority != nil {
+		fields = append(fields, endpointacl.FieldPriority)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *EndpointACLMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case endpointacl.FieldTenantID:
+		return m.AddedTenantID()
+	case endpointacl.FieldPriority:
+		return m.AddedPriority()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *EndpointACLMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case endpointacl.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	case endpointacl.FieldPriority:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPriority(v)
+		return nil
+	}
+	return fmt.Errorf("unknown EndpointACL numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *EndpointACLMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(endpointacl.FieldMethod) {
+		fields = append(fields, endpointacl.FieldMethod)
+	}
+	if m.FieldCleared(endpointacl.FieldDescription) {
+		fields = append(fields, endpointacl.FieldDescription)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *EndpointACLMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *EndpointACLMutation) ClearField(name string) error {
+	switch name {
+	case endpointacl.FieldMethod:
+		m.ClearMethod()
+		return nil
+	case endpointacl.FieldDescription:
+		m.ClearDescription()
+		return nil
+	}
+	return fmt.Errorf("unknown EndpointACL nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *EndpointACLMutation) ResetField(name string) error {
+	switch name {
+	case endpointacl.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case endpointacl.FieldPathPattern:
+		m.ResetPathPattern()
+		return nil
+	case endpointacl.FieldMethod:
+		m.ResetMethod()
+		return nil
+	case endpointacl.FieldResource:
+		m.ResetResource()
+		return nil
+	case endpointacl.FieldAction:
+		m.ResetAction()
+		return nil
+	case endpointacl.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case endpointacl.FieldPriority:
+		m.ResetPriority()
+		return nil
+	case endpointacl.FieldIsActive:
+		m.ResetIsActive()
+		return nil
+	case endpointacl.FieldIsWhitelist:
+		m.ResetIsWhitelist()
+		return nil
+	case endpointacl.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case endpointacl.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown EndpointACL field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *EndpointACLMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *EndpointACLMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *EndpointACLMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *EndpointACLMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *EndpointACLMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *EndpointACLMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *EndpointACLMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown EndpointACL unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *EndpointACLMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown EndpointACL edge %s", name)
 }
 
 // EngineerSkillMutation represents an operation that mutates the EngineerSkill nodes in the graph.

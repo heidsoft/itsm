@@ -33,6 +33,7 @@ import (
 	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
+	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
@@ -161,6 +162,8 @@ type Client struct {
 	DiscoveryResult *DiscoveryResultClient
 	// DiscoverySource is the client for interacting with the DiscoverySource builders.
 	DiscoverySource *DiscoverySourceClient
+	// EndpointACL is the client for interacting with the EndpointACL builders.
+	EndpointACL *EndpointACLClient
 	// EngineerSkill is the client for interacting with the EngineerSkill builders.
 	EngineerSkill *EngineerSkillClient
 	// Group is the client for interacting with the Group builders.
@@ -338,6 +341,7 @@ func (c *Client) init() {
 	c.DiscoveryJob = NewDiscoveryJobClient(c.config)
 	c.DiscoveryResult = NewDiscoveryResultClient(c.config)
 	c.DiscoverySource = NewDiscoverySourceClient(c.config)
+	c.EndpointACL = NewEndpointACLClient(c.config)
 	c.EngineerSkill = NewEngineerSkillClient(c.config)
 	c.Group = NewGroupClient(c.config)
 	c.Incident = NewIncidentClient(c.config)
@@ -524,6 +528,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		DiscoveryJob:            NewDiscoveryJobClient(cfg),
 		DiscoveryResult:         NewDiscoveryResultClient(cfg),
 		DiscoverySource:         NewDiscoverySourceClient(cfg),
+		EndpointACL:             NewEndpointACLClient(cfg),
 		EngineerSkill:           NewEngineerSkillClient(cfg),
 		Group:                   NewGroupClient(cfg),
 		Incident:                NewIncidentClient(cfg),
@@ -637,6 +642,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		DiscoveryJob:            NewDiscoveryJobClient(cfg),
 		DiscoveryResult:         NewDiscoveryResultClient(cfg),
 		DiscoverySource:         NewDiscoverySourceClient(cfg),
+		EndpointACL:             NewEndpointACLClient(cfg),
 		EngineerSkill:           NewEngineerSkillClient(cfg),
 		Group:                   NewGroupClient(cfg),
 		Incident:                NewIncidentClient(cfg),
@@ -742,24 +748,24 @@ func (c *Client) Use(hooks ...Hook) {
 		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CIAttributeDefinition,
 		c.CIRelationship, c.CIType, c.Change, c.CloudAccount, c.CloudResource,
 		c.CloudService, c.ConfigurationItem, c.Contract, c.Conversation, c.Department,
-		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.EngineerSkill, c.Group,
-		c.Incident, c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent,
-		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
-		c.KnowledgeArticleLike, c.KnownError, c.MSPAllocation, c.Menu, c.Message,
-		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
-		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessAuditLog,
-		c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
-		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
-		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
-		c.StandardChange, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
-		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.ToolInvocation, c.User, c.Vendor, c.Workflow, c.WorkflowInstance,
-		c.WorkflowTask, c.WorkflowVersion,
+		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.EndpointACL,
+		c.EngineerSkill, c.Group, c.Incident, c.IncidentAlert,
+		c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
+		c.IncidentRuleExecution, c.KnowledgeArticle, c.KnowledgeArticleLike,
+		c.KnownError, c.MSPAllocation, c.Menu, c.Message, c.Microservice,
+		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
+		c.PermissionDefinition, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
+		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
+		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
+		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange,
+		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -773,24 +779,24 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CIAttributeDefinition,
 		c.CIRelationship, c.CIType, c.Change, c.CloudAccount, c.CloudResource,
 		c.CloudService, c.ConfigurationItem, c.Contract, c.Conversation, c.Department,
-		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.EngineerSkill, c.Group,
-		c.Incident, c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent,
-		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
-		c.KnowledgeArticleLike, c.KnownError, c.MSPAllocation, c.Menu, c.Message,
-		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
-		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessAuditLog,
-		c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
-		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
-		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
-		c.StandardChange, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
-		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.ToolInvocation, c.User, c.Vendor, c.Workflow, c.WorkflowInstance,
-		c.WorkflowTask, c.WorkflowVersion,
+		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.EndpointACL,
+		c.EngineerSkill, c.Group, c.Incident, c.IncidentAlert,
+		c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
+		c.IncidentRuleExecution, c.KnowledgeArticle, c.KnowledgeArticleLike,
+		c.KnownError, c.MSPAllocation, c.Menu, c.Message, c.Microservice,
+		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
+		c.PermissionDefinition, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
+		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
+		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
+		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange,
+		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -843,6 +849,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.DiscoveryResult.mutate(ctx, m)
 	case *DiscoverySourceMutation:
 		return c.DiscoverySource.mutate(ctx, m)
+	case *EndpointACLMutation:
+		return c.EndpointACL.mutate(ctx, m)
 	case *EngineerSkillMutation:
 		return c.EngineerSkill.mutate(ctx, m)
 	case *GroupMutation:
@@ -4523,6 +4531,139 @@ func (c *DiscoverySourceClient) mutate(ctx context.Context, m *DiscoverySourceMu
 		return (&DiscoverySourceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown DiscoverySource mutation op: %q", m.Op())
+	}
+}
+
+// EndpointACLClient is a client for the EndpointACL schema.
+type EndpointACLClient struct {
+	config
+}
+
+// NewEndpointACLClient returns a client for the EndpointACL from the given config.
+func NewEndpointACLClient(c config) *EndpointACLClient {
+	return &EndpointACLClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `endpointacl.Hooks(f(g(h())))`.
+func (c *EndpointACLClient) Use(hooks ...Hook) {
+	c.hooks.EndpointACL = append(c.hooks.EndpointACL, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `endpointacl.Intercept(f(g(h())))`.
+func (c *EndpointACLClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EndpointACL = append(c.inters.EndpointACL, interceptors...)
+}
+
+// Create returns a builder for creating a EndpointACL entity.
+func (c *EndpointACLClient) Create() *EndpointACLCreate {
+	mutation := newEndpointACLMutation(c.config, OpCreate)
+	return &EndpointACLCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EndpointACL entities.
+func (c *EndpointACLClient) CreateBulk(builders ...*EndpointACLCreate) *EndpointACLCreateBulk {
+	return &EndpointACLCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EndpointACLClient) MapCreateBulk(slice any, setFunc func(*EndpointACLCreate, int)) *EndpointACLCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EndpointACLCreateBulk{err: fmt.Errorf("calling to EndpointACLClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EndpointACLCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EndpointACLCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EndpointACL.
+func (c *EndpointACLClient) Update() *EndpointACLUpdate {
+	mutation := newEndpointACLMutation(c.config, OpUpdate)
+	return &EndpointACLUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EndpointACLClient) UpdateOne(_m *EndpointACL) *EndpointACLUpdateOne {
+	mutation := newEndpointACLMutation(c.config, OpUpdateOne, withEndpointACL(_m))
+	return &EndpointACLUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EndpointACLClient) UpdateOneID(id int) *EndpointACLUpdateOne {
+	mutation := newEndpointACLMutation(c.config, OpUpdateOne, withEndpointACLID(id))
+	return &EndpointACLUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EndpointACL.
+func (c *EndpointACLClient) Delete() *EndpointACLDelete {
+	mutation := newEndpointACLMutation(c.config, OpDelete)
+	return &EndpointACLDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EndpointACLClient) DeleteOne(_m *EndpointACL) *EndpointACLDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EndpointACLClient) DeleteOneID(id int) *EndpointACLDeleteOne {
+	builder := c.Delete().Where(endpointacl.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EndpointACLDeleteOne{builder}
+}
+
+// Query returns a query builder for EndpointACL.
+func (c *EndpointACLClient) Query() *EndpointACLQuery {
+	return &EndpointACLQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEndpointACL},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EndpointACL entity by its id.
+func (c *EndpointACLClient) Get(ctx context.Context, id int) (*EndpointACL, error) {
+	return c.Query().Where(endpointacl.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EndpointACLClient) GetX(ctx context.Context, id int) *EndpointACL {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EndpointACLClient) Hooks() []Hook {
+	return c.hooks.EndpointACL
+}
+
+// Interceptors returns the client interceptors.
+func (c *EndpointACLClient) Interceptors() []Interceptor {
+	return c.inters.EndpointACL
+}
+
+func (c *EndpointACLClient) mutate(ctx context.Context, m *EndpointACLMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EndpointACLCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EndpointACLUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EndpointACLUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EndpointACLDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EndpointACL mutation op: %q", m.Op())
 	}
 }
 
@@ -16157,7 +16298,7 @@ type (
 		AssetLicense, AuditLog, BPMNPermission, CIAttributeDefinition, CIRelationship,
 		CIType, Change, CloudAccount, CloudResource, CloudService, ConfigurationItem,
 		Contract, Conversation, Department, DiscoveryJob, DiscoveryResult,
-		DiscoverySource, EngineerSkill, Group, Incident, IncidentAlert,
+		DiscoverySource, EndpointACL, EngineerSkill, Group, Incident, IncidentAlert,
 		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
 		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike, KnownError,
 		MSPAllocation, Menu, Message, Microservice, Notification,
@@ -16179,7 +16320,7 @@ type (
 		AssetLicense, AuditLog, BPMNPermission, CIAttributeDefinition, CIRelationship,
 		CIType, Change, CloudAccount, CloudResource, CloudService, ConfigurationItem,
 		Contract, Conversation, Department, DiscoveryJob, DiscoveryResult,
-		DiscoverySource, EngineerSkill, Group, Incident, IncidentAlert,
+		DiscoverySource, EndpointACL, EngineerSkill, Group, Incident, IncidentAlert,
 		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
 		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike, KnownError,
 		MSPAllocation, Menu, Message, Microservice, Notification,

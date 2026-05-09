@@ -104,23 +104,61 @@ return result
 
 ## 🚀 快速开始
 
-### Docker 一键启动（推荐）
+### 一键启动（推荐）
 
 ```bash
 # 克隆项目
 git clone https://github.com/heidsoft/itsm.git
 cd itsm
 
-# 启动所有服务
-make dev-up
+# 方式1: 一键启动脚本（推荐）
+./quick-start.sh
+
+# 方式2: Docker Compose
+docker compose up -d --build
+
+# 或使用 Makefile
+make oob-up
+
+# 查看服务状态
+docker compose ps
 
 # 访问应用
 # 🌐 前端:    http://localhost:3000
-# 🔧 后端:    http://localhost:8080
-# 📚 API文档: http://localhost:8080/swagger
+# 🔧 后端:    http://localhost:8090
+# 📚 API文档: http://localhost:8090/swagger
 ```
 
 > **👤 首次登录**: 用户名 `admin`，密码 `admin123`
+
+### 快速验证
+
+```bash
+# 检查服务健康状态
+curl http://localhost:8090/health
+
+# 查看日志
+docker compose logs -f
+
+# 停止服务
+docker compose down
+
+# 完全清理（包括数据卷）
+docker compose down -v
+```
+
+### 本地开发模式
+
+```bash
+# 仅启动数据库和Redis
+docker compose -f docker-compose.dev.yml up -d postgres redis
+
+# 本地运行后端（需要Go 1.25+）
+cd itsm-backend && go run main.go
+
+# 本地运行前端（需要Node 18+）
+cd itsm-frontend && npm run dev
+```
 
 ---
 
@@ -398,7 +436,7 @@ Apache License 2.0 - 开源免费，企业级商用首选
 
 🐛 **问题**: [Issues](https://github.com/heidsoft/itsm/issues)
 
-📧 **Email**: heidsoft@qq.com
+📧 **Email**: <heidsoft@qq.com>
 
 </div>
 
