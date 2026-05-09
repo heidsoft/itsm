@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <!-- ======================================================== -->
+  <!-- 国内企业ITSM - 问题管理流程                              -->
+  <!-- 特点: 根因分析、知识沉淀、预防机制                        -->
+  <!-- ======================================================== -->
+
+  <bpmn:process id="problem_management_flow_cn" name="问题管理流程(国内企业版)" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">problem</bpmn:metaData>
+      <bpmn:metaData name="version">2.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">国内企业问题管理流程，专注根因分析和预防</bpmn:metaData>
+      <bpmn:metaData name="enterprise_type">cn_enterprise</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- ========== 开始节点 ========== -->
+    <bpmn:startEvent id="StartEvent_ProblemCreate" name="问题创建">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="source">incident,user_report,monitoring</bpmn:metaData>
+        <bpmn:metaData name="link_incident_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_P1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- ========== 问题分类 ========== -->
+    <bpmn:serviceTask id="Activity_AutoClassify" name="自动分类">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">classify_problem</bpmn:metaData>
+        <bpmn:metaData name="ai_enabled">true</bpmn:metaData>
+        <bpmn:metaData name="category">hardware,software,network,process,other</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_P1</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 问题经理分配 ========== -->
+    <bpmn:userTask id="Activity_ProblemManagerAssign" name="问题经理分配">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">pm_assign_problem</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">sd_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_P2</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 根因分析阶段 ========== -->
+    <bpmn:userTask id="Activity_RootCauseAnalysis" name="根因分析">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">root_cause_analysis</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">3</bpmn:metaData>
+        <bpmn:metaData name="analysis_method">5why,fishbone</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_P3</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 根因判定网关 -->
+    <bpmn:exclusiveGateway id="Gateway_RootCauseStatus" name="根因判定">
+      <bpmn:incoming>Flow_P4</bpmn:incoming>
+      <bpmn:outgoing>Flow_RootCauseFound</bpmn:outgoing>
+      <bpmn:outgoing>Flow_RootCausePending</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 根因已确定 -->
+    <bpmn:userTask id="Activity_RootCauseConfirmed" name="根因确认">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">confirm_root_cause</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+        <bpmn:metaData name="approval_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_RootCauseFound</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 根因待确认（需要更多时间） -->
+    <bpmn:serviceTask id="Activity_RootCausePendingNotify" name="通知相关人">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">notify_root_cause_pending</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">l3_expert,ops_manager</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_RootCausePending</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_Pending</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Activity_WaitRootCause" name="等待根因分析">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">wait_for_root_cause</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">7</bpmn:metaData>
+        <bpmn:metaData name="escalation_enabled">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_P5_Pending</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 解决方案制定 ========== -->
+    <bpmn:userTask id="Activity_SolutionDesign" name="解决方案设计">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">design_solution</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">5</bpmn:metaData>
+        <bpmn:metaData name="alternative_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_P5</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 解决方案评审网关 -->
+    <bpmn:exclusiveGateway id="Gateway_SolutionReview" name="解决方案评审">
+      <bpmn:incoming>Flow_P6</bpmn:incoming>
+      <bpmn:outgoing>Flow_SolutionApproved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SolutionRejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 解决方案通过 -->
+    <bpmn:userTask id="Activity_SolutionApproved" name="解决方案审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">approve_solution</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_director</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">48</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SolutionApproved</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 解决方案驳回 -->
+    <bpmn:userTask id="Activity_SolutionRevise" name="解决方案修订">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">revise_solution</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">2</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SolutionRejected</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 变更实施 ========== -->
+    <bpmn:serviceTask id="Activity_CreateRFC" name="创建变更请求">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">create_change_request</bpmn:metaData>
+        <bpmn:metaData name="link_problem">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_P7</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Activity_ImplementSolution" name="解决方案实施">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">implement_solution</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">7</bpmn:metaData>
+        <bpmn:metaData name="rollback_plan">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_P8</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 验证与关闭 ========== -->
+    <bpmn:userTask id="Activity_VerifySolution" name="解决方案验证">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">verify_solution</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">48</bpmn:metaData>
+        <bpmn:metaData name="monitoring_period">7d</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_P9</bpmn:incoming>
+      <bpmn:outgoing>Flow_P10</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 验证结果网关 -->
+    <bpmn:exclusiveGateway id="Gateway_VerifyResult" name="验证结果判定">
+      <bpmn:incoming>Flow_P10</bpmn:incoming>
+      <bpmn:outgoing>Flow_Success</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 验证失败需重新设计 -->
+    <bpmn:userTask id="Activity_ReviseSolution" name="修订解决方案">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">revise_solution</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">3</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Failed</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 知识沉淀 ========== -->
+    <bpmn:serviceTask id="Activity_CreateKBArticle" name="创建知识库">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">create_knowledge_article</bpmn:metaData>
+        <bpmn:metaData name="article_type">problem_solution</bpmn:metaData>
+        <bpmn:metaData name="auto_publish">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Success</bpmn:incoming>
+      <bpmn:outgoing>Flow_P11</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 预防措施触发 -->
+    <bpmn:serviceTask id="Activity_TriggerPrevention" name="触发预防措施">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">trigger_prevention_measures</bpmn:metaData>
+        <bpmn:metaData name="actions">monitoring_update,process_improvement,training</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_P11</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 问题关闭 ========== -->
+    <bpmn:userTask id="Activity_ProblemClose" name="问题关闭">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">close_problem</bpmn:metaData>
+        <bpmn:metaData name="require_lessons_learned">true</bpmn:metaData>
+        <bpmn:metaData name="link_change_request">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_P11</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 结束事件 -->
+    <bpmn:endEvent id="EndEvent_ProblemComplete" name="问题关闭">
+      <bpmn:incoming>Flow_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ========== 流程连线 ========== -->
+    <bpmn:sequenceFlow id="Flow_P1" sourceRef="StartEvent_ProblemCreate" targetRef="Activity_AutoClassify" />
+    <bpmn:sequenceFlow id="Flow_P2" sourceRef="Activity_AutoClassify" targetRef="Activity_ProblemManagerAssign" />
+    <bpmn:sequenceFlow id="Flow_P3" sourceRef="Activity_ProblemManagerAssign" targetRef="Activity_RootCauseAnalysis" />
+    <bpmn:sequenceFlow id="Flow_P4" sourceRef="Activity_RootCauseAnalysis" targetRef="Gateway_RootCauseStatus" />
+    <bpmn:sequenceFlow id="Flow_RootCauseFound" sourceRef="Gateway_RootCauseStatus" targetRef="Activity_RootCauseConfirmed">
+      <bpmn:conditionExpression><![CDATA[${variables['root_cause_found'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_RootCausePending" sourceRef="Gateway_RootCauseStatus" targetRef="Activity_RootCausePendingNotify">
+      <bpmn:conditionExpression><![CDATA[${variables['root_cause_found'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_P5_Pending" sourceRef="Activity_RootCausePendingNotify" targetRef="Activity_WaitRootCause" />
+    <bpmn:sequenceFlow id="Flow_P5" sourceRef="Activity_WaitRootCause" targetRef="Activity_SolutionDesign" />
+    <bpmn:sequenceFlow id="Flow_P5" sourceRef="Activity_RootCauseConfirmed" targetRef="Activity_SolutionDesign" />
+    <bpmn:sequenceFlow id="Flow_P6" sourceRef="Activity_SolutionDesign" targetRef="Gateway_SolutionReview" />
+    <bpmn:sequenceFlow id="Flow_SolutionApproved" sourceRef="Gateway_SolutionReview" targetRef="Activity_SolutionApproved">
+      <bpmn:conditionExpression><![CDATA[${variables['solution_approved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_SolutionRejected" sourceRef="Gateway_SolutionReview" targetRef="Activity_SolutionRevise">
+      <bpmn:conditionExpression><![CDATA[${variables['solution_approved'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_P7" sourceRef="Activity_SolutionApproved" targetRef="Activity_CreateRFC" />
+    <bpmn:sequenceFlow id="Flow_P8" sourceRef="Activity_CreateRFC" targetRef="Activity_ImplementSolution" />
+    <bpmn:sequenceFlow id="Flow_P9" sourceRef="Activity_ImplementSolution" targetRef="Activity_VerifySolution" />
+    <bpmn:sequenceFlow id="Flow_P10" sourceRef="Activity_VerifySolution" targetRef="Gateway_VerifyResult" />
+    <bpmn:sequenceFlow id="Flow_Success" sourceRef="Gateway_VerifyResult" targetRef="Activity_CreateKBArticle">
+      <bpmn:conditionExpression><![CDATA[${variables['verified'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Failed" sourceRef="Gateway_VerifyResult" targetRef="Activity_ReviseSolution">
+      <bpmn:conditionExpression><![CDATA[${variables['verified'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_P11" sourceRef="Activity_CreateKBArticle" targetRef="Activity_TriggerPrevention" />
+    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_TriggerPrevention" targetRef="Activity_ProblemClose" />
+    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_ProblemClose" targetRef="EndEvent_ProblemComplete" />
+
+  </bpmn:process>
+</bpmn:definitions>

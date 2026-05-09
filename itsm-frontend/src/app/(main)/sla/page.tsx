@@ -34,7 +34,15 @@ export default function SLAPage() {
     try {
       setLoading(true);
       const data = await SLAApi.getSLAStats();
-      setStats(data);
+
+      // 映射后端 snake_case 字段到前端 camelCase
+      setStats({
+        totalDefinitions: data.total_definitions || data.totalDefinitions || 0,
+        activeDefinitions: data.active_definitions || data.activeDefinitions || 0,
+        totalViolations: data.total_violations || data.totalViolations || 0,
+        openViolations: data.open_violations || data.openViolations || 0,
+        overallComplianceRate: data.overall_compliance_rate || data.overallComplianceRate || 100,
+      });
     } catch (error) {
       console.error('Failed to load SLA stats:', error);
     } finally {

@@ -4,6 +4,8 @@ services:
   # PostgreSQL 数据库
   postgres:
     image: postgres:17-alpine
+    container_name: itsm-postgres
+    hostname: postgres
     environment:
       POSTGRES_DB: itsm
       POSTGRES_USER: itsm
@@ -24,6 +26,8 @@ services:
   # Redis 缓存
   redis:
     image: redis:7-alpine
+    container_name: itsm-redis
+    hostname: redis
     ports:
       - "6379:6379"
     volumes:
@@ -42,22 +46,40 @@ services:
     build:
       context: ./itsm-backend
       dockerfile: Dockerfile.backend
+      args:
+        - GOPROXY=https://goproxy.cn,direct
+        - GOSUMDB=off
+        - HTTP_PROXY=
+        - HTTPS_PROXY=
+        - http_proxy=
+        - https_proxy=
+        - no_proxy=localhost,127.0.0.1
+    container_name: itsm-backend
+    hostname: backend
     environment:
+      - DATABASE_URL=postgres://itsm:${DB_PASSWORD:-itsm_dev_password}@postgres:5432/itsm?sslmode=disable
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=itsm
-      - DB_PASSWORD=itsm_password_2026
+      - DB_PASSWORD=${DB_PASSWORD:-itsm_dev_password}
       - DB_NAME=itsm
       - DB_SSLMODE=disable
-
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - REDIS_DB=0
-
-      - JWT_SECRET=dev-secret-key-change-in-production-minimum-32-characters-long
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key-placeholder-change-in-production-min-32-chars}
       - SERVER_MODE=release
       - LOG_LEVEL=info
+      - GIN_MODE=release
+      - ITSM_ALLOW_ALL_ORIGINS=true
+      # 取消代理设置，确保内部网络请求不走代理
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - NO_PROXY=localhost,127.0.0.1,backend,postgres,redis
+      - no_proxy=localhost,127.0.0.1,backend,postgres,redis
     ports:
       - "8090:8090"
     depends_on:
@@ -71,15 +93,7 @@ services:
       - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:8090/health",
-        ]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -89,11 +103,19 @@ services:
     build:
       context: ./itsm-frontend
       dockerfile: Dockerfile.frontend
-      target: production
+    container_name: itsm-frontend
+    hostname: frontend
     environment:
       - NODE_ENV=production
-      - ITSM_BACKEND_URL=http://itsm-backend:8090
-      - NEXT_PUBLIC_API_URL=http://itsm-backend:8090
+      - ITSM_BACKEND_URL=http://host.docker.internal:8090
+      - NEXT_PUBLIC_API_URL=http://host.docker.internal:8090
+      # 取消代理设置，确保内部网络请求不走代理
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - NO_PROXY=localhost,127.0.0.1,backend,postgres,redis
+      - no_proxy=localhost,127.0.0.1,backend,postgres,redis
     ports:
       - "3000:3000"
     depends_on:

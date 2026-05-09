@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="incident_emergency_flow" name="紧急事件流程" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">incident</bpmn:metaData>
+      <bpmn:metaData name="version">1.1.0</bpmn:metaData>
+      <bpmn:metaData name="description">紧急事件快速响应流程（带主管审批）</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- ========== 开始节点 ========== -->
+    <bpmn:startEvent id="StartEvent_1" name="事件报告">
+      <bpmn:outgoing>Flow_Start_To_AutoAssign</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- ========== 自动分配 ========== -->
+    <bpmn:serviceTask id="Activity_AutoAssign" name="自动分配" implementation="##WebService">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="action">assign_incident</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Start_To_AutoAssign</bpmn:incoming>
+      <bpmn:outgoing>Flow_AutoAssign_To_ManagerApproval</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 主管审批节点 (新增) ========== -->
+    <bpmn:userTask id="Activity_ManagerApproval" name="主管审批">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="action">manager_approval</camunda:inputParameter>
+          <camunda:inputParameter name="timeout">60</camunda:inputParameter>
+          <camunda:inputParameter name="approver_type">manager</camunda:inputParameter>
+        </camunda:inputOutput>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
+        <bpmn:metaData name="action">manager_approval</bpmn:metaData>
+        <bpmn:metaData name="approval_required">true</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">60</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AutoAssign_To_ManagerApproval</bpmn:incoming>
+      <bpmn:outgoing>Flow_ManagerApproval_To_Diagnosis</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 初步诊断 ========== -->
+    <bpmn:userTask id="Activity_Diagnosis" name="初步诊断">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="action">update_incident</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ManagerApproval_To_Diagnosis</bpmn:incoming>
+      <bpmn:outgoing>Flow_Diagnosis_To_Gateway</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 问题定位网关 ========== -->
+    <bpmn:exclusiveGateway id="Gateway_Resolved" name="问题已定位?">
+      <bpmn:incoming>Flow_Diagnosis_To_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Resolve_Path</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Escalate_Path</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ========== 立即解决 ========== -->
+    <bpmn:userTask id="Activity_Resolve" name="立即解决">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="action">resolve_incident</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Resolve_Path</bpmn:incoming>
+      <bpmn:outgoing>Flow_Resolve_To_Notify</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 升级处理 ========== -->
+    <bpmn:serviceTask id="Activity_AutoEscalate" name="自动升级" implementation="##WebService">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="action">escalate_incident</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Escalate_Path</bpmn:incoming>
+      <bpmn:outgoing>Flow_Escalate_To_ExpertHandle</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 专家团队处理 ========== -->
+    <bpmn:userTask id="Activity_ExpertHandle" name="专家团队处理">
+      <bpmn:incoming>Flow_Escalate_To_ExpertHandle</bpmn:incoming>
+      <bpmn:outgoing>Flow_ExpertHandle_To_Gateway2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 问题解决网关 ========== -->
+    <bpmn:exclusiveGateway id="Gateway_Solved" name="问题解决?">
+      <bpmn:incoming>Flow_ExpertHandle_To_Gateway2</bpmn:incoming>
+      <bpmn:outgoing>Flow_Solved_To_Notify</bpmn:outgoing>
+      <bpmn:outgoing>Flow_NotSolved_BackTo_Expert</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ========== 通知相关方 ========== -->
+    <bpmn:serviceTask id="Activity_Notify" name="通知相关方" implementation="##WebService">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="action">notify</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Resolve_To_Notify</bpmn:incoming>
+      <bpmn:incoming>Flow_Solved_To_Notify</bpmn:incoming>
+      <bpmn:outgoing>Flow_Notify_To_Close</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 事件关闭 ========== -->
+    <bpmn:userTask id="Activity_Close" name="事件关闭">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="action">close_incident</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Notify_To_Close</bpmn:incoming>
+      <bpmn:outgoing>Flow_Close_To_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 结束事件 ========== -->
+    <bpmn:endEvent id="EndEvent_1" name="事件完成">
+      <bpmn:incoming>Flow_Close_To_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ========== 流程连线 ========== -->
+    
+    <!-- 开始 -> 自动分配 -->
+    <bpmn:sequenceFlow id="Flow_Start_To_AutoAssign" sourceRef="StartEvent_1" targetRef="Activity_AutoAssign">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">开始事件报告</bpmn:metaData>
+      </bpmn:extensionElements>
+    </bpmn:sequenceFlow>
+    
+    <!-- 自动分配 -> 主管审批 (新增) -->
+    <bpmn:sequenceFlow id="Flow_AutoAssign_To_ManagerApproval" sourceRef="Activity_AutoAssign" targetRef="Activity_ManagerApproval">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">进入主管审批</bpmn:metaData>
+      </bpmn:extensionElements>
+    </bpmn:sequenceFlow>
+    
+    <!-- 主管审批 -> 初步诊断 (新增) -->
+    <bpmn:sequenceFlow id="Flow_ManagerApproval_To_Diagnosis" sourceRef="Activity_ManagerApproval" targetRef="Activity_Diagnosis">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">审批通过</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'approved'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <!-- 初步诊断 -> 问题定位网关 -->
+    <bpmn:sequenceFlow id="Flow_Diagnosis_To_Gateway" sourceRef="Activity_Diagnosis" targetRef="Gateway_Resolved">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">完成初步诊断</bpmn:metaData>
+      </bpmn:extensionElements>
+    </bpmn:sequenceFlow>
+    
+    <!-- 问题定位 -> 立即解决 (问题已定位) -->
+    <bpmn:sequenceFlow id="Flow_Resolve_Path" sourceRef="Gateway_Resolved" targetRef="Activity_Resolve">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">问题已定位</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:conditionExpression><![CDATA[${variables['problem_identified'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <!-- 问题定位 -> 自动升级 (问题未定位) -->
+    <bpmn:sequenceFlow id="Flow_Escalate_Path" sourceRef="Gateway_Resolved" targetRef="Activity_AutoEscalate">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">问题未定位，需要升级</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:conditionExpression><![CDATA[${variables['problem_identified'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <!-- 自动升级 -> 专家团队处理 -->
+    <bpmn:sequenceFlow id="Flow_Escalate_To_ExpertHandle" sourceRef="Activity_AutoEscalate" targetRef="Activity_ExpertHandle">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">升级完成</bpmn:metaData>
+      </bpmn:extensionElements>
+    </bpmn:sequenceFlow>
+    
+    <!-- 专家团队 -> 问题解决网关 -->
+    <bpmn:sequenceFlow id="Flow_ExpertHandle_To_Gateway2" sourceRef="Activity_ExpertHandle" targetRef="Gateway_Solved">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">专家处理完成</bpmn:metaData>
+      </bpmn:extensionElements>
+    </bpmn:sequenceFlow>
+    
+    <!-- 问题已解决 -> 通知相关方 -->
+    <bpmn:sequenceFlow id="Flow_Solved_To_Notify" sourceRef="Gateway_Solved" targetRef="Activity_Notify">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">问题已解决</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:conditionExpression><![CDATA[${variables['solved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <!-- 问题未解决 -> 返回专家团队 -->
+    <bpmn:sequenceFlow id="Flow_NotSolved_BackTo_Expert" sourceRef="Gateway_Solved" targetRef="Activity_ExpertHandle">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">问题未解决，继续处理</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:conditionExpression><![CDATA[${variables['solved'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <!-- 立即解决 -> 通知相关方 -->
+    <bpmn:sequenceFlow id="Flow_Resolve_To_Notify" sourceRef="Activity_Resolve" targetRef="Activity_Notify">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">解决完成</bpmn:metaData>
+      </bpmn:extensionElements>
+    </bpmn:sequenceFlow>
+    
+    <!-- 通知相关方 -> 事件关闭 -->
+    <bpmn:sequenceFlow id="Flow_Notify_To_Close" sourceRef="Activity_Notify" targetRef="Activity_Close">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">通知完成</bpmn:metaData>
+      </bpmn:extensionElements>
+    </bpmn:sequenceFlow>
+    
+    <!-- 事件关闭 -> 结束事件 -->
+    <bpmn:sequenceFlow id="Flow_Close_To_End" sourceRef="Activity_Close" targetRef="EndEvent_1">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="flow_name">流程结束</bpmn:metaData>
+      </bpmn:extensionElements>
+    </bpmn:sequenceFlow>
+
+  </bpmn:process>
+
+  <!-- BPMN 图元定义 (用于可视化) -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="incident_emergency_flow">
+      <!-- 图元位置信息由前端渲染工具生成 -->
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>

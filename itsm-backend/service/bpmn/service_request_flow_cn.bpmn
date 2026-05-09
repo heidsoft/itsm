@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <!-- ======================================================== -->
+  <!-- 国内企业ITSM - 服务请求流程                              -->
+  <!-- 特点: 服务目录化、自动化派单、客户满意度评价               -->
+  <!-- ======================================================== -->
+
+  <bpmn:process id="service_request_flow_cn" name="服务请求流程(国内企业版)" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">service_request</bpmn:metaData>
+      <bpmn:metaData name="version">2.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">国内企业服务请求流程，自动化派单和服务目录化</bpmn:metaData>
+      <bpmn:metaData name="enterprise_type">cn_enterprise</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- ========== 开始节点 ========== -->
+    <bpmn:startEvent id="StartEvent_ServiceRequest" name="服务请求提交">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_catalog_required">true</bpmn:metaData>
+        <bpmn:metaData name="auto_categorize">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_SR1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- ========== 服务分类 ========== -->
+    <bpmn:serviceTask id="Activity_AutoCategorize" name="智能分类">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">auto_categorize_request</bpmn:metaData>
+        <bpmn:metaData name="ai_enabled">true</bpmn:metaData>
+        <bpmn:metaData name="confidence_threshold">0.8</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SR1</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 服务类型判定网关 -->
+    <bpmn:exclusiveGateway id="Gateway_ServiceType" name="服务类型判定">
+      <bpmn:incoming>Flow_SR2</bpmn:incoming>
+      <bpmn:outgoing>Flow_ITService</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AccessRequest</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SoftwareRequest</bpmn:outgoing>
+      <bpmn:outgoing>Flow_HardwareRequest</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ========== IT服务类请求 ========== -->
+    <bpmn:userTask id="Activity_ITServiceL1Handle" name="一线处理">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">l1_handle_request</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
+        <bpmn:metaData name="sla_category">standard</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ITService</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR_ITCheck</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_ITServiceStatus" name="处理结果判定">
+      <bpmn:incoming>Flow_SR_ITCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_ITResolved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ITNeedL2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Activity_ITServiceL2Handle" name="L2处理">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">l2_handle_request</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ITNeedL2</bpmn:incoming>
+      <bpmn:outgoing>Flow_ITResolved</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 权限申请类请求 ========== -->
+    <bpmn:userTask id="Activity_AccessApproval" name="权限审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">access_permission_approval</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
+        <bpmn:metaData name="security_check_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AccessRequest</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR_AccessCheck</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_AccessStatus" name="审批结果">
+      <bpmn:incoming>Flow_SR_AccessCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_AccessApproved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AccessRejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Activity_GrantAccess" name="授权执行">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">grant_system_access</bpmn:metaData>
+        <bpmn:metaData name="auto_provision">true</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">1</bpmn:metaData>
+        <bpmn:metaData name="notification_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AccessApproved</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR_Merge</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 软件申请类请求 ========== -->
+    <bpmn:userTask id="Activity_SoftwareLicenseCheck" name="License检查">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">check_software_license</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
+        <bpmn:metaData name="budget_check_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SoftwareRequest</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR_SoftwareCheck</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_SoftwareStatus" name="License检查结果">
+      <bpmn:incoming>Flow_SR_SoftwareCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_SoftwareAvailable</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SoftwareNotAvailable</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Activity_SoftwareProvision" name="软件部署">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">provision_software</bpmn:metaData>
+        <bpmn:metaData name="auto_install">true</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SoftwareAvailable</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR_Merge2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Activity_SoftwarePurchase" name="采购申请">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">initiate_purchase_request</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">ops_manager,finance</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SoftwareNotAvailable</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR_PendingPurchase</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Activity_WaitForPurchase" name="等待采购完成">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">wait_for_purchase</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">7</bpmn:metaData>
+        <bpmn:metaData name="notification_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SR_PendingPurchase</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR_Merge2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 硬件申请类请求 ========== -->
+    <bpmn:userTask id="Activity_HardwareApproval" name="硬件审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">hardware_request_approval</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
+        <bpmn:metaData name="budget_approval_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_HardwareRequest</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR_HardwareCheck</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_HardwareStatus" name="审批结果">
+      <bpmn:incoming>Flow_SR_HardwareCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_HardwareApproved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_HardwareRejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Activity_HardwareProvision" name="硬件准备">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">prepare_hardware</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">5</bpmn:metaData>
+        <bpmn:metaData name="delivery_tracking">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_HardwareApproved</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR_Merge3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 合并节点 ========== -->
+    <bpmn:serviceTask id="Activity_NotifyRequester" name="通知申请人">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">notify_requester</bpmn:metaData>
+        <bpmn:metaData name="notify_channel">email,wechat</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ITResolved</bpmn:incoming>
+      <bpmn:incoming>Flow_SR_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_SR_Merge2</bpmn:incoming>
+      <bpmn:incoming>Flow_SR_Merge3</bpmn:incoming>
+      <bpmn:outgoing>Flow_SatisfactionSurvey</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 满意度评价 ========== -->
+    <bpmn:userTask id="Activity_SatisfactionSurvey" name="满意度评价">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">send_satisfaction_survey</bpmn:metaData>
+        <bpmn:metaData name="survey_channel">email,wechat,sms</bpmn:metaData>
+        <bpmn:metaData name="response_timeout_hours">72</bpmn:metaData>
+        <bpmn:metaData name="auto_close_after_timeout">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SatisfactionSurvey</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR_Close</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 关闭阶段 ========== -->
+    <bpmn:userTask id="Activity_ServiceRequestClose" name="请求关闭">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">close_service_request</bpmn:metaData>
+        <bpmn:metaData name="create_knowledge_article">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SR_Close</bpmn:incoming>
+      <bpmn:incoming>Flow_AccessRejected</bpmn:incoming>
+      <bpmn:incoming>Flow_HardwareRejected</bpmn:incoming>
+      <bpmn:outgoing>Flow_SR_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 结束事件 -->
+    <bpmn:endEvent id="EndEvent_ServiceRequestComplete" name="请求完成">
+      <bpmn:incoming>Flow_SR_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ========== 流程连线 ========== -->
+    <bpmn:sequenceFlow id="Flow_SR1" sourceRef="StartEvent_ServiceRequest" targetRef="Activity_AutoCategorize" />
+    <bpmn:sequenceFlow id="Flow_SR2" sourceRef="Activity_AutoCategorize" targetRef="Gateway_ServiceType" />
+    
+    <!-- 服务类型分流 -->
+    <bpmn:sequenceFlow id="Flow_ITService" sourceRef="Gateway_ServiceType" targetRef="Activity_ITServiceL1Handle">
+      <bpmn:conditionExpression><![CDATA[${variables['service_type'] == 'it_service'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_AccessRequest" sourceRef="Gateway_ServiceType" targetRef="Activity_AccessApproval">
+      <bpmn:conditionExpression><![CDATA[${variables['service_type'] == 'access_request'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_SoftwareRequest" sourceRef="Gateway_ServiceType" targetRef="Activity_SoftwareLicenseCheck">
+      <bpmn:conditionExpression><![CDATA[${variables['service_type'] == 'software_request'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_HardwareRequest" sourceRef="Gateway_ServiceType" targetRef="Activity_HardwareApproval">
+      <bpmn:conditionExpression><![CDATA[${variables['service_type'] == 'hardware_request'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- IT服务处理路径 -->
+    <bpmn:sequenceFlow id="Flow_SR_ITCheck" sourceRef="Activity_ITServiceL1Handle" targetRef="Gateway_ITServiceStatus" />
+    <bpmn:sequenceFlow id="Flow_ITResolved" sourceRef="Gateway_ITServiceStatus" targetRef="Activity_NotifyRequester">
+      <bpmn:conditionExpression><![CDATA[${variables['resolved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ITNeedL2" sourceRef="Gateway_ITServiceStatus" targetRef="Activity_ITServiceL2Handle">
+      <bpmn:conditionExpression><![CDATA[${variables['resolved'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- 权限申请路径 -->
+    <bpmn:sequenceFlow id="Flow_SR_AccessCheck" sourceRef="Activity_AccessApproval" targetRef="Gateway_AccessStatus" />
+    <bpmn:sequenceFlow id="Flow_AccessApproved" sourceRef="Gateway_AccessStatus" targetRef="Activity_GrantAccess">
+      <bpmn:conditionExpression><![CDATA[${variables['approved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_AccessRejected" sourceRef="Gateway_AccessStatus" targetRef="Activity_ServiceRequestClose">
+      <bpmn:conditionExpression><![CDATA[${variables['approved'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_SR_Merge" sourceRef="Activity_GrantAccess" targetRef="Activity_NotifyRequester" />
+
+    <!-- 软件申请路径 -->
+    <bpmn:sequenceFlow id="Flow_SR_SoftwareCheck" sourceRef="Activity_SoftwareLicenseCheck" targetRef="Gateway_SoftwareStatus" />
+    <bpmn:sequenceFlow id="Flow_SoftwareAvailable" sourceRef="Gateway_SoftwareStatus" targetRef="Activity_SoftwareProvision">
+      <bpmn:conditionExpression><![CDATA[${variables['license_available'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_SoftwareNotAvailable" sourceRef="Gateway_SoftwareStatus" targetRef="Activity_SoftwarePurchase">
+      <bpmn:conditionExpression><![CDATA[${variables['license_available'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_SR_PendingPurchase" sourceRef="Activity_SoftwarePurchase" targetRef="Activity_WaitForPurchase" />
+    <bpmn:sequenceFlow id="Flow_SR_Merge2" sourceRef="Activity_SoftwareProvision" targetRef="Activity_NotifyRequester" />
+    <bpmn:sequenceFlow id="Flow_SR_Merge2" sourceRef="Activity_WaitForPurchase" targetRef="Activity_NotifyRequester" />
+
+    <!-- 硬件申请路径 -->
+    <bpmn:sequenceFlow id="Flow_SR_HardwareCheck" sourceRef="Activity_HardwareApproval" targetRef="Gateway_HardwareStatus" />
+    <bpmn:sequenceFlow id="Flow_HardwareApproved" sourceRef="Gateway_HardwareStatus" targetRef="Activity_HardwareProvision">
+      <bpmn:conditionExpression><![CDATA[${variables['approved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_HardwareRejected" sourceRef="Gateway_HardwareStatus" targetRef="Activity_ServiceRequestClose">
+      <bpmn:conditionExpression><![CDATA[${variables['approved'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_SR_Merge3" sourceRef="Activity_HardwareProvision" targetRef="Activity_NotifyRequester" />
+
+    <!-- 结束路径 -->
+    <bpmn:sequenceFlow id="Flow_SatisfactionSurvey" sourceRef="Activity_NotifyRequester" targetRef="Activity_SatisfactionSurvey" />
+    <bpmn:sequenceFlow id="Flow_SR_Close" sourceRef="Activity_SatisfactionSurvey" targetRef="Activity_ServiceRequestClose" />
+    <bpmn:sequenceFlow id="Flow_SR_End" sourceRef="Activity_ServiceRequestClose" targetRef="EndEvent_ServiceRequestComplete" />
+
+  </bpmn:process>
+</bpmn:definitions>
