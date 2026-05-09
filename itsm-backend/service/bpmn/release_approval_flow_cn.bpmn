@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <!-- ======================================================== -->
+  <!-- 国内企业ITSM - 发布审批流程                              -->
+  <!-- 特点: 严格测试阶段、分级审批、灰度发布、回滚机制          -->
+  <!-- ======================================================== -->
+
+  <bpmn:process id="release_approval_flow_cn" name="发布审批流程(国内企业版)" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">release</bpmn:metaData>
+      <bpmn:metaData name="version">2.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">国内企业软件发布审批流程，含严格测试和灰度发布</bpmn:metaData>
+      <bpmn:metaData name="enterprise_type">cn_enterprise</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- ========== 开始节点 ========== -->
+    <bpmn:startEvent id="StartEvent_ReleaseRequest" name="发布申请">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="form_required">true</bpmn:metaData>
+        <bpmn:metaData name="impact_analysis">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_R1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- ========== 发布经理初审 ========== -->
+    <bpmn:userTask id="Activity_ReleaseManagerReview" name="发布经理初审">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">release_manager_review</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">sd_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
+        <bpmn:metaData name="risk_assessment_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R1</bpmn:incoming>
+      <bpmn:outgoing>Flow_R2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 发布类型判定 -->
+    <bpmn:exclusiveGateway id="Gateway_ReleaseType" name="发布类型判定">
+      <bpmn:incoming>Flow_R2</bpmn:incoming>
+      <bpmn:outgoing>Flow_Hotfix</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Normal</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Major</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ========== 热修复路径 (紧急修复) ========== -->
+    <bpmn:userTask id="Activity_HotfixTest" name="快速测试">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">hotfix_quick_test</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">2</bpmn:metaData>
+        <bpmn:metaData name="test_type">smoke_test</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Hotfix</bpmn:incoming>
+      <bpmn:outgoing>Flow_R3_Hotfix</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_HotfixApproval" name="热修复审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">hotfix_approval</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">1</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R3_Hotfix</bpmn:incoming>
+      <bpmn:outgoing>Flow_R4_Hotfix</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Activity_HotfixDeploy" name="热修复部署">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">hotfix_deploy</bpmn:metaData>
+        <bpmn:metaData name="auto_rollback">true</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">30</bpmn:metaData>
+        <bpmn:metaData name="monitoring_enabled">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R4_Hotfix</bpmn:incoming>
+      <bpmn:outgoing>Flow_R5_Hotfix</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Activity_HotfixVerify" name="热修复验证">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">hotfix_verify</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">2</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R5_Hotfix</bpmn:incoming>
+      <bpmn:outgoing>Flow_R_Merge_Hotfix</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 常规发布路径 ========== -->
+    <bpmn:userTask id="Activity_UnitTest" name="单元测试">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">unit_test</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">developer</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
+        <bpmn:metaData name="coverage_threshold">80%</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Normal</bpmn:incoming>
+      <bpmn:outgoing>Flow_R3_Normal</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_IntegrationTest" name="集成测试">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">integration_test</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R3_Normal</bpmn:incoming>
+      <bpmn:outgoing>Flow_R4_Normal</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_UAT" name="用户验收测试">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">user_acceptance_test</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">rd_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">3</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R4_Normal</bpmn:incoming>
+      <bpmn:outgoing>Flow_R5_Normal</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_NormalTest" name="测试结果判定">
+      <bpmn:incoming>Flow_R5_Normal</bpmn:incoming>
+      <bpmn:outgoing>Flow_TestPass</bpmn:outgoing>
+      <bpmn:outgoing>Flow_TestFail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Activity_NormalApproval" name="常规发布审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">normal_release_approval</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_TestPass</bpmn:incoming>
+      <bpmn:outgoing>Flow_R6_Normal</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Activity_StagingDeploy" name="预发布部署">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">staging_deploy</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">2</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R6_Normal</bpmn:incoming>
+      <bpmn:outgoing>Flow_R_Merge_Normal</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 测试失败返回修复 -->
+    <bpmn:userTask id="Activity_FixIssues" name="修复问题">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">fix_test_issues</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">developer</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_TestFail</bpmn:incoming>
+      <bpmn:outgoing>Flow_R3_Normal</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 重大发布路径 ========== -->
+    <bpmn:userTask id="Activity_SecurityTest" name="安全测试">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">security_test</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">security_admin</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">5</bpmn:metaData>
+        <bpmn:metaData name="vulnerability_scan">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Major</bpmn:incoming>
+      <bpmn:outgoing>Flow_R3_Major</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_PerformanceTest" name="性能测试">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">performance_test</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">5</bpmn:metaData>
+        <bpmn:metaData name="load_threshold">1000 concurrent</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R3_Major</bpmn:incoming>
+      <bpmn:outgoing>Flow_R4_Major</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_IntegrationTest_Major" name="集成测试">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">integration_test</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">3</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R4_Major</bpmn:incoming>
+      <bpmn:outgoing>Flow_R5_Major</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_UAT_Major" name="用户验收测试">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">user_acceptance_test</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">rd_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">5</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R5_Major</bpmn:incoming>
+      <bpmn:outgoing>Flow_R6_Major</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_MajorTest" name="测试结果判定">
+      <bpmn:incoming>Flow_R6_Major</bpmn:incoming>
+      <bpmn:outgoing>Flow_MajorTestPass</bpmn:outgoing>
+      <bpmn:outgoing>Flow_MajorTestFail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 重大发布多级审批 -->
+    <bpmn:userTask id="Activity_MajorTechApproval" name="技术评审">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">technical_review_approval</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_director</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_MajorTestPass</bpmn:incoming>
+      <bpmn:outgoing>Flow_R7_Major</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_MajorSecurityApproval" name="安全审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">security_approval</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">security_admin</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R7_Major</bpmn:incoming>
+      <bpmn:outgoing>Flow_R8_Major</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Activity_MajorITDirectorApproval" name="IT总监审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">it_director_approval</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_director</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+        <bpmn:metaData name="budget_approval_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R8_Major</bpmn:incoming>
+      <bpmn:outgoing>Flow_R9_Major</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Activity_StagingDeploy_Major" name="预发布部署">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">staging_deploy</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R9_Major</bpmn:incoming>
+      <bpmn:outgoing>Flow_R_Merge_Major</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 重大发布测试失败 -->
+    <bpmn:userTask id="Activity_FixIssues_Major" name="修复问题">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">fix_test_issues</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">developer</bpmn:metaData>
+        <bpmn:metaData name="timeout_days">3</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_MajorTestFail</bpmn:incoming>
+      <bpmn:outgoing>Flow_R3_Major</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 灰度发布 ========== -->
+    <bpmn:serviceTask id="Activity_CanaryDeploy" name="灰度发布(10%)">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">canary_deploy</bpmn:metaData>
+        <bpmn:metaData name="initial_percentage">10</bpmn:metaData>
+        <bpmn:metaData name="monitoring_enabled">true</bpmn:metaData>
+        <bpmn:metaData name="auto_rollback">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R_Merge_Hotfix</bpmn:incoming>
+      <bpmn:incoming>Flow_R_Merge_Normal</bpmn:incoming>
+      <bpmn:incoming>Flow_R_Merge_Major</bpmn:incoming>
+      <bpmn:outgoing>Flow_R_Canary</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Activity_CanaryMonitor" name="灰度监控">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">canary_monitoring</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+        <bpmn:metaData name="metrics_threshold">error_rate&lt;1%</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R_Canary</bpmn:incoming>
+      <bpmn:outgoing>Flow_R_CanaryCheck</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_CanaryResult" name="灰度结果判定">
+      <bpmn:incoming>Flow_R_CanaryCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_CanaryPass</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CanaryFail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 灰度失败自动回滚 -->
+    <bpmn:serviceTask id="Activity_AutoRollback" name="自动回滚">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">auto_rollback</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">ops_manager,developer</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_CanaryFail</bpmn:incoming>
+      <bpmn:outgoing>Flow_End_Rollback</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 全量发布 ========== -->
+    <bpmn:serviceTask id="Activity_FullDeploy" name="全量发布">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">full_deploy</bpmn:metaData>
+        <bpmn:metaData name="maintenance_window_check">true</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_CanaryPass</bpmn:incoming>
+      <bpmn:outgoing>Flow_R_Full</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Activity_PostReleaseVerify" name="发布后验证">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">post_release_verify</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
+        <bpmn:metaData name="monitoring_period">24h</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_R_Full</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 关闭 ========== -->
+    <bpmn:userTask id="Activity_ReleaseClose" name="发布关闭">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">release_close</bpmn:metaData>
+        <bpmn:metaData name="create_release_notes">true</bpmn:metaData>
+        <bpmn:metaData name="update_knowledge_base">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_End</bpmn:incoming>
+      <bpmn:incoming>Flow_End_Rollback</bpmn:incoming>
+      <bpmn:outgoing>Flow_Final</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:endEvent id="EndEvent_ReleaseComplete" name="发布完成">
+      <bpmn:incoming>Flow_Final</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ========== 流程连线 ========== -->
+    <bpmn:sequenceFlow id="Flow_R1" sourceRef="StartEvent_ReleaseRequest" targetRef="Activity_ReleaseManagerReview" />
+    <bpmn:sequenceFlow id="Flow_R2" sourceRef="Activity_ReleaseManagerReview" targetRef="Gateway_ReleaseType" />
+    
+    <!-- 发布类型分流 -->
+    <bpmn:sequenceFlow id="Flow_Hotfix" sourceRef="Gateway_ReleaseType" targetRef="Activity_HotfixTest">
+      <bpmn:conditionExpression><![CDATA[${variables['release_type'] == 'hotfix'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Normal" sourceRef="Gateway_ReleaseType" targetRef="Activity_UnitTest">
+      <bpmn:conditionExpression><![CDATA[${variables['release_type'] == 'normal'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Major" sourceRef="Gateway_ReleaseType" targetRef="Activity_SecurityTest">
+      <bpmn:conditionExpression><![CDATA[${variables['release_type'] == 'major'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- 热修复路径 -->
+    <bpmn:sequenceFlow id="Flow_R3_Hotfix" sourceRef="Activity_HotfixTest" targetRef="Activity_HotfixApproval" />
+    <bpmn:sequenceFlow id="Flow_R4_Hotfix" sourceRef="Activity_HotfixApproval" targetRef="Activity_HotfixDeploy" />
+    <bpmn:sequenceFlow id="Flow_R5_Hotfix" sourceRef="Activity_HotfixDeploy" targetRef="Activity_HotfixVerify" />
+    <bpmn:sequenceFlow id="Flow_R_Merge_Hotfix" sourceRef="Activity_HotfixVerify" targetRef="Activity_CanaryDeploy" />
+
+    <!-- 常规发布路径 -->
+    <bpmn:sequenceFlow id="Flow_R3_Normal" sourceRef="Activity_UnitTest" targetRef="Activity_IntegrationTest" />
+    <bpmn:sequenceFlow id="Flow_R4_Normal" sourceRef="Activity_IntegrationTest" targetRef="Activity_UAT" />
+    <bpmn:sequenceFlow id="Flow_R5_Normal" sourceRef="Activity_UAT" targetRef="Gateway_NormalTest" />
+    <bpmn:sequenceFlow id="Flow_TestPass" sourceRef="Gateway_NormalTest" targetRef="Activity_NormalApproval">
+      <bpmn:conditionExpression><![CDATA[${variables['test_passed'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_TestFail" sourceRef="Gateway_NormalTest" targetRef="Activity_FixIssues">
+      <bpmn:conditionExpression><![CDATA[${variables['test_passed'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_R6_Normal" sourceRef="Activity_NormalApproval" targetRef="Activity_StagingDeploy" />
+    <bpmn:sequenceFlow id="Flow_R_Merge_Normal" sourceRef="Activity_StagingDeploy" targetRef="Activity_CanaryDeploy" />
+
+    <!-- 重大发布路径 -->
+    <bpmn:sequenceFlow id="Flow_R3_Major" sourceRef="Activity_SecurityTest" targetRef="Activity_PerformanceTest" />
+    <bpmn:sequenceFlow id="Flow_R4_Major" sourceRef="Activity_PerformanceTest" targetRef="Activity_IntegrationTest_Major" />
+    <bpmn:sequenceFlow id="Flow_R5_Major" sourceRef="Activity_IntegrationTest_Major" targetRef="Activity_UAT_Major" />
+    <bpmn:sequenceFlow id="Flow_R6_Major" sourceRef="Activity_UAT_Major" targetRef="Gateway_MajorTest" />
+    <bpmn:sequenceFlow id="Flow_MajorTestPass" sourceRef="Gateway_MajorTest" targetRef="Activity_MajorTechApproval">
+      <bpmn:conditionExpression><![CDATA[${variables['test_passed'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_MajorTestFail" sourceRef="Gateway_MajorTest" targetRef="Activity_FixIssues_Major">
+      <bpmn:conditionExpression><![CDATA[${variables['test_passed'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_R7_Major" sourceRef="Activity_MajorTechApproval" targetRef="Activity_MajorSecurityApproval" />
+    <bpmn:sequenceFlow id="Flow_R8_Major" sourceRef="Activity_MajorSecurityApproval" targetRef="Activity_MajorITDirectorApproval" />
+    <bpmn:sequenceFlow id="Flow_R9_Major" sourceRef="Activity_MajorITDirectorApproval" targetRef="Activity_StagingDeploy_Major" />
+    <bpmn:sequenceFlow id="Flow_R_Merge_Major" sourceRef="Activity_StagingDeploy_Major" targetRef="Activity_CanaryDeploy" />
+
+    <!-- 灰度发布 -->
+    <bpmn:sequenceFlow id="Flow_R_Canary" sourceRef="Activity_CanaryDeploy" targetRef="Activity_CanaryMonitor" />
+    <bpmn:sequenceFlow id="Flow_R_CanaryCheck" sourceRef="Activity_CanaryMonitor" targetRef="Gateway_CanaryResult" />
+    <bpmn:sequenceFlow id="Flow_CanaryPass" sourceRef="Gateway_CanaryResult" targetRef="Activity_FullDeploy">
+      <bpmn:conditionExpression><![CDATA[${variables['canary_passed'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_CanaryFail" sourceRef="Gateway_CanaryResult" targetRef="Activity_AutoRollback">
+      <bpmn:conditionExpression><![CDATA[${variables['canary_passed'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- 全量发布 -->
+    <bpmn:sequenceFlow id="Flow_R_Full" sourceRef="Activity_FullDeploy" targetRef="Activity_PostReleaseVerify" />
+    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_PostReleaseVerify" targetRef="Activity_ReleaseClose" />
+    <bpmn:sequenceFlow id="Flow_End_Rollback" sourceRef="Activity_AutoRollback" targetRef="Activity_ReleaseClose" />
+    <bpmn:sequenceFlow id="Flow_Final" sourceRef="Activity_ReleaseClose" targetRef="EndEvent_ReleaseComplete" />
+
+  </bpmn:process>
+</bpmn:definitions>
