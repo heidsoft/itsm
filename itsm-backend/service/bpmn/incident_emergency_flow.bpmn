@@ -2,13 +2,14 @@
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
                  targetNamespace="http://bpmn.io/schema/bpmn">
 
   <bpmn:process id="incident_emergency_flow" name="紧急事件流程" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">incident</bpmn:metaData>
-      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">紧急事件快速响应流程</bpmn:metaData>
+      <bpmn:metaData name="version">1.1.0</bpmn:metaData>
+      <bpmn:metaData name="description">紧急事件快速响应流程（带主管审批）</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- 开始事件：事件报告 -->
@@ -23,8 +24,21 @@
         <bpmn:metaData name="action">assign_incident</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1</bpmn:incoming>
-      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Manager</bpmn:outgoing>
     </bpmn:serviceTask>
+
+    <!-- 主管审批 (新增) -->
+    <bpmn:userTask id="Activity_ManagerApproval" name="主管审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
+        <bpmn:metaData name="action">manager_approval</bpmn:metaData>
+        <bpmn:metaData name="approval_required">true</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">60</bpmn:metaData>
+        <bpmn:metaData name="approver_type">manager</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Manager</bpmn:incoming>
+      <bpmn:outgoing>Flow_ManagerToDiagnosis</bpmn:outgoing>
+    </bpmn:userTask>
 
     <!-- 初步诊断 -->
     <bpmn:userTask id="Activity_Diagnosis" name="初步诊断">
@@ -32,7 +46,7 @@
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">update_incident</bpmn:metaData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:incoming>Flow_ManagerToDiagnosis</bpmn:incoming>
       <bpmn:outgoing>Flow_3</bpmn:outgoing>
     </bpmn:userTask>
 
@@ -103,7 +117,8 @@
 
     <!-- 连线 -->
     <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_AutoAssign" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_AutoAssign" targetRef="Activity_Diagnosis" />
+    <bpmn:sequenceFlow id="Flow_Manager" sourceRef="Activity_AutoAssign" targetRef="Activity_ManagerApproval" />
+    <bpmn:sequenceFlow id="Flow_ManagerToDiagnosis" sourceRef="Activity_ManagerApproval" targetRef="Activity_Diagnosis" />
     <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Diagnosis" targetRef="Gateway_Resolved" />
     <bpmn:sequenceFlow id="Flow_Resolve" sourceRef="Gateway_Resolved" targetRef="Activity_Resolve">
       <bpmn:conditionExpression><![CDATA[${variables['problem_identified'] == true}]]></bpmn:conditionExpression>

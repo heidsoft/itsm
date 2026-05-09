@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <!-- ======================================================== -->
+  <!-- 国内企业ITSM - 紧急故障响应流程 (P0/P1)                   -->
+  <!-- 特点: 快速响应、多级升级、即时通知                         -->
+  <!-- ======================================================== -->
+
+  <bpmn:process id="incident_emergency_flow_cn" name="紧急故障响应流程(国内企业版)" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">incident</bpmn:metaData>
+      <bpmn:metaData name="version">2.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">国内企业ITSM紧急故障响应流程，包含快速响应、多级升级机制</bpmn:metaData>
+      <bpmn:metaData name="enterprise_type">cn_enterprise</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- ========== 开始节点 ========== -->
+    <bpmn:startEvent id="StartEvent_P0Report" name="P0故障上报">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="priority">P0</bpmn:metaData>
+        <bpmn:metaData name="sla_minutes">15</bpmn:metaData>
+        <bpmn:metaData name="notification_enabled">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_S1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- ========== 阶段1: 快速响应 (5分钟内) ========== -->
+    <bpmn:serviceTask id="Activity_InstantNotify" name="即时通知" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">instant_notify</bpmn:metaData>
+        <bpmn:metaData name="notification_channel">sms,wechat,email</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">sd_manager,l1_support,ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_seconds">30</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_S1</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Activity_AutoAssign_P0" name="自动分派" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">auto_assign</bpmn:metaData>
+        <bpmn:metaData name="assign_rule">round_robin</bpmn:metaData>
+        <bpmn:metaData name="target_role">l1_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_seconds">30</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_S2</bpmn:incoming>
+      <bpmn:outgoing>Flow_S3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 阶段2: 快速响应 (30分钟内) ========== -->
+    <bpmn:userTask id="Activity_L1Response" name="一线响应">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">l1_response</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">30</bpmn:metaData>
+        <bpmn:metaData name="escalation_enabled">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_S3</bpmn:incoming>
+      <bpmn:outgoing>Flow_S4</bpmn:outgoing>
+      <bpmn:outputBinding>
+        <bpmn:output id="Output_problem_identified" name="problem_identified" />
+        <bpmn:output id="Output_fixable" name="fixable" />
+      </bpmn:outputBinding>
+    </bpmn:userTask>
+
+    <!-- ========== 阶段3: 问题判定网关 ========== -->
+    <bpmn:exclusiveGateway id="Gateway_ProblemStatus" name="问题状态判定">
+      <bpmn:incoming>Flow_S4</bpmn:incoming>
+      <bpmn:outgoing>Flow_CanFix</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CannotFix</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 可快速解决路径 -->
+    <bpmn:userTask id="Activity_L1Fix" name="一线修复">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">l1_fix</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">60</bpmn:metaData>
+        <bpmn:metaData name="auto_close">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_CanFix</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotifySuccess</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 无法解决需升级 -->
+    <bpmn:serviceTask id="Activity_AutoEscalate_L2" name="自动升级L2">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">escalate_to_l2</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">l2_support,ops_manager</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">5</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_CannotFix</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToL2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 阶段4: L2处理 (60分钟内) ========== -->
+    <bpmn:userTask id="Activity_L2Diagnosis" name="L2诊断">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">l2_diagnosis</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">60</bpmn:metaData>
+        <bpmn:metaData name="escalation_enabled">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToL2</bpmn:incoming>
+      <bpmn:outgoing>Flow_S5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- L2问题判定网关 -->
+    <bpmn:exclusiveGateway id="Gateway_L2Status" name="L2处理结果">
+      <bpmn:incoming>Flow_S5</bpmn:incoming>
+      <bpmn:outgoing>Flow_L2Resolved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_L2Unresolved</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- L2解决 -->
+    <bpmn:userTask id="Activity_L2Fix" name="L2修复">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">l2_fix</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">120</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L2Resolved</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotifyL2Success</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- L2无法解决升级L3 -->
+    <bpmn:serviceTask id="Activity_EscalateL3" name="升级L3专家">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">escalate_to_l3</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">l3_expert,ops_director,it_director</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">5</bpmn:metaData>
+        <bpmn:metaData name="urgency">critical</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L2Unresolved</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToL3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ========== 阶段5: L3专家处理 ========== -->
+    <bpmn:userTask id="Activity_L3ExpertHandle" name="L3专家处理">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">l3_expert_handle</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">240</bpmn:metaData>
+        <bpmn:metaData name="expert_type">dba,network_eng,security_admin</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToL3</bpmn:incoming>
+      <bpmn:outgoing>Flow_S6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- L3结果判定 -->
+    <bpmn:exclusiveGateway id="Gateway_L3Status" name="L3处理结果">
+      <bpmn:incoming>Flow_S6</bpmn:incoming>
+      <bpmn:outgoing>Flow_L3Resolved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_L3MajorIncident</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- L3解决 -->
+    <bpmn:userTask id="Activity_L3Fix" name="L3修复完成">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">l3_fix_complete</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">60</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L3Resolved</bpmn:incoming>
+      <bpmn:outgoing>Flow_FinalNotify</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 重大事件升级 -->
+    <bpmn:serviceTask id="Activity_MajorIncidentEscalate" name="重大事件升级">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">major_incident_escalate</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">it_director,ops_director,security_admin</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">10</bpmn:metaData>
+        <bpmn:metaData name="create_war_room">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L3MajorIncident</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToWarRoom</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Activity_WarRoomHandle" name="事件指挥室处理">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">war_room_handle</bpmn:metaData>
+        <bpmn:metaData name="timeout_minutes">480</bpmn:metaData>
+        <bpmn:metaData name="participant_roles">it_director,ops_director,l3_expert</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToWarRoom</bpmn:incoming>
+      <bpmn:outgoing>Flow_FinalNotify</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- ========== 结束阶段: 通知与归档 ========== -->
+    <bpmn:serviceTask id="Activity_NotifyStakeholders" name="通知相关方">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">notify_stakeholders</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">reporter,manager,audit</bpmn:metaData>
+        <bpmn:metaData name="report_required">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_NotifySuccess</bpmn:incoming>
+      <bpmn:incoming>Flow_NotifyL2Success</bpmn:incoming>
+      <bpmn:incoming>Flow_FinalNotify</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToClose</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Activity_IncidentClose" name="事件关闭">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">incident_close</bpmn:metaData>
+        <bpmn:metaData name="require_resolution_summary">true</bpmn:metaData>
+        <bpmn:metaData name="require_lesson_learned">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToClose</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 结束事件 -->
+    <bpmn:endEvent id="EndEvent_Complete" name="事件完成">
+      <bpmn:incoming>Flow_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ========== 流程连线 ========== -->
+    <bpmn:sequenceFlow id="Flow_S1" sourceRef="StartEvent_P0Report" targetRef="Activity_InstantNotify" />
+    <bpmn:sequenceFlow id="Flow_S2" sourceRef="Activity_InstantNotify" targetRef="Activity_AutoAssign_P0" />
+    <bpmn:sequenceFlow id="Flow_S3" sourceRef="Activity_AutoAssign_P0" targetRef="Activity_L1Response" />
+    <bpmn:sequenceFlow id="Flow_S4" sourceRef="Activity_L1Response" targetRef="Gateway_ProblemStatus" />
+    <bpmn:sequenceFlow id="Flow_CanFix" sourceRef="Gateway_ProblemStatus" targetRef="Activity_L1Fix">
+      <bpmn:conditionExpression><![CDATA[${variables['fixable'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_CannotFix" sourceRef="Gateway_ProblemStatus" targetRef="Activity_AutoEscalate_L2">
+      <bpmn:conditionExpression><![CDATA[${variables['fixable'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ToL2" sourceRef="Activity_AutoEscalate_L2" targetRef="Activity_L2Diagnosis" />
+    <bpmn:sequenceFlow id="Flow_S5" sourceRef="Activity_L2Diagnosis" targetRef="Gateway_L2Status" />
+    <bpmn:sequenceFlow id="Flow_L2Resolved" sourceRef="Gateway_L2Status" targetRef="Activity_L2Fix">
+      <bpmn:conditionExpression><![CDATA[${variables['resolved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_L2Unresolved" sourceRef="Gateway_L2Status" targetRef="Activity_EscalateL3">
+      <bpmn:conditionExpression><![CDATA[${variables['resolved'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_NotifyL2Success" sourceRef="Activity_L2Fix" targetRef="Activity_NotifyStakeholders" />
+    <bpmn:sequenceFlow id="Flow_ToL3" sourceRef="Activity_EscalateL3" targetRef="Activity_L3ExpertHandle" />
+    <bpmn:sequenceFlow id="Flow_S6" sourceRef="Activity_L3ExpertHandle" targetRef="Gateway_L3Status" />
+    <bpmn:sequenceFlow id="Flow_L3Resolved" sourceRef="Gateway_L3Status" targetRef="Activity_L3Fix">
+      <bpmn:conditionExpression><![CDATA[${variables['resolved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_L3MajorIncident" sourceRef="Gateway_L3Status" targetRef="Activity_MajorIncidentEscalate">
+      <bpmn:conditionExpression><![CDATA[${variables['is_major_incident'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ToWarRoom" sourceRef="Activity_MajorIncidentEscalate" targetRef="Activity_WarRoomHandle" />
+    <bpmn:sequenceFlow id="Flow_FinalNotify" sourceRef="Activity_L3Fix" targetRef="Activity_NotifyStakeholders" />
+    <bpmn:sequenceFlow id="Flow_NotifySuccess" sourceRef="Activity_L1Fix" targetRef="Activity_NotifyStakeholders" />
+    <bpmn:sequenceFlow id="Flow_ToClose" sourceRef="Activity_NotifyStakeholders" targetRef="Activity_IncidentClose" />
+    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_IncidentClose" targetRef="EndEvent_Complete" />
+
+  </bpmn:process>
+</bpmn:definitions>

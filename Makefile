@@ -134,10 +134,10 @@ oob-down: ## 停止并清理开箱即用环境（包含 volumes）
 	docker compose -p itsm_oob -f docker-compose.yml down -v
 	@echo "$(GREEN)✅ 已清理$(NC)"
 
-oob-test: ## 运行开箱即用验收测试（E2E：smoke + business-flows）
+oob-test: ## 运行开箱即用验收测试（smoke test）
 	@echo "$(BLUE)🧪 运行开箱即用验收测试...$(NC)"
-	cd $(FRONTEND_DIR) && PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run test:smoke
-	cd $(FRONTEND_DIR) && PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run test:e2e:business
+	chmod +x scripts/smoke-test.sh
+	./scripts/smoke-test.sh
 	@echo "$(GREEN)✅ 开箱即用验收通过$(NC)"
 
 # ============================================
@@ -350,3 +350,25 @@ quickstart: dev-up ## 快速启动（开发环境）
 	@echo "  make db-shell   进入数据库"
 	@echo "  make stop       停止服务"
 	@echo ""
+
+# ============================================
+# 统一启动脚本 (itsm.sh)
+# 同时支持 Docker 和本地开发环境
+# ============================================
+start: ## 统一启动 (Docker 或本地)
+	@echo "$(BLUE)🔧 统一启动脚本 - 自动检测环境$(NC)"
+	chmod +x scripts/itsm.sh
+	./scripts/itsm.sh start
+
+status: ## 统一查看状态
+	chmod +x scripts/itsm.sh
+	./scripts/itsm.sh status
+
+shutdown: ## 统一停止服务
+	chmod +x scripts/itsm.sh
+	./scripts/itsm.sh stop
+
+restart-services: ## 统一重启服务
+	chmod +x scripts/itsm.sh
+	./scripts/itsm.sh restart
+

@@ -87,10 +87,24 @@ itsm-frontend/.swc/
 debug*.log
 debug*.txt
 debug*.png
-*.png
 !docs/images/*.png
 test_result*.log
 server.log
+
+# Screenshots (auto-generated during testing)
+*.png
+!docs/images/*.png
+
+# API keys and secrets
+*apikey*
+*secret*
+*password*
+*.key
+credentials*
+
+# Graphify output cache
+graphify-out/cache/
+.graphify_*
 
 # Test outputs
 itsm-frontend/test-results/
