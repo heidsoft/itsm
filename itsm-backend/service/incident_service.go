@@ -1298,7 +1298,8 @@ func (s *IncidentService) triggerWorkflowForIncident(ctx context.Context, incide
 	}
 
 	// 根据严重程度选择不同的流程
-	processKey := "incident_general_flow"
+	// 注意: incident_general_flow 不存在，使用 incident_emergency_flow 作为默认
+	processKey := "incident_emergency_flow"
 	if inc.Severity == "critical" || inc.Priority == "urgent" {
 		processKey = "incident_emergency_flow"
 	}

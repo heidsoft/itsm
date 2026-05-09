@@ -952,6 +952,27 @@ var (
 			},
 		},
 	}
+	// EndpointAcLsColumns holds the columns for the "endpoint_ac_ls" table.
+	EndpointAcLsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "path_pattern", Type: field.TypeString},
+		{Name: "method", Type: field.TypeString, Nullable: true},
+		{Name: "resource", Type: field.TypeString},
+		{Name: "action", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "priority", Type: field.TypeInt, Default: 100},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "is_whitelist", Type: field.TypeBool, Default: false},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// EndpointAcLsTable holds the schema information for the "endpoint_ac_ls" table.
+	EndpointAcLsTable = &schema.Table{
+		Name:       "endpoint_ac_ls",
+		Columns:    EndpointAcLsColumns,
+		PrimaryKey: []*schema.Column{EndpointAcLsColumns[0]},
+	}
 	// EngineerSkillsColumns holds the columns for the "engineer_skills" table.
 	EngineerSkillsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -4017,6 +4038,7 @@ var (
 		DiscoveryJobsTable,
 		DiscoveryResultsTable,
 		DiscoverySourcesTable,
+		EndpointAcLsTable,
 		EngineerSkillsTable,
 		GroupsTable,
 		IncidentsTable,

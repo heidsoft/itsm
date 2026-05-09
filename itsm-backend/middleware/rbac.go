@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/database"
 	"itsm-backend/ent"
-	"itsm-backend/ent/permissiondefinition"
+	"itsm-backend/ent/permission"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/ticket"
@@ -29,7 +30,7 @@ type Permission struct {
 // cachedPermission 带过期时间的缓存条目
 type cachedPermission struct {
 	permissions []Permission
-	expiresAt  time.Time
+	expiresAt   time.Time
 }
 
 // DefaultPermissionCacheTTL 默认权限缓存TTL（5分钟）
@@ -39,7 +40,7 @@ const DefaultPermissionCacheTTL = 5 * time.Minute
 var (
 	permissionCache     = make(map[string]*cachedPermission)
 	permissionCacheLock sync.RWMutex
-	permissionCacheTTL = DefaultPermissionCacheTTL
+	permissionCacheTTL  = DefaultPermissionCacheTTL
 )
 
 // SetPermissionCacheTTL 设置权限缓存TTL
@@ -207,6 +208,8 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "bpmn", Action: "write"},
 	},
 	"security": {
+		// 安全角色需要基本的用户信息访问权限
+		{Resource: "user", Action: "read"}, // 查看自己的用户信息
 		// V0：安全审批只需要查看/处理服务请求（以及读取服务目录用于上下文展示）
 		{Resource: "service_catalog", Action: "read"},
 		{Resource: "service_request", Action: "read"},
@@ -316,13 +319,14 @@ var PermissionConfig = struct {
 	// EnableCache 是否启用缓存
 	EnableCache bool
 }{
-	Mode:       PermissionConfigModeFallback,
+	Mode:        PermissionConfigModeDBOnly, // 企业级交付：仅使用数据库权限，支持多租户差异化
 	EnableCache: true,
 }
 
 // loadRolePermissionsFromDB 从数据库加载角色的权限
+// 直接从 role_permissions 联表查询，支持多租户
 func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int) []Permission {
-	// 如果 client 为 nil，直接返回空权限（将使用默认权限）
+	// 如果 client 为 nil，直接返回空权限
 	if client == nil {
 		return nil
 	}
@@ -339,23 +343,45 @@ func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int
 	}
 	permissionCacheLock.RUnlock()
 
-	// 从数据库加载
+	// 从数据库加载: 通过 role_permissions 联表查询
 	var perms []Permission
 
+	// 首先查找角色ID
 	roleEntity, err := client.Role.Query().
 		Where(
 			role.Code(roleName),
 			role.TenantID(tenantID),
 		).
-		WithPermissions().
 		Only(context.Background())
 
-	if err == nil && roleEntity != nil && roleEntity.Edges.Permissions != nil {
-		for _, p := range roleEntity.Edges.Permissions {
-			perms = append(perms, Permission{
-				Resource: p.Resource,
-				Action:   p.Action,
-			})
+	if err == nil && roleEntity != nil {
+		roleID := roleEntity.ID
+
+		// 直接查询 role_permissions 联表获取该角色的权限
+		rolePerms, err := client.RolePermission.Query().
+			Where(rolepermission.RoleIDEQ(roleID)).
+			All(context.Background())
+
+		if err == nil && len(rolePerms) > 0 {
+			// 提取permission_id列表
+			permIDs := make([]int, len(rolePerms))
+			for i, rp := range rolePerms {
+				permIDs[i] = rp.PermissionID
+			}
+
+			// 查询 permissions 表获取权限详情
+			permsData, err := client.Permission.Query().
+				Where(permission.IDIn(permIDs...)).
+				All(context.Background())
+
+			if err == nil {
+				for _, p := range permsData {
+					perms = append(perms, Permission{
+						Resource: p.Resource,
+						Action:   p.Action,
+					})
+				}
+			}
 		}
 	}
 
@@ -363,7 +389,7 @@ func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int
 	permissionCacheLock.Lock()
 	permissionCache[cacheKey] = &cachedPermission{
 		permissions: perms,
-		expiresAt:  time.Now().Add(permissionCacheTTL),
+		expiresAt:   time.Now().Add(permissionCacheTTL),
 	}
 	permissionCacheLock.Unlock()
 
@@ -431,23 +457,23 @@ func loadPermissionsFromDB(client *ent.Client, roleName string, tenantID int) []
 				permIDs[i] = rp.PermissionID
 			}
 
-			// 查询permission_definition表获取权限详情
-			permDefs, err := client.PermissionDefinition.Query().
-				Where(permissiondefinition.IDIn(permIDs...)).
+			// 查询 permissions 表获取权限详情
+			permsData, err := client.Permission.Query().
+				Where(permission.IDIn(permIDs...)).
 				All(context.Background())
 
 			if err == nil {
-				for _, pd := range permDefs {
+				for _, p := range permsData {
 					perms = append(perms, Permission{
-						Resource: pd.Resource,
-						Action:   pd.Action,
+						Resource: p.Resource,
+						Action:   p.Action,
 					})
 				}
 			}
 		}
 	}
 
-	// 如果新的role_permission表没有数据，fallback到旧的Permission表
+	// 如果仍然没有权限，fallback到旧的方式
 	if len(perms) == 0 {
 		perms = loadRolePermissionsFromDB(client, roleName, tenantID)
 	}
@@ -456,7 +482,7 @@ func loadPermissionsFromDB(client *ent.Client, roleName string, tenantID int) []
 	permissionCacheLock.Lock()
 	permissionCache[cacheKey] = &cachedPermission{
 		permissions: perms,
-		expiresAt:  time.Now().Add(permissionCacheTTL),
+		expiresAt:   time.Now().Add(permissionCacheTTL),
 	}
 	permissionCacheLock.Unlock()
 
@@ -518,13 +544,13 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/process-bindings":   {Resource: "bpmn", Action: "read"},
 		"/api/v1/process-bindings/*": {Resource: "bpmn", Action: "read"},
 		// MSP Permissions
-		"/api/v1/msp/status":           {Resource: "msp", Action: "read"},
-		"/api/v1/msp/context":          {Resource: "msp", Action: "read"},
-		"/api/v1/msp/allocations":     {Resource: "msp_allocation", Action: "read"},
-		"/api/v1/msp/customers":        {Resource: "msp_customer", Action: "read"},
-		"/api/v1/msp/customers/*":     {Resource: "msp_customer", Action: "read"},
+		"/api/v1/msp/status":              {Resource: "msp", Action: "read"},
+		"/api/v1/msp/context":             {Resource: "msp", Action: "read"},
+		"/api/v1/msp/allocations":         {Resource: "msp_allocation", Action: "read"},
+		"/api/v1/msp/customers":           {Resource: "msp_customer", Action: "read"},
+		"/api/v1/msp/customers/*":         {Resource: "msp_customer", Action: "read"},
 		"/api/v1/msp/customers/*/tickets": {Resource: "msp_ticket", Action: "read"},
-		"/api/v1/msp/reports/*":       {Resource: "msp_report", Action: "read"},
+		"/api/v1/msp/reports/*":           {Resource: "msp_report", Action: "read"},
 	},
 	"POST": {
 		"/api/v1/tickets":               {Resource: "ticket", Action: "write"},
@@ -570,9 +596,9 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/process-bindings":   {Resource: "bpmn", Action: "write"},
 		"/api/v1/process-bindings/*": {Resource: "bpmn", Action: "write"},
 		// MSP Permissions
-		"/api/v1/msp/allocations":      {Resource: "msp_allocation", Action: "write"},
+		"/api/v1/msp/allocations":            {Resource: "msp_allocation", Action: "write"},
 		"/api/v1/msp/allocations/deallocate": {Resource: "msp_allocation", Action: "write"},
-		"/api/v1/msp/tickets/*/assign": {Resource: "msp_ticket", Action: "write"},
+		"/api/v1/msp/tickets/*/assign":       {Resource: "msp_ticket", Action: "write"},
 	},
 	"PUT": {
 		"/api/v1/tickets/*":            {Resource: "ticket", Action: "write"},
@@ -650,9 +676,9 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		// 特殊路径：认证相关端点不需要租户ID检查
 		authPaths := map[string]bool{
 			"/api/v1/auth/me":      true,
-			"/api/v1/auth/tenants":  true,
-			"/api/v1/auth/menus":    true,
-			"/api/v1/auth/profile":  true,
+			"/api/v1/auth/tenants": true,
+			"/api/v1/auth/menus":   true,
+			"/api/v1/auth/profile": true,
 		}
 		isAuthPath := authPaths[c.Request.URL.Path]
 
@@ -848,6 +874,7 @@ func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 }
 
 // hasPermission 检查用户是否有权限访问指定资源
+// Uses Smart Permission Checker (4-layer fallback architecture)
 func hasPermission(client *ent.Client, role, method, path string, userID, tenantID int, c *gin.Context) bool {
 	// 超级管理员拥有所有权限
 	if role == "super_admin" {
@@ -860,20 +887,10 @@ func hasPermission(client *ent.Client, role, method, path string, userID, tenant
 		return true
 	}
 
-	// 获取路径对应的资源和操作
-	perm := getPermissionFromPath(method, path)
-	if perm == nil {
-		// 如果没有找到对应的权限配置，默认拒绝访问
-		return false
-	}
-
-	// 检查角色是否有该资源的操作权限
-	if !hasResourcePermission(client, role, perm.Resource, perm.Action, tenantID) {
-		return false
-	}
-
-	// 资源级别的权限检查
-	return checkResourceLevelPermission(role, perm.Resource, perm.Action, userID, c)
+	// 使用智能权限检查器（4层兜底架构）
+	// 获取底层数据库连接进行 ACL 查询
+	db := database.GetRawDB()
+	return SmartCheckPermission(c, db, role, method, path, tenantID)
 }
 
 // hasResourcePermission 检查角色是否有指定资源的操作权限（支持多种配置模式）

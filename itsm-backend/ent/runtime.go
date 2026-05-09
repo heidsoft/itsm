@@ -25,6 +25,7 @@ import (
 	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
+	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
@@ -796,6 +797,46 @@ func init() {
 	discoverysourceDescID := discoverysourceFields[0].Descriptor()
 	// discoverysource.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	discoverysource.IDValidator = discoverysourceDescID.Validators[0].(func(string) error)
+	endpointaclFields := schema.EndpointACL{}.Fields()
+	_ = endpointaclFields
+	// endpointaclDescTenantID is the schema descriptor for tenant_id field.
+	endpointaclDescTenantID := endpointaclFields[0].Descriptor()
+	// endpointacl.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	endpointacl.TenantIDValidator = endpointaclDescTenantID.Validators[0].(func(int) error)
+	// endpointaclDescPathPattern is the schema descriptor for path_pattern field.
+	endpointaclDescPathPattern := endpointaclFields[1].Descriptor()
+	// endpointacl.PathPatternValidator is a validator for the "path_pattern" field. It is called by the builders before save.
+	endpointacl.PathPatternValidator = endpointaclDescPathPattern.Validators[0].(func(string) error)
+	// endpointaclDescResource is the schema descriptor for resource field.
+	endpointaclDescResource := endpointaclFields[3].Descriptor()
+	// endpointacl.ResourceValidator is a validator for the "resource" field. It is called by the builders before save.
+	endpointacl.ResourceValidator = endpointaclDescResource.Validators[0].(func(string) error)
+	// endpointaclDescAction is the schema descriptor for action field.
+	endpointaclDescAction := endpointaclFields[4].Descriptor()
+	// endpointacl.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	endpointacl.ActionValidator = endpointaclDescAction.Validators[0].(func(string) error)
+	// endpointaclDescPriority is the schema descriptor for priority field.
+	endpointaclDescPriority := endpointaclFields[6].Descriptor()
+	// endpointacl.DefaultPriority holds the default value on creation for the priority field.
+	endpointacl.DefaultPriority = endpointaclDescPriority.Default.(int)
+	// endpointaclDescIsActive is the schema descriptor for is_active field.
+	endpointaclDescIsActive := endpointaclFields[7].Descriptor()
+	// endpointacl.DefaultIsActive holds the default value on creation for the is_active field.
+	endpointacl.DefaultIsActive = endpointaclDescIsActive.Default.(bool)
+	// endpointaclDescIsWhitelist is the schema descriptor for is_whitelist field.
+	endpointaclDescIsWhitelist := endpointaclFields[8].Descriptor()
+	// endpointacl.DefaultIsWhitelist holds the default value on creation for the is_whitelist field.
+	endpointacl.DefaultIsWhitelist = endpointaclDescIsWhitelist.Default.(bool)
+	// endpointaclDescCreatedAt is the schema descriptor for created_at field.
+	endpointaclDescCreatedAt := endpointaclFields[9].Descriptor()
+	// endpointacl.DefaultCreatedAt holds the default value on creation for the created_at field.
+	endpointacl.DefaultCreatedAt = endpointaclDescCreatedAt.Default.(func() time.Time)
+	// endpointaclDescUpdatedAt is the schema descriptor for updated_at field.
+	endpointaclDescUpdatedAt := endpointaclFields[10].Descriptor()
+	// endpointacl.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	endpointacl.DefaultUpdatedAt = endpointaclDescUpdatedAt.Default.(func() time.Time)
+	// endpointacl.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	endpointacl.UpdateDefaultUpdatedAt = endpointaclDescUpdatedAt.UpdateDefault.(func() time.Time)
 	engineerskillFields := schema.EngineerSkill{}.Fields()
 	_ = engineerskillFields
 	// engineerskillDescUserID is the schema descriptor for user_id field.

@@ -272,6 +272,18 @@ func (f DiscoverySourceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Va
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DiscoverySourceMutation", m)
 }
 
+// The EndpointACLFunc type is an adapter to allow the use of ordinary
+// function as EndpointACL mutator.
+type EndpointACLFunc func(context.Context, *ent.EndpointACLMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EndpointACLFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EndpointACLMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EndpointACLMutation", m)
+}
+
 // The EngineerSkillFunc type is an adapter to allow the use of ordinary
 // function as EngineerSkill mutator.
 type EngineerSkillFunc func(context.Context, *ent.EngineerSkillMutation) (ent.Value, error)

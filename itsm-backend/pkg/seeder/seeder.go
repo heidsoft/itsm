@@ -9,33 +9,34 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/approvalworkflow"
+	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processbinding"
+	"itsm-backend/ent/release"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/standardchange"
+	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
-	"itsm-backend/ent/assetlicense"
-	"itsm-backend/ent/knownerror"
-	"itsm-backend/ent/release"
-	"itsm-backend/ent/standardchange"
-	"itsm-backend/ent/tag"
 	"itsm-backend/service"
+
+	"itsm-backend/database"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
-	"itsm-backend/database"
 )
 
 // Force import usage for ent packages (use predicate functions)
@@ -457,7 +458,7 @@ func (s *Seeder) seedDefaultTenant(ctx context.Context) {
 		SetCode("default").
 		SetDomain("localhost").
 		SetStatus("active").
-		SetType("enterprise").
+		SetType("standard").  // standard|msp|customer
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
@@ -1318,7 +1319,7 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		if err != nil {
 			s.sugar.Warnw("fix menu path failed", "error", err, "old_path", oldPath, "new_path", newPath)
 		} else {
-			s.sugar.Infow("menu path fixed", "old_path", oldPath, "new_path", newPath)
+			s.sugar.Debugw("menu path fixed", "old_path", oldPath, "new_path", newPath)
 		}
 	}
 
