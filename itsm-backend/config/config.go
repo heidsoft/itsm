@@ -177,12 +177,7 @@ func LoadConfig() (*Config, error) {
 	}
 	resolveMapEnvVars(rawConfig)
 
-	// 重新绑定到 Config 结构
-	if err := viper.Unmarshal(&Config{}); err != nil {
-		return nil, err
-	}
-
-	// 使用 viper 再次解析
+	// 重新设置解析后的值到 viper
 	viper.Set("database", rawConfig["database"])
 	viper.Set("server", rawConfig["server"])
 	viper.Set("jwt", rawConfig["jwt"])
@@ -190,7 +185,13 @@ func LoadConfig() (*Config, error) {
 	viper.Set("llm", rawConfig["llm"])
 	viper.Set("sms", rawConfig["sms"])
 	viper.Set("smtp", rawConfig["smtp"])
+	viper.Set("redis", rawConfig["redis"])
+	viper.Set("ticket", rawConfig["ticket"])
+	viper.Set("embedding", rawConfig["embedding"])
+	viper.Set("security", rawConfig["security"])
+	viper.Set("admin", rawConfig["admin"])
 
+	// 重新绑定到 Config 结构
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
 		return nil, err
