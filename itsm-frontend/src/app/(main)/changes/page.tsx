@@ -62,7 +62,7 @@ export default function ChangesPage() {
       const response = await ChangeApi.getChanges({
         page: 1,
         page_size: 100,
-        status: statusFilter,
+        status: statusFilter as any,  // ChangeStatus is string enum
         search: debouncedSearch,
       });
       const items = (response as any).items || (response as any).changes || [];
