@@ -37,11 +37,11 @@ export default function SLAPage() {
 
       // 映射后端 snake_case 字段到前端 camelCase
       setStats({
-        totalDefinitions: data.total_definitions || data.totalDefinitions || 0,
-        activeDefinitions: data.active_definitions || data.activeDefinitions || 0,
-        totalViolations: data.total_violations || data.totalViolations || 0,
-        openViolations: data.open_violations || data.openViolations || 0,
-        overallComplianceRate: data.overall_compliance_rate || data.overallComplianceRate || 100,
+        totalDefinitions: (data as any).total_definitions || (data as any).totalDefinitions || 0,
+        activeDefinitions: (data as any).active_definitions || (data as any).activeDefinitions || 0,
+        totalViolations: (data as any).total_violations || (data as any).totalViolations || 0,
+        openViolations: (data as any).open_violations || (data as any).openViolations || 0,
+        overallComplianceRate: (data as any).overall_compliance_rate || (data as any).overallComplianceRate || 100,
       });
     } catch (error) {
       console.error('Failed to load SLA stats:', error);
