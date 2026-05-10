@@ -111,25 +111,27 @@ return result
 git clone https://github.com/heidsoft/itsm.git
 cd itsm
 
-# 方式1: 一键启动脚本（推荐）
-./quick-start.sh
+# 方式1: 统一启动脚本（推荐）
+bash scripts/itsm.sh start
 
 # 方式2: Docker Compose
 docker compose up -d --build
 
 # 或使用 Makefile
-make oob-up
+make dev-up
 
 # 查看服务状态
 docker compose ps
 
 # 访问应用
-# 🌐 前端:    http://localhost:3000
-# 🔧 后端:    http://localhost:8090
-# 📚 API文档: http://localhost:8090/swagger
+# 前端:    http://localhost:3000
+# 后端:    http://localhost:8090
+# API文档: http://localhost:8090/swagger
 ```
 
-> **👤 首次登录**: 用户名 `admin`，密码 `admin123`
+> **首次登录**: 用户名 `admin`，密码 `admin123`
+
+> **中国网络**: 如遇 Docker 构建超时，请配置镜像加速: `~/.docker/config.json`
 
 ### 快速验证
 
@@ -362,33 +364,50 @@ cd itsm-frontend && npm run dev
 
 ---
 
-## 📚 文档导航
+## 文档导航
 
-| 📖 [开发指南](./docs/DEVELOPMENT.md) | 🚀 [部署指南](./DEPLOYMENT.md) | ⚙️ [配置参考](./docs/CONFIGURATION.md) |
+| [开发指南](./docs/DEVELOPMENT.md) | [部署指南](./docs/DEPLOYMENT.md) | [配置参考](./docs/CONFIGURATION.md) |
 |:---:|:---:|:---:|
 | 开发环境搭建 | Docker/K8s 部署 | 环境变量详解 |
 
-| 🗄️ [数据库](./docs/DATABASE.md) | 🔧 [运维手册](./docs/OPERATIONS.md) | 🔐 [安全指南](./docs/SECURITY.md) |
+| [数据库](./docs/DATABASE.md) | [运维手册](./docs/OPERATIONS.md) | [AI架构解析](./docs/articles/07-AI-Native-ITSM的架构进化论：Guidance-Harness-Skill三层体系设计.md) |
 |:---:|:---:|:---:|
-| 迁移与备份 | 日志与监控 | 权限与审计 |
+| 迁移与备份 | 日志与监控 | Guidance-Harness-Skill 三层体系 |
 
-| 🤖 [AI架构解析](./docs/articles/07-AI-Native-ITSM的架构进化论：Guidance-Harness-Skill三层体系设计.md) |
-|:---:|
-| Guidance-Harness-Skill 三层体系设计 |
+| [测试框架](./tests/README.md) | [快速启动脚本](./scripts/itsm.sh) | [贡献指南](./CONTRIBUTING.md) |
+|:---:|:---:|:---:|
+| API/UI/数据库测试 | 一键启动 | PR 流程 |
 
 ---
 
-## 🛠️ 常用命令
+## 常用命令
 
 ```bash
-# Docker 开发环境
-make dev-up          # 启动所有服务 (前端:3000 | 后端:8080)
-make dev-down        # 停止服务
-make dev-logs        # 查看日志
+# 统一启动脚本
+bash scripts/itsm.sh start    # 启动所有服务
+bash scripts/itsm.sh stop     # 停止所有服务
+bash scripts/itsm.sh logs      # 查看日志
+bash scripts/itsm.sh status     # 查看状态
+
+# Docker 开发环境 (Makefile)
+make dev-up         # 启动开发环境
+make dev-down       # 停止开发环境
+make dev-logs       # 查看日志
+make dev-shell      # 进入后端容器
+
+# 构建
+make build          # 构建前后端镜像
+make build-backend  # 构建后端镜像
+make build-frontend # 构建前端镜像
+
+# 本地运行
+make run            # 启动后端服务（本地）
+make frontend-run   # 启动前端服务（本地）
 
 # 测试
-cd itsm-frontend && npm run test:e2e   # E2E 测试
-cd itsm-backend && go test ./...        # 后端测试
+make test           # 运行所有测试
+make test-backend   # 运行后端测试
+make test-frontend  # 运行前端测试
 ```
 
 ---
