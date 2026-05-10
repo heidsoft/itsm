@@ -41,7 +41,8 @@ export default function SLAPage() {
         activeDefinitions: (data as any).active_definitions || (data as any).activeDefinitions || 0,
         totalViolations: (data as any).total_violations || (data as any).totalViolations || 0,
         openViolations: (data as any).open_violations || (data as any).openViolations || 0,
-        overallComplianceRate: (data as any).overall_compliance_rate || (data as any).overallComplianceRate || 100,
+        overallComplianceRate:
+          (data as any).overall_compliance_rate || (data as any).overallComplianceRate || 100,
       });
     } catch (error) {
       console.error('Failed to load SLA stats:', error);
