@@ -16,7 +16,10 @@ func CORSMiddleware() gin.HandlerFunc {
 		reqOrigin := c.GetHeader("Origin")
 
 		// 安全策略：优先使用白名单；开发环境默认回显请求 Origin 以支持本地多端口调试
-		if allowedOriginsEnv != "" {
+		// 没有 Origin 头时默认为 *（宽松策略，测试环境需要）
+		if reqOrigin == "" {
+			originHeader = "*"
+		} else if allowedOriginsEnv != "" {
 			// 白名单模式：只允许配置中明确列出的 origin
 			for _, o := range strings.Split(allowedOriginsEnv, ",") {
 				trimmed := strings.TrimSpace(o)
