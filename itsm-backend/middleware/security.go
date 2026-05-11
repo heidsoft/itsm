@@ -16,18 +16,68 @@ import (
 
 // RateLimiter 请求限流器
 type RateLimiter struct {
-	requests map[string][]time.Time
-	mutex    sync.RWMutex
-	limit    int           // 每分钟最大请求数
-	window   time.Duration // 时间窗口
+	requests  map[string][]time.Time
+	mutex     sync.RWMutex
+	limit     int           // 每分钟最大请求数
+	window    time.Duration // 时间窗口
+	maxIPs    int           // 最大跟踪IP数，防止内存无限增长
+	stopClean chan struct{} // 停止清理 goroutine 的信号
 }
+
+const defaultMaxIPs = 10000
 
 // NewRateLimiter 创建限流器
 func NewRateLimiter(limit int, window time.Duration) *RateLimiter {
-	return &RateLimiter{
-		requests: make(map[string][]time.Time),
-		limit:    limit,
-		window:   window,
+	rl := &RateLimiter{
+		requests:  make(map[string][]time.Time),
+		limit:     limit,
+		window:    window,
+		maxIPs:    defaultMaxIPs,
+		stopClean: make(chan struct{}),
+	}
+	// 启动定期清理 goroutine，移除过期 IP 条目
+	go rl.cleanupLoop()
+	return rl
+}
+
+// Stop 停止清理 goroutine
+func (rl *RateLimiter) Stop() {
+	close(rl.stopClean)
+}
+
+// cleanupLoop 定期清理过期的 IP 条目
+func (rl *RateLimiter) cleanupLoop() {
+	ticker := time.NewTicker(rl.window)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-rl.stopClean:
+			return
+		case <-ticker.C:
+			rl.cleanup()
+		}
+	}
+}
+
+// cleanup 移除所有过期的 IP 条目
+func (rl *RateLimiter) cleanup() {
+	rl.mutex.Lock()
+	defer rl.mutex.Unlock()
+
+	cutoff := time.Now().Add(-rl.window)
+	for ip, requests := range rl.requests {
+		// 过滤过期请求
+		valid := make([]time.Time, 0, len(requests))
+		for _, t := range requests {
+			if t.After(cutoff) {
+				valid = append(valid, t)
+			}
+		}
+		if len(valid) == 0 {
+			delete(rl.requests, ip)
+		} else {
+			rl.requests[ip] = valid
+		}
 	}
 }
 
@@ -61,6 +111,21 @@ func (rl *RateLimiter) Allow(clientIP string) bool {
 	// 添加当前请求
 	validRequests = append(validRequests, now)
 	rl.requests[clientIP] = validRequests
+
+	// 如果跟踪的IP数量超过上限，移除最旧的IP条目
+	if len(rl.requests) > rl.maxIPs {
+		oldestIP := ""
+		oldestTime := time.Now()
+		for ip, times := range rl.requests {
+			if len(times) > 0 && times[0].Before(oldestTime) {
+				oldestTime = times[0]
+				oldestIP = ip
+			}
+		}
+		if oldestIP != "" {
+			delete(rl.requests, oldestIP)
+		}
+	}
 
 	return true
 }

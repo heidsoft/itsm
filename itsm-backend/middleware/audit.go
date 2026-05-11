@@ -57,7 +57,13 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 		// read body safely and restore
 		var bodyBytes []byte
 		if c.Request.Body != nil {
-			bodyBytes, _ = io.ReadAll(c.Request.Body)
+			var err error
+			bodyBytes, err = io.ReadAll(c.Request.Body)
+			if err != nil {
+				if globalLogger != nil {
+					globalLogger.Warnw("failed to read request body for audit", "error", err)
+				}
+			}
 			c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 		}
 

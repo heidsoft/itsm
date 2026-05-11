@@ -18,7 +18,7 @@ server:
   mode: "${SERVER_MODE:release}"  # Use env: SERVER_MODE, default release
 
 jwt:
-  secret: "${JWT_SECRET:dev-secret-key-change-in-production-minimum-32-characters-long}"
+  secret: "${JWT_SECRET}"
   expire_time: 900        # 15分钟 (access token)
   refresh_expire_time: 604800  # 7天 (refresh token)
 
@@ -68,7 +68,7 @@ security:
   token_expiry: 24h
   refresh_token_expiry: 168h
   bcrypt_cost: 10
-  csrf_enabled: false  # Disable CSRF protection for development
+  csrf_enabled: true  # Enable CSRF protection (required for production)
 
 # Admin user settings
 admin:

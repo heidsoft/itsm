@@ -4,7 +4,6 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -41,7 +40,7 @@ func DefaultCSRFConfig() *CSRFConfig {
 		HeaderName:    CSRFTokenHeaderName,
 		FormName:      CSRFTokenFormName,
 		CookieMaxAge:  86400,
-		Secure:        false, // 开发环境设为 false
+		Secure:        gin.Mode() == gin.ReleaseMode, // 生产环境启用 Secure
 		SkipPaths: []string{
 			"/api/v1/auth/login",
 			"/api/v1/auth/refresh-token",
@@ -236,11 +235,14 @@ func ValidateCSRFOrigin(c *gin.Context, allowedOrigins []string) bool {
 	}
 
 	if origin == "" {
-		return true // 没有 origin/referer header，可能是同源请求
+		// 无 origin/referer 的跨域请求应被拒绝
+		// 同源请求通常不带 Origin header，但 CSRF 攻击必然带跨域 Origin
+		// 此处安全起见返回 true（同源请求），CSRF token 本身提供保护
+		return true
 	}
 
 	for _, allowed := range allowedOrigins {
-		if strings.HasPrefix(origin, allowed) {
+		if origin == allowed {
 			return true
 		}
 	}

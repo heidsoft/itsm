@@ -274,7 +274,7 @@ const UserManagement: React.FC = () => {
       title: '创建时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (text: string) => text ? new Date(text).toLocaleString('zh-CN') : '-',
+      render: (text: string) => (text ? new Date(text).toLocaleString('zh-CN') : '-'),
     },
     {
       title: '操作',
@@ -321,7 +321,7 @@ const UserManagement: React.FC = () => {
             ],
           }}
         >
-          <Button type="text" icon={<MoreHorizontal size={16} />} />
+          <Button type="text" icon={<MoreHorizontal size={16} />} aria-label="更多操作" />
         </Dropdown>
       ),
     },
@@ -413,7 +413,9 @@ const UserManagement: React.FC = () => {
               >
                 新建用户
               </Button>
-              <Button icon={<Download size={16} />} onClick={() => {
+              <Button
+                icon={<Download size={16} />}
+                onClick={() => {
                   // 导出用户数据
                   const exportData = users.map(user => ({
                     用户名: user.username,
@@ -426,9 +428,11 @@ const UserManagement: React.FC = () => {
                   }));
                   const csvContent = [
                     Object.keys(exportData[0] || {}).join(','),
-                    ...exportData.map(row => Object.values(row).join(','))
+                    ...exportData.map(row => Object.values(row).join(',')),
                   ].join('\n');
-                  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                  const blob = new Blob(['\ufeff' + csvContent], {
+                    type: 'text/csv;charset=utf-8;',
+                  });
                   const url = URL.createObjectURL(blob);
                   const link = document.createElement('a');
                   link.href = url;
@@ -436,7 +440,8 @@ const UserManagement: React.FC = () => {
                   link.click();
                   URL.revokeObjectURL(url);
                   message.success('导出成功');
-                }}>
+                }}
+              >
                 导出
               </Button>
             </Space>

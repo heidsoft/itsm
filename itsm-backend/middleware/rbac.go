@@ -684,28 +684,24 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		tenantIDInterface, exists := c.Get("tenant_id")
 		if !exists {
-			// 对于认证端点，从JWT claim或其他方式获取租户ID
+			// 对于认证端点，尝试从JWT claim获取租户ID
 			if isAuthPath {
-				// 尝试从JWT的tenant_id claim获取
+				// 仅从JWT的tenant_id claim获取，不信任请求头
 				if jwtTenantID, ok := c.Get("tenant_id"); ok {
 					if tid, ok := jwtTenantID.(int); ok && tid > 0 {
 						c.Set("tenant_id", tid)
 						tenantIDInterface = tid
 					}
 				}
-				// 如果仍然没有，从X-Tenant-ID header获取
+				// 如果仍然没有租户ID，拒绝请求而非默认分配
 				if tenantIDInterface == nil {
-					if tenantIDStr := c.GetHeader("X-Tenant-ID"); tenantIDStr != "" {
-						if tid, err := strconv.Atoi(tenantIDStr); err == nil {
-							c.Set("tenant_id", tid)
-							tenantIDInterface = tid
-						}
-					}
-				}
-				// 如果还是没有租户ID，设置默认租户ID=1
-				if tenantIDInterface == nil {
-					c.Set("tenant_id", 1)
-					tenantIDInterface = 1
+					zap.S().Warnw("RBACMiddleware: tenant_id not found in context for auth path",
+						"path", c.Request.URL.Path,
+						"user_id", userID,
+					)
+					common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+					c.Abort()
+					return
 				}
 			} else {
 				zap.S().Warnw("RBACMiddleware: tenant_id not found in context",

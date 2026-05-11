@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"itsm-backend/common"
@@ -25,5 +27,8 @@ func (w *WebhookController) ReceiveAlert(c *gin.Context) {
 	// 解析告警数据
 	// 自动创建事件
 	// 关联CMDB配置项
-	common.Success(c, nil)
+	c.JSON(http.StatusNotImplemented, gin.H{
+		"code":    common.InternalErrorCode,
+		"message": "功能尚未实现",
+	})
 }

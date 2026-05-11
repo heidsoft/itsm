@@ -3,7 +3,6 @@ package middleware
 import (
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -28,16 +27,12 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 		tenantCode := c.GetHeader("X-Tenant-Code")
 		var tenantEntity *ent.Tenant
 		var err error
-		// 1) 如果没有提供租户代码，尝试从 JWT 的 tenant_id 或 X-Tenant-ID 解析
+		// 1) 如果没有提供租户代码，尝试从 JWT 的 tenant_id 获取（不信任请求头）
 		if tenantCode == "" {
 			claimedTenantID := c.GetInt("tenant_id")
 			if claimedTenantID <= 0 {
-				// 尝试从头部 X-Tenant-ID 读取
-				if s := c.GetHeader("X-Tenant-ID"); s != "" {
-					if id, convErr := strconv.Atoi(s); convErr == nil {
-						claimedTenantID = id
-					}
-				}
+				// 不再从 X-Tenant-ID 请求头获取，防止租户绕过
+				// JWT 中的 tenant_id 是唯一的可信来源
 			}
 			if claimedTenantID > 0 {
 				tenantEntity, err = client.Tenant.Get(c.Request.Context(), claimedTenantID)

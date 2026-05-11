@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-itsm_prod}
       POSTGRES_USER: ${DB_USER:-itsm}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-itsm_password_change_me}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
     ports:
       - "5432:5432" # 生产环境建议只暴露给内网，或使用 SSL
     volumes:
@@ -39,7 +39,7 @@ services:
     container_name: itsm-redis-prod
     hostname: redis
     command: >
-      redis-server --requirepass ${REDIS_PASSWORD:-redis_password_change_me}
+      redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
       --maxmemory 2gb --maxmemory-policy allkeys-lru --save 900 1 --save 300 10
       --save 60 10000 --appendonly yes --appendfsync everysec
     ports:
@@ -55,7 +55,7 @@ services:
           "redis-cli",
           "--no-auth-warning",
           "-a",
-          "${REDIS_PASSWORD:-redis_password_change_me}",
+          "${REDIS_PASSWORD:?REDIS_PASSWORD must be set}",
           "ping",
         ]
       interval: 10s
@@ -86,15 +86,15 @@ services:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=${DB_USER:-itsm}
-      - DB_PASSWORD=${DB_PASSWORD:-itsm_password_change_me}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set}
       - DB_NAME=${DB_NAME:-itsm_prod}
       - DB_SSLMODE=${DB_SSLMODE:-disable}
 
       # Redis 配置
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_password_change_me}@redis:6379/0
+      - REDIS_URL=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/0
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password_change_me}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
       - REDIS_DB=0
 
       # 服务配置
@@ -104,7 +104,7 @@ services:
       - SERVER_HOST=0.0.0.0
 
       # JWT 配置（生产环境必须更改！）
-      - JWT_SECRET=${JWT_SECRET:-jwt_secret_change_me_minimum_32_chars_long}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
       - JWT_EXPIRE_TIME=86400
       - JWT_REFRESH_EXPIRE_TIME=604800
 
@@ -119,8 +119,8 @@ services:
 
       # 对象存储（生产用 S3 或 MinIO）
       - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minio_secret_change_me}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY must be set}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:?MINIO_SECRET_KEY must be set}
       - MINIO_BUCKET=${MINIO_BUCKET:-itsm-uploads}
       - MINIO_USE_SSL=${MINIO_USE_SSL:-false}
 

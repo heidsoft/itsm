@@ -289,12 +289,14 @@ func (h *TicketServiceTaskHandler) escalateTicket(ctx context.Context, ticketID 
 	if len(adminIDs) > 0 {
 		content := fmt.Sprintf("工单 %s (#%s) 已升级，原因：%s", ticketEntity.Title, ticketEntity.TicketNumber, escalationReason)
 		for _, adminID := range adminIDs {
-			_ = h.notificationService.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
+			if err := h.notificationService.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
 				UserIDs: []int{adminID},
 				Type:    "escalation",
 				Channel: "in_app",
 				Content: content,
-			}, ticketEntity.TenantID)
+			}, ticketEntity.TenantID); err != nil {
+				h.logger.Warnw("failed to send escalation notification", "error", err, "ticket_id", ticketID, "admin_id", adminID)
+			}
 		}
 	}
 
@@ -346,12 +348,14 @@ func (h *TicketServiceTaskHandler) assignTicket(ctx context.Context, ticketID in
 	if notifyContent == "" {
 		notifyContent = fmt.Sprintf("您被分配了一个新工单：%s (#%s)", ticketEntity.Title, ticketEntity.TicketNumber)
 	}
-	_ = h.notificationService.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
+	if err := h.notificationService.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
 		UserIDs: []int{assigneeID},
 		Type:    "assignment",
 		Channel: "in_app",
 		Content: notifyContent,
-	}, ticketEntity.TenantID)
+	}, ticketEntity.TenantID); err != nil {
+		h.logger.Warnw("failed to send assignment notification", "error", err, "ticket_id", ticketID, "assignee_id", assigneeID)
+	}
 
 	h.logger.Infow("Ticket assigned via BPMN", "ticket_id", ticketID, "assignee_id", assigneeID)
 

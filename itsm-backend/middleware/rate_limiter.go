@@ -44,7 +44,14 @@ func LoginRateLimiter() gin.HandlerFunc {
 		}
 
 		// Actually increment the counter for this valid request
-		_, _ = limiterInstance.Get(c.Request.Context(), key)
+		if _, err := limiterInstance.Get(c.Request.Context(), key); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    500,
+				"message": "限流服务异常",
+			})
+			c.Abort()
+			return
+		}
 
 		c.Next()
 	}

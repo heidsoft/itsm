@@ -614,6 +614,7 @@ const WorkflowManagementPage = () => {
               type="text"
               icon={<GitBranch className="w-4 h-4" />}
               onClick={() => handleDesignWorkflow(record)}
+              aria-label="设计工作流"
             />
           </Tooltip>
           <Tooltip title={t('workflow.viewDetails')}>
@@ -621,6 +622,7 @@ const WorkflowManagementPage = () => {
               type="text"
               icon={<Eye className="w-4 h-4" />}
               onClick={() => router.push(`/workflow/designer?id=${record.id}&key=${record.id}`)}
+              aria-label="查看工作流"
             />
           </Tooltip>
           <Dropdown
@@ -707,7 +709,11 @@ const WorkflowManagementPage = () => {
               ].filter(item => item.style?.display !== 'none'), // 过滤隐藏项目
             }}
           >
-            <Button type="text" icon={<MoreHorizontal className="w-4 h-4" />} />
+            <Button
+              type="text"
+              icon={<MoreHorizontal className="w-4 h-4" />}
+              aria-label="更多操作"
+            />
           </Dropdown>
         </Space>
       ),
@@ -873,7 +879,11 @@ const WorkflowManagementPage = () => {
               >
                 发起流程
               </Button>
-              <Button icon={<Upload className="w-4 h-4" />} onClick={handleImportWorkflow}>
+              <Button
+                icon={<Upload className="w-4 h-4" />}
+                onClick={handleImportWorkflow}
+                aria-label="导入工作流"
+              >
                 {t('workflow.import')}
               </Button>
               <Button
