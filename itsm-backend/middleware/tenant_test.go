@@ -117,7 +117,7 @@ func TestTenantMiddleware(t *testing.T) {
 		assert.Equal(t, "active-tenant", tenantCtx.Tenant.Code)
 	})
 
-	t.Run("Valid Tenant via X-Tenant-ID Header", func(t *testing.T) {
+	t.Run("X-Tenant-ID Header is No Longer Trusted", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 		c.Request, _ = http.NewRequest("GET", "/api/v1/tickets", nil)
@@ -125,8 +125,8 @@ func TestTenantMiddleware(t *testing.T) {
 
 		TenantMiddleware(client)(c)
 
-		// Should not abort
-		assert.False(t, c.IsAborted())
+		// Should abort — X-Tenant-ID header is not a trusted source
+		assert.True(t, c.IsAborted())
 	})
 }
 

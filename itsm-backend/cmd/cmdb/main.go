@@ -53,11 +53,19 @@ func main() {
 	// 初始化路由
 	r := gin.Default()
 
-	// 设置CORS
+	// 设置CORS — 仅允许配置的来源
+	allowedOrigin := os.Getenv("CORS_ALLOWED_ORIGIN")
+	if allowedOrigin == "" {
+		allowedOrigin = "http://localhost:3000"
+	}
 	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
+		origin := c.GetHeader("Origin")
+		if origin == allowedOrigin {
+			c.Header("Access-Control-Allow-Origin", origin)
+		}
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
+		c.Header("Access-Control-Allow-Credentials", "true")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
@@ -65,6 +73,23 @@ func main() {
 		}
 
 		c.Next()
+	})
+
+	// API Key 认证中间件
+	apiKey := os.Getenv("API_KEY")
+	if apiKey == "" {
+		sugar.Warn("API_KEY 环境变量未设置，API 无认证保护！生产环境请务必设置")
+	}
+	r.Use(func(c *gin.Context) {
+		if apiKey == "" {
+			c.Next()
+			return
+		}
+		if c.GetHeader("X-API-Key") == apiKey {
+			c.Next()
+			return
+		}
+		c.AbortWithStatusJSON(401, gin.H{"error": "未授权：缺少有效的 API Key"})
 	})
 
 	// 设置路由

@@ -161,7 +161,7 @@ services:
     build:
       context: ./itsm-frontend
       dockerfile: Dockerfile.frontend
-      target: development
+      target: runner
       args:
         - NODE_ENV=development
     container_name: itsm-frontend-dev

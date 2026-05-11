@@ -187,13 +187,29 @@ func (h *CacheHelper) InvalidateCMDBCache(ctx *gin.Context, tenantID int) error 
 }
 
 // ParsePagination 解析分页参数
-func ParsePagination(c *gin.Context) (page, pageSize int) {
-	page, _ = strconv.Atoi(c.DefaultQuery("page", "1"))
+func ParsePagination(c *gin.Context) (page, pageSize int, err error) {
+	pageStr := c.Query("page")
+	if pageStr != "" {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil {
+			return 0, 0, fmt.Errorf("page 参数必须为数字")
+		}
+	} else {
+		page = 1
+	}
 	if page < 1 {
 		page = 1
 	}
 
-	pageSize, _ = strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	pageSizeStr := c.Query("page_size")
+	if pageSizeStr != "" {
+		pageSize, err = strconv.Atoi(pageSizeStr)
+		if err != nil {
+			return 0, 0, fmt.Errorf("page_size 参数必须为数字")
+		}
+	} else {
+		pageSize = 20
+	}
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 20
 	}

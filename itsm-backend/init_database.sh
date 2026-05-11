@@ -13,6 +13,9 @@ DB_USER=${DB_USER:-"dev"}
 DB_PASSWORD=${DB_PASSWORD:-"dev_password_2026"}
 DB_NAME=${DB_NAME:-"itsm"}
 
+# Admin password is REQUIRED - no hardcoded default
+ADMIN_PASSWORD=${ADMIN_PASSWORD:?"ADMIN_PASSWORD must be set. Run: ADMIN_PASSWORD=your_secure_password $0"}
+
 export PGPASSWORD=${DB_PASSWORD}
 
 echo "📋 数据库配置:"
@@ -42,26 +45,26 @@ echo ""
 
 # 执行初始化 SQL
 echo "📝 执行 SQL 初始化脚本..."
-psql -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} -d ${DB_NAME} << 'EOSQL'
--- 创建默认管理员账号（密码：admin123）
+psql -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} -d ${DB_NAME} -v admin_pw="'${ADMIN_PASSWORD}'" << 'EOSQL'
+-- 创建默认管理员账号（密码由 ADMIN_PASSWORD 环境变量提供）
 DO $$
 DECLARE
-    admin_password TEXT := crypt('admin123', gen_salt('bf'));
+    admin_password TEXT := crypt(:'admin_pw', gen_salt('bf'));
     tenant_id BIGINT;
 BEGIN
     -- 获取默认租户 ID
     SELECT id INTO tenant_id FROM tenants WHERE code = 'default' LIMIT 1;
-    
+
     -- 创建或更新管理员账号
     IF EXISTS (SELECT 1 FROM users WHERE username = 'admin') THEN
         -- 更新现有管理员密码
-        UPDATE users SET 
+        UPDATE users SET
             password_hash = admin_password,
             role = 'admin',
             updated_at = NOW()
         WHERE username = 'admin';
-        
-        RAISE NOTICE 'ℹ️  管理员账号已存在，密码已重置为：admin123';
+
+        RAISE NOTICE 'ℹ️  管理员账号已存在，密码已重置为环境变量提供的密码';
     ELSE
         -- 创建新管理员账号
         INSERT INTO users (id, username, email, password_hash, role, name, department, active, tenant_id, created_at, updated_at)
@@ -78,10 +81,10 @@ BEGIN
             NOW(),
             NOW()
         );
-        
+
         RAISE NOTICE '✅ 默认管理员账号创建成功！';
     END IF;
-    
+
     -- 显示用户统计
     RAISE NOTICE '';
     RAISE NOTICE '📊 用户统计:';
@@ -98,13 +101,13 @@ EOSQL
 echo ""
 echo "✅ 数据库初始化完成！"
 echo ""
-echo "🔐 默认管理员账号："
+echo "🔐 管理员账号："
 echo "   用户名：admin"
-echo "   密码：admin123"
+echo "   密码：（由 ADMIN_PASSWORD 环境变量设置）"
 echo ""
-echo "⚠️  建议首次登录后修改默认密码！"
+echo "⚠️  请确保 ADMIN_PASSWORD 已通过环境变量设置，切勿使用弱密码！"
 echo ""
 echo "🚀 下一步:"
 echo "1. 启动后端服务：cd itsm-backend && go run main.go"
 echo "2. 访问管理后台：http://localhost:8080"
-echo "3. 使用 admin/admin123 登录"
+echo "3. 使用 admin/<your-admin-password> 登录"

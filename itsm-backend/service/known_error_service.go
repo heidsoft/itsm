@@ -7,16 +7,19 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+
+	"go.uber.org/zap"
 )
 
 // KnownErrorService 已知错误服务
 type KnownErrorService struct {
 	client *ent.Client
+	logger *zap.SugaredLogger
 }
 
 // NewKnownErrorService 创建已知错误服务
-func NewKnownErrorService(client *ent.Client) *KnownErrorService {
-	return &KnownErrorService{client: client}
+func NewKnownErrorService(client *ent.Client, logger *zap.SugaredLogger) *KnownErrorService {
+	return &KnownErrorService{client: client, logger: logger}
 }
 
 // CreateKnownError 创建已知错误
@@ -204,7 +207,9 @@ func (s *KnownErrorService) MatchKnownErrorBySymptoms(ctx context.Context, tenan
 		}
 		if e.Symptoms != "" && contains(e.Symptoms, symptoms) {
 			// 增加匹配次数
-			_ = s.IncrementOccurrenceCount(ctx, e.ID)
+			if err := s.IncrementOccurrenceCount(ctx, e.ID); err != nil {
+				s.logger.Warnw("failed to increment occurrence count", "knownErrorID", e.ID, "error", err)
+			}
 			return e, nil
 		}
 	}

@@ -206,19 +206,23 @@ func (a *AIController) Chat(c *gin.Context) {
 		}
 	}
 	if convID != 0 {
-		_ = a.client.Message.Create().
+		if _, err := a.client.Message.Create().
 			SetConversationID(convID).
 			SetRole("user").
 			SetContent(req.Query).
 			SetRequestID(c.GetString("request_id")).
-			Exec(c.Request.Context())
+			Exec(c.Request.Context()); err != nil {
+			a.logger.Warn("failed to save user message", zap.Error(err))
+		}
 		payload, _ := json.Marshal(items)
-		_ = a.client.Message.Create().
+		if _, err := a.client.Message.Create().
 			SetConversationID(convID).
 			SetRole("assistant").
 			SetContent(string(payload)).
 			SetRequestID(c.GetString("request_id")).
-			Exec(c.Request.Context())
+			Exec(c.Request.Context()); err != nil {
+			a.logger.Warn("failed to save assistant message", zap.Error(err))
+		}
 	}
 	common.Success(c, gin.H{"answers": items, "conversation_id": convID})
 }
@@ -324,7 +328,10 @@ type ApproveRequest struct {
 func (a *AIController) ApproveTool(c *gin.Context) {
 	idStr := c.Param("id")
 	var body ApproveRequest
-	_ = c.ShouldBindJSON(&body)
+	if err := c.ShouldBindJSON(&body); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误")
+		return
+	}
 	// load invocation
 	id, _ := strconv.Atoi(idStr)
 	inv, err := a.client.ToolInvocation.Get(c.Request.Context(), id)
@@ -338,12 +345,18 @@ func (a *AIController) ApproveTool(c *gin.Context) {
 		return
 	}
 	if !body.Approve {
-		_, _ = a.client.ToolInvocation.UpdateOneID(inv.ID).SetApprovalState("rejected").SetApprovalReason(body.Reason).Save(c.Request.Context())
+		if _, err := a.client.ToolInvocation.UpdateOneID(inv.ID).SetApprovalState("rejected").SetApprovalReason(body.Reason).Save(c.Request.Context()); err != nil {
+			common.Fail(c, common.InternalErrorCode, "操作失败")
+			return
+		}
 		common.Success(c, gin.H{"invocation_id": inv.ID, "approval_state": "rejected"})
 		return
 	}
 	// approve and enqueue
-	_, _ = a.client.ToolInvocation.UpdateOneID(inv.ID).SetApprovalState("approved").SetApprovedBy(c.GetInt("user_id")).Save(c.Request.Context())
+	if _, err := a.client.ToolInvocation.UpdateOneID(inv.ID).SetApprovalState("approved").SetApprovedBy(c.GetInt("user_id")).Save(c.Request.Context()); err != nil {
+		common.Fail(c, common.InternalErrorCode, "操作失败")
+		return
+	}
 	if a.queue != nil {
 		a.queue.Enqueue(service.ToolJob{InvocationID: inv.ID, TenantID: c.GetInt("tenant_id"), RequestID: c.GetString("request_id")})
 	}
@@ -388,7 +401,10 @@ type RunEmbedRequest struct {
 // RunEmbed 触发一次嵌入流水线（按当前租户）
 func (a *AIController) RunEmbed(c *gin.Context) {
 	var req RunEmbedRequest
-	_ = c.ShouldBindJSON(&req)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误")
+		return
+	}
 	if req.Limit <= 0 {
 		req.Limit = 50
 	}

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"strconv"
+	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -9,6 +10,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// getIntFromContext safely extracts an int from gin context with type assertion.
+// Returns the value and true if successful, or 0 and false if the key is missing or wrong type.
+func getIntFromContext(c *gin.Context, key string) (int, bool) {
+	val, exists := c.Get(key)
+	if !exists {
+		return 0, false
+	}
+	v, ok := val.(int)
+	return v, ok
+}
 
 // ApprovalController 审批流程控制器
 type ApprovalController struct {
@@ -38,13 +50,13 @@ func (c *ApprovalController) CreateWorkflow(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+	tid, ok := getIntFromContext(ctx, "tenant_id")
+	if !ok {
+		common.Fail(ctx, common.AuthFailedCode, "无效的租户ID")
 		return
 	}
 
-	response, err := c.approvalService.CreateWorkflow(ctx.Request.Context(), &req, tenantID.(int))
+	response, err := c.approvalService.CreateWorkflow(ctx.Request.Context(), &req, tid)
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "创建工作流失败: "+err.Error())
 		return
@@ -77,13 +89,13 @@ func (c *ApprovalController) UpdateWorkflow(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+	tid, ok := getIntFromContext(ctx, "tenant_id")
+	if !ok {
+		common.Fail(ctx, common.AuthFailedCode, "无效的租户ID")
 		return
 	}
 
-	response, err := c.approvalService.UpdateWorkflow(ctx.Request.Context(), id, &req, tenantID.(int))
+	response, err := c.approvalService.UpdateWorkflow(ctx.Request.Context(), id, &req, tid)
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "更新工作流失败: "+err.Error())
 		return
@@ -109,13 +121,13 @@ func (c *ApprovalController) DeleteWorkflow(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+	tid, ok := getIntFromContext(ctx, "tenant_id")
+	if !ok {
+		common.Fail(ctx, common.AuthFailedCode, "无效的租户ID")
 		return
 	}
 
-	err = c.approvalService.DeleteWorkflow(ctx.Request.Context(), id, tenantID.(int))
+	err = c.approvalService.DeleteWorkflow(ctx.Request.Context(), id, tid)
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "删除工作流失败: "+err.Error())
 		return
@@ -138,9 +150,9 @@ func (c *ApprovalController) DeleteWorkflow(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/approval-workflows [get]
 func (c *ApprovalController) ListWorkflows(ctx *gin.Context) {
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+	tid, ok := getIntFromContext(ctx, "tenant_id")
+	if !ok {
+		common.Fail(ctx, common.AuthFailedCode, "无效的租户ID")
 		return
 	}
 
@@ -168,7 +180,7 @@ func (c *ApprovalController) ListWorkflows(ctx *gin.Context) {
 		}
 	}
 
-	workflows, total, err := c.approvalService.ListWorkflows(ctx.Request.Context(), filters, tenantID.(int), page, pageSize)
+	workflows, total, err := c.approvalService.ListWorkflows(ctx.Request.Context(), filters, tid, page, pageSize)
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "获取工作流列表失败: "+err.Error())
 		return
@@ -191,19 +203,58 @@ func (c *ApprovalController) GetWorkflow(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+	tid, ok := getIntFromContext(ctx, "tenant_id")
+	if !ok {
+		common.Fail(ctx, common.AuthFailedCode, "无效的租户ID")
 		return
 	}
 
-	workflow, err := c.approvalService.GetWorkflow(ctx.Request.Context(), id, tenantID.(int))
+	workflow, err := c.approvalService.GetWorkflow(ctx.Request.Context(), id, tid)
 	if err != nil {
+		// 检查是否是"未找到"错误
+		if err.Error() == "ent: not found" || strings.Contains(err.Error(), "not found") {
+			ctx.JSON(404, common.Response{
+				Code:    404,
+				Message: "审批工作流不存在",
+				Data:    nil,
+			})
+			return
+		}
 		common.Fail(ctx, common.InternalErrorCode, "获取工作流失败: "+err.Error())
 		return
 	}
 
 	common.Success(ctx, workflow)
+}
+
+// PatchWorkflow 部分更新审批工作流
+func (c *ApprovalController) PatchWorkflow(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的工作流ID: "+err.Error())
+		return
+	}
+
+	tid, ok := getIntFromContext(ctx, "tenant_id")
+	if !ok {
+		common.Fail(ctx, common.AuthFailedCode, "无效的租户ID")
+		return
+	}
+
+	var req dto.UpdateApprovalWorkflowRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	response, err := c.approvalService.UpdateWorkflow(ctx.Request.Context(), id, &req, tid)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "更新工作流失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, response)
 }
 
 // GetApprovalRecords 获取审批记录
@@ -238,13 +289,13 @@ func (c *ApprovalController) GetApprovalRecords(ctx *gin.Context) {
 		}
 	}
 
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+	tid, ok := getIntFromContext(ctx, "tenant_id")
+	if !ok {
+		common.Fail(ctx, common.AuthFailedCode, "无效的租户ID")
 		return
 	}
 
-	records, total, err := c.approvalService.GetApprovalRecords(ctx.Request.Context(), &req, tenantID.(int))
+	records, total, err := c.approvalService.GetApprovalRecords(ctx.Request.Context(), &req, tid)
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "获取审批记录失败: "+err.Error())
 		return
@@ -273,27 +324,27 @@ func (c *ApprovalController) SubmitApproval(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+	tid, ok := getIntFromContext(ctx, "tenant_id")
+	if !ok {
+		common.Fail(ctx, common.AuthFailedCode, "无效的租户ID")
 		return
 	}
 
 	// 获取当前用户ID
-	userID, exists := ctx.Get("user_id")
-	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 用户信息缺失")
+	uid, ok := getIntFromContext(ctx, "user_id")
+	if !ok {
+		common.Fail(ctx, common.AuthFailedCode, "无效的用户ID")
 		return
 	}
 
 	err := c.approvalService.SubmitApproval(
 		ctx.Request.Context(),
 		req.ApprovalID,
-		userID.(int),
+		uid,
 		req.Action,
 		req.Comment,
 		req.DelegateToUserID,
-		tenantID.(int),
+		tid,
 	)
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "提交审批失败: "+err.Error())
