@@ -117,16 +117,20 @@ func (s *ProvisioningService) ExecuteTask(ctx context.Context, taskID, tenantID,
 
 	// 回写任务状态 + ServiceRequest
 	if execErr != nil {
-		_ = s.client.ProvisioningTask.UpdateOneID(task.ID).
+		if err := s.client.ProvisioningTask.UpdateOneID(task.ID).
 			Where(provisioningtask.TenantID(tenantID)).
 			SetStatus(string(provisioning.TaskFailed)).
 			SetErrorMessage(execErr.Error()).
-			Exec(ctx)
-		_ = s.client.ServiceRequest.Update().
+			Exec(ctx); err != nil {
+			s.logger.Warnw("failed to update task status to failed", "taskID", task.ID, "error", err)
+		}
+		if err := s.client.ServiceRequest.Update().
 			Where(servicerequest.ID(task.ServiceRequestID), servicerequest.TenantID(tenantID)).
 			SetStatus("failed").
 			SetLastError(execErr.Error()).
-			Exec(ctx)
+			Exec(ctx); err != nil {
+			s.logger.Warnw("failed to update service request status to failed", "serviceRequestID", task.ServiceRequestID, "error", err)
+		}
 		return nil, execErr
 	}
 
@@ -142,10 +146,12 @@ func (s *ProvisioningService) ExecuteTask(ctx context.Context, taskID, tenantID,
 		Exec(ctx); err != nil {
 		return nil, fmt.Errorf("回写任务结果失败: %w", err)
 	}
-	_ = s.client.ServiceRequest.Update().
+	if err := s.client.ServiceRequest.Update().
 		Where(servicerequest.ID(task.ServiceRequestID), servicerequest.TenantID(tenantID)).
 		SetStatus("delivered").
-		Exec(ctx)
+		Exec(ctx); err != nil {
+		s.logger.Warnw("failed to update service request status to delivered", "serviceRequestID", task.ServiceRequestID, "error", err)
+	}
 
 	// 返回最新任务
 	return s.client.ProvisioningTask.Get(ctx, task.ID)

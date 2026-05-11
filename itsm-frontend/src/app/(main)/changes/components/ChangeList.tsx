@@ -6,94 +6,9 @@ import type { TablePaginationConfig } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import { Eye, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Change, changeService } from '@/lib/services/change-service';
+import { getStatusColor, getPriorityColor } from '@/lib/utils/color-tokens';
 
-const getChangeStatusColor = (status: string) => {
-  switch (status) {
-    case 'pending':
-      return {
-        color: '#fa8c16',
-        text: '待审批',
-        backgroundColor: '#fff7e6',
-      };
-    case 'approved':
-      return {
-        color: '#1890ff',
-        text: '审批通过',
-        backgroundColor: '#e6f7ff',
-      };
-    case 'implementing':
-      return {
-        color: '#722ed1',
-        text: '实施中',
-        backgroundColor: '#f9f0ff',
-      };
-    case 'completed':
-      return {
-        color: '#52c41a',
-        text: '已完成',
-        backgroundColor: '#f6ffed',
-      };
-    case 'cancelled':
-      return {
-        color: '#ff4d4f',
-        text: '已取消',
-        backgroundColor: '#fff2f0',
-      };
-    case 'draft':
-      return {
-        color: '#8c8c8c',
-        text: '草稿',
-        backgroundColor: '#f5f5f5',
-      };
-    case 'rejected':
-      return {
-        color: '#ff4d4f',
-        text: '已拒绝',
-        backgroundColor: '#fff2f0',
-      };
-    default:
-      return {
-        color: '#8c8c8c',
-        text: status,
-        backgroundColor: '#f5f5f5',
-      };
-  }
-};
-
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case 'urgent':
-      return {
-        color: '#ff4d4f',
-        text: '紧急',
-        backgroundColor: '#fff2f0',
-      };
-    case 'high':
-      return {
-        color: '#fa8c16',
-        text: '高',
-        backgroundColor: '#fff7e6',
-      };
-    case 'medium':
-      return {
-        color: '#1890ff',
-        text: '中',
-        backgroundColor: '#e6f7ff',
-      };
-    case 'low':
-      return {
-        color: '#52c41a',
-        text: '低',
-        backgroundColor: '#f6ffed',
-      };
-    default:
-      return {
-        color: '#8c8c8c',
-        text: priority,
-        backgroundColor: '#f5f5f5',
-      };
-  }
-};
+// Note: getStatusColor and getPriorityColor now use design tokens from color-tokens.ts
 
 interface ChangeListProps {
   changes: Change[];
@@ -153,7 +68,7 @@ export const ChangeList: React.FC<ChangeListProps> = ({
       key: 'status',
       width: 120,
       render: (status: string) => {
-        const statusConfig = getChangeStatusColor(status);
+        const statusConfig = getStatusColor(status);
         return <Badge color={statusConfig.color} text={statusConfig.text} />;
       },
     },
@@ -262,7 +177,7 @@ export const ChangeList: React.FC<ChangeListProps> = ({
               icon={<MoreHorizontal size={16} />}
               className="text-gray-600 hover:text-gray-800 hover:bg-gray-50"
               title="更多操作"
-              onClick={(e) => e.preventDefault()}
+              onClick={e => e.preventDefault()}
             />
           </Dropdown>
         </Space>

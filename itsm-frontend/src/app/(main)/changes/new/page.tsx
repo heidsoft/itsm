@@ -88,6 +88,7 @@ const CreateChangePage = () => {
         <button
           onClick={() => router.back()}
           className="flex items-center text-blue-600 hover:underline mb-4"
+          aria-label="返回变更列表"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           返回变更列表

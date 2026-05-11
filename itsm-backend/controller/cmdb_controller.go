@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type CMDBController struct {
@@ -41,9 +43,8 @@ func (c *CMDBController) SetCloudDiscoveryService(svc *service.CloudDiscoverySer
 
 // CreateCI 创建配置项（统一走 ent 层，携带租户 ID）
 func (c *CMDBController) CreateCI(ctx *gin.Context) {
-	tenantIDVal, _ := ctx.Get("tenant_id")
-	tenantID, _ := tenantIDVal.(int)
-	if tenantID == 0 {
+	tenantID, ok := getIntFromContext(ctx, "tenant_id")
+	if !ok {
 		common.Fail(ctx, common.AuthFailedCode, "租户ID无效")
 		ctx.Abort()
 		return
@@ -128,9 +129,8 @@ func (c *CMDBController) GetCI(ctx *gin.Context) {
 		return
 	}
 
-	tenantIDVal, _ := ctx.Get("tenant_id")
-	tenantID, _ := tenantIDVal.(int)
-	if tenantID == 0 {
+	tenantID, ok := getIntFromContext(ctx, "tenant_id")
+	if !ok {
 		common.Fail(ctx, common.AuthFailedCode, "租户ID无效")
 		ctx.Abort()
 		return
@@ -1041,10 +1041,15 @@ func (c *CMDBController) GetDiscoveryStatus(ctx *gin.Context) {
 		return
 	}
 
-	tenantIDVal, _ := ctx.Get("tenant_id")
-	tenantID, _ := tenantIDVal.(int)
-	if tenantID == 0 {
-		tenantID = 1 // 默认租户
+	tenantIDVal, exists := ctx.Get("tenant_id")
+	if !exists {
+		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok || tenantID <= 0 {
+		common.Fail(ctx, common.AuthFailedCode, "无效的租户ID")
+		return
 	}
 
 	status, err := c.cloudDiscoveryService.GetDiscoveryStatus(ctx.Request.Context(), tenantID)
@@ -1063,17 +1068,23 @@ func (c *CMDBController) RunDiscovery(ctx *gin.Context) {
 		return
 	}
 
-	tenantIDVal, _ := ctx.Get("tenant_id")
-	tenantID, _ := tenantIDVal.(int)
-	if tenantID == 0 {
-		tenantID = 1 // 默认租户
+	tenantIDVal, exists := ctx.Get("tenant_id")
+	if !exists {
+		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok || tenantID <= 0 {
+		common.Fail(ctx, common.AuthFailedCode, "无效的租户ID")
+		return
 	}
 
 	// 异步执行发现任务
 	go func() {
-		err := c.cloudDiscoveryService.DiscoverAll(ctx.Request.Context(), tenantID)
-		if err != nil {
-			fmt.Printf("Cloud discovery error: %v\n", err)
+		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+		if err := c.cloudDiscoveryService.DiscoverAll(bgCtx, tenantID); err != nil {
+			zap.S().Warnw("Cloud discovery failed", "error", err, "tenant_id", tenantID)
 		}
 	}()
 

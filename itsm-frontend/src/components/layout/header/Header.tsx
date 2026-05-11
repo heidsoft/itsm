@@ -153,7 +153,7 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
       key: 'zh-CN',
       label: (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>🇨🇳</span>
+          <span style={{ fontSize: 14 }}>中</span>
           <span>中文</span>
           {language === 'zh-CN' && <span style={{ color: DESIGN.colors.accent }}>✓</span>}
         </div>
@@ -164,7 +164,7 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
       key: 'en-US',
       label: (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>🇺🇸</span>
+          <span style={{ fontSize: 14 }}>En</span>
           <span>English</span>
           {language === 'en-US' && <span style={{ color: DESIGN.colors.accent }}>✓</span>}
         </div>

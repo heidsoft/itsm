@@ -82,12 +82,226 @@
   background-color: rgba(255, 77, 79, 0.1) !important;
 }
 
-/* Select 下拉框样式修复 - 仅在暗色主题下生效 */
+/* Select 下拉框样式修复 - 亮色模式（默认） */
+/* 确保所有下拉框在亮色模式下使用一致的白色背景 */
+.ant-select-dropdown,
+:root .ant-select-dropdown {
+  background-color: #ffffff !important;
+  border-radius: 8px !important;
+  border: 1px solid #e5e5e5 !important;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+.ant-select-item,
+:root .ant-select-item {
+  color: #404040 !important;
+  background-color: transparent !important;
+}
+
+.ant-select-item-option-disabled,
+:root .ant-select-item-option-disabled {
+  color: #a3a3a3 !important;
+}
+
+.ant-select-item-option-active:not(.ant-select-item-option-disabled),
+:root .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: #f5f5f5 !important;
+}
+
+.ant-select-item-option-selected,
+:root .ant-select-item-option-selected {
+  background-color: #e6f4ff !important;
+  color: #1890ff !important;
+  font-weight: 500 !important;
+}
+
+.ant-select-selection-item,
+:global(:root) .ant-select-selection-item,
+:global(:root) .ant-select-selection-search-input {
+  color: #404040 !important;
+}
+
+/* DatePicker/TimePicker 下拉面板样式 - 亮色模式（默认） */
+.ant-picker-dropdown,
+:global(:root) .ant-picker-dropdown,
+.ant-picker-dropdown.ant-picker-dropdown-placement-topLeft,
+:global(:root) .ant-picker-dropdown.ant-picker-dropdown-placement-topLeft,
+.ant-picker-dropdown.ant-picker-dropdown-placement-topRight,
+:global(:root) .ant-picker-dropdown.ant-picker-dropdown-placement-topRight,
+.ant-picker-dropdown.ant-picker-dropdown-placement-bottomLeft,
+:global(:root) .ant-picker-dropdown.ant-picker-dropdown-placement-bottomLeft,
+.ant-picker-dropdown.ant-picker-dropdown-placement-bottomRight,
+:global(:root) .ant-picker-dropdown.ant-picker-dropdown-placement-bottomRight {
+  background-color: #ffffff !important;
+  color: #404040 !important;
+  border-radius: 8px !important;
+  border: 1px solid #e5e5e5 !important;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+.ant-picker-panel,
+:global(:root) .ant-picker-panel {
+  background-color: #ffffff !important;
+  color: #404040 !important;
+}
+
+.ant-picker-header,
+:global(:root) .ant-picker-header,
+.ant-picker-body,
+:global(:root) .ant-picker-body,
+.ant-picker-footer,
+:global(:root) .ant-picker-footer {
+  background-color: transparent !important;
+  color: #404040 !important;
+}
+
+.ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner,
+:global(:root) .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner,
+.ant-picker-cell:hover .ant-picker-cell-inner,
+:global(:root) .ant-picker-cell:hover .ant-picker-cell-inner {
+  background-color: #f5f5f5 !important;
+  color: #404040 !important;
+}
+
+.ant-picker-cell.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner,
+:global(:root) .ant-picker-cell.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner {
+  background-color: #e6f4ff !important;
+  color: #1890ff !important;
+}
+
+.ant-picker-time-panel-column,
+:global(:root) .ant-picker-time-panel-column {
+  background-color: transparent !important;
+}
+
+.ant-picker-time-panel-cell-inner,
+:global(:root) .ant-picker-time-panel-cell-inner {
+  color: #404040 !important;
+}
+
+.ant-picker-time-panel-cell-inner:hover,
+:global(:root) .ant-picker-time-panel-cell-inner:hover {
+  background-color: #f5f5f5 !important;
+}
+
+.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner,
+:global(:root) .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+  background-color: #e6f4ff !important;
+  color: #1890ff !important;
+}
+
+/* ColorPicker 下拉样式 - 亮色模式（默认） */
+.ant-color-dropdown,
+:global(:root) .ant-color-dropdown {
+  background-color: #ffffff !important;
+  border-radius: 8px !important;
+  border: 1px solid #e5e5e5 !important;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08) !important;
+}
+
+.ant-color-dropdown-link,
+:global(:root) .ant-color-dropdown-link,
+.ant-color-dropdown-button,
+:global(:root) .ant-color-dropdown-button {
+  color: #404040 !important;
+}
+
+.ant-color-dropdown-link:hover,
+:global(:root) .ant-color-dropdown-link:hover {
+  background-color: #f5f5f5 !important;
+}
+
+/* TreeSelect 下拉样式 - 亮色模式（默认） */
+.ant-select-tree-dropdown,
+:global(:root) .ant-select-tree-dropdown {
+  background-color: #ffffff !important;
+  color: #404040 !important;
+  border-radius: 8px !important;
+  border: 1px solid #e5e5e5 !important;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08) !important;
+}
+
+.ant-select-tree-dropdown .ant-select-tree-node-content-wrapper,
+:global(:root) .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper,
+.ant-select-tree-dropdown .ant-select-tree-title,
+:global(:root) .ant-select-tree-dropdown .ant-select-tree-title {
+  color: #404040 !important;
+}
+
+.ant-select-tree-dropdown .ant-select-tree-node-content-wrapper:hover,
+:global(:root) .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper:hover {
+  background-color: #f5f5f5 !important;
+}
+
+.ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper,
+:global(:root) .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper,
+.ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-title,
+:global(:root) .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-title {
+  background-color: #e6f4ff !important;
+  color: #1890ff !important;
+}
+
+/* Cascader 下拉样式 - 亮色模式（默认） */
+.ant-cascader-dropdown,
+:global(:root) .ant-cascader-dropdown {
+  background-color: #ffffff !important;
+  color: #404040 !important;
+  border-radius: 8px !important;
+  border: 1px solid #e5e5e5 !important;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08) !important;
+}
+
+.ant-cascader-menu-item,
+:global(:root) .ant-cascader-menu-item,
+.ant-cascader-menu-item-active,
+:global(:root) .ant-cascader-menu-item-active,
+.ant-cascader-menu-item-expand-selected,
+:global(:root) .ant-cascader-menu-item-expand-selected,
+.ant-cascader-menu-item-selected,
+:global(:root) .ant-cascader-menu-item-selected {
+  color: #404040 !important;
+  background-color: transparent !important;
+}
+
+.ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled),
+:global(:root) .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled) {
+  background-color: #f5f5f5 !important;
+}
+
+.ant-cascader-menu-item-selected,
+:global(:root) .ant-cascader-menu-item-selected {
+  background-color: #e6f4ff !important;
+  color: #1890ff !important;
+}
+
+/* Mentions 下拉样式 - 亮色模式（默认） */
+.ant-mentions-dropdown,
+:global(:root) .ant-mentions-dropdown {
+  background-color: #ffffff !important;
+  color: #404040 !important;
+  border-radius: 8px !important;
+  border: 1px solid #e5e5e5 !important;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08) !important;
+}
+
+.ant-mentions-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled),
+:global(:root) .ant-mentions-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: #f5f5f5 !important;
+  color: #404040 !important;
+}
+
+.ant-mentions-dropdown .ant-select-item-option-selected,
+:global(:root) .ant-mentions-dropdown .ant-select-item-option-selected {
+  background-color: #e6f4ff !important;
+  color: #1890ff !important;
+}
+
+/* Select 下拉框样式修复 - 暗色模式 */
 .dark .ant-select-dropdown,
 :root:not(.light) .ant-select-dropdown {
   background-color: #333 !important;
   color: #fff !important;
-  border-radius: 4px !important;
+  border-radius: 8px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
 }
@@ -112,7 +326,6 @@
 .dark .ant-select-item-option-selected,
 :root:not(.light) .ant-select-item-option-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
-  color: #fff !important;
 }
 
 .dark .ant-select-selection-item,

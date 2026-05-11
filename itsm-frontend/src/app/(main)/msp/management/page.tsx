@@ -1,19 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Card,
-  Form,
-  Select,
-  Input,
-  Button,
-  Table,
-  message,
-  Modal,
-  Space,
-  Tag,
-  Alert,
-} from 'antd';
+import { Card, Form, Select, Input, Button, Table, message, Modal, Space, Tag, Alert } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import MSPService from '@/services/msp-service';
 import type { MSPAllocation, CreateAllocationRequest } from '@/types/msp';
@@ -23,16 +11,48 @@ const { Option } = Select;
 export default function MSPManagementPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
   const [allocations, setAllocations] = useState<MSPAllocation[]>([]);
   const [customers, setCustomers] = useState<{ id: number; code: string; name: string }[]>([]);
   const [mspUsers, setMSPUsers] = useState<{ id: number; username: string }[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAllocation, setSelectedAllocation] = useState<MSPAllocation | null>(null);
   const [deallocateLoading, setDeallocateLoading] = useState(false);
+  const [accessError, setAccessError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData();
+    checkAccess();
   }, []);
+
+  const checkAccess = async () => {
+    try {
+      const { isMSP, isAdmin } = await MSPService.isMSPUser();
+      if (isMSP || isAdmin) {
+        setHasAccess(true);
+        loadData();
+      } else {
+        setAccessError('您没有权限访问此页面');
+      }
+    } catch (err: any) {
+      setAccessError(err.message || '检查权限失败');
+    }
+  };
+
+  if (accessError) {
+    return (
+      <div style={{ padding: 24 }}>
+        <Alert message={accessError} type="error" showIcon />
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <div style={{ padding: 24, textAlign: 'center' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   const loadData = async () => {
     setLoading(true);
@@ -47,7 +67,10 @@ export default function MSPManagementPage() {
       // 暂时使用已分配的 MSP 用户
       const uniqueUsers = Array.from(
         new Map(
-          allocRes.allocations.map((a) => [a.msp_user_id, { id: a.msp_user_id, username: a.msp_username || '' }])
+          allocRes.allocations.map(a => [
+            a.msp_user_id,
+            { id: a.msp_user_id, username: a.msp_username || '' },
+          ])
         ).values()
       );
       setMSPUsers(uniqueUsers);
@@ -176,7 +199,7 @@ export default function MSPManagementPage() {
             rules={[{ required: true, message: '请选择 MSP 员工' }]}
           >
             <Select placeholder="选择 MSP 员工">
-              {mspUsers.map((user) => (
+              {mspUsers.map(user => (
                 <Option key={user.id} value={user.id}>
                   {user.username}
                 </Option>
@@ -190,7 +213,7 @@ export default function MSPManagementPage() {
             rules={[{ required: true, message: '请选择客户租户' }]}
           >
             <Select placeholder="选择客户租户" showSearch optionFilterProp="children">
-              {customers.map((cust) => (
+              {customers.map(cust => (
                 <Option key={cust.id} value={cust.id}>
                   {cust.code} - {cust.name}
                 </Option>

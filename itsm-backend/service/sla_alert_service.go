@@ -470,7 +470,9 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 				}
 
 				// 发送站内通知
-				_ = s.notificationSvc.NotifySLAAlertLevelChanged(ctx, ticketEntity.ID, alertLevel, percentage, tenantID)
+				if err := s.notificationSvc.NotifySLAAlertLevelChanged(ctx, ticketEntity.ID, alertLevel, percentage, tenantID); err != nil {
+					s.logger.Warnw("failed to send SLA alert level change notification", "error", err, "ticket_id", ticketEntity.ID, "alert_level", alertLevel)
+				}
 
 				// 如果是严重级别，发送邮件通知
 				if alertLevel == "critical" && s.notificationSvc.emailService != nil {
@@ -491,16 +493,20 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 					if len(emails) > 0 {
 						content := fmt.Sprintf("【严重SLA预警】工单 #%s 剩余时间不足 %.1f%%，请立即处理！",
 							ticketEntity.TicketNumber, percentage)
-						_ = s.notificationSvc.emailService.SendTicketNotification(
-							ctx, emails, ticketEntity.TicketNumber, ticketEntity.Title, "sla_alert", content)
+						if err := s.notificationSvc.emailService.SendTicketNotification(
+							ctx, emails, ticketEntity.TicketNumber, ticketEntity.Title, "sla_alert", content); err != nil {
+							s.logger.Warnw("failed to send SLA critical alert email", "error", err, "ticket_id", ticketEntity.ID)
+						}
 					}
 				}
 
 				// 标记通知已发送
 				if alertHistory != nil {
-					_, _ = s.client.SLAAlertHistory.UpdateOneID(alertHistory.ID).
+					if _, err := s.client.SLAAlertHistory.UpdateOneID(alertHistory.ID).
 						SetNotificationSent(true).
-						Save(ctx)
+						Save(ctx); err != nil {
+						s.logger.Warnw("failed to mark alert notification as sent", "error", err, "alert_history_id", alertHistory.ID)
+					}
 				}
 			}
 

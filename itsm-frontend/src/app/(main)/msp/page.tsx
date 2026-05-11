@@ -28,6 +28,7 @@ import type { MSPAllocation, MSPCustomerReport, MSPContext } from '@/types/msp';
 export default function MSPDashboardPage() {
   const [loading, setLoading] = useState(false);
   const [isMSP, setIsMSP] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [allocations, setAllocations] = useState<MSPAllocation[]>([]);
   const [customers, setCustomers] = useState<{ id: number; code: string; name: string }[]>([]);
   const [reports, setReports] = useState<MSPCustomerReport[]>([]);
@@ -39,17 +40,20 @@ export default function MSPDashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (isMSP) {
+    if (isMSP || isAdmin) {
       loadDashboardData();
     }
-  }, [isMSP]);
+  }, [isMSP, isAdmin]);
 
   const checkMSPAccess = async () => {
     try {
-      const mspFlag = await MSPService.isMSPUser();
+      const { isMSP: mspFlag, isAdmin: adminFlag } = await MSPService.isMSPUser();
       setIsMSP(mspFlag);
-      if (!mspFlag) {
+      setIsAdmin(adminFlag);
+      if (!mspFlag && !adminFlag) {
         setError('您不是 MSP 员工，无法访问此页面');
+      } else if (adminFlag) {
+        setError(null); // 管理员可以访问
       }
     } catch (err: any) {
       setError(err.message || '检查 MSP 状态失败');

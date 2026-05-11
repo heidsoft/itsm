@@ -368,7 +368,9 @@ func (s *TicketNotificationService) NotifySLABreached(
 			}
 		}
 		if len(emails) > 0 {
-			_ = s.emailService.SendTicketNotification(ctx, emails, ticket.TicketNumber, ticket.Title, "sla_breached", content)
+			if err := s.emailService.SendTicketNotification(ctx, emails, ticket.TicketNumber, ticket.Title, "sla_breached", content); err != nil {
+				s.logger.Warnw("failed to send SLA breach email notification", "error", err, "ticket_id", ticketID)
+			}
 		}
 	}
 
@@ -384,10 +386,12 @@ func (s *TicketNotificationService) NotifySLABreached(
 		if len(phones) > 0 {
 			smsContent := fmt.Sprintf("【ITSM系统】SLA告警：工单 %s 的%s已超时 %.1f 分钟，请立即处理！",
 				ticket.TicketNumber, slaType, exceededMinutes)
-			_ = s.smsService.Send(ctx, &SMSMessage{
+			if err := s.smsService.Send(ctx, &SMSMessage{
 				PhoneNumbers: phones,
 				Content:      smsContent,
-			})
+			}); err != nil {
+				s.logger.Warnw("failed to send SLA breach SMS notification", "error", err, "ticket_id", ticketID)
+			}
 		}
 	}
 
@@ -452,9 +456,12 @@ func (s *TicketNotificationService) ListTicketNotifications(
 		if notification.Edges.User != nil {
 			userEntity = notification.Edges.User
 		} else {
-			userEntity, _ = s.client.User.Get(ctx, notification.UserID)
+			userEntity, err := s.client.User.Get(ctx, notification.UserID)
+			if err != nil {
+				s.logger.Warnw("failed to get user for notification response", "error", err, "user_id", notification.UserID)
+			}
+			responses = append(responses, dto.ToTicketNotificationResponse(notification, userEntity))
 		}
-		responses = append(responses, dto.ToTicketNotificationResponse(notification, userEntity))
 	}
 
 	return responses, nil
@@ -505,9 +512,12 @@ func (s *TicketNotificationService) ListUserNotifications(
 		if notification.Edges.User != nil {
 			userEntity = notification.Edges.User
 		} else {
-			userEntity, _ = s.client.User.Get(ctx, notification.UserID)
+			userEntity, err := s.client.User.Get(ctx, notification.UserID)
+			if err != nil {
+				s.logger.Warnw("failed to get user for notification response", "error", err, "user_id", notification.UserID)
+			}
+			responses = append(responses, dto.ToTicketNotificationResponse(notification, userEntity))
 		}
-		responses = append(responses, dto.ToTicketNotificationResponse(notification, userEntity))
 	}
 
 	return responses, total, nil
@@ -624,12 +634,16 @@ func (s *TicketNotificationService) SendAssignmentNotification(ticketID, assigne
 	}
 	ctx := context.Background()
 	content := fmt.Sprintf("您被分配了工单 #%d", ticketID)
-	_ = s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
+
+	tenantID := s.resolveTenantID(ctx, ticketID)
+	if err := s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
 		UserIDs: []int{assigneeID},
 		Type:    "assigned",
 		Channel: "in_app",
 		Content: content,
-	}, 0)
+	}, tenantID); err != nil {
+		s.logger.Warnw("failed to send assignment notification", "error", err, "ticket_id", ticketID)
+	}
 }
 
 // SendEscalationNotification 发送工单升级通知
@@ -639,12 +653,16 @@ func (s *TicketNotificationService) SendEscalationNotification(ticketID, newAssi
 	}
 	ctx := context.Background()
 	content := fmt.Sprintf("工单 #%d 已被升级，新处理人: %d", ticketID, newAssignee)
-	_ = s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
+
+	tenantID := s.resolveTenantID(ctx, ticketID)
+	if err := s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
 		UserIDs: []int{newAssignee},
 		Type:    "escalated",
 		Channel: "in_app",
 		Content: content,
-	}, 0)
+	}, tenantID); err != nil {
+		s.logger.Warnw("failed to send escalation notification", "error", err, "ticket_id", ticketID)
+	}
 }
 
 // SendResolutionNotification 发送工单解决通知
@@ -654,10 +672,25 @@ func (s *TicketNotificationService) SendResolutionNotification(ticketID, request
 	}
 	ctx := context.Background()
 	content := fmt.Sprintf("工单 #%d 已被解决", ticketID)
-	_ = s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
+
+	tenantID := s.resolveTenantID(ctx, ticketID)
+	if err := s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
 		UserIDs: []int{requesterID},
 		Type:    "resolved",
 		Channel: "in_app",
 		Content: content,
-	}, 0)
+	}, tenantID); err != nil {
+		s.logger.Warnw("failed to send resolution notification", "error", err, "ticket_id", ticketID)
+	}
+}
+
+// resolveTenantID resolves the tenant ID for a ticket from the database.
+// Returns 0 if the ticket cannot be found (callers should handle this appropriately).
+func (s *TicketNotificationService) resolveTenantID(ctx context.Context, ticketID int) int {
+	ticketEntity, err := s.client.Ticket.Get(ctx, ticketID)
+	if err != nil {
+		s.logger.Warnw("failed to resolve tenant ID for ticket", "error", err, "ticket_id", ticketID)
+		return 0
+	}
+	return ticketEntity.TenantID
 }
