@@ -251,7 +251,9 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 		userID = u.ID
 		userName = u.Name
 	}
-	_ = e.auditService.RecordProcessStarted(ctx, instance, userID, userName, variables)
+	if err := e.auditService.RecordProcessStarted(ctx, instance, userID, userName, variables); err != nil {
+		e.logger.Warnw("audit record failed", "error", err)
+	}
 
 	return instance, nil
 }
@@ -327,7 +329,9 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 		userName = u.Name
 	}
 	variablesBefore := task.TaskVariables
-	_ = e.auditService.RecordTaskCompleted(ctx, task, userID, userName, variablesBefore, variables)
+	if err := e.auditService.RecordTaskCompleted(ctx, task, userID, userName, variablesBefore, variables); err != nil {
+		e.logger.Warnw("audit record failed", "error", err)
+	}
 
 	return nil
 }
@@ -621,7 +625,7 @@ func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanc
 		userID = u.ID
 		userName = u.Name
 	}
-	_ = e.auditService.RecordAudit(ctx, &AuditContext{
+	if err := e.auditService.RecordAudit(ctx, &AuditContext{
 		ProcessInstanceID:    instance.ID,
 		ProcessInstanceKey:   instance.ProcessInstanceID,
 		ProcessDefinitionKey: instance.ProcessDefinitionKey,
@@ -634,7 +638,9 @@ func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanc
 		UserName:             userName,
 		Comment:              reason,
 		TenantID:             instance.TenantID,
-	})
+	}); err != nil {
+		e.logger.Warnw("audit record failed", "error", err)
+	}
 
 	return nil
 }
@@ -663,7 +669,7 @@ func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstance
 		userID = u.ID
 		userName = u.Name
 	}
-	_ = e.auditService.RecordAudit(ctx, &AuditContext{
+	if err := e.auditService.RecordAudit(ctx, &AuditContext{
 		ProcessInstanceID:    instance.ID,
 		ProcessInstanceKey:   instance.ProcessInstanceID,
 		ProcessDefinitionKey: instance.ProcessDefinitionKey,
@@ -675,7 +681,9 @@ func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstance
 		UserID:               userID,
 		UserName:             userName,
 		TenantID:             instance.TenantID,
-	})
+	}); err != nil {
+		e.logger.Warnw("audit record failed", "error", err)
+	}
 
 	return nil
 }
@@ -717,7 +725,7 @@ func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInsta
 		userID = u.ID
 		userName = u.Name
 	}
-	_ = e.auditService.RecordAudit(ctx, &AuditContext{
+	if err := e.auditService.RecordAudit(ctx, &AuditContext{
 		ProcessInstanceID:    instance.ID,
 		ProcessInstanceKey:   instance.ProcessInstanceID,
 		ProcessDefinitionKey: instance.ProcessDefinitionKey,
@@ -730,7 +738,9 @@ func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInsta
 		UserName:             userName,
 		Comment:              reason,
 		TenantID:             instance.TenantID,
-	})
+	}); err != nil {
+		e.logger.Warnw("audit record failed", "error", err)
+	}
 
 	return nil
 }

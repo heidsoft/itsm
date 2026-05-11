@@ -122,6 +122,7 @@ const ServiceRequestPage = () => {
           <button
             onClick={() => router.push('/service-catalog')}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            aria-label="返回服务目录"
           >
             返回服务目录
           </button>
@@ -136,6 +137,7 @@ const ServiceRequestPage = () => {
         <button
           onClick={() => router.back()}
           className="flex items-center text-blue-600 hover:underline mb-4"
+          aria-label="返回服务目录"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           返回服务目录

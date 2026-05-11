@@ -248,7 +248,9 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 
 	// 发送SLA违规通知
 	if s.notificationSvc != nil {
-		_ = s.notificationSvc.NotifySLABreached(ctx, t.ID, violationType, exceededMinutes, t.TenantID)
+		if err := s.notificationSvc.NotifySLABreached(ctx, t.ID, violationType, exceededMinutes, t.TenantID); err != nil {
+			s.logger.Warnw("failed to send SLA breach notification", "error", err, "ticket_id", t.ID, "violation_type", violationType)
+		}
 	}
 
 	s.logger.Infow("SLA violation created and notification sent", "ticket_id", t.ID,

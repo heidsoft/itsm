@@ -313,46 +313,53 @@ const TicketTemplatesPage = () => {
       });
 
       // 将API响应转换为组件期望的格式
-      const apiTemplates: TicketTemplate[] = (response.items || []).map((item: {
-        id: number;
-        name: string;
-        description: string;
-        category: string;
-        content?: Record<string, unknown>;
-        created_at?: string;
-        updated_at?: string;
-      }) => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        type: (item.content?.type as string) || item.category?.toLowerCase() || 'incident',
-        category: item.category,
-        subcategory: item.content?.subcategory as string || undefined,
-        priority: (item.content?.priority as string) || 'medium',
-        estimatedTime: (item.content?.estimatedTime as string) || '1 hour',
-        sla: (item.content?.sla as string) || '4 hours',
-        slaType: (item.content?.slaType as 'hours' | 'days' | 'business_hours') || 'hours',
-        impact: (item.content?.impact as string) || 'individual',
-        urgency: (item.content?.urgency as string) || 'medium',
-        businessValue: (item.content?.businessValue as string) || 'medium',
-        source: (item.content?.source as string) || 'web',
-        assigneeGroup: item.content?.assigneeGroup as string || undefined,
-        autoAssign: (item.content?.autoAssign as boolean) || false,
-        requiresApproval: (item.content?.requiresApproval as boolean) || false,
-        approvalLevel: (item.content?.approvalLevel as string) || 'none',
-        customFields: (item.content?.customFields as CustomField[]) || [],
-        tags: (item.content?.tags as string[]) || [],
-        isActive: true,
-        isPublic: true,
-        createdBy: 'System',
-        createdAt: item.created_at || new Date().toISOString(),
-        updatedAt: item.updated_at || new Date().toISOString(),
-        usageCount: 0,
-        rating: 4.0,
-        version: '1.0',
-        icon: <FileText size={20} />,
-        color: item.category === 'System Access' ? 'red' : item.category === 'Hardware Equipment' ? 'orange' : 'blue',
-      }));
+      const apiTemplates: TicketTemplate[] = (response.items || []).map(
+        (item: {
+          id: number;
+          name: string;
+          description: string;
+          category: string;
+          content?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        }) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          type: (item.content?.type as string) || item.category?.toLowerCase() || 'incident',
+          category: item.category,
+          subcategory: (item.content?.subcategory as string) || undefined,
+          priority: (item.content?.priority as string) || 'medium',
+          estimatedTime: (item.content?.estimatedTime as string) || '1 hour',
+          sla: (item.content?.sla as string) || '4 hours',
+          slaType: (item.content?.slaType as 'hours' | 'days' | 'business_hours') || 'hours',
+          impact: (item.content?.impact as string) || 'individual',
+          urgency: (item.content?.urgency as string) || 'medium',
+          businessValue: (item.content?.businessValue as string) || 'medium',
+          source: (item.content?.source as string) || 'web',
+          assigneeGroup: (item.content?.assigneeGroup as string) || undefined,
+          autoAssign: (item.content?.autoAssign as boolean) || false,
+          requiresApproval: (item.content?.requiresApproval as boolean) || false,
+          approvalLevel: (item.content?.approvalLevel as string) || 'none',
+          customFields: (item.content?.customFields as CustomField[]) || [],
+          tags: (item.content?.tags as string[]) || [],
+          isActive: true,
+          isPublic: true,
+          createdBy: 'System',
+          createdAt: item.created_at || new Date().toISOString(),
+          updatedAt: item.updated_at || new Date().toISOString(),
+          usageCount: 0,
+          rating: 4.0,
+          version: '1.0',
+          icon: <FileText size={20} />,
+          color:
+            item.category === 'System Access'
+              ? 'red'
+              : item.category === 'Hardware Equipment'
+                ? 'orange'
+                : 'blue',
+        })
+      );
 
       setTemplates(apiTemplates);
     } catch (error) {
@@ -425,6 +432,7 @@ const TicketTemplatesPage = () => {
             type="text"
             icon={<Edit size={16} />}
             onClick={() => handleEditTemplate(template)}
+            aria-label="编辑模板"
           />
         </Tooltip>,
         <Tooltip title="Copy template" key="copy">
@@ -432,6 +440,7 @@ const TicketTemplatesPage = () => {
             type="text"
             icon={<Copy size={16} />}
             onClick={() => handleCopyTemplate(template)}
+            aria-label="复制模板"
           />
         </Tooltip>,
         <Tooltip title="Delete template" key="delete">
@@ -441,7 +450,7 @@ const TicketTemplatesPage = () => {
             okText="Confirm"
             cancelText="Cancel"
           >
-            <Button type="text" danger icon={<Delete size={16} />} />
+            <Button type="text" danger icon={<Delete size={16} />} aria-label="删除模板" />
           </Popconfirm>
         </Tooltip>,
       ]}
@@ -560,11 +569,13 @@ const TicketTemplatesPage = () => {
               type="text"
               icon={<Edit size={16} />}
               onClick={() => handleEditTemplate(template)}
+              aria-label="编辑模板"
             />
             <Button
               type="text"
               icon={<Copy size={16} />}
               onClick={() => handleCopyTemplate(template)}
+              aria-label="复制模板"
             />
             <Popconfirm
               title="Are you sure you want to delete this template?"
@@ -572,7 +583,7 @@ const TicketTemplatesPage = () => {
               okText="Confirm"
               cancelText="Cancel"
             >
-              <Button type="text" danger icon={<Delete size={16} />} />
+              <Button type="text" danger icon={<Delete size={16} />} aria-label="删除模板" />
             </Popconfirm>
           </Space>
         </div>
@@ -591,10 +602,15 @@ const TicketTemplatesPage = () => {
           </p>
         </div>
         <Space>
-          <Button icon={<RefreshCw size={16} />} onClick={loadTemplates}>
+          <Button icon={<RefreshCw size={16} />} onClick={loadTemplates} aria-label="刷新模板列表">
             Refresh
           </Button>
-          <Button type="primary" icon={<Plus size={16} />} onClick={handleCreateTemplate}>
+          <Button
+            type="primary"
+            icon={<Plus size={16} />}
+            onClick={handleCreateTemplate}
+            aria-label="新建模板"
+          >
             New Template
           </Button>
         </Space>

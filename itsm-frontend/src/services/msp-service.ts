@@ -12,7 +12,7 @@ import type {
 
 export class MSPService {
   // 缓存当前用户 MSP 状态
-  private static _isMSPUser: boolean | null = null;
+  private static _isMSPUser: { isMSP: boolean; isAdmin: boolean } | null = null;
   private static mspContext: MSPContext | null = null;
 
   /**
@@ -127,9 +127,9 @@ export class MSPService {
   }
 
   /**
-   * 检查当前用户是否是 MSP 员工（带缓存）
+   * 检查当前用户是否是 MSP 员工或管理员（带缓存）
    */
-  static async isMSPUser(): Promise<boolean> {
+  static async isMSPUser(): Promise<{ isMSP: boolean; isAdmin: boolean }> {
     if (this._isMSPUser !== null) {
       return this._isMSPUser;
     }

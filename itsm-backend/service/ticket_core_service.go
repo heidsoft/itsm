@@ -141,7 +141,9 @@ func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.Crea
 created:
 
 	if len(req.TagIDs) > 0 {
-		_, _ = ticket.Update().AddTagIDs(req.TagIDs...).Save(ctx)
+		if _, err := ticket.Update().AddTagIDs(req.TagIDs...).Save(ctx); err != nil {
+			s.logger.Warnw("failed to associate tags with ticket", "ticketID", ticket.ID, "tagIDs", req.TagIDs, "error", err)
+		}
 	}
 
 	return ticket, nil

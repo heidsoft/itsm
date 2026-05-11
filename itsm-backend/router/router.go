@@ -25,7 +25,6 @@ import (
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 )
@@ -216,44 +215,46 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		auth.Use(middleware.CSRFProtectionMiddleware(csrfConfig))
 	}
 
-	// WebSocket 路由（需要JWT认证）
-	// 注意: WebSocket无法使用标准Authorization header，需要从query参数获取token
-	// 放在 auth group 之外，避免 AuthMiddleware 拦截
+	// WebSocket 路由（使用短期票据替代JWT query参数，避免token泄露）
+	// 票据流程:
+	//   1. 客户端 POST /api/v1/ws/ticket (携带 Authorization header) 获取短期票据
+	//   2. 客户端使用 ?ticket=<ticket> 建立 WebSocket 连接
+	//   3. 票据验证后立即销毁（一次性使用）
+	var wsTicketStore *WSTicketStore
 	if config.WebSocketService != nil {
+		wsTicketStore = NewWSTicketStore(DefaultWSTicketTTL)
+
+		// 票据颁发端点（需要JWT认证）
+		auth.POST("/ws/ticket", func(c *gin.Context) {
+			userID, _ := c.Get("user_id")
+			tenantID, _ := c.Get("tenant_id")
+
+			ticketStr, err := wsTicketStore.Generate(userID.(int), tenantID.(int))
+			if err != nil {
+				common.Fail(c, common.InternalErrorCode, "生成票据失败")
+				return
+			}
+
+			common.Success(c, gin.H{"ticket": ticketStr})
+		})
+
+		// WebSocket 连接端点（使用短期票据认证）
 		wsGroup := r.Group("/api/v1")
 		wsGroup.GET("/ws/notifications", func(c *gin.Context) {
-			// 从query参数获取token (前端使用 ?token=xxx&user_id=1)
-			tokenStr := c.Query("token")
-			if tokenStr == "" {
-				common.Fail(c, common.AuthFailedCode, "缺少认证token")
+			ticketStr := c.Query("ticket")
+			if ticketStr == "" {
+				common.Fail(c, common.AuthFailedCode, "缺少认证票据")
 				c.Abort()
 				return
 			}
 
-			// 解析JWT获取用户信息
-			token, err := jwt.ParseWithClaims(tokenStr, &middleware.Claims{}, func(token *jwt.Token) (interface{}, error) {
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, jwt.ErrSignatureInvalid
-				}
-				return []byte(config.JWTSecret), nil
-			})
-
-			if err != nil || !token.Valid {
-				zap.S().Warnw("WebSocket auth: token parse failed", "error", err, "token_length", len(tokenStr))
-				common.Fail(c, common.AuthFailedCode, "token无效")
-				c.Abort()
-				return
-			}
-
-			claims, ok := token.Claims.(*middleware.Claims)
+			userID, tenantID, ok := wsTicketStore.Redeem(ticketStr)
 			if !ok {
-				common.Fail(c, common.AuthFailedCode, "token解析失败")
+				common.Fail(c, common.AuthFailedCode, "票据无效或已过期")
 				c.Abort()
 				return
 			}
 
-			userID := claims.UserID
-			tenantID := claims.TenantID
 			config.WebSocketService.HandleWebSocket(c.Writer, c.Request, userID, tenantID)
 		})
 	}
@@ -265,8 +266,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		msp.Use(middleware.RBACMiddleware(config.Client)) // 设置 client 到 context
 		msp.Use(middleware.MSPMiddleware(config.Client))
 		{
-			// MSP 基础信息 - 需要 msp:read 权限
-			msp.GET("/status", middleware.RequireMSPPermission("msp", "read"), config.MSPController.GetMSPStatus)
+			// MSP 基础信息 - 允许 MSP 员工和管理员访问
+			msp.GET("/status", config.MSPController.GetMSPStatus)
 			msp.GET("/context", middleware.RequireMSPPermission("msp", "read"), config.MSPController.GetMSPContext)
 
 			// 分配管理 - 需要 msp_allocation 权限
@@ -375,6 +376,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					approvalWorkflows.POST("", config.ApprovalController.CreateWorkflow)
 					approvalWorkflows.GET("/:id", config.ApprovalController.GetWorkflow)
 					approvalWorkflows.PUT("/:id", config.ApprovalController.UpdateWorkflow)
+					approvalWorkflows.PATCH("/:id", config.ApprovalController.PatchWorkflow)
 					approvalWorkflows.DELETE("/:id", config.ApprovalController.DeleteWorkflow)
 				}
 			}

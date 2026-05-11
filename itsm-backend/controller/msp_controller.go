@@ -36,24 +36,43 @@ func NewMSPController(
 
 // GetMSPStatus 获取当前用户的 MSP 状态
 // @Summary 获取MSP状态
-// @Description 返回当前用户是否是MSP员工
+// @Description 返回当前用户是否是MSP员工或管理员
 // @Tags MSP管理
 // @Produce json
 // @Success 200 {object} common.Response
 // @Router /api/v1/msp/status [get]
 func (mc *MSPController) GetMSPStatus(c *gin.Context) {
 	mspCtx, exists := middleware.GetMSPContext(c)
-	if !exists {
+
+	// 检查是否是超级管理员或租户管理员，管理员可以访问所有MSP功能
+	userRole, _ := c.Get("user_role")
+	isAdmin := userRole == "super_admin" || userRole == "admin"
+
+	if exists && mspCtx.IsMSP {
 		common.Success(c, gin.H{
-			"is_msp": false,
-			"message": "非MSP用户",
+			"is_msp":     true,
+			"msp_user_id": mspCtx.MSPUserID,
+			"role":       mspCtx.Role,
+			"is_admin":   isAdmin,
 		})
 		return
 	}
+
+
+	// 如果是管理员，返回管理员状态但不标记为MSP员工
+	if isAdmin {
+		common.Success(c, gin.H{
+			"is_msp":     false,
+			"is_admin":   true,
+			"message":    "管理员模式：可配置MSP功能",
+		})
+		return
+	}
+
 	common.Success(c, gin.H{
-		"is_msp": mspCtx.IsMSP,
-		"msp_user_id": mspCtx.MSPUserID,
-		"role": mspCtx.Role,
+		"is_msp":  false,
+		"is_admin": false,
+		"message": "非MSP用户",
 	})
 }
 

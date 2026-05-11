@@ -107,12 +107,15 @@ export class MSPAPI {
   /**
    * 检查当前用户是否是 MSP 员工
    */
-  static async isMSPUser(): Promise<boolean> {
+  static async isMSPUser(): Promise<{ isMSP: boolean; isAdmin: boolean }> {
     try {
-      const res = await httpClient.get<ApiResponse<{ is_msp: boolean }>>('/api/v1/msp/status');
-      return res.data?.is_msp || false;
+      const res = await httpClient.get<ApiResponse<{ is_msp: boolean; is_admin?: boolean }>>('/api/v1/msp/status');
+      return {
+        isMSP: res.data?.is_msp || false,
+        isAdmin: res.data?.is_admin || false,
+      };
     } catch {
-      return false;
+      return { isMSP: false, isAdmin: false };
     }
   }
 

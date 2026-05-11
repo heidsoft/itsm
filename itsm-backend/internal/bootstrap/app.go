@@ -537,11 +537,15 @@ func (app *Application) startBackgroundTasks() {
 		tenants, err := app.DBClient.Tenant.Query().All(ctx)
 		if err == nil {
 			for _, t := range tenants {
-				_ = pipeline.RunOnce(ctx, t.ID, 200)
+				if err := pipeline.RunOnce(ctx, t.ID, 200); err != nil {
+					app.Logger.Warnw("embedding pipeline failed", "error", err, "tenant_id", t.ID)
+				}
 			}
 		} else {
 			// fallback default tenant 1
-			_ = pipeline.RunOnce(ctx, 1, 200)
+			if err := pipeline.RunOnce(ctx, 1, 200); err != nil {
+				app.Logger.Warnw("embedding pipeline failed", "error", err, "tenant_id", 1)
+			}
 		}
 		// periodic incremental per tenant
 		ticker := time.NewTicker(15 * time.Minute)
@@ -552,7 +556,9 @@ func (app *Application) startBackgroundTasks() {
 				continue
 			}
 			for _, t := range tenants {
-				_ = pipeline.RunOnce(ctx, t.ID, 50)
+				if err := pipeline.RunOnce(ctx, t.ID, 50); err != nil {
+					app.Logger.Warnw("embedding pipeline failed", "error", err, "tenant_id", t.ID)
+				}
 			}
 		}
 	}()
@@ -579,7 +585,9 @@ func (app *Application) startBackgroundTasks() {
 					continue
 				}
 				for _, t := range tenants {
-					_, _ = slaMonitorService.CheckSLAViolations(ctx, t.ID)
+					if _, err := slaMonitorService.CheckSLAViolations(ctx, t.ID); err != nil {
+						app.Logger.Warnw("SLA violation check failed", "error", err, "tenant_id", t.ID)
+					}
 				}
 			case <-escalationTicker.C:
 				tenants, err := app.DBClient.Tenant.Query().All(ctx)
@@ -587,7 +595,9 @@ func (app *Application) startBackgroundTasks() {
 					continue
 				}
 				for _, t := range tenants {
-					_ = escalationService.ProcessEscalations(ctx, t.ID)
+					if err := escalationService.ProcessEscalations(ctx, t.ID); err != nil {
+						app.Logger.Warnw("escalation processing failed", "error", err, "tenant_id", t.ID)
+					}
 				}
 			}
 		}

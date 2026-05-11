@@ -1,5 +1,7 @@
 // 安全工具库
 
+import DOMPurify from 'dompurify';
+
 // XSS防护
 export const xssProtection = {
   // HTML转义
@@ -207,7 +209,9 @@ export const passwordSecurity = {
     let password = '';
 
     for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * charset.length);
+      const randomArray = new Uint32Array(1);
+      crypto.getRandomValues(randomArray);
+      const randomIndex = randomArray[0] % charset.length;
       password += charset[randomIndex];
     }
 
@@ -294,12 +298,11 @@ export const contentSecurity = {
 
   // 清理危险内容
   sanitizeContent: (content: string): string => {
-    return content
-      .replace(/<script[^>]*>.*?<\/script>/gi, '')
-      .replace(/javascript:/gi, '')
-      .replace(/on\w+\s*=/gi, '')
-      .replace(/eval\s*\(/gi, '')
-      .replace(/document\.write/gi, '');
+      if (typeof DOMPurify !== 'undefined') {
+          return DOMPurify.sanitize(content, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li'], ALLOWED_ATTR: ['href', 'target'] });
+      }
+      // Fallback for SSR: strip all tags
+      return content.replace(/<[^>]*>/g, '');
   },
 };
 
