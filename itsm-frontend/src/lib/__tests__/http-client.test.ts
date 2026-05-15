@@ -37,10 +37,31 @@ jest.mock('@/lib/security', () => ({
 // Mock env module
 jest.mock('@/lib/env', () => ({
   logger: {
+    debug: jest.fn(),
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
   },
+}));
+
+// Mock tenant-context module
+jest.mock('@/lib/auth/tenant-context', () => ({
+  getTenantId: jest.fn().mockReturnValue(null),
+  getTenantCode: jest.fn().mockReturnValue(null),
+  setTenantId: jest.fn(),
+  setTenantCode: jest.fn(),
+  clearTenantContext: jest.fn(),
+}));
+
+// Mock auth/token-storage
+jest.mock('@/lib/auth/token-storage', () => ({
+  getAccessToken: jest.fn().mockReturnValue(null),
+  getRefreshToken: jest.fn().mockReturnValue(null),
+  setAccessToken: jest.fn(),
+  setRefreshToken: jest.fn(),
+  clearAuthStorage: jest.fn(),
+  isAuthenticated: jest.fn().mockReturnValue(false),
+  STORAGE_KEYS: {},
 }));
 
 // 延迟导入以确保 mock 生效
@@ -82,17 +103,18 @@ describe('HttpClient', () => {
   });
 
   describe('tenant management', () => {
-    it('should set and get tenant ID', () => {
+    it('should set and get tenant ID (deprecated — delegates to TenantContext)', () => {
+      // setTenantId is now a no-op (deprecated); getTenantId reads from TenantContext
       client.setTenantId(123);
-      expect(client.getTenantId()).toBe(123);
+      expect(client.getTenantId()).toBeNull(); // TenantContext not initialized in test
     });
 
-    it('should set and get tenant code', () => {
+    it('should set and get tenant code (deprecated — delegates to TenantContext)', () => {
       client.setTenantCode('acme');
-      expect(client.getTenantCode()).toBe('acme');
+      expect(client.getTenantCode()).toBeNull(); // TenantContext not initialized in test
     });
 
-    it('should clear tenant ID', () => {
+    it('should clear tenant ID (deprecated — no-op)', () => {
       client.setTenantId(123);
       client.setTenantId(null);
       expect(client.getTenantId()).toBeNull();

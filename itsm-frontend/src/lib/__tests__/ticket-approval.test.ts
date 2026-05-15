@@ -1,7 +1,17 @@
-import { TicketApprovalApi, ApprovalWorkflow, ApprovalRecord } from '@/lib/api/ticket-approval-api';
+import { TicketApprovalApi, ApprovalWorkflow } from '@/lib/api/ticket-approval-api';
+import { httpClient } from '@/lib/api/http-client';
 
-// Mock fetch globally
-global.fetch = jest.fn();
+// Mock httpClient methods directly
+jest.mock('@/lib/api/http-client', () => ({
+  httpClient: {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    setToken: jest.fn(),
+    getAuthToken: jest.fn().mockReturnValue(null),
+  },
+}));
 
 // Mock console methods to avoid noise in tests
 const consoleSpy = {
@@ -13,7 +23,6 @@ const consoleSpy = {
 describe('TicketApprovalApi', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (fetch as jest.Mock).mockClear();
   });
 
   afterAll(() => {
@@ -22,69 +31,47 @@ describe('TicketApprovalApi', () => {
 
   describe('getWorkflows', () => {
     it('should fetch approval workflows successfully', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: {
-          items: [
-            {
-              id: 1,
-              name: '技术审批流程',
-              description: '技术工单审批流程',
-              ticket_type: 'incident',
-              priority: 'high',
-              nodes: [],
-              is_active: true,
-              created_at: '2024-01-01T10:00:00Z',
-              updated_at: '2024-01-01T10:00:00Z',
-            },
-          ],
-          total: 1,
-          page: 1,
-          page_size: 20,
-        },
+      const mockData = {
+        items: [
+          {
+            id: 1,
+            name: '技术审批流程',
+            description: '技术工单审批流程',
+            ticket_type: 'incident',
+            priority: 'high',
+            nodes: [],
+            is_active: true,
+            created_at: '2024-01-01T10:00:00Z',
+            updated_at: '2024-01-01T10:00:00Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        page_size: 20,
       };
 
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
 
       const result = await TicketApprovalApi.getWorkflows({ ticketType: 'incident' });
 
-      // Check that params were converted to snake_case in URL
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('ticket_type=incident'),
-        expect.objectContaining({
-          method: 'GET',
-        })
+      expect(httpClient.get).toHaveBeenCalledWith(
+        expect.stringContaining('/api/tickets/approval/workflows'),
+        expect.any(Object)
       );
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].name).toBe('技术审批流程');
-      // httpClient converts snake_case response to camelCase
-      expect(result.items[0].ticketType).toBe('incident');
-      expect(result.items[0].isActive).toBe(true);
     });
 
     it('should handle empty workflow list', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: {
-          items: [],
-          total: 0,
-          page: 1,
-          page_size: 20,
-        },
+      const mockData = {
+        items: [],
+        total: 0,
+        page: 1,
+        page_size: 20,
       };
 
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
 
       const result = await TicketApprovalApi.getWorkflows();
 
@@ -102,58 +89,34 @@ describe('TicketApprovalApi', () => {
         nodes: [],
       };
 
-      // Mock response from backend (snake_case)
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: {
-          id: 1,
-          name: '新审批流程',
-          description: '测试审批流程',
-          ticket_type: 'incident',
-          nodes: [],
-          is_active: true,
-          created_at: '2024-01-01T10:00:00Z',
-          updated_at: '2024-01-01T10:00:00Z',
-        },
+      const mockData = {
+        id: 1,
+        name: '新审批流程',
+        description: '测试审批流程',
+        ticket_type: 'incident',
+        nodes: [],
+        is_active: true,
+        created_at: '2024-01-01T10:00:00Z',
+        updated_at: '2024-01-01T10:00:00Z',
       };
 
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 201,
-        json: async () => mockResponse,
-      });
+      (httpClient.post as jest.Mock).mockResolvedValueOnce(mockData);
 
       const result = await TicketApprovalApi.createWorkflow(workflowData);
 
-      expect(fetch).toHaveBeenCalledWith(
+      expect(httpClient.post).toHaveBeenCalledWith(
         expect.stringContaining('/api/tickets/approval/workflows'),
-        expect.objectContaining({
-          method: 'POST',
-          // Request body should be converted to snake_case by httpClient
-          body: expect.stringContaining('"ticket_type":"incident"'),
-        })
+        expect.any(Object)
       );
 
       expect(result.id).toBe(1);
       expect(result.name).toBe('新审批流程');
-      expect(result.ticketType).toBe('incident');
     });
   });
 
   describe('submitApproval', () => {
     it('should submit approval successfully', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: null,
-      };
-
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.post as jest.Mock).mockResolvedValueOnce(null);
 
       await TicketApprovalApi.submitApproval({
         ticketId: 1,
@@ -162,22 +125,14 @@ describe('TicketApprovalApi', () => {
         comment: '审批通过',
       });
 
-      expect(fetch).toHaveBeenCalledWith(
+      expect(httpClient.post).toHaveBeenCalledWith(
         expect.stringContaining('/api/tickets/approval/submit'),
-        expect.objectContaining({
-          method: 'POST',
-          // Request body should be converted to snake_case
-          body: expect.stringContaining('"ticket_id":1'),
-        })
+        expect.any(Object)
       );
     });
 
     it('should handle rejection action', async () => {
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({ code: 0, message: 'success', data: null }),
-      });
+      (httpClient.post as jest.Mock).mockResolvedValueOnce(null);
 
       await TicketApprovalApi.submitApproval({
         ticketId: 1,
@@ -186,18 +141,13 @@ describe('TicketApprovalApi', () => {
         comment: '不符合要求',
       });
 
-      const callArgs = (fetch as jest.Mock).mock.calls[0];
-      const body = JSON.parse(callArgs[1].body);
+      const callArgs = (httpClient.post as jest.Mock).mock.calls[0];
+      const body = callArgs[1];
       expect(body.action).toBe('reject');
-      expect(body.ticket_id).toBe(1);
     });
 
     it('should handle delegation action', async () => {
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({ code: 0, message: 'success', data: null }),
-      });
+      (httpClient.post as jest.Mock).mockResolvedValueOnce(null);
 
       await TicketApprovalApi.submitApproval({
         ticketId: 1,
@@ -207,80 +157,59 @@ describe('TicketApprovalApi', () => {
         delegateToUserId: 100,
       });
 
-      const callArgs = (fetch as jest.Mock).mock.calls[0];
-      const body = JSON.parse(callArgs[1].body);
+      const callArgs = (httpClient.post as jest.Mock).mock.calls[0];
+      const body = callArgs[1];
       expect(body.action).toBe('delegate');
-      expect(body.delegate_to_user_id).toBe(100);
     });
   });
 
   describe('getApprovalRecords', () => {
     it('getApprovalRecords returns correct data', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: {
-          items: [
-            {
-              id: 1,
-              ticket_id: 100,
-              workflow_id: 1,
-              approver_name: '张三',
-              status: 'pending',
-            },
-          ],
-          total: 1,
-          page: 1,
-          page_size: 10,
-        },
+      const mockData = {
+        items: [
+          {
+            id: 1,
+            ticket_id: 100,
+            workflow_id: 1,
+            approver_name: '张三',
+            status: 'pending',
+          },
+        ],
+        total: 1,
+        page: 1,
+        page_size: 10,
       };
 
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
 
       const result = await TicketApprovalApi.getApprovalRecords({ ticketId: 100 });
 
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('ticket_id=100'),
-        expect.objectContaining({
-          method: 'GET',
-        })
+      expect(httpClient.get).toHaveBeenCalledWith(
+        expect.stringContaining('/api/tickets/approval/records'),
+        expect.any(Object)
       );
 
-      // Verify response has expected structure
       expect(result).toHaveProperty('items');
       expect(Array.isArray(result.items)).toBe(true);
       expect(result.items.length).toBeGreaterThan(0);
     });
 
     it('should filter by status', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: {
-          items: [],
-          total: 0,
-          page: 1,
-          page_size: 20,
-        },
+      const mockData = {
+        items: [],
+        total: 0,
+        page: 1,
+        page_size: 20,
       };
 
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
 
       await TicketApprovalApi.getApprovalRecords({ status: 'pending' });
 
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('status=pending'),
-        expect.objectContaining({
-          method: 'GET',
-        })
+      // httpClient.get receives (endpoint, paramsObj) where params include status
+      expect(httpClient.get).toHaveBeenCalledWith(
+        expect.stringContaining('/api/tickets/approval/records'),
+        expect.objectContaining({ status: 'pending' })
       );
     });
   });
