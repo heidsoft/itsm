@@ -1,7 +1,18 @@
 import { WorkflowApi } from '@/lib/api/workflow-api';
+import { httpClient } from '@/lib/api/http-client';
 
-// Mock fetch globally
-global.fetch = jest.fn();
+// Mock httpClient methods directly
+jest.mock('@/lib/api/http-client', () => ({
+  httpClient: {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    getTenantId: jest.fn().mockReturnValue(null),
+    setToken: jest.fn(),
+    getAuthToken: jest.fn().mockReturnValue(null),
+  },
+}));
 
 // Mock console methods to avoid noise in tests
 const consoleSpy = {
@@ -13,7 +24,6 @@ const consoleSpy = {
 describe('WorkflowApi', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (fetch as jest.Mock).mockClear();
   });
 
   afterAll(() => {
@@ -22,90 +32,8 @@ describe('WorkflowApi', () => {
 
   describe('getWorkflows', () => {
     it('should fetch workflows successfully', async () => {
-      // httpClient.get returns responseData.data directly
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: [
-          {
-            id: 1,
-            key: 'approval_workflow',
-            name: 'Approval Workflow',
-            description: 'Test workflow',
-            version: 1,
-            created_at: '2024-01-01T10:00:00Z',
-            updated_at: '2024-01-01T10:00:00Z',
-          },
-        ],
-      };
-
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
-
-      const result = await WorkflowApi.getWorkflows();
-
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/bpmn/process-definitions'),
-        expect.objectContaining({
-          method: 'GET',
-        })
-      );
-
-      expect(result.workflows).toHaveLength(1);
-      expect(result.workflows[0].name).toBe('Approval Workflow');
-    });
-
-    it('should handle empty workflow list', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: [],
-      };
-
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
-
-      const result = await WorkflowApi.getWorkflows();
-
-      expect(result.workflows).toHaveLength(0);
-      expect(result.total).toBe(0);
-    });
-
-    it('should pass pagination parameters correctly', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: [],
-      };
-
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
-
-      await WorkflowApi.getWorkflows({ page: 2, pageSize: 10 });
-
-      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('page=2'), expect.any(Object));
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('page_size=10'),
-        expect.any(Object)
-      );
-    });
-  });
-
-  describe('getWorkflow', () => {
-    it('should fetch single workflow successfully', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: {
+      const mockData = [
+        {
           id: 1,
           key: 'approval_workflow',
           name: 'Approval Workflow',
@@ -114,38 +42,67 @@ describe('WorkflowApi', () => {
           created_at: '2024-01-01T10:00:00Z',
           updated_at: '2024-01-01T10:00:00Z',
         },
+      ];
+
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
+
+      const result = await WorkflowApi.getWorkflows();
+
+      expect(httpClient.get).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/bpmn/process-definitions'),
+        expect.any(Object)
+      );
+
+      expect(result.workflows).toHaveLength(1);
+      expect(result.workflows[0].name).toBe('Approval Workflow');
+    });
+
+    it('should handle empty workflow list', async () => {
+      (httpClient.get as jest.Mock).mockResolvedValueOnce([]);
+
+      const result = await WorkflowApi.getWorkflows();
+
+      expect(result.workflows).toHaveLength(0);
+      expect(result.total).toBe(0);
+    });
+
+    it('should pass pagination parameters correctly', async () => {
+      (httpClient.get as jest.Mock).mockResolvedValueOnce([]);
+
+      await WorkflowApi.getWorkflows({ page: 2, pageSize: 10 });
+
+      expect(httpClient.get).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ page: 2, page_size: 10 })
+      );
+    });
+  });
+
+  describe('getWorkflow', () => {
+    it('should fetch single workflow successfully', async () => {
+      const mockData = {
+        id: 1,
+        key: 'approval_workflow',
+        name: 'Approval Workflow',
+        description: 'Test workflow',
+        version: 1,
+        created_at: '2024-01-01T10:00:00Z',
+        updated_at: '2024-01-01T10:00:00Z',
       };
 
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
 
       const result = await WorkflowApi.getWorkflow('approval_workflow');
 
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/bpmn/process-definitions/approval_workflow'),
-        expect.objectContaining({
-          method: 'GET',
-        })
+      expect(httpClient.get).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/bpmn/process-definitions/approval_workflow')
       );
 
       expect(result.name).toBe('Approval Workflow');
     });
 
     it('should handle workflow not found', async () => {
-      const mockResponse = {
-        code: 4004,
-        message: 'Workflow not found',
-        data: null,
-      };
-
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.get as jest.Mock).mockRejectedValueOnce(new Error('Workflow not found'));
 
       await expect(WorkflowApi.getWorkflow('nonexistent')).rejects.toBeDefined();
     });
@@ -153,22 +110,14 @@ describe('WorkflowApi', () => {
 
   describe('getProcessDefinition (backward compatible)', () => {
     it('should fetch process definition using key', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: {
-          id: 1,
-          key: 'test_process',
-          name: 'Test Process',
-          version: 1,
-        },
+      const mockData = {
+        id: 1,
+        key: 'test_process',
+        name: 'Test Process',
+        version: 1,
       };
 
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
 
       const result = await WorkflowApi.getProcessDefinition('test_process');
 
@@ -178,39 +127,17 @@ describe('WorkflowApi', () => {
 
   describe('getProcessVersions', () => {
     it('should fetch all versions of a process', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: [
-          {
-            id: 1,
-            key: 'test_process',
-            version: 1,
-            name: 'Test Process v1',
-          },
-          {
-            id: 2,
-            key: 'test_process',
-            version: 2,
-            name: 'Test Process v2',
-          },
-        ],
-      };
+      const mockData = [
+        { id: 1, key: 'test_process', version: 1, name: 'Test Process v1' },
+        { id: 2, key: 'test_process', version: 2, name: 'Test Process v2' },
+      ];
 
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
 
       const result = await WorkflowApi.getProcessVersions('test_process');
 
-      // getProcessVersions calls getWorkflowVersions which uses /api/v1/bpmn/versions
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/bpmn/versions'),
-        expect.objectContaining({
-          method: 'GET',
-        })
+      expect(httpClient.get).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/bpmn/versions')
       );
 
       expect(result).toHaveLength(2);
@@ -219,36 +146,24 @@ describe('WorkflowApi', () => {
 
   describe('listWorkflowInstances', () => {
     it('should fetch workflow instances', async () => {
-      // httpClient.get returns responseData.data directly
-      // The API expects instance_id and process_definition_key in snake_case
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: [
-          {
-            id: '1',
-            instance_id: '1',
-            process_definition_key: 'approval_workflow',
-            business_key: 'ticket-123',
-            status: 'running',
-            start_time: '2024-01-01T10:00:00Z',
-          },
-        ],
-      };
+      const mockData = [
+        {
+          id: '1',
+          instance_id: '1',
+          process_definition_key: 'approval_workflow',
+          business_key: 'ticket-123',
+          status: 'running',
+          start_time: '2024-01-01T10:00:00Z',
+        },
+      ];
 
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
 
       const result = await WorkflowApi.listWorkflowInstances({});
 
-      expect(fetch).toHaveBeenCalledWith(
+      expect(httpClient.get).toHaveBeenCalledWith(
         expect.stringContaining('/api/v1/bpmn/process-instances'),
-        expect.objectContaining({
-          method: 'GET',
-        })
+        expect.any(Object)
       );
 
       expect(result.instances).toHaveLength(1);
@@ -257,32 +172,25 @@ describe('WorkflowApi', () => {
 
   describe('startWorkflow', () => {
     it('should start a new workflow', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: {
-          id: 1,
-          process_key: 'approval_workflow',
-          status: 'running',
-        },
+      const mockData = {
+        id: '1',
+        process_instance_id: '1',
+        process_definition_key: 'approval_workflow',
+        business_key: 'BIZ-123',
+        status: 'running',
+        start_time: '2024-01-01T10:00:00Z',
       };
 
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 201,
-        json: async () => mockResponse,
-      });
+      (httpClient.post as jest.Mock).mockResolvedValueOnce(mockData);
 
       const result = await WorkflowApi.startWorkflow({
         workflowId: 'approval_workflow',
         variables: { ticketId: 123 },
       });
 
-      expect(fetch).toHaveBeenCalledWith(
+      expect(httpClient.post).toHaveBeenCalledWith(
         expect.stringContaining('/api/v1/bpmn/process-instances'),
-        expect.objectContaining({
-          method: 'POST',
-        })
+        expect.any(Object)
       );
 
       expect(result.status).toBe('running');
@@ -291,100 +199,50 @@ describe('WorkflowApi', () => {
 
   describe('suspendWorkflow', () => {
     it('should suspend a running workflow', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: null,
-      };
-
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.put as jest.Mock).mockResolvedValueOnce(undefined);
 
       await WorkflowApi.suspendWorkflow('1');
 
-      expect(fetch).toHaveBeenCalledWith(
+      expect(httpClient.put).toHaveBeenCalledWith(
         expect.stringContaining('/api/v1/bpmn/process-instances/1/suspend'),
-        expect.objectContaining({
-          method: 'PUT',
-        })
+        expect.any(Object)
       );
     });
   });
 
   describe('resumeWorkflow', () => {
     it('should resume a suspended workflow', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: null,
-      };
-
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.put as jest.Mock).mockResolvedValueOnce(undefined);
 
       await WorkflowApi.resumeWorkflow('1');
 
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/bpmn/process-instances/1/resume'),
-        expect.objectContaining({
-          method: 'PUT',
-        })
+      expect(httpClient.put).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/bpmn/process-instances/1/resume')
       );
     });
   });
 
   describe('terminateWorkflow', () => {
     it('should terminate a running workflow', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: null,
-      };
-
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.put as jest.Mock).mockResolvedValueOnce(undefined);
 
       await WorkflowApi.terminateWorkflow('1', 'Terminated by user');
 
-      expect(fetch).toHaveBeenCalledWith(
+      expect(httpClient.put).toHaveBeenCalledWith(
         expect.stringContaining('/api/v1/bpmn/process-instances/1/terminate'),
-        expect.objectContaining({
-          method: 'PUT',
-        })
+        expect.any(Object)
       );
     });
   });
 
   describe('deleteWorkflow', () => {
     it('should delete a workflow', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: null,
-      };
-
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      (httpClient.delete as jest.Mock).mockResolvedValueOnce(undefined);
 
       await WorkflowApi.deleteWorkflow('approval_workflow');
 
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/bpmn/process-definitions/approval_workflow'),
-        expect.objectContaining({
-          method: 'DELETE',
-        })
+      expect(httpClient.delete).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/bpmn/process-definitions/approval_workflow')
       );
     });
   });
