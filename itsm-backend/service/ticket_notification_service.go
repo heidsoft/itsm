@@ -456,7 +456,7 @@ func (s *TicketNotificationService) ListTicketNotifications(
 		if notification.Edges.User != nil {
 			userEntity = notification.Edges.User
 		} else {
-			userEntity, err := s.client.User.Get(ctx, notification.UserID)
+			userEntity, err = s.client.User.Get(ctx, notification.UserID)
 			if err != nil {
 				s.logger.Warnw("failed to get user for notification response", "error", err, "user_id", notification.UserID)
 			}
@@ -512,7 +512,7 @@ func (s *TicketNotificationService) ListUserNotifications(
 		if notification.Edges.User != nil {
 			userEntity = notification.Edges.User
 		} else {
-			userEntity, err := s.client.User.Get(ctx, notification.UserID)
+			userEntity, err = s.client.User.Get(ctx, notification.UserID)
 			if err != nil {
 				s.logger.Warnw("failed to get user for notification response", "error", err, "user_id", notification.UserID)
 			}
