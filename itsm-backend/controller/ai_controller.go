@@ -206,7 +206,7 @@ func (a *AIController) Chat(c *gin.Context) {
 		}
 	}
 	if convID != 0 {
-		if _, err := a.client.Message.Create().
+		if err := a.client.Message.Create().
 			SetConversationID(convID).
 			SetRole("user").
 			SetContent(req.Query).
@@ -215,7 +215,7 @@ func (a *AIController) Chat(c *gin.Context) {
 			a.logger.Warn("failed to save user message", zap.Error(err))
 		}
 		payload, _ := json.Marshal(items)
-		if _, err := a.client.Message.Create().
+		if err := a.client.Message.Create().
 			SetConversationID(convID).
 			SetRole("assistant").
 			SetContent(string(payload)).
