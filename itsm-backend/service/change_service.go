@@ -426,15 +426,16 @@ func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.
 	// 获取各状态的变更数
 	stats := &dto.ChangeStatsResponse{Total: total}
 
-	// 待审批 - 包含 pending 和 review
-	pending, err := s.client.Change.Query().
-		Where(change.TenantID(tenantID), change.StatusIn(string(dto.ChangeStatusPending), "review", "pending")).
+	// 待审批 - draft/submitted 状态是待审批前的状态
+	// pending 和 submitted 是实际待审批状态
+	draftOrSubmitted, err := s.client.Change.Query().
+		Where(change.TenantID(tenantID), change.StatusIn(string(dto.ChangeStatusDraft), "submitted")).
 		Count(ctx)
 	if err == nil {
-		stats.Pending = pending
+		stats.Pending = draftOrSubmitted
 	}
 
-	// 已批准 - 包含 approved
+	// 已批准
 	approved, err := s.client.Change.Query().
 		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusApproved))).
 		Count(ctx)
@@ -442,27 +443,21 @@ func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.
 		stats.Approved = approved
 	}
 
-
-	// 实施中 - 包含 in_progress 和 implementing, implemented (数据库使用 implementing/implemented)
-	inProgressDB, err := s.client.Change.Query().
+	// 实施中 - 包含 in_progress 和 scheduled
+	inProgress, err := s.client.Change.Query().
 		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusInProgress))).
 		Count(ctx)
-	implementing, err := s.client.Change.Query().
-		Where(change.TenantID(tenantID), change.StatusIn("implementing", "implemented")).
-		Count(ctx)
 	if err == nil {
-		stats.InProgress = inProgressDB + implementing
+		stats.InProgress = inProgress
 	}
 
-
-	// 已完成 - 包含 completed
+	// 已完成
 	completed, err := s.client.Change.Query().
 		Where(change.TenantID(tenantID), change.Status(string(dto.ChangeStatusCompleted))).
 		Count(ctx)
 	if err == nil {
 		stats.Completed = completed
 	}
-
 
 	// 已回滚
 	rolledBack, err := s.client.Change.Query().
@@ -486,6 +481,16 @@ func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.
 		Count(ctx)
 	if err == nil {
 		stats.Cancelled = cancelled
+	}
+
+	// 验证：确保各状态之和等于总数
+	calculatedTotal := stats.Pending + stats.Approved + stats.InProgress + stats.Completed +
+		stats.RolledBack + stats.Rejected + stats.Cancelled
+	if calculatedTotal != total {
+		s.logger.Warnw("Change stats sum mismatch",
+			"total", total,
+			"calculated_sum", calculatedTotal,
+			"tenant_id", tenantID)
 	}
 
 	return stats, nil
@@ -547,14 +552,14 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 func isValidChangeStatusTransition(currentStatus, newStatus string) bool {
 	validTransitions := map[string][]string{
 		common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusCancelled},
-		common.ChangeStatusSubmitted: {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
-		common.ChangeStatusApproved:  {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+		common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
+		common.ChangeStatusApproved:   {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
 		common.ChangeStatusRejected:   {}, // 被拒绝后不允许转换
 		common.ChangeStatusScheduled:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
 		common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, common.ChangeStatusCancelled},
 		common.ChangeStatusCompleted:  {}, // 已完成不允许转换
 		common.ChangeStatusFailed:     {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
-		common.ChangeStatusCancelled:   {}, // 已取消不允许转换
+		common.ChangeStatusCancelled:  {}, // 已取消不允许转换
 	}
 
 	allowed, ok := validTransitions[currentStatus]
