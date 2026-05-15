@@ -71,9 +71,13 @@ services:
   itsm-backend:
     build:
       context: ./itsm-backend
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
       args:
         - BUILDKIT_INLINE_CACHE=1
+        - HTTP_PROXY=
+        - HTTPS_PROXY=
+        - http_proxy=
+        - https_proxy=
     container_name: itsm-backend-dev
     hostname: backend
     environment:
@@ -127,6 +131,14 @@ services:
       # 其他
       - ENABLE_SWAGGER=true
       - ENABLE_CORS=true
+
+      # 清除代理（避免 Docker Desktop 代理干扰容器内请求）
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - NO_PROXY=
+      - no_proxy=
     ports:
       - "8090:8090"
       - "9090:9090" # metrics 端口
@@ -148,7 +160,7 @@ services:
           "--no-verbose",
           "--tries=1",
           "--spider",
-          "http://localhost:8090/health",
+          "http://localhost:8090/api/v1/health",
         ]
       interval: 10s
       timeout: 5s
@@ -160,30 +172,38 @@ services:
   itsm-frontend:
     build:
       context: ./itsm-frontend
-      dockerfile: Dockerfile.frontend
+      dockerfile: Dockerfile
       target: runner
       args:
         - NODE_ENV=development
+        - HTTP_PROXY=
+        - HTTPS_PROXY=
+        - http_proxy=
+        - https_proxy=
     container_name: itsm-frontend-dev
     hostname: frontend
     environment:
       - NODE_ENV=development
-      - ITSM_BACKEND_URL=http://itsm-backend:8090
-      - NEXT_PUBLIC_API_URL=http://itsm-backend:8090
+      - ITSM_BACKEND_URL=http://backend:8090
+      - NEXT_PUBLIC_API_URL=http://localhost:8090
       - NEXT_PUBLIC_ENABLE_AI=true
       - NEXT_PUBLIC_ENABLE_SWAGGER=true
+
+      # 清除代理
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - NO_PROXY=
+      - no_proxy=
     ports:
       - "3000:3000"
       - "9229:9229" # Node.js debug 端口
     depends_on:
-      - itsm-backend
-    volumes:
-      - ./itsm-frontend:/app
-      - /app/node_modules
-      - /app/.next
+      itsm-backend:
+        condition: service_healthy
     networks:
       - itsm-dev-network
-    command: npm run dev
     restart: unless-stopped
     profiles: [ "dev" ]
 
