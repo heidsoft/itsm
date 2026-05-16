@@ -1,0 +1,16 @@
+# CODEOWNERS
+
+# Default owner for all files
+*       @heidsoft
+
+# Backend
+/itsm-backend/    @heidsoft
+
+# Frontend
+/itsm-frontend/  @heidsoft
+
+# CI/CD
+/.github/workflows/  @heidsoft
+
+# Scripts
+/scripts/  @heidsoft

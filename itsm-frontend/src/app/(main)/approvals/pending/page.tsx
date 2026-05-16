@@ -2,8 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Card, Space, Button, Table, Tag, App, Empty } from 'antd';
-import { ReloadOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Card, Space, Button, Table, Tag, App, Empty, Tooltip, Popconfirm, message } from 'antd';
+import {
+  ReloadOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  CheckOutlined,
+  CloseOutlined,
+} from '@ant-design/icons';
 
 import { serviceRequestAPI, ServiceRequest } from '@/lib/api/service-request-api';
 import { useI18n } from '@/lib/i18n';
@@ -32,6 +38,7 @@ export default function PendingApprovalsPage() {
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
 
   const load = async (p = page, s = size) => {
     try {
@@ -48,6 +55,42 @@ export default function PendingApprovalsPage() {
       setTotal(0);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApprove = async (id: number) => {
+    try {
+      setProcessingIds(prev => new Set(prev).add(id));
+      await serviceRequestAPI.applyApprovalAction(id, { action: 'approve' });
+      message.success('审批通过');
+      load();
+    } catch (e) {
+      console.error(e);
+      message.error('审批失败');
+    } finally {
+      setProcessingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
+  const handleReject = async (id: number) => {
+    try {
+      setProcessingIds(prev => new Set(prev).add(id));
+      await serviceRequestAPI.applyApprovalAction(id, { action: 'reject' });
+      message.success('已拒绝');
+      load();
+    } catch (e) {
+      console.error(e);
+      message.error('操作失败');
+    } finally {
+      setProcessingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -124,8 +167,44 @@ export default function PendingApprovalsPage() {
                 {
                   title: '操作',
                   key: 'actions',
-                  width: 160,
-                  render: (_, r) => <Link href={`/my-requests/${r.id}`}>查看并处理</Link>,
+                  width: 240,
+                  render: (_, r) => (
+                    <Space size="small">
+                      <Tooltip title="批准">
+                        <Button
+                          type="primary"
+                          size="small"
+                          icon={<CheckOutlined />}
+                          loading={processingIds.has(r.id)}
+                          onClick={() => handleApprove(r.id)}
+                        >
+                          批准
+                        </Button>
+                      </Tooltip>
+                      <Popconfirm
+                        title="确认拒绝此申请？"
+                        description="拒绝后将通知申请人"
+                        onConfirm={() => handleReject(r.id)}
+                        okText="确认拒绝"
+                        cancelText="取消"
+                        okButtonProps={{ danger: true }}
+                      >
+                        <Tooltip title="拒绝">
+                          <Button
+                            danger
+                            size="small"
+                            icon={<CloseOutlined />}
+                            loading={processingIds.has(r.id)}
+                          >
+                            拒绝
+                          </Button>
+                        </Tooltip>
+                      </Popconfirm>
+                      <Link href={`/my-requests/${r.id}`}>
+                        <Button size="small">详情</Button>
+                      </Link>
+                    </Space>
+                  ),
                 },
               ]}
             />

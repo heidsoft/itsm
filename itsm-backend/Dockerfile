@@ -15,12 +15,13 @@ ARG no_proxy=localhost,127.0.0.1
 RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
     apk add --no-cache git ca-certificates
 
-# 接收构建参数（禁用代理确保直连）
-# Note: Use Chinese mirror goproxy.cn for better connectivity in China region
-# Must unset proxy vars to prevent interference with direct connections
-ARG GOPROXY=https://goproxy.cn,direct
-ARG GOSUMDB=off
-ENV GOPROXY=${GOPROXY}
+# Go module proxy - configurable via build arg for international users
+# Default: goproxy.cn for China region, use GOPROXY=https://proxy.golang.org,direct for other regions
+ARG GOPROXY
+ENV GOPROXY=${GOPROXY:-https://proxy.golang.org,direct}
+
+# Enable module checksum verification (security)
+ARG GOSUMDB=sum.golang.org
 ENV GOSUMDB=${GOSUMDB}
 
 # Copy go mod files
@@ -28,7 +29,7 @@ COPY go.mod go.sum ./
 
 # go mod download - use goproxy.cn mirror
 RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    GOPROXY=https://goproxy.cn,direct GOSUMDB=off go mod download
+    go mod download
 
 # Copy source code
 COPY . ./
@@ -36,7 +37,7 @@ COPY . ./
 # Build the application
 # Unset proxy vars and use goproxy.cn for dependencies
 RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    GOPROXY=https://goproxy.cn,direct CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+    CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 # Final stage
 FROM alpine:latest

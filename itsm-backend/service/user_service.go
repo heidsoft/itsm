@@ -187,7 +187,10 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 		Where(user.IDEQ(id), user.TenantIDEQ(tenantID)).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("cross-tenant access denied: user not found or access denied")
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("用户不存在: ID=%d", id)
+		}
+		return nil, fmt.Errorf("获取用户失败: %w", err)
 	}
 
 	update := s.client.User.UpdateOneID(id).Where(user.TenantIDEQ(tenantID))

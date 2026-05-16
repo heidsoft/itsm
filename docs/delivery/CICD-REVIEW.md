@@ -14,8 +14,8 @@
 itsm/
 ├── itsm-backend/          # Go/Gin 后端服务 (Port 8090)
 ├── itsm-frontend/         # Next.js/TypeScript 前端 (Port 3000)
-├── ai-service/            # AI 服务模块
-├── ai-dev-agent/          # AI 开发代理
+├── itsm-ai-service/       # ITSM AI 推理服务（模型能力侧）
+├── itsm-code-agent/       # ITSM 代码代理（工程侧）
 ├── monitoring/           # Prometheus + Grafana 监控
 ├── tests/                # Python 集成测试
 ├── scripts/              # 部署运维脚本
@@ -258,8 +258,8 @@ make dev-up          # docker compose -f docker-compose.dev.yml up -d --build
 # 方式2: 开箱即用
 make oob-up          # docker compose -p itsm_oob -f docker-compose.yml up -d --build
 
-# 方式3: 统一脚本
-./scripts/itsm.sh start
+# 方式3: 部署脚本
+./scripts/deploy-dev.sh up
 ```
 
 **启动检查**:

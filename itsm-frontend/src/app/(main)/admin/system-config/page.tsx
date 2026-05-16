@@ -90,7 +90,9 @@ export default function SystemConfiguration() {
           uptime: calculateUptime((status as any).startTime as number | undefined),
           goroutines: (status as any).goroutines || 0,
           cpuCores: (status as any).cpu_cores || 0,
-          memoryUsagePercent: Math.round((status as any).memory?.usage_percent || (status as any).memory?.usage || 0),
+          memoryUsagePercent: Math.round(
+            (status as any).memory?.usage_percent || (status as any).memory?.usage || 0
+          ),
         });
       } catch (error) {
         console.error('Failed to fetch system status:', error);
@@ -504,7 +506,9 @@ export default function SystemConfiguration() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-gray-500">内存使用率</div>
-                <div className="text-2xl font-bold text-purple-600">{systemStats.memoryUsagePercent}%</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {systemStats.memoryUsagePercent}%
+                </div>
               </div>
               <MemoryStick className="w-8 h-8 text-purple-600" />
             </div>

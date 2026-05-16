@@ -394,7 +394,14 @@ const AccessDenied: React.FC = () => (
       <h2 className="text-xl font-semibold text-gray-900 mb-2">访问被拒绝</h2>
       <p className="text-gray-600 mb-4">您没有权限访问此页面或执行此操作。</p>
       <button
-        onClick={() => window.history.back()}
+        onClick={() => {
+          // 只有在有历史记录时才返回上一页
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.location.href = '/';
+          }
+        }}
         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
       >
         返回上一页

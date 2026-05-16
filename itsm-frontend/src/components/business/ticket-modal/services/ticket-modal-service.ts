@@ -5,6 +5,8 @@
 
 import type { TicketFormValues } from '../types';
 import { ticketService } from '@/lib/services/ticket-service';
+import { UserApi } from '@/lib/api/user-api';
+import { TemplateApi } from '@/lib/api/template-api';
 
 /**
  * 提交工单
@@ -39,20 +41,24 @@ export const updateTicket = async (
  * 获取用户列表（用于分配）
  */
 export const fetchUserList = async (): Promise<any[]> => {
-  // TODO: 替换为实际的 API 调用
-  // return await UserApi.getUsers();
-  return [
-    { id: 1, name: 'Alice', role: 'IT Support', avatar: 'A' },
-    { id: 2, name: 'Bob', role: 'Network Admin', avatar: 'B' },
-    { id: 3, name: 'Charlie', role: 'Service Desk', avatar: 'C' },
-  ];
+  try {
+    const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+    return response.users || [];
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    return [];
+  }
 };
 
 /**
  * 获取工单模板列表
  */
 export const fetchTicketTemplates = async (): Promise<any[]> => {
-  // TODO: 替换为实际的 API 调用
-  // return await TemplateApi.getTemplates();
-  return [];
+  try {
+    const response = await TemplateApi.getTemplates();
+    return response.templates || [];
+  } catch (error) {
+    console.error('Failed to fetch templates:', error);
+    return [];
+  }
 };

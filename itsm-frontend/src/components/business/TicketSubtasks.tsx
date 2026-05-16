@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Card,
   Button,
@@ -36,6 +36,8 @@ import { Ticket } from '@/lib/services/ticket-service';
 import { getStatusConfig, getPriorityConfig } from '@/lib/constants/ticket-constants';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { UserApi } from '@/lib/api/user-api';
+import type { User } from '@/lib/api/user-api';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -76,6 +78,24 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
   const [editingSubtask, setEditingSubtask] = useState<Subtask | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [form] = Form.useForm();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // 获取用户列表
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoadingUsers(true);
+      try {
+        const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+        setUsers(response.users || []);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   // 计算父工单进度
   const parentProgress = useMemo(() => {
@@ -472,8 +492,12 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
             </Select>
           </Form.Item>
           <Form.Item name="assignee_id" label="处理人">
-            <Select placeholder="请选择处理人" allowClear>
-              {/* TODO: 从用户列表获取 */}
+            <Select placeholder="请选择处理人" allowClear loading={loadingUsers}>
+              {users.map(user => (
+                <Option key={user.id} value={user.id}>
+                  {user.name || user.username || `用户 ${user.id}`}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
           <Form.Item name="due_date" label="截止时间">

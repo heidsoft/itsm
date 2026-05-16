@@ -81,8 +81,8 @@ function isValidToken(token: string | null): boolean {
   if (parts.length !== 3) return false;
 
   try {
-    // 验证 payload 可以被解析
-    const payload = JSON.parse(atob(parts[1]));
+    // Verify payload can be parsed (Buffer is required for Edge runtime)
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
     // 检查是否过期
     if (payload.exp) {
       const currentTime = Math.floor(Date.now() / 1000);

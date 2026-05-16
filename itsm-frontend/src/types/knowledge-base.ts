@@ -382,22 +382,34 @@ export interface ArticleNotification {
 // ==================== 统计和分析 ====================
 
 /**
- * 知识库统计
+ * 知识库统计 - 与后端 KnowledgeStatsResponse 对齐
  */
 export interface KnowledgeBaseStats {
-  totalArticles: number;
-  publishedArticles: number;
-  draftArticles: number;
-  archivedArticles: number;
+  total: number;           // 总文章数 (后端字段)
+  published: number;      // 已发布文章数 (后端字段)
+  draft: number;          // 草稿数 (后端字段)
+  views: number;          // 总浏览次数 (后端字段)
+  rating: number;         // 平均评分 (后端字段)
+  categories: Array<{     // 分类统计 (后端字段)
+    name: string;
+    count: number;
+  }>;
+  
+  // 兼容旧字段 (可选)
+  totalArticles?: number;
+  publishedArticles?: number;
+  draftArticles?: number;
+  archivedArticles?: number;
+  totalViews?: number;
+  totalLikes?: number;
+  totalComments?: number;
+  articlesByCategory?: Record<string, number>;
+  articlesByStatus?: Record<ArticleStatus, number>;
+  articlesByVisibility?: Record<ArticleVisibility, number>;
+}
 
-  totalViews: number;
-  totalLikes: number;
-  totalComments: number;
-
-  articlesByCategory: Record<string, number>;
-  articlesByStatus: Record<ArticleStatus, number>;
-  articlesByVisibility: Record<ArticleVisibility, number>;
-
+// 知识库分析仪表盘
+export interface KnowledgeAnalyticsDashboard {
   topArticles: Array<{
     article: KnowledgeArticle;
     views: number;
@@ -411,12 +423,12 @@ export interface KnowledgeBaseStats {
     avgRating: number;
   }>;
 
-  trends: {
+  trends: Array<{
     date: string;
     created: number;
     published: number;
     views: number;
-  }[];
+  }>;
 }
 
 /**

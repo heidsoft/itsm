@@ -21,6 +21,8 @@ import {
   Progress,
   Tag,
   Table,
+  Modal,
+  Tooltip,
 } from 'antd';
 import {
   User,
@@ -45,6 +47,7 @@ import {
 import { PageHeader } from '@/components/layout/PageHeader';
 import { UserApi } from '@/lib/api/user-api';
 import { TicketApi } from '@/lib/api/ticket-api';
+import { NotificationPreferenceApi } from '@/lib/api/notification-preference-api';
 import { useI18n } from '@/lib/i18n';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 
@@ -114,7 +117,6 @@ interface ActivityItem {
   status: 'completed' | 'pending' | 'cancelled';
 }
 
-
 export default function ProfilePage() {
   const { t } = useI18n();
   const { user } = useAuthStore();
@@ -128,20 +130,43 @@ export default function ProfilePage() {
   const [profileForm] = Form.useForm();
   const [preferencesForm] = Form.useForm();
 
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [passwordForm] = Form.useForm();
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [prefsLoading, setPrefsLoading] = useState(false);
+
+  const handlePasswordChange = async () => {
+    try {
+      const values = await passwordForm.validateFields();
+
+      if (values.newPassword !== values.confirmPassword) {
+        message.error('两次输入的密码不一致');
+        return;
+      }
+
+      if (!profile?.id) {
+        message.error('用户信息不完整');
+        return;
+      }
+
+      setPasswordLoading(true);
+      await UserApi.resetPassword(profile.id, values.newPassword);
+      message.success('密码修改成功');
+      setPasswordModalVisible(false);
+      passwordForm.resetFields();
+    } catch (error) {
+      console.error('Failed to change password:', error);
+      message.error('密码修改失败，请重试');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadProfile();
     loadStats();
     loadActivities();
-
-    // 加载保存的偏好设置
-    const savedPreferences = localStorage.getItem('user_preferences');
-    if (savedPreferences) {
-      try {
-        preferencesForm.setFieldsValue(JSON.parse(savedPreferences));
-      } catch (e) {
-        console.error('Failed to load preferences:', e);
-      }
-    }
+    loadNotificationPreferences();
   }, []);
 
   const loadProfile = async () => {
@@ -177,9 +202,10 @@ export default function ProfilePage() {
         resolvedTickets: ticketStats.resolved || 0,
         avgResolutionTime: 0, // 需要后端支持
         satisfactionScore: 0, // 需要后端支持
-        responseRate: ticketStats.total > 0
-          ? Math.round(((ticketStats.total - ticketStats.open) / ticketStats.total) * 100)
-          : 0,
+        responseRate:
+          ticketStats.total > 0
+            ? Math.round(((ticketStats.total - ticketStats.open) / ticketStats.total) * 100)
+            : 0,
       });
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -225,7 +251,7 @@ export default function ProfilePage() {
       });
       message.success('个人信息更新成功');
       setEditing(false);
-      setProfile(prev => prev ? { ...prev, ...values } : null);
+      setProfile(prev => (prev ? { ...prev, ...values } : null));
 
       // 更新 auth store 中的用户信息
       const { updateUser } = useAuthStore.getState();
@@ -240,26 +266,99 @@ export default function ProfilePage() {
 
   const handleSavePreferences = async (values: any) => {
     try {
-      // 保存到 localStorage
-      localStorage.setItem('user_preferences', JSON.stringify(values));
-      message.success('偏好设置保存成功');
+      setPrefsLoading(true);
+      // 获取所有事件类型定义
+      const eventTypes = [
+        'ticket_created',
+        'ticket_assigned',
+        'ticket_updated',
+        'ticket_resolved',
+        'ticket_closed',
+        'sla_warning',
+        'sla_violated',
+        'comment_added',
+        'approval_required',
+        'mention',
+        'incident_created',
+        'incident_escalated',
+        'change_approved',
+        'change_rejected',
+        'problem_identified',
+      ];
+
+      // 构建批量更新请求：基于表单开关设置各事件类型的通知方式
+      const preferences = eventTypes.map(eventType => {
+        const emailEnabled = values.emailNotify !== false;
+        const inAppEnabled = values.desktopNotify !== false;
+        return {
+          event_type: eventType,
+          email_enabled: emailEnabled,
+          in_app_enabled: inAppEnabled,
+          timezone: values.timezone || 'Asia/Shanghai',
+          frequency: 'immediate',
+        };
+      });
+
+      await NotificationPreferenceApi.bulkUpdate({ preferences });
+      message.success('偏好设置已保存到服务器');
     } catch (error) {
       console.error('Failed to save preferences:', error);
       message.error('保存失败，请重试');
+    } finally {
+      setPrefsLoading(false);
     }
   };
 
   // 获取用户首字母
   const userInitial = (profile?.name || profile?.username || 'U').charAt(0).toUpperCase();
 
+  // 加载通知偏好设置
+  const loadNotificationPreferences = async () => {
+    try {
+      const data = await NotificationPreferenceApi.getPreferences();
+      if (data.preferences && data.preferences.length > 0) {
+        // 从后端偏好中提取语言、时区、通知开关设置
+        // 查找 ticket_assigned 事件类型的偏好（综合开关）
+        const assignedPref = data.preferences.find(p => p.event_type === 'ticket_assigned');
+        const emailNotify = data.preferences.some(p => p.email_enabled);
+        const desktopNotify = data.preferences.some(p => p.in_app_enabled);
+        const timezone = data.preferences.find(p => p.timezone)?.timezone || 'Asia/Shanghai';
+        preferencesForm.setFieldsValue({
+          language: 'zh-CN',
+          timezone,
+          emailNotify,
+          desktopNotify,
+        });
+      } else {
+        // 无偏好记录，使用默认表单初始值
+        preferencesForm.setFieldsValue({
+          language: 'zh-CN',
+          timezone: 'Asia/Shanghai',
+          emailNotify: true,
+          desktopNotify: true,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load notification preferences:', error);
+      // 后端不可用时使用默认值
+      preferencesForm.setFieldsValue({
+        language: 'zh-CN',
+        timezone: 'Asia/Shanghai',
+        emailNotify: true,
+        desktopNotify: true,
+      });
+    }
+  };
+
   // 角色标签颜色
-  const roleColor = profile?.role === 'admin' || profile?.role === 'super_admin' ? DESIGN.colors.accent : DESIGN.colors.textMuted;
+  const roleColor =
+    profile?.role === 'admin' || profile?.role === 'super_admin'
+      ? DESIGN.colors.accent
+      : DESIGN.colors.textMuted;
 
   return (
     <div className="min-h-screen" style={{ background: DESIGN.colors.bgSubtle }}>
-      <PageHeader
-        title="个人中心"
-      />
+      <PageHeader title="个人中心" />
 
       <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
         <Row gutter={[24, 24]}>
@@ -323,7 +422,9 @@ export default function ProfilePage() {
                   </Text>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+                <div
+                  style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}
+                >
                   <Tag
                     color={roleColor}
                     style={{
@@ -332,7 +433,11 @@ export default function ProfilePage() {
                       fontWeight: 600,
                     }}
                   >
-                    {profile?.role === 'admin' ? '管理员' : profile?.role === 'super_admin' ? '超级管理员' : '用户'}
+                    {profile?.role === 'admin'
+                      ? '管理员'
+                      : profile?.role === 'super_admin'
+                        ? '超级管理员'
+                        : '用户'}
                   </Tag>
                   <Tag
                     style={{
@@ -376,7 +481,9 @@ export default function ProfilePage() {
                 boxShadow: DESIGN.shadows.card,
               }}
             >
-              <Title level={5} style={{ marginBottom: 20 }}>工作统计</Title>
+              <Title level={5} style={{ marginBottom: 20 }}>
+                工作统计
+              </Title>
               <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <Statistic
@@ -445,15 +552,17 @@ export default function ProfilePage() {
                           name="name"
                           rules={[{ required: true, message: '请输入姓名' }]}
                         >
-                          <Input prefix={<User size={16} style={{ color: DESIGN.colors.textMuted }} />} />
+                          <Input
+                            prefix={<User size={16} style={{ color: DESIGN.colors.textMuted }} />}
+                          />
                         </Form.Item>
                       </Col>
                       <Col xs={24} md={12}>
-                        <Form.Item
-                          label="用户名"
-                          name="username"
-                        >
-                          <Input disabled prefix={<User size={16} style={{ color: DESIGN.colors.textMuted }} />} />
+                        <Form.Item label="用户名" name="username">
+                          <Input
+                            disabled
+                            prefix={<User size={16} style={{ color: DESIGN.colors.textMuted }} />}
+                          />
                         </Form.Item>
                       </Col>
                       <Col xs={24} md={12}>
@@ -462,29 +571,35 @@ export default function ProfilePage() {
                           name="email"
                           rules={[{ required: true, type: 'email', message: '请输入有效邮箱' }]}
                         >
-                          <Input prefix={<Mail size={16} style={{ color: DESIGN.colors.textMuted }} />} />
+                          <Input
+                            prefix={<Mail size={16} style={{ color: DESIGN.colors.textMuted }} />}
+                          />
                         </Form.Item>
                       </Col>
                       <Col xs={24} md={12}>
-                        <Form.Item
-                          label="电话"
-                          name="phone"
-                        >
-                          <Input prefix={<Phone size={16} style={{ color: DESIGN.colors.textMuted }} />} />
+                        <Form.Item label="电话" name="phone">
+                          <Input
+                            prefix={<Phone size={16} style={{ color: DESIGN.colors.textMuted }} />}
+                          />
                         </Form.Item>
                       </Col>
                       <Col xs={24} md={12}>
-                        <Form.Item
-                          label="部门"
-                          name="department"
-                        >
-                          <Input prefix={<Building size={16} style={{ color: DESIGN.colors.textMuted }} />} />
+                        <Form.Item label="部门" name="department">
+                          <Input
+                            prefix={
+                              <Building size={16} style={{ color: DESIGN.colors.textMuted }} />
+                            }
+                          />
                         </Form.Item>
                       </Col>
                       <Col xs={24} md={12}>
                         <Form.Item label="角色">
                           <Tag color={roleColor} style={{ padding: '4px 12px' }}>
-                            {profile?.role === 'admin' ? '管理员' : profile?.role === 'super_admin' ? '超级管理员' : '用户'}
+                            {profile?.role === 'admin'
+                              ? '管理员'
+                              : profile?.role === 'super_admin'
+                                ? '超级管理员'
+                                : '用户'}
                           </Tag>
                         </Form.Item>
                       </Col>
@@ -492,9 +607,7 @@ export default function ProfilePage() {
 
                     <div style={{ marginTop: 24, textAlign: 'right' }}>
                       <Space>
-                        {editing && (
-                          <Button onClick={() => setEditing(false)}>取消</Button>
-                        )}
+                        {editing && <Button onClick={() => setEditing(false)}>取消</Button>}
                         <Button
                           type="primary"
                           htmlType="submit"
@@ -545,7 +658,9 @@ export default function ProfilePage() {
                       <Col xs={24}>
                         <Form.Item label="时区" name="timezone">
                           <Select>
-                            <Select.Option value="Asia/Shanghai">中国标准时间 (UTC+8)</Select.Option>
+                            <Select.Option value="Asia/Shanghai">
+                              中国标准时间 (UTC+8)
+                            </Select.Option>
                             <Select.Option value="UTC">UTC</Select.Option>
                           </Select>
                         </Form.Item>
@@ -567,6 +682,7 @@ export default function ProfilePage() {
                         type="primary"
                         htmlType="submit"
                         icon={<Save size={16} />}
+                        loading={prefsLoading}
                         style={{
                           background: DESIGN.colors.gradient.primary,
                         }}
@@ -589,7 +705,13 @@ export default function ProfilePage() {
                 >
                   <div>
                     {activities.length === 0 ? (
-                      <div style={{ textAlign: 'center', padding: '40px 0', color: DESIGN.colors.textMuted }}>
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '40px 0',
+                          color: DESIGN.colors.textMuted,
+                        }}
+                      >
                         暂无活动记录
                       </div>
                     ) : (
@@ -600,35 +722,38 @@ export default function ProfilePage() {
                             display: 'flex',
                             gap: 16,
                             padding: '16px 0',
-                            borderBottom: index < activities.length - 1 ? `1px solid ${DESIGN.colors.border}` : 'none',
+                            borderBottom:
+                              index < activities.length - 1
+                                ? `1px solid ${DESIGN.colors.border}`
+                                : 'none',
                           }}
                         >
-                        <div
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: DESIGN.radius.md,
-                            background: `${DESIGN.colors.success}15`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: DESIGN.colors.success,
-                          }}
-                        >
-                          <CheckCircle size={18} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 500, marginBottom: 4 }}>
-                            {activity.action}
+                          <div
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: DESIGN.radius.md,
+                              background: `${DESIGN.colors.success}15`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: DESIGN.colors.success,
+                            }}
+                          >
+                            <CheckCircle size={18} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 500, marginBottom: 4 }}>
+                              {activity.action}
+                            </div>
+                            <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                              {activity.target}
+                            </div>
                           </div>
                           <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
-                            {activity.target}
+                            {activity.time}
                           </div>
                         </div>
-                        <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
-                          {activity.time}
-                        </div>
-                      </div>
                       ))
                     )}
                   </div>
@@ -652,33 +777,24 @@ export default function ProfilePage() {
                         border: `1px solid ${DESIGN.colors.border}`,
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
                         <div>
                           <div style={{ fontWeight: 600, marginBottom: 4 }}>修改密码</div>
                           <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
                             定期修改密码可以保护账户安全
                           </div>
                         </div>
-                        <Button icon={<Key size={16} />}>修改</Button>
-                      </div>
-                    </Card>
-
-                    <Card
-                      size="small"
-                      style={{
-                        borderRadius: DESIGN.radius.md,
-                        border: `1px solid ${DESIGN.colors.border}`,
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <div style={{ fontWeight: 600, marginBottom: 4 }}>两步验证</div>
-                          <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
-                            为账户添加额外的安全保护
-                          </div>
-                        </div>
-                        <Button type="primary" ghost>
-                          启用
+                        <Button
+                          icon={<Key size={16} />}
+                          onClick={() => setPasswordModalVisible(true)}
+                        >
+                          修改
                         </Button>
                       </div>
                     </Card>
@@ -690,14 +806,50 @@ export default function ProfilePage() {
                         border: `1px solid ${DESIGN.colors.border}`,
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 600, marginBottom: 4 }}>两步验证</div>
+                          <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                            为账户添加额外的安全保护
+                          </div>
+                        </div>
+                        <Tooltip title="两步验证功能开发中">
+                          <Button type="primary" ghost disabled>
+                            启用
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    </Card>
+
+                    <Card
+                      size="small"
+                      style={{
+                        borderRadius: DESIGN.radius.md,
+                        border: `1px solid ${DESIGN.colors.border}`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
                         <div>
                           <div style={{ fontWeight: 600, marginBottom: 4 }}>登录历史</div>
                           <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
                             查看账户的登录历史记录
                           </div>
                         </div>
-                        <Button>查看</Button>
+                        <Tooltip title="登录历史功能开发中">
+                          <Button disabled>查看</Button>
+                        </Tooltip>
                       </div>
                     </Card>
                   </Space>
@@ -707,6 +859,47 @@ export default function ProfilePage() {
           </Col>
         </Row>
       </div>
+
+      {/* 修改密码模态框 */}
+      <Modal
+        title="修改密码"
+        open={passwordModalVisible}
+        onOk={handlePasswordChange}
+        onCancel={() => {
+          setPasswordModalVisible(false);
+          passwordForm.resetFields();
+        }}
+        confirmLoading={passwordLoading}
+        okText="确认修改"
+        cancelText="取消"
+      >
+        <Form form={passwordForm} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item
+            name="oldPassword"
+            label="当前密码"
+            rules={[{ required: true, message: '请输入当前密码' }]}
+          >
+            <Input.Password placeholder="请输入当前密码" />
+          </Form.Item>
+          <Form.Item
+            name="newPassword"
+            label="新密码"
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { min: 6, message: '密码长度至少6位' },
+            ]}
+          >
+            <Input.Password placeholder="请输入新密码" />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label="确认新密码"
+            rules={[{ required: true, message: '请确认新密码' }]}
+          >
+            <Input.Password placeholder="请再次输入新密码" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
