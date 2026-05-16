@@ -73,20 +73,20 @@ const ProblemEfficiencyPage = () => {
         const problemsRes = await problemService.listProblems({ page: 1, page_size: 100 });
         problemsData = problemsRes.problems;
       } catch (e) {
-        console.warn('获取问题数据失败，使用演示数据');
+        console.warn('获取问题数据失败，使用空数据');
       }
 
       if (statsData) {
         setStats(statsData);
       } else {
-        // 演示数据
+        // 无真实数据时，使用空状态
         statsData = {
-          total: 156,
-          open: 23,
-          inProgress: 45,
-          resolved: 67,
-          closed: 21,
-          highPriority: 18,
+          total: 0,
+          open: 0,
+          inProgress: 0,
+          resolved: 0,
+          closed: 0,
+          highPriority: 0,
         };
         setStats(statsData);
       }
@@ -119,48 +119,28 @@ const ProblemEfficiencyPage = () => {
 
         setProblems(problemsData.slice(0, 10));
       } else {
-        // 演示数据
-        setProblemsByStatus([
-          { name: '待处理', value: 23, color: STATUS_COLORS.open },
-          { name: '处理中', value: 45, color: STATUS_COLORS.inProgress },
-          { name: '已解决', value: 67, color: STATUS_COLORS.resolved },
-          { name: '已关闭', value: 21, color: STATUS_COLORS.closed },
-        ]);
-
-        setProblemsByPriority([
-          { name: '低', value: 34, color: PRIORITY_COLORS.low },
-          { name: '中', value: 56, color: PRIORITY_COLORS.medium },
-          { name: '高', value: 48, color: PRIORITY_COLORS.high },
-          { name: '紧急', value: 18, color: PRIORITY_COLORS.critical },
-        ]);
+        // 无真实数据时，使用空状态
+        setProblemsByStatus([]);
+        setProblemsByPriority([]);
+        setProblems([]);
       }
     } catch (error) {
       console.error('加载问题效率数据失败:', error);
       message.error('加载数据失败');
 
-      // 演示数据
+      // 不再使用演示数据，保持空数据状态
       setStats({
-        total: 156,
-        open: 23,
-        inProgress: 45,
-        resolved: 67,
-        closed: 21,
-        highPriority: 18,
+        total: 0,
+        open: 0,
+        inProgress: 0,
+        resolved: 0,
+        closed: 0,
+        highPriority: 0,
       });
 
-      setProblemsByStatus([
-        { name: '待处理', value: 23, color: STATUS_COLORS.open },
-        { name: '处理中', value: 45, color: STATUS_COLORS.inProgress },
-        { name: '已解决', value: 67, color: STATUS_COLORS.resolved },
-        { name: '已关闭', value: 21, color: STATUS_COLORS.closed },
-      ]);
-
-      setProblemsByPriority([
-        { name: '低', value: 34, color: PRIORITY_COLORS.low },
-        { name: '中', value: 56, color: PRIORITY_COLORS.medium },
-        { name: '高', value: 48, color: PRIORITY_COLORS.high },
-        { name: '紧急', value: 18, color: PRIORITY_COLORS.critical },
-      ]);
+      setProblemsByStatus([]);
+      setProblemsByPriority([]);
+      setProblems([]);
     } finally {
       setLoading(false);
     }

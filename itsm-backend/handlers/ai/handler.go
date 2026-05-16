@@ -20,6 +20,59 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+// ListTools handles GET /api/v1/agent/tools
+func (h *Handler) ListTools(c *gin.Context) {
+	tools := h.svc.ListTools()
+	common.Success(c, gin.H{"tools": tools})
+}
+
+// ExecuteTool handles POST /api/v1/agent/tools/execute
+func (h *Handler) ExecuteTool(c *gin.Context) {
+	var req struct {
+		Name string                 `json:"name" binding:"required"`
+		Args map[string]interface{} `json:"args"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		tenantID = 1
+	}
+
+	readOnly := false
+	for _, t := range h.svc.ListTools() {
+		if t.Name == req.Name {
+			readOnly = t.ReadOnly
+			break
+		}
+	}
+	if !readOnly {
+		common.Fail(c, http.StatusForbidden, "tool requires approval; write tools are not enabled in agent v1")
+		return
+	}
+
+	if req.Args == nil {
+		req.Args = map[string]interface{}{}
+	}
+
+	res, _, err := h.svc.ExecuteTool(c.Request.Context(), tenantID, req.Name, req.Args)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{
+		"status":       "success",
+		"summary":      "tool executed",
+		"next_actions": []string{"If the result is incomplete, refine args and retry."},
+		"artifacts":    []string{},
+		"data":         res,
+	})
+}
+
 // Chat handles POST /api/v1/ai/chat
 func (h *Handler) Chat(c *gin.Context) {
 	var req struct {

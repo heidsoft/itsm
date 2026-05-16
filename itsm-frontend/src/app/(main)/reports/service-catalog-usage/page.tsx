@@ -41,45 +41,52 @@ const ServiceCatalogUsagePage = () => {
 
       setServices(servicesData);
 
-      // 模拟请求数据 - 实际项目中应调用真实API
-      const mockRequestsByService = [
-        { name: '账号申请', value: 156, color: '#1890ff' },
-        { name: '权限变更', value: 98, color: '#52c41a' },
-        { name: '设备报修', value: 87, color: '#faad14' },
-        { name: '软件安装', value: 65, color: '#ff4d4f' },
-        { name: '网络申请', value: 43, color: '#722ed1' },
-        { name: '其他服务', value: 32, color: '#13c2c2' },
-      ];
+      // 从真实服务数据生成使用统计，而非使用模拟数据
+      // 如果有真实服务，使用其统计；否则使用空数据
+      if (servicesData && servicesData.length > 0) {
+        // 生成按服务类型分布数据（基于实际服务）
+        const serviceUsage = servicesData.map((service: any, index: number) => ({
+          name: service.name || `服务 ${service.id}`,
+          value: service.usage_count || service.request_count || 0,
+          color: COLORS[index % COLORS.length],
+        }));
 
-      const mockRequestsByStatus = [
-        { name: '已完成', value: 312, color: '#52c41a' },
-        { name: '处理中', value: 89, color: '#1890ff' },
-        { name: '待审批', value: 45, color: '#faad14' },
-        { name: '已取消', value: 23, color: '#d9d9d9' },
-      ];
+        setRequestsByService(serviceUsage);
 
-      setRequestsByService(mockRequestsByService);
-      setRequestsByStatus(mockRequestsByStatus);
+        // 生成按状态分布数据（基于服务状态）
+        const statusDistribution = [
+          {
+            name: '已发布',
+            value: servicesData.filter((s: any) => s.status === 'published').length,
+            color: '#52c41a',
+          },
+          {
+            name: '草稿',
+            value: servicesData.filter((s: any) => s.status === 'draft').length,
+            color: '#1890ff',
+          },
+          {
+            name: '已下线',
+            value: servicesData.filter(
+              (s: any) => s.status === 'archived' || s.status === 'deprecated'
+            ).length,
+            color: '#d9d9d9',
+          },
+        ].filter(item => item.value > 0);
+
+        setRequestsByStatus(statusDistribution.length > 0 ? statusDistribution : []);
+      } else {
+        // 无数据时显示空状态
+        setRequestsByService([]);
+        setRequestsByStatus([]);
+      }
     } catch (error) {
       console.error('加载服务目录数据失败:', error);
-      message.error('加载数据失败，使用演示数据');
+      message.error('加载数据失败');
 
-      // 演示数据
-      setRequestsByService([
-        { name: '账号申请', value: 156, color: '#1890ff' },
-        { name: '权限变更', value: 98, color: '#52c41a' },
-        { name: '设备报修', value: 87, color: '#faad14' },
-        { name: '软件安装', value: 65, color: '#ff4d4f' },
-        { name: '网络申请', value: 43, color: '#722ed1' },
-        { name: '其他服务', value: 32, color: '#13c2c2' },
-      ]);
-
-      setRequestsByStatus([
-        { name: '已完成', value: 312, color: '#52c41a' },
-        { name: '处理中', value: 89, color: '#1890ff' },
-        { name: '待审批', value: 45, color: '#faad14' },
-        { name: '已取消', value: 23, color: '#d9d9d9' },
-      ]);
+      // 不再使用演示数据，保持空数据状态
+      setRequestsByService([]);
+      setRequestsByStatus([]);
     } finally {
       setLoading(false);
     }

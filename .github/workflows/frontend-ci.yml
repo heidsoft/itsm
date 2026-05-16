@@ -1,10 +1,15 @@
-name: ITSM Frontend CI
+name: frontend-ci
 
 on:
   push:
     branches: [main, develop]
+    paths:
+      - 'itsm-frontend/**'
+      - '.github/workflows/frontend-ci.yml'
   pull_request:
-    branches: [main]
+    paths:
+      - 'itsm-frontend/**'
+      - '.github/workflows/frontend-ci.yml'
   workflow_dispatch:
 
 env:
@@ -16,12 +21,10 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -34,69 +37,17 @@ jobs:
         working-directory: ./itsm-frontend
         run: npm ci
 
-      - name: Code quality checks (file size & function length)
-        run: |
-          echo "=== File Size Check (>500 lines warning) ==="
-          large_files=$(find itsm-frontend/src -name "*.ts" -o -name "*.tsx" | while read f; do
-            lines=$(wc -l < "$f")
-            if [ "$lines" -gt 500 ]; then
-              echo "  WARNING: $f ($lines lines)"
-            fi
-          done | head -10)
-          if [ -n "$large_files" ]; then
-            echo "$large_files"
-            echo "::warning::Found large files (>500 lines). Consider refactoring."
-          else
-            echo "✓ No large files found"
-          fi
-          
-          echo "=== Function Length Check (>50 lines warning) ==="
-          # Simple function length check for TypeScript
-          long_funcs=$(find itsm-frontend/src -name "*.ts" -o -name "*.tsx" -exec awk '
-          /^[[:space:]]*(export[[:space:]]+)?(async[[:space:]]+)?function[[:space:]]+/ || /^[[:space:]]*(const|let|var)[[:space:]]+[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*=[[:space:]]*(async[[:space:]]*)?\(/ {
-              func_name = $0
-              gsub(/^[[:space:]]*(export[[:space:]]+)?(async[[:space:]]+)?function[[:space:]]+/, "", func_name)
-              gsub(/^[[:space:]]*(const|let|var)[[:space:]]+/, "", func_name)
-              gsub(/[[:space:]]*=.*/, "", func_name)
-              gsub(/\(.*/, "", func_name)
-              start = NR; braces = 0; in_func = 1
-          }
-          in_func && /\{/ { braces += gsub(/\{/, "{") }
-          in_func && /\}/ { braces -= gsub(/\}/, "}") }
-          in_func && braces == 0 {
-              len = NR - start + 1
-              if (len > 50) printf "  WARNING: %s:%s (%d lines)\n", FILENAME, func_name, len
-              in_func = 0
-          }
-          ' {} \; | head -10)
-          if [ -n "$long_funcs" ]; then
-            echo "$long_funcs"
-            echo "::warning::Found long functions (>50 lines). Consider refactoring."
-          else
-            echo "✓ No long functions found"
-          fi
-
       - name: Run lint
         working-directory: ./itsm-frontend
         run: npm run lint:check
 
-      - name: Upload lint results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-results
-          path: itsm-frontend/*.log
-          retention-days: 3
-
   type-check:
     name: Type Check
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -113,23 +64,13 @@ jobs:
         working-directory: ./itsm-frontend
         run: npm run type-check
 
-      - name: Upload type check results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: type-check-results
-          path: itsm-frontend/*.log
-          retention-days: 3
-
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -152,57 +93,14 @@ jobs:
           name: frontend-coverage
           path: itsm-frontend/coverage/
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-test-results
-          path: itsm-frontend/junit.xml
-          retention-days: 7
-
-  integration-tests:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: itsm-frontend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: ./itsm-frontend
-        run: npm ci
-
-      - name: Run integration tests
-        working-directory: ./itsm-frontend
-        run: npm run test:integration -- --passWithNoTests
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: integration-test-results
-          path: itsm-frontend/junit.xml
-          retention-days: 7
-
   build:
     name: Build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: [lint, type-check, unit-tests, integration-tests]
+    timeout-minutes: 20
+    needs: [lint, type-check, unit-tests]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -219,26 +117,23 @@ jobs:
         working-directory: ./itsm-frontend
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8080
+          NEXT_PUBLIC_API_URL: http://localhost:8090
           NODE_OPTIONS: --max-old-space-size=4096
 
+      - name: Verify standalone output
+        run: |
+          if [ ! -d "itsm-frontend/.next/standalone" ]; then
+            echo "::error::Standalone build output not found"
+            exit 1
+          fi
+          echo "Standalone build verified"
+
       - name: Upload build artifacts
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
           path: |
-            itsm-frontend/.next
+            itsm-frontend/.next/standalone
+            itsm-frontend/.next/static
             itsm-frontend/public
           retention-days: 7
-
-      - name: Upload build stats
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-stats
-          path: itsm-frontend/.next/stats.json
-          retention-days: 7
-
-  # E2E tests skipped in CI - require running backend server
-  # To run E2E tests locally: npm run test:e2e

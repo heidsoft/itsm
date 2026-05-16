@@ -150,24 +150,27 @@ function DefaultCard<T>({
 
   const priorityConfig = priorityOptions.find(p => p.value === priority);
 
-  const menuItems: MenuProps['items'] = React.useMemo(() => [
-    {
-      key: 'view',
-      label: '查看详情',
-      icon: <EyeOutlined />,
-      onClick: () => onClick(),
-    },
-    ...(onEdit
-      ? [
-          {
-            key: 'edit',
-            label: '编辑',
-            icon: <EditOutlined />,
-            onClick: () => onEdit(),
-          },
-        ]
-      : []),
-  ], [onClick, onEdit]);
+  const menuItems: MenuProps['items'] = React.useMemo(
+    () => [
+      {
+        key: 'view',
+        label: '查看详情',
+        icon: <EyeOutlined />,
+        onClick: () => onClick(),
+      },
+      ...(onEdit
+        ? [
+            {
+              key: 'edit',
+              label: '编辑',
+              icon: <EditOutlined />,
+              onClick: () => onEdit(),
+            },
+          ]
+        : []),
+    ],
+    [onClick, onEdit]
+  );
 
   return (
     <Card
@@ -179,7 +182,15 @@ function DefaultCard<T>({
         borderColor: priorityConfig?.color || undefined,
         margin: '0 0 12px 0',
       }}
-      actions={menuItems.length > 0 ? [<Dropdown key="more" menu={{ items: menuItems }} trigger={['click']}><MoreOutlined /></Dropdown>] : []}
+      actions={
+        menuItems.length > 0
+          ? [
+              <Dropdown key="more" menu={{ items: menuItems }} trigger={['click']}>
+                <MoreOutlined />
+              </Dropdown>,
+            ]
+          : []
+      }
     >
       <div className="space-y-2">
         <div className="flex items-start justify-between">
@@ -187,40 +198,48 @@ function DefaultCard<T>({
           {priorityConfig && (
             <Badge
               count={priorityConfig.label}
-              style={{ backgroundColor: priorityConfig.color, fontSize: '12px', lineHeight: '16px' }}
+              style={{
+                backgroundColor: priorityConfig.color,
+                fontSize: '12px',
+                lineHeight: '16px',
+              }}
             />
           )}
         </div>
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-gray-500">#{number}</span>
-          {category && <Tag color="blue" className="text-xs">{category}</Tag>}
+          {category && (
+            <Tag color="blue" className="text-xs">
+              {category}
+            </Tag>
+          )}
         </div>
 
-        {description && (
-          <div className="text-xs text-gray-500 line-clamp-2">{description}</div>
-        )}
+        {description && <div className="text-xs text-gray-500 line-clamp-2">{description}</div>}
 
         <div className="flex items-center justify-between text-xs text-gray-400">
           <div className="flex items-center gap-2">
             {assignee ? (
               <>
-                <Avatar size="small" className="text-xs">{assignee.name[0]}</Avatar>
+                <Avatar size="small" className="text-xs">
+                  {assignee.name[0]}
+                </Avatar>
                 <span>{assignee.name}</span>
               </>
             ) : (
               <span>未分配</span>
             )}
           </div>
-          {createdAt && (
-            <span>{dayjs(createdAt).fromNow()}</span>
-          )}
+          {createdAt && <span>{dayjs(createdAt).fromNow()}</span>}
         </div>
 
         {tags.length > 0 && (
           <div className="flex gap-1 flex-wrap">
             {tags.slice(0, 2).map((tag, idx) => (
-              <Tag key={idx} color="default" className="text-xs">{tag}</Tag>
+              <Tag key={idx} color="default" className="text-xs">
+                {tag}
+              </Tag>
             ))}
           </div>
         )}
@@ -253,7 +272,7 @@ export function UnifiedKanbanBoard<T>({
   enableDrag = true,
   showToolbar = true,
   columnConfigs,
-  searchPlaceholder = "搜索...",
+  searchPlaceholder = '搜索...',
   showStatusFilter = true,
   showPriorityFilter = true,
   priorityOptions = [],
@@ -292,7 +311,17 @@ export function UnifiedKanbanBoard<T>({
     }
 
     return result;
-  }, [items, searchKeyword, filterStatus, filterPriority, getItemTitle, getItemNumber, getItemDescription, getItemStatus, getItemPriority]);
+  }, [
+    items,
+    searchKeyword,
+    filterStatus,
+    filterPriority,
+    getItemTitle,
+    getItemNumber,
+    getItemDescription,
+    getItemStatus,
+    getItemPriority,
+  ]);
 
   // 按列分组的项目
   const columnsData = useMemo(() => {
@@ -303,43 +332,62 @@ export function UnifiedKanbanBoard<T>({
   }, [filteredItems, columnConfigs, getItemStatus]);
 
   // 状态处理
-  const handleItemClick = useCallback((item: T) => {
-    onItemClick?.(item);
-  }, [onItemClick]);
+  const handleItemClick = useCallback(
+    (item: T) => {
+      onItemClick?.(item);
+    },
+    [onItemClick]
+  );
 
-  const handleItemEdit = useCallback((item: T) => {
-    onItemEdit?.(item);
-  }, [onItemEdit]);
+  const handleItemEdit = useCallback(
+    (item: T) => {
+      onItemEdit?.(item);
+    },
+    [onItemEdit]
+  );
 
   // 渲染卡片
-  const renderCard = useCallback((item: T, column: KanbanColumnConfig<T>) => {
-    if (customCardRender) {
-      return customCardRender(item, column);
-    }
+  const renderCard = useCallback(
+    (item: T, column: KanbanColumnConfig<T>) => {
+      if (customCardRender) {
+        return customCardRender(item, column);
+      }
 
-    return (
-      <DefaultCard
-        key={getItemId(item)}
-        item={item}
-        column={column}
-        onClick={() => handleItemClick(item)}
-        onEdit={() => handleItemEdit(item)}
-        getItemTitle={getItemTitle}
-        getItemNumber={getItemNumber}
-        getItemDescription={getItemDescription}
-        getItemPriority={getItemPriority}
-        getItemAssignee={getItemAssignee}
-        getItemCreatedAt={getItemCreatedAt}
-        getItemTags={getItemTags}
-        getItemCategory={getItemCategory}
-        priorityOptions={priorityOptions}
-      />
-    );
-  }, [
-    customCardRender, getItemId, handleItemClick, handleItemEdit,
-    getItemTitle, getItemNumber, getItemDescription, getItemPriority,
-    getItemAssignee, getItemCreatedAt, getItemTags, getItemCategory, priorityOptions
-  ]);
+      return (
+        <DefaultCard
+          key={getItemId(item)}
+          item={item}
+          column={column}
+          onClick={() => handleItemClick(item)}
+          onEdit={() => handleItemEdit(item)}
+          getItemTitle={getItemTitle}
+          getItemNumber={getItemNumber}
+          getItemDescription={getItemDescription}
+          getItemPriority={getItemPriority}
+          getItemAssignee={getItemAssignee}
+          getItemCreatedAt={getItemCreatedAt}
+          getItemTags={getItemTags}
+          getItemCategory={getItemCategory}
+          priorityOptions={priorityOptions}
+        />
+      );
+    },
+    [
+      customCardRender,
+      getItemId,
+      handleItemClick,
+      handleItemEdit,
+      getItemTitle,
+      getItemNumber,
+      getItemDescription,
+      getItemPriority,
+      getItemAssignee,
+      getItemCreatedAt,
+      getItemTags,
+      getItemCategory,
+      priorityOptions,
+    ]
+  );
 
   if (loading) {
     return (
@@ -372,7 +420,9 @@ export function UnifiedKanbanBoard<T>({
               >
                 <Option value="all">全部状态</Option>
                 {columnConfigs.map(col => (
-                  <Option key={col.key} value={col.key}>{col.title}</Option>
+                  <Option key={col.key} value={col.key}>
+                    {col.title}
+                  </Option>
                 ))}
               </Select>
             )}
@@ -385,26 +435,35 @@ export function UnifiedKanbanBoard<T>({
               >
                 <Option value="all">全部优先级</Option>
                 {priorityOptions.map(p => (
-                  <Option key={p.value} value={p.value}>{p.label}</Option>
+                  <Option key={p.value} value={p.value}>
+                    {p.label}
+                  </Option>
                 ))}
               </Select>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Dropdown menu={{ items: [
-              {
-                key: 'save',
-                label: '保存当前视图',
-                icon: <SaveOutlined />,
-                onClick: () => antMessage.info('保存视图功能即将推出，敬请期待'),
-              },
-              {
-                key: 'share',
-                label: '共享视图',
-                icon: <ShareAltOutlined />,
-                onClick: () => antMessage.info('共享功能即将推出，敬请期待'),
-              },
-            ] }} trigger={['click']}>
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'save',
+                    label: '保存当前视图',
+                    icon: <SaveOutlined />,
+                    disabled: true,
+                    onClick: () => antMessage.info('保存视图功能即将推出，敬请期待'),
+                  },
+                  {
+                    key: 'share',
+                    label: '共享视图',
+                    icon: <ShareAltOutlined />,
+                    disabled: true,
+                    onClick: () => antMessage.info('共享功能即将推出，敬请期待'),
+                  },
+                ],
+              }}
+              trigger={['click']}
+            >
               <Button icon={<SettingOutlined />}>视图设置</Button>
             </Dropdown>
           </div>
@@ -425,10 +484,7 @@ export function UnifiedKanbanBoard<T>({
                     />
                     <span className="font-medium text-gray-900">{column.title}</span>
                   </div>
-                  <Badge
-                    count={column.items.length}
-                    style={{ backgroundColor: column.color }}
-                  />
+                  <Badge count={column.items.length} style={{ backgroundColor: column.color }} />
                 </div>
               }
               size="small"

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, Row, Col, Button, Space, Breadcrumb } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -46,6 +47,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
   content,
   className = '',
 }) => {
+  const router = useRouter();
   // 默认的快速操作
   const defaultQuickActions = (
     <Space>
@@ -53,7 +55,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
         type="primary"
         icon={<PlusOutlined />}
         className="enterprise-btn enterprise-btn-primary"
-        onClick={() => (window.location.href = '/tickets/create')}
+        onClick={() => router.push('/tickets/create')}
       >
         新建
       </Button>
@@ -122,7 +124,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
                 type="text"
                 icon={<ArrowLeftOutlined />}
                 className="mr-2"
-                onClick={() => window.history.back()}
+                onClick={() => router.back()}
               >
                 返回
               </Button>

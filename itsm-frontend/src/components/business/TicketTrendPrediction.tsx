@@ -23,6 +23,7 @@ import {
   Empty,
   Divider,
   Progress,
+  Tooltip as AntTooltip,
 } from 'antd';
 import {
   ArrowUpOutlined,
@@ -244,10 +245,41 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
   };
 
   // 导出报告
-  const handleExport = useCallback(() => {
-    // 注意：导出报告功能需要后端支持
-    antMessage.info('导出功能即将推出，敬请期待');
-  }, [antMessage]);
+  const handleExport = useCallback(async () => {
+    try {
+      // 调用真实导出API
+      const { TicketPredictionApi } = await import('@/lib/api/ticket-prediction-api');
+      const request = {
+        time_range: [timeRange[0].format('YYYY-MM-DD'), timeRange[1].format('YYYY-MM-DD')] as [
+          string,
+          string,
+        ],
+        prediction_period: predictionPeriod as 'week' | 'month' | 'quarter',
+        model_type: 'arima' as const,
+      };
+      const blob = await TicketPredictionApi.exportPredictionReport(request, 'excel');
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `prediction-report-${dayjs().format('YYYY-MM-DD')}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      antMessage.success('导出成功');
+    } catch (error) {
+      console.error('导出失败:', error);
+      // 如果后端不支持，使用降级提示
+      if (
+        error instanceof Error &&
+        (error.message.includes('404') || error.message.includes('not found'))
+      ) {
+        antMessage.info('导出功能正在开发中，请稍后再试');
+      } else {
+        antMessage.error('导出失败，请稍后再试');
+      }
+    }
+  }, [timeRange, predictionPeriod, antMessage]);
 
   return (
     <div className="space-y-4">
@@ -258,9 +290,11 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
             工单趋势预测
           </Title>
           <Space>
-            <Button icon={<DownloadOutlined />} onClick={handleExport}>
-              导出报告
-            </Button>
+            <AntTooltip title="导出功能即将推出">
+              <Button icon={<DownloadOutlined />} disabled onClick={handleExport}>
+                导出报告
+              </Button>
+            </AntTooltip>
             <Button icon={<ReloadOutlined />} onClick={loadPrediction} loading={loading}>
               刷新
             </Button>

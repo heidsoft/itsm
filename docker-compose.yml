@@ -46,10 +46,10 @@ services:
   itsm-backend:
     build:
       context: ./itsm-backend
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
       args:
-        - GOPROXY=https://goproxy.cn,direct
-        - GOSUMDB=off
+        - GOPROXY=${GOPROXY:-https://proxy.golang.org,direct}
+        - GOSUMDB=${GOSUMDB:-sum.golang.org}
         - HTTP_PROXY=
         - HTTPS_PROXY=
         - http_proxy=
@@ -59,12 +59,12 @@ services:
     hostname: backend
     environment:
       # WARNING: Change DB_PASSWORD before deploying! This default is for local dev only.
-      - DATABASE_URL=postgres://itsm:${DB_PASSWORD:-itsm_dev_password}@postgres:5432/itsm?sslmode=disable
+      - DATABASE_URL=postgres://itsm:${DB_PASSWORD:-itsm_password_2026}@postgres:5432/itsm?sslmode=disable
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=itsm
       # WARNING: Change DB_PASSWORD before deploying! This default is for local dev only.
-      - DB_PASSWORD=${DB_PASSWORD:-itsm_dev_password}
+      - DB_PASSWORD=${DB_PASSWORD:-itsm_password_2026}
       - DB_NAME=itsm
       - DB_SSLMODE=disable
       - REDIS_HOST=redis
@@ -98,7 +98,7 @@ services:
       - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/health" ]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/v1/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -107,13 +107,13 @@ services:
   itsm-frontend:
     build:
       context: ./itsm-frontend
-      dockerfile: Dockerfile.frontend
+      dockerfile: Dockerfile
+      target: production
     container_name: itsm-frontend
     hostname: frontend
     environment:
       - NODE_ENV=production
-      - ITSM_BACKEND_URL=http://host.docker.internal:8090
-      - NEXT_PUBLIC_API_URL=http://host.docker.internal:8090
+      - NEXT_PUBLIC_API_URL=http://itsm-backend:8090
       # 取消代理设置，确保内部网络请求不走代理
       - HTTP_PROXY=
       - HTTPS_PROXY=

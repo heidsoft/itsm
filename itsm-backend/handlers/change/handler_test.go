@@ -527,8 +527,8 @@ func TestChangeController_GetStats(t *testing.T) {
 	assert.Equal(t, common.SuccessCode, response.Code)
 
 	data := response.Data.(map[string]interface{})
-	// Stats struct uses capitalized field names in JSON
-	assert.Contains(t, data, "Total")
+	// Stats struct uses camelCase/lowercase JSON tags
+	assert.Contains(t, data, "total")
 }
 
 // TestChangeController_SubmitChange tests POST /api/v1/changes/:id/submit

@@ -25,6 +25,7 @@ import {
 import { ArrowLeftOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
+import { Modal, Input } from 'antd';
 
 import { ChangeApi } from '@/lib/api/';
 import {
@@ -63,6 +64,10 @@ const ChangeDetail: React.FC = () => {
   const [impactAnalysis, setImpactAnalysis] = useState<any>(null);
   const [rollbackPlan, setRollbackPlan] = useState<any>(null);
   const [assessmentLoading, setAssessmentLoading] = useState(false);
+  const [approvalModalVisible, setApprovalModalVisible] = useState(false);
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [approvalComment, setApprovalComment] = useState('');
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -70,6 +75,43 @@ const ChangeDetail: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // 检查是否可以审批
+  const canApprove = change?.status === ChangeStatus.PENDING;
+
+  // 批准变更
+  const handleApprove = async () => {
+    if (!change) return;
+    setProcessing(true);
+    try {
+      await ChangeApi.approveChange(change.id, { comment: approvalComment });
+      message.success('变更已批准');
+      setApprovalModalVisible(false);
+      setApprovalComment('');
+      loadDetail();
+    } catch (error) {
+      message.error('批准失败');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // 拒绝变更
+  const handleReject = async () => {
+    if (!change) return;
+    setProcessing(true);
+    try {
+      await ChangeApi.rejectChange(change.id, { comment: approvalComment });
+      message.success('变更已拒绝');
+      setRejectModalVisible(false);
+      setApprovalComment('');
+      loadDetail();
+    } catch (error) {
+      message.error('拒绝失败');
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   const loadDetail = async () => {
     setLoading(true);
@@ -198,6 +240,24 @@ const ChangeDetail: React.FC = () => {
             <Tag color={statusColors[change.status]} style={{ padding: '4px 12px', fontSize: 14 }}>
               {ChangeStatusLabels[change.status]}
             </Tag>
+            {canApprove && (
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  onClick={() => setApprovalModalVisible(true)}
+                >
+                  批准
+                </Button>
+                <Button
+                  danger
+                  icon={<CloseCircleOutlined />}
+                  onClick={() => setRejectModalVisible(true)}
+                >
+                  拒绝
+                </Button>
+              </Space>
+            )}
           </div>
         </div>
 
@@ -220,16 +280,14 @@ const ChangeDetail: React.FC = () => {
               : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="计划截止">
-            {change.plannedEndDate
-              ? dayjs(change.plannedEndDate).format('YYYY-MM-DD HH:mm')
-              : '-'}
+            {change.plannedEndDate ? dayjs(change.plannedEndDate).format('YYYY-MM-DD HH:mm') : '-'}
           </Descriptions.Item>
         </Descriptions>
 
         <Tabs
           defaultActiveKey="1"
           style={{ marginTop: 24 }}
-          onChange={(activeKey) => {
+          onChange={activeKey => {
             if (activeKey === '3' && !riskAssessment) loadRiskAssessment();
             if (activeKey === '4' && !impactAnalysis) loadImpactAnalysis();
           }}
@@ -266,7 +324,7 @@ const ChangeDetail: React.FC = () => {
             {
               key: '2',
               label: '审批记录',
-              children: (
+              children:
                 approvals.length > 0 ? (
                   <List
                     itemLayout="horizontal"
@@ -299,8 +357,7 @@ const ChangeDetail: React.FC = () => {
                   />
                 ) : (
                   <Empty description="暂无审批记录" />
-                )
-              ),
+                ),
             },
             {
               key: '3',
@@ -344,6 +401,56 @@ const ChangeDetail: React.FC = () => {
           ]}
         />
       </Card>
+
+      {/* 批准弹窗 */}
+      <Modal
+        title="批准变更"
+        open={approvalModalVisible}
+        onCancel={() => setApprovalModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setApprovalModalVisible(false)}>
+            取消
+          </Button>,
+          <Button key="approve" type="primary" loading={processing} onClick={handleApprove}>
+            批准
+          </Button>,
+        ]}
+      >
+        <div className="py-4">
+          <p className="mb-2">审批意见（可选）：</p>
+          <Input.TextArea
+            value={approvalComment}
+            onChange={e => setApprovalComment(e.target.value)}
+            placeholder="请输入审批意见..."
+            rows={3}
+          />
+        </div>
+      </Modal>
+
+      {/* 拒绝弹窗 */}
+      <Modal
+        title="拒绝变更"
+        open={rejectModalVisible}
+        onCancel={() => setRejectModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setRejectModalVisible(false)}>
+            取消
+          </Button>,
+          <Button key="reject" danger loading={processing} onClick={handleReject}>
+            拒绝
+          </Button>,
+        ]}
+      >
+        <div className="py-4">
+          <p className="mb-2">拒绝原因（可选）：</p>
+          <Input.TextArea
+            value={approvalComment}
+            onChange={e => setApprovalComment(e.target.value)}
+            placeholder="请输入拒绝原因..."
+            rows={3}
+          />
+        </div>
+      </Modal>
     </Space>
   );
 };

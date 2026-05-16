@@ -23,6 +23,7 @@ import {
   Tree,
   Collapse,
   Statistic,
+  Tooltip,
 } from 'antd';
 import {
   SearchOutlined,
@@ -261,9 +262,15 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
             >
               执行分析
             </Button>
-            <Button icon={<DownloadOutlined />} onClick={() => antMessage.info('导出功能即将推出，敬请期待')}>
-              导出报告
-            </Button>
+            <Tooltip title="导出功能即将推出">
+              <Button
+                icon={<DownloadOutlined />}
+                disabled
+                onClick={() => antMessage.info('导出功能即将推出，敬请期待')}
+              >
+                导出报告
+              </Button>
+            </Tooltip>
             <Button icon={<ReloadOutlined />} onClick={performAnalysis} loading={analyzing}>
               刷新
             </Button>

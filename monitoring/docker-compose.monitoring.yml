@@ -73,7 +73,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=9094
-      - ITSM_BACKEND_URL=http://itsm-backend:8080
+      - ITSM_BACKEND_URL=http://itsm-backend:8090
     command: ["node", "/var/app/alertReceiver.js"]
     depends_on:
       - alertmanager

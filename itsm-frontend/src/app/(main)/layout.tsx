@@ -156,6 +156,13 @@ export default function MainLayout({
   return (
     <ConfigProvider locale={zhCN}>
       <App>
+        {/* Skip to main content link for accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-400"
+        >
+          跳转到主要内容
+        </a>
         <Layout
           className="min-h-screen bg-[#f5f7fb]"
           style={{
@@ -177,8 +184,10 @@ export default function MainLayout({
 
             {/* 内容区域 */}
             <Content
+              id="main-content"
+              tabIndex={-1}
               onClick={handleContentClick}
-              className="bg-[#f5f7fb] w-auto min-w-0 max-w-full overflow-x-hidden shadow-none"
+              className="bg-[#f5f7fb] w-auto min-w-0 max-w-full overflow-x-hidden shadow-none outline-none"
               style={{
                 minHeight: LAYOUT_CONFIG.content.minHeight,
               }}

@@ -18,6 +18,8 @@ import {
   Row,
   Col,
   Flex,
+  Tooltip,
+  message,
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
 import { AuthService } from '@/lib/services/auth-service';
@@ -178,9 +180,11 @@ export default function LoginPage() {
                       >
                         {t('auth.login.rememberMe')}
                       </Checkbox>
-                      <Button type="link" className="p-0 h-auto text-xs" disabled={loading}>
-                        {t('auth.login.forgotPassword')}
-                      </Button>
+                      <Tooltip title={loading ? '登录中...' : ''}>
+                        <Button type="link" className="p-0 h-auto text-xs" disabled={loading}>
+                          {t('auth.login.forgotPassword')}
+                        </Button>
+                      </Tooltip>
                     </Flex>
                   </Form.Item>
 

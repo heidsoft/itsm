@@ -41,8 +41,16 @@ logs/
 .env
 .env.local
 .env.*.local
+.env.prod
 config/local.yaml
 config/production.yaml
+
+# Deploy state
+.deploy/
+.pids/
+
+# Backups
+backups/
 
 # Database
 *.db
@@ -106,12 +114,18 @@ credentials*
 graphify-out/cache/
 .graphify_*
 
-# Test outputs
-itsm-frontend/test-results/
-itsm-frontend/reports/
-reports/
-report.html
-report.xml
+# AI tool configs (developer-specific, do not track)
+.trae/
+.codex/
+
+# Python / Test
+tests/
+itsm-frontend/tests/e2e/venv/
+itsm-backend/memory/venv/
+itsm-backend/.pytest_cache/
+itsm-backend/memory/*.md
+itsm-backend/memory/*.sh
+itsm-backend/memory/run_tests.sh
 
 # Build binaries
 itsm-backend/itsm
