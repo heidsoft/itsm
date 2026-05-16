@@ -1,0 +1,18 @@
+# ITSM AI Service Dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+
+# AI/ML Libraries
+# 基础NLP
+transformers>=4.35.0
+torch>=2.1.0
+tokenizers>=0.15.0
+
+# 可选: 本地向量存储
+# faiss-cpu>=1.7.4
+
+# 日志和监控
+python-multipart>=0.0.6
+httpx>=0.25.0
