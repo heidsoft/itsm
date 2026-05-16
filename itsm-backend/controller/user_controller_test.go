@@ -23,7 +23,7 @@ import (
 	"itsm-backend/service"
 )
 
-func setupTestUserController(t *testing.T) (*gin.Engine, *ent.Client, *UserController) {
+func setupTestUserController(t *testing.T) (*gin.Engine, *ent.Client, *UserController, int) {
 	// 设置测试模式
 	gin.SetMode(gin.TestMode)
 
@@ -39,14 +39,24 @@ func setupTestUserController(t *testing.T) (*gin.Engine, *ent.Client, *UserContr
 	// 创建控制器
 	userController := NewUserController(userService, logger)
 
+	// 预创建租户以获取确定的 tenant_id
+	ctx := context.Background()
+	tenant, err := client.Tenant.Create().
+		SetName("Default Test Tenant").
+		SetCode("DEFAULT_TEST").
+		SetDomain("test.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
 	// 创建路由
 	r := gin.New()
 	r.Use(gin.Recovery())
 
-	// 添加认证中间件模拟
+	// 使用创建的 tenant.ID 设置中间件
 	r.Use(func(c *gin.Context) {
 		c.Set("user_id", 1)
-		c.Set("tenant_id", 1)
+		c.Set("tenant_id", tenant.ID)
 		c.Next()
 	})
 
@@ -60,20 +70,15 @@ func setupTestUserController(t *testing.T) (*gin.Engine, *ent.Client, *UserContr
 	r.PUT("/api/v1/users/:id/status", userController.ChangeUserStatus)
 	r.PUT("/api/v1/users/:id/password", userController.ResetPassword)
 
-	return r, client, userController
+	return r, client, userController, tenant.ID
 }
 
-func createTestUserData(t *testing.T, client *ent.Client) (*ent.Tenant, *ent.User) {
+func createTestUserData(t *testing.T, client *ent.Client, tenantID int) (*ent.Tenant, *ent.User) {
 	ctx := context.Background()
 	uniqueID := uniqueTestID()
 
-	// 创建测试租户
-	tenant, err := client.Tenant.Create().
-		SetName("Test Tenant").
-		SetCode("TEST" + uniqueID).
-		SetDomain("test.com").
-		SetStatus("active").
-		Save(ctx)
+	// 获取已有租户
+	tenant, err := client.Tenant.Get(ctx, tenantID)
 	require.NoError(t, err)
 
 	// 创建密码哈希
@@ -97,11 +102,11 @@ func createTestUserData(t *testing.T, client *ent.Client) (*ent.Tenant, *ent.Use
 }
 
 func TestUserController_CreateUser(t *testing.T) {
-	r, client, _ := setupTestUserController(t)
+	r, client, _, tenantID := setupTestUserController(t)
 	defer client.Close()
 
 	// 创建测试数据
-	tenant, _ := createTestUserData(t, client)
+	tenant, _ := createTestUserData(t, client, tenantID)
 
 	// 先创建一个用户用于测试"用户名已存在"的场景
 	existingUsername := "existinguser"
@@ -206,11 +211,11 @@ func TestUserController_CreateUser(t *testing.T) {
 }
 
 func TestUserController_ListUsers(t *testing.T) {
-	r, client, _ := setupTestUserController(t)
+	r, client, _, tenantID := setupTestUserController(t)
 	defer client.Close()
 
 	// 创建测试数据
-	createTestUserData(t, client)
+	createTestUserData(t, client, tenantID)
 
 	tests := []struct {
 		name           string
@@ -271,11 +276,11 @@ func TestUserController_ListUsers(t *testing.T) {
 }
 
 func TestUserController_GetUser(t *testing.T) {
-	r, client, _ := setupTestUserController(t)
+	r, client, _, tenantID := setupTestUserController(t)
 	defer client.Close()
 
 	// 创建测试数据
-	_, user := createTestUserData(t, client)
+	_, user := createTestUserData(t, client, tenantID)
 
 	tests := []struct {
 		name           string
@@ -321,11 +326,11 @@ func TestUserController_GetUser(t *testing.T) {
 }
 
 func TestUserController_UpdateUser(t *testing.T) {
-	r, client, _ := setupTestUserController(t)
+	r, client, _, tenantID := setupTestUserController(t)
 	defer client.Close()
 
 	// 创建测试数据
-	_, user := createTestUserData(t, client)
+	_, user := createTestUserData(t, client, tenantID)
 
 	tests := []struct {
 		name           string
@@ -387,11 +392,11 @@ func TestUserController_UpdateUser(t *testing.T) {
 }
 
 func TestUserController_DeleteUser(t *testing.T) {
-	r, client, _ := setupTestUserController(t)
+	r, client, _, tenantID := setupTestUserController(t)
 	defer client.Close()
 
 	// 创建测试数据
-	_, user := createTestUserData(t, client)
+	_, user := createTestUserData(t, client, tenantID)
 
 	tests := []struct {
 		name           string
@@ -437,11 +442,11 @@ func TestUserController_DeleteUser(t *testing.T) {
 }
 
 func TestUserController_SearchUsers(t *testing.T) {
-	r, client, _ := setupTestUserController(t)
+	r, client, _, tenantID := setupTestUserController(t)
 	defer client.Close()
 
 	// 创建测试数据
-	createTestUserData(t, client)
+	createTestUserData(t, client, tenantID)
 
 	tests := []struct {
 		name           string
@@ -503,11 +508,24 @@ func TestUserController_SearchUsers(t *testing.T) {
 }
 
 func TestUserController_ChangeUserStatus(t *testing.T) {
-	r, client, _ := setupTestUserController(t)
+	r, client, _, tenantID := setupTestUserController(t)
 	defer client.Close()
 
-	// 创建测试数据
-	_, user := createTestUserData(t, client)
+	// 创建测试数据 - 创建第二个用户（ID 不同于中间件中的 user_id=1）
+	_, user := createTestUserData(t, client, tenantID)
+
+	// 创建另一个用户专门用于禁用测试，避免与当前登录用户ID冲突
+	ctx := context.Background()
+	uniqueID := uniqueTestID()
+	disabledUser, err := client.User.Create().
+		SetUsername("disableme" + uniqueID).
+		SetEmail("disable" + uniqueID + "@example.com").
+		SetPasswordHash("$2a$10$dummyhash").
+		SetName("To Be Disabled").
+		SetActive(true).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name           string
@@ -527,7 +545,7 @@ func TestUserController_ChangeUserStatus(t *testing.T) {
 		},
 		{
 			name:   "禁用用户",
-			userID: strconv.Itoa(user.ID),
+			userID: strconv.Itoa(disabledUser.ID),
 			request: dto.ChangeUserStatusRequest{
 				Active: false,
 			},
@@ -567,11 +585,11 @@ func TestUserController_ChangeUserStatus(t *testing.T) {
 }
 
 func TestUserController_ResetPassword(t *testing.T) {
-	r, client, _ := setupTestUserController(t)
+	r, client, _, tenantID := setupTestUserController(t)
 	defer client.Close()
 
 	// 创建测试数据
-	_, user := createTestUserData(t, client)
+	_, user := createTestUserData(t, client, tenantID)
 
 	tests := []struct {
 		name           string

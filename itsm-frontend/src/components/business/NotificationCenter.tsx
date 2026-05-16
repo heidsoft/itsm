@@ -132,6 +132,35 @@ const NotificationCenter: React.FC<{
   const [form] = Form.useForm();
   const [channelForm] = Form.useForm();
 
+  // 筛选状态
+  const [filterType, setFilterType] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<string>('');
+
+  // 筛选后的通知列表
+  const filteredNotifications = notifications.filter(n => {
+    if (filterType && n.type !== filterType) return false;
+    if (filterStatus && n.status !== filterStatus) return false;
+    return true;
+  });
+
+  // 导出通知列表
+  const handleExport = () => {
+    const csvContent = [
+      ['ID', '标题', '内容', '类型', '状态', '接收人', '发送时间'].join(','),
+      ...filteredNotifications.map(n =>
+        [n.id, n.title, n.message, n.type, n.status, n.recipient, n.sent_at || ''].join(',')
+      ),
+    ].join('\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `notifications_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    message.success('导出成功');
+  };
+
   // 模拟数据
   useEffect(() => {
     if (open) {
@@ -781,24 +810,67 @@ const NotificationCenter: React.FC<{
             {/* 操作按钮 */}
             <div className="flex justify-between items-center">
               <Space>
-                <Button icon={<Filter className="w-4 h-4" />} onClick={() => {}}>
+                <Button
+                  icon={<Filter className="w-4 h-4" />}
+                  onClick={() => setActiveTab('settings')}
+                >
                   筛选
                 </Button>
-                <Button icon={<Download className="w-4 h-4" />} onClick={() => {}}>
+                <Button icon={<Download className="w-4 h-4" />} onClick={handleExport}>
                   导出
                 </Button>
               </Space>
               <Space>
-                <Button onClick={handleMarkAllRead} disabled={stats.unread === 0}>
-                  全部标记已读
-                </Button>
+                <Tooltip title={stats.unread === 0 ? '暂无未读通知' : ''}>
+                  <Button onClick={handleMarkAllRead} disabled={stats.unread === 0}>
+                    全部标记已读
+                  </Button>
+                </Tooltip>
               </Space>
             </div>
+
+            {/* 筛选表单 */}
+            <Card size="small" className="mb-4">
+              <Space wrap>
+                <Select
+                  placeholder="通知类型"
+                  allowClear
+                  style={{ width: 120 }}
+                  value={filterType || undefined}
+                  onChange={setFilterType}
+                >
+                  <Option value="info">通知</Option>
+                  <Option value="success">成功</Option>
+                  <Option value="warning">警告</Option>
+                  <Option value="error">错误</Option>
+                </Select>
+                <Select
+                  placeholder="通知状态"
+                  allowClear
+                  style={{ width: 120 }}
+                  value={filterStatus || undefined}
+                  onChange={setFilterStatus}
+                >
+                  <Option value="pending">待处理</Option>
+                  <Option value="sent">已发送</Option>
+                  <Option value="failed">失败</Option>
+                  <Option value="read">已读</Option>
+                </Select>
+                <Button
+                  onClick={() => {
+                    setFilterType('');
+                    setFilterStatus('');
+                  }}
+                >
+                  重置
+                </Button>
+              </Space>
+            </Card>
 
             {/* 通知列表 */}
             <Table
               columns={notificationColumns}
-              dataSource={notifications}
+              dataSource={filteredNotifications}
               rowKey="id"
               loading={loading}
               scroll={{ x: 'max-content' }}
@@ -830,7 +902,13 @@ const NotificationCenter: React.FC<{
               </Button>
             </div>
 
-            <Table columns={templateColumns} dataSource={templates} rowKey="id" size="small" scroll={{ x: 'max-content' }} />
+            <Table
+              columns={templateColumns}
+              dataSource={templates}
+              rowKey="id"
+              size="small"
+              scroll={{ x: 'max-content' }}
+            />
           </div>
         </TabPane>
 
@@ -851,7 +929,13 @@ const NotificationCenter: React.FC<{
               </Button>
             </div>
 
-            <Table columns={channelColumns} dataSource={channels} rowKey="id" size="small" scroll={{ x: 'max-content' }} />
+            <Table
+              columns={channelColumns}
+              dataSource={channels}
+              rowKey="id"
+              size="small"
+              scroll={{ x: 'max-content' }}
+            />
           </div>
         </TabPane>
       </Tabs>

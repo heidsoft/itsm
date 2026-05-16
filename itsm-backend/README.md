@@ -114,8 +114,8 @@ API base: `http://localhost:8080/api/v1`
 
 After server starts, open:
 
-- Swagger UI: `http://localhost:8080/swagger/index.html`
-- OpenAPI JSON: `http://localhost:8080/docs/swagger.json`
+- Swagger UI: `http://localhost:8090/swagger/index.html`
+- OpenAPI JSON: `http://localhost:8090/docs/swagger.json`
 
 Generate docs locally:
 

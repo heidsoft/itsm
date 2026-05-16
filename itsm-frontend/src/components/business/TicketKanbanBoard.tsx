@@ -131,9 +131,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
           {/* 状态和优先级 */}
           <div className="flex items-center gap-2 flex-wrap">
             <Tag color={statusConfig.color}>{statusConfig.label}</Tag>
-            <Tag color={priorityConfig.color}>
-              {priorityConfig.label}
-            </Tag>
+            <Tag color={priorityConfig.color}>{priorityConfig.label}</Tag>
           </div>
 
           {/* 处理人和时间 */}
@@ -378,6 +376,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
       key: 'share',
       label: '共享视图',
       icon: <ShareAltOutlined />,
+      disabled: true,
       onClick: () => antMessage.info('共享功能即将推出，敬请期待'),
     },
   ];

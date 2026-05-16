@@ -98,7 +98,6 @@ services:
       - REDIS_DB=0
 
       # 服务配置
-      - PORT=8090
       - GIN_MODE=debug
       - SERVER_ENV=development
 
@@ -126,7 +125,6 @@ services:
 
       # 监控配置
       - ENABLE_METRICS=true
-      - METRICS_PORT=9090
 
       # 其他
       - ENABLE_SWAGGER=true
@@ -141,7 +139,6 @@ services:
       - no_proxy=
     ports:
       - "8090:8090"
-      - "9090:9090" # metrics 端口
     depends_on:
       postgres:
         condition: service_healthy
@@ -156,11 +153,9 @@ services:
       test:
         [
           "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:8090/api/v1/health",
+          "sh",
+          "-c",
+          "http_proxy= https_proxy= HTTP_PROXY= HTTPS_PROXY= wget --no-verbose --tries=1 --spider http://localhost:8090/api/v1/health",
         ]
       interval: 10s
       timeout: 5s

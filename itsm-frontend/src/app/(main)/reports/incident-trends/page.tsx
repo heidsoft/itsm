@@ -82,23 +82,23 @@ const IncidentTrendsPage = () => {
         ticketService.getTicketStats(),
       ]);
 
-      // 处理趋势数据
+      // 处理趋势数据 - 如果没有真实数据，显示空状态而非模拟数据
       if (analyticsRes.daily_trend && analyticsRes.daily_trend.length > 0) {
         setTrendData(analyticsRes.daily_trend);
       } else {
-        // 生成模拟数据
-        setTrendData(generateMockTrend());
+        setTrendData([]);
       }
 
-      // 处理优先级数据
+      // 处理优先级数据 - 使用真实数据
       if (analyticsRes.priority_distribution && analyticsRes.priority_distribution.length > 0) {
         setPriorityData(analyticsRes.priority_distribution);
       } else {
+        // 使用 API 返回的统计值作为后备（如果可用）
         setPriorityData([
           { name: '低', value: 0, color: priorityColors.low },
           { name: '中', value: 0, color: priorityColors.medium },
           { name: '高', value: statsRes.highPriority || 0, color: priorityColors.high },
-          { name: '紧急', value: statsRes.highPriority || 0, color: priorityColors.urgent },
+          { name: '紧急', value: 0, color: priorityColors.urgent },
         ]);
       }
 
@@ -113,30 +113,12 @@ const IncidentTrendsPage = () => {
     } catch (error) {
       console.error('加载报表数据失败:', error);
       message.error('加载报表数据失败');
-      // 使用模拟数据
-      setTrendData(generateMockTrend());
-      setPriorityData([
-        { name: '低', value: 234, color: priorityColors.low },
-        { name: '中', value: 389, color: priorityColors.medium },
-        { name: '高', value: 198, color: priorityColors.high },
-        { name: '紧急', value: 26, color: priorityColors.urgent },
-      ]);
+      // 不再使用模拟数据，保持空数据状态
+      setTrendData([]);
+      setPriorityData([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  // 生成模拟趋势数据
-  const generateMockTrend = () => {
-    const days = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90;
-    return Array.from({ length: days }, (_, i) => ({
-      date: dayjs()
-        .subtract(days - 1 - i, 'day')
-        .format('MM-DD'),
-      created: Math.floor(Math.random() * 20) + 5,
-      resolved: Math.floor(Math.random() * 15) + 3,
-      open: Math.floor(Math.random() * 10) + 2,
-    }));
   };
 
   useEffect(() => {

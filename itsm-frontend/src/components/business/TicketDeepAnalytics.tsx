@@ -25,6 +25,7 @@ import {
   Empty,
   Spin,
   Modal,
+  Tooltip as AntTooltip,
 } from 'antd';
 import {
   BarChartOutlined,
@@ -222,10 +223,33 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
   }, [form, config, onConfigChange, antMessage, loadAnalyticsData]);
 
   // 导出数据
-  const handleExport = useCallback(() => {
-    // 注意：导出功能需要后端支持导出API
-    antMessage.info('导出功能即将推出，敬请期待');
-  }, [antMessage]);
+  const handleExport = useCallback(async () => {
+    try {
+      // 调用真实导出API
+      const { TicketAnalyticsApi } = await import('@/lib/api/ticket-analytics-api');
+      const blob = await TicketAnalyticsApi.exportAnalytics(config, 'excel');
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `deep-analytics-${dayjs().format('YYYY-MM-DD')}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      antMessage.success('导出成功');
+    } catch (error) {
+      console.error('导出失败:', error);
+      // 如果后端不支持，使用降级提示
+      if (
+        error instanceof Error &&
+        (error.message.includes('404') || error.message.includes('not found'))
+      ) {
+        antMessage.info('导出功能正在开发中，请稍后再试');
+      } else {
+        antMessage.error('导出失败，请稍后再试');
+      }
+    }
+  }, [config, antMessage]);
 
   // 渲染图表
   const renderChart = () => {
@@ -343,9 +367,11 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               配置
             </Button>
             {canExport && (
-              <Button icon={<DownloadOutlined />} onClick={handleExport}>
-                导出
-              </Button>
+              <AntTooltip title="导出功能即将推出">
+                <Button icon={<DownloadOutlined />} disabled onClick={handleExport}>
+                  导出
+                </Button>
+              </AntTooltip>
             )}
             <Button icon={<ReloadOutlined />} onClick={loadAnalyticsData} loading={loading}>
               刷新

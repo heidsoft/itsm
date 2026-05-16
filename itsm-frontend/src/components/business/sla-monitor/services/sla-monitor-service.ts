@@ -54,33 +54,47 @@ export const acknowledgeSLAViolation = async (violationId: number): Promise<void
  * 获取告警规则列表
  */
 export const fetchAlertRules = async (): Promise<SLAAlertRule[]> => {
-  // TODO: 实现 API 调用
-  // return await SLAApi.getAlertRules();
-  return [];
+  try {
+    const response = await SLAApi.getAlertRules();
+    return response.items || [];
+  } catch (error) {
+    console.error('Failed to fetch alert rules:', error);
+    return [];
+  }
 };
 
 /**
  * 创建告警规则
  */
 export const createAlertRule = async (rule: Partial<SLAAlertRule>): Promise<SLAAlertRule> => {
-  // TODO: 实现 API 调用
-  // return await SLAApi.createAlertRule(rule);
-  throw new Error('Not implemented');
+  const response = await SLAApi.createAlertRule({
+    name: rule.name || 'New Rule',
+    sla_definition_id: rule.sla_definition_id || 0,
+    alert_level: rule.alert_level || 'warning',
+    threshold_percent: rule.threshold_percent || 80,
+    notify_owners: rule.notify_owners ?? true,
+    is_active: rule.is_active ?? true,
+  });
+  return response;
 };
 
 /**
  * 更新告警规则
  */
 export const updateAlertRule = async (ruleId: number, rule: Partial<SLAAlertRule>): Promise<SLAAlertRule> => {
-  // TODO: 实现 API 调用
-  // return await SLAApi.updateAlertRule(ruleId, rule);
-  throw new Error('Not implemented');
+  const response = await SLAApi.updateAlertRule(ruleId, {
+    name: rule.name,
+    alert_level: rule.alert_level,
+    threshold_percent: rule.threshold_percent,
+    notify_owners: rule.notify_owners,
+    is_active: rule.is_active,
+  });
+  return response;
 };
 
 /**
  * 删除告警规则
  */
 export const deleteAlertRule = async (ruleId: number): Promise<void> => {
-  // TODO: 实现 API 调用
-  // await SLAApi.deleteAlertRule(ruleId);
+  await SLAApi.deleteAlertRule(ruleId);
 };

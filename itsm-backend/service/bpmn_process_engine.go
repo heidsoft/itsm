@@ -789,6 +789,7 @@ type ListUserTasksRequest struct {
 	CandidateGroups      string `json:"candidate_groups"`
 	Status               string `json:"status"`
 	ProcessDefinitionKey string `json:"process_definition_key"`
+	ProcessInstanceID    int    `json:"process_instance_id"`
 	TenantID             int    `json:"tenant_id"`
 	Page                 int    `json:"page"`
 	PageSize             int    `json:"page_size"`
@@ -1305,6 +1306,9 @@ func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksR
 	}
 	if req.ProcessDefinitionKey != "" {
 		query = query.Where(processtask.ProcessDefinitionKey(req.ProcessDefinitionKey))
+	}
+	if req.ProcessInstanceID > 0 {
+		query = query.Where(processtask.ProcessInstanceID(req.ProcessInstanceID))
 	}
 	if req.TenantID > 0 {
 		query = query.Where(processtask.TenantID(req.TenantID))

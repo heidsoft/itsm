@@ -808,6 +808,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				aiGrp.POST("/knowledge/search", config.AIHandler.KnowledgeSearch)
 				aiGrp.POST("/triage", config.AIHandler.Triage)
 			}
+
+			agentGrp := tenant.(*gin.RouterGroup).Group("/agent")
+			{
+				agentGrp.GET("/tools", middleware.RequirePermission("ai", "read"), config.AIHandler.ListTools)
+				agentGrp.POST("/tools/execute", middleware.RequirePermission("ai", "read"), config.AIHandler.ExecuteTool)
+			}
 		}
 
 		// ==================== Common & System (DDD) ====================

@@ -191,9 +191,41 @@ export class WorkflowApi {
     return WorkflowApi.getInstances(params as any);
   }
 
-  static async listWorkflowTasks(_instanceId: string): Promise<WorkflowTask[]> {
-    // tasks API not implemented; return empty list for now
-    return [];
+  static async listWorkflowTasks(instanceId: string): Promise<WorkflowTask[]> {
+    // 调用后端 BPMN API 获取指定流程实例的任务列表
+    try {
+      const tenantId = httpClient.getTenantId() || 1;
+      const res = await httpClient.get<{ items?: any[]; list?: any[]; data?: any[] }>('/api/v1/bpmn/tasks', {
+        process_instance_id: instanceId,
+        page: 1,
+        page_size: 100,
+      });
+      
+      // 解析响应数据
+      let tasks: any[] = [];
+      if (Array.isArray(res)) {
+        tasks = res;
+      } else if (res && typeof res === 'object') {
+        tasks = res.items || res.list || res.data || [];
+      }
+      
+      // 转换为 WorkflowTask 格式
+      return tasks.map((task: any) => ({
+        id: task.id || task.task_id || task.ID,
+        nodeId: task.task_id || task.task_definition_key || '',
+        nodeName: task.task_name || task.taskName || '',
+        nodeType: task.task_type || task.taskType || 'user_task',
+        status: task.status || 'pending',
+        assignee: task.assignee || '',
+        assigneeId: task.assignee ? parseInt(task.assignee, 10) : undefined,
+        createdAt: task.created_time || task.createdAt || new Date().toISOString(),
+        dueDate: task.due_date || task.dueDate || null,
+        variables: task.task_variables || task.variables || {},
+      }));
+    } catch (error) {
+      console.error('Failed to fetch workflow tasks:', error);
+      return [];
+    }
   }
 
   static async suspendWorkflow(instanceId: string): Promise<void> {

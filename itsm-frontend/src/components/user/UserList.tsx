@@ -258,14 +258,40 @@ const UserList: React.FC<UserListProps> = ({
       return;
     }
 
-    // 批量操作功能需要后端支持
-    message.info(`批量${action}功能即将推出，敬请期待`);
+    try {
+      const { UserApi } = await import('@/lib/api/user-api');
+      const userIds = selectedRowKeys.map(k => Number(k));
+      await UserApi.batchUpdateUsers({
+        user_ids: userIds,
+        action: action === '启用' ? 'activate' : 'deactivate',
+      });
+      message.success(`批量${action}成功`);
+      setSelectedRowKeys([]);
+      fetchUsers();
+    } catch (error) {
+      console.error('批量操作失败:', error);
+      message.error(`批量${action}失败`);
+    }
   };
 
   // 导出数据
-  const handleExport = () => {
-    // 导出功能需要后端支持导出API
-    message.info('导出功能即将推出，敬请期待');
+  const handleExport = async () => {
+    try {
+      const { UserApi } = await import('@/lib/api/user-api');
+      const blob = await UserApi.exportUsers(filters as Record<string, unknown>);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `users-${dayjs().format('YYYY-MM-DD')}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      message.success('导出成功');
+    } catch (error) {
+      console.error('导出失败:', error);
+      message.error('导出失败，请稍后再试');
+    }
   };
 
   // 状态标签渲染
@@ -497,9 +523,7 @@ const UserList: React.FC<UserListProps> = ({
               <Space>
                 {selectedRowKeys.length > 0 && (
                   <>
-                    <Badge count={selectedRowKeys.length}>
-                      <Button onClick={() => handleBatchAction('启用')}>批量启用</Button>
-                    </Badge>
+                    <Button onClick={() => handleBatchAction('启用')}>批量启用</Button>
                     <Button onClick={() => handleBatchAction('禁用')}>批量禁用</Button>
                   </>
                 )}

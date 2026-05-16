@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { AntdProvider } from '@/lib/providers/AntdProvider';
+import { ThemeProvider, ThemeConfig } from '@/lib/design-system/theme';
 
 dayjs.locale('zh-cn');
 import ErrorBoundary from '@/components/common/ErrorBoundary';
@@ -107,11 +108,15 @@ export default function RootLayout({
           fontFamily: `var(--font-noto-sans-sc), var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'`,
         }}
       >
-        <AntdProvider>
-          <QueryProvider>
-            <ErrorBoundary>{children}</ErrorBoundary>
-          </QueryProvider>
-        </AntdProvider>
+        <ThemeProvider>
+          <ThemeConfig>
+            <AntdProvider>
+              <QueryProvider>
+                <ErrorBoundary>{children}</ErrorBoundary>
+              </QueryProvider>
+            </AntdProvider>
+          </ThemeConfig>
+        </ThemeProvider>
 
         {/* 性能监控脚本 */}
         <Script src="/scripts/monitoring.js" strategy="afterInteractive" />

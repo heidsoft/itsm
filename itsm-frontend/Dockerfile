@@ -5,15 +5,26 @@ FROM node:22-alpine AS deps
 
 WORKDIR /app
 
-# Use China mirror for faster downloads
-RUN npm config set registry https://registry.npmmirror.com
+# Clear proxy settings to avoid Docker Desktop proxy interference
+ARG HTTP_PROXY=
+ARG HTTPS_PROXY=
+ARG http_proxy=
+ARG https_proxy=
+ARG NO_PROXY=localhost,127.0.0.1
+ARG no_proxy=localhost,127.0.0.1
+
+ARG NPM_REGISTRY
+# Use configurable npm registry (defaults to official registry, override with build arg for China: --build-arg NPM_REGISTRY=https://registry.npmmirror.com)
+RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
+    npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org}
 
 # Copy package files first for caching
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
+COPY package.json pnpm-lock.yaml* package-lock.json* ./
 
-# Install pnpm and dependencies
-RUN npm install -g pnpm@9.0.0 && \
-    pnpm install --ignore-scripts
+# Install pnpm and dependencies (without --ignore-scripts so postinstall hooks run)
+RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
+    npm install -g pnpm@9.0.0 && \
+    pnpm install --frozen-lockfile || pnpm install
 
 # ============================================
 # Stage 2: Build Next.js application (production)
@@ -22,7 +33,15 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-RUN npm config set registry https://registry.npmmirror.com && \
+ARG HTTP_PROXY=
+ARG HTTPS_PROXY=
+ARG http_proxy=
+ARG https_proxy=
+ARG NO_PROXY=localhost,127.0.0.1
+ARG no_proxy=localhost,127.0.0.1
+
+RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
+    npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org} && \
     npm install -g pnpm@9.0.0
 
 # Copy dependencies from deps stage
@@ -32,7 +51,7 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN pnpm install --ignore-scripts && \
+RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
     pnpm run build
 
 # ============================================
@@ -62,14 +81,15 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Install pnpm in runner stage (no network needed from host)
-RUN npm config set registry https://registry.npmmirror.com && \
+RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
+    npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org} && \
     npm install -g pnpm@9.0.0
 
 # Copy everything from deps (node_modules ready) + source
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN mkdir -p .next && chmod 777 .next
+RUN mkdir -p .next && chmod 755 .next
 
 ENV NODE_ENV=development
 ENV PORT=3000

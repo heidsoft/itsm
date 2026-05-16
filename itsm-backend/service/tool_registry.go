@@ -2,14 +2,19 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"itsm-backend/ent"
 )
 
 type ToolDefinition struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	ReadOnly    bool   `json:"read_only"`
+	Name         string                 `json:"name"`
+	Description  string                 `json:"description"`
+	ReadOnly     bool                   `json:"read_only"`
+	Resource     string                 `json:"resource"`
+	Action       string                 `json:"action"`
+	ArgsSchema   map[string]interface{} `json:"args_schema"`
+	ResultSchema map[string]interface{} `json:"result_schema"`
 }
 
 type ToolRegistry struct {
@@ -25,11 +30,86 @@ func NewToolRegistry(rag *RAGService, incident *IncidentService, cmdb *CMDBServi
 
 func (t *ToolRegistry) ListTools() []ToolDefinition {
 	return []ToolDefinition{
-		{Name: "get_incident_stats", Description: "获取当前租户的事件统计", ReadOnly: true},
-		{Name: "list_kb", Description: "按关键词检索知识库文章（RAG 简化）", ReadOnly: true},
-		{Name: "list_cis", Description: "列出配置项（分页）", ReadOnly: true},
-		{Name: "create_ticket", Description: "创建工单（需审批）", ReadOnly: false},
-		{Name: "update_ticket", Description: "更新工单（需审批）", ReadOnly: false},
+		{
+			Name:        "get_incident_stats",
+			Description: "获取当前租户的事件统计",
+			ReadOnly:    true,
+			Resource:    "incident",
+			Action:      "read",
+			ArgsSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"totalIncidents":    map[string]interface{}{"type": "integer"},
+					"openIncidents":     map[string]interface{}{"type": "integer"},
+					"resolvedIncidents": map[string]interface{}{"type": "integer"},
+				},
+			},
+		},
+		{
+			Name:        "list_kb",
+			Description: "按关键词检索知识库文章（RAG 简化）",
+			ReadOnly:    true,
+			Resource:    "knowledge",
+			Action:      "read",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"q":     map[string]interface{}{"type": "string"},
+					"limit": map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 20},
+				},
+				"required": []string{"q"},
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "array",
+			},
+		},
+		{
+			Name:        "list_cis",
+			Description: "列出配置项（分页）",
+			ReadOnly:    true,
+			Resource:    "cmdb",
+			Action:      "read",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"limit":  map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 100},
+					"offset": map[string]interface{}{"type": "integer", "minimum": 0},
+				},
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "array",
+			},
+		},
+		{
+			Name:        "create_ticket",
+			Description: "创建工单（需审批）",
+			ReadOnly:    false,
+			Resource:    "ticket",
+			Action:      "write",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "object",
+			},
+		},
+		{
+			Name:        "update_ticket",
+			Description: "更新工单（需审批）",
+			ReadOnly:    false,
+			Resource:    "ticket",
+			Action:      "write",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "object",
+			},
+		},
 	}
 }
 
@@ -43,17 +123,17 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		}
 
 		stats := map[string]interface{}{
-			"total_incidents":    len(incidents),
-			"open_incidents":     0,
-			"resolved_incidents": 0,
+			"totalIncidents":    len(incidents),
+			"openIncidents":     0,
+			"resolvedIncidents": 0,
 		}
 
 		for _, incident := range incidents {
 			switch incident.Status {
 			case "new", "in_progress":
-				stats["open_incidents"] = stats["open_incidents"].(int) + 1
+				stats["openIncidents"] = stats["openIncidents"].(int) + 1
 			case "resolved", "closed":
-				stats["resolved_incidents"] = stats["resolved_incidents"].(int) + 1
+				stats["resolvedIncidents"] = stats["resolvedIncidents"].(int) + 1
 			}
 		}
 
@@ -81,10 +161,10 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		items, _, err := t.cmdb.ListCIs(ctx, req)
 		return items, err
 	case "create_ticket":
-		return map[string]any{"needs_approval": true}, nil
+		return nil, fmt.Errorf("tool %s requires approval and is not implemented", name)
 	case "update_ticket":
-		return map[string]any{"needs_approval": true}, nil
+		return nil, fmt.Errorf("tool %s requires approval and is not implemented", name)
 	default:
-		return nil, nil
+		return nil, fmt.Errorf("unknown tool: %s", name)
 	}
 }

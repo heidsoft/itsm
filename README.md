@@ -111,8 +111,8 @@ return result
 git clone https://github.com/heidsoft/itsm.git
 cd itsm
 
-# 方式1: 统一启动脚本（推荐）
-bash scripts/itsm.sh start
+# 方式1: 部署脚本（推荐）
+./scripts/deploy-dev.sh up
 
 # 方式2: Docker Compose
 docker compose up -d --build
@@ -374,7 +374,7 @@ cd itsm-frontend && npm run dev
 |:---:|:---:|:---:|
 | 迁移与备份 | 日志与监控 | Guidance-Harness-Skill 三层体系 |
 
-| [测试框架](./tests/README.md) | [快速启动脚本](./scripts/itsm.sh) | [贡献指南](./CONTRIBUTING.md) |
+| [测试框架](./tests/README.md) | [部署脚本](./scripts/deploy-dev.sh) | [贡献指南](./CONTRIBUTING.md) |
 |:---:|:---:|:---:|
 | API/UI/数据库测试 | 一键启动 | PR 流程 |
 
@@ -383,11 +383,12 @@ cd itsm-frontend && npm run dev
 ## 常用命令
 
 ```bash
-# 统一启动脚本
-bash scripts/itsm.sh start    # 启动所有服务
-bash scripts/itsm.sh stop     # 停止所有服务
-bash scripts/itsm.sh logs      # 查看日志
-bash scripts/itsm.sh status     # 查看状态
+# 部署脚本
+./scripts/deploy-dev.sh up        # 启动开发环境
+./scripts/deploy-dev.sh down      # 停止开发环境
+./scripts/deploy-dev.sh logs      # 查看日志
+./scripts/deploy-dev.sh doctor    # 诊断问题
+./scripts/deploy-prod.sh deploy   # 部署生产环境
 
 # Docker 开发环境 (Makefile)
 make dev-up         # 启动开发环境

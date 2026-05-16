@@ -115,6 +115,7 @@ const PermissionGuard: React.FC<{
   route: RouteConfig;
   user: User;
 }> = ({ children, route, user }) => {
+  const router = useRouter();
   const hasPermission = RoutePermissionChecker.hasRoutePermission(
     route,
     user.permissions,
@@ -130,7 +131,7 @@ const PermissionGuard: React.FC<{
           subTitle="抱歉，您没有权限访问此页面"
           icon={<AlertTriangle size={64} className="text-red-500" />}
           extra={
-            <Button type="primary" onClick={() => window.history.back()}>
+            <Button type="primary" onClick={() => router.back()}>
               返回上一页
             </Button>
           }

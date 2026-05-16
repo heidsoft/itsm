@@ -76,46 +76,24 @@ const ChangeSuccessReport = () => {
           totalChanges: stats.total,
         });
       } else {
-        // 使用演示数据
+        // 无真实数据时，使用空状态
         setData({
-          byStatus: [
-            { name: '草稿', value: 12, color: STATUS_COLORS.draft },
-            { name: '待审批', value: 28, color: STATUS_COLORS.pending },
-            { name: '已批准', value: 45, color: STATUS_COLORS.approved },
-            { name: '实施中', value: 18, color: STATUS_COLORS.implementing },
-            { name: '已完成', value: 156, color: STATUS_COLORS.completed },
-            { name: '已取消', value: 8, color: STATUS_COLORS.cancelled },
-          ],
-          byType: [
-            { type: '标准变更', count: 89 },
-            { type: '普通变更', count: 134 },
-            { type: '紧急变更', count: 44 },
-          ],
-          successRate: 85.7,
-          totalChanges: 267,
+          byStatus: [],
+          byType: [],
+          successRate: 0,
+          totalChanges: 0,
         });
       }
     } catch (error) {
       console.error('加载变更报表数据失败:', error);
       message.error('加载数据失败');
 
-      // 演示数据
+      // 不再使用演示数据，保持空数据状态
       setData({
-        byStatus: [
-          { name: '草稿', value: 12, color: STATUS_COLORS.draft },
-          { name: '待审批', value: 28, color: STATUS_COLORS.pending },
-          { name: '已批准', value: 45, color: STATUS_COLORS.approved },
-          { name: '实施中', value: 18, color: STATUS_COLORS.implementing },
-          { name: '已完成', value: 156, color: STATUS_COLORS.completed },
-          { name: '已取消', value: 8, color: STATUS_COLORS.cancelled },
-        ],
-        byType: [
-          { type: '标准变更', count: 89 },
-          { type: '普通变更', count: 134 },
-          { type: '紧急变更', count: 44 },
-        ],
-        successRate: 85.7,
-        totalChanges: 267,
+        byStatus: [],
+        byType: [],
+        successRate: 0,
+        totalChanges: 0,
       });
     } finally {
       setLoading(false);
