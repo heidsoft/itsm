@@ -14,6 +14,10 @@ import {
   List,
   Avatar,
   Spin,
+  Select,
+  Space,
+  DatePicker,
+  message,
 } from 'antd';
 import {
   UserOutlined,
@@ -23,7 +27,9 @@ import {
   ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import MSPService from '@/services/msp-service';
-import type { MSPAllocation, MSPCustomerReport, MSPContext } from '@/types/msp';
+import type { MSPAllocation, MSPCustomerReport, MSPContext, MSPAllocationHistory } from '@/types/msp';
+
+const { RangePicker } = DatePicker;
 
 export default function MSPDashboardPage() {
   const [loading, setLoading] = useState(false);
@@ -34,6 +40,19 @@ export default function MSPDashboardPage() {
   const [reports, setReports] = useState<MSPCustomerReport[]>([]);
   const [mspContext, setMSPContext] = useState<MSPContext | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // 客户工单状态
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [customerTickets, setCustomerTickets] = useState<any[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
+
+  // 绩效报表状态
+  const [performanceReports, setPerformanceReports] = useState<MSPCustomerReport[]>([]);
+  const [perfLoading, setPerfLoading] = useState(false);
+
+  // 分配历史状态
+  const [allocationHistory, setAllocationHistory] = useState<MSPAllocationHistory[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     checkMSPAccess();
@@ -53,7 +72,7 @@ export default function MSPDashboardPage() {
       if (!mspFlag && !adminFlag) {
         setError('您不是 MSP 员工，无法访问此页面');
       } else if (adminFlag) {
-        setError(null); // 管理员可以访问
+        setError(null);
       }
     } catch (err: any) {
       setError(err.message || '检查 MSP 状态失败');
@@ -63,7 +82,6 @@ export default function MSPDashboardPage() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // 并行加载所有数据
       const [allocRes, custRes, ctxRes] = await Promise.all([
         MSPService.getAllocations(),
         MSPService.getCustomers(),
@@ -74,7 +92,6 @@ export default function MSPDashboardPage() {
       setCustomers(custRes.customers);
       setMSPContext(ctxRes);
 
-      // 获取最近30天报表
       const endDate = new Date().toISOString().split('T')[0];
       const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       const reportsData = await MSPService.getCustomerReports({
@@ -89,17 +106,64 @@ export default function MSPDashboardPage() {
     }
   };
 
+  // 加载客户工单
+  const loadCustomerTickets = async (customerId: number) => {
+    setSelectedCustomerId(customerId);
+    setTicketsLoading(true);
+    try {
+      const result = await MSPService.getCustomerTickets(customerId);
+      setCustomerTickets(result.tickets);
+    } catch (err: any) {
+      message.error(err.message || '加载客户工单失败');
+      setCustomerTickets([]);
+    } finally {
+      setTicketsLoading(false);
+    }
+  };
+
+  // 分配 MSP 技术员
+  const handleAssignTechnician = async (ticketId: number) => {
+    if (!selectedCustomerId) return;
+    try {
+      await MSPService.assignTechnician(ticketId, selectedCustomerId);
+      message.success('技术员分配成功');
+      loadCustomerTickets(selectedCustomerId);
+    } catch (err: any) {
+      message.error(err.message || '分配技术员失败');
+    }
+  };
+
+  // 加载绩效报表
+  const loadPerformanceReports = async (startDate?: string, endDate?: string) => {
+    setPerfLoading(true);
+    try {
+      const end = endDate || new Date().toISOString().split('T')[0];
+      const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const data = await MSPService.getCustomerReports({ start_date: start, end_date: end });
+      setPerformanceReports(data);
+    } catch (err: any) {
+      message.error(err.message || '加载绩效报表失败');
+    } finally {
+      setPerfLoading(false);
+    }
+  };
+
+  // 加载分配历史
+  const loadAllocationHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const data = await MSPService.getAllocationHistory({});
+      setAllocationHistory(data);
+    } catch (err: any) {
+      message.error(err.message || '加载分配历史失败');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   const allocationColumns = [
-    {
-      title: 'MSP 员工',
-      dataIndex: 'msp_username',
-      key: 'msp_username',
-    },
-    {
-      title: '客户租户',
-      dataIndex: 'customer_name',
-      key: 'customer_name',
-    },
+    { title: 'MSP 员工', dataIndex: 'msp_username', key: 'msp_username' },
+    { title: '客户租户', dataIndex: 'customer_name', key: 'customer_name' },
     {
       title: '角色',
       dataIndex: 'role',
@@ -113,35 +177,24 @@ export default function MSPDashboardPage() {
       title: '分配时间',
       dataIndex: 'assignedAt',
       key: 'assignedAt',
-      render: (date: string) => new Date(date).toLocaleString('zh-CN'),
+      render: (date: string) => date ? new Date(date).toLocaleString('zh-CN') : '-',
     },
   ];
 
   const reportColumns = [
-    {
-      title: '客户名称',
-      dataIndex: 'customer_name',
-      key: 'customer_name',
-    },
+    { title: '客户名称', dataIndex: 'customer_name', key: 'customer_name' },
     {
       title: '工单总数',
       dataIndex: 'total_tickets',
       key: 'total_tickets',
       sorter: (a: MSPCustomerReport, b: MSPCustomerReport) => a.total_tickets - b.total_tickets,
     },
-    {
-      title: '已解决',
-      dataIndex: 'resolved_tickets',
-      key: 'resolved_tickets',
-    },
+    { title: '已解决', dataIndex: 'resolved_tickets', key: 'resolved_tickets' },
     {
       title: '解决率',
       key: 'resolution_rate',
       render: (record: MSPCustomerReport) => {
-        const rate =
-          record.total_tickets > 0
-            ? Number(((record.resolved_tickets / record.total_tickets) * 100).toFixed(1))
-            : 0;
+        const rate = record.total_tickets > 0 ? Number(((record.resolved_tickets / record.total_tickets) * 100).toFixed(1)) : 0;
         return <Tag color={rate >= 90 ? 'green' : rate >= 70 ? 'orange' : 'red'}>{rate}%</Tag>;
       },
     },
@@ -149,20 +202,62 @@ export default function MSPDashboardPage() {
       title: '平均处理时长(小时)',
       dataIndex: 'msp_handling_time_avg',
       key: 'msp_handling_time_avg',
-      render: (val: number) => val.toFixed(2),
+      render: (val: number) => val?.toFixed(2) || '-',
     },
     {
       title: 'SLA 合规率',
       key: 'sla_compliance_rate',
-      render: (val: number) => {
+      render: (_: any, record: MSPCustomerReport) => {
+        const val = record.sla_compliance_rate;
         const rate = (val * 100).toFixed(1);
         return <Tag color={val >= 0.95 ? 'green' : val >= 0.8 ? 'orange' : 'red'}>{rate}%</Tag>;
       },
     },
   ];
 
-  // 对于非 MSP 用户，显示欢迎页面
-  if (!isMSP) {
+  const ticketColumns = [
+    { title: '工单标题', dataIndex: 'title', key: 'title' },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => <Tag>{status}</Tag>,
+    },
+    { title: '负责人', dataIndex: 'assignee_name', key: 'assignee_name', render: (v: string) => v || '未分配' },
+    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_: any, record: any) => (
+        <Button
+          size="small"
+          type="link"
+          onClick={() => handleAssignTechnician(record.id)}
+        >
+          分配技术员
+        </Button>
+      ),
+    },
+  ];
+
+  const historyColumns = [
+    { title: 'MSP 员工', dataIndex: 'msp_username', key: 'msp_username' },
+    { title: '客户', dataIndex: 'customer_name', key: 'customer_name' },
+    {
+      title: '角色',
+      dataIndex: 'role',
+      key: 'role',
+      render: (role: string) => {
+        const color = role === 'primary' ? 'green' : role === 'backup' ? 'orange' : 'blue';
+        return <Tag color={color}>{role.toUpperCase()}</Tag>;
+      },
+    },
+    { title: '分配时间', dataIndex: 'assigned_at', key: 'assigned_at', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
+    { title: '解除时间', dataIndex: 'deassigned_at', key: 'deassigned_at', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
+    { title: '解除原因', dataIndex: 'deallocation_reason', key: 'deallocation_reason', render: (v: string) => v || '-' },
+  ];
+
+  if (!isMSP && !isAdmin) {
     return (
       <div style={{ padding: 24 }}>
         <Card>
@@ -269,6 +364,45 @@ export default function MSPDashboardPage() {
             ),
           },
           {
+            key: 'tickets',
+            label: '客户工单',
+            children: (
+              <div>
+                <div style={{ marginBottom: 16 }}>
+                  <Space>
+                    <span>选择客户：</span>
+                    <Select
+                      placeholder="请选择客户"
+                      style={{ width: 300 }}
+                      value={selectedCustomerId || undefined}
+                      onChange={loadCustomerTickets}
+                      showSearch
+                      optionFilterProp="children"
+                    >
+                      {customers.map(c => (
+                        <Select.Option key={c.id} value={c.id}>
+                          {c.code} - {c.name}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Space>
+                </div>
+                {selectedCustomerId ? (
+                  <Table
+                    columns={ticketColumns}
+                    dataSource={customerTickets}
+                    rowKey="id"
+                    loading={ticketsLoading}
+                    pagination={{ pageSize: 10 }}
+                    locale={{ emptyText: '暂无工单数据' }}
+                  />
+                ) : (
+                  <Alert message="请先选择一个客户以查看其工单" type="info" showIcon />
+                )}
+              </div>
+            ),
+          },
+          {
             key: 'reports',
             label: '服务报表',
             children: (
@@ -279,6 +413,56 @@ export default function MSPDashboardPage() {
                 loading={loading}
                 pagination={{ pageSize: 10 }}
               />
+            ),
+          },
+          {
+            key: 'performance',
+            label: '绩效报表',
+            children: (
+              <div>
+                <div style={{ marginBottom: 16 }}>
+                  <Button
+                    type="primary"
+                    loading={perfLoading}
+                    onClick={() => loadPerformanceReports()}
+                  >
+                    加载绩效数据
+                  </Button>
+                </div>
+                <Table
+                  columns={reportColumns}
+                  dataSource={performanceReports}
+                  rowKey="customer_tenant_id"
+                  loading={perfLoading}
+                  pagination={{ pageSize: 10 }}
+                  locale={{ emptyText: '点击"加载绩效数据"按钮查看报表' }}
+                />
+              </div>
+            ),
+          },
+          {
+            key: 'history',
+            label: '分配历史',
+            children: (
+              <div>
+                <div style={{ marginBottom: 16 }}>
+                  <Button
+                    type="primary"
+                    loading={historyLoading}
+                    onClick={loadAllocationHistory}
+                  >
+                    加载分配历史
+                  </Button>
+                </div>
+                <Table
+                  columns={historyColumns}
+                  dataSource={allocationHistory}
+                  rowKey="id"
+                  loading={historyLoading}
+                  pagination={{ pageSize: 10 }}
+                  locale={{ emptyText: '点击"加载分配历史"按钮查看历史记录' }}
+                />
+              </div>
             ),
           },
           {
