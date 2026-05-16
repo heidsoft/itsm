@@ -3,9 +3,9 @@
  * 简化版：只负责容器和状态管理，业务逻辑已拆分
  */
 
-import React, { useEffect } from 'react';
-import { Modal, Form, Button, Alert, Avatar, App } from 'antd';
-import { Plus, Edit, BookOpen } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Modal, Form, Button, Alert, Avatar, App, message, Popconfirm } from 'antd';
+import { Plus, Edit, BookOpen, Save } from 'lucide-react';
 import type { Ticket } from '@/lib/services/ticket-service';
 import { useI18n } from '@/lib/i18n';
 
@@ -94,67 +94,144 @@ TicketModal.displayName = 'TicketModal';
 
 export const TicketTemplateModal: React.FC<TicketTemplateModalProps> = React.memo(
   ({ visible, onCancel }) => {
-    const ticketTemplates: TicketTemplate[] = MOCK_TICKET_TEMPLATES;
-    const userList: User[] = MOCK_USER_LIST;
+    const [templates, setTemplates] = useState<TicketTemplate[]>(MOCK_TICKET_TEMPLATES);
+    const [editingTemplate, setEditingTemplate] = useState<TicketTemplate | null>(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [templateForm] = Form.useForm();
 
+    // 编辑模板
     const handleEditTemplate = (template: TicketTemplate) => {
-      console.log('Edit template:', template);
-      // TODO: 实现编辑逻辑
+      setEditingTemplate(template);
+      templateForm.setFieldsValue({
+        name: template.name,
+        description: template.description,
+        type: template.type,
+      });
+      setShowEditModal(true);
     };
 
+    // 保存编辑
+    const handleSaveTemplate = async () => {
+      try {
+        const values = await templateForm.validateFields();
+        if (editingTemplate) {
+          setTemplates(prev =>
+            prev.map(t => (t.id === editingTemplate.id ? { ...t, ...values } : t))
+          );
+          message.success('模板更新成功');
+        }
+        setShowEditModal(false);
+        setEditingTemplate(null);
+        templateForm.resetFields();
+      } catch {
+        // 表单验证失败
+      }
+    };
+
+    // 删除模板
     const handleDeleteTemplate = (templateId: number) => {
-      console.log('Delete template:', templateId);
-      // TODO: 实现删除逻辑
+      setTemplates(prev => prev.filter(t => t.id !== templateId));
+      message.success('模板删除成功');
     };
 
     return (
-      <Modal
-        title={
-          <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-md">
-              <BookOpen size={20} className="text-white" />
+      <>
+        <Modal
+          title={
+            <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-md">
+                <BookOpen size={20} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">工单模板管理</h3>
+                <p className="text-sm text-gray-500">管理和配置工单模板，提高工作效率</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">工单模板管理</h3>
-              <p className="text-sm text-gray-500">管理和配置工单模板，提高工作效率</p>
+          }
+          open={visible}
+          onCancel={onCancel}
+          footer={null}
+          width={1100}
+          className="[&_.ant-modal-content]:rounded-xl [&_.ant-modal-content]:shadow-2xl [&_.ant-modal-header]:border-0 [&_.ant-modal-header]:pb-0 [&_.ant-modal-body]:pt-6"
+        >
+          <div style={{ padding: '24px 0' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 24,
+              }}
+            >
+              <div>
+                <p style={{ color: '#666' }}>管理所有可用的工单模板，提高工单创建效率</p>
+              </div>
+              <Button
+                type="primary"
+                icon={<Plus size={16} />}
+                onClick={() => {
+                  setEditingTemplate(null);
+                  templateForm.resetFields();
+                  setShowEditModal(true);
+                }}
+              >
+                新建模板
+              </Button>
             </div>
-          </div>
-        }
-        open={visible}
-        onCancel={onCancel}
-        footer={null}
-        width={1100}
-        className="[&_.ant-modal-content]:rounded-xl [&_.ant-modal-content]:shadow-2xl [&_.ant-modal-header]:border-0 [&_.ant-modal-header]:pb-0 [&_.ant-modal-body]:pt-6"
-      >
-        <div style={{ padding: '24px 0' }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: 24,
-            }}
-          >
-            <div>
-              <p style={{ color: '#666' }}>管理所有可用的工单模板，提高工单创建效率</p>
-            </div>
-            <Button type="primary" icon={<Plus size={16} />}>
-              新建模板
-            </Button>
-          </div>
 
-          <div className="space-y-4">
-            {ticketTemplates.map(template => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                onEdit={handleEditTemplate}
-                onDelete={handleDeleteTemplate}
-              />
-            ))}
+            <div className="space-y-4">
+              {templates.map(template => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  onEdit={handleEditTemplate}
+                  onDelete={handleDeleteTemplate}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </Modal>
+        </Modal>
+
+        {/* 编辑模板弹窗 */}
+        <Modal
+          title={editingTemplate ? '编辑模板' : '新建模板'}
+          open={showEditModal}
+          onCancel={() => {
+            setShowEditModal(false);
+            setEditingTemplate(null);
+            templateForm.resetFields();
+          }}
+          footer={[
+            <Button key="cancel" onClick={() => setShowEditModal(false)}>
+              取消
+            </Button>,
+            <Button
+              key="save"
+              type="primary"
+              icon={<Save size={16} />}
+              onClick={handleSaveTemplate}
+            >
+              保存
+            </Button>,
+          ]}
+        >
+          <Form form={templateForm} layout="vertical" className="mt-4">
+            <Form.Item name="name" label="模板名称" rules={[{ required: true }]}>
+              <Form.Input placeholder="请输入模板名称" />
+            </Form.Item>
+            <Form.Item name="description" label="模板描述">
+              <Form.TextArea placeholder="请输入模板描述" rows={3} />
+            </Form.Item>
+            <Form.Item name="type" label="模板类型" rules={[{ required: true }]}>
+              <Form.Select placeholder="请选择模板类型">
+                <Form.Select.Option value="incident">故障</Form.Select.Option>
+                <Form.Select.Option value="request">请求</Form.Select.Option>
+                <Form.Select.Option value="change">变更</Form.Select.Option>
+              </Form.Select>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </>
     );
   }
 );

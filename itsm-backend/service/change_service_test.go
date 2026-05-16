@@ -597,7 +597,7 @@ func TestChangeService_GetChangeStats(t *testing.T) {
 		count  int
 	}{
 		{"draft", 3},
-		{"pending", 2},
+		{"submitted", 2},
 		{"approved", 4},
 		{"completed", 1},
 	}
@@ -626,8 +626,8 @@ func TestChangeService_GetChangeStats(t *testing.T) {
 	totalExpected := 3 + 2 + 4 + 1 // 10
 	assert.Equal(t, totalExpected, stats.Total)
 
-	// 验证各状态计数
-	assert.Equal(t, 2, stats.Pending)
+	// Pending = draft + submitted = 3 + 2 = 5
+	assert.Equal(t, 5, stats.Pending)
 	assert.Equal(t, 4, stats.Approved)
 	assert.Equal(t, 1, stats.Completed)
 }

@@ -1,9 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Card, Tag, Button, Typography, Rate, Space, Dropdown } from 'antd';
+import {
+  Card,
+  Tag,
+  Button,
+  Typography,
+  Rate,
+  Space,
+  Dropdown,
+  Popconfirm,
+  App,
+  message,
+} from 'antd';
 import type { MenuProps } from 'antd';
 import {
   HardDrive,
@@ -17,6 +28,7 @@ import {
   ToggleLeft,
   ToggleRight,
 } from 'lucide-react';
+import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { ServiceItem, ServiceCategory } from '@/types/service-catalog';
 import { useI18n } from '@/lib/i18n';
 
@@ -44,6 +56,8 @@ interface ServiceItemCardProps {
 export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => {
   const { t } = useI18n();
   const router = useRouter();
+  const { message } = App.useApp();
+  const [deleting, setDeleting] = useState(false);
   const categoryKey = String(catalog.category);
   const IconComponent = categoryIcons[categoryKey] || HardDrive;
 
@@ -71,6 +85,22 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
 
   const isPublished = catalog.status === 'published';
 
+  // 删除服务
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await ServiceCatalogApi.deleteService(String(catalog.id));
+      message.success(t('service.deleteSuccess') || '服务已删除');
+      // 触发刷新
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to delete service:', error);
+      message.error(t('service.deleteFailed') || '删除失败');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const actionItems: MenuProps['items'] = [
     {
       key: 'detail',
@@ -88,9 +118,10 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
       type: 'divider',
     },
     {
-      key: 'toggle',
-      icon: isPublished ? <ToggleLeft size={14} /> : <ToggleRight size={14} />,
-      label: isPublished ? t('service.disable') || '停用' : t('service.publish') || '发布',
+      key: 'delete',
+      icon: <span style={{ color: '#ff4d4f' }}>×</span>,
+      label: <span style={{ color: '#ff4d4f' }}>{t('common.delete') || '删除'}</span>,
+      danger: true,
     },
   ];
 
@@ -147,7 +178,11 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
             </Button>
           </Link>
           <Dropdown menu={{ items: actionItems }} trigger={['click']} placement="bottomRight">
-            <Button icon={<MoreHorizontal size={16} />} onClick={e => e.stopPropagation()} />
+            <Button
+              icon={<MoreHorizontal size={16} />}
+              onClick={e => e.stopPropagation()}
+              loading={deleting}
+            />
           </Dropdown>
         </div>
       </div>

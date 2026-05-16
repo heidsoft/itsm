@@ -1,0 +1,64 @@
+# Patterns to ignore in build contexts
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+LICENSE
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+CHANGELOG.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Environment
+.env
+.env.*
+!.env.example
+!.env.prod.example
+
+# Build artifacts
+itsm-backend/bin/
+itsm-backend/dist/
+itsm-backend/build/
+itsm-frontend/.next/
+itsm-frontend/out/
+itsm-frontend/build/
+itsm-frontend/dist/
+itsm-frontend/node_modules/
+itsm-frontend/coverage/
+itsm-frontend/.jest-cache/
+itsm-frontend/.swc/
+
+# Dependencies
+vendor/
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# Test
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+jest.config.*
+*.tsbuildinfo
+
+# Cache
+__pycache__/
+.pytest_cache/
+*.pyc
+.mypy_cache/
+.eslintcache
+
+# Development files
+.dockerignore
+.dockerignore

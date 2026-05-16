@@ -298,9 +298,10 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
             <Button icon={<Share2 className="w-4 h-4" />} onClick={() => setShowShareModal(true)} />
           </Tooltip>
 
-          <Tooltip title="查看版本历史">
+          <Tooltip title="版本历史功能即将推出">
             <Button
               icon={<GitBranch className="w-4 h-4" />}
+              disabled
               onClick={() => message.info('版本历史功能即将推出，敬请期待')}
             />
           </Tooltip>

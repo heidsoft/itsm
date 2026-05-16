@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Tooltip } from 'antd';
-import { Zap, AlertCircle, Info, ChevronsDown, Clock } from 'lucide-react';
+import { Zap, AlertCircle, Info, ChevronsDown, Clock, Volume2, VolumeX } from 'lucide-react';
 
 const priorityConfig = {
   P1: {
@@ -43,11 +43,6 @@ const priorityConfig = {
   },
 };
 
-const playAlertSound = () => {
-  const audio = new Audio('/alert.mp3'); // 确保public目录下有alert.mp3文件
-  audio.play().catch(e => console.error('Error playing sound:', e));
-};
-
 interface TicketCardProps {
   id: string | number;
   title: string;
@@ -56,6 +51,7 @@ interface TicketCardProps {
   lastUpdate: string;
   type?: string;
   playSound?: boolean;
+  onClick?: () => void;
 }
 
 export const TicketCard: React.FC<TicketCardProps> = ({
@@ -66,27 +62,59 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   lastUpdate,
   type = '事件',
   playSound = false,
+  onClick,
 }) => {
-  const config = priorityConfig[priority] || priorityConfig.P4; // 默认P4
+  const config = priorityConfig[priority] || priorityConfig.P4;
   const Icon = config.icon;
-
   const cardRef = useRef<HTMLDivElement>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
+  // Detect reduced motion preference
   useEffect(() => {
-    if (priority === 'P1') {
-      if (playSound) {
-        playAlertSound();
-      }
-      cardRef.current?.classList.add('animate-pulse-strong'); // 自定义动画类
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  // Handle pulse animation with reduced motion consideration
+  useEffect(() => {
+    if (priority === 'P1' && !prefersReducedMotion) {
+      cardRef.current?.classList.add('animate-pulse-strong');
     } else {
       cardRef.current?.classList.remove('animate-pulse-strong');
     }
-  }, [priority, playSound]);
+  }, [priority, prefersReducedMotion]);
+
+  // Keyboard handler
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick?.();
+    }
+  };
+
+  // Sound toggle for P1
+  const toggleSound = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSoundEnabled(!soundEnabled);
+    if (!soundEnabled) {
+      const audio = new Audio('/alert.mp3');
+      audio.play().catch(() => {});
+    }
+  };
 
   return (
     <div
       ref={cardRef}
-      className={`relative flex flex-col justify-between rounded-lg border-l-4 bg-white p-6 shadow-md transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 cursor-pointer ${config.borderColor}`}
+      role="button"
+      tabIndex={0}
+      aria-label={`工单 ${id}: ${title}, 状态: ${status}, 优先级: ${config.label}`}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      className={`relative flex flex-col justify-between rounded-lg border-l-4 bg-white p-6 shadow-md transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${config.borderColor}`}
     >
       {/* 优先级徽章 */}
       <Tooltip title={`优先级: ${config.label}`}>
@@ -97,7 +125,25 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         </div>
       </Tooltip>
 
-      <h3 className="mb-2 text-lg font-semibold text-gray-800 truncate" title={title}>
+      {/* P1 声音开关 */}
+      {priority === 'P1' && (
+        <Tooltip title={soundEnabled ? '关闭声音提醒' : '开启声音提醒'}>
+          <button
+            type="button"
+            onClick={toggleSound}
+            aria-label={soundEnabled ? '关闭声音提醒' : '开启声音提醒'}
+            className="absolute top-3 left-3 p-1.5 rounded-full bg-white shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            {soundEnabled ? (
+              <Volume2 className="h-4 w-4 text-red-500" />
+            ) : (
+              <VolumeX className="h-4 w-4 text-gray-400" />
+            )}
+          </button>
+        </Tooltip>
+      )}
+
+      <h3 className="mb-2 text-lg font-semibold text-gray-800 truncate pt-6" title={title}>
         {title}
       </h3>
       <p className="mb-4 text-sm text-gray-600">

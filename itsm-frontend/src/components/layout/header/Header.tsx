@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Layout, Button, Tooltip, Badge, Dropdown, message } from 'antd';
-import { PanelLeftClose, PanelLeftOpen, Bell, Globe } from 'lucide-react';
+import { Layout, Button, Tooltip, Badge, Dropdown, message, Breadcrumb } from 'antd';
+import { PanelLeftClose, PanelLeftOpen, Bell, Globe, Home } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { DESIGN } from '@/design-system/tokens';
@@ -31,7 +31,25 @@ interface HeaderProps {
   showBreadcrumb?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
+// 路径到面包屑的映射
+const pathToBreadcrumb: Record<string, Array<{ title: string; href?: string }>> = {
+  '/dashboard': [{ title: '首页', href: '/dashboard' }],
+  '/tickets': [{ title: '首页', href: '/dashboard' }, { title: '工单管理' }],
+  '/incidents': [{ title: '首页', href: '/dashboard' }, { title: '事件管理' }],
+  '/problems': [{ title: '首页', href: '/dashboard' }, { title: '问题管理' }],
+  '/changes': [{ title: '首页', href: '/dashboard' }, { title: '变更管理' }],
+  '/knowledge': [{ title: '首页', href: '/dashboard' }, { title: '知识库' }],
+  '/service-catalog': [{ title: '首页', href: '/dashboard' }, { title: '服务目录' }],
+  '/profile': [{ title: '首页', href: '/dashboard' }, { title: '个人中心' }],
+  '/notifications': [{ title: '首页', href: '/dashboard' }, { title: '通知中心' }],
+};
+
+export const Header: React.FC<HeaderProps> = ({
+  collapsed,
+  onCollapse,
+  breadcrumb,
+  showBreadcrumb = false,
+}) => {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout, token } = useAuthStore();
@@ -175,6 +193,17 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
 
   return (
     <AntHeader className={styles.header} style={{ background: DESIGN.colors.surface }}>
+      {/* 面包屑 */}
+      {showBreadcrumb && (
+        <div className={styles.breadcrumb} role="navigation" aria-label="面包屑导航">
+          <Breadcrumb
+            items={
+              breadcrumb || pathToBreadcrumb[pathname] || [{ title: '首页', href: '/dashboard' }]
+            }
+            separator="/"
+          />
+        </div>
+      )}
       {/* 左侧 */}
       <div className={styles.left}>
         <Button
@@ -185,8 +214,8 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
           title={collapsed ? '展开侧边栏' : '收起侧边栏'}
           className={styles.collapseButton}
           style={{
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             borderRadius: DESIGN.radius.md,
           }}
         />
@@ -211,8 +240,8 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
               aria-label="通知中心"
               title="通知中心"
               style={{
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 borderRadius: DESIGN.radius.md,
                 display: 'flex',
                 alignItems: 'center',
@@ -232,8 +261,8 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onCollapse }) => {
               aria-label={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
               title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
               style={{
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 borderRadius: DESIGN.radius.md,
                 display: 'flex',
                 alignItems: 'center',
