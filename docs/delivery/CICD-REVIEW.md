@@ -15,7 +15,7 @@ itsm/
 ├── itsm-backend/          # Go/Gin 后端服务 (Port 8090)
 ├── itsm-frontend/         # Next.js/TypeScript 前端 (Port 3000)
 ├── itsm-ai-service/       # ITSM AI 推理服务（模型能力侧）
-├── itsm-code-agent/       # ITSM 代码代理（工程侧）
+├── itsm-agent/            # ITSM 代码代理（工程侧）
 ├── monitoring/           # Prometheus + Grafana 监控
 ├── tests/                # Python 集成测试
 ├── scripts/              # 部署运维脚本
