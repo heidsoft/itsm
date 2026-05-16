@@ -1,0 +1,80 @@
+# ITSM AI Service Configuration
+
+service:
+  # Service name
+  name: "itsm-ai-service"
+  # Service version
+  version: "1.0.0"
+  # API host
+  host: "0.0.0.0"
+  # API port
+  port: 8000
+  # Log level: debug, info, warning, error
+  log_level: "info"
+  # CORS allowed origins
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8090"
+
+database:
+  # PostgreSQL connection
+  host: "localhost"
+  port: 5432
+  user: "itsm"
+  password: "itsm_password_2026"
+  database: "itsm"
+  # Connection pool settings
+  pool_size: 10
+  max_overflow: 20
+  # SSL mode
+  sslmode: "disable"
+
+redis:
+  # Redis connection
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+  # Key prefix for caching
+  key_prefix: "itsm-ai:"
+
+llm:
+  # Default LLM provider: openai, ollama, vllm, deepseek, zhipu, baidu, ali
+  provider: "openai"
+  # API key (for cloud providers)
+  api_key: ""
+  # Base URL (for self-hosted providers)
+  base_url: "https://api.openai.com/v1"
+  # Default model
+  model: "gpt-4o-mini"
+  # Timeout in seconds
+  timeout: 120
+  # Max tokens per request
+  max_tokens: 4096
+
+rca:
+  # RCA analysis settings
+  max_findings: 10
+  # Analysis methods: 5_whys, fishbone, ai_assisted
+  default_method: "5_whys"
+  # Similar problems threshold
+  similarity_threshold: 0.7
+
+risk:
+  # Risk prediction settings
+  # Risk levels: low, medium, high, critical
+  auto_approve_threshold: "low"
+  normal_approval_threshold: "medium"
+  cab_review_threshold: "high"
+  # Impact/probability weights
+  impact_weight: 0.6
+  probability_weight: 0.4
+
+triage:
+  # Triage settings
+  # Category confidence threshold
+  confidence_threshold: 0.6
+  # Max related articles to return
+  max_related_articles: 5
+  # Keywords extraction count
+  max_keywords: 10
