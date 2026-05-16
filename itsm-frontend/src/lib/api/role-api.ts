@@ -38,4 +38,9 @@ export class RoleAPI {
     const response = await httpClient.get<{ permissions: string[] }>('/api/v1/permissions');
     return response.permissions;
   }
+
+  // 分配权限给角色
+  static async assignPermissions(roleId: number, permissionIds: number[]): Promise<void> {
+    await httpClient.post(`/api/v1/roles/${roleId}/permissions`, { permission_ids: permissionIds });
+  }
 }
