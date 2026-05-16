@@ -42,6 +42,41 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # ITSM AI Service (独立 Python 微服务)
+  itsm-ai-service:
+    build:
+      context: ./itsm-ai-service
+      dockerfile: Dockerfile
+    container_name: itsm-ai-service
+    hostname: ai-service
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ITSM_AI_CONFIG=/app/config.yaml
+      - ITSM_BACKEND_URL=http://itsm-backend:8090
+      # LLM 配置
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o-mini}
+      # 取消代理设置
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - NO_PROXY=localhost,127.0.0.1,ai-service,backend
+      - no_proxy=localhost,127.0.0.1,ai-service,backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - itsm-backend
+    networks:
+      - itsm-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health').raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # ITSM 后端服务
   itsm-backend:
     build:
