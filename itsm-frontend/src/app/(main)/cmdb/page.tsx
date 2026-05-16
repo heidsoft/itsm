@@ -18,6 +18,7 @@ import {
   App,
   Spin,
   message,
+  Tooltip,
 } from 'antd';
 import {
   Database,
@@ -293,7 +294,14 @@ export default function CMDBPage() {
           <Button
             size="small"
             type="link"
-            onClick={() => message.info(`同步资源 ${record.resource_id}`)}
+            onClick={async () => {
+              try {
+                await CMDBApi.runReconciliation();
+                message.success(`资源 ${record.resource_id} 同步已触发`);
+              } catch (e) {
+                message.error('同步失败');
+              }
+            }}
           >
             同步
           </Button>
@@ -364,17 +372,26 @@ export default function CMDBPage() {
           <Button
             size="small"
             type="link"
-            onClick={() => message.info(`同步配置项 ${record.ci_name}`)}
+            onClick={async () => {
+              try {
+                await CMDBApi.runReconciliation();
+                message.success('同步已触发，请稍后刷新查看');
+              } catch (e) {
+                message.error('同步失败');
+              }
+            }}
           >
             同步
           </Button>
-          <Button
-            size="small"
-            type="link"
-            onClick={() => message.info(`忽略配置项 ${record.ci_name}`)}
-          >
-            忽略
-          </Button>
+          <Tooltip title="忽略功能需要后端支持，暂未实现">
+            <Button
+              size="small"
+              type="link"
+              disabled
+            >
+              忽略
+            </Button>
+          </Tooltip>
         </Space>
       ),
     },

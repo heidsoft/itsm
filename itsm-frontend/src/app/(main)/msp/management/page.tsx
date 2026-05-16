@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, Form, Select, Input, Button, Table, message, Modal, Space, Tag, Alert } from 'antd';
+import { Card, Form, Select, Input, Button, Table, message, Modal, Space, Tag, Alert, Spin } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import MSPService from '@/services/msp-service';
+import { UserApi } from '@/lib/api/user-api';
 import type { MSPAllocation, CreateAllocationRequest } from '@/types/msp';
 
 const { Option } = Select;
@@ -57,23 +58,30 @@ export default function MSPManagementPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [allocRes, custRes] = await Promise.all([
+      const [allocRes, custRes, usersRes] = await Promise.all([
         MSPService.getAllocations(),
         MSPService.getCustomers(),
+        UserApi.getUsers({ page: 1, page_size: 200 }).catch(() => ({ users: [] })),
       ]);
       setAllocations(allocRes.allocations);
       setCustomers(custRes.customers);
-      // TODO: 获取 MSP 用户列表（需要新 API）
-      // 暂时使用已分配的 MSP 用户
-      const uniqueUsers = Array.from(
-        new Map(
-          allocRes.allocations.map(a => [
-            a.msp_user_id,
-            { id: a.msp_user_id, username: a.msp_username || '' },
-          ])
-        ).values()
-      );
-      setMSPUsers(uniqueUsers);
+
+      // 从用户 API 获取完整用户列表
+      const allUsers = (usersRes as any)?.users || (usersRes as any)?.data?.users || [];
+      if (allUsers.length > 0) {
+        setMSPUsers(allUsers.map((u: any) => ({ id: u.id, username: u.username || u.name || '' })));
+      } else {
+        // 降级：从已有分配中提取用户
+        const uniqueUsers = Array.from(
+          new Map(
+            allocRes.allocations.map(a => [
+              a.msp_user_id,
+              { id: a.msp_user_id, username: a.msp_username || '' },
+            ])
+          ).values()
+        );
+        setMSPUsers(uniqueUsers);
+      }
     } catch (err: any) {
       message.error(err.message || '加载数据失败');
     } finally {
@@ -198,7 +206,7 @@ export default function MSPManagementPage() {
             label="MSP 员工"
             rules={[{ required: true, message: '请选择 MSP 员工' }]}
           >
-            <Select placeholder="选择 MSP 员工">
+            <Select placeholder="选择 MSP 员工" showSearch optionFilterProp="children">
               {mspUsers.map(user => (
                 <Option key={user.id} value={user.id}>
                   {user.username}

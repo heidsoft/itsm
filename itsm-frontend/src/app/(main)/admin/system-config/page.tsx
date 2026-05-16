@@ -11,7 +11,7 @@ import {
   Settings,
   Shield,
   Clock,
-  HardDrive,
+  Cpu,
 } from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
@@ -53,10 +53,10 @@ export default function SystemConfiguration() {
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [systemStats, setSystemStats] = useState({
-    uptime: '7天 12小时',
-    connections: 128,
-    diskUsage: 65,
-    memoryUsage: 42,
+    uptime: '加载中...',
+    goroutines: 0,
+    cpuCores: 0,
+    memoryUsagePercent: 0,
   });
   const [initialConfig, setInitialConfig] = useState<Record<string, unknown>>({});
 
@@ -82,18 +82,37 @@ export default function SystemConfiguration() {
   useEffect(() => {
     loadConfig();
 
-    // 模拟获取系统状态
-    const interval = setInterval(() => {
-      setSystemStats({
-        uptime: '7天 12小时',
-        connections: Math.floor(Math.random() * 200) + 50,
-        diskUsage: Math.floor(Math.random() * 30) + 60,
-        memoryUsage: Math.floor(Math.random() * 30) + 30,
-      });
-    }, 5000);
+    // 定期获取真实系统状态
+    const fetchSystemStats = async () => {
+      try {
+        const status = await SystemConfigAPI.getSystemStatus();
+        setSystemStats({
+          uptime: calculateUptime((status as any).startTime as number | undefined),
+          goroutines: (status as any).goroutines || 0,
+          cpuCores: (status as any).cpu_cores || 0,
+          memoryUsagePercent: Math.round((status as any).memory?.usage_percent || (status as any).memory?.usage || 0),
+        });
+      } catch (error) {
+        console.error('Failed to fetch system status:', error);
+      }
+    };
 
+    // 初始加载
+    fetchSystemStats();
+
+    // 定期更新
+    const interval = setInterval(fetchSystemStats, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // 计算运行时长
+  const calculateUptime = (startTime?: number): string => {
+    if (!startTime) return '未知';
+    const diff = Date.now() - startTime;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    return `${days}天 ${hours}小时`;
+  };
 
   // 表单值变化时标记为有更改
   const handleFormChange = () => {
@@ -463,8 +482,8 @@ export default function SystemConfiguration() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
-              title="当前连接数"
-              value={systemStats.connections}
+              title="Goroutine 数"
+              value={systemStats.goroutines}
               prefix={<Network className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
             />
@@ -472,14 +491,12 @@ export default function SystemConfiguration() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-gray-500">磁盘使用率</div>
-                <div className="text-2xl font-bold text-orange-600">{systemStats.diskUsage}%</div>
-              </div>
-              <HardDrive className="w-8 h-8 text-orange-600" />
-            </div>
-            <Progress percent={systemStats.diskUsage} size="small" strokeColor="#fa8c16" />
+            <Statistic
+              title="CPU 核心数"
+              value={systemStats.cpuCores}
+              prefix={<Cpu className="w-5 h-5" />}
+              styles={{ content: { color: '#fa8c16' } }}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
@@ -487,11 +504,11 @@ export default function SystemConfiguration() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-gray-500">内存使用率</div>
-                <div className="text-2xl font-bold text-purple-600">{systemStats.memoryUsage}%</div>
+                <div className="text-2xl font-bold text-purple-600">{systemStats.memoryUsagePercent}%</div>
               </div>
               <MemoryStick className="w-8 h-8 text-purple-600" />
             </div>
-            <Progress percent={systemStats.memoryUsage} size="small" strokeColor="#722ed1" />
+            <Progress percent={systemStats.memoryUsagePercent} size="small" strokeColor="#722ed1" />
           </Card>
         </Col>
       </Row>
