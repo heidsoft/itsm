@@ -3,6 +3,7 @@ package change
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"itsm-backend/dto"
 
@@ -45,6 +46,41 @@ func (s *Service) DeleteChange(ctx context.Context, id int, tenantID int) error 
 
 func (s *Service) GetStats(ctx context.Context, tenantID int) (*Stats, error) {
 	return s.repo.GetStats(ctx, tenantID)
+}
+
+// GetCalendarView 获取日历视图数据
+func (s *Service) GetCalendarView(ctx context.Context, tenantID int, startDate, endDate, status string) (*dto.ChangeCalendarResponse, error) {
+	changes, err := s.repo.ListByDateRange(ctx, tenantID, startDate, endDate, status)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]dto.ChangeCalendarItem, 0, len(changes))
+	for _, c := range changes {
+		var plannedStart, plannedEnd time.Time
+		if c.PlannedStartDate != nil {
+			plannedStart = *c.PlannedStartDate
+		}
+		if c.PlannedEndDate != nil {
+			plannedEnd = *c.PlannedEndDate
+		}
+
+		items = append(items, dto.ChangeCalendarItem{
+			ID:           c.ID,
+			Title:        c.Title,
+			ChangeNumber: fmt.Sprintf("C-%d", c.ID),
+			Status:       c.Status,
+			RiskLevel:    c.RiskLevel,
+			Category:     c.Type,
+			PlannedStart: plannedStart,
+			PlannedEnd:   plannedEnd,
+		})
+	}
+
+	return &dto.ChangeCalendarResponse{
+		Items: items,
+		Total: len(items),
+	}, nil
 }
 
 // SubmitChange submits a change for approval

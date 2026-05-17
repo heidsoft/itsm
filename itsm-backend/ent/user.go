@@ -77,9 +77,13 @@ type UserEdges struct {
 	Groups []*Group `json:"groups,omitempty"`
 	// MSP用户分配
 	MspAllocations []*MSPAllocation `json:"msp_allocations,omitempty"`
+	// 文章协作会话
+	ArticleSessions []*KnowledgeArticleSession `json:"article_sessions,omitempty"`
+	// 文章协作参与
+	ArticleParticipations []*KnowledgeArticleParticipant `json:"article_participations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [10]bool
+	loadedTypes [12]bool
 }
 
 // DepartmentRefOrErr returns the DepartmentRef value or an error if the edge
@@ -174,6 +178,24 @@ func (e UserEdges) MspAllocationsOrErr() ([]*MSPAllocation, error) {
 		return e.MspAllocations, nil
 	}
 	return nil, &NotLoadedError{edge: "msp_allocations"}
+}
+
+// ArticleSessionsOrErr returns the ArticleSessions value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ArticleSessionsOrErr() ([]*KnowledgeArticleSession, error) {
+	if e.loadedTypes[10] {
+		return e.ArticleSessions, nil
+	}
+	return nil, &NotLoadedError{edge: "article_sessions"}
+}
+
+// ArticleParticipationsOrErr returns the ArticleParticipations value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ArticleParticipationsOrErr() ([]*KnowledgeArticleParticipant, error) {
+	if e.loadedTypes[11] {
+		return e.ArticleParticipations, nil
+	}
+	return nil, &NotLoadedError{edge: "article_participations"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -373,6 +395,16 @@ func (_m *User) QueryGroups() *GroupQuery {
 // QueryMspAllocations queries the "msp_allocations" edge of the User entity.
 func (_m *User) QueryMspAllocations() *MSPAllocationQuery {
 	return NewUserClient(_m.config).QueryMspAllocations(_m)
+}
+
+// QueryArticleSessions queries the "article_sessions" edge of the User entity.
+func (_m *User) QueryArticleSessions() *KnowledgeArticleSessionQuery {
+	return NewUserClient(_m.config).QueryArticleSessions(_m)
+}
+
+// QueryArticleParticipations queries the "article_participations" edge of the User entity.
+func (_m *User) QueryArticleParticipations() *KnowledgeArticleParticipantQuery {
+	return NewUserClient(_m.config).QueryArticleParticipations(_m)
 }
 
 // Update returns a builder for updating this User.

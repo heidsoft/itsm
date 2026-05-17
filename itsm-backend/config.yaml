@@ -1,8 +1,8 @@
 database:
-  host: "${DB_HOST:postgres}"
+  host: "${DB_HOST:localhost}"
   port: 5432
-  user: "${DB_USER:itsm}"
-  password: "${DB_PASSWORD:itsm_password_2026}"
+  user: "${DB_USER:postgres}"
+  password: "${DB_PASSWORD:dev123}"
   dbname: "${DB_NAME:itsm}"
   sslmode: "${DB_SSLMODE:disable}"
 

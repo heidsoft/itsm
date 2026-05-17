@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/ent"
 	enttenant "itsm-backend/ent/tenant"
+	entuser "itsm-backend/ent/user"
 	"itsm-backend/middleware"
 
 	"go.uber.org/zap"
@@ -66,30 +67,49 @@ func (s *Service) Login(ctx context.Context, username, password string, tenantID
 			tenantID = t.ID
 		}
 	}
+	// When no tenant is specified, find user by username alone (matches across tenants)
+	var u *User
+	var entUser *ent.User
+	var err error
 	if tenantID == 0 {
-		// fallback to default tenant if exists
-		if t, err := s.client.Tenant.Query().Where(enttenant.CodeEQ("default")).First(ctx); err == nil {
-			tenantID = t.ID
+		// Look for user by username without tenant filter
+		entUser, err = s.client.User.Query().Where(entuser.UsernameEQ(username)).Only(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("invalid credentials")
 		}
-	}
-	u, err := s.repo.GetUserByUsername(ctx, username, tenantID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid credentials")
-	}
-
-	// Verify password (need to get hash from DB, but domain User doesn't have it)
-	// I'll fetch the ent user directly for password verification to keep domain User clean
-	entUser, err := s.client.User.Get(ctx, u.ID)
-	if err != nil {
-		return nil, err
+		u = toUserDomain(entUser)
+	} else {
+		entUser, err = s.client.User.Query().
+			Where(entuser.UsernameEQ(username), entuser.TenantID(tenantID)).
+			Only(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("invalid credentials")
+		}
+		u = toUserDomain(entUser)
 	}
 
+	// Set msp_role from ent user
+	mspRoleStr := string(entUser.MspRole)
+	if mspRoleStr != "" {
+		u.MSPRole = &mspRoleStr
+	}
+
+	// Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(entUser.PasswordHash), []byte(password)); err != nil {
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
 	if !u.Active {
 		return nil, fmt.Errorf("user account is inactive")
+	}
+
+	// 对于 MSP 用户，需要将 MSP 角色转换为 RBAC 角色
+	// u.Role 是数据库中存储的 RBAC 角色（MSP 用户的 Role 是 admin）
+	// 如果用户有 MSP 角色，则从 MSP 角色映射到正确的 RBAC 角色
+	if mspRoleStr != "" {
+		if mappedRole := middleware.GetMSPRBACRole(mspRoleStr); mappedRole != "" {
+			u.Role = mappedRole
+		}
 	}
 
 	// Generate tokens

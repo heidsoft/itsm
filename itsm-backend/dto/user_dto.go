@@ -15,6 +15,8 @@ type CreateUserRequest struct {
 	TenantID   int    `json:"tenant_id" binding:"required,min=1"`
 	// 角色，可选；不提供时使用后端默认值（end_user）
 	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician security end_user"`
+	// MSP角色，仅当用户属于MSP租户时使用
+	MSPRole string `json:"msp_role,omitempty" binding:"omitempty,oneof=provider_admin provider_agent customer_user"`
 }
 
 // UpdateUserRequest 更新用户请求
@@ -49,6 +51,7 @@ type UserDetailResponse struct {
 	Active     bool      `json:"active"`
 	TenantID   int       `json:"tenant_id"`
 	Role       string    `json:"role"`
+	MSPRole    *string   `json:"msp_role,omitempty"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }

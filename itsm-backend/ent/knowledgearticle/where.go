@@ -673,6 +673,52 @@ func HasUserLikesWith(preds ...predicate.KnowledgeArticleLike) predicate.Knowled
 	})
 }
 
+// HasVersions applies the HasEdge predicate on the "versions" edge.
+func HasVersions() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, VersionsTable, VersionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasVersionsWith applies the HasEdge predicate on the "versions" edge with a given conditions (other predicates).
+func HasVersionsWith(preds ...predicate.KnowledgeArticleVersion) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(func(s *sql.Selector) {
+		step := newVersionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSessions applies the HasEdge predicate on the "sessions" edge.
+func HasSessions() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, SessionsTable, SessionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSessionsWith applies the HasEdge predicate on the "sessions" edge with a given conditions (other predicates).
+func HasSessionsWith(preds ...predicate.KnowledgeArticleSession) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(func(s *sql.Selector) {
+		step := newSessionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.KnowledgeArticle) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.AndPredicates(predicates...))

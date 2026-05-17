@@ -405,3 +405,29 @@ type SubmitChangeRequest struct {
 	ApproverIDs []int  `json:"approverIds"` // 审批人ID列表
 	Comment     string `json:"comment"`     // 提交说明（可选）
 }
+
+// ChangeCalendarRequest 日历视图请求
+type ChangeCalendarRequest struct {
+	StartDate string `form:"startDate" binding:"required"` // 开始日期 YYYY-MM-DD
+	EndDate   string `form:"endDate" binding:"required"`   // 结束日期 YYYY-MM-DD
+	Status    string `form:"status"`                        // 状态过滤
+}
+
+// ChangeCalendarItem 日历项
+type ChangeCalendarItem struct {
+	ID            int       `json:"id"`
+	Title         string    `json:"title"`
+	ChangeNumber  string    `json:"changeNumber"`
+	Status        string    `json:"status"`
+	RiskLevel     string    `json:"riskLevel"`
+	Category      string    `json:"category"`
+	PlannedStart  time.Time `json:"plannedStart"`
+	PlannedEnd    time.Time `json:"plannedEnd"`
+	AssigneeName  string    `json:"assigneeName"`
+}
+
+// ChangeCalendarResponse 日历视图响应
+type ChangeCalendarResponse struct {
+	Items []ChangeCalendarItem `json:"items"`
+	Total int                  `json:"total"`
+}

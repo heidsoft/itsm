@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
+	"itsm-backend/ent/knowledgearticlesession"
+	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/predicate"
 	"math"
 
@@ -25,6 +27,8 @@ type KnowledgeArticleQuery struct {
 	inters        []Interceptor
 	predicates    []predicate.KnowledgeArticle
 	withUserLikes *KnowledgeArticleLikeQuery
+	withVersions  *KnowledgeArticleVersionQuery
+	withSessions  *KnowledgeArticleSessionQuery
 	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -77,6 +81,50 @@ func (_q *KnowledgeArticleQuery) QueryUserLikes() *KnowledgeArticleLikeQuery {
 			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, selector),
 			sqlgraph.To(knowledgearticlelike.Table, knowledgearticlelike.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, knowledgearticle.UserLikesTable, knowledgearticle.UserLikesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryVersions chains the current query on the "versions" edge.
+func (_q *KnowledgeArticleQuery) QueryVersions() *KnowledgeArticleVersionQuery {
+	query := (&KnowledgeArticleVersionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, selector),
+			sqlgraph.To(knowledgearticleversion.Table, knowledgearticleversion.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, knowledgearticle.VersionsTable, knowledgearticle.VersionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySessions chains the current query on the "sessions" edge.
+func (_q *KnowledgeArticleQuery) QuerySessions() *KnowledgeArticleSessionQuery {
+	query := (&KnowledgeArticleSessionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, selector),
+			sqlgraph.To(knowledgearticlesession.Table, knowledgearticlesession.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, knowledgearticle.SessionsTable, knowledgearticle.SessionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -277,6 +325,8 @@ func (_q *KnowledgeArticleQuery) Clone() *KnowledgeArticleQuery {
 		inters:        append([]Interceptor{}, _q.inters...),
 		predicates:    append([]predicate.KnowledgeArticle{}, _q.predicates...),
 		withUserLikes: _q.withUserLikes.Clone(),
+		withVersions:  _q.withVersions.Clone(),
+		withSessions:  _q.withSessions.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -291,6 +341,28 @@ func (_q *KnowledgeArticleQuery) WithUserLikes(opts ...func(*KnowledgeArticleLik
 		opt(query)
 	}
 	_q.withUserLikes = query
+	return _q
+}
+
+// WithVersions tells the query-builder to eager-load the nodes that are connected to
+// the "versions" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *KnowledgeArticleQuery) WithVersions(opts ...func(*KnowledgeArticleVersionQuery)) *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleVersionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withVersions = query
+	return _q
+}
+
+// WithSessions tells the query-builder to eager-load the nodes that are connected to
+// the "sessions" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *KnowledgeArticleQuery) WithSessions(opts ...func(*KnowledgeArticleSessionQuery)) *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleSessionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withSessions = query
 	return _q
 }
 
@@ -373,10 +445,15 @@ func (_q *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 		nodes       = []*KnowledgeArticle{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [3]bool{
 			_q.withUserLikes != nil,
+			_q.withVersions != nil,
+			_q.withSessions != nil,
 		}
 	)
+	if _q.withVersions != nil || _q.withSessions != nil {
+		withFKs = true
+	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, knowledgearticle.ForeignKeys...)
 	}
@@ -402,6 +479,18 @@ func (_q *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 		if err := _q.loadUserLikes(ctx, query, nodes,
 			func(n *KnowledgeArticle) { n.Edges.UserLikes = []*KnowledgeArticleLike{} },
 			func(n *KnowledgeArticle, e *KnowledgeArticleLike) { n.Edges.UserLikes = append(n.Edges.UserLikes, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withVersions; query != nil {
+		if err := _q.loadVersions(ctx, query, nodes, nil,
+			func(n *KnowledgeArticle, e *KnowledgeArticleVersion) { n.Edges.Versions = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withSessions; query != nil {
+		if err := _q.loadSessions(ctx, query, nodes, nil,
+			func(n *KnowledgeArticle, e *KnowledgeArticleSession) { n.Edges.Sessions = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -435,6 +524,70 @@ func (_q *KnowledgeArticleQuery) loadUserLikes(ctx context.Context, query *Knowl
 			return fmt.Errorf(`unexpected referenced foreign-key "article_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (_q *KnowledgeArticleQuery) loadVersions(ctx context.Context, query *KnowledgeArticleVersionQuery, nodes []*KnowledgeArticle, init func(*KnowledgeArticle), assign func(*KnowledgeArticle, *KnowledgeArticleVersion)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*KnowledgeArticle)
+	for i := range nodes {
+		if nodes[i].knowledge_article_versions == nil {
+			continue
+		}
+		fk := *nodes[i].knowledge_article_versions
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(knowledgearticleversion.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "knowledge_article_versions" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *KnowledgeArticleQuery) loadSessions(ctx context.Context, query *KnowledgeArticleSessionQuery, nodes []*KnowledgeArticle, init func(*KnowledgeArticle), assign func(*KnowledgeArticle, *KnowledgeArticleSession)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*KnowledgeArticle)
+	for i := range nodes {
+		if nodes[i].knowledge_article_sessions == nil {
+			continue
+		}
+		fk := *nodes[i].knowledge_article_sessions
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(knowledgearticlesession.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "knowledge_article_sessions" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }

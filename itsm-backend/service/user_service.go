@@ -71,6 +71,10 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 	if strings.TrimSpace(req.Role) != "" {
 		uc = uc.SetRole(user.Role(strings.ToLower(strings.TrimSpace(req.Role))))
 	}
+	// 如果请求中提供了MSP角色，则设置MSP角色
+	if strings.TrimSpace(req.MSPRole) != "" {
+		uc = uc.SetMspRole(user.MspRole(strings.ToLower(strings.TrimSpace(req.MSPRole))))
+	}
 	userEntity, err := uc.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("创建用户失败: %w", err)

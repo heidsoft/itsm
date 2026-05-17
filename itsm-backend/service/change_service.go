@@ -685,3 +685,75 @@ func (s *ChangeService) mapProcessStatus(status string) dto.ProcessStatus {
 		return dto.ProcessStatusPending
 	}
 }
+
+// GetCalendarView 获取变更日历视图数据
+func (s *ChangeService) GetCalendarView(ctx context.Context, tenantID int, startDate, endDate string, status string) (*dto.ChangeCalendarResponse, error) {
+	// 解析日期
+	start, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid start date format: %w", err)
+	}
+	end, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid end date format: %w", err)
+	}
+	// 设置结束日期为当天结束
+	end = end.Add(24*time.Hour - time.Second)
+
+	// 构建查询: 计划时间在日期范围内
+	query := s.client.Change.Query().
+		Where(
+			change.TenantID(tenantID),
+			change.Or(
+				change.And(
+					change.PlannedStartDateGTE(start),
+					change.PlannedStartDateLTE(end),
+				),
+				change.And(
+					change.PlannedEndDateGTE(start),
+					change.PlannedEndDateLTE(end),
+				),
+			),
+		)
+
+	// 状态过滤
+	if status != "" {
+		query = query.Where(change.Status(status))
+	}
+
+	// 获取变更列表
+	changes, err := query.Order(ent.Asc(change.FieldPlannedStartDate)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get changes: %w", err)
+	}
+
+	// 构建响应
+	items := make([]dto.ChangeCalendarItem, 0, len(changes))
+	for _, c := range changes {
+		item := dto.ChangeCalendarItem{
+			ID:           c.ID,
+			Title:        c.Title,
+			ChangeNumber: fmt.Sprintf("C-%d", c.ID),
+			Status:       c.Status,
+			RiskLevel:    c.RiskLevel,
+			Category:     string(c.Type),
+			PlannedStart: c.PlannedStartDate,
+			PlannedEnd:   c.PlannedEndDate,
+		}
+
+		// 获取处理人姓名
+		if c.AssigneeID > 0 {
+			user, err := s.client.User.Get(ctx, c.AssigneeID)
+			if err == nil {
+				item.AssigneeName = user.Name
+			}
+		}
+
+		items = append(items, item)
+	}
+
+	return &dto.ChangeCalendarResponse{
+		Items: items,
+		Total: len(items),
+	}, nil
+}

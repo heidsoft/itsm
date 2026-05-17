@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
+	"itsm-backend/ent/knowledgearticleparticipant"
+	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/predicate"
@@ -43,6 +45,8 @@ type UserQuery struct {
 	withVersionChangelogs       *ProcessVersionChangelogQuery
 	withGroups                  *GroupQuery
 	withMspAllocations          *MSPAllocationQuery
+	withArticleSessions         *KnowledgeArticleSessionQuery
+	withArticleParticipations   *KnowledgeArticleParticipantQuery
 	withFKs                     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -300,6 +304,50 @@ func (_q *UserQuery) QueryMspAllocations() *MSPAllocationQuery {
 	return query
 }
 
+// QueryArticleSessions chains the current query on the "article_sessions" edge.
+func (_q *UserQuery) QueryArticleSessions() *KnowledgeArticleSessionQuery {
+	query := (&KnowledgeArticleSessionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(knowledgearticlesession.Table, knowledgearticlesession.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.ArticleSessionsTable, user.ArticleSessionsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryArticleParticipations chains the current query on the "article_participations" edge.
+func (_q *UserQuery) QueryArticleParticipations() *KnowledgeArticleParticipantQuery {
+	query := (&KnowledgeArticleParticipantClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(knowledgearticleparticipant.Table, knowledgearticleparticipant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.ArticleParticipationsTable, user.ArticleParticipationsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first User entity from the query.
 // Returns a *NotFoundError when no User was found.
 func (_q *UserQuery) First(ctx context.Context) (*User, error) {
@@ -502,6 +550,8 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withVersionChangelogs:       _q.withVersionChangelogs.Clone(),
 		withGroups:                  _q.withGroups.Clone(),
 		withMspAllocations:          _q.withMspAllocations.Clone(),
+		withArticleSessions:         _q.withArticleSessions.Clone(),
+		withArticleParticipations:   _q.withArticleParticipations.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -618,6 +668,28 @@ func (_q *UserQuery) WithMspAllocations(opts ...func(*MSPAllocationQuery)) *User
 	return _q
 }
 
+// WithArticleSessions tells the query-builder to eager-load the nodes that are connected to
+// the "article_sessions" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithArticleSessions(opts ...func(*KnowledgeArticleSessionQuery)) *UserQuery {
+	query := (&KnowledgeArticleSessionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withArticleSessions = query
+	return _q
+}
+
+// WithArticleParticipations tells the query-builder to eager-load the nodes that are connected to
+// the "article_participations" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithArticleParticipations(opts ...func(*KnowledgeArticleParticipantQuery)) *UserQuery {
+	query := (&KnowledgeArticleParticipantClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withArticleParticipations = query
+	return _q
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -697,7 +769,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [10]bool{
+		loadedTypes = [12]bool{
 			_q.withDepartmentRef != nil,
 			_q.withTenant != nil,
 			_q.withTicketComments != nil,
@@ -708,6 +780,8 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			_q.withVersionChangelogs != nil,
 			_q.withGroups != nil,
 			_q.withMspAllocations != nil,
+			_q.withArticleSessions != nil,
+			_q.withArticleParticipations != nil,
 		}
 	)
 	if withFKs {
@@ -802,6 +876,24 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadMspAllocations(ctx, query, nodes,
 			func(n *User) { n.Edges.MspAllocations = []*MSPAllocation{} },
 			func(n *User, e *MSPAllocation) { n.Edges.MspAllocations = append(n.Edges.MspAllocations, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withArticleSessions; query != nil {
+		if err := _q.loadArticleSessions(ctx, query, nodes,
+			func(n *User) { n.Edges.ArticleSessions = []*KnowledgeArticleSession{} },
+			func(n *User, e *KnowledgeArticleSession) {
+				n.Edges.ArticleSessions = append(n.Edges.ArticleSessions, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withArticleParticipations; query != nil {
+		if err := _q.loadArticleParticipations(ctx, query, nodes,
+			func(n *User) { n.Edges.ArticleParticipations = []*KnowledgeArticleParticipant{} },
+			func(n *User, e *KnowledgeArticleParticipant) {
+				n.Edges.ArticleParticipations = append(n.Edges.ArticleParticipations, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -1135,6 +1227,128 @@ func (_q *UserQuery) loadMspAllocations(ctx context.Context, query *MSPAllocatio
 			return fmt.Errorf(`unexpected referenced foreign-key "msp_user_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadArticleSessions(ctx context.Context, query *KnowledgeArticleSessionQuery, nodes []*User, init func(*User), assign func(*User, *KnowledgeArticleSession)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*User)
+	nids := make(map[int]map[*User]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(user.ArticleSessionsTable)
+		s.Join(joinT).On(s.C(knowledgearticlesession.FieldID), joinT.C(user.ArticleSessionsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(user.ArticleSessionsPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(user.ArticleSessionsPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*KnowledgeArticleSession](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "article_sessions" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (_q *UserQuery) loadArticleParticipations(ctx context.Context, query *KnowledgeArticleParticipantQuery, nodes []*User, init func(*User), assign func(*User, *KnowledgeArticleParticipant)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*User)
+	nids := make(map[int]map[*User]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(user.ArticleParticipationsTable)
+		s.Join(joinT).On(s.C(knowledgearticleparticipant.FieldID), joinT.C(user.ArticleParticipationsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(user.ArticleParticipationsPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(user.ArticleParticipationsPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*KnowledgeArticleParticipant](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "article_participations" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

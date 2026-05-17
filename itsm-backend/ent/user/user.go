@@ -63,6 +63,10 @@ const (
 	EdgeGroups = "groups"
 	// EdgeMspAllocations holds the string denoting the msp_allocations edge name in mutations.
 	EdgeMspAllocations = "msp_allocations"
+	// EdgeArticleSessions holds the string denoting the article_sessions edge name in mutations.
+	EdgeArticleSessions = "article_sessions"
+	// EdgeArticleParticipations holds the string denoting the article_participations edge name in mutations.
+	EdgeArticleParticipations = "article_participations"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// DepartmentRefTable is the table that holds the department_ref relation/edge.
@@ -133,6 +137,16 @@ const (
 	MspAllocationsInverseTable = "msp_allocations"
 	// MspAllocationsColumn is the table column denoting the msp_allocations relation/edge.
 	MspAllocationsColumn = "msp_user_id"
+	// ArticleSessionsTable is the table that holds the article_sessions relation/edge. The primary key declared below.
+	ArticleSessionsTable = "user_article_sessions"
+	// ArticleSessionsInverseTable is the table name for the KnowledgeArticleSession entity.
+	// It exists in this package in order to avoid circular dependency with the "knowledgearticlesession" package.
+	ArticleSessionsInverseTable = "knowledge_article_sessions"
+	// ArticleParticipationsTable is the table that holds the article_participations relation/edge. The primary key declared below.
+	ArticleParticipationsTable = "user_article_participations"
+	// ArticleParticipationsInverseTable is the table name for the KnowledgeArticleParticipant entity.
+	// It exists in this package in order to avoid circular dependency with the "knowledgearticleparticipant" package.
+	ArticleParticipationsInverseTable = "knowledge_article_participants"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -165,6 +179,12 @@ var (
 	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
 	// primary key for the roles relation (M2M).
 	RolesPrimaryKey = []string{"user_id", "role_id"}
+	// ArticleSessionsPrimaryKey and ArticleSessionsColumn2 are the table columns denoting the
+	// primary key for the article_sessions relation (M2M).
+	ArticleSessionsPrimaryKey = []string{"user_id", "knowledge_article_session_id"}
+	// ArticleParticipationsPrimaryKey and ArticleParticipationsColumn2 are the table columns denoting the
+	// primary key for the article_participations relation (M2M).
+	ArticleParticipationsPrimaryKey = []string{"user_id", "knowledge_article_participant_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -461,6 +481,34 @@ func ByMspAllocations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMspAllocationsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByArticleSessionsCount orders the results by article_sessions count.
+func ByArticleSessionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newArticleSessionsStep(), opts...)
+	}
+}
+
+// ByArticleSessions orders the results by article_sessions terms.
+func ByArticleSessions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newArticleSessionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByArticleParticipationsCount orders the results by article_participations count.
+func ByArticleParticipationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newArticleParticipationsStep(), opts...)
+	}
+}
+
+// ByArticleParticipations orders the results by article_participations terms.
+func ByArticleParticipations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newArticleParticipationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newDepartmentRefStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -529,5 +577,19 @@ func newMspAllocationsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MspAllocationsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MspAllocationsTable, MspAllocationsColumn),
+	)
+}
+func newArticleSessionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ArticleSessionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ArticleSessionsTable, ArticleSessionsPrimaryKey...),
+	)
+}
+func newArticleParticipationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ArticleParticipationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ArticleParticipationsTable, ArticleParticipationsPrimaryKey...),
 	)
 }

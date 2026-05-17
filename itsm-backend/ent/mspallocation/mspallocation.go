@@ -16,6 +16,8 @@ const (
 	FieldID = "id"
 	// FieldMspUserID holds the string denoting the msp_user_id field in the database.
 	FieldMspUserID = "msp_user_id"
+	// FieldCustomerTenantID holds the string denoting the customer_tenant_id field in the database.
+	FieldCustomerTenantID = "customer_tenant_id"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
 	// FieldAssignedAt holds the string denoting the assigned_at field in the database.
@@ -48,6 +50,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldMspUserID,
+	FieldCustomerTenantID,
 	FieldRole,
 	FieldAssignedAt,
 	FieldDeassignedAt,
@@ -90,6 +93,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByMspUserID orders the results by the msp_user_id field.
 func ByMspUserID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldMspUserID, opts...).ToFunc()
+}
+
+// ByCustomerTenantID orders the results by the customer_tenant_id field.
+func ByCustomerTenantID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCustomerTenantID, opts...).ToFunc()
 }
 
 // ByRole orders the results by the role field.
