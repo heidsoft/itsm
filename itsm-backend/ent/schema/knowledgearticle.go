@@ -29,5 +29,7 @@ func (KnowledgeArticle) Fields() []ent.Field {
 func (KnowledgeArticle) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("user_likes", KnowledgeArticleLike.Type),
+		edge.To("versions", KnowledgeArticleVersion.Type).Unique(),
+		edge.To("sessions", KnowledgeArticleSession.Type).Unique(),
 	}
 }

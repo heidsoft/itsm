@@ -44,6 +44,33 @@ func (_u *MSPAllocationUpdate) SetNillableMspUserID(v *int) *MSPAllocationUpdate
 	return _u
 }
 
+// SetCustomerTenantID sets the "customer_tenant_id" field.
+func (_u *MSPAllocationUpdate) SetCustomerTenantID(v int) *MSPAllocationUpdate {
+	_u.mutation.ResetCustomerTenantID()
+	_u.mutation.SetCustomerTenantID(v)
+	return _u
+}
+
+// SetNillableCustomerTenantID sets the "customer_tenant_id" field if the given value is not nil.
+func (_u *MSPAllocationUpdate) SetNillableCustomerTenantID(v *int) *MSPAllocationUpdate {
+	if v != nil {
+		_u.SetCustomerTenantID(*v)
+	}
+	return _u
+}
+
+// AddCustomerTenantID adds value to the "customer_tenant_id" field.
+func (_u *MSPAllocationUpdate) AddCustomerTenantID(v int) *MSPAllocationUpdate {
+	_u.mutation.AddCustomerTenantID(v)
+	return _u
+}
+
+// ClearCustomerTenantID clears the value of the "customer_tenant_id" field.
+func (_u *MSPAllocationUpdate) ClearCustomerTenantID() *MSPAllocationUpdate {
+	_u.mutation.ClearCustomerTenantID()
+	return _u
+}
+
 // SetRole sets the "role" field.
 func (_u *MSPAllocationUpdate) SetRole(v string) *MSPAllocationUpdate {
 	_u.mutation.SetRole(v)
@@ -205,6 +232,15 @@ func (_u *MSPAllocationUpdate) sqlSave(ctx context.Context) (_node int, err erro
 			}
 		}
 	}
+	if value, ok := _u.mutation.CustomerTenantID(); ok {
+		_spec.SetField(mspallocation.FieldCustomerTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCustomerTenantID(); ok {
+		_spec.AddField(mspallocation.FieldCustomerTenantID, field.TypeInt, value)
+	}
+	if _u.mutation.CustomerTenantIDCleared() {
+		_spec.ClearField(mspallocation.FieldCustomerTenantID, field.TypeInt)
+	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(mspallocation.FieldRole, field.TypeString, value)
 	}
@@ -325,6 +361,33 @@ func (_u *MSPAllocationUpdateOne) SetNillableMspUserID(v *int) *MSPAllocationUpd
 	if v != nil {
 		_u.SetMspUserID(*v)
 	}
+	return _u
+}
+
+// SetCustomerTenantID sets the "customer_tenant_id" field.
+func (_u *MSPAllocationUpdateOne) SetCustomerTenantID(v int) *MSPAllocationUpdateOne {
+	_u.mutation.ResetCustomerTenantID()
+	_u.mutation.SetCustomerTenantID(v)
+	return _u
+}
+
+// SetNillableCustomerTenantID sets the "customer_tenant_id" field if the given value is not nil.
+func (_u *MSPAllocationUpdateOne) SetNillableCustomerTenantID(v *int) *MSPAllocationUpdateOne {
+	if v != nil {
+		_u.SetCustomerTenantID(*v)
+	}
+	return _u
+}
+
+// AddCustomerTenantID adds value to the "customer_tenant_id" field.
+func (_u *MSPAllocationUpdateOne) AddCustomerTenantID(v int) *MSPAllocationUpdateOne {
+	_u.mutation.AddCustomerTenantID(v)
+	return _u
+}
+
+// ClearCustomerTenantID clears the value of the "customer_tenant_id" field.
+func (_u *MSPAllocationUpdateOne) ClearCustomerTenantID() *MSPAllocationUpdateOne {
+	_u.mutation.ClearCustomerTenantID()
 	return _u
 }
 
@@ -518,6 +581,15 @@ func (_u *MSPAllocationUpdateOne) sqlSave(ctx context.Context) (_node *MSPAlloca
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.CustomerTenantID(); ok {
+		_spec.SetField(mspallocation.FieldCustomerTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCustomerTenantID(); ok {
+		_spec.AddField(mspallocation.FieldCustomerTenantID, field.TypeInt, value)
+	}
+	if _u.mutation.CustomerTenantIDCleared() {
+		_spec.ClearField(mspallocation.FieldCustomerTenantID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(mspallocation.FieldRole, field.TypeString, value)

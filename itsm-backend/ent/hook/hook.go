@@ -416,6 +416,42 @@ func (f KnowledgeArticleLikeFunc) Mutate(ctx context.Context, m ent.Mutation) (e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnowledgeArticleLikeMutation", m)
 }
 
+// The KnowledgeArticleParticipantFunc type is an adapter to allow the use of ordinary
+// function as KnowledgeArticleParticipant mutator.
+type KnowledgeArticleParticipantFunc func(context.Context, *ent.KnowledgeArticleParticipantMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KnowledgeArticleParticipantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KnowledgeArticleParticipantMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnowledgeArticleParticipantMutation", m)
+}
+
+// The KnowledgeArticleSessionFunc type is an adapter to allow the use of ordinary
+// function as KnowledgeArticleSession mutator.
+type KnowledgeArticleSessionFunc func(context.Context, *ent.KnowledgeArticleSessionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KnowledgeArticleSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KnowledgeArticleSessionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnowledgeArticleSessionMutation", m)
+}
+
+// The KnowledgeArticleVersionFunc type is an adapter to allow the use of ordinary
+// function as KnowledgeArticleVersion mutator.
+type KnowledgeArticleVersionFunc func(context.Context, *ent.KnowledgeArticleVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KnowledgeArticleVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KnowledgeArticleVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnowledgeArticleVersionMutation", m)
+}
+
 // The KnownErrorFunc type is an adapter to allow the use of ordinary
 // function as KnownError mutator.
 type KnownErrorFunc func(context.Context, *ent.KnownErrorMutation) (ent.Value, error)

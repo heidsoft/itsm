@@ -48,7 +48,14 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := uc.userService.CreateUser(c.Request.Context(), &req, tenantID.(int))
+	// 确定目标租户：对于super_admin且请求中指定了tenant_id，使用请求中的；否则使用上下文中的
+	targetTenantID := tenantID.(int)
+	userRole, _ := c.Get("role")
+	if userRole == "super_admin" && req.TenantID > 0 {
+		targetTenantID = req.TenantID
+	}
+
+	user, err := uc.userService.CreateUser(c.Request.Context(), &req, targetTenantID)
 	if err != nil {
 		uc.logger.Errorf("创建用户失败: %v", err)
 		// 业务错误：用户名/邮箱重复

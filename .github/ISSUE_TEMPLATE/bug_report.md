@@ -10,6 +10,12 @@ assignees: ''
 ## Bug Description
 <!-- A clear and concise description of what the bug is. -->
 
+## Severity
+- [ ] Blocker (阻塞)
+- [ ] Critical (严重)
+- [ ] Major (一般)
+- [ ] Minor
+
 ## To Reproduce
 Steps to reproduce the behavior:
 1. Go to '...'
@@ -29,6 +35,12 @@ Steps to reproduce the behavior:
 - OS: [e.g. Ubuntu 22.04, macOS 14.0, Windows 11]
 - CPU: [e.g. Intel i7, AMD Ryzen 7]
 - Memory: [e.g. 16GB]
+
+**Browser:**
+- Browser: [Chrome/Firefox/Edge/Safari]
+- Version: [e.g. 110.0.5481.177]
+- Resolution: [e.g. 1920x1080]
+- Device: [e.g. 14-inch laptop / 27-inch desktop / tablet]
 
 **Software:**
 - Go Version: [e.g. 1.25]

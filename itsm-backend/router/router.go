@@ -609,6 +609,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				// 风险评估（同时支持 /risk 和 /risk-assessment 两个路径）
 				changes.GET("/:id/risk-assessment", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
 				changes.GET("/:id/risk", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
+				// 日历视图
+				changes.GET("/calendar", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetCalendar)
 			}
 		}
 

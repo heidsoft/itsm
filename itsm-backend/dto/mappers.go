@@ -27,6 +27,7 @@ func ToUserDetailResponse(user *ent.User) *UserDetailResponse {
 		Active:     user.Active,
 		TenantID:   user.TenantID,
 		Role:       string(user.Role),
+		MSPRole:    func() *string { s := string(user.MspRole); return &s }(),
 		CreatedAt:  user.CreatedAt,
 		UpdatedAt:  user.UpdatedAt,
 	}

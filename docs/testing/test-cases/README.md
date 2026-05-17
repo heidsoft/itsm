@@ -13,14 +13,16 @@
 | 模块名称 | 文件路径 | 用例数量 | 优先级 | 状态 |
 |---------|---------|---------|--------|------|
 | 认证模块 | TC-AUTH.md | 50+ | P0 | 生成中 |
-| 个人中心 | TC-PROFILE.md | 40+ | P0 | 生成中 |
+| 个人中心 | TC-PROFILE-个人中心.md | 40+ | P0 | 生成中 |
 | 通用UI组件 | TC-UI-COMPONENTS.md | 60+ | P0 | 生成中 |
 | 工单模块 | TC-TICKET.md | 100+ | P0 | 生成中 |
 | 事件管理 | TC-INCIDENT.md | 60+ | P0 | 生成中 |
 | 问题管理 | TC-PROBLEM.md | 50+ | P1 | 生成中 |
 | 变更管理 | TC-CHANGE.md | 60+ | P0 | 生成中 |
+| 发布管理 | TC-RELEASE.md | 45+ | P0 | 新增 |
 | 知识库 | TC-KNOWLEDGE.md | 50+ | P1 | 生成中 |
 | 服务目录 | TC-SERVICE-CATALOG.md | 45+ | P1 | 生成中 |
+| 服务请求管理 | TC-SERVICE-REQUEST.md | 55+ | P0 | 新增 |
 | CMDB | TC-CMDB.md | 60+ | P1 | 生成中 |
 | SLA监控 | TC-SLA.md | 50+ | P0 | 生成中 |
 | 工作流/BPMN | TC-WORKFLOW.md | 55+ | P0 | 生成中 |
@@ -64,8 +66,10 @@ TC-ADMIN-001     -> 系统管理模块第1个用例
 | 事件管理 | INCIDENT |
 | 问题管理 | PROBLEM |
 | 变更管理 | CHANGE |
+| 发布管理 | RELEASE |
 | 知识库 | KNOWLEDGE |
 | 服务目录 | SERVICE-CATALOG |
+| 服务请求管理 | SERVICE-REQUEST |
 | CMDB | CMDB |
 | SLA监控 | SLA |
 | 工作流 | WORKFLOW |
@@ -119,8 +123,10 @@ TC-ADMIN-001     -> 系统管理模块第1个用例
 - [事件管理](./TC-INCIDENT.md)
 - [问题管理](./TC-PROBLEM.md)
 - [变更管理](./TC-CHANGE.md)
+- [发布管理](./TC-RELEASE.md)
 - [知识库](./TC-KNOWLEDGE.md)
 - [服务目录](./TC-SERVICE-CATALOG.md)
+- [服务请求管理](./TC-SERVICE-REQUEST.md)
 - [CMDB](./TC-CMDB.md)
 - [SLA监控](./TC-SLA.md)
 - [工作流](./TC-WORKFLOW.md)

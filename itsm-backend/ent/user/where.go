@@ -995,6 +995,52 @@ func HasMspAllocationsWith(preds ...predicate.MSPAllocation) predicate.User {
 	})
 }
 
+// HasArticleSessions applies the HasEdge predicate on the "article_sessions" edge.
+func HasArticleSessions() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, ArticleSessionsTable, ArticleSessionsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasArticleSessionsWith applies the HasEdge predicate on the "article_sessions" edge with a given conditions (other predicates).
+func HasArticleSessionsWith(preds ...predicate.KnowledgeArticleSession) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newArticleSessionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasArticleParticipations applies the HasEdge predicate on the "article_participations" edge.
+func HasArticleParticipations() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, ArticleParticipationsTable, ArticleParticipationsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasArticleParticipationsWith applies the HasEdge predicate on the "article_participations" edge with a given conditions (other predicates).
+func HasArticleParticipationsWith(preds ...predicate.KnowledgeArticleParticipant) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newArticleParticipationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

@@ -17,6 +17,9 @@ func (MSPAllocation) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("msp_user_id").
 			Comment("MSP 员工ID（属于MSP租户）"),
+		field.Int("customer_tenant_id").
+			Comment("客户租户ID（支持单客户模式）").
+			Optional(),
 		field.String("role").
 			Comment("分配角色: primary|backup|specialist").
 			Default("primary"),
