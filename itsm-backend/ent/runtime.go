@@ -37,6 +37,9 @@ import (
 	"itsm-backend/ent/incidentruleexecution"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
+	"itsm-backend/ent/knowledgearticleparticipant"
+	"itsm-backend/ent/knowledgearticlesession"
+	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/message"
@@ -1257,6 +1260,68 @@ func init() {
 	knowledgearticlelikeDescCreatedAt := knowledgearticlelikeFields[3].Descriptor()
 	// knowledgearticlelike.DefaultCreatedAt holds the default value on creation for the created_at field.
 	knowledgearticlelike.DefaultCreatedAt = knowledgearticlelikeDescCreatedAt.Default.(func() time.Time)
+	knowledgearticleparticipantFields := schema.KnowledgeArticleParticipant{}.Fields()
+	_ = knowledgearticleparticipantFields
+	// knowledgearticleparticipantDescSessionID is the schema descriptor for session_id field.
+	knowledgearticleparticipantDescSessionID := knowledgearticleparticipantFields[0].Descriptor()
+	// knowledgearticleparticipant.SessionIDValidator is a validator for the "session_id" field. It is called by the builders before save.
+	knowledgearticleparticipant.SessionIDValidator = knowledgearticleparticipantDescSessionID.Validators[0].(func(int) error)
+	// knowledgearticleparticipantDescUserID is the schema descriptor for user_id field.
+	knowledgearticleparticipantDescUserID := knowledgearticleparticipantFields[1].Descriptor()
+	// knowledgearticleparticipant.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	knowledgearticleparticipant.UserIDValidator = knowledgearticleparticipantDescUserID.Validators[0].(func(int) error)
+	// knowledgearticleparticipantDescCursorPosition is the schema descriptor for cursor_position field.
+	knowledgearticleparticipantDescCursorPosition := knowledgearticleparticipantFields[2].Descriptor()
+	// knowledgearticleparticipant.DefaultCursorPosition holds the default value on creation for the cursor_position field.
+	knowledgearticleparticipant.DefaultCursorPosition = knowledgearticleparticipantDescCursorPosition.Default.(int)
+	// knowledgearticleparticipantDescIsActive is the schema descriptor for is_active field.
+	knowledgearticleparticipantDescIsActive := knowledgearticleparticipantFields[3].Descriptor()
+	// knowledgearticleparticipant.DefaultIsActive holds the default value on creation for the is_active field.
+	knowledgearticleparticipant.DefaultIsActive = knowledgearticleparticipantDescIsActive.Default.(bool)
+	// knowledgearticleparticipantDescJoinedAt is the schema descriptor for joined_at field.
+	knowledgearticleparticipantDescJoinedAt := knowledgearticleparticipantFields[4].Descriptor()
+	// knowledgearticleparticipant.DefaultJoinedAt holds the default value on creation for the joined_at field.
+	knowledgearticleparticipant.DefaultJoinedAt = knowledgearticleparticipantDescJoinedAt.Default.(func() time.Time)
+	knowledgearticlesessionFields := schema.KnowledgeArticleSession{}.Fields()
+	_ = knowledgearticlesessionFields
+	// knowledgearticlesessionDescArticleID is the schema descriptor for article_id field.
+	knowledgearticlesessionDescArticleID := knowledgearticlesessionFields[0].Descriptor()
+	// knowledgearticlesession.ArticleIDValidator is a validator for the "article_id" field. It is called by the builders before save.
+	knowledgearticlesession.ArticleIDValidator = knowledgearticlesessionDescArticleID.Validators[0].(func(int) error)
+	// knowledgearticlesessionDescUserID is the schema descriptor for user_id field.
+	knowledgearticlesessionDescUserID := knowledgearticlesessionFields[1].Descriptor()
+	// knowledgearticlesession.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	knowledgearticlesession.UserIDValidator = knowledgearticlesessionDescUserID.Validators[0].(func(int) error)
+	// knowledgearticlesessionDescSessionToken is the schema descriptor for session_token field.
+	knowledgearticlesessionDescSessionToken := knowledgearticlesessionFields[2].Descriptor()
+	// knowledgearticlesession.SessionTokenValidator is a validator for the "session_token" field. It is called by the builders before save.
+	knowledgearticlesession.SessionTokenValidator = knowledgearticlesessionDescSessionToken.Validators[0].(func(string) error)
+	// knowledgearticlesessionDescCreatedAt is the schema descriptor for created_at field.
+	knowledgearticlesessionDescCreatedAt := knowledgearticlesessionFields[5].Descriptor()
+	// knowledgearticlesession.DefaultCreatedAt holds the default value on creation for the created_at field.
+	knowledgearticlesession.DefaultCreatedAt = knowledgearticlesessionDescCreatedAt.Default.(func() time.Time)
+	knowledgearticleversionFields := schema.KnowledgeArticleVersion{}.Fields()
+	_ = knowledgearticleversionFields
+	// knowledgearticleversionDescArticleID is the schema descriptor for article_id field.
+	knowledgearticleversionDescArticleID := knowledgearticleversionFields[0].Descriptor()
+	// knowledgearticleversion.ArticleIDValidator is a validator for the "article_id" field. It is called by the builders before save.
+	knowledgearticleversion.ArticleIDValidator = knowledgearticleversionDescArticleID.Validators[0].(func(int) error)
+	// knowledgearticleversionDescVersion is the schema descriptor for version field.
+	knowledgearticleversionDescVersion := knowledgearticleversionFields[1].Descriptor()
+	// knowledgearticleversion.VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	knowledgearticleversion.VersionValidator = knowledgearticleversionDescVersion.Validators[0].(func(int) error)
+	// knowledgearticleversionDescTitle is the schema descriptor for title field.
+	knowledgearticleversionDescTitle := knowledgearticleversionFields[2].Descriptor()
+	// knowledgearticleversion.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	knowledgearticleversion.TitleValidator = knowledgearticleversionDescTitle.Validators[0].(func(string) error)
+	// knowledgearticleversionDescAuthorID is the schema descriptor for author_id field.
+	knowledgearticleversionDescAuthorID := knowledgearticleversionFields[6].Descriptor()
+	// knowledgearticleversion.AuthorIDValidator is a validator for the "author_id" field. It is called by the builders before save.
+	knowledgearticleversion.AuthorIDValidator = knowledgearticleversionDescAuthorID.Validators[0].(func(int) error)
+	// knowledgearticleversionDescCreatedAt is the schema descriptor for created_at field.
+	knowledgearticleversionDescCreatedAt := knowledgearticleversionFields[8].Descriptor()
+	// knowledgearticleversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	knowledgearticleversion.DefaultCreatedAt = knowledgearticleversionDescCreatedAt.Default.(func() time.Time)
 	knownerrorFields := schema.KnownError{}.Fields()
 	_ = knownerrorFields
 	// knownerrorDescTitle is the schema descriptor for title field.
@@ -1296,15 +1361,15 @@ func init() {
 	mspallocationFields := schema.MSPAllocation{}.Fields()
 	_ = mspallocationFields
 	// mspallocationDescRole is the schema descriptor for role field.
-	mspallocationDescRole := mspallocationFields[1].Descriptor()
+	mspallocationDescRole := mspallocationFields[2].Descriptor()
 	// mspallocation.DefaultRole holds the default value on creation for the role field.
 	mspallocation.DefaultRole = mspallocationDescRole.Default.(string)
 	// mspallocationDescAssignedAt is the schema descriptor for assigned_at field.
-	mspallocationDescAssignedAt := mspallocationFields[2].Descriptor()
+	mspallocationDescAssignedAt := mspallocationFields[3].Descriptor()
 	// mspallocation.DefaultAssignedAt holds the default value on creation for the assigned_at field.
 	mspallocation.DefaultAssignedAt = mspallocationDescAssignedAt.Default.(func() time.Time)
 	// mspallocationDescCreatedAt is the schema descriptor for created_at field.
-	mspallocationDescCreatedAt := mspallocationFields[4].Descriptor()
+	mspallocationDescCreatedAt := mspallocationFields[5].Descriptor()
 	// mspallocation.DefaultCreatedAt holds the default value on creation for the created_at field.
 	mspallocation.DefaultCreatedAt = mspallocationDescCreatedAt.Default.(func() time.Time)
 	menuFields := schema.Menu{}.Fields()

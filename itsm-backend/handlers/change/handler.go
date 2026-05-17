@@ -435,3 +435,23 @@ func (h *Handler) DeleteChange(c *gin.Context) {
 	}
 	common.Success(c, gin.H{"message": "deleted"})
 }
+
+// GetCalendar handles GET /api/v1/changes/calendar
+func (h *Handler) GetCalendar(c *gin.Context) {
+	var req dto.ChangeCalendarRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid query parameters: "+err.Error())
+		return
+	}
+
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	res, err := h.svc.GetCalendarView(c.Request.Context(), tenantID, req.StartDate, req.EndDate, req.Status)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, res)
+}

@@ -95,13 +95,19 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	}
 
 	// 使用数据库中的角色字段，确保JWT与RBAC一致
-	role := userEntity.Role
+	// 对于 MSP 用户，需要将 MSP 角色转换为 RBAC 角色
+	roleStr := string(userEntity.Role)
+	if userEntity.MspRole != "" {
+		if rbacRole := middleware.GetMSPRBACRole(string(userEntity.MspRole)); rbacRole != "" {
+			roleStr = rbacRole
+		}
+	}
 
 	// 生成access token（15分钟）
 	accessToken, err := middleware.GenerateAccessToken(
 		userEntity.ID,
 		userEntity.Username,
-		string(role),
+		roleStr,
 		userEntity.TenantID,
 		s.jwtSecret,
 		time.Duration(15)*time.Minute,
@@ -135,7 +141,8 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 			Username:     userEntity.Username,
 			Email:        userEntity.Email,
 			Name:         userEntity.Name,
-			Role:         string(userEntity.Role),
+			Role:         roleStr,
+			MSPRole:      func() *string { s := string(userEntity.MspRole); if s == "" { return nil }; return &s }(),
 			Department:   userEntity.Department,
 			DepartmentID: userEntity.DepartmentID,
 			Phone:        userEntity.Phone,
@@ -161,16 +168,33 @@ func (s *AuthService) getUserPermissions(userEntity *ent.User) []string {
 	// 从 middleware.RolePermissions 获取角色权限
 	roleCode := string(userEntity.Role)
 	rolePerms, ok := middleware.RolePermissions[roleCode]
-	if !ok {
-		return permissions
+	if ok {
+		seen := make(map[string]bool)
+		for _, p := range rolePerms {
+			key := p.Resource + ":" + p.Action
+			if !seen[key] {
+				seen[key] = true
+				permissions = append(permissions, key)
+			}
+		}
 	}
 
-	seen := make(map[string]bool)
-	for _, p := range rolePerms {
-		key := p.Resource + ":" + p.Action
-		if !seen[key] {
-			seen[key] = true
-			permissions = append(permissions, key)
+	// 对于 MSP 用户，也要合并 RBAC MSP 角色的权限
+	if userEntity.MspRole != "" {
+		if rbacRole := middleware.GetMSPRBACRole(string(userEntity.MspRole)); rbacRole != "" {
+			if mspPerms, ok := middleware.RolePermissions[rbacRole]; ok {
+				seen := make(map[string]bool)
+				for _, p := range permissions {
+					seen[p] = true
+				}
+				for _, p := range mspPerms {
+					key := p.Resource + ":" + p.Action
+					if !seen[key] {
+						seen[key] = true
+						permissions = append(permissions, key)
+					}
+				}
+			}
 		}
 	}
 
@@ -326,6 +350,7 @@ func (s *AuthService) SwitchTenant(ctx context.Context, userID, tenantID int) (*
 			Email:        userEntity.Email,
 			Name:         userEntity.Name,
 			Role:         string(userEntity.Role),
+			MSPRole:      func() *string { s := string(userEntity.MspRole); if s == "" { return nil }; return &s }(),
 			Department:   userEntity.Department,
 			DepartmentID: userEntity.DepartmentID,
 			Phone:        userEntity.Phone,

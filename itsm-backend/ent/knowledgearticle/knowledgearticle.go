@@ -38,6 +38,10 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeUserLikes holds the string denoting the user_likes edge name in mutations.
 	EdgeUserLikes = "user_likes"
+	// EdgeVersions holds the string denoting the versions edge name in mutations.
+	EdgeVersions = "versions"
+	// EdgeSessions holds the string denoting the sessions edge name in mutations.
+	EdgeSessions = "sessions"
 	// Table holds the table name of the knowledgearticle in the database.
 	Table = "knowledge_articles"
 	// UserLikesTable is the table that holds the user_likes relation/edge.
@@ -47,6 +51,20 @@ const (
 	UserLikesInverseTable = "knowledge_article_likes"
 	// UserLikesColumn is the table column denoting the user_likes relation/edge.
 	UserLikesColumn = "article_id"
+	// VersionsTable is the table that holds the versions relation/edge.
+	VersionsTable = "knowledge_articles"
+	// VersionsInverseTable is the table name for the KnowledgeArticleVersion entity.
+	// It exists in this package in order to avoid circular dependency with the "knowledgearticleversion" package.
+	VersionsInverseTable = "knowledge_article_versions"
+	// VersionsColumn is the table column denoting the versions relation/edge.
+	VersionsColumn = "knowledge_article_versions"
+	// SessionsTable is the table that holds the sessions relation/edge.
+	SessionsTable = "knowledge_articles"
+	// SessionsInverseTable is the table name for the KnowledgeArticleSession entity.
+	// It exists in this package in order to avoid circular dependency with the "knowledgearticlesession" package.
+	SessionsInverseTable = "knowledge_article_sessions"
+	// SessionsColumn is the table column denoting the sessions relation/edge.
+	SessionsColumn = "knowledge_article_sessions"
 )
 
 // Columns holds all SQL columns for knowledgearticle fields.
@@ -68,6 +86,8 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "knowledge_articles"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
+	"knowledge_article_versions",
+	"knowledge_article_sessions",
 	"known_error_knowledge_articles",
 }
 
@@ -183,10 +203,38 @@ func ByUserLikes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUserLikesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByVersionsField orders the results by versions field.
+func ByVersionsField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVersionsStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// BySessionsField orders the results by sessions field.
+func BySessionsField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSessionsStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newUserLikesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserLikesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UserLikesTable, UserLikesColumn),
+	)
+}
+func newVersionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VersionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, VersionsTable, VersionsColumn),
+	)
+}
+func newSessionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SessionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, SessionsTable, SessionsColumn),
 	)
 }

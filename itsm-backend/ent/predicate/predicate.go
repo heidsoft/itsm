@@ -108,6 +108,15 @@ type KnowledgeArticle func(*sql.Selector)
 // KnowledgeArticleLike is the predicate function for knowledgearticlelike builders.
 type KnowledgeArticleLike func(*sql.Selector)
 
+// KnowledgeArticleParticipant is the predicate function for knowledgearticleparticipant builders.
+type KnowledgeArticleParticipant func(*sql.Selector)
+
+// KnowledgeArticleSession is the predicate function for knowledgearticlesession builders.
+type KnowledgeArticleSession func(*sql.Selector)
+
+// KnowledgeArticleVersion is the predicate function for knowledgearticleversion builders.
+type KnowledgeArticleVersion func(*sql.Selector)
+
 // KnownError is the predicate function for knownerror builders.
 type KnownError func(*sql.Selector)
 

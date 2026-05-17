@@ -20,6 +20,8 @@ type MSPAllocation struct {
 	ID int `json:"id,omitempty"`
 	// MSP 员工ID（属于MSP租户）
 	MspUserID int `json:"msp_user_id,omitempty"`
+	// 客户租户ID（支持单客户模式）
+	CustomerTenantID int `json:"customer_tenant_id,omitempty"`
 	// 分配角色: primary|backup|specialist
 	Role string `json:"role,omitempty"`
 	// 分配时间
@@ -70,7 +72,7 @@ func (*MSPAllocation) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case mspallocation.FieldID, mspallocation.FieldMspUserID:
+		case mspallocation.FieldID, mspallocation.FieldMspUserID, mspallocation.FieldCustomerTenantID:
 			values[i] = new(sql.NullInt64)
 		case mspallocation.FieldRole:
 			values[i] = new(sql.NullString)
@@ -102,6 +104,12 @@ func (_m *MSPAllocation) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field msp_user_id", values[i])
 			} else if value.Valid {
 				_m.MspUserID = int(value.Int64)
+			}
+		case mspallocation.FieldCustomerTenantID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field customer_tenant_id", values[i])
+			} else if value.Valid {
+				_m.CustomerTenantID = int(value.Int64)
 			}
 		case mspallocation.FieldRole:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -175,6 +183,9 @@ func (_m *MSPAllocation) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("msp_user_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.MspUserID))
+	builder.WriteString(", ")
+	builder.WriteString("customer_tenant_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CustomerTenantID))
 	builder.WriteString(", ")
 	builder.WriteString("role=")
 	builder.WriteString(_m.Role)

@@ -45,6 +45,9 @@ import (
 	"itsm-backend/ent/incidentruleexecution"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
+	"itsm-backend/ent/knowledgearticleparticipant"
+	"itsm-backend/ent/knowledgearticlesession"
+	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/message"
@@ -186,6 +189,12 @@ type Client struct {
 	KnowledgeArticle *KnowledgeArticleClient
 	// KnowledgeArticleLike is the client for interacting with the KnowledgeArticleLike builders.
 	KnowledgeArticleLike *KnowledgeArticleLikeClient
+	// KnowledgeArticleParticipant is the client for interacting with the KnowledgeArticleParticipant builders.
+	KnowledgeArticleParticipant *KnowledgeArticleParticipantClient
+	// KnowledgeArticleSession is the client for interacting with the KnowledgeArticleSession builders.
+	KnowledgeArticleSession *KnowledgeArticleSessionClient
+	// KnowledgeArticleVersion is the client for interacting with the KnowledgeArticleVersion builders.
+	KnowledgeArticleVersion *KnowledgeArticleVersionClient
 	// KnownError is the client for interacting with the KnownError builders.
 	KnownError *KnownErrorClient
 	// MSPAllocation is the client for interacting with the MSPAllocation builders.
@@ -353,6 +362,9 @@ func (c *Client) init() {
 	c.IncidentRuleExecution = NewIncidentRuleExecutionClient(c.config)
 	c.KnowledgeArticle = NewKnowledgeArticleClient(c.config)
 	c.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(c.config)
+	c.KnowledgeArticleParticipant = NewKnowledgeArticleParticipantClient(c.config)
+	c.KnowledgeArticleSession = NewKnowledgeArticleSessionClient(c.config)
+	c.KnowledgeArticleVersion = NewKnowledgeArticleVersionClient(c.config)
 	c.KnownError = NewKnownErrorClient(c.config)
 	c.MSPAllocation = NewMSPAllocationClient(c.config)
 	c.Menu = NewMenuClient(c.config)
@@ -504,103 +516,106 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                     ctx,
-		config:                  cfg,
-		Application:             NewApplicationClient(cfg),
-		ApprovalChain:           NewApprovalChainClient(cfg),
-		ApprovalRecord:          NewApprovalRecordClient(cfg),
-		ApprovalWorkflow:        NewApprovalWorkflowClient(cfg),
-		Asset:                   NewAssetClient(cfg),
-		AssetLicense:            NewAssetLicenseClient(cfg),
-		AuditLog:                NewAuditLogClient(cfg),
-		BPMNPermission:          NewBPMNPermissionClient(cfg),
-		CIAttributeDefinition:   NewCIAttributeDefinitionClient(cfg),
-		CIRelationship:          NewCIRelationshipClient(cfg),
-		CIType:                  NewCITypeClient(cfg),
-		Change:                  NewChangeClient(cfg),
-		CloudAccount:            NewCloudAccountClient(cfg),
-		CloudResource:           NewCloudResourceClient(cfg),
-		CloudService:            NewCloudServiceClient(cfg),
-		ConfigurationItem:       NewConfigurationItemClient(cfg),
-		Contract:                NewContractClient(cfg),
-		Conversation:            NewConversationClient(cfg),
-		Department:              NewDepartmentClient(cfg),
-		DiscoveryJob:            NewDiscoveryJobClient(cfg),
-		DiscoveryResult:         NewDiscoveryResultClient(cfg),
-		DiscoverySource:         NewDiscoverySourceClient(cfg),
-		EndpointACL:             NewEndpointACLClient(cfg),
-		EngineerSkill:           NewEngineerSkillClient(cfg),
-		Group:                   NewGroupClient(cfg),
-		Incident:                NewIncidentClient(cfg),
-		IncidentAlert:           NewIncidentAlertClient(cfg),
-		IncidentEscalationRule:  NewIncidentEscalationRuleClient(cfg),
-		IncidentEvent:           NewIncidentEventClient(cfg),
-		IncidentMetric:          NewIncidentMetricClient(cfg),
-		IncidentRule:            NewIncidentRuleClient(cfg),
-		IncidentRuleExecution:   NewIncidentRuleExecutionClient(cfg),
-		KnowledgeArticle:        NewKnowledgeArticleClient(cfg),
-		KnowledgeArticleLike:    NewKnowledgeArticleLikeClient(cfg),
-		KnownError:              NewKnownErrorClient(cfg),
-		MSPAllocation:           NewMSPAllocationClient(cfg),
-		Menu:                    NewMenuClient(cfg),
-		Message:                 NewMessageClient(cfg),
-		Microservice:            NewMicroserviceClient(cfg),
-		Notification:            NewNotificationClient(cfg),
-		NotificationPreference:  NewNotificationPreferenceClient(cfg),
-		PasswordResetToken:      NewPasswordResetTokenClient(cfg),
-		Permission:              NewPermissionClient(cfg),
-		PermissionDefinition:    NewPermissionDefinitionClient(cfg),
-		Problem:                 NewProblemClient(cfg),
-		ProcessAuditLog:         NewProcessAuditLogClient(cfg),
-		ProcessBinding:          NewProcessBindingClient(cfg),
-		ProcessDefinition:       NewProcessDefinitionClient(cfg),
-		ProcessDeployment:       NewProcessDeploymentClient(cfg),
-		ProcessExecutionHistory: NewProcessExecutionHistoryClient(cfg),
-		ProcessInstance:         NewProcessInstanceClient(cfg),
-		ProcessTask:             NewProcessTaskClient(cfg),
-		ProcessVariable:         NewProcessVariableClient(cfg),
-		ProcessVersionChangelog: NewProcessVersionChangelogClient(cfg),
-		Project:                 NewProjectClient(cfg),
-		PromptTemplate:          NewPromptTemplateClient(cfg),
-		ProvisioningTask:        NewProvisioningTaskClient(cfg),
-		RelationshipType:        NewRelationshipTypeClient(cfg),
-		Release:                 NewReleaseClient(cfg),
-		Role:                    NewRoleClient(cfg),
-		RolePermission:          NewRolePermissionClient(cfg),
-		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
-		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
-		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
-		SLADefinition:           NewSLADefinitionClient(cfg),
-		SLAMetric:               NewSLAMetricClient(cfg),
-		SLAPolicy:               NewSLAPolicyClient(cfg),
-		SLAViolation:            NewSLAViolationClient(cfg),
-		ServiceCatalog:          NewServiceCatalogClient(cfg),
-		ServiceRequest:          NewServiceRequestClient(cfg),
-		ServiceRequestApproval:  NewServiceRequestApprovalClient(cfg),
-		StandardChange:          NewStandardChangeClient(cfg),
-		Survey:                  NewSurveyClient(cfg),
-		SurveyResponse:          NewSurveyResponseClient(cfg),
-		SystemConfig:            NewSystemConfigClient(cfg),
-		Tag:                     NewTagClient(cfg),
-		Team:                    NewTeamClient(cfg),
-		Tenant:                  NewTenantClient(cfg),
-		Ticket:                  NewTicketClient(cfg),
-		TicketAssignmentRule:    NewTicketAssignmentRuleClient(cfg),
-		TicketAttachment:        NewTicketAttachmentClient(cfg),
-		TicketAutomationRule:    NewTicketAutomationRuleClient(cfg),
-		TicketCategory:          NewTicketCategoryClient(cfg),
-		TicketComment:           NewTicketCommentClient(cfg),
-		TicketNotification:      NewTicketNotificationClient(cfg),
-		TicketTag:               NewTicketTagClient(cfg),
-		TicketTemplate:          NewTicketTemplateClient(cfg),
-		TicketView:              NewTicketViewClient(cfg),
-		ToolInvocation:          NewToolInvocationClient(cfg),
-		User:                    NewUserClient(cfg),
-		Vendor:                  NewVendorClient(cfg),
-		Workflow:                NewWorkflowClient(cfg),
-		WorkflowInstance:        NewWorkflowInstanceClient(cfg),
-		WorkflowTask:            NewWorkflowTaskClient(cfg),
-		WorkflowVersion:         NewWorkflowVersionClient(cfg),
+		ctx:                         ctx,
+		config:                      cfg,
+		Application:                 NewApplicationClient(cfg),
+		ApprovalChain:               NewApprovalChainClient(cfg),
+		ApprovalRecord:              NewApprovalRecordClient(cfg),
+		ApprovalWorkflow:            NewApprovalWorkflowClient(cfg),
+		Asset:                       NewAssetClient(cfg),
+		AssetLicense:                NewAssetLicenseClient(cfg),
+		AuditLog:                    NewAuditLogClient(cfg),
+		BPMNPermission:              NewBPMNPermissionClient(cfg),
+		CIAttributeDefinition:       NewCIAttributeDefinitionClient(cfg),
+		CIRelationship:              NewCIRelationshipClient(cfg),
+		CIType:                      NewCITypeClient(cfg),
+		Change:                      NewChangeClient(cfg),
+		CloudAccount:                NewCloudAccountClient(cfg),
+		CloudResource:               NewCloudResourceClient(cfg),
+		CloudService:                NewCloudServiceClient(cfg),
+		ConfigurationItem:           NewConfigurationItemClient(cfg),
+		Contract:                    NewContractClient(cfg),
+		Conversation:                NewConversationClient(cfg),
+		Department:                  NewDepartmentClient(cfg),
+		DiscoveryJob:                NewDiscoveryJobClient(cfg),
+		DiscoveryResult:             NewDiscoveryResultClient(cfg),
+		DiscoverySource:             NewDiscoverySourceClient(cfg),
+		EndpointACL:                 NewEndpointACLClient(cfg),
+		EngineerSkill:               NewEngineerSkillClient(cfg),
+		Group:                       NewGroupClient(cfg),
+		Incident:                    NewIncidentClient(cfg),
+		IncidentAlert:               NewIncidentAlertClient(cfg),
+		IncidentEscalationRule:      NewIncidentEscalationRuleClient(cfg),
+		IncidentEvent:               NewIncidentEventClient(cfg),
+		IncidentMetric:              NewIncidentMetricClient(cfg),
+		IncidentRule:                NewIncidentRuleClient(cfg),
+		IncidentRuleExecution:       NewIncidentRuleExecutionClient(cfg),
+		KnowledgeArticle:            NewKnowledgeArticleClient(cfg),
+		KnowledgeArticleLike:        NewKnowledgeArticleLikeClient(cfg),
+		KnowledgeArticleParticipant: NewKnowledgeArticleParticipantClient(cfg),
+		KnowledgeArticleSession:     NewKnowledgeArticleSessionClient(cfg),
+		KnowledgeArticleVersion:     NewKnowledgeArticleVersionClient(cfg),
+		KnownError:                  NewKnownErrorClient(cfg),
+		MSPAllocation:               NewMSPAllocationClient(cfg),
+		Menu:                        NewMenuClient(cfg),
+		Message:                     NewMessageClient(cfg),
+		Microservice:                NewMicroserviceClient(cfg),
+		Notification:                NewNotificationClient(cfg),
+		NotificationPreference:      NewNotificationPreferenceClient(cfg),
+		PasswordResetToken:          NewPasswordResetTokenClient(cfg),
+		Permission:                  NewPermissionClient(cfg),
+		PermissionDefinition:        NewPermissionDefinitionClient(cfg),
+		Problem:                     NewProblemClient(cfg),
+		ProcessAuditLog:             NewProcessAuditLogClient(cfg),
+		ProcessBinding:              NewProcessBindingClient(cfg),
+		ProcessDefinition:           NewProcessDefinitionClient(cfg),
+		ProcessDeployment:           NewProcessDeploymentClient(cfg),
+		ProcessExecutionHistory:     NewProcessExecutionHistoryClient(cfg),
+		ProcessInstance:             NewProcessInstanceClient(cfg),
+		ProcessTask:                 NewProcessTaskClient(cfg),
+		ProcessVariable:             NewProcessVariableClient(cfg),
+		ProcessVersionChangelog:     NewProcessVersionChangelogClient(cfg),
+		Project:                     NewProjectClient(cfg),
+		PromptTemplate:              NewPromptTemplateClient(cfg),
+		ProvisioningTask:            NewProvisioningTaskClient(cfg),
+		RelationshipType:            NewRelationshipTypeClient(cfg),
+		Release:                     NewReleaseClient(cfg),
+		Role:                        NewRoleClient(cfg),
+		RolePermission:              NewRolePermissionClient(cfg),
+		RootCauseAnalysis:           NewRootCauseAnalysisClient(cfg),
+		SLAAlertHistory:             NewSLAAlertHistoryClient(cfg),
+		SLAAlertRule:                NewSLAAlertRuleClient(cfg),
+		SLADefinition:               NewSLADefinitionClient(cfg),
+		SLAMetric:                   NewSLAMetricClient(cfg),
+		SLAPolicy:                   NewSLAPolicyClient(cfg),
+		SLAViolation:                NewSLAViolationClient(cfg),
+		ServiceCatalog:              NewServiceCatalogClient(cfg),
+		ServiceRequest:              NewServiceRequestClient(cfg),
+		ServiceRequestApproval:      NewServiceRequestApprovalClient(cfg),
+		StandardChange:              NewStandardChangeClient(cfg),
+		Survey:                      NewSurveyClient(cfg),
+		SurveyResponse:              NewSurveyResponseClient(cfg),
+		SystemConfig:                NewSystemConfigClient(cfg),
+		Tag:                         NewTagClient(cfg),
+		Team:                        NewTeamClient(cfg),
+		Tenant:                      NewTenantClient(cfg),
+		Ticket:                      NewTicketClient(cfg),
+		TicketAssignmentRule:        NewTicketAssignmentRuleClient(cfg),
+		TicketAttachment:            NewTicketAttachmentClient(cfg),
+		TicketAutomationRule:        NewTicketAutomationRuleClient(cfg),
+		TicketCategory:              NewTicketCategoryClient(cfg),
+		TicketComment:               NewTicketCommentClient(cfg),
+		TicketNotification:          NewTicketNotificationClient(cfg),
+		TicketTag:                   NewTicketTagClient(cfg),
+		TicketTemplate:              NewTicketTemplateClient(cfg),
+		TicketView:                  NewTicketViewClient(cfg),
+		ToolInvocation:              NewToolInvocationClient(cfg),
+		User:                        NewUserClient(cfg),
+		Vendor:                      NewVendorClient(cfg),
+		Workflow:                    NewWorkflowClient(cfg),
+		WorkflowInstance:            NewWorkflowInstanceClient(cfg),
+		WorkflowTask:                NewWorkflowTaskClient(cfg),
+		WorkflowVersion:             NewWorkflowVersionClient(cfg),
 	}, nil
 }
 
@@ -618,103 +633,106 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                     ctx,
-		config:                  cfg,
-		Application:             NewApplicationClient(cfg),
-		ApprovalChain:           NewApprovalChainClient(cfg),
-		ApprovalRecord:          NewApprovalRecordClient(cfg),
-		ApprovalWorkflow:        NewApprovalWorkflowClient(cfg),
-		Asset:                   NewAssetClient(cfg),
-		AssetLicense:            NewAssetLicenseClient(cfg),
-		AuditLog:                NewAuditLogClient(cfg),
-		BPMNPermission:          NewBPMNPermissionClient(cfg),
-		CIAttributeDefinition:   NewCIAttributeDefinitionClient(cfg),
-		CIRelationship:          NewCIRelationshipClient(cfg),
-		CIType:                  NewCITypeClient(cfg),
-		Change:                  NewChangeClient(cfg),
-		CloudAccount:            NewCloudAccountClient(cfg),
-		CloudResource:           NewCloudResourceClient(cfg),
-		CloudService:            NewCloudServiceClient(cfg),
-		ConfigurationItem:       NewConfigurationItemClient(cfg),
-		Contract:                NewContractClient(cfg),
-		Conversation:            NewConversationClient(cfg),
-		Department:              NewDepartmentClient(cfg),
-		DiscoveryJob:            NewDiscoveryJobClient(cfg),
-		DiscoveryResult:         NewDiscoveryResultClient(cfg),
-		DiscoverySource:         NewDiscoverySourceClient(cfg),
-		EndpointACL:             NewEndpointACLClient(cfg),
-		EngineerSkill:           NewEngineerSkillClient(cfg),
-		Group:                   NewGroupClient(cfg),
-		Incident:                NewIncidentClient(cfg),
-		IncidentAlert:           NewIncidentAlertClient(cfg),
-		IncidentEscalationRule:  NewIncidentEscalationRuleClient(cfg),
-		IncidentEvent:           NewIncidentEventClient(cfg),
-		IncidentMetric:          NewIncidentMetricClient(cfg),
-		IncidentRule:            NewIncidentRuleClient(cfg),
-		IncidentRuleExecution:   NewIncidentRuleExecutionClient(cfg),
-		KnowledgeArticle:        NewKnowledgeArticleClient(cfg),
-		KnowledgeArticleLike:    NewKnowledgeArticleLikeClient(cfg),
-		KnownError:              NewKnownErrorClient(cfg),
-		MSPAllocation:           NewMSPAllocationClient(cfg),
-		Menu:                    NewMenuClient(cfg),
-		Message:                 NewMessageClient(cfg),
-		Microservice:            NewMicroserviceClient(cfg),
-		Notification:            NewNotificationClient(cfg),
-		NotificationPreference:  NewNotificationPreferenceClient(cfg),
-		PasswordResetToken:      NewPasswordResetTokenClient(cfg),
-		Permission:              NewPermissionClient(cfg),
-		PermissionDefinition:    NewPermissionDefinitionClient(cfg),
-		Problem:                 NewProblemClient(cfg),
-		ProcessAuditLog:         NewProcessAuditLogClient(cfg),
-		ProcessBinding:          NewProcessBindingClient(cfg),
-		ProcessDefinition:       NewProcessDefinitionClient(cfg),
-		ProcessDeployment:       NewProcessDeploymentClient(cfg),
-		ProcessExecutionHistory: NewProcessExecutionHistoryClient(cfg),
-		ProcessInstance:         NewProcessInstanceClient(cfg),
-		ProcessTask:             NewProcessTaskClient(cfg),
-		ProcessVariable:         NewProcessVariableClient(cfg),
-		ProcessVersionChangelog: NewProcessVersionChangelogClient(cfg),
-		Project:                 NewProjectClient(cfg),
-		PromptTemplate:          NewPromptTemplateClient(cfg),
-		ProvisioningTask:        NewProvisioningTaskClient(cfg),
-		RelationshipType:        NewRelationshipTypeClient(cfg),
-		Release:                 NewReleaseClient(cfg),
-		Role:                    NewRoleClient(cfg),
-		RolePermission:          NewRolePermissionClient(cfg),
-		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
-		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
-		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
-		SLADefinition:           NewSLADefinitionClient(cfg),
-		SLAMetric:               NewSLAMetricClient(cfg),
-		SLAPolicy:               NewSLAPolicyClient(cfg),
-		SLAViolation:            NewSLAViolationClient(cfg),
-		ServiceCatalog:          NewServiceCatalogClient(cfg),
-		ServiceRequest:          NewServiceRequestClient(cfg),
-		ServiceRequestApproval:  NewServiceRequestApprovalClient(cfg),
-		StandardChange:          NewStandardChangeClient(cfg),
-		Survey:                  NewSurveyClient(cfg),
-		SurveyResponse:          NewSurveyResponseClient(cfg),
-		SystemConfig:            NewSystemConfigClient(cfg),
-		Tag:                     NewTagClient(cfg),
-		Team:                    NewTeamClient(cfg),
-		Tenant:                  NewTenantClient(cfg),
-		Ticket:                  NewTicketClient(cfg),
-		TicketAssignmentRule:    NewTicketAssignmentRuleClient(cfg),
-		TicketAttachment:        NewTicketAttachmentClient(cfg),
-		TicketAutomationRule:    NewTicketAutomationRuleClient(cfg),
-		TicketCategory:          NewTicketCategoryClient(cfg),
-		TicketComment:           NewTicketCommentClient(cfg),
-		TicketNotification:      NewTicketNotificationClient(cfg),
-		TicketTag:               NewTicketTagClient(cfg),
-		TicketTemplate:          NewTicketTemplateClient(cfg),
-		TicketView:              NewTicketViewClient(cfg),
-		ToolInvocation:          NewToolInvocationClient(cfg),
-		User:                    NewUserClient(cfg),
-		Vendor:                  NewVendorClient(cfg),
-		Workflow:                NewWorkflowClient(cfg),
-		WorkflowInstance:        NewWorkflowInstanceClient(cfg),
-		WorkflowTask:            NewWorkflowTaskClient(cfg),
-		WorkflowVersion:         NewWorkflowVersionClient(cfg),
+		ctx:                         ctx,
+		config:                      cfg,
+		Application:                 NewApplicationClient(cfg),
+		ApprovalChain:               NewApprovalChainClient(cfg),
+		ApprovalRecord:              NewApprovalRecordClient(cfg),
+		ApprovalWorkflow:            NewApprovalWorkflowClient(cfg),
+		Asset:                       NewAssetClient(cfg),
+		AssetLicense:                NewAssetLicenseClient(cfg),
+		AuditLog:                    NewAuditLogClient(cfg),
+		BPMNPermission:              NewBPMNPermissionClient(cfg),
+		CIAttributeDefinition:       NewCIAttributeDefinitionClient(cfg),
+		CIRelationship:              NewCIRelationshipClient(cfg),
+		CIType:                      NewCITypeClient(cfg),
+		Change:                      NewChangeClient(cfg),
+		CloudAccount:                NewCloudAccountClient(cfg),
+		CloudResource:               NewCloudResourceClient(cfg),
+		CloudService:                NewCloudServiceClient(cfg),
+		ConfigurationItem:           NewConfigurationItemClient(cfg),
+		Contract:                    NewContractClient(cfg),
+		Conversation:                NewConversationClient(cfg),
+		Department:                  NewDepartmentClient(cfg),
+		DiscoveryJob:                NewDiscoveryJobClient(cfg),
+		DiscoveryResult:             NewDiscoveryResultClient(cfg),
+		DiscoverySource:             NewDiscoverySourceClient(cfg),
+		EndpointACL:                 NewEndpointACLClient(cfg),
+		EngineerSkill:               NewEngineerSkillClient(cfg),
+		Group:                       NewGroupClient(cfg),
+		Incident:                    NewIncidentClient(cfg),
+		IncidentAlert:               NewIncidentAlertClient(cfg),
+		IncidentEscalationRule:      NewIncidentEscalationRuleClient(cfg),
+		IncidentEvent:               NewIncidentEventClient(cfg),
+		IncidentMetric:              NewIncidentMetricClient(cfg),
+		IncidentRule:                NewIncidentRuleClient(cfg),
+		IncidentRuleExecution:       NewIncidentRuleExecutionClient(cfg),
+		KnowledgeArticle:            NewKnowledgeArticleClient(cfg),
+		KnowledgeArticleLike:        NewKnowledgeArticleLikeClient(cfg),
+		KnowledgeArticleParticipant: NewKnowledgeArticleParticipantClient(cfg),
+		KnowledgeArticleSession:     NewKnowledgeArticleSessionClient(cfg),
+		KnowledgeArticleVersion:     NewKnowledgeArticleVersionClient(cfg),
+		KnownError:                  NewKnownErrorClient(cfg),
+		MSPAllocation:               NewMSPAllocationClient(cfg),
+		Menu:                        NewMenuClient(cfg),
+		Message:                     NewMessageClient(cfg),
+		Microservice:                NewMicroserviceClient(cfg),
+		Notification:                NewNotificationClient(cfg),
+		NotificationPreference:      NewNotificationPreferenceClient(cfg),
+		PasswordResetToken:          NewPasswordResetTokenClient(cfg),
+		Permission:                  NewPermissionClient(cfg),
+		PermissionDefinition:        NewPermissionDefinitionClient(cfg),
+		Problem:                     NewProblemClient(cfg),
+		ProcessAuditLog:             NewProcessAuditLogClient(cfg),
+		ProcessBinding:              NewProcessBindingClient(cfg),
+		ProcessDefinition:           NewProcessDefinitionClient(cfg),
+		ProcessDeployment:           NewProcessDeploymentClient(cfg),
+		ProcessExecutionHistory:     NewProcessExecutionHistoryClient(cfg),
+		ProcessInstance:             NewProcessInstanceClient(cfg),
+		ProcessTask:                 NewProcessTaskClient(cfg),
+		ProcessVariable:             NewProcessVariableClient(cfg),
+		ProcessVersionChangelog:     NewProcessVersionChangelogClient(cfg),
+		Project:                     NewProjectClient(cfg),
+		PromptTemplate:              NewPromptTemplateClient(cfg),
+		ProvisioningTask:            NewProvisioningTaskClient(cfg),
+		RelationshipType:            NewRelationshipTypeClient(cfg),
+		Release:                     NewReleaseClient(cfg),
+		Role:                        NewRoleClient(cfg),
+		RolePermission:              NewRolePermissionClient(cfg),
+		RootCauseAnalysis:           NewRootCauseAnalysisClient(cfg),
+		SLAAlertHistory:             NewSLAAlertHistoryClient(cfg),
+		SLAAlertRule:                NewSLAAlertRuleClient(cfg),
+		SLADefinition:               NewSLADefinitionClient(cfg),
+		SLAMetric:                   NewSLAMetricClient(cfg),
+		SLAPolicy:                   NewSLAPolicyClient(cfg),
+		SLAViolation:                NewSLAViolationClient(cfg),
+		ServiceCatalog:              NewServiceCatalogClient(cfg),
+		ServiceRequest:              NewServiceRequestClient(cfg),
+		ServiceRequestApproval:      NewServiceRequestApprovalClient(cfg),
+		StandardChange:              NewStandardChangeClient(cfg),
+		Survey:                      NewSurveyClient(cfg),
+		SurveyResponse:              NewSurveyResponseClient(cfg),
+		SystemConfig:                NewSystemConfigClient(cfg),
+		Tag:                         NewTagClient(cfg),
+		Team:                        NewTeamClient(cfg),
+		Tenant:                      NewTenantClient(cfg),
+		Ticket:                      NewTicketClient(cfg),
+		TicketAssignmentRule:        NewTicketAssignmentRuleClient(cfg),
+		TicketAttachment:            NewTicketAttachmentClient(cfg),
+		TicketAutomationRule:        NewTicketAutomationRuleClient(cfg),
+		TicketCategory:              NewTicketCategoryClient(cfg),
+		TicketComment:               NewTicketCommentClient(cfg),
+		TicketNotification:          NewTicketNotificationClient(cfg),
+		TicketTag:                   NewTicketTagClient(cfg),
+		TicketTemplate:              NewTicketTemplateClient(cfg),
+		TicketView:                  NewTicketViewClient(cfg),
+		ToolInvocation:              NewToolInvocationClient(cfg),
+		User:                        NewUserClient(cfg),
+		Vendor:                      NewVendorClient(cfg),
+		Workflow:                    NewWorkflowClient(cfg),
+		WorkflowInstance:            NewWorkflowInstanceClient(cfg),
+		WorkflowTask:                NewWorkflowTaskClient(cfg),
+		WorkflowVersion:             NewWorkflowVersionClient(cfg),
 	}, nil
 }
 
@@ -752,20 +770,22 @@ func (c *Client) Use(hooks ...Hook) {
 		c.EngineerSkill, c.Group, c.Incident, c.IncidentAlert,
 		c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
 		c.IncidentRuleExecution, c.KnowledgeArticle, c.KnowledgeArticleLike,
-		c.KnownError, c.MSPAllocation, c.Menu, c.Message, c.Microservice,
-		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
-		c.PermissionDefinition, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
-		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
-		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
-		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
-		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange,
-		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
-		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
-		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.KnowledgeArticleParticipant, c.KnowledgeArticleSession,
+		c.KnowledgeArticleVersion, c.KnownError, c.MSPAllocation, c.Menu, c.Message,
+		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
+		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessAuditLog,
+		c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
+		c.StandardChange, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
+		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
+		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
+		c.ToolInvocation, c.User, c.Vendor, c.Workflow, c.WorkflowInstance,
+		c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -783,20 +803,22 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.EngineerSkill, c.Group, c.Incident, c.IncidentAlert,
 		c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
 		c.IncidentRuleExecution, c.KnowledgeArticle, c.KnowledgeArticleLike,
-		c.KnownError, c.MSPAllocation, c.Menu, c.Message, c.Microservice,
-		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
-		c.PermissionDefinition, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
-		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
-		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
-		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
-		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange,
-		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
-		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
-		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.KnowledgeArticleParticipant, c.KnowledgeArticleSession,
+		c.KnowledgeArticleVersion, c.KnownError, c.MSPAllocation, c.Menu, c.Message,
+		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
+		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessAuditLog,
+		c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
+		c.StandardChange, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
+		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
+		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
+		c.ToolInvocation, c.User, c.Vendor, c.Workflow, c.WorkflowInstance,
+		c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -873,6 +895,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.KnowledgeArticle.mutate(ctx, m)
 	case *KnowledgeArticleLikeMutation:
 		return c.KnowledgeArticleLike.mutate(ctx, m)
+	case *KnowledgeArticleParticipantMutation:
+		return c.KnowledgeArticleParticipant.mutate(ctx, m)
+	case *KnowledgeArticleSessionMutation:
+		return c.KnowledgeArticleSession.mutate(ctx, m)
+	case *KnowledgeArticleVersionMutation:
+		return c.KnowledgeArticleVersion.mutate(ctx, m)
 	case *KnownErrorMutation:
 		return c.KnownError.mutate(ctx, m)
 	case *MSPAllocationMutation:
@@ -6196,6 +6224,38 @@ func (c *KnowledgeArticleClient) QueryUserLikes(_m *KnowledgeArticle) *Knowledge
 	return query
 }
 
+// QueryVersions queries the versions edge of a KnowledgeArticle.
+func (c *KnowledgeArticleClient) QueryVersions(_m *KnowledgeArticle) *KnowledgeArticleVersionQuery {
+	query := (&KnowledgeArticleVersionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, id),
+			sqlgraph.To(knowledgearticleversion.Table, knowledgearticleversion.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, knowledgearticle.VersionsTable, knowledgearticle.VersionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySessions queries the sessions edge of a KnowledgeArticle.
+func (c *KnowledgeArticleClient) QuerySessions(_m *KnowledgeArticle) *KnowledgeArticleSessionQuery {
+	query := (&KnowledgeArticleSessionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, id),
+			sqlgraph.To(knowledgearticlesession.Table, knowledgearticlesession.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, knowledgearticle.SessionsTable, knowledgearticle.SessionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *KnowledgeArticleClient) Hooks() []Hook {
 	return c.hooks.KnowledgeArticle
@@ -6367,6 +6427,501 @@ func (c *KnowledgeArticleLikeClient) mutate(ctx context.Context, m *KnowledgeArt
 		return (&KnowledgeArticleLikeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown KnowledgeArticleLike mutation op: %q", m.Op())
+	}
+}
+
+// KnowledgeArticleParticipantClient is a client for the KnowledgeArticleParticipant schema.
+type KnowledgeArticleParticipantClient struct {
+	config
+}
+
+// NewKnowledgeArticleParticipantClient returns a client for the KnowledgeArticleParticipant from the given config.
+func NewKnowledgeArticleParticipantClient(c config) *KnowledgeArticleParticipantClient {
+	return &KnowledgeArticleParticipantClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `knowledgearticleparticipant.Hooks(f(g(h())))`.
+func (c *KnowledgeArticleParticipantClient) Use(hooks ...Hook) {
+	c.hooks.KnowledgeArticleParticipant = append(c.hooks.KnowledgeArticleParticipant, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `knowledgearticleparticipant.Intercept(f(g(h())))`.
+func (c *KnowledgeArticleParticipantClient) Intercept(interceptors ...Interceptor) {
+	c.inters.KnowledgeArticleParticipant = append(c.inters.KnowledgeArticleParticipant, interceptors...)
+}
+
+// Create returns a builder for creating a KnowledgeArticleParticipant entity.
+func (c *KnowledgeArticleParticipantClient) Create() *KnowledgeArticleParticipantCreate {
+	mutation := newKnowledgeArticleParticipantMutation(c.config, OpCreate)
+	return &KnowledgeArticleParticipantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of KnowledgeArticleParticipant entities.
+func (c *KnowledgeArticleParticipantClient) CreateBulk(builders ...*KnowledgeArticleParticipantCreate) *KnowledgeArticleParticipantCreateBulk {
+	return &KnowledgeArticleParticipantCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KnowledgeArticleParticipantClient) MapCreateBulk(slice any, setFunc func(*KnowledgeArticleParticipantCreate, int)) *KnowledgeArticleParticipantCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KnowledgeArticleParticipantCreateBulk{err: fmt.Errorf("calling to KnowledgeArticleParticipantClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KnowledgeArticleParticipantCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KnowledgeArticleParticipantCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for KnowledgeArticleParticipant.
+func (c *KnowledgeArticleParticipantClient) Update() *KnowledgeArticleParticipantUpdate {
+	mutation := newKnowledgeArticleParticipantMutation(c.config, OpUpdate)
+	return &KnowledgeArticleParticipantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KnowledgeArticleParticipantClient) UpdateOne(_m *KnowledgeArticleParticipant) *KnowledgeArticleParticipantUpdateOne {
+	mutation := newKnowledgeArticleParticipantMutation(c.config, OpUpdateOne, withKnowledgeArticleParticipant(_m))
+	return &KnowledgeArticleParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KnowledgeArticleParticipantClient) UpdateOneID(id int) *KnowledgeArticleParticipantUpdateOne {
+	mutation := newKnowledgeArticleParticipantMutation(c.config, OpUpdateOne, withKnowledgeArticleParticipantID(id))
+	return &KnowledgeArticleParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for KnowledgeArticleParticipant.
+func (c *KnowledgeArticleParticipantClient) Delete() *KnowledgeArticleParticipantDelete {
+	mutation := newKnowledgeArticleParticipantMutation(c.config, OpDelete)
+	return &KnowledgeArticleParticipantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KnowledgeArticleParticipantClient) DeleteOne(_m *KnowledgeArticleParticipant) *KnowledgeArticleParticipantDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KnowledgeArticleParticipantClient) DeleteOneID(id int) *KnowledgeArticleParticipantDeleteOne {
+	builder := c.Delete().Where(knowledgearticleparticipant.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KnowledgeArticleParticipantDeleteOne{builder}
+}
+
+// Query returns a query builder for KnowledgeArticleParticipant.
+func (c *KnowledgeArticleParticipantClient) Query() *KnowledgeArticleParticipantQuery {
+	return &KnowledgeArticleParticipantQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKnowledgeArticleParticipant},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a KnowledgeArticleParticipant entity by its id.
+func (c *KnowledgeArticleParticipantClient) Get(ctx context.Context, id int) (*KnowledgeArticleParticipant, error) {
+	return c.Query().Where(knowledgearticleparticipant.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KnowledgeArticleParticipantClient) GetX(ctx context.Context, id int) *KnowledgeArticleParticipant {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySession queries the session edge of a KnowledgeArticleParticipant.
+func (c *KnowledgeArticleParticipantClient) QuerySession(_m *KnowledgeArticleParticipant) *KnowledgeArticleSessionQuery {
+	query := (&KnowledgeArticleSessionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticleparticipant.Table, knowledgearticleparticipant.FieldID, id),
+			sqlgraph.To(knowledgearticlesession.Table, knowledgearticlesession.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, knowledgearticleparticipant.SessionTable, knowledgearticleparticipant.SessionPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a KnowledgeArticleParticipant.
+func (c *KnowledgeArticleParticipantClient) QueryUser(_m *KnowledgeArticleParticipant) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticleparticipant.Table, knowledgearticleparticipant.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, knowledgearticleparticipant.UserTable, knowledgearticleparticipant.UserPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KnowledgeArticleParticipantClient) Hooks() []Hook {
+	return c.hooks.KnowledgeArticleParticipant
+}
+
+// Interceptors returns the client interceptors.
+func (c *KnowledgeArticleParticipantClient) Interceptors() []Interceptor {
+	return c.inters.KnowledgeArticleParticipant
+}
+
+func (c *KnowledgeArticleParticipantClient) mutate(ctx context.Context, m *KnowledgeArticleParticipantMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KnowledgeArticleParticipantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KnowledgeArticleParticipantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KnowledgeArticleParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KnowledgeArticleParticipantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown KnowledgeArticleParticipant mutation op: %q", m.Op())
+	}
+}
+
+// KnowledgeArticleSessionClient is a client for the KnowledgeArticleSession schema.
+type KnowledgeArticleSessionClient struct {
+	config
+}
+
+// NewKnowledgeArticleSessionClient returns a client for the KnowledgeArticleSession from the given config.
+func NewKnowledgeArticleSessionClient(c config) *KnowledgeArticleSessionClient {
+	return &KnowledgeArticleSessionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `knowledgearticlesession.Hooks(f(g(h())))`.
+func (c *KnowledgeArticleSessionClient) Use(hooks ...Hook) {
+	c.hooks.KnowledgeArticleSession = append(c.hooks.KnowledgeArticleSession, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `knowledgearticlesession.Intercept(f(g(h())))`.
+func (c *KnowledgeArticleSessionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.KnowledgeArticleSession = append(c.inters.KnowledgeArticleSession, interceptors...)
+}
+
+// Create returns a builder for creating a KnowledgeArticleSession entity.
+func (c *KnowledgeArticleSessionClient) Create() *KnowledgeArticleSessionCreate {
+	mutation := newKnowledgeArticleSessionMutation(c.config, OpCreate)
+	return &KnowledgeArticleSessionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of KnowledgeArticleSession entities.
+func (c *KnowledgeArticleSessionClient) CreateBulk(builders ...*KnowledgeArticleSessionCreate) *KnowledgeArticleSessionCreateBulk {
+	return &KnowledgeArticleSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KnowledgeArticleSessionClient) MapCreateBulk(slice any, setFunc func(*KnowledgeArticleSessionCreate, int)) *KnowledgeArticleSessionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KnowledgeArticleSessionCreateBulk{err: fmt.Errorf("calling to KnowledgeArticleSessionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KnowledgeArticleSessionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KnowledgeArticleSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for KnowledgeArticleSession.
+func (c *KnowledgeArticleSessionClient) Update() *KnowledgeArticleSessionUpdate {
+	mutation := newKnowledgeArticleSessionMutation(c.config, OpUpdate)
+	return &KnowledgeArticleSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KnowledgeArticleSessionClient) UpdateOne(_m *KnowledgeArticleSession) *KnowledgeArticleSessionUpdateOne {
+	mutation := newKnowledgeArticleSessionMutation(c.config, OpUpdateOne, withKnowledgeArticleSession(_m))
+	return &KnowledgeArticleSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KnowledgeArticleSessionClient) UpdateOneID(id int) *KnowledgeArticleSessionUpdateOne {
+	mutation := newKnowledgeArticleSessionMutation(c.config, OpUpdateOne, withKnowledgeArticleSessionID(id))
+	return &KnowledgeArticleSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for KnowledgeArticleSession.
+func (c *KnowledgeArticleSessionClient) Delete() *KnowledgeArticleSessionDelete {
+	mutation := newKnowledgeArticleSessionMutation(c.config, OpDelete)
+	return &KnowledgeArticleSessionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KnowledgeArticleSessionClient) DeleteOne(_m *KnowledgeArticleSession) *KnowledgeArticleSessionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KnowledgeArticleSessionClient) DeleteOneID(id int) *KnowledgeArticleSessionDeleteOne {
+	builder := c.Delete().Where(knowledgearticlesession.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KnowledgeArticleSessionDeleteOne{builder}
+}
+
+// Query returns a query builder for KnowledgeArticleSession.
+func (c *KnowledgeArticleSessionClient) Query() *KnowledgeArticleSessionQuery {
+	return &KnowledgeArticleSessionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKnowledgeArticleSession},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a KnowledgeArticleSession entity by its id.
+func (c *KnowledgeArticleSessionClient) Get(ctx context.Context, id int) (*KnowledgeArticleSession, error) {
+	return c.Query().Where(knowledgearticlesession.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KnowledgeArticleSessionClient) GetX(ctx context.Context, id int) *KnowledgeArticleSession {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryArticle queries the article edge of a KnowledgeArticleSession.
+func (c *KnowledgeArticleSessionClient) QueryArticle(_m *KnowledgeArticleSession) *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticlesession.Table, knowledgearticlesession.FieldID, id),
+			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, knowledgearticlesession.ArticleTable, knowledgearticlesession.ArticleColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a KnowledgeArticleSession.
+func (c *KnowledgeArticleSessionClient) QueryUser(_m *KnowledgeArticleSession) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticlesession.Table, knowledgearticlesession.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, knowledgearticlesession.UserTable, knowledgearticlesession.UserPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryParticipants queries the participants edge of a KnowledgeArticleSession.
+func (c *KnowledgeArticleSessionClient) QueryParticipants(_m *KnowledgeArticleSession) *KnowledgeArticleParticipantQuery {
+	query := (&KnowledgeArticleParticipantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticlesession.Table, knowledgearticlesession.FieldID, id),
+			sqlgraph.To(knowledgearticleparticipant.Table, knowledgearticleparticipant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, knowledgearticlesession.ParticipantsTable, knowledgearticlesession.ParticipantsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KnowledgeArticleSessionClient) Hooks() []Hook {
+	return c.hooks.KnowledgeArticleSession
+}
+
+// Interceptors returns the client interceptors.
+func (c *KnowledgeArticleSessionClient) Interceptors() []Interceptor {
+	return c.inters.KnowledgeArticleSession
+}
+
+func (c *KnowledgeArticleSessionClient) mutate(ctx context.Context, m *KnowledgeArticleSessionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KnowledgeArticleSessionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KnowledgeArticleSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KnowledgeArticleSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KnowledgeArticleSessionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown KnowledgeArticleSession mutation op: %q", m.Op())
+	}
+}
+
+// KnowledgeArticleVersionClient is a client for the KnowledgeArticleVersion schema.
+type KnowledgeArticleVersionClient struct {
+	config
+}
+
+// NewKnowledgeArticleVersionClient returns a client for the KnowledgeArticleVersion from the given config.
+func NewKnowledgeArticleVersionClient(c config) *KnowledgeArticleVersionClient {
+	return &KnowledgeArticleVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `knowledgearticleversion.Hooks(f(g(h())))`.
+func (c *KnowledgeArticleVersionClient) Use(hooks ...Hook) {
+	c.hooks.KnowledgeArticleVersion = append(c.hooks.KnowledgeArticleVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `knowledgearticleversion.Intercept(f(g(h())))`.
+func (c *KnowledgeArticleVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.KnowledgeArticleVersion = append(c.inters.KnowledgeArticleVersion, interceptors...)
+}
+
+// Create returns a builder for creating a KnowledgeArticleVersion entity.
+func (c *KnowledgeArticleVersionClient) Create() *KnowledgeArticleVersionCreate {
+	mutation := newKnowledgeArticleVersionMutation(c.config, OpCreate)
+	return &KnowledgeArticleVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of KnowledgeArticleVersion entities.
+func (c *KnowledgeArticleVersionClient) CreateBulk(builders ...*KnowledgeArticleVersionCreate) *KnowledgeArticleVersionCreateBulk {
+	return &KnowledgeArticleVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KnowledgeArticleVersionClient) MapCreateBulk(slice any, setFunc func(*KnowledgeArticleVersionCreate, int)) *KnowledgeArticleVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KnowledgeArticleVersionCreateBulk{err: fmt.Errorf("calling to KnowledgeArticleVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KnowledgeArticleVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KnowledgeArticleVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for KnowledgeArticleVersion.
+func (c *KnowledgeArticleVersionClient) Update() *KnowledgeArticleVersionUpdate {
+	mutation := newKnowledgeArticleVersionMutation(c.config, OpUpdate)
+	return &KnowledgeArticleVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KnowledgeArticleVersionClient) UpdateOne(_m *KnowledgeArticleVersion) *KnowledgeArticleVersionUpdateOne {
+	mutation := newKnowledgeArticleVersionMutation(c.config, OpUpdateOne, withKnowledgeArticleVersion(_m))
+	return &KnowledgeArticleVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KnowledgeArticleVersionClient) UpdateOneID(id int) *KnowledgeArticleVersionUpdateOne {
+	mutation := newKnowledgeArticleVersionMutation(c.config, OpUpdateOne, withKnowledgeArticleVersionID(id))
+	return &KnowledgeArticleVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for KnowledgeArticleVersion.
+func (c *KnowledgeArticleVersionClient) Delete() *KnowledgeArticleVersionDelete {
+	mutation := newKnowledgeArticleVersionMutation(c.config, OpDelete)
+	return &KnowledgeArticleVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KnowledgeArticleVersionClient) DeleteOne(_m *KnowledgeArticleVersion) *KnowledgeArticleVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KnowledgeArticleVersionClient) DeleteOneID(id int) *KnowledgeArticleVersionDeleteOne {
+	builder := c.Delete().Where(knowledgearticleversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KnowledgeArticleVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for KnowledgeArticleVersion.
+func (c *KnowledgeArticleVersionClient) Query() *KnowledgeArticleVersionQuery {
+	return &KnowledgeArticleVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKnowledgeArticleVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a KnowledgeArticleVersion entity by its id.
+func (c *KnowledgeArticleVersionClient) Get(ctx context.Context, id int) (*KnowledgeArticleVersion, error) {
+	return c.Query().Where(knowledgearticleversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KnowledgeArticleVersionClient) GetX(ctx context.Context, id int) *KnowledgeArticleVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryArticle queries the article edge of a KnowledgeArticleVersion.
+func (c *KnowledgeArticleVersionClient) QueryArticle(_m *KnowledgeArticleVersion) *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticleversion.Table, knowledgearticleversion.FieldID, id),
+			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, knowledgearticleversion.ArticleTable, knowledgearticleversion.ArticleColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KnowledgeArticleVersionClient) Hooks() []Hook {
+	return c.hooks.KnowledgeArticleVersion
+}
+
+// Interceptors returns the client interceptors.
+func (c *KnowledgeArticleVersionClient) Interceptors() []Interceptor {
+	return c.inters.KnowledgeArticleVersion
+}
+
+func (c *KnowledgeArticleVersionClient) mutate(ctx context.Context, m *KnowledgeArticleVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KnowledgeArticleVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KnowledgeArticleVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KnowledgeArticleVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KnowledgeArticleVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown KnowledgeArticleVersion mutation op: %q", m.Op())
 	}
 }
 
@@ -15457,6 +16012,38 @@ func (c *UserClient) QueryMspAllocations(_m *User) *MSPAllocationQuery {
 	return query
 }
 
+// QueryArticleSessions queries the article_sessions edge of a User.
+func (c *UserClient) QueryArticleSessions(_m *User) *KnowledgeArticleSessionQuery {
+	query := (&KnowledgeArticleSessionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(knowledgearticlesession.Table, knowledgearticlesession.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.ArticleSessionsTable, user.ArticleSessionsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryArticleParticipations queries the article_participations edge of a User.
+func (c *UserClient) QueryArticleParticipations(_m *User) *KnowledgeArticleParticipantQuery {
+	query := (&KnowledgeArticleParticipantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(knowledgearticleparticipant.Table, knowledgearticleparticipant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.ArticleParticipationsTable, user.ArticleParticipationsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -16300,8 +16887,9 @@ type (
 		Contract, Conversation, Department, DiscoveryJob, DiscoveryResult,
 		DiscoverySource, EndpointACL, EngineerSkill, Group, Incident, IncidentAlert,
 		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
-		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike, KnownError,
-		MSPAllocation, Menu, Message, Microservice, Notification,
+		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
+		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
+		KnownError, MSPAllocation, Menu, Message, Microservice, Notification,
 		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,
 		Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition, ProcessDeployment,
 		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
@@ -16322,8 +16910,9 @@ type (
 		Contract, Conversation, Department, DiscoveryJob, DiscoveryResult,
 		DiscoverySource, EndpointACL, EngineerSkill, Group, Incident, IncidentAlert,
 		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
-		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike, KnownError,
-		MSPAllocation, Menu, Message, Microservice, Notification,
+		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
+		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
+		KnownError, MSPAllocation, Menu, Message, Microservice, Notification,
 		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,
 		Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition, ProcessDeployment,
 		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,

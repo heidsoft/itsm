@@ -26,6 +26,7 @@ type LoginUserResponse struct {
 	Email        string    `json:"email"`
 	Name         string    `json:"name"`
 	Role         string    `json:"role"`
+	MSPRole      *string   `json:"msp_role,omitempty"`
 	Department   string    `json:"department"`
 	DepartmentID int       `json:"department_id"`
 	Phone        string    `json:"phone"`

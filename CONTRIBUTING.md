@@ -258,4 +258,4 @@ func TestUserCreationFunction
 
 ## 许可证
 
-通过贡献代码，您同意您的贡献将按 MIT 许可证授权。
+通过贡献代码，您同意您的贡献将按 Apache License 2.0 授权。
