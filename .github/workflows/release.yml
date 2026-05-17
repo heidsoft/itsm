@@ -50,7 +50,7 @@ jobs:
           go build -ldflags="-s -w" -o itsm-${{ matrix.goos }}-${{ matrix.goarch }} ./main.go
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: itsm-backend-${{ matrix.goos }}-${{ matrix.goarch }}
           path: itsm-backend/itsm-${{ matrix.goos }}-${{ matrix.goarch }}
@@ -90,7 +90,7 @@ jobs:
           cp -r public frontend-standalone/public
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: itsm-frontend-build
           path: itsm-frontend/frontend-standalone

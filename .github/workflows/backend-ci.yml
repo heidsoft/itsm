@@ -86,7 +86,7 @@ jobs:
         run: cd itsm-backend && go build -o itsm ./main.go
 
       - name: Upload binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: itsm-backend-binary
           path: itsm-backend/itsm
@@ -114,7 +114,7 @@ jobs:
           go tool cover -func=coverage.out
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: backend-coverage
           path: itsm-backend/coverage.out
