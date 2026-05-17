@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
+	"itsm-backend/ent/knowledgearticlesession"
+	"itsm-backend/ent/knowledgearticleversion"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -164,6 +166,44 @@ func (_c *KnowledgeArticleCreate) AddUserLikes(v ...*KnowledgeArticleLike) *Know
 		ids[i] = v[i].ID
 	}
 	return _c.AddUserLikeIDs(ids...)
+}
+
+// SetVersionsID sets the "versions" edge to the KnowledgeArticleVersion entity by ID.
+func (_c *KnowledgeArticleCreate) SetVersionsID(id int) *KnowledgeArticleCreate {
+	_c.mutation.SetVersionsID(id)
+	return _c
+}
+
+// SetNillableVersionsID sets the "versions" edge to the KnowledgeArticleVersion entity by ID if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableVersionsID(id *int) *KnowledgeArticleCreate {
+	if id != nil {
+		_c = _c.SetVersionsID(*id)
+	}
+	return _c
+}
+
+// SetVersions sets the "versions" edge to the KnowledgeArticleVersion entity.
+func (_c *KnowledgeArticleCreate) SetVersions(v *KnowledgeArticleVersion) *KnowledgeArticleCreate {
+	return _c.SetVersionsID(v.ID)
+}
+
+// SetSessionsID sets the "sessions" edge to the KnowledgeArticleSession entity by ID.
+func (_c *KnowledgeArticleCreate) SetSessionsID(id int) *KnowledgeArticleCreate {
+	_c.mutation.SetSessionsID(id)
+	return _c
+}
+
+// SetNillableSessionsID sets the "sessions" edge to the KnowledgeArticleSession entity by ID if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableSessionsID(id *int) *KnowledgeArticleCreate {
+	if id != nil {
+		_c = _c.SetSessionsID(*id)
+	}
+	return _c
+}
+
+// SetSessions sets the "sessions" edge to the KnowledgeArticleSession entity.
+func (_c *KnowledgeArticleCreate) SetSessions(v *KnowledgeArticleSession) *KnowledgeArticleCreate {
+	return _c.SetSessionsID(v.ID)
 }
 
 // Mutation returns the KnowledgeArticleMutation object of the builder.
@@ -348,6 +388,40 @@ func (_c *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cre
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.VersionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   knowledgearticle.VersionsTable,
+			Columns: []string{knowledgearticle.VersionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticleversion.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.knowledge_article_versions = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SessionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   knowledgearticle.SessionsTable,
+			Columns: []string{knowledgearticle.SessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlesession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.knowledge_article_sessions = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

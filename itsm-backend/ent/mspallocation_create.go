@@ -28,6 +28,20 @@ func (_c *MSPAllocationCreate) SetMspUserID(v int) *MSPAllocationCreate {
 	return _c
 }
 
+// SetCustomerTenantID sets the "customer_tenant_id" field.
+func (_c *MSPAllocationCreate) SetCustomerTenantID(v int) *MSPAllocationCreate {
+	_c.mutation.SetCustomerTenantID(v)
+	return _c
+}
+
+// SetNillableCustomerTenantID sets the "customer_tenant_id" field if the given value is not nil.
+func (_c *MSPAllocationCreate) SetNillableCustomerTenantID(v *int) *MSPAllocationCreate {
+	if v != nil {
+		_c.SetCustomerTenantID(*v)
+	}
+	return _c
+}
+
 // SetRole sets the "role" field.
 func (_c *MSPAllocationCreate) SetRole(v string) *MSPAllocationCreate {
 	_c.mutation.SetRole(v)
@@ -199,6 +213,10 @@ func (_c *MSPAllocationCreate) createSpec() (*MSPAllocation, *sqlgraph.CreateSpe
 		_node = &MSPAllocation{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(mspallocation.Table, sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt))
 	)
+	if value, ok := _c.mutation.CustomerTenantID(); ok {
+		_spec.SetField(mspallocation.FieldCustomerTenantID, field.TypeInt, value)
+		_node.CustomerTenantID = value
+	}
 	if value, ok := _c.mutation.Role(); ok {
 		_spec.SetField(mspallocation.FieldRole, field.TypeString, value)
 		_node.Role = value

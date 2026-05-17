@@ -3,6 +3,7 @@ package change
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"itsm-backend/ent"
@@ -391,4 +392,107 @@ func (r *EntRepository) ValidateApproverBelongsToTenant(ctx context.Context, app
 		return false, err
 	}
 	return exists, nil
+}
+
+// ListByDateRange retrieves changes within a date range
+func (r *EntRepository) ListByDateRange(ctx context.Context, tenantID int, startDate, endDate, status string) ([]*Change, error) {
+	// Parse date range
+	start, err1 := time.Parse("2006-01-02", startDate)
+	end, err2 := time.Parse("2006-01-02", endDate)
+	if err1 != nil || err2 != nil {
+		return nil, fmt.Errorf("invalid date format")
+	}
+	end = end.Add(24*time.Hour - time.Second) // End of day
+
+	query := r.client.Change.Query().
+		Where(change.TenantID(tenantID))
+
+	if status != "" {
+		query = query.Where(change.Status(status))
+	}
+
+	// Filter by planned date range in memory
+	changes, err := query.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*Change, 0)
+	for _, c := range changes {
+		if !c.PlannedStartDate.IsZero() && !c.PlannedEndDate.IsZero() {
+			// Check if date ranges overlap
+			if (c.PlannedStartDate.Before(end) || c.PlannedStartDate.Equal(end)) &&
+				(c.PlannedEndDate.After(start) || c.PlannedEndDate.Equal(start)) {
+				result = append(result, toDomain(c))
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// toDomainMap ent entity to domain entity
+func toDomainMap(ec *ent.Change) *Change {
+	if ec == nil {
+		return nil
+	}
+
+	var assigneeID *int
+	if ec.AssigneeID > 0 {
+		v := ec.AssigneeID
+		assigneeID = &v
+	}
+
+	var plannedStart, plannedEnd, actualStart, actualEnd *time.Time
+	if !ec.PlannedStartDate.IsZero() {
+		v := ec.PlannedStartDate
+		plannedStart = &v
+	}
+	if !ec.PlannedEndDate.IsZero() {
+		v := ec.PlannedEndDate
+		plannedEnd = &v
+	}
+	if !ec.ActualStartDate.IsZero() {
+		v := ec.ActualStartDate
+		actualStart = &v
+	}
+	if !ec.ActualEndDate.IsZero() {
+		v := ec.ActualEndDate
+		actualEnd = &v
+	}
+
+	affectedCIs := []string{}
+	if len(ec.AffectedCis) > 0 {
+		affectedCIs = ec.AffectedCis
+	}
+
+	relatedTickets := []string{}
+	if len(ec.RelatedTickets) > 0 {
+		relatedTickets = ec.RelatedTickets
+	}
+
+	return &Change{
+		ID:                 ec.ID,
+		Title:              ec.Title,
+		Description:        ec.Description,
+		Justification:      ec.Justification,
+		Type:               ec.Type,
+		Status:             ec.Status,
+		Priority:           ec.Priority,
+		ImpactScope:        ec.ImpactScope,
+		RiskLevel:          ec.RiskLevel,
+		AssigneeID:         assigneeID,
+		CreatedBy:          ec.CreatedBy,
+		TenantID:           ec.TenantID,
+		PlannedStartDate:   plannedStart,
+		PlannedEndDate:     plannedEnd,
+		ActualStartDate:    actualStart,
+		ActualEndDate:      actualEnd,
+		ImplementationPlan: ec.ImplementationPlan,
+		RollbackPlan:       ec.RollbackPlan,
+		AffectedCIs:        affectedCIs,
+		RelatedTickets:     relatedTickets,
+		CreatedAt:          ec.CreatedAt,
+		UpdatedAt:          ec.UpdatedAt,
+	}
 }

@@ -80,6 +80,12 @@ type Tx struct {
 	KnowledgeArticle *KnowledgeArticleClient
 	// KnowledgeArticleLike is the client for interacting with the KnowledgeArticleLike builders.
 	KnowledgeArticleLike *KnowledgeArticleLikeClient
+	// KnowledgeArticleParticipant is the client for interacting with the KnowledgeArticleParticipant builders.
+	KnowledgeArticleParticipant *KnowledgeArticleParticipantClient
+	// KnowledgeArticleSession is the client for interacting with the KnowledgeArticleSession builders.
+	KnowledgeArticleSession *KnowledgeArticleSessionClient
+	// KnowledgeArticleVersion is the client for interacting with the KnowledgeArticleVersion builders.
+	KnowledgeArticleVersion *KnowledgeArticleVersionClient
 	// KnownError is the client for interacting with the KnownError builders.
 	KnownError *KnownErrorClient
 	// MSPAllocation is the client for interacting with the MSPAllocation builders.
@@ -367,6 +373,9 @@ func (tx *Tx) init() {
 	tx.IncidentRuleExecution = NewIncidentRuleExecutionClient(tx.config)
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
 	tx.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(tx.config)
+	tx.KnowledgeArticleParticipant = NewKnowledgeArticleParticipantClient(tx.config)
+	tx.KnowledgeArticleSession = NewKnowledgeArticleSessionClient(tx.config)
+	tx.KnowledgeArticleVersion = NewKnowledgeArticleVersionClient(tx.config)
 	tx.KnownError = NewKnownErrorClient(tx.config)
 	tx.MSPAllocation = NewMSPAllocationClient(tx.config)
 	tx.Menu = NewMenuClient(tx.config)

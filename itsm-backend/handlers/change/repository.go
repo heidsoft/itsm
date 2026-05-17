@@ -30,4 +30,7 @@ type Repository interface {
 
 	// Tenant validation
 	ValidateApproverBelongsToTenant(ctx context.Context, approverID, tenantID int) (bool, error)
+
+	// Calendar view
+	ListByDateRange(ctx context.Context, tenantID int, startDate, endDate, status string) ([]*Change, error)
 }

@@ -97,9 +97,9 @@ All APIs return `{ code: number, message: string, data: any }`:
 
 ## Configuration
 
-- Frontend: `NEXT_PUBLIC_API_URL` env var (default: http://localhost:8080)
+- Frontend: `NEXT_PUBLIC_API_URL` env var (default: http://localhost:8090)
 - Backend: `config.yaml` or environment variables
-- Backend runs on port 8080, frontend on 3000
+- Backend runs on port 8090, frontend on 3000
 
 ## Build Tags for Backend
 - `migrate` - Run database migrations

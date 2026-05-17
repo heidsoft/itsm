@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
+	"itsm-backend/ent/knowledgearticleparticipant"
+	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/predicate"
@@ -407,6 +409,36 @@ func (_u *UserUpdate) AddMspAllocations(v ...*MSPAllocation) *UserUpdate {
 	return _u.AddMspAllocationIDs(ids...)
 }
 
+// AddArticleSessionIDs adds the "article_sessions" edge to the KnowledgeArticleSession entity by IDs.
+func (_u *UserUpdate) AddArticleSessionIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddArticleSessionIDs(ids...)
+	return _u
+}
+
+// AddArticleSessions adds the "article_sessions" edges to the KnowledgeArticleSession entity.
+func (_u *UserUpdate) AddArticleSessions(v ...*KnowledgeArticleSession) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddArticleSessionIDs(ids...)
+}
+
+// AddArticleParticipationIDs adds the "article_participations" edge to the KnowledgeArticleParticipant entity by IDs.
+func (_u *UserUpdate) AddArticleParticipationIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddArticleParticipationIDs(ids...)
+	return _u
+}
+
+// AddArticleParticipations adds the "article_participations" edges to the KnowledgeArticleParticipant entity.
+func (_u *UserUpdate) AddArticleParticipations(v ...*KnowledgeArticleParticipant) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddArticleParticipationIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -590,6 +622,48 @@ func (_u *UserUpdate) RemoveMspAllocations(v ...*MSPAllocation) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMspAllocationIDs(ids...)
+}
+
+// ClearArticleSessions clears all "article_sessions" edges to the KnowledgeArticleSession entity.
+func (_u *UserUpdate) ClearArticleSessions() *UserUpdate {
+	_u.mutation.ClearArticleSessions()
+	return _u
+}
+
+// RemoveArticleSessionIDs removes the "article_sessions" edge to KnowledgeArticleSession entities by IDs.
+func (_u *UserUpdate) RemoveArticleSessionIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveArticleSessionIDs(ids...)
+	return _u
+}
+
+// RemoveArticleSessions removes "article_sessions" edges to KnowledgeArticleSession entities.
+func (_u *UserUpdate) RemoveArticleSessions(v ...*KnowledgeArticleSession) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveArticleSessionIDs(ids...)
+}
+
+// ClearArticleParticipations clears all "article_participations" edges to the KnowledgeArticleParticipant entity.
+func (_u *UserUpdate) ClearArticleParticipations() *UserUpdate {
+	_u.mutation.ClearArticleParticipations()
+	return _u
+}
+
+// RemoveArticleParticipationIDs removes the "article_participations" edge to KnowledgeArticleParticipant entities by IDs.
+func (_u *UserUpdate) RemoveArticleParticipationIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveArticleParticipationIDs(ids...)
+	return _u
+}
+
+// RemoveArticleParticipations removes "article_participations" edges to KnowledgeArticleParticipant entities.
+func (_u *UserUpdate) RemoveArticleParticipations(v ...*KnowledgeArticleParticipant) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveArticleParticipationIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1152,6 +1226,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.ArticleSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleSessionsTable,
+			Columns: user.ArticleSessionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlesession.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedArticleSessionsIDs(); len(nodes) > 0 && !_u.mutation.ArticleSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleSessionsTable,
+			Columns: user.ArticleSessionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlesession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ArticleSessionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleSessionsTable,
+			Columns: user.ArticleSessionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlesession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ArticleParticipationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleParticipationsTable,
+			Columns: user.ArticleParticipationsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticleparticipant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedArticleParticipationsIDs(); len(nodes) > 0 && !_u.mutation.ArticleParticipationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleParticipationsTable,
+			Columns: user.ArticleParticipationsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticleparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ArticleParticipationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleParticipationsTable,
+			Columns: user.ArticleParticipationsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticleparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -1541,6 +1705,36 @@ func (_u *UserUpdateOne) AddMspAllocations(v ...*MSPAllocation) *UserUpdateOne {
 	return _u.AddMspAllocationIDs(ids...)
 }
 
+// AddArticleSessionIDs adds the "article_sessions" edge to the KnowledgeArticleSession entity by IDs.
+func (_u *UserUpdateOne) AddArticleSessionIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddArticleSessionIDs(ids...)
+	return _u
+}
+
+// AddArticleSessions adds the "article_sessions" edges to the KnowledgeArticleSession entity.
+func (_u *UserUpdateOne) AddArticleSessions(v ...*KnowledgeArticleSession) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddArticleSessionIDs(ids...)
+}
+
+// AddArticleParticipationIDs adds the "article_participations" edge to the KnowledgeArticleParticipant entity by IDs.
+func (_u *UserUpdateOne) AddArticleParticipationIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddArticleParticipationIDs(ids...)
+	return _u
+}
+
+// AddArticleParticipations adds the "article_participations" edges to the KnowledgeArticleParticipant entity.
+func (_u *UserUpdateOne) AddArticleParticipations(v ...*KnowledgeArticleParticipant) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddArticleParticipationIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -1724,6 +1918,48 @@ func (_u *UserUpdateOne) RemoveMspAllocations(v ...*MSPAllocation) *UserUpdateOn
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMspAllocationIDs(ids...)
+}
+
+// ClearArticleSessions clears all "article_sessions" edges to the KnowledgeArticleSession entity.
+func (_u *UserUpdateOne) ClearArticleSessions() *UserUpdateOne {
+	_u.mutation.ClearArticleSessions()
+	return _u
+}
+
+// RemoveArticleSessionIDs removes the "article_sessions" edge to KnowledgeArticleSession entities by IDs.
+func (_u *UserUpdateOne) RemoveArticleSessionIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveArticleSessionIDs(ids...)
+	return _u
+}
+
+// RemoveArticleSessions removes "article_sessions" edges to KnowledgeArticleSession entities.
+func (_u *UserUpdateOne) RemoveArticleSessions(v ...*KnowledgeArticleSession) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveArticleSessionIDs(ids...)
+}
+
+// ClearArticleParticipations clears all "article_participations" edges to the KnowledgeArticleParticipant entity.
+func (_u *UserUpdateOne) ClearArticleParticipations() *UserUpdateOne {
+	_u.mutation.ClearArticleParticipations()
+	return _u
+}
+
+// RemoveArticleParticipationIDs removes the "article_participations" edge to KnowledgeArticleParticipant entities by IDs.
+func (_u *UserUpdateOne) RemoveArticleParticipationIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveArticleParticipationIDs(ids...)
+	return _u
+}
+
+// RemoveArticleParticipations removes "article_participations" edges to KnowledgeArticleParticipant entities.
+func (_u *UserUpdateOne) RemoveArticleParticipations(v ...*KnowledgeArticleParticipant) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveArticleParticipationIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -2309,6 +2545,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ArticleSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleSessionsTable,
+			Columns: user.ArticleSessionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlesession.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedArticleSessionsIDs(); len(nodes) > 0 && !_u.mutation.ArticleSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleSessionsTable,
+			Columns: user.ArticleSessionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlesession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ArticleSessionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleSessionsTable,
+			Columns: user.ArticleSessionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlesession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ArticleParticipationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleParticipationsTable,
+			Columns: user.ArticleParticipationsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticleparticipant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedArticleParticipationsIDs(); len(nodes) > 0 && !_u.mutation.ArticleParticipationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleParticipationsTable,
+			Columns: user.ArticleParticipationsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticleparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ArticleParticipationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleParticipationsTable,
+			Columns: user.ArticleParticipationsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticleparticipant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

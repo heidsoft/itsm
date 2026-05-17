@@ -25,12 +25,17 @@ func toUserDomain(e *ent.User) *User {
 	if e == nil {
 		return nil
 	}
+	mspRole := ""
+	if e.MspRole != "" {
+		mspRole = string(e.MspRole)
+	}
 	return &User{
 		ID:           e.ID,
 		Username:     e.Username,
 		Email:        e.Email,
 		Name:         e.Name,
 		Role:         string(e.Role),
+		MSPRole:      &mspRole,
 		Department:   e.Department,
 		DepartmentID: e.DepartmentID,
 		Phone:        e.Phone,

@@ -94,5 +94,9 @@ func (User) Edges() []ent.Edge {
 			Comment("用户所属组"),
 		edge.To("msp_allocations", MSPAllocation.Type).
 			Comment("MSP用户分配"),
+		edge.To("article_sessions", KnowledgeArticleSession.Type).
+			Comment("文章协作会话"),
+		edge.To("article_participations", KnowledgeArticleParticipant.Type).
+			Comment("文章协作参与"),
 	}
 }

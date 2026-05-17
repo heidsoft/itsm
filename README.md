@@ -440,9 +440,14 @@ git push origin feature/amazing-feature
 
 ## 📄 许可证
 
-Apache License 2.0 - 开源免费，企业级商用首选
+Apache License 2.0 - 开源免费，允许自由使用于商业产品。
 
-> **商业化授权声明**: 如需将本项目用于商业产品，请访问 [官网](https://cloudmesh.top/) 获取商业授权。未经授权的商业使用将视为侵权行为。
+- ✅ 个人学习与使用
+- ✅ 商业产品集成
+- ✅ 闭源项目使用
+- ✅ 二次开发与分发
+
+> 详见 [LICENSE](./LICENSE) 和 [NOTICE](./NOTICE) 文件。
 
 ---
 

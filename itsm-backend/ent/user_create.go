@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
+	"itsm-backend/ent/knowledgearticleparticipant"
+	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/processversionchangelog"
@@ -328,6 +330,36 @@ func (_c *UserCreate) AddMspAllocations(v ...*MSPAllocation) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddMspAllocationIDs(ids...)
+}
+
+// AddArticleSessionIDs adds the "article_sessions" edge to the KnowledgeArticleSession entity by IDs.
+func (_c *UserCreate) AddArticleSessionIDs(ids ...int) *UserCreate {
+	_c.mutation.AddArticleSessionIDs(ids...)
+	return _c
+}
+
+// AddArticleSessions adds the "article_sessions" edges to the KnowledgeArticleSession entity.
+func (_c *UserCreate) AddArticleSessions(v ...*KnowledgeArticleSession) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddArticleSessionIDs(ids...)
+}
+
+// AddArticleParticipationIDs adds the "article_participations" edge to the KnowledgeArticleParticipant entity by IDs.
+func (_c *UserCreate) AddArticleParticipationIDs(ids ...int) *UserCreate {
+	_c.mutation.AddArticleParticipationIDs(ids...)
+	return _c
+}
+
+// AddArticleParticipations adds the "article_participations" edges to the KnowledgeArticleParticipant entity.
+func (_c *UserCreate) AddArticleParticipations(v ...*KnowledgeArticleParticipant) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddArticleParticipationIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -679,6 +711,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ArticleSessionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleSessionsTable,
+			Columns: user.ArticleSessionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlesession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ArticleParticipationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ArticleParticipationsTable,
+			Columns: user.ArticleParticipationsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticleparticipant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

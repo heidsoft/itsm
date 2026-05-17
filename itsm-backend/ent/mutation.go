@@ -40,6 +40,9 @@ import (
 	"itsm-backend/ent/incidentruleexecution"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
+	"itsm-backend/ent/knowledgearticleparticipant"
+	"itsm-backend/ent/knowledgearticlesession"
+	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/message"
@@ -119,101 +122,104 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeApplication             = "Application"
-	TypeApprovalChain           = "ApprovalChain"
-	TypeApprovalRecord          = "ApprovalRecord"
-	TypeApprovalWorkflow        = "ApprovalWorkflow"
-	TypeAsset                   = "Asset"
-	TypeAssetLicense            = "AssetLicense"
-	TypeAuditLog                = "AuditLog"
-	TypeBPMNPermission          = "BPMNPermission"
-	TypeCIAttributeDefinition   = "CIAttributeDefinition"
-	TypeCIRelationship          = "CIRelationship"
-	TypeCIType                  = "CIType"
-	TypeChange                  = "Change"
-	TypeCloudAccount            = "CloudAccount"
-	TypeCloudResource           = "CloudResource"
-	TypeCloudService            = "CloudService"
-	TypeConfigurationItem       = "ConfigurationItem"
-	TypeContract                = "Contract"
-	TypeConversation            = "Conversation"
-	TypeDepartment              = "Department"
-	TypeDiscoveryJob            = "DiscoveryJob"
-	TypeDiscoveryResult         = "DiscoveryResult"
-	TypeDiscoverySource         = "DiscoverySource"
-	TypeEndpointACL             = "EndpointACL"
-	TypeEngineerSkill           = "EngineerSkill"
-	TypeGroup                   = "Group"
-	TypeIncident                = "Incident"
-	TypeIncidentAlert           = "IncidentAlert"
-	TypeIncidentEscalationRule  = "IncidentEscalationRule"
-	TypeIncidentEvent           = "IncidentEvent"
-	TypeIncidentMetric          = "IncidentMetric"
-	TypeIncidentRule            = "IncidentRule"
-	TypeIncidentRuleExecution   = "IncidentRuleExecution"
-	TypeKnowledgeArticle        = "KnowledgeArticle"
-	TypeKnowledgeArticleLike    = "KnowledgeArticleLike"
-	TypeKnownError              = "KnownError"
-	TypeMSPAllocation           = "MSPAllocation"
-	TypeMenu                    = "Menu"
-	TypeMessage                 = "Message"
-	TypeMicroservice            = "Microservice"
-	TypeNotification            = "Notification"
-	TypeNotificationPreference  = "NotificationPreference"
-	TypePasswordResetToken      = "PasswordResetToken"
-	TypePermission              = "Permission"
-	TypePermissionDefinition    = "PermissionDefinition"
-	TypeProblem                 = "Problem"
-	TypeProcessAuditLog         = "ProcessAuditLog"
-	TypeProcessBinding          = "ProcessBinding"
-	TypeProcessDefinition       = "ProcessDefinition"
-	TypeProcessDeployment       = "ProcessDeployment"
-	TypeProcessExecutionHistory = "ProcessExecutionHistory"
-	TypeProcessInstance         = "ProcessInstance"
-	TypeProcessTask             = "ProcessTask"
-	TypeProcessVariable         = "ProcessVariable"
-	TypeProcessVersionChangelog = "ProcessVersionChangelog"
-	TypeProject                 = "Project"
-	TypePromptTemplate          = "PromptTemplate"
-	TypeProvisioningTask        = "ProvisioningTask"
-	TypeRelationshipType        = "RelationshipType"
-	TypeRelease                 = "Release"
-	TypeRole                    = "Role"
-	TypeRolePermission          = "RolePermission"
-	TypeRootCauseAnalysis       = "RootCauseAnalysis"
-	TypeSLAAlertHistory         = "SLAAlertHistory"
-	TypeSLAAlertRule            = "SLAAlertRule"
-	TypeSLADefinition           = "SLADefinition"
-	TypeSLAMetric               = "SLAMetric"
-	TypeSLAPolicy               = "SLAPolicy"
-	TypeSLAViolation            = "SLAViolation"
-	TypeServiceCatalog          = "ServiceCatalog"
-	TypeServiceRequest          = "ServiceRequest"
-	TypeServiceRequestApproval  = "ServiceRequestApproval"
-	TypeStandardChange          = "StandardChange"
-	TypeSurvey                  = "Survey"
-	TypeSurveyResponse          = "SurveyResponse"
-	TypeSystemConfig            = "SystemConfig"
-	TypeTag                     = "Tag"
-	TypeTeam                    = "Team"
-	TypeTenant                  = "Tenant"
-	TypeTicket                  = "Ticket"
-	TypeTicketAssignmentRule    = "TicketAssignmentRule"
-	TypeTicketAttachment        = "TicketAttachment"
-	TypeTicketAutomationRule    = "TicketAutomationRule"
-	TypeTicketCategory          = "TicketCategory"
-	TypeTicketComment           = "TicketComment"
-	TypeTicketNotification      = "TicketNotification"
-	TypeTicketTag               = "TicketTag"
-	TypeTicketTemplate          = "TicketTemplate"
-	TypeTicketView              = "TicketView"
-	TypeToolInvocation          = "ToolInvocation"
-	TypeUser                    = "User"
-	TypeVendor                  = "Vendor"
-	TypeWorkflow                = "Workflow"
-	TypeWorkflowInstance        = "WorkflowInstance"
-	TypeWorkflowTask            = "WorkflowTask"
-	TypeWorkflowVersion         = "WorkflowVersion"
+	TypeApplication                 = "Application"
+	TypeApprovalChain               = "ApprovalChain"
+	TypeApprovalRecord              = "ApprovalRecord"
+	TypeApprovalWorkflow            = "ApprovalWorkflow"
+	TypeAsset                       = "Asset"
+	TypeAssetLicense                = "AssetLicense"
+	TypeAuditLog                    = "AuditLog"
+	TypeBPMNPermission              = "BPMNPermission"
+	TypeCIAttributeDefinition       = "CIAttributeDefinition"
+	TypeCIRelationship              = "CIRelationship"
+	TypeCIType                      = "CIType"
+	TypeChange                      = "Change"
+	TypeCloudAccount                = "CloudAccount"
+	TypeCloudResource               = "CloudResource"
+	TypeCloudService                = "CloudService"
+	TypeConfigurationItem           = "ConfigurationItem"
+	TypeContract                    = "Contract"
+	TypeConversation                = "Conversation"
+	TypeDepartment                  = "Department"
+	TypeDiscoveryJob                = "DiscoveryJob"
+	TypeDiscoveryResult             = "DiscoveryResult"
+	TypeDiscoverySource             = "DiscoverySource"
+	TypeEndpointACL                 = "EndpointACL"
+	TypeEngineerSkill               = "EngineerSkill"
+	TypeGroup                       = "Group"
+	TypeIncident                    = "Incident"
+	TypeIncidentAlert               = "IncidentAlert"
+	TypeIncidentEscalationRule      = "IncidentEscalationRule"
+	TypeIncidentEvent               = "IncidentEvent"
+	TypeIncidentMetric              = "IncidentMetric"
+	TypeIncidentRule                = "IncidentRule"
+	TypeIncidentRuleExecution       = "IncidentRuleExecution"
+	TypeKnowledgeArticle            = "KnowledgeArticle"
+	TypeKnowledgeArticleLike        = "KnowledgeArticleLike"
+	TypeKnowledgeArticleParticipant = "KnowledgeArticleParticipant"
+	TypeKnowledgeArticleSession     = "KnowledgeArticleSession"
+	TypeKnowledgeArticleVersion     = "KnowledgeArticleVersion"
+	TypeKnownError                  = "KnownError"
+	TypeMSPAllocation               = "MSPAllocation"
+	TypeMenu                        = "Menu"
+	TypeMessage                     = "Message"
+	TypeMicroservice                = "Microservice"
+	TypeNotification                = "Notification"
+	TypeNotificationPreference      = "NotificationPreference"
+	TypePasswordResetToken          = "PasswordResetToken"
+	TypePermission                  = "Permission"
+	TypePermissionDefinition        = "PermissionDefinition"
+	TypeProblem                     = "Problem"
+	TypeProcessAuditLog             = "ProcessAuditLog"
+	TypeProcessBinding              = "ProcessBinding"
+	TypeProcessDefinition           = "ProcessDefinition"
+	TypeProcessDeployment           = "ProcessDeployment"
+	TypeProcessExecutionHistory     = "ProcessExecutionHistory"
+	TypeProcessInstance             = "ProcessInstance"
+	TypeProcessTask                 = "ProcessTask"
+	TypeProcessVariable             = "ProcessVariable"
+	TypeProcessVersionChangelog     = "ProcessVersionChangelog"
+	TypeProject                     = "Project"
+	TypePromptTemplate              = "PromptTemplate"
+	TypeProvisioningTask            = "ProvisioningTask"
+	TypeRelationshipType            = "RelationshipType"
+	TypeRelease                     = "Release"
+	TypeRole                        = "Role"
+	TypeRolePermission              = "RolePermission"
+	TypeRootCauseAnalysis           = "RootCauseAnalysis"
+	TypeSLAAlertHistory             = "SLAAlertHistory"
+	TypeSLAAlertRule                = "SLAAlertRule"
+	TypeSLADefinition               = "SLADefinition"
+	TypeSLAMetric                   = "SLAMetric"
+	TypeSLAPolicy                   = "SLAPolicy"
+	TypeSLAViolation                = "SLAViolation"
+	TypeServiceCatalog              = "ServiceCatalog"
+	TypeServiceRequest              = "ServiceRequest"
+	TypeServiceRequestApproval      = "ServiceRequestApproval"
+	TypeStandardChange              = "StandardChange"
+	TypeSurvey                      = "Survey"
+	TypeSurveyResponse              = "SurveyResponse"
+	TypeSystemConfig                = "SystemConfig"
+	TypeTag                         = "Tag"
+	TypeTeam                        = "Team"
+	TypeTenant                      = "Tenant"
+	TypeTicket                      = "Ticket"
+	TypeTicketAssignmentRule        = "TicketAssignmentRule"
+	TypeTicketAttachment            = "TicketAttachment"
+	TypeTicketAutomationRule        = "TicketAutomationRule"
+	TypeTicketCategory              = "TicketCategory"
+	TypeTicketComment               = "TicketComment"
+	TypeTicketNotification          = "TicketNotification"
+	TypeTicketTag                   = "TicketTag"
+	TypeTicketTemplate              = "TicketTemplate"
+	TypeTicketView                  = "TicketView"
+	TypeToolInvocation              = "ToolInvocation"
+	TypeUser                        = "User"
+	TypeVendor                      = "Vendor"
+	TypeWorkflow                    = "Workflow"
+	TypeWorkflowInstance            = "WorkflowInstance"
+	TypeWorkflowTask                = "WorkflowTask"
+	TypeWorkflowVersion             = "WorkflowVersion"
 )
 
 // ApplicationMutation represents an operation that mutates the Application nodes in the graph.
@@ -42699,6 +42705,10 @@ type KnowledgeArticleMutation struct {
 	user_likes        map[int]struct{}
 	removeduser_likes map[int]struct{}
 	cleareduser_likes bool
+	versions          *int
+	clearedversions   bool
+	sessions          *int
+	clearedsessions   bool
 	done              bool
 	oldValue          func(context.Context) (*KnowledgeArticle, error)
 	predicates        []predicate.KnowledgeArticle
@@ -43371,6 +43381,84 @@ func (m *KnowledgeArticleMutation) ResetUserLikes() {
 	m.removeduser_likes = nil
 }
 
+// SetVersionsID sets the "versions" edge to the KnowledgeArticleVersion entity by id.
+func (m *KnowledgeArticleMutation) SetVersionsID(id int) {
+	m.versions = &id
+}
+
+// ClearVersions clears the "versions" edge to the KnowledgeArticleVersion entity.
+func (m *KnowledgeArticleMutation) ClearVersions() {
+	m.clearedversions = true
+}
+
+// VersionsCleared reports if the "versions" edge to the KnowledgeArticleVersion entity was cleared.
+func (m *KnowledgeArticleMutation) VersionsCleared() bool {
+	return m.clearedversions
+}
+
+// VersionsID returns the "versions" edge ID in the mutation.
+func (m *KnowledgeArticleMutation) VersionsID() (id int, exists bool) {
+	if m.versions != nil {
+		return *m.versions, true
+	}
+	return
+}
+
+// VersionsIDs returns the "versions" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// VersionsID instead. It exists only for internal usage by the builders.
+func (m *KnowledgeArticleMutation) VersionsIDs() (ids []int) {
+	if id := m.versions; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetVersions resets all changes to the "versions" edge.
+func (m *KnowledgeArticleMutation) ResetVersions() {
+	m.versions = nil
+	m.clearedversions = false
+}
+
+// SetSessionsID sets the "sessions" edge to the KnowledgeArticleSession entity by id.
+func (m *KnowledgeArticleMutation) SetSessionsID(id int) {
+	m.sessions = &id
+}
+
+// ClearSessions clears the "sessions" edge to the KnowledgeArticleSession entity.
+func (m *KnowledgeArticleMutation) ClearSessions() {
+	m.clearedsessions = true
+}
+
+// SessionsCleared reports if the "sessions" edge to the KnowledgeArticleSession entity was cleared.
+func (m *KnowledgeArticleMutation) SessionsCleared() bool {
+	return m.clearedsessions
+}
+
+// SessionsID returns the "sessions" edge ID in the mutation.
+func (m *KnowledgeArticleMutation) SessionsID() (id int, exists bool) {
+	if m.sessions != nil {
+		return *m.sessions, true
+	}
+	return
+}
+
+// SessionsIDs returns the "sessions" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// SessionsID instead. It exists only for internal usage by the builders.
+func (m *KnowledgeArticleMutation) SessionsIDs() (ids []int) {
+	if id := m.sessions; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetSessions resets all changes to the "sessions" edge.
+func (m *KnowledgeArticleMutation) ResetSessions() {
+	m.sessions = nil
+	m.clearedsessions = false
+}
+
 // Where appends a list predicates to the KnowledgeArticleMutation builder.
 func (m *KnowledgeArticleMutation) Where(ps ...predicate.KnowledgeArticle) {
 	m.predicates = append(m.predicates, ps...)
@@ -43746,9 +43834,15 @@ func (m *KnowledgeArticleMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *KnowledgeArticleMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.user_likes != nil {
 		edges = append(edges, knowledgearticle.EdgeUserLikes)
+	}
+	if m.versions != nil {
+		edges = append(edges, knowledgearticle.EdgeVersions)
+	}
+	if m.sessions != nil {
+		edges = append(edges, knowledgearticle.EdgeSessions)
 	}
 	return edges
 }
@@ -43763,13 +43857,21 @@ func (m *KnowledgeArticleMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case knowledgearticle.EdgeVersions:
+		if id := m.versions; id != nil {
+			return []ent.Value{*id}
+		}
+	case knowledgearticle.EdgeSessions:
+		if id := m.sessions; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *KnowledgeArticleMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.removeduser_likes != nil {
 		edges = append(edges, knowledgearticle.EdgeUserLikes)
 	}
@@ -43792,9 +43894,15 @@ func (m *KnowledgeArticleMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *KnowledgeArticleMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.cleareduser_likes {
 		edges = append(edges, knowledgearticle.EdgeUserLikes)
+	}
+	if m.clearedversions {
+		edges = append(edges, knowledgearticle.EdgeVersions)
+	}
+	if m.clearedsessions {
+		edges = append(edges, knowledgearticle.EdgeSessions)
 	}
 	return edges
 }
@@ -43805,6 +43913,10 @@ func (m *KnowledgeArticleMutation) EdgeCleared(name string) bool {
 	switch name {
 	case knowledgearticle.EdgeUserLikes:
 		return m.cleareduser_likes
+	case knowledgearticle.EdgeVersions:
+		return m.clearedversions
+	case knowledgearticle.EdgeSessions:
+		return m.clearedsessions
 	}
 	return false
 }
@@ -43813,6 +43925,12 @@ func (m *KnowledgeArticleMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *KnowledgeArticleMutation) ClearEdge(name string) error {
 	switch name {
+	case knowledgearticle.EdgeVersions:
+		m.ClearVersions()
+		return nil
+	case knowledgearticle.EdgeSessions:
+		m.ClearSessions()
+		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticle unique edge %s", name)
 }
@@ -43823,6 +43941,12 @@ func (m *KnowledgeArticleMutation) ResetEdge(name string) error {
 	switch name {
 	case knowledgearticle.EdgeUserLikes:
 		m.ResetUserLikes()
+		return nil
+	case knowledgearticle.EdgeVersions:
+		m.ResetVersions()
+		return nil
+	case knowledgearticle.EdgeSessions:
+		m.ResetSessions()
 		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticle edge %s", name)
@@ -44437,6 +44561,2880 @@ func (m *KnowledgeArticleLikeMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticleLike edge %s", name)
+}
+
+// KnowledgeArticleParticipantMutation represents an operation that mutates the KnowledgeArticleParticipant nodes in the graph.
+type KnowledgeArticleParticipantMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *int
+	session_id         *int
+	addsession_id      *int
+	user_id            *int
+	adduser_id         *int
+	cursor_position    *int
+	addcursor_position *int
+	is_active          *bool
+	joined_at          *time.Time
+	last_activity      *time.Time
+	clearedFields      map[string]struct{}
+	session            map[int]struct{}
+	removedsession     map[int]struct{}
+	clearedsession     bool
+	user               map[int]struct{}
+	removeduser        map[int]struct{}
+	cleareduser        bool
+	done               bool
+	oldValue           func(context.Context) (*KnowledgeArticleParticipant, error)
+	predicates         []predicate.KnowledgeArticleParticipant
+}
+
+var _ ent.Mutation = (*KnowledgeArticleParticipantMutation)(nil)
+
+// knowledgearticleparticipantOption allows management of the mutation configuration using functional options.
+type knowledgearticleparticipantOption func(*KnowledgeArticleParticipantMutation)
+
+// newKnowledgeArticleParticipantMutation creates new mutation for the KnowledgeArticleParticipant entity.
+func newKnowledgeArticleParticipantMutation(c config, op Op, opts ...knowledgearticleparticipantOption) *KnowledgeArticleParticipantMutation {
+	m := &KnowledgeArticleParticipantMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeKnowledgeArticleParticipant,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withKnowledgeArticleParticipantID sets the ID field of the mutation.
+func withKnowledgeArticleParticipantID(id int) knowledgearticleparticipantOption {
+	return func(m *KnowledgeArticleParticipantMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *KnowledgeArticleParticipant
+		)
+		m.oldValue = func(ctx context.Context) (*KnowledgeArticleParticipant, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().KnowledgeArticleParticipant.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withKnowledgeArticleParticipant sets the old KnowledgeArticleParticipant of the mutation.
+func withKnowledgeArticleParticipant(node *KnowledgeArticleParticipant) knowledgearticleparticipantOption {
+	return func(m *KnowledgeArticleParticipantMutation) {
+		m.oldValue = func(context.Context) (*KnowledgeArticleParticipant, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m KnowledgeArticleParticipantMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m KnowledgeArticleParticipantMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *KnowledgeArticleParticipantMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *KnowledgeArticleParticipantMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().KnowledgeArticleParticipant.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetSessionID sets the "session_id" field.
+func (m *KnowledgeArticleParticipantMutation) SetSessionID(i int) {
+	m.session_id = &i
+	m.addsession_id = nil
+}
+
+// SessionID returns the value of the "session_id" field in the mutation.
+func (m *KnowledgeArticleParticipantMutation) SessionID() (r int, exists bool) {
+	v := m.session_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSessionID returns the old "session_id" field's value of the KnowledgeArticleParticipant entity.
+// If the KnowledgeArticleParticipant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleParticipantMutation) OldSessionID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSessionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSessionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSessionID: %w", err)
+	}
+	return oldValue.SessionID, nil
+}
+
+// AddSessionID adds i to the "session_id" field.
+func (m *KnowledgeArticleParticipantMutation) AddSessionID(i int) {
+	if m.addsession_id != nil {
+		*m.addsession_id += i
+	} else {
+		m.addsession_id = &i
+	}
+}
+
+// AddedSessionID returns the value that was added to the "session_id" field in this mutation.
+func (m *KnowledgeArticleParticipantMutation) AddedSessionID() (r int, exists bool) {
+	v := m.addsession_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSessionID resets all changes to the "session_id" field.
+func (m *KnowledgeArticleParticipantMutation) ResetSessionID() {
+	m.session_id = nil
+	m.addsession_id = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *KnowledgeArticleParticipantMutation) SetUserID(i int) {
+	m.user_id = &i
+	m.adduser_id = nil
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *KnowledgeArticleParticipantMutation) UserID() (r int, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the KnowledgeArticleParticipant entity.
+// If the KnowledgeArticleParticipant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleParticipantMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// AddUserID adds i to the "user_id" field.
+func (m *KnowledgeArticleParticipantMutation) AddUserID(i int) {
+	if m.adduser_id != nil {
+		*m.adduser_id += i
+	} else {
+		m.adduser_id = &i
+	}
+}
+
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
+func (m *KnowledgeArticleParticipantMutation) AddedUserID() (r int, exists bool) {
+	v := m.adduser_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *KnowledgeArticleParticipantMutation) ResetUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+}
+
+// SetCursorPosition sets the "cursor_position" field.
+func (m *KnowledgeArticleParticipantMutation) SetCursorPosition(i int) {
+	m.cursor_position = &i
+	m.addcursor_position = nil
+}
+
+// CursorPosition returns the value of the "cursor_position" field in the mutation.
+func (m *KnowledgeArticleParticipantMutation) CursorPosition() (r int, exists bool) {
+	v := m.cursor_position
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCursorPosition returns the old "cursor_position" field's value of the KnowledgeArticleParticipant entity.
+// If the KnowledgeArticleParticipant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleParticipantMutation) OldCursorPosition(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCursorPosition is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCursorPosition requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCursorPosition: %w", err)
+	}
+	return oldValue.CursorPosition, nil
+}
+
+// AddCursorPosition adds i to the "cursor_position" field.
+func (m *KnowledgeArticleParticipantMutation) AddCursorPosition(i int) {
+	if m.addcursor_position != nil {
+		*m.addcursor_position += i
+	} else {
+		m.addcursor_position = &i
+	}
+}
+
+// AddedCursorPosition returns the value that was added to the "cursor_position" field in this mutation.
+func (m *KnowledgeArticleParticipantMutation) AddedCursorPosition() (r int, exists bool) {
+	v := m.addcursor_position
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCursorPosition resets all changes to the "cursor_position" field.
+func (m *KnowledgeArticleParticipantMutation) ResetCursorPosition() {
+	m.cursor_position = nil
+	m.addcursor_position = nil
+}
+
+// SetIsActive sets the "is_active" field.
+func (m *KnowledgeArticleParticipantMutation) SetIsActive(b bool) {
+	m.is_active = &b
+}
+
+// IsActive returns the value of the "is_active" field in the mutation.
+func (m *KnowledgeArticleParticipantMutation) IsActive() (r bool, exists bool) {
+	v := m.is_active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsActive returns the old "is_active" field's value of the KnowledgeArticleParticipant entity.
+// If the KnowledgeArticleParticipant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleParticipantMutation) OldIsActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsActive: %w", err)
+	}
+	return oldValue.IsActive, nil
+}
+
+// ResetIsActive resets all changes to the "is_active" field.
+func (m *KnowledgeArticleParticipantMutation) ResetIsActive() {
+	m.is_active = nil
+}
+
+// SetJoinedAt sets the "joined_at" field.
+func (m *KnowledgeArticleParticipantMutation) SetJoinedAt(t time.Time) {
+	m.joined_at = &t
+}
+
+// JoinedAt returns the value of the "joined_at" field in the mutation.
+func (m *KnowledgeArticleParticipantMutation) JoinedAt() (r time.Time, exists bool) {
+	v := m.joined_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJoinedAt returns the old "joined_at" field's value of the KnowledgeArticleParticipant entity.
+// If the KnowledgeArticleParticipant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleParticipantMutation) OldJoinedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJoinedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJoinedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJoinedAt: %w", err)
+	}
+	return oldValue.JoinedAt, nil
+}
+
+// ResetJoinedAt resets all changes to the "joined_at" field.
+func (m *KnowledgeArticleParticipantMutation) ResetJoinedAt() {
+	m.joined_at = nil
+}
+
+// SetLastActivity sets the "last_activity" field.
+func (m *KnowledgeArticleParticipantMutation) SetLastActivity(t time.Time) {
+	m.last_activity = &t
+}
+
+// LastActivity returns the value of the "last_activity" field in the mutation.
+func (m *KnowledgeArticleParticipantMutation) LastActivity() (r time.Time, exists bool) {
+	v := m.last_activity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastActivity returns the old "last_activity" field's value of the KnowledgeArticleParticipant entity.
+// If the KnowledgeArticleParticipant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleParticipantMutation) OldLastActivity(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastActivity is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastActivity requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastActivity: %w", err)
+	}
+	return oldValue.LastActivity, nil
+}
+
+// ClearLastActivity clears the value of the "last_activity" field.
+func (m *KnowledgeArticleParticipantMutation) ClearLastActivity() {
+	m.last_activity = nil
+	m.clearedFields[knowledgearticleparticipant.FieldLastActivity] = struct{}{}
+}
+
+// LastActivityCleared returns if the "last_activity" field was cleared in this mutation.
+func (m *KnowledgeArticleParticipantMutation) LastActivityCleared() bool {
+	_, ok := m.clearedFields[knowledgearticleparticipant.FieldLastActivity]
+	return ok
+}
+
+// ResetLastActivity resets all changes to the "last_activity" field.
+func (m *KnowledgeArticleParticipantMutation) ResetLastActivity() {
+	m.last_activity = nil
+	delete(m.clearedFields, knowledgearticleparticipant.FieldLastActivity)
+}
+
+// AddSessionIDs adds the "session" edge to the KnowledgeArticleSession entity by ids.
+func (m *KnowledgeArticleParticipantMutation) AddSessionIDs(ids ...int) {
+	if m.session == nil {
+		m.session = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.session[ids[i]] = struct{}{}
+	}
+}
+
+// ClearSession clears the "session" edge to the KnowledgeArticleSession entity.
+func (m *KnowledgeArticleParticipantMutation) ClearSession() {
+	m.clearedsession = true
+}
+
+// SessionCleared reports if the "session" edge to the KnowledgeArticleSession entity was cleared.
+func (m *KnowledgeArticleParticipantMutation) SessionCleared() bool {
+	return m.clearedsession
+}
+
+// RemoveSessionIDs removes the "session" edge to the KnowledgeArticleSession entity by IDs.
+func (m *KnowledgeArticleParticipantMutation) RemoveSessionIDs(ids ...int) {
+	if m.removedsession == nil {
+		m.removedsession = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.session, ids[i])
+		m.removedsession[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedSession returns the removed IDs of the "session" edge to the KnowledgeArticleSession entity.
+func (m *KnowledgeArticleParticipantMutation) RemovedSessionIDs() (ids []int) {
+	for id := range m.removedsession {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// SessionIDs returns the "session" edge IDs in the mutation.
+func (m *KnowledgeArticleParticipantMutation) SessionIDs() (ids []int) {
+	for id := range m.session {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetSession resets all changes to the "session" edge.
+func (m *KnowledgeArticleParticipantMutation) ResetSession() {
+	m.session = nil
+	m.clearedsession = false
+	m.removedsession = nil
+}
+
+// AddUserIDs adds the "user" edge to the User entity by ids.
+func (m *KnowledgeArticleParticipantMutation) AddUserIDs(ids ...int) {
+	if m.user == nil {
+		m.user = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.user[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *KnowledgeArticleParticipantMutation) ClearUser() {
+	m.cleareduser = true
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *KnowledgeArticleParticipantMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// RemoveUserIDs removes the "user" edge to the User entity by IDs.
+func (m *KnowledgeArticleParticipantMutation) RemoveUserIDs(ids ...int) {
+	if m.removeduser == nil {
+		m.removeduser = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.user, ids[i])
+		m.removeduser[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUser returns the removed IDs of the "user" edge to the User entity.
+func (m *KnowledgeArticleParticipantMutation) RemovedUserIDs() (ids []int) {
+	for id := range m.removeduser {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+func (m *KnowledgeArticleParticipantMutation) UserIDs() (ids []int) {
+	for id := range m.user {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *KnowledgeArticleParticipantMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+	m.removeduser = nil
+}
+
+// Where appends a list predicates to the KnowledgeArticleParticipantMutation builder.
+func (m *KnowledgeArticleParticipantMutation) Where(ps ...predicate.KnowledgeArticleParticipant) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the KnowledgeArticleParticipantMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *KnowledgeArticleParticipantMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.KnowledgeArticleParticipant, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *KnowledgeArticleParticipantMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *KnowledgeArticleParticipantMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (KnowledgeArticleParticipant).
+func (m *KnowledgeArticleParticipantMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *KnowledgeArticleParticipantMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.session_id != nil {
+		fields = append(fields, knowledgearticleparticipant.FieldSessionID)
+	}
+	if m.user_id != nil {
+		fields = append(fields, knowledgearticleparticipant.FieldUserID)
+	}
+	if m.cursor_position != nil {
+		fields = append(fields, knowledgearticleparticipant.FieldCursorPosition)
+	}
+	if m.is_active != nil {
+		fields = append(fields, knowledgearticleparticipant.FieldIsActive)
+	}
+	if m.joined_at != nil {
+		fields = append(fields, knowledgearticleparticipant.FieldJoinedAt)
+	}
+	if m.last_activity != nil {
+		fields = append(fields, knowledgearticleparticipant.FieldLastActivity)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *KnowledgeArticleParticipantMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case knowledgearticleparticipant.FieldSessionID:
+		return m.SessionID()
+	case knowledgearticleparticipant.FieldUserID:
+		return m.UserID()
+	case knowledgearticleparticipant.FieldCursorPosition:
+		return m.CursorPosition()
+	case knowledgearticleparticipant.FieldIsActive:
+		return m.IsActive()
+	case knowledgearticleparticipant.FieldJoinedAt:
+		return m.JoinedAt()
+	case knowledgearticleparticipant.FieldLastActivity:
+		return m.LastActivity()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *KnowledgeArticleParticipantMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case knowledgearticleparticipant.FieldSessionID:
+		return m.OldSessionID(ctx)
+	case knowledgearticleparticipant.FieldUserID:
+		return m.OldUserID(ctx)
+	case knowledgearticleparticipant.FieldCursorPosition:
+		return m.OldCursorPosition(ctx)
+	case knowledgearticleparticipant.FieldIsActive:
+		return m.OldIsActive(ctx)
+	case knowledgearticleparticipant.FieldJoinedAt:
+		return m.OldJoinedAt(ctx)
+	case knowledgearticleparticipant.FieldLastActivity:
+		return m.OldLastActivity(ctx)
+	}
+	return nil, fmt.Errorf("unknown KnowledgeArticleParticipant field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *KnowledgeArticleParticipantMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case knowledgearticleparticipant.FieldSessionID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSessionID(v)
+		return nil
+	case knowledgearticleparticipant.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case knowledgearticleparticipant.FieldCursorPosition:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCursorPosition(v)
+		return nil
+	case knowledgearticleparticipant.FieldIsActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsActive(v)
+		return nil
+	case knowledgearticleparticipant.FieldJoinedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJoinedAt(v)
+		return nil
+	case knowledgearticleparticipant.FieldLastActivity:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastActivity(v)
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleParticipant field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *KnowledgeArticleParticipantMutation) AddedFields() []string {
+	var fields []string
+	if m.addsession_id != nil {
+		fields = append(fields, knowledgearticleparticipant.FieldSessionID)
+	}
+	if m.adduser_id != nil {
+		fields = append(fields, knowledgearticleparticipant.FieldUserID)
+	}
+	if m.addcursor_position != nil {
+		fields = append(fields, knowledgearticleparticipant.FieldCursorPosition)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *KnowledgeArticleParticipantMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case knowledgearticleparticipant.FieldSessionID:
+		return m.AddedSessionID()
+	case knowledgearticleparticipant.FieldUserID:
+		return m.AddedUserID()
+	case knowledgearticleparticipant.FieldCursorPosition:
+		return m.AddedCursorPosition()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *KnowledgeArticleParticipantMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case knowledgearticleparticipant.FieldSessionID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSessionID(v)
+		return nil
+	case knowledgearticleparticipant.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserID(v)
+		return nil
+	case knowledgearticleparticipant.FieldCursorPosition:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCursorPosition(v)
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleParticipant numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *KnowledgeArticleParticipantMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(knowledgearticleparticipant.FieldLastActivity) {
+		fields = append(fields, knowledgearticleparticipant.FieldLastActivity)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *KnowledgeArticleParticipantMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *KnowledgeArticleParticipantMutation) ClearField(name string) error {
+	switch name {
+	case knowledgearticleparticipant.FieldLastActivity:
+		m.ClearLastActivity()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleParticipant nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *KnowledgeArticleParticipantMutation) ResetField(name string) error {
+	switch name {
+	case knowledgearticleparticipant.FieldSessionID:
+		m.ResetSessionID()
+		return nil
+	case knowledgearticleparticipant.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case knowledgearticleparticipant.FieldCursorPosition:
+		m.ResetCursorPosition()
+		return nil
+	case knowledgearticleparticipant.FieldIsActive:
+		m.ResetIsActive()
+		return nil
+	case knowledgearticleparticipant.FieldJoinedAt:
+		m.ResetJoinedAt()
+		return nil
+	case knowledgearticleparticipant.FieldLastActivity:
+		m.ResetLastActivity()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleParticipant field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *KnowledgeArticleParticipantMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.session != nil {
+		edges = append(edges, knowledgearticleparticipant.EdgeSession)
+	}
+	if m.user != nil {
+		edges = append(edges, knowledgearticleparticipant.EdgeUser)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *KnowledgeArticleParticipantMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case knowledgearticleparticipant.EdgeSession:
+		ids := make([]ent.Value, 0, len(m.session))
+		for id := range m.session {
+			ids = append(ids, id)
+		}
+		return ids
+	case knowledgearticleparticipant.EdgeUser:
+		ids := make([]ent.Value, 0, len(m.user))
+		for id := range m.user {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *KnowledgeArticleParticipantMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedsession != nil {
+		edges = append(edges, knowledgearticleparticipant.EdgeSession)
+	}
+	if m.removeduser != nil {
+		edges = append(edges, knowledgearticleparticipant.EdgeUser)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *KnowledgeArticleParticipantMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case knowledgearticleparticipant.EdgeSession:
+		ids := make([]ent.Value, 0, len(m.removedsession))
+		for id := range m.removedsession {
+			ids = append(ids, id)
+		}
+		return ids
+	case knowledgearticleparticipant.EdgeUser:
+		ids := make([]ent.Value, 0, len(m.removeduser))
+		for id := range m.removeduser {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *KnowledgeArticleParticipantMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedsession {
+		edges = append(edges, knowledgearticleparticipant.EdgeSession)
+	}
+	if m.cleareduser {
+		edges = append(edges, knowledgearticleparticipant.EdgeUser)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *KnowledgeArticleParticipantMutation) EdgeCleared(name string) bool {
+	switch name {
+	case knowledgearticleparticipant.EdgeSession:
+		return m.clearedsession
+	case knowledgearticleparticipant.EdgeUser:
+		return m.cleareduser
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *KnowledgeArticleParticipantMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown KnowledgeArticleParticipant unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *KnowledgeArticleParticipantMutation) ResetEdge(name string) error {
+	switch name {
+	case knowledgearticleparticipant.EdgeSession:
+		m.ResetSession()
+		return nil
+	case knowledgearticleparticipant.EdgeUser:
+		m.ResetUser()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleParticipant edge %s", name)
+}
+
+// KnowledgeArticleSessionMutation represents an operation that mutates the KnowledgeArticleSession nodes in the graph.
+type KnowledgeArticleSessionMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *int
+	article_id          *int
+	addarticle_id       *int
+	user_id             *int
+	adduser_id          *int
+	session_token       *string
+	status              *knowledgearticlesession.Status
+	last_heartbeat      *time.Time
+	created_at          *time.Time
+	clearedFields       map[string]struct{}
+	article             map[int]struct{}
+	removedarticle      map[int]struct{}
+	clearedarticle      bool
+	user                map[int]struct{}
+	removeduser         map[int]struct{}
+	cleareduser         bool
+	participants        map[int]struct{}
+	removedparticipants map[int]struct{}
+	clearedparticipants bool
+	done                bool
+	oldValue            func(context.Context) (*KnowledgeArticleSession, error)
+	predicates          []predicate.KnowledgeArticleSession
+}
+
+var _ ent.Mutation = (*KnowledgeArticleSessionMutation)(nil)
+
+// knowledgearticlesessionOption allows management of the mutation configuration using functional options.
+type knowledgearticlesessionOption func(*KnowledgeArticleSessionMutation)
+
+// newKnowledgeArticleSessionMutation creates new mutation for the KnowledgeArticleSession entity.
+func newKnowledgeArticleSessionMutation(c config, op Op, opts ...knowledgearticlesessionOption) *KnowledgeArticleSessionMutation {
+	m := &KnowledgeArticleSessionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeKnowledgeArticleSession,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withKnowledgeArticleSessionID sets the ID field of the mutation.
+func withKnowledgeArticleSessionID(id int) knowledgearticlesessionOption {
+	return func(m *KnowledgeArticleSessionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *KnowledgeArticleSession
+		)
+		m.oldValue = func(ctx context.Context) (*KnowledgeArticleSession, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().KnowledgeArticleSession.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withKnowledgeArticleSession sets the old KnowledgeArticleSession of the mutation.
+func withKnowledgeArticleSession(node *KnowledgeArticleSession) knowledgearticlesessionOption {
+	return func(m *KnowledgeArticleSessionMutation) {
+		m.oldValue = func(context.Context) (*KnowledgeArticleSession, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m KnowledgeArticleSessionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m KnowledgeArticleSessionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *KnowledgeArticleSessionMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *KnowledgeArticleSessionMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().KnowledgeArticleSession.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetArticleID sets the "article_id" field.
+func (m *KnowledgeArticleSessionMutation) SetArticleID(i int) {
+	m.article_id = &i
+	m.addarticle_id = nil
+}
+
+// ArticleID returns the value of the "article_id" field in the mutation.
+func (m *KnowledgeArticleSessionMutation) ArticleID() (r int, exists bool) {
+	v := m.article_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldArticleID returns the old "article_id" field's value of the KnowledgeArticleSession entity.
+// If the KnowledgeArticleSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleSessionMutation) OldArticleID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldArticleID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldArticleID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldArticleID: %w", err)
+	}
+	return oldValue.ArticleID, nil
+}
+
+// AddArticleID adds i to the "article_id" field.
+func (m *KnowledgeArticleSessionMutation) AddArticleID(i int) {
+	if m.addarticle_id != nil {
+		*m.addarticle_id += i
+	} else {
+		m.addarticle_id = &i
+	}
+}
+
+// AddedArticleID returns the value that was added to the "article_id" field in this mutation.
+func (m *KnowledgeArticleSessionMutation) AddedArticleID() (r int, exists bool) {
+	v := m.addarticle_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetArticleID resets all changes to the "article_id" field.
+func (m *KnowledgeArticleSessionMutation) ResetArticleID() {
+	m.article_id = nil
+	m.addarticle_id = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *KnowledgeArticleSessionMutation) SetUserID(i int) {
+	m.user_id = &i
+	m.adduser_id = nil
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *KnowledgeArticleSessionMutation) UserID() (r int, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the KnowledgeArticleSession entity.
+// If the KnowledgeArticleSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleSessionMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// AddUserID adds i to the "user_id" field.
+func (m *KnowledgeArticleSessionMutation) AddUserID(i int) {
+	if m.adduser_id != nil {
+		*m.adduser_id += i
+	} else {
+		m.adduser_id = &i
+	}
+}
+
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
+func (m *KnowledgeArticleSessionMutation) AddedUserID() (r int, exists bool) {
+	v := m.adduser_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *KnowledgeArticleSessionMutation) ResetUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+}
+
+// SetSessionToken sets the "session_token" field.
+func (m *KnowledgeArticleSessionMutation) SetSessionToken(s string) {
+	m.session_token = &s
+}
+
+// SessionToken returns the value of the "session_token" field in the mutation.
+func (m *KnowledgeArticleSessionMutation) SessionToken() (r string, exists bool) {
+	v := m.session_token
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSessionToken returns the old "session_token" field's value of the KnowledgeArticleSession entity.
+// If the KnowledgeArticleSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleSessionMutation) OldSessionToken(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSessionToken is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSessionToken requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSessionToken: %w", err)
+	}
+	return oldValue.SessionToken, nil
+}
+
+// ResetSessionToken resets all changes to the "session_token" field.
+func (m *KnowledgeArticleSessionMutation) ResetSessionToken() {
+	m.session_token = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *KnowledgeArticleSessionMutation) SetStatus(k knowledgearticlesession.Status) {
+	m.status = &k
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *KnowledgeArticleSessionMutation) Status() (r knowledgearticlesession.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the KnowledgeArticleSession entity.
+// If the KnowledgeArticleSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleSessionMutation) OldStatus(ctx context.Context) (v knowledgearticlesession.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *KnowledgeArticleSessionMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetLastHeartbeat sets the "last_heartbeat" field.
+func (m *KnowledgeArticleSessionMutation) SetLastHeartbeat(t time.Time) {
+	m.last_heartbeat = &t
+}
+
+// LastHeartbeat returns the value of the "last_heartbeat" field in the mutation.
+func (m *KnowledgeArticleSessionMutation) LastHeartbeat() (r time.Time, exists bool) {
+	v := m.last_heartbeat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastHeartbeat returns the old "last_heartbeat" field's value of the KnowledgeArticleSession entity.
+// If the KnowledgeArticleSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleSessionMutation) OldLastHeartbeat(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastHeartbeat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastHeartbeat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastHeartbeat: %w", err)
+	}
+	return oldValue.LastHeartbeat, nil
+}
+
+// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
+func (m *KnowledgeArticleSessionMutation) ClearLastHeartbeat() {
+	m.last_heartbeat = nil
+	m.clearedFields[knowledgearticlesession.FieldLastHeartbeat] = struct{}{}
+}
+
+// LastHeartbeatCleared returns if the "last_heartbeat" field was cleared in this mutation.
+func (m *KnowledgeArticleSessionMutation) LastHeartbeatCleared() bool {
+	_, ok := m.clearedFields[knowledgearticlesession.FieldLastHeartbeat]
+	return ok
+}
+
+// ResetLastHeartbeat resets all changes to the "last_heartbeat" field.
+func (m *KnowledgeArticleSessionMutation) ResetLastHeartbeat() {
+	m.last_heartbeat = nil
+	delete(m.clearedFields, knowledgearticlesession.FieldLastHeartbeat)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *KnowledgeArticleSessionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *KnowledgeArticleSessionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the KnowledgeArticleSession entity.
+// If the KnowledgeArticleSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleSessionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *KnowledgeArticleSessionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// AddArticleIDs adds the "article" edge to the KnowledgeArticle entity by ids.
+func (m *KnowledgeArticleSessionMutation) AddArticleIDs(ids ...int) {
+	if m.article == nil {
+		m.article = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.article[ids[i]] = struct{}{}
+	}
+}
+
+// ClearArticle clears the "article" edge to the KnowledgeArticle entity.
+func (m *KnowledgeArticleSessionMutation) ClearArticle() {
+	m.clearedarticle = true
+}
+
+// ArticleCleared reports if the "article" edge to the KnowledgeArticle entity was cleared.
+func (m *KnowledgeArticleSessionMutation) ArticleCleared() bool {
+	return m.clearedarticle
+}
+
+// RemoveArticleIDs removes the "article" edge to the KnowledgeArticle entity by IDs.
+func (m *KnowledgeArticleSessionMutation) RemoveArticleIDs(ids ...int) {
+	if m.removedarticle == nil {
+		m.removedarticle = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.article, ids[i])
+		m.removedarticle[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedArticle returns the removed IDs of the "article" edge to the KnowledgeArticle entity.
+func (m *KnowledgeArticleSessionMutation) RemovedArticleIDs() (ids []int) {
+	for id := range m.removedarticle {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ArticleIDs returns the "article" edge IDs in the mutation.
+func (m *KnowledgeArticleSessionMutation) ArticleIDs() (ids []int) {
+	for id := range m.article {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetArticle resets all changes to the "article" edge.
+func (m *KnowledgeArticleSessionMutation) ResetArticle() {
+	m.article = nil
+	m.clearedarticle = false
+	m.removedarticle = nil
+}
+
+// AddUserIDs adds the "user" edge to the User entity by ids.
+func (m *KnowledgeArticleSessionMutation) AddUserIDs(ids ...int) {
+	if m.user == nil {
+		m.user = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.user[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *KnowledgeArticleSessionMutation) ClearUser() {
+	m.cleareduser = true
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *KnowledgeArticleSessionMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// RemoveUserIDs removes the "user" edge to the User entity by IDs.
+func (m *KnowledgeArticleSessionMutation) RemoveUserIDs(ids ...int) {
+	if m.removeduser == nil {
+		m.removeduser = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.user, ids[i])
+		m.removeduser[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUser returns the removed IDs of the "user" edge to the User entity.
+func (m *KnowledgeArticleSessionMutation) RemovedUserIDs() (ids []int) {
+	for id := range m.removeduser {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+func (m *KnowledgeArticleSessionMutation) UserIDs() (ids []int) {
+	for id := range m.user {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *KnowledgeArticleSessionMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+	m.removeduser = nil
+}
+
+// AddParticipantIDs adds the "participants" edge to the KnowledgeArticleParticipant entity by ids.
+func (m *KnowledgeArticleSessionMutation) AddParticipantIDs(ids ...int) {
+	if m.participants == nil {
+		m.participants = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.participants[ids[i]] = struct{}{}
+	}
+}
+
+// ClearParticipants clears the "participants" edge to the KnowledgeArticleParticipant entity.
+func (m *KnowledgeArticleSessionMutation) ClearParticipants() {
+	m.clearedparticipants = true
+}
+
+// ParticipantsCleared reports if the "participants" edge to the KnowledgeArticleParticipant entity was cleared.
+func (m *KnowledgeArticleSessionMutation) ParticipantsCleared() bool {
+	return m.clearedparticipants
+}
+
+// RemoveParticipantIDs removes the "participants" edge to the KnowledgeArticleParticipant entity by IDs.
+func (m *KnowledgeArticleSessionMutation) RemoveParticipantIDs(ids ...int) {
+	if m.removedparticipants == nil {
+		m.removedparticipants = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.participants, ids[i])
+		m.removedparticipants[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedParticipants returns the removed IDs of the "participants" edge to the KnowledgeArticleParticipant entity.
+func (m *KnowledgeArticleSessionMutation) RemovedParticipantsIDs() (ids []int) {
+	for id := range m.removedparticipants {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ParticipantsIDs returns the "participants" edge IDs in the mutation.
+func (m *KnowledgeArticleSessionMutation) ParticipantsIDs() (ids []int) {
+	for id := range m.participants {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetParticipants resets all changes to the "participants" edge.
+func (m *KnowledgeArticleSessionMutation) ResetParticipants() {
+	m.participants = nil
+	m.clearedparticipants = false
+	m.removedparticipants = nil
+}
+
+// Where appends a list predicates to the KnowledgeArticleSessionMutation builder.
+func (m *KnowledgeArticleSessionMutation) Where(ps ...predicate.KnowledgeArticleSession) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the KnowledgeArticleSessionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *KnowledgeArticleSessionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.KnowledgeArticleSession, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *KnowledgeArticleSessionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *KnowledgeArticleSessionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (KnowledgeArticleSession).
+func (m *KnowledgeArticleSessionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *KnowledgeArticleSessionMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.article_id != nil {
+		fields = append(fields, knowledgearticlesession.FieldArticleID)
+	}
+	if m.user_id != nil {
+		fields = append(fields, knowledgearticlesession.FieldUserID)
+	}
+	if m.session_token != nil {
+		fields = append(fields, knowledgearticlesession.FieldSessionToken)
+	}
+	if m.status != nil {
+		fields = append(fields, knowledgearticlesession.FieldStatus)
+	}
+	if m.last_heartbeat != nil {
+		fields = append(fields, knowledgearticlesession.FieldLastHeartbeat)
+	}
+	if m.created_at != nil {
+		fields = append(fields, knowledgearticlesession.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *KnowledgeArticleSessionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case knowledgearticlesession.FieldArticleID:
+		return m.ArticleID()
+	case knowledgearticlesession.FieldUserID:
+		return m.UserID()
+	case knowledgearticlesession.FieldSessionToken:
+		return m.SessionToken()
+	case knowledgearticlesession.FieldStatus:
+		return m.Status()
+	case knowledgearticlesession.FieldLastHeartbeat:
+		return m.LastHeartbeat()
+	case knowledgearticlesession.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *KnowledgeArticleSessionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case knowledgearticlesession.FieldArticleID:
+		return m.OldArticleID(ctx)
+	case knowledgearticlesession.FieldUserID:
+		return m.OldUserID(ctx)
+	case knowledgearticlesession.FieldSessionToken:
+		return m.OldSessionToken(ctx)
+	case knowledgearticlesession.FieldStatus:
+		return m.OldStatus(ctx)
+	case knowledgearticlesession.FieldLastHeartbeat:
+		return m.OldLastHeartbeat(ctx)
+	case knowledgearticlesession.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown KnowledgeArticleSession field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *KnowledgeArticleSessionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case knowledgearticlesession.FieldArticleID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetArticleID(v)
+		return nil
+	case knowledgearticlesession.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case knowledgearticlesession.FieldSessionToken:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSessionToken(v)
+		return nil
+	case knowledgearticlesession.FieldStatus:
+		v, ok := value.(knowledgearticlesession.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case knowledgearticlesession.FieldLastHeartbeat:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastHeartbeat(v)
+		return nil
+	case knowledgearticlesession.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleSession field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *KnowledgeArticleSessionMutation) AddedFields() []string {
+	var fields []string
+	if m.addarticle_id != nil {
+		fields = append(fields, knowledgearticlesession.FieldArticleID)
+	}
+	if m.adduser_id != nil {
+		fields = append(fields, knowledgearticlesession.FieldUserID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *KnowledgeArticleSessionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case knowledgearticlesession.FieldArticleID:
+		return m.AddedArticleID()
+	case knowledgearticlesession.FieldUserID:
+		return m.AddedUserID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *KnowledgeArticleSessionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case knowledgearticlesession.FieldArticleID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddArticleID(v)
+		return nil
+	case knowledgearticlesession.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleSession numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *KnowledgeArticleSessionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(knowledgearticlesession.FieldLastHeartbeat) {
+		fields = append(fields, knowledgearticlesession.FieldLastHeartbeat)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *KnowledgeArticleSessionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *KnowledgeArticleSessionMutation) ClearField(name string) error {
+	switch name {
+	case knowledgearticlesession.FieldLastHeartbeat:
+		m.ClearLastHeartbeat()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleSession nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *KnowledgeArticleSessionMutation) ResetField(name string) error {
+	switch name {
+	case knowledgearticlesession.FieldArticleID:
+		m.ResetArticleID()
+		return nil
+	case knowledgearticlesession.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case knowledgearticlesession.FieldSessionToken:
+		m.ResetSessionToken()
+		return nil
+	case knowledgearticlesession.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case knowledgearticlesession.FieldLastHeartbeat:
+		m.ResetLastHeartbeat()
+		return nil
+	case knowledgearticlesession.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleSession field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *KnowledgeArticleSessionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.article != nil {
+		edges = append(edges, knowledgearticlesession.EdgeArticle)
+	}
+	if m.user != nil {
+		edges = append(edges, knowledgearticlesession.EdgeUser)
+	}
+	if m.participants != nil {
+		edges = append(edges, knowledgearticlesession.EdgeParticipants)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *KnowledgeArticleSessionMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case knowledgearticlesession.EdgeArticle:
+		ids := make([]ent.Value, 0, len(m.article))
+		for id := range m.article {
+			ids = append(ids, id)
+		}
+		return ids
+	case knowledgearticlesession.EdgeUser:
+		ids := make([]ent.Value, 0, len(m.user))
+		for id := range m.user {
+			ids = append(ids, id)
+		}
+		return ids
+	case knowledgearticlesession.EdgeParticipants:
+		ids := make([]ent.Value, 0, len(m.participants))
+		for id := range m.participants {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *KnowledgeArticleSessionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.removedarticle != nil {
+		edges = append(edges, knowledgearticlesession.EdgeArticle)
+	}
+	if m.removeduser != nil {
+		edges = append(edges, knowledgearticlesession.EdgeUser)
+	}
+	if m.removedparticipants != nil {
+		edges = append(edges, knowledgearticlesession.EdgeParticipants)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *KnowledgeArticleSessionMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case knowledgearticlesession.EdgeArticle:
+		ids := make([]ent.Value, 0, len(m.removedarticle))
+		for id := range m.removedarticle {
+			ids = append(ids, id)
+		}
+		return ids
+	case knowledgearticlesession.EdgeUser:
+		ids := make([]ent.Value, 0, len(m.removeduser))
+		for id := range m.removeduser {
+			ids = append(ids, id)
+		}
+		return ids
+	case knowledgearticlesession.EdgeParticipants:
+		ids := make([]ent.Value, 0, len(m.removedparticipants))
+		for id := range m.removedparticipants {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *KnowledgeArticleSessionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.clearedarticle {
+		edges = append(edges, knowledgearticlesession.EdgeArticle)
+	}
+	if m.cleareduser {
+		edges = append(edges, knowledgearticlesession.EdgeUser)
+	}
+	if m.clearedparticipants {
+		edges = append(edges, knowledgearticlesession.EdgeParticipants)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *KnowledgeArticleSessionMutation) EdgeCleared(name string) bool {
+	switch name {
+	case knowledgearticlesession.EdgeArticle:
+		return m.clearedarticle
+	case knowledgearticlesession.EdgeUser:
+		return m.cleareduser
+	case knowledgearticlesession.EdgeParticipants:
+		return m.clearedparticipants
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *KnowledgeArticleSessionMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown KnowledgeArticleSession unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *KnowledgeArticleSessionMutation) ResetEdge(name string) error {
+	switch name {
+	case knowledgearticlesession.EdgeArticle:
+		m.ResetArticle()
+		return nil
+	case knowledgearticlesession.EdgeUser:
+		m.ResetUser()
+		return nil
+	case knowledgearticlesession.EdgeParticipants:
+		m.ResetParticipants()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleSession edge %s", name)
+}
+
+// KnowledgeArticleVersionMutation represents an operation that mutates the KnowledgeArticleVersion nodes in the graph.
+type KnowledgeArticleVersionMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	article_id     *int
+	addarticle_id  *int
+	version        *int
+	addversion     *int
+	title          *string
+	content        *string
+	category       *string
+	tags           *string
+	author_id      *int
+	addauthor_id   *int
+	change_summary *string
+	created_at     *time.Time
+	clearedFields  map[string]struct{}
+	article        map[int]struct{}
+	removedarticle map[int]struct{}
+	clearedarticle bool
+	done           bool
+	oldValue       func(context.Context) (*KnowledgeArticleVersion, error)
+	predicates     []predicate.KnowledgeArticleVersion
+}
+
+var _ ent.Mutation = (*KnowledgeArticleVersionMutation)(nil)
+
+// knowledgearticleversionOption allows management of the mutation configuration using functional options.
+type knowledgearticleversionOption func(*KnowledgeArticleVersionMutation)
+
+// newKnowledgeArticleVersionMutation creates new mutation for the KnowledgeArticleVersion entity.
+func newKnowledgeArticleVersionMutation(c config, op Op, opts ...knowledgearticleversionOption) *KnowledgeArticleVersionMutation {
+	m := &KnowledgeArticleVersionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeKnowledgeArticleVersion,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withKnowledgeArticleVersionID sets the ID field of the mutation.
+func withKnowledgeArticleVersionID(id int) knowledgearticleversionOption {
+	return func(m *KnowledgeArticleVersionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *KnowledgeArticleVersion
+		)
+		m.oldValue = func(ctx context.Context) (*KnowledgeArticleVersion, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().KnowledgeArticleVersion.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withKnowledgeArticleVersion sets the old KnowledgeArticleVersion of the mutation.
+func withKnowledgeArticleVersion(node *KnowledgeArticleVersion) knowledgearticleversionOption {
+	return func(m *KnowledgeArticleVersionMutation) {
+		m.oldValue = func(context.Context) (*KnowledgeArticleVersion, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m KnowledgeArticleVersionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m KnowledgeArticleVersionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *KnowledgeArticleVersionMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *KnowledgeArticleVersionMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().KnowledgeArticleVersion.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetArticleID sets the "article_id" field.
+func (m *KnowledgeArticleVersionMutation) SetArticleID(i int) {
+	m.article_id = &i
+	m.addarticle_id = nil
+}
+
+// ArticleID returns the value of the "article_id" field in the mutation.
+func (m *KnowledgeArticleVersionMutation) ArticleID() (r int, exists bool) {
+	v := m.article_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldArticleID returns the old "article_id" field's value of the KnowledgeArticleVersion entity.
+// If the KnowledgeArticleVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleVersionMutation) OldArticleID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldArticleID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldArticleID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldArticleID: %w", err)
+	}
+	return oldValue.ArticleID, nil
+}
+
+// AddArticleID adds i to the "article_id" field.
+func (m *KnowledgeArticleVersionMutation) AddArticleID(i int) {
+	if m.addarticle_id != nil {
+		*m.addarticle_id += i
+	} else {
+		m.addarticle_id = &i
+	}
+}
+
+// AddedArticleID returns the value that was added to the "article_id" field in this mutation.
+func (m *KnowledgeArticleVersionMutation) AddedArticleID() (r int, exists bool) {
+	v := m.addarticle_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetArticleID resets all changes to the "article_id" field.
+func (m *KnowledgeArticleVersionMutation) ResetArticleID() {
+	m.article_id = nil
+	m.addarticle_id = nil
+}
+
+// SetVersion sets the "version" field.
+func (m *KnowledgeArticleVersionMutation) SetVersion(i int) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *KnowledgeArticleVersionMutation) Version() (r int, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the KnowledgeArticleVersion entity.
+// If the KnowledgeArticleVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleVersionMutation) OldVersion(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *KnowledgeArticleVersionMutation) AddVersion(i int) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *KnowledgeArticleVersionMutation) AddedVersion() (r int, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *KnowledgeArticleVersionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetTitle sets the "title" field.
+func (m *KnowledgeArticleVersionMutation) SetTitle(s string) {
+	m.title = &s
+}
+
+// Title returns the value of the "title" field in the mutation.
+func (m *KnowledgeArticleVersionMutation) Title() (r string, exists bool) {
+	v := m.title
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTitle returns the old "title" field's value of the KnowledgeArticleVersion entity.
+// If the KnowledgeArticleVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleVersionMutation) OldTitle(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTitle is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTitle requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTitle: %w", err)
+	}
+	return oldValue.Title, nil
+}
+
+// ResetTitle resets all changes to the "title" field.
+func (m *KnowledgeArticleVersionMutation) ResetTitle() {
+	m.title = nil
+}
+
+// SetContent sets the "content" field.
+func (m *KnowledgeArticleVersionMutation) SetContent(s string) {
+	m.content = &s
+}
+
+// Content returns the value of the "content" field in the mutation.
+func (m *KnowledgeArticleVersionMutation) Content() (r string, exists bool) {
+	v := m.content
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContent returns the old "content" field's value of the KnowledgeArticleVersion entity.
+// If the KnowledgeArticleVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleVersionMutation) OldContent(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContent: %w", err)
+	}
+	return oldValue.Content, nil
+}
+
+// ClearContent clears the value of the "content" field.
+func (m *KnowledgeArticleVersionMutation) ClearContent() {
+	m.content = nil
+	m.clearedFields[knowledgearticleversion.FieldContent] = struct{}{}
+}
+
+// ContentCleared returns if the "content" field was cleared in this mutation.
+func (m *KnowledgeArticleVersionMutation) ContentCleared() bool {
+	_, ok := m.clearedFields[knowledgearticleversion.FieldContent]
+	return ok
+}
+
+// ResetContent resets all changes to the "content" field.
+func (m *KnowledgeArticleVersionMutation) ResetContent() {
+	m.content = nil
+	delete(m.clearedFields, knowledgearticleversion.FieldContent)
+}
+
+// SetCategory sets the "category" field.
+func (m *KnowledgeArticleVersionMutation) SetCategory(s string) {
+	m.category = &s
+}
+
+// Category returns the value of the "category" field in the mutation.
+func (m *KnowledgeArticleVersionMutation) Category() (r string, exists bool) {
+	v := m.category
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCategory returns the old "category" field's value of the KnowledgeArticleVersion entity.
+// If the KnowledgeArticleVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleVersionMutation) OldCategory(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCategory is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCategory requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCategory: %w", err)
+	}
+	return oldValue.Category, nil
+}
+
+// ClearCategory clears the value of the "category" field.
+func (m *KnowledgeArticleVersionMutation) ClearCategory() {
+	m.category = nil
+	m.clearedFields[knowledgearticleversion.FieldCategory] = struct{}{}
+}
+
+// CategoryCleared returns if the "category" field was cleared in this mutation.
+func (m *KnowledgeArticleVersionMutation) CategoryCleared() bool {
+	_, ok := m.clearedFields[knowledgearticleversion.FieldCategory]
+	return ok
+}
+
+// ResetCategory resets all changes to the "category" field.
+func (m *KnowledgeArticleVersionMutation) ResetCategory() {
+	m.category = nil
+	delete(m.clearedFields, knowledgearticleversion.FieldCategory)
+}
+
+// SetTags sets the "tags" field.
+func (m *KnowledgeArticleVersionMutation) SetTags(s string) {
+	m.tags = &s
+}
+
+// Tags returns the value of the "tags" field in the mutation.
+func (m *KnowledgeArticleVersionMutation) Tags() (r string, exists bool) {
+	v := m.tags
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTags returns the old "tags" field's value of the KnowledgeArticleVersion entity.
+// If the KnowledgeArticleVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleVersionMutation) OldTags(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTags is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTags requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTags: %w", err)
+	}
+	return oldValue.Tags, nil
+}
+
+// ClearTags clears the value of the "tags" field.
+func (m *KnowledgeArticleVersionMutation) ClearTags() {
+	m.tags = nil
+	m.clearedFields[knowledgearticleversion.FieldTags] = struct{}{}
+}
+
+// TagsCleared returns if the "tags" field was cleared in this mutation.
+func (m *KnowledgeArticleVersionMutation) TagsCleared() bool {
+	_, ok := m.clearedFields[knowledgearticleversion.FieldTags]
+	return ok
+}
+
+// ResetTags resets all changes to the "tags" field.
+func (m *KnowledgeArticleVersionMutation) ResetTags() {
+	m.tags = nil
+	delete(m.clearedFields, knowledgearticleversion.FieldTags)
+}
+
+// SetAuthorID sets the "author_id" field.
+func (m *KnowledgeArticleVersionMutation) SetAuthorID(i int) {
+	m.author_id = &i
+	m.addauthor_id = nil
+}
+
+// AuthorID returns the value of the "author_id" field in the mutation.
+func (m *KnowledgeArticleVersionMutation) AuthorID() (r int, exists bool) {
+	v := m.author_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAuthorID returns the old "author_id" field's value of the KnowledgeArticleVersion entity.
+// If the KnowledgeArticleVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleVersionMutation) OldAuthorID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAuthorID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAuthorID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAuthorID: %w", err)
+	}
+	return oldValue.AuthorID, nil
+}
+
+// AddAuthorID adds i to the "author_id" field.
+func (m *KnowledgeArticleVersionMutation) AddAuthorID(i int) {
+	if m.addauthor_id != nil {
+		*m.addauthor_id += i
+	} else {
+		m.addauthor_id = &i
+	}
+}
+
+// AddedAuthorID returns the value that was added to the "author_id" field in this mutation.
+func (m *KnowledgeArticleVersionMutation) AddedAuthorID() (r int, exists bool) {
+	v := m.addauthor_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAuthorID resets all changes to the "author_id" field.
+func (m *KnowledgeArticleVersionMutation) ResetAuthorID() {
+	m.author_id = nil
+	m.addauthor_id = nil
+}
+
+// SetChangeSummary sets the "change_summary" field.
+func (m *KnowledgeArticleVersionMutation) SetChangeSummary(s string) {
+	m.change_summary = &s
+}
+
+// ChangeSummary returns the value of the "change_summary" field in the mutation.
+func (m *KnowledgeArticleVersionMutation) ChangeSummary() (r string, exists bool) {
+	v := m.change_summary
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangeSummary returns the old "change_summary" field's value of the KnowledgeArticleVersion entity.
+// If the KnowledgeArticleVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleVersionMutation) OldChangeSummary(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangeSummary is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangeSummary requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangeSummary: %w", err)
+	}
+	return oldValue.ChangeSummary, nil
+}
+
+// ClearChangeSummary clears the value of the "change_summary" field.
+func (m *KnowledgeArticleVersionMutation) ClearChangeSummary() {
+	m.change_summary = nil
+	m.clearedFields[knowledgearticleversion.FieldChangeSummary] = struct{}{}
+}
+
+// ChangeSummaryCleared returns if the "change_summary" field was cleared in this mutation.
+func (m *KnowledgeArticleVersionMutation) ChangeSummaryCleared() bool {
+	_, ok := m.clearedFields[knowledgearticleversion.FieldChangeSummary]
+	return ok
+}
+
+// ResetChangeSummary resets all changes to the "change_summary" field.
+func (m *KnowledgeArticleVersionMutation) ResetChangeSummary() {
+	m.change_summary = nil
+	delete(m.clearedFields, knowledgearticleversion.FieldChangeSummary)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *KnowledgeArticleVersionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *KnowledgeArticleVersionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the KnowledgeArticleVersion entity.
+// If the KnowledgeArticleVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleVersionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *KnowledgeArticleVersionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// AddArticleIDs adds the "article" edge to the KnowledgeArticle entity by ids.
+func (m *KnowledgeArticleVersionMutation) AddArticleIDs(ids ...int) {
+	if m.article == nil {
+		m.article = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.article[ids[i]] = struct{}{}
+	}
+}
+
+// ClearArticle clears the "article" edge to the KnowledgeArticle entity.
+func (m *KnowledgeArticleVersionMutation) ClearArticle() {
+	m.clearedarticle = true
+}
+
+// ArticleCleared reports if the "article" edge to the KnowledgeArticle entity was cleared.
+func (m *KnowledgeArticleVersionMutation) ArticleCleared() bool {
+	return m.clearedarticle
+}
+
+// RemoveArticleIDs removes the "article" edge to the KnowledgeArticle entity by IDs.
+func (m *KnowledgeArticleVersionMutation) RemoveArticleIDs(ids ...int) {
+	if m.removedarticle == nil {
+		m.removedarticle = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.article, ids[i])
+		m.removedarticle[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedArticle returns the removed IDs of the "article" edge to the KnowledgeArticle entity.
+func (m *KnowledgeArticleVersionMutation) RemovedArticleIDs() (ids []int) {
+	for id := range m.removedarticle {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ArticleIDs returns the "article" edge IDs in the mutation.
+func (m *KnowledgeArticleVersionMutation) ArticleIDs() (ids []int) {
+	for id := range m.article {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetArticle resets all changes to the "article" edge.
+func (m *KnowledgeArticleVersionMutation) ResetArticle() {
+	m.article = nil
+	m.clearedarticle = false
+	m.removedarticle = nil
+}
+
+// Where appends a list predicates to the KnowledgeArticleVersionMutation builder.
+func (m *KnowledgeArticleVersionMutation) Where(ps ...predicate.KnowledgeArticleVersion) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the KnowledgeArticleVersionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *KnowledgeArticleVersionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.KnowledgeArticleVersion, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *KnowledgeArticleVersionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *KnowledgeArticleVersionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (KnowledgeArticleVersion).
+func (m *KnowledgeArticleVersionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *KnowledgeArticleVersionMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.article_id != nil {
+		fields = append(fields, knowledgearticleversion.FieldArticleID)
+	}
+	if m.version != nil {
+		fields = append(fields, knowledgearticleversion.FieldVersion)
+	}
+	if m.title != nil {
+		fields = append(fields, knowledgearticleversion.FieldTitle)
+	}
+	if m.content != nil {
+		fields = append(fields, knowledgearticleversion.FieldContent)
+	}
+	if m.category != nil {
+		fields = append(fields, knowledgearticleversion.FieldCategory)
+	}
+	if m.tags != nil {
+		fields = append(fields, knowledgearticleversion.FieldTags)
+	}
+	if m.author_id != nil {
+		fields = append(fields, knowledgearticleversion.FieldAuthorID)
+	}
+	if m.change_summary != nil {
+		fields = append(fields, knowledgearticleversion.FieldChangeSummary)
+	}
+	if m.created_at != nil {
+		fields = append(fields, knowledgearticleversion.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *KnowledgeArticleVersionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case knowledgearticleversion.FieldArticleID:
+		return m.ArticleID()
+	case knowledgearticleversion.FieldVersion:
+		return m.Version()
+	case knowledgearticleversion.FieldTitle:
+		return m.Title()
+	case knowledgearticleversion.FieldContent:
+		return m.Content()
+	case knowledgearticleversion.FieldCategory:
+		return m.Category()
+	case knowledgearticleversion.FieldTags:
+		return m.Tags()
+	case knowledgearticleversion.FieldAuthorID:
+		return m.AuthorID()
+	case knowledgearticleversion.FieldChangeSummary:
+		return m.ChangeSummary()
+	case knowledgearticleversion.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *KnowledgeArticleVersionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case knowledgearticleversion.FieldArticleID:
+		return m.OldArticleID(ctx)
+	case knowledgearticleversion.FieldVersion:
+		return m.OldVersion(ctx)
+	case knowledgearticleversion.FieldTitle:
+		return m.OldTitle(ctx)
+	case knowledgearticleversion.FieldContent:
+		return m.OldContent(ctx)
+	case knowledgearticleversion.FieldCategory:
+		return m.OldCategory(ctx)
+	case knowledgearticleversion.FieldTags:
+		return m.OldTags(ctx)
+	case knowledgearticleversion.FieldAuthorID:
+		return m.OldAuthorID(ctx)
+	case knowledgearticleversion.FieldChangeSummary:
+		return m.OldChangeSummary(ctx)
+	case knowledgearticleversion.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown KnowledgeArticleVersion field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *KnowledgeArticleVersionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case knowledgearticleversion.FieldArticleID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetArticleID(v)
+		return nil
+	case knowledgearticleversion.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case knowledgearticleversion.FieldTitle:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTitle(v)
+		return nil
+	case knowledgearticleversion.FieldContent:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContent(v)
+		return nil
+	case knowledgearticleversion.FieldCategory:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCategory(v)
+		return nil
+	case knowledgearticleversion.FieldTags:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTags(v)
+		return nil
+	case knowledgearticleversion.FieldAuthorID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAuthorID(v)
+		return nil
+	case knowledgearticleversion.FieldChangeSummary:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangeSummary(v)
+		return nil
+	case knowledgearticleversion.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleVersion field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *KnowledgeArticleVersionMutation) AddedFields() []string {
+	var fields []string
+	if m.addarticle_id != nil {
+		fields = append(fields, knowledgearticleversion.FieldArticleID)
+	}
+	if m.addversion != nil {
+		fields = append(fields, knowledgearticleversion.FieldVersion)
+	}
+	if m.addauthor_id != nil {
+		fields = append(fields, knowledgearticleversion.FieldAuthorID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *KnowledgeArticleVersionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case knowledgearticleversion.FieldArticleID:
+		return m.AddedArticleID()
+	case knowledgearticleversion.FieldVersion:
+		return m.AddedVersion()
+	case knowledgearticleversion.FieldAuthorID:
+		return m.AddedAuthorID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *KnowledgeArticleVersionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case knowledgearticleversion.FieldArticleID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddArticleID(v)
+		return nil
+	case knowledgearticleversion.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case knowledgearticleversion.FieldAuthorID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAuthorID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleVersion numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *KnowledgeArticleVersionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(knowledgearticleversion.FieldContent) {
+		fields = append(fields, knowledgearticleversion.FieldContent)
+	}
+	if m.FieldCleared(knowledgearticleversion.FieldCategory) {
+		fields = append(fields, knowledgearticleversion.FieldCategory)
+	}
+	if m.FieldCleared(knowledgearticleversion.FieldTags) {
+		fields = append(fields, knowledgearticleversion.FieldTags)
+	}
+	if m.FieldCleared(knowledgearticleversion.FieldChangeSummary) {
+		fields = append(fields, knowledgearticleversion.FieldChangeSummary)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *KnowledgeArticleVersionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *KnowledgeArticleVersionMutation) ClearField(name string) error {
+	switch name {
+	case knowledgearticleversion.FieldContent:
+		m.ClearContent()
+		return nil
+	case knowledgearticleversion.FieldCategory:
+		m.ClearCategory()
+		return nil
+	case knowledgearticleversion.FieldTags:
+		m.ClearTags()
+		return nil
+	case knowledgearticleversion.FieldChangeSummary:
+		m.ClearChangeSummary()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleVersion nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *KnowledgeArticleVersionMutation) ResetField(name string) error {
+	switch name {
+	case knowledgearticleversion.FieldArticleID:
+		m.ResetArticleID()
+		return nil
+	case knowledgearticleversion.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case knowledgearticleversion.FieldTitle:
+		m.ResetTitle()
+		return nil
+	case knowledgearticleversion.FieldContent:
+		m.ResetContent()
+		return nil
+	case knowledgearticleversion.FieldCategory:
+		m.ResetCategory()
+		return nil
+	case knowledgearticleversion.FieldTags:
+		m.ResetTags()
+		return nil
+	case knowledgearticleversion.FieldAuthorID:
+		m.ResetAuthorID()
+		return nil
+	case knowledgearticleversion.FieldChangeSummary:
+		m.ResetChangeSummary()
+		return nil
+	case knowledgearticleversion.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleVersion field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *KnowledgeArticleVersionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.article != nil {
+		edges = append(edges, knowledgearticleversion.EdgeArticle)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *KnowledgeArticleVersionMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case knowledgearticleversion.EdgeArticle:
+		ids := make([]ent.Value, 0, len(m.article))
+		for id := range m.article {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *KnowledgeArticleVersionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedarticle != nil {
+		edges = append(edges, knowledgearticleversion.EdgeArticle)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *KnowledgeArticleVersionMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case knowledgearticleversion.EdgeArticle:
+		ids := make([]ent.Value, 0, len(m.removedarticle))
+		for id := range m.removedarticle {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *KnowledgeArticleVersionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedarticle {
+		edges = append(edges, knowledgearticleversion.EdgeArticle)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *KnowledgeArticleVersionMutation) EdgeCleared(name string) bool {
+	switch name {
+	case knowledgearticleversion.EdgeArticle:
+		return m.clearedarticle
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *KnowledgeArticleVersionMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown KnowledgeArticleVersion unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *KnowledgeArticleVersionMutation) ResetEdge(name string) error {
+	switch name {
+	case knowledgearticleversion.EdgeArticle:
+		m.ResetArticle()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleVersion edge %s", name)
 }
 
 // KnownErrorMutation represents an operation that mutates the KnownError nodes in the graph.
@@ -46318,6 +49316,8 @@ type MSPAllocationMutation struct {
 	op                     Op
 	typ                    string
 	id                     *int
+	customer_tenant_id     *int
+	addcustomer_tenant_id  *int
 	role                   *string
 	assigned_at            *time.Time
 	deassigned_at          *time.Time
@@ -46465,6 +49465,76 @@ func (m *MSPAllocationMutation) OldMspUserID(ctx context.Context) (v int, err er
 // ResetMspUserID resets all changes to the "msp_user_id" field.
 func (m *MSPAllocationMutation) ResetMspUserID() {
 	m.msp_user = nil
+}
+
+// SetCustomerTenantID sets the "customer_tenant_id" field.
+func (m *MSPAllocationMutation) SetCustomerTenantID(i int) {
+	m.customer_tenant_id = &i
+	m.addcustomer_tenant_id = nil
+}
+
+// CustomerTenantID returns the value of the "customer_tenant_id" field in the mutation.
+func (m *MSPAllocationMutation) CustomerTenantID() (r int, exists bool) {
+	v := m.customer_tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCustomerTenantID returns the old "customer_tenant_id" field's value of the MSPAllocation entity.
+// If the MSPAllocation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MSPAllocationMutation) OldCustomerTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCustomerTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCustomerTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCustomerTenantID: %w", err)
+	}
+	return oldValue.CustomerTenantID, nil
+}
+
+// AddCustomerTenantID adds i to the "customer_tenant_id" field.
+func (m *MSPAllocationMutation) AddCustomerTenantID(i int) {
+	if m.addcustomer_tenant_id != nil {
+		*m.addcustomer_tenant_id += i
+	} else {
+		m.addcustomer_tenant_id = &i
+	}
+}
+
+// AddedCustomerTenantID returns the value that was added to the "customer_tenant_id" field in this mutation.
+func (m *MSPAllocationMutation) AddedCustomerTenantID() (r int, exists bool) {
+	v := m.addcustomer_tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearCustomerTenantID clears the value of the "customer_tenant_id" field.
+func (m *MSPAllocationMutation) ClearCustomerTenantID() {
+	m.customer_tenant_id = nil
+	m.addcustomer_tenant_id = nil
+	m.clearedFields[mspallocation.FieldCustomerTenantID] = struct{}{}
+}
+
+// CustomerTenantIDCleared returns if the "customer_tenant_id" field was cleared in this mutation.
+func (m *MSPAllocationMutation) CustomerTenantIDCleared() bool {
+	_, ok := m.clearedFields[mspallocation.FieldCustomerTenantID]
+	return ok
+}
+
+// ResetCustomerTenantID resets all changes to the "customer_tenant_id" field.
+func (m *MSPAllocationMutation) ResetCustomerTenantID() {
+	m.customer_tenant_id = nil
+	m.addcustomer_tenant_id = nil
+	delete(m.clearedFields, mspallocation.FieldCustomerTenantID)
 }
 
 // SetRole sets the "role" field.
@@ -46739,9 +49809,12 @@ func (m *MSPAllocationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MSPAllocationMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.msp_user != nil {
 		fields = append(fields, mspallocation.FieldMspUserID)
+	}
+	if m.customer_tenant_id != nil {
+		fields = append(fields, mspallocation.FieldCustomerTenantID)
 	}
 	if m.role != nil {
 		fields = append(fields, mspallocation.FieldRole)
@@ -46765,6 +49838,8 @@ func (m *MSPAllocationMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case mspallocation.FieldMspUserID:
 		return m.MspUserID()
+	case mspallocation.FieldCustomerTenantID:
+		return m.CustomerTenantID()
 	case mspallocation.FieldRole:
 		return m.Role()
 	case mspallocation.FieldAssignedAt:
@@ -46784,6 +49859,8 @@ func (m *MSPAllocationMutation) OldField(ctx context.Context, name string) (ent.
 	switch name {
 	case mspallocation.FieldMspUserID:
 		return m.OldMspUserID(ctx)
+	case mspallocation.FieldCustomerTenantID:
+		return m.OldCustomerTenantID(ctx)
 	case mspallocation.FieldRole:
 		return m.OldRole(ctx)
 	case mspallocation.FieldAssignedAt:
@@ -46807,6 +49884,13 @@ func (m *MSPAllocationMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetMspUserID(v)
+		return nil
+	case mspallocation.FieldCustomerTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCustomerTenantID(v)
 		return nil
 	case mspallocation.FieldRole:
 		v, ok := value.(string)
@@ -46844,6 +49928,9 @@ func (m *MSPAllocationMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *MSPAllocationMutation) AddedFields() []string {
 	var fields []string
+	if m.addcustomer_tenant_id != nil {
+		fields = append(fields, mspallocation.FieldCustomerTenantID)
+	}
 	return fields
 }
 
@@ -46852,6 +49939,8 @@ func (m *MSPAllocationMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *MSPAllocationMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case mspallocation.FieldCustomerTenantID:
+		return m.AddedCustomerTenantID()
 	}
 	return nil, false
 }
@@ -46861,6 +49950,13 @@ func (m *MSPAllocationMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *MSPAllocationMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case mspallocation.FieldCustomerTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCustomerTenantID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown MSPAllocation numeric field %s", name)
 }
@@ -46869,6 +49965,9 @@ func (m *MSPAllocationMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *MSPAllocationMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(mspallocation.FieldCustomerTenantID) {
+		fields = append(fields, mspallocation.FieldCustomerTenantID)
+	}
 	if m.FieldCleared(mspallocation.FieldDeassignedAt) {
 		fields = append(fields, mspallocation.FieldDeassignedAt)
 	}
@@ -46886,6 +49985,9 @@ func (m *MSPAllocationMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *MSPAllocationMutation) ClearField(name string) error {
 	switch name {
+	case mspallocation.FieldCustomerTenantID:
+		m.ClearCustomerTenantID()
+		return nil
 	case mspallocation.FieldDeassignedAt:
 		m.ClearDeassignedAt()
 		return nil
@@ -46899,6 +50001,9 @@ func (m *MSPAllocationMutation) ResetField(name string) error {
 	switch name {
 	case mspallocation.FieldMspUserID:
 		m.ResetMspUserID()
+		return nil
+	case mspallocation.FieldCustomerTenantID:
+		m.ResetCustomerTenantID()
 		return nil
 	case mspallocation.FieldRole:
 		m.ResetRole()
@@ -113264,6 +116369,12 @@ type UserMutation struct {
 	msp_allocations                 map[int]struct{}
 	removedmsp_allocations          map[int]struct{}
 	clearedmsp_allocations          bool
+	article_sessions                map[int]struct{}
+	removedarticle_sessions         map[int]struct{}
+	clearedarticle_sessions         bool
+	article_participations          map[int]struct{}
+	removedarticle_participations   map[int]struct{}
+	clearedarticle_participations   bool
 	done                            bool
 	oldValue                        func(context.Context) (*User, error)
 	predicates                      []predicate.User
@@ -114456,6 +117567,114 @@ func (m *UserMutation) ResetMspAllocations() {
 	m.removedmsp_allocations = nil
 }
 
+// AddArticleSessionIDs adds the "article_sessions" edge to the KnowledgeArticleSession entity by ids.
+func (m *UserMutation) AddArticleSessionIDs(ids ...int) {
+	if m.article_sessions == nil {
+		m.article_sessions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.article_sessions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearArticleSessions clears the "article_sessions" edge to the KnowledgeArticleSession entity.
+func (m *UserMutation) ClearArticleSessions() {
+	m.clearedarticle_sessions = true
+}
+
+// ArticleSessionsCleared reports if the "article_sessions" edge to the KnowledgeArticleSession entity was cleared.
+func (m *UserMutation) ArticleSessionsCleared() bool {
+	return m.clearedarticle_sessions
+}
+
+// RemoveArticleSessionIDs removes the "article_sessions" edge to the KnowledgeArticleSession entity by IDs.
+func (m *UserMutation) RemoveArticleSessionIDs(ids ...int) {
+	if m.removedarticle_sessions == nil {
+		m.removedarticle_sessions = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.article_sessions, ids[i])
+		m.removedarticle_sessions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedArticleSessions returns the removed IDs of the "article_sessions" edge to the KnowledgeArticleSession entity.
+func (m *UserMutation) RemovedArticleSessionsIDs() (ids []int) {
+	for id := range m.removedarticle_sessions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ArticleSessionsIDs returns the "article_sessions" edge IDs in the mutation.
+func (m *UserMutation) ArticleSessionsIDs() (ids []int) {
+	for id := range m.article_sessions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetArticleSessions resets all changes to the "article_sessions" edge.
+func (m *UserMutation) ResetArticleSessions() {
+	m.article_sessions = nil
+	m.clearedarticle_sessions = false
+	m.removedarticle_sessions = nil
+}
+
+// AddArticleParticipationIDs adds the "article_participations" edge to the KnowledgeArticleParticipant entity by ids.
+func (m *UserMutation) AddArticleParticipationIDs(ids ...int) {
+	if m.article_participations == nil {
+		m.article_participations = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.article_participations[ids[i]] = struct{}{}
+	}
+}
+
+// ClearArticleParticipations clears the "article_participations" edge to the KnowledgeArticleParticipant entity.
+func (m *UserMutation) ClearArticleParticipations() {
+	m.clearedarticle_participations = true
+}
+
+// ArticleParticipationsCleared reports if the "article_participations" edge to the KnowledgeArticleParticipant entity was cleared.
+func (m *UserMutation) ArticleParticipationsCleared() bool {
+	return m.clearedarticle_participations
+}
+
+// RemoveArticleParticipationIDs removes the "article_participations" edge to the KnowledgeArticleParticipant entity by IDs.
+func (m *UserMutation) RemoveArticleParticipationIDs(ids ...int) {
+	if m.removedarticle_participations == nil {
+		m.removedarticle_participations = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.article_participations, ids[i])
+		m.removedarticle_participations[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedArticleParticipations returns the removed IDs of the "article_participations" edge to the KnowledgeArticleParticipant entity.
+func (m *UserMutation) RemovedArticleParticipationsIDs() (ids []int) {
+	for id := range m.removedarticle_participations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ArticleParticipationsIDs returns the "article_participations" edge IDs in the mutation.
+func (m *UserMutation) ArticleParticipationsIDs() (ids []int) {
+	for id := range m.article_participations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetArticleParticipations resets all changes to the "article_participations" edge.
+func (m *UserMutation) ResetArticleParticipations() {
+	m.article_participations = nil
+	m.clearedarticle_participations = false
+	m.removedarticle_participations = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -114858,7 +118077,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 10)
+	edges := make([]string, 0, 12)
 	if m.department_ref != nil {
 		edges = append(edges, user.EdgeDepartmentRef)
 	}
@@ -114888,6 +118107,12 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.msp_allocations != nil {
 		edges = append(edges, user.EdgeMspAllocations)
+	}
+	if m.article_sessions != nil {
+		edges = append(edges, user.EdgeArticleSessions)
+	}
+	if m.article_participations != nil {
+		edges = append(edges, user.EdgeArticleParticipations)
 	}
 	return edges
 }
@@ -114952,13 +118177,25 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeArticleSessions:
+		ids := make([]ent.Value, 0, len(m.article_sessions))
+		for id := range m.article_sessions {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeArticleParticipations:
+		ids := make([]ent.Value, 0, len(m.article_participations))
+		for id := range m.article_participations {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 10)
+	edges := make([]string, 0, 12)
 	if m.removedticket_comments != nil {
 		edges = append(edges, user.EdgeTicketComments)
 	}
@@ -114982,6 +118219,12 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedmsp_allocations != nil {
 		edges = append(edges, user.EdgeMspAllocations)
+	}
+	if m.removedarticle_sessions != nil {
+		edges = append(edges, user.EdgeArticleSessions)
+	}
+	if m.removedarticle_participations != nil {
+		edges = append(edges, user.EdgeArticleParticipations)
 	}
 	return edges
 }
@@ -115038,13 +118281,25 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeArticleSessions:
+		ids := make([]ent.Value, 0, len(m.removedarticle_sessions))
+		for id := range m.removedarticle_sessions {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeArticleParticipations:
+		ids := make([]ent.Value, 0, len(m.removedarticle_participations))
+		for id := range m.removedarticle_participations {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 10)
+	edges := make([]string, 0, 12)
 	if m.cleareddepartment_ref {
 		edges = append(edges, user.EdgeDepartmentRef)
 	}
@@ -115075,6 +118330,12 @@ func (m *UserMutation) ClearedEdges() []string {
 	if m.clearedmsp_allocations {
 		edges = append(edges, user.EdgeMspAllocations)
 	}
+	if m.clearedarticle_sessions {
+		edges = append(edges, user.EdgeArticleSessions)
+	}
+	if m.clearedarticle_participations {
+		edges = append(edges, user.EdgeArticleParticipations)
+	}
 	return edges
 }
 
@@ -115102,6 +118363,10 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedgroups
 	case user.EdgeMspAllocations:
 		return m.clearedmsp_allocations
+	case user.EdgeArticleSessions:
+		return m.clearedarticle_sessions
+	case user.EdgeArticleParticipations:
+		return m.clearedarticle_participations
 	}
 	return false
 }
@@ -115153,6 +118418,12 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeMspAllocations:
 		m.ResetMspAllocations()
+		return nil
+	case user.EdgeArticleSessions:
+		m.ResetArticleSessions()
+		return nil
+	case user.EdgeArticleParticipations:
+		m.ResetArticleParticipations()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

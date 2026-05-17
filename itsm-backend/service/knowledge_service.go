@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
+	"itsm-backend/ent/knowledgearticlesession"
+	"itsm-backend/ent/knowledgearticleversion"
 
 	"go.uber.org/zap"
 )
@@ -290,4 +293,302 @@ func (ks *KnowledgeService) GetLikeCount(ctx context.Context, articleID, tenantI
 		return 0, fmt.Errorf("获取文章失败: %w", err)
 	}
 	return article.LikeCount, nil
+}
+
+// ============ 版本历史相关方法 ============
+
+// CreateVersion 创建文章版本快照
+func (ks *KnowledgeService) CreateVersion(ctx context.Context, article *ent.KnowledgeArticle, changeSummary string) (*ent.KnowledgeArticleVersion, error) {
+	// 获取当前最新版本号
+	latestVersion, _ := ks.client.KnowledgeArticleVersion.Query().
+		Where(knowledgearticleversion.ArticleID(article.ID)).
+		Order(ent.Desc(knowledgearticleversion.FieldVersion)).
+		Only(ctx)
+
+	newVersion := 1
+	if latestVersion != nil {
+		newVersion = latestVersion.Version + 1
+	}
+
+	version, err := ks.client.KnowledgeArticleVersion.Create().
+		SetArticleID(article.ID).
+		SetVersion(newVersion).
+		SetTitle(article.Title).
+		SetContent(article.Content).
+		SetCategory(article.Category).
+		SetTags(article.Tags).
+		SetAuthorID(article.AuthorID).
+		SetChangeSummary(changeSummary).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("创建版本失败: %w", err)
+	}
+
+	ks.logger.Infow("Article version created", "article_id", article.ID, "version", newVersion)
+	return version, nil
+}
+
+// ListVersions 获取文章版本列表
+func (ks *KnowledgeService) ListVersions(ctx context.Context, articleID, tenantID, page, pageSize int) ([]*ent.KnowledgeArticleVersion, int, error) {
+	// 验证文章存在且属于该租户
+	exist, err := ks.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.ID(articleID),
+			knowledgearticle.TenantID(tenantID),
+		).
+		Exist(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("检查文章失败: %w", err)
+	}
+	if !exist {
+		return nil, 0, fmt.Errorf("文章不存在")
+	}
+
+	// 查询总数
+	total, err := ks.client.KnowledgeArticleVersion.Query().
+		Where(knowledgearticleversion.ArticleID(articleID)).
+		Count(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("获取版本总数失败: %w", err)
+	}
+
+	// 分页查询
+	offset := (page - 1) * pageSize
+	versions, err := ks.client.KnowledgeArticleVersion.Query().
+		Where(knowledgearticleversion.ArticleID(articleID)).
+		Order(ent.Desc(knowledgearticleversion.FieldVersion)).
+		Offset(offset).
+		Limit(pageSize).
+		All(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("获取版本列表失败: %w", err)
+	}
+
+	return versions, total, nil
+}
+
+// GetVersion 获取指定版本
+func (ks *KnowledgeService) GetVersion(ctx context.Context, articleID, version, tenantID int) (*ent.KnowledgeArticleVersion, error) {
+	// 验证文章存在且属于该租户
+	exist, err := ks.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.ID(articleID),
+			knowledgearticle.TenantID(tenantID),
+		).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("检查文章失败: %w", err)
+	}
+	if !exist {
+		return nil, fmt.Errorf("文章不存在")
+	}
+
+	versionEntity, err := ks.client.KnowledgeArticleVersion.Query().
+		Where(
+			knowledgearticleversion.ArticleID(articleID),
+			knowledgearticleversion.Version(version),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("版本不存在")
+		}
+		return nil, fmt.Errorf("获取版本失败: %w", err)
+	}
+
+	return versionEntity, nil
+}
+
+// RestoreVersion 恢复文章到指定版本
+func (ks *KnowledgeService) RestoreVersion(ctx context.Context, articleID, version, tenantID, userID int) (*ent.KnowledgeArticle, error) {
+	// 获取版本
+	versionEntity, err := ks.GetVersion(ctx, articleID, version, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取当前文章
+	article, err := ks.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.ID(articleID),
+			knowledgearticle.TenantID(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取文章失败: %w", err)
+	}
+
+	// 创建当前版本快照
+	_, err = ks.CreateVersion(ctx, article, "恢复前版本")
+	if err != nil {
+		ks.logger.Warnw("Failed to create version before restore", "error", err)
+	}
+
+	// 更新文章内容
+	article, err = ks.client.KnowledgeArticle.UpdateOne(article).
+		SetTitle(versionEntity.Title).
+		SetContent(versionEntity.Content).
+		SetCategory(versionEntity.Category).
+		SetTags(versionEntity.Tags).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("恢复版本失败: %w", err)
+	}
+
+	ks.logger.Infow("Article restored to version", "article_id", articleID, "version", version)
+	return article, nil
+}
+
+// ============ 实时协作Session相关方法 ============
+
+// CreateSession 创建或加入协作会话
+func (ks *KnowledgeService) CreateSession(ctx context.Context, articleID, userID, tenantID int) (*ent.KnowledgeArticleSession, error) {
+	// 验证文章存在
+	exist, err := ks.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.ID(articleID),
+			knowledgearticle.TenantID(tenantID),
+		).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("检查文章失败: %w", err)
+	}
+	if !exist {
+		return nil, fmt.Errorf("文章不存在")
+	}
+
+	// 检查是否已有活跃会话
+	existingSession, err := ks.client.KnowledgeArticleSession.Query().
+		Where(
+			knowledgearticlesession.ArticleID(articleID),
+			knowledgearticlesession.StatusEQ(knowledgearticlesession.StatusActive),
+		).
+		Only(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		return nil, fmt.Errorf("检查会话失败: %w", err)
+	}
+
+	// 生成会话Token
+	sessionToken := fmt.Sprintf("session_%d_%d_%d", articleID, userID, time.Now().UnixNano())
+
+	if existingSession != nil {
+		// 用户加入现有会话
+		existingSession, err = ks.client.KnowledgeArticleSession.UpdateOne(existingSession).
+			AddUserIDs(userID).
+			SetLastHeartbeat(time.Now()).
+			Save(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("加入会话失败: %w", err)
+		}
+		ks.logger.Infow("User joined existing session", "user_id", userID, "session_id", existingSession.ID)
+		return existingSession, nil
+	}
+
+	// 创建新会话
+	session, err := ks.client.KnowledgeArticleSession.Create().
+		SetArticleID(articleID).
+		SetUserID(userID).
+		SetSessionToken(sessionToken).
+		SetStatus(knowledgearticlesession.StatusActive).
+		SetLastHeartbeat(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("创建会话失败: %w", err)
+	}
+
+	ks.logger.Infow("Session created", "session_id", session.ID, "article_id", articleID)
+	return session, nil
+}
+
+// Heartbeat 更新会话心跳
+func (ks *KnowledgeService) Heartbeat(ctx context.Context, sessionToken string, cursorPos *int) error {
+	if cursorPos != nil {
+		// 更新光标位置 - 需要通过 Participant 更新
+	}
+
+	_, err := ks.client.KnowledgeArticleSession.Update().
+		Where(knowledgearticlesession.SessionTokenEQ(sessionToken)).
+		SetLastHeartbeat(time.Now()).
+		SetStatus(knowledgearticlesession.StatusActive).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("更新心跳失败: %w", err)
+	}
+
+	return nil
+}
+
+// GetSession 获取当前会话
+func (ks *KnowledgeService) GetSession(ctx context.Context, articleID, userID, tenantID int) (*ent.KnowledgeArticleSession, error) {
+	// 验证文章存在
+	exist, err := ks.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.ID(articleID),
+			knowledgearticle.TenantID(tenantID),
+		).
+		Exist(ctx)
+	if err != nil || !exist {
+		return nil, fmt.Errorf("文章不存在")
+	}
+
+	// 查询活跃会话
+	session, err := ks.client.KnowledgeArticleSession.Query().
+		Where(
+			knowledgearticlesession.ArticleID(articleID),
+			knowledgearticlesession.StatusEQ(knowledgearticlesession.StatusActive),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil // 没有活跃会话
+		}
+		return nil, fmt.Errorf("获取会话失败: %w", err)
+	}
+
+	return session, nil
+}
+
+// ListParticipants 获取参与者列表
+func (ks *KnowledgeService) ListParticipants(ctx context.Context, articleID, tenantID int) ([]*ent.KnowledgeArticleSession, error) {
+	// 验证文章存在
+	exist, err := ks.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.ID(articleID),
+			knowledgearticle.TenantID(tenantID),
+		).
+		Exist(ctx)
+	if err != nil || !exist {
+		return nil, fmt.Errorf("文章不存在")
+	}
+
+	// 查询活跃会话
+	sessions, err := ks.client.KnowledgeArticleSession.Query().
+		Where(
+			knowledgearticlesession.ArticleID(articleID),
+			knowledgearticlesession.StatusIn(knowledgearticlesession.StatusActive, knowledgearticlesession.StatusIdle),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取参与者失败: %w", err)
+	}
+
+	return sessions, nil
+}
+
+// LeaveSession 离开会话
+func (ks *KnowledgeService) LeaveSession(ctx context.Context, articleID, userID int) error {
+	_, err := ks.client.KnowledgeArticleSession.Update().
+		Where(
+			knowledgearticlesession.ArticleID(articleID),
+			knowledgearticlesession.UserID(userID),
+			knowledgearticlesession.StatusEQ(knowledgearticlesession.StatusActive),
+		).
+		SetStatus(knowledgearticlesession.StatusInactive).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("离开会话失败: %w", err)
+	}
+
+	ks.logger.Infow("User left session", "user_id", userID, "article_id", articleID)
+	return nil
 }

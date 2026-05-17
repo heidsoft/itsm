@@ -66,3 +66,77 @@ type CategoryStats struct {
 	Name  string `json:"name"`  // 分类名称
 	Count int    `json:"count"` // 文章数量
 }
+
+// KnowledgeArticleVersionResponse 文章版本历史响应
+type KnowledgeArticleVersionResponse struct {
+	ID            int       `json:"id"`
+	ArticleID     int       `json:"articleId"`
+	Version       int       `json:"version"`
+	Title         string    `json:"title"`
+	Content       string    `json:"content"`
+	Category      string    `json:"category"`
+	Tags          []string  `json:"tags"`
+	AuthorID      int       `json:"authorId"`
+	AuthorName    string    `json:"authorName"`
+	ChangeSummary string    `json:"changeSummary"`
+	CreatedAt     time.Time `json:"createdAt"`
+}
+
+// ListArticleVersionsRequest 列出版本请求
+type ListArticleVersionsRequest struct {
+	Page     int `form:"page" binding:"min=1"`
+	PageSize int `form:"pageSize" binding:"min=1,max=50"`
+}
+
+// KnowledgeArticleVersionListResponse 文章版本列表响应
+type KnowledgeArticleVersionListResponse struct {
+	Versions []KnowledgeArticleVersionResponse `json:"versions"`
+	Total    int                              `json:"total"`
+	Page     int                              `json:"page"`
+	Size     int                              `json:"size"`
+}
+
+// RestoreArticleVersionRequest 恢复版本请求
+type RestoreArticleVersionRequest struct {
+	Version int `json:"version" binding:"required,min=1"`
+}
+
+// ArticleSessionResponse 协作会话响应
+type ArticleSessionResponse struct {
+	SessionID     int       `json:"sessionId"`
+	ArticleID     int       `json:"articleId"`
+	UserID        int       `json:"userId"`
+	UserName      string    `json:"userName"`
+	SessionToken  string    `json:"sessionToken"`
+	Status        string    `json:"status"`
+	LastHeartbeat time.Time `json:"lastHeartbeat"`
+	CreatedAt     time.Time `json:"createdAt"`
+}
+
+// CreateSessionRequest 创建会话请求
+type CreateSessionRequest struct {
+	ArticleID int `json:"articleId" binding:"required,min=1"`
+}
+
+// SessionHeartbeatRequest 心跳请求
+type SessionHeartbeatRequest struct {
+	SessionToken string `json:"sessionToken" binding:"required"`
+	CursorPos     *int   `json:"cursorPosition"`
+}
+
+// ArticleParticipantResponse 参与者响应
+type ArticleParticipantResponse struct {
+	UserID        int       `json:"userId"`
+	UserName      string    `json:"userName"`
+	Avatar        string    `json:"avatar"`
+	CursorPos     int       `json:"cursorPosition"`
+	IsActive      bool      `json:"isActive"`
+	JoinedAt      time.Time `json:"joinedAt"`
+	LastActivity  time.Time `json:"lastActivity"`
+}
+
+// ListParticipantsResponse 参与者列表响应
+type ListParticipantsResponse struct {
+	Participants []ArticleParticipantResponse `json:"participants"`
+	Total        int                           `json:"total"`
+}
