@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Input, Drawer, List, Typography } from 'antd';
+import { Input, Modal, List, Typography } from 'antd';
 import { Search, Ticket } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
@@ -69,17 +69,19 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
   };
 
   return (
-    <Drawer
+    <Modal
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Search size={18} style={{ color: DESIGN.colors.accent }} />
-          <span>搜索结果</span>
+          <span>全局搜索</span>
         </div>
       }
-      placement="top"
       open={open}
-      onClose={onClose}
-      styles={{ root: { zIndex: 100 }, body: { height: 500 } }}
+      onCancel={onClose}
+      footer={null}
+      width={560}
+      centered
+      destroyOnHidden
     >
       <div style={{ padding: '0 20px' }}>
         <Input
@@ -123,7 +125,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
           输入关键词搜索...
         </div>
       )}
-    </Drawer>
+    </Modal>
   );
 };
 
@@ -137,38 +139,36 @@ interface SearchInputProps {
 
 export const SearchInput: React.FC<SearchInputProps> = ({ value, onChange, onSearch, onFocus }) => {
   return (
-    <div style={{ position: 'relative' }}>
-      <Input
-        placeholder="搜索工单、事件..."
-        prefix={<Search size={16} style={{ color: DESIGN.colors.textMuted }} />}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        onPressEnter={() => onSearch(value)}
-        onFocus={onFocus}
-        style={{
-          width: 200,
-          height: 36,
-          borderRadius: DESIGN.radius.full,
-          border: `1px solid ${DESIGN.colors.border}`,
-          background: DESIGN.colors.bgSubtle,
-        }}
-      />
-      <kbd
-        style={{
-          position: 'absolute',
-          right: 8,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          fontSize: 11,
-          padding: '2px 6px',
-          borderRadius: 4,
-          background: DESIGN.colors.surface,
-          border: `1px solid ${DESIGN.colors.border}`,
-          color: DESIGN.colors.textMuted,
-        }}
-      >
-        /
-      </kbd>
-    </div>
+    <Input
+      placeholder="搜索..."
+      prefix={<Search size={14} style={{ color: DESIGN.colors.textMuted }} />}
+      suffix={
+        <kbd
+          style={{
+            fontSize: 11,
+            padding: '1px 5px',
+            borderRadius: 3,
+            background: DESIGN.colors.bgSubtle,
+            border: `1px solid ${DESIGN.colors.border}`,
+            color: DESIGN.colors.textMuted,
+            lineHeight: 1.4,
+          }}
+        >
+          /
+        </kbd>
+      }
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      onPressEnter={() => onSearch(value)}
+      onFocus={onFocus}
+      style={{
+        width: 180,
+        height: 32,
+        borderRadius: DESIGN.radius.md,
+        border: `1px solid ${DESIGN.colors.border}`,
+        background: DESIGN.colors.bgSubtle,
+        fontSize: 13,
+      }}
+    />
   );
 };

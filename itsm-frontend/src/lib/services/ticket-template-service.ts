@@ -63,7 +63,7 @@ class TicketTemplateService {
       if (params.is_active !== undefined) queryParams.is_active = params.is_active;
 
       const response = await httpClient.get<TemplateListResponse>(
-        '/api/v1/ticket-templates',
+        '/api/v1/tickets/templates',
         queryParams
       );
       return response;
@@ -76,7 +76,7 @@ class TicketTemplateService {
   // 获取单个模板
   async getTemplate(id: number): Promise<TicketTemplate> {
     try {
-      const response = await httpClient.get<TicketTemplate>(`/api/v1/ticket-templates/${id}`);
+      const response = await httpClient.get<TicketTemplate>(`/api/v1/tickets/templates/${id}`);
       return response;
     } catch (error) {
       console.error('TicketTemplateService.getTemplate error:', error);
@@ -87,7 +87,7 @@ class TicketTemplateService {
   // 创建模板
   async createTemplate(data: CreateTemplateRequest): Promise<TicketTemplate> {
     try {
-      const response = await httpClient.post<TicketTemplate>('/api/v1/ticket-templates', data);
+      const response = await httpClient.post<TicketTemplate>('/api/v1/tickets/templates', data);
       return response;
     } catch (error) {
       console.error('TicketTemplateService.createTemplate error:', error);
@@ -98,7 +98,10 @@ class TicketTemplateService {
   // 更新模板
   async updateTemplate(id: number, data: UpdateTemplateRequest): Promise<TicketTemplate> {
     try {
-      const response = await httpClient.put<TicketTemplate>(`/api/v1/ticket-templates/${id}`, data);
+      const response = await httpClient.put<TicketTemplate>(
+        `/api/v1/tickets/templates/${id}`,
+        data
+      );
       return response;
     } catch (error) {
       console.error('TicketTemplateService.updateTemplate error:', error);
@@ -109,7 +112,7 @@ class TicketTemplateService {
   // 删除模板
   async deleteTemplate(id: number): Promise<void> {
     try {
-      await httpClient.delete(`/api/v1/ticket-templates/${id}`);
+      await httpClient.delete(`/api/v1/tickets/templates/${id}`);
     } catch (error) {
       console.error('TicketTemplateService.deleteTemplate error:', error);
       throw error;
@@ -120,7 +123,7 @@ class TicketTemplateService {
   async toggleTemplateStatus(id: number, isActive: boolean): Promise<TicketTemplate> {
     try {
       const response = await httpClient.patch<TicketTemplate>(
-        `/api/v1/ticket-templates/${id}/status`,
+        `/api/v1/tickets/templates/${id}/status`,
         {
           is_active: isActive,
         }
@@ -136,7 +139,7 @@ class TicketTemplateService {
   async copyTemplate(id: number, newName: string): Promise<TicketTemplate> {
     try {
       const response = await httpClient.post<TicketTemplate>(
-        `/api/v1/ticket-templates/${id}/copy`,
+        `/api/v1/tickets/templates/${id}/copy`,
         {
           name: newName,
         }
@@ -151,7 +154,7 @@ class TicketTemplateService {
   // 获取模板分类
   async getTemplateCategories(): Promise<string[]> {
     try {
-      const response = await httpClient.get<string[]>('/api/v1/ticket-templates/categories');
+      const response = await httpClient.get<string[]>('/api/v1/tickets/templates/categories');
       return response;
     } catch (error) {
       console.error('TicketTemplateService.getTemplateCategories error:', error);

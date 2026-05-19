@@ -20,18 +20,33 @@ type MenuItemRender = Required<MenuProps>['items'][number];
 
 /**
  * 渲染菜单项
+ * 使用唯一的 key（前缀 + index）避免 Ant Design Menu 的 key 冲突
  */
 export function renderMenuItems(
   items: MenuItem[],
   onMenuClick: (key: string) => void
 ): MenuItemRender[] {
-  return items.map(item => {
+  // 收集已使用的 key，确保唯一性
+  const usedKeys = new Set<string>();
+
+  return items.map((item, itemIndex) => {
     // 如果有子菜单
-    if (item.children) {
-      // 确保父菜单 key 与子菜单不重复：添加 "-group" 后缀
-      const parentKey = item.key.endsWith('-group') ? item.key : `${item.key}-group`;
+    if (item.children && item.children.length > 0) {
+      // 构建唯一父 key
+      let parentKey = item.key;
+      if (!item.key.endsWith('-group')) {
+        parentKey = `${item.key}-group`;
+      }
+      // 确保 key 唯一
+      let uniqueParentKey = parentKey;
+      let counter = 1;
+      while (usedKeys.has(uniqueParentKey)) {
+        uniqueParentKey = `${parentKey}-${counter++}`;
+      }
+      usedKeys.add(uniqueParentKey);
+
       return {
-        key: parentKey,
+        key: uniqueParentKey,
         icon: item.icon,
         label: (
           <div
@@ -53,22 +68,39 @@ export function renderMenuItems(
             <span className="truncate">{item.label}</span>
           </div>
         ),
-        children: item.children.map((child: MenuItem) => ({
-          key: child.key,
-          icon: child.icon,
-          label: (
-            <div className={styles.menuItemLabel}>
-              <span className="truncate">{child.label}</span>
-            </div>
-          ),
-          onClick: () => onMenuClick(child.key),
-        })),
+        children: item.children.map((child: MenuItem, childIndex: number) => {
+          // 构建唯一子 key
+          let uniqueChildKey = child.key;
+          let childCounter = 0;
+          while (usedKeys.has(uniqueChildKey)) {
+            uniqueChildKey = `${child.key}-${++childCounter}`;
+          }
+          usedKeys.add(uniqueChildKey);
+
+          return {
+            key: uniqueChildKey,
+            icon: child.icon,
+            label: (
+              <div className={styles.menuItemLabel}>
+                <span className="truncate">{child.label}</span>
+              </div>
+            ),
+            onClick: () => onMenuClick(child.key),
+          };
+        }),
       };
     }
 
     // 普通菜单项
+    let uniqueKey = item.key;
+    let counter = 0;
+    while (usedKeys.has(uniqueKey)) {
+      uniqueKey = `${item.key}-${++counter}`;
+    }
+    usedKeys.add(uniqueKey);
+
     return {
-      key: item.key,
+      key: uniqueKey,
       icon: item.icon,
       label: (
         <div

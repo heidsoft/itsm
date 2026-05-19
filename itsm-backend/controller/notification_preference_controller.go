@@ -28,6 +28,7 @@ func NewNotificationPreferenceController(preferenceService *service.Notification
 
 // ListPreferences 获取用户的所有通知偏好
 func (c *NotificationPreferenceController) ListPreferences(cxt *gin.Context) {
+	c.logger.Infow("ListPreferences called", "user_id", cxt.GetInt("user_id"))
 	userID, err := middleware.GetUserID(cxt)
 	if err != nil || userID == 0 {
 		common.Fail(cxt, common.UnauthorizedCode, "未授权访问")

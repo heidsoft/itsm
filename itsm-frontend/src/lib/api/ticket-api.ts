@@ -573,7 +573,7 @@ export class TicketApi {
     }>;
     total: number;
   }> {
-    return httpClient.get('/api/v1/ticket-templates', params);
+    return httpClient.get('/api/v1/tickets/templates', params);
   }
 
   // Get ticket SLA info
