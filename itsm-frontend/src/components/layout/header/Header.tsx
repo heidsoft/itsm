@@ -193,95 +193,99 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <AntHeader className={styles.header} style={{ background: DESIGN.colors.surface }}>
-      {/* 面包屑 */}
-      {showBreadcrumb && (
-        <div className={styles.breadcrumb} role="navigation" aria-label="面包屑导航">
-          <Breadcrumb
-            items={
-              breadcrumb || pathToBreadcrumb[pathname] || [{ title: '首页', href: '/dashboard' }]
-            }
-            separator="/"
+      {/* 主行：面包屑/收缩按钮 + 右侧工具 */}
+      <div className={styles.mainRow}>
+        {/* 左侧：收缩按钮 + 面包屑 */}
+        <div className={styles.left}>
+          <Button
+            type="text"
+            icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+            onClick={() => onCollapse(!collapsed)}
+            aria-label={collapsed ? '展开侧边栏' : '收起侧边栏'}
+            title={collapsed ? '展开侧边栏' : '收起侧边栏'}
+            className={styles.collapseButton}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: DESIGN.radius.md,
+              flexShrink: 0,
+            }}
           />
+          {showBreadcrumb && (
+            <div className={styles.breadcrumb} role="navigation" aria-label="面包屑导航">
+              <Breadcrumb
+                items={
+                  breadcrumb ||
+                  pathToBreadcrumb[pathname] || [{ title: '首页', href: '/dashboard' }]
+                }
+                separator="/"
+              />
+            </div>
+          )}
         </div>
-      )}
-      {/* 左侧 */}
-      <div className={styles.left}>
-        <Button
-          type="text"
-          icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-          onClick={() => onCollapse(!collapsed)}
-          aria-label={collapsed ? '展开侧边栏' : '收起侧边栏'}
-          title={collapsed ? '展开侧边栏' : '收起侧边栏'}
-          className={styles.collapseButton}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: DESIGN.radius.md,
-          }}
-        />
-      </div>
 
-      {/* 右侧 */}
-      <div className={styles.right}>
-        {/* 搜索 */}
-        <SearchInput
-          value=""
-          onChange={() => {}}
-          onSearch={handleSearch}
-          onFocus={() => setSearchModalVisible(true)}
-        />
-
-        {/* 通知 */}
-        <Tooltip title="通知中心">
-          <Badge count={unreadCount} size="small" offset={[-2, 2]}>
-            <Button
-              type="text"
-              onClick={() => setNotificationsOpen(true)}
-              aria-label="通知中心"
-              title="通知中心"
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: DESIGN.radius.md,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Bell size={20} style={{ color: DESIGN.colors.textMuted }} />
-            </Button>
-          </Badge>
-        </Tooltip>
-
-        {/* 语言切换 */}
-        <Dropdown menu={{ items: languageItems }} placement="bottomRight" trigger={['click']}>
-          <Tooltip title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}>
-            <Button
-              type="text"
-              aria-label={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
-              title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: DESIGN.radius.md,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Globe size={20} style={{ color: DESIGN.colors.textMuted }} />
-            </Button>
-          </Tooltip>
-        </Dropdown>
-
-        {/* 用户菜单 */}
-        {isClient && (
-          <UserMenuDropdown
-            open={userMenuOpen}
-            onOpenChange={setUserMenuOpen}
-            onLogout={handleLogout}
+        {/* 右侧 */}
+        <div className={styles.right}>
+          {/* 搜索 */}
+          <SearchInput
+            value=""
+            onChange={() => {}}
+            onSearch={handleSearch}
+            onFocus={() => setSearchModalVisible(true)}
           />
-        )}
+
+          {/* 通知 */}
+          <Tooltip title="通知中心">
+            <Badge count={unreadCount} size="small" offset={[-2, 2]}>
+              <Button
+                type="text"
+                onClick={() => setNotificationsOpen(true)}
+                aria-label="通知中心"
+                title="通知中心"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: DESIGN.radius.md,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Bell size={18} style={{ color: DESIGN.colors.textMuted }} />
+              </Button>
+            </Badge>
+          </Tooltip>
+
+          {/* 语言切换 */}
+          <Dropdown menu={{ items: languageItems }} placement="bottomRight" trigger={['click']}>
+            <Tooltip title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}>
+              <Button
+                type="text"
+                aria-label={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
+                title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: DESIGN.radius.md,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Globe size={18} style={{ color: DESIGN.colors.textMuted }} />
+              </Button>
+            </Tooltip>
+          </Dropdown>
+
+          {/* 用户菜单 */}
+          {isClient && (
+            <UserMenuDropdown
+              open={userMenuOpen}
+              onOpenChange={setUserMenuOpen}
+              onLogout={handleLogout}
+            />
+          )}
+        </div>
       </div>
 
       {/* 通知抽屉 */}

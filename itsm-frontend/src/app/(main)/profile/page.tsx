@@ -455,7 +455,7 @@ export default function ProfilePage() {
                 <Divider style={{ margin: '16px 0' }} />
 
                 {/* 用户详情 */}
-                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Building size={16} style={{ color: DESIGN.colors.textMuted }} />
                     <Text>{profile?.department || '未设置'}</Text>
@@ -528,333 +528,346 @@ export default function ProfilePage() {
                 boxShadow: DESIGN.shadows.card,
               }}
             >
-              <Tabs defaultActiveKey="basic" size="large">
-                {/* 基本信息 */}
-                <TabPane
-                  key="basic"
-                  tab={
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <User size={16} />
-                      基本信息
-                    </span>
-                  }
-                >
-                  <Form
-                    form={profileForm}
-                    layout="vertical"
-                    onFinish={handleSaveProfile}
-                    initialValues={profile || undefined}
-                  >
-                    <Row gutter={24}>
-                      <Col xs={24} md={12}>
-                        <Form.Item
-                          label="姓名"
-                          name="name"
-                          rules={[{ required: true, message: '请输入姓名' }]}
-                        >
-                          <Input
-                            prefix={<User size={16} style={{ color: DESIGN.colors.textMuted }} />}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={12}>
-                        <Form.Item label="用户名" name="username">
-                          <Input
-                            disabled
-                            prefix={<User size={16} style={{ color: DESIGN.colors.textMuted }} />}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={12}>
-                        <Form.Item
-                          label="邮箱"
-                          name="email"
-                          rules={[{ required: true, type: 'email', message: '请输入有效邮箱' }]}
-                        >
-                          <Input
-                            prefix={<Mail size={16} style={{ color: DESIGN.colors.textMuted }} />}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={12}>
-                        <Form.Item label="电话" name="phone">
-                          <Input
-                            prefix={<Phone size={16} style={{ color: DESIGN.colors.textMuted }} />}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={12}>
-                        <Form.Item label="部门" name="department">
-                          <Input
-                            prefix={
-                              <Building size={16} style={{ color: DESIGN.colors.textMuted }} />
-                            }
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={12}>
-                        <Form.Item label="角色">
-                          <Tag color={roleColor} style={{ padding: '4px 12px' }}>
-                            {profile?.role === 'admin'
-                              ? '管理员'
-                              : profile?.role === 'super_admin'
-                                ? '超级管理员'
-                                : '用户'}
-                          </Tag>
-                        </Form.Item>
-                      </Col>
-                    </Row>
+              <Tabs
+                defaultActiveKey="basic"
+                size="large"
+                items={[
+                  {
+                    key: 'basic',
+                    label: (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <User size={16} />
+                        基本信息
+                      </span>
+                    ),
+                    children: (
+                      <Form
+                        form={profileForm}
+                        layout="vertical"
+                        onFinish={handleSaveProfile}
+                        initialValues={profile || undefined}
+                      >
+                        <Row gutter={24}>
+                          <Col xs={24} md={12}>
+                            <Form.Item
+                              label="姓名"
+                              name="name"
+                              rules={[{ required: true, message: '请输入姓名' }]}
+                            >
+                              <Input
+                                prefix={
+                                  <User size={16} style={{ color: DESIGN.colors.textMuted }} />
+                                }
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12}>
+                            <Form.Item label="用户名" name="username">
+                              <Input
+                                disabled
+                                prefix={
+                                  <User size={16} style={{ color: DESIGN.colors.textMuted }} />
+                                }
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12}>
+                            <Form.Item
+                              label="邮箱"
+                              name="email"
+                              rules={[{ required: true, type: 'email', message: '请输入有效邮箱' }]}
+                            >
+                              <Input
+                                prefix={
+                                  <Mail size={16} style={{ color: DESIGN.colors.textMuted }} />
+                                }
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12}>
+                            <Form.Item label="电话" name="phone">
+                              <Input
+                                prefix={
+                                  <Phone size={16} style={{ color: DESIGN.colors.textMuted }} />
+                                }
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12}>
+                            <Form.Item label="部门" name="department">
+                              <Input
+                                prefix={
+                                  <Building size={16} style={{ color: DESIGN.colors.textMuted }} />
+                                }
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12}>
+                            <Form.Item label="角色">
+                              <Tag color={roleColor} style={{ padding: '4px 12px' }}>
+                                {profile?.role === 'admin'
+                                  ? '管理员'
+                                  : profile?.role === 'super_admin'
+                                    ? '超级管理员'
+                                    : '用户'}
+                              </Tag>
+                            </Form.Item>
+                          </Col>
+                        </Row>
 
-                    <div style={{ marginTop: 24, textAlign: 'right' }}>
-                      <Space>
-                        {editing && <Button onClick={() => setEditing(false)}>取消</Button>}
-                        <Button
-                          type="primary"
-                          htmlType="submit"
-                          icon={<Save size={16} />}
-                          style={{
-                            background: DESIGN.colors.gradient.primary,
-                            boxShadow: DESIGN.shadows.glow(DESIGN.colors.accent),
-                          }}
-                        >
-                          保存修改
-                        </Button>
-                      </Space>
-                    </div>
-                  </Form>
-                </TabPane>
-
-                {/* 偏好设置 */}
-                <TabPane
-                  key="preferences"
-                  tab={
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Settings size={16} />
-                      偏好设置
-                    </span>
-                  }
-                >
-                  <Form
-                    form={preferencesForm}
-                    layout="vertical"
-                    onFinish={handleSavePreferences}
-                    initialValues={{
-                      language: 'zh-CN',
-                      timezone: 'Asia/Shanghai',
-                      emailNotify: true,
-                      desktopNotify: true,
-                    }}
-                  >
-                    <Title level={5}>通知设置</Title>
-                    <Row gutter={24}>
-                      <Col xs={24}>
-                        <Form.Item label="语言" name="language">
-                          <Select>
-                            <Select.Option value="zh-CN">简体中文</Select.Option>
-                            <Select.Option value="en-US">English</Select.Option>
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24}>
-                        <Form.Item label="时区" name="timezone">
-                          <Select>
-                            <Select.Option value="Asia/Shanghai">
-                              中国标准时间 (UTC+8)
-                            </Select.Option>
-                            <Select.Option value="UTC">UTC</Select.Option>
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24}>
-                        <Form.Item label="邮件通知" name="emailNotify" valuePropName="checked">
-                          <Switch checkedChildren="开启" unCheckedChildren="关闭" />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24}>
-                        <Form.Item label="桌面通知" name="desktopNotify" valuePropName="checked">
-                          <Switch checkedChildren="开启" unCheckedChildren="关闭" />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-
-                    <div style={{ marginTop: 24, textAlign: 'right' }}>
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        icon={<Save size={16} />}
-                        loading={prefsLoading}
-                        style={{
-                          background: DESIGN.colors.gradient.primary,
+                        <div style={{ marginTop: 24, textAlign: 'right' }}>
+                          <Space>
+                            {editing && <Button onClick={() => setEditing(false)}>取消</Button>}
+                            <Button
+                              type="primary"
+                              htmlType="submit"
+                              icon={<Save size={16} />}
+                              style={{
+                                background: DESIGN.colors.gradient.primary,
+                                boxShadow: DESIGN.shadows.glow(DESIGN.colors.accent),
+                              }}
+                            >
+                              保存修改
+                            </Button>
+                          </Space>
+                        </div>
+                      </Form>
+                    ),
+                  },
+                  {
+                    key: 'preferences',
+                    label: (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Settings size={16} />
+                        偏好设置
+                      </span>
+                    ),
+                    children: (
+                      <Form
+                        form={preferencesForm}
+                        layout="vertical"
+                        onFinish={handleSavePreferences}
+                        initialValues={{
+                          language: 'zh-CN',
+                          timezone: 'Asia/Shanghai',
+                          emailNotify: true,
+                          desktopNotify: true,
                         }}
                       >
-                        保存设置
-                      </Button>
-                    </div>
-                  </Form>
-                </TabPane>
+                        <Title level={5}>通知设置</Title>
+                        <Row gutter={24}>
+                          <Col xs={24}>
+                            <Form.Item label="语言" name="language">
+                              <Select>
+                                <Select.Option value="zh-CN">简体中文</Select.Option>
+                                <Select.Option value="en-US">English</Select.Option>
+                              </Select>
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24}>
+                            <Form.Item label="时区" name="timezone">
+                              <Select>
+                                <Select.Option value="Asia/Shanghai">
+                                  中国标准时间 (UTC+8)
+                                </Select.Option>
+                                <Select.Option value="UTC">UTC</Select.Option>
+                              </Select>
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24}>
+                            <Form.Item label="邮件通知" name="emailNotify" valuePropName="checked">
+                              <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24}>
+                            <Form.Item
+                              label="桌面通知"
+                              name="desktopNotify"
+                              valuePropName="checked"
+                            >
+                              <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+                            </Form.Item>
+                          </Col>
+                        </Row>
 
-                {/* 最近活动 */}
-                <TabPane
-                  key="activities"
-                  tab={
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Activity size={16} />
-                      最近活动
-                    </span>
-                  }
-                >
-                  <div>
-                    {activities.length === 0 ? (
-                      <div
-                        style={{
-                          textAlign: 'center',
-                          padding: '40px 0',
-                          color: DESIGN.colors.textMuted,
-                        }}
-                      >
-                        暂无活动记录
+                        <div style={{ marginTop: 24, textAlign: 'right' }}>
+                          <Button
+                            type="primary"
+                            htmlType="submit"
+                            icon={<Save size={16} />}
+                            loading={prefsLoading}
+                            style={{
+                              background: DESIGN.colors.gradient.primary,
+                            }}
+                          >
+                            保存设置
+                          </Button>
+                        </div>
+                      </Form>
+                    ),
+                  },
+                  {
+                    key: 'activities',
+                    label: (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Activity size={16} />
+                        最近活动
+                      </span>
+                    ),
+                    children: (
+                      <div>
+                        {activities.length === 0 ? (
+                          <div
+                            style={{
+                              textAlign: 'center',
+                              padding: '40px 0',
+                              color: DESIGN.colors.textMuted,
+                            }}
+                          >
+                            暂无活动记录
+                          </div>
+                        ) : (
+                          activities.map((activity, index) => (
+                            <div
+                              key={activity.id}
+                              style={{
+                                display: 'flex',
+                                gap: 16,
+                                padding: '16px 0',
+                                borderBottom:
+                                  index < activities.length - 1
+                                    ? `1px solid ${DESIGN.colors.border}`
+                                    : 'none',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: 40,
+                                  height: 40,
+                                  borderRadius: DESIGN.radius.md,
+                                  background: `${DESIGN.colors.success}15`,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: DESIGN.colors.success,
+                                }}
+                              >
+                                <CheckCircle size={18} />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 500, marginBottom: 4 }}>
+                                  {activity.action}
+                                </div>
+                                <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                                  {activity.target}
+                                </div>
+                              </div>
+                              <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                                {activity.time}
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
-                    ) : (
-                      activities.map((activity, index) => (
-                        <div
-                          key={activity.id}
+                    ),
+                  },
+                  {
+                    key: 'security',
+                    label: (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Lock size={16} />
+                        安全设置
+                      </span>
+                    ),
+                    children: (
+                      <>
+                        <Card
+                          size="small"
                           style={{
-                            display: 'flex',
-                            gap: 16,
-                            padding: '16px 0',
-                            borderBottom:
-                              index < activities.length - 1
-                                ? `1px solid ${DESIGN.colors.border}`
-                                : 'none',
+                            borderRadius: DESIGN.radius.md,
+                            border: `1px solid ${DESIGN.colors.border}`,
                           }}
                         >
                           <div
                             style={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: DESIGN.radius.md,
-                              background: `${DESIGN.colors.success}15`,
                               display: 'flex',
+                              justifyContent: 'space-between',
                               alignItems: 'center',
-                              justifyContent: 'center',
-                              color: DESIGN.colors.success,
                             }}
                           >
-                            <CheckCircle size={18} />
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 500, marginBottom: 4 }}>
-                              {activity.action}
+                            <div>
+                              <div style={{ fontWeight: 600, marginBottom: 4 }}>修改密码</div>
+                              <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                                定期修改密码可以保护账户安全
+                              </div>
                             </div>
-                            <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
-                              {activity.target}
-                            </div>
+                            <Button
+                              icon={<Key size={16} />}
+                              onClick={() => setPasswordModalVisible(true)}
+                            >
+                              修改
+                            </Button>
                           </div>
-                          <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
-                            {activity.time}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </TabPane>
+                        </Card>
 
-                {/* 安全设置 */}
-                <TabPane
-                  key="security"
-                  tab={
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Lock size={16} />
-                      安全设置
-                    </span>
-                  }
-                >
-                  <Space direction="vertical" style={{ width: '100%' }} size="large">
-                    <Card
-                      size="small"
-                      style={{
-                        borderRadius: DESIGN.radius.md,
-                        border: `1px solid ${DESIGN.colors.border}`,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 600, marginBottom: 4 }}>修改密码</div>
-                          <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
-                            定期修改密码可以保护账户安全
-                          </div>
-                        </div>
-                        <Button
-                          icon={<Key size={16} />}
-                          onClick={() => setPasswordModalVisible(true)}
+                        <Card
+                          size="small"
+                          style={{
+                            borderRadius: DESIGN.radius.md,
+                            border: `1px solid ${DESIGN.colors.border}`,
+                          }}
                         >
-                          修改
-                        </Button>
-                      </div>
-                    </Card>
-
-                    <Card
-                      size="small"
-                      style={{
-                        borderRadius: DESIGN.radius.md,
-                        border: `1px solid ${DESIGN.colors.border}`,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 600, marginBottom: 4 }}>两步验证</div>
-                          <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
-                            为账户添加额外的安全保护
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontWeight: 600, marginBottom: 4 }}>两步验证</div>
+                              <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                                为账户添加额外的安全保护
+                              </div>
+                            </div>
+                            <Tooltip title="两步验证功能开发中">
+                              <Button type="primary" ghost disabled>
+                                启用
+                              </Button>
+                            </Tooltip>
                           </div>
-                        </div>
-                        <Tooltip title="两步验证功能开发中">
-                          <Button type="primary" ghost disabled>
-                            启用
-                          </Button>
-                        </Tooltip>
-                      </div>
-                    </Card>
+                        </Card>
 
-                    <Card
-                      size="small"
-                      style={{
-                        borderRadius: DESIGN.radius.md,
-                        border: `1px solid ${DESIGN.colors.border}`,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 600, marginBottom: 4 }}>登录历史</div>
-                          <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
-                            查看账户的登录历史记录
+                        <Card
+                          size="small"
+                          style={{
+                            borderRadius: DESIGN.radius.md,
+                            border: `1px solid ${DESIGN.colors.border}`,
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontWeight: 600, marginBottom: 4 }}>登录历史</div>
+                              <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                                查看账户的登录历史记录
+                              </div>
+                            </div>
+                            <Tooltip title="登录历史功能开发中">
+                              <Button disabled>查看</Button>
+                            </Tooltip>
                           </div>
-                        </div>
-                        <Tooltip title="登录历史功能开发中">
-                          <Button disabled>查看</Button>
-                        </Tooltip>
-                      </div>
-                    </Card>
-                  </Space>
-                </TabPane>
-              </Tabs>
+                        </Card>
+                      </>
+                    ),
+                  },
+                ]}
+              />
             </Card>
           </Col>
         </Row>

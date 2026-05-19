@@ -952,7 +952,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 
 			// Notification Preferences
+			config.Logger.Info("NotificationPreferenceController check:", zap.Any("controller", config.NotificationPreferenceController))
 			if config.NotificationPreferenceController != nil {
+				config.Logger.Info("Registering notification-preferences routes")
 				notifPrefs := tenant.(*gin.RouterGroup).Group("/notification-preferences")
 				{
 					notifPrefs.GET("", config.NotificationPreferenceController.ListPreferences)

@@ -8,6 +8,8 @@ import { useI18n } from '@/lib/i18n';
 
 const { Text } = Typography;
 
+const getCurrentYear = () => new Date().getFullYear();
+
 export const SystemInfo: React.FC = () => {
   const { token } = theme.useToken();
   const { t } = useI18n();
@@ -28,11 +30,11 @@ export const SystemInfo: React.FC = () => {
           <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Text type="secondary">{t('admin.systemVersion')}</Text>
-              <Text strong>ITSM Pro v2.0.1</Text>
+              <Text strong>ITSM Pro v2.5.0</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Text type="secondary">{t('admin.databaseVersion')}</Text>
-              <Text strong>PostgreSQL 14.2</Text>
+              <Text strong>PostgreSQL 15.0</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Text type="secondary">{t('admin.licenseStatus')}</Text>
@@ -40,7 +42,7 @@ export const SystemInfo: React.FC = () => {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Text type="secondary">{t('admin.licenseExpiry')}</Text>
-              <Text strong>2024-12-31</Text>
+              <Text strong>{getCurrentYear() + 1}-12-31</Text>
             </div>
           </Space>
         </Card>
