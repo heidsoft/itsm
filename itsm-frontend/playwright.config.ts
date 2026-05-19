@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
+const enableBrowserChannels = process.env.PLAYWRIGHT_SKIP_CHANNELS !== '1';
+const enableEdge = process.env.PLAYWRIGHT_ENABLE_EDGE === '1';
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -26,19 +28,34 @@ export default defineConfig({
     timeout: 60_000, // 减少启动超时
   },
   projects: [
+    ...(enableBrowserChannels
+      ? [
+          {
+            name: 'chrome',
+            use: { browserName: 'chromium', channel: 'chrome' as const },
+          },
+        ]
+      : []),
+    ...(enableEdge
+      ? [
+          {
+            name: 'edge',
+            use: { browserName: 'chromium', channel: 'msedge' as const },
+          },
+        ]
+      : []),
     {
-      name: 'chrome',
-      use: { browserName: 'chromium', channel: 'chrome' },
-    },
-    {
-      name: 'chromium',
-      use: { browserName: 'chromium' },
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-    // 业务流程测试专用配置
+    {
+      name: 'chromium',
+      use: { browserName: 'chromium' },
+    },
     {
       name: 'business-flows',
       use: {

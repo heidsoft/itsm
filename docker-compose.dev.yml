@@ -7,8 +7,8 @@ services:
     container_name: itsm-postgres-dev
     hostname: postgres
     environment:
-      POSTGRES_DB: itsm_dev
-      POSTGRES_USER: dev
+      POSTGRES_DB: itsm
+      POSTGRES_USER: itsm_user
       POSTGRES_PASSWORD: dev123
     ports:
       - "5432:5432"
@@ -17,7 +17,7 @@ services:
     networks:
       - itsm-dev-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U dev -d itsm_dev" ]
+      test: [ "CMD-SHELL", "pg_isready -U itsm_user -d itsm" ]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -82,12 +82,12 @@ services:
     hostname: backend
     environment:
       # 数据库配置
-      - DATABASE_URL=postgres://dev:dev123@postgres:5432/itsm_dev?sslmode=disable
+      - DATABASE_URL=postgres://itsm_user:dev123@postgres:5432/itsm?sslmode=disable
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USER=dev
+      - DB_USER=itsm_user
       - DB_PASSWORD=dev123
-      - DB_NAME=itsm_dev
+      - DB_NAME=itsm
       - DB_SSLMODE=disable
 
       # Redis 配置

@@ -236,9 +236,9 @@ check_prerequisites() {
 
     # Version checks
     local go_ver node_ver
-    go_ver=$(go version 2>/dev/null | grep -oP 'go\K[0-9]+\.[0-9]+' | head -1 || echo "?")
+    go_ver=$(go version 2>/dev/null | grep -oE 'go[0-9]+\.[0-9]+' | tr -d 'go' || echo "?")
     node_ver=$(node --version 2>/dev/null | tr -d 'v' || echo "?")
-    log_success "Go ${go_ver}, Node ${node_ver}, pnpm $(pnpm --version 2>/dev/null || echo '?'), Docker $(docker --version 2>/dev/null | grep -oP '\K[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo '?')"
+    log_success "Go ${go_ver}, Node ${node_ver}, pnpm $(pnpm --version 2>/dev/null || echo '?'), Docker $(docker --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo '?')"
 }
 
 start_infrastructure() {
@@ -302,8 +302,8 @@ start_backend_local() {
     # Environment defaults (only set if not already defined)
     export DB_HOST="${DB_HOST:-localhost}"
     export DB_PORT="${DB_PORT:-5432}"
-    export DB_USER="${DB_USER:-itsm}"
-    export DB_PASSWORD="${DB_PASSWORD:-itsm_password_2026}"
+    export DB_USER="${DB_USER:-itsm_user}"
+    export DB_PASSWORD="${DB_PASSWORD:-dev123}"
     export DB_NAME="${DB_NAME:-itsm}"
     export DB_SSLMODE="${DB_SSLMODE:-disable}"
     export REDIS_HOST="${REDIS_HOST:-localhost}"
@@ -350,6 +350,8 @@ start_frontend_local() {
     if [[ "$SKIP_DEPS" == "false" ]] && [[ ! -d "node_modules" ]]; then
         log_info "Installing frontend dependencies..."
         pnpm install --ignore-scripts
+        # Approve builds for native modules (sharp, etc.) to avoid pnpm blocking on startup
+        pnpm approve-builds --silent 2>/dev/null || true
     fi
 
     export NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-http://localhost:8090}"
@@ -357,7 +359,9 @@ start_frontend_local() {
 
     local start; start=$(timer_start)
     log_info "Starting Next.js dev server..."
-    nohup pnpm dev > "$LOG_DIR/frontend.log" 2>&1 &
+    # Use direct node_modules path to bypass pnpm wrapper overhead on each reload
+    nohup ./node_modules/.bin/next dev --port 3000 > "$LOG_DIR/frontend.log" 2>&1 &
+    local pid=$!
     local pid=$!
     echo "$pid" > "$PID_DIR/frontend.pid"
     log_info "Frontend PID: $pid"
@@ -471,7 +475,7 @@ cmd_init() {
         log_error "Docker is required. Install: https://docs.docker.com/get-docker/"
         exit 1
     fi
-    log_success "Docker: $(docker --version | grep -oP '\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+    log_success "Docker: $(docker --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
 
     # 2. Create .env
     if [[ ! -f "$PROJECT_ROOT/.env" ]] && [[ -f "$PROJECT_ROOT/.env.example" ]]; then
