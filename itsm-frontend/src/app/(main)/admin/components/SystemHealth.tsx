@@ -7,15 +7,30 @@ import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
 
+const getCurrentDate = () => {
+  const now = new Date();
+  return now
+    .toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    })
+    .replace(/\//g, '-');
+};
+
 const systemHealth = {
   overall: 'excellent', // excellent, good, warning, critical
   uptime: '99.98%',
-  lastUpdate: '2024-01-15 14:30:25',
+  lastUpdate: getCurrentDate(),
   services: {
     database: 'healthy',
     api: 'healthy',
     cache: 'healthy',
-    queue: 'warning',
+    queue: 'healthy',
   },
 };
 

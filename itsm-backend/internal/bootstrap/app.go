@@ -170,6 +170,10 @@ func NewApplication() *Application {
 	notificationService := service.NewNotificationService(client)
 	notificationController := controller.NewNotificationController(notificationService)
 
+	// Notification Preference Service & Controller
+	notificationPreferenceService := service.NewNotificationPreferenceService(client, sugar)
+	notificationPreferenceController := controller.NewNotificationPreferenceController(notificationPreferenceService, sugar)
+
 	// 服务请求服务（依赖通知服务）
 	serviceRequestService := service.NewServiceRequestService(client, sugar, approvalService, notificationService)
 
@@ -465,6 +469,9 @@ func NewApplication() *Application {
 		// CMDB Controller (新增)
 		CMDBController: cmdbController,
 
+		// Notification Preference Controller
+		NotificationPreferenceController: notificationPreferenceController,
+
 		// Vendor Controller
 		VendorController: vendorController,
 
@@ -472,11 +479,11 @@ func NewApplication() *Application {
 		ServiceController:      serviceController,
 		ProvisioningController: provisioningController,
 		AnalyticsController:    analyticsController,
-		PredictionController:     predictionController,
-		ReleaseController:        releaseController,
-		AssetController:          assetController,
-		AssetLicenseController:   assetLicenseController,
-		SurveyController:         surveyController,
+		PredictionController:   predictionController,
+		ReleaseController:      releaseController,
+		AssetController:        assetController,
+		AssetLicenseController: assetLicenseController,
+		SurveyController:       surveyController,
 
 		// Domain Handlers
 		ServiceCatalogHandler: scHandler,
