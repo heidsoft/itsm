@@ -1285,8 +1285,8 @@ func (s *DashboardService) GetUserStats(ctx context.Context, tenantID int) (*dto
 	}
 
 	stats := &dto.UserStatsResponse{
-		Total:    len(users),
-		ByRole:   make(map[string]int),
+		Total:        len(users),
+		ByRole:       make(map[string]int),
 		ByDepartment: make(map[string]int),
 	}
 

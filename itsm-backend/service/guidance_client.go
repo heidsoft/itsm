@@ -46,8 +46,8 @@ type GuidanceTriageResponse struct {
 	Category     string  `json:"category"`
 	Priority     string  `json:"priority"`
 	Confidence   float64 `json:"confidence"`
-	Explanation string  `json:"explanation"`
-	SuggestedFix string `json:"suggested_fix,omitempty"`
+	Explanation  string  `json:"explanation"`
+	SuggestedFix string  `json:"suggested_fix,omitempty"`
 	AssigneeID   int     `json:"assignee_id"`
 	Method       string  `json:"method"`
 	LatencyMs    float64 `json:"latency_ms"`

@@ -6,8 +6,8 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"itsm-backend/ent/enttest"
 	"github.com/stretchr/testify/assert"
+	"itsm-backend/ent/enttest"
 )
 
 func TestTenantAwareRepository_ValidateTenantAccess(t *testing.T) {

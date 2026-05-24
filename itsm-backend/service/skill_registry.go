@@ -20,9 +20,9 @@ type Skill interface {
 
 // SkillRegistry 技能注册中心
 type SkillRegistry struct {
-	skills    map[string]Skill
-	tagIndex  map[string][]string // tag -> skill names
-	mu        sync.RWMutex
+	skills   map[string]Skill
+	tagIndex map[string][]string // tag -> skill names
+	mu       sync.RWMutex
 }
 
 // NewSkillRegistry 创建技能注册中心

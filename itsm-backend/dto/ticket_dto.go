@@ -20,13 +20,13 @@ type CreateTicketRequest struct {
 	Priority              string                 `json:"priority" binding:"required"`
 	Type                  string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"` // 工单类型
 	Category              string                 `json:"category"`                                                                      // 分类名称（可选，前端传入）
-	CategoryID            *int                   `json:"categoryId,omitempty"`                                                           // 分类ID（优先使用）
-	TemplateID            *int                   `json:"templateId,omitempty"`                                                           // 模板ID
-	RequesterID           int                    `json:"requesterId" binding:"omitempty"`                                                 // 从认证上下文中获取，前端可不传
+	CategoryID            *int                   `json:"categoryId,omitempty"`                                                          // 分类ID（优先使用）
+	TemplateID            *int                   `json:"templateId,omitempty"`                                                          // 模板ID
+	RequesterID           int                    `json:"requesterId" binding:"omitempty"`                                               // 从认证上下文中获取，前端可不传
 	AssigneeID            int                    `json:"assigneeId"`
 	ParentTicketID        *int                   `json:"parentTicketId,omitempty"`
 	TagIDs                []int                  `json:"tagIds,omitempty"` // 标签ID列表
-	Tags                  []string               `json:"tags"`              // 标签名称列表（兼容旧格式）
+	Tags                  []string               `json:"tags"`             // 标签名称列表（兼容旧格式）
 	FormFields            map[string]interface{} `json:"formFields"`
 	Attachments           []string               `json:"attachments"`
 	WorkflowDefinitionKey string                 `json:"workflowDefinitionKey"` // 工作流定义Key（可选，优先级高于自动选择）
@@ -45,9 +45,9 @@ type UpdateTicketRequest struct {
 	Tags        []string               `json:"tags"`
 	Resolution  string                 `json:"resolution" binding:"omitempty"`
 	FormFields  map[string]interface{} `json:"formFields"`
-	UserID      int                    `json:"userId" binding:"omitempty"`  // 操作用户ID (后端自动填充)
-	Version     int                    `json:"version"`                     // 版本号（乐观锁）
-	Force       bool                   `json:"force"`                       // 是否强制更新（忽略版本检查）
+	UserID      int                    `json:"userId" binding:"omitempty"` // 操作用户ID (后端自动填充)
+	Version     int                    `json:"version"`                    // 版本号（乐观锁）
+	Force       bool                   `json:"force"`                      // 是否强制更新（忽略版本检查）
 }
 
 // ListTicketsRequest 获取工单列表请求
@@ -56,11 +56,11 @@ type ListTicketsRequest struct {
 	PageSize       int        `json:"pageSize" form:"pageSize"`
 	Status         string     `json:"status" form:"status"`
 	Priority       string     `json:"priority" form:"priority"`
-	Type           string     `json:"type" form:"type"`                 // 工单类型筛选
-	Category       string     `json:"category" form:"category"`         // 分类名称
-	CategoryID     *int       `json:"categoryId" form:"categoryId"`     // 分类ID（优先）
-	AssigneeID     *int       `json:"assigneeId" form:"assigneeId"`     // 处理人ID（可选）
-	RequesterID    *int       `json:"requesterId" form:"requesterId"`   // 创建人ID（可选）
+	Type           string     `json:"type" form:"type"`               // 工单类型筛选
+	Category       string     `json:"category" form:"category"`       // 分类名称
+	CategoryID     *int       `json:"categoryId" form:"categoryId"`   // 分类ID（优先）
+	AssigneeID     *int       `json:"assigneeId" form:"assigneeId"`   // 处理人ID（可选）
+	RequesterID    *int       `json:"requesterId" form:"requesterId"` // 创建人ID（可选）
 	ParentTicketID *int       `json:"parentTicketId" form:"parentTicketId"`
 	Keyword        string     `json:"keyword" form:"keyword"`
 	DateFrom       *time.Time `json:"dateFrom" form:"dateFrom"` // 创建时间起始
@@ -193,9 +193,9 @@ type TicketEscalationRequest struct {
 type TicketSLARequest struct {
 	Category       string `json:"category" binding:"required"`
 	Priority       string `json:"priority" binding:"required"`
-	ResponseTime   int    `json:"responseTime" binding:"required"`    // 响应时间（小时）
-	ResolutionTime int    `json:"resolutionTime" binding:"required"`  // 解决时间（小时）
-	BusinessHours  bool   `json:"businessHours"`                      // 是否仅计算工作时间
+	ResponseTime   int    `json:"responseTime" binding:"required"`   // 响应时间（小时）
+	ResolutionTime int    `json:"resolutionTime" binding:"required"` // 解决时间（小时）
+	BusinessHours  bool   `json:"businessHours"`                     // 是否仅计算工作时间
 }
 
 // TicketNotificationRequest 工单通知请求

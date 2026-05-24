@@ -53,11 +53,11 @@ type KnowledgeArticleListResponse struct {
 
 // KnowledgeStatsResponse 知识库统计响应
 type KnowledgeStatsResponse struct {
-	Total      int      `json:"total"`               // 总文章数
-	Published  int      `json:"published"`           // 已发布文章数
-	Draft      int      `json:"draft"`               // 草稿数
-	Views      int64    `json:"views"`               // 总浏览次数
-	Rating     float64  `json:"rating"`              // 平均评分 (基于点赞数)
+	Total      int             `json:"total"`      // 总文章数
+	Published  int             `json:"published"`  // 已发布文章数
+	Draft      int             `json:"draft"`      // 草稿数
+	Views      int64           `json:"views"`      // 总浏览次数
+	Rating     float64         `json:"rating"`     // 平均评分 (基于点赞数)
 	Categories []CategoryStats `json:"categories"` // 按分类统计
 }
 
@@ -91,9 +91,9 @@ type ListArticleVersionsRequest struct {
 // KnowledgeArticleVersionListResponse 文章版本列表响应
 type KnowledgeArticleVersionListResponse struct {
 	Versions []KnowledgeArticleVersionResponse `json:"versions"`
-	Total    int                              `json:"total"`
-	Page     int                              `json:"page"`
-	Size     int                              `json:"size"`
+	Total    int                               `json:"total"`
+	Page     int                               `json:"page"`
+	Size     int                               `json:"size"`
 }
 
 // RestoreArticleVersionRequest 恢复版本请求
@@ -121,22 +121,22 @@ type CreateSessionRequest struct {
 // SessionHeartbeatRequest 心跳请求
 type SessionHeartbeatRequest struct {
 	SessionToken string `json:"sessionToken" binding:"required"`
-	CursorPos     *int   `json:"cursorPosition"`
+	CursorPos    *int   `json:"cursorPosition"`
 }
 
 // ArticleParticipantResponse 参与者响应
 type ArticleParticipantResponse struct {
-	UserID        int       `json:"userId"`
-	UserName      string    `json:"userName"`
-	Avatar        string    `json:"avatar"`
-	CursorPos     int       `json:"cursorPosition"`
-	IsActive      bool      `json:"isActive"`
-	JoinedAt      time.Time `json:"joinedAt"`
-	LastActivity  time.Time `json:"lastActivity"`
+	UserID       int       `json:"userId"`
+	UserName     string    `json:"userName"`
+	Avatar       string    `json:"avatar"`
+	CursorPos    int       `json:"cursorPosition"`
+	IsActive     bool      `json:"isActive"`
+	JoinedAt     time.Time `json:"joinedAt"`
+	LastActivity time.Time `json:"lastActivity"`
 }
 
 // ListParticipantsResponse 参与者列表响应
 type ListParticipantsResponse struct {
 	Participants []ArticleParticipantResponse `json:"participants"`
-	Total        int                           `json:"total"`
+	Total        int                          `json:"total"`
 }

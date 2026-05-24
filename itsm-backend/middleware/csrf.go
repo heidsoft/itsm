@@ -21,26 +21,26 @@ const (
 
 // CSRFConfig CSRF 配置
 type CSRFConfig struct {
-	TokenLength   int           // Token 字节长度，默认 32
-	CookieName    string        // Cookie 名称
-	HeaderName    string        // Header 名称
-	FormName      string        // Form 字段名称
-	CookieMaxAge  int           // Cookie 最大年龄（秒），默认 86400 (24小时)
-	Secure        bool          // Cookie 是否仅 HTTPS
-	Domain        string        // Cookie Domain
-	SkipPaths     []string      // 跳过 CSRF 验证的路径
-	AllowedMethods []string     // 需要验证的 HTTP 方法
+	TokenLength    int      // Token 字节长度，默认 32
+	CookieName     string   // Cookie 名称
+	HeaderName     string   // Header 名称
+	FormName       string   // Form 字段名称
+	CookieMaxAge   int      // Cookie 最大年龄（秒），默认 86400 (24小时)
+	Secure         bool     // Cookie 是否仅 HTTPS
+	Domain         string   // Cookie Domain
+	SkipPaths      []string // 跳过 CSRF 验证的路径
+	AllowedMethods []string // 需要验证的 HTTP 方法
 }
 
 // DefaultCSRFConfig 默认 CSRF 配置
 func DefaultCSRFConfig() *CSRFConfig {
 	return &CSRFConfig{
-		TokenLength:   32,
-		CookieName:    CSRFTokenCookieName,
-		HeaderName:    CSRFTokenHeaderName,
-		FormName:      CSRFTokenFormName,
-		CookieMaxAge:  86400,
-		Secure:        gin.Mode() == gin.ReleaseMode, // 生产环境启用 Secure
+		TokenLength:  32,
+		CookieName:   CSRFTokenCookieName,
+		HeaderName:   CSRFTokenHeaderName,
+		FormName:     CSRFTokenFormName,
+		CookieMaxAge: 86400,
+		Secure:       gin.Mode() == gin.ReleaseMode, // 生产环境启用 Secure
 		SkipPaths: []string{
 			"/api/v1/auth/login",
 			"/api/v1/auth/refresh-token",

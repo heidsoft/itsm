@@ -73,31 +73,31 @@ const (
 const (
 	IncidentStatusNew          = "new"
 	IncidentStatusAcknowledged = "acknowledged" // 已确认
-	IncidentStatusAssigned    = "assigned"    // 已分配
-	IncidentStatusInProgress  = "in_progress"
-	IncidentStatusTriaged     = "triaged"     // 已分类
-	IncidentStatusEscalated  = "escalated"   // 已升级
-	IncidentStatusResolved   = "resolved"
-	IncidentStatusClosed     = "closed"
+	IncidentStatusAssigned     = "assigned"     // 已分配
+	IncidentStatusInProgress   = "in_progress"
+	IncidentStatusTriaged      = "triaged"   // 已分类
+	IncidentStatusEscalated    = "escalated" // 已升级
+	IncidentStatusResolved     = "resolved"
+	IncidentStatusClosed       = "closed"
 )
 
 // ===================================
 // Problem Status Constants
 // ===================================
 const (
-	ProblemStatusNew        = "new"
+	ProblemStatusNew           = "new"
 	ProblemStatusInvestigating = "investigating" //调查中
-	ProblemStatusIdentified = "identified"       //已识别
-	ProblemStatusResolved   = "resolved"
-	ProblemStatusClosed     = "closed"
+	ProblemStatusIdentified    = "identified"    //已识别
+	ProblemStatusResolved      = "resolved"
+	ProblemStatusClosed        = "closed"
 )
 
 // ===================================
 // ProcessTask Status Constants (BPMN)
 // ===================================
 const (
-	ProcessTaskStatusCreated    = "created"
-	ProcessTaskStatusAssigned   = "assigned"
+	ProcessTaskStatusCreated   = "created"
+	ProcessTaskStatusAssigned  = "assigned"
 	ProcessTaskStatusStarted   = "started"
 	ProcessTaskStatusCompleted = "completed"
 	ProcessTaskStatusCancelled = "cancelled"

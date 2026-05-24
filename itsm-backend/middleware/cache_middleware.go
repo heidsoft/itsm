@@ -78,15 +78,15 @@ func (cm *CacheMiddleware) InvalidateCache(patterns ...string) gin.HandlerFunc {
 		c.Next()
 
 		// 只在成功的POST/PUT/DELETE请求后失效缓存
-		if c.Writer.Status() >= 200 && c.Writer.Status() < 300 && 
-			(c.Request.Method == http.MethodPost || 
-			 c.Request.Method == http.MethodPut || 
-			 c.Request.Method == http.MethodDelete) {
-			
+		if c.Writer.Status() >= 200 && c.Writer.Status() < 300 &&
+			(c.Request.Method == http.MethodPost ||
+				c.Request.Method == http.MethodPut ||
+				c.Request.Method == http.MethodDelete) {
+
 			for _, pattern := range patterns {
 				if err := cm.cache.DeleteByPattern(c.Request.Context(), pattern); err != nil {
-					cm.logger.Warn("Failed to invalidate cache", 
-						zap.Error(err), 
+					cm.logger.Warn("Failed to invalidate cache",
+						zap.Error(err),
 						zap.String("pattern", pattern))
 				} else {
 					cm.logger.Debug("Cache invalidated", zap.String("pattern", pattern))
@@ -103,7 +103,7 @@ func (cm *CacheMiddleware) generateCacheKey(c *gin.Context) string {
 	path := c.Request.URL.Path
 	query := c.Request.URL.RawQuery
 
-	return fmt.Sprintf("api:tenant:%d:user:%d:path:%s:query:%s", 
+	return fmt.Sprintf("api:tenant:%d:user:%d:path:%s:query:%s",
 		tenantID, userID, path, query)
 }
 
@@ -126,7 +126,7 @@ func (cm *CacheMiddleware) CacheStats() gin.HandlerFunc {
 		c.Next()
 
 		duration := time.Since(start)
-		
+
 		// 记录慢查询
 		if duration > 1*time.Second {
 			cm.logger.Warn("Slow request detected",
@@ -141,14 +141,14 @@ func (cm *CacheMiddleware) CacheStats() gin.HandlerFunc {
 
 // Cacheable 缓存标记（用于控制器方法）
 type Cacheable struct {
-	Key     string
-	TTL     time.Duration
+	Key          string
+	TTL          time.Duration
 	InvalidateOn []string
 }
 
 // CacheHelper 缓存辅助函数
 type CacheHelper struct {
-	cache *cache.CacheService
+	cache  *cache.CacheService
 	logger *zap.Logger
 }
 
@@ -159,7 +159,7 @@ func NewCacheHelper(cache *cache.CacheService, logger *zap.Logger) *CacheHelper 
 // CacheTicketList 缓存工单列表
 func (h *CacheHelper) CacheTicketList(ctx *gin.Context, tenantID int, page, pageSize int, fn func() (interface{}, error)) (interface{}, error) {
 	key := fmt.Sprintf("tickets:tenant:%d:page:%d:size:%d", tenantID, page, pageSize)
-	
+
 	var result interface{}
 	err := h.cache.GetOrSet(ctx.Request.Context(), key, &result, 5*time.Minute, fn)
 	return result, err
@@ -174,7 +174,7 @@ func (h *CacheHelper) InvalidateTicketCache(ctx *gin.Context, tenantID int) erro
 // CacheCMDBData 缓存CMDB数据
 func (h *CacheHelper) CacheCMDBData(ctx *gin.Context, tenantID, ciID int, fn func() (interface{}, error)) (interface{}, error) {
 	key := fmt.Sprintf("cmdb:tenant:%d:ci:%d", tenantID, ciID)
-	
+
 	var result interface{}
 	err := h.cache.GetOrSet(ctx.Request.Context(), key, &result, 10*time.Minute, fn)
 	return result, err

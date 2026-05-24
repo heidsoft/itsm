@@ -137,7 +137,7 @@ func toSchemaAnswers(answers []dto.AnswerDTO) []schema.Answer {
 	for i, a := range answers {
 		result[i] = schema.Answer{
 			QuestionIndex: a.QuestionIndex,
-			Value:        a.Value,
+			Value:         a.Value,
 		}
 	}
 	return result

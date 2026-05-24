@@ -15,11 +15,11 @@ import (
 )
 
 type CMDBController struct {
-	cmdbService             *service.CMDBService
-	ciRelationshipService   *service.CIRelationshipService
-	auditLogService         *service.AuditLogService
-	dddSvc                  *dddcmdb.Service
-	cloudDiscoveryService   *service.CloudDiscoveryService
+	cmdbService           *service.CMDBService
+	ciRelationshipService *service.CIRelationshipService
+	auditLogService       *service.AuditLogService
+	dddSvc                *dddcmdb.Service
+	cloudDiscoveryService *service.CloudDiscoveryService
 }
 
 func NewCMDBController(

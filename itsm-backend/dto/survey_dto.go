@@ -27,11 +27,11 @@ type SurveyDTO struct {
 
 // SubmitSurveyRequest represents a request to submit a survey response
 type SubmitSurveyRequest struct {
-	SurveyID int        `json:"surveyId" binding:"required"`
-	TicketID int        `json:"ticketId" binding:"required"`
+	SurveyID int         `json:"surveyId" binding:"required"`
+	TicketID int         `json:"ticketId" binding:"required"`
 	Answers  []AnswerDTO `json:"answers" binding:"required"`
-	Score    int        `json:"score"`
-	Comment  string     `json:"comment"`
+	Score    int         `json:"score"`
+	Comment  string      `json:"comment"`
 }
 
 // AnswerDTO represents an answer to a survey question

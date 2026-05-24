@@ -107,7 +107,6 @@ func (s *KnownErrorService) SearchKnownErrors(ctx context.Context, tenantID int,
 	return result, nil
 }
 
-
 // GetActiveKnownErrors 获取所有激活的已知错误
 func (s *KnownErrorService) GetActiveKnownErrors(ctx context.Context, tenantID int) ([]*ent.KnownError, error) {
 	all, err := s.client.KnownError.Query().All(ctx)

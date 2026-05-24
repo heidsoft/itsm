@@ -50,29 +50,28 @@ func (mc *MSPController) GetMSPStatus(c *gin.Context) {
 
 	if exists && mspCtx.IsMSP {
 		common.Success(c, gin.H{
-			"is_msp":     true,
+			"is_msp":      true,
 			"msp_user_id": mspCtx.MSPUserID,
-			"role":       mspCtx.Role,
-			"is_admin":   isAdmin,
+			"role":        mspCtx.Role,
+			"is_admin":    isAdmin,
 		})
 		return
 	}
 
-
 	// 如果是管理员，返回管理员状态但不标记为MSP员工
 	if isAdmin {
 		common.Success(c, gin.H{
-			"is_msp":     false,
-			"is_admin":   true,
-			"message":    "管理员模式：可配置MSP功能",
+			"is_msp":   false,
+			"is_admin": true,
+			"message":  "管理员模式：可配置MSP功能",
 		})
 		return
 	}
 
 	common.Success(c, gin.H{
-		"is_msp":  false,
+		"is_msp":   false,
 		"is_admin": false,
-		"message": "非MSP用户",
+		"message":  "非MSP用户",
 	})
 }
 
@@ -93,11 +92,11 @@ func (mc *MSPController) GetMSPContext(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"is_msp":           mspCtx.IsMSP,
-		"msp_user_id":     mspCtx.MSPUserID,
+		"is_msp":             mspCtx.IsMSP,
+		"msp_user_id":        mspCtx.MSPUserID,
 		"customer_tenant_id": mspCtx.CustomerTenantID,
-		"role":            mspCtx.Role,
-		"allowed_customers": mspCtx.AllowedCustomers,
+		"role":               mspCtx.Role,
+		"allowed_customers":  mspCtx.AllowedCustomers,
 	})
 }
 
