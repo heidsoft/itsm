@@ -212,6 +212,7 @@ export class WorkflowApi {
       // 转换为 WorkflowTask 格式
       return tasks.map((task: any) => ({
         id: task.id || task.task_id || task.ID,
+        instanceId: instanceId,
         nodeId: task.task_id || task.task_definition_key || '',
         nodeName: task.task_name || task.taskName || '',
         nodeType: task.task_type || task.taskType || 'user_task',
@@ -221,6 +222,7 @@ export class WorkflowApi {
         createdAt: task.created_time || task.createdAt || new Date().toISOString(),
         dueDate: task.due_date || task.dueDate || null,
         variables: task.task_variables || task.variables || {},
+        retryCount: task.retry_count || 0,
       }));
     } catch (error) {
       console.error('Failed to fetch workflow tasks:', error);

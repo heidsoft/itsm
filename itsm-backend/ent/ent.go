@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/bpmnpermission"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citype"
@@ -182,6 +183,7 @@ func checkColumn(t, c string) error {
 			cirelationship.Table:              cirelationship.ValidColumn,
 			citype.Table:                      citype.ValidColumn,
 			change.Table:                      change.ValidColumn,
+			changepir.Table:                   changepir.ValidColumn,
 			cloudaccount.Table:                cloudaccount.ValidColumn,
 			cloudresource.Table:               cloudresource.ValidColumn,
 			cloudservice.Table:                cloudservice.ValidColumn,

@@ -1293,6 +1293,29 @@ func HasProblemsWith(preds ...predicate.Problem) predicate.Change {
 	})
 }
 
+// HasPir applies the HasEdge predicate on the "pir" edge.
+func HasPir() predicate.Change {
+	return predicate.Change(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PirTable, PirColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPirWith applies the HasEdge predicate on the "pir" edge with a given conditions (other predicates).
+func HasPirWith(preds ...predicate.ChangePIR) predicate.Change {
+	return predicate.Change(func(s *sql.Selector) {
+		step := newPirStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Change) predicate.Change {
 	return predicate.Change(sql.AndPredicates(predicates...))

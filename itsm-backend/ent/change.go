@@ -71,9 +71,11 @@ type Change struct {
 type ChangeEdges struct {
 	// 关联的问题
 	Problems []*Problem `json:"problems,omitempty"`
+	// 实施后审查
+	Pir []*ChangePIR `json:"pir,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // ProblemsOrErr returns the Problems value or an error if the edge
@@ -83,6 +85,15 @@ func (e ChangeEdges) ProblemsOrErr() ([]*Problem, error) {
 		return e.Problems, nil
 	}
 	return nil, &NotLoadedError{edge: "problems"}
+}
+
+// PirOrErr returns the Pir value or an error if the edge
+// was not loaded in eager-loading.
+func (e ChangeEdges) PirOrErr() ([]*ChangePIR, error) {
+	if e.loadedTypes[1] {
+		return e.Pir, nil
+	}
+	return nil, &NotLoadedError{edge: "pir"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -274,6 +285,11 @@ func (_m *Change) Value(name string) (ent.Value, error) {
 // QueryProblems queries the "problems" edge of the Change entity.
 func (_m *Change) QueryProblems() *ProblemQuery {
 	return NewChangeClient(_m.config).QueryProblems(_m)
+}
+
+// QueryPir queries the "pir" edge of the Change entity.
+func (_m *Change) QueryPir() *ChangePIRQuery {
+	return NewChangeClient(_m.config).QueryPir(_m)
 }
 
 // Update returns a builder for updating this Change.

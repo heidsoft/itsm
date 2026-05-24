@@ -6,20 +6,28 @@ import (
 	"time"
 
 	"itsm-backend/dto"
+	"itsm-backend/ent"
+	"itsm-backend/service"
 
 	"go.uber.org/zap"
 )
 
 type Service struct {
-	repo   Repository
-	logger *zap.SugaredLogger
+	repo        Repository
+	logger      *zap.SugaredLogger
+	entClient   *ent.Client
+	pirService  *service.ChangePIRService
 }
 
-func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
-	return &Service{
-		repo:   repo,
-		logger: logger,
+func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogger) *Service {
+	svc := &Service{
+		repo:      repo,
+		entClient: entClient,
+		logger:    logger,
 	}
+	// Initialize PIR service
+	svc.pirService = service.NewChangePIRService(entClient, logger)
+	return svc
 }
 
 // Change methods
@@ -316,4 +324,42 @@ func isValidChangeStatusTransition(currentStatus, newStatus string) bool {
 // GetApprovalHistory returns approval records for a change
 func (s *Service) GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
 	return s.repo.GetApprovalHistory(ctx, changeID, tenantID)
+}
+
+// ==================== PIR (Post-Implementation Review) Methods ====================
+
+func (s *Service) CreatePIR(ctx context.Context, req *dto.CreateChangePIRRequest, reviewerID, tenantID int) (*dto.ChangePIRResponse, error) {
+	s.logger.Infow("Creating PIR", "change_id", req.ChangeID, "reviewer_id", reviewerID)
+	if s.pirService != nil {
+		return s.pirService.CreatePIR(ctx, req, reviewerID, tenantID)
+	}
+	return nil, fmt.Errorf("PIR service not initialized")
+}
+
+func (s *Service) GetPIRByChange(ctx context.Context, changeID, tenantID int) (*dto.ChangePIRResponse, error) {
+	if s.pirService != nil {
+		return s.pirService.GetPIRByChange(ctx, changeID, tenantID)
+	}
+	return nil, fmt.Errorf("PIR service not initialized")
+}
+
+func (s *Service) ListPIRs(ctx context.Context, tenantID int, page, pageSize int, result string) (*dto.ChangePIRListResponse, error) {
+	if s.pirService != nil {
+		return s.pirService.ListPIRs(ctx, tenantID, page, pageSize, result)
+	}
+	return nil, fmt.Errorf("PIR service not initialized")
+}
+
+func (s *Service) UpdatePIR(ctx context.Context, pirID int, req *dto.UpdateChangePIRRequest, tenantID int) (*dto.ChangePIRResponse, error) {
+	if s.pirService != nil {
+		return s.pirService.UpdatePIR(ctx, pirID, req, tenantID)
+	}
+	return nil, fmt.Errorf("PIR service not initialized")
+}
+
+func (s *Service) DeletePIR(ctx context.Context, pirID, tenantID int) error {
+	if s.pirService != nil {
+		return s.pirService.DeletePIR(ctx, pirID, tenantID)
+	}
+	return fmt.Errorf("PIR service not initialized")
 }

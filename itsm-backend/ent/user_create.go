@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/knowledgearticleparticipant"
@@ -360,6 +361,21 @@ func (_c *UserCreate) AddArticleParticipations(v ...*KnowledgeArticleParticipant
 		ids[i] = v[i].ID
 	}
 	return _c.AddArticleParticipationIDs(ids...)
+}
+
+// AddPirReviewIDs adds the "pir_reviews" edge to the ChangePIR entity by IDs.
+func (_c *UserCreate) AddPirReviewIDs(ids ...int) *UserCreate {
+	_c.mutation.AddPirReviewIDs(ids...)
+	return _c
+}
+
+// AddPirReviews adds the "pir_reviews" edges to the ChangePIR entity.
+func (_c *UserCreate) AddPirReviews(v ...*ChangePIR) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPirReviewIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -743,6 +759,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(knowledgearticleparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PirReviewsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PirReviewsTable,
+			Columns: []string{user.PirReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

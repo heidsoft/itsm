@@ -398,6 +398,18 @@ const ChangeDetail: React.FC = () => {
                 </Spin>
               ),
             },
+            {
+              key: '6',
+              label: '实施后审查 (PIR)',
+              children: (
+                <div className="py-4">
+                  <p className="text-gray-500 mb-4">评估变更实施结果，总结经验教训</p>
+                  <Button type="primary" onClick={() => router.push(`/changes/${id}/pir`)}>
+                    {change.status === 'completed' ? '填写PIR' : '查看PIR'}
+                  </Button>
+                </div>
+              ),
+            },
           ]}
         />
       </Card>

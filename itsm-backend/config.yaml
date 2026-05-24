@@ -1,8 +1,8 @@
 database:
   host: "${DB_HOST:localhost}"
   port: 5432
-  user: "${DB_USER:postgres}"
-  password: "${DB_PASSWORD:dev123}"
+  user: "${DB_USER:itsm}"
+  password: "${DB_PASSWORD:itsm_password_2026}"
   dbname: "${DB_NAME:itsm}"
   sslmode: "${DB_SSLMODE:disable}"
 
@@ -91,7 +91,7 @@ smtp:
 
 # Redis configuration (for sequence service, cache, etc.)
 redis:
-  host: "${REDIS_HOST:redis}"
+  host: "localhost"
   port: 6379
   password: "${REDIS_PASSWORD:}"
   db: 0

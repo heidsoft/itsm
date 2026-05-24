@@ -56,7 +56,7 @@ export const acknowledgeSLAViolation = async (violationId: number): Promise<void
 export const fetchAlertRules = async (): Promise<SLAAlertRule[]> => {
   try {
     const response = await SLAApi.getAlertRules();
-    return response.items || [];
+    return Array.isArray(response) ? response : [];
   } catch (error) {
     console.error('Failed to fetch alert rules:', error);
     return [];
@@ -71,8 +71,8 @@ export const createAlertRule = async (rule: Partial<SLAAlertRule>): Promise<SLAA
     name: rule.name || 'New Rule',
     sla_definition_id: rule.sla_definition_id || 0,
     alert_level: rule.alert_level || 'warning',
-    threshold_percent: rule.threshold_percent || 80,
-    notify_owners: rule.notify_owners ?? true,
+    threshold_percentage: rule.threshold_percentage || 80,
+    notification_channels: rule.notification_channels || ['email'],
     is_active: rule.is_active ?? true,
   });
   return response;
@@ -85,8 +85,8 @@ export const updateAlertRule = async (ruleId: number, rule: Partial<SLAAlertRule
   const response = await SLAApi.updateAlertRule(ruleId, {
     name: rule.name,
     alert_level: rule.alert_level,
-    threshold_percent: rule.threshold_percent,
-    notify_owners: rule.notify_owners,
+    threshold_percentage: rule.threshold_percentage,
+    notification_channels: rule.notification_channels,
     is_active: rule.is_active,
   });
   return response;

@@ -135,6 +135,66 @@ export interface ImpactAnalysisData {
   impactScore?: number;
 }
 
+// ==================== PIR (Post-Implementation Review) 类型定义 ====================
+// PIR总体结果
+export type PIROverallResult = 'successful' | 'partially_successful' | 'failed';
+
+
+// PIR请求
+export interface CreatePIRRequest {
+  overallResult: PIROverallResult;
+  objectivesAchieved: boolean;
+  successSummary?: string;
+  issuesEncountered?: string;
+  lessonsLearned?: string;
+  improvementRecommendations?: string;
+  actualStartTime?: string;
+  actualEndTime?: string;
+  rollbackPerformed: boolean;
+  rollbackReason?: string;
+}
+
+// PIR更新请求
+export interface UpdatePIRRequest {
+  overallResult?: PIROverallResult;
+  objectivesAchieved?: boolean;
+  successSummary?: string;
+  issuesEncountered?: string;
+  lessonsLearned?: string;
+  improvementRecommendations?: string;
+}
+
+// PIR响应
+export interface PIRResponse {
+  id: number;
+  changeId: number;
+  changeTitle: string;
+  reviewerId: number;
+  reviewerName: string;
+  overallResult: PIROverallResult;
+  objectivesAchieved: boolean;
+  successSummary?: string;
+  issuesEncountered?: string;
+  lessonsLearned?: string;
+  improvementRecommendations?: string;
+  actualStartTime?: string;
+  actualEndTime?: string;
+  actualDurationMinutes: number;
+  rollbackPerformed: boolean;
+  rollbackReason?: string;
+  tenantId: number;
+  reviewDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
+// PIR列表响应
+export interface PIRListResponse {
+  total: number;
+  items: PIRResponse[];
+}
+
 // 变更API类
 export class ChangeApi {
   // 获取变更列表
@@ -280,6 +340,45 @@ export class ChangeApi {
   // 获取变更实施日志
   static async getImplementationLogs(id: number): Promise<any[]> {
     return httpClient.get(`/api/v1/changes/${id}/logs`);
+  }
+
+  // ==================== PIR (Post-Implementation Review) ====================
+
+
+  // PIR总体结果类型
+  static async getPIRs(params?: {
+    page?: number;
+    page_size?: number;
+    result?: 'successful' | 'partially_successful' | 'failed' | '全部';
+  }): Promise<PIRListResponse> {
+    return httpClient.get<PIRListResponse>('/api/v1/changes/pirs', params as Record<string, unknown>);
+  }
+
+  // 获取变更关联的PIR
+  static async getPIR(changeId: number): Promise<PIRResponse | null> {
+    try {
+      return await httpClient.get<PIRResponse>(`/api/v1/changes/${changeId}/pir`);
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  // 创建PIR
+  static async createPIR(changeId: number, data: CreatePIRRequest): Promise<PIRResponse> {
+    return httpClient.post<PIRResponse>(`/api/v1/changes/${changeId}/pir`, data);
+  }
+
+  // 更新PIR
+  static async updatePIR(pirId: number, data: UpdatePIRRequest): Promise<PIRResponse> {
+    return httpClient.put<PIRResponse>(`/api/v1/changes/pir/${pirId}`, data);
+  }
+
+  // 删除PIR
+  static async deletePIR(pirId: number): Promise<void> {
+    return httpClient.delete(`/api/v1/changes/pir/${pirId}`);
   }
 
   // ==================== 兼容别名（旧代码使用） ====================

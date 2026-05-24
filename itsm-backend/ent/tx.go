@@ -36,6 +36,8 @@ type Tx struct {
 	CIType *CITypeClient
 	// Change is the client for interacting with the Change builders.
 	Change *ChangeClient
+	// ChangePIR is the client for interacting with the ChangePIR builders.
+	ChangePIR *ChangePIRClient
 	// CloudAccount is the client for interacting with the CloudAccount builders.
 	CloudAccount *CloudAccountClient
 	// CloudResource is the client for interacting with the CloudResource builders.
@@ -351,6 +353,7 @@ func (tx *Tx) init() {
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)
 	tx.CIType = NewCITypeClient(tx.config)
 	tx.Change = NewChangeClient(tx.config)
+	tx.ChangePIR = NewChangePIRClient(tx.config)
 	tx.CloudAccount = NewCloudAccountClient(tx.config)
 	tx.CloudResource = NewCloudResourceClient(tx.config)
 	tx.CloudService = NewCloudServiceClient(tx.config)
