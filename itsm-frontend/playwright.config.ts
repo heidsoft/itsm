@@ -32,7 +32,7 @@ export default defineConfig({
       ? [
           {
             name: 'chrome',
-            use: { browserName: 'chromium', channel: 'chrome' as const },
+            use: { browserName: 'chromium' as const, channel: 'chrome' as const },
           },
         ]
       : []),
@@ -40,7 +40,7 @@ export default defineConfig({
       ? [
           {
             name: 'edge',
-            use: { browserName: 'chromium', channel: 'msedge' as const },
+            use: { browserName: 'chromium' as const, channel: 'msedge' as const },
           },
         ]
       : []),
@@ -54,12 +54,12 @@ export default defineConfig({
     },
     {
       name: 'chromium',
-      use: { browserName: 'chromium' },
+      use: { browserName: 'chromium' as const },
     },
     {
       name: 'business-flows',
       use: {
-        browserName: 'chromium',
+        browserName: 'chromium' as const,
         viewport: { width: 1440, height: 900 },
       },
       testDir: './tests/e2e/business-flows',

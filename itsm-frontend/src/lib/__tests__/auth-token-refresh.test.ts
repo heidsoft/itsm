@@ -230,6 +230,7 @@ describe('Auth Token Refresh Mechanism', () => {
   // ==========================================
   describe('HttpClient.refreshTokenInternal()', () => {
     it('should return false when no refresh token exists', async () => {
+      // @ts-ignore - Testing private method for internal behavior
       const result = await httpClient.refreshTokenInternal();
       expect(result).toBe(false);
     });
@@ -247,6 +248,7 @@ describe('Auth Token Refresh Mechanism', () => {
         }),
       });
 
+      // @ts-ignore - Testing private method for internal behavior
       const result = await httpClient.refreshTokenInternal();
       expect(result).toBe(false);
     });
@@ -256,6 +258,7 @@ describe('Auth Token Refresh Mechanism', () => {
 
       (fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
+      // @ts-ignore - Testing private method for internal behavior
       const result = await httpClient.refreshTokenInternal();
       expect(result).toBe(false);
     });

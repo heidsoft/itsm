@@ -3,7 +3,7 @@
  */
 
 export interface KnowledgeArticle {
-  id: number;
+  id: number | string;
   title: string;
   content: string;
   summary?: string;
@@ -17,6 +17,7 @@ export interface KnowledgeArticle {
   author: string;
   author_id?: number;
   authorId?: number;
+  authorName?: string;
   views?: number;
   helpful_count?: number;
   helpfulCount?: number;
@@ -26,6 +27,7 @@ export interface KnowledgeArticle {
   createdAt?: string;
   updated_at: string;
   updatedAt?: string;
+  submittedAt?: string;
 }
 
 export interface ArticleQuery {
@@ -49,3 +51,13 @@ export interface ReviewArticleRequest {
   action: 'approve' | 'reject';
   comment?: string;
 }
+
+// Re-export ArticleStatus for compatibility with knowledge-base.ts
+export const ArticleStatus = {
+  DRAFT: 'draft',
+  UNDER_REVIEW: 'under_review',
+  PUBLISHED: 'published',
+  ARCHIVED: 'archived',
+} as const;
+
+export type ArticleStatus = typeof ArticleStatus[keyof typeof ArticleStatus];

@@ -26,11 +26,24 @@ import {
 import { useRouter } from 'next/navigation';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
-import type {
-  KnowledgeArticle,
-  ReviewArticleRequest,
-  KnowledgeArticleStatus,
-} from '@/types/biz/knowledge';
+import type { ReviewArticleRequest } from '@/types/knowledge-base';
+
+// 本地定义的类型以匹配API响应
+interface ArticleItem {
+  id: number | string;
+  title: string;
+  content: string;
+  summary?: string;
+  category?: string;
+  tags?: string[];
+  status: string;
+  author?: string;
+  authorName?: string;
+  authorId?: number;
+  submittedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 import { useI18n } from '@/lib/i18n/useI18n';
 import dayjs from 'dayjs';
 import { ExclamationCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
@@ -52,14 +65,14 @@ export default function KnowledgeReviewListPage() {
   const { t } = useI18n();
 
   const [loading, setLoading] = useState(false);
-  const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
+  const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<KnowledgeArticle | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<ArticleItem | null>(null);
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve');
   const [reviewComment, setReviewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -70,11 +83,11 @@ export default function KnowledgeReviewListPage() {
       const response = await KnowledgeBaseApi.getArticles({
         page,
         pageSize,
-        status: statusFilter as KnowledgeArticleStatus,
+        status: statusFilter as any,
       });
       // 过滤出待审核的文章（如果选择了状态）或所有需要审核的文章
-      const items = response.articles || [];
-      const pendingReview = items.filter((a: KnowledgeArticle) => a.status === 'pending_review');
+      const items = (response.articles || []) as unknown as ArticleItem[];
+      const pendingReview = items.filter(a => a.status === 'pending_review');
 
       if (statusFilter === 'pending_review' || !statusFilter) {
         setArticles(pendingReview);
@@ -103,7 +116,7 @@ export default function KnowledgeReviewListPage() {
         action: reviewAction,
         comment: reviewComment || undefined,
       };
-      await KnowledgeBaseApi.reviewArticle(selectedArticle.id, request);
+      await KnowledgeBaseApi.reviewArticle(String(selectedArticle.id), request);
       message.success(reviewAction === 'approve' ? '已批准发布' : '已拒绝');
       setReviewModalVisible(false);
       setSelectedArticle(null);
@@ -125,7 +138,7 @@ export default function KnowledgeReviewListPage() {
     );
   };
 
-  const columns: ColumnsType<KnowledgeArticle> = [
+  const columns: ColumnsType<ArticleItem> = [
     {
       title: '标题',
       dataIndex: 'title',
