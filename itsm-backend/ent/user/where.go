@@ -1041,6 +1041,29 @@ func HasArticleParticipationsWith(preds ...predicate.KnowledgeArticleParticipant
 	})
 }
 
+// HasPirReviews applies the HasEdge predicate on the "pir_reviews" edge.
+func HasPirReviews() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PirReviewsTable, PirReviewsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPirReviewsWith applies the HasEdge predicate on the "pir_reviews" edge with a given conditions (other predicates).
+func HasPirReviewsWith(preds ...predicate.ChangePIR) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newPirReviewsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
 	"time"
@@ -414,6 +415,21 @@ func (_u *ChangeUpdate) AddProblems(v ...*Problem) *ChangeUpdate {
 	return _u.AddProblemIDs(ids...)
 }
 
+// AddPirIDs adds the "pir" edge to the ChangePIR entity by IDs.
+func (_u *ChangeUpdate) AddPirIDs(ids ...int) *ChangeUpdate {
+	_u.mutation.AddPirIDs(ids...)
+	return _u
+}
+
+// AddPir adds the "pir" edges to the ChangePIR entity.
+func (_u *ChangeUpdate) AddPir(v ...*ChangePIR) *ChangeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPirIDs(ids...)
+}
+
 // Mutation returns the ChangeMutation object of the builder.
 func (_u *ChangeUpdate) Mutation() *ChangeMutation {
 	return _u.mutation
@@ -438,6 +454,27 @@ func (_u *ChangeUpdate) RemoveProblems(v ...*Problem) *ChangeUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveProblemIDs(ids...)
+}
+
+// ClearPir clears all "pir" edges to the ChangePIR entity.
+func (_u *ChangeUpdate) ClearPir() *ChangeUpdate {
+	_u.mutation.ClearPir()
+	return _u
+}
+
+// RemovePirIDs removes the "pir" edge to ChangePIR entities by IDs.
+func (_u *ChangeUpdate) RemovePirIDs(ids ...int) *ChangeUpdate {
+	_u.mutation.RemovePirIDs(ids...)
+	return _u
+}
+
+// RemovePir removes "pir" edges to ChangePIR entities.
+func (_u *ChangeUpdate) RemovePir(v ...*ChangePIR) *ChangeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePirIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -661,6 +698,51 @@ func (_u *ChangeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PirCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   change.PirTable,
+			Columns: []string{change.PirColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPirIDs(); len(nodes) > 0 && !_u.mutation.PirCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   change.PirTable,
+			Columns: []string{change.PirColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PirIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   change.PirTable,
+			Columns: []string{change.PirColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1072,6 +1154,21 @@ func (_u *ChangeUpdateOne) AddProblems(v ...*Problem) *ChangeUpdateOne {
 	return _u.AddProblemIDs(ids...)
 }
 
+// AddPirIDs adds the "pir" edge to the ChangePIR entity by IDs.
+func (_u *ChangeUpdateOne) AddPirIDs(ids ...int) *ChangeUpdateOne {
+	_u.mutation.AddPirIDs(ids...)
+	return _u
+}
+
+// AddPir adds the "pir" edges to the ChangePIR entity.
+func (_u *ChangeUpdateOne) AddPir(v ...*ChangePIR) *ChangeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPirIDs(ids...)
+}
+
 // Mutation returns the ChangeMutation object of the builder.
 func (_u *ChangeUpdateOne) Mutation() *ChangeMutation {
 	return _u.mutation
@@ -1096,6 +1193,27 @@ func (_u *ChangeUpdateOne) RemoveProblems(v ...*Problem) *ChangeUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveProblemIDs(ids...)
+}
+
+// ClearPir clears all "pir" edges to the ChangePIR entity.
+func (_u *ChangeUpdateOne) ClearPir() *ChangeUpdateOne {
+	_u.mutation.ClearPir()
+	return _u
+}
+
+// RemovePirIDs removes the "pir" edge to ChangePIR entities by IDs.
+func (_u *ChangeUpdateOne) RemovePirIDs(ids ...int) *ChangeUpdateOne {
+	_u.mutation.RemovePirIDs(ids...)
+	return _u
+}
+
+// RemovePir removes "pir" edges to ChangePIR entities.
+func (_u *ChangeUpdateOne) RemovePir(v ...*ChangePIR) *ChangeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePirIDs(ids...)
 }
 
 // Where appends a list predicates to the ChangeUpdate builder.
@@ -1349,6 +1467,51 @@ func (_u *ChangeUpdateOne) sqlSave(ctx context.Context) (_node *Change, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PirCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   change.PirTable,
+			Columns: []string{change.PirColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPirIDs(); len(nodes) > 0 && !_u.mutation.PirCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   change.PirTable,
+			Columns: []string{change.PirColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PirIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   change.PirTable,
+			Columns: []string{change.PirColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

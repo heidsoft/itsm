@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/bpmnpermission"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citype"
@@ -516,6 +517,42 @@ func init() {
 	change.DefaultUpdatedAt = changeDescUpdatedAt.Default.(func() time.Time)
 	// change.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	change.UpdateDefaultUpdatedAt = changeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	changepirFields := schema.ChangePIR{}.Fields()
+	_ = changepirFields
+	// changepirDescOverallResult is the schema descriptor for overall_result field.
+	changepirDescOverallResult := changepirFields[1].Descriptor()
+	// changepir.DefaultOverallResult holds the default value on creation for the overall_result field.
+	changepir.DefaultOverallResult = changepirDescOverallResult.Default.(string)
+	// changepirDescObjectivesAchieved is the schema descriptor for objectives_achieved field.
+	changepirDescObjectivesAchieved := changepirFields[2].Descriptor()
+	// changepir.DefaultObjectivesAchieved holds the default value on creation for the objectives_achieved field.
+	changepir.DefaultObjectivesAchieved = changepirDescObjectivesAchieved.Default.(bool)
+	// changepirDescActualDurationMinutes is the schema descriptor for actual_duration_minutes field.
+	changepirDescActualDurationMinutes := changepirFields[9].Descriptor()
+	// changepir.DefaultActualDurationMinutes holds the default value on creation for the actual_duration_minutes field.
+	changepir.DefaultActualDurationMinutes = changepirDescActualDurationMinutes.Default.(int)
+	// changepirDescRollbackPerformed is the schema descriptor for rollback_performed field.
+	changepirDescRollbackPerformed := changepirFields[10].Descriptor()
+	// changepir.DefaultRollbackPerformed holds the default value on creation for the rollback_performed field.
+	changepir.DefaultRollbackPerformed = changepirDescRollbackPerformed.Default.(bool)
+	// changepirDescTenantID is the schema descriptor for tenant_id field.
+	changepirDescTenantID := changepirFields[12].Descriptor()
+	// changepir.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	changepir.TenantIDValidator = changepirDescTenantID.Validators[0].(func(int) error)
+	// changepirDescReviewDate is the schema descriptor for review_date field.
+	changepirDescReviewDate := changepirFields[13].Descriptor()
+	// changepir.DefaultReviewDate holds the default value on creation for the review_date field.
+	changepir.DefaultReviewDate = changepirDescReviewDate.Default.(func() time.Time)
+	// changepirDescCreatedAt is the schema descriptor for created_at field.
+	changepirDescCreatedAt := changepirFields[14].Descriptor()
+	// changepir.DefaultCreatedAt holds the default value on creation for the created_at field.
+	changepir.DefaultCreatedAt = changepirDescCreatedAt.Default.(func() time.Time)
+	// changepirDescUpdatedAt is the schema descriptor for updated_at field.
+	changepirDescUpdatedAt := changepirFields[15].Descriptor()
+	// changepir.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	changepir.DefaultUpdatedAt = changepirDescUpdatedAt.Default.(func() time.Time)
+	// changepir.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	changepir.UpdateDefaultUpdatedAt = changepirDescUpdatedAt.UpdateDefault.(func() time.Time)
 	cloudaccountFields := schema.CloudAccount{}.Fields()
 	_ = cloudaccountFields
 	// cloudaccountDescProvider is the schema descriptor for provider field.

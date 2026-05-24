@@ -4,55 +4,55 @@ import "time"
 
 // CreateChangePIRRequest 创建变更PIR请求
 type CreateChangePIRRequest struct {
-	ChangeID                    int        `json:"change_id" binding:"required"`
-	OverallResult               string     `json:"overall_result" binding:"required,oneof=successful partially_successful failed"`
-	ObjectivesAchieved          bool       `json:"objectives_achieved"`
-	SuccessSummary              *string    `json:"success_summary"`
-	IssuesEncountered           *string    `json:"issues_encountered"`
-	LessonsLearned              *string    `json:"lessons_learned"`
-	ImprovementRecommendations  *string    `json:"improvement_recommendations"`
-	ActualStartTime             *time.Time `json:"actual_start_time"`
-	ActualEndTime               *time.Time `json:"actual_end_time"`
-	RollbackPerformed           bool       `json:"rollback_performed"`
-	RollbackReason              *string    `json:"rollback_reason"`
+	ChangeID                   int        `json:"changeId"`
+	OverallResult              string     `json:"overallResult" binding:"required,oneof=successful partially_successful failed"`
+	ObjectivesAchieved         bool       `json:"objectivesAchieved"`
+	SuccessSummary             *string    `json:"successSummary"`
+	IssuesEncountered          *string    `json:"issuesEncountered"`
+	LessonsLearned             *string    `json:"lessonsLearned"`
+	ImprovementRecommendations *string    `json:"improvementRecommendations"`
+	ActualStartTime            *time.Time `json:"actualStartTime"`
+	ActualEndTime              *time.Time `json:"actualEndTime"`
+	RollbackPerformed          bool       `json:"rollbackPerformed"`
+	RollbackReason             *string    `json:"rollbackReason"`
 }
 
 // UpdateChangePIRRequest 更新变更PIR请求
 type UpdateChangePIRRequest struct {
-	OverallResult               *string    `json:"overall_result" binding:"omitempty,oneof=successful partially_successful failed"`
-	ObjectivesAchieved          *bool      `json:"objectives_achieved"`
-	SuccessSummary              *string    `json:"success_summary"`
-	IssuesEncountered           *string    `json:"issues_encountered"`
-	LessonsLearned              *string    `json:"lessons_learned"`
-	ImprovementRecommendations  *string    `json:"improvement_recommendations"`
+	OverallResult              *string `json:"overallResult" binding:"omitempty,oneof=successful partially_successful failed"`
+	ObjectivesAchieved         *bool   `json:"objectivesAchieved"`
+	SuccessSummary             *string `json:"successSummary"`
+	IssuesEncountered          *string `json:"issuesEncountered"`
+	LessonsLearned             *string `json:"lessonsLearned"`
+	ImprovementRecommendations *string `json:"improvementRecommendations"`
 }
 
 // ChangePIRResponse 变更PIR响应
 type ChangePIRResponse struct {
-	ID                          int        `json:"id"`
-	ChangeID                    int        `json:"change_id"`
-	ChangeTitle                 string     `json:"change_title"`
-	ReviewerID                  int        `json:"reviewer_id"`
-	ReviewerName                string     `json:"reviewer_name"`
-	OverallResult               string     `json:"overall_result"`
-	ObjectivesAchieved          bool       `json:"objectives_achieved"`
-	SuccessSummary              *string    `json:"success_summary"`
-	IssuesEncountered           *string    `json:"issues_encountered"`
-	LessonsLearned              *string    `json:"lessons_learned"`
-	ImprovementRecommendations  *string    `json:"improvement_recommendations"`
-	ActualStartTime             *time.Time `json:"actual_start_time"`
-	ActualEndTime               *time.Time `json:"actual_end_time"`
-	ActualDurationMinutes       int        `json:"actual_duration_minutes"`
-	RollbackPerformed           bool       `json:"rollback_performed"`
-	RollbackReason              *string    `json:"rollback_reason"`
-	TenantID                    int        `json:"tenant_id"`
-	ReviewDate                  time.Time  `json:"review_date"`
-	CreatedAt                   time.Time  `json:"created_at"`
-	UpdatedAt                   time.Time  `json:"updated_at"`
+	ID                         int        `json:"id"`
+	ChangeID                   int        `json:"changeId"`
+	ChangeTitle                string     `json:"changeTitle"`
+	ReviewerID                 int        `json:"reviewerId"`
+	ReviewerName               string     `json:"reviewerName"`
+	OverallResult              string     `json:"overallResult"`
+	ObjectivesAchieved         bool       `json:"objectivesAchieved"`
+	SuccessSummary             *string    `json:"successSummary"`
+	IssuesEncountered          *string    `json:"issuesEncountered"`
+	LessonsLearned             *string    `json:"lessonsLearned"`
+	ImprovementRecommendations *string    `json:"improvementRecommendations"`
+	ActualStartTime            *time.Time `json:"actualStartTime"`
+	ActualEndTime              *time.Time `json:"actualEndTime"`
+	ActualDurationMinutes      int        `json:"actualDurationMinutes"`
+	RollbackPerformed          bool       `json:"rollbackPerformed"`
+	RollbackReason             *string    `json:"rollbackReason"`
+	TenantID                   int        `json:"tenantId"`
+	ReviewDate                 time.Time  `json:"reviewDate"`
+	CreatedAt                  time.Time  `json:"createdAt"`
+	UpdatedAt                  time.Time  `json:"updatedAt"`
 }
 
 // ChangePIRListResponse 变更PIR列表响应
 type ChangePIRListResponse struct {
-	Total int                   `json:"total"`
+	Total int                  `json:"total"`
 	Items []*ChangePIRResponse `json:"items"`
 }

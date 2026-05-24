@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/knowledgearticleparticipant"
@@ -439,6 +440,21 @@ func (_u *UserUpdate) AddArticleParticipations(v ...*KnowledgeArticleParticipant
 	return _u.AddArticleParticipationIDs(ids...)
 }
 
+// AddPirReviewIDs adds the "pir_reviews" edge to the ChangePIR entity by IDs.
+func (_u *UserUpdate) AddPirReviewIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddPirReviewIDs(ids...)
+	return _u
+}
+
+// AddPirReviews adds the "pir_reviews" edges to the ChangePIR entity.
+func (_u *UserUpdate) AddPirReviews(v ...*ChangePIR) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPirReviewIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -664,6 +680,27 @@ func (_u *UserUpdate) RemoveArticleParticipations(v ...*KnowledgeArticleParticip
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveArticleParticipationIDs(ids...)
+}
+
+// ClearPirReviews clears all "pir_reviews" edges to the ChangePIR entity.
+func (_u *UserUpdate) ClearPirReviews() *UserUpdate {
+	_u.mutation.ClearPirReviews()
+	return _u
+}
+
+// RemovePirReviewIDs removes the "pir_reviews" edge to ChangePIR entities by IDs.
+func (_u *UserUpdate) RemovePirReviewIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemovePirReviewIDs(ids...)
+	return _u
+}
+
+// RemovePirReviews removes "pir_reviews" edges to ChangePIR entities.
+func (_u *UserUpdate) RemovePirReviews(v ...*ChangePIR) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePirReviewIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1316,6 +1353,51 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.PirReviewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PirReviewsTable,
+			Columns: []string{user.PirReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPirReviewsIDs(); len(nodes) > 0 && !_u.mutation.PirReviewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PirReviewsTable,
+			Columns: []string{user.PirReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PirReviewsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PirReviewsTable,
+			Columns: []string{user.PirReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -1735,6 +1817,21 @@ func (_u *UserUpdateOne) AddArticleParticipations(v ...*KnowledgeArticleParticip
 	return _u.AddArticleParticipationIDs(ids...)
 }
 
+// AddPirReviewIDs adds the "pir_reviews" edge to the ChangePIR entity by IDs.
+func (_u *UserUpdateOne) AddPirReviewIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddPirReviewIDs(ids...)
+	return _u
+}
+
+// AddPirReviews adds the "pir_reviews" edges to the ChangePIR entity.
+func (_u *UserUpdateOne) AddPirReviews(v ...*ChangePIR) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPirReviewIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -1960,6 +2057,27 @@ func (_u *UserUpdateOne) RemoveArticleParticipations(v ...*KnowledgeArticleParti
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveArticleParticipationIDs(ids...)
+}
+
+// ClearPirReviews clears all "pir_reviews" edges to the ChangePIR entity.
+func (_u *UserUpdateOne) ClearPirReviews() *UserUpdateOne {
+	_u.mutation.ClearPirReviews()
+	return _u
+}
+
+// RemovePirReviewIDs removes the "pir_reviews" edge to ChangePIR entities by IDs.
+func (_u *UserUpdateOne) RemovePirReviewIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemovePirReviewIDs(ids...)
+	return _u
+}
+
+// RemovePirReviews removes "pir_reviews" edges to ChangePIR entities.
+func (_u *UserUpdateOne) RemovePirReviews(v ...*ChangePIR) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePirReviewIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -2635,6 +2753,51 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(knowledgearticleparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PirReviewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PirReviewsTable,
+			Columns: []string{user.PirReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPirReviewsIDs(); len(nodes) > 0 && !_u.mutation.PirReviewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PirReviewsTable,
+			Columns: []string{user.PirReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PirReviewsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PirReviewsTable,
+			Columns: []string{user.PirReviewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
