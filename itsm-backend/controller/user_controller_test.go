@@ -41,9 +41,10 @@ func setupTestUserController(t *testing.T) (*gin.Engine, *ent.Client, *UserContr
 
 	// 预创建租户以获取确定的 tenant_id
 	ctx := context.Background()
+	uniqueID := uniqueTestID()
 	tenant, err := client.Tenant.Create().
-		SetName("Default Test Tenant").
-		SetCode("DEFAULT_TEST").
+		SetName("Default Test Tenant " + uniqueID).
+		SetCode("TEST_" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
