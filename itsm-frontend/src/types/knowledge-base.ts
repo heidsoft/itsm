@@ -502,7 +502,7 @@ export interface PublishArticleRequest {
  * 审核文章请求
  */
 export interface ReviewArticleRequest {
-  approved: boolean;
+  action: 'approve' | 'reject';
   comment?: string;
 }
 
