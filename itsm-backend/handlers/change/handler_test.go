@@ -25,7 +25,7 @@ func setupTestHandler(t *testing.T) (*gin.Engine, *Handler, *mockRepository) {
 
 	logger := zaptest.NewLogger(t).Sugar()
 	repo := newMockRepository()
-	svc := NewService(repo, logger)
+	svc := NewService(repo, nil, logger)
 	handler := NewHandler(svc)
 
 	r := gin.New()
@@ -55,19 +55,19 @@ func setupTestHandler(t *testing.T) (*gin.Engine, *Handler, *mockRepository) {
 
 // mockRepository implements Repository interface for testing
 type mockRepository struct {
-	changes      map[int]*Change
-	approvals    map[int]*ApprovalRecord
-	riskAssess   map[int]*RiskAssessment
-	nextID       int
+	changes       map[int]*Change
+	approvals     map[int]*ApprovalRecord
+	riskAssess    map[int]*RiskAssessment
+	nextID        int
 	approverValid bool
 }
 
 func newMockRepository() *mockRepository {
 	return &mockRepository{
-		changes:      make(map[int]*Change),
-		approvals:    make(map[int]*ApprovalRecord),
-		riskAssess:   make(map[int]*RiskAssessment),
-		nextID:       1,
+		changes:       make(map[int]*Change),
+		approvals:     make(map[int]*ApprovalRecord),
+		riskAssess:    make(map[int]*RiskAssessment),
+		nextID:        1,
 		approverValid: true,
 	}
 }
@@ -198,21 +198,33 @@ func (m *mockRepository) ValidateApproverBelongsToTenant(ctx context.Context, ap
 	return m.approverValid, nil
 }
 
+func (m *mockRepository) ListByDateRange(ctx context.Context, tenantID int, startDate, endDate, status string) ([]*Change, error) {
+	var result []*Change
+	for _, c := range m.changes {
+		if c.TenantID == tenantID {
+			if status == "" || c.Status == status {
+				result = append(result, c)
+			}
+		}
+	}
+	return result, nil
+}
+
 // Helper function to create test change
 func createTestChange(repo *mockRepository, tenantID, userID int) *Change {
 	c := &Change{
-		Title:        "Test Change",
-		Description:  "Test Description",
+		Title:         "Test Change",
+		Description:   "Test Description",
 		Justification: "Test Justification",
-		Type:         "normal",
-		Status:       "draft",
-		Priority:     "medium",
-		ImpactScope:  "low",
-		RiskLevel:    "low",
-		CreatedBy:    userID,
-		TenantID:     tenantID,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		Type:          "normal",
+		Status:        "draft",
+		Priority:      "medium",
+		ImpactScope:   "low",
+		RiskLevel:     "low",
+		CreatedBy:     userID,
+		TenantID:      tenantID,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 	repo.changes[1] = c
 	repo.nextID = 2
@@ -301,15 +313,15 @@ func TestChangeController_CreateChange(t *testing.T) {
 		{
 			name: "带计划时间的变更",
 			request: dto.CreateChangeRequest{
-				Title:            "计划变更",
-				Description:      "带计划时间",
-				Justification:    "理由",
-				Type:             "standard",
-				Priority:         "high",
-				ImpactScope:      "medium",
-				RiskLevel:        "medium",
+				Title:              "计划变更",
+				Description:        "带计划时间",
+				Justification:      "理由",
+				Type:               "standard",
+				Priority:           "high",
+				ImpactScope:        "medium",
+				RiskLevel:          "medium",
 				ImplementationPlan: "实施计划",
-				RollbackPlan:     "回滚计划",
+				RollbackPlan:       "回滚计划",
 			},
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
