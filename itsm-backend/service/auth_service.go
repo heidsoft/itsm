@@ -137,12 +137,18 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User: &dto.LoginUserResponse{
-			ID:           userEntity.ID,
-			Username:     userEntity.Username,
-			Email:        userEntity.Email,
-			Name:         userEntity.Name,
-			Role:         roleStr,
-			MSPRole:      func() *string { s := string(userEntity.MspRole); if s == "" { return nil }; return &s }(),
+			ID:       userEntity.ID,
+			Username: userEntity.Username,
+			Email:    userEntity.Email,
+			Name:     userEntity.Name,
+			Role:     roleStr,
+			MSPRole: func() *string {
+				s := string(userEntity.MspRole)
+				if s == "" {
+					return nil
+				}
+				return &s
+			}(),
 			Department:   userEntity.Department,
 			DepartmentID: userEntity.DepartmentID,
 			Phone:        userEntity.Phone,
@@ -345,12 +351,18 @@ func (s *AuthService) SwitchTenant(ctx context.Context, userID, tenantID int) (*
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User: &dto.LoginUserResponse{
-			ID:           userEntity.ID,
-			Username:     userEntity.Username,
-			Email:        userEntity.Email,
-			Name:         userEntity.Name,
-			Role:         string(userEntity.Role),
-			MSPRole:      func() *string { s := string(userEntity.MspRole); if s == "" { return nil }; return &s }(),
+			ID:       userEntity.ID,
+			Username: userEntity.Username,
+			Email:    userEntity.Email,
+			Name:     userEntity.Name,
+			Role:     string(userEntity.Role),
+			MSPRole: func() *string {
+				s := string(userEntity.MspRole)
+				if s == "" {
+					return nil
+				}
+				return &s
+			}(),
 			Department:   userEntity.Department,
 			DepartmentID: userEntity.DepartmentID,
 			Phone:        userEntity.Phone,

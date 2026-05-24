@@ -8,10 +8,10 @@ import "time"
 type TenantType string
 
 const (
-	TenantTypeInternal   TenantType = "internal"   // MSP 公司内部租户
-	TenantTypeCustomer   TenantType = "customer"   // 客户租户
-	TenantTypePartner    TenantType = "partner"    // 合作伙伴
-	TenantTypeStandard   TenantType = "standard"   // 标准租户
+	TenantTypeInternal TenantType = "internal" // MSP 公司内部租户
+	TenantTypeCustomer TenantType = "customer" // 客户租户
+	TenantTypePartner  TenantType = "partner"  // 合作伙伴
+	TenantTypeStandard TenantType = "standard" // 标准租户
 )
 
 // ==================== MSP 角色 ====================
@@ -20,10 +20,10 @@ const (
 type MSPRole string
 
 const (
-	MSPRoleTech        MSPRole = "msp_tech"         // 技术支持
-	MSPRoleSpecialist  MSPRole = "msp_specialist"  // 专家
-	MSPRoleManager     MSPRole = "msp_manager"     // 经理
-	MSPRoleViewer      MSPRole = "msp_viewer"      // 观察者
+	MSPRoleTech       MSPRole = "msp_tech"       // 技术支持
+	MSPRoleSpecialist MSPRole = "msp_specialist" // 专家
+	MSPRoleManager    MSPRole = "msp_manager"    // 经理
+	MSPRoleViewer     MSPRole = "msp_viewer"     // 观察者
 )
 
 // AllocationRole 分配角色
@@ -51,16 +51,16 @@ type MSPAllocationDTO struct {
 
 // CreateAllocationRequest 创建分配请求
 type CreateAllocationRequest struct {
-	MSPUserID          int    `json:"msp_user_id" binding:"required"`
-	CustomerTenantID   int    `json:"customer_tenant_id" binding:"required"`
-	Role               string `json:"role" binding:"omitempty,oneof=primary backup specialist"`
+	MSPUserID        int    `json:"msp_user_id" binding:"required"`
+	CustomerTenantID int    `json:"customer_tenant_id" binding:"required"`
+	Role             string `json:"role" binding:"omitempty,oneof=primary backup specialist"`
 }
 
 // DeallocateRequest 解除分配请求
 type DeallocateRequest struct {
-	MSPUserID          int    `json:"msp_user_id" binding:"required"`
-	CustomerTenantID   int    `json:"customer_tenant_id" binding:"required"`
-	Reason             string `json:"reason,omitempty"`
+	MSPUserID        int    `json:"msp_user_id" binding:"required"`
+	CustomerTenantID int    `json:"customer_tenant_id" binding:"required"`
+	Reason           string `json:"reason,omitempty"`
 }
 
 // ==================== 工单 MSP 信息 DTO ====================
@@ -85,11 +85,11 @@ type AssignMSPTechnicianRequest struct {
 
 // MSPContext MSP 访问上下文
 type MSPContext struct {
-	IsMSP            bool     `json:"is_msp"`
-	MSPUserID        int      `json:"msp_user_id,omitempty"`
-	CustomerTenantID *int     `json:"customer_tenant_id,omitempty"`
-	Role             string   `json:"role,omitempty"`
-	AllowedCustomers []int    `json:"allowed_customers,omitempty"`
+	IsMSP            bool   `json:"is_msp"`
+	MSPUserID        int    `json:"msp_user_id,omitempty"`
+	CustomerTenantID *int   `json:"customer_tenant_id,omitempty"`
+	Role             string `json:"role,omitempty"`
+	AllowedCustomers []int  `json:"allowed_customers,omitempty"`
 }
 
 // ==================== 客户与报表 DTO ====================
@@ -103,23 +103,23 @@ type CustomerDTO struct {
 
 // MSPCustomerReport MSP 客户服务报表
 type MSPCustomerReport struct {
-	CustomerTenantID      int     `json:"customer_tenant_id"`
-	CustomerName          string  `json:"customer_name"`
-	Period                string  `json:"period"`
-	TotalTickets          int     `json:"total_tickets"`
-	ResolvedTickets       int     `json:"resolved_tickets"`
-	MSPHandlingTimeAvg    float64 `json:"msp_handling_time_avg"`    // 小时
-	SLAComplianceRate     float64 `json:"sla_compliance_rate"`     // 0.0-1.0
+	CustomerTenantID   int     `json:"customer_tenant_id"`
+	CustomerName       string  `json:"customer_name"`
+	Period             string  `json:"period"`
+	TotalTickets       int     `json:"total_tickets"`
+	ResolvedTickets    int     `json:"resolved_tickets"`
+	MSPHandlingTimeAvg float64 `json:"msp_handling_time_avg"` // 小时
+	SLAComplianceRate  float64 `json:"sla_compliance_rate"`   // 0.0-1.0
 }
 
 // MSPPerformanceReport MSP 员工绩效报表
 type MSPPerformanceReport struct {
-	MSPUserID      int     `json:"msp_user_id"`
-	MSPUsername    string  `json:"msp_username"`
-	Period         string  `json:"period"`
-	TotalTickets   int     `json:"total_tickets"`
-	ResolvedTickets  int   `json:"resolved_tickets"`
-	AvgHandleTime  float64 `json:"avg_handle_time"`
+	MSPUserID            int     `json:"msp_user_id"`
+	MSPUsername          string  `json:"msp_username"`
+	Period               string  `json:"period"`
+	TotalTickets         int     `json:"total_tickets"`
+	ResolvedTickets      int     `json:"resolved_tickets"`
+	AvgHandleTime        float64 `json:"avg_handle_time"`
 	CustomerSatisfaction float64 `json:"customer_satisfaction,omitempty"`
 }
 
@@ -127,17 +127,17 @@ type MSPPerformanceReport struct {
 
 // MSPAllocationHistory 分配历史记录
 type MSPAllocationHistory struct {
-	ID                  int       `json:"id"`
-	MSPUserID           int       `json:"msp_user_id"`
-	MSPUsername         string    `json:"msp_username"`
-	CustomerTenantID    int       `json:"customer_tenant_id"`
-	CustomerName        string    `json:"customer_name"`
-	Role                string    `json:"role"`
-	AssignedAt          time.Time `json:"assigned_at"`
-	DeassignedAt        *time.Time `json:"deassigned_at,omitempty"`
-	DeallocationReason  string    `json:"deallocation_reason,omitempty"`
-	CreatedBy           int       `json:"created_by"`
-	CreatedByName       string    `json:"created_by_name,omitempty"`
+	ID                 int        `json:"id"`
+	MSPUserID          int        `json:"msp_user_id"`
+	MSPUsername        string     `json:"msp_username"`
+	CustomerTenantID   int        `json:"customer_tenant_id"`
+	CustomerName       string     `json:"customer_name"`
+	Role               string     `json:"role"`
+	AssignedAt         time.Time  `json:"assigned_at"`
+	DeassignedAt       *time.Time `json:"deassigned_at,omitempty"`
+	DeallocationReason string     `json:"deallocation_reason,omitempty"`
+	CreatedBy          int        `json:"created_by"`
+	CreatedByName      string     `json:"created_by_name,omitempty"`
 }
 
 // ==================== 工作流节点 MSP 配置 DTO ====================
@@ -163,12 +163,12 @@ type MSPAllocationQueryParam struct {
 
 // MSPTicketQueryParam MSP 工单查询参数
 type MSPTicketQueryParam struct {
-	Page              int    `json:"page,omitempty" form:"page"`
-	PageSize          int    `json:"page_size,omitempty" form:"page_size"`
-	CustomerTenantID  int    `json:"customer_tenant_id,omitempty" form:"customer_tenant_id" binding:"required"`
-	Status            string `json:"status,omitempty" form:"status"`
-	AssignedToMSP     bool   `json:"assigned_to_msp,omitempty" form:"assigned_to_msp"`
-	ManagedByUserID   int    `json:"managed_by_user_id,omitempty" form:"managed_by_user_id"`
+	Page             int    `json:"page,omitempty" form:"page"`
+	PageSize         int    `json:"page_size,omitempty" form:"page_size"`
+	CustomerTenantID int    `json:"customer_tenant_id,omitempty" form:"customer_tenant_id" binding:"required"`
+	Status           string `json:"status,omitempty" form:"status"`
+	AssignedToMSP    bool   `json:"assigned_to_msp,omitempty" form:"assigned_to_msp"`
+	ManagedByUserID  int    `json:"managed_by_user_id,omitempty" form:"managed_by_user_id"`
 }
 
 // MSPReportQueryParam MSP 报表查询参数

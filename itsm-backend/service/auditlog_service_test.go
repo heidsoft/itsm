@@ -210,7 +210,7 @@ func TestAuditLogService_ListAuditLogs_FilterByResource(t *testing.T) {
 			SetTenantID(testTenant.ID).
 			SetResource(resource).
 			SetAction("create").
-			SetPath("/api/"+resource).
+			SetPath("/api/" + resource).
 			SetMethod("POST").
 			Save(ctx)
 		require.NoError(t, err)
@@ -310,8 +310,8 @@ func TestAuditLogService_ListAuditLogs_FilterByStatusCode(t *testing.T) {
 
 	statusCode := 200
 	req := &dto.ListAuditLogsRequest{
-		Page:      1,
-		PageSize:  10,
+		Page:       1,
+		PageSize:   10,
 		StatusCode: &statusCode,
 	}
 

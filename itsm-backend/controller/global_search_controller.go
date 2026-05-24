@@ -3,11 +3,11 @@ package controller
 import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
-	"itsm-backend/ent/ticket"
-	"itsm-backend/ent/incident"
-	"itsm-backend/ent/problem"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/problem"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -55,7 +55,7 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 	results := make([]*SearchResult, 0)
 
 	// 搜索工单
-tickets, err := c.client.Ticket.Query().
+	tickets, err := c.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
 			ticket.Or(
@@ -80,7 +80,7 @@ tickets, err := c.client.Ticket.Query().
 	}
 
 	// 搜索事件
-incidents, err := c.client.Incident.Query().
+	incidents, err := c.client.Incident.Query().
 		Where(
 			incident.TenantID(tenantID),
 			incident.Or(
@@ -105,7 +105,7 @@ incidents, err := c.client.Incident.Query().
 	}
 
 	// 搜索问题
-problems, err := c.client.Problem.Query().
+	problems, err := c.client.Problem.Query().
 		Where(
 			problem.TenantID(tenantID),
 			problem.Or(
@@ -128,7 +128,7 @@ problems, err := c.client.Problem.Query().
 	}
 
 	// 搜索变更
-changes, err := c.client.Change.Query().
+	changes, err := c.client.Change.Query().
 		Where(
 			change.TenantID(tenantID),
 			change.Or(
@@ -151,7 +151,7 @@ changes, err := c.client.Change.Query().
 	}
 
 	// 搜索知识库文章
-articles, err := c.client.KnowledgeArticle.Query().
+	articles, err := c.client.KnowledgeArticle.Query().
 		Where(
 			knowledgearticle.TenantID(tenantID),
 			knowledgearticle.Or(

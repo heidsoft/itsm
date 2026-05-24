@@ -13,7 +13,7 @@ type SurveyQuestion struct {
 	Question string   `json:"question"`
 	Type     string   `json:"type"` // rating, text, choice
 	Options  []string `json:"options,omitempty"`
-	Required bool    `json:"required"`
+	Required bool     `json:"required"`
 }
 
 // Survey holds the schema definition for the Survey entity.

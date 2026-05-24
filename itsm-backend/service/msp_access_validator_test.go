@@ -6,8 +6,8 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"itsm-backend/ent/enttest"
 	"github.com/stretchr/testify/assert"
+	"itsm-backend/ent/enttest"
 )
 
 func TestMSPAccessValidator_ValidateCustomerAccess(t *testing.T) {

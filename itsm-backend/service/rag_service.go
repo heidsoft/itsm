@@ -68,7 +68,9 @@ func NewRAGServiceWithAutoConfig(client *ent.Client, vectors *VectorStore, embed
 	vectorAvailable := vectors != nil && embedder != nil
 	if vectorAvailable {
 		// Test if embedder works (requires valid API key)
-		if testEmbed, ok := embedder.(interface{ Embed(string) ([]float32, error) }); ok {
+		if testEmbed, ok := embedder.(interface {
+			Embed(string) ([]float32, error)
+		}); ok {
 			if _, err := testEmbed.Embed("test"); err != nil {
 				logger.Warnw("RAGService: embedder not functional", "error", err)
 				vectorAvailable = false

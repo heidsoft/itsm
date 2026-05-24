@@ -41,41 +41,41 @@ import (
 
 // Force import usage for ent packages (use predicate functions)
 var (
-	_ = incident.TitleEQ       // Used to ensure incident package is imported
-	_ = problem.TitleEQ        // Used to ensure problem package is imported
-	_ = change.TitleEQ         // Used to ensure change package is imported
+	_ = incident.TitleEQ         // Used to ensure incident package is imported
+	_ = problem.TitleEQ          // Used to ensure problem package is imported
+	_ = change.TitleEQ           // Used to ensure change package is imported
 	_ = knowledgearticle.TitleEQ // Used to ensure knowledgearticle package is imported
-	_ = ticketcategory.NameEQ  // Used to ensure ticketcategory package is imported
-	_ = knownerror.TitleEQ     // Used to ensure knownerror package is imported
-	_ = standardchange.TitleEQ // Used to ensure standardchange package is imported
-	_ = tag.NameEQ             // Used to ensure tag package is imported
-	_ = assetlicense.NameEQ    // Used to ensure assetlicense package is imported
-	_ = release.TitleEQ        // Used to ensure release package is imported
+	_ = ticketcategory.NameEQ    // Used to ensure ticketcategory package is imported
+	_ = knownerror.TitleEQ       // Used to ensure knownerror package is imported
+	_ = standardchange.TitleEQ   // Used to ensure standardchange package is imported
+	_ = tag.NameEQ               // Used to ensure tag package is imported
+	_ = assetlicense.NameEQ      // Used to ensure assetlicense package is imported
+	_ = release.TitleEQ          // Used to ensure release package is imported
 )
 
 // SeedConfig 种子数据配置结构
 type SeedConfig struct {
-	Departments        []DepartmentSeed        `json:"departments"`
-	Teams              []TeamSeed              `json:"teams"`
-	Roles              []RoleSeed              `json:"roles"`
-	SLADefinitions     []SLADefinitionSeed    `json:"sla_definitions"`
-	ServiceCatalog     []ServiceCatalogSeed    `json:"service_catalog"`
-	ApprovalWorkflows  []ApprovalWorkflowSeed  `json:"approval_workflows"`
-	ProcessBindings    []ProcessBindingSeed    `json:"process_bindings"`
-	TicketViews        []TicketViewSeed        `json:"ticket_views"`
-	CITypes            []CITypeSeed            `json:"ci_types"`
+	Departments       []DepartmentSeed       `json:"departments"`
+	Teams             []TeamSeed             `json:"teams"`
+	Roles             []RoleSeed             `json:"roles"`
+	SLADefinitions    []SLADefinitionSeed    `json:"sla_definitions"`
+	ServiceCatalog    []ServiceCatalogSeed   `json:"service_catalog"`
+	ApprovalWorkflows []ApprovalWorkflowSeed `json:"approval_workflows"`
+	ProcessBindings   []ProcessBindingSeed   `json:"process_bindings"`
+	TicketViews       []TicketViewSeed       `json:"ticket_views"`
+	CITypes           []CITypeSeed           `json:"ci_types"`
 	// 新增：可配置的种子数据
-	Incidents          []IncidentSeed          `json:"incidents"`
-	Problems           []ProblemSeed           `json:"problems"`
-	Changes            []ChangeSeed            `json:"changes"`
-	KnowledgeArticles []KnowledgeArticleSeed  `json:"knowledge_articles"`
-	IncidentCategories []TicketCategorySeed    `json:"incident_categories"`
+	Incidents          []IncidentSeed         `json:"incidents"`
+	Problems           []ProblemSeed          `json:"problems"`
+	Changes            []ChangeSeed           `json:"changes"`
+	KnowledgeArticles  []KnowledgeArticleSeed `json:"knowledge_articles"`
+	IncidentCategories []TicketCategorySeed   `json:"incident_categories"`
 	// 新增：标准变更模板、已知错误、标签种子数据
-	StandardChanges   []StandardChangeSeed   `json:"standard_changes"`
-	KnownErrors      []KnownErrorSeed      `json:"known_errors"`
-	TicketTags       []TicketTagSeed       `json:"ticket_tags"`
+	StandardChanges []StandardChangeSeed `json:"standard_changes"`
+	KnownErrors     []KnownErrorSeed     `json:"known_errors"`
+	TicketTags      []TicketTagSeed      `json:"ticket_tags"`
 	// 工作流种子配置
-	SeedWorkflows      bool                    `json:"seed_workflows"`
+	SeedWorkflows bool `json:"seed_workflows"`
 }
 
 type DepartmentSeed struct {
@@ -184,7 +184,7 @@ type KnowledgeArticleSeed struct {
 	Content     string `json:"content"`
 	Category    string `json:"category"`
 	IsPublished bool   `json:"is_published"`
-	ViewCount    int    `json:"view_count"`
+	ViewCount   int    `json:"view_count"`
 }
 
 // TicketCategorySeed 工单分类种子数据结构（用于事件分类）
@@ -204,7 +204,7 @@ type StandardChangeSeed struct {
 	Category           string   `json:"category"`
 	RiskLevel          string   `json:"risk_level"`
 	ImpactScope        string   `json:"impact_scope"`
-	ExpectedDuration    int      `json:"expected_duration"`
+	ExpectedDuration   int      `json:"expected_duration"`
 	ApprovalRequired   bool     `json:"approval_required"`
 	AffectedCIs        []string `json:"affected_cis"`
 	Prerequisites      []string `json:"prerequisites"`
@@ -237,18 +237,18 @@ type TicketTagSeed struct {
 
 // Seeder manages database seeding operations
 type Seeder struct {
-	client               *ent.Client
-	sugar                *zap.SugaredLogger
-	config               *SeedConfig
+	client              *ent.Client
+	sugar               *zap.SugaredLogger
+	config              *SeedConfig
 	bpmnTemplateService *service.BPMNTemplateService
 }
 
 // NewSeeder creates a new Seeder instance
 func NewSeeder(client *ent.Client, sugar *zap.SugaredLogger) *Seeder {
 	return &Seeder{
-		client:               client,
-		sugar:                sugar,
-		config:               loadSeedConfig(sugar),
+		client:              client,
+		sugar:               sugar,
+		config:              loadSeedConfig(sugar),
 		bpmnTemplateService: service.NewBPMNTemplateService(client),
 	}
 }
@@ -414,7 +414,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
 	s.seedPermissions(ctx) // 新增：初始化权限
-	s.seedMenus(ctx)      // 新增：初始化菜单
+	s.seedMenus(ctx)       // 新增：初始化菜单
 	s.backfillAdminRole(ctx)
 	s.seedAdmin(ctx)
 	s.seedUser1(ctx)
@@ -432,16 +432,16 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedBPMNWorkflows(ctx) // 部署BPMN工作流模板
 	s.seedTicketViews(ctx)
 	s.seedServiceCatalog(ctx)
-	s.seedTicketTypes(ctx)         // 新增：初始化工单类型
-	s.seedCITypes(ctx)            // 新增：初始化CI类型
-	s.seedIncidentCategories(ctx) // 新增：初始化事件分类
-	s.seedIncidents(ctx)          // 新增：初始化事件数据
-	s.seedProblems(ctx)           // 新增：初始化问题数据
-	s.seedChanges(ctx)            // 新增：初始化变更数据
-	s.seedKnowledgeArticles(ctx)  // 新增：初始化知识库文章
-	s.seedStandardChanges(ctx)    // 新增：初始化标准变更模板
-	s.seedKnownErrors(ctx)        // 新增：初始化已知错误
-	s.seedTicketTags(ctx)         // 新增：初始化标签
+	s.seedTicketTypes(ctx)            // 新增：初始化工单类型
+	s.seedCITypes(ctx)                // 新增：初始化CI类型
+	s.seedIncidentCategories(ctx)     // 新增：初始化事件分类
+	s.seedIncidents(ctx)              // 新增：初始化事件数据
+	s.seedProblems(ctx)               // 新增：初始化问题数据
+	s.seedChanges(ctx)                // 新增：初始化变更数据
+	s.seedKnowledgeArticles(ctx)      // 新增：初始化知识库文章
+	s.seedStandardChanges(ctx)        // 新增：初始化标准变更模板
+	s.seedKnownErrors(ctx)            // 新增：初始化已知错误
+	s.seedTicketTags(ctx)             // 新增：初始化标签
 	s.seedMenuAndPermissionFixes(ctx) // 修复：更新菜单路径和补充缺失权限
 }
 
@@ -458,7 +458,7 @@ func (s *Seeder) seedDefaultTenant(ctx context.Context) {
 		SetCode("default").
 		SetDomain("localhost").
 		SetStatus("active").
-		SetType("standard").  // standard|msp|customer
+		SetType("standard"). // standard|msp|customer
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
@@ -728,15 +728,15 @@ func (s *Seeder) seedAssetLicenses(ctx context.Context) {
 
 	// 默认许可证种子数据
 	licenses := []struct {
-		Name            string
-		Vendor         string
-		LicenseType    string
-		TotalQuantity  int
-		UsedQuantity   int
-		Status         string
-		PurchaseDate   string
-		ExpiryDate     string
-		Description    string
+		Name          string
+		Vendor        string
+		LicenseType   string
+		TotalQuantity int
+		UsedQuantity  int
+		Status        string
+		PurchaseDate  string
+		ExpiryDate    string
+		Description   string
 	}{
 		{"Microsoft Office 365 E3", "Microsoft", "subscription", 100, 75, "active", "2024-01-15", "2025-01-15", "Office 365 企业版订阅"},
 		{"Adobe Creative Cloud", "Adobe", "per-seat", 50, 35, "active", "2024-02-20", "2025-02-20", "Adobe创意套件许可证"},
@@ -798,14 +798,14 @@ func (s *Seeder) seedReleases(ctx context.Context) {
 
 	// 默认发布种子数据
 	releases := []struct {
-		ReleaseNumber   string
-		Title          string
-		Description    string
-		Type           string
-		Status         string
-		Severity       string
-		Environment    string
-		PlannedDate    time.Time
+		ReleaseNumber string
+		Title         string
+		Description   string
+		Type          string
+		Status        string
+		Severity      string
+		Environment   string
+		PlannedDate   time.Time
 	}{
 		{"REL-2024-001", "v3.2.0 版本发布", "核心系统版本升级，包含性能优化和新功能", "major", "completed", "high", "production", time.Now().AddDate(0, -1, 0)},
 		{"REL-2024-002", "安全补丁 KB-2024-03", "修复CVE-2024-1234高危漏洞", "hotfix", "completed", "critical", "production", time.Now().AddDate(0, -2, 0)},
@@ -1304,11 +1304,11 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 
 	// 1. 修复菜单路径
 	menuPathFixes := map[string]string{
-		"/admin/sla":               "/admin/sla-definitions",
-		"/admin/system":           "/admin/system-config",
-		"/admin/workflows":        "/workflow",
-		"/admin/tickets/assignment":  "/admin/tickets/assignment-rules",
-		"/admin/tickets/automation":   "/admin/tickets/automation-rules",
+		"/admin/sla":                "/admin/sla-definitions",
+		"/admin/system":             "/admin/system-config",
+		"/admin/workflows":          "/workflow",
+		"/admin/tickets/assignment": "/admin/tickets/assignment-rules",
+		"/admin/tickets/automation": "/admin/tickets/automation-rules",
 	}
 
 	for oldPath, newPath := range menuPathFixes {
@@ -2169,11 +2169,11 @@ func (s *Seeder) seedKnowledgeArticles(ctx context.Context) {
 
 	// 知识库文章种子数据
 	articles := []struct {
-		Title      string
-		Content    string
-		Category   string
+		Title       string
+		Content     string
+		Category    string
 		IsPublished bool
-		ViewCount  int
+		ViewCount   int
 	}{
 		{
 			"如何申请云服务器 ECS",

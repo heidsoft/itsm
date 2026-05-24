@@ -593,9 +593,9 @@ func (kc *KnowledgeController) GetParticipants(c *gin.Context) {
 	participants := make([]dto.ArticleParticipantResponse, 0, len(sessions))
 	for _, s := range sessions {
 		participants = append(participants, dto.ArticleParticipantResponse{
-			UserID:    s.UserID,
-			IsActive:  s.Status == "active",
-			JoinedAt:  s.CreatedAt,
+			UserID:   s.UserID,
+			IsActive: s.Status == "active",
+			JoinedAt: s.CreatedAt,
 		})
 	}
 

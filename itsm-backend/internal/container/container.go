@@ -26,11 +26,11 @@ type Container struct {
 	ticketRepository ticketRepo.Repository
 
 	// Core Services
-	ticketService        *service.TicketServiceV2
-	incidentService      *service.IncidentService
-	notificationService  *service.NotificationService
-	approvalService      *service.ApprovalService
-	sequenceService      *service.SequenceService
+	ticketService       *service.TicketServiceV2
+	incidentService     *service.IncidentService
+	notificationService *service.NotificationService
+	approvalService     *service.ApprovalService
+	sequenceService     *service.SequenceService
 
 	// Ticket-related Services
 	ticketNotificationService *service.TicketNotificationService
@@ -113,7 +113,7 @@ func (c *Container) initBusinessServices() {
 	// Ticket Service V2（使用构造函数注入）
 	c.ticketService = service.NewTicketServiceV2(&service.TicketServiceV2Config{
 		Repository:            c.ticketRepository,
-		Logger:               c.logger,
+		Logger:                c.logger,
 		NotificationService:   c.ticketNotificationService,
 		ApprovalService:       c.approvalService,
 		AutomationRuleService: c.ticketAutomationService,
@@ -184,7 +184,7 @@ func (c *Container) NewTicketServiceWithDeps(
 ) *service.TicketServiceV2 {
 	return service.NewTicketServiceV2(&service.TicketServiceV2Config{
 		Repository:            c.ticketRepository,
-		Logger:               c.logger,
+		Logger:                c.logger,
 		NotificationService:   notificationSvc,
 		ApprovalService:       approvalSvc,
 		AutomationRuleService: automationSvc,

@@ -150,25 +150,25 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 	}
 
 	response := &IncidentResponse{
-		ID:                incident.ID,
-		Title:             incident.Title,
-		Description:       incident.Description,
-		Status:            incident.Status,
-		Priority:          incident.Priority,
-		Severity:          incident.Severity,
-		IncidentNumber:    incident.IncidentNumber,
-		ReporterID:        incident.ReporterID,
-		Category:          incident.Category,
-		Subcategory:       incident.Subcategory,
-		ImpactAnalysis:    impactAnalysis,
-		RootCause:         rootCause,
-		ResolutionSteps:   resolutionSteps,
-		IsAutomated:       incident.IsAutomated,
-		IsMajorIncident:   incident.IsMajorIncident,
-		TenantID:          incident.TenantID,
-		Version:           incident.Version, // 乐观锁版本号
-		CreatedAt:         incident.CreatedAt,
-		UpdatedAt:         incident.UpdatedAt,
+		ID:              incident.ID,
+		Title:           incident.Title,
+		Description:     incident.Description,
+		Status:          incident.Status,
+		Priority:        incident.Priority,
+		Severity:        incident.Severity,
+		IncidentNumber:  incident.IncidentNumber,
+		ReporterID:      incident.ReporterID,
+		Category:        incident.Category,
+		Subcategory:     incident.Subcategory,
+		ImpactAnalysis:  impactAnalysis,
+		RootCause:       rootCause,
+		ResolutionSteps: resolutionSteps,
+		IsAutomated:     incident.IsAutomated,
+		IsMajorIncident: incident.IsMajorIncident,
+		TenantID:        incident.TenantID,
+		Version:         incident.Version, // 乐观锁版本号
+		CreatedAt:       incident.CreatedAt,
+		UpdatedAt:       incident.UpdatedAt,
 	}
 
 	// Add optional fields if present
@@ -477,12 +477,12 @@ func ToProjectResponse(project *ent.Project) *ProjectResponse {
 	response := &ProjectResponse{
 		ID:          project.ID,
 		Name:        project.Name,
-		Code:       project.Code,
+		Code:        project.Code,
 		Description: project.Description,
-		Status:     project.Status,
-		TenantID:   project.TenantID,
-		CreatedAt:  project.CreatedAt,
-		UpdatedAt:  project.UpdatedAt,
+		Status:      project.Status,
+		TenantID:    project.TenantID,
+		CreatedAt:   project.CreatedAt,
+		UpdatedAt:   project.UpdatedAt,
 	}
 
 	if project.ManagerID > 0 {
@@ -703,10 +703,10 @@ func ToWorkflowResponse(workflow *ent.Workflow) *WorkflowResponse {
 		Type:        workflow.Type,
 		Definition:  definition,
 		Version:     workflow.Version,
-		IsActive:   workflow.IsActive,
-		TenantID:   workflow.TenantID,
-		CreatedAt:  workflow.CreatedAt,
-		UpdatedAt:  workflow.UpdatedAt,
+		IsActive:    workflow.IsActive,
+		TenantID:    workflow.TenantID,
+		CreatedAt:   workflow.CreatedAt,
+		UpdatedAt:   workflow.UpdatedAt,
 	}
 
 	if workflow.DepartmentID > 0 {
@@ -743,17 +743,17 @@ func ToWorkflowInstanceResponse(instance *ent.WorkflowInstance) *WorkflowInstanc
 	}
 
 	response := &WorkflowInstanceResponse{
-		ID:         instance.ID,
-		Status:     instance.Status,
+		ID:          instance.ID,
+		Status:      instance.Status,
 		CurrentStep: instance.CurrentStep,
-		Context:    context,
-		WorkflowID: instance.WorkflowID,
-		EntityID:   instance.EntityID,
-		EntityType: instance.EntityType,
-		TenantID:   instance.TenantID,
-		StartedAt:  instance.StartedAt,
-		CreatedAt:  instance.CreatedAt,
-		UpdatedAt:  instance.UpdatedAt,
+		Context:     context,
+		WorkflowID:  instance.WorkflowID,
+		EntityID:    instance.EntityID,
+		EntityType:  instance.EntityType,
+		TenantID:    instance.TenantID,
+		StartedAt:   instance.StartedAt,
+		CreatedAt:   instance.CreatedAt,
+		UpdatedAt:   instance.UpdatedAt,
 	}
 
 	if !instance.CompletedAt.IsZero() {

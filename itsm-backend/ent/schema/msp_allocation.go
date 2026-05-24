@@ -1,10 +1,10 @@
 package schema
 
 import (
-	"time"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"time"
 )
 
 // MSPAllocation holds the schema definition for the MSPAllocation entity.

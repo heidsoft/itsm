@@ -19,10 +19,10 @@ type UpdateGroupRequest struct {
 
 // ListGroupsRequest 获取组列表请求
 type ListGroupsRequest struct {
-	Page       int    `form:"page,default=1" binding:"min=1"`
-	PageSize   int    `form:"page_size,default=10" binding:"min=1,max=100"`
-	TenantID   int    `form:"tenant_id"`
-	Search     string `form:"search"`
+	Page     int    `form:"page,default=1" binding:"min=1"`
+	PageSize int    `form:"page_size,default=10" binding:"min=1,max=100"`
+	TenantID int    `form:"tenant_id"`
+	Search   string `form:"search"`
 }
 
 // AddUserToGroupRequest 添加用户到组请求
@@ -47,23 +47,23 @@ type GroupResponse struct {
 
 // PagedGroupsResponse 分页组响应
 type PagedGroupsResponse struct {
-	Groups      []*GroupResponse   `json:"groups"`
-	Pagination  PaginationResponse `json:"pagination"`
+	Groups     []*GroupResponse   `json:"groups"`
+	Pagination PaginationResponse `json:"pagination"`
 }
 
 // GroupMembersResponse 组成员响应
 type GroupMembersResponse struct {
-	Members     []*UserDTO  `json:"members"`
-	Pagination  PaginationResponse `json:"pagination"`
+	Members    []*UserDTO         `json:"members"`
+	Pagination PaginationResponse `json:"pagination"`
 }
 
 // UserDTO 用户简略信息（用于组成员）
 type UserDTO struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
-	Name     string    `json:"name"`
-	Email    string    `json:"email"`
-	Role     string    `json:"role"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
 }
 
 // GroupDetailResponse 组详细响应（包含成员）

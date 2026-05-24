@@ -38,15 +38,15 @@ type UpdateServiceRequestStatusRequest struct {
 
 // UpdateServiceRequestRequest 更新服务请求请求
 type UpdateServiceRequestRequest struct {
-	Title     string         `json:"title" binding:"omitempty,max=255"`
-	Reason    string         `json:"reason" binding:"omitempty,max=500"`
-	FormData  map[string]any `json:"form_data" binding:"omitempty"`
+	Title    string         `json:"title" binding:"omitempty,max=255"`
+	Reason   string         `json:"reason" binding:"omitempty,max=500"`
+	FormData map[string]any `json:"form_data" binding:"omitempty"`
 
 	CostCenter         string     `json:"cost_center" binding:"omitempty,max=100"`
 	DataClassification string     `json:"data_classification" binding:"omitempty,oneof=public internal confidential"`
 	NeedsPublicIP      bool       `json:"needs_public_ip"`
 	SourceIPWhitelist  []string   `json:"source_ip_whitelist" binding:"omitempty"`
-	ExpireAt          *time.Time `json:"expire_at" binding:"omitempty"`
+	ExpireAt           *time.Time `json:"expire_at" binding:"omitempty"`
 	ComplianceAck      bool       `json:"compliance_ack"`
 }
 
@@ -126,7 +126,7 @@ type ServiceRequestApprovalResponse struct {
 	TimeoutHours     int        `json:"timeoutHours,omitempty"`     // 审批时限（小时）
 	DueAt            *time.Time `json:"dueAt,omitempty"`            // 到期时间
 	IsEscalated      bool       `json:"isEscalated,omitempty"`      // 是否已升级
-	DelegatedToID    *int       `json:"delegatedToId,omitempty"`   // 转交审批人ID
+	DelegatedToID    *int       `json:"delegatedToId,omitempty"`    // 转交审批人ID
 	EscalationReason string     `json:"escalationReason,omitempty"` // 升级原因
 }
 

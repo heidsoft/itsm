@@ -11,22 +11,22 @@ type BusinessMetrics struct {
 	logger *zap.Logger
 
 	// 工单指标
-	TicketsCreated     *prometheus.CounterVec
-	TicketsResolved    *prometheus.CounterVec
+	TicketsCreated       *prometheus.CounterVec
+	TicketsResolved      *prometheus.CounterVec
 	TicketResolutionTime *prometheus.HistogramVec
-	TicketsByStatus    *prometheus.GaugeVec
-	TicketsByPriority  *prometheus.GaugeVec
+	TicketsByStatus      *prometheus.GaugeVec
+	TicketsByPriority    *prometheus.GaugeVec
 
 	// 事件指标
-	IncidentsCreated   *prometheus.CounterVec
-	IncidentsResolved  *prometheus.CounterVec
-	IncidentMTTR       *prometheus.HistogramVec
+	IncidentsCreated    *prometheus.CounterVec
+	IncidentsResolved   *prometheus.CounterVec
+	IncidentMTTR        *prometheus.HistogramVec
 	IncidentsByCategory *prometheus.GaugeVec
 
 	// SLA指标
-	SLACompliance      *prometheus.GaugeVec
-	SLAViolations      *prometheus.CounterVec
-	SLAResponseTime    *prometheus.HistogramVec
+	SLACompliance   *prometheus.GaugeVec
+	SLAViolations   *prometheus.CounterVec
+	SLAResponseTime *prometheus.HistogramVec
 
 	// 变更指标
 	ChangesCreated     *prometheus.CounterVec
@@ -40,9 +40,9 @@ type BusinessMetrics struct {
 	KnowledgeArticleViews    *prometheus.CounterVec
 
 	// 用户指标
-	ActiveUsers        *prometheus.GaugeVec
-	UserSessions       *prometheus.CounterVec
-	UserActions        *prometheus.CounterVec
+	ActiveUsers  *prometheus.GaugeVec
+	UserSessions *prometheus.CounterVec
+	UserActions  *prometheus.CounterVec
 }
 
 // NewBusinessMetrics 创建业务指标收集器

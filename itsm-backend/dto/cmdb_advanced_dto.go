@@ -6,22 +6,22 @@ import (
 
 // CI类型相关DTO
 type CreateCITypeRequest struct {
-	Name            string                 `json:"name" binding:"required"`
-	Description     string                 `json:"description"`
-	Icon            string                 `json:"icon"`
-	Color           string                 `json:"color"`
-	AttributeSchema string                 `json:"attribute_schema"`
-	IsActive        *bool                  `json:"is_active"`
-	TenantID        int                    `json:"tenant_id"`
+	Name            string `json:"name" binding:"required"`
+	Description     string `json:"description"`
+	Icon            string `json:"icon"`
+	Color           string `json:"color"`
+	AttributeSchema string `json:"attribute_schema"`
+	IsActive        *bool  `json:"is_active"`
+	TenantID        int    `json:"tenant_id"`
 }
 
 type UpdateCITypeRequest struct {
-	Name            string                 `json:"name" binding:"required"`
-	Description     string                 `json:"description"`
-	Icon            string                 `json:"icon"`
-	Color           string                 `json:"color"`
-	AttributeSchema string                 `json:"attribute_schema"`
-	IsActive        *bool                  `json:"is_active"`
+	Name            string `json:"name" binding:"required"`
+	Description     string `json:"description"`
+	Icon            string `json:"icon"`
+	Color           string `json:"color"`
+	AttributeSchema string `json:"attribute_schema"`
+	IsActive        *bool  `json:"is_active"`
 }
 
 type CITypeResponse struct {

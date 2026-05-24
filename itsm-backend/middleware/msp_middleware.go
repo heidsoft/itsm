@@ -8,9 +8,9 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/mspallocation"
-	"itsm-backend/ent/user"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/user"
 
 	"github.com/gin-gonic/gin"
 )
@@ -175,9 +175,9 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 						"code":    http.StatusForbidden,
 						"message": "MSP员工无权访问此客户租户",
 						"data": gin.H{
-							"msp_user_id":          userID,
-							"target_customer":      targetTenantID,
-							"allowed_customers":    allowedCustomers,
+							"msp_user_id":       userID,
+							"target_customer":   targetTenantID,
+							"allowed_customers": allowedCustomers,
 						},
 					})
 					c.Abort()
@@ -341,7 +341,7 @@ func GetMSPContextFromContext(ctx context.Context) (*MSPContext, bool) {
 
 // MSP角色到RBAC角色的映射
 var mspRoleToRBACRoleMap = map[string]string{
-	"provider_admin":  "msp_manager",
+	"provider_admin": "msp_manager",
 	"provider_agent": "msp_tech",
 	"customer_user":  "end_user",
 }
@@ -410,9 +410,9 @@ func RequireMSPPermission(resource, action string) gin.HandlerFunc {
 				"message": "权限不足",
 				"data": gin.H{
 					"required_resource": resource,
-					"required_action":  action,
-					"msp_role":         mspCtx.Role,
-					"rbac_role":       rbacRole,
+					"required_action":   action,
+					"msp_role":          mspCtx.Role,
+					"rbac_role":         rbacRole,
 				},
 			})
 			c.Abort()

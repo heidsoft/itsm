@@ -33,47 +33,47 @@ const (
 type Type string
 
 const (
-	TypeIncident      Type = "incident"
-	TypeProblem       Type = "problem"
-	TypeChange        Type = "change"
+	TypeIncident       Type = "incident"
+	TypeProblem        Type = "problem"
+	TypeChange         Type = "change"
 	TypeServiceRequest Type = "service_request"
 )
 
 // Ticket 工单领域模型
 // 表示 ITSM 系统中的工单实体
 type Ticket struct {
-	ID                   int
-	TicketNumber         string
-	Title                string
-	Description          string
-	Status               Status
-	Type                 Type
-	Priority             Priority
-	RequesterID          int
-	AssigneeID           *int
-	TenantID             int
-	TemplateID           *int
-	CategoryID           *int
-	DepartmentID         *int
-	ParentTicketID       *int
-	SLADefinitionID      *int
-	SLAResponseDeadline  *time.Time
+	ID                    int
+	TicketNumber          string
+	Title                 string
+	Description           string
+	Status                Status
+	Type                  Type
+	Priority              Priority
+	RequesterID           int
+	AssigneeID            *int
+	TenantID              int
+	TemplateID            *int
+	CategoryID            *int
+	DepartmentID          *int
+	ParentTicketID        *int
+	SLADefinitionID       *int
+	SLAResponseDeadline   *time.Time
 	SLAResolutionDeadline *time.Time
-	FirstResponseAt      *time.Time
-	ResolvedAt           *time.Time
-	Resolution           *string
-	Rating               *int
-	RatingComment        *string
-	RatedAt              *time.Time
-	RatedBy              *int
-	Version              int
-	IsManagedByMSP       bool
-	MSPProviderID        *int
-	ManagedByUserID      *int
-	MSPTicketID          *string
-	CreatedAt            time.Time
-	UpdatedAt            time.Time
-	DeletedAt            *time.Time
+	FirstResponseAt       *time.Time
+	ResolvedAt            *time.Time
+	Resolution            *string
+	Rating                *int
+	RatingComment         *string
+	RatedAt               *time.Time
+	RatedBy               *int
+	Version               int
+	IsManagedByMSP        bool
+	MSPProviderID         *int
+	ManagedByUserID       *int
+	MSPTicketID           *string
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
+	DeletedAt             *time.Time
 }
 
 // IsFinalState 判断是否为终态

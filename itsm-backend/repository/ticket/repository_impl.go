@@ -467,19 +467,19 @@ func toDomainModel(e *ent.Ticket) *Ticket {
 	}
 
 	t := &Ticket{
-		ID:            e.ID,
-		TicketNumber:  e.TicketNumber,
-		Title:         e.Title,
-		Description:   e.Description,
-		Status:        Status(e.Status),
-		Type:          Type(e.Type),
-		Priority:      Priority(e.Priority),
-		RequesterID:   e.RequesterID,
-		TenantID:      e.TenantID,
-		Version:       e.Version,
+		ID:             e.ID,
+		TicketNumber:   e.TicketNumber,
+		Title:          e.Title,
+		Description:    e.Description,
+		Status:         Status(e.Status),
+		Type:           Type(e.Type),
+		Priority:       Priority(e.Priority),
+		RequesterID:    e.RequesterID,
+		TenantID:       e.TenantID,
+		Version:        e.Version,
 		IsManagedByMSP: e.IsManagedByMsp,
-		CreatedAt:     e.CreatedAt,
-		UpdatedAt:     e.UpdatedAt,
+		CreatedAt:      e.CreatedAt,
+		UpdatedAt:      e.UpdatedAt,
 	}
 
 	// 可选字段
