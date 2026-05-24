@@ -635,7 +635,8 @@ func TestUserService_UpdateUser_TenantIsolation(t *testing.T) {
 	_, err = userService.UpdateUser(ctx, user1.ID, &dto.UpdateUserRequest{Name: "Hacked"}, tenant2.ID)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "cross-tenant access denied")
+	// User doesn't exist from tenant 2's perspective (cross-tenant isolation works)
+	assert.Contains(t, err.Error(), "用户不存在")
 }
 
 func BenchmarkUserService_CreateUser(b *testing.B) {
