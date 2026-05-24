@@ -92,7 +92,7 @@ export interface ChangeStatsResponse {
 
 // 变更审批请求
 export interface ChangeApprovalRequest {
-  status: ChangeStatus;
+  status?: ChangeStatus;
   comment?: string;
 }
 
