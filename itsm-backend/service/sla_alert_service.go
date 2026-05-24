@@ -494,7 +494,8 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 						content := fmt.Sprintf("【严重SLA预警】工单 #%s 剩余时间不足 %.1f%%，请立即处理！",
 							ticketEntity.TicketNumber, percentage)
 						if err := s.notificationSvc.emailService.SendTicketNotification(
-							ctx, emails, ticketEntity.TicketNumber, ticketEntity.Title, "sla_alert", content); err != nil {
+							ctx, emails, ticketEntity.TicketNumber, ticketEntity.Title, "sla_alert", content,
+						); err != nil {
 							s.logger.Warnw("failed to send SLA critical alert email", "error", err, "ticket_id", ticketEntity.ID)
 						}
 					}

@@ -1320,7 +1320,8 @@ func (s *IncidentService) triggerWorkflowForIncident(ctx context.Context, incide
 		return fmt.Errorf("failed to trigger workflow: %w", err)
 	}
 
-	s.logger.Infow("Workflow triggered for incident",
+	s.logger.Infow(
+		"Workflow triggered for incident",
 		"incident_id", incidentID,
 		"process_instance_id", resp.ProcessInstanceID,
 		"process_key", processKey,

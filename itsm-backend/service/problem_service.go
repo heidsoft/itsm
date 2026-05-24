@@ -316,7 +316,8 @@ func (s *ProblemService) triggerWorkflowForProblem(ctx context.Context, problemI
 		return fmt.Errorf("failed to trigger workflow: %w", err)
 	}
 
-	s.logger.Infow("Workflow triggered for problem",
+	s.logger.Infow(
+		"Workflow triggered for problem",
 		"problem_id", problemID,
 		"process_instance_id", resp.ProcessInstanceID,
 	)

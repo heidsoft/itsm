@@ -199,7 +199,8 @@ func (s *CloudDiscoveryService) discoverEC2(ctx context.Context, account *ent.Cl
 	// client := ec2.NewFromConfig(cfg)
 	// output, _ := client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{})
 
-	s.logger.Infow("EC2 discovery requires AWS SDK integration",
+	s.logger.Infow(
+		"EC2 discovery requires AWS SDK integration",
 		"account_id", account.ID,
 		"provider", account.Provider,
 		"credential_ref", account.CredentialRef,
@@ -223,7 +224,8 @@ func (s *CloudDiscoveryService) discoverS3(ctx context.Context, account *ent.Clo
 	//   })
 	// }
 
-	s.logger.Infow("S3 discovery requires AWS SDK integration",
+	s.logger.Infow(
+		"S3 discovery requires AWS SDK integration",
 		"account_id", account.ID,
 		"provider", account.Provider,
 		"credential_ref", account.CredentialRef,
@@ -237,7 +239,8 @@ func (s *CloudDiscoveryService) discoverRDS(ctx context.Context, account *ent.Cl
 	// 使用 rds.NewFromConfig 创建客户端
 	// 调用 DescribeDBInstances 获取数据库实例
 
-	s.logger.Infow("RDS discovery requires AWS SDK integration",
+	s.logger.Infow(
+		"RDS discovery requires AWS SDK integration",
 		"account_id", account.ID,
 		"provider", account.Provider,
 		"credential_ref", account.CredentialRef,

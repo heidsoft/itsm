@@ -643,7 +643,8 @@ var ResourceActionMap = map[string]map[string]Permission{
 func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 调试日志
-		zap.S().Infow("RBACMiddleware: received request",
+		zap.S().Infow(
+			"RBACMiddleware: received request",
 			"path", c.Request.URL.Path,
 			"method", c.Request.Method,
 		)
@@ -655,7 +656,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		// 获取用户信息
 		userIDInterface, exists := c.Get("user_id")
 		if !exists {
-			zap.S().Warnw("RBACMiddleware: user_id not found in context",
+			zap.S().Warnw(
+				"RBACMiddleware: user_id not found in context",
 				"path", c.Request.URL.Path,
 			)
 			common.Fail(c, common.AuthFailedCode, "用户未认证")
@@ -665,7 +667,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		userID, ok := userIDInterface.(int)
 		if !ok {
-			zap.S().Warnw("RBACMiddleware: user_id format error",
+			zap.S().Warnw(
+				"RBACMiddleware: user_id format error",
 				"path", c.Request.URL.Path,
 				"user_id_interface", userIDInterface,
 			)
@@ -697,7 +700,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 				}
 				// 如果仍然没有租户ID，拒绝请求而非默认分配
 				if tenantIDInterface == nil {
-					zap.S().Warnw("RBACMiddleware: tenant_id not found in context for auth path",
+					zap.S().Warnw(
+						"RBACMiddleware: tenant_id not found in context for auth path",
 						"path", c.Request.URL.Path,
 						"user_id", userID,
 					)
@@ -706,7 +710,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 					return
 				}
 			} else {
-				zap.S().Warnw("RBACMiddleware: tenant_id not found in context",
+				zap.S().Warnw(
+					"RBACMiddleware: tenant_id not found in context",
 					"path", c.Request.URL.Path,
 					"user_id", userID,
 				)
@@ -717,7 +722,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		}
 		tenantID, ok := tenantIDInterface.(int)
 		if !ok {
-			zap.S().Warnw("RBACMiddleware: tenant_id format error",
+			zap.S().Warnw(
+				"RBACMiddleware: tenant_id format error",
 				"path", c.Request.URL.Path,
 				"tenant_id_interface", tenantIDInterface,
 			)
@@ -731,7 +737,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 			Where(user.ID(userID)).
 			Only(context.Background())
 		if err != nil {
-			zap.S().Warnw("RBACMiddleware: user not found in DB",
+			zap.S().Warnw(
+				"RBACMiddleware: user not found in DB",
 				"path", c.Request.URL.Path,
 				"user_id", userID,
 				"error", err.Error(),
@@ -743,7 +750,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		// 检查用户是否被禁用
 		if !userEntity.Active {
-			zap.S().Warnw("RBACMiddleware: user is disabled",
+			zap.S().Warnw(
+				"RBACMiddleware: user is disabled",
 				"path", c.Request.URL.Path,
 				"user_id", userID,
 			)
@@ -755,7 +763,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		// 从JWT中获取角色信息
 		roleInterface, exists := c.Get("role")
 		if !exists {
-			zap.S().Warnw("RBACMiddleware: role not found in context",
+			zap.S().Warnw(
+				"RBACMiddleware: role not found in context",
 				"path", c.Request.URL.Path,
 				"user_id", userID,
 			)
@@ -766,7 +775,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		role, ok := roleInterface.(string)
 		if !ok {
-			zap.S().Warnw("RBACMiddleware: role format error",
+			zap.S().Warnw(
+				"RBACMiddleware: role format error",
 				"path", c.Request.URL.Path,
 				"role_interface", roleInterface,
 			)
@@ -781,7 +791,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		// 检查权限（从数据库加载权限）
 		if !hasPermission(client, role, method, path, userID, tenantID, c) {
-			zap.S().Warnw("RBACMiddleware: permission denied",
+			zap.S().Warnw(
+				"RBACMiddleware: permission denied",
 				"path", c.Request.URL.Path,
 				"method", c.Request.Method,
 				"user_id", userID,
@@ -793,7 +804,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		}
 
 		// 调试日志：RBAC检查通过
-		zap.S().Infow("RBACMiddleware: access granted",
+		zap.S().Infow(
+			"RBACMiddleware: access granted",
 			"path", c.Request.URL.Path,
 			"user_id", userID,
 			"role", role,

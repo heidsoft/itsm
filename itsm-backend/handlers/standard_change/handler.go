@@ -100,7 +100,6 @@ func (h *Handler) ListStandardChanges(c *gin.Context) {
 		Offset(offset).
 		Limit(pageSize).
 		All(ctx)
-
 	if err != nil {
 		h.logger.Warnw("Failed to list standard changes", "error", err)
 		common.Fail(c, http.StatusInternalServerError, "Failed to list standard changes")
@@ -141,7 +140,6 @@ func (h *Handler) GetStandardChange(c *gin.Context) {
 			entstandardchange.TenantID(tenantID),
 		).
 		Only(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, http.StatusNotFound, "Standard change template not found")
@@ -203,7 +201,6 @@ func (h *Handler) CreateStandardChange(c *gin.Context) {
 		SetTenantID(tenantID).
 		SetIsActive(true).
 		Save(ctx)
-
 	if err != nil {
 		h.logger.Warnw("Failed to create standard change", "error", err)
 		common.Fail(c, http.StatusInternalServerError, "Failed to create standard change template")
@@ -240,7 +237,6 @@ func (h *Handler) UpdateStandardChange(c *gin.Context) {
 			entstandardchange.TenantID(tenantID),
 		).
 		Only(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, http.StatusNotFound, "Standard change template not found")
@@ -328,7 +324,6 @@ func (h *Handler) DeleteStandardChange(c *gin.Context) {
 			entstandardchange.TenantID(tenantID),
 		).
 		Only(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, http.StatusNotFound, "Standard change template not found")
@@ -344,7 +339,6 @@ func (h *Handler) DeleteStandardChange(c *gin.Context) {
 		Where(entstandardchange.ID(id)).
 		SetIsActive(false).
 		Save(ctx)
-
 	if err != nil {
 		h.logger.Warnw("Failed to delete standard change", "error", err, "id", id)
 		common.Fail(c, http.StatusInternalServerError, "Failed to delete standard change template")
@@ -366,7 +360,6 @@ func (h *Handler) GetCategories(c *gin.Context) {
 		Select(entstandardchange.FieldCategory).
 		Where(entstandardchange.TenantID(tenantID)).
 		All(ctx)
-
 	if err != nil {
 		h.logger.Warnw("Failed to get categories", "error", err)
 		common.Fail(c, http.StatusInternalServerError, "Failed to get categories")
@@ -421,7 +414,6 @@ func (h *Handler) InstantiateStandardChange(c *gin.Context) {
 			entstandardchange.IsActive(true),
 		).
 		Only(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, http.StatusNotFound, "Standard change template not found")
@@ -460,7 +452,6 @@ func (h *Handler) InstantiateStandardChange(c *gin.Context) {
 		SetCreatedBy(userID).
 		SetTenantID(tenantID).
 		Save(ctx)
-
 	if err != nil {
 		h.logger.Warnw("Failed to create change from template", "error", err)
 		common.Fail(c, http.StatusInternalServerError, "Failed to create change from template")

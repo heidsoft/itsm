@@ -56,7 +56,8 @@ func NewEmailService(config EmailConfig, logger *zap.SugaredLogger) *EmailServic
 
 // Send 发送邮件
 func (s *EmailService) Send(ctx context.Context, msg *EmailMessage) error {
-	s.logger.Infow("Sending email",
+	s.logger.Infow(
+		"Sending email",
 		"to", msg.To,
 		"subject", msg.Subject,
 	)

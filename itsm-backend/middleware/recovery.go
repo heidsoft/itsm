@@ -13,7 +13,8 @@ func RecoveryMiddleware() gin.HandlerFunc {
 			if rid, exists := c.Get("request_id"); exists {
 				c.Writer.Header().Set("X-Request-Id", rid.(string))
 			}
-			globalLogger.Errorw("Panic recovered",
+			globalLogger.Errorw(
+				"Panic recovered",
 				"error", recovered,
 				"path", c.Request.URL.Path,
 				"method", c.Request.Method,

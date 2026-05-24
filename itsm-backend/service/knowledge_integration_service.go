@@ -168,7 +168,8 @@ func (s *KnowledgeIntegrationService) searchKnowledgeArticles(ctx context.Contex
 	// 添加关键词搜索条件
 	var conditions []predicate.KnowledgeArticle
 	for _, keyword := range keywords {
-		conditions = append(conditions,
+		conditions = append(
+			conditions,
 			knowledgearticle.Or(
 				knowledgearticle.TitleContains(keyword),
 				knowledgearticle.ContentContains(keyword),

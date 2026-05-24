@@ -52,7 +52,8 @@ func (s *ChangeApprovalService) CreateChangeApproval(ctx context.Context, req *d
 
 	var id int
 	var createdAt time.Time
-	err = s.rawDB.QueryRowContext(ctx, query,
+	err = s.rawDB.QueryRowContext(
+		ctx, query,
 		req.ChangeID,
 		req.ApproverID,
 		"pending",
@@ -95,7 +96,8 @@ func (s *ChangeApprovalService) UpdateChangeApproval(ctx context.Context, approv
 	var approvedAt *time.Time
 	var createdAt time.Time
 
-	err := s.rawDB.QueryRowContext(ctx, query,
+	err := s.rawDB.QueryRowContext(
+		ctx, query,
 		string(req.Status),
 		req.Comment,
 		time.Now(),
@@ -171,7 +173,8 @@ func (s *ChangeApprovalService) CreateChangeApprovalWorkflow(ctx context.Context
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
 		`
 
-		_, err = tx.ExecContext(ctx, query,
+		_, err = tx.ExecContext(
+			ctx, query,
 			req.ChangeID,
 			item.Level,
 			item.ApproverID,
@@ -357,7 +360,8 @@ func (s *ChangeApprovalService) CreateChangeRiskAssessment(ctx context.Context, 
 
 	var id int
 	var createdAt time.Time
-	err = s.rawDB.QueryRowContext(ctx, query,
+	err = s.rawDB.QueryRowContext(
+		ctx, query,
 		req.ChangeID,
 		string(req.RiskLevel),
 		req.RiskDescription,
@@ -470,7 +474,8 @@ func (s *ChangeApprovalService) CreateChangeImplementationPlan(ctx context.Conte
 
 	var id int
 	var createdAt time.Time
-	err = s.rawDB.QueryRowContext(ctx, query,
+	err = s.rawDB.QueryRowContext(
+		ctx, query,
 		req.ChangeID,
 		req.Phase,
 		req.Description,
@@ -536,7 +541,8 @@ func (s *ChangeApprovalService) CreateChangeRollbackPlan(ctx context.Context, re
 
 	var id int
 	var createdAt time.Time
-	err = s.rawDB.QueryRowContext(ctx, query,
+	err = s.rawDB.QueryRowContext(
+		ctx, query,
 		req.ChangeID,
 		triggerConditionsJSON,
 		rollbackStepsJSON,
@@ -606,7 +612,8 @@ func (s *ChangeApprovalService) ExecuteChangeRollback(ctx context.Context, chang
 
 	var id int
 	var createdAt time.Time
-	err = s.rawDB.QueryRowContext(ctx, query,
+	err = s.rawDB.QueryRowContext(
+		ctx, query,
 		changeID,
 		rollbackPlanID,
 		triggerReason,

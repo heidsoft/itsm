@@ -71,7 +71,6 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 				q.Select(tenant.FieldID, tenant.FieldCode, tenant.FieldName, tenant.FieldType)
 			}).
 			Only(c.Request.Context())
-
 		if err != nil {
 			if ent.IsNotFound(err) {
 				c.JSON(http.StatusUnauthorized, gin.H{

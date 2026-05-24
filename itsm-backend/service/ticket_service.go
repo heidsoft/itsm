@@ -228,6 +228,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	s.logger.Infow("Ticket created (orchestrated)", "ticket_id", ticket.ID)
 	return ticket, nil
 }
+
 func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, ticketID int, tenantID int, workflowDefinitionKey string) error {
 	// 获取工单信息
 	ticket, err := s.client.Ticket.Get(ctx, ticketID)
@@ -285,7 +286,8 @@ func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, ticketID i
 		return fmt.Errorf("failed to trigger workflow: %w", err)
 	}
 
-	s.logger.Infow("Workflow triggered for ticket",
+	s.logger.Infow(
+		"Workflow triggered for ticket",
 		"ticket_id", ticketID,
 		"process_instance_id", resp.ProcessInstanceID,
 		"process_key", processKey,
@@ -409,7 +411,8 @@ func (s *TicketService) SyncTicketStatusWithWorkflow(ctx context.Context, ticket
 		return fmt.Errorf("同步工单状态失败: %w", err)
 	}
 
-	s.logger.Infow("Ticket status synced with workflow",
+	s.logger.Infow(
+		"Ticket status synced with workflow",
 		"ticket_id", ticketID,
 		"workflow_status", workflowStatus.Status,
 		"ticket_status", newTicketStatus,
@@ -447,6 +450,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto
 	s.logger.Infow("Ticket updated", "ticket_id", ticket.ID)
 	return ticket, nil
 }
+
 func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, status string, tenantID int, operatorID int) (*ent.Ticket, error) {
 	s.logger.Infow("Updating ticket status", "ticket_id", ticketID, "status", status, "tenant_id", tenantID, "operator_id", operatorID)
 
@@ -625,6 +629,7 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 		PageSize: req.PageSize,
 	}, nil
 }
+
 func (s *TicketService) GetTicket(ctx context.Context, ticketID int, tenantID int) (*ent.Ticket, error) {
 	s.logger.Infow("Getting ticket", "ticket_id", ticketID, "tenant_id", tenantID)
 
@@ -1350,7 +1355,8 @@ func (s *TicketService) getEscalationAssignee(priority string, tenantID int) int
 
 // sendAssignmentNotification 发送分配通知
 func (s *TicketService) sendAssignmentNotification(ticketID, assigneeID, assignedBy int) {
-	s.logger.Infow("Sending assignment notification",
+	s.logger.Infow(
+		"Sending assignment notification",
 		"ticket_id", ticketID,
 		"assignee_id", assigneeID,
 		"assigned_by", assignedBy,
@@ -1360,7 +1366,8 @@ func (s *TicketService) sendAssignmentNotification(ticketID, assigneeID, assigne
 
 // sendEscalationNotification 发送升级通知
 func (s *TicketService) sendEscalationNotification(ticketID, newAssignee, escalatedBy int, reason string) {
-	s.logger.Infow("Sending escalation notification",
+	s.logger.Infow(
+		"Sending escalation notification",
 		"ticket_id", ticketID,
 		"new_assignee", newAssignee,
 		"escalated_by", escalatedBy,
@@ -1371,7 +1378,8 @@ func (s *TicketService) sendEscalationNotification(ticketID, newAssignee, escala
 
 // sendResolutionNotification 发送解决通知
 func (s *TicketService) sendResolutionNotification(ticketID, requesterID, resolvedBy int) {
-	s.logger.Infow("Sending resolution notification",
+	s.logger.Infow(
+		"Sending resolution notification",
 		"ticket_id", ticketID,
 		"requester_id", requesterID,
 		"resolved_by", resolvedBy,
@@ -1381,7 +1389,8 @@ func (s *TicketService) sendResolutionNotification(ticketID, requesterID, resolv
 
 // logAuditEvent 记录审计事件
 func (s *TicketService) logAuditEvent(ctx context.Context, event string, ticketID int, tenantID int, metadata map[string]interface{}) {
-	s.logger.Infow("Audit event",
+	s.logger.Infow(
+		"Audit event",
 		"event", event,
 		"ticket_id", ticketID,
 		"tenant_id", tenantID,

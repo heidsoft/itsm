@@ -662,7 +662,8 @@ func (s *TicketWorkflowService) getTicket(ctx context.Context, ticketID, tenantI
 	}
 
 	err := s.rawDB.QueryRowContext(ctx, query, ticketID, tenantID).Scan(
-		&ticket.ID, &ticket.Status, &ticket.RequesterID, &ticket.AssigneeID)
+		&ticket.ID, &ticket.Status, &ticket.RequesterID, &ticket.AssigneeID,
+	)
 
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("工单不存在")
@@ -692,7 +693,8 @@ func (s *TicketWorkflowService) createWorkflowRecord(ctx context.Context, record
 		toUserID = &record.ToUser.ID
 	}
 
-	_, err := s.rawDB.ExecContext(ctx, query,
+	_, err := s.rawDB.ExecContext(
+		ctx, query,
 		record.TicketID, record.Action, record.FromStatus, record.ToStatus,
 		record.Operator.ID, fromUserID, toUserID,
 		record.Comment, record.Reason, metadataJSON,

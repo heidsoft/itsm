@@ -102,7 +102,8 @@ func LoggerMiddlewareWithConfig(cfg LoggerConfig) gin.HandlerFunc {
 					fields = append(fields, "stack_trace", true)
 					globalLogger.Errorw("HTTP Server Error", fields...)
 					// 额外记录详细堆栈（通过 zap 的堆栈跟踪）
-					globalLogger.Desugar().Error("HTTP 5xx error",
+					globalLogger.Desugar().Error(
+						"HTTP 5xx error",
 						zap.String("path", param.Path),
 						zap.String("method", param.Method),
 						zap.Int("status", statusCode),
@@ -119,7 +120,8 @@ func LoggerMiddlewareWithConfig(cfg LoggerConfig) gin.HandlerFunc {
 				globalLogger.Warnw("HTTP Client Error", fields...)
 			} else if latency > cfg.SlowRequestThreshold {
 				// 慢请求：记录为 WARN
-				fields = append(fields,
+				fields = append(
+					fields,
 					"slow_request", true,
 					"threshold", cfg.SlowRequestThreshold.String(),
 				)
@@ -134,7 +136,8 @@ func LoggerMiddlewareWithConfig(cfg LoggerConfig) gin.HandlerFunc {
 		if cfg.SkipPaths[param.Path] {
 			return ""
 		}
-		return fmt.Sprintf("%s - %s %s %d %s\n",
+		return fmt.Sprintf(
+			"%s - %s %s %d %s\n",
 			param.TimeStamp.Format(time.RFC3339),
 			param.Method,
 			param.Path,

@@ -1511,7 +1511,8 @@ func (s *Seeder) seedTicketTypes(ctx context.Context) {
 	}
 
 	for _, tt := range ticketTypes {
-		_, err := rawDB.ExecContext(ctx, `
+		_, err := rawDB.ExecContext(
+			ctx, `
 			INSERT INTO ticket_types (
 				code, name, description, icon, color, status,
 				custom_fields, approval_enabled, approval_chain,
