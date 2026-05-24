@@ -53,7 +53,7 @@ RUN go build \
 # ============================================
 # 第二阶段：运行时镜像（runtime）
 # ============================================
-FROM alpine:3.19 AS runtime
+FROM alpine:3.23 AS runtime
 
 # 添加元数据
 LABEL maintainer="ITSM Team <dev@heidsoft.com>"
