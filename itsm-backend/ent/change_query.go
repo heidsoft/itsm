@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
 	"math"
@@ -25,6 +26,7 @@ type ChangeQuery struct {
 	inters       []Interceptor
 	predicates   []predicate.Change
 	withProblems *ProblemQuery
+	withPir      *ChangePIRQuery
 	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -77,6 +79,28 @@ func (_q *ChangeQuery) QueryProblems() *ProblemQuery {
 			sqlgraph.From(change.Table, change.FieldID, selector),
 			sqlgraph.To(problem.Table, problem.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, change.ProblemsTable, change.ProblemsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPir chains the current query on the "pir" edge.
+func (_q *ChangeQuery) QueryPir() *ChangePIRQuery {
+	query := (&ChangePIRClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(change.Table, change.FieldID, selector),
+			sqlgraph.To(changepir.Table, changepir.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, change.PirTable, change.PirColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -277,6 +301,7 @@ func (_q *ChangeQuery) Clone() *ChangeQuery {
 		inters:       append([]Interceptor{}, _q.inters...),
 		predicates:   append([]predicate.Change{}, _q.predicates...),
 		withProblems: _q.withProblems.Clone(),
+		withPir:      _q.withPir.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -291,6 +316,17 @@ func (_q *ChangeQuery) WithProblems(opts ...func(*ProblemQuery)) *ChangeQuery {
 		opt(query)
 	}
 	_q.withProblems = query
+	return _q
+}
+
+// WithPir tells the query-builder to eager-load the nodes that are connected to
+// the "pir" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ChangeQuery) WithPir(opts ...func(*ChangePIRQuery)) *ChangeQuery {
+	query := (&ChangePIRClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPir = query
 	return _q
 }
 
@@ -373,8 +409,9 @@ func (_q *ChangeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chang
 		nodes       = []*Change{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			_q.withProblems != nil,
+			_q.withPir != nil,
 		}
 	)
 	if withFKs {
@@ -402,6 +439,13 @@ func (_q *ChangeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chang
 		if err := _q.loadProblems(ctx, query, nodes,
 			func(n *Change) { n.Edges.Problems = []*Problem{} },
 			func(n *Change, e *Problem) { n.Edges.Problems = append(n.Edges.Problems, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPir; query != nil {
+		if err := _q.loadPir(ctx, query, nodes,
+			func(n *Change) { n.Edges.Pir = []*ChangePIR{} },
+			func(n *Change, e *ChangePIR) { n.Edges.Pir = append(n.Edges.Pir, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -466,6 +510,37 @@ func (_q *ChangeQuery) loadProblems(ctx context.Context, query *ProblemQuery, no
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (_q *ChangeQuery) loadPir(ctx context.Context, query *ChangePIRQuery, nodes []*Change, init func(*Change), assign func(*Change, *ChangePIR)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Change)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.ChangePIR(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(change.PirColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.change_pir
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "change_pir" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "change_pir" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

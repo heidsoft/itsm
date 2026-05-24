@@ -515,6 +515,48 @@ var (
 			},
 		},
 	}
+	// ChangePiRsColumns holds the columns for the "change_pi_rs" table.
+	ChangePiRsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "reviewer_id", Type: field.TypeInt, Nullable: true},
+		{Name: "overall_result", Type: field.TypeString, Default: "successful"},
+		{Name: "objectives_achieved", Type: field.TypeBool, Default: false},
+		{Name: "success_summary", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "issues_encountered", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "lessons_learned", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "improvement_recommendations", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "actual_start_time", Type: field.TypeTime, Nullable: true},
+		{Name: "actual_end_time", Type: field.TypeTime, Nullable: true},
+		{Name: "actual_duration_minutes", Type: field.TypeInt, Default: 0},
+		{Name: "rollback_performed", Type: field.TypeBool, Default: false},
+		{Name: "rollback_reason", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "review_date", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "change_pir", Type: field.TypeInt},
+		{Name: "user_pir_reviews", Type: field.TypeInt, Nullable: true},
+	}
+	// ChangePiRsTable holds the schema information for the "change_pi_rs" table.
+	ChangePiRsTable = &schema.Table{
+		Name:       "change_pi_rs",
+		Columns:    ChangePiRsColumns,
+		PrimaryKey: []*schema.Column{ChangePiRsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "change_pi_rs_changes_pir",
+				Columns:    []*schema.Column{ChangePiRsColumns[17]},
+				RefColumns: []*schema.Column{ChangesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "change_pi_rs_users_pir_reviews",
+				Columns:    []*schema.Column{ChangePiRsColumns[18]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// CloudAccountsColumns holds the columns for the "cloud_accounts" table.
 	CloudAccountsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -4210,6 +4252,7 @@ var (
 		CiRelationshipsTable,
 		CiTypesTable,
 		ChangesTable,
+		ChangePiRsTable,
 		CloudAccountsTable,
 		CloudResourcesTable,
 		CloudServicesTable,
@@ -4323,6 +4366,8 @@ func init() {
 	CiRelationshipsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
 	CiRelationshipsTable.ForeignKeys[1].RefTable = ConfigurationItemsTable
 	ChangesTable.ForeignKeys[0].RefTable = StandardChangesTable
+	ChangePiRsTable.ForeignKeys[0].RefTable = ChangesTable
+	ChangePiRsTable.ForeignKeys[1].RefTable = UsersTable
 	CloudResourcesTable.ForeignKeys[0].RefTable = CloudAccountsTable
 	CloudResourcesTable.ForeignKeys[1].RefTable = CloudServicesTable
 	CloudServicesTable.ForeignKeys[0].RefTable = CloudServicesTable

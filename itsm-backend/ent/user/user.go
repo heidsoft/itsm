@@ -67,6 +67,8 @@ const (
 	EdgeArticleSessions = "article_sessions"
 	// EdgeArticleParticipations holds the string denoting the article_participations edge name in mutations.
 	EdgeArticleParticipations = "article_participations"
+	// EdgePirReviews holds the string denoting the pir_reviews edge name in mutations.
+	EdgePirReviews = "pir_reviews"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// DepartmentRefTable is the table that holds the department_ref relation/edge.
@@ -147,6 +149,13 @@ const (
 	// ArticleParticipationsInverseTable is the table name for the KnowledgeArticleParticipant entity.
 	// It exists in this package in order to avoid circular dependency with the "knowledgearticleparticipant" package.
 	ArticleParticipationsInverseTable = "knowledge_article_participants"
+	// PirReviewsTable is the table that holds the pir_reviews relation/edge.
+	PirReviewsTable = "change_pi_rs"
+	// PirReviewsInverseTable is the table name for the ChangePIR entity.
+	// It exists in this package in order to avoid circular dependency with the "changepir" package.
+	PirReviewsInverseTable = "change_pi_rs"
+	// PirReviewsColumn is the table column denoting the pir_reviews relation/edge.
+	PirReviewsColumn = "user_pir_reviews"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -509,6 +518,20 @@ func ByArticleParticipations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOp
 		sqlgraph.OrderByNeighborTerms(s, newArticleParticipationsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByPirReviewsCount orders the results by pir_reviews count.
+func ByPirReviewsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPirReviewsStep(), opts...)
+	}
+}
+
+// ByPirReviews orders the results by pir_reviews terms.
+func ByPirReviews(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPirReviewsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newDepartmentRefStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -591,5 +614,12 @@ func newArticleParticipationsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ArticleParticipationsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, ArticleParticipationsTable, ArticleParticipationsPrimaryKey...),
+	)
+}
+func newPirReviewsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PirReviewsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PirReviewsTable, PirReviewsColumn),
 	)
 }

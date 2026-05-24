@@ -152,6 +152,18 @@ func (f ChangeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChangeMutation", m)
 }
 
+// The ChangePIRFunc type is an adapter to allow the use of ordinary
+// function as ChangePIR mutator.
+type ChangePIRFunc func(context.Context, *ent.ChangePIRMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChangePIRFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChangePIRMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChangePIRMutation", m)
+}
+
 // The CloudAccountFunc type is an adapter to allow the use of ordinary
 // function as CloudAccount mutator.
 type CloudAccountFunc func(context.Context, *ent.CloudAccountMutation) (ent.Value, error)

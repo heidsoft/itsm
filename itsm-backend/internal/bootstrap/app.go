@@ -303,7 +303,7 @@ func NewApplication() *Application {
 
 	// Domain: Change (DDD)
 	changeRepo := change.NewEntRepository(client, database.GetRawDB())
-	changeServiceDomain := change.NewService(changeRepo, sugar)
+	changeServiceDomain := change.NewService(changeRepo, client, sugar)
 	changeHandler := change.NewHandler(changeServiceDomain)
 
 	// CMDB Controller (新增)

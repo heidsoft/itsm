@@ -447,6 +447,7 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
+
 	res, err := h.svc.GetCalendarView(c.Request.Context(), tenantID, req.StartDate, req.EndDate, req.Status)
 	if err != nil {
 		common.Fail(c, http.StatusInternalServerError, err.Error())
@@ -454,4 +455,139 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 	}
 
 	common.Success(c, res)
+}
+
+// ==================== PIR (Post-Implementation Review) Handlers ====================
+
+// CreatePIR handles POST /api/v1/changes/:id/pir
+func (h *Handler) CreatePIR(c *gin.Context) {
+	changeIDStr := c.Param("id")
+	changeID, err := strconv.Atoi(changeIDStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+		return
+	}
+
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	userIDVal, _ := c.Get("user_id")
+	userID := userIDVal.(int)
+
+	var req dto.CreateChangePIRRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		return
+	}
+	req.ChangeID = changeID
+
+	pir, err := h.svc.CreatePIR(c.Request.Context(), &req, userID, tenantID)
+	if err != nil {
+		if strings.Contains(err.Error(), "已存在") {
+			common.Fail(c, http.StatusConflict, err.Error())
+			return
+		}
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, pir)
+}
+
+// GetPIR handles GET /api/v1/changes/:id/pir
+func (h *Handler) GetPIR(c *gin.Context) {
+	changeIDStr := c.Param("id")
+	changeID, err := strconv.Atoi(changeIDStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+		return
+	}
+
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	pir, err := h.svc.GetPIRByChange(c.Request.Context(), changeID, tenantID)
+	if err != nil {
+		if strings.Contains(err.Error(), "无PIR记录") {
+			common.Fail(c, http.StatusNotFound, err.Error())
+			return
+		}
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, pir)
+}
+
+// ListPIRs handles GET /api/v1/changes/pirs
+func (h *Handler) ListPIRs(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	result := c.Query("result")
+
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	pirs, err := h.svc.ListPIRs(c.Request.Context(), tenantID, page, pageSize, result)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, pirs)
+}
+
+// UpdatePIR handles PUT /api/v1/changes/pir/:id
+func (h *Handler) UpdatePIR(c *gin.Context) {
+	pirIDStr := c.Param("id")
+	pirID, err := strconv.Atoi(pirIDStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid PIR id")
+		return
+	}
+
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+
+	var req dto.UpdateChangePIRRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		return
+	}
+
+	pir, err := h.svc.UpdatePIR(c.Request.Context(), pirID, &req, tenantID)
+	if err != nil {
+		if strings.Contains(err.Error(), "不存在") {
+			common.Fail(c, http.StatusNotFound, err.Error())
+			return
+		}
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, pir)
+}
+
+// DeletePIR handles DELETE /api/v1/changes/pir/:id
+func (h *Handler) DeletePIR(c *gin.Context) {
+	pirIDStr := c.Param("id")
+	pirID, err := strconv.Atoi(pirIDStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid PIR id")
+		return
+	}
+
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	if err := h.svc.DeletePIR(c.Request.Context(), pirID, tenantID); err != nil {
+		if strings.Contains(err.Error(), "不存在") {
+			common.Fail(c, http.StatusNotFound, err.Error())
+			return
+		}
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "PIR deleted"})
 }
