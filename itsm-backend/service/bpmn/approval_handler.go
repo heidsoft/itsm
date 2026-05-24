@@ -78,7 +78,8 @@ func (h *ApprovalHandler) submitApproval(ctx context.Context, variables map[stri
 		return nil, fmt.Errorf("业务ID不能为空")
 	}
 
-	h.logger.Infow("Submitting approval via BPMN",
+	h.logger.Infow(
+		"Submitting approval via BPMN",
 		"business_id", businessID,
 		"business_type", businessType,
 		"approver_id", approverID,
@@ -109,7 +110,8 @@ func (h *ApprovalHandler) approve(ctx context.Context, variables map[string]inte
 		return nil, fmt.Errorf("审批ID或业务ID不能为空")
 	}
 
-	h.logger.Infow("Approval approved via BPMN",
+	h.logger.Infow(
+		"Approval approved via BPMN",
 		"approval_id", approvalID,
 		"business_id", businessID,
 		"comment", comment,
@@ -139,7 +141,8 @@ func (h *ApprovalHandler) reject(ctx context.Context, variables map[string]inter
 		return nil, fmt.Errorf("审批ID或业务ID不能为空")
 	}
 
-	h.logger.Infow("Approval rejected via BPMN",
+	h.logger.Infow(
+		"Approval rejected via BPMN",
 		"approval_id", approvalID,
 		"business_id", businessID,
 		"reason", reason,
@@ -175,7 +178,8 @@ func (h *ApprovalHandler) delegate(ctx context.Context, variables map[string]int
 		return nil, fmt.Errorf("委托目标用户ID不能为空")
 	}
 
-	h.logger.Infow("Approval delegated via BPMN",
+	h.logger.Infow(
+		"Approval delegated via BPMN",
 		"approval_id", approvalID,
 		"from_user_id", fromUserID,
 		"to_user_id", toUserID,
@@ -210,7 +214,8 @@ func (h *ApprovalHandler) escalateApproval(ctx context.Context, variables map[st
 		return nil, fmt.Errorf("升级目标用户ID不能为空")
 	}
 
-	h.logger.Infow("Approval escalated via BPMN",
+	h.logger.Infow(
+		"Approval escalated via BPMN",
 		"approval_id", approvalID,
 		"escalate_to", escalateTo,
 		"reason", reason,

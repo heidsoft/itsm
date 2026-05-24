@@ -229,7 +229,8 @@ func (s *KnownErrorService) CreateKnowledgeArticleFromKnownError(ctx context.Con
 		return nil, err
 	}
 
-	content := fmt.Sprintf(`## 症状
+	content := fmt.Sprintf(
+		`## 症状
 %s
 
 ## 根本原因

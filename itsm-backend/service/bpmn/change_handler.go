@@ -377,7 +377,8 @@ func (h *ChangeServiceTaskHandler) notifyStakeholders(ctx context.Context, varia
 	}
 
 	// 记录通知日志（实际应调用通知服务）
-	h.logger.Infow("Stakeholders notification via BPMN",
+	h.logger.Infow(
+		"Stakeholders notification via BPMN",
 		"change_id", changeID,
 		"change_title", change.Title,
 		"notification_type", notificationType,

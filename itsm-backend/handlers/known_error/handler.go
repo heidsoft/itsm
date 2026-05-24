@@ -102,7 +102,6 @@ func (h *Handler) ListKnownErrors(c *gin.Context) {
 		Offset(offset).
 		Limit(pageSize).
 		All(ctx)
-
 	if err != nil {
 		h.logger.Warnw("Failed to list known errors", "error", err)
 		common.Fail(c, http.StatusInternalServerError, "Failed to list known errors")
@@ -143,7 +142,6 @@ func (h *Handler) GetKnownError(c *gin.Context) {
 			entknownerror.TenantID(tenantID),
 		).
 		Only(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, http.StatusNotFound, "Known error not found")
@@ -237,7 +235,6 @@ func (h *Handler) UpdateKnownError(c *gin.Context) {
 			entknownerror.TenantID(tenantID),
 		).
 		Only(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, http.StatusNotFound, "Known error not found")
@@ -319,7 +316,6 @@ func (h *Handler) DeleteKnownError(c *gin.Context) {
 			entknownerror.TenantID(tenantID),
 		).
 		Only(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, http.StatusNotFound, "Known error not found")
@@ -334,7 +330,6 @@ func (h *Handler) DeleteKnownError(c *gin.Context) {
 	_, err = h.client.KnownError.Delete().
 		Where(entknownerror.ID(id)).
 		Exec(ctx)
-
 	if err != nil {
 		h.logger.Warnw("Failed to delete known error", "error", err, "id", id)
 		common.Fail(c, http.StatusInternalServerError, "Failed to delete known error")
@@ -401,7 +396,6 @@ func (h *Handler) SearchKnownErrors(c *gin.Context) {
 		).
 		Limit(20).
 		All(ctx)
-
 	if err != nil {
 		h.logger.Warnw("Failed to search known errors", "error", err)
 		common.Fail(c, http.StatusInternalServerError, "Failed to search known errors")
@@ -430,7 +424,6 @@ func (h *Handler) GetCategories(c *gin.Context) {
 		Select(entknownerror.FieldCategory).
 		Where(entknownerror.TenantID(tenantID)).
 		All(ctx)
-
 	if err != nil {
 		h.logger.Warnw("Failed to get categories", "error", err)
 		common.Fail(c, http.StatusInternalServerError, "Failed to get categories")
@@ -474,7 +467,6 @@ func (h *Handler) PromoteToKnownError(c *gin.Context) {
 			entknownerror.TenantID(tenantID),
 		).
 		Only(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, http.StatusNotFound, "Known error not found")
@@ -489,7 +481,6 @@ func (h *Handler) PromoteToKnownError(c *gin.Context) {
 	_, err = ke.Update().
 		SetStatus("active").
 		Save(ctx)
-
 	if err != nil {
 		h.logger.Warnw("Failed to promote known error", "error", err, "id", id)
 		common.Fail(c, http.StatusInternalServerError, "Failed to promote known error")

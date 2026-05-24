@@ -129,7 +129,8 @@ func (cm *CacheMiddleware) CacheStats() gin.HandlerFunc {
 
 		// 记录慢查询
 		if duration > 1*time.Second {
-			cm.logger.Warn("Slow request detected",
+			cm.logger.Warn(
+				"Slow request detected",
 				zap.String("method", c.Request.Method),
 				zap.String("path", c.Request.URL.Path),
 				zap.Duration("duration", duration),

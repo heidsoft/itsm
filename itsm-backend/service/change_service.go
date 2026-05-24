@@ -625,7 +625,8 @@ func (s *ChangeService) triggerWorkflowForChange(ctx context.Context, changeID i
 		return fmt.Errorf("failed to trigger workflow: %w", err)
 	}
 
-	s.logger.Infow("Workflow triggered for change",
+	s.logger.Infow(
+		"Workflow triggered for change",
 		"change_id", changeID,
 		"process_instance_id", resp.ProcessInstanceID,
 		"process_key", processKey,

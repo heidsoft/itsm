@@ -544,7 +544,8 @@ func (e *CustomProcessEngine) evaluateCondition(flow *BPMNSequenceFlow, variable
 	// 使用表达式引擎评估条件
 	result, err := e.exprEngine.EvaluateCondition(flow.ConditionExpression.Expression, evalVars)
 	if err != nil {
-		e.logger.Warnw("Failed to evaluate condition, defaulting to true",
+		e.logger.Warnw(
+			"Failed to evaluate condition, defaulting to true",
 			"expression", flow.ConditionExpression.Expression,
 			"error", err,
 		)

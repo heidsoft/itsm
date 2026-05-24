@@ -76,7 +76,8 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 
 		// 调试日志：记录收到的请求信息
-		zap.S().Infow("AuthMiddleware: received request",
+		zap.S().Infow(
+			"AuthMiddleware: received request",
 			"path", c.Request.URL.Path,
 			"method", c.Request.Method,
 			"has_auth_header", authHeader != "",
@@ -87,14 +88,16 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		if authHeader == "" {
 			if cookieToken, err := c.Cookie("access_token"); err == nil && cookieToken != "" {
 				authHeader = "Bearer " + cookieToken
-				zap.S().Infow("AuthMiddleware: using token from cookie",
+				zap.S().Infow(
+					"AuthMiddleware: using token from cookie",
 					"path", c.Request.URL.Path,
 				)
 			}
 		}
 
 		if authHeader == "" {
-			zap.S().Warnw("AuthMiddleware: missing Authorization header",
+			zap.S().Warnw(
+				"AuthMiddleware: missing Authorization header",
 				"path", c.Request.URL.Path,
 				"ip", c.ClientIP(),
 			)
@@ -105,7 +108,8 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 
 		// 检查Bearer前缀
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			zap.S().Warnw("AuthMiddleware: invalid token format",
+			zap.S().Warnw(
+				"AuthMiddleware: invalid token format",
 				"path", c.Request.URL.Path,
 				"prefix", authHeader[:min(10, len(authHeader))],
 			)
@@ -117,7 +121,8 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		// 提取token
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		if tokenString == "" {
-			zap.S().Warnw("AuthMiddleware: empty token",
+			zap.S().Warnw(
+				"AuthMiddleware: empty token",
 				"path", c.Request.URL.Path,
 			)
 			common.Fail(c, common.AuthFailedCode, "token不能为空")
@@ -126,7 +131,8 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		}
 
 		// 调试日志：记录token解析前的信息
-		zap.S().Infow("AuthMiddleware: parsing token",
+		zap.S().Infow(
+			"AuthMiddleware: parsing token",
 			"path", c.Request.URL.Path,
 			"token_length", len(tokenString),
 		)
@@ -139,9 +145,9 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			}
 			return []byte(jwtSecret), nil
 		})
-
 		if err != nil {
-			zap.S().Warnw("AuthMiddleware: token parse failed",
+			zap.S().Warnw(
+				"AuthMiddleware: token parse failed",
 				"path", c.Request.URL.Path,
 				"error", err.Error(),
 				"error_type", fmt.Sprintf("%T", err),
@@ -152,7 +158,8 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		}
 
 		if !token.Valid {
-			zap.S().Warnw("AuthMiddleware: token invalid",
+			zap.S().Warnw(
+				"AuthMiddleware: token invalid",
 				"path", c.Request.URL.Path,
 			)
 			common.Fail(c, common.AuthFailedCode, "token无效")
@@ -169,14 +176,16 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			c.Set("token", tokenString)
 
 			// 调试日志：认证成功
-			zap.S().Infow("AuthMiddleware: authentication successful",
+			zap.S().Infow(
+				"AuthMiddleware: authentication successful",
 				"path", c.Request.URL.Path,
 				"user_id", claims.UserID,
 				"username", claims.Username,
 				"tenant_id", claims.TenantID,
 			)
 		} else {
-			zap.S().Warnw("AuthMiddleware: failed to extract claims",
+			zap.S().Warnw(
+				"AuthMiddleware: failed to extract claims",
 				"path", c.Request.URL.Path,
 			)
 			common.Fail(c, common.AuthFailedCode, "token解析失败")

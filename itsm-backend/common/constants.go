@@ -86,8 +86,8 @@ const (
 // ===================================
 const (
 	ProblemStatusNew           = "new"
-	ProblemStatusInvestigating = "investigating" //调查中
-	ProblemStatusIdentified    = "identified"    //已识别
+	ProblemStatusInvestigating = "investigating" // 调查中
+	ProblemStatusIdentified    = "identified"    // 已识别
 	ProblemStatusResolved      = "resolved"
 	ProblemStatusClosed        = "closed"
 )
