@@ -29,7 +29,6 @@ func (v *MSPAccessValidator) ValidateCustomerAccess(ctx context.Context, mspUser
 		Where(mspallocation.DeassignedAtIsNil()).
 		Where(mspallocation.HasCustomerTenantWith(tenant.IDEQ(customerTenantID))).
 		All(ctx)
-
 	if err != nil {
 		return fmt.Errorf("access denied: failed to query allocations: %w", err)
 	}
@@ -48,7 +47,6 @@ func (v *MSPAccessValidator) GetAllowedCustomerIDs(ctx context.Context, mspUserI
 		Where(mspallocation.DeassignedAtIsNil()).
 		WithCustomerTenant().
 		All(ctx)
-
 	if err != nil {
 		return nil, err
 	}

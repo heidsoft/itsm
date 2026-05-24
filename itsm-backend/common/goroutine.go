@@ -28,7 +28,8 @@ func GoSafe(fn func(), opts ...GoSafeOptions) {
 					if taskName == "" {
 						taskName = "unknown"
 					}
-					logger.Errorw("Goroutine panic recovered",
+					logger.Errorw(
+						"Goroutine panic recovered",
 						"task", taskName,
 						"error", fmt.Sprintf("%v", r),
 						"stack", string(stack),

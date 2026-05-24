@@ -67,7 +67,8 @@ func (h *NotificationHandler) sendEmail(ctx context.Context, variables map[strin
 		return nil, fmt.Errorf("邮件收件人不能为空")
 	}
 
-	h.logger.Infow("Sending email notification via BPMN",
+	h.logger.Infow(
+		"Sending email notification via BPMN",
 		"recipients", recipients,
 		"subject", subject,
 		"body_length", len(body),
@@ -91,7 +92,8 @@ func (h *NotificationHandler) sendSMS(ctx context.Context, variables map[string]
 		return nil, fmt.Errorf("手机号不能为空")
 	}
 
-	h.logger.Infow("Sending SMS notification via BPMN",
+	h.logger.Infow(
+		"Sending SMS notification via BPMN",
 		"phone_numbers", phoneNumbers,
 		"message", message,
 	)
@@ -116,7 +118,8 @@ func (h *NotificationHandler) sendInAppNotification(ctx context.Context, variabl
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
 
-	h.logger.Infow("Sending in-app notification via BPMN",
+	h.logger.Infow(
+		"Sending in-app notification via BPMN",
 		"user_id", userIDs,
 		"title", title,
 		"type", notificationType,
@@ -141,7 +144,8 @@ func (h *NotificationHandler) sendWebhookNotification(ctx context.Context, varia
 		return nil, fmt.Errorf("Webhook URL不能为空")
 	}
 
-	h.logger.Infow("Sending webhook notification via BPMN",
+	h.logger.Infow(
+		"Sending webhook notification via BPMN",
 		"webhook_url", webhookURL,
 		"payload", payload,
 	)

@@ -75,7 +75,8 @@ func (h *WebhookHandler) callWebhook(ctx context.Context, variables map[string]i
 		method = "POST"
 	}
 
-	h.logger.Infow("Calling webhook via BPMN",
+	h.logger.Infow(
+		"Calling webhook via BPMN",
 		"webhook_url", webhookURL,
 		"method", method,
 	)
@@ -129,7 +130,8 @@ func (h *WebhookHandler) callWebhook(ctx context.Context, variables map[string]i
 		h.logger.Warnw("Webhook response is not JSON", "status_code", resp.StatusCode)
 	}
 
-	h.logger.Infow("Webhook called successfully",
+	h.logger.Infow(
+		"Webhook called successfully",
 		"webhook_url", webhookURL,
 		"status_code", resp.StatusCode,
 	)

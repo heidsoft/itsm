@@ -338,7 +338,8 @@ func (s *BPMNSLAService) CheckSLAViolations(ctx context.Context, tenantID int) (
 // 注意: 当前使用日志记录，未来可以扩展为独立的BPMN SLA告警表
 func (s *BPMNSLAService) RecordSLAAlert(ctx context.Context, violation *SLAViolation) error {
 	// 记录到日志
-	s.logger.Infow("SLA Alert",
+	s.logger.Infow(
+		"SLA Alert",
 		"resource_type", violation.ResourceType,
 		"resource_key", violation.ResourceKey,
 		"status", violation.SLAStatus,

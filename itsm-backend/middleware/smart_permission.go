@@ -224,7 +224,6 @@ func loadACLsFromDB(db DBQuerier, tenantID int) []EndpointACL {
 		WHERE tenant_id = $1 AND is_active = true
 		ORDER BY priority DESC
 	`, tenantID)
-
 	if err != nil {
 		zap.S().Warnw("Failed to load ACLs from DB",
 			"tenant_id", tenantID, "error", err)
