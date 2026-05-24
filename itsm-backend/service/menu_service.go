@@ -67,7 +67,6 @@ func (s *MenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest
 		SetIsVisible(isVisible).
 		SetIsEnabled(isEnabled).
 		Save(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("创建菜单失败: %w", err)
 	}

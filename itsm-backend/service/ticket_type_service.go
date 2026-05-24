@@ -85,7 +85,8 @@ func (s *TicketTypeService) CreateTicketType(ctx context.Context, req *dto.Creat
 	`
 
 	var id int
-	err = s.rawDB.QueryRowContext(ctx, query,
+	err = s.rawDB.QueryRowContext(
+		ctx, query,
 		req.Code, req.Name, req.Description, req.Icon, req.Color, dto.TicketTypeStatusActive,
 		customFieldsJSON, req.ApprovalEnabled, nil, approvalChainJSON,
 		req.SLAEnabled, req.DefaultSLAID, req.AutoAssignEnabled, assignmentRulesJSON,

@@ -384,7 +384,8 @@ func (s *TicketLifecycleService) getEscalationAssignee(priority string, tenantID
 // logAuditEvent 记录审计日志
 func (s *TicketLifecycleService) logAuditEvent(ctx context.Context, event string, ticketID int, tenantID int, metadata map[string]interface{}) {
 	// 实现审计日志记录逻辑
-	s.logger.Infow("Audit event",
+	s.logger.Infow(
+		"Audit event",
 		"event", event,
 		"ticketID", ticketID,
 		"tenantID", tenantID,

@@ -60,7 +60,8 @@ func NewSMSService(config SMSConfig, logger *zap.SugaredLogger) *SMSService {
 
 // Send 发送短信
 func (s *SMSService) Send(ctx context.Context, msg *SMSMessage) error {
-	s.logger.Infow("Sending SMS",
+	s.logger.Infow(
+		"Sending SMS",
 		"provider", s.config.Provider,
 		"phones", len(msg.PhoneNumbers),
 	)
@@ -313,7 +314,8 @@ type TencentSMSResponse struct {
 
 // sendMock 模拟发送（用于测试）
 func (s *SMSService) sendMock(ctx context.Context, msg *SMSMessage) error {
-	s.logger.Infow("Mock SMS sent",
+	s.logger.Infow(
+		"Mock SMS sent",
 		"phones", msg.PhoneNumbers,
 		"content", msg.Content,
 	)
