@@ -39,12 +39,12 @@ type MonthlyProblemCountResponse struct {
 
 // ProblemHotspotsResponse 问题热点响应
 type ProblemHotspotsResponse struct {
-	PeriodStart       string            `json:"period_start"`
-	PeriodEnd         string            `json:"period_end"`
-	CategoryBreakdown map[string]int    `json:"category_breakdown"`
-	PriorityBreakdown map[string]int    `json:"priority_breakdown"`
-	Hotspots          []string          `json:"hotspots"`
-	AvgPerCategory    float64           `json:"avg_per_category"`
+	PeriodStart       string         `json:"period_start"`
+	PeriodEnd         string         `json:"period_end"`
+	CategoryBreakdown map[string]int `json:"category_breakdown"`
+	PriorityBreakdown map[string]int `json:"priority_breakdown"`
+	Hotspots          []string       `json:"hotspots"`
+	AvgPerCategory    float64        `json:"avg_per_category"`
 }
 
 // ProblemPredictionResponse 问题预测响应

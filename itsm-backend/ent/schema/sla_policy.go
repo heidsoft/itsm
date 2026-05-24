@@ -81,9 +81,9 @@ func (SLAPolicy) Edges() []ent.Edge {
 
 // BusinessHoursConfig 业务时间配置
 type BusinessHoursConfig struct {
-	WorkDays     []int  `json:"work_days"`      // 工作日: 1-7 (周一到周日)
-	StartTime    string `json:"start_time"`    // 开始时间: "09:00"
-	EndTime      string `json:"end_time"`      // 结束时间: "18:00"
-	TimeZone     string `json:"time_zone"`     // 时区: "Asia/Shanghai"
-	HolidayList  []string `json:"holiday_list"` // 节假日列表
+	WorkDays    []int    `json:"work_days"`    // 工作日: 1-7 (周一到周日)
+	StartTime   string   `json:"start_time"`   // 开始时间: "09:00"
+	EndTime     string   `json:"end_time"`     // 结束时间: "18:00"
+	TimeZone    string   `json:"time_zone"`    // 时区: "Asia/Shanghai"
+	HolidayList []string `json:"holiday_list"` // 节假日列表
 }

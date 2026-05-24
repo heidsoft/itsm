@@ -2,17 +2,17 @@ package dto
 
 // MenuDTO 菜单数据传输对象
 type MenuDTO struct {
-	ID             int     `json:"id"`
-	Name           string  `json:"name"`
-	Path           string  `json:"path"`
-	Icon           string  `json:"icon,omitempty"`
-	ParentID       *int    `json:"parent_id,omitempty"`
-	PermissionCode *string `json:"permission_code,omitempty"`
-	SortOrder      int     `json:"sort_order"`
-	TenantID       int     `json:"tenant_id"`
-	IsVisible      bool    `json:"is_visible"`
-	IsEnabled      bool    `json:"is_enabled"`
-	Description    string  `json:"description,omitempty"`
+	ID             int       `json:"id"`
+	Name           string    `json:"name"`
+	Path           string    `json:"path"`
+	Icon           string    `json:"icon,omitempty"`
+	ParentID       *int      `json:"parent_id,omitempty"`
+	PermissionCode *string   `json:"permission_code,omitempty"`
+	SortOrder      int       `json:"sort_order"`
+	TenantID       int       `json:"tenant_id"`
+	IsVisible      bool      `json:"is_visible"`
+	IsEnabled      bool      `json:"is_enabled"`
+	Description    string    `json:"description,omitempty"`
 	Children       []MenuDTO `json:"children,omitempty"`
 }
 

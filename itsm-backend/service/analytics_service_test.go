@@ -58,9 +58,9 @@ func TestAnalyticsService_GetDeepAnalytics_Empty(t *testing.T) {
 	require.NoError(t, err)
 
 	req := &dto.DeepAnalyticsRequest{
-		TimeRange: []string{"2024-01-01", "2024-01-31"},
+		TimeRange:  []string{"2024-01-01", "2024-01-31"},
 		Dimensions: []string{"status"},
-		Metrics:   []string{"count"},
+		Metrics:    []string{"count"},
 	}
 
 	response, err := service.GetDeepAnalytics(ctx, req, testTenant.ID)

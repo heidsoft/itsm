@@ -544,9 +544,9 @@ func TestTicketCoreService_UpdateTicketBasic_VersionControl(t *testing.T) {
 
 	t.Run("版本匹配时更新成功", func(t *testing.T) {
 		updated, err := coreService.UpdateTicketBasic(ctx, testTicket.ID, &dto.UpdateTicketRequest{
-			Title:       "Updated Title",
-			Version:     1, // 匹配当前版本
-			Force:       false,
+			Title:   "Updated Title",
+			Version: 1, // 匹配当前版本
+			Force:   false,
 		}, testTenant.ID)
 
 		require.NoError(t, err)
@@ -558,9 +558,9 @@ func TestTicketCoreService_UpdateTicketBasic_VersionControl(t *testing.T) {
 	t.Run("版本不匹配时返回冲突错误", func(t *testing.T) {
 		// 当前版本应该是 2
 		_, err := coreService.UpdateTicketBasic(ctx, testTicket.ID, &dto.UpdateTicketRequest{
-			Title:       "Should Fail",
-			Version:     1, // 使用旧版本号
-			Force:       false,
+			Title:   "Should Fail",
+			Version: 1, // 使用旧版本号
+			Force:   false,
 		}, testTenant.ID)
 
 		require.Error(t, err)
@@ -569,9 +569,9 @@ func TestTicketCoreService_UpdateTicketBasic_VersionControl(t *testing.T) {
 
 	t.Run("Force=true 忽略版本检查", func(t *testing.T) {
 		updated, err := coreService.UpdateTicketBasic(ctx, testTicket.ID, &dto.UpdateTicketRequest{
-			Title:       "Force Update",
-			Version:     1, // 旧版本号
-			Force:       true, // 强制更新
+			Title:   "Force Update",
+			Version: 1,    // 旧版本号
+			Force:   true, // 强制更新
 		}, testTenant.ID)
 
 		require.NoError(t, err)
@@ -581,9 +581,9 @@ func TestTicketCoreService_UpdateTicketBasic_VersionControl(t *testing.T) {
 
 	t.Run("Version=0 跳过版本检查", func(t *testing.T) {
 		updated, err := coreService.UpdateTicketBasic(ctx, testTicket.ID, &dto.UpdateTicketRequest{
-			Title:       "No Version Check",
-			Version:     0, // 跳过版本检查
-			Force:       false,
+			Title:   "No Version Check",
+			Version: 0, // 跳过版本检查
+			Force:   false,
 		}, testTenant.ID)
 
 		require.NoError(t, err)

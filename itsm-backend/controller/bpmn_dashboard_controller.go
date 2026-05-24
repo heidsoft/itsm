@@ -29,7 +29,7 @@ func NewBPMNDashboardController(
 		metricsService: metricsService,
 		auditService:   auditService,
 		tenantService:  tenantService,
-		slaService:    slaService,
+		slaService:     slaService,
 	}
 }
 
@@ -375,8 +375,8 @@ func (c *BPMNDashboardController) GetSLACompliance(ctx *gin.Context) {
 
 	common.Success(ctx, gin.H{
 		"compliance_rate": rate,
-		"compliant":      compliant,
-		"total":          total,
+		"compliant":       compliant,
+		"total":           total,
 	})
 }
 

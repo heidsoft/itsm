@@ -194,10 +194,10 @@ func NewLocalProvider(baseURL string) *LocalProvider {
 
 // MiniMaxProvider implements LLMProvider using MiniMax Anthropic-compatible API
 type MiniMaxProvider struct {
-	apiKey   string
-	model    string
-	baseURL  string
-	client   *http.Client
+	apiKey  string
+	model   string
+	baseURL string
+	client  *http.Client
 }
 
 func NewMiniMaxProvider(apiKey, model string) *MiniMaxProvider {
@@ -213,11 +213,11 @@ func NewMiniMaxProvider(apiKey, model string) *MiniMaxProvider {
 
 // MiniMax Anthropic-format request
 type MiniMaxAnthropicRequest struct {
-	Model       string                     `json:"model"`
-	MaxTokens   int                        `json:"max_tokens"`
-	System      string                     `json:"system,omitempty"`
-	Temperature float64                    `json:"temperature,omitempty"`
-	Messages    []MiniMaxAnthropicMessage  `json:"messages"`
+	Model       string                    `json:"model"`
+	MaxTokens   int                       `json:"max_tokens"`
+	System      string                    `json:"system,omitempty"`
+	Temperature float64                   `json:"temperature,omitempty"`
+	Messages    []MiniMaxAnthropicMessage `json:"messages"`
 }
 
 // MiniMax Anthropic message format

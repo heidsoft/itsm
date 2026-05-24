@@ -9,7 +9,7 @@ import (
 
 // GoSafeOptions 安全协程选项
 type GoSafeOptions struct {
-	Logger  *zap.SugaredLogger
+	Logger   *zap.SugaredLogger
 	TaskName string
 }
 
@@ -20,7 +20,7 @@ func GoSafe(fn func(), opts ...GoSafeOptions) {
 		defer func() {
 			if r := recover(); r != nil {
 				stack := debug.Stack()
-				
+
 				// 如果提供了logger，使用结构化日志
 				if len(opts) > 0 && opts[0].Logger != nil {
 					logger := opts[0].Logger
@@ -40,7 +40,7 @@ func GoSafe(fn func(), opts ...GoSafeOptions) {
 				}
 			}
 		}()
-		
+
 		fn()
 	}()
 }

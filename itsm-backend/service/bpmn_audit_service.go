@@ -27,33 +27,33 @@ func NewBPMNAuditService(client *ent.Client, logger *zap.SugaredLogger) *BPMNAud
 
 // AuditAction 审计操作类型
 const (
-	AuditActionProcessStarted      = "started"
-	AuditActionProcessCompleted   = "completed"
-	AuditActionProcessSuspended   = "suspended"
-	AuditActionProcessResumed     = "resumed"
-	AuditActionProcessTerminated  = "terminated"
-	AuditActionTaskAssigned       = "assigned"
-	AuditActionTaskUnassigned     = "unassigned"
-	AuditActionTaskClaimed        = "claimed"
-	AuditActionTaskCompleted      = "completed"
-	AuditActionTaskCancelled      = "cancelled"
-	AuditActionTaskEscalated      = "escalated"
-	AuditActionTaskReassigned     = "reassigned"
-	AuditActionVariableChanged    = "variable_changed"
-	AuditActionActivityStarted    = "activity_started"
-	AuditActionActivityCompleted  = "activity_completed"
+	AuditActionProcessStarted    = "started"
+	AuditActionProcessCompleted  = "completed"
+	AuditActionProcessSuspended  = "suspended"
+	AuditActionProcessResumed    = "resumed"
+	AuditActionProcessTerminated = "terminated"
+	AuditActionTaskAssigned      = "assigned"
+	AuditActionTaskUnassigned    = "unassigned"
+	AuditActionTaskClaimed       = "claimed"
+	AuditActionTaskCompleted     = "completed"
+	AuditActionTaskCancelled     = "cancelled"
+	AuditActionTaskEscalated     = "escalated"
+	AuditActionTaskReassigned    = "reassigned"
+	AuditActionVariableChanged   = "variable_changed"
+	AuditActionActivityStarted   = "activity_started"
+	AuditActionActivityCompleted = "activity_completed"
 )
 
 // ActivityType 活动类型
 const (
-	ActivityTypeStartEvent     = "startEvent"
-	ActivityTypeEndEvent       = "endEvent"
-	ActivityTypeUserTask       = "userTask"
-	ActivityTypeServiceTask    = "serviceTask"
-	ActivityTypeScriptTask     = "scriptTask"
-	ActivityTypeManualTask     = "manualTask"
-	ActivityTypeGateway        = "gateway"
-	ActivityTypeSubProcess     = "subProcess"
+	ActivityTypeStartEvent        = "startEvent"
+	ActivityTypeEndEvent          = "endEvent"
+	ActivityTypeUserTask          = "userTask"
+	ActivityTypeServiceTask       = "serviceTask"
+	ActivityTypeScriptTask        = "scriptTask"
+	ActivityTypeManualTask        = "manualTask"
+	ActivityTypeGateway           = "gateway"
+	ActivityTypeSubProcess        = "subProcess"
 	ActivityTypeIntermediateEvent = "intermediateEvent"
 )
 
@@ -64,21 +64,21 @@ type AuditContext struct {
 	ProcessDefinitionKey string
 	ProcessDefinitionID  int
 	ActivityID           string
-	ActivityName        string
-	ActivityType        string
-	Action              string
-	UserID              int
-	UserName            string
-	AssigneeID         int
-	AssigneeName       string
-	VariablesBefore    map[string]interface{}
-	VariablesAfter     map[string]interface{}
-	Comment            string
-	IPAddress          string
-	UserAgent          string
-	TenantID           int
-	DurationMs         int
-	Metadata           map[string]interface{}
+	ActivityName         string
+	ActivityType         string
+	Action               string
+	UserID               int
+	UserName             string
+	AssigneeID           int
+	AssigneeName         string
+	VariablesBefore      map[string]interface{}
+	VariablesAfter       map[string]interface{}
+	Comment              string
+	IPAddress            string
+	UserAgent            string
+	TenantID             int
+	DurationMs           int
+	Metadata             map[string]interface{}
 }
 
 // RecordAudit 记录审计日志
@@ -417,18 +417,18 @@ func (s *BPMNAuditService) GetActivityStatistics(ctx context.Context, processDef
 // QueryAuditLogsRequest 查询审计日志请求
 type QueryAuditLogsRequest struct {
 	ProcessInstanceID    int
-	ProcessInstanceKey  string
+	ProcessInstanceKey   string
 	ProcessDefinitionKey string
-	ActivityID          string
-	ActivityType       string
-	Action             string
-	UserID             int
-	AssigneeID        int
-	TenantID          int
-	StartTime         time.Time
-	EndTime           time.Time
-	Page              int
-	PageSize          int
-	SortBy            string
-	SortOrder         string
+	ActivityID           string
+	ActivityType         string
+	Action               string
+	UserID               int
+	AssigneeID           int
+	TenantID             int
+	StartTime            time.Time
+	EndTime              time.Time
+	Page                 int
+	PageSize             int
+	SortBy               string
+	SortOrder            string
 }

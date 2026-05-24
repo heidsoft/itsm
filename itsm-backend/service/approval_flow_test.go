@@ -11,10 +11,10 @@ func TestApprovalCountWithDelegatedStatus(t *testing.T) {
 		id     int
 		status string
 	}{
-		{id: 1, status: "approved"},    // 已通过
-		{id: 2, status: "delegated"},   // 已委托
-		{id: 3, status: "pending"},     // 待审批
-		{id: 4, status: "in_review"},   // 审核中
+		{id: 1, status: "approved"},  // 已通过
+		{id: 2, status: "delegated"}, // 已委托
+		{id: 3, status: "pending"},   // 待审批
+		{id: 4, status: "in_review"}, // 审核中
 	}
 
 	// 定义未完成的状态
@@ -68,7 +68,7 @@ func TestApprovalWorkflowCompletion(t *testing.T) {
 		},
 		{
 			name:              "has in_review",
-		records:           []string{"approved", "in_review"},
+			records:           []string{"approved", "in_review"},
 			shouldBeCompleted: false,
 		},
 		{
@@ -110,12 +110,12 @@ func TestApprovalWorkflowCompletion(t *testing.T) {
 func TestApprovalStatusTransitions(t *testing.T) {
 	// 定义合法的状态转换
 	validTransitions := map[string][]string{
-		"pending":    {"approved", "rejected", "delegated", "in_review"},
-		"delegated":  {"approved", "rejected", "pending"},
-		"in_review":  {"approved", "rejected", "pending"},
-		"escalated":  {"approved", "rejected", "pending"},
-		"approved":  {},  // 终态
-		"rejected":  {},  // 终态
+		"pending":   {"approved", "rejected", "delegated", "in_review"},
+		"delegated": {"approved", "rejected", "pending"},
+		"in_review": {"approved", "rejected", "pending"},
+		"escalated": {"approved", "rejected", "pending"},
+		"approved":  {}, // 终态
+		"rejected":  {}, // 终态
 	}
 
 	tests := []struct {

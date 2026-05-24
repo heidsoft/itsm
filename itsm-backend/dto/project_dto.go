@@ -21,5 +21,5 @@ type ProjectResponse struct {
 // ProjectListResponse 项目列表响应
 type ProjectListResponse struct {
 	Projects []*ProjectResponse `json:"projects"`
-	Total    int               `json:"total"`
+	Total    int                `json:"total"`
 }

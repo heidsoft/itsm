@@ -73,8 +73,8 @@ type UpdateIncidentRequest struct {
 	RootCause       *RootCause             `json:"rootCause,omitempty"`
 	ResolutionSteps []ResolutionStep       `json:"resolutionSteps,omitempty"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
-	Version         int                    `json:"version"`  // 版本号（乐观锁）
-	Force           bool                   `json:"force"`    // 是否强制更新（忽略版本检查）
+	Version         int                    `json:"version"` // 版本号（乐观锁）
+	Force           bool                   `json:"force"`   // 是否强制更新（忽略版本检查）
 }
 
 type IncidentResponse struct {
@@ -324,7 +324,7 @@ type IncidentStatsResponse struct {
 
 // ConvertIncidentToProblemRequest 将事件转换为问题的请求
 type ConvertIncidentToProblemRequest struct {
-	Title       string `json:"title" binding:"omitempty"`        // 可选自定义标题
+	Title       string `json:"title" binding:"omitempty"`       // 可选自定义标题
 	Description string `json:"description" binding:"omitempty"` // 可选自定义描述
 	RootCause   string `json:"rootCause" binding:"omitempty"`   // 根因分析
 }

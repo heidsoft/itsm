@@ -5,8 +5,8 @@ import "time"
 // Known Error statuses
 const (
 	KnownErrorStatusDraft      = "draft"
-	KnownErrorStatusActive    = "active"
-	KnownErrorStatusResolved  = "resolved"
+	KnownErrorStatusActive     = "active"
+	KnownErrorStatusResolved   = "resolved"
 	KnownErrorStatusDeprecated = "deprecated"
 )
 
@@ -91,20 +91,20 @@ type KEDBListRequest struct {
 
 // KEDBListResponse 已知错误列表响应
 type KEDBListResponse struct {
-	Items     []*KEDBResponse `json:"items"`
-	Total     int             `json:"total"`
-	Page      int             `json:"page"`
-	PageSize  int             `json:"page_size"`
+	Items    []*KEDBResponse `json:"items"`
+	Total    int             `json:"total"`
+	Page     int             `json:"page"`
+	PageSize int             `json:"page_size"`
 }
 
 // KEDBStatsResponse KEDB统计响应
 type KEDBStatsResponse struct {
-	Total     int `json:"total"`
-	Active    int `json:"active"`
-	Resolved  int `json:"resolved"`
+	Total      int `json:"total"`
+	Active     int `json:"active"`
+	Resolved   int `json:"resolved"`
 	Deprecated int `json:"deprecated"`
-	Critical  int `json:"critical"`
-	High      int `json:"high"`
-	Medium    int `json:"medium"`
-	Low       int `json:"low"`
+	Critical   int `json:"critical"`
+	High       int `json:"high"`
+	Medium     int `json:"medium"`
+	Low        int `json:"low"`
 }

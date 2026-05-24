@@ -116,10 +116,10 @@ func (h *Handler) ListKnownErrors(c *gin.Context) {
 	}
 
 	common.Success(c, &dto.KEDBListResponse{
-		Items:     items,
-		Total:     total,
-		Page:      page,
-		PageSize:    pageSize,
+		Items:    items,
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
 	})
 }
 
@@ -415,7 +415,7 @@ func (h *Handler) SearchKnownErrors(c *gin.Context) {
 
 	common.Success(c, gin.H{
 		"knownErrors": knownErrors,
-		"total":      len(knownErrors),
+		"total":       len(knownErrors),
 	})
 }
 

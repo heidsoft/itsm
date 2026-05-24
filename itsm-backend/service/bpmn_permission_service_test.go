@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/bpmnpermission"
+	"itsm-backend/ent/enttest"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
@@ -60,10 +60,10 @@ func TestBPMNPermissionService_RevokePermission_TenantIsolation(t *testing.T) {
 	tenant2Ctx := context.WithValue(ctx, "bpmn_tenant_id", tenant2.ID)
 	err = svc.RevokePermission(tenant2Ctx, &RevokePermissionRequest{
 		ResourceType:   "process_definition",
-		ResourceID:    100,
+		ResourceID:     100,
 		PermissionType: "read",
-		PrincipalType: "user",
-		PrincipalID:   1,
+		PrincipalType:  "user",
+		PrincipalID:    1,
 	})
 
 	// Should fail with tenant isolation error
@@ -112,10 +112,10 @@ func TestBPMNPermissionService_RevokePermission_SameTenant(t *testing.T) {
 	tenant1Ctx := context.WithValue(ctx, "bpmn_tenant_id", tenant1.ID)
 	err = svc.RevokePermission(tenant1Ctx, &RevokePermissionRequest{
 		ResourceType:   "process_definition",
-		ResourceID:    100,
+		ResourceID:     100,
 		PermissionType: "read",
-		PrincipalType: "user",
-		PrincipalID:   1,
+		PrincipalType:  "user",
+		PrincipalID:    1,
 	})
 
 	// Should succeed

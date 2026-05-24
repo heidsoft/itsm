@@ -14,40 +14,40 @@ import (
 
 // BPMNMetricsService BPMN指标服务
 type BPMNMetricsService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client     *ent.Client
+	logger     *zap.SugaredLogger
 	slaService *BPMNSLAService
 }
 
 // NewBPMNMetricsService 创建BPMN指标服务
 func NewBPMNMetricsService(client *ent.Client, logger *zap.SugaredLogger) *BPMNMetricsService {
 	return &BPMNMetricsService{
-		client: client,
-		logger: logger,
+		client:     client,
+		logger:     logger,
 		slaService: NewBPMNSLAService(client, logger),
 	}
 }
 
 // DashboardMetrics 仪表盘指标
 type DashboardMetrics struct {
-	TotalProcesses        int              `json:"total_processes"`
-	ActiveInstances       int              `json:"active_instances"`
-	CompletedToday       int              `json:"completed_today"`
-	OpenTasks            int              `json:"open_tasks"`
-	SLAComplianceRate    float64          `json:"sla_compliance_rate"`
-	AvgCompletionTime    float64          `json:"avg_completion_time_minutes"`
-	ProcessHealth        *ProcessHealth   `json:"process_health"`
-	TopProcesses         []ProcessStat    `json:"top_processes"`
-	TaskDistribution     []TaskStat       `json:"task_distribution"`
-	TrendData            []TrendPoint     `json:"trend_data"`
+	TotalProcesses    int            `json:"total_processes"`
+	ActiveInstances   int            `json:"active_instances"`
+	CompletedToday    int            `json:"completed_today"`
+	OpenTasks         int            `json:"open_tasks"`
+	SLAComplianceRate float64        `json:"sla_compliance_rate"`
+	AvgCompletionTime float64        `json:"avg_completion_time_minutes"`
+	ProcessHealth     *ProcessHealth `json:"process_health"`
+	TopProcesses      []ProcessStat  `json:"top_processes"`
+	TaskDistribution  []TaskStat     `json:"task_distribution"`
+	TrendData         []TrendPoint   `json:"trend_data"`
 }
 
 // ProcessHealth 流程健康度
 type ProcessHealth struct {
-	Healthy      int     `json:"healthy"`
-	Warning      int     `json:"warning"`
-	Critical     int     `json:"critical"`
-	HealthScore  float64 `json:"health_score"` // 0-100
+	Healthy     int     `json:"healthy"`
+	Warning     int     `json:"warning"`
+	Critical    int     `json:"critical"`
+	HealthScore float64 `json:"health_score"` // 0-100
 }
 
 // ProcessStat 流程统计
@@ -61,15 +61,15 @@ type ProcessStat struct {
 
 // TaskStat 任务统计
 type TaskStat struct {
-	Status  string `json:"status"`
-	Count   int    `json:"count"`
+	Status  string  `json:"status"`
+	Count   int     `json:"count"`
 	Percent float64 `json:"percent"`
 }
 
 // TrendPoint 趋势数据点
 type TrendPoint struct {
-	Date   string `json:"date"`
-	Count  int    `json:"count"`
+	Date  string `json:"date"`
+	Count int    `json:"count"`
 }
 
 // GetDashboardMetrics 获取仪表盘指标
@@ -149,15 +149,15 @@ func (s *BPMNMetricsService) GetDashboardMetrics(ctx context.Context, tenantID i
 	trendData := s.getTrendData(ctx, tenantID, startTime, endTime)
 
 	return &DashboardMetrics{
-		TotalProcesses:     totalProcesses,
-		ActiveInstances:    activeInstances,
-		CompletedToday:     completedToday,
-		OpenTasks:          openTasks,
-		SLAComplianceRate:  slaRate,
-		AvgCompletionTime:  avgDuration,
-		ProcessHealth:      health,
-		TopProcesses:       topProcesses,
-		TaskDistribution:   taskDistribution,
+		TotalProcesses:    totalProcesses,
+		ActiveInstances:   activeInstances,
+		CompletedToday:    completedToday,
+		OpenTasks:         openTasks,
+		SLAComplianceRate: slaRate,
+		AvgCompletionTime: avgDuration,
+		ProcessHealth:     health,
+		TopProcesses:      topProcesses,
+		TaskDistribution:  taskDistribution,
 		TrendData:         trendData,
 	}, nil
 }
@@ -219,7 +219,7 @@ func (s *BPMNMetricsService) calculateProcessHealth(ctx context.Context, tenantI
 	total := healthy + warning + critical
 	healthScore := 0.0
 	if total > 0 {
-		healthScore = float64(healthy*100 + warning*50) / float64(total)
+		healthScore = float64(healthy*100+warning*50) / float64(total)
 	}
 
 	return &ProcessHealth{
@@ -400,13 +400,18 @@ func (s *BPMNMetricsService) GetProcessMetrics(ctx context.Context, processDefin
 	avgDuration := s.calculateAvgCompletionTime(ctx, tenantID, startTime, endTime)
 
 	return &BPMNProcessMetrics{
-		TotalInstances:       totalInstances,
-		RunningInstances:     runningInstances,
-		CompletedInstances:   completedInstances,
-		TerminatedInstances:  terminatedInstances,
-		CompletionRate:       func() float64 { if totalInstances == 0 { return 0 }; return float64(completedInstances) / float64(totalInstances) * 100 }(),
-		SLAComplianceRate:    slaRate,
-		AvgCompletionTime:    avgDuration,
+		TotalInstances:      totalInstances,
+		RunningInstances:    runningInstances,
+		CompletedInstances:  completedInstances,
+		TerminatedInstances: terminatedInstances,
+		CompletionRate: func() float64 {
+			if totalInstances == 0 {
+				return 0
+			}
+			return float64(completedInstances) / float64(totalInstances) * 100
+		}(),
+		SLAComplianceRate: slaRate,
+		AvgCompletionTime: avgDuration,
 	}, nil
 }
 
@@ -461,7 +466,7 @@ func (s *BPMNMetricsService) GetBottleneckAnalysis(ctx context.Context, processD
 	result := make([]BottleneckInfo, 0, len(taskStats))
 	for _, stats := range taskStats {
 		result = append(result, BottleneckInfo{
-			TaskName:     stats.TaskName,
+			TaskName:    stats.TaskName,
 			TotalCount:  stats.Count,
 			AvgDuration: stats.AvgDuration,
 			MaxDuration: stats.MaxDuration,
@@ -483,19 +488,19 @@ func (s *BPMNMetricsService) GetBottleneckAnalysis(ctx context.Context, processD
 
 // TaskStats 任务统计
 type TaskStats struct {
-	TaskName     string
-	Count        int
+	TaskName      string
+	Count         int
 	TotalDuration float64
-	AvgDuration  float64
-	MaxDuration  float64
-	MinDuration  float64
+	AvgDuration   float64
+	MaxDuration   float64
+	MinDuration   float64
 }
 
 // BottleneckInfo 瓶颈信息
 type BottleneckInfo struct {
-	TaskName     string  `json:"task_name"`
-	TotalCount   int     `json:"total_count"`
-	AvgDuration  float64 `json:"avg_duration_minutes"`
-	MaxDuration  float64 `json:"max_duration_minutes"`
-	MinDuration  float64 `json:"min_duration_minutes"`
+	TaskName    string  `json:"task_name"`
+	TotalCount  int     `json:"total_count"`
+	AvgDuration float64 `json:"avg_duration_minutes"`
+	MaxDuration float64 `json:"max_duration_minutes"`
+	MinDuration float64 `json:"min_duration_minutes"`
 }

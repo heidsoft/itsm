@@ -30,12 +30,12 @@ func NewBPMNSLAService(client *ent.Client, logger *zap.SugaredLogger) *BPMNSLASe
 // ProcessSLA 流程SLA定义
 type ProcessSLA struct {
 	ProcessDefinitionKey string `json:"process_definition_key"`
-	TaskDefinitionKey   string `json:"task_definition_key,omitempty"`
-	MilestoneName      string `json:"milestone_name"` // 开始->审批, 审批->执行
-	DeadlineMinutes    int    `json:"deadline_minutes"`
-	WarningMinutes     int    `json:"warning_minutes"` // 预警时间
-	BusinessHoursOnly  bool   `json:"business_hours_only"`
-	Priority           string `json:"priority,omitempty"` // 对应任务优先级
+	TaskDefinitionKey    string `json:"task_definition_key,omitempty"`
+	MilestoneName        string `json:"milestone_name"` // 开始->审批, 审批->执行
+	DeadlineMinutes      int    `json:"deadline_minutes"`
+	WarningMinutes       int    `json:"warning_minutes"` // 预警时间
+	BusinessHoursOnly    bool   `json:"business_hours_only"`
+	Priority             string `json:"priority,omitempty"` // 对应任务优先级
 }
 
 // SLAStatus SLA状态
@@ -62,10 +62,10 @@ func (s *BPMNSLAService) GetProcessSLA(ctx context.Context, processDefinitionKey
 		// 返回默认SLA配置
 		return &ProcessSLA{
 			ProcessDefinitionKey: processDefinitionKey,
-			MilestoneName:       "process_completion",
-			DeadlineMinutes:     480, // 8小时
-			WarningMinutes:      360, // 6小时
-			BusinessHoursOnly:   true,
+			MilestoneName:        "process_completion",
+			DeadlineMinutes:      480, // 8小时
+			WarningMinutes:       360, // 6小时
+			BusinessHoursOnly:    true,
 		}, nil
 	}
 
@@ -118,11 +118,11 @@ func (s *BPMNSLAService) GetTaskSLA(ctx context.Context, task *ent.ProcessTask) 
 
 	return &ProcessSLA{
 		ProcessDefinitionKey: task.ProcessDefinitionKey,
-		TaskDefinitionKey:   task.TaskDefinitionKey,
-		MilestoneName:       task.TaskName,
-		DeadlineMinutes:     deadlineMinutes,
-		WarningMinutes:      warningMinutes,
-		BusinessHoursOnly:   true,
+		TaskDefinitionKey:    task.TaskDefinitionKey,
+		MilestoneName:        task.TaskName,
+		DeadlineMinutes:      deadlineMinutes,
+		WarningMinutes:       warningMinutes,
+		BusinessHoursOnly:    true,
 	}, nil
 }
 
@@ -219,11 +219,11 @@ func (s *BPMNSLAService) GetProcessInstanceSLAInfo(ctx context.Context, instance
 	elapsedMinutes := int(time.Since(instance.StartTime).Minutes())
 
 	return &SLAInfo{
-		Status:          status,
-		Deadline:        deadline,
-		Warning:         warning,
-		ElapsedMinutes:  elapsedMinutes,
-		TotalMinutes:    sla.DeadlineMinutes,
+		Status:         status,
+		Deadline:       deadline,
+		Warning:        warning,
+		ElapsedMinutes: elapsedMinutes,
+		TotalMinutes:   sla.DeadlineMinutes,
 		RemainingMinutes: func() int {
 			if status == SLAStatusBreached {
 				return 0
@@ -254,11 +254,11 @@ func (s *BPMNSLAService) GetTaskSLAInfo(ctx context.Context, task *ent.ProcessTa
 	elapsedMinutes := int(time.Since(startTime).Minutes())
 
 	return &SLAInfo{
-		Status:          status,
-		Deadline:        deadline,
-		Warning:         warning,
-		ElapsedMinutes:  elapsedMinutes,
-		TotalMinutes:    sla.DeadlineMinutes,
+		Status:         status,
+		Deadline:       deadline,
+		Warning:        warning,
+		ElapsedMinutes: elapsedMinutes,
+		TotalMinutes:   sla.DeadlineMinutes,
 		RemainingMinutes: func() int {
 			if status == SLAStatusBreached {
 				return 0
@@ -289,7 +289,7 @@ func (s *BPMNSLAService) CheckSLAViolations(ctx context.Context, tenantID int) (
 
 		if info.Status == SLAStatusBreached || info.Status == SLAStatusWarning {
 			violations = append(violations, &SLAViolation{
-				ResourceType:    "process_instance",
+				ResourceType:   "process_instance",
 				ResourceID:     instance.ID,
 				ResourceKey:    instance.ProcessInstanceID,
 				SLAStatus:      info.Status,
@@ -319,14 +319,14 @@ func (s *BPMNSLAService) CheckSLAViolations(ctx context.Context, tenantID int) (
 
 		if info.Status == SLAStatusBreached || info.Status == SLAStatusWarning {
 			violations = append(violations, &SLAViolation{
-				ResourceType:    "task",
-				ResourceID:      task.ID,
-				ResourceKey:     task.TaskID,
-				SLAStatus:       info.Status,
-				StartTime:       task.CreatedAt,
-				Deadline:        info.Deadline,
-				ElapsedMinutes:  info.ElapsedMinutes,
-				TenantID:        task.TenantID,
+				ResourceType:   "task",
+				ResourceID:     task.ID,
+				ResourceKey:    task.TaskID,
+				SLAStatus:      info.Status,
+				StartTime:      task.CreatedAt,
+				Deadline:       info.Deadline,
+				ElapsedMinutes: info.ElapsedMinutes,
+				TenantID:       task.TenantID,
 			})
 		}
 	}
@@ -388,19 +388,19 @@ type SLAInfo struct {
 	Status           string    `json:"status"`
 	Deadline         time.Time `json:"deadline"`
 	Warning          time.Time `json:"warning"`
-	ElapsedMinutes  int       `json:"elapsed_minutes"`
+	ElapsedMinutes   int       `json:"elapsed_minutes"`
 	TotalMinutes     int       `json:"total_minutes"`
 	RemainingMinutes int       `json:"remaining_minutes"`
 }
 
 // SLAViolation SLA违规
 type SLAViolation struct {
-	ResourceType    string
-	ResourceID      int
-	ResourceKey     string
-	SLAStatus       string
-	StartTime       time.Time
-	Deadline        time.Time
-	ElapsedMinutes  int
-	TenantID        int
+	ResourceType   string
+	ResourceID     int
+	ResourceKey    string
+	SLAStatus      string
+	StartTime      time.Time
+	Deadline       time.Time
+	ElapsedMinutes int
+	TenantID       int
 }

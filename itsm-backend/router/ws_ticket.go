@@ -11,8 +11,8 @@ import (
 // WebSocket ticket is created. The ticket is single-use and expires
 // after a short TTL.
 type wsTicket struct {
-	UserID   int
-	TenantID int
+	UserID    int
+	TenantID  int
 	ExpiresAt time.Time
 }
 

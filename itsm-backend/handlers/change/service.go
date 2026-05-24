@@ -13,10 +13,10 @@ import (
 )
 
 type Service struct {
-	repo        Repository
-	logger      *zap.SugaredLogger
-	entClient   *ent.Client
-	pirService  *service.ChangePIRService
+	repo       Repository
+	logger     *zap.SugaredLogger
+	entClient  *ent.Client
+	pirService *service.ChangePIRService
 }
 
 func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogger) *Service {
@@ -298,14 +298,14 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 // isValidChangeStatusTransition validates state transitions for Change entities
 func isValidChangeStatusTransition(currentStatus, newStatus string) bool {
 	validTransitions := map[string][]string{
-		"draft":      {"pending", "cancelled"},
-		"pending":    {"approved", "rejected", "cancelled"},
-		"approved":   {"in_progress", "cancelled"},
-		"rejected":   {},
+		"draft":       {"pending", "cancelled"},
+		"pending":     {"approved", "rejected", "cancelled"},
+		"approved":    {"in_progress", "cancelled"},
+		"rejected":    {},
 		"in_progress": {"completed", "failed", "cancelled"},
-		"completed":  {},
-		"failed":     {"in_progress", "cancelled"},
-		"cancelled":  {},
+		"completed":   {},
+		"failed":      {"in_progress", "cancelled"},
+		"cancelled":   {},
 	}
 
 	allowed, ok := validTransitions[currentStatus]

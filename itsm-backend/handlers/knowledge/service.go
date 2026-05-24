@@ -3,8 +3,8 @@ package knowledge
 import (
 	"context"
 
-	"itsm-backend/dto"
 	"go.uber.org/zap"
+	"itsm-backend/dto"
 )
 
 type Service struct {

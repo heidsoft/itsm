@@ -29,9 +29,9 @@ func NewBPMNPermissionService(client *ent.Client, logger *zap.SugaredLogger) *BP
 const (
 	PermissionTypeRead     = "read"
 	PermissionTypeWrite    = "write"
-	PermissionTypeExecute = "execute"
-	PermissionTypeAdmin   = "admin"
-	PermissionTypeAssign  = "assign"
+	PermissionTypeExecute  = "execute"
+	PermissionTypeAdmin    = "admin"
+	PermissionTypeAssign   = "assign"
 	PermissionTypeComplete = "complete"
 	PermissionTypeDelegate = "delegate"
 	PermissionTypeEscalate = "escalate"
@@ -40,15 +40,15 @@ const (
 // ResourceType 资源类型
 const (
 	ResourceTypeProcessDefinition = "process_definition"
-	ResourceTypeProcessInstance  = "process_instance"
-	ResourceTypeTask             = "task"
+	ResourceTypeProcessInstance   = "process_instance"
+	ResourceTypeTask              = "task"
 )
 
 // PrincipalType 授权主体类型
 const (
-	PrincipalTypeUser      = "user"
-	PrincipalTypeRole     = "role"
-	PrincipalTypeGroup    = "group"
+	PrincipalTypeUser       = "user"
+	PrincipalTypeRole       = "role"
+	PrincipalTypeGroup      = "group"
 	PrincipalTypeDepartment = "department"
 )
 
@@ -336,25 +336,25 @@ func (s *BPMNPermissionService) CleanExpiredPermissions(ctx context.Context) (in
 
 // GrantPermissionRequest 授予权限请求
 type GrantPermissionRequest struct {
-	ResourceType    string
-	ResourceID     int
-	ResourceKey    string
-	PermissionType string
-	PrincipalType  string
-	PrincipalID    int
-	IsGranted      bool
-	Conditions     string
+	ResourceType     string
+	ResourceID       int
+	ResourceKey      string
+	PermissionType   string
+	PrincipalType    string
+	PrincipalID      int
+	IsGranted        bool
+	Conditions       string
 	FieldPermissions string
-	Description    string
-	TenantID       int
-	ExpiresAt      time.Time
+	Description      string
+	TenantID         int
+	ExpiresAt        time.Time
 }
 
 // RevokePermissionRequest 撤销权限请求
 type RevokePermissionRequest struct {
 	ResourceType   string
-	ResourceID    int
-	PrincipalType string
-	PrincipalID   int
+	ResourceID     int
+	PrincipalType  string
+	PrincipalID    int
 	PermissionType string
 }

@@ -447,7 +447,6 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
-
 	res, err := h.svc.GetCalendarView(c.Request.Context(), tenantID, req.StartDate, req.EndDate, req.Status)
 	if err != nil {
 		common.Fail(c, http.StatusInternalServerError, err.Error())
@@ -547,7 +546,6 @@ func (h *Handler) UpdatePIR(c *gin.Context) {
 
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
-
 
 	var req dto.UpdateChangePIRRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

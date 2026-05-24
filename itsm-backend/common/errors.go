@@ -29,8 +29,8 @@ func NewBusinessError(code int, message, detail string) *BusinessError {
 
 // VersionConflictError 版本冲突错误（乐观锁）
 type VersionConflictError struct {
-	ResourceName  string // 资源名称（如 "工单"、"事件"）
-	ResourceID    int    // 资源ID
+	ResourceName   string // 资源名称（如 "工单"、"事件"）
+	ResourceID     int    // 资源ID
 	CurrentVersion int    // 客户端持有的版本
 	ServerVersion  int    // 服务器当前版本
 }
@@ -45,8 +45,8 @@ func (e *VersionConflictError) Error() string {
 // NewVersionConflictError 创建版本冲突错误
 func NewVersionConflictError(resourceName string, resourceID, currentVersion, serverVersion int) *VersionConflictError {
 	return &VersionConflictError{
-		ResourceName:  resourceName,
-		ResourceID:    resourceID,
+		ResourceName:   resourceName,
+		ResourceID:     resourceID,
 		CurrentVersion: currentVersion,
 		ServerVersion:  serverVersion,
 	}

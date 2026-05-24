@@ -11,10 +11,10 @@ import (
 // RedisRateLimiter 基于 Redis 的分布式限流器
 // 使用滑动窗口算法实现精确的请求限流
 type RedisRateLimiter struct {
-	client  *redis.Client
-	limit   int           // 每时间窗口最大请求数
-	window  time.Duration // 时间窗口
-	keyPrefix string     // Redis key 前缀
+	client    *redis.Client
+	limit     int           // 每时间窗口最大请求数
+	window    time.Duration // 时间窗口
+	keyPrefix string        // Redis key 前缀
 }
 
 // NewRedisRateLimiter 创建 Redis 限流器
