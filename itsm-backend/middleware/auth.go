@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"itsm-backend/common"
 	"go.uber.org/zap"
+	"itsm-backend/common"
 )
 
 type Claims struct {

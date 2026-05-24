@@ -42,3 +42,10 @@ export interface ArticleListResponse {
   page: number;
   size: number;
 }
+
+export type KnowledgeArticleStatus = 'draft' | 'pending_review' | 'approved' | 'rejected' | 'archived';
+
+export interface ReviewArticleRequest {
+  action: 'approve' | 'reject';
+  comment?: string;
+}

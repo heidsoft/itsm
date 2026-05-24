@@ -82,28 +82,28 @@ type ResetPasswordRequest struct {
 
 // UserStatsResponse 用户统计响应
 type UserStatsResponse struct {
-	Total         int              `json:"total"`
-	Active        int             `json:"active"`
-	Online        int             `json:"online"`
-	ByRole        map[string]int  `json:"byRole"`
-	ByDepartment  map[string]int  `json:"byDepartment"`
-	LoginToday    int             `json:"loginToday"`
-	ActiveThisWeek int             `json:"activeThisWeek"`
-	NewThisMonth  int              `json:"newThisMonth"`
+	Total          int            `json:"total"`
+	Active         int            `json:"active"`
+	Online         int            `json:"online"`
+	ByRole         map[string]int `json:"byRole"`
+	ByDepartment   map[string]int `json:"byDepartment"`
+	LoginToday     int            `json:"loginToday"`
+	ActiveThisWeek int            `json:"activeThisWeek"`
+	NewThisMonth   int            `json:"newThisMonth"`
 }
 
 // SystemStatsResponse 系统统计响应
 type SystemStatsResponse struct {
-	Uptime           float64 `json:"uptime"`
-	CPUUsage         float64 `json:"cpuUsage"`
-	MemoryUsage      float64 `json:"memoryUsage"`
-	DiskUsage        float64 `json:"diskUsage"`
-	AvgResponseTime  float64 `json:"avgResponseTime"`
+	Uptime            float64 `json:"uptime"`
+	CPUUsage          float64 `json:"cpuUsage"`
+	MemoryUsage       float64 `json:"memoryUsage"`
+	DiskUsage         float64 `json:"diskUsage"`
+	AvgResponseTime   float64 `json:"avgResponseTime"`
 	RequestsPerSecond float64 `json:"requestsPerSecond"`
-	ErrorRate        float64 `json:"errorRate"`
-	DBConnections    int     `json:"dbConnections"`
-	DBSize           int64   `json:"dbSize"`
-	CacheHitRate     float64 `json:"cacheHitRate"`
+	ErrorRate         float64 `json:"errorRate"`
+	DBConnections     int     `json:"dbConnections"`
+	DBSize            int64   `json:"dbSize"`
+	CacheHitRate      float64 `json:"cacheHitRate"`
 }
 
 // BatchUpdateUsersRequest 批量更新用户请求

@@ -367,33 +367,33 @@ func (s *MenuService) filterMenusByPermission(menus []*ent.Menu, permissions map
 // actionAliasMap 权限 Action 别名映射：前端使用的 action → 后端定义的 action
 var actionAliasMap = map[string]string{
 	// 基础别名
-	"view":    "read",   // view 是 read 的别名
-	"use":     "read",   // use 是 read 的别名
-	"manage":  "admin",  // manage 是 admin 的别名
-	"create":  "write",  // create 是 write 的别名
-	"update":  "write",  // update 是 write 的别名
+	"view":   "read",  // view 是 read 的别名
+	"use":    "read",  // use 是 read 的别名
+	"manage": "admin", // manage 是 admin 的别名
+	"create": "write", // create 是 write 的别名
+	"update": "write", // update 是 write 的别名
 	// 扩展别名（数据库中使用的权限action）
-	"approve": "admin",  // approve 审批权限等同于 admin
-	"analyze": "read",   // analyze 分析权限等同于 read
-	"audit":   "read",   // audit 审计权限等同于 read
-	"config":  "write",  // config 配置权限等同于 write
-	"request": "read",   // request 请求权限等同于 read
-	"access":  "read",   // access 访问权限等同于 read
+	"approve": "admin", // approve 审批权限等同于 admin
+	"analyze": "read",  // analyze 分析权限等同于 read
+	"audit":   "read",  // audit 审计权限等同于 read
+	"config":  "write", // config 配置权限等同于 write
+	"request": "read",  // request 请求权限等同于 read
+	"access":  "read",  // access 访问权限等同于 read
 }
 
 // resourceAliasMap 权限 Resource 别名映射：前端使用的 resource → 后端定义的 resource
 var resourceAliasMap = map[string]string{
 	// 基础别名
-	"service":   "service_catalog", // service 是 service_catalog 的别名
-	"workflow":  "bpmn",            // workflow 是 bpmn 的别名
-	"report":    "report",          // report 没有对应资源，保持不变
+	"service":  "service_catalog", // service 是 service_catalog 的别名
+	"workflow": "bpmn",            // workflow 是 bpmn 的别名
+	"report":   "report",          // report 没有对应资源，保持不变
 	// 扩展别名（数据库中使用的权限resource）
-	"helpdesk":  "ticket",         // helpdesk 等同于 ticket
-	"approval":   "permission",     // approval 等同于 permission
-	"department": "org",            // department 等同于 org
-	"team":      "org",             // team 等同于 org
-	"system":    "system_config",   // system 等同于 system_config
-	"tenant":    "org",             // tenant 等同于 org
+	"helpdesk":   "ticket",        // helpdesk 等同于 ticket
+	"approval":   "permission",    // approval 等同于 permission
+	"department": "org",           // department 等同于 org
+	"team":       "org",           // team 等同于 org
+	"system":     "system_config", // system 等同于 system_config
+	"tenant":     "org",           // tenant 等同于 org
 }
 
 // resolveActionAliases 解析 Action 别名，返回后端定义的 Action

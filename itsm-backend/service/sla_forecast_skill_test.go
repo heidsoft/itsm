@@ -79,10 +79,10 @@ func TestSLAForecastSkill_CalculateOverallConfidence(t *testing.T) {
 	skill := NewSLAForecastSkill(client, nil, logger)
 
 	tests := []struct {
-		name      string
-		counts    []int
-		minConf   float64
-		maxConf   float64
+		name    string
+		counts  []int
+		minConf float64
+		maxConf float64
 	}{
 		{"empty", []int{}, 0.5, 0.5},
 		{"single", []int{10}, 0.0, 0.5},
@@ -108,9 +108,9 @@ func TestSLAForecastSkill_DetermineTrend(t *testing.T) {
 	skill := NewSLAForecastSkill(client, nil, logger)
 
 	tests := []struct {
-		name      string
-		counts    []int
-		expected  string
+		name     string
+		counts   []int
+		expected string
 	}{
 		{"empty", []int{}, "stable"},
 		{"single", []int{10}, "stable"},
@@ -135,9 +135,9 @@ func TestSLAForecastSkill_DetectSeasonality(t *testing.T) {
 	skill := NewSLAForecastSkill(client, nil, logger)
 
 	tests := []struct {
-		name      string
-		counts    []int
-		wantKeys  int
+		name     string
+		counts   []int
+		wantKeys int
 	}{
 		{"empty", []int{}, 0},
 		{"single", []int{10}, 0},
@@ -157,9 +157,9 @@ func TestForecastEvaluator_CalculateMAE(t *testing.T) {
 	evaluator := NewForecastEvaluator()
 
 	// Add predictions with known errors
-	evaluator.AddPrediction(10, 12, 8, 14)  // error = 2
-	evaluator.AddPrediction(10, 8, 8, 14)   // error = 2
-	evaluator.AddPrediction(10, 11, 8, 14)  // error = 1
+	evaluator.AddPrediction(10, 12, 8, 14) // error = 2
+	evaluator.AddPrediction(10, 8, 8, 14)  // error = 2
+	evaluator.AddPrediction(10, 11, 8, 14) // error = 1
 
 	mae := evaluator.CalculateMAE()
 	assert.InDelta(t, 1.667, mae, 0.01)
@@ -201,12 +201,12 @@ func TestForecastEvaluator_SortAnomaliesBySeverity(t *testing.T) {
 	evaluator := NewForecastEvaluator()
 
 	// Add predictions with different deviation levels
-	evaluator.AddPrediction(10, 5, 8, 12)   // deviation = 5 (most severe)
-	evaluator.AddPrediction(10, 11, 8, 12)  // deviation = 1 (within bounds)
-	evaluator.AddPrediction(10, 20, 8, 12)  // deviation = 8 (most severe)
+	evaluator.AddPrediction(10, 5, 8, 12)  // deviation = 5 (most severe)
+	evaluator.AddPrediction(10, 11, 8, 12) // deviation = 1 (within bounds)
+	evaluator.AddPrediction(10, 20, 8, 12) // deviation = 8 (most severe)
 
 	anomalies := evaluator.SortAnomaliesBySeverity()
 	assert.Len(t, anomalies, 2) // Only 2 are anomalies (actual outside bounds)
-	assert.Greater(t, anomalies[0].Actual - anomalies[0].UpperBound,
-		anomalies[1].Actual - anomalies[1].UpperBound)
+	assert.Greater(t, anomalies[0].Actual-anomalies[0].UpperBound,
+		anomalies[1].Actual-anomalies[1].UpperBound)
 }

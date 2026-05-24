@@ -191,7 +191,7 @@ type SLAEscalationResponse struct {
 
 // SLAMonitoringDashboard represents comprehensive SLA monitoring dashboard
 type SLAMonitoringDashboard struct {
-	ComplianceRate    float64             `json:"complianceRate"`
+	ComplianceRate    float64            `json:"complianceRate"`
 	ViolationRate     float64            `json:"violationRate"`
 	TotalTickets      int                `json:"totalTickets"`
 	AtRiskTickets     int                `json:"atRiskTickets"`

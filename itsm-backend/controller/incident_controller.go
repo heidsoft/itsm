@@ -14,12 +14,12 @@ import (
 )
 
 type IncidentController struct {
-	incidentService           *service.IncidentService
-	ruleEngine                *service.IncidentRuleEngine
-	monitoringService         *service.IncidentMonitoringService
-	alertingService            *service.IncidentAlertingService
-	rootCauseAnalysisService  *service.RootCauseAnalysisService
-	logger                    *zap.SugaredLogger
+	incidentService          *service.IncidentService
+	ruleEngine               *service.IncidentRuleEngine
+	monitoringService        *service.IncidentMonitoringService
+	alertingService          *service.IncidentAlertingService
+	rootCauseAnalysisService *service.RootCauseAnalysisService
+	logger                   *zap.SugaredLogger
 }
 
 func NewIncidentController(
@@ -31,12 +31,12 @@ func NewIncidentController(
 	logger *zap.SugaredLogger,
 ) *IncidentController {
 	return &IncidentController{
-		incidentService:           incidentService,
-		ruleEngine:                ruleEngine,
-		monitoringService:         monitoringService,
-		alertingService:           alertingService,
-		rootCauseAnalysisService:  rootCauseAnalysisService,
-		logger:                    logger,
+		incidentService:          incidentService,
+		ruleEngine:               ruleEngine,
+		monitoringService:        monitoringService,
+		alertingService:          alertingService,
+		rootCauseAnalysisService: rootCauseAnalysisService,
+		logger:                   logger,
 	}
 }
 

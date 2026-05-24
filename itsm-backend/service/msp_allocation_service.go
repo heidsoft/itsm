@@ -8,8 +8,8 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/mspallocation"
-	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
@@ -141,8 +141,8 @@ func (s *MSPAllocationService) toDTO(a *ent.MSPAllocation) (*dto.MSPAllocationDT
 		MSPUsername:        mspUsername,
 		CustomerTenantID:   customerTenantID,
 		CustomerTenantName: customerTenantName,
-		Role:              a.Role,
-		AssignedAt:        a.AssignedAt,
+		Role:               a.Role,
+		AssignedAt:         a.AssignedAt,
 		DeassignedAt:       &a.DeassignedAt,
 	}, nil
 }
@@ -237,8 +237,8 @@ func (s *MSPAllocationService) GetActiveAllocations(ctx context.Context) ([]*dto
 			MSPUsername:        mspUsername,
 			CustomerTenantID:   customerTenantID,
 			CustomerTenantName: customerTenantName,
-			Role:              a.Role,
-			AssignedAt:        a.AssignedAt,
+			Role:               a.Role,
+			AssignedAt:         a.AssignedAt,
 			DeassignedAt:       &a.DeassignedAt,
 		})
 	}

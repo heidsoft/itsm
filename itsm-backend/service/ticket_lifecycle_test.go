@@ -9,10 +9,10 @@ import (
 // TestIsValidTicketStatusTransition 测试状态转换合法性
 func TestIsValidTicketStatusTransition(t *testing.T) {
 	tests := []struct {
-		name        string
-		current     string
-		newStatus   string
-		expected    bool
+		name      string
+		current   string
+		newStatus string
+		expected  bool
 	}{
 		// 合法转换
 		{"new to open", common.TicketStatusNew, common.TicketStatusOpen, true},
@@ -21,12 +21,12 @@ func TestIsValidTicketStatusTransition(t *testing.T) {
 		{"open to resolved", common.TicketStatusOpen, common.TicketStatusResolved, false}, // 需要先in_progress
 		{"in_progress to resolved", common.TicketStatusInProgress, common.TicketStatusResolved, true},
 		{"resolved to closed", common.TicketStatusResolved, common.TicketStatusClosed, true},
-		
+
 		// 非法转换
 		{"closed to open", common.TicketStatusClosed, common.TicketStatusOpen, false},
 		{"closed to resolved", common.TicketStatusClosed, common.TicketStatusResolved, false},
 		{"new to closed", common.TicketStatusNew, common.TicketStatusClosed, false},
-		
+
 		// Pending状态测试（修复Bug #L1）
 		{"pending to in_progress", common.TicketStatusPending, common.TicketStatusInProgress, true},
 		{"pending to resolved", common.TicketStatusPending, common.TicketStatusResolved, true},
@@ -98,7 +98,7 @@ func TestTicketStatusStateMachine(t *testing.T) {
 	for i := 0; i < len(normalFlow)-1; i++ {
 		current := normalFlow[i]
 		next := normalFlow[i+1]
-		
+
 		t.Run("flow "+current+" to "+next, func(t *testing.T) {
 			if !IsValidTicketStatusTransition(current, next) {
 				// New->Open 和 Assigned 跳过

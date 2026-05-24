@@ -13,10 +13,10 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	AccessToken  string          `json:"access_token"`
-	RefreshToken string          `json:"refresh_token"`
+	AccessToken  string             `json:"access_token"`
+	RefreshToken string             `json:"refresh_token"`
 	User         *LoginUserResponse `json:"user"`
-	Tenant       *ent.Tenant     `json:"tenant"`
+	Tenant       *ent.Tenant        `json:"tenant"`
 }
 
 // LoginUserResponse 登录返回的用户信息（包含权限列表）

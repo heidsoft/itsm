@@ -20,11 +20,11 @@ func NewRootCauseAnalysisService(client *ent.Client) *RootCauseAnalysisService {
 
 // RCAContext RCA分析上下文
 type RCAContext struct {
-	ProblemID    int
-	IncidentIDs  []int
-	AnalysisType string // "5_whys", "fishbone", "ai_assisted"
-	Findings     []string
-	RootCause    string
+	ProblemID       int
+	IncidentIDs     []int
+	AnalysisType    string // "5_whys", "fishbone", "ai_assisted"
+	Findings        []string
+	RootCause       string
 	Recommendations []string
 }
 

@@ -12,8 +12,8 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentmetric"
 
 	"github.com/stretchr/testify/assert"
@@ -113,9 +113,9 @@ func TestIncidentService_CreateIncident_WithOptionalFields(t *testing.T) {
 		Source:      "monitoring",
 		DetectedAt:  &detectedAt,
 		Metadata: map[string]interface{}{
-			"source_ip":  "192.168.1.100",
-			"alert_id":   "ALT-001",
-			"automated":  true,
+			"source_ip": "192.168.1.100",
+			"alert_id":  "ALT-001",
+			"automated": true,
 		},
 	}
 
@@ -462,7 +462,7 @@ func TestIncidentService_UpdateIncident_VersionControl(t *testing.T) {
 		newTitle := "Force Update"
 		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
 			Title:   &newTitle,
-			Version: 1, // 旧版本号
+			Version: 1,    // 旧版本号
 			Force:   true, // 强制更新
 		}, testTenant.ID)
 

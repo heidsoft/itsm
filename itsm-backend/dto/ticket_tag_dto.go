@@ -20,8 +20,8 @@ type TicketCategoryResponse struct {
 	Name        string    `json:"name"`
 	Code        string    `json:"code"`
 	Description string    `json:"description"`
-	ParentID    *int     `json:"parent_id,omitempty"`
-	SortOrder   int      `json:"sort_order"`
+	ParentID    *int      `json:"parent_id,omitempty"`
+	SortOrder   int       `json:"sort_order"`
 	IsActive    bool      `json:"is_active"`
 	TenantID    int       `json:"tenant_id"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -30,10 +30,10 @@ type TicketCategoryResponse struct {
 
 // TicketCategoryTreeResponse 分类树响应
 type TicketCategoryTreeResponse struct {
-	ID          int                       `json:"id"`
-	Name        string                    `json:"name"`
-	Code        string                    `json:"code"`
-	Description string                    `json:"description"`
-	SortOrder   int                       `json:"sort_order"`
+	ID          int                           `json:"id"`
+	Name        string                        `json:"name"`
+	Code        string                        `json:"code"`
+	Description string                        `json:"description"`
+	SortOrder   int                           `json:"sort_order"`
 	Children    []*TicketCategoryTreeResponse `json:"children,omitempty"`
 }

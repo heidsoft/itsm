@@ -765,7 +765,7 @@ func (s *IncidentService) executeIncidentRules(ctx context.Context, incidentID i
 		Where(
 			incident.IDEQ(incidentID),
 			incident.TenantIDEQ(tenantID),
-	).
+		).
 		Only(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get incident", "error", err)
@@ -925,10 +925,10 @@ func isValidIncidentStatusTransition(currentStatus, newStatus string) bool {
 		common.IncidentStatusAcknowledged: {common.IncidentStatusInProgress, common.IncidentStatusClosed},
 		common.IncidentStatusAssigned:     {common.IncidentStatusInProgress, common.IncidentStatusEscalated, common.IncidentStatusClosed},
 		common.IncidentStatusInProgress:   {common.IncidentStatusResolved, common.IncidentStatusEscalated, common.IncidentStatusClosed},
-		common.IncidentStatusTriaged:     {common.IncidentStatusInProgress, common.IncidentStatusEscalated, common.IncidentStatusClosed},
-		common.IncidentStatusEscalated:   {common.IncidentStatusInProgress, common.IncidentStatusClosed},
-		common.IncidentStatusResolved:    {common.IncidentStatusClosed, common.IncidentStatusInProgress}, // 重新打开
-		common.IncidentStatusClosed:       {}, // 已关闭不允许转换
+		common.IncidentStatusTriaged:      {common.IncidentStatusInProgress, common.IncidentStatusEscalated, common.IncidentStatusClosed},
+		common.IncidentStatusEscalated:    {common.IncidentStatusInProgress, common.IncidentStatusClosed},
+		common.IncidentStatusResolved:     {common.IncidentStatusClosed, common.IncidentStatusInProgress}, // 重新打开
+		common.IncidentStatusClosed:       {},                                                             // 已关闭不允许转换
 	}
 
 	allowed, ok := validTransitions[currentStatus]

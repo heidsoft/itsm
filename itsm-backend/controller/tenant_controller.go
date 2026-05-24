@@ -94,7 +94,7 @@ func (tc *TenantController) ListTenants(c *gin.Context) {
 			Name:      tenant.Name,
 			Code:      tenant.Code,
 			Domain:    domain,
-			Type: string(tenant.Type),
+			Type:      string(tenant.Type),
 			Status:    tenant.Status,
 			ExpiresAt: &tenant.ExpiresAt,
 			CreatedAt: tenant.CreatedAt,

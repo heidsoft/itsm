@@ -224,11 +224,11 @@ func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredict
 
 	// Return insights-focused response
 	return map[string]interface{}{
-		"confidence":   output.Confidence,
-		"model":        output.Model,
-		"insights":     output.Insights,
-		"seasonality":  output.Seasonality,
-		"trend":        output.Trend,
+		"confidence":    output.Confidence,
+		"model":         output.Model,
+		"insights":      output.Insights,
+		"seasonality":   output.Seasonality,
+		"trend":         output.Trend,
 		"anomaly_dates": output.AnomalyDates,
 	}, nil
 }
@@ -285,7 +285,7 @@ func (s *Service) TriageTicket(ctx context.Context, tenantID int, title, descrip
 	result := map[string]interface{}{
 		"title":       title,
 		"description": description,
-		"suggestions":  make(map[string]interface{}),
+		"suggestions": make(map[string]interface{}),
 	}
 
 	suggestedCategory := category
