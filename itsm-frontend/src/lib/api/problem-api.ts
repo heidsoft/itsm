@@ -5,6 +5,49 @@
 
 import { httpClient } from './http-client';
 
+// ==================== 问题趋势相关类型 ====================
+
+export interface ProblemTrendRequest {
+  start_date: string;
+  end_date: string;
+  category?: string;
+}
+
+export interface CategoryCount {
+  category: string;
+  count: number;
+}
+
+export interface MonthlyCount {
+  month: string;
+  count: number;
+  resolved: number;
+  open: number;
+}
+
+export interface ProblemTrendData {
+  period: string;
+  total_problems: number;
+  resolved_problems: number;
+  open_problems: number;
+  resolution_rate: number;
+  avg_resolution_time_hours: number;
+  category_breakdown: Record<string, number>;
+  priority_breakdown: Record<string, number>;
+  trend_direction: string;
+  top_categories: CategoryCount[];
+  monthly_trend: MonthlyCount[];
+}
+
+export interface ProblemHotspotsData {
+  period_start: string;
+  period_end: string;
+  category_breakdown: Record<string, number>;
+  priority_breakdown: Record<string, number>;
+  hotspots: string[];
+  avg_per_category: number;
+}
+
 export interface Problem {
   id: number;
   title: string;
@@ -108,6 +151,23 @@ export class ProblemApi {
    */
   static async closeProblem(id: number, resolution: string): Promise<Problem> {
     return httpClient.post(`/api/v1/problems/${id}/close`, { resolution });
+  }
+
+  // ==================== 趋势分析 ====================
+
+
+  /**
+   * 获取问题趋势分析
+   */
+  static async getTrends(params: ProblemTrendRequest): Promise<ProblemTrendData> {
+    return httpClient.get<ProblemTrendData>('/api/v1/problems/trend', params);
+  }
+
+  /**
+   * 获取问题热点分析
+   */
+  static async getHotspots(params: ProblemTrendRequest): Promise<ProblemHotspotsData> {
+    return httpClient.get<ProblemHotspotsData>('/api/v1/problems/hotspots', params);
   }
 }
 

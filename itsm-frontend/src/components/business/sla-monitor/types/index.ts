@@ -87,14 +87,18 @@ export interface SLAAlertRule {
   id: number;
   name: string;
   sla_definition_id: number;
-  alert_level: 'warning' | 'critical';
-  trigger_conditions: {
-    time_threshold_percent: number;
-    violation_types: string[];
-  };
+  alert_level: 'warning' | 'critical' | 'severe';
+  threshold_percentage: number;
   notification_channels: string[];
+  escalation_enabled?: boolean;
+  escalation_levels?: Array<{
+    level: number;
+    threshold_percentage: number;
+    notification_channels: string[];
+  }>;
   is_active: boolean;
   created_at: string;
+  updated_at?: string;
 }
 
 // ============ Hook 返回类型 ============

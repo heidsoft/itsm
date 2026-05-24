@@ -81,9 +81,11 @@ type UserEdges struct {
 	ArticleSessions []*KnowledgeArticleSession `json:"article_sessions,omitempty"`
 	// 文章协作参与
 	ArticleParticipations []*KnowledgeArticleParticipant `json:"article_participations,omitempty"`
+	// PIR审查记录
+	PirReviews []*ChangePIR `json:"pir_reviews,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [12]bool
+	loadedTypes [13]bool
 }
 
 // DepartmentRefOrErr returns the DepartmentRef value or an error if the edge
@@ -196,6 +198,15 @@ func (e UserEdges) ArticleParticipationsOrErr() ([]*KnowledgeArticleParticipant,
 		return e.ArticleParticipations, nil
 	}
 	return nil, &NotLoadedError{edge: "article_participations"}
+}
+
+// PirReviewsOrErr returns the PirReviews value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PirReviewsOrErr() ([]*ChangePIR, error) {
+	if e.loadedTypes[12] {
+		return e.PirReviews, nil
+	}
+	return nil, &NotLoadedError{edge: "pir_reviews"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -405,6 +416,11 @@ func (_m *User) QueryArticleSessions() *KnowledgeArticleSessionQuery {
 // QueryArticleParticipations queries the "article_participations" edge of the User entity.
 func (_m *User) QueryArticleParticipations() *KnowledgeArticleParticipantQuery {
 	return NewUserClient(_m.config).QueryArticleParticipations(_m)
+}
+
+// QueryPirReviews queries the "pir_reviews" edge of the User entity.
+func (_m *User) QueryPirReviews() *ChangePIRQuery {
+	return NewUserClient(_m.config).QueryPirReviews(_m)
 }
 
 // Update returns a builder for updating this User.

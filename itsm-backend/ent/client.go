@@ -20,6 +20,7 @@ import (
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/bpmnpermission"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citype"
@@ -145,6 +146,8 @@ type Client struct {
 	CIType *CITypeClient
 	// Change is the client for interacting with the Change builders.
 	Change *ChangeClient
+	// ChangePIR is the client for interacting with the ChangePIR builders.
+	ChangePIR *ChangePIRClient
 	// CloudAccount is the client for interacting with the CloudAccount builders.
 	CloudAccount *CloudAccountClient
 	// CloudResource is the client for interacting with the CloudResource builders.
@@ -340,6 +343,7 @@ func (c *Client) init() {
 	c.CIRelationship = NewCIRelationshipClient(c.config)
 	c.CIType = NewCITypeClient(c.config)
 	c.Change = NewChangeClient(c.config)
+	c.ChangePIR = NewChangePIRClient(c.config)
 	c.CloudAccount = NewCloudAccountClient(c.config)
 	c.CloudResource = NewCloudResourceClient(c.config)
 	c.CloudService = NewCloudServiceClient(c.config)
@@ -530,6 +534,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		CIRelationship:              NewCIRelationshipClient(cfg),
 		CIType:                      NewCITypeClient(cfg),
 		Change:                      NewChangeClient(cfg),
+		ChangePIR:                   NewChangePIRClient(cfg),
 		CloudAccount:                NewCloudAccountClient(cfg),
 		CloudResource:               NewCloudResourceClient(cfg),
 		CloudService:                NewCloudServiceClient(cfg),
@@ -647,6 +652,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		CIRelationship:              NewCIRelationshipClient(cfg),
 		CIType:                      NewCITypeClient(cfg),
 		Change:                      NewChangeClient(cfg),
+		ChangePIR:                   NewChangePIRClient(cfg),
 		CloudAccount:                NewCloudAccountClient(cfg),
 		CloudResource:               NewCloudResourceClient(cfg),
 		CloudService:                NewCloudServiceClient(cfg),
@@ -764,28 +770,28 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset,
 		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CIAttributeDefinition,
-		c.CIRelationship, c.CIType, c.Change, c.CloudAccount, c.CloudResource,
-		c.CloudService, c.ConfigurationItem, c.Contract, c.Conversation, c.Department,
-		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.EndpointACL,
-		c.EngineerSkill, c.Group, c.Incident, c.IncidentAlert,
-		c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
-		c.IncidentRuleExecution, c.KnowledgeArticle, c.KnowledgeArticleLike,
-		c.KnowledgeArticleParticipant, c.KnowledgeArticleSession,
-		c.KnowledgeArticleVersion, c.KnownError, c.MSPAllocation, c.Menu, c.Message,
-		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
-		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessAuditLog,
-		c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
-		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
-		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
-		c.StandardChange, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
-		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.ToolInvocation, c.User, c.Vendor, c.Workflow, c.WorkflowInstance,
-		c.WorkflowTask, c.WorkflowVersion,
+		c.CIRelationship, c.CIType, c.Change, c.ChangePIR, c.CloudAccount,
+		c.CloudResource, c.CloudService, c.ConfigurationItem, c.Contract,
+		c.Conversation, c.Department, c.DiscoveryJob, c.DiscoveryResult,
+		c.DiscoverySource, c.EndpointACL, c.EngineerSkill, c.Group, c.Incident,
+		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
+		c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
+		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
+		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
+		c.MSPAllocation, c.Menu, c.Message, c.Microservice, c.Notification,
+		c.NotificationPreference, c.PasswordResetToken, c.Permission,
+		c.PermissionDefinition, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
+		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
+		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
+		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange,
+		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -797,28 +803,28 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset,
 		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CIAttributeDefinition,
-		c.CIRelationship, c.CIType, c.Change, c.CloudAccount, c.CloudResource,
-		c.CloudService, c.ConfigurationItem, c.Contract, c.Conversation, c.Department,
-		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.EndpointACL,
-		c.EngineerSkill, c.Group, c.Incident, c.IncidentAlert,
-		c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
-		c.IncidentRuleExecution, c.KnowledgeArticle, c.KnowledgeArticleLike,
-		c.KnowledgeArticleParticipant, c.KnowledgeArticleSession,
-		c.KnowledgeArticleVersion, c.KnownError, c.MSPAllocation, c.Menu, c.Message,
-		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
-		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessAuditLog,
-		c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
-		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
-		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
-		c.StandardChange, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
-		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.ToolInvocation, c.User, c.Vendor, c.Workflow, c.WorkflowInstance,
-		c.WorkflowTask, c.WorkflowVersion,
+		c.CIRelationship, c.CIType, c.Change, c.ChangePIR, c.CloudAccount,
+		c.CloudResource, c.CloudService, c.ConfigurationItem, c.Contract,
+		c.Conversation, c.Department, c.DiscoveryJob, c.DiscoveryResult,
+		c.DiscoverySource, c.EndpointACL, c.EngineerSkill, c.Group, c.Incident,
+		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
+		c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
+		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
+		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
+		c.MSPAllocation, c.Menu, c.Message, c.Microservice, c.Notification,
+		c.NotificationPreference, c.PasswordResetToken, c.Permission,
+		c.PermissionDefinition, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
+		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
+		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
+		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange,
+		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -851,6 +857,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.CIType.mutate(ctx, m)
 	case *ChangeMutation:
 		return c.Change.mutate(ctx, m)
+	case *ChangePIRMutation:
+		return c.ChangePIR.mutate(ctx, m)
 	case *CloudAccountMutation:
 		return c.CloudAccount.mutate(ctx, m)
 	case *CloudResourceMutation:
@@ -2759,6 +2767,22 @@ func (c *ChangeClient) QueryProblems(_m *Change) *ProblemQuery {
 	return query
 }
 
+// QueryPir queries the pir edge of a Change.
+func (c *ChangeClient) QueryPir(_m *Change) *ChangePIRQuery {
+	query := (&ChangePIRClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(change.Table, change.FieldID, id),
+			sqlgraph.To(changepir.Table, changepir.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, change.PirTable, change.PirColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ChangeClient) Hooks() []Hook {
 	return c.hooks.Change
@@ -2781,6 +2805,155 @@ func (c *ChangeClient) mutate(ctx context.Context, m *ChangeMutation) (Value, er
 		return (&ChangeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Change mutation op: %q", m.Op())
+	}
+}
+
+// ChangePIRClient is a client for the ChangePIR schema.
+type ChangePIRClient struct {
+	config
+}
+
+// NewChangePIRClient returns a client for the ChangePIR from the given config.
+func NewChangePIRClient(c config) *ChangePIRClient {
+	return &ChangePIRClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `changepir.Hooks(f(g(h())))`.
+func (c *ChangePIRClient) Use(hooks ...Hook) {
+	c.hooks.ChangePIR = append(c.hooks.ChangePIR, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `changepir.Intercept(f(g(h())))`.
+func (c *ChangePIRClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ChangePIR = append(c.inters.ChangePIR, interceptors...)
+}
+
+// Create returns a builder for creating a ChangePIR entity.
+func (c *ChangePIRClient) Create() *ChangePIRCreate {
+	mutation := newChangePIRMutation(c.config, OpCreate)
+	return &ChangePIRCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ChangePIR entities.
+func (c *ChangePIRClient) CreateBulk(builders ...*ChangePIRCreate) *ChangePIRCreateBulk {
+	return &ChangePIRCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ChangePIRClient) MapCreateBulk(slice any, setFunc func(*ChangePIRCreate, int)) *ChangePIRCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ChangePIRCreateBulk{err: fmt.Errorf("calling to ChangePIRClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ChangePIRCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ChangePIRCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ChangePIR.
+func (c *ChangePIRClient) Update() *ChangePIRUpdate {
+	mutation := newChangePIRMutation(c.config, OpUpdate)
+	return &ChangePIRUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ChangePIRClient) UpdateOne(_m *ChangePIR) *ChangePIRUpdateOne {
+	mutation := newChangePIRMutation(c.config, OpUpdateOne, withChangePIR(_m))
+	return &ChangePIRUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ChangePIRClient) UpdateOneID(id int) *ChangePIRUpdateOne {
+	mutation := newChangePIRMutation(c.config, OpUpdateOne, withChangePIRID(id))
+	return &ChangePIRUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ChangePIR.
+func (c *ChangePIRClient) Delete() *ChangePIRDelete {
+	mutation := newChangePIRMutation(c.config, OpDelete)
+	return &ChangePIRDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ChangePIRClient) DeleteOne(_m *ChangePIR) *ChangePIRDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ChangePIRClient) DeleteOneID(id int) *ChangePIRDeleteOne {
+	builder := c.Delete().Where(changepir.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ChangePIRDeleteOne{builder}
+}
+
+// Query returns a query builder for ChangePIR.
+func (c *ChangePIRClient) Query() *ChangePIRQuery {
+	return &ChangePIRQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeChangePIR},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ChangePIR entity by its id.
+func (c *ChangePIRClient) Get(ctx context.Context, id int) (*ChangePIR, error) {
+	return c.Query().Where(changepir.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ChangePIRClient) GetX(ctx context.Context, id int) *ChangePIR {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryChange queries the change edge of a ChangePIR.
+func (c *ChangePIRClient) QueryChange(_m *ChangePIR) *ChangeQuery {
+	query := (&ChangeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(changepir.Table, changepir.FieldID, id),
+			sqlgraph.To(change.Table, change.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, changepir.ChangeTable, changepir.ChangeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ChangePIRClient) Hooks() []Hook {
+	return c.hooks.ChangePIR
+}
+
+// Interceptors returns the client interceptors.
+func (c *ChangePIRClient) Interceptors() []Interceptor {
+	return c.inters.ChangePIR
+}
+
+func (c *ChangePIRClient) mutate(ctx context.Context, m *ChangePIRMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ChangePIRCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ChangePIRUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ChangePIRUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ChangePIRDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ChangePIR mutation op: %q", m.Op())
 	}
 }
 
@@ -16044,6 +16217,22 @@ func (c *UserClient) QueryArticleParticipations(_m *User) *KnowledgeArticleParti
 	return query
 }
 
+// QueryPirReviews queries the pir_reviews edge of a User.
+func (c *UserClient) QueryPirReviews(_m *User) *ChangePIRQuery {
+	query := (&ChangePIRClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(changepir.Table, changepir.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PirReviewsTable, user.PirReviewsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -16883,11 +17072,11 @@ type (
 	hooks struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
 		AssetLicense, AuditLog, BPMNPermission, CIAttributeDefinition, CIRelationship,
-		CIType, Change, CloudAccount, CloudResource, CloudService, ConfigurationItem,
-		Contract, Conversation, Department, DiscoveryJob, DiscoveryResult,
-		DiscoverySource, EndpointACL, EngineerSkill, Group, Incident, IncidentAlert,
-		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
-		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
+		CIType, Change, ChangePIR, CloudAccount, CloudResource, CloudService,
+		ConfigurationItem, Contract, Conversation, Department, DiscoveryJob,
+		DiscoveryResult, DiscoverySource, EndpointACL, EngineerSkill, Group, Incident,
+		IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
+		IncidentRule, IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
 		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
 		KnownError, MSPAllocation, Menu, Message, Microservice, Notification,
 		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,
@@ -16906,11 +17095,11 @@ type (
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
 		AssetLicense, AuditLog, BPMNPermission, CIAttributeDefinition, CIRelationship,
-		CIType, Change, CloudAccount, CloudResource, CloudService, ConfigurationItem,
-		Contract, Conversation, Department, DiscoveryJob, DiscoveryResult,
-		DiscoverySource, EndpointACL, EngineerSkill, Group, Incident, IncidentAlert,
-		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
-		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
+		CIType, Change, ChangePIR, CloudAccount, CloudResource, CloudService,
+		ConfigurationItem, Contract, Conversation, Department, DiscoveryJob,
+		DiscoveryResult, DiscoverySource, EndpointACL, EngineerSkill, Group, Incident,
+		IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
+		IncidentRule, IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
 		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
 		KnownError, MSPAllocation, Menu, Message, Microservice, Notification,
 		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,

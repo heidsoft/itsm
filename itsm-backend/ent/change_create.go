@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/problem"
 	"time"
 
@@ -290,6 +291,21 @@ func (_c *ChangeCreate) AddProblems(v ...*Problem) *ChangeCreate {
 	return _c.AddProblemIDs(ids...)
 }
 
+// AddPirIDs adds the "pir" edge to the ChangePIR entity by IDs.
+func (_c *ChangeCreate) AddPirIDs(ids ...int) *ChangeCreate {
+	_c.mutation.AddPirIDs(ids...)
+	return _c
+}
+
+// AddPir adds the "pir" edges to the ChangePIR entity.
+func (_c *ChangeCreate) AddPir(v ...*ChangePIR) *ChangeCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPirIDs(ids...)
+}
+
 // Mutation returns the ChangeMutation object of the builder.
 func (_c *ChangeCreate) Mutation() *ChangeMutation {
 	return _c.mutation
@@ -521,6 +537,22 @@ func (_c *ChangeCreate) createSpec() (*Change, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PirIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   change.PirTable,
+			Columns: []string{change.PirColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

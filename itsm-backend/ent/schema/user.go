@@ -98,5 +98,7 @@ func (User) Edges() []ent.Edge {
 			Comment("文章协作会话"),
 		edge.To("article_participations", KnowledgeArticleParticipant.Type).
 			Comment("文章协作参与"),
+		edge.To("pir_reviews", ChangePIR.Type).
+			Comment("PIR审查记录"),
 	}
 }

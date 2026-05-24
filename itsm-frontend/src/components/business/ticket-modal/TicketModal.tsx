@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Button, Alert, Avatar, App, message, Popconfirm } from 'antd';
+import { Modal, Form, Button, Input, Select, message, App } from 'antd';
 import { Plus, Edit, BookOpen, Save } from 'lucide-react';
 import type { Ticket } from '@/lib/services/ticket-service';
 import { useI18n } from '@/lib/i18n';
@@ -217,17 +217,17 @@ export const TicketTemplateModal: React.FC<TicketTemplateModalProps> = React.mem
         >
           <Form form={templateForm} layout="vertical" className="mt-4">
             <Form.Item name="name" label="模板名称" rules={[{ required: true }]}>
-              <Form.Input placeholder="请输入模板名称" />
+              <Input placeholder="请输入模板名称" />
             </Form.Item>
             <Form.Item name="description" label="模板描述">
-              <Form.TextArea placeholder="请输入模板描述" rows={3} />
+              <Input.TextArea placeholder="请输入模板描述" rows={3} />
             </Form.Item>
             <Form.Item name="type" label="模板类型" rules={[{ required: true }]}>
-              <Form.Select placeholder="请选择模板类型">
-                <Form.Select.Option value="incident">故障</Form.Select.Option>
-                <Form.Select.Option value="request">请求</Form.Select.Option>
-                <Form.Select.Option value="change">变更</Form.Select.Option>
-              </Form.Select>
+              <Select placeholder="请选择模板类型">
+                <Select.Option value="incident">故障</Select.Option>
+                <Select.Option value="request">请求</Select.Option>
+                <Select.Option value="change">变更</Select.Option>
+              </Select>
             </Form.Item>
           </Form>
         </Modal>

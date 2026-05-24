@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/bpmnpermission"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citype"
@@ -134,6 +135,7 @@ const (
 	TypeCIRelationship              = "CIRelationship"
 	TypeCIType                      = "CIType"
 	TypeChange                      = "Change"
+	TypeChangePIR                   = "ChangePIR"
 	TypeCloudAccount                = "CloudAccount"
 	TypeCloudResource               = "CloudResource"
 	TypeCloudService                = "CloudService"
@@ -14433,6 +14435,9 @@ type ChangeMutation struct {
 	problems              map[int]struct{}
 	removedproblems       map[int]struct{}
 	clearedproblems       bool
+	pir                   map[int]struct{}
+	removedpir            map[int]struct{}
+	clearedpir            bool
 	done                  bool
 	oldValue              func(context.Context) (*Change, error)
 	predicates            []predicate.Change
@@ -15582,6 +15587,60 @@ func (m *ChangeMutation) ResetProblems() {
 	m.removedproblems = nil
 }
 
+// AddPirIDs adds the "pir" edge to the ChangePIR entity by ids.
+func (m *ChangeMutation) AddPirIDs(ids ...int) {
+	if m.pir == nil {
+		m.pir = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.pir[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPir clears the "pir" edge to the ChangePIR entity.
+func (m *ChangeMutation) ClearPir() {
+	m.clearedpir = true
+}
+
+// PirCleared reports if the "pir" edge to the ChangePIR entity was cleared.
+func (m *ChangeMutation) PirCleared() bool {
+	return m.clearedpir
+}
+
+// RemovePirIDs removes the "pir" edge to the ChangePIR entity by IDs.
+func (m *ChangeMutation) RemovePirIDs(ids ...int) {
+	if m.removedpir == nil {
+		m.removedpir = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.pir, ids[i])
+		m.removedpir[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPir returns the removed IDs of the "pir" edge to the ChangePIR entity.
+func (m *ChangeMutation) RemovedPirIDs() (ids []int) {
+	for id := range m.removedpir {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PirIDs returns the "pir" edge IDs in the mutation.
+func (m *ChangeMutation) PirIDs() (ids []int) {
+	for id := range m.pir {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPir resets all changes to the "pir" edge.
+func (m *ChangeMutation) ResetPir() {
+	m.pir = nil
+	m.clearedpir = false
+	m.removedpir = nil
+}
+
 // Where appends a list predicates to the ChangeMutation builder.
 func (m *ChangeMutation) Where(ps ...predicate.Change) {
 	m.predicates = append(m.predicates, ps...)
@@ -16163,9 +16222,12 @@ func (m *ChangeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ChangeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.problems != nil {
 		edges = append(edges, change.EdgeProblems)
+	}
+	if m.pir != nil {
+		edges = append(edges, change.EdgePir)
 	}
 	return edges
 }
@@ -16180,15 +16242,24 @@ func (m *ChangeMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case change.EdgePir:
+		ids := make([]ent.Value, 0, len(m.pir))
+		for id := range m.pir {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ChangeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedproblems != nil {
 		edges = append(edges, change.EdgeProblems)
+	}
+	if m.removedpir != nil {
+		edges = append(edges, change.EdgePir)
 	}
 	return edges
 }
@@ -16203,15 +16274,24 @@ func (m *ChangeMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case change.EdgePir:
+		ids := make([]ent.Value, 0, len(m.removedpir))
+		for id := range m.removedpir {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ChangeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedproblems {
 		edges = append(edges, change.EdgeProblems)
+	}
+	if m.clearedpir {
+		edges = append(edges, change.EdgePir)
 	}
 	return edges
 }
@@ -16222,6 +16302,8 @@ func (m *ChangeMutation) EdgeCleared(name string) bool {
 	switch name {
 	case change.EdgeProblems:
 		return m.clearedproblems
+	case change.EdgePir:
+		return m.clearedpir
 	}
 	return false
 }
@@ -16241,8 +16323,1472 @@ func (m *ChangeMutation) ResetEdge(name string) error {
 	case change.EdgeProblems:
 		m.ResetProblems()
 		return nil
+	case change.EdgePir:
+		m.ResetPir()
+		return nil
 	}
 	return fmt.Errorf("unknown Change edge %s", name)
+}
+
+// ChangePIRMutation represents an operation that mutates the ChangePIR nodes in the graph.
+type ChangePIRMutation struct {
+	config
+	op                          Op
+	typ                         string
+	id                          *int
+	reviewer_id                 *int
+	addreviewer_id              *int
+	overall_result              *string
+	objectives_achieved         *bool
+	success_summary             *string
+	issues_encountered          *string
+	lessons_learned             *string
+	improvement_recommendations *string
+	actual_start_time           *time.Time
+	actual_end_time             *time.Time
+	actual_duration_minutes     *int
+	addactual_duration_minutes  *int
+	rollback_performed          *bool
+	rollback_reason             *string
+	tenant_id                   *int
+	addtenant_id                *int
+	review_date                 *time.Time
+	created_at                  *time.Time
+	updated_at                  *time.Time
+	clearedFields               map[string]struct{}
+	change                      *int
+	clearedchange               bool
+	done                        bool
+	oldValue                    func(context.Context) (*ChangePIR, error)
+	predicates                  []predicate.ChangePIR
+}
+
+var _ ent.Mutation = (*ChangePIRMutation)(nil)
+
+// changepirOption allows management of the mutation configuration using functional options.
+type changepirOption func(*ChangePIRMutation)
+
+// newChangePIRMutation creates new mutation for the ChangePIR entity.
+func newChangePIRMutation(c config, op Op, opts ...changepirOption) *ChangePIRMutation {
+	m := &ChangePIRMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeChangePIR,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withChangePIRID sets the ID field of the mutation.
+func withChangePIRID(id int) changepirOption {
+	return func(m *ChangePIRMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ChangePIR
+		)
+		m.oldValue = func(ctx context.Context) (*ChangePIR, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ChangePIR.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withChangePIR sets the old ChangePIR of the mutation.
+func withChangePIR(node *ChangePIR) changepirOption {
+	return func(m *ChangePIRMutation) {
+		m.oldValue = func(context.Context) (*ChangePIR, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ChangePIRMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ChangePIRMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ChangePIRMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ChangePIRMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ChangePIR.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetReviewerID sets the "reviewer_id" field.
+func (m *ChangePIRMutation) SetReviewerID(i int) {
+	m.reviewer_id = &i
+	m.addreviewer_id = nil
+}
+
+// ReviewerID returns the value of the "reviewer_id" field in the mutation.
+func (m *ChangePIRMutation) ReviewerID() (r int, exists bool) {
+	v := m.reviewer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewerID returns the old "reviewer_id" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldReviewerID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewerID: %w", err)
+	}
+	return oldValue.ReviewerID, nil
+}
+
+// AddReviewerID adds i to the "reviewer_id" field.
+func (m *ChangePIRMutation) AddReviewerID(i int) {
+	if m.addreviewer_id != nil {
+		*m.addreviewer_id += i
+	} else {
+		m.addreviewer_id = &i
+	}
+}
+
+// AddedReviewerID returns the value that was added to the "reviewer_id" field in this mutation.
+func (m *ChangePIRMutation) AddedReviewerID() (r int, exists bool) {
+	v := m.addreviewer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearReviewerID clears the value of the "reviewer_id" field.
+func (m *ChangePIRMutation) ClearReviewerID() {
+	m.reviewer_id = nil
+	m.addreviewer_id = nil
+	m.clearedFields[changepir.FieldReviewerID] = struct{}{}
+}
+
+// ReviewerIDCleared returns if the "reviewer_id" field was cleared in this mutation.
+func (m *ChangePIRMutation) ReviewerIDCleared() bool {
+	_, ok := m.clearedFields[changepir.FieldReviewerID]
+	return ok
+}
+
+// ResetReviewerID resets all changes to the "reviewer_id" field.
+func (m *ChangePIRMutation) ResetReviewerID() {
+	m.reviewer_id = nil
+	m.addreviewer_id = nil
+	delete(m.clearedFields, changepir.FieldReviewerID)
+}
+
+// SetOverallResult sets the "overall_result" field.
+func (m *ChangePIRMutation) SetOverallResult(s string) {
+	m.overall_result = &s
+}
+
+// OverallResult returns the value of the "overall_result" field in the mutation.
+func (m *ChangePIRMutation) OverallResult() (r string, exists bool) {
+	v := m.overall_result
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOverallResult returns the old "overall_result" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldOverallResult(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOverallResult is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOverallResult requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOverallResult: %w", err)
+	}
+	return oldValue.OverallResult, nil
+}
+
+// ResetOverallResult resets all changes to the "overall_result" field.
+func (m *ChangePIRMutation) ResetOverallResult() {
+	m.overall_result = nil
+}
+
+// SetObjectivesAchieved sets the "objectives_achieved" field.
+func (m *ChangePIRMutation) SetObjectivesAchieved(b bool) {
+	m.objectives_achieved = &b
+}
+
+// ObjectivesAchieved returns the value of the "objectives_achieved" field in the mutation.
+func (m *ChangePIRMutation) ObjectivesAchieved() (r bool, exists bool) {
+	v := m.objectives_achieved
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldObjectivesAchieved returns the old "objectives_achieved" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldObjectivesAchieved(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldObjectivesAchieved is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldObjectivesAchieved requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldObjectivesAchieved: %w", err)
+	}
+	return oldValue.ObjectivesAchieved, nil
+}
+
+// ResetObjectivesAchieved resets all changes to the "objectives_achieved" field.
+func (m *ChangePIRMutation) ResetObjectivesAchieved() {
+	m.objectives_achieved = nil
+}
+
+// SetSuccessSummary sets the "success_summary" field.
+func (m *ChangePIRMutation) SetSuccessSummary(s string) {
+	m.success_summary = &s
+}
+
+// SuccessSummary returns the value of the "success_summary" field in the mutation.
+func (m *ChangePIRMutation) SuccessSummary() (r string, exists bool) {
+	v := m.success_summary
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSuccessSummary returns the old "success_summary" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldSuccessSummary(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSuccessSummary is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSuccessSummary requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSuccessSummary: %w", err)
+	}
+	return oldValue.SuccessSummary, nil
+}
+
+// ClearSuccessSummary clears the value of the "success_summary" field.
+func (m *ChangePIRMutation) ClearSuccessSummary() {
+	m.success_summary = nil
+	m.clearedFields[changepir.FieldSuccessSummary] = struct{}{}
+}
+
+// SuccessSummaryCleared returns if the "success_summary" field was cleared in this mutation.
+func (m *ChangePIRMutation) SuccessSummaryCleared() bool {
+	_, ok := m.clearedFields[changepir.FieldSuccessSummary]
+	return ok
+}
+
+// ResetSuccessSummary resets all changes to the "success_summary" field.
+func (m *ChangePIRMutation) ResetSuccessSummary() {
+	m.success_summary = nil
+	delete(m.clearedFields, changepir.FieldSuccessSummary)
+}
+
+// SetIssuesEncountered sets the "issues_encountered" field.
+func (m *ChangePIRMutation) SetIssuesEncountered(s string) {
+	m.issues_encountered = &s
+}
+
+// IssuesEncountered returns the value of the "issues_encountered" field in the mutation.
+func (m *ChangePIRMutation) IssuesEncountered() (r string, exists bool) {
+	v := m.issues_encountered
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIssuesEncountered returns the old "issues_encountered" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldIssuesEncountered(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIssuesEncountered is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIssuesEncountered requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIssuesEncountered: %w", err)
+	}
+	return oldValue.IssuesEncountered, nil
+}
+
+// ClearIssuesEncountered clears the value of the "issues_encountered" field.
+func (m *ChangePIRMutation) ClearIssuesEncountered() {
+	m.issues_encountered = nil
+	m.clearedFields[changepir.FieldIssuesEncountered] = struct{}{}
+}
+
+// IssuesEncounteredCleared returns if the "issues_encountered" field was cleared in this mutation.
+func (m *ChangePIRMutation) IssuesEncounteredCleared() bool {
+	_, ok := m.clearedFields[changepir.FieldIssuesEncountered]
+	return ok
+}
+
+// ResetIssuesEncountered resets all changes to the "issues_encountered" field.
+func (m *ChangePIRMutation) ResetIssuesEncountered() {
+	m.issues_encountered = nil
+	delete(m.clearedFields, changepir.FieldIssuesEncountered)
+}
+
+// SetLessonsLearned sets the "lessons_learned" field.
+func (m *ChangePIRMutation) SetLessonsLearned(s string) {
+	m.lessons_learned = &s
+}
+
+// LessonsLearned returns the value of the "lessons_learned" field in the mutation.
+func (m *ChangePIRMutation) LessonsLearned() (r string, exists bool) {
+	v := m.lessons_learned
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLessonsLearned returns the old "lessons_learned" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldLessonsLearned(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLessonsLearned is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLessonsLearned requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLessonsLearned: %w", err)
+	}
+	return oldValue.LessonsLearned, nil
+}
+
+// ClearLessonsLearned clears the value of the "lessons_learned" field.
+func (m *ChangePIRMutation) ClearLessonsLearned() {
+	m.lessons_learned = nil
+	m.clearedFields[changepir.FieldLessonsLearned] = struct{}{}
+}
+
+// LessonsLearnedCleared returns if the "lessons_learned" field was cleared in this mutation.
+func (m *ChangePIRMutation) LessonsLearnedCleared() bool {
+	_, ok := m.clearedFields[changepir.FieldLessonsLearned]
+	return ok
+}
+
+// ResetLessonsLearned resets all changes to the "lessons_learned" field.
+func (m *ChangePIRMutation) ResetLessonsLearned() {
+	m.lessons_learned = nil
+	delete(m.clearedFields, changepir.FieldLessonsLearned)
+}
+
+// SetImprovementRecommendations sets the "improvement_recommendations" field.
+func (m *ChangePIRMutation) SetImprovementRecommendations(s string) {
+	m.improvement_recommendations = &s
+}
+
+// ImprovementRecommendations returns the value of the "improvement_recommendations" field in the mutation.
+func (m *ChangePIRMutation) ImprovementRecommendations() (r string, exists bool) {
+	v := m.improvement_recommendations
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImprovementRecommendations returns the old "improvement_recommendations" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldImprovementRecommendations(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImprovementRecommendations is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImprovementRecommendations requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImprovementRecommendations: %w", err)
+	}
+	return oldValue.ImprovementRecommendations, nil
+}
+
+// ClearImprovementRecommendations clears the value of the "improvement_recommendations" field.
+func (m *ChangePIRMutation) ClearImprovementRecommendations() {
+	m.improvement_recommendations = nil
+	m.clearedFields[changepir.FieldImprovementRecommendations] = struct{}{}
+}
+
+// ImprovementRecommendationsCleared returns if the "improvement_recommendations" field was cleared in this mutation.
+func (m *ChangePIRMutation) ImprovementRecommendationsCleared() bool {
+	_, ok := m.clearedFields[changepir.FieldImprovementRecommendations]
+	return ok
+}
+
+// ResetImprovementRecommendations resets all changes to the "improvement_recommendations" field.
+func (m *ChangePIRMutation) ResetImprovementRecommendations() {
+	m.improvement_recommendations = nil
+	delete(m.clearedFields, changepir.FieldImprovementRecommendations)
+}
+
+// SetActualStartTime sets the "actual_start_time" field.
+func (m *ChangePIRMutation) SetActualStartTime(t time.Time) {
+	m.actual_start_time = &t
+}
+
+// ActualStartTime returns the value of the "actual_start_time" field in the mutation.
+func (m *ChangePIRMutation) ActualStartTime() (r time.Time, exists bool) {
+	v := m.actual_start_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActualStartTime returns the old "actual_start_time" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldActualStartTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActualStartTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActualStartTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActualStartTime: %w", err)
+	}
+	return oldValue.ActualStartTime, nil
+}
+
+// ClearActualStartTime clears the value of the "actual_start_time" field.
+func (m *ChangePIRMutation) ClearActualStartTime() {
+	m.actual_start_time = nil
+	m.clearedFields[changepir.FieldActualStartTime] = struct{}{}
+}
+
+// ActualStartTimeCleared returns if the "actual_start_time" field was cleared in this mutation.
+func (m *ChangePIRMutation) ActualStartTimeCleared() bool {
+	_, ok := m.clearedFields[changepir.FieldActualStartTime]
+	return ok
+}
+
+// ResetActualStartTime resets all changes to the "actual_start_time" field.
+func (m *ChangePIRMutation) ResetActualStartTime() {
+	m.actual_start_time = nil
+	delete(m.clearedFields, changepir.FieldActualStartTime)
+}
+
+// SetActualEndTime sets the "actual_end_time" field.
+func (m *ChangePIRMutation) SetActualEndTime(t time.Time) {
+	m.actual_end_time = &t
+}
+
+// ActualEndTime returns the value of the "actual_end_time" field in the mutation.
+func (m *ChangePIRMutation) ActualEndTime() (r time.Time, exists bool) {
+	v := m.actual_end_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActualEndTime returns the old "actual_end_time" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldActualEndTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActualEndTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActualEndTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActualEndTime: %w", err)
+	}
+	return oldValue.ActualEndTime, nil
+}
+
+// ClearActualEndTime clears the value of the "actual_end_time" field.
+func (m *ChangePIRMutation) ClearActualEndTime() {
+	m.actual_end_time = nil
+	m.clearedFields[changepir.FieldActualEndTime] = struct{}{}
+}
+
+// ActualEndTimeCleared returns if the "actual_end_time" field was cleared in this mutation.
+func (m *ChangePIRMutation) ActualEndTimeCleared() bool {
+	_, ok := m.clearedFields[changepir.FieldActualEndTime]
+	return ok
+}
+
+// ResetActualEndTime resets all changes to the "actual_end_time" field.
+func (m *ChangePIRMutation) ResetActualEndTime() {
+	m.actual_end_time = nil
+	delete(m.clearedFields, changepir.FieldActualEndTime)
+}
+
+// SetActualDurationMinutes sets the "actual_duration_minutes" field.
+func (m *ChangePIRMutation) SetActualDurationMinutes(i int) {
+	m.actual_duration_minutes = &i
+	m.addactual_duration_minutes = nil
+}
+
+// ActualDurationMinutes returns the value of the "actual_duration_minutes" field in the mutation.
+func (m *ChangePIRMutation) ActualDurationMinutes() (r int, exists bool) {
+	v := m.actual_duration_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActualDurationMinutes returns the old "actual_duration_minutes" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldActualDurationMinutes(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActualDurationMinutes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActualDurationMinutes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActualDurationMinutes: %w", err)
+	}
+	return oldValue.ActualDurationMinutes, nil
+}
+
+// AddActualDurationMinutes adds i to the "actual_duration_minutes" field.
+func (m *ChangePIRMutation) AddActualDurationMinutes(i int) {
+	if m.addactual_duration_minutes != nil {
+		*m.addactual_duration_minutes += i
+	} else {
+		m.addactual_duration_minutes = &i
+	}
+}
+
+// AddedActualDurationMinutes returns the value that was added to the "actual_duration_minutes" field in this mutation.
+func (m *ChangePIRMutation) AddedActualDurationMinutes() (r int, exists bool) {
+	v := m.addactual_duration_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetActualDurationMinutes resets all changes to the "actual_duration_minutes" field.
+func (m *ChangePIRMutation) ResetActualDurationMinutes() {
+	m.actual_duration_minutes = nil
+	m.addactual_duration_minutes = nil
+}
+
+// SetRollbackPerformed sets the "rollback_performed" field.
+func (m *ChangePIRMutation) SetRollbackPerformed(b bool) {
+	m.rollback_performed = &b
+}
+
+// RollbackPerformed returns the value of the "rollback_performed" field in the mutation.
+func (m *ChangePIRMutation) RollbackPerformed() (r bool, exists bool) {
+	v := m.rollback_performed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRollbackPerformed returns the old "rollback_performed" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldRollbackPerformed(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRollbackPerformed is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRollbackPerformed requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRollbackPerformed: %w", err)
+	}
+	return oldValue.RollbackPerformed, nil
+}
+
+// ResetRollbackPerformed resets all changes to the "rollback_performed" field.
+func (m *ChangePIRMutation) ResetRollbackPerformed() {
+	m.rollback_performed = nil
+}
+
+// SetRollbackReason sets the "rollback_reason" field.
+func (m *ChangePIRMutation) SetRollbackReason(s string) {
+	m.rollback_reason = &s
+}
+
+// RollbackReason returns the value of the "rollback_reason" field in the mutation.
+func (m *ChangePIRMutation) RollbackReason() (r string, exists bool) {
+	v := m.rollback_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRollbackReason returns the old "rollback_reason" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldRollbackReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRollbackReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRollbackReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRollbackReason: %w", err)
+	}
+	return oldValue.RollbackReason, nil
+}
+
+// ClearRollbackReason clears the value of the "rollback_reason" field.
+func (m *ChangePIRMutation) ClearRollbackReason() {
+	m.rollback_reason = nil
+	m.clearedFields[changepir.FieldRollbackReason] = struct{}{}
+}
+
+// RollbackReasonCleared returns if the "rollback_reason" field was cleared in this mutation.
+func (m *ChangePIRMutation) RollbackReasonCleared() bool {
+	_, ok := m.clearedFields[changepir.FieldRollbackReason]
+	return ok
+}
+
+// ResetRollbackReason resets all changes to the "rollback_reason" field.
+func (m *ChangePIRMutation) ResetRollbackReason() {
+	m.rollback_reason = nil
+	delete(m.clearedFields, changepir.FieldRollbackReason)
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *ChangePIRMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *ChangePIRMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *ChangePIRMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *ChangePIRMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *ChangePIRMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetReviewDate sets the "review_date" field.
+func (m *ChangePIRMutation) SetReviewDate(t time.Time) {
+	m.review_date = &t
+}
+
+// ReviewDate returns the value of the "review_date" field in the mutation.
+func (m *ChangePIRMutation) ReviewDate() (r time.Time, exists bool) {
+	v := m.review_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewDate returns the old "review_date" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldReviewDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewDate: %w", err)
+	}
+	return oldValue.ReviewDate, nil
+}
+
+// ResetReviewDate resets all changes to the "review_date" field.
+func (m *ChangePIRMutation) ResetReviewDate() {
+	m.review_date = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ChangePIRMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ChangePIRMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ChangePIRMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ChangePIRMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ChangePIRMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ChangePIR entity.
+// If the ChangePIR object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangePIRMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ChangePIRMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetChangeID sets the "change" edge to the Change entity by id.
+func (m *ChangePIRMutation) SetChangeID(id int) {
+	m.change = &id
+}
+
+// ClearChange clears the "change" edge to the Change entity.
+func (m *ChangePIRMutation) ClearChange() {
+	m.clearedchange = true
+}
+
+// ChangeCleared reports if the "change" edge to the Change entity was cleared.
+func (m *ChangePIRMutation) ChangeCleared() bool {
+	return m.clearedchange
+}
+
+// ChangeID returns the "change" edge ID in the mutation.
+func (m *ChangePIRMutation) ChangeID() (id int, exists bool) {
+	if m.change != nil {
+		return *m.change, true
+	}
+	return
+}
+
+// ChangeIDs returns the "change" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ChangeID instead. It exists only for internal usage by the builders.
+func (m *ChangePIRMutation) ChangeIDs() (ids []int) {
+	if id := m.change; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetChange resets all changes to the "change" edge.
+func (m *ChangePIRMutation) ResetChange() {
+	m.change = nil
+	m.clearedchange = false
+}
+
+// Where appends a list predicates to the ChangePIRMutation builder.
+func (m *ChangePIRMutation) Where(ps ...predicate.ChangePIR) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ChangePIRMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ChangePIRMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ChangePIR, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ChangePIRMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ChangePIRMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ChangePIR).
+func (m *ChangePIRMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ChangePIRMutation) Fields() []string {
+	fields := make([]string, 0, 16)
+	if m.reviewer_id != nil {
+		fields = append(fields, changepir.FieldReviewerID)
+	}
+	if m.overall_result != nil {
+		fields = append(fields, changepir.FieldOverallResult)
+	}
+	if m.objectives_achieved != nil {
+		fields = append(fields, changepir.FieldObjectivesAchieved)
+	}
+	if m.success_summary != nil {
+		fields = append(fields, changepir.FieldSuccessSummary)
+	}
+	if m.issues_encountered != nil {
+		fields = append(fields, changepir.FieldIssuesEncountered)
+	}
+	if m.lessons_learned != nil {
+		fields = append(fields, changepir.FieldLessonsLearned)
+	}
+	if m.improvement_recommendations != nil {
+		fields = append(fields, changepir.FieldImprovementRecommendations)
+	}
+	if m.actual_start_time != nil {
+		fields = append(fields, changepir.FieldActualStartTime)
+	}
+	if m.actual_end_time != nil {
+		fields = append(fields, changepir.FieldActualEndTime)
+	}
+	if m.actual_duration_minutes != nil {
+		fields = append(fields, changepir.FieldActualDurationMinutes)
+	}
+	if m.rollback_performed != nil {
+		fields = append(fields, changepir.FieldRollbackPerformed)
+	}
+	if m.rollback_reason != nil {
+		fields = append(fields, changepir.FieldRollbackReason)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, changepir.FieldTenantID)
+	}
+	if m.review_date != nil {
+		fields = append(fields, changepir.FieldReviewDate)
+	}
+	if m.created_at != nil {
+		fields = append(fields, changepir.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, changepir.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ChangePIRMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case changepir.FieldReviewerID:
+		return m.ReviewerID()
+	case changepir.FieldOverallResult:
+		return m.OverallResult()
+	case changepir.FieldObjectivesAchieved:
+		return m.ObjectivesAchieved()
+	case changepir.FieldSuccessSummary:
+		return m.SuccessSummary()
+	case changepir.FieldIssuesEncountered:
+		return m.IssuesEncountered()
+	case changepir.FieldLessonsLearned:
+		return m.LessonsLearned()
+	case changepir.FieldImprovementRecommendations:
+		return m.ImprovementRecommendations()
+	case changepir.FieldActualStartTime:
+		return m.ActualStartTime()
+	case changepir.FieldActualEndTime:
+		return m.ActualEndTime()
+	case changepir.FieldActualDurationMinutes:
+		return m.ActualDurationMinutes()
+	case changepir.FieldRollbackPerformed:
+		return m.RollbackPerformed()
+	case changepir.FieldRollbackReason:
+		return m.RollbackReason()
+	case changepir.FieldTenantID:
+		return m.TenantID()
+	case changepir.FieldReviewDate:
+		return m.ReviewDate()
+	case changepir.FieldCreatedAt:
+		return m.CreatedAt()
+	case changepir.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ChangePIRMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case changepir.FieldReviewerID:
+		return m.OldReviewerID(ctx)
+	case changepir.FieldOverallResult:
+		return m.OldOverallResult(ctx)
+	case changepir.FieldObjectivesAchieved:
+		return m.OldObjectivesAchieved(ctx)
+	case changepir.FieldSuccessSummary:
+		return m.OldSuccessSummary(ctx)
+	case changepir.FieldIssuesEncountered:
+		return m.OldIssuesEncountered(ctx)
+	case changepir.FieldLessonsLearned:
+		return m.OldLessonsLearned(ctx)
+	case changepir.FieldImprovementRecommendations:
+		return m.OldImprovementRecommendations(ctx)
+	case changepir.FieldActualStartTime:
+		return m.OldActualStartTime(ctx)
+	case changepir.FieldActualEndTime:
+		return m.OldActualEndTime(ctx)
+	case changepir.FieldActualDurationMinutes:
+		return m.OldActualDurationMinutes(ctx)
+	case changepir.FieldRollbackPerformed:
+		return m.OldRollbackPerformed(ctx)
+	case changepir.FieldRollbackReason:
+		return m.OldRollbackReason(ctx)
+	case changepir.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case changepir.FieldReviewDate:
+		return m.OldReviewDate(ctx)
+	case changepir.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case changepir.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ChangePIR field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ChangePIRMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case changepir.FieldReviewerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewerID(v)
+		return nil
+	case changepir.FieldOverallResult:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOverallResult(v)
+		return nil
+	case changepir.FieldObjectivesAchieved:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetObjectivesAchieved(v)
+		return nil
+	case changepir.FieldSuccessSummary:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSuccessSummary(v)
+		return nil
+	case changepir.FieldIssuesEncountered:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIssuesEncountered(v)
+		return nil
+	case changepir.FieldLessonsLearned:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLessonsLearned(v)
+		return nil
+	case changepir.FieldImprovementRecommendations:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImprovementRecommendations(v)
+		return nil
+	case changepir.FieldActualStartTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActualStartTime(v)
+		return nil
+	case changepir.FieldActualEndTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActualEndTime(v)
+		return nil
+	case changepir.FieldActualDurationMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActualDurationMinutes(v)
+		return nil
+	case changepir.FieldRollbackPerformed:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRollbackPerformed(v)
+		return nil
+	case changepir.FieldRollbackReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRollbackReason(v)
+		return nil
+	case changepir.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case changepir.FieldReviewDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewDate(v)
+		return nil
+	case changepir.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case changepir.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ChangePIR field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ChangePIRMutation) AddedFields() []string {
+	var fields []string
+	if m.addreviewer_id != nil {
+		fields = append(fields, changepir.FieldReviewerID)
+	}
+	if m.addactual_duration_minutes != nil {
+		fields = append(fields, changepir.FieldActualDurationMinutes)
+	}
+	if m.addtenant_id != nil {
+		fields = append(fields, changepir.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ChangePIRMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case changepir.FieldReviewerID:
+		return m.AddedReviewerID()
+	case changepir.FieldActualDurationMinutes:
+		return m.AddedActualDurationMinutes()
+	case changepir.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ChangePIRMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case changepir.FieldReviewerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReviewerID(v)
+		return nil
+	case changepir.FieldActualDurationMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddActualDurationMinutes(v)
+		return nil
+	case changepir.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ChangePIR numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ChangePIRMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(changepir.FieldReviewerID) {
+		fields = append(fields, changepir.FieldReviewerID)
+	}
+	if m.FieldCleared(changepir.FieldSuccessSummary) {
+		fields = append(fields, changepir.FieldSuccessSummary)
+	}
+	if m.FieldCleared(changepir.FieldIssuesEncountered) {
+		fields = append(fields, changepir.FieldIssuesEncountered)
+	}
+	if m.FieldCleared(changepir.FieldLessonsLearned) {
+		fields = append(fields, changepir.FieldLessonsLearned)
+	}
+	if m.FieldCleared(changepir.FieldImprovementRecommendations) {
+		fields = append(fields, changepir.FieldImprovementRecommendations)
+	}
+	if m.FieldCleared(changepir.FieldActualStartTime) {
+		fields = append(fields, changepir.FieldActualStartTime)
+	}
+	if m.FieldCleared(changepir.FieldActualEndTime) {
+		fields = append(fields, changepir.FieldActualEndTime)
+	}
+	if m.FieldCleared(changepir.FieldRollbackReason) {
+		fields = append(fields, changepir.FieldRollbackReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ChangePIRMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ChangePIRMutation) ClearField(name string) error {
+	switch name {
+	case changepir.FieldReviewerID:
+		m.ClearReviewerID()
+		return nil
+	case changepir.FieldSuccessSummary:
+		m.ClearSuccessSummary()
+		return nil
+	case changepir.FieldIssuesEncountered:
+		m.ClearIssuesEncountered()
+		return nil
+	case changepir.FieldLessonsLearned:
+		m.ClearLessonsLearned()
+		return nil
+	case changepir.FieldImprovementRecommendations:
+		m.ClearImprovementRecommendations()
+		return nil
+	case changepir.FieldActualStartTime:
+		m.ClearActualStartTime()
+		return nil
+	case changepir.FieldActualEndTime:
+		m.ClearActualEndTime()
+		return nil
+	case changepir.FieldRollbackReason:
+		m.ClearRollbackReason()
+		return nil
+	}
+	return fmt.Errorf("unknown ChangePIR nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ChangePIRMutation) ResetField(name string) error {
+	switch name {
+	case changepir.FieldReviewerID:
+		m.ResetReviewerID()
+		return nil
+	case changepir.FieldOverallResult:
+		m.ResetOverallResult()
+		return nil
+	case changepir.FieldObjectivesAchieved:
+		m.ResetObjectivesAchieved()
+		return nil
+	case changepir.FieldSuccessSummary:
+		m.ResetSuccessSummary()
+		return nil
+	case changepir.FieldIssuesEncountered:
+		m.ResetIssuesEncountered()
+		return nil
+	case changepir.FieldLessonsLearned:
+		m.ResetLessonsLearned()
+		return nil
+	case changepir.FieldImprovementRecommendations:
+		m.ResetImprovementRecommendations()
+		return nil
+	case changepir.FieldActualStartTime:
+		m.ResetActualStartTime()
+		return nil
+	case changepir.FieldActualEndTime:
+		m.ResetActualEndTime()
+		return nil
+	case changepir.FieldActualDurationMinutes:
+		m.ResetActualDurationMinutes()
+		return nil
+	case changepir.FieldRollbackPerformed:
+		m.ResetRollbackPerformed()
+		return nil
+	case changepir.FieldRollbackReason:
+		m.ResetRollbackReason()
+		return nil
+	case changepir.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case changepir.FieldReviewDate:
+		m.ResetReviewDate()
+		return nil
+	case changepir.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case changepir.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ChangePIR field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ChangePIRMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.change != nil {
+		edges = append(edges, changepir.EdgeChange)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ChangePIRMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case changepir.EdgeChange:
+		if id := m.change; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ChangePIRMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ChangePIRMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ChangePIRMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedchange {
+		edges = append(edges, changepir.EdgeChange)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ChangePIRMutation) EdgeCleared(name string) bool {
+	switch name {
+	case changepir.EdgeChange:
+		return m.clearedchange
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ChangePIRMutation) ClearEdge(name string) error {
+	switch name {
+	case changepir.EdgeChange:
+		m.ClearChange()
+		return nil
+	}
+	return fmt.Errorf("unknown ChangePIR unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ChangePIRMutation) ResetEdge(name string) error {
+	switch name {
+	case changepir.EdgeChange:
+		m.ResetChange()
+		return nil
+	}
+	return fmt.Errorf("unknown ChangePIR edge %s", name)
 }
 
 // CloudAccountMutation represents an operation that mutates the CloudAccount nodes in the graph.
@@ -116375,6 +117921,9 @@ type UserMutation struct {
 	article_participations          map[int]struct{}
 	removedarticle_participations   map[int]struct{}
 	clearedarticle_participations   bool
+	pir_reviews                     map[int]struct{}
+	removedpir_reviews              map[int]struct{}
+	clearedpir_reviews              bool
 	done                            bool
 	oldValue                        func(context.Context) (*User, error)
 	predicates                      []predicate.User
@@ -117675,6 +119224,60 @@ func (m *UserMutation) ResetArticleParticipations() {
 	m.removedarticle_participations = nil
 }
 
+// AddPirReviewIDs adds the "pir_reviews" edge to the ChangePIR entity by ids.
+func (m *UserMutation) AddPirReviewIDs(ids ...int) {
+	if m.pir_reviews == nil {
+		m.pir_reviews = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.pir_reviews[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPirReviews clears the "pir_reviews" edge to the ChangePIR entity.
+func (m *UserMutation) ClearPirReviews() {
+	m.clearedpir_reviews = true
+}
+
+// PirReviewsCleared reports if the "pir_reviews" edge to the ChangePIR entity was cleared.
+func (m *UserMutation) PirReviewsCleared() bool {
+	return m.clearedpir_reviews
+}
+
+// RemovePirReviewIDs removes the "pir_reviews" edge to the ChangePIR entity by IDs.
+func (m *UserMutation) RemovePirReviewIDs(ids ...int) {
+	if m.removedpir_reviews == nil {
+		m.removedpir_reviews = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.pir_reviews, ids[i])
+		m.removedpir_reviews[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPirReviews returns the removed IDs of the "pir_reviews" edge to the ChangePIR entity.
+func (m *UserMutation) RemovedPirReviewsIDs() (ids []int) {
+	for id := range m.removedpir_reviews {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PirReviewsIDs returns the "pir_reviews" edge IDs in the mutation.
+func (m *UserMutation) PirReviewsIDs() (ids []int) {
+	for id := range m.pir_reviews {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPirReviews resets all changes to the "pir_reviews" edge.
+func (m *UserMutation) ResetPirReviews() {
+	m.pir_reviews = nil
+	m.clearedpir_reviews = false
+	m.removedpir_reviews = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -118077,7 +119680,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 12)
+	edges := make([]string, 0, 13)
 	if m.department_ref != nil {
 		edges = append(edges, user.EdgeDepartmentRef)
 	}
@@ -118113,6 +119716,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.article_participations != nil {
 		edges = append(edges, user.EdgeArticleParticipations)
+	}
+	if m.pir_reviews != nil {
+		edges = append(edges, user.EdgePirReviews)
 	}
 	return edges
 }
@@ -118189,13 +119795,19 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgePirReviews:
+		ids := make([]ent.Value, 0, len(m.pir_reviews))
+		for id := range m.pir_reviews {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 12)
+	edges := make([]string, 0, 13)
 	if m.removedticket_comments != nil {
 		edges = append(edges, user.EdgeTicketComments)
 	}
@@ -118225,6 +119837,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedarticle_participations != nil {
 		edges = append(edges, user.EdgeArticleParticipations)
+	}
+	if m.removedpir_reviews != nil {
+		edges = append(edges, user.EdgePirReviews)
 	}
 	return edges
 }
@@ -118293,13 +119908,19 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgePirReviews:
+		ids := make([]ent.Value, 0, len(m.removedpir_reviews))
+		for id := range m.removedpir_reviews {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 12)
+	edges := make([]string, 0, 13)
 	if m.cleareddepartment_ref {
 		edges = append(edges, user.EdgeDepartmentRef)
 	}
@@ -118336,6 +119957,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	if m.clearedarticle_participations {
 		edges = append(edges, user.EdgeArticleParticipations)
 	}
+	if m.clearedpir_reviews {
+		edges = append(edges, user.EdgePirReviews)
+	}
 	return edges
 }
 
@@ -118367,6 +119991,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedarticle_sessions
 	case user.EdgeArticleParticipations:
 		return m.clearedarticle_participations
+	case user.EdgePirReviews:
+		return m.clearedpir_reviews
 	}
 	return false
 }
@@ -118424,6 +120050,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeArticleParticipations:
 		m.ResetArticleParticipations()
+		return nil
+	case user.EdgePirReviews:
+		m.ResetPirReviews()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/knowledgearticleparticipant"
@@ -47,6 +48,7 @@ type UserQuery struct {
 	withMspAllocations          *MSPAllocationQuery
 	withArticleSessions         *KnowledgeArticleSessionQuery
 	withArticleParticipations   *KnowledgeArticleParticipantQuery
+	withPirReviews              *ChangePIRQuery
 	withFKs                     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -348,6 +350,28 @@ func (_q *UserQuery) QueryArticleParticipations() *KnowledgeArticleParticipantQu
 	return query
 }
 
+// QueryPirReviews chains the current query on the "pir_reviews" edge.
+func (_q *UserQuery) QueryPirReviews() *ChangePIRQuery {
+	query := (&ChangePIRClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(changepir.Table, changepir.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PirReviewsTable, user.PirReviewsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first User entity from the query.
 // Returns a *NotFoundError when no User was found.
 func (_q *UserQuery) First(ctx context.Context) (*User, error) {
@@ -552,6 +576,7 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withMspAllocations:          _q.withMspAllocations.Clone(),
 		withArticleSessions:         _q.withArticleSessions.Clone(),
 		withArticleParticipations:   _q.withArticleParticipations.Clone(),
+		withPirReviews:              _q.withPirReviews.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -690,6 +715,17 @@ func (_q *UserQuery) WithArticleParticipations(opts ...func(*KnowledgeArticlePar
 	return _q
 }
 
+// WithPirReviews tells the query-builder to eager-load the nodes that are connected to
+// the "pir_reviews" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithPirReviews(opts ...func(*ChangePIRQuery)) *UserQuery {
+	query := (&ChangePIRClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPirReviews = query
+	return _q
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -769,7 +805,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [12]bool{
+		loadedTypes = [13]bool{
 			_q.withDepartmentRef != nil,
 			_q.withTenant != nil,
 			_q.withTicketComments != nil,
@@ -782,6 +818,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			_q.withMspAllocations != nil,
 			_q.withArticleSessions != nil,
 			_q.withArticleParticipations != nil,
+			_q.withPirReviews != nil,
 		}
 	)
 	if withFKs {
@@ -894,6 +931,13 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			func(n *User, e *KnowledgeArticleParticipant) {
 				n.Edges.ArticleParticipations = append(n.Edges.ArticleParticipations, e)
 			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPirReviews; query != nil {
+		if err := _q.loadPirReviews(ctx, query, nodes,
+			func(n *User) { n.Edges.PirReviews = []*ChangePIR{} },
+			func(n *User, e *ChangePIR) { n.Edges.PirReviews = append(n.Edges.PirReviews, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1349,6 +1393,37 @@ func (_q *UserQuery) loadArticleParticipations(ctx context.Context, query *Knowl
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (_q *UserQuery) loadPirReviews(ctx context.Context, query *ChangePIRQuery, nodes []*User, init func(*User), assign func(*User, *ChangePIR)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.ChangePIR(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.PirReviewsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_pir_reviews
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_pir_reviews" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_pir_reviews" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

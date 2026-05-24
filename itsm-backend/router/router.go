@@ -611,6 +611,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				changes.GET("/:id/risk", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
 				// 日历视图
 				changes.GET("/calendar", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetCalendar)
+				// PIR (Post-Implementation Review)
+				changes.GET("/pirs", middleware.RequirePermission("change", "read"), config.ChangeHandler.ListPIRs)
+				changes.GET("/:id/pir", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetPIR)
+				changes.POST("/:id/pir", middleware.RequirePermission("change", "write"), config.ChangeHandler.CreatePIR)
+				changes.PUT("/pir/:id", middleware.RequirePermission("change", "write"), config.ChangeHandler.UpdatePIR)
+				changes.DELETE("/pir/:id", middleware.RequirePermission("change", "delete"), config.ChangeHandler.DeletePIR)
 			}
 		}
 

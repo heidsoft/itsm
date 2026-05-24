@@ -89,5 +89,7 @@ func (Change) Edges() []ent.Edge {
 		edge.From("problems", Problem.Type).
 			Ref("changes").
 			Comment("关联的问题"),
+		edge.To("pir", ChangePIR.Type).
+			Comment("实施后审查"),
 	}
 }
