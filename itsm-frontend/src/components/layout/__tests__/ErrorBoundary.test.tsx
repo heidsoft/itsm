@@ -700,6 +700,7 @@ describe('性能和边界情况', () => {
     class SpecialErrorComponent extends Component<{}, {}> {
       render(): React.ReactNode {
         throw new Error('Error with <special> & "characters"');
+        return null; // This line ensures render has a return statement
       }
     }
 
