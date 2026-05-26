@@ -44,11 +44,13 @@ jobs:
           }
 
       - name: Run staticcheck
-        uses: dominikh/staticcheck-action@v1.4.0
+        uses: dominikh/staticcheck-action@v1.12.0
         with:
           version: latest
-          cache: true
-          args: "-checks=all,-ST1000,-U1000"
+          use-cache: true
+          checks: "all,-ST1000,-U1000"
+          min-go-version: "1.24"
+          working-directory: itsm-backend
 
       - name: Code quality checks
         run: |
