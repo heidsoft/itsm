@@ -404,8 +404,8 @@ export default function KnowledgeReviewListPage() {
       >
         <div className="py-4">
           <p className="mb-4">
-            确定要{reviewAction === 'approve' ? '批准' : '拒绝'}发布文章 "
-            <Text strong>{selectedArticle?.title}</Text>" 吗？
+            确定要{reviewAction === 'approve' ? '批准' : '拒绝'}发布文章 &quot;
+            <Text strong>{selectedArticle?.title}</Text>&quot; 吗？
           </p>
           <div>
             <Text type="secondary" className="mb-2 block">
