@@ -144,3 +144,9 @@ __pycache__/
 
 # Compiled binary (large file)
 itsm-backend/main
+easycloud
+easycloud/*
+itsm-rag
+itsm-rag/*
+itsm-skill
+itsm-skill/*
