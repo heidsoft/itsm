@@ -44,10 +44,10 @@ jobs:
           }
 
       - name: Run staticcheck
-        uses: dominikh/staticcheck-action@v1.8.0
-        with:
-          version: latest
-          use-cache: true
+        run: |
+          cd itsm-backend
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          staticcheck ./...
 
       - name: Code quality checks
         run: |
