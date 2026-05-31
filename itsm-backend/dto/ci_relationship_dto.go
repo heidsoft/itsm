@@ -56,44 +56,44 @@ const (
 
 // CreateCIRelationshipRequest 创建CI关系请求
 type CreateCIRelationshipRequest struct {
-	SourceCIID       int                    `json:"source_ci_id" binding:"required"`
-	TargetCIID       int                    `json:"target_ci_id" binding:"required"`
-	RelationshipType CIRelationshipType     `json:"relationship_type" binding:"required"`
+	SourceCIID       int                    `json:"sourceCiId" binding:"required"`
+	TargetCIID       int                    `json:"targetCiId" binding:"required"`
+	RelationshipType CIRelationshipType     `json:"relationshipType" binding:"required"`
 	Strength         RelationshipStrength   `json:"strength"`
-	ImpactLevel      ImpactLevel            `json:"impact_level"`
+	ImpactLevel      ImpactLevel            `json:"impactLevel"`
 	Description      string                 `json:"description"`
 	Metadata         map[string]interface{} `json:"metadata"`
 }
 
 // UpdateCIRelationshipRequest 更新CI关系请求
 type UpdateCIRelationshipRequest struct {
-	RelationshipType *CIRelationshipType     `json:"relationship_type"`
+	RelationshipType *CIRelationshipType     `json:"relationshipType"`
 	Strength         *RelationshipStrength   `json:"strength"`
-	ImpactLevel      *ImpactLevel            `json:"impact_level"`
+	ImpactLevel      *ImpactLevel            `json:"impactLevel"`
 	Description      *string                 `json:"description"`
 	Metadata         *map[string]interface{} `json:"metadata"`
-	IsActive         *bool                   `json:"is_active"`
+	IsActive         *bool                   `json:"isActive"`
 }
 
 // CIRelationshipResponse CI关系响应
 type CIRelationshipResponse struct {
 	ID                   int                    `json:"id"`
-	SourceCIID           int                    `json:"source_ci_id"`
-	SourceCIName         string                 `json:"source_ci_name"`
-	SourceCIType         string                 `json:"source_ci_type"`
-	TargetCIID           int                    `json:"target_ci_id"`
-	TargetCIName         string                 `json:"target_ci_name"`
-	TargetCIType         string                 `json:"target_ci_type"`
-	RelationshipType     CIRelationshipType     `json:"relationship_type"`
+	SourceCIID           int                    `json:"sourceCiId"`
+	SourceCIName         string                 `json:"sourceCiName"`
+	SourceCIType         string                 `json:"sourceCiType"`
+	TargetCIID           int                    `json:"targetCiId"`
+	TargetCIName         string                 `json:"targetCiName"`
+	TargetCIType         string                 `json:"targetCiType"`
+	RelationshipType     CIRelationshipType     `json:"relationshipType"`
 	RelationshipTypeName string                 `json:"relationship_type_name"`
 	Strength             RelationshipStrength   `json:"strength"`
-	ImpactLevel          ImpactLevel            `json:"impact_level"`
-	IsActive             bool                   `json:"is_active"`
+	ImpactLevel          ImpactLevel            `json:"impactLevel"`
+	IsActive             bool                   `json:"isActive"`
 	IsDiscovered         bool                   `json:"is_discovered"`
 	Description          string                 `json:"description"`
 	Metadata             map[string]interface{} `json:"metadata"`
-	CreatedAt            time.Time              `json:"created_at"`
-	UpdatedAt            time.Time              `json:"updated_at"`
+	CreatedAt            time.Time              `json:"createdAt"`
+	UpdatedAt            time.Time              `json:"updatedAt"`
 }
 
 // TopologyNode 拓扑图节点
@@ -113,10 +113,10 @@ type TopologyEdge struct {
 	ID                int    `json:"id"`
 	Source            int    `json:"source"`
 	Target            int    `json:"target"`
-	RelationshipType  string `json:"relationship_type"`
+	RelationshipType  string `json:"relationshipType"`
 	RelationshipLabel string `json:"relationship_label"`
 	Strength          string `json:"strength"`
-	ImpactLevel       string `json:"impact_level"`
+	ImpactLevel       string `json:"impactLevel"`
 }
 
 // TopologyGraph 拓扑图数据
@@ -131,7 +131,7 @@ type TopologyGraph struct {
 
 // ImpactAnalysisRequest 影响分析请求
 type ImpactAnalysisRequest struct {
-	CIID              int                  `json:"ci_id" binding:"required"`
+	CIID              int                  `json:"ciId" binding:"required"`
 	IncludeUpstream   bool                 `json:"include_upstream"`
 	IncludeDownstream bool                 `json:"include_downstream"`
 	MaxDepth          int                  `json:"max_depth"`
@@ -140,12 +140,12 @@ type ImpactAnalysisRequest struct {
 
 // ImpactAnalysisItem 影响分析项
 type ImpactAnalysisItem struct {
-	CIID             int                `json:"ci_id"`
+	CIID             int                `json:"ciId"`
 	CIName           string             `json:"ci_name"`
 	CIT              string             `json:"ci_type"`
 	Relationship     string             `json:"relationship"`
-	RelationshipType CIRelationshipType `json:"relationship_type"`
-	ImpactLevel      ImpactLevel        `json:"impact_level"`
+	RelationshipType CIRelationshipType `json:"relationshipType"`
+	ImpactLevel      ImpactLevel        `json:"impactLevel"`
 	Distance         int                `json:"distance"`
 	Direction        string             `json:"direction"`      // upstream / downstream
 	AffectedCount    int                `json:"affected_count"` // 受影响的工单/事件数量
@@ -169,7 +169,7 @@ type AffectedTicket struct {
 	Title     string `json:"title"`
 	Status    string `json:"status"`
 	Priority  string `json:"priority"`
-	CreatedAt string `json:"created_at"`
+	CreatedAt string `json:"createdAt"`
 }
 
 // AffectedIncident 受影响的事件
@@ -178,7 +178,7 @@ type AffectedIncident struct {
 	Title     string `json:"title"`
 	Status    string `json:"status"`
 	Severity  string `json:"severity"`
-	CreatedAt string `json:"created_at"`
+	CreatedAt string `json:"createdAt"`
 }
 
 // CIImpactRequest CI影响范围请求（用于变更/工单）
@@ -201,10 +201,10 @@ type CIImpactResponse struct {
 
 // GetCIRelationshipsRequest 获取CI关系请求
 type GetCIRelationshipsRequest struct {
-	CIID             int                `json:"ci_id" binding:"required"`
+	CIID             int                `json:"ciId" binding:"required"`
 	IncludeOutgoing  bool               `json:"include_outgoing"`
 	IncludeIncoming  bool               `json:"include_incoming"`
-	RelationshipType CIRelationshipType `json:"relationship_type"`
+	RelationshipType CIRelationshipType `json:"relationshipType"`
 	ActiveOnly       bool               `json:"active_only"`
 }
 
@@ -218,7 +218,7 @@ type GetCIRelationshipsResponse struct {
 
 // GetCIWithRelationsRequest 获取CI及其所有关系请求
 type GetCIWithRelationsRequest struct {
-	CIID  int `json:"ci_id" binding:"required"`
+	CIID  int `json:"ciId" binding:"required"`
 	Depth int `json:"depth"`
 }
 
