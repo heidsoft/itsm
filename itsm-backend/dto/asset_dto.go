@@ -31,20 +31,20 @@ type CreateAssetRequest struct {
 	Type           string            `json:"type"`                            // 资产类型
 	Category       string            `json:"category"`                        // 资产分类
 	Subcategory    string            `json:"subcategory"`                     // 资产子分类
-	CIID           *int              `json:"ci_id"`                           // 关联CMDB配置项ID
-	AssignedTo     *int              `json:"assigned_to"`                     // 分配给的用户ID
-	LocationID     *int              `json:"location_id"`                     // 位置ID
-	SerialNumber   string            `json:"serial_number"`                   // 序列号
+	CIID           *int              `json:"ciId"`                           // 关联CMDB配置项ID
+	AssignedTo     *int              `json:"assignedTo"`                     // 分配给的用户ID
+	LocationID     *int              `json:"locationId"`                     // 位置ID
+	SerialNumber   string            `json:"serialNumber"`                   // 序列号
 	Model          string            `json:"model"`                           // 型号
 	Manufacturer   string            `json:"manufacturer"`                    // 制造商
 	Vendor         string            `json:"vendor"`                          // 供应商
-	PurchaseDate   string            `json:"purchase_date"`                   // 采购日期
+	PurchaseDate   string            `json:"purchaseDate"`                   // 采购日期
 	PurchasePrice  *float64          `json:"purchase_price"`                  // 采购价格
 	WarrantyExpiry string            `json:"warranty_expiry"`                 // 保修期到期
 	SupportExpiry  string            `json:"support_expiry"`                  // 支持期到期
 	Location       string            `json:"location"`                        // 物理位置
 	Department     string            `json:"department"`                      // 所属部门
-	ParentAssetID  *int              `json:"parent_asset_id"`                 // 父资产ID
+	ParentAssetID  *int              `json:"parentAssetId"`                 // 父资产ID
 	Specifications map[string]string `json:"specifications"`                  // 规格参数
 	CustomFields   map[string]string `json:"custom_fields"`                   // 自定义字段
 	Tags           []string          `json:"tags"`                            // 标签
@@ -57,20 +57,20 @@ type UpdateAssetRequest struct {
 	Type           *string           `json:"type"`            // 资产类型
 	Category       *string           `json:"category"`        // 资产分类
 	Subcategory    *string           `json:"subcategory"`     // 资产子分类
-	CIID           *int              `json:"ci_id"`           // 关联CMDB配置项ID
-	AssignedTo     *int              `json:"assigned_to"`     // 分配给的用户ID
-	LocationID     *int              `json:"location_id"`     // 位置ID
-	SerialNumber   *string           `json:"serial_number"`   // 序列号
+	CIID           *int              `json:"ciId"`           // 关联CMDB配置项ID
+	AssignedTo     *int              `json:"assignedTo"`     // 分配给的用户ID
+	LocationID     *int              `json:"locationId"`     // 位置ID
+	SerialNumber   *string           `json:"serialNumber"`   // 序列号
 	Model          *string           `json:"model"`           // 型号
 	Manufacturer   *string           `json:"manufacturer"`    // 制造商
 	Vendor         *string           `json:"vendor"`          // 供应商
-	PurchaseDate   *string           `json:"purchase_date"`   // 采购日期
+	PurchaseDate   *string           `json:"purchaseDate"`   // 采购日期
 	PurchasePrice  *float64          `json:"purchase_price"`  // 采购价格
 	WarrantyExpiry *string           `json:"warranty_expiry"` // 保修期到期
 	SupportExpiry  *string           `json:"support_expiry"`  // 支持期到期
 	Location       *string           `json:"location"`        // 物理位置
 	Department     *string           `json:"department"`      // 所属部门
-	ParentAssetID  *int              `json:"parent_asset_id"` // 父资产ID
+	ParentAssetID  *int              `json:"parentAssetId"` // 父资产ID
 	Specifications map[string]string `json:"specifications"`  // 规格参数
 	CustomFields   map[string]string `json:"custom_fields"`   // 自定义字段
 	Tags           []string          `json:"tags"`            // 标签
@@ -86,29 +86,29 @@ type AssetResponse struct {
 	Status          string            `json:"status"`            // 状态
 	Category        string            `json:"category"`          // 资产分类
 	Subcategory     string            `json:"subcategory"`       // 资产子分类
-	TenantID        int               `json:"tenant_id"`         // 租户ID
-	CIID            *int              `json:"ci_id"`             // 关联CMDB配置项ID
+	TenantID        int               `json:"tenantId"`         // 租户ID
+	CIID            *int              `json:"ciId"`             // 关联CMDB配置项ID
 	CIName          *string           `json:"ci_name"`           // 关联CMDB配置项名称
-	AssignedTo      *int              `json:"assigned_to"`       // 分配给的用户ID
+	AssignedTo      *int              `json:"assignedTo"`       // 分配给的用户ID
 	AssignedToName  *string           `json:"assigned_to_name"`  // 分配给的用户姓名
-	LocationID      *int              `json:"location_id"`       // 位置ID
-	SerialNumber    string            `json:"serial_number"`     // 序列号
+	LocationID      *int              `json:"locationId"`       // 位置ID
+	SerialNumber    string            `json:"serialNumber"`     // 序列号
 	Model           string            `json:"model"`             // 型号
 	Manufacturer    string            `json:"manufacturer"`      // 制造商
 	Vendor          string            `json:"vendor"`            // 供应商
-	PurchaseDate    string            `json:"purchase_date"`     // 采购日期
+	PurchaseDate    string            `json:"purchaseDate"`     // 采购日期
 	PurchasePrice   *float64          `json:"purchase_price"`    // 采购价格
 	WarrantyExpiry  string            `json:"warranty_expiry"`   // 保修期到期
 	SupportExpiry   string            `json:"support_expiry"`    // 支持期到期
 	Location        string            `json:"location"`          // 物理位置
 	Department      string            `json:"department"`        // 所属部门
-	ParentAssetID   *int              `json:"parent_asset_id"`   // 父资产ID
+	ParentAssetID   *int              `json:"parentAssetId"`   // 父资产ID
 	ParentAssetName *string           `json:"parent_asset_name"` // 父资产名称
 	Specifications  map[string]string `json:"specifications"`    // 规格参数
 	CustomFields    map[string]string `json:"custom_fields"`     // 自定义字段
 	Tags            []string          `json:"tags"`              // 标签
-	CreatedAt       time.Time         `json:"created_at"`        // 创建时间
-	UpdatedAt       time.Time         `json:"updated_at"`        // 更新时间
+	CreatedAt       time.Time         `json:"createdAt"`        // 创建时间
+	UpdatedAt       time.Time         `json:"updatedAt"`        // 更新时间
 }
 
 // AssetListResponse 资产列表响应
@@ -130,19 +130,19 @@ type AssetStatsResponse struct {
 // AssetStatusUpdateRequest 资产状态更新请求
 type AssetStatusUpdateRequest struct {
 	Status     AssetStatus `json:"status" binding:"required"` // 新状态
-	AssignedTo *int        `json:"assigned_to"`               // 分配给的用户ID
+	AssignedTo *int        `json:"assignedTo"`               // 分配给的用户ID
 	Comment    *string     `json:"comment"`                   // 状态变更说明
 }
 
 // AssetAssignRequest 资产分配请求
 type AssetAssignRequest struct {
-	AssignedTo int     `json:"assigned_to" binding:"required"` // 分配给的用户ID
+	AssignedTo int     `json:"assignedTo" binding:"required"` // 分配给的用户ID
 	Comment    *string `json:"comment"`                        // 分配说明
 }
 
 // AssetTransferRequest 资产转移请求
 type AssetTransferRequest struct {
-	AssignedTo int     `json:"assigned_to" binding:"required"` // 新所有者ID
+	AssignedTo int     `json:"assignedTo" binding:"required"` // 新所有者ID
 	Location   *string `json:"location"`                       // 新位置
 	Comment    *string `json:"comment"`                        // 转移说明
 }
@@ -151,7 +151,7 @@ type AssetTransferRequest struct {
 type AssetMaintenanceRequest struct {
 	MaintenanceType string     `json:"maintenance_type" binding:"required"` // 维护类型
 	Description     string     `json:"description" binding:"required"`      // 维护描述
-	StartDate       *time.Time `json:"start_date"`                          // 开始日期
+	StartDate       *time.Time `json:"startDate"`                          // 开始日期
 	EndDate         *time.Time `json:"end_date"`                            // 结束日期
 	Cost            *float64   `json:"cost"`                                // 维护成本
 	Vendor          *string    `json:"vendor"`                              // 供应商

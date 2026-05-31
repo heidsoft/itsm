@@ -28,15 +28,15 @@ type CreateLicenseRequest struct {
 	Name           string   `json:"name" binding:"required"` // 许可证名称
 	Description    string   `json:"description"`             // 许可证描述
 	Vendor         string   `json:"vendor"`                  // 供应商
-	LicenseType    string   `json:"license_type"`            // 许可证类型
-	TotalQuantity  int      `json:"total_quantity"`          // 总数量
-	AssetID        *int     `json:"asset_id"`                // 关联的资产ID
-	PurchaseDate   string   `json:"purchase_date"`           // 采购日期
-	PurchasePrice  *float64 `json:"purchase_price"`          // 采购价格
-	ExpiryDate     string   `json:"expiry_date"`             // 到期日期
-	SupportVendor  string   `json:"support_vendor"`          // 支持供应商
-	SupportContact string   `json:"support_contact"`         // 支持联系方式
-	RenewalCost    string   `json:"renewal_cost"`            // 续费成本
+	LicenseType    string   `json:"licenseType"`            // 许可证类型
+	TotalQuantity  int      `json:"totalQuantity"`          // 总数量
+	AssetID        *int     `json:"assetId"`                // 关联的资产ID
+	PurchaseDate   string   `json:"purchaseDate"`           // 采购日期
+	PurchasePrice  *float64 `json:"purchasePrice"`          // 采购价格
+	ExpiryDate     string   `json:"expiryDate"`             // 到期日期
+	SupportVendor  string   `json:"supportVendor"`          // 支持供应商
+	SupportContact string   `json:"supportContact"`         // 支持联系方式
+	RenewalCost    string   `json:"renewalCost"`            // 续费成本
 	Notes          string   `json:"notes"`                   // 备注
 	Users          []int    `json:"users"`                   // 授权用户列表
 	Tags           []string `json:"tags"`                    // 标签
@@ -47,16 +47,16 @@ type UpdateLicenseRequest struct {
 	Name           *string  `json:"name"`            // 许可证名称
 	Description    *string  `json:"description"`     // 许可证描述
 	Vendor         *string  `json:"vendor"`          // 供应商
-	LicenseType    *string  `json:"license_type"`    // 许可证类型
-	TotalQuantity  *int     `json:"total_quantity"`  // 总数量
+	LicenseType    *string  `json:"licenseType"`    // 许可证类型
+	TotalQuantity  *int     `json:"totalQuantity"`  // 总数量
 	UsedQuantity   *int     `json:"used_quantity"`   // 已使用数量
-	AssetID        *int     `json:"asset_id"`        // 关联的资产ID
-	PurchaseDate   *string  `json:"purchase_date"`   // 采购日期
-	PurchasePrice  *float64 `json:"purchase_price"`  // 采购价格
-	ExpiryDate     *string  `json:"expiry_date"`     // 到期日期
-	SupportVendor  *string  `json:"support_vendor"`  // 支持供应商
-	SupportContact *string  `json:"support_contact"` // 支持联系方式
-	RenewalCost    *string  `json:"renewal_cost"`    // 续费成本
+	AssetID        *int     `json:"assetId"`        // 关联的资产ID
+	PurchaseDate   *string  `json:"purchaseDate"`   // 采购日期
+	PurchasePrice  *float64 `json:"purchasePrice"`  // 采购价格
+	ExpiryDate     *string  `json:"expiryDate"`     // 到期日期
+	SupportVendor  *string  `json:"supportVendor"`  // 支持供应商
+	SupportContact *string  `json:"supportContact"` // 支持联系方式
+	RenewalCost    *string  `json:"renewalCost"`    // 续费成本
 	Notes          *string  `json:"notes"`           // 备注
 	Users          []int    `json:"users"`           // 授权用户列表
 	Tags           []string `json:"tags"`            // 标签
@@ -69,26 +69,26 @@ type LicenseResponse struct {
 	Name              string    `json:"name"`               // 许可证名称
 	Description       string    `json:"description"`        // 许可证描述
 	Vendor            string    `json:"vendor"`             // 供应商
-	LicenseType       string    `json:"license_type"`       // 许可证类型
-	TotalQuantity     int       `json:"total_quantity"`     // 总数量
+	LicenseType       string    `json:"licenseType"`       // 许可证类型
+	TotalQuantity     int       `json:"totalQuantity"`     // 总数量
 	UsedQuantity      int       `json:"used_quantity"`      // 已使用数量
 	AvailableQuantity int       `json:"available_quantity"` // 可用数量
-	TenantID          int       `json:"tenant_id"`          // 租户ID
-	AssetID           *int      `json:"asset_id"`           // 关联的资产ID
+	TenantID          int       `json:"tenantId"`          // 租户ID
+	AssetID           *int      `json:"assetId"`           // 关联的资产ID
 	AssetName         *string   `json:"asset_name"`         // 关联的资产名称
-	PurchaseDate      string    `json:"purchase_date"`      // 采购日期
-	PurchasePrice     *float64  `json:"purchase_price"`     // 采购价格
-	ExpiryDate        string    `json:"expiry_date"`        // 到期日期
-	SupportVendor     string    `json:"support_vendor"`     // 支持供应商
-	SupportContact    string    `json:"support_contact"`    // 支持联系方式
-	RenewalCost       string    `json:"renewal_cost"`       // 续费成本
+	PurchaseDate      string    `json:"purchaseDate"`      // 采购日期
+	PurchasePrice     *float64  `json:"purchasePrice"`     // 采购价格
+	ExpiryDate        string    `json:"expiryDate"`        // 到期日期
+	SupportVendor     string    `json:"supportVendor"`     // 支持供应商
+	SupportContact    string    `json:"supportContact"`    // 支持联系方式
+	RenewalCost       string    `json:"renewalCost"`       // 续费成本
 	Status            string    `json:"status"`             // 状态
 	Notes             string    `json:"notes"`              // 备注
 	Users             []int     `json:"users"`              // 授权用户列表
 	UserNames         []string  `json:"user_names"`         // 授权用户姓名列表
 	Tags              []string  `json:"tags"`               // 标签
-	CreatedAt         time.Time `json:"created_at"`         // 创建时间
-	UpdatedAt         time.Time `json:"updated_at"`         // 更新时间
+	CreatedAt         time.Time `json:"createdAt"`         // 创建时间
+	UpdatedAt         time.Time `json:"updatedAt"`         // 更新时间
 }
 
 // LicenseListResponse 许可证列表响应
@@ -116,7 +116,7 @@ type LicenseAssignRequest struct {
 // LicenseRenewalRequest 许可证续期请求
 type LicenseRenewalRequest struct {
 	NewExpiryDate string  `json:"new_expiry_date" binding:"required"` // 新到期日期
-	RenewalCost   string  `json:"renewal_cost"`                       // 续费成本
+	RenewalCost   string  `json:"renewalCost"`                       // 续费成本
 	Vendor        string  `json:"vendor"`                             // 供应商
 	Comment       *string `json:"comment"`                            // 备注
 }

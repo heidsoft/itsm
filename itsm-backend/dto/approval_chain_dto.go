@@ -8,14 +8,14 @@ type ApprovalChainStepDTO struct {
 	ApproverID int    `json:"approver_id,omitempty"`
 	Role       string `json:"role"`
 	Name       string `json:"name"`
-	IsRequired bool   `json:"is_required"`
+	IsRequired bool   `json:"isRequired"`
 }
 
 // ApprovalChainRequest 创建审批链请求
 type ApprovalChainRequest struct {
 	Name        string                 `json:"name" binding:"required"`
 	Description string                 `json:"description"`
-	EntityType  string                 `json:"entity_type" binding:"required"`
+	EntityType  string                 `json:"entityType" binding:"required"`
 	Chain       []ApprovalChainStepDTO `json:"chain" binding:"required"`
 	Status      string                 `json:"status"`
 	TenantID    int                    `json:"-"`
@@ -26,13 +26,13 @@ type ApprovalChainResponse struct {
 	ID          int                    `json:"id"`
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
-	EntityType  string                 `json:"entity_type"`
+	EntityType  string                 `json:"entityType"`
 	Chain       []ApprovalChainStepDTO `json:"chain"`
 	Status      string                 `json:"status"`
-	CreatedBy   int                    `json:"created_by"`
-	TenantID    int                    `json:"tenant_id"`
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   time.Time              `json:"updated_at"`
+	CreatedBy   int                    `json:"createdBy"`
+	TenantID    int                    `json:"tenantId"`
+	CreatedAt   time.Time              `json:"createdAt"`
+	UpdatedAt   time.Time              `json:"updatedAt"`
 }
 
 // ApprovalChainListResponse 审批链列表响应
@@ -48,6 +48,6 @@ type ApprovalChainStats struct {
 	Total            int     `json:"total"`
 	Active           int     `json:"active"`
 	Inactive         int     `json:"inactive"`
-	TotalSteps       int     `json:"total_steps"`
-	AvgStepsPerChain float64 `json:"avg_steps_per_chain"`
+	TotalSteps       int     `json:"totalSteps"`
+	AvgStepsPerChain float64 `json:"avgStepsPerChain"`
 }
