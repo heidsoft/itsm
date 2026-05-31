@@ -8,7 +8,7 @@ import (
 type CreateGroupRequest struct {
 	Name        string `json:"name" binding:"required,min=1,max=100"`
 	Description string `json:"description" binding:"omitempty,max=500"`
-	TenantID    int    `json:"tenant_id" binding:"omitempty,min=1"`
+	TenantID    int    `json:"tenantId" binding:"omitempty,min=1"`
 }
 
 // UpdateGroupRequest 更新组请求
@@ -27,12 +27,12 @@ type ListGroupsRequest struct {
 
 // AddUserToGroupRequest 添加用户到组请求
 type AddUserToGroupRequest struct {
-	UserID int `json:"user_id" binding:"required,min=1"`
+	UserID int `json:"userId" binding:"required,min=1"`
 }
 
 // RemoveUserFromGroupRequest 从组移除用户请求
 type RemoveUserFromGroupRequest struct {
-	UserID int `json:"user_id" binding:"required,min=1"`
+	UserID int `json:"userId" binding:"required,min=1"`
 }
 
 // GroupResponse 组响应
@@ -40,9 +40,9 @@ type GroupResponse struct {
 	ID          int       `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	TenantID    int       `json:"tenant_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	TenantID    int       `json:"tenantId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // PagedGroupsResponse 分页组响应
@@ -71,8 +71,8 @@ type GroupDetailResponse struct {
 	ID          int        `json:"id"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
-	TenantID    int        `json:"tenant_id"`
+	TenantID    int        `json:"tenantId"`
 	Members     []*UserDTO `json:"members,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	UpdatedAt   time.Time  `json:"updatedAt"`
 }
