@@ -7,7 +7,7 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 ### How to Report
 
 1. **Do NOT** create a public GitHub issue for security vulnerabilities
-2. Email the maintainers directly at: (replace with your security contact email)
+2. Email the maintainers directly at: security@cloudmesh.top
 3. Include the following information:
    - Description of the vulnerability
    - Steps to reproduce
