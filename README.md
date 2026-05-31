@@ -7,9 +7,14 @@
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?style=flat&logo=nextdotjs)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat&logo=typescript)](https://typescriptlang.org)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791?style=flat&logo=postgresql)](https://postgresql.org)
 [![License](https://img.shields.io/badge/License-Apache_2.0-yellowgreen?style=flat)](LICENSE)
+[![Backend CI](https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml)
 [![AI-Native](https://img.shields.io/badge/AI-Native-FF6B6B?style=flat&logo=openai)](https://openai.com)
+[![Stars](https://img.shields.io/github/stars/heidsoft/itsm?style=flat)](https://github.com/heidsoft/itsm/stargazers)
+[![Forks](https://img.shields.io/github/forks/heidsoft/itsm?style=flat)](https://github.com/heidsoft/itsm/network)
+[![Issues](https://img.shields.io/github/issues/heidsoft/itsm?style=flat)](https://github.com/heidsoft/itsm/issues)
+[![Contributors](https://img.shields.io/github/contributors/heidsoft/itsm?style=flat)](https://github.com/heidsoft/itsm/graphs/contributors)
 
 **🚀 LLM-first 智能分诊 | Guidance-Harness-Skill 工程体系 | 开源免费**
 
@@ -472,6 +477,8 @@ Apache License 2.0 - 开源免费，允许自由使用于商业产品。
 **⭐ 如果这个项目对您有帮助，请 Star 支持！**
 
 **🤖 AI-Native ITSM: AI First, Not AI After**
+
+**[贡献者](./CONTRIBUTORS.md)** | 感谢您的参与！
 
 Made with ❤️ by ITSM Team
 
