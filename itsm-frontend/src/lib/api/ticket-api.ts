@@ -512,7 +512,7 @@ export class TicketApi {
   static async batchDeleteTickets(ticketIds: number[]): Promise<void> {
     return httpClient.request({
       method: 'DELETE',
-      url: '/api/v1/tickets/batch',
+      url: '/api/v1/tickets/batch-delete',
       data: { ticket_ids: ticketIds },
     });
   }
@@ -549,7 +549,7 @@ export class TicketApi {
     action: string,
     data?: Record<string, unknown>
   ): Promise<void> {
-    return httpClient.put('/api/v1/tickets/batch', {
+    return httpClient.put('/api/v1/tickets/batch-assign', {
       ticket_ids: ticketIds,
       action,
       data,
