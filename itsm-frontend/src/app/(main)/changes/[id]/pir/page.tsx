@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   Form,
@@ -52,9 +52,9 @@ export default function PIRPage() {
 
   useEffect(() => {
     fetchPIR();
-  }, [changeId]);
+  }, [changeId, fetchPIR]);
 
-  const fetchPIR = async () => {
+  const fetchPIR = useCallback(async () => {
     setLoading(true);
     try {
       const pirData = await ChangeApi.getPIR(changeId);
