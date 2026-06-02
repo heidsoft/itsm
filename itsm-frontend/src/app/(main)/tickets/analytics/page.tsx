@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Card,
   Row,
@@ -59,9 +59,7 @@ const TicketAnalytics: React.FC = () => {
   // 获取分析数据
   useEffect(() => {
     fetchData();
-  }, [dateRange]);
-
-  // 初始空数据
+  }, [dateRange, fetchData]);
   function getInitialData(): TicketAnalyticsResponse {
     return {
       total_tickets: 0,
@@ -84,7 +82,7 @@ const TicketAnalytics: React.FC = () => {
   }
 
   // 获取数据
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [analyticsRes, statsRes] = await Promise.all([
@@ -127,7 +125,8 @@ const TicketAnalytics: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [dateRange]);
+  }, [dateRange, fetchData]);
+  }, [dateRange, fetchData]);
 
   // 导出数据
   const handleExport = async (format: 'csv' | 'excel' | 'pdf' = 'excel') => {
