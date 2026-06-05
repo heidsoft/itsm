@@ -36,8 +36,9 @@ COPY . ./
 
 # Build the application
 # Unset proxy vars and use goproxy.cn for dependencies
+# Use -p=2 to limit parallel compilations and avoid OOM with large ent packages
 RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+    CGO_ENABLED=0 GOOS=linux go build -p=2 -o main .
 
 # Final stage
 FROM alpine:latest
