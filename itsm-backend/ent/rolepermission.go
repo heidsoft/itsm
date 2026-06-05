@@ -18,7 +18,7 @@ type RolePermission struct {
 	ID int `json:"id,omitempty"`
 	// 角色ID
 	RoleID int `json:"role_id,omitempty"`
-	// 权限定义ID
+	// 权限ID
 	PermissionID                           int `json:"permission_id,omitempty"`
 	permission_definition_role_permissions *int
 	selectValues                           sql.SelectValues

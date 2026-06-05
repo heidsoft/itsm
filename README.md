@@ -134,7 +134,7 @@ docker compose ps
 # API文档: http://localhost:8090/swagger
 ```
 
-> **首次登录**: 用户名 `admin`，密码 `admin123`
+> **首次登录（开发/首次安装）**: 用户名 `admin`，密码 `admin123`。生产部署前必须通过环境变量或初始化流程修改管理员密码、`JWT_SECRET`、数据库密码和 Redis 密码。
 
 > **中国网络**: 如遇 Docker 构建超时，请配置镜像加速: `~/.docker/config.json`
 
@@ -142,7 +142,7 @@ docker compose ps
 
 ```bash
 # 检查服务健康状态
-curl http://localhost:8090/health
+curl http://localhost:8090/api/v1/health
 
 # 查看日志
 docker compose logs -f

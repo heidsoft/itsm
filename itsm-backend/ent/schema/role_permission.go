@@ -6,7 +6,7 @@ import (
 )
 
 // RolePermission holds the schema definition for the RolePermission entity.
-// This is a join table for many-to-many relationship between Role and PermissionDefinition.
+// This is a join table for many-to-many relationship between Role and Permission.
 type RolePermission struct {
 	ent.Schema
 }
@@ -15,7 +15,7 @@ type RolePermission struct {
 func (RolePermission) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("role_id").Comment("角色ID"),
-		field.Int("permission_id").Comment("权限定义ID"),
+		field.Int("permission_id").Comment("权限ID"),
 	}
 }
 

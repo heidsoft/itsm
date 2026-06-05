@@ -21,6 +21,7 @@ import (
 	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/release"
 	"itsm-backend/ent/role"
+	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
@@ -1550,10 +1551,9 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 
 	assigned := 0
 	for _, r := range roles {
-		// 检查该角色是否已有权限分配
-		existingCount, err := s.client.Role.Query().
-			Where(role.IDEQ(r.ID)).
-			QueryPermissions().
+		// 检查该角色是否已有权限分配（查询 role_permissions 联表）
+		existingCount, err := s.client.RolePermission.Query().
+			Where(rolepermission.RoleID(r.ID)).
 			Count(ctx)
 		if err != nil {
 			s.sugar.Warnw("check role permissions failed", "error", err, "role", r.Code)
@@ -1579,16 +1579,23 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			continue
 		}
 
-		// 为角色添加权限
-		if err := s.client.Role.Update().
-			Where(role.IDEQ(r.ID)).
-			AddPermissionIDs(permIDs...).
-			Exec(ctx); err != nil {
-			s.sugar.Warnw("assign permissions to role failed", "error", err, "role", r.Code)
-		} else {
-			s.sugar.Infow("role permissions assigned", "role", r.Code, "count", len(permIDs))
-			assigned++
-		}
+		// 为角色添加权限（直接写入 role_permissions 联表）
+			created := 0
+			for _, pid := range permIDs {
+				_, err := s.client.RolePermission.Create().
+					SetRoleID(r.ID).
+					SetPermissionID(pid).
+					Save(ctx)
+				if err != nil {
+					s.sugar.Warnw("create role-permission failed", "error", err, "role", r.Code, "permission_id", pid)
+				} else {
+					created++
+				}
+			}
+			if created > 0 {
+				s.sugar.Infow("role permissions assigned", "role", r.Code, "count", created)
+				assigned++
+			}
 	}
 	s.sugar.Infow("role permissions seed completed", "roles_assigned", assigned)
 }
