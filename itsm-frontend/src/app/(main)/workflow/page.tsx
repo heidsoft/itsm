@@ -159,9 +159,31 @@ const WorkflowManagementPage = () => {
   };
 
   const loadStats = useCallback(async () => {
-    // 统计已经在 loadWorkflows 中一起计算了
-    // 这里保持空实现作为占位符
-  }, []);
+    // 从已加载的工作流数据中计算统计信息
+    setStats(prev => {
+      const active = workflows.filter(w => w.status === 'active').length;
+      const draft = workflows.filter(w => w.status === 'draft').length;
+      const inactive = workflows.filter(w => w.status === 'inactive').length;
+      const running = workflows.reduce((sum, w) => sum + (w.running_instances || 0), 0);
+      const completed = workflows.reduce((sum, w) => sum + (w.instances_count || 0), 0) - running;
+      return {
+        ...prev,
+        total: pagination.total,
+        active,
+        draft,
+        inactive,
+        running: Math.max(0, running),
+        completed: Math.max(0, completed),
+        todayInstances: 0,
+        avgExecutionTime: 0,
+      };
+    });
+  }, [workflows, pagination.total]);
+
+  // 当工作流列表更新时同步刷新统计
+  useEffect(() => {
+    loadStats();
+  }, [workflows, pagination.total]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 初始加载工作流列表
   useEffect(() => {

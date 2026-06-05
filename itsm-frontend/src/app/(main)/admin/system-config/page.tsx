@@ -86,12 +86,14 @@ export default function SystemConfiguration() {
     const fetchSystemStats = async () => {
       try {
         const status = await SystemConfigAPI.getSystemStatus();
+        const cpu = (status as any).cpu || {};
+        const memory = (status as any).memory || {};
         setSystemStats({
           uptime: calculateUptime((status as any).startTime as number | undefined),
           goroutines: (status as any).goroutines || 0,
-          cpuCores: (status as any).cpu_cores || 0,
+          cpuCores: cpu.cores || (status as any).cpu_cores || 0,
           memoryUsagePercent: Math.round(
-            (status as any).memory?.usage_percent || (status as any).memory?.usage || 0
+            memory.usage_percent || memory.usage || 0
           ),
         });
       } catch (error) {

@@ -187,11 +187,14 @@ services:
       target: production
       args:
         - NODE_ENV=production
+        - ITSM_BACKEND_URL=http://itsm-backend:8090
+        - NEXT_PUBLIC_API_URL=http://itsm-backend:8090
         - NEXT_PUBLIC_ENABLE_AI=${NEXT_PUBLIC_ENABLE_AI:-true}
     container_name: itsm-frontend-prod
     hostname: frontend
     environment:
       - NODE_ENV=production
+      - ITSM_BACKEND_URL=http://itsm-backend:8090
       - NEXT_PUBLIC_API_URL=http://itsm-backend:8090
       - no_proxy=localhost,127.0.0.1
       - NO_PROXY=localhost,127.0.0.1
