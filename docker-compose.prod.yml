@@ -81,11 +81,7 @@ services:
   itsm-backend:
     build:
       context: ./itsm-backend
-      dockerfile: Dockerfile
-      args:
-        - BUILDKIT_INLINE_CACHE=1
-        - GIT_COMMIT=${GIT_COMMIT:-unknown}
-        - BUILD_DATE=${BUILD_DATE:-unknown}
+      dockerfile: Dockerfile.prod
     container_name: itsm-backend-prod
     hostname: backend
     environment:

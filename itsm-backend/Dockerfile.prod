@@ -1,0 +1,23 @@
+# Production image - use distroless static base (no package manager needed)
+FROM gcr.io/distroless/static-debian12:nonroot
+
+WORKDIR /app
+
+# Copy pre-built binary (built by CI/CD or local cross-compile)
+COPY itsm-backend ./main
+COPY config.yaml .
+COPY migrations ./migrations
+COPY config/seed ./config/seed
+
+# Create required directories
+RUN mkdir -p /app/logs /app/uploads /app/temp
+
+# Expose port
+EXPOSE 8090
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD ["/main", "health"] || exit 1
+
+# Run the application
+CMD ["./main"]
