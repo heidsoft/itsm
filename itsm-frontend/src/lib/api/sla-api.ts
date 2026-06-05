@@ -15,10 +15,15 @@ export interface SLADefinition {
   // 可选字段：后端可能不返回 availability
   availability_target?: number;
   availability?: number;
-  is_active: boolean;
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
+  // 后端返回 camelCase: isActive
+  isActive?: boolean;
+  is_active?: boolean;
+  tenantId?: number;
+  tenant_id?: number;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
 }
 
 // SLA违规接口
