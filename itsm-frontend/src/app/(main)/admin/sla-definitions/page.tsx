@@ -136,7 +136,7 @@ const SLADefinitionManagement = () => {
       if (!sla) return;
 
       const newStatus = sla.status === 'active' ? 'inactive' : 'active';
-      await SLAApi.updateSLADefinition(Number(slaId), { is_active: newStatus === 'active' });
+      await SLAApi.updateSLADefinition(Number(slaId), { isActive: newStatus === 'active' });
       setSlaDefinitions(prev =>
         prev.map(sla => {
           if (sla.id === slaId) {

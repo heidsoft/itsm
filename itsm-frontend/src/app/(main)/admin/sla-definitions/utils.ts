@@ -24,9 +24,9 @@ export const transformSLA = (item: APISLADefinition): SLADefinition => ({
   businessHours: '7x24',
   escalationRules: [],
   applicableServices: [],
-  status: item.is_active ? 'active' : 'inactive',
-  createdAt: item.created_at,
-  updatedAt: item.updated_at,
+  status: (item.isActive ?? item.is_active) ? 'active' : 'inactive',
+  createdAt: item.createdAt || item.created_at,
+  updatedAt: item.updatedAt || item.updated_at,
   createdBy: '系统',
 });
 
