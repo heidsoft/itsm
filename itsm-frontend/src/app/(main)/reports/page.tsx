@@ -203,10 +203,12 @@ const ReportsPage: React.FC = () => {
                     suffix={
                       <Text type="secondary">
                         (
-                        {(
-                          (analyticsData.summary.resolved / analyticsData.summary.total) *
-                          100
-                        ).toFixed(1)}
+                        {analyticsData.summary.total > 0
+                          ? (
+                              (analyticsData.summary.resolved / analyticsData.summary.total) *
+                              100
+                            ).toFixed(1)
+                          : '0.0'}
                         %)
                       </Text>
                     }

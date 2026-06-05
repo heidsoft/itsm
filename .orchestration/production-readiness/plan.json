@@ -1,0 +1,33 @@
+{
+  "sessionName": "itsm-production-readiness",
+  "baseRef": "HEAD",
+  "seedPaths": [
+    "docs/delivery/production-readiness-program.md",
+    ".orchestration/production-readiness/README.md",
+    ".orchestration/production-readiness/plan.json",
+    "scripts/orchestrate-codex-worker.sh"
+  ],
+  "launcherCommand": "bash {repo_root}/scripts/orchestrate-codex-worker.sh {task_file} {handoff_file} {status_file}",
+  "workers": [
+    {
+      "name": "backend-reliability",
+      "task": "Audit backend build and test failures, remove soft assumptions, and prepare a prioritized fix list with verification commands."
+    },
+    {
+      "name": "frontend-stability",
+      "task": "Audit frontend type, build, and route regressions, then define the smallest path to stable core-flow smoke coverage."
+    },
+    {
+      "name": "release-engineering",
+      "task": "Harden CI and release gates so failing backend and frontend checks cannot pass silently."
+    },
+    {
+      "name": "security-tenancy",
+      "task": "Review auth, RBAC, tenant isolation, secrets, and scan workflows. Produce a blocker-focused backlog."
+    },
+    {
+      "name": "ops-observability",
+      "task": "Validate deploy, backup, rollback, health, metrics, and alerting paths. Produce runbook gaps and production blockers."
+    }
+  ]
+}

@@ -121,11 +121,12 @@ const TicketAnalytics: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange]);
 
   useEffect(() => {
     fetchData();
-  }, [dateRange, fetchData]);
+  useEffect(() => {
+    fetchData();
   }, [dateRange, fetchData]);
 
   // 导出数据
