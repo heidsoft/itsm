@@ -27,7 +27,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version-file: itsm-backend/go.mod
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
@@ -47,7 +47,7 @@ jobs:
         run: |
           cd itsm-backend
           go install honnef.co/go/tools/cmd/staticcheck@2023.1.1
-          staticcheck ./... || true
+          staticcheck ./...
 
       - name: Code quality checks
         run: |
@@ -77,14 +77,14 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version-file: itsm-backend/go.mod
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
       - name: Build
         run: |
           cd itsm-backend
-          go build -o itsm ./main.go || true
+          go build -o itsm ./main.go
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
@@ -104,16 +104,16 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version-file: itsm-backend/go.mod
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
       - name: Run tests with coverage
         run: |
           cd itsm-backend
-          go test ./... -coverprofile=coverage.out -covermode=set || true
+          go test ./... -coverprofile=coverage.out -covermode=set
           if [ -f coverage.out ]; then
-            go tool cover -func=coverage.out || true
+            go tool cover -func=coverage.out
           fi
 
       - name: Upload coverage
@@ -134,7 +134,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version-file: itsm-backend/go.mod
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 

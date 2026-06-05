@@ -52,8 +52,7 @@ export default function PIRPage() {
 
   useEffect(() => {
     fetchPIR();
-  }, [changeId, fetchPIR]);
-
+  }, [fetchPIR]);
   const fetchPIR = useCallback(async () => {
     setLoading(true);
     try {
@@ -79,7 +78,11 @@ export default function PIRPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [changeId, form]);
+
+  useEffect(() => {
+    fetchPIR();
+  }, [fetchPIR]);
 
   const handleSubmit = async (values: any) => {
     setSubmitting(true);

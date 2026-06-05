@@ -443,6 +443,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedKnownErrors(ctx)            // 新增：初始化已知错误
 	s.seedTicketTags(ctx)             // 新增：初始化标签
 	s.seedMenuAndPermissionFixes(ctx) // 修复：更新菜单路径和补充缺失权限
+	s.seedRolePermissions(ctx)          // 新增：为角色分配权限
 }
 
 // seedDefaultTenant ensures default tenant exists
@@ -1403,6 +1404,239 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 			s.sugar.Infow("missing menu created", "path", m.Path)
 		}
 	}
+}
+
+// seedRolePermissions 为角色分配权限关联
+func (s *Seeder) seedRolePermissions(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip role permissions seed", "error", err)
+		return
+	}
+
+	// 查询所有权限，构建 code -> id 映射
+	perms, err := s.client.Permission.Query().Where(permission.TenantIDEQ(t.ID)).All(ctx)
+	if err != nil {
+		s.sugar.Warnw("query permissions failed; skip role permissions seed", "error", err)
+		return
+	}
+	if len(perms) == 0 {
+		s.sugar.Infow("no permissions found; skip role permissions seed")
+		return
+	}
+
+	permByCode := make(map[string]int, len(perms))
+	allPermIDs := make([]int, 0, len(perms))
+	for _, p := range perms {
+		permByCode[p.Code] = p.ID
+		allPermIDs = append(allPermIDs, p.ID)
+	}
+
+	// 定义角色权限映射
+	rolePermissionMap := map[string][]string{
+		// 系统管理员：所有权限
+		"sysadmin": allPermissionCodes(),
+		// IT总监：全局读写（不含系统管理）
+		"it_director": allExcept([]string{"system:write", "msp:write", "msp_allocation:write"}),
+		// 运维总监：运维相关读写
+		"ops_director": allExcept([]string{"system:write", "msp:write", "msp_allocation:write", "msp_report:write"}),
+		// 运维经理：运维相关读写
+		"ops_manager": {
+			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"problem:read", "problem:write", "change:read", "change:write",
+			"asset:read", "asset:write", "cmdb:read", "cmdb:write",
+			"sla:read", "workflow:read", "report:read",
+			"team:read", "department:read", "user:read",
+		},
+		// 运维工程师：运维操作
+		"ops_engineer": {
+			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"problem:read", "change:read", "asset:read", "asset:write",
+			"cmdb:read", "cmdb:write", "sla:read", "knowledge:read", "knowledge:write",
+		},
+		// DBA工程师
+		"dba": {
+			"ticket:read", "incident:read", "problem:read", "problem:write",
+			"change:read", "change:write", "asset:read", "cmdb:read", "cmdb:write",
+			"knowledge:read", "knowledge:write",
+		},
+		// 网络安全工程师
+		"network_eng": {
+			"ticket:read", "incident:read", "incident:write", "problem:read",
+			"change:read", "asset:read", "cmdb:read", "sla:read",
+			"knowledge:read", "knowledge:write",
+		},
+		// 服务台主管
+		"sd_manager": {
+			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"problem:read", "change:read", "sla:read", "sla:write",
+			"knowledge:read", "knowledge:write", "report:read",
+			"user:read", "team:read",
+		},
+		// 一线支持工程师
+		"l1_support": {
+			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"knowledge:read", "user:read", "sla:read",
+		},
+		// 二线支持工程师
+		"l2_support": {
+			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"problem:read", "change:read", "asset:read",
+			"knowledge:read", "knowledge:write", "user:read", "sla:read",
+		},
+		// 三线专家
+		"l3_expert": {
+			"ticket:read", "ticket:write", "incident:read", "incident:write",
+			"problem:read", "problem:write", "change:read", "change:write",
+			"asset:read", "cmdb:read", "knowledge:read", "knowledge:write",
+			"sla:read", "workflow:read",
+		},
+		// 研发经理
+		"rd_manager": {
+			"ticket:read", "problem:read", "change:read", "change:write",
+			"release:read", "release:write", "workflow:read", "workflow:write",
+			"knowledge:read", "knowledge:write", "report:read",
+		},
+		// 开发工程师
+		"developer": {
+			"ticket:read", "problem:read", "change:read",
+			"release:read", "knowledge:read", "knowledge:write",
+		},
+		// 测试工程师
+		"qa_engineer": {
+			"ticket:read", "problem:read", "change:read",
+			"release:read", "knowledge:read", "knowledge:write", "report:read",
+		},
+		// 安全管理员
+		"security_admin": {
+			"ticket:read", "incident:read", "problem:read",
+			"system:read", "user:read", "role:read",
+			"knowledge:read", "report:read",
+		},
+		// 审计管理员
+		"audit_admin": {
+			"ticket:read", "incident:read", "problem:read", "change:read",
+			"system:read", "user:read", "role:read", "report:read",
+		},
+		// 部门经理
+		"dept_manager": {
+			"ticket:read", "ticket:write", "incident:read",
+			"problem:read", "change:read", "report:read",
+			"user:read", "department:read", "team:read",
+			"knowledge:read",
+		},
+		// 团队主管
+		"team_lead": {
+			"ticket:read", "ticket:write", "incident:read",
+			"problem:read", "change:read", "team:read",
+			"user:read", "knowledge:read",
+		},
+		// 普通用户
+		"end_user": {
+			"ticket:read", "ticket:write", "knowledge:read",
+		},
+		// 访客
+		"guest": {
+			"knowledge:read",
+		},
+	}
+
+	// 查询所有角色并为每个角色分配权限
+	roles, err := s.client.Role.Query().Where(role.TenantIDEQ(t.ID)).All(ctx)
+	if err != nil {
+		s.sugar.Warnw("query roles failed; skip role permissions seed", "error", err)
+		return
+	}
+
+	assigned := 0
+	for _, r := range roles {
+		// 检查该角色是否已有权限分配
+		existingCount, err := s.client.Role.Query().
+			Where(role.IDEQ(r.ID)).
+			QueryPermissions().
+			Count(ctx)
+		if err != nil {
+			s.sugar.Warnw("check role permissions failed", "error", err, "role", r.Code)
+			continue
+		}
+		if existingCount > 0 {
+			continue // 跳过已有权限的角色
+		}
+
+		codes, ok := rolePermissionMap[r.Code]
+		if !ok {
+			continue // 未定义的角色跳过
+		}
+
+		// 收集该角色应拥有的权限ID
+		permIDs := make([]int, 0, len(codes))
+		for _, code := range codes {
+			if id, exists := permByCode[code]; exists {
+				permIDs = append(permIDs, id)
+			}
+		}
+		if len(permIDs) == 0 {
+			continue
+		}
+
+		// 为角色添加权限
+		if err := s.client.Role.Update().
+			Where(role.IDEQ(r.ID)).
+			AddPermissionIDs(permIDs...).
+			Exec(ctx); err != nil {
+			s.sugar.Warnw("assign permissions to role failed", "error", err, "role", r.Code)
+		} else {
+			s.sugar.Infow("role permissions assigned", "role", r.Code, "count", len(permIDs))
+			assigned++
+		}
+	}
+	s.sugar.Infow("role permissions seed completed", "roles_assigned", assigned)
+}
+
+// allPermissionCodes 返回所有权限代码
+func allPermissionCodes() []string {
+	return []string{
+		"ticket:read", "ticket:write", "ticket:delete",
+		"incident:read", "incident:write", "incident:delete",
+		"problem:read", "problem:write", "problem:delete",
+		"change:read", "change:write", "change:delete",
+		"release:read", "release:write", "release:delete",
+		"asset:read", "asset:write", "asset:delete",
+		"cmdb:read", "cmdb:write",
+		"report:read", "report:write",
+		"license:read", "license:write", "license:delete",
+		"service:read", "service:write",
+		"sla:read", "sla:write",
+		"user:read", "user:write", "user:delete",
+		"group:read", "group:write",
+		"role:read", "role:write",
+		"department:read", "department:write",
+		"team:read", "team:write",
+		"approval:read", "approval:write",
+		"workflow:read", "workflow:write",
+		"knowledge:read", "knowledge:write",
+		"system:read", "system:write",
+		"msp:read", "msp:write",
+		"msp_customer:read", "msp_customer:write",
+		"msp_ticket:read", "msp_ticket:write",
+		"msp_allocation:read", "msp_allocation:write",
+		"msp_report:read", "msp_report:write",
+	}
+}
+
+// allExcept 返回除指定代码外的所有权限代码
+func allExcept(exclude []string) []string {
+	excludeSet := make(map[string]bool, len(exclude))
+	for _, code := range exclude {
+		excludeSet[code] = true
+	}
+	result := make([]string, 0)
+	for _, code := range allPermissionCodes() {
+		if !excludeSet[code] {
+			result = append(result, code)
+		}
+	}
+	return result
 }
 
 // strPtr 字符串指针辅助函数
