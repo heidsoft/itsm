@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/role"
+	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/user"
 	"itsm-backend/middleware"
 
@@ -30,11 +31,79 @@ func NewRoleService(client *ent.Client, logger *zap.SugaredLogger) *RoleService 
 	}
 }
 
+// getRolePermissionsByIDs 批量查询多个角色的权限（按roleID分组）
+func (s *RoleService) getRolePermissionsByIDs(ctx context.Context, roleIDs []int) (map[int][]dto.PermissionInfo, error) {
+	result := make(map[int][]dto.PermissionInfo, len(roleIDs))
+	for _, rid := range roleIDs {
+		result[rid] = []dto.PermissionInfo{}
+	}
+
+	if len(roleIDs) == 0 {
+		return result, nil
+	}
+
+	// 查询 role_permissions 联表
+	rps, err := s.client.RolePermission.Query().
+		Where(rolepermission.RoleIDIn(roleIDs...)).
+		All(ctx)
+	if err != nil {
+		return result, fmt.Errorf("查询角色权限关联失败: %w", err)
+	}
+
+	// 收集所有 permission IDs
+	permIDs := make([]int, 0, len(rps))
+	for _, rp := range rps {
+		permIDs = append(permIDs, rp.PermissionID)
+	}
+	if len(permIDs) == 0 {
+		return result, nil
+	}
+
+	// 批量查询权限详情
+	perms, err := s.client.Permission.Query().
+		Where(permission.IDIn(permIDs...)).
+		All(ctx)
+	if err != nil {
+		return result, fmt.Errorf("查询权限详情失败: %w", err)
+	}
+
+	permMap := make(map[int]*ent.Permission, len(perms))
+	for _, p := range perms {
+		permMap[p.ID] = p
+	}
+
+	// 按 roleID 分组
+	for _, rp := range rps {
+		if p, ok := permMap[rp.PermissionID]; ok {
+			result[rp.RoleID] = append(result[rp.RoleID], dto.PermissionInfo{
+				ID:   p.ID,
+				Code: p.Code,
+				Name: p.Name,
+			})
+		}
+	}
+	return result, nil
+}
+
+// buildRoleResponse 构建角色基础响应（不加载权限）
+func (s *RoleService) buildRoleResponse(roleEntity *ent.Role) *dto.RoleResponse {
+	return &dto.RoleResponse{
+		ID:          roleEntity.ID,
+		Name:        roleEntity.Name,
+		Code:        roleEntity.Code,
+		Description: roleEntity.Description,
+		IsSystem:    roleEntity.IsSystem,
+		Permissions: []dto.PermissionInfo{},
+		TenantID:    roleEntity.TenantID,
+		CreatedAt:   roleEntity.CreatedAt,
+		UpdatedAt:   roleEntity.UpdatedAt,
+	}
+}
+
 // CreateRole 创建角色
 func (s *RoleService) CreateRole(ctx context.Context, req *dto.CreateRoleRequest, tenantID int) (*dto.RoleResponse, error) {
 	s.logger.Infow("Creating role", "name", req.Name, "tenant_id", tenantID)
 
-	// 如果 code 为空，从 name 自动生成
 	code := req.Code
 	if code == "" {
 		code = generateCodeFromName(req.Name)
@@ -51,7 +120,7 @@ func (s *RoleService) CreateRole(ctx context.Context, req *dto.CreateRoleRequest
 		return nil, fmt.Errorf("创建角色失败: %w", err)
 	}
 
-	return s.toRoleResponse(roleEntity), nil
+	return s.buildRoleResponse(roleEntity), nil
 }
 
 // GetRole 获取角色详情
@@ -61,7 +130,6 @@ func (s *RoleService) GetRole(ctx context.Context, id int, tenantID int) (*dto.R
 			role.IDEQ(id),
 			role.TenantID(tenantID),
 		).
-		WithPermissions().
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -70,7 +138,16 @@ func (s *RoleService) GetRole(ctx context.Context, id int, tenantID int) (*dto.R
 		return nil, fmt.Errorf("查询角色失败: %w", err)
 	}
 
-	return s.toRoleResponse(roleEntity), nil
+	resp := s.buildRoleResponse(roleEntity)
+
+	perms, err := s.getRolePermissionsByIDs(ctx, []int{id})
+	if err != nil {
+		s.logger.Warnw("Failed to load role permissions", "role_id", id, "error", err)
+	} else {
+		resp.Permissions = perms[id]
+	}
+
+	return resp, nil
 }
 
 // ListRoles 获取角色列表
@@ -86,15 +163,29 @@ func (s *RoleService) ListRoles(ctx context.Context, tenantID int, page, pageSiz
 	roles, err := query.
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
-		WithPermissions().
 		All(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("查询角色列表失败: %w", err)
 	}
 
+	roleIDs := make([]int, len(roles))
+	for i, r := range roles {
+		roleIDs[i] = r.ID
+	}
+
+	permMap := make(map[int][]dto.PermissionInfo)
+	if len(roleIDs) > 0 {
+		permMap, err = s.getRolePermissionsByIDs(ctx, roleIDs)
+		if err != nil {
+			s.logger.Warnw("Failed to batch load role permissions", "error", err)
+		}
+	}
+
 	responses := make([]*dto.RoleResponse, len(roles))
 	for i, r := range roles {
-		responses[i] = s.toRoleResponse(r)
+		resp := s.buildRoleResponse(r)
+		resp.Permissions = permMap[r.ID]
+		responses[i] = resp
 	}
 
 	return responses, total, nil
@@ -104,7 +195,6 @@ func (s *RoleService) ListRoles(ctx context.Context, tenantID int, page, pageSiz
 func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRoleRequest, tenantID int) (*dto.RoleResponse, error) {
 	s.logger.Infow("Updating role", "id", id, "tenant_id", tenantID)
 
-	// 获取更新前的角色信息（用于缓存失效）
 	roleEntity, err := s.client.Role.Query().
 		Where(role.IDEQ(id)).
 		Only(ctx)
@@ -130,7 +220,6 @@ func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRol
 		return nil, fmt.Errorf("更新角色失败: %w", err)
 	}
 
-	// 使该角色的权限缓存失效
 	middleware.InvalidateRolePermissionCache(roleEntity.Code, tenantID)
 
 	return s.GetRole(ctx, id, tenantID)
@@ -140,7 +229,6 @@ func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRol
 func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting role", "id", id, "tenant_id", tenantID)
 
-	// 检查是否为系统角色，并且验证角色属于当前租户
 	roleEntity, err := s.client.Role.Query().
 		Where(
 			role.IDEQ(id),
@@ -155,7 +243,6 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 		return fmt.Errorf("系统角色不能删除")
 	}
 
-	// 检查是否有用户使用此角色
 	count, err := s.client.User.Query().
 		Where(
 			user.HasRolesWith(role.IDEQ(roleEntity.ID)),
@@ -169,10 +256,16 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 		return fmt.Errorf("有%d个用户使用此角色，无法删除", count)
 	}
 
-	// 保存角色code用于缓存失效
 	roleCode := roleEntity.Code
 
-	// 删除角色的权限关联，使用tenant过滤防止跨租户删除
+	// 删除角色权限关联
+	_, err = s.client.RolePermission.Delete().
+		Where(rolepermission.RoleID(id)).
+		Exec(ctx)
+	if err != nil {
+		s.logger.Warnw("Failed to delete role permissions", "role_id", id, "error", err)
+	}
+
 	_, err = s.client.Role.Delete().
 		Where(
 			role.IDEQ(id),
@@ -183,13 +276,12 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 		return fmt.Errorf("删除角色失败: %w", err)
 	}
 
-	// 使该角色的权限缓存失效
 	middleware.InvalidateRolePermissionCache(roleCode, tenantID)
 
 	return nil
 }
 
-// AssignPermissions 给角色分配权限
+// AssignPermissions 给角色分配权限（直接操作 role_permissions 联表）
 func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permissionIDs []int, tenantID int) error {
 	s.logger.Infow("Assigning permissions to role", "role_id", roleID, "permission_count", len(permissionIDs))
 
@@ -198,68 +290,45 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 			role.IDEQ(roleID),
 			role.TenantID(tenantID),
 		).
-		WithPermissions().
 		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("角色不存在: %w", err)
 	}
 
-	// 验证权限存在
-	perms, err := s.client.Permission.Query().
-		Where(permission.IDIn(permissionIDs...)).
-		All(ctx)
-	if err != nil {
-		return fmt.Errorf("查询权限失败: %w", err)
-	}
-
-	if len(perms) != len(permissionIDs) {
-		return fmt.Errorf("部分权限不存在")
-	}
-
-	// 清除现有权限
-	builder := roleEntity.Update().ClearPermissions()
-	_, err = builder.Save(ctx)
-	if err != nil {
-		return fmt.Errorf("清除权限失败: %w", err)
-	}
-
-	// 添加新权限
-	for _, p := range perms {
-		_, err = roleEntity.Update().AddPermissions(p).Save(ctx)
+	if len(permissionIDs) > 0 {
+		perms, err := s.client.Permission.Query().
+			Where(permission.IDIn(permissionIDs...)).
+			All(ctx)
 		if err != nil {
-			s.logger.Warnw("Failed to add permission to role", "permission_id", p.ID, "error", err)
+			return fmt.Errorf("查询权限失败: %w", err)
+		}
+		if len(perms) != len(permissionIDs) {
+			return fmt.Errorf("部分权限不存在")
 		}
 	}
 
-	// 使该角色的权限缓存失效
+	// 清除现有权限关联
+	_, err = s.client.RolePermission.Delete().
+		Where(rolepermission.RoleID(roleID)).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("清除权限关联失败: %w", err)
+	}
+
+	// 添加新权限关联
+	for _, pid := range permissionIDs {
+		_, err = s.client.RolePermission.Create().
+			SetRoleID(roleID).
+			SetPermissionID(pid).
+			Save(ctx)
+		if err != nil {
+			s.logger.Warnw("Failed to create role-permission association", "role_id", roleID, "permission_id", pid, "error", err)
+		}
+	}
+
 	middleware.InvalidateRolePermissionCache(roleEntity.Code, tenantID)
 
 	return nil
-}
-
-func (s *RoleService) toRoleResponse(roleEntity *ent.Role) *dto.RoleResponse {
-	permissions := make([]dto.PermissionInfo, 0)
-	if roleEntity.Edges.Permissions != nil {
-		for _, p := range roleEntity.Edges.Permissions {
-			permissions = append(permissions, dto.PermissionInfo{
-				ID:   p.ID,
-				Code: p.Code,
-				Name: p.Name,
-			})
-		}
-	}
-
-	return &dto.RoleResponse{
-		ID:          roleEntity.ID,
-		Name:        roleEntity.Name,
-		Code:        roleEntity.Code,
-		Description: roleEntity.Description,
-		IsSystem:    roleEntity.IsSystem,
-		Permissions: permissions,
-		TenantID:    roleEntity.TenantID,
-		CreatedAt:   roleEntity.CreatedAt,
-		UpdatedAt:   roleEntity.UpdatedAt,
-	}
 }
 
 // PermissionService 权限服务
@@ -337,7 +406,6 @@ func (s *PermissionService) InitDefaultPermissions(ctx context.Context, tenantID
 	}
 
 	for _, req := range defaultPermissions {
-		// 检查是否已存在
 		exists, _ := s.client.Permission.Query().
 			Where(
 				permission.Code(req.Code),
@@ -373,14 +441,10 @@ func (s *PermissionService) toPermissionResponse(permEntity *ent.Permission) *dt
 
 // generateCodeFromName 从名称生成代码
 func generateCodeFromName(name string) string {
-	// 将名称转换为小写，移除特殊字符，用下划线替换空格
 	code := strings.ToLower(name)
 	code = regexp.MustCompile(`[^a-z0-9\u4e00-\u9fa5]`).ReplaceAllString(code, "_")
-	// 移除连续的下划线
 	code = regexp.MustCompile(`_+`).ReplaceAllString(code, "_")
-	// 移除首尾的下划线
 	code = strings.Trim(code, "_")
-	// 添加时间戳后缀避免重复
 	if len(code) > 20 {
 		code = code[:20]
 	}

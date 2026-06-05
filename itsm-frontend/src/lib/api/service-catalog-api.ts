@@ -20,6 +20,10 @@ import type {
 export class ServiceCatalogApi {
   // ==================== 内部适配（对齐后端 /api/v1/service-catalogs & /api/v1/service-requests） ====================
 
+  private static unsupportedFeature(feature: string): never {
+    throw new Error(`${feature}暂未接入后端，请在能力开放前关闭入口或补齐服务端接口。`);
+  }
+
   private static toBackendStatus(status?: unknown): 'enabled' | 'disabled' | undefined {
     // V0：后端服务目录状态枚举为 enabled/disabled；前端为 draft/published/retired
     if (!status) return undefined;
@@ -316,27 +320,25 @@ export class ServiceCatalogApi {
    * 添加收藏
    */
   static async addFavorite(serviceId: string): Promise<ServiceFavorite> {
-    // 后端暂未实现收藏功能，返回模拟数据
-    return {
-      id: `fav_${Date.now()}`,
-      serviceId,
-      userId: 0,
-      createdAt: new Date(),
-    };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _serviceId = serviceId;
+    return ServiceCatalogApi.unsupportedFeature('服务收藏');
   }
 
   /**
    * 取消收藏
    */
   static async removeFavorite(serviceId: string): Promise<void> {
-    // 后端暂未实现收藏功能，静默忽略
-    // console.warn(`取消收藏服务 ${serviceId}（功能待后端实现）`);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _serviceId = serviceId;
+    ServiceCatalogApi.unsupportedFeature('服务收藏');
   }
 
   /**
    * 获取收藏列表
    */
   static async getFavorites(): Promise<ServiceFavorite[]> {
+    // 后端未提供收藏列表接口。读取路径返回空列表，写入路径必须显式失败，避免用户误以为收藏已保存。
     return [];
   }
 
@@ -348,16 +350,9 @@ export class ServiceCatalogApi {
     rating: number,
     comment?: string
   ): Promise<ServiceRating> {
-    // 后端暂未实现评分功能，返回模拟数据
-    return {
-      id: `rating_${Date.now()}`,
-      serviceId,
-      userId: 0,
-      userName: '',
-      rating: Math.min(5, Math.max(1, rating)),
-      comment: comment || '',
-      createdAt: new Date(),
-    };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _args = { serviceId, rating, comment };
+    return ServiceCatalogApi.unsupportedFeature('服务评分');
   }
 
   /**
@@ -381,8 +376,9 @@ export class ServiceCatalogApi {
    * 标记评分有用
    */
   static async markRatingHelpful(ratingId: string): Promise<void> {
-    // 后端暂未实现评分有用功能，静默忽略
-    console.warn(`标记评分 ${ratingId} 有用（功能待后端实现）`);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _ratingId = ratingId;
+    ServiceCatalogApi.unsupportedFeature('评分有用标记');
   }
 
   // ==================== 门户配置 ====================
@@ -391,7 +387,7 @@ export class ServiceCatalogApi {
    * 获取门户配置
    */
   static async getPortalConfig(): Promise<PortalConfig> {
-    // 后端暂未实现门户配置，返回默认配置
+    // 本地只提供只读默认配置；未接后端的能力默认关闭，避免页面展示不可持久化操作。
     return {
       id: 'default',
       name: '默认门户',
@@ -401,9 +397,9 @@ export class ServiceCatalogApi {
       homepage: {},
       features: {
         enableSearch: true,
-        enableRating: true,
-        enableFavorites: true,
-        enableNotifications: true,
+        enableRating: false,
+        enableFavorites: false,
+        enableNotifications: false,
         showServicePrice: false,
         showServiceOwner: true,
       },
@@ -415,25 +411,9 @@ export class ServiceCatalogApi {
    * 更新门户配置
    */
   static async updatePortalConfig(config: Partial<PortalConfig>): Promise<PortalConfig> {
-    // 后端暂未实现门户配置，直接返回更新后的配置
-    const fullConfig: PortalConfig = {
-      id: config.id || 'default',
-      name: config.name || '默认门户',
-      branding: config.branding || {
-        primaryColor: '#1890ff',
-      },
-      homepage: config.homepage || {},
-      features: config.features || {
-        enableSearch: true,
-        enableRating: true,
-        enableFavorites: true,
-        enableNotifications: true,
-        showServicePrice: false,
-        showServiceOwner: true,
-      },
-      updatedAt: new Date(),
-    };
-    return fullConfig;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _config = config;
+    return ServiceCatalogApi.unsupportedFeature('门户配置更新');
   }
 
   // ==================== 统计和分析 ====================
