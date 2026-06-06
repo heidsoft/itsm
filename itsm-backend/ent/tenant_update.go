@@ -180,6 +180,140 @@ func (_u *TenantUpdate) ClearExpiresAt() *TenantUpdate {
 	return _u
 }
 
+// SetPlanCode sets the "plan_code" field.
+func (_u *TenantUpdate) SetPlanCode(v string) *TenantUpdate {
+	_u.mutation.SetPlanCode(v)
+	return _u
+}
+
+// SetNillablePlanCode sets the "plan_code" field if the given value is not nil.
+func (_u *TenantUpdate) SetNillablePlanCode(v *string) *TenantUpdate {
+	if v != nil {
+		_u.SetPlanCode(*v)
+	}
+	return _u
+}
+
+// ClearPlanCode clears the value of the "plan_code" field.
+func (_u *TenantUpdate) ClearPlanCode() *TenantUpdate {
+	_u.mutation.ClearPlanCode()
+	return _u
+}
+
+// SetBillingEnabled sets the "billing_enabled" field.
+func (_u *TenantUpdate) SetBillingEnabled(v bool) *TenantUpdate {
+	_u.mutation.SetBillingEnabled(v)
+	return _u
+}
+
+// SetNillableBillingEnabled sets the "billing_enabled" field if the given value is not nil.
+func (_u *TenantUpdate) SetNillableBillingEnabled(v *bool) *TenantUpdate {
+	if v != nil {
+		_u.SetBillingEnabled(*v)
+	}
+	return _u
+}
+
+// SetCostCenterCode sets the "cost_center_code" field.
+func (_u *TenantUpdate) SetCostCenterCode(v string) *TenantUpdate {
+	_u.mutation.SetCostCenterCode(v)
+	return _u
+}
+
+// SetNillableCostCenterCode sets the "cost_center_code" field if the given value is not nil.
+func (_u *TenantUpdate) SetNillableCostCenterCode(v *string) *TenantUpdate {
+	if v != nil {
+		_u.SetCostCenterCode(*v)
+	}
+	return _u
+}
+
+// ClearCostCenterCode clears the value of the "cost_center_code" field.
+func (_u *TenantUpdate) ClearCostCenterCode() *TenantUpdate {
+	_u.mutation.ClearCostCenterCode()
+	return _u
+}
+
+// SetLegalEntityCode sets the "legal_entity_code" field.
+func (_u *TenantUpdate) SetLegalEntityCode(v string) *TenantUpdate {
+	_u.mutation.SetLegalEntityCode(v)
+	return _u
+}
+
+// SetNillableLegalEntityCode sets the "legal_entity_code" field if the given value is not nil.
+func (_u *TenantUpdate) SetNillableLegalEntityCode(v *string) *TenantUpdate {
+	if v != nil {
+		_u.SetLegalEntityCode(*v)
+	}
+	return _u
+}
+
+// ClearLegalEntityCode clears the value of the "legal_entity_code" field.
+func (_u *TenantUpdate) ClearLegalEntityCode() *TenantUpdate {
+	_u.mutation.ClearLegalEntityCode()
+	return _u
+}
+
+// SetCurrency sets the "currency" field.
+func (_u *TenantUpdate) SetCurrency(v string) *TenantUpdate {
+	_u.mutation.SetCurrency(v)
+	return _u
+}
+
+// SetNillableCurrency sets the "currency" field if the given value is not nil.
+func (_u *TenantUpdate) SetNillableCurrency(v *string) *TenantUpdate {
+	if v != nil {
+		_u.SetCurrency(*v)
+	}
+	return _u
+}
+
+// ClearCurrency clears the value of the "currency" field.
+func (_u *TenantUpdate) ClearCurrency() *TenantUpdate {
+	_u.mutation.ClearCurrency()
+	return _u
+}
+
+// SetServiceTier sets the "service_tier" field.
+func (_u *TenantUpdate) SetServiceTier(v string) *TenantUpdate {
+	_u.mutation.SetServiceTier(v)
+	return _u
+}
+
+// SetNillableServiceTier sets the "service_tier" field if the given value is not nil.
+func (_u *TenantUpdate) SetNillableServiceTier(v *string) *TenantUpdate {
+	if v != nil {
+		_u.SetServiceTier(*v)
+	}
+	return _u
+}
+
+// ClearServiceTier clears the value of the "service_tier" field.
+func (_u *TenantUpdate) ClearServiceTier() *TenantUpdate {
+	_u.mutation.ClearServiceTier()
+	return _u
+}
+
+// SetOwnerContact sets the "owner_contact" field.
+func (_u *TenantUpdate) SetOwnerContact(v string) *TenantUpdate {
+	_u.mutation.SetOwnerContact(v)
+	return _u
+}
+
+// SetNillableOwnerContact sets the "owner_contact" field if the given value is not nil.
+func (_u *TenantUpdate) SetNillableOwnerContact(v *string) *TenantUpdate {
+	if v != nil {
+		_u.SetOwnerContact(*v)
+	}
+	return _u
+}
+
+// ClearOwnerContact clears the value of the "owner_contact" field.
+func (_u *TenantUpdate) ClearOwnerContact() *TenantUpdate {
+	_u.mutation.ClearOwnerContact()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *TenantUpdate) SetCreatedAt(v time.Time) *TenantUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -387,6 +521,45 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.ExpiresAtCleared() {
 		_spec.ClearField(tenant.FieldExpiresAt, field.TypeTime)
 	}
+	if value, ok := _u.mutation.PlanCode(); ok {
+		_spec.SetField(tenant.FieldPlanCode, field.TypeString, value)
+	}
+	if _u.mutation.PlanCodeCleared() {
+		_spec.ClearField(tenant.FieldPlanCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.BillingEnabled(); ok {
+		_spec.SetField(tenant.FieldBillingEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.CostCenterCode(); ok {
+		_spec.SetField(tenant.FieldCostCenterCode, field.TypeString, value)
+	}
+	if _u.mutation.CostCenterCodeCleared() {
+		_spec.ClearField(tenant.FieldCostCenterCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.LegalEntityCode(); ok {
+		_spec.SetField(tenant.FieldLegalEntityCode, field.TypeString, value)
+	}
+	if _u.mutation.LegalEntityCodeCleared() {
+		_spec.ClearField(tenant.FieldLegalEntityCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.Currency(); ok {
+		_spec.SetField(tenant.FieldCurrency, field.TypeString, value)
+	}
+	if _u.mutation.CurrencyCleared() {
+		_spec.ClearField(tenant.FieldCurrency, field.TypeString)
+	}
+	if value, ok := _u.mutation.ServiceTier(); ok {
+		_spec.SetField(tenant.FieldServiceTier, field.TypeString, value)
+	}
+	if _u.mutation.ServiceTierCleared() {
+		_spec.ClearField(tenant.FieldServiceTier, field.TypeString)
+	}
+	if value, ok := _u.mutation.OwnerContact(); ok {
+		_spec.SetField(tenant.FieldOwnerContact, field.TypeString, value)
+	}
+	if _u.mutation.OwnerContactCleared() {
+		_spec.ClearField(tenant.FieldOwnerContact, field.TypeString)
+	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(tenant.FieldCreatedAt, field.TypeTime, value)
 	}
@@ -440,10 +613,10 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.MspCustomerAllocationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   tenant.MspCustomerAllocationsTable,
-			Columns: tenant.MspCustomerAllocationsPrimaryKey,
+			Columns: []string{tenant.MspCustomerAllocationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),
@@ -453,10 +626,10 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if nodes := _u.mutation.RemovedMspCustomerAllocationsIDs(); len(nodes) > 0 && !_u.mutation.MspCustomerAllocationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   tenant.MspCustomerAllocationsTable,
-			Columns: tenant.MspCustomerAllocationsPrimaryKey,
+			Columns: []string{tenant.MspCustomerAllocationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),
@@ -469,10 +642,10 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if nodes := _u.mutation.MspCustomerAllocationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   tenant.MspCustomerAllocationsTable,
-			Columns: tenant.MspCustomerAllocationsPrimaryKey,
+			Columns: []string{tenant.MspCustomerAllocationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),
@@ -650,6 +823,140 @@ func (_u *TenantUpdateOne) SetNillableExpiresAt(v *time.Time) *TenantUpdateOne {
 // ClearExpiresAt clears the value of the "expires_at" field.
 func (_u *TenantUpdateOne) ClearExpiresAt() *TenantUpdateOne {
 	_u.mutation.ClearExpiresAt()
+	return _u
+}
+
+// SetPlanCode sets the "plan_code" field.
+func (_u *TenantUpdateOne) SetPlanCode(v string) *TenantUpdateOne {
+	_u.mutation.SetPlanCode(v)
+	return _u
+}
+
+// SetNillablePlanCode sets the "plan_code" field if the given value is not nil.
+func (_u *TenantUpdateOne) SetNillablePlanCode(v *string) *TenantUpdateOne {
+	if v != nil {
+		_u.SetPlanCode(*v)
+	}
+	return _u
+}
+
+// ClearPlanCode clears the value of the "plan_code" field.
+func (_u *TenantUpdateOne) ClearPlanCode() *TenantUpdateOne {
+	_u.mutation.ClearPlanCode()
+	return _u
+}
+
+// SetBillingEnabled sets the "billing_enabled" field.
+func (_u *TenantUpdateOne) SetBillingEnabled(v bool) *TenantUpdateOne {
+	_u.mutation.SetBillingEnabled(v)
+	return _u
+}
+
+// SetNillableBillingEnabled sets the "billing_enabled" field if the given value is not nil.
+func (_u *TenantUpdateOne) SetNillableBillingEnabled(v *bool) *TenantUpdateOne {
+	if v != nil {
+		_u.SetBillingEnabled(*v)
+	}
+	return _u
+}
+
+// SetCostCenterCode sets the "cost_center_code" field.
+func (_u *TenantUpdateOne) SetCostCenterCode(v string) *TenantUpdateOne {
+	_u.mutation.SetCostCenterCode(v)
+	return _u
+}
+
+// SetNillableCostCenterCode sets the "cost_center_code" field if the given value is not nil.
+func (_u *TenantUpdateOne) SetNillableCostCenterCode(v *string) *TenantUpdateOne {
+	if v != nil {
+		_u.SetCostCenterCode(*v)
+	}
+	return _u
+}
+
+// ClearCostCenterCode clears the value of the "cost_center_code" field.
+func (_u *TenantUpdateOne) ClearCostCenterCode() *TenantUpdateOne {
+	_u.mutation.ClearCostCenterCode()
+	return _u
+}
+
+// SetLegalEntityCode sets the "legal_entity_code" field.
+func (_u *TenantUpdateOne) SetLegalEntityCode(v string) *TenantUpdateOne {
+	_u.mutation.SetLegalEntityCode(v)
+	return _u
+}
+
+// SetNillableLegalEntityCode sets the "legal_entity_code" field if the given value is not nil.
+func (_u *TenantUpdateOne) SetNillableLegalEntityCode(v *string) *TenantUpdateOne {
+	if v != nil {
+		_u.SetLegalEntityCode(*v)
+	}
+	return _u
+}
+
+// ClearLegalEntityCode clears the value of the "legal_entity_code" field.
+func (_u *TenantUpdateOne) ClearLegalEntityCode() *TenantUpdateOne {
+	_u.mutation.ClearLegalEntityCode()
+	return _u
+}
+
+// SetCurrency sets the "currency" field.
+func (_u *TenantUpdateOne) SetCurrency(v string) *TenantUpdateOne {
+	_u.mutation.SetCurrency(v)
+	return _u
+}
+
+// SetNillableCurrency sets the "currency" field if the given value is not nil.
+func (_u *TenantUpdateOne) SetNillableCurrency(v *string) *TenantUpdateOne {
+	if v != nil {
+		_u.SetCurrency(*v)
+	}
+	return _u
+}
+
+// ClearCurrency clears the value of the "currency" field.
+func (_u *TenantUpdateOne) ClearCurrency() *TenantUpdateOne {
+	_u.mutation.ClearCurrency()
+	return _u
+}
+
+// SetServiceTier sets the "service_tier" field.
+func (_u *TenantUpdateOne) SetServiceTier(v string) *TenantUpdateOne {
+	_u.mutation.SetServiceTier(v)
+	return _u
+}
+
+// SetNillableServiceTier sets the "service_tier" field if the given value is not nil.
+func (_u *TenantUpdateOne) SetNillableServiceTier(v *string) *TenantUpdateOne {
+	if v != nil {
+		_u.SetServiceTier(*v)
+	}
+	return _u
+}
+
+// ClearServiceTier clears the value of the "service_tier" field.
+func (_u *TenantUpdateOne) ClearServiceTier() *TenantUpdateOne {
+	_u.mutation.ClearServiceTier()
+	return _u
+}
+
+// SetOwnerContact sets the "owner_contact" field.
+func (_u *TenantUpdateOne) SetOwnerContact(v string) *TenantUpdateOne {
+	_u.mutation.SetOwnerContact(v)
+	return _u
+}
+
+// SetNillableOwnerContact sets the "owner_contact" field if the given value is not nil.
+func (_u *TenantUpdateOne) SetNillableOwnerContact(v *string) *TenantUpdateOne {
+	if v != nil {
+		_u.SetOwnerContact(*v)
+	}
+	return _u
+}
+
+// ClearOwnerContact clears the value of the "owner_contact" field.
+func (_u *TenantUpdateOne) ClearOwnerContact() *TenantUpdateOne {
+	_u.mutation.ClearOwnerContact()
 	return _u
 }
 
@@ -890,6 +1197,45 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 	if _u.mutation.ExpiresAtCleared() {
 		_spec.ClearField(tenant.FieldExpiresAt, field.TypeTime)
 	}
+	if value, ok := _u.mutation.PlanCode(); ok {
+		_spec.SetField(tenant.FieldPlanCode, field.TypeString, value)
+	}
+	if _u.mutation.PlanCodeCleared() {
+		_spec.ClearField(tenant.FieldPlanCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.BillingEnabled(); ok {
+		_spec.SetField(tenant.FieldBillingEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.CostCenterCode(); ok {
+		_spec.SetField(tenant.FieldCostCenterCode, field.TypeString, value)
+	}
+	if _u.mutation.CostCenterCodeCleared() {
+		_spec.ClearField(tenant.FieldCostCenterCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.LegalEntityCode(); ok {
+		_spec.SetField(tenant.FieldLegalEntityCode, field.TypeString, value)
+	}
+	if _u.mutation.LegalEntityCodeCleared() {
+		_spec.ClearField(tenant.FieldLegalEntityCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.Currency(); ok {
+		_spec.SetField(tenant.FieldCurrency, field.TypeString, value)
+	}
+	if _u.mutation.CurrencyCleared() {
+		_spec.ClearField(tenant.FieldCurrency, field.TypeString)
+	}
+	if value, ok := _u.mutation.ServiceTier(); ok {
+		_spec.SetField(tenant.FieldServiceTier, field.TypeString, value)
+	}
+	if _u.mutation.ServiceTierCleared() {
+		_spec.ClearField(tenant.FieldServiceTier, field.TypeString)
+	}
+	if value, ok := _u.mutation.OwnerContact(); ok {
+		_spec.SetField(tenant.FieldOwnerContact, field.TypeString, value)
+	}
+	if _u.mutation.OwnerContactCleared() {
+		_spec.ClearField(tenant.FieldOwnerContact, field.TypeString)
+	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(tenant.FieldCreatedAt, field.TypeTime, value)
 	}
@@ -943,10 +1289,10 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 	}
 	if _u.mutation.MspCustomerAllocationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   tenant.MspCustomerAllocationsTable,
-			Columns: tenant.MspCustomerAllocationsPrimaryKey,
+			Columns: []string{tenant.MspCustomerAllocationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),
@@ -956,10 +1302,10 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 	}
 	if nodes := _u.mutation.RemovedMspCustomerAllocationsIDs(); len(nodes) > 0 && !_u.mutation.MspCustomerAllocationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   tenant.MspCustomerAllocationsTable,
-			Columns: tenant.MspCustomerAllocationsPrimaryKey,
+			Columns: []string{tenant.MspCustomerAllocationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),
@@ -972,10 +1318,10 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 	}
 	if nodes := _u.mutation.MspCustomerAllocationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   tenant.MspCustomerAllocationsTable,
-			Columns: tenant.MspCustomerAllocationsPrimaryKey,
+			Columns: []string{tenant.MspCustomerAllocationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),

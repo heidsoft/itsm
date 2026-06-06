@@ -27,6 +27,7 @@ import (
 	"itsm-backend/ent/user"
 
 	"itsm-backend/config"
+	"itsm-backend/pkg/tenantmode"
 
 	"go.uber.org/zap"
 )
@@ -1941,7 +1942,13 @@ func (s *TicketService) GetMSPCustomerReports(ctx context.Context, mspUserID int
 		} else {
 			// 如果没有设置mspValidator，回退到原有行为（但这不应该发生在MSP上下文中）
 			tenants, err := s.client.Tenant.Query().
-				Where(tenant.TypeEQ("customer")).
+				Where(
+					tenant.Or(
+						tenant.TypeEQ(tenantmode.TenantTypeMSPCustomer),
+						tenant.TypeEQ(tenantmode.TenantTypeSaaSCustomer),
+						tenant.TypeEQ(tenantmode.TenantTypeLegacyCustomer),
+					),
+				).
 				All(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("获取客户列表失败: %w", err)

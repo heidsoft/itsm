@@ -11,15 +11,10 @@ import (
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/pkg/tenantmode"
 
 	"go.uber.org/zap"
 )
-
-// TenantTypeMSP MSP服务提供商类型
-const TenantTypeMSP = "msp"
-
-// TenantTypeCustomer 客户类型
-const TenantTypeCustomer = "customer"
 
 // MSPAllocationService MSP 分配业务服务
 type MSPAllocationService struct {
@@ -56,7 +51,7 @@ func (s *MSPAllocationService) Create(
 		if err != nil {
 			return nil, fmt.Errorf("MSP用户不存在: %w", err)
 		}
-		if u.Edges.Tenant == nil || u.Edges.Tenant.Type != TenantTypeMSP {
+		if u.Edges.Tenant == nil || !tenantmode.IsMSPProviderTenantType(string(u.Edges.Tenant.Type)) {
 			return nil, fmt.Errorf("用户不属于MSP租户")
 		}
 	}
@@ -68,7 +63,7 @@ func (s *MSPAllocationService) Create(
 	if err != nil {
 		return nil, fmt.Errorf("客户租户不存在: %w", err)
 	}
-	if !isAdmin && cust.Type != TenantTypeCustomer {
+	if !isAdmin && !tenantmode.IsCustomerTenantType(string(cust.Type)) {
 		return nil, fmt.Errorf("目标租户不是客户类型")
 	}
 
@@ -104,7 +99,7 @@ func (s *MSPAllocationService) Create(
 	// 5. 创建新的分配记录
 	alloc, err := s.client.MSPAllocation.Create().
 		SetMspUserID(mspUserID).
-		AddCustomerTenantIDs(customerTenantID).
+		SetCustomerTenantID(customerTenantID).
 		SetRole(role).
 		SetAssignedAt(time.Now()).
 		Save(ctx)
@@ -226,9 +221,9 @@ func (s *MSPAllocationService) GetActiveAllocations(ctx context.Context) ([]*dto
 		if a.Edges.MspUser != nil {
 			mspUsername = a.Edges.MspUser.Name
 		}
-		if len(a.Edges.CustomerTenant) > 0 {
-			customerTenantID = a.Edges.CustomerTenant[0].ID
-			customerTenantName = a.Edges.CustomerTenant[0].Name
+		if a.Edges.CustomerTenant != nil {
+			customerTenantID = a.Edges.CustomerTenant.ID
+			customerTenantName = a.Edges.CustomerTenant.Name
 		}
 
 		dtos = append(dtos, &dto.MSPAllocationDTO{
@@ -261,8 +256,8 @@ func (s *MSPAllocationService) GetMSPCustomers(ctx context.Context, mspUserID in
 
 	customers := make([]*ent.Tenant, 0, len(allocations))
 	for _, a := range allocations {
-		if len(a.Edges.CustomerTenant) > 0 {
-			customers = append(customers, a.Edges.CustomerTenant[0])
+		if a.Edges.CustomerTenant != nil {
+			customers = append(customers, a.Edges.CustomerTenant)
 		}
 	}
 

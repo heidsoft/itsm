@@ -1,8 +1,6 @@
 // API 基础配置
-// 在客户端使用相对路径以利用 Next.js 的 Rewrites 代理
-// 在服务端（SSR）使用完整的后端地址
 export const API_BASE_URL =
-  typeof window === 'undefined' ? process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090' : '';
+  typeof window === 'undefined' ? process.env.ITSM_BACKEND_URL || 'http://localhost:8090' : '';
 export const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
 export const API_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
 

@@ -17,6 +17,11 @@ server:
   port: 8090
   mode: "${SERVER_MODE:release}"  # Use env: SERVER_MODE, default release
 
+deployment:
+  mode: "${DEPLOYMENT_MODE:private}"  # private | saas | saas_msp
+  auto_migrate: ${ITSM_AUTO_MIGRATE:true}
+  auto_seed: ${ITSM_AUTO_SEED:true}
+
 jwt:
   secret: "${JWT_SECRET}"
   expire_time: 900        # 15分钟 (access token)

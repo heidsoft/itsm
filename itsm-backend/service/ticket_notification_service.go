@@ -14,8 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-
-func stringPtr(s string) *string {
+func ticketNotificationStringPtr(s string) *string {
 	return &s
 }
 
@@ -113,15 +112,15 @@ func (s *TicketNotificationService) SendNotification(
 			}
 
 			// 同步创建到通用notifications表(供前端统一查询)
-				_, _ = s.client.Notification.Create().
-					SetTitle(req.Type).
-					SetMessage(req.Content).
-					SetType(req.Type).
-					SetUserID(userID).
-					SetTenantID(tenantID).
-					SetNillableActionURL(stringPtr(fmt.Sprintf("/tickets/%d", ticketID))).
-					SetNillableActionText(stringPtr("查看工单")).
-					Save(ctx)
+			_, _ = s.client.Notification.Create().
+				SetTitle(req.Type).
+				SetMessage(req.Content).
+				SetType(req.Type).
+				SetUserID(userID).
+				SetTenantID(tenantID).
+				SetNillableActionURL(ticketNotificationStringPtr(fmt.Sprintf("/tickets/%d", ticketID))).
+				SetNillableActionText(ticketNotificationStringPtr("查看工单")).
+				Save(ctx)
 
 			// 如果是站内消息，立即标记为已发送
 			if req.Channel == "in_app" {
@@ -199,9 +198,9 @@ func (s *TicketNotificationService) SendNotification(
 
 // NotifyTicketCreated 工单创建时发送通知
 // 通知目标:
-//   1. 工单处理人(AssigneeID),如果有
-//   2. 工单创建人(ReporterID),如果是普通用户
-//   3. 所有租户内管理员(如果没有处理人)
+//  1. 工单处理人(AssigneeID),如果有
+//  2. 工单创建人(ReporterID),如果是普通用户
+//  3. 所有租户内管理员(如果没有处理人)
 func (s *TicketNotificationService) NotifyTicketCreated(ctx context.Context, ticket *ent.Ticket) error {
 	userIDs := []int{}
 

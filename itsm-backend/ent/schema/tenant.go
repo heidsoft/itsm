@@ -27,8 +27,8 @@ func (Tenant) Fields() []ent.Field {
 			Comment("域名").
 			Optional(),
 		field.Enum("type").
-			Comment("租户类型: standard=标准租户, msp=MSP服务提供商, customer=MSP客户").
-			Values("standard", "msp", "customer").
+			Comment("租户类型: internal|saas_customer|msp_provider|msp_customer，保留 standard|msp|customer 兼容历史数据").
+			Values("standard", "msp", "customer", "internal", "saas_customer", "msp_provider", "msp_customer").
 			Default("standard"),
 		field.String("status").
 			Comment("状态").
@@ -41,6 +41,27 @@ func (Tenant) Fields() []ent.Field {
 			Optional(),
 		field.Time("expires_at").
 			Comment("过期时间").
+			Optional(),
+		field.String("plan_code").
+			Comment("订阅或套餐编码").
+			Optional(),
+		field.Bool("billing_enabled").
+			Comment("是否启用计费/核算").
+			Default(false),
+		field.String("cost_center_code").
+			Comment("成本中心编码").
+			Optional(),
+		field.String("legal_entity_code").
+			Comment("法人实体编码").
+			Optional(),
+		field.String("currency").
+			Comment("结算币种").
+			Optional(),
+		field.String("service_tier").
+			Comment("服务等级").
+			Optional(),
+		field.String("owner_contact").
+			Comment("租户负责人联系方式").
 			Optional(),
 		field.Time("created_at").
 			Comment("创建时间").

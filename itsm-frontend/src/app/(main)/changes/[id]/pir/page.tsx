@@ -14,6 +14,8 @@ import {
   Tag,
   Descriptions,
   Modal,
+  Alert,
+  Typography,
 } from 'antd';
 import {
   CheckCircleOutlined,
@@ -35,6 +37,7 @@ import dayjs from 'dayjs';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 const { TextArea } = Input;
+const { Text } = Typography;
 
 export default function PIRPage() {
   const params = useParams();
@@ -212,6 +215,12 @@ export default function PIRPage() {
           title={existingPIR ? '编辑实施后审查' : '创建实施后审查'}
           className="shadow-sm rounded-lg"
         >
+          <Alert
+            type="info"
+            showIcon
+            className="mb-5"
+            message="按结果、问题、经验和改进建议四部分填写即可，不必每项都写很长。"
+          />
           <Form
             form={form}
             layout="vertical"
@@ -229,7 +238,7 @@ export default function PIRPage() {
               label="总体结果"
               rules={[{ required: true, message: '请选择总体结果' }]}
             >
-              <Select>
+              <Select placeholder="选择实施结果">
                 <Select.Option value="successful">
                   <Space>
                     <CheckCircleOutlined style={{ color: '#52c41a' }} />
@@ -251,45 +260,56 @@ export default function PIRPage() {
               </Select>
             </Form.Item>
 
-            <Form.Item name="objectivesAchieved" label="目标是否达成" valuePropName="checked">
-              <Select>
-                <Select.Option value={true}>是</Select.Option>
-                <Select.Option value={false}>否</Select.Option>
-              </Select>
+            <Form.Item name="objectivesAchieved" label="目标是否达成">
+              <Select
+                placeholder="选择是否达成"
+                options={[
+                  { label: '是', value: true },
+                  { label: '否', value: false },
+                ]}
+              />
             </Form.Item>
 
             <Divider>详细评估</Divider>
 
-            <Form.Item
-              name="successSummary"
-              label="成功总结"
-              extra="描述变更实施过程中做得好的方面"
-            >
-              <TextArea rows={4} placeholder="描述成功实施的关键因素..." />
+            <div className="mb-4">
+              <Text type="secondary">建议每项控制在 1 到 3 句话，优先描述事实和影响。</Text>
+            </div>
+
+            <Form.Item name="successSummary" label="成功总结">
+              <TextArea
+                rows={4}
+                placeholder="哪些做法有效，为什么有效？"
+                showCount
+                maxLength={300}
+              />
             </Form.Item>
 
-            <Form.Item
-              name="issuesEncountered"
-              label="遇到的问题"
-              extra="记录实施过程中遇到的问题和挑战"
-            >
-              <TextArea rows={4} placeholder="描述遇到的问题..." />
+            <Form.Item name="issuesEncountered" label="遇到的问题">
+              <TextArea
+                rows={4}
+                placeholder="实施中遇到了什么阻碍？"
+                showCount
+                maxLength={300}
+              />
             </Form.Item>
 
-            <Form.Item
-              name="lessonsLearned"
-              label="经验教训"
-              extra="总结可以从这次变更中学到的经验"
-            >
-              <TextArea rows={4} placeholder="经验教训..." />
+            <Form.Item name="lessonsLearned" label="经验教训">
+              <TextArea
+                rows={4}
+                placeholder="这次最值得复用或避免的经验是什么？"
+                showCount
+                maxLength={300}
+              />
             </Form.Item>
 
-            <Form.Item
-              name="improvementRecommendations"
-              label="改进建议"
-              extra="为未来的变更提供改进建议"
-            >
-              <TextArea rows={4} placeholder="改进建议..." />
+            <Form.Item name="improvementRecommendations" label="改进建议">
+              <TextArea
+                rows={4}
+                placeholder="下次如何做得更稳、更快？"
+                showCount
+                maxLength={300}
+              />
             </Form.Item>
 
             <Divider>实施时间</Divider>
@@ -306,11 +326,14 @@ export default function PIRPage() {
 
             <Divider>回滚信息</Divider>
 
-            <Form.Item name="rollbackPerformed" label="是否执行了回滚" valuePropName="checked">
-              <Select>
-                <Select.Option value={true}>是</Select.Option>
-                <Select.Option value={false}>否</Select.Option>
-              </Select>
+            <Form.Item name="rollbackPerformed" label="是否执行了回滚">
+              <Select
+                placeholder="选择是否回滚"
+                options={[
+                  { label: '是', value: true },
+                  { label: '否', value: false },
+                ]}
+              />
             </Form.Item>
 
             <Form.Item
@@ -319,7 +342,12 @@ export default function PIRPage() {
               dependencies={['rollbackPerformed']}
               hidden={!form.getFieldValue('rollbackPerformed')}
             >
-              <TextArea rows={3} placeholder="如果执行了回滚，请说明原因..." />
+              <TextArea
+                rows={3}
+                placeholder="如果执行了回滚，请说明触发原因和处置结果。"
+                showCount
+                maxLength={240}
+              />
             </Form.Item>
 
             <Divider />
@@ -327,11 +355,12 @@ export default function PIRPage() {
             <Form.Item>
               <Space>
                 <Button type="primary" htmlType="submit" loading={submitting}>
-                  {existingPIR ? '更新PIR' : '创建PIR'}
+                  {existingPIR ? '更新 PIR' : '创建 PIR'}
                 </Button>
+                <Button onClick={() => router.push(`/changes/${changeId}`)}>取消</Button>
                 {existingPIR && (
                   <Button danger onClick={() => setDeleteModalVisible(true)}>
-                    删除PIR
+                    删除 PIR
                   </Button>
                 )}
               </Space>

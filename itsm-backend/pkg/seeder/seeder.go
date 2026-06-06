@@ -16,6 +16,7 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/menu"
+	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processbinding"
@@ -34,7 +35,9 @@ import (
 	"itsm-backend/ent/user"
 	"itsm-backend/service"
 
+	"itsm-backend/config"
 	"itsm-backend/database"
+	"itsm-backend/pkg/tenantmode"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -241,15 +244,17 @@ type Seeder struct {
 	client              *ent.Client
 	sugar               *zap.SugaredLogger
 	config              *SeedConfig
+	appConfig           *config.Config
 	bpmnTemplateService *service.BPMNTemplateService
 }
 
 // NewSeeder creates a new Seeder instance
-func NewSeeder(client *ent.Client, sugar *zap.SugaredLogger) *Seeder {
+func NewSeeder(client *ent.Client, sugar *zap.SugaredLogger, appConfig *config.Config) *Seeder {
 	return &Seeder{
 		client:              client,
 		sugar:               sugar,
 		config:              loadSeedConfig(sugar),
+		appConfig:           appConfig,
 		bpmnTemplateService: service.NewBPMNTemplateService(client),
 	}
 }
@@ -410,7 +415,8 @@ func getEmbeddedConfig() *SeedConfig {
 // SeedAll runs all seeding operations
 func (s *Seeder) SeedAll(ctx context.Context) {
 	// 首先确保 default 租户存在
-	s.seedDefaultTenant(ctx)
+	rootTenant := s.seedDefaultTenant(ctx)
+	s.seedModeTenants(ctx, rootTenant)
 	s.seedDepartments(ctx)
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
@@ -444,31 +450,226 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedKnownErrors(ctx)            // 新增：初始化已知错误
 	s.seedTicketTags(ctx)             // 新增：初始化标签
 	s.seedMenuAndPermissionFixes(ctx) // 修复：更新菜单路径和补充缺失权限
-	s.seedRolePermissions(ctx)          // 新增：为角色分配权限
+	s.seedRolePermissions(ctx)        // 新增：为角色分配权限
 }
 
 // seedDefaultTenant ensures default tenant exists
-func (s *Seeder) seedDefaultTenant(ctx context.Context) {
+func (s *Seeder) seedDefaultTenant(ctx context.Context) *ent.Tenant {
+	rootType := tenantmode.TenantTypeInternal
+	rootName := "Default Tenant"
+	rootDomain := "localhost"
+
+	switch s.deploymentMode() {
+	case tenantmode.DeploymentModeSaaS:
+		rootName = "SaaS Platform Tenant"
+	case tenantmode.DeploymentModeSaaSMSP:
+		rootType = tenantmode.TenantTypeMSPProvider
+		rootName = "MSP Provider Tenant"
+	}
+
 	existing, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err == nil && existing != nil {
+		updated, updateErr := existing.Update().
+			SetName(rootName).
+			SetDomain(rootDomain).
+			SetStatus("active").
+			SetType(tenant.Type(rootType)).
+			SetBillingEnabled(true).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if updateErr == nil {
+			existing = updated
+		}
 		s.sugar.Infow("default tenant already exists", "tenant_id", existing.ID)
-		return
+		return existing
 	}
 
 	defaultTenant, err := s.client.Tenant.Create().
-		SetName("Default Tenant").
+		SetName(rootName).
 		SetCode("default").
-		SetDomain("localhost").
+		SetDomain(rootDomain).
 		SetStatus("active").
-		SetType("standard"). // standard|msp|customer
+		SetType(tenant.Type(rootType)).
+		SetBillingEnabled(true).
+		SetCurrency("CNY").
+		SetServiceTier("enterprise").
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
 		s.sugar.Warnw("failed to create default tenant", "error", err)
-		return
+		return nil
 	}
 	s.sugar.Infow("default tenant created", "tenant_id", defaultTenant.ID)
+	return defaultTenant
+}
+
+func (s *Seeder) seedModeTenants(ctx context.Context, rootTenant *ent.Tenant) {
+	if rootTenant == nil {
+		return
+	}
+
+	switch s.deploymentMode() {
+	case tenantmode.DeploymentModePrivate:
+		s.ensureTenant(ctx, tenantSeed{
+			Code:            "hq",
+			Name:            "Group Headquarters",
+			Type:            tenantmode.TenantTypeInternal,
+			ParentTenantID:  &rootTenant.ID,
+			BillingEnabled:  true,
+			CostCenterCode:  "HQ-001",
+			LegalEntityCode: "GROUP",
+			Currency:        "CNY",
+			ServiceTier:     "enterprise",
+			OwnerContact:    "hq-admin@example.com",
+		})
+	case tenantmode.DeploymentModeSaaSMSP:
+		customerOne := s.ensureTenant(ctx, tenantSeed{
+			Code:            "customer-a",
+			Name:            "Customer A",
+			Type:            tenantmode.TenantTypeMSPCustomer,
+			MSPProviderID:   &rootTenant.ID,
+			ParentTenantID:  &rootTenant.ID,
+			BillingEnabled:  true,
+			PlanCode:        "msp-enterprise",
+			CostCenterCode:  "CUS-A",
+			LegalEntityCode: "CUS-A-LE",
+			Currency:        "CNY",
+			ServiceTier:     "gold",
+			OwnerContact:    "it-manager@customer-a.example.com",
+		})
+		_ = s.ensureTenant(ctx, tenantSeed{
+			Code:            "customer-b",
+			Name:            "Customer B",
+			Type:            tenantmode.TenantTypeMSPCustomer,
+			MSPProviderID:   &rootTenant.ID,
+			ParentTenantID:  &rootTenant.ID,
+			BillingEnabled:  true,
+			PlanCode:        "msp-standard",
+			CostCenterCode:  "CUS-B",
+			LegalEntityCode: "CUS-B-LE",
+			Currency:        "CNY",
+			ServiceTier:     "silver",
+			OwnerContact:    "ops@customer-b.example.com",
+		})
+		if customerOne != nil {
+			s.seedDefaultMSPAllocations(ctx, rootTenant, customerOne)
+		}
+	}
+}
+
+type tenantSeed struct {
+	Code            string
+	Name            string
+	Type            string
+	ParentTenantID  *int
+	MSPProviderID   *int
+	PlanCode        string
+	BillingEnabled  bool
+	CostCenterCode  string
+	LegalEntityCode string
+	Currency        string
+	ServiceTier     string
+	OwnerContact    string
+}
+
+func (s *Seeder) ensureTenant(ctx context.Context, input tenantSeed) *ent.Tenant {
+	existing, err := s.client.Tenant.Query().Where(tenant.CodeEQ(input.Code)).First(ctx)
+	if err == nil && existing != nil {
+		updated, updateErr := existing.Update().
+			SetName(input.Name).
+			SetType(tenant.Type(input.Type)).
+			SetStatus("active").
+			SetNillableParentTenantID(input.ParentTenantID).
+			SetNillableMspProviderID(input.MSPProviderID).
+			SetBillingEnabled(input.BillingEnabled).
+			SetNillablePlanCode(nilIfEmpty(input.PlanCode)).
+			SetNillableCostCenterCode(nilIfEmpty(input.CostCenterCode)).
+			SetNillableLegalEntityCode(nilIfEmpty(input.LegalEntityCode)).
+			SetNillableCurrency(nilIfEmpty(input.Currency)).
+			SetNillableServiceTier(nilIfEmpty(input.ServiceTier)).
+			SetNillableOwnerContact(nilIfEmpty(input.OwnerContact)).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if updateErr == nil {
+			return updated
+		}
+		s.sugar.Warnw("update tenant seed failed", "code", input.Code, "error", updateErr)
+		return existing
+	}
+
+	created, createErr := s.client.Tenant.Create().
+		SetName(input.Name).
+		SetCode(input.Code).
+		SetType(tenant.Type(input.Type)).
+		SetStatus("active").
+		SetNillableParentTenantID(input.ParentTenantID).
+		SetNillableMspProviderID(input.MSPProviderID).
+		SetBillingEnabled(input.BillingEnabled).
+		SetNillablePlanCode(nilIfEmpty(input.PlanCode)).
+		SetNillableCostCenterCode(nilIfEmpty(input.CostCenterCode)).
+		SetNillableLegalEntityCode(nilIfEmpty(input.LegalEntityCode)).
+		SetNillableCurrency(nilIfEmpty(input.Currency)).
+		SetNillableServiceTier(nilIfEmpty(input.ServiceTier)).
+		SetNillableOwnerContact(nilIfEmpty(input.OwnerContact)).
+		SetCreatedAt(time.Now()).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
+	if createErr != nil {
+		s.sugar.Warnw("create tenant seed failed", "code", input.Code, "error", createErr)
+		return nil
+	}
+	return created
+}
+
+func (s *Seeder) seedDefaultMSPAllocations(ctx context.Context, providerTenant *ent.Tenant, customerTenant *ent.Tenant) {
+	if providerTenant == nil || customerTenant == nil {
+		return
+	}
+
+	adminUser, err := s.client.User.Query().
+		Where(
+			user.UsernameEQ("admin"),
+			user.TenantIDEQ(providerTenant.ID),
+		).
+		Only(ctx)
+	if err != nil {
+		return
+	}
+
+	exists, err := s.client.MSPAllocation.Query().
+		Where(
+			mspallocation.MspUserIDEQ(adminUser.ID),
+			mspallocation.CustomerTenantIDEQ(customerTenant.ID),
+			mspallocation.DeassignedAtIsNil(),
+		).
+		Exist(ctx)
+	if err == nil && exists {
+		return
+	}
+
+	if _, err := s.client.MSPAllocation.Create().
+		SetMspUserID(adminUser.ID).
+		SetCustomerTenantID(customerTenant.ID).
+		SetRole("primary").
+		SetAssignedAt(time.Now()).
+		Save(ctx); err != nil {
+		s.sugar.Warnw("seed MSP allocation failed", "error", err)
+	}
+}
+
+func (s *Seeder) deploymentMode() string {
+	if s.appConfig == nil || s.appConfig.Deployment.Mode == "" {
+		return tenantmode.DeploymentModePrivate
+	}
+	return s.appConfig.Deployment.Mode
+}
+
+func nilIfEmpty(value string) *string {
+	if strings.TrimSpace(value) == "" {
+		return nil
+	}
+	return &value
 }
 
 func (s *Seeder) seedAdmin(ctx context.Context) {
@@ -1580,22 +1781,22 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		}
 
 		// 为角色添加权限（直接写入 role_permissions 联表）
-			created := 0
-			for _, pid := range permIDs {
-				_, err := s.client.RolePermission.Create().
-					SetRoleID(r.ID).
-					SetPermissionID(pid).
-					Save(ctx)
-				if err != nil {
-					s.sugar.Warnw("create role-permission failed", "error", err, "role", r.Code, "permission_id", pid)
-				} else {
-					created++
-				}
+		created := 0
+		for _, pid := range permIDs {
+			_, err := s.client.RolePermission.Create().
+				SetRoleID(r.ID).
+				SetPermissionID(pid).
+				Save(ctx)
+			if err != nil {
+				s.sugar.Warnw("create role-permission failed", "error", err, "role", r.Code, "permission_id", pid)
+			} else {
+				created++
 			}
-			if created > 0 {
-				s.sugar.Infow("role permissions assigned", "role", r.Code, "count", created)
-				assigned++
-			}
+		}
+		if created > 0 {
+			s.sugar.Infow("role permissions assigned", "role", r.Code, "count", created)
+			assigned++
+		}
 	}
 	s.sugar.Infow("role permissions seed completed", "roles_assigned", assigned)
 }

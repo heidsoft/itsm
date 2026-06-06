@@ -13,6 +13,10 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
+func testStringPtr(value string) *string {
+	return &value
+}
+
 func TestKnowledgeService_CreateArticle(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
@@ -271,9 +275,9 @@ func TestKnowledgeService_UpdateArticle(t *testing.T) {
 			name:      "成功更新文章",
 			articleID: testArticle.ID,
 			request: &dto.UpdateKnowledgeArticleRequest{
-				Title:    stringPtr("更新后的标题"),
-				Content:  stringPtr("更新后的内容"),
-				Category: stringPtr("更新后的分类"),
+				Title:    testStringPtr("更新后的标题"),
+				Content:  testStringPtr("更新后的内容"),
+				Category: testStringPtr("更新后的分类"),
 				Tags:     []string{"更新", "标签"},
 			},
 			tenantID:      testTenant.ID,
@@ -292,7 +296,7 @@ func TestKnowledgeService_UpdateArticle(t *testing.T) {
 			name:      "文章不存在",
 			articleID: 99999,
 			request: &dto.UpdateKnowledgeArticleRequest{
-				Title: stringPtr("不存在的文章"),
+				Title: testStringPtr("不存在的文章"),
 			},
 			tenantID:      testTenant.ID,
 			expectedError: true,
@@ -831,9 +835,4 @@ func BenchmarkKnowledgeService_ListArticles(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _, _ = knowledgeService.ListArticles(ctx, req, testTenant.ID)
 	}
-}
-
-// 辅助函数
-func stringPtr(s string) *string {
-	return &s
 }

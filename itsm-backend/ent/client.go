@@ -7395,7 +7395,7 @@ func (c *MSPAllocationClient) QueryCustomerTenant(_m *MSPAllocation) *TenantQuer
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mspallocation.Table, mspallocation.FieldID, id),
 			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, mspallocation.CustomerTenantTable, mspallocation.CustomerTenantPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, mspallocation.CustomerTenantTable, mspallocation.CustomerTenantColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -13893,7 +13893,7 @@ func (c *TenantClient) QueryMspCustomerAllocations(_m *Tenant) *MSPAllocationQue
 		step := sqlgraph.NewStep(
 			sqlgraph.From(tenant.Table, tenant.FieldID, id),
 			sqlgraph.To(mspallocation.Table, mspallocation.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, tenant.MspCustomerAllocationsTable, tenant.MspCustomerAllocationsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.MspCustomerAllocationsTable, tenant.MspCustomerAllocationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

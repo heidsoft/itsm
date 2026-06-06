@@ -46,7 +46,6 @@ func (_u *MSPAllocationUpdate) SetNillableMspUserID(v *int) *MSPAllocationUpdate
 
 // SetCustomerTenantID sets the "customer_tenant_id" field.
 func (_u *MSPAllocationUpdate) SetCustomerTenantID(v int) *MSPAllocationUpdate {
-	_u.mutation.ResetCustomerTenantID()
 	_u.mutation.SetCustomerTenantID(v)
 	return _u
 }
@@ -56,18 +55,6 @@ func (_u *MSPAllocationUpdate) SetNillableCustomerTenantID(v *int) *MSPAllocatio
 	if v != nil {
 		_u.SetCustomerTenantID(*v)
 	}
-	return _u
-}
-
-// AddCustomerTenantID adds value to the "customer_tenant_id" field.
-func (_u *MSPAllocationUpdate) AddCustomerTenantID(v int) *MSPAllocationUpdate {
-	_u.mutation.AddCustomerTenantID(v)
-	return _u
-}
-
-// ClearCustomerTenantID clears the value of the "customer_tenant_id" field.
-func (_u *MSPAllocationUpdate) ClearCustomerTenantID() *MSPAllocationUpdate {
-	_u.mutation.ClearCustomerTenantID()
 	return _u
 }
 
@@ -138,19 +125,9 @@ func (_u *MSPAllocationUpdate) SetMspUser(v *User) *MSPAllocationUpdate {
 	return _u.SetMspUserID(v.ID)
 }
 
-// AddCustomerTenantIDs adds the "customer_tenant" edge to the Tenant entity by IDs.
-func (_u *MSPAllocationUpdate) AddCustomerTenantIDs(ids ...int) *MSPAllocationUpdate {
-	_u.mutation.AddCustomerTenantIDs(ids...)
-	return _u
-}
-
-// AddCustomerTenant adds the "customer_tenant" edges to the Tenant entity.
-func (_u *MSPAllocationUpdate) AddCustomerTenant(v ...*Tenant) *MSPAllocationUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddCustomerTenantIDs(ids...)
+// SetCustomerTenant sets the "customer_tenant" edge to the Tenant entity.
+func (_u *MSPAllocationUpdate) SetCustomerTenant(v *Tenant) *MSPAllocationUpdate {
+	return _u.SetCustomerTenantID(v.ID)
 }
 
 // Mutation returns the MSPAllocationMutation object of the builder.
@@ -164,25 +141,10 @@ func (_u *MSPAllocationUpdate) ClearMspUser() *MSPAllocationUpdate {
 	return _u
 }
 
-// ClearCustomerTenant clears all "customer_tenant" edges to the Tenant entity.
+// ClearCustomerTenant clears the "customer_tenant" edge to the Tenant entity.
 func (_u *MSPAllocationUpdate) ClearCustomerTenant() *MSPAllocationUpdate {
 	_u.mutation.ClearCustomerTenant()
 	return _u
-}
-
-// RemoveCustomerTenantIDs removes the "customer_tenant" edge to Tenant entities by IDs.
-func (_u *MSPAllocationUpdate) RemoveCustomerTenantIDs(ids ...int) *MSPAllocationUpdate {
-	_u.mutation.RemoveCustomerTenantIDs(ids...)
-	return _u
-}
-
-// RemoveCustomerTenant removes "customer_tenant" edges to Tenant entities.
-func (_u *MSPAllocationUpdate) RemoveCustomerTenant(v ...*Tenant) *MSPAllocationUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemoveCustomerTenantIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -217,6 +179,9 @@ func (_u *MSPAllocationUpdate) check() error {
 	if _u.mutation.MspUserCleared() && len(_u.mutation.MspUserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MSPAllocation.msp_user"`)
 	}
+	if _u.mutation.CustomerTenantCleared() && len(_u.mutation.CustomerTenantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "MSPAllocation.customer_tenant"`)
+	}
 	return nil
 }
 
@@ -231,15 +196,6 @@ func (_u *MSPAllocationUpdate) sqlSave(ctx context.Context) (_node int, err erro
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := _u.mutation.CustomerTenantID(); ok {
-		_spec.SetField(mspallocation.FieldCustomerTenantID, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedCustomerTenantID(); ok {
-		_spec.AddField(mspallocation.FieldCustomerTenantID, field.TypeInt, value)
-	}
-	if _u.mutation.CustomerTenantIDCleared() {
-		_spec.ClearField(mspallocation.FieldCustomerTenantID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(mspallocation.FieldRole, field.TypeString, value)
@@ -287,39 +243,23 @@ func (_u *MSPAllocationUpdate) sqlSave(ctx context.Context) (_node int, err erro
 	}
 	if _u.mutation.CustomerTenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   mspallocation.CustomerTenantTable,
-			Columns: mspallocation.CustomerTenantPrimaryKey,
+			Columns: []string{mspallocation.CustomerTenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedCustomerTenantIDs(); len(nodes) > 0 && !_u.mutation.CustomerTenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   mspallocation.CustomerTenantTable,
-			Columns: mspallocation.CustomerTenantPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.CustomerTenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   mspallocation.CustomerTenantTable,
-			Columns: mspallocation.CustomerTenantPrimaryKey,
+			Columns: []string{mspallocation.CustomerTenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
@@ -366,7 +306,6 @@ func (_u *MSPAllocationUpdateOne) SetNillableMspUserID(v *int) *MSPAllocationUpd
 
 // SetCustomerTenantID sets the "customer_tenant_id" field.
 func (_u *MSPAllocationUpdateOne) SetCustomerTenantID(v int) *MSPAllocationUpdateOne {
-	_u.mutation.ResetCustomerTenantID()
 	_u.mutation.SetCustomerTenantID(v)
 	return _u
 }
@@ -376,18 +315,6 @@ func (_u *MSPAllocationUpdateOne) SetNillableCustomerTenantID(v *int) *MSPAlloca
 	if v != nil {
 		_u.SetCustomerTenantID(*v)
 	}
-	return _u
-}
-
-// AddCustomerTenantID adds value to the "customer_tenant_id" field.
-func (_u *MSPAllocationUpdateOne) AddCustomerTenantID(v int) *MSPAllocationUpdateOne {
-	_u.mutation.AddCustomerTenantID(v)
-	return _u
-}
-
-// ClearCustomerTenantID clears the value of the "customer_tenant_id" field.
-func (_u *MSPAllocationUpdateOne) ClearCustomerTenantID() *MSPAllocationUpdateOne {
-	_u.mutation.ClearCustomerTenantID()
 	return _u
 }
 
@@ -458,19 +385,9 @@ func (_u *MSPAllocationUpdateOne) SetMspUser(v *User) *MSPAllocationUpdateOne {
 	return _u.SetMspUserID(v.ID)
 }
 
-// AddCustomerTenantIDs adds the "customer_tenant" edge to the Tenant entity by IDs.
-func (_u *MSPAllocationUpdateOne) AddCustomerTenantIDs(ids ...int) *MSPAllocationUpdateOne {
-	_u.mutation.AddCustomerTenantIDs(ids...)
-	return _u
-}
-
-// AddCustomerTenant adds the "customer_tenant" edges to the Tenant entity.
-func (_u *MSPAllocationUpdateOne) AddCustomerTenant(v ...*Tenant) *MSPAllocationUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddCustomerTenantIDs(ids...)
+// SetCustomerTenant sets the "customer_tenant" edge to the Tenant entity.
+func (_u *MSPAllocationUpdateOne) SetCustomerTenant(v *Tenant) *MSPAllocationUpdateOne {
+	return _u.SetCustomerTenantID(v.ID)
 }
 
 // Mutation returns the MSPAllocationMutation object of the builder.
@@ -484,25 +401,10 @@ func (_u *MSPAllocationUpdateOne) ClearMspUser() *MSPAllocationUpdateOne {
 	return _u
 }
 
-// ClearCustomerTenant clears all "customer_tenant" edges to the Tenant entity.
+// ClearCustomerTenant clears the "customer_tenant" edge to the Tenant entity.
 func (_u *MSPAllocationUpdateOne) ClearCustomerTenant() *MSPAllocationUpdateOne {
 	_u.mutation.ClearCustomerTenant()
 	return _u
-}
-
-// RemoveCustomerTenantIDs removes the "customer_tenant" edge to Tenant entities by IDs.
-func (_u *MSPAllocationUpdateOne) RemoveCustomerTenantIDs(ids ...int) *MSPAllocationUpdateOne {
-	_u.mutation.RemoveCustomerTenantIDs(ids...)
-	return _u
-}
-
-// RemoveCustomerTenant removes "customer_tenant" edges to Tenant entities.
-func (_u *MSPAllocationUpdateOne) RemoveCustomerTenant(v ...*Tenant) *MSPAllocationUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemoveCustomerTenantIDs(ids...)
 }
 
 // Where appends a list predicates to the MSPAllocationUpdate builder.
@@ -550,6 +452,9 @@ func (_u *MSPAllocationUpdateOne) check() error {
 	if _u.mutation.MspUserCleared() && len(_u.mutation.MspUserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "MSPAllocation.msp_user"`)
 	}
+	if _u.mutation.CustomerTenantCleared() && len(_u.mutation.CustomerTenantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "MSPAllocation.customer_tenant"`)
+	}
 	return nil
 }
 
@@ -581,15 +486,6 @@ func (_u *MSPAllocationUpdateOne) sqlSave(ctx context.Context) (_node *MSPAlloca
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := _u.mutation.CustomerTenantID(); ok {
-		_spec.SetField(mspallocation.FieldCustomerTenantID, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedCustomerTenantID(); ok {
-		_spec.AddField(mspallocation.FieldCustomerTenantID, field.TypeInt, value)
-	}
-	if _u.mutation.CustomerTenantIDCleared() {
-		_spec.ClearField(mspallocation.FieldCustomerTenantID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(mspallocation.FieldRole, field.TypeString, value)
@@ -637,39 +533,23 @@ func (_u *MSPAllocationUpdateOne) sqlSave(ctx context.Context) (_node *MSPAlloca
 	}
 	if _u.mutation.CustomerTenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   mspallocation.CustomerTenantTable,
-			Columns: mspallocation.CustomerTenantPrimaryKey,
+			Columns: []string{mspallocation.CustomerTenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedCustomerTenantIDs(); len(nodes) > 0 && !_u.mutation.CustomerTenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   mspallocation.CustomerTenantTable,
-			Columns: mspallocation.CustomerTenantPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.CustomerTenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   mspallocation.CustomerTenantTable,
-			Columns: mspallocation.CustomerTenantPrimaryKey,
+			Columns: []string{mspallocation.CustomerTenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),

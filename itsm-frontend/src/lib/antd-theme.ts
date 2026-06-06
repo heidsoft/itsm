@@ -38,9 +38,9 @@ export const antdTheme: ThemeConfig = {
     colorBorderSecondary: '#f1f5f9', // slate-100
 
     // 圆角
-    borderRadius: 6, // 与我们的 --radius-md 一致
-    borderRadiusLG: 8, // 与我们的 --radius-lg 一致
-    borderRadiusSM: 4, // 与我们的 --radius-sm 一致
+    borderRadius: 8,
+    borderRadiusLG: 12,
+    borderRadiusSM: 6,
 
     // 间距
     padding: 16, // 与我们的 --spacing-lg 一致
@@ -54,6 +54,9 @@ export const antdTheme: ThemeConfig = {
     fontSize: 14,
     fontSizeLG: 16,
     fontSizeSM: 12,
+    controlHeight: 40,
+    controlHeightLG: 44,
+    controlHeightSM: 32,
 
     // 行高
     lineHeight: 1.5,
@@ -76,12 +79,14 @@ export const antdTheme: ThemeConfig = {
   components: {
     // 按钮组件
     Button: {
-      borderRadius: 6,
-      controlHeight: 32,
-      controlHeightLG: 40,
-      controlHeightSM: 24,
-      paddingInline: 12,
-      paddingBlock: 6,
+      borderRadius: 10,
+      controlHeight: 40,
+      controlHeightLG: 44,
+      controlHeightSM: 32,
+      fontWeight: 600,
+      paddingInline: 16,
+      paddingBlock: 8,
+      primaryShadow: '0 10px 20px -12px rgb(37 99 235 / 0.55)',
     },
 
     // 卡片组件
@@ -102,23 +107,40 @@ export const antdTheme: ThemeConfig = {
 
     // 表单组件
     Form: {
-      labelColor: '#374151', // gray-700
+      labelColor: '#334155',
       labelFontSize: 14,
-      labelHeight: 32,
+      labelHeight: 28,
+      itemMarginBottom: 18,
+      verticalLabelPadding: '0 0 6px',
     },
 
     Input: {
-      borderRadius: 6,
-      controlHeight: 32,
-      controlHeightLG: 40,
-      controlHeightSM: 24,
+      borderRadius: 10,
+      controlHeight: 40,
+      controlHeightLG: 44,
+      controlHeightSM: 32,
+      activeBorderColor: '#2563eb',
+      hoverBorderColor: '#94a3b8',
     },
 
     Select: {
-      borderRadius: 6,
-      controlHeight: 32,
-      controlHeightLG: 40,
-      controlHeightSM: 24,
+      borderRadius: 10,
+      controlHeight: 40,
+      controlHeightLG: 44,
+      controlHeightSM: 32,
+      optionSelectedBg: '#dbeafe',
+      optionActiveBg: '#eff6ff',
+      optionSelectedColor: '#1d4ed8',
+      colorTextPlaceholder: '#94a3b8',
+    },
+
+    DatePicker: {
+      borderRadius: 10,
+      controlHeight: 40,
+      controlHeightLG: 44,
+      controlHeightSM: 32,
+      activeBorderColor: '#2563eb',
+      hoverBorderColor: '#94a3b8',
     },
 
     // 菜单组件

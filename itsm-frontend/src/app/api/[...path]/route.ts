@@ -1,194 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090';
+const BACKEND_BASE_URL = process.env.ITSM_BACKEND_URL || 'http://localhost:8090';
 
-// 禁用代理的配置
-const fetchOptions: RequestInit = {
-  credentials: 'include',
-};
-
-// 通过环境变量禁用代理
-if (process.env.NO_PROXY || process.env.no_proxy) {
-  // 确保本地地址不走代理
-}
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
+async function proxyRequest(request: NextRequest, params: Promise<{ path: string[] }>) {
   const { path } = await params;
-  const url = `${API_BASE_URL}/api/${path.join('/')}`;
-  const searchParams = request.nextUrl.searchParams.toString();
-  const fullUrl = searchParams ? `${url}?${searchParams}` : url;
+  const backendURL = new URL(`/api/${path.join('/')}`, BACKEND_BASE_URL);
+  backendURL.search = request.nextUrl.search;
 
-  const cookieHeader = request.headers.get('cookie') || '';
-  // Get auth from header first, then fallback to localStorage (for cross-origin proxy)
-  const token = request.cookies.get('access_token')?.value;
-  const authHeader = request.headers.get('Authorization') || (token ? `Bearer ${token}` : '');
+  const headers = new Headers(request.headers);
+  headers.delete('host');
+  headers.delete('content-length');
+
+  const init: RequestInit = {
+    method: request.method,
+    headers,
+    redirect: 'manual',
+  };
+
+  if (!['GET', 'HEAD'].includes(request.method)) {
+    init.body = await request.text();
+  }
 
   try {
-    const response = await fetch(fullUrl, {
-      ...fetchOptions,
-      method: 'GET',
-      headers: {
-        Cookie: cookieHeader,
-        Authorization: authHeader,
-        'Content-Type': 'application/json',
-      },
+    const response = await fetch(backendURL, init);
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('content-encoding');
+    responseHeaders.delete('content-length');
+
+    return new NextResponse(response.body, {
+      status: response.status,
+      headers: responseHeaders,
     });
-
-    const data = await response.json();
-    const newCookies = response.headers.get('set-cookie');
-
-    const headers = new Headers();
-    if (newCookies) {
-      headers.set('Set-Cookie', newCookies);
-    }
-
-    return NextResponse.json(data, { status: response.status, headers });
-  } catch (error) {
-    return NextResponse.json({ code: 500, message: 'Backend request failed' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ code: 5001, message: 'Backend request failed' }, { status: 500 });
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const url = `${API_BASE_URL}/api/${path.join('/')}`;
+type RouteContext = { params: Promise<{ path: string[] }> };
 
-  const cookieHeader = request.headers.get('cookie') || '';
-  const body = await request.json();
-
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Cookie: cookieHeader,
-        Authorization: request.headers.get('Authorization') || '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      credentials: 'include',
-    });
-
-    const data = await response.json();
-    const newCookies = response.headers.get('set-cookie');
-
-    const headers = new Headers();
-    if (newCookies) {
-      headers.set('Set-Cookie', newCookies);
-    }
-
-    return NextResponse.json(data, { status: response.status, headers });
-  } catch (error) {
-    return NextResponse.json({ code: 500, message: 'Backend request failed' }, { status: 500 });
-  }
+export async function GET(request: NextRequest, context: RouteContext) {
+  return proxyRequest(request, context.params);
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const url = `${API_BASE_URL}/api/${path.join('/')}`;
-
-  const cookieHeader = request.headers.get('cookie') || '';
-  const body = await request.json();
-
-  try {
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        Cookie: cookieHeader,
-        Authorization: request.headers.get('Authorization') || '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      credentials: 'include',
-    });
-
-    const data = await response.json();
-    const newCookies = response.headers.get('set-cookie');
-
-    const headers = new Headers();
-    if (newCookies) {
-      headers.set('Set-Cookie', newCookies);
-    }
-
-    return NextResponse.json(data, { status: response.status, headers });
-  } catch (error) {
-    return NextResponse.json({ code: 500, message: 'Backend request failed' }, { status: 500 });
-  }
+export async function POST(request: NextRequest, context: RouteContext) {
+  return proxyRequest(request, context.params);
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const url = `${API_BASE_URL}/api/${path.join('/')}`;
-
-  const cookieHeader = request.headers.get('cookie') || '';
-
-  try {
-    const response = await fetch(url, {
-      method: 'DELETE',
-      headers: {
-        Cookie: cookieHeader,
-        Authorization: request.headers.get('Authorization') || '',
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-
-    const data = await response.json();
-    const newCookies = response.headers.get('set-cookie');
-
-    const headers = new Headers();
-    if (newCookies) {
-      headers.set('Set-Cookie', newCookies);
-    }
-
-    return NextResponse.json(data, { status: response.status, headers });
-  } catch (error) {
-    return NextResponse.json({ code: 500, message: 'Backend request failed' }, { status: 500 });
-  }
+export async function PUT(request: NextRequest, context: RouteContext) {
+  return proxyRequest(request, context.params);
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const url = `${API_BASE_URL}/api/${path.join('/')}`;
-
-  const cookieHeader = request.headers.get('cookie') || '';
-  const body = await request.json();
-
-  try {
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: {
-        Cookie: cookieHeader,
-        Authorization: request.headers.get('Authorization') || '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      credentials: 'include',
-    });
-
-    const data = await response.json();
-    const newCookies = response.headers.get('set-cookie');
-
-    const headers = new Headers();
-    if (newCookies) {
-      headers.set('Set-Cookie', newCookies);
-    }
-
-    return NextResponse.json(data, { status: response.status, headers });
-  } catch (error) {
-    return NextResponse.json({ code: 500, message: 'Backend request failed' }, { status: 500 });
-  }
+export async function PATCH(request: NextRequest, context: RouteContext) {
+  return proxyRequest(request, context.params);
 }
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  return proxyRequest(request, context.params);
+}
+
+export const dynamic = 'force-dynamic';

@@ -78,6 +78,56 @@ services:
       retries: 3
 
   # ITSM 后端服务
+  itsm-init:
+    build:
+      context: ./itsm-backend
+      dockerfile: Dockerfile
+      args:
+        - GOPROXY=${GOPROXY:-https://proxy.golang.org,direct}
+        - GOSUMDB=${GOSUMDB:-sum.golang.org}
+        - HTTP_PROXY=
+        - HTTPS_PROXY=
+        - http_proxy=
+        - https_proxy=
+        - no_proxy=localhost,127.0.0.1
+    container_name: itsm-init
+    hostname: init
+    command: ["./main"]
+    environment:
+      - DATABASE_URL=postgres://itsm:${DB_PASSWORD:-itsm_password_2026}@postgres:5432/itsm?sslmode=disable
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=itsm
+      - DB_PASSWORD=${DB_PASSWORD:-itsm_password_2026}
+      - DB_NAME=itsm
+      - DB_SSLMODE=disable
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_DB=0
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key-placeholder-change-in-production-min-32-chars}
+      - SERVER_MODE=release
+      - LOG_LEVEL=info
+      - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
+      - ITSM_BOOTSTRAP_ONLY=true
+      - ITSM_AUTO_MIGRATE=true
+      - ITSM_AUTO_SEED=true
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - NO_PROXY=localhost,127.0.0.1,backend,postgres,redis
+      - no_proxy=localhost,127.0.0.1,backend,postgres,redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - itsm-network
+    restart: "no"
+
+  # ITSM 后端服务
   itsm-backend:
     build:
       context: ./itsm-backend
@@ -111,6 +161,9 @@ services:
       - SERVER_MODE=release
       - LOG_LEVEL=info
       - GIN_MODE=release
+      - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
+      - ITSM_AUTO_MIGRATE=false
+      - ITSM_AUTO_SEED=false
       # WARNING: ITSM_ALLOW_ALL_ORIGINS=true is for local dev only! Set proper CORS in production.
       - ITSM_ALLOW_ALL_ORIGINS=true
       # 取消代理设置，确保内部网络请求不走代理
@@ -127,6 +180,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      itsm-init:
+        condition: service_completed_successfully
     networks:
       - itsm-network
     volumes:
@@ -148,7 +203,7 @@ services:
     hostname: frontend
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://itsm-backend:8090
+      - ITSM_BACKEND_URL=http://itsm-backend:8090
       # 取消代理设置，确保内部网络请求不走代理
       - HTTP_PROXY=
       - HTTPS_PROXY=

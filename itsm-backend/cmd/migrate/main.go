@@ -261,7 +261,7 @@ func seedData(sugar *zap.SugaredLogger) {
 	}
 	defer client.Close()
 
-	seederInstance := seeder.NewSeeder(client, sugar)
+	seederInstance := seeder.NewSeeder(client, sugar, cfg)
 	seederInstance.SeedAll(context.Background())
 	fmt.Println("Seed completed successfully")
 }
@@ -324,7 +324,7 @@ func freshDatabase(migrator *migration.Migrator, sugar *zap.SugaredLogger) {
 		log.Fatalf("Failed to connect for seeding: %v", err)
 	}
 	defer client.Close()
-	seederInstance := seeder.NewSeeder(client, sugar)
+	seederInstance := seeder.NewSeeder(client, sugar, cfg)
 	seederInstance.SeedAll(context.Background())
 
 	fmt.Println("Fresh reset completed successfully")

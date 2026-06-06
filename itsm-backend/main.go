@@ -9,11 +9,17 @@ package main
 
 import (
 	boot "itsm-backend/internal/bootstrap"
+	"os"
 )
 
 // main函数：Go程序的入口点
 // 当程序启动时，首先执行这个函数
 func main() {
+	if os.Getenv("ITSM_BOOTSTRAP_ONLY") == "true" {
+		boot.RunInitialization()
+		return
+	}
+
 	app := boot.NewApplication()
 	app.Run()
 }

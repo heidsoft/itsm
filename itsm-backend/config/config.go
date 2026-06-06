@@ -13,16 +13,23 @@ import (
 )
 
 type Config struct {
-	Database DatabaseConfig `mapstructure:"database"`
-	Server   ServerConfig   `mapstructure:"server"`
-	JWT      JWTConfig      `mapstructure:"jwt"`
-	Log      LogConfig      `mapstructure:"log"`
-	LLM      LLMConfig      `mapstructure:"llm"`
-	SMS      SMSConfig      `mapstructure:"sms"`
-	SMTP     SMTPConfig     `mapstructure:"smtp"`
-	Ticket   TicketConfig   `mapstructure:"ticket"`
-	Redis    RedisConfig    `mapstructure:"redis"`
-	Security SecurityConfig `mapstructure:"security"`
+	Database   DatabaseConfig   `mapstructure:"database"`
+	Server     ServerConfig     `mapstructure:"server"`
+	JWT        JWTConfig        `mapstructure:"jwt"`
+	Log        LogConfig        `mapstructure:"log"`
+	LLM        LLMConfig        `mapstructure:"llm"`
+	SMS        SMSConfig        `mapstructure:"sms"`
+	SMTP       SMTPConfig       `mapstructure:"smtp"`
+	Ticket     TicketConfig     `mapstructure:"ticket"`
+	Redis      RedisConfig      `mapstructure:"redis"`
+	Security   SecurityConfig   `mapstructure:"security"`
+	Deployment DeploymentConfig `mapstructure:"deployment"`
+}
+
+type DeploymentConfig struct {
+	Mode        string `mapstructure:"mode"`
+	AutoMigrate bool   `mapstructure:"auto_migrate"`
+	AutoSeed    bool   `mapstructure:"auto_seed"`
 }
 
 // SecurityConfig 安全配置
@@ -190,6 +197,7 @@ func LoadConfig() (*Config, error) {
 	viper.Set("embedding", rawConfig["embedding"])
 	viper.Set("security", rawConfig["security"])
 	viper.Set("admin", rawConfig["admin"])
+	viper.Set("deployment", rawConfig["deployment"])
 
 	// 重新绑定到 Config 结构
 	var config Config
@@ -205,6 +213,9 @@ func LoadConfig() (*Config, error) {
 	config.Log.Path = getEnvWithDefault("LOG_PATH", config.Log.Path)
 	config.Log.Development = os.Getenv("LOG_DEVELOPMENT") == "true"
 	config.LLM.APIKey = getEnvWithDefault("OPENAI_API_KEY", config.LLM.APIKey)
+	config.Deployment.Mode = getEnvWithDefault("DEPLOYMENT_MODE", config.Deployment.Mode)
+	config.Deployment.AutoMigrate = getEnvBoolWithDefault("ITSM_AUTO_MIGRATE", config.Deployment.AutoMigrate)
+	config.Deployment.AutoSeed = getEnvBoolWithDefault("ITSM_AUTO_SEED", config.Deployment.AutoSeed)
 
 	if config.JWT.Secret == "" {
 		secretBytes := make([]byte, 32)
@@ -243,5 +254,27 @@ func getEnvWithDefault(key, defaultValue string) string {
 	if value := os.Getenv("ITSM_" + strings.ToUpper(key)); value != "" {
 		return value
 	}
+	return defaultValue
+}
+
+func getEnvBoolWithDefault(key string, defaultValue bool) bool {
+	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
+		switch strings.ToLower(value) {
+		case "1", "true", "yes", "on":
+			return true
+		case "0", "false", "no", "off":
+			return false
+		}
+	}
+
+	if value := strings.TrimSpace(os.Getenv("ITSM_" + strings.ToUpper(key))); value != "" {
+		switch strings.ToLower(value) {
+		case "1", "true", "yes", "on":
+			return true
+		case "0", "false", "no", "off":
+			return false
+		}
+	}
+
 	return defaultValue
 }

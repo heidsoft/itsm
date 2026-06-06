@@ -90,6 +90,41 @@ func ExpiresAt(v time.Time) predicate.Tenant {
 	return predicate.Tenant(sql.FieldEQ(FieldExpiresAt, v))
 }
 
+// PlanCode applies equality check predicate on the "plan_code" field. It's identical to PlanCodeEQ.
+func PlanCode(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldPlanCode, v))
+}
+
+// BillingEnabled applies equality check predicate on the "billing_enabled" field. It's identical to BillingEnabledEQ.
+func BillingEnabled(v bool) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldBillingEnabled, v))
+}
+
+// CostCenterCode applies equality check predicate on the "cost_center_code" field. It's identical to CostCenterCodeEQ.
+func CostCenterCode(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldCostCenterCode, v))
+}
+
+// LegalEntityCode applies equality check predicate on the "legal_entity_code" field. It's identical to LegalEntityCodeEQ.
+func LegalEntityCode(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldLegalEntityCode, v))
+}
+
+// Currency applies equality check predicate on the "currency" field. It's identical to CurrencyEQ.
+func Currency(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldCurrency, v))
+}
+
+// ServiceTier applies equality check predicate on the "service_tier" field. It's identical to ServiceTierEQ.
+func ServiceTier(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldServiceTier, v))
+}
+
+// OwnerContact applies equality check predicate on the "owner_contact" field. It's identical to OwnerContactEQ.
+func OwnerContact(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldOwnerContact, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Tenant {
 	return predicate.Tenant(sql.FieldEQ(FieldCreatedAt, v))
@@ -540,6 +575,466 @@ func ExpiresAtNotNil() predicate.Tenant {
 	return predicate.Tenant(sql.FieldNotNull(FieldExpiresAt))
 }
 
+// PlanCodeEQ applies the EQ predicate on the "plan_code" field.
+func PlanCodeEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldPlanCode, v))
+}
+
+// PlanCodeNEQ applies the NEQ predicate on the "plan_code" field.
+func PlanCodeNEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNEQ(FieldPlanCode, v))
+}
+
+// PlanCodeIn applies the In predicate on the "plan_code" field.
+func PlanCodeIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldIn(FieldPlanCode, vs...))
+}
+
+// PlanCodeNotIn applies the NotIn predicate on the "plan_code" field.
+func PlanCodeNotIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotIn(FieldPlanCode, vs...))
+}
+
+// PlanCodeGT applies the GT predicate on the "plan_code" field.
+func PlanCodeGT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGT(FieldPlanCode, v))
+}
+
+// PlanCodeGTE applies the GTE predicate on the "plan_code" field.
+func PlanCodeGTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGTE(FieldPlanCode, v))
+}
+
+// PlanCodeLT applies the LT predicate on the "plan_code" field.
+func PlanCodeLT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLT(FieldPlanCode, v))
+}
+
+// PlanCodeLTE applies the LTE predicate on the "plan_code" field.
+func PlanCodeLTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLTE(FieldPlanCode, v))
+}
+
+// PlanCodeContains applies the Contains predicate on the "plan_code" field.
+func PlanCodeContains(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContains(FieldPlanCode, v))
+}
+
+// PlanCodeHasPrefix applies the HasPrefix predicate on the "plan_code" field.
+func PlanCodeHasPrefix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasPrefix(FieldPlanCode, v))
+}
+
+// PlanCodeHasSuffix applies the HasSuffix predicate on the "plan_code" field.
+func PlanCodeHasSuffix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasSuffix(FieldPlanCode, v))
+}
+
+// PlanCodeIsNil applies the IsNil predicate on the "plan_code" field.
+func PlanCodeIsNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldIsNull(FieldPlanCode))
+}
+
+// PlanCodeNotNil applies the NotNil predicate on the "plan_code" field.
+func PlanCodeNotNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotNull(FieldPlanCode))
+}
+
+// PlanCodeEqualFold applies the EqualFold predicate on the "plan_code" field.
+func PlanCodeEqualFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEqualFold(FieldPlanCode, v))
+}
+
+// PlanCodeContainsFold applies the ContainsFold predicate on the "plan_code" field.
+func PlanCodeContainsFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContainsFold(FieldPlanCode, v))
+}
+
+// BillingEnabledEQ applies the EQ predicate on the "billing_enabled" field.
+func BillingEnabledEQ(v bool) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldBillingEnabled, v))
+}
+
+// BillingEnabledNEQ applies the NEQ predicate on the "billing_enabled" field.
+func BillingEnabledNEQ(v bool) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNEQ(FieldBillingEnabled, v))
+}
+
+// CostCenterCodeEQ applies the EQ predicate on the "cost_center_code" field.
+func CostCenterCodeEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldCostCenterCode, v))
+}
+
+// CostCenterCodeNEQ applies the NEQ predicate on the "cost_center_code" field.
+func CostCenterCodeNEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNEQ(FieldCostCenterCode, v))
+}
+
+// CostCenterCodeIn applies the In predicate on the "cost_center_code" field.
+func CostCenterCodeIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldIn(FieldCostCenterCode, vs...))
+}
+
+// CostCenterCodeNotIn applies the NotIn predicate on the "cost_center_code" field.
+func CostCenterCodeNotIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotIn(FieldCostCenterCode, vs...))
+}
+
+// CostCenterCodeGT applies the GT predicate on the "cost_center_code" field.
+func CostCenterCodeGT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGT(FieldCostCenterCode, v))
+}
+
+// CostCenterCodeGTE applies the GTE predicate on the "cost_center_code" field.
+func CostCenterCodeGTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGTE(FieldCostCenterCode, v))
+}
+
+// CostCenterCodeLT applies the LT predicate on the "cost_center_code" field.
+func CostCenterCodeLT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLT(FieldCostCenterCode, v))
+}
+
+// CostCenterCodeLTE applies the LTE predicate on the "cost_center_code" field.
+func CostCenterCodeLTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLTE(FieldCostCenterCode, v))
+}
+
+// CostCenterCodeContains applies the Contains predicate on the "cost_center_code" field.
+func CostCenterCodeContains(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContains(FieldCostCenterCode, v))
+}
+
+// CostCenterCodeHasPrefix applies the HasPrefix predicate on the "cost_center_code" field.
+func CostCenterCodeHasPrefix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasPrefix(FieldCostCenterCode, v))
+}
+
+// CostCenterCodeHasSuffix applies the HasSuffix predicate on the "cost_center_code" field.
+func CostCenterCodeHasSuffix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasSuffix(FieldCostCenterCode, v))
+}
+
+// CostCenterCodeIsNil applies the IsNil predicate on the "cost_center_code" field.
+func CostCenterCodeIsNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldIsNull(FieldCostCenterCode))
+}
+
+// CostCenterCodeNotNil applies the NotNil predicate on the "cost_center_code" field.
+func CostCenterCodeNotNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotNull(FieldCostCenterCode))
+}
+
+// CostCenterCodeEqualFold applies the EqualFold predicate on the "cost_center_code" field.
+func CostCenterCodeEqualFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEqualFold(FieldCostCenterCode, v))
+}
+
+// CostCenterCodeContainsFold applies the ContainsFold predicate on the "cost_center_code" field.
+func CostCenterCodeContainsFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContainsFold(FieldCostCenterCode, v))
+}
+
+// LegalEntityCodeEQ applies the EQ predicate on the "legal_entity_code" field.
+func LegalEntityCodeEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldLegalEntityCode, v))
+}
+
+// LegalEntityCodeNEQ applies the NEQ predicate on the "legal_entity_code" field.
+func LegalEntityCodeNEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNEQ(FieldLegalEntityCode, v))
+}
+
+// LegalEntityCodeIn applies the In predicate on the "legal_entity_code" field.
+func LegalEntityCodeIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldIn(FieldLegalEntityCode, vs...))
+}
+
+// LegalEntityCodeNotIn applies the NotIn predicate on the "legal_entity_code" field.
+func LegalEntityCodeNotIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotIn(FieldLegalEntityCode, vs...))
+}
+
+// LegalEntityCodeGT applies the GT predicate on the "legal_entity_code" field.
+func LegalEntityCodeGT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGT(FieldLegalEntityCode, v))
+}
+
+// LegalEntityCodeGTE applies the GTE predicate on the "legal_entity_code" field.
+func LegalEntityCodeGTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGTE(FieldLegalEntityCode, v))
+}
+
+// LegalEntityCodeLT applies the LT predicate on the "legal_entity_code" field.
+func LegalEntityCodeLT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLT(FieldLegalEntityCode, v))
+}
+
+// LegalEntityCodeLTE applies the LTE predicate on the "legal_entity_code" field.
+func LegalEntityCodeLTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLTE(FieldLegalEntityCode, v))
+}
+
+// LegalEntityCodeContains applies the Contains predicate on the "legal_entity_code" field.
+func LegalEntityCodeContains(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContains(FieldLegalEntityCode, v))
+}
+
+// LegalEntityCodeHasPrefix applies the HasPrefix predicate on the "legal_entity_code" field.
+func LegalEntityCodeHasPrefix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasPrefix(FieldLegalEntityCode, v))
+}
+
+// LegalEntityCodeHasSuffix applies the HasSuffix predicate on the "legal_entity_code" field.
+func LegalEntityCodeHasSuffix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasSuffix(FieldLegalEntityCode, v))
+}
+
+// LegalEntityCodeIsNil applies the IsNil predicate on the "legal_entity_code" field.
+func LegalEntityCodeIsNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldIsNull(FieldLegalEntityCode))
+}
+
+// LegalEntityCodeNotNil applies the NotNil predicate on the "legal_entity_code" field.
+func LegalEntityCodeNotNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotNull(FieldLegalEntityCode))
+}
+
+// LegalEntityCodeEqualFold applies the EqualFold predicate on the "legal_entity_code" field.
+func LegalEntityCodeEqualFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEqualFold(FieldLegalEntityCode, v))
+}
+
+// LegalEntityCodeContainsFold applies the ContainsFold predicate on the "legal_entity_code" field.
+func LegalEntityCodeContainsFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContainsFold(FieldLegalEntityCode, v))
+}
+
+// CurrencyEQ applies the EQ predicate on the "currency" field.
+func CurrencyEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldCurrency, v))
+}
+
+// CurrencyNEQ applies the NEQ predicate on the "currency" field.
+func CurrencyNEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNEQ(FieldCurrency, v))
+}
+
+// CurrencyIn applies the In predicate on the "currency" field.
+func CurrencyIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldIn(FieldCurrency, vs...))
+}
+
+// CurrencyNotIn applies the NotIn predicate on the "currency" field.
+func CurrencyNotIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotIn(FieldCurrency, vs...))
+}
+
+// CurrencyGT applies the GT predicate on the "currency" field.
+func CurrencyGT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGT(FieldCurrency, v))
+}
+
+// CurrencyGTE applies the GTE predicate on the "currency" field.
+func CurrencyGTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGTE(FieldCurrency, v))
+}
+
+// CurrencyLT applies the LT predicate on the "currency" field.
+func CurrencyLT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLT(FieldCurrency, v))
+}
+
+// CurrencyLTE applies the LTE predicate on the "currency" field.
+func CurrencyLTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLTE(FieldCurrency, v))
+}
+
+// CurrencyContains applies the Contains predicate on the "currency" field.
+func CurrencyContains(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContains(FieldCurrency, v))
+}
+
+// CurrencyHasPrefix applies the HasPrefix predicate on the "currency" field.
+func CurrencyHasPrefix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasPrefix(FieldCurrency, v))
+}
+
+// CurrencyHasSuffix applies the HasSuffix predicate on the "currency" field.
+func CurrencyHasSuffix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasSuffix(FieldCurrency, v))
+}
+
+// CurrencyIsNil applies the IsNil predicate on the "currency" field.
+func CurrencyIsNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldIsNull(FieldCurrency))
+}
+
+// CurrencyNotNil applies the NotNil predicate on the "currency" field.
+func CurrencyNotNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotNull(FieldCurrency))
+}
+
+// CurrencyEqualFold applies the EqualFold predicate on the "currency" field.
+func CurrencyEqualFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEqualFold(FieldCurrency, v))
+}
+
+// CurrencyContainsFold applies the ContainsFold predicate on the "currency" field.
+func CurrencyContainsFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContainsFold(FieldCurrency, v))
+}
+
+// ServiceTierEQ applies the EQ predicate on the "service_tier" field.
+func ServiceTierEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldServiceTier, v))
+}
+
+// ServiceTierNEQ applies the NEQ predicate on the "service_tier" field.
+func ServiceTierNEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNEQ(FieldServiceTier, v))
+}
+
+// ServiceTierIn applies the In predicate on the "service_tier" field.
+func ServiceTierIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldIn(FieldServiceTier, vs...))
+}
+
+// ServiceTierNotIn applies the NotIn predicate on the "service_tier" field.
+func ServiceTierNotIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotIn(FieldServiceTier, vs...))
+}
+
+// ServiceTierGT applies the GT predicate on the "service_tier" field.
+func ServiceTierGT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGT(FieldServiceTier, v))
+}
+
+// ServiceTierGTE applies the GTE predicate on the "service_tier" field.
+func ServiceTierGTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGTE(FieldServiceTier, v))
+}
+
+// ServiceTierLT applies the LT predicate on the "service_tier" field.
+func ServiceTierLT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLT(FieldServiceTier, v))
+}
+
+// ServiceTierLTE applies the LTE predicate on the "service_tier" field.
+func ServiceTierLTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLTE(FieldServiceTier, v))
+}
+
+// ServiceTierContains applies the Contains predicate on the "service_tier" field.
+func ServiceTierContains(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContains(FieldServiceTier, v))
+}
+
+// ServiceTierHasPrefix applies the HasPrefix predicate on the "service_tier" field.
+func ServiceTierHasPrefix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasPrefix(FieldServiceTier, v))
+}
+
+// ServiceTierHasSuffix applies the HasSuffix predicate on the "service_tier" field.
+func ServiceTierHasSuffix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasSuffix(FieldServiceTier, v))
+}
+
+// ServiceTierIsNil applies the IsNil predicate on the "service_tier" field.
+func ServiceTierIsNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldIsNull(FieldServiceTier))
+}
+
+// ServiceTierNotNil applies the NotNil predicate on the "service_tier" field.
+func ServiceTierNotNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotNull(FieldServiceTier))
+}
+
+// ServiceTierEqualFold applies the EqualFold predicate on the "service_tier" field.
+func ServiceTierEqualFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEqualFold(FieldServiceTier, v))
+}
+
+// ServiceTierContainsFold applies the ContainsFold predicate on the "service_tier" field.
+func ServiceTierContainsFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContainsFold(FieldServiceTier, v))
+}
+
+// OwnerContactEQ applies the EQ predicate on the "owner_contact" field.
+func OwnerContactEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldOwnerContact, v))
+}
+
+// OwnerContactNEQ applies the NEQ predicate on the "owner_contact" field.
+func OwnerContactNEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNEQ(FieldOwnerContact, v))
+}
+
+// OwnerContactIn applies the In predicate on the "owner_contact" field.
+func OwnerContactIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldIn(FieldOwnerContact, vs...))
+}
+
+// OwnerContactNotIn applies the NotIn predicate on the "owner_contact" field.
+func OwnerContactNotIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotIn(FieldOwnerContact, vs...))
+}
+
+// OwnerContactGT applies the GT predicate on the "owner_contact" field.
+func OwnerContactGT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGT(FieldOwnerContact, v))
+}
+
+// OwnerContactGTE applies the GTE predicate on the "owner_contact" field.
+func OwnerContactGTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGTE(FieldOwnerContact, v))
+}
+
+// OwnerContactLT applies the LT predicate on the "owner_contact" field.
+func OwnerContactLT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLT(FieldOwnerContact, v))
+}
+
+// OwnerContactLTE applies the LTE predicate on the "owner_contact" field.
+func OwnerContactLTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLTE(FieldOwnerContact, v))
+}
+
+// OwnerContactContains applies the Contains predicate on the "owner_contact" field.
+func OwnerContactContains(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContains(FieldOwnerContact, v))
+}
+
+// OwnerContactHasPrefix applies the HasPrefix predicate on the "owner_contact" field.
+func OwnerContactHasPrefix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasPrefix(FieldOwnerContact, v))
+}
+
+// OwnerContactHasSuffix applies the HasSuffix predicate on the "owner_contact" field.
+func OwnerContactHasSuffix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasSuffix(FieldOwnerContact, v))
+}
+
+// OwnerContactIsNil applies the IsNil predicate on the "owner_contact" field.
+func OwnerContactIsNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldIsNull(FieldOwnerContact))
+}
+
+// OwnerContactNotNil applies the NotNil predicate on the "owner_contact" field.
+func OwnerContactNotNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotNull(FieldOwnerContact))
+}
+
+// OwnerContactEqualFold applies the EqualFold predicate on the "owner_contact" field.
+func OwnerContactEqualFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEqualFold(FieldOwnerContact, v))
+}
+
+// OwnerContactContainsFold applies the ContainsFold predicate on the "owner_contact" field.
+func OwnerContactContainsFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContainsFold(FieldOwnerContact, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Tenant {
 	return predicate.Tenant(sql.FieldEQ(FieldCreatedAt, v))
@@ -648,7 +1143,7 @@ func HasMspCustomerAllocations() predicate.Tenant {
 	return predicate.Tenant(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, MspCustomerAllocationsTable, MspCustomerAllocationsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, MspCustomerAllocationsTable, MspCustomerAllocationsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
