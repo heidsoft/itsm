@@ -2,75 +2,25 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Breadcrumb, Button, Card, Divider, Form, Input, Select, Space, message } from 'antd';
+import { App, Card } from 'antd';
+import { Form } from 'antd';
 
+import { CIEditorForm } from '@/components/cmdb/CIEditorForm';
+import {
+  CIFormValues,
+  extractCloudDataList,
+  normalizeSchemaFields,
+  SchemaField,
+} from '@/components/cmdb/ci-editor-shared';
+import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { CMDBApi } from '@/lib/api/cmdb-api';
-import { CIStatus, CIStatusLabels } from '@/constants/cmdb';
 import type { CIType, CloudResource, CloudService, ConfigurationItem } from '@/types/biz/cmdb';
-
-const { TextArea } = Input;
-
-const statusOptions = [CIStatus.ACTIVE, CIStatus.INACTIVE, CIStatus.MAINTENANCE];
-
-type SchemaField = {
-  key: string;
-  label: string;
-  type?: string;
-  required?: boolean;
-  options?: string[];
-  placeholder?: string;
-};
-
-const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
-  if (!schema) return [];
-  if (Array.isArray(schema)) {
-    return schema
-      .map((item): SchemaField | null => {
-        if (typeof item !== 'object' || item === null) return null;
-        const record = item as Record<string, any>;
-        const key = record.key || record.name;
-        if (!key) return null;
-        return {
-          key,
-          label: record.label || key,
-          type: record.type,
-          required: Boolean(record.required),
-          options: Array.isArray(record.options) ? record.options : undefined,
-          placeholder: record.placeholder,
-        };
-      })
-      .filter((item): item is SchemaField => item !== null);
-  }
-  if (typeof schema === 'object') {
-    const record = schema as Record<string, any>;
-    if (Array.isArray(record.fields)) {
-      return normalizeSchemaFields(record.fields);
-    }
-    return Object.entries(record).map(([key, value]): SchemaField => {
-      if (typeof value === 'string') {
-        return { key, label: value };
-      }
-      if (typeof value === 'object' && value !== null) {
-        const entry = value as Record<string, any>;
-        return {
-          key,
-          label: entry.label || key,
-          type: entry.type,
-          required: Boolean(entry.required),
-          options: Array.isArray(entry.options) ? entry.options : undefined,
-          placeholder: entry.placeholder,
-        };
-      }
-      return { key, label: key };
-    });
-  }
-  return [];
-};
 
 const EditCIPage: React.FC = () => {
   const router = useRouter();
   const { id } = useParams() as { id: string };
-  const [form] = Form.useForm();
+  const { message } = App.useApp();
+  const [form] = Form.useForm<CIFormValues>();
   const [types, setTypes] = useState<CIType[]>([]);
   const [typesLoading, setTypesLoading] = useState(true);
   const [cloudResources, setCloudResources] = useState<CloudResource[]>([]);
@@ -82,23 +32,24 @@ const EditCIPage: React.FC = () => {
   const [ci, setCi] = useState<ConfigurationItem | null>(null);
   const initializedRef = useRef(false);
 
-  const cloudServiceMap = useMemo(() => {
-    return new Map(cloudServices.map(service => [service.id, service]));
-  }, [cloudServices]);
+  const cloudServiceMap = useMemo(
+    () => new Map(cloudServices.map(service => [service.id, service])),
+    [cloudServices]
+  );
 
   useEffect(() => {
     const loadTypes = async () => {
       try {
         const res = await CMDBApi.getTypes();
         setTypes(res || []);
-      } catch (error) {
+      } catch {
         message.error('加载资产类型失败');
       } finally {
         setTypesLoading(false);
       }
     };
     loadTypes();
-  }, []);
+  }, [message]);
 
   useEffect(() => {
     const loadCloudData = async () => {
@@ -108,24 +59,24 @@ const EditCIPage: React.FC = () => {
           CMDBApi.getCloudResources(),
           CMDBApi.getCloudServices(),
         ]);
-        setCloudResources((resources as any).items || (resources as any).data || []);
-        setCloudServices((services as any).items || (services as any).data || []);
-      } catch (error) {
+        setCloudResources(extractCloudDataList<CloudResource>(resources));
+        setCloudServices(extractCloudDataList<CloudService>(services));
+      } catch {
         message.error('加载云资源数据失败');
       } finally {
         setCloudLoading(false);
       }
     };
     loadCloudData();
-  }, []);
+  }, [message]);
 
   useEffect(() => {
     const loadCI = async () => {
       setLoading(true);
       try {
         const res = await CMDBApi.getCI(id);
-        setCi(res as any);
-      } catch (error) {
+        setCi(res as unknown as ConfigurationItem);
+      } catch {
         message.error('加载配置项失败');
       } finally {
         setLoading(false);
@@ -134,18 +85,18 @@ const EditCIPage: React.FC = () => {
     if (id) {
       loadCI();
     }
-  }, [id]);
+  }, [id, message]);
 
   useEffect(() => {
     if (!ci || initializedRef.current) return;
-    const initialValues: Record<string, any> = {
+    const initialValues: Record<string, unknown> = {
       ...ci,
       cloud_account_id: ci.cloud_account_id ? String(ci.cloud_account_id) : undefined,
     };
     if (ci.attributes && typeof ci.attributes === 'object') {
       initialValues.attributes = JSON.stringify(ci.attributes, null, 2);
     }
-    form.setFieldsValue(initialValues);
+    form.setFieldsValue(initialValues as CIFormValues);
 
     if (ci.cloud_resource_ref_id && cloudResources.length && cloudServices.length) {
       const resource = cloudResources.find(item => item.id === ci.cloud_resource_ref_id);
@@ -174,42 +125,16 @@ const EditCIPage: React.FC = () => {
     });
   };
 
-  const handleSubmit = async (values: {
-    name: string;
-    ci_type_id: number;
-    status: CIStatus;
-    description?: string;
-    attributes?: string;
-    serial_number?: string;
-    model?: string;
-    vendor?: string;
-    location?: string;
-    asset_tag?: string;
-    assigned_to?: string;
-    owned_by?: string;
-    environment?: string;
-    criticality?: string;
-    discovery_source?: string;
-    source?: string;
-    cloud_provider?: string;
-    cloud_account_id?: string;
-    cloud_region?: string;
-    cloud_zone?: string;
-    cloud_resource_id?: string;
-    cloud_resource_type?: string;
-    cloud_sync_status?: string;
-    cloud_resource_ref_id?: number;
-    cloud_metadata?: Record<string, any>;
-  }) => {
+  const handleSubmit = async (values: CIFormValues) => {
     try {
-      let attributes: Record<string, any> | undefined;
+      let attributes: Record<string, unknown> | undefined;
       if (values.attributes) {
         try {
           attributes =
             typeof values.attributes === 'string'
               ? JSON.parse(values.attributes)
               : values.attributes;
-        } catch (parseError) {
+        } catch {
           message.error('扩展属性需要是有效的 JSON');
           return;
         }
@@ -256,239 +181,35 @@ const EditCIPage: React.FC = () => {
   };
 
   return (
-    <Card loading={loading}>
-      <Breadcrumb
-        style={{ marginBottom: 16 }}
-        items={[
-          { title: '首页' },
-          { title: '配置管理' },
-          { title: <a onClick={() => router.push('/cmdb')}>配置项列表</a> },
-          { title: '编辑资产' },
-        ]}
+    <div className="space-y-6">
+      <ManagementPageHeader
+        title="编辑配置项"
+        description="统一维护资产主数据、云资源映射和扩展属性，避免创建页与编辑页字段表现不一致。"
+        notice={
+          <ManagementNotice
+            message="编辑时会保留原有云资源映射"
+            description="变更云资源引用后，系统会同步刷新动态属性字段，请确认扩展属性是否仍然适配。"
+          />
+        }
       />
 
-      <Form form={form} layout="vertical" onFinish={handleSubmit}>
-        <Form.Item
-          label="资产名称"
-          name="name"
-          rules={[{ required: true, message: '请输入资产名称' }]}
-        >
-          <Input placeholder="请输入资产名称" />
-        </Form.Item>
-
-        <Form.Item
-          label="资产类型"
-          name="ci_type_id"
-          rules={[{ required: true, message: '请选择资产类型' }]}
-        >
-          <Select
-            placeholder="请选择资产类型"
-            loading={typesLoading}
-            options={types.map(type => ({
-              label: type.name,
-              value: type.id,
-            }))}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="状态"
-          name="status"
-          rules={[{ required: true, message: '请选择资产状态' }]}
-        >
-          <Select
-            placeholder="请选择资产状态"
-            options={statusOptions.map(status => ({
-              label: CIStatusLabels[status],
-              value: status,
-            }))}
-          />
-        </Form.Item>
-
-        <Form.Item label="描述" name="description">
-          <TextArea rows={4} placeholder="补充描述信息（可选）" />
-        </Form.Item>
-
-        <Form.Item label="序列号" name="serial_number">
-          <Input placeholder="请输入序列号（可选）" />
-        </Form.Item>
-
-        <Form.Item label="型号" name="model">
-          <Input placeholder="请输入型号（可选）" />
-        </Form.Item>
-
-        <Form.Item label="厂商" name="vendor">
-          <Input placeholder="请输入厂商（可选）" />
-        </Form.Item>
-
-        <Form.Item label="位置" name="location">
-          <Input placeholder="请输入位置（可选）" />
-        </Form.Item>
-
-        <Form.Item label="资产标签" name="asset_tag">
-          <Input placeholder="请输入资产标签（可选）" />
-        </Form.Item>
-
-        <Form.Item label="分配给" name="assigned_to">
-          <Input placeholder="请输入分配人（可选）" />
-        </Form.Item>
-
-        <Form.Item label="拥有者" name="owned_by">
-          <Input placeholder="请输入拥有者（可选）" />
-        </Form.Item>
-
-        <Form.Item label="环境" name="environment">
-          <Select
-            placeholder="请选择环境"
-            allowClear
-            options={[
-              { label: '生产', value: 'production' },
-              { label: '预发布', value: 'staging' },
-              { label: '开发', value: 'development' },
-            ]}
-          />
-        </Form.Item>
-
-        <Form.Item label="重要性" name="criticality">
-          <Select
-            placeholder="请选择重要性"
-            allowClear
-            options={[
-              { label: '低', value: 'low' },
-              { label: '中', value: 'medium' },
-              { label: '高', value: 'high' },
-              { label: '关键', value: 'critical' },
-            ]}
-          />
-        </Form.Item>
-
-        <Form.Item label="发现源" name="discovery_source">
-          <Input placeholder="请输入发现源（可选）" />
-        </Form.Item>
-
-        <Form.Item label="数据来源" name="source">
-          <Select
-            placeholder="请选择数据来源"
-            allowClear
-            options={[
-              { label: '手工录入', value: 'manual' },
-              { label: '自动发现', value: 'discovery' },
-              { label: '批量导入', value: 'import' },
-            ]}
-          />
-        </Form.Item>
-
-        <Divider>云资源信息</Divider>
-
-        <Form.Item label="云厂商" name="cloud_provider">
-          <Select
-            placeholder="请选择云厂商"
-            allowClear
-            options={[
-              { label: '阿里云', value: 'aliyun' },
-              { label: '华为云', value: 'huawei' },
-              { label: '腾讯云', value: 'tencent' },
-              { label: 'Azure', value: 'azure' },
-              { label: '私有云', value: 'onprem' },
-            ]}
-          />
-        </Form.Item>
-
-        <Form.Item label="云资源引用" name="cloud_resource_ref_id">
-          <Select
-            placeholder="请选择云资源（可选）"
-            allowClear
-            loading={cloudLoading}
-            showSearch
-            optionFilterProp="label"
-            onChange={handleCloudResourceChange}
-            options={cloudResources.map(resource => {
-              const service = cloudServiceMap.get(resource.service_id);
-              const label = `${resource.resource_name || resource.resource_id}（${service?.resource_type_name || '未知类型'}）`;
-              return {
-                label,
-                value: resource.id,
-              };
-            })}
-          />
-        </Form.Item>
-
-        <Form.Item label="云账号ID" name="cloud_account_id">
-          <Input placeholder="请输入云账号ID（可选）" />
-        </Form.Item>
-
-        <Form.Item label="Region" name="cloud_region">
-          <Input placeholder="请输入Region（可选）" />
-        </Form.Item>
-
-        <Form.Item label="Zone" name="cloud_zone">
-          <Input placeholder="请输入Zone（可选）" />
-        </Form.Item>
-
-        <Form.Item label="云资源ID" name="cloud_resource_id">
-          <Input placeholder="请输入云资源ID（可选）" />
-        </Form.Item>
-
-        <Form.Item label="云资源类型" name="cloud_resource_type">
-          <Input placeholder="请输入云资源类型（可选）" />
-        </Form.Item>
-
-        {schemaFields.length > 0 && (
-          <>
-            <Divider>云资源动态属性</Divider>
-            <div style={{ marginBottom: 12, color: '#8c8c8c' }}>动态属性仅支持枚举选择。</div>
-            {schemaFields.map(field => (
-              <Form.Item
-                key={field.key}
-                label={field.label || field.key}
-                name={['cloud_metadata', field.key]}
-                rules={
-                  field.required
-                    ? [{ required: true, message: `请输入${field.label || field.key}` }]
-                    : undefined
-                }
-              >
-                {field.type === 'select' ? (
-                  <Select
-                    placeholder={field.placeholder || `请选择${field.label || field.key}`}
-                    allowClear
-                    options={(field.options || []).map(option => ({
-                      label: option,
-                      value: option,
-                    }))}
-                  />
-                ) : (
-                  <Input placeholder={field.placeholder || `请输入${field.label || field.key}`} />
-                )}
-              </Form.Item>
-            ))}
-          </>
-        )}
-
-        <Form.Item label="同步状态" name="cloud_sync_status">
-          <Select
-            placeholder="请选择同步状态"
-            allowClear
-            options={[
-              { label: '成功', value: 'success' },
-              { label: '失败', value: 'failed' },
-              { label: '未知', value: 'unknown' },
-            ]}
-          />
-        </Form.Item>
-
-        <Form.Item label="扩展属性" name="attributes">
-          <TextArea rows={4} placeholder="请输入扩展属性 JSON（可选）" />
-        </Form.Item>
-
-        <Space>
-          <Button onClick={() => router.back()}>取消</Button>
-          <Button type="primary" htmlType="submit" loading={saving}>
-            保存
-          </Button>
-        </Space>
-      </Form>
-    </Card>
+      <Card className="rounded-xl shadow-sm" loading={loading}>
+        <CIEditorForm
+          form={form}
+          types={types}
+          typesLoading={typesLoading}
+          cloudResources={cloudResources}
+          cloudServices={cloudServices}
+          cloudLoading={cloudLoading}
+          schemaFields={schemaFields}
+          saving={saving}
+          submitText="保存修改"
+          onSubmit={handleSubmit}
+          onCancel={() => router.back()}
+          onCloudResourceChange={handleCloudResourceChange}
+        />
+      </Card>
+    </div>
   );
 };
 

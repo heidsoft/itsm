@@ -17,7 +17,6 @@ import {
   Select,
   App,
   Spin,
-  message,
   Tooltip,
 } from 'antd';
 import {
@@ -35,10 +34,14 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import CIList from '@/components/cmdb/CIList';
+import { FilterToolbarCard } from '@/components/ui/FilterToolbarCard';
+import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
+import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
+import { StatsOverview } from '@/components/ui/StatsOverview';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { httpClient } from '@/lib/api/http-client';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const providerColors: Record<string, string> = {
   阿里云: 'blue',
@@ -426,88 +429,76 @@ export default function CMDBPage() {
     setCloudStatusFilter(undefined);
   };
 
+  const handleSyncCloudResources = async () => {
+    message.loading({ content: '正在同步云资源...', key: 'sync' });
+    setLoading(true);
+    try {
+      await fetchCloudResources();
+      message.success({ content: '云资源同步完成', key: 'sync' });
+    } catch (error) {
+      message.error({ content: '同步失败', key: 'sync' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const headerActions = (
+    <>
+      <Button icon={<RefreshCw className="w-4 h-4" />} loading={loading} onClick={handleSyncCloudResources}>
+        同步云资源
+      </Button>
+      <Button type="primary" icon={<Plus className="w-4 h-4" />} onClick={() => router.push('/cmdb/cis/create')}>
+        新增配置项
+      </Button>
+    </>
+  );
+
+  const statsItems = [
+    {
+      key: 'total',
+      title: '配置项总数',
+      value: stats.totalCIs,
+      prefix: <Database className="text-blue-500 mr-2" />,
+      accentColor: '#1890ff',
+    },
+    {
+      key: 'online',
+      title: '在线',
+      value: stats.online,
+      prefix: <CheckCircle className="text-green-500 mr-2" />,
+      accentColor: '#52c41a',
+    },
+    {
+      key: 'offline',
+      title: '离线',
+      value: stats.offline,
+      prefix: <AlertTriangle className="text-red-500 mr-2" />,
+      accentColor: '#ff4d4f',
+    },
+    {
+      key: 'maintenance',
+      title: '维护中',
+      value: stats.maintenance,
+      prefix: <Server className="text-orange-500 mr-2" />,
+      accentColor: '#fa8c16',
+    },
+  ];
+
   return (
     <div className="p-6 min-h-screen bg-gray-50">
-      {/* 页面头部 */}
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <Title level={2} style={{ marginBottom: 4 }}>
-            配置管理数据库 (CMDB)
-          </Title>
-          <Text type="secondary">管理IT基础设施的配置项和关系</Text>
-        </div>
-        <Space>
-          <Button
-            icon={<RefreshCw className="w-4 h-4" />}
-            loading={loading}
-            onClick={async () => {
-              message.loading({ content: '正在同步云资源...', key: 'sync' });
-              setLoading(true);
-              try {
-                await fetchCloudResources();
-                message.success({ content: '云资源同步完成', key: 'sync' });
-              } catch (error) {
-                message.error({ content: '同步失败', key: 'sync' });
-              } finally {
-                setLoading(false);
-              }
-            }}
-          >
-            同步云资源
-          </Button>
-          <Button
-            type="primary"
-            icon={<Plus className="w-4 h-4" />}
-            onClick={() => router.push('/cmdb/cis/create')}
-          >
-            新增配置项
-          </Button>
-        </Space>
-      </div>
+      <ManagementPageHeader
+        title="配置管理数据库 (CMDB)"
+        description="管理配置项、云资源同步、关系拓扑和核对结果。"
+        actions={headerActions}
+        notice={
+          <ManagementNotice
+            message="复杂域页面开始统一收口"
+            description="总览、云资源、核对和配置项详情将逐步复用同一套页面头部、统计卡和筛选栏基线。"
+          />
+        }
+      />
 
-      {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm">
-            <Statistic
-              title="配置项总数"
-              value={stats.totalCIs}
-              prefix={<Database className="text-blue-500 mr-2" />}
-              styles={{ content: { color: '#1890ff' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm">
-            <Statistic
-              title="在线"
-              value={stats.online}
-              prefix={<CheckCircle className="text-green-500 mr-2" />}
-              styles={{ content: { color: '#52c41a' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm">
-            <Statistic
-              title="离线"
-              value={stats.offline}
-              prefix={<AlertTriangle className="text-red-500 mr-2" />}
-              styles={{ content: { color: '#ff4d4f' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm">
-            <Statistic
-              title="维护中"
-              value={stats.maintenance}
-              prefix={<Server className="text-orange-500 mr-2" />}
-              styles={{ content: { color: '#fa8c16' } }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <StatsOverview items={statsItems} className="mb-6" />
 
       {/* 云资源同步状态卡片 */}
       <Card
@@ -648,50 +639,72 @@ export default function CMDBPage() {
                   </Row>
 
                   {/* 筛选栏 */}
-                  <div className="mb-4 flex gap-2">
-                    <Input
-                      placeholder="搜索资源名称"
-                      prefix={<Search className="w-4 h-4" />}
-                      style={{ width: 200 }}
-                      value={cloudSearchKeyword}
-                      onChange={e => setCloudSearchKeyword(e.target.value)}
-                      allowClear
-                    />
-                    <Select
-                      placeholder="资源类型"
-                      style={{ width: 120 }}
-                      allowClear
-                      value={cloudTypeFilter}
-                      onChange={setCloudTypeFilter}
-                      options={[
-                        { value: 'ECS', label: 'ECS' },
-                        { value: 'RDS', label: 'RDS' },
-                        { value: 'OSS', label: 'OSS' },
-                        { value: 'SLB', label: 'SLB' },
-                      ]}
-                    />
-                    <Select
-                      placeholder="状态"
-                      style={{ width: 100 }}
-                      allowClear
-                      value={cloudStatusFilter}
-                      onChange={setCloudStatusFilter}
-                      options={[
-                        { value: 'running', label: '运行中' },
-                        { value: 'stopped', label: '已停止' },
-                      ]}
-                    />
-                    <Button icon={<Filter className="w-4 h-4" />} onClick={handleResetCloudFilters}>
-                      重置
-                    </Button>
-                  </div>
-
-                  <Table
-                    columns={cloudResourceColumns}
-                    dataSource={filteredCloudResources}
-                    rowKey="id"
-                    pagination={{ pageSize: 10 }}
+                  <FilterToolbarCard
+                    className="mb-4"
+                    filters={
+                      <>
+                        <Input
+                          placeholder="搜索资源名称"
+                          prefix={<Search className="w-4 h-4" />}
+                          className="min-w-[220px]"
+                          value={cloudSearchKeyword}
+                          onChange={e => setCloudSearchKeyword(e.target.value)}
+                          allowClear
+                        />
+                        <Select
+                          placeholder="资源类型"
+                          className="min-w-[120px]"
+                          allowClear
+                          value={cloudTypeFilter}
+                          onChange={setCloudTypeFilter}
+                          options={[
+                            { value: 'ECS', label: 'ECS' },
+                            { value: 'RDS', label: 'RDS' },
+                            { value: 'OSS', label: 'OSS' },
+                            { value: 'SLB', label: 'SLB' },
+                          ]}
+                        />
+                        <Select
+                          placeholder="状态"
+                          className="min-w-[120px]"
+                          allowClear
+                          value={cloudStatusFilter}
+                          onChange={setCloudStatusFilter}
+                          options={[
+                            { value: 'running', label: '运行中' },
+                            { value: 'stopped', label: '已停止' },
+                          ]}
+                        />
+                      </>
+                    }
+                    actions={
+                      <>
+                        <Text type="secondary">筛选后 {filteredCloudResources.length} 条</Text>
+                        <Button icon={<Filter className="w-4 h-4" />} onClick={handleResetCloudFilters}>
+                          重置
+                        </Button>
+                      </>
+                    }
                   />
+
+                  {filteredCloudResources.length === 0 ? (
+                    <LoadingEmptyError
+                      state="empty"
+                      empty={{
+                        title: '暂无云资源',
+                        description: '可以先同步云资源，或调整当前筛选条件。',
+                        actionText: '立即同步',
+                        onAction: triggerCloudDiscovery,
+                      }}
+                    />
+                  ) : (
+                    <Table
+                      columns={cloudResourceColumns}
+                      dataSource={filteredCloudResources}
+                      rowKey="id"
+                      pagination={{ pageSize: 10 }}
+                    />
+                  )}
                 </div>
               ),
             },
@@ -780,12 +793,27 @@ export default function CMDBPage() {
                     <Text type="secondary">最后同步: {new Date().toLocaleString('zh-CN')}</Text>
                   </div>
 
-                  <Table
-                    columns={reconciliationColumns}
-                    dataSource={reconciliationData}
-                    rowKey="id"
-                    pagination={{ pageSize: 10 }}
-                  />
+                  {reconciliationData.length === 0 ? (
+                    <LoadingEmptyError
+                      state="empty"
+                      empty={{
+                        title: '暂无核对结果',
+                        description: '执行全量核对后，这里会展示匹配、缺失和不一致项。',
+                        actionText: '执行全量核对',
+                        onAction: async () => {
+                          await CMDBApi.runReconciliation();
+                          await fetchReconciliationData();
+                        },
+                      }}
+                    />
+                  ) : (
+                    <Table
+                      columns={reconciliationColumns}
+                      dataSource={reconciliationData}
+                      rowKey="id"
+                      pagination={{ pageSize: 10 }}
+                    />
+                  )}
                 </div>
               ),
             },
