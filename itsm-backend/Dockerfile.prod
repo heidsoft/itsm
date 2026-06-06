@@ -1,23 +1,25 @@
-# Production image - use distroless static base (no package manager needed)
-FROM gcr.io/distroless/static-debian12:nonroot
+# Production image - static binary runtime with shell/wget for health checks
+FROM alpine:3.20
 
 WORKDIR /app
 
-# Copy pre-built binary (built by CI/CD or local cross-compile)
-COPY itsm-backend ./main
-COPY config.yaml .
-COPY migrations ./migrations
-COPY config/seed ./config/seed
+RUN addgroup -S app && adduser -S -G app app \
+    && mkdir -p /app/logs /app/uploads /app/temp \
+    && chown -R app:app /app
 
-# Create required directories
-RUN mkdir -p /app/logs /app/uploads /app/temp
+# Copy pre-built binary (built by CI/CD or local cross-compile)
+COPY --chown=app:app itsm-backend ./main
+COPY --chown=app:app config.yaml .
+COPY --chown=app:app migrations ./migrations
+COPY --chown=app:app config/seed ./config/seed
 
 # Expose port
 EXPOSE 8090
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD ["/main", "health"] || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8090/api/v1/health || exit 1
 
 # Run the application
+USER app
 CMD ["./main"]
