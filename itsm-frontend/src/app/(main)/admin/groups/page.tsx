@@ -28,6 +28,16 @@ interface Group {
   status: 'active' | 'inactive';
 }
 
+const formatPermission = (permission: unknown): string => {
+  if (typeof permission === 'string') return permission;
+  if (permission && typeof permission === 'object') {
+    const item = permission as Record<string, unknown>;
+    const code = item.code || item.name || item.id;
+    return code !== undefined && code !== null ? String(code) : '未知权限';
+  }
+  return '未知权限';
+};
+
 const GroupManagement = () => {
   const { message, modal } = App.useApp();
   const [groups, setGroups] = useState<Group[]>([]);
@@ -57,7 +67,9 @@ const GroupManagement = () => {
         description: role.description || '',
         type: role.isSystem ? 'system' : 'custom',
         memberCount: role.userCount || 0,
-        permissions: role.permissions || [],
+        permissions: Array.isArray(role.permissions)
+          ? role.permissions.map(formatPermission)
+          : [],
         createdAt: role.createdAt,
         updatedAt: role.updatedAt,
         status: role.status || 'active',
