@@ -11,15 +11,13 @@ import (
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/pkg/tenantmode"
 
 	"github.com/gin-gonic/gin"
 )
 
 // MSPContextKey MSP 上下文键名
 const MSPContextKey = "msp_context"
-
-// TenantTypeMSP MSP服务提供商类型
-const TenantTypeMSP = "msp"
 
 // MSPRoleManager MSP经理角色
 const MSPRoleManager = "provider_admin"
@@ -106,7 +104,7 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 		var mspRole string
 
 		// MSP 员工判断：用户必须属于 MSP 租户且有 msp_role 字段
-		if tenantObj.Type == TenantTypeMSP && u.MspRole != "" {
+		if tenantmode.IsMSPProviderTenantType(string(tenantObj.Type)) && u.MspRole != "" {
 			isMSP = true
 			mspRole = string(u.MspRole)
 		}
@@ -140,8 +138,8 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 			// 4.2 构建允许访问的客户租户列表
 			allowedCustomers := make([]int, 0, len(allocations))
 			for _, alloc := range allocations {
-				if len(alloc.Edges.CustomerTenant) > 0 {
-					allowedCustomers = append(allowedCustomers, alloc.Edges.CustomerTenant[0].ID)
+				if alloc.Edges.CustomerTenant != nil {
+					allowedCustomers = append(allowedCustomers, alloc.Edges.CustomerTenant.ID)
 				}
 			}
 

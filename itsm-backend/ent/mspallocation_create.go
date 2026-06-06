@@ -34,14 +34,6 @@ func (_c *MSPAllocationCreate) SetCustomerTenantID(v int) *MSPAllocationCreate {
 	return _c
 }
 
-// SetNillableCustomerTenantID sets the "customer_tenant_id" field if the given value is not nil.
-func (_c *MSPAllocationCreate) SetNillableCustomerTenantID(v *int) *MSPAllocationCreate {
-	if v != nil {
-		_c.SetCustomerTenantID(*v)
-	}
-	return _c
-}
-
 // SetRole sets the "role" field.
 func (_c *MSPAllocationCreate) SetRole(v string) *MSPAllocationCreate {
 	_c.mutation.SetRole(v)
@@ -103,19 +95,9 @@ func (_c *MSPAllocationCreate) SetMspUser(v *User) *MSPAllocationCreate {
 	return _c.SetMspUserID(v.ID)
 }
 
-// AddCustomerTenantIDs adds the "customer_tenant" edge to the Tenant entity by IDs.
-func (_c *MSPAllocationCreate) AddCustomerTenantIDs(ids ...int) *MSPAllocationCreate {
-	_c.mutation.AddCustomerTenantIDs(ids...)
-	return _c
-}
-
-// AddCustomerTenant adds the "customer_tenant" edges to the Tenant entity.
-func (_c *MSPAllocationCreate) AddCustomerTenant(v ...*Tenant) *MSPAllocationCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddCustomerTenantIDs(ids...)
+// SetCustomerTenant sets the "customer_tenant" edge to the Tenant entity.
+func (_c *MSPAllocationCreate) SetCustomerTenant(v *Tenant) *MSPAllocationCreate {
+	return _c.SetCustomerTenantID(v.ID)
 }
 
 // Mutation returns the MSPAllocationMutation object of the builder.
@@ -172,6 +154,9 @@ func (_c *MSPAllocationCreate) check() error {
 	if _, ok := _c.mutation.MspUserID(); !ok {
 		return &ValidationError{Name: "msp_user_id", err: errors.New(`ent: missing required field "MSPAllocation.msp_user_id"`)}
 	}
+	if _, ok := _c.mutation.CustomerTenantID(); !ok {
+		return &ValidationError{Name: "customer_tenant_id", err: errors.New(`ent: missing required field "MSPAllocation.customer_tenant_id"`)}
+	}
 	if _, ok := _c.mutation.Role(); !ok {
 		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "MSPAllocation.role"`)}
 	}
@@ -213,10 +198,6 @@ func (_c *MSPAllocationCreate) createSpec() (*MSPAllocation, *sqlgraph.CreateSpe
 		_node = &MSPAllocation{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(mspallocation.Table, sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt))
 	)
-	if value, ok := _c.mutation.CustomerTenantID(); ok {
-		_spec.SetField(mspallocation.FieldCustomerTenantID, field.TypeInt, value)
-		_node.CustomerTenantID = value
-	}
 	if value, ok := _c.mutation.Role(); ok {
 		_spec.SetField(mspallocation.FieldRole, field.TypeString, value)
 		_node.Role = value
@@ -252,10 +233,10 @@ func (_c *MSPAllocationCreate) createSpec() (*MSPAllocation, *sqlgraph.CreateSpe
 	}
 	if nodes := _c.mutation.CustomerTenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   mspallocation.CustomerTenantTable,
-			Columns: mspallocation.CustomerTenantPrimaryKey,
+			Columns: []string{mspallocation.CustomerTenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
@@ -264,6 +245,7 @@ func (_c *MSPAllocationCreate) createSpec() (*MSPAllocation, *sqlgraph.CreateSpe
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.CustomerTenantID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

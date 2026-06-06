@@ -54,11 +54,9 @@ func (v *MSPAccessValidator) GetAllowedCustomerIDs(ctx context.Context, mspUserI
 	customerIDs := make([]int, 0)
 	seen := make(map[int]bool)
 	for _, a := range allocations {
-		for _, t := range a.Edges.CustomerTenant {
-			if !seen[t.ID] {
-				customerIDs = append(customerIDs, t.ID)
-				seen[t.ID] = true
-			}
+		if a.Edges.CustomerTenant != nil && !seen[a.Edges.CustomerTenant.ID] {
+			customerIDs = append(customerIDs, a.Edges.CustomerTenant.ID)
+			seen[a.Edges.CustomerTenant.ID] = true
 		}
 	}
 	return customerIDs, nil

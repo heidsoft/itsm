@@ -46,8 +46,17 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 		SetCode(req.Code).
 		SetNillableDomain(req.Domain).
 		SetType(tenant.Type(req.Type)).
-		SetStatus("active").
+		SetStatus(defaultTenantStatus(req.Status)).
 		SetNillableExpiresAt(req.ExpiresAt).
+		SetNillableParentTenantID(req.ParentTenantID).
+		SetNillableMspProviderID(req.MSPProviderID).
+		SetNillablePlanCode(req.PlanCode).
+		SetNillableBillingEnabled(req.BillingEnabled).
+		SetNillableCostCenterCode(req.CostCenterCode).
+		SetNillableLegalEntityCode(req.LegalEntityCode).
+		SetNillableCurrency(req.Currency).
+		SetNillableServiceTier(req.ServiceTier).
+		SetNillableOwnerContact(req.OwnerContact).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorf("创建租户失败: %v", err)
@@ -183,6 +192,33 @@ func (s *TenantService) UpdateTenant(ctx context.Context, tenantID int, req *dto
 	if req.ExpiresAt != nil {
 		update = update.SetNillableExpiresAt(req.ExpiresAt)
 	}
+	if req.ParentTenantID != nil {
+		update = update.SetNillableParentTenantID(req.ParentTenantID)
+	}
+	if req.MSPProviderID != nil {
+		update = update.SetNillableMspProviderID(req.MSPProviderID)
+	}
+	if req.PlanCode != nil {
+		update = update.SetNillablePlanCode(req.PlanCode)
+	}
+	if req.BillingEnabled != nil {
+		update = update.SetNillableBillingEnabled(req.BillingEnabled)
+	}
+	if req.CostCenterCode != nil {
+		update = update.SetNillableCostCenterCode(req.CostCenterCode)
+	}
+	if req.LegalEntityCode != nil {
+		update = update.SetNillableLegalEntityCode(req.LegalEntityCode)
+	}
+	if req.Currency != nil {
+		update = update.SetNillableCurrency(req.Currency)
+	}
+	if req.ServiceTier != nil {
+		update = update.SetNillableServiceTier(req.ServiceTier)
+	}
+	if req.OwnerContact != nil {
+		update = update.SetNillableOwnerContact(req.OwnerContact)
+	}
 
 	tenantEntity, err := update.Save(ctx)
 	if err != nil {
@@ -228,4 +264,11 @@ func (s *TenantService) DeleteTenant(ctx context.Context, tenantID int) error {
 
 	s.logger.Infof("成功删除租户: %d", tenantID)
 	return nil
+}
+
+func defaultTenantStatus(status *string) string {
+	if status == nil || *status == "" {
+		return "active"
+	}
+	return *status
 }

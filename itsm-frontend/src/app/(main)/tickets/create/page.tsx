@@ -45,7 +45,7 @@ import {
   type TicketTypePreset,
 } from '@/lib/ticket-type-presets';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 type Priority = 'low' | 'medium' | 'high' | 'urgent';
@@ -447,6 +447,12 @@ export default function CreateTicketPage() {
                   aria-label="基础工单信息表单"
                   data-testid="ticket-form"
                 >
+                  <Alert
+                    type="info"
+                    showIcon
+                    className="mb-4"
+                    message="填写最少信息即可提交，补充说明建议写在详细描述中。"
+                  />
                   <Form.Item
                     name="title"
                     label="标题"
@@ -470,7 +476,7 @@ export default function CreateTicketPage() {
                       { required: true, message: '请输入描述（至少10个字符）' },
                       { min: 10, message: '描述至少需要10个字符' },
                     ]}
-                    help="请详细描述问题现象、影响范围、期望结果等信息"
+                    extra="建议写清现象、影响范围和期望结果。"
                   >
                     <TextArea
                       rows={6}
@@ -489,12 +495,14 @@ export default function CreateTicketPage() {
                         rules={[{ required: true }]}
                       >
                         <Select<Priority>
+                          allowClear
                           options={[
                             { label: '低', value: 'low' },
                             { label: '中', value: 'medium' },
                             { label: '高', value: 'high' },
                             { label: '紧急', value: 'urgent' },
                           ]}
+                          placeholder="选择优先级"
                           aria-label="选择工单优先级"
                         />
                       </Form.Item>
@@ -502,11 +510,15 @@ export default function CreateTicketPage() {
                     <Col xs={24} sm={12}>
                       <Form.Item name="category" label="分类" initialValue="技术支持">
                         <Select
+                          allowClear
+                          showSearch
                           options={[
                             { label: '技术支持', value: '技术支持' },
                             { label: '账户问题', value: '账户问题' },
                             { label: '系统故障', value: '系统故障' },
                           ]}
+                          optionFilterProp="label"
+                          placeholder="选择分类"
                           aria-label="选择工单分类"
                         />
                       </Form.Item>
@@ -594,7 +606,7 @@ export default function CreateTicketPage() {
                   className="mt-2"
                   block
                 >
-                  获取智能分类建议
+                  获取 AI 建议
                 </Button>
               </Card>
             </Form>

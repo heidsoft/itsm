@@ -23,7 +23,7 @@ type Tenant struct {
 	Code string `json:"code,omitempty"`
 	// 域名
 	Domain string `json:"domain,omitempty"`
-	// 租户类型: standard=标准租户, msp=MSP服务提供商, customer=MSP客户
+	// 租户类型: internal|saas_customer|msp_provider|msp_customer，保留 standard|msp|customer 兼容历史数据
 	Type tenant.Type `json:"type,omitempty"`
 	// 状态
 	Status string `json:"status,omitempty"`
@@ -33,6 +33,20 @@ type Tenant struct {
 	MspProviderID int `json:"msp_provider_id,omitempty"`
 	// 过期时间
 	ExpiresAt time.Time `json:"expires_at,omitempty"`
+	// 订阅或套餐编码
+	PlanCode string `json:"plan_code,omitempty"`
+	// 是否启用计费/核算
+	BillingEnabled bool `json:"billing_enabled,omitempty"`
+	// 成本中心编码
+	CostCenterCode string `json:"cost_center_code,omitempty"`
+	// 法人实体编码
+	LegalEntityCode string `json:"legal_entity_code,omitempty"`
+	// 结算币种
+	Currency string `json:"currency,omitempty"`
+	// 服务等级
+	ServiceTier string `json:"service_tier,omitempty"`
+	// 租户负责人联系方式
+	OwnerContact string `json:"owner_contact,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -77,9 +91,11 @@ func (*Tenant) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case tenant.FieldBillingEnabled:
+			values[i] = new(sql.NullBool)
 		case tenant.FieldID, tenant.FieldParentTenantID, tenant.FieldMspProviderID:
 			values[i] = new(sql.NullInt64)
-		case tenant.FieldName, tenant.FieldCode, tenant.FieldDomain, tenant.FieldType, tenant.FieldStatus:
+		case tenant.FieldName, tenant.FieldCode, tenant.FieldDomain, tenant.FieldType, tenant.FieldStatus, tenant.FieldPlanCode, tenant.FieldCostCenterCode, tenant.FieldLegalEntityCode, tenant.FieldCurrency, tenant.FieldServiceTier, tenant.FieldOwnerContact:
 			values[i] = new(sql.NullString)
 		case tenant.FieldExpiresAt, tenant.FieldCreatedAt, tenant.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -151,6 +167,48 @@ func (_m *Tenant) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field expires_at", values[i])
 			} else if value.Valid {
 				_m.ExpiresAt = value.Time
+			}
+		case tenant.FieldPlanCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field plan_code", values[i])
+			} else if value.Valid {
+				_m.PlanCode = value.String
+			}
+		case tenant.FieldBillingEnabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field billing_enabled", values[i])
+			} else if value.Valid {
+				_m.BillingEnabled = value.Bool
+			}
+		case tenant.FieldCostCenterCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field cost_center_code", values[i])
+			} else if value.Valid {
+				_m.CostCenterCode = value.String
+			}
+		case tenant.FieldLegalEntityCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field legal_entity_code", values[i])
+			} else if value.Valid {
+				_m.LegalEntityCode = value.String
+			}
+		case tenant.FieldCurrency:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field currency", values[i])
+			} else if value.Valid {
+				_m.Currency = value.String
+			}
+		case tenant.FieldServiceTier:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field service_tier", values[i])
+			} else if value.Valid {
+				_m.ServiceTier = value.String
+			}
+		case tenant.FieldOwnerContact:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field owner_contact", values[i])
+			} else if value.Valid {
+				_m.OwnerContact = value.String
 			}
 		case tenant.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -233,6 +291,27 @@ func (_m *Tenant) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("expires_at=")
 	builder.WriteString(_m.ExpiresAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("plan_code=")
+	builder.WriteString(_m.PlanCode)
+	builder.WriteString(", ")
+	builder.WriteString("billing_enabled=")
+	builder.WriteString(fmt.Sprintf("%v", _m.BillingEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("cost_center_code=")
+	builder.WriteString(_m.CostCenterCode)
+	builder.WriteString(", ")
+	builder.WriteString("legal_entity_code=")
+	builder.WriteString(_m.LegalEntityCode)
+	builder.WriteString(", ")
+	builder.WriteString("currency=")
+	builder.WriteString(_m.Currency)
+	builder.WriteString(", ")
+	builder.WriteString("service_tier=")
+	builder.WriteString(_m.ServiceTier)
+	builder.WriteString(", ")
+	builder.WriteString("owner_contact=")
+	builder.WriteString(_m.OwnerContact)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

@@ -41,7 +41,8 @@ export interface WebAuthnChallengeResponse {
 }
 
 // API配置
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090';
+const API_BASE_URL =
+  typeof window === 'undefined' ? process.env.ITSM_BACKEND_URL || 'http://localhost:8090' : '';
 const API_TIMEOUT = 30000; // 30秒超时
 
 // 统一 token 存储工具

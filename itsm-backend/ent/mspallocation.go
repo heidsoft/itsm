@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"itsm-backend/ent/mspallocation"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
 	"strings"
 	"time"
@@ -41,7 +42,7 @@ type MSPAllocationEdges struct {
 	// MspUser holds the value of the msp_user edge.
 	MspUser *User `json:"msp_user,omitempty"`
 	// CustomerTenant holds the value of the customer_tenant edge.
-	CustomerTenant []*Tenant `json:"customer_tenant,omitempty"`
+	CustomerTenant *Tenant `json:"customer_tenant,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
@@ -59,10 +60,12 @@ func (e MSPAllocationEdges) MspUserOrErr() (*User, error) {
 }
 
 // CustomerTenantOrErr returns the CustomerTenant value or an error if the edge
-// was not loaded in eager-loading.
-func (e MSPAllocationEdges) CustomerTenantOrErr() ([]*Tenant, error) {
-	if e.loadedTypes[1] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e MSPAllocationEdges) CustomerTenantOrErr() (*Tenant, error) {
+	if e.CustomerTenant != nil {
 		return e.CustomerTenant, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: tenant.Label}
 	}
 	return nil, &NotLoadedError{edge: "customer_tenant"}
 }

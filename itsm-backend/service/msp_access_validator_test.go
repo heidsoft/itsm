@@ -44,7 +44,7 @@ func TestMSPAccessValidator_ValidateCustomerAccess(t *testing.T) {
 	// Create active allocation
 	_, err = client.MSPAllocation.Create().
 		SetMspUserID(mspUser.ID).
-		AddCustomerTenantIDs(customerTenant.ID).
+		SetCustomerTenantID(customerTenant.ID).
 		SetRole("provider_agent").
 		Save(ctx)
 	assert.NoError(t, err)
@@ -103,7 +103,12 @@ func TestMSPAccessValidator_GetAllowedCustomerIDs(t *testing.T) {
 	// Create allocations to two customers
 	client.MSPAllocation.Create().
 		SetMspUserID(mspUser.ID).
-		AddCustomerTenantIDs(customerTenant1.ID, customerTenant2.ID).
+		SetCustomerTenantID(customerTenant1.ID).
+		SetRole("provider_agent").
+		Save(ctx)
+	client.MSPAllocation.Create().
+		SetMspUserID(mspUser.ID).
+		SetCustomerTenantID(customerTenant2.ID).
 		SetRole("provider_agent").
 		Save(ctx)
 
@@ -158,7 +163,12 @@ func TestMSPAccessValidator_FilterByMSPAllocation(t *testing.T) {
 	// Create allocation only to allowedTenant1 and allowedTenant2
 	client.MSPAllocation.Create().
 		SetMspUserID(mspUser.ID).
-		AddCustomerTenantIDs(allowedTenant1.ID, allowedTenant2.ID).
+		SetCustomerTenantID(allowedTenant1.ID).
+		SetRole("provider_agent").
+		Save(ctx)
+	client.MSPAllocation.Create().
+		SetMspUserID(mspUser.ID).
+		SetCustomerTenantID(allowedTenant2.ID).
 		SetRole("provider_agent").
 		Save(ctx)
 
@@ -203,7 +213,7 @@ func TestMSPAccessValidator_DeassignedAllocationNoLongerValid(t *testing.T) {
 	// Create allocation then deassign it
 	allocation, err := client.MSPAllocation.Create().
 		SetMspUserID(mspUser.ID).
-		AddCustomerTenantIDs(customerTenant.ID).
+		SetCustomerTenantID(customerTenant.ID).
 		SetRole("provider_agent").
 		Save(ctx)
 	assert.NoError(t, err)

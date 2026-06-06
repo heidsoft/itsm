@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/predicate"
@@ -99,7 +98,7 @@ func (_q *MSPAllocationQuery) QueryCustomerTenant() *TenantQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mspallocation.Table, mspallocation.FieldID, selector),
 			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, mspallocation.CustomerTenantTable, mspallocation.CustomerTenantPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, mspallocation.CustomerTenantTable, mspallocation.CustomerTenantColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -437,9 +436,8 @@ func (_q *MSPAllocationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		}
 	}
 	if query := _q.withCustomerTenant; query != nil {
-		if err := _q.loadCustomerTenant(ctx, query, nodes,
-			func(n *MSPAllocation) { n.Edges.CustomerTenant = []*Tenant{} },
-			func(n *MSPAllocation, e *Tenant) { n.Edges.CustomerTenant = append(n.Edges.CustomerTenant, e) }); err != nil {
+		if err := _q.loadCustomerTenant(ctx, query, nodes, nil,
+			func(n *MSPAllocation, e *Tenant) { n.Edges.CustomerTenant = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -476,62 +474,30 @@ func (_q *MSPAllocationQuery) loadMspUser(ctx context.Context, query *UserQuery,
 	return nil
 }
 func (_q *MSPAllocationQuery) loadCustomerTenant(ctx context.Context, query *TenantQuery, nodes []*MSPAllocation, init func(*MSPAllocation), assign func(*MSPAllocation, *Tenant)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*MSPAllocation)
-	nids := make(map[int]map[*MSPAllocation]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*MSPAllocation)
+	for i := range nodes {
+		fk := nodes[i].CustomerTenantID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
 		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(mspallocation.CustomerTenantTable)
-		s.Join(joinT).On(s.C(tenant.FieldID), joinT.C(mspallocation.CustomerTenantPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(mspallocation.CustomerTenantPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(mspallocation.CustomerTenantPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
+	if len(ids) == 0 {
+		return nil
 	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*MSPAllocation]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Tenant](ctx, query, qr, query.inters)
+	query.Where(tenant.IDIn(ids...))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "customer_tenant" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "customer_tenant_id" returned %v`, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil
@@ -564,6 +530,9 @@ func (_q *MSPAllocationQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if _q.withMspUser != nil {
 			_spec.Node.AddColumnOnce(mspallocation.FieldMspUserID)
+		}
+		if _q.withCustomerTenant != nil {
+			_spec.Node.AddColumnOnce(mspallocation.FieldCustomerTenantID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

@@ -1,11 +1,7 @@
 import { API_BASE_URL } from '@/lib/api/api-config';
 import { security } from '@/lib/security';
 import { logger } from '@/lib/env';
-import {
-  getTenantId,
-  getTenantCode,
-  subscribe,
-} from '@/lib/auth/tenant-context';
+import { getTenantId, getTenantCode, subscribe } from '@/lib/auth/tenant-context';
 
 // Cookie utility functions for secure token storage
 function getCookie(name: string): string | null {
@@ -103,7 +99,8 @@ class HttpClient {
   private readonly timeout: number;
 
   constructor(baseURL: string = API_BASE_URL) {
-    this.baseURL = typeof window === 'undefined' ? process.env.NEXT_PUBLIC_API_URL || baseURL : baseURL;
+    this.baseURL =
+      typeof window === 'undefined' ? process.env.ITSM_BACKEND_URL || baseURL : baseURL;
     this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
     // Token is read from cookie only (httpOnly from backend) — never stored in localStorage
     if (typeof window !== 'undefined') {
@@ -166,10 +163,7 @@ class HttpClient {
 
     // Get token from cookie only (backend sets httpOnly cookies)
     // localStorage does NOT store tokens (security policy)
-    const currentToken =
-      typeof window !== 'undefined'
-        ? getCookie('access_token')
-        : this.token;
+    const currentToken = typeof window !== 'undefined' ? getCookie('access_token') : this.token;
     // Tenant state — read from TenantContext (single source of truth)
     const currentTenantId = getTenantId();
     const currentTenantCode = getTenantCode();
@@ -218,10 +212,7 @@ class HttpClient {
   // Independent token refresh method to avoid circular dependencies
   private async refreshTokenInternal(): Promise<boolean> {
     // Get refresh token from cookie only (httpOnly)
-    const refreshToken =
-      typeof window !== 'undefined'
-        ? getCookie('refresh_token')
-        : null;
+    const refreshToken = typeof window !== 'undefined' ? getCookie('refresh_token') : null;
     if (!refreshToken) {
       return false;
     }

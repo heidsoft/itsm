@@ -99,7 +99,7 @@ export class TicketAttachmentApi {
         reject(new Error('上传失败'));
       });
 
-      const baseURL = API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090';
+      const baseURL = API_BASE_URL || process.env.ITSM_BACKEND_URL || 'http://localhost:8090';
       xhr.open('POST', `${baseURL}/api/v1/tickets/${ticketId}/attachments`);
 
       // 添加认证头

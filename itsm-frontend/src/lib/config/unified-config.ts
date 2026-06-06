@@ -7,6 +7,7 @@
 export const ENV_CONFIG = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '',
+  ITSM_BACKEND_URL: process.env.ITSM_BACKEND_URL || '',
   NEXT_PUBLIC_API_VERSION: process.env.NEXT_PUBLIC_API_VERSION || 'v1',
   NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'ITSM System',
   NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
@@ -20,7 +21,7 @@ export const ENV_CONFIG = {
 export const API_CONFIG = {
   BASE_URL:
     ENV_CONFIG.NEXT_PUBLIC_API_URL ||
-    (typeof window === 'undefined' ? 'http://localhost:8090' : ''),
+    (typeof window === 'undefined' ? ENV_CONFIG.ITSM_BACKEND_URL || 'http://localhost:8090' : ''),
   VERSION: ENV_CONFIG.NEXT_PUBLIC_API_VERSION,
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
@@ -357,8 +358,12 @@ export const validateConfig = () => {
   const errors: string[] = [];
 
   // 验证必需的环境变量
-  if (!ENV_CONFIG.NEXT_PUBLIC_API_URL && typeof window === 'undefined') {
-    errors.push('NEXT_PUBLIC_API_URL is required for server-side rendering');
+  if (
+    !ENV_CONFIG.NEXT_PUBLIC_API_URL &&
+    !ENV_CONFIG.ITSM_BACKEND_URL &&
+    typeof window === 'undefined'
+  ) {
+    errors.push('ITSM_BACKEND_URL is required for server-side rendering');
   }
 
   // 验证文件大小限制
