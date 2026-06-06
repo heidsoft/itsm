@@ -85,11 +85,17 @@ export default function SystemConfiguration() {
     // 定期获取真实系统状态
     const fetchSystemStats = async () => {
       try {
-        const status = await SystemConfigAPI.getSystemStatus();
+        const status = (await SystemConfigAPI.getSystemStatus()) || {};
         const cpu = (status as any).cpu || {};
         const memory = (status as any).memory || {};
+        const startTime =
+          (status as any).startTime ||
+          (status as any).start_time ||
+          (status as any).startedAt ||
+          (status as any).started_at;
+        const uptime = (status as any).uptime || (status as any).upTime;
         setSystemStats({
-          uptime: calculateUptime((status as any).startTime as number | undefined),
+          uptime: typeof uptime === 'string' ? uptime : calculateUptime(startTime),
           goroutines: (status as any).goroutines || 0,
           cpuCores: cpu.cores || (status as any).cpu_cores || 0,
           memoryUsagePercent: Math.round(
