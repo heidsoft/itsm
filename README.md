@@ -109,12 +109,26 @@ return result
 
 ## 🚀 快速开始
 
+### 交付模式
+
+同一套代码基线支持三种部署模式，通过 `DEPLOYMENT_MODE` 切换：
+
+- `private`: 私有化部署，默认创建一个根租户和管理员
+- `saas`: SaaS 托管模式，平台托管多个企业客户租户
+- `saas_msp`: SaaS + MSP 模式，平台方可并行服务多个客户公司
+
+容器编排内置了一次性 `itsm-init` 初始化任务，负责数据库迁移和幂等 seed。常驻后端服务默认不再隐式做初始化。
+
 ### 一键启动（推荐）
 
 ```bash
 # 克隆项目
 git clone https://github.com/heidsoft/itsm.git
 cd itsm
+
+# 复制环境文件并选择部署模式
+cp .env.example .env
+# 编辑 .env，至少确认 DEPLOYMENT_MODE / JWT_SECRET / DB_PASSWORD
 
 # 方式1: 部署脚本（推荐）
 ./scripts/deploy-dev.sh up
@@ -135,6 +149,8 @@ docker compose ps
 ```
 
 > **首次登录（开发/首次安装）**: 用户名 `admin`，密码 `admin123`。生产部署前必须通过环境变量或初始化流程修改管理员密码、`JWT_SECRET`、数据库密码和 Redis 密码。
+>
+> **前端访问链路**: 浏览器统一访问同源 `/api`，前端服务端代理再转发到 `ITSM_BACKEND_URL`。不要把容器内地址直接配置到浏览器侧 `NEXT_PUBLIC_API_URL`。
 
 > **中国网络**: 如遇 Docker 构建超时，请配置镜像加速: `~/.docker/config.json`
 
@@ -166,6 +182,22 @@ cd itsm-backend && go run main.go
 # 本地运行前端（需要Node 18+）
 cd itsm-frontend && npm run dev
 ```
+
+### 初始化说明
+
+```bash
+# 手动执行一次性初始化（迁移 + seed）
+docker compose run --rm itsm-init
+
+# 生产环境必须显式传入环境文件
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+```
+
+默认初始化模板：
+
+- `private`: 创建默认根租户和管理员，适合集团/事业部/子公司模式
+- `saas`: 创建平台系统租户，不预置客户业务数据
+- `saas_msp`: 创建 MSP 提供方租户、示例客户租户和基础分配关系
 
 ---
 
