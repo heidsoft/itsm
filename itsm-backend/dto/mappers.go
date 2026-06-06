@@ -329,13 +329,14 @@ func ToTenantResponse(tenant *ent.Tenant) *TenantResponse {
 	}
 
 	response := &TenantResponse{
-		ID:        tenant.ID,
-		Name:      tenant.Name,
-		Code:      tenant.Code,
-		Status:    string(tenant.Status),
-		Type:      string(tenant.Type),
-		CreatedAt: tenant.CreatedAt,
-		UpdatedAt: tenant.UpdatedAt,
+		ID:             tenant.ID,
+		Name:           tenant.Name,
+		Code:           tenant.Code,
+		Status:         string(tenant.Status),
+		Type:           string(tenant.Type),
+		BillingEnabled: tenant.BillingEnabled,
+		CreatedAt:      tenant.CreatedAt,
+		UpdatedAt:      tenant.UpdatedAt,
 	}
 
 	if tenant.Domain != "" {
@@ -344,6 +345,30 @@ func ToTenantResponse(tenant *ent.Tenant) *TenantResponse {
 
 	if !tenant.ExpiresAt.IsZero() {
 		response.ExpiresAt = &tenant.ExpiresAt
+	}
+	if tenant.ParentTenantID != 0 {
+		response.ParentTenantID = &tenant.ParentTenantID
+	}
+	if tenant.MspProviderID != 0 {
+		response.MSPProviderID = &tenant.MspProviderID
+	}
+	if tenant.PlanCode != "" {
+		response.PlanCode = &tenant.PlanCode
+	}
+	if tenant.CostCenterCode != "" {
+		response.CostCenterCode = &tenant.CostCenterCode
+	}
+	if tenant.LegalEntityCode != "" {
+		response.LegalEntityCode = &tenant.LegalEntityCode
+	}
+	if tenant.Currency != "" {
+		response.Currency = &tenant.Currency
+	}
+	if tenant.ServiceTier != "" {
+		response.ServiceTier = &tenant.ServiceTier
+	}
+	if tenant.OwnerContact != "" {
+		response.OwnerContact = &tenant.OwnerContact
 	}
 
 	return response

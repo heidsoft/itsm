@@ -125,36 +125,6 @@ func CustomerTenantIDNotIn(vs ...int) predicate.MSPAllocation {
 	return predicate.MSPAllocation(sql.FieldNotIn(FieldCustomerTenantID, vs...))
 }
 
-// CustomerTenantIDGT applies the GT predicate on the "customer_tenant_id" field.
-func CustomerTenantIDGT(v int) predicate.MSPAllocation {
-	return predicate.MSPAllocation(sql.FieldGT(FieldCustomerTenantID, v))
-}
-
-// CustomerTenantIDGTE applies the GTE predicate on the "customer_tenant_id" field.
-func CustomerTenantIDGTE(v int) predicate.MSPAllocation {
-	return predicate.MSPAllocation(sql.FieldGTE(FieldCustomerTenantID, v))
-}
-
-// CustomerTenantIDLT applies the LT predicate on the "customer_tenant_id" field.
-func CustomerTenantIDLT(v int) predicate.MSPAllocation {
-	return predicate.MSPAllocation(sql.FieldLT(FieldCustomerTenantID, v))
-}
-
-// CustomerTenantIDLTE applies the LTE predicate on the "customer_tenant_id" field.
-func CustomerTenantIDLTE(v int) predicate.MSPAllocation {
-	return predicate.MSPAllocation(sql.FieldLTE(FieldCustomerTenantID, v))
-}
-
-// CustomerTenantIDIsNil applies the IsNil predicate on the "customer_tenant_id" field.
-func CustomerTenantIDIsNil() predicate.MSPAllocation {
-	return predicate.MSPAllocation(sql.FieldIsNull(FieldCustomerTenantID))
-}
-
-// CustomerTenantIDNotNil applies the NotNil predicate on the "customer_tenant_id" field.
-func CustomerTenantIDNotNil() predicate.MSPAllocation {
-	return predicate.MSPAllocation(sql.FieldNotNull(FieldCustomerTenantID))
-}
-
 // RoleEQ applies the EQ predicate on the "role" field.
 func RoleEQ(v string) predicate.MSPAllocation {
 	return predicate.MSPAllocation(sql.FieldEQ(FieldRole, v))
@@ -378,7 +348,7 @@ func HasCustomerTenant() predicate.MSPAllocation {
 	return predicate.MSPAllocation(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, CustomerTenantTable, CustomerTenantPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, CustomerTenantTable, CustomerTenantColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

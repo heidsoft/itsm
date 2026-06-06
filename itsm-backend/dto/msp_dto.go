@@ -8,10 +8,13 @@ import "time"
 type TenantType string
 
 const (
-	TenantTypeInternal TenantType = "internal" // MSP 公司内部租户
-	TenantTypeCustomer TenantType = "customer" // 客户租户
-	TenantTypePartner  TenantType = "partner"  // 合作伙伴
-	TenantTypeStandard TenantType = "standard" // 标准租户
+	TenantTypeInternal     TenantType = "internal"
+	TenantTypeCustomer     TenantType = "saas_customer"
+	TenantTypeMSPProvider  TenantType = "msp_provider"
+	TenantTypeMSPCustomer  TenantType = "msp_customer"
+	TenantTypeLegacyMSP    TenantType = "msp"
+	TenantTypeLegacyClient TenantType = "customer"
+	TenantTypeStandard     TenantType = "standard"
 )
 
 // ==================== MSP 角色 ====================

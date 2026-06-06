@@ -2847,12 +2847,16 @@ func init() {
 	tenantDescStatus := tenantFields[4].Descriptor()
 	// tenant.DefaultStatus holds the default value on creation for the status field.
 	tenant.DefaultStatus = tenantDescStatus.Default.(string)
+	// tenantDescBillingEnabled is the schema descriptor for billing_enabled field.
+	tenantDescBillingEnabled := tenantFields[9].Descriptor()
+	// tenant.DefaultBillingEnabled holds the default value on creation for the billing_enabled field.
+	tenant.DefaultBillingEnabled = tenantDescBillingEnabled.Default.(bool)
 	// tenantDescCreatedAt is the schema descriptor for created_at field.
-	tenantDescCreatedAt := tenantFields[8].Descriptor()
+	tenantDescCreatedAt := tenantFields[15].Descriptor()
 	// tenant.DefaultCreatedAt holds the default value on creation for the created_at field.
 	tenant.DefaultCreatedAt = tenantDescCreatedAt.Default.(func() time.Time)
 	// tenantDescUpdatedAt is the schema descriptor for updated_at field.
-	tenantDescUpdatedAt := tenantFields[9].Descriptor()
+	tenantDescUpdatedAt := tenantFields[16].Descriptor()
 	// tenant.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	tenant.DefaultUpdatedAt = tenantDescUpdatedAt.Default.(func() time.Time)
 	// tenant.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

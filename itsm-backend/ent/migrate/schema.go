@@ -1468,11 +1468,11 @@ var (
 	// MspAllocationsColumns holds the columns for the "msp_allocations" table.
 	MspAllocationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "customer_tenant_id", Type: field.TypeInt, Nullable: true},
 		{Name: "role", Type: field.TypeString, Default: "primary"},
 		{Name: "assigned_at", Type: field.TypeTime},
 		{Name: "deassigned_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "customer_tenant_id", Type: field.TypeInt},
 		{Name: "msp_user_id", Type: field.TypeInt},
 	}
 	// MspAllocationsTable holds the schema information for the "msp_allocations" table.
@@ -1481,6 +1481,12 @@ var (
 		Columns:    MspAllocationsColumns,
 		PrimaryKey: []*schema.Column{MspAllocationsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "msp_allocations_tenants_msp_customer_allocations",
+				Columns:    []*schema.Column{MspAllocationsColumns[5]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
 			{
 				Symbol:     "msp_allocations_users_msp_allocations",
 				Columns:    []*schema.Column{MspAllocationsColumns[6]},
@@ -3169,11 +3175,18 @@ var (
 		{Name: "name", Type: field.TypeString},
 		{Name: "code", Type: field.TypeString, Unique: true},
 		{Name: "domain", Type: field.TypeString, Nullable: true},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"standard", "msp", "customer"}, Default: "standard"},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"standard", "msp", "customer", "internal", "saas_customer", "msp_provider", "msp_customer"}, Default: "standard"},
 		{Name: "status", Type: field.TypeString, Default: "active"},
 		{Name: "parent_tenant_id", Type: field.TypeInt, Nullable: true},
 		{Name: "msp_provider_id", Type: field.TypeInt, Nullable: true},
 		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "plan_code", Type: field.TypeString, Nullable: true},
+		{Name: "billing_enabled", Type: field.TypeBool, Default: false},
+		{Name: "cost_center_code", Type: field.TypeString, Nullable: true},
+		{Name: "legal_entity_code", Type: field.TypeString, Nullable: true},
+		{Name: "currency", Type: field.TypeString, Nullable: true},
+		{Name: "service_tier", Type: field.TypeString, Nullable: true},
+		{Name: "owner_contact", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -4138,31 +4151,6 @@ var (
 			},
 		},
 	}
-	// TenantMspCustomerAllocationsColumns holds the columns for the "tenant_msp_customer_allocations" table.
-	TenantMspCustomerAllocationsColumns = []*schema.Column{
-		{Name: "tenant_id", Type: field.TypeInt},
-		{Name: "msp_allocation_id", Type: field.TypeInt},
-	}
-	// TenantMspCustomerAllocationsTable holds the schema information for the "tenant_msp_customer_allocations" table.
-	TenantMspCustomerAllocationsTable = &schema.Table{
-		Name:       "tenant_msp_customer_allocations",
-		Columns:    TenantMspCustomerAllocationsColumns,
-		PrimaryKey: []*schema.Column{TenantMspCustomerAllocationsColumns[0], TenantMspCustomerAllocationsColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "tenant_msp_customer_allocations_tenant_id",
-				Columns:    []*schema.Column{TenantMspCustomerAllocationsColumns[0]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "tenant_msp_customer_allocations_msp_allocation_id",
-				Columns:    []*schema.Column{TenantMspCustomerAllocationsColumns[1]},
-				RefColumns: []*schema.Column{MspAllocationsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// UserRolesColumns holds the columns for the "user_roles" table.
 	UserRolesColumns = []*schema.Column{
 		{Name: "user_id", Type: field.TypeInt},
@@ -4351,7 +4339,6 @@ var (
 		ProblemChangesTable,
 		ProjectTagsTable,
 		TeamTagsTable,
-		TenantMspCustomerAllocationsTable,
 		UserRolesTable,
 		UserArticleSessionsTable,
 		UserArticleParticipationsTable,
@@ -4386,7 +4373,8 @@ func init() {
 	KnowledgeArticlesTable.ForeignKeys[1].RefTable = KnowledgeArticleSessionsTable
 	KnowledgeArticlesTable.ForeignKeys[2].RefTable = KnownErrorsTable
 	KnowledgeArticleLikesTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
-	MspAllocationsTable.ForeignKeys[0].RefTable = UsersTable
+	MspAllocationsTable.ForeignKeys[0].RefTable = TenantsTable
+	MspAllocationsTable.ForeignKeys[1].RefTable = UsersTable
 	MenusTable.ForeignKeys[0].RefTable = MenusTable
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
 	MicroservicesTable.ForeignKeys[0].RefTable = ApplicationsTable
@@ -4466,8 +4454,6 @@ func init() {
 	ProjectTagsTable.ForeignKeys[1].RefTable = TagsTable
 	TeamTagsTable.ForeignKeys[0].RefTable = TeamsTable
 	TeamTagsTable.ForeignKeys[1].RefTable = TagsTable
-	TenantMspCustomerAllocationsTable.ForeignKeys[0].RefTable = TenantsTable
-	TenantMspCustomerAllocationsTable.ForeignKeys[1].RefTable = MspAllocationsTable
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable
 	UserRolesTable.ForeignKeys[1].RefTable = RolesTable
 	UserArticleSessionsTable.ForeignKeys[0].RefTable = UsersTable

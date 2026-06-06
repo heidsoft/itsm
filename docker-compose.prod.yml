@@ -78,6 +78,49 @@ services:
     restart: always
 
   # ITSM 后端服务（生产环境）
+  itsm-init:
+    build:
+      context: ./itsm-backend
+      dockerfile: Dockerfile.prod
+    container_name: itsm-init-prod
+    hostname: init
+    command: ["./main"]
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-itsm}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set}
+      - DB_NAME=${DB_NAME:-itsm_prod}
+      - DB_SSLMODE=${DB_SSLMODE:-disable}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+      - REDIS_DB=0
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - LOG_LEVEL=error
+      - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
+      - ITSM_BOOTSTRAP_ONLY=true
+      - ITSM_AUTO_MIGRATE=true
+      - ITSM_AUTO_SEED=true
+      - no_proxy=localhost,127.0.0.1
+      - NO_PROXY=localhost,127.0.0.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads:rw
+      - ./config:/app/config:ro
+    networks:
+      - itsm-prod-network
+    restart: "no"
+
+  # ITSM 后端服务（生产环境）
   itsm-backend:
     build:
       context: ./itsm-backend
@@ -112,6 +155,9 @@ services:
       - LOG_LEVEL=error
       - LOG_PATH=/app/logs
       - LOG_FORMAT=json
+      - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
+      - ITSM_AUTO_MIGRATE=false
+      - ITSM_AUTO_SEED=false
 
       # 监控
       - ENABLE_METRICS=true
@@ -155,6 +201,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      itsm-init:
+        condition: service_completed_successfully
     volumes:
       - ./logs:/app/logs
       - ./uploads:/app/uploads:rw
@@ -184,14 +232,12 @@ services:
       args:
         - NODE_ENV=production
         - ITSM_BACKEND_URL=http://itsm-backend:8090
-        - NEXT_PUBLIC_API_URL=http://itsm-backend:8090
         - NEXT_PUBLIC_ENABLE_AI=${NEXT_PUBLIC_ENABLE_AI:-true}
     container_name: itsm-frontend-prod
     hostname: frontend
     environment:
       - NODE_ENV=production
       - ITSM_BACKEND_URL=http://itsm-backend:8090
-      - NEXT_PUBLIC_API_URL=http://itsm-backend:8090
       - no_proxy=localhost,127.0.0.1
       - NO_PROXY=localhost,127.0.0.1
     ports:

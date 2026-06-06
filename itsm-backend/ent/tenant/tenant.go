@@ -31,6 +31,20 @@ const (
 	FieldMspProviderID = "msp_provider_id"
 	// FieldExpiresAt holds the string denoting the expires_at field in the database.
 	FieldExpiresAt = "expires_at"
+	// FieldPlanCode holds the string denoting the plan_code field in the database.
+	FieldPlanCode = "plan_code"
+	// FieldBillingEnabled holds the string denoting the billing_enabled field in the database.
+	FieldBillingEnabled = "billing_enabled"
+	// FieldCostCenterCode holds the string denoting the cost_center_code field in the database.
+	FieldCostCenterCode = "cost_center_code"
+	// FieldLegalEntityCode holds the string denoting the legal_entity_code field in the database.
+	FieldLegalEntityCode = "legal_entity_code"
+	// FieldCurrency holds the string denoting the currency field in the database.
+	FieldCurrency = "currency"
+	// FieldServiceTier holds the string denoting the service_tier field in the database.
+	FieldServiceTier = "service_tier"
+	// FieldOwnerContact holds the string denoting the owner_contact field in the database.
+	FieldOwnerContact = "owner_contact"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -48,11 +62,13 @@ const (
 	UsersInverseTable = "users"
 	// UsersColumn is the table column denoting the users relation/edge.
 	UsersColumn = "tenant_id"
-	// MspCustomerAllocationsTable is the table that holds the msp_customer_allocations relation/edge. The primary key declared below.
-	MspCustomerAllocationsTable = "tenant_msp_customer_allocations"
+	// MspCustomerAllocationsTable is the table that holds the msp_customer_allocations relation/edge.
+	MspCustomerAllocationsTable = "msp_allocations"
 	// MspCustomerAllocationsInverseTable is the table name for the MSPAllocation entity.
 	// It exists in this package in order to avoid circular dependency with the "mspallocation" package.
 	MspCustomerAllocationsInverseTable = "msp_allocations"
+	// MspCustomerAllocationsColumn is the table column denoting the msp_customer_allocations relation/edge.
+	MspCustomerAllocationsColumn = "customer_tenant_id"
 )
 
 // Columns holds all SQL columns for tenant fields.
@@ -66,15 +82,16 @@ var Columns = []string{
 	FieldParentTenantID,
 	FieldMspProviderID,
 	FieldExpiresAt,
+	FieldPlanCode,
+	FieldBillingEnabled,
+	FieldCostCenterCode,
+	FieldLegalEntityCode,
+	FieldCurrency,
+	FieldServiceTier,
+	FieldOwnerContact,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
-
-var (
-	// MspCustomerAllocationsPrimaryKey and MspCustomerAllocationsColumn2 are the table columns denoting the
-	// primary key for the msp_customer_allocations relation (M2M).
-	MspCustomerAllocationsPrimaryKey = []string{"tenant_id", "msp_allocation_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -93,6 +110,8 @@ var (
 	CodeValidator func(string) error
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
+	// DefaultBillingEnabled holds the default value on creation for the "billing_enabled" field.
+	DefaultBillingEnabled bool
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -109,9 +128,13 @@ const DefaultType = TypeStandard
 
 // Type values.
 const (
-	TypeStandard Type = "standard"
-	TypeMsp      Type = "msp"
-	TypeCustomer Type = "customer"
+	TypeStandard     Type = "standard"
+	TypeMsp          Type = "msp"
+	TypeCustomer     Type = "customer"
+	TypeInternal     Type = "internal"
+	TypeSaasCustomer Type = "saas_customer"
+	TypeMspProvider  Type = "msp_provider"
+	TypeMspCustomer  Type = "msp_customer"
 )
 
 func (_type Type) String() string {
@@ -121,7 +144,7 @@ func (_type Type) String() string {
 // TypeValidator is a validator for the "type" field enum values. It is called by the builders before save.
 func TypeValidator(_type Type) error {
 	switch _type {
-	case TypeStandard, TypeMsp, TypeCustomer:
+	case TypeStandard, TypeMsp, TypeCustomer, TypeInternal, TypeSaasCustomer, TypeMspProvider, TypeMspCustomer:
 		return nil
 	default:
 		return fmt.Errorf("tenant: invalid enum value for type field: %q", _type)
@@ -176,6 +199,41 @@ func ByExpiresAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExpiresAt, opts...).ToFunc()
 }
 
+// ByPlanCode orders the results by the plan_code field.
+func ByPlanCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPlanCode, opts...).ToFunc()
+}
+
+// ByBillingEnabled orders the results by the billing_enabled field.
+func ByBillingEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBillingEnabled, opts...).ToFunc()
+}
+
+// ByCostCenterCode orders the results by the cost_center_code field.
+func ByCostCenterCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCostCenterCode, opts...).ToFunc()
+}
+
+// ByLegalEntityCode orders the results by the legal_entity_code field.
+func ByLegalEntityCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLegalEntityCode, opts...).ToFunc()
+}
+
+// ByCurrency orders the results by the currency field.
+func ByCurrency(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCurrency, opts...).ToFunc()
+}
+
+// ByServiceTier orders the results by the service_tier field.
+func ByServiceTier(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldServiceTier, opts...).ToFunc()
+}
+
+// ByOwnerContact orders the results by the owner_contact field.
+func ByOwnerContact(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOwnerContact, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -224,6 +282,6 @@ func newMspCustomerAllocationsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MspCustomerAllocationsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, MspCustomerAllocationsTable, MspCustomerAllocationsPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, MspCustomerAllocationsTable, MspCustomerAllocationsColumn),
 	)
 }

@@ -118,6 +118,104 @@ func (_c *TenantCreate) SetNillableExpiresAt(v *time.Time) *TenantCreate {
 	return _c
 }
 
+// SetPlanCode sets the "plan_code" field.
+func (_c *TenantCreate) SetPlanCode(v string) *TenantCreate {
+	_c.mutation.SetPlanCode(v)
+	return _c
+}
+
+// SetNillablePlanCode sets the "plan_code" field if the given value is not nil.
+func (_c *TenantCreate) SetNillablePlanCode(v *string) *TenantCreate {
+	if v != nil {
+		_c.SetPlanCode(*v)
+	}
+	return _c
+}
+
+// SetBillingEnabled sets the "billing_enabled" field.
+func (_c *TenantCreate) SetBillingEnabled(v bool) *TenantCreate {
+	_c.mutation.SetBillingEnabled(v)
+	return _c
+}
+
+// SetNillableBillingEnabled sets the "billing_enabled" field if the given value is not nil.
+func (_c *TenantCreate) SetNillableBillingEnabled(v *bool) *TenantCreate {
+	if v != nil {
+		_c.SetBillingEnabled(*v)
+	}
+	return _c
+}
+
+// SetCostCenterCode sets the "cost_center_code" field.
+func (_c *TenantCreate) SetCostCenterCode(v string) *TenantCreate {
+	_c.mutation.SetCostCenterCode(v)
+	return _c
+}
+
+// SetNillableCostCenterCode sets the "cost_center_code" field if the given value is not nil.
+func (_c *TenantCreate) SetNillableCostCenterCode(v *string) *TenantCreate {
+	if v != nil {
+		_c.SetCostCenterCode(*v)
+	}
+	return _c
+}
+
+// SetLegalEntityCode sets the "legal_entity_code" field.
+func (_c *TenantCreate) SetLegalEntityCode(v string) *TenantCreate {
+	_c.mutation.SetLegalEntityCode(v)
+	return _c
+}
+
+// SetNillableLegalEntityCode sets the "legal_entity_code" field if the given value is not nil.
+func (_c *TenantCreate) SetNillableLegalEntityCode(v *string) *TenantCreate {
+	if v != nil {
+		_c.SetLegalEntityCode(*v)
+	}
+	return _c
+}
+
+// SetCurrency sets the "currency" field.
+func (_c *TenantCreate) SetCurrency(v string) *TenantCreate {
+	_c.mutation.SetCurrency(v)
+	return _c
+}
+
+// SetNillableCurrency sets the "currency" field if the given value is not nil.
+func (_c *TenantCreate) SetNillableCurrency(v *string) *TenantCreate {
+	if v != nil {
+		_c.SetCurrency(*v)
+	}
+	return _c
+}
+
+// SetServiceTier sets the "service_tier" field.
+func (_c *TenantCreate) SetServiceTier(v string) *TenantCreate {
+	_c.mutation.SetServiceTier(v)
+	return _c
+}
+
+// SetNillableServiceTier sets the "service_tier" field if the given value is not nil.
+func (_c *TenantCreate) SetNillableServiceTier(v *string) *TenantCreate {
+	if v != nil {
+		_c.SetServiceTier(*v)
+	}
+	return _c
+}
+
+// SetOwnerContact sets the "owner_contact" field.
+func (_c *TenantCreate) SetOwnerContact(v string) *TenantCreate {
+	_c.mutation.SetOwnerContact(v)
+	return _c
+}
+
+// SetNillableOwnerContact sets the "owner_contact" field if the given value is not nil.
+func (_c *TenantCreate) SetNillableOwnerContact(v *string) *TenantCreate {
+	if v != nil {
+		_c.SetOwnerContact(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *TenantCreate) SetCreatedAt(v time.Time) *TenantCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -219,6 +317,10 @@ func (_c *TenantCreate) defaults() {
 		v := tenant.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.BillingEnabled(); !ok {
+		v := tenant.DefaultBillingEnabled
+		_c.mutation.SetBillingEnabled(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := tenant.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -257,6 +359,9 @@ func (_c *TenantCreate) check() error {
 	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Tenant.status"`)}
+	}
+	if _, ok := _c.mutation.BillingEnabled(); !ok {
+		return &ValidationError{Name: "billing_enabled", err: errors.New(`ent: missing required field "Tenant.billing_enabled"`)}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Tenant.created_at"`)}
@@ -322,6 +427,34 @@ func (_c *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 		_spec.SetField(tenant.FieldExpiresAt, field.TypeTime, value)
 		_node.ExpiresAt = value
 	}
+	if value, ok := _c.mutation.PlanCode(); ok {
+		_spec.SetField(tenant.FieldPlanCode, field.TypeString, value)
+		_node.PlanCode = value
+	}
+	if value, ok := _c.mutation.BillingEnabled(); ok {
+		_spec.SetField(tenant.FieldBillingEnabled, field.TypeBool, value)
+		_node.BillingEnabled = value
+	}
+	if value, ok := _c.mutation.CostCenterCode(); ok {
+		_spec.SetField(tenant.FieldCostCenterCode, field.TypeString, value)
+		_node.CostCenterCode = value
+	}
+	if value, ok := _c.mutation.LegalEntityCode(); ok {
+		_spec.SetField(tenant.FieldLegalEntityCode, field.TypeString, value)
+		_node.LegalEntityCode = value
+	}
+	if value, ok := _c.mutation.Currency(); ok {
+		_spec.SetField(tenant.FieldCurrency, field.TypeString, value)
+		_node.Currency = value
+	}
+	if value, ok := _c.mutation.ServiceTier(); ok {
+		_spec.SetField(tenant.FieldServiceTier, field.TypeString, value)
+		_node.ServiceTier = value
+	}
+	if value, ok := _c.mutation.OwnerContact(); ok {
+		_spec.SetField(tenant.FieldOwnerContact, field.TypeString, value)
+		_node.OwnerContact = value
+	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(tenant.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -348,10 +481,10 @@ func (_c *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 	}
 	if nodes := _c.mutation.MspCustomerAllocationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   tenant.MspCustomerAllocationsTable,
-			Columns: tenant.MspCustomerAllocationsPrimaryKey,
+			Columns: []string{tenant.MspCustomerAllocationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mspallocation.FieldID, field.TypeInt),

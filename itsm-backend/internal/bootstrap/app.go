@@ -66,15 +66,9 @@ func NewApplication() *Application {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// 4. 创建数据库schema
-	if err := client.Schema.Create(context.Background()); err != nil {
-		log.Fatalf("Failed to create schema resources: %v", err)
+	if err := InitializeStorage(cfg, client, sugar); err != nil {
+		log.Fatalf("Failed to initialize storage: %v", err)
 	}
-
-	// 5. 运行 Seeder
-	// 移除了匿名函数，改为使用 Seeder 结构体
-	s := seeder.NewSeeder(client, sugar)
-	s.SeedAll(context.Background())
 
 	// 6. 初始化服务层 & 控制器
 	// 这部分代码量较大，为了简化，我们先在这里进行组装，后续可以进一步拆分为 wires / container
@@ -520,6 +514,48 @@ func NewApplication() *Application {
 		Router:      r,
 		Embedder:    embedder,
 		VectorStore: vectorStore,
+	}
+}
+
+func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.SugaredLogger) error {
+	ctx := context.Background()
+
+	if cfg.Deployment.AutoMigrate {
+		if err := client.Schema.Create(ctx); err != nil {
+			return fmt.Errorf("create schema resources: %w", err)
+		}
+		sugar.Infow("database schema ensured", "deployment_mode", cfg.Deployment.Mode)
+	}
+
+	if cfg.Deployment.AutoSeed {
+		s := seeder.NewSeeder(client, sugar, cfg)
+		s.SeedAll(ctx)
+		sugar.Infow("seed completed", "deployment_mode", cfg.Deployment.Mode)
+	}
+
+	return nil
+}
+
+func RunInitialization() {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	logger := initLogger(&cfg.Log)
+	defer func() {
+		_ = logger.Sync()
+	}()
+
+	sugar := logger.Sugar()
+	client, err := database.InitDatabase(&cfg.Database)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer client.Close()
+
+	if err := InitializeStorage(cfg, client, sugar); err != nil {
+		log.Fatalf("Initialization failed: %v", err)
 	}
 }
 

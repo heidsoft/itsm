@@ -50862,8 +50862,6 @@ type MSPAllocationMutation struct {
 	op                     Op
 	typ                    string
 	id                     *int
-	customer_tenant_id     *int
-	addcustomer_tenant_id  *int
 	role                   *string
 	assigned_at            *time.Time
 	deassigned_at          *time.Time
@@ -50871,8 +50869,7 @@ type MSPAllocationMutation struct {
 	clearedFields          map[string]struct{}
 	msp_user               *int
 	clearedmsp_user        bool
-	customer_tenant        map[int]struct{}
-	removedcustomer_tenant map[int]struct{}
+	customer_tenant        *int
 	clearedcustomer_tenant bool
 	done                   bool
 	oldValue               func(context.Context) (*MSPAllocation, error)
@@ -51015,13 +51012,12 @@ func (m *MSPAllocationMutation) ResetMspUserID() {
 
 // SetCustomerTenantID sets the "customer_tenant_id" field.
 func (m *MSPAllocationMutation) SetCustomerTenantID(i int) {
-	m.customer_tenant_id = &i
-	m.addcustomer_tenant_id = nil
+	m.customer_tenant = &i
 }
 
 // CustomerTenantID returns the value of the "customer_tenant_id" field in the mutation.
 func (m *MSPAllocationMutation) CustomerTenantID() (r int, exists bool) {
-	v := m.customer_tenant_id
+	v := m.customer_tenant
 	if v == nil {
 		return
 	}
@@ -51045,42 +51041,9 @@ func (m *MSPAllocationMutation) OldCustomerTenantID(ctx context.Context) (v int,
 	return oldValue.CustomerTenantID, nil
 }
 
-// AddCustomerTenantID adds i to the "customer_tenant_id" field.
-func (m *MSPAllocationMutation) AddCustomerTenantID(i int) {
-	if m.addcustomer_tenant_id != nil {
-		*m.addcustomer_tenant_id += i
-	} else {
-		m.addcustomer_tenant_id = &i
-	}
-}
-
-// AddedCustomerTenantID returns the value that was added to the "customer_tenant_id" field in this mutation.
-func (m *MSPAllocationMutation) AddedCustomerTenantID() (r int, exists bool) {
-	v := m.addcustomer_tenant_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ClearCustomerTenantID clears the value of the "customer_tenant_id" field.
-func (m *MSPAllocationMutation) ClearCustomerTenantID() {
-	m.customer_tenant_id = nil
-	m.addcustomer_tenant_id = nil
-	m.clearedFields[mspallocation.FieldCustomerTenantID] = struct{}{}
-}
-
-// CustomerTenantIDCleared returns if the "customer_tenant_id" field was cleared in this mutation.
-func (m *MSPAllocationMutation) CustomerTenantIDCleared() bool {
-	_, ok := m.clearedFields[mspallocation.FieldCustomerTenantID]
-	return ok
-}
-
 // ResetCustomerTenantID resets all changes to the "customer_tenant_id" field.
 func (m *MSPAllocationMutation) ResetCustomerTenantID() {
-	m.customer_tenant_id = nil
-	m.addcustomer_tenant_id = nil
-	delete(m.clearedFields, mspallocation.FieldCustomerTenantID)
+	m.customer_tenant = nil
 }
 
 // SetRole sets the "role" field.
@@ -51267,19 +51230,10 @@ func (m *MSPAllocationMutation) ResetMspUser() {
 	m.clearedmsp_user = false
 }
 
-// AddCustomerTenantIDs adds the "customer_tenant" edge to the Tenant entity by ids.
-func (m *MSPAllocationMutation) AddCustomerTenantIDs(ids ...int) {
-	if m.customer_tenant == nil {
-		m.customer_tenant = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.customer_tenant[ids[i]] = struct{}{}
-	}
-}
-
 // ClearCustomerTenant clears the "customer_tenant" edge to the Tenant entity.
 func (m *MSPAllocationMutation) ClearCustomerTenant() {
 	m.clearedcustomer_tenant = true
+	m.clearedFields[mspallocation.FieldCustomerTenantID] = struct{}{}
 }
 
 // CustomerTenantCleared reports if the "customer_tenant" edge to the Tenant entity was cleared.
@@ -51287,29 +51241,12 @@ func (m *MSPAllocationMutation) CustomerTenantCleared() bool {
 	return m.clearedcustomer_tenant
 }
 
-// RemoveCustomerTenantIDs removes the "customer_tenant" edge to the Tenant entity by IDs.
-func (m *MSPAllocationMutation) RemoveCustomerTenantIDs(ids ...int) {
-	if m.removedcustomer_tenant == nil {
-		m.removedcustomer_tenant = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.customer_tenant, ids[i])
-		m.removedcustomer_tenant[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedCustomerTenant returns the removed IDs of the "customer_tenant" edge to the Tenant entity.
-func (m *MSPAllocationMutation) RemovedCustomerTenantIDs() (ids []int) {
-	for id := range m.removedcustomer_tenant {
-		ids = append(ids, id)
-	}
-	return
-}
-
 // CustomerTenantIDs returns the "customer_tenant" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CustomerTenantID instead. It exists only for internal usage by the builders.
 func (m *MSPAllocationMutation) CustomerTenantIDs() (ids []int) {
-	for id := range m.customer_tenant {
-		ids = append(ids, id)
+	if id := m.customer_tenant; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -51318,7 +51255,6 @@ func (m *MSPAllocationMutation) CustomerTenantIDs() (ids []int) {
 func (m *MSPAllocationMutation) ResetCustomerTenant() {
 	m.customer_tenant = nil
 	m.clearedcustomer_tenant = false
-	m.removedcustomer_tenant = nil
 }
 
 // Where appends a list predicates to the MSPAllocationMutation builder.
@@ -51359,7 +51295,7 @@ func (m *MSPAllocationMutation) Fields() []string {
 	if m.msp_user != nil {
 		fields = append(fields, mspallocation.FieldMspUserID)
 	}
-	if m.customer_tenant_id != nil {
+	if m.customer_tenant != nil {
 		fields = append(fields, mspallocation.FieldCustomerTenantID)
 	}
 	if m.role != nil {
@@ -51474,9 +51410,6 @@ func (m *MSPAllocationMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *MSPAllocationMutation) AddedFields() []string {
 	var fields []string
-	if m.addcustomer_tenant_id != nil {
-		fields = append(fields, mspallocation.FieldCustomerTenantID)
-	}
 	return fields
 }
 
@@ -51485,8 +51418,6 @@ func (m *MSPAllocationMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *MSPAllocationMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case mspallocation.FieldCustomerTenantID:
-		return m.AddedCustomerTenantID()
 	}
 	return nil, false
 }
@@ -51496,13 +51427,6 @@ func (m *MSPAllocationMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *MSPAllocationMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case mspallocation.FieldCustomerTenantID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddCustomerTenantID(v)
-		return nil
 	}
 	return fmt.Errorf("unknown MSPAllocation numeric field %s", name)
 }
@@ -51511,9 +51435,6 @@ func (m *MSPAllocationMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *MSPAllocationMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(mspallocation.FieldCustomerTenantID) {
-		fields = append(fields, mspallocation.FieldCustomerTenantID)
-	}
 	if m.FieldCleared(mspallocation.FieldDeassignedAt) {
 		fields = append(fields, mspallocation.FieldDeassignedAt)
 	}
@@ -51531,9 +51452,6 @@ func (m *MSPAllocationMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *MSPAllocationMutation) ClearField(name string) error {
 	switch name {
-	case mspallocation.FieldCustomerTenantID:
-		m.ClearCustomerTenantID()
-		return nil
 	case mspallocation.FieldDeassignedAt:
 		m.ClearDeassignedAt()
 		return nil
@@ -51588,11 +51506,9 @@ func (m *MSPAllocationMutation) AddedIDs(name string) []ent.Value {
 			return []ent.Value{*id}
 		}
 	case mspallocation.EdgeCustomerTenant:
-		ids := make([]ent.Value, 0, len(m.customer_tenant))
-		for id := range m.customer_tenant {
-			ids = append(ids, id)
+		if id := m.customer_tenant; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -51600,23 +51516,12 @@ func (m *MSPAllocationMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *MSPAllocationMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedcustomer_tenant != nil {
-		edges = append(edges, mspallocation.EdgeCustomerTenant)
-	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *MSPAllocationMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case mspallocation.EdgeCustomerTenant:
-		ids := make([]ent.Value, 0, len(m.removedcustomer_tenant))
-		for id := range m.removedcustomer_tenant {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
@@ -51650,6 +51555,9 @@ func (m *MSPAllocationMutation) ClearEdge(name string) error {
 	switch name {
 	case mspallocation.EdgeMspUser:
 		m.ClearMspUser()
+		return nil
+	case mspallocation.EdgeCustomerTenant:
+		m.ClearCustomerTenant()
 		return nil
 	}
 	return fmt.Errorf("unknown MSPAllocation unique edge %s", name)
@@ -102097,6 +102005,13 @@ type TenantMutation struct {
 	msp_provider_id                 *int
 	addmsp_provider_id              *int
 	expires_at                      *time.Time
+	plan_code                       *string
+	billing_enabled                 *bool
+	cost_center_code                *string
+	legal_entity_code               *string
+	currency                        *string
+	service_tier                    *string
+	owner_contact                   *string
 	created_at                      *time.Time
 	updated_at                      *time.Time
 	clearedFields                   map[string]struct{}
@@ -102591,6 +102506,336 @@ func (m *TenantMutation) ResetExpiresAt() {
 	delete(m.clearedFields, tenant.FieldExpiresAt)
 }
 
+// SetPlanCode sets the "plan_code" field.
+func (m *TenantMutation) SetPlanCode(s string) {
+	m.plan_code = &s
+}
+
+// PlanCode returns the value of the "plan_code" field in the mutation.
+func (m *TenantMutation) PlanCode() (r string, exists bool) {
+	v := m.plan_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlanCode returns the old "plan_code" field's value of the Tenant entity.
+// If the Tenant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantMutation) OldPlanCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlanCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlanCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlanCode: %w", err)
+	}
+	return oldValue.PlanCode, nil
+}
+
+// ClearPlanCode clears the value of the "plan_code" field.
+func (m *TenantMutation) ClearPlanCode() {
+	m.plan_code = nil
+	m.clearedFields[tenant.FieldPlanCode] = struct{}{}
+}
+
+// PlanCodeCleared returns if the "plan_code" field was cleared in this mutation.
+func (m *TenantMutation) PlanCodeCleared() bool {
+	_, ok := m.clearedFields[tenant.FieldPlanCode]
+	return ok
+}
+
+// ResetPlanCode resets all changes to the "plan_code" field.
+func (m *TenantMutation) ResetPlanCode() {
+	m.plan_code = nil
+	delete(m.clearedFields, tenant.FieldPlanCode)
+}
+
+// SetBillingEnabled sets the "billing_enabled" field.
+func (m *TenantMutation) SetBillingEnabled(b bool) {
+	m.billing_enabled = &b
+}
+
+// BillingEnabled returns the value of the "billing_enabled" field in the mutation.
+func (m *TenantMutation) BillingEnabled() (r bool, exists bool) {
+	v := m.billing_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBillingEnabled returns the old "billing_enabled" field's value of the Tenant entity.
+// If the Tenant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantMutation) OldBillingEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBillingEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBillingEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBillingEnabled: %w", err)
+	}
+	return oldValue.BillingEnabled, nil
+}
+
+// ResetBillingEnabled resets all changes to the "billing_enabled" field.
+func (m *TenantMutation) ResetBillingEnabled() {
+	m.billing_enabled = nil
+}
+
+// SetCostCenterCode sets the "cost_center_code" field.
+func (m *TenantMutation) SetCostCenterCode(s string) {
+	m.cost_center_code = &s
+}
+
+// CostCenterCode returns the value of the "cost_center_code" field in the mutation.
+func (m *TenantMutation) CostCenterCode() (r string, exists bool) {
+	v := m.cost_center_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCostCenterCode returns the old "cost_center_code" field's value of the Tenant entity.
+// If the Tenant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantMutation) OldCostCenterCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCostCenterCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCostCenterCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCostCenterCode: %w", err)
+	}
+	return oldValue.CostCenterCode, nil
+}
+
+// ClearCostCenterCode clears the value of the "cost_center_code" field.
+func (m *TenantMutation) ClearCostCenterCode() {
+	m.cost_center_code = nil
+	m.clearedFields[tenant.FieldCostCenterCode] = struct{}{}
+}
+
+// CostCenterCodeCleared returns if the "cost_center_code" field was cleared in this mutation.
+func (m *TenantMutation) CostCenterCodeCleared() bool {
+	_, ok := m.clearedFields[tenant.FieldCostCenterCode]
+	return ok
+}
+
+// ResetCostCenterCode resets all changes to the "cost_center_code" field.
+func (m *TenantMutation) ResetCostCenterCode() {
+	m.cost_center_code = nil
+	delete(m.clearedFields, tenant.FieldCostCenterCode)
+}
+
+// SetLegalEntityCode sets the "legal_entity_code" field.
+func (m *TenantMutation) SetLegalEntityCode(s string) {
+	m.legal_entity_code = &s
+}
+
+// LegalEntityCode returns the value of the "legal_entity_code" field in the mutation.
+func (m *TenantMutation) LegalEntityCode() (r string, exists bool) {
+	v := m.legal_entity_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLegalEntityCode returns the old "legal_entity_code" field's value of the Tenant entity.
+// If the Tenant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantMutation) OldLegalEntityCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLegalEntityCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLegalEntityCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLegalEntityCode: %w", err)
+	}
+	return oldValue.LegalEntityCode, nil
+}
+
+// ClearLegalEntityCode clears the value of the "legal_entity_code" field.
+func (m *TenantMutation) ClearLegalEntityCode() {
+	m.legal_entity_code = nil
+	m.clearedFields[tenant.FieldLegalEntityCode] = struct{}{}
+}
+
+// LegalEntityCodeCleared returns if the "legal_entity_code" field was cleared in this mutation.
+func (m *TenantMutation) LegalEntityCodeCleared() bool {
+	_, ok := m.clearedFields[tenant.FieldLegalEntityCode]
+	return ok
+}
+
+// ResetLegalEntityCode resets all changes to the "legal_entity_code" field.
+func (m *TenantMutation) ResetLegalEntityCode() {
+	m.legal_entity_code = nil
+	delete(m.clearedFields, tenant.FieldLegalEntityCode)
+}
+
+// SetCurrency sets the "currency" field.
+func (m *TenantMutation) SetCurrency(s string) {
+	m.currency = &s
+}
+
+// Currency returns the value of the "currency" field in the mutation.
+func (m *TenantMutation) Currency() (r string, exists bool) {
+	v := m.currency
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrency returns the old "currency" field's value of the Tenant entity.
+// If the Tenant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantMutation) OldCurrency(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrency is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrency requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrency: %w", err)
+	}
+	return oldValue.Currency, nil
+}
+
+// ClearCurrency clears the value of the "currency" field.
+func (m *TenantMutation) ClearCurrency() {
+	m.currency = nil
+	m.clearedFields[tenant.FieldCurrency] = struct{}{}
+}
+
+// CurrencyCleared returns if the "currency" field was cleared in this mutation.
+func (m *TenantMutation) CurrencyCleared() bool {
+	_, ok := m.clearedFields[tenant.FieldCurrency]
+	return ok
+}
+
+// ResetCurrency resets all changes to the "currency" field.
+func (m *TenantMutation) ResetCurrency() {
+	m.currency = nil
+	delete(m.clearedFields, tenant.FieldCurrency)
+}
+
+// SetServiceTier sets the "service_tier" field.
+func (m *TenantMutation) SetServiceTier(s string) {
+	m.service_tier = &s
+}
+
+// ServiceTier returns the value of the "service_tier" field in the mutation.
+func (m *TenantMutation) ServiceTier() (r string, exists bool) {
+	v := m.service_tier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldServiceTier returns the old "service_tier" field's value of the Tenant entity.
+// If the Tenant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantMutation) OldServiceTier(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldServiceTier is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldServiceTier requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldServiceTier: %w", err)
+	}
+	return oldValue.ServiceTier, nil
+}
+
+// ClearServiceTier clears the value of the "service_tier" field.
+func (m *TenantMutation) ClearServiceTier() {
+	m.service_tier = nil
+	m.clearedFields[tenant.FieldServiceTier] = struct{}{}
+}
+
+// ServiceTierCleared returns if the "service_tier" field was cleared in this mutation.
+func (m *TenantMutation) ServiceTierCleared() bool {
+	_, ok := m.clearedFields[tenant.FieldServiceTier]
+	return ok
+}
+
+// ResetServiceTier resets all changes to the "service_tier" field.
+func (m *TenantMutation) ResetServiceTier() {
+	m.service_tier = nil
+	delete(m.clearedFields, tenant.FieldServiceTier)
+}
+
+// SetOwnerContact sets the "owner_contact" field.
+func (m *TenantMutation) SetOwnerContact(s string) {
+	m.owner_contact = &s
+}
+
+// OwnerContact returns the value of the "owner_contact" field in the mutation.
+func (m *TenantMutation) OwnerContact() (r string, exists bool) {
+	v := m.owner_contact
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerContact returns the old "owner_contact" field's value of the Tenant entity.
+// If the Tenant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantMutation) OldOwnerContact(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerContact is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerContact requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerContact: %w", err)
+	}
+	return oldValue.OwnerContact, nil
+}
+
+// ClearOwnerContact clears the value of the "owner_contact" field.
+func (m *TenantMutation) ClearOwnerContact() {
+	m.owner_contact = nil
+	m.clearedFields[tenant.FieldOwnerContact] = struct{}{}
+}
+
+// OwnerContactCleared returns if the "owner_contact" field was cleared in this mutation.
+func (m *TenantMutation) OwnerContactCleared() bool {
+	_, ok := m.clearedFields[tenant.FieldOwnerContact]
+	return ok
+}
+
+// ResetOwnerContact resets all changes to the "owner_contact" field.
+func (m *TenantMutation) ResetOwnerContact() {
+	m.owner_contact = nil
+	delete(m.clearedFields, tenant.FieldOwnerContact)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *TenantMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -102805,7 +103050,7 @@ func (m *TenantMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TenantMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 17)
 	if m.name != nil {
 		fields = append(fields, tenant.FieldName)
 	}
@@ -102829,6 +103074,27 @@ func (m *TenantMutation) Fields() []string {
 	}
 	if m.expires_at != nil {
 		fields = append(fields, tenant.FieldExpiresAt)
+	}
+	if m.plan_code != nil {
+		fields = append(fields, tenant.FieldPlanCode)
+	}
+	if m.billing_enabled != nil {
+		fields = append(fields, tenant.FieldBillingEnabled)
+	}
+	if m.cost_center_code != nil {
+		fields = append(fields, tenant.FieldCostCenterCode)
+	}
+	if m.legal_entity_code != nil {
+		fields = append(fields, tenant.FieldLegalEntityCode)
+	}
+	if m.currency != nil {
+		fields = append(fields, tenant.FieldCurrency)
+	}
+	if m.service_tier != nil {
+		fields = append(fields, tenant.FieldServiceTier)
+	}
+	if m.owner_contact != nil {
+		fields = append(fields, tenant.FieldOwnerContact)
 	}
 	if m.created_at != nil {
 		fields = append(fields, tenant.FieldCreatedAt)
@@ -102860,6 +103126,20 @@ func (m *TenantMutation) Field(name string) (ent.Value, bool) {
 		return m.MspProviderID()
 	case tenant.FieldExpiresAt:
 		return m.ExpiresAt()
+	case tenant.FieldPlanCode:
+		return m.PlanCode()
+	case tenant.FieldBillingEnabled:
+		return m.BillingEnabled()
+	case tenant.FieldCostCenterCode:
+		return m.CostCenterCode()
+	case tenant.FieldLegalEntityCode:
+		return m.LegalEntityCode()
+	case tenant.FieldCurrency:
+		return m.Currency()
+	case tenant.FieldServiceTier:
+		return m.ServiceTier()
+	case tenant.FieldOwnerContact:
+		return m.OwnerContact()
 	case tenant.FieldCreatedAt:
 		return m.CreatedAt()
 	case tenant.FieldUpdatedAt:
@@ -102889,6 +103169,20 @@ func (m *TenantMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldMspProviderID(ctx)
 	case tenant.FieldExpiresAt:
 		return m.OldExpiresAt(ctx)
+	case tenant.FieldPlanCode:
+		return m.OldPlanCode(ctx)
+	case tenant.FieldBillingEnabled:
+		return m.OldBillingEnabled(ctx)
+	case tenant.FieldCostCenterCode:
+		return m.OldCostCenterCode(ctx)
+	case tenant.FieldLegalEntityCode:
+		return m.OldLegalEntityCode(ctx)
+	case tenant.FieldCurrency:
+		return m.OldCurrency(ctx)
+	case tenant.FieldServiceTier:
+		return m.OldServiceTier(ctx)
+	case tenant.FieldOwnerContact:
+		return m.OldOwnerContact(ctx)
 	case tenant.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case tenant.FieldUpdatedAt:
@@ -102957,6 +103251,55 @@ func (m *TenantMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetExpiresAt(v)
+		return nil
+	case tenant.FieldPlanCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlanCode(v)
+		return nil
+	case tenant.FieldBillingEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBillingEnabled(v)
+		return nil
+	case tenant.FieldCostCenterCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCostCenterCode(v)
+		return nil
+	case tenant.FieldLegalEntityCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLegalEntityCode(v)
+		return nil
+	case tenant.FieldCurrency:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrency(v)
+		return nil
+	case tenant.FieldServiceTier:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetServiceTier(v)
+		return nil
+	case tenant.FieldOwnerContact:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerContact(v)
 		return nil
 	case tenant.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -103041,6 +103384,24 @@ func (m *TenantMutation) ClearedFields() []string {
 	if m.FieldCleared(tenant.FieldExpiresAt) {
 		fields = append(fields, tenant.FieldExpiresAt)
 	}
+	if m.FieldCleared(tenant.FieldPlanCode) {
+		fields = append(fields, tenant.FieldPlanCode)
+	}
+	if m.FieldCleared(tenant.FieldCostCenterCode) {
+		fields = append(fields, tenant.FieldCostCenterCode)
+	}
+	if m.FieldCleared(tenant.FieldLegalEntityCode) {
+		fields = append(fields, tenant.FieldLegalEntityCode)
+	}
+	if m.FieldCleared(tenant.FieldCurrency) {
+		fields = append(fields, tenant.FieldCurrency)
+	}
+	if m.FieldCleared(tenant.FieldServiceTier) {
+		fields = append(fields, tenant.FieldServiceTier)
+	}
+	if m.FieldCleared(tenant.FieldOwnerContact) {
+		fields = append(fields, tenant.FieldOwnerContact)
+	}
 	return fields
 }
 
@@ -103066,6 +103427,24 @@ func (m *TenantMutation) ClearField(name string) error {
 		return nil
 	case tenant.FieldExpiresAt:
 		m.ClearExpiresAt()
+		return nil
+	case tenant.FieldPlanCode:
+		m.ClearPlanCode()
+		return nil
+	case tenant.FieldCostCenterCode:
+		m.ClearCostCenterCode()
+		return nil
+	case tenant.FieldLegalEntityCode:
+		m.ClearLegalEntityCode()
+		return nil
+	case tenant.FieldCurrency:
+		m.ClearCurrency()
+		return nil
+	case tenant.FieldServiceTier:
+		m.ClearServiceTier()
+		return nil
+	case tenant.FieldOwnerContact:
+		m.ClearOwnerContact()
 		return nil
 	}
 	return fmt.Errorf("unknown Tenant nullable field %s", name)
@@ -103098,6 +103477,27 @@ func (m *TenantMutation) ResetField(name string) error {
 		return nil
 	case tenant.FieldExpiresAt:
 		m.ResetExpiresAt()
+		return nil
+	case tenant.FieldPlanCode:
+		m.ResetPlanCode()
+		return nil
+	case tenant.FieldBillingEnabled:
+		m.ResetBillingEnabled()
+		return nil
+	case tenant.FieldCostCenterCode:
+		m.ResetCostCenterCode()
+		return nil
+	case tenant.FieldLegalEntityCode:
+		m.ResetLegalEntityCode()
+		return nil
+	case tenant.FieldCurrency:
+		m.ResetCurrency()
+		return nil
+	case tenant.FieldServiceTier:
+		m.ResetServiceTier()
+		return nil
+	case tenant.FieldOwnerContact:
+		m.ResetOwnerContact()
 		return nil
 	case tenant.FieldCreatedAt:
 		m.ResetCreatedAt()

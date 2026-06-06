@@ -34,7 +34,6 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 ARG ITSM_BACKEND_URL=http://itsm-backend:8090
-ARG NEXT_PUBLIC_API_URL=http://itsm-backend:8090
 ARG HTTP_PROXY=
 ARG HTTPS_PROXY=
 ARG http_proxy=
@@ -53,7 +52,6 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV ITSM_BACKEND_URL=${ITSM_BACKEND_URL}
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
     pnpm run build
@@ -100,7 +98,6 @@ ENV NODE_ENV=development
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV ITSM_BACKEND_URL=http://host.docker.internal:8090
-ENV NEXT_PUBLIC_API_URL=http://host.docker.internal:8090
 
 EXPOSE 3000
 
