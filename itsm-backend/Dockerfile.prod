@@ -1,25 +1,45 @@
-# Production image - static binary runtime with shell/wget for health checks
+FROM --platform=$BUILDPLATFORM golang:alpine AS builder
+
+WORKDIR /src
+
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+ARG GOPROXY=https://proxy.golang.org,direct
+ARG GOSUMDB=sum.golang.org
+
+ENV CGO_ENABLED=0 \
+    GOOS=${TARGETOS} \
+    GOARCH=${TARGETARCH} \
+    GOPROXY=${GOPROXY} \
+    GOSUMDB=${GOSUMDB}
+
+RUN apk add --no-cache git ca-certificates tzdata
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN go build -trimpath -ldflags="-s -w" -o /out/main ./main.go
+
 FROM alpine:3.20
 
 WORKDIR /app
 
 RUN addgroup -S app && adduser -S -G app app \
+    && apk add --no-cache ca-certificates tzdata wget \
     && mkdir -p /app/logs /app/uploads /app/temp \
     && chown -R app:app /app
 
-# Copy pre-built binary (built by CI/CD or local cross-compile)
-COPY --chown=app:app itsm-backend ./main
+COPY --from=builder --chown=app:app /out/main ./main
 COPY --chown=app:app config.yaml .
 COPY --chown=app:app migrations ./migrations
 COPY --chown=app:app config/seed ./config/seed
 
-# Expose port
 EXPOSE 8090
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8090/api/v1/health || exit 1
 
-# Run the application
 USER app
 CMD ["./main"]

@@ -26,7 +26,8 @@
     "test:ux": "jest src/app/__tests__/ux --coverage=false",
     "test:performance": "jest src/app/__tests__/performance --coverage=false",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e && npm run test:ux && npm run test:performance",
-    "screenshot": "npx ts-node tests/e2e/screenshot.ts"
+    "screenshot": "npx ts-node tests/e2e/screenshot.ts",
+    "audit:ui": "node tools/generate-ui-audit-inventory.mjs"
   },
   "dependencies": {
     "@ant-design/charts": "^2.6.2",

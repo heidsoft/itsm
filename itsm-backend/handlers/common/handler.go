@@ -3,6 +3,7 @@ package common
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"itsm-backend/common"
 
@@ -15,6 +16,20 @@ type Handler struct {
 
 func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
+}
+
+func shouldUseSecureCookies(c *gin.Context) bool {
+	if c.Request.TLS != nil {
+		return true
+	}
+
+	return strings.EqualFold(c.GetHeader("X-Forwarded-Proto"), "https")
+}
+
+func cookieDomain(_ *gin.Context) string {
+	// Frontend now calls the backend through same-origin /api proxy, so host-only
+	// cookies are the safest default for both localhost and production domains.
+	return ""
 }
 
 // Auth
@@ -37,19 +52,18 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	// 设置 httpOnly cookies（仅当请求来自安全来源或 localhost 时设置 Secure flag）
-	// 生产环境 Behind HTTPS: Secure=true
-	// 开发环境 HTTP localhost: Secure=false（让浏览器接受 cookie）
-	isSecure := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
-	isLocalhost := c.Request.Host == "localhost:8090" || c.Request.Host == "127.0.0.1:8090" ||
-		c.GetHeader("Origin") == "http://localhost:3000" || c.GetHeader("Origin") == "http://127.0.0.1:3000"
-	secure := isSecure || !isLocalhost
+	secure := shouldUseSecureCookies(c)
+	domain := cookieDomain(c)
+	httpOnly := true
+
+	// Browsers reject Secure cookies over plain HTTP. We keep host-only cookies
+	// without Secure in local development so the same-origin frontend proxy can
+	// persist login state. Production HTTPS requests still get Secure cookies.
 
 	// Access token: 15分钟
-	// Domain="localhost" 无端口，使 cookie 能共享给前端 (localhost:3000) 和后端 (localhost:8090)
-	c.SetCookie("access_token", res.AccessToken, 900, "/", "localhost", secure, false)
+	c.SetCookie("access_token", res.AccessToken, 900, "/", domain, secure, httpOnly)
 	// Refresh token: 7天
-	c.SetCookie("refresh_token", res.RefreshToken, 604800, "/", "localhost", secure, false)
+	c.SetCookie("refresh_token", res.RefreshToken, 604800, "/", domain, secure, httpOnly)
 
 	common.Success(c, res)
 }
@@ -69,10 +83,13 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	// 设置 httpOnly cookies (secure=false for HTTP localhost, httpOnly=true)
-	c.SetCookie("access_token", res.AccessToken, 900, "/", "localhost", false, true)
+	secure := shouldUseSecureCookies(c)
+	domain := cookieDomain(c)
+
+	// 设置 httpOnly cookies (Secure only on HTTPS requests)
+	c.SetCookie("access_token", res.AccessToken, 900, "/", domain, secure, true)
 	if res.RefreshToken != "" {
-		c.SetCookie("refresh_token", res.RefreshToken, 604800, "/", "localhost", false, true)
+		c.SetCookie("refresh_token", res.RefreshToken, 604800, "/", domain, secure, true)
 	}
 
 	common.Success(c, res)

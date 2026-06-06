@@ -19,7 +19,7 @@ import {
   Statistic,
   Alert,
   App,
-  Skeleton,
+  Typography,
 } from 'antd';
 import {
   Plus,
@@ -43,6 +43,10 @@ import {
 } from 'lucide-react';
 
 import BPMNDesigner from '@/components/workflow/BPMNDesigner';
+import { FilterToolbarCard } from '@/components/ui/FilterToolbarCard';
+import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
+import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
+import { StatsOverview } from '@/components/ui/StatsOverview';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { WorkflowType } from '@/types/workflow';
 
@@ -50,6 +54,7 @@ import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 
 const { Option } = Select;
+const { Text } = Typography;
 
 interface Workflow {
   id: number;
@@ -65,14 +70,6 @@ interface Workflow {
   running_instances: number;
   created_by: string;
 }
-
-const WorkflowManagementPageSkeleton: React.FC = () => (
-  <div>
-    <Skeleton active paragraph={{ rows: 4 }} />
-    <Skeleton active paragraph={{ rows: 2 }} style={{ marginTop: 24 }} />
-    <Skeleton active paragraph={{ rows: 8 }} style={{ marginTop: 24 }} />
-  </div>
-);
 
 const WorkflowManagementPage = () => {
   const { t } = useI18n();
@@ -750,174 +747,157 @@ const WorkflowManagementPage = () => {
     return true;
   });
 
+  const statsItems = useMemo(
+    () => [
+      {
+        key: 'total',
+        title: t('workflow.totalWorkflows'),
+        value: stats.total,
+        prefix: <FileText className="w-5 h-5" />,
+        accentColor: '#1890ff',
+        helper: `${t('workflow.active')} ${stats.active} | ${t('workflow.draft')} ${stats.draft} | ${t('workflow.inactive')} ${stats.inactive}`,
+      },
+      {
+        key: 'running',
+        title: t('workflow.runningInstances'),
+        value: stats.running,
+        prefix: <Clock className="w-5 h-5" />,
+        accentColor: '#faad14',
+        helper: t('workflow.todayNewInstances', { count: stats.todayInstances }),
+      },
+      {
+        key: 'completed',
+        title: t('workflow.completedInstances'),
+        value: stats.completed,
+        prefix: <CheckCircle className="w-5 h-5" />,
+        accentColor: '#52c41a',
+        helper: `${t('workflow.completionRate')} ${stats.total > 0 ? Math.round((stats.completed / (stats.completed + stats.running)) * 100) : 0}%`,
+      },
+      {
+        key: 'efficiency',
+        title: t('workflow.avgExecutionTime'),
+        value: stats.avgExecutionTime,
+        suffix: t('workflow.minutes'),
+        prefix: <BarChart3 className="w-5 h-5" />,
+        accentColor: '#722ed1',
+        helper:
+          stats.avgExecutionTime < 60 ? t('workflow.goodEfficiency') : t('workflow.optimizableSpace'),
+      },
+    ],
+    [stats, t]
+  );
+
+  const headerActions = (
+    <>
+      <Dropdown
+        menu={{
+          items: [
+            {
+              key: 'ticket_approval',
+              label: t('workflow.ticketApprovalProcess'),
+              icon: <GitBranch className="w-4 h-4" />,
+              onClick: () => router.push('/workflow/designer'),
+            },
+            {
+              key: 'general',
+              label: t('workflow.generalWorkflow'),
+              icon: <GitBranch className="w-4 h-4" />,
+              onClick: handleCreateWorkflow,
+            },
+            {
+              key: 'bpmn',
+              label: t('workflow.bpmnWorkflow'),
+              icon: <Code className="w-4 h-4" />,
+              onClick: () => {
+                setEditingWorkflow(null);
+                setDesignerVisible(true);
+              },
+            },
+          ],
+        }}
+        trigger={['click']}
+      >
+        <Button type="primary" icon={<Plus className="w-4 h-4" />}>
+          {t('workflow.newWorkflow')} <MoreHorizontal className="w-3 h-3 ml-1" />
+        </Button>
+      </Dropdown>
+      <Button
+        type="default"
+        icon={<PlayCircle className="w-4 h-4" />}
+        onClick={() => router.push('/workflow/instances')}
+      >
+        发起流程
+      </Button>
+      <Button icon={<Upload className="w-4 h-4" />} onClick={handleImportWorkflow} aria-label="导入工作流">
+        {t('workflow.import')}
+      </Button>
+      <Button icon={<RefreshCw className="w-4 h-4" />} onClick={() => loadWorkflows(pagination.current, pagination.pageSize)}>
+        {t('workflow.refresh')}
+      </Button>
+    </>
+  );
+
+  const filterToolbar = (
+    <>
+      <Input
+        placeholder={t('workflow.searchPlaceholder')}
+        prefix={<Search className="w-4 h-4" />}
+        value={filters.keyword}
+        onChange={e => setFilters(prev => ({ ...prev, keyword: e.target.value }))}
+        allowClear
+        className="min-w-[220px]"
+      />
+      <Select
+        placeholder={t('workflow.statusFilter')}
+        value={filters.status || undefined}
+        onChange={value => setFilters(prev => ({ ...prev, status: value ?? '' }))}
+        allowClear
+        className="min-w-[160px]"
+      >
+        <Option value="draft">{t('workflow.draft')}</Option>
+        <Option value="active">{t('workflow.activated')}</Option>
+        <Option value="inactive">{t('workflow.deactivated')}</Option>
+        <Option value="archived">{t('workflow.archived')}</Option>
+      </Select>
+      <Select
+        placeholder={t('workflow.categoryFilter')}
+        value={filters.category || undefined}
+        onChange={value => setFilters(prev => ({ ...prev, category: value ?? '' }))}
+        allowClear
+        className="min-w-[180px]"
+      >
+        <Option value={t('workflow.approvalProcess')}>{t('workflow.approvalProcess')}</Option>
+        <Option value={t('workflow.incidentHandling')}>{t('workflow.incidentHandling')}</Option>
+        <Option value={t('workflow.changeManagement')}>{t('workflow.changeManagement')}</Option>
+      </Select>
+    </>
+  );
+
   return (
     <>
-      {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('workflow.totalWorkflows')}
-              value={stats.total}
-              prefix={<FileText className="w-5 h-5" />}
-              styles={{ content: { color: '#1890ff' } }}
-            />
-            <div className="mt-2 text-xs text-gray-500">
-              {t('workflow.active')} {stats.active} | {t('workflow.draft')} {stats.draft} |{' '}
-              {t('workflow.inactive')} {stats.inactive}
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('workflow.runningInstances')}
-              value={stats.running}
-              prefix={<Clock className="w-5 h-5" />}
-              styles={{ content: { color: '#faad14' } }}
-            />
-            <div className="mt-2 text-xs text-gray-500">
-              {t('workflow.todayNewInstances', { count: stats.todayInstances })}
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('workflow.completedInstances')}
-              value={stats.completed}
-              prefix={<CheckCircle className="w-5 h-5" />}
-              styles={{ content: { color: '#52c41a' } }}
-            />
-            <div className="mt-2 text-xs text-gray-500">
-              {t('workflow.completionRate')}{' '}
-              {stats.total > 0
-                ? Math.round((stats.completed / (stats.completed + stats.running)) * 100)
-                : 0}
-              %
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('workflow.avgExecutionTime')}
-              value={stats.avgExecutionTime}
-              suffix={t('workflow.minutes')}
-              prefix={<BarChart3 className="w-5 h-5" />}
-              styles={{ content: { color: '#722ed1' } }}
-            />
-            <div className="mt-2 text-xs text-gray-500">
-              {stats.avgExecutionTime < 60
-                ? t('workflow.goodEfficiency')
-                : t('workflow.optimizableSpace')}
-            </div>
-          </Card>
-        </Col>
-      </Row>
+      <ManagementPageHeader
+        title={t('workflow.workflowManagement')}
+        description="统一管理工作流定义、运行状态、设计入口和批量操作。"
+        actions={headerActions}
+        notice={
+          <ManagementNotice
+            message="设计态与运行态已分离处理"
+            description="工作流定义、实例管理和设计器入口保持分层，筛选、批量操作和主表格统一走页面基线。"
+          />
+        }
+      />
 
-      {/* 工具栏 */}
-      <Card className="enterprise-card mb-6">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={8}>
-            <Input
-              placeholder={t('workflow.searchPlaceholder')}
-              prefix={<Search className="w-4 h-4" />}
-              value={filters.keyword}
-              onChange={e => setFilters(prev => ({ ...prev, keyword: e.target.value }))}
-              allowClear
-            />
-          </Col>
-          <Col xs={24} sm={12} md={4}>
-            <Select
-              placeholder={t('workflow.statusFilter')}
-              value={filters.status}
-              onChange={value => setFilters(prev => ({ ...prev, status: value }))}
-              allowClear
-              style={{ width: '100%' }}
-            >
-              <Option value="draft">{t('workflow.draft')}</Option>
-              <Option value="active">{t('workflow.activated')}</Option>
-              <Option value="inactive">{t('workflow.deactivated')}</Option>
-              <Option value="archived">{t('workflow.archived')}</Option>
-            </Select>
-          </Col>
-          <Col xs={24} sm={12} md={4}>
-            <Select
-              placeholder={t('workflow.categoryFilter')}
-              value={filters.category}
-              onChange={value => setFilters(prev => ({ ...prev, category: value }))}
-              allowClear
-              style={{ width: '100%' }}
-            >
-              <Option value={t('workflow.approvalProcess')}>{t('workflow.approvalProcess')}</Option>
-              <Option value={t('workflow.incidentHandling')}>
-                {t('workflow.incidentHandling')}
-              </Option>
-              <Option value={t('workflow.changeManagement')}>
-                {t('workflow.changeManagement')}
-              </Option>
-            </Select>
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Space>
-              <Dropdown
-                menu={{
-                  items: [
-                    {
-                      key: 'ticket_approval',
-                      label: t('workflow.ticketApprovalProcess'),
-                      icon: <GitBranch className="w-4 h-4" />,
-                      onClick: () => router.push('/workflow/designer'),
-                    },
-                    {
-                      key: 'general',
-                      label: t('workflow.generalWorkflow'),
-                      icon: <GitBranch className="w-4 h-4" />,
-                      onClick: handleCreateWorkflow,
-                    },
-                    {
-                      key: 'bpmn',
-                      label: t('workflow.bpmnWorkflow'),
-                      icon: <Code className="w-4 h-4" />,
-                      onClick: () => {
-                        setEditingWorkflow(null);
-                        setDesignerVisible(true);
-                      },
-                    },
-                  ],
-                }}
-                trigger={['click']}
-              >
-                <Button type="primary" icon={<Plus className="w-4 h-4" />}>
-                  {t('workflow.newWorkflow')} <MoreHorizontal className="w-3 h-3 ml-1" />
-                </Button>
-              </Dropdown>
-              {/* 发起流程快捷入口 - 跳转到实例管理页面 */}
-              <Button
-                type="default"
-                icon={<PlayCircle className="w-4 h-4" />}
-                onClick={() => router.push('/workflow/instances')}
-              >
-                发起流程
-              </Button>
-              <Button
-                icon={<Upload className="w-4 h-4" />}
-                onClick={handleImportWorkflow}
-                aria-label="导入工作流"
-              >
-                {t('workflow.import')}
-              </Button>
-              <Button
-                icon={<RefreshCw className="w-4 h-4" />}
-                onClick={() => loadWorkflows(pagination.current, pagination.pageSize)}
-              >
-                {t('workflow.refresh')}
-              </Button>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
+      <StatsOverview items={statsItems} className="mb-6" />
+
+      <FilterToolbarCard
+        className="mb-6"
+        filters={filterToolbar}
+        actions={
+          <Text type="secondary">
+            共 {filteredWorkflows.length} / {pagination.total} 个工作流
+          </Text>
+        }
+      />
 
       {/* 批量操作工具栏 */}
       {selectedRowKeys.length > 0 && (
@@ -954,54 +934,66 @@ const WorkflowManagementPage = () => {
 
       {/* 工作流表格 */}
       <Card className="enterprise-card">
-        <Table
-          columns={columns}
-          dataSource={filteredWorkflows}
-          rowKey="id"
-          loading={loading}
-          rowSelection={{
-            selectedRowKeys,
-            onChange: (selectedRowKeys: React.Key[]) => {
-              setSelectedRowKeys(selectedRowKeys.map(key => Number(key)));
-            },
-            selections: [
-              Table.SELECTION_ALL,
-              Table.SELECTION_INVERT,
-              Table.SELECTION_NONE,
-              {
-                key: 'select-active',
-                text: t('workflow.selectActive'),
-                onSelect: () => {
-                  const activeKeys = filteredWorkflows
-                    .filter(w => w.status === 'active')
-                    .map(w => w.id);
-                  setSelectedRowKeys(activeKeys);
-                },
+        {filteredWorkflows.length === 0 && !loading ? (
+          <LoadingEmptyError
+            state="empty"
+            empty={{
+              title: '暂无匹配的工作流',
+              description: '可以放宽筛选条件，或者直接创建新的工作流定义。',
+              actionText: t('workflow.newWorkflow'),
+              onAction: handleCreateWorkflow,
+            }}
+          />
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={filteredWorkflows}
+            rowKey="id"
+            loading={loading}
+            rowSelection={{
+              selectedRowKeys,
+              onChange: (selectedRowKeys: React.Key[]) => {
+                setSelectedRowKeys(selectedRowKeys.map(key => Number(key)));
               },
-              {
-                key: 'select-draft',
-                text: t('workflow.selectDraft'),
-                onSelect: () => {
-                  const draftKeys = filteredWorkflows
-                    .filter(w => w.status === 'draft')
-                    .map(w => w.id);
-                  setSelectedRowKeys(draftKeys);
+              selections: [
+                Table.SELECTION_ALL,
+                Table.SELECTION_INVERT,
+                Table.SELECTION_NONE,
+                {
+                  key: 'select-active',
+                  text: t('workflow.selectActive'),
+                  onSelect: () => {
+                    const activeKeys = filteredWorkflows
+                      .filter(w => w.status === 'active')
+                      .map(w => w.id);
+                    setSelectedRowKeys(activeKeys);
+                  },
                 },
-              },
-            ],
-          }}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              t('workflow.showTotal', { start: range[0], end: range[1], total }),
-            onChange: handleTableChange,
-          }}
-          scroll={{ x: 1200 }}
-        />
+                {
+                  key: 'select-draft',
+                  text: t('workflow.selectDraft'),
+                  onSelect: () => {
+                    const draftKeys = filteredWorkflows
+                      .filter(w => w.status === 'draft')
+                      .map(w => w.id);
+                    setSelectedRowKeys(draftKeys);
+                  },
+                },
+              ],
+            }}
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                t('workflow.showTotal', { start: range[0], end: range[1], total }),
+              onChange: handleTableChange,
+            }}
+            scroll={{ x: 1200 }}
+          />
+        )}
       </Card>
 
       {/* 创建/编辑工作流模态框 */}
