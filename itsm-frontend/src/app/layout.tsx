@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { Inter, Noto_Sans_SC } from 'next/font/google';
+// 禁用 Google Fonts (build 离线环境) - 改用系统字体
+// import { Inter, Noto_Sans_SC } from 'next/font/google';
 import './globals.css';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
@@ -12,19 +13,9 @@ dayjs.locale('zh-cn');
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { QueryProvider } from '@/lib/providers/QueryProvider';
 
-// 使用更适合中文的字体组合
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin'],
-  display: 'swap',
-});
-
-const notoSansSC = Noto_Sans_SC({
-  variable: '--font-noto-sans-sc',
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-});
+// 使用系统字体代替 Google Fonts
+const inter = { variable: '--font-inter' };
+const notoSansSC = { variable: '--font-noto-sans-sc' };
 
 export const metadata: Metadata = {
   title: 'ITSM Platform - IT服务管理平台',

@@ -261,11 +261,58 @@ func (h *Handler) AddArticleComment(c *gin.Context) {
 
 // SearchArticles handles POST /api/v1/knowledge/search
 func (h *Handler) SearchArticles(c *gin.Context) {
-	// Stub implementation
+	var req struct {
+		Query    string `json:"query" binding:"required"`
+		Category string `json:"category"`
+		Limit    int    `json:"limit"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "参数错误: "+err.Error())
+		return
+	}
+
+	tenantID, _ := c.Get("tenant_id")
+	tenantIDInt, _ := tenantID.(int)
+	if tenantIDInt == 0 {
+		tenantIDInt = 1
+	}
+
+	limit := req.Limit
+	if limit <= 0 || limit > 50 {
+		limit = 20
+	}
+
+	articles, total, err := h.svc.ListArticles(c.Request.Context(), tenantIDInt, 1, limit, req.Category, req.Query, "")
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, "搜索失败: "+err.Error())
+		return
+	}
+
+	items := make([]interface{}, 0, len(articles))
+	for _, a := range articles {
+		items = append(items, map[string]interface{}{
+			"id":          a.ID,
+			"title":       a.Title,
+			"category":    a.Category,
+			"snippet":     snippet(a.Content, 200),
+			"tags":        a.Tags,
+			"is_published": a.IsPublished,
+			"score":       0.8,
+			"search_type": "keyword",
+		})
+	}
+
 	common.Success(c, gin.H{
-		"items": []interface{}{},
-		"total": 0,
+		"items": items,
+		"total": total,
 	})
+}
+
+func snippet(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
 }
 
 // GetRecommendations handles GET /api/v1/knowledge/recommendations
