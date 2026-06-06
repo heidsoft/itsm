@@ -11,6 +11,7 @@
 
 - `cd itsm-frontend && npm run type-check`
 - `cd itsm-frontend && npm run build`
+- `docker compose --env-file .env.prod -f docker-compose.prod.yml build itsm-backend itsm-frontend`
 - `docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --no-deps --build itsm-frontend`
 - `docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"`
 
@@ -134,6 +135,44 @@
 | `/api/v1/system-configs/status` | 可正常返回 CPU / memory / goroutines 等运行状态 |
 | 配置详情 / 更新验证 | 因当前无初始化配置数据，未能执行真实配置项更新回滚 |
 
+## 重建后回归
+
+本轮在确认“今天前后端源码已有较多改动”后，执行了完整的重建后验证：
+
+| 项目 | 结果 |
+| --- | --- |
+| 前端生产镜像 | 重新 build 成功 |
+| 后端生产镜像 | 重新 build 成功 |
+| 生产服务 | `itsm-backend-prod`、`itsm-frontend-prod`、`itsm-nginx-prod`、`postgres`、`redis`、`minio` 全部 `healthy` |
+| 前端连通性 | `http://127.0.0.1:3000/login` 返回 `HTTP 200` |
+| 后端连通性 | `http://127.0.0.1:8090/api/v1/health` 返回 `HTTP 200` |
+| 管理员登录 | 通过 `/api/v1/auth/login` 成功获取 token 并可访问 `/api/v1/auth/me` |
+| 关键统计接口 | `/knowledge/stats`、`/releases/stats`、`/sla/stats`、`/configuration-items/stats` 均返回 `code = 0` |
+
+### 重建后浏览器烟测
+
+使用 `itsm-frontend/screenshot.js` 基于 Playwright 对以下页面执行了登录后截图烟测：
+
+`/dashboard`、`/tickets`、`/incidents`、`/problems`、`/changes`、`/knowledge`、`/workflow/designer`、`/workflow/dashboard`、`/sla-monitor`、`/cmdb`、`/assets`、`/msp/management`
+
+截图已保存到 `docs/images/`。
+
+### 重建后新增问题
+
+| 编号 | 页面/模块 | 现象 | 判断 |
+| --- | --- | --- | --- |
+| WF-01 | `/workflow/designer` | 控制台报错 `unsupported configuration <keyboard.bindTo>`，随后 `Failed to create blank diagram: Error: no diagram to display` | BPMN 设计器初始化与当前 `bpmn-js` 配置不兼容 |
+| WF-02 | `/workflow/dashboard` | 页面请求返回 `HTTP 404`，控制台记录 `Failed to fetch dashboard metrics` | 前端 `bpmn-dashboard-api` 与后端已注册路由不匹配，存在接口路径偏差 |
+
+### 重建后修复与复测
+
+已对上述两条工作流问题完成前端修复并重新 build 镜像、重启前端服务：
+
+| 编号 | 修复 | 结果 |
+| --- | --- | --- |
+| WF-01 | `BPMNDesigner` 去掉已不兼容的 `keyboard.bindTo` 配置，空白流程改为 `modeler.createDiagram()` 初始化 | 复测通过，`/workflow/designer` 无控制台报错，截图成功 |
+| WF-02 | `bpmn-dashboard-api` 统一补全 `/api/v1/bpmn/dashboard` 前缀 | 复测通过，`/workflow/dashboard` 正常打开并完成截图 |
+
 ## 已修复问题
 
 1. `/admin/groups` 渲染角色权限对象时触发 React 错误边界。
@@ -148,9 +187,19 @@
    - 原因: Dockerfile 构建阶段和 healthcheck 使用 `sh`/`wget`，distroless runtime 不提供 shell。
    - 修复: 改为 Alpine 静态二进制运行环境，创建非 root 用户并保留 HTTP healthcheck。
 
+4. `/workflow/designer` 空白流程初始化失败。
+   - 原因: 当前 `bpmn-js` 版本不再接受 `keyboard.bindTo` 显式绑定，且手写极简 BPMN XML 不能稳定生成可展示图。
+   - 修复: 移除不兼容键盘绑定，改用 `modeler.createDiagram()` 初始化空白流程图。
+
+5. `/workflow/dashboard` 请求路径不匹配导致 404。
+   - 原因: 前端 API 使用 `/bpmn/dashboard/*`，后端实际注册在 `/api/v1/bpmn/dashboard/*`。
+   - 修复: `bpmn-dashboard-api` 统一改为 `/api/v1/bpmn/dashboard` 基路径。
+
 ## 限制与说明
 
 - Playwright CLI 在当前 macOS 沙箱中无法启动 Chromium，报 `MachPortRendezvousServer Permission denied (1100)`，因此浏览器验证改用 Chrome 插件完成。
+- 本轮重建后浏览器烟测改用仓库内 `itsm-frontend/screenshot.js` 执行，登录和主路径截图成功，但暴露出两条工作流相关前端问题（见 `WF-01`、`WF-02`）。
 - 生产前端重建期间出现多次外部 TLS 连接重试，最终构建成功并重启 `itsm-frontend-prod`，容器状态为 healthy。
+- 后端重建最初被 `alpine:3.20` 拉取超时阻塞，重试后成功下载并完成镜像构建。
 - `incident/escalate` 与 `change/submit` 不是空 body 动作接口，调用时必须提交 JSON 请求体；使用正确请求体后接口行为正常。
 - 系统配置模块当前缺少初始化数据，导致配置列表为空；这更像环境准备缺口，不是接口崩溃。

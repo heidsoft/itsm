@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Layout, Button, Tooltip, Badge, Dropdown, message, Breadcrumb } from 'antd';
-import { PanelLeftClose, PanelLeftOpen, Bell, Globe, Home } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, Bell, Globe, Home, Moon, Sun } from 'lucide-react';
+import { useTheme } from '@/lib/design-system/theme';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { DESIGN } from '@/design-system/tokens';
@@ -53,6 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout, token } = useAuthStore();
+  const { isDark, toggleTheme } = useTheme();
   const { language, changeLanguage } = useI18n();
   useAuthStoreHydration();
 
@@ -254,6 +256,30 @@ export const Header: React.FC<HeaderProps> = ({
                 <Bell size={18} style={{ color: DESIGN.colors.textMuted }} />
               </Button>
             </Badge>
+          </Tooltip>
+
+          {/* 主题切换 */}
+          <Tooltip title={isDark ? '切换到亮色' : '切换到暗色'}>
+            <Button
+              type="text"
+              onClick={toggleTheme}
+              aria-label={isDark ? '切换到亮色' : '切换到暗色'}
+              title={isDark ? '切换到亮色' : '切换到暗色'}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: DESIGN.radius.md,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {isDark ? (
+                <Sun size={18} style={{ color: DESIGN.colors.textMuted }} />
+              ) : (
+                <Moon size={18} style={{ color: DESIGN.colors.textMuted }} />
+              )}
+            </Button>
           </Tooltip>
 
           {/* 语言切换 */}

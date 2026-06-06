@@ -135,6 +135,7 @@ export interface BottleneckInfo {
 }
 
 export class BPMNDashboardApi {
+  private static readonly baseUrl = '/api/v1/bpmn/dashboard';
   /**
    * 获取仪表盘指标
    */
@@ -143,7 +144,7 @@ export class BPMNDashboardApi {
     if (startTime) params.append('start_time', startTime);
     if (endTime) params.append('end_time', endTime);
 
-    return httpClient.get<DashboardMetrics>(`/bpmn/dashboard/metrics?${params}`);
+    return httpClient.get<DashboardMetrics>(`${this.baseUrl}/metrics?${params}`);
   }
 
   /**
@@ -157,7 +158,7 @@ export class BPMNDashboardApi {
     if (startTime) params.append('start_time', startTime);
     if (endTime) params.append('end_time', endTime);
 
-    return httpClient.get<ProcessMetrics>(`/bpmn/dashboard/process/${key}/metrics?${params}`);
+    return httpClient.get<ProcessMetrics>(`${this.baseUrl}/process/${key}/metrics?${params}`);
   }
 
   /**
@@ -171,14 +172,14 @@ export class BPMNDashboardApi {
       }
     });
 
-    return httpClient.get<{ list: ProcessAuditLog[]; total: number; page: number }>(`/bpmn/dashboard/audit-logs?${params}`);
+    return httpClient.get<{ list: ProcessAuditLog[]; total: number; page: number }>(`${this.baseUrl}/audit-logs?${params}`);
   }
 
   /**
    * 获取流程时间线
    */
   static async getProcessTimeline(processInstanceKey: string): Promise<ProcessAuditLog[]> {
-    return httpClient.get<ProcessAuditLog[]>(`/bpmn/dashboard/audit-logs/timeline?process_instance_key=${processInstanceKey}`);
+    return httpClient.get<ProcessAuditLog[]>(`${this.baseUrl}/audit-logs/timeline?process_instance_key=${processInstanceKey}`);
   }
 
   /**
@@ -191,14 +192,14 @@ export class BPMNDashboardApi {
     if (startTime) params.append('start_time', startTime);
     if (endTime) params.append('end_time', endTime);
 
-    return httpClient.get<ProcessAuditLog[]>(`/bpmn/dashboard/audit-logs/user/${userId}?${params}`);
+    return httpClient.get<ProcessAuditLog[]>(`${this.baseUrl}/audit-logs/user/${userId}?${params}`);
   }
 
   /**
    * 获取SLA违规
    */
   static async getSLAViolations(tenantId: number): Promise<SLAViolation[]> {
-    return httpClient.get<SLAViolation[]>(`/bpmn/dashboard/sla/violations?tenant_id=${tenantId}`);
+    return httpClient.get<SLAViolation[]>(`${this.baseUrl}/sla/violations?tenant_id=${tenantId}`);
   }
 
   /**
@@ -216,21 +217,21 @@ export class BPMNDashboardApi {
     if (startTime) params.append('start_time', startTime);
     if (endTime) params.append('end_time', endTime);
 
-    return httpClient.get<{ compliance_rate: number; compliant: number; total: number }>(`/bpmn/dashboard/sla/compliance?${params}`);
+    return httpClient.get<{ compliance_rate: number; compliant: number; total: number }>(`${this.baseUrl}/sla/compliance?${params}`);
   }
 
   /**
    * 获取租户统计
    */
   static async getTenantStats(tenantId: number): Promise<TenantBPMNStats> {
-    return httpClient.get<TenantBPMNStats>(`/bpmn/dashboard/tenant/stats?tenant_id=${tenantId}`);
+    return httpClient.get<TenantBPMNStats>(`${this.baseUrl}/tenant/stats?tenant_id=${tenantId}`);
   }
 
   /**
    * 获取瓶颈分析
    */
   static async getBottleneckAnalysis(key: string, tenantId: number): Promise<BottleneckInfo[]> {
-    return httpClient.get<BottleneckInfo[]>(`/bpmn/dashboard/bottlenecks?key=${key}&tenant_id=${tenantId}`);
+    return httpClient.get<BottleneckInfo[]>(`${this.baseUrl}/bottlenecks?key=${key}&tenant_id=${tenantId}`);
   }
 }
 

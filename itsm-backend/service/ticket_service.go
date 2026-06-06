@@ -184,8 +184,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}()
 	}
 
-	// 通知（如果分配了处理人）- 异步执行，不阻塞主流程
-	if s.notificationService != nil && ticket.AssigneeID > 0 {
+	// 通知 - 异步执行，不阻塞主流程
+	// 总是发送通知(无论是处理人/创建人/管理员)
+	if s.notificationService != nil {
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()

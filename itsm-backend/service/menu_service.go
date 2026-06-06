@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -221,6 +222,7 @@ func (s *MenuService) GetUserMenus(ctx context.Context, userID int, tenantID int
 
 	// 获取用户的权限列表
 	permissions := s.getUserPermissions(ctx, userEntity, tenantID)
+	roleCodes := collectUserRoleCodes(userEntity)
 
 	// 获取所有启用的菜单
 	allMenus, err := s.client.Menu.Query().
@@ -236,7 +238,7 @@ func (s *MenuService) GetUserMenus(ctx context.Context, userID int, tenantID int
 	}
 
 	// 根据权限过滤菜单
-	filteredMenus := s.filterMenusByPermission(allMenus, permissions)
+	filteredMenus := s.filterMenusByPermission(allMenus, permissions, roleCodes)
 
 	// 构建菜单树
 	mainMenus, adminMenus := s.buildMenuTree(filteredMenus)
@@ -297,10 +299,14 @@ func (s *MenuService) getUserPermissions(ctx context.Context, userEntity *ent.Us
 }
 
 // filterMenusByPermission 根据权限过滤菜单
-func (s *MenuService) filterMenusByPermission(menus []*ent.Menu, permissions map[string]bool) []*ent.Menu {
+func (s *MenuService) filterMenusByPermission(menus []*ent.Menu, permissions map[string]bool, roleCodes map[string]bool) []*ent.Menu {
 	filtered := make([]*ent.Menu, 0)
 
 	for _, m := range menus {
+		if shouldRestrictMenuForRole(m.Path, roleCodes) {
+			continue
+		}
+
 		// 如果没有权限要求，或者用户有权限，则包含
 		if m.PermissionCode == "" {
 			filtered = append(filtered, m)
@@ -361,6 +367,61 @@ func (s *MenuService) filterMenusByPermission(menus []*ent.Menu, permissions map
 	}
 
 	return filtered
+}
+
+func collectUserRoleCodes(userEntity *ent.User) map[string]bool {
+	roleCodes := make(map[string]bool)
+
+	if userEntity.Role != "" {
+		roleCodes[strings.ToLower(string(userEntity.Role))] = true
+	}
+
+	if userEntity.Edges.Roles != nil {
+		for _, r := range userEntity.Edges.Roles {
+			if r.Code != "" {
+				roleCodes[strings.ToLower(r.Code)] = true
+			}
+		}
+	}
+
+	return roleCodes
+}
+
+func shouldRestrictMenuForRole(path string, roleCodes map[string]bool) bool {
+	if path == "" || isElevatedMenuRole(roleCodes) {
+		return false
+	}
+
+	restrictedPrefixes := []string{
+		"/admin",
+		"/enterprise",
+		"/system",
+		"/workflow",
+	}
+
+	for _, prefix := range restrictedPrefixes {
+		if strings.HasPrefix(path, prefix) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isElevatedMenuRole(roleCodes map[string]bool) bool {
+	elevatedRoles := []string{
+		"super_admin",
+		"admin",
+		"manager",
+	}
+
+	for _, roleCode := range elevatedRoles {
+		if roleCodes[roleCode] {
+			return true
+		}
+	}
+
+	return false
 }
 
 // actionAliasMap 权限 Action 别名映射：前端使用的 action → 后端定义的 action

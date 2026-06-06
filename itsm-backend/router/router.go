@@ -845,20 +845,20 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if config.UserController != nil {
 				users := tenant.(*gin.RouterGroup).Group("/users")
 				{
-					users.GET("", config.UserController.ListUsers)
-					users.POST("", config.UserController.CreateUser)
-					users.GET("/:id", config.UserController.GetUser)
-					users.PUT("/:id", config.UserController.UpdateUser)
-					users.DELETE("/:id", config.UserController.DeleteUser)
-					users.PUT("/:id/status", config.UserController.ChangeUserStatus)
-					users.PUT("/:id/reset-password", config.UserController.ResetPassword)
-					users.GET("/stats", config.UserController.GetUserStats)
-					users.POST("/batch", config.UserController.BatchUpdateUsers)
+					users.GET("", middleware.RequirePermission("user", "read"), config.UserController.ListUsers)
+					users.POST("", middleware.RequirePermission("user", "write"), config.UserController.CreateUser)
+					users.GET("/:id", middleware.RequirePermission("user", "read"), config.UserController.GetUser)
+					users.PUT("/:id", middleware.RequirePermission("user", "write"), config.UserController.UpdateUser)
+					users.DELETE("/:id", middleware.RequirePermission("user", "delete"), config.UserController.DeleteUser)
+					users.PUT("/:id/status", middleware.RequirePermission("user", "write"), config.UserController.ChangeUserStatus)
+					users.PUT("/:id/reset-password", middleware.RequirePermission("user", "write"), config.UserController.ResetPassword)
+					users.GET("/stats", middleware.RequirePermission("user", "read"), config.UserController.GetUserStats)
+					users.POST("/batch", middleware.RequirePermission("user", "write"), config.UserController.BatchUpdateUsers)
 				}
 			} else {
 				users := tenant.(*gin.RouterGroup).Group("/users")
 				{
-					users.GET("", config.CommonHandler.ListUsers)
+					users.GET("", middleware.RequirePermission("user", "read"), config.CommonHandler.ListUsers)
 				}
 			}
 
@@ -900,6 +900,47 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					projects.PUT("/:id", config.ProjectController.UpdateProject)
 					projects.DELETE("/:id", config.ProjectController.DeleteProject)
 				}
+			}
+
+			// Applications
+			if config.ApplicationController != nil {
+				applications := tenant.(*gin.RouterGroup).Group("/applications")
+				{
+					applications.GET("", config.ApplicationController.ListApplications)
+					applications.POST("", config.ApplicationController.CreateApplication)
+					applications.GET("/microservices", config.ApplicationController.ListMicroservices)
+					applications.POST("/microservices", config.ApplicationController.CreateMicroservice)
+				}
+			}
+
+			// Service Catalog & Service Requests
+			if config.ServiceController != nil {
+				services := tenant.(*gin.RouterGroup).Group("/services")
+				{
+					services.GET("/catalogs", config.ServiceController.GetServiceCatalogs)
+					services.POST("/catalogs", config.ServiceController.CreateServiceCatalog)
+					services.GET("/catalogs/:id", config.ServiceController.GetServiceCatalogByID)
+					services.PUT("/catalogs/:id", config.ServiceController.UpdateServiceCatalog)
+					services.DELETE("/catalogs/:id", config.ServiceController.DeleteServiceCatalog)
+					services.GET("/requests", config.ServiceController.GetUserServiceRequests)
+					services.POST("/requests", config.ServiceController.CreateServiceRequest)
+					services.GET("/requests/:id", config.ServiceController.GetServiceRequestByID)
+					services.PUT("/requests/:id/status", config.ServiceController.UpdateServiceRequestStatus)
+					services.POST("/requests/approval", config.ServiceController.ApplyServiceRequestApproval)
+					services.GET("/requests/approvals", config.ServiceController.GetServiceRequestApprovals)
+					services.GET("/requests/approvals/pending", config.ServiceController.GetPendingServiceRequestApprovals)
+				}
+			}
+
+			// Ticket Dependencies
+			if config.TicketDependencyController != nil {
+				tickets.GET("/:id/dependencies", config.TicketDependencyController.AnalyzeDependencyImpact)
+			}
+
+			// Ticket Notifications
+			if config.TicketNotificationController != nil {
+				tickets.GET("/:id/notifications", config.TicketNotificationController.ListTicketNotifications)
+				tickets.POST("/:id/notifications", config.TicketNotificationController.SendTicketNotification)
 			}
 
 			// System
