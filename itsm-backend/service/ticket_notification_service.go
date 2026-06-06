@@ -14,6 +14,11 @@ import (
 	"go.uber.org/zap"
 )
 
+
+func stringPtr(s string) *string {
+	return &s
+}
+
 type TicketNotificationService struct {
 	client       *ent.Client
 	logger       *zap.SugaredLogger
@@ -107,6 +112,17 @@ func (s *TicketNotificationService) SendNotification(
 				continue
 			}
 
+			// 同步创建到通用notifications表(供前端统一查询)
+				_, _ = s.client.Notification.Create().
+					SetTitle(req.Type).
+					SetMessage(req.Content).
+					SetType(req.Type).
+					SetUserID(userID).
+					SetTenantID(tenantID).
+					SetNillableActionURL(stringPtr(fmt.Sprintf("/tickets/%d", ticketID))).
+					SetNillableActionText(stringPtr("查看工单")).
+					Save(ctx)
+
 			// 如果是站内消息，立即标记为已发送
 			if req.Channel == "in_app" {
 				_, err = s.client.TicketNotification.UpdateOneID(notification.ID).
@@ -182,17 +198,65 @@ func (s *TicketNotificationService) SendNotification(
 }
 
 // NotifyTicketCreated 工单创建时发送通知
+// 通知目标:
+//   1. 工单处理人(AssigneeID),如果有
+//   2. 工单创建人(ReporterID),如果是普通用户
+//   3. 所有租户内管理员(如果没有处理人)
 func (s *TicketNotificationService) NotifyTicketCreated(ctx context.Context, ticket *ent.Ticket) error {
+	userIDs := []int{}
+
+	// 1. 处理人
 	if ticket.AssigneeID > 0 {
-		content := fmt.Sprintf("您被分配了一个新工单：%s (#%s)", ticket.Title, ticket.TicketNumber)
-		return s.SendNotification(ctx, ticket.ID, &dto.SendTicketNotificationRequest{
-			UserIDs: []int{ticket.AssigneeID},
-			Type:    "created",
-			Channel: "in_app",
-			Content: content,
-		}, ticket.TenantID)
+		userIDs = append(userIDs, ticket.AssigneeID)
 	}
-	return nil
+
+	// 2. 创建人(去重)
+	if ticket.RequesterID > 0 {
+		dup := false
+		for _, id := range userIDs {
+			if id == ticket.RequesterID {
+				dup = true
+				break
+			}
+		}
+		if !dup {
+			userIDs = append(userIDs, ticket.RequesterID)
+		}
+	}
+
+	// 3. 如果只有创建人(没有处理人),广播给所有admin
+	if len(userIDs) <= 1 && ticket.RequesterID > 0 {
+		admins, err := s.client.User.Query().
+			Where(user.TenantID(ticket.TenantID)).
+			Where(user.IDNEQ(ticket.RequesterID)).
+			All(ctx)
+		if err == nil {
+			for _, admin := range admins {
+				dup := false
+				for _, id := range userIDs {
+					if id == admin.ID {
+						dup = true
+						break
+					}
+				}
+				if !dup {
+					userIDs = append(userIDs, admin.ID)
+				}
+			}
+		}
+	}
+
+	if len(userIDs) == 0 {
+		return nil
+	}
+
+	content := fmt.Sprintf("新工单已创建：%s (#%s)", ticket.Title, ticket.TicketNumber)
+	return s.SendNotification(ctx, ticket.ID, &dto.SendTicketNotificationRequest{
+		UserIDs: userIDs,
+		Type:    "created",
+		Channel: "in_app",
+		Content: content,
+	}, ticket.TenantID)
 }
 
 // NotifyTicketAssigned 工单分配时发送通知

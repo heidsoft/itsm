@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"net/http"
 	"strconv"
 
 	"itsm-backend/common"
@@ -158,10 +157,7 @@ func (h *DashboardHandler) GetOverview(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    5001,
-			"message": "获取租户ID失败",
-		})
+		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
 		return
 	}
 
@@ -169,10 +165,7 @@ func (h *DashboardHandler) GetOverview(c *gin.Context) {
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get dashboard overview", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    5001,
-			"message": "获取Dashboard数据失败",
-		})
+		common.Fail(c, common.InternalErrorCode, "获取Dashboard数据失败")
 		return
 	}
 
@@ -347,18 +340,18 @@ func (h *DashboardHandler) GetKPIMetrics(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取租户ID失败"})
+		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
 		return
 	}
 
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get dashboard overview", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取KPI指标失败"})
+		common.Fail(c, common.InternalErrorCode, "获取KPI指标失败")
 		return
 	}
 
-	c.JSON(http.StatusOK, convertKPIMetrics(overviewData.KPIMetrics))
+	common.Success(c, convertKPIMetrics(overviewData.KPIMetrics))
 }
 
 // GetTicketTrend 获取工单趋势数据
@@ -375,7 +368,7 @@ func (h *DashboardHandler) GetTicketTrend(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取租户ID失败"})
+		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
 		return
 	}
 
@@ -388,11 +381,11 @@ func (h *DashboardHandler) GetTicketTrend(c *gin.Context) {
 	trend, err := h.dashboardService.GetTicketTrend(c.Request.Context(), tenantID, days)
 	if err != nil {
 		h.logger.Errorw("Failed to get ticket trend", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取工单趋势失败"})
+		common.Fail(c, common.InternalErrorCode, "获取工单趋势失败")
 		return
 	}
 
-	c.JSON(http.StatusOK, convertTicketTrend(trend))
+	common.Success(c, convertTicketTrend(trend))
 }
 
 // GetIncidentDistribution 获取事件分布数据
@@ -408,18 +401,18 @@ func (h *DashboardHandler) GetIncidentDistribution(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取租户ID失败"})
+		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
 		return
 	}
 
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get incident distribution", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取事件分布失败"})
+		common.Fail(c, common.InternalErrorCode, "获取事件分布失败")
 		return
 	}
 
-	c.JSON(http.StatusOK, convertIncidentDistribution(overviewData.IncidentDistribution))
+	common.Success(c, convertIncidentDistribution(overviewData.IncidentDistribution))
 }
 
 // GetSLAData 获取SLA数据
@@ -435,18 +428,18 @@ func (h *DashboardHandler) GetSLAData(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取租户ID失败"})
+		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
 		return
 	}
 
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get SLA data", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取SLA数据失败"})
+		common.Fail(c, common.InternalErrorCode, "获取SLA数据失败")
 		return
 	}
 
-	c.JSON(http.StatusOK, convertSLAData(overviewData.SLAData))
+	common.Success(c, convertSLAData(overviewData.SLAData))
 }
 
 // GetSatisfactionData 获取满意度数据
@@ -463,7 +456,7 @@ func (h *DashboardHandler) GetSatisfactionData(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取租户ID失败"})
+		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
 		return
 	}
 
@@ -476,7 +469,7 @@ func (h *DashboardHandler) GetSatisfactionData(c *gin.Context) {
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get satisfaction data", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取满意度数据失败"})
+		common.Fail(c, common.InternalErrorCode, "获取满意度数据失败")
 		return
 	}
 
@@ -487,7 +480,7 @@ func (h *DashboardHandler) GetSatisfactionData(c *gin.Context) {
 		data = data[len(data)-months:]
 	}
 
-	c.JSON(http.StatusOK, data)
+	common.Success(c, data)
 }
 
 // GetQuickActions 获取快速操作列表
@@ -555,7 +548,7 @@ func (h *DashboardHandler) GetQuickActions(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, filteredActions)
+	common.Success(c, filteredActions)
 }
 
 // GetRecentActivities 获取最近活动
@@ -572,7 +565,7 @@ func (h *DashboardHandler) GetRecentActivities(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取租户ID失败"})
+		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
 		return
 	}
 
@@ -585,7 +578,7 @@ func (h *DashboardHandler) GetRecentActivities(c *gin.Context) {
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get recent activities", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 5001, "message": "获取最近活动失败"})
+		common.Fail(c, common.InternalErrorCode, "获取最近活动失败")
 		return
 	}
 
@@ -596,7 +589,7 @@ func (h *DashboardHandler) GetRecentActivities(c *gin.Context) {
 		activities = activities[:limit]
 	}
 
-	c.JSON(http.StatusOK, activities)
+	common.Success(c, activities)
 }
 
 // GetStats 获取仪表盘统计数据（兼容前端 /api/v1/dashboard/stats）

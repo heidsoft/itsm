@@ -51,9 +51,6 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
 
     const modeler = new BpmnModeler({
       container: containerRef.current,
-      keyboard: {
-        bindTo: window,
-      },
     });
 
     modelerRef.current = modeler;
@@ -65,14 +62,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         message.error('加载流程图失败');
       });
     } else {
-      // 创建空白流程
-      const blankXML = `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL">
-  <bpmn:process id="Process_1" name="新流程" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="开始"/>
-  </bpmn:process>
-</bpmn:definitions>`;
-      modeler.importXML(blankXML).catch((err: Error) => {
+      modeler.createDiagram().catch((err: Error) => {
         console.error('Failed to create blank diagram:', err);
       });
     }
