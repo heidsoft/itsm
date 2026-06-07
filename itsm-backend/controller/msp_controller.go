@@ -49,29 +49,29 @@ func (mc *MSPController) GetMSPStatus(c *gin.Context) {
 	isAdmin := userRole == "super_admin" || userRole == "admin"
 
 	if exists && mspCtx.IsMSP {
-		common.Success(c, gin.H{
-			"is_msp":      true,
-			"msp_user_id": mspCtx.MSPUserID,
-			"role":        mspCtx.Role,
-			"is_admin":    isAdmin,
+		common.Success(c, dto.MSPStatusResponse{
+			IsMSP:     true,
+			MSPUserID: mspCtx.MSPUserID,
+			Role:      mspCtx.Role,
+			IsAdmin:   isAdmin,
 		})
 		return
 	}
 
 	// 如果是管理员，返回管理员状态但不标记为MSP员工
 	if isAdmin {
-		common.Success(c, gin.H{
-			"is_msp":   false,
-			"is_admin": true,
-			"message":  "管理员模式：可配置MSP功能",
+		common.Success(c, dto.MSPStatusResponse{
+			IsMSP:   false,
+			IsAdmin: true,
+			Message: "管理员模式：可配置MSP功能",
 		})
 		return
 	}
 
-	common.Success(c, gin.H{
-		"is_msp":   false,
-		"is_admin": false,
-		"message":  "非MSP用户",
+	common.Success(c, dto.MSPStatusResponse{
+		IsMSP:   false,
+		IsAdmin: false,
+		Message: "非MSP用户",
 	})
 }
 
@@ -85,18 +85,18 @@ func (mc *MSPController) GetMSPStatus(c *gin.Context) {
 func (mc *MSPController) GetMSPContext(c *gin.Context) {
 	mspCtx, exists := middleware.GetMSPContext(c)
 	if !exists || !mspCtx.IsMSP {
-		common.Success(c, gin.H{
-			"is_msp": false,
+		common.Success(c, dto.MSPContext{
+			IsMSP: false,
 		})
 		return
 	}
 
-	common.Success(c, gin.H{
-		"is_msp":             mspCtx.IsMSP,
-		"msp_user_id":        mspCtx.MSPUserID,
-		"customer_tenant_id": mspCtx.CustomerTenantID,
-		"role":               mspCtx.Role,
-		"allowed_customers":  mspCtx.AllowedCustomers,
+	common.Success(c, dto.MSPContext{
+		IsMSP:            mspCtx.IsMSP,
+		MSPUserID:        mspCtx.MSPUserID,
+		CustomerTenantID: mspCtx.CustomerTenantID,
+		Role:             mspCtx.Role,
+		AllowedCustomers: mspCtx.AllowedCustomers,
 	})
 }
 
@@ -124,9 +124,9 @@ func (mc *MSPController) GetAllocations(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{
-		"allocations": allocations,
-		"total":       len(allocations),
+	common.Success(c, dto.MSPAllocationListResponse{
+		Allocations: allocations,
+		Total:       len(allocations),
 	})
 }
 
@@ -229,9 +229,18 @@ func (mc *MSPController) GetAllCustomers(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{
-		"customers": customers,
-		"total":     len(customers),
+	customerDTOs := make([]*dto.CustomerDTO, 0, len(customers))
+	for _, customer := range customers {
+		customerDTOs = append(customerDTOs, &dto.CustomerDTO{
+			ID:   customer.ID,
+			Code: customer.Code,
+			Name: customer.Name,
+		})
+	}
+
+	common.Success(c, dto.MSPCustomerListResponse{
+		Customers: customerDTOs,
+		Total:     len(customerDTOs),
 	})
 }
 
@@ -371,9 +380,9 @@ func (mc *MSPController) GetCustomerReports(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{
-		"reports": reports,
-		"total":   len(reports),
+	common.Success(c, dto.MSPReportListResponse[dto.MSPCustomerReport]{
+		Reports: reports,
+		Total:   len(reports),
 	})
 }
 
@@ -427,8 +436,8 @@ func (mc *MSPController) GetPerformanceReports(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{
-		"reports": reports,
-		"total":   len(reports),
+	common.Success(c, dto.MSPReportListResponse[dto.MSPPerformanceReport]{
+		Reports: reports,
+		Total:   len(reports),
 	})
 }
