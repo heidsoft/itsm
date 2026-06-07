@@ -45,7 +45,6 @@ import dayjs from 'dayjs';
 import {
   TicketNotificationApi,
   TicketNotification,
-  NotificationPreferencesResponse,
   NotificationPreferenceItem,
 } from '@/lib/api/ticket-notification-api';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -53,8 +52,16 @@ import { notificationWS } from '@/lib/services/notification-ws';
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
+
+const normalizeNotification = (notification: TicketNotification): TicketNotification => ({
+  ...notification,
+  createdAt: notification.createdAt || notification.created_at,
+  readAt: notification.readAt || notification.read_at,
+  sentAt: notification.sentAt || notification.sent_at,
+  ticketId: notification.ticketId || notification.ticket_id,
+  userId: notification.userId || notification.user_id,
+});
 
 // 通知事件类型配置
 const EVENT_TYPES = [
@@ -149,10 +156,10 @@ export default function NotificationsPage() {
         TicketNotificationApi.getUserNotifications({ page: 1, page_size: 100, read: true }),
       ]);
 
-      const all = allRes.notifications || [];
+      const all = (allRes.notifications || []).map(normalizeNotification);
       setNotifications(all);
-      setUnreadNotifications(unreadRes.notifications || []);
-      setReadNotifications(readRes.notifications || []);
+      setUnreadNotifications((unreadRes.notifications || []).map(normalizeNotification));
+      setReadNotifications((readRes.notifications || []).map(normalizeNotification));
     } catch (error) {
       message.error(t('notifications.loadFailed'));
       console.error('Failed to load notifications:', error);
@@ -200,8 +207,9 @@ export default function NotificationsPage() {
 
       // 监听新通知
       const unsubscribe = notificationWS.onNotification(notification => {
-        setNotifications(prev => [notification, ...prev]);
-        setUnreadNotifications(prev => [notification, ...prev]);
+        const normalized = normalizeNotification(notification);
+        setNotifications(prev => [normalized, ...prev]);
+        setUnreadNotifications(prev => [normalized, ...prev]);
         message.info(notification.content);
       });
 
@@ -552,6 +560,171 @@ export default function NotificationsPage() {
     </Row>
   );
 
+  const tabItems = [
+    {
+      key: 'all',
+      label: (
+        <span>
+          <Bell className="mr-1 inline h-4 w-4" />
+          {t('notifications.allNotifications')}
+          {filteredUnreadNotifications.length > 0 && (
+            <Badge count={filteredUnreadNotifications.length} className="ml-2" />
+          )}
+        </span>
+      ),
+      children: (
+        <Card>
+          {renderFilterBar()}
+          <div className="mb-4 flex items-center justify-between">
+            <Text>
+              {t('notifications.totalNotifications', { total: filteredNotifications.length })},
+              {t('notifications.unreadCount', { count: filteredUnreadNotifications.length })}
+            </Text>
+            <Space>
+              {filteredUnreadNotifications.length > 0 && (
+                <Button onClick={handleMarkAllRead}>{t('notifications.markAllRead')}</Button>
+              )}
+              {filteredNotifications.length > 0 && (
+                <Popconfirm
+                  title={t('notifications.clearAll')}
+                  description={t('notifications.deleteRead')}
+                  onConfirm={handleClearAll}
+                >
+                  <Button danger icon={<Delete className="h-4 w-4" />}>
+                    {t('notifications.clearAll')}
+                  </Button>
+                </Popconfirm>
+              )}
+            </Space>
+          </div>
+          <Spin spinning={loading}>{renderNotificationList(filteredNotifications)}</Spin>
+        </Card>
+      ),
+    },
+    {
+      key: 'unread',
+      label: (
+        <span>
+          <Clock className="mr-1 inline h-4 w-4" />
+          {t('notifications.unread')}
+          {filteredUnreadNotifications.length > 0 && (
+            <Badge count={filteredUnreadNotifications.length} className="ml-2" />
+          )}
+        </span>
+      ),
+      children: (
+        <Card>
+          {renderFilterBar()}
+          <Spin spinning={loading}>{renderNotificationList(filteredUnreadNotifications)}</Spin>
+        </Card>
+      ),
+    },
+    {
+      key: 'read',
+      label: (
+        <span>
+          <CheckCircle className="mr-1 inline h-4 w-4" />
+          {t('notifications.read')}
+        </span>
+      ),
+      children: (
+        <Card>
+          {renderFilterBar()}
+          <Spin spinning={loading}>{renderNotificationList(filteredReadNotifications)}</Spin>
+        </Card>
+      ),
+    },
+    {
+      key: 'preferences',
+      label: (
+        <span>
+          <Settings className="mr-1 inline h-4 w-4" />
+          {t('notifications.preferences')}
+        </span>
+      ),
+      children: (
+        <Card>
+          <div className="mb-4 flex items-center justify-between">
+            <Title level={4}>{t('notifications.preferences')}</Title>
+            <Button icon={<RotateCcw className="h-4 w-4" />} onClick={handleResetPreferences}>
+              {t('notifications.resetDefault')}
+            </Button>
+          </div>
+          <Spin spinning={preferencesLoading}>
+            <Form form={form} layout="vertical" onFinish={handleSavePreferences}>
+              <Row gutter={[16, 16]}>
+                <Col xs={24} md={8}>
+                  <Text strong>{t('notifications.eventTypes')}</Text>
+                </Col>
+                <Col xs={24} md={5}>
+                  <Text strong className="flex items-center">
+                    <Mail className="mr-1 h-4 w-4" /> {t('notifications.emailEnabled')}
+                  </Text>
+                </Col>
+                <Col xs={24} md={5}>
+                  <Text strong className="flex items-center">
+                    <MessageSquare className="mr-1 h-4 w-4" /> {t('notifications.inAppEnabled')}
+                  </Text>
+                </Col>
+                <Col xs={24} md={6}>
+                  <Text strong className="flex items-center">
+                    <Smartphone className="mr-1 h-4 w-4" /> {t('notifications.smsEnabled')}
+                  </Text>
+                </Col>
+              </Row>
+              <Divider />
+              {EVENT_TYPES.map(event => (
+                <Row key={event.type} gutter={[16, 16]} align="middle" className="mb-2">
+                  <Col xs={24} md={8}>
+                    <div>
+                      <Text>{t(event.nameKey as any)}</Text>
+                      <br />
+                      <Text type="secondary" className="text-xs">
+                        {t(event.descKey as any)}
+                      </Text>
+                    </div>
+                  </Col>
+                  <Col xs={24} md={5}>
+                    <Form.Item name={`${event.type}_email`} valuePropName="checked" noStyle>
+                      <Switch
+                        checkedChildren={t('workflow.statusEnabled')}
+                        unCheckedChildren={t('workflow.statusDisabled')}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={5}>
+                    <Form.Item name={`${event.type}_in_app`} valuePropName="checked" noStyle>
+                      <Switch
+                        checkedChildren={t('workflow.statusEnabled')}
+                        unCheckedChildren={t('workflow.statusDisabled')}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Form.Item name={`${event.type}_sms`} valuePropName="checked" noStyle>
+                      <Switch
+                        checkedChildren={t('workflow.statusEnabled')}
+                        unCheckedChildren={t('workflow.statusDisabled')}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              ))}
+
+              <Divider />
+
+              <Form.Item>
+                <Button type="primary" htmlType="submit">
+                  {t('notifications.saveSettings')}
+                </Button>
+              </Form.Item>
+            </Form>
+          </Spin>
+        </Card>
+      ),
+    },
+  ];
+
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -561,180 +734,18 @@ export default function NotificationsPage() {
             title={wsConnected ? t('notifications.wsConnected') : t('notifications.wsDisconnected')}
           >
             {wsConnected ? (
-              <Wifi className="w-5 h-5 text-green-500" />
+              <Wifi className="h-5 w-5 text-green-500" />
             ) : (
-              <WifiOff className="w-5 h-5 text-red-500" />
+              <WifiOff className="h-5 w-5 text-red-500" />
             )}
           </Tooltip>
-          <Button icon={<RefreshCw className="w-4 h-4" />} onClick={loadNotifications}>
+          <Button icon={<RefreshCw className="h-4 w-4" />} onClick={loadNotifications}>
             {t('workflow.refresh')}
           </Button>
         </Space>
       </div>
 
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane
-          tab={
-            <span>
-              <Bell className="w-4 h-4 inline mr-1" />
-              {t('notifications.allNotifications')}
-              {filteredUnreadNotifications.length > 0 && (
-                <Badge count={filteredUnreadNotifications.length} className="ml-2" />
-              )}
-            </span>
-          }
-          key="all"
-        >
-          <Card>
-            {renderFilterBar()}
-            <div className="mb-4 flex justify-between items-center">
-              <Text>
-                {t('notifications.totalNotifications', { total: filteredNotifications.length })},
-                {t('notifications.unreadCount', { count: filteredUnreadNotifications.length })}
-              </Text>
-              <Space>
-                {filteredUnreadNotifications.length > 0 && (
-                  <Button onClick={handleMarkAllRead}>{t('notifications.markAllRead')}</Button>
-                )}
-                {filteredNotifications.length > 0 && (
-                  <Popconfirm
-                    title={t('notifications.clearAll')}
-                    description={t('notifications.deleteRead')}
-                    onConfirm={handleClearAll}
-                  >
-                    <Button danger icon={<Delete className="w-4 h-4" />}>
-                      {t('notifications.clearAll')}
-                    </Button>
-                  </Popconfirm>
-                )}
-              </Space>
-            </div>
-            <Spin spinning={loading}>{renderNotificationList(filteredNotifications)}</Spin>
-          </Card>
-        </TabPane>
-
-        <TabPane
-          tab={
-            <span>
-              <Clock className="w-4 h-4 inline mr-1" />
-              {t('notifications.unread')}
-              {filteredUnreadNotifications.length > 0 && (
-                <Badge count={filteredUnreadNotifications.length} className="ml-2" />
-              )}
-            </span>
-          }
-          key="unread"
-        >
-          <Card>
-            {renderFilterBar()}
-            <Spin spinning={loading}>{renderNotificationList(filteredUnreadNotifications)}</Spin>
-          </Card>
-        </TabPane>
-
-        <TabPane
-          tab={
-            <span>
-              <CheckCircle className="w-4 h-4 inline mr-1" />
-              {t('notifications.read')}
-            </span>
-          }
-          key="read"
-        >
-          <Card>
-            {renderFilterBar()}
-            <Spin spinning={loading}>{renderNotificationList(filteredReadNotifications)}</Spin>
-          </Card>
-        </TabPane>
-
-        <TabPane
-          tab={
-            <span>
-              <Settings className="w-4 h-4 inline mr-1" />
-              {t('notifications.preferences')}
-            </span>
-          }
-          key="preferences"
-        >
-          <Card>
-            <div className="flex justify-between items-center mb-4">
-              <Title level={4}>{t('notifications.preferences')}</Title>
-              <Button icon={<RotateCcw className="w-4 h-4" />} onClick={handleResetPreferences}>
-                {t('notifications.resetDefault')}
-              </Button>
-            </div>
-            <Spin spinning={preferencesLoading}>
-              <Form form={form} layout="vertical" onFinish={handleSavePreferences}>
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} md={8}>
-                    <Text strong>{t('notifications.eventTypes')}</Text>
-                  </Col>
-                  <Col xs={24} md={5}>
-                    <Text strong className="flex items-center">
-                      <Mail className="w-4 h-4 mr-1" /> {t('notifications.emailEnabled')}
-                    </Text>
-                  </Col>
-                  <Col xs={24} md={5}>
-                    <Text strong className="flex items-center">
-                      <MessageSquare className="w-4 h-4 mr-1" /> {t('notifications.inAppEnabled')}
-                    </Text>
-                  </Col>
-                  <Col xs={24} md={6}>
-                    <Text strong className="flex items-center">
-                      <Smartphone className="w-4 h-4 mr-1" /> {t('notifications.smsEnabled')}
-                    </Text>
-                  </Col>
-                </Row>
-                <Divider />
-                {EVENT_TYPES.map(event => (
-                  <Row key={event.type} gutter={[16, 16]} align="middle" className="mb-2">
-                    <Col xs={24} md={8}>
-                      <div>
-                        <Text>{t(event.nameKey as any)}</Text>
-                        <br />
-                        <Text type="secondary" className="text-xs">
-                          {t(event.descKey as any)}
-                        </Text>
-                      </div>
-                    </Col>
-                    <Col xs={24} md={5}>
-                      <Form.Item name={`${event.type}_email`} valuePropName="checked" noStyle>
-                        <Switch
-                          checkedChildren={t('workflow.statusEnabled')}
-                          unCheckedChildren={t('workflow.statusDisabled')}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={5}>
-                      <Form.Item name={`${event.type}_in_app`} valuePropName="checked" noStyle>
-                        <Switch
-                          checkedChildren={t('workflow.statusEnabled')}
-                          unCheckedChildren={t('workflow.statusDisabled')}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={6}>
-                      <Form.Item name={`${event.type}_sms`} valuePropName="checked" noStyle>
-                        <Switch
-                          checkedChildren={t('workflow.statusEnabled')}
-                          unCheckedChildren={t('workflow.statusDisabled')}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                ))}
-
-                <Divider />
-
-                <Form.Item>
-                  <Button type="primary" htmlType="submit">
-                    {t('notifications.saveSettings')}
-                  </Button>
-                </Form.Item>
-              </Form>
-            </Spin>
-          </Card>
-        </TabPane>
-      </Tabs>
+      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
     </div>
   );
 }

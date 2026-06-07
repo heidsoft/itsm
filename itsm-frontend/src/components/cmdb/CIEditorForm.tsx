@@ -133,7 +133,7 @@ export function CIEditorForm({
         <Select placeholder="请选择数据来源" allowClear options={sourceOptions} />
       </Form.Item>
 
-      <Divider orientation="left">云资源信息</Divider>
+      <Divider>云资源信息</Divider>
 
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <Form.Item label="云厂商" name="cloud_provider">
@@ -174,7 +174,7 @@ export function CIEditorForm({
 
       {schemaFields.length > 0 && (
         <>
-          <Divider orientation="left">云资源动态属性</Divider>
+          <Divider>云资源动态属性</Divider>
           <div className="mb-3 text-sm text-slate-500">
             动态属性会跟随所选云资源类型变化，优先使用枚举选择，减少手填错误。
           </div>

@@ -81,6 +81,7 @@ func (tcc *TicketCommentController) CreateTicketComment(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	req.Normalize()
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
@@ -119,6 +120,7 @@ func (tcc *TicketCommentController) UpdateTicketComment(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	req.Normalize()
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
