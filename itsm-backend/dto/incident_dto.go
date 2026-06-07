@@ -108,6 +108,15 @@ type IncidentResponse struct {
 	UpdatedAt           time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
+type IncidentListResponse struct {
+	Incidents  []*IncidentResponse `json:"incidents"`
+	Items      []*IncidentResponse `json:"items,omitempty"`
+	Total      int                 `json:"total"`
+	Page       int                 `json:"page"`
+	PageSize   int                 `json:"pageSize"`
+	TotalPages int                 `json:"totalPages"`
+}
+
 // 事件活动记录DTO
 type CreateIncidentEventRequest struct {
 	IncidentID  int                    `json:"incidentId" binding:"required" example:"1"`
@@ -172,6 +181,13 @@ type IncidentAlertResponse struct {
 	TenantID       int                    `json:"tenantId" example:"1"`
 	CreatedAt      time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
 	UpdatedAt      time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
+}
+
+type IncidentAlertListResponse struct {
+	Items    []*IncidentAlertResponse `json:"items"`
+	Total    int                      `json:"total"`
+	Page     int                      `json:"page"`
+	PageSize int                      `json:"pageSize"`
 }
 
 // 事件指标DTO
