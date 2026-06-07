@@ -1,109 +1,102 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
-import {
-  Card,
-  Typography,
-  Tabs,
-  Row,
-  Col,
-  Select,
-  Button,
-  Space,
-  Alert,
-  Statistic,
-  Table,
-  Tag,
-  Progress,
-  App,
-  Spin,
-  Empty,
-} from 'antd';
-import {
-  BarChart3,
-  TrendingUp,
-  Download,
-  FileText,
-  PieChart,
-  Activity,
-  Clock,
-  CheckCircle,
-  Target,
-} from 'lucide-react';
+import { App, Button, Card, Select, Space, Tabs, Typography } from 'antd';
+import { Activity, BarChart3, Download, FileText, TrendingUp } from 'lucide-react';
+import { format, subDays } from 'date-fns';
+
+import { FilterToolbarCard } from '@/components/ui/FilterToolbarCard';
+import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
+import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
+import { StatsOverview } from '@/components/ui/StatsOverview';
 import {
   TicketAnalyticsApi,
   type AnalyticsConfig,
   type AnalyticsResponse,
 } from '@/lib/api/ticket-analytics-api';
-import { format, subDays } from 'date-fns';
 
-// 动态导入报告组件 - 减少初始 bundle 大小
 const ReportsCharts = dynamic(() => import('@/components/reports/ReportsCharts'), {
   ssr: false,
-  loading: () => <Spin />,
+  loading: () => <div className="p-8 text-center text-slate-500">正在加载图表组件...</div>,
 });
 
 const ReportGenerator = dynamic(() => import('@/components/reports/ReportGenerator'), {
   ssr: false,
-  loading: () => <Spin />,
+  loading: () => <div className="p-8 text-center text-slate-500">正在加载自定义分析器...</div>,
 });
 
 const AdvancedAnalytics = dynamic(() => import('@/components/reports/AdvancedAnalytics'), {
   ssr: false,
-  loading: () => <Spin />,
+  loading: () => <div className="p-8 text-center text-slate-500">正在加载高级分析...</div>,
 });
 
 const RealTimeMonitoring = dynamic(() => import('@/components/reports/RealTimeMonitoring'), {
   ssr: false,
-  loading: () => <Spin />,
+  loading: () => <div className="p-8 text-center text-slate-500">正在加载实时监控...</div>,
 });
 
-const { Title, Text } = Typography;
-const { Option } = Select;
+const { Text } = Typography;
+
+const predefinedReports = {
+  ticket_trends: {
+    name: '工单趋势分析',
+    dimensions: ['created_date'],
+    metrics: ['count'],
+    chart_type: 'line' as const,
+  },
+  sla_performance: {
+    name: 'SLA 表现分析',
+    dimensions: ['sla_status'],
+    metrics: ['count', 'avg_response_time'],
+    chart_type: 'bar' as const,
+  },
+  priority_distribution: {
+    name: '优先级分布',
+    dimensions: ['priority'],
+    metrics: ['count'],
+    chart_type: 'pie' as const,
+  },
+  resolution_time: {
+    name: '解决时间分析',
+    dimensions: ['resolution_category'],
+    metrics: ['avg_resolution_time'],
+    chart_type: 'bar' as const,
+  },
+};
+
+const emptyAnalytics: AnalyticsResponse = {
+  data: [],
+  summary: {
+    total: 0,
+    resolved: 0,
+    avg_response_time: 0,
+    avg_resolution_time: 0,
+    sla_compliance: 0,
+    customer_satisfaction: 0,
+  },
+  generated_at: new Date().toISOString(),
+};
 
 const ReportsPage: React.FC = () => {
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [selectedReportKey, setSelectedReportKey] =
+    useState<keyof typeof predefinedReports>('ticket_trends');
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsResponse>(emptyAnalytics);
   const [timeRange, setTimeRange] = useState<[string, string]>([
     format(subDays(new Date(), 30), 'yyyy-MM-dd'),
     format(new Date(), 'yyyy-MM-dd'),
   ]);
-  const [activeTab, setActiveTab] = useState('overview');
 
-  // 预定义的报告配置
-  const predefinedReports = {
-    ticket_trends: {
-      name: '工单趋势分析',
-      dimensions: ['created_date'],
-      metrics: ['count'],
-      chart_type: 'line' as const,
-    },
-    sla_performance: {
-      name: 'SLA表现分析',
-      dimensions: ['sla_status'],
-      metrics: ['count', 'avg_response_time'],
-      chart_type: 'bar' as const,
-    },
-    priority_distribution: {
-      name: '优先级分布',
-      dimensions: ['priority'],
-      metrics: ['count'],
-      chart_type: 'pie' as const,
-    },
-    resolution_time: {
-      name: '解决时间分析',
-      dimensions: ['resolution_category'],
-      metrics: ['avg_resolution_time'],
-      chart_type: 'bar' as const,
-    },
-  };
+  const selectedReport = predefinedReports[selectedReportKey];
 
-  // 获取数据
   const fetchAnalyticsData = async (config: Partial<AnalyticsConfig>) => {
     try {
       setLoading(true);
+      setError(null);
       const analyticsConfig: AnalyticsConfig = {
         dimensions: config.dimensions || ['created_date'],
         metrics: config.metrics || ['count'],
@@ -114,61 +107,91 @@ const ReportsPage: React.FC = () => {
       };
 
       const response = await TicketAnalyticsApi.getDeepAnalytics(analyticsConfig);
-      setAnalyticsData(response);
-    } catch (error) {
+      setAnalyticsData({
+        data: Array.isArray(response?.data) ? response.data : [],
+        summary: response?.summary || emptyAnalytics.summary,
+        generated_at: response?.generated_at || new Date().toISOString(),
+      });
+    } catch (fetchError) {
+      setAnalyticsData(emptyAnalytics);
+      setError('报表数据暂时不可用，已切换到安全空态。');
       message.error('获取分析数据失败');
-      console.error(error);
+      console.error(fetchError);
     } finally {
       setLoading(false);
     }
   };
 
-  // 导出报告
   const handleExport = async (fileFormat: 'excel' | 'pdf' | 'csv') => {
     try {
       const config: AnalyticsConfig = {
-        dimensions: ['status'],
-        metrics: ['count', 'avg_resolution_time'],
+        dimensions: selectedReport.dimensions,
+        metrics: selectedReport.metrics,
         chart_type: 'table',
         time_range: timeRange,
         filters: {},
       };
 
-      try {
-        const blob = await TicketAnalyticsApi.exportAnalytics(config, fileFormat);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `report-${format(new Date(), 'yyyy-MM-dd')}.${fileFormat}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        message.success(`报告导出成功 (${fileFormat.toUpperCase()})`);
-      } catch (exportError: any) {
-        console.error('Export failed:', exportError);
-        // 显示友好错误消息
-        if (
-          exportError?.message?.includes('not implemented') ||
-          exportError?.message?.includes('暂未实现')
-        ) {
-          message.warning('导出功能正在开发中，请稍后再试');
-        } else {
-          message.error(`导出失败: ${exportError?.message || '请检查后端服务是否运行'}`);
-        }
-      }
-    } catch (error) {
-      console.error('Export error:', error);
-      message.error('导出失败，请稍后重试');
+      const blob = await TicketAnalyticsApi.exportAnalytics(config, fileFormat);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `report-${format(new Date(), 'yyyy-MM-dd')}.${fileFormat}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      message.success(`报告导出成功 (${fileFormat.toUpperCase()})`);
+    } catch (exportError) {
+      console.error('Export failed:', exportError);
+      message.warning('导出功能暂时不可用，请稍后重试');
     }
   };
 
   useEffect(() => {
-    // 默认加载工单趋势数据
-    fetchAnalyticsData(predefinedReports.ticket_trends);
-  }, [timeRange]);
+    fetchAnalyticsData(predefinedReports[selectedReportKey]);
+  }, [selectedReportKey, timeRange]);
 
-  // 标签页内容
+  const statsItems = useMemo(
+    () => [
+      {
+        key: 'total',
+        title: '总工单数',
+        value: analyticsData.summary.total,
+        prefix: <FileText className="h-5 w-5" />,
+        accentColor: '#1677ff',
+      },
+      {
+        key: 'resolved',
+        title: '已解决',
+        value: analyticsData.summary.resolved,
+        prefix: <Activity className="h-5 w-5" />,
+        accentColor: '#52c41a',
+        helper:
+          analyticsData.summary.total > 0
+            ? `占比 ${((analyticsData.summary.resolved / analyticsData.summary.total) * 100).toFixed(1)}%`
+            : '暂无已解决数据',
+      },
+      {
+        key: 'response',
+        title: '平均响应时间',
+        value: analyticsData.summary.avg_response_time,
+        suffix: '小时',
+        prefix: <TrendingUp className="h-5 w-5" />,
+        accentColor: '#fa8c16',
+      },
+      {
+        key: 'sla',
+        title: 'SLA 合规率',
+        value: analyticsData.summary.sla_compliance,
+        suffix: '%',
+        prefix: <BarChart3 className="h-5 w-5" />,
+        accentColor: analyticsData.summary.sla_compliance >= 95 ? '#52c41a' : '#faad14',
+      },
+    ],
+    [analyticsData]
+  );
+
   const tabItems = [
     {
       key: 'overview',
@@ -180,95 +203,24 @@ const ReportsPage: React.FC = () => {
       ),
       children: (
         <div className="space-y-6">
-          {/* 快速统计 */}
-          {analyticsData && (
-            <Row gutter={[16, 16]}>
-              <Col xs={24} sm={12} md={6}>
-                <Card>
-                  <Statistic
-                    title="总工单数"
-                    value={analyticsData.summary.total}
-                    prefix={<FileText className="w-4 h-4" />}
-                    styles={{ content: { color: '#1890ff' } }}
-                  />
-                </Card>
-              </Col>
-              <Col xs={24} sm={12} md={6}>
-                <Card>
-                  <Statistic
-                    title="已解决"
-                    value={analyticsData.summary.resolved}
-                    prefix={<CheckCircle className="w-4 h-4" />}
-                    styles={{ content: { color: '#52c41a' } }}
-                    suffix={
-                      <Text type="secondary">
-                        (
-                        {analyticsData.summary.total > 0
-                          ? (
-                              (analyticsData.summary.resolved / analyticsData.summary.total) *
-                              100
-                            ).toFixed(1)
-                          : '0.0'}
-                        %)
-                      </Text>
-                    }
-                  />
-                </Card>
-              </Col>
-              <Col xs={24} sm={12} md={6}>
-                <Card>
-                  <Statistic
-                    title="平均响应时间"
-                    value={analyticsData.summary.avg_response_time}
-                    suffix="小时"
-                    prefix={<Clock className="w-4 h-4" />}
-                    styles={{ content: { color: '#fa8c16' } }}
-                  />
-                </Card>
-              </Col>
-              <Col xs={24} sm={12} md={6}>
-                <Card>
-                  <Statistic
-                    title="SLA合规率"
-                    value={analyticsData.summary.sla_compliance}
-                    suffix="%"
-                    prefix={<Target className="w-4 h-4" />}
-                    styles={{
-                      content: {
-                        color: analyticsData.summary.sla_compliance >= 95 ? '#52c41a' : '#f5222d',
-                      },
-                    }}
-                  />
-                </Card>
-              </Col>
-            </Row>
-          )}
-
-          {/* 图表区域 */}
-          <Card
-            title="工单趋势分析"
-            extra={
-              <Space>
-                <Select
-                  defaultValue="ticket_trends"
-                  style={{ width: 200 }}
-                  onChange={value => {
-                    fetchAnalyticsData(predefinedReports[value as keyof typeof predefinedReports]);
-                  }}
-                >
-                  {Object.entries(predefinedReports).map(([key, report]) => (
-                    <Option key={key} value={key}>
-                      {report.name}
-                    </Option>
-                  ))}
-                </Select>
-                <Button icon={<Download size={16} />} onClick={() => handleExport('excel')}>
-                  导出
-                </Button>
-              </Space>
-            }
-          >
-            <ReportsCharts data={analyticsData?.data || []} loading={loading} chartType="line" />
+          <StatsOverview items={statsItems} />
+          <Card title={selectedReport.name}>
+            <LoadingEmptyError
+              state={loading ? 'loading' : analyticsData.data.length === 0 ? 'empty' : 'success'}
+              loadingText="正在加载报表数据..."
+              empty={{
+                title: '暂无可展示的报表数据',
+                description: error || '请切换报表类型或稍后重试。',
+                actionText: '重新加载',
+                onAction: () => fetchAnalyticsData(selectedReport),
+              }}
+            >
+              <ReportsCharts
+                data={analyticsData.data}
+                loading={loading}
+                chartType={selectedReport.chart_type}
+              />
+            </LoadingEmptyError>
           </Card>
         </div>
       ),
@@ -281,14 +233,10 @@ const ReportsPage: React.FC = () => {
           高级分析
         </Space>
       ),
-      children: (
-        <div className="space-y-6">
-          <AdvancedAnalytics />
-        </div>
-      ),
+      children: <AdvancedAnalytics />,
     },
     {
-      key: 'detailed',
+      key: 'custom',
       label: (
         <Space>
           <Activity size={16} />
@@ -296,15 +244,9 @@ const ReportsPage: React.FC = () => {
         </Space>
       ),
       children: (
-        <div className="space-y-6">
-          <Card title="自定义分析报告">
-            <ReportGenerator
-              onGenerate={fetchAnalyticsData}
-              loading={loading}
-              timeRange={timeRange}
-            />
-          </Card>
-        </div>
+        <Card title="自定义分析报告">
+          <ReportGenerator onGenerate={fetchAnalyticsData} loading={loading} timeRange={timeRange} />
+        </Card>
       ),
     },
     {
@@ -315,81 +257,57 @@ const ReportsPage: React.FC = () => {
           实时监控
         </Space>
       ),
-      children: (
-        <div className="space-y-6">
-          <RealTimeMonitoring autoRefresh={true} refreshInterval={30} />
-        </div>
-      ),
-    },
-    {
-      key: 'export',
-      label: (
-        <Space>
-          <Download size={16} />
-          报告导出
-        </Space>
-      ),
-      children: (
-        <div className="space-y-6">
-          <Card title="报告导出中心">
-            <Space orientation="vertical" size="large" style={{ width: '100%' }}>
-              <div>
-                <Title level={4}>选择导出格式</Title>
-                <Space wrap>
-                  <Button
-                    size="large"
-                    onClick={() => handleExport('excel')}
-                    icon={<Download size={16} />}
-                  >
-                    导出 Excel
-                  </Button>
-                  <Button
-                    size="large"
-                    onClick={() => handleExport('pdf')}
-                    icon={<Download size={16} />}
-                  >
-                    导出 PDF
-                  </Button>
-                  <Button
-                    size="large"
-                    onClick={() => handleExport('csv')}
-                    icon={<Download size={16} />}
-                  >
-                    导出 CSV
-                  </Button>
-                </Space>
-              </div>
-
-              <div>
-                <Title level={4}>时间范围</Title>
-                <Space orientation="vertical">
-                  <div>
-                    <Text type="secondary">开始日期: {timeRange[0]}</Text>
-                  </div>
-                  <div>
-                    <Text type="secondary">结束日期: {timeRange[1]}</Text>
-                  </div>
-                </Space>
-              </div>
-            </Space>
-          </Card>
-        </div>
-      ),
+      children: <RealTimeMonitoring autoRefresh refreshInterval={30} />,
     },
   ];
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <Title level={2} className="mb-2">
-          报表中心
-        </Title>
-        <Text type="secondary">全面的ITSM数据分析与报告中心，提供多维度数据洞察和决策支持</Text>
-      </div>
+    <div className="space-y-6 p-6">
+      <ManagementPageHeader
+        title="报表中心"
+        description="统一查看 ITSM 趋势、SLA 表现和自定义分析结果，即使后端分析接口波动也能保持前端可用。"
+        notice={
+          <ManagementNotice
+            message="报表页已切换为稳态渲染"
+            description="图表数据失败时会显示可恢复空态，不再因为接口异常或子组件延迟导致整页不可用。"
+            type={error ? 'warning' : 'info'}
+          />
+        }
+      />
 
-      <Card>
-        <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
-      </Card>
+      <FilterToolbarCard
+        filters={
+          <>
+            <Select
+              value={selectedReportKey}
+              style={{ width: 220 }}
+              onChange={value => setSelectedReportKey(value)}
+              options={Object.entries(predefinedReports).map(([key, report]) => ({
+                value: key,
+                label: report.name,
+              }))}
+            />
+            <Button onClick={() => setTimeRange([format(subDays(new Date(), 7), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd')])}>
+              最近 7 天
+            </Button>
+            <Button onClick={() => setTimeRange([format(subDays(new Date(), 30), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd')])}>
+              最近 30 天
+            </Button>
+          </>
+        }
+        actions={
+          <>
+            <Text type="secondary">
+              时间范围：{timeRange[0]} 至 {timeRange[1]}
+            </Text>
+            <Button icon={<Download size={16} />} onClick={() => handleExport('excel')}>
+              导出 Excel
+            </Button>
+          </>
+        }
+      />
+
+      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
     </div>
   );
 };

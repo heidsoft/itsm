@@ -29,6 +29,13 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
   const [searchResults, setSearchResults] = useState<GlobalSearchResponse | null>(initialResults);
   const [isSearching, setIsSearching] = useState(false);
 
+  useEffect(() => {
+    if (!open) {
+      setSearchValue('');
+    }
+    setSearchResults(initialResults);
+  }, [initialResults, open]);
+
   // Ctrl+K 快捷键
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -154,7 +161,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({ value, onChange, onSea
             lineHeight: 1.4,
           }}
         >
-          /
+          Ctrl K
         </kbd>
       }
       value={value}

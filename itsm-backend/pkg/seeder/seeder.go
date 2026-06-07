@@ -416,7 +416,6 @@ func getEmbeddedConfig() *SeedConfig {
 func (s *Seeder) SeedAll(ctx context.Context) {
 	// 首先确保 default 租户存在
 	rootTenant := s.seedDefaultTenant(ctx)
-	s.seedModeTenants(ctx, rootTenant)
 	s.seedDepartments(ctx)
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
@@ -424,6 +423,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedMenus(ctx)       // 新增：初始化菜单
 	s.backfillAdminRole(ctx)
 	s.seedAdmin(ctx)
+	s.seedModeTenants(ctx, rootTenant)
 	s.seedUser1(ctx)
 	s.seedSecurity1(ctx)
 	s.backfillUserRole(ctx)
@@ -538,7 +538,7 @@ func (s *Seeder) seedModeTenants(ctx context.Context, rootTenant *ent.Tenant) {
 			ServiceTier:     "gold",
 			OwnerContact:    "it-manager@customer-a.example.com",
 		})
-		_ = s.ensureTenant(ctx, tenantSeed{
+		customerTwo := s.ensureTenant(ctx, tenantSeed{
 			Code:            "customer-b",
 			Name:            "Customer B",
 			Type:            tenantmode.TenantTypeMSPCustomer,
@@ -554,6 +554,9 @@ func (s *Seeder) seedModeTenants(ctx context.Context, rootTenant *ent.Tenant) {
 		})
 		if customerOne != nil {
 			s.seedDefaultMSPAllocations(ctx, rootTenant, customerOne)
+		}
+		if customerTwo != nil {
+			s.seedDefaultMSPAllocations(ctx, rootTenant, customerTwo)
 		}
 	}
 }

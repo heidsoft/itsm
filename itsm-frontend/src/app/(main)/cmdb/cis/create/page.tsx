@@ -197,7 +197,6 @@ const CreateCIPage: React.FC = () => {
       <Card className="rounded-xl shadow-sm">
         {formReady ? (
           <CIEditorForm
-            form={antdForm}
             form={form}
             types={types}
             typesLoading={typesLoading}

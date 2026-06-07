@@ -1,6 +1,6 @@
 # Frontend UI Audit Inventory
 
-Generated at: 2026-06-06T23:09:18.803Z
+Generated at: 2026-06-07T06:37:23.371Z
 
 ## Coverage
 
@@ -17,17 +17,17 @@ Generated at: 2026-06-06T23:09:18.803Z
 | `tickets/templates/page.tsx` | batch-1 | list | 997 | 2 |
 | `templates/page.tsx` | batch-3 | list | 975 | 3 |
 | `profile/page.tsx` | batch-3 | list | 919 | 2 |
-| `workflow/instances/page.tsx` | batch-1 | list | 915 | 5 |
 | `admin/workflows/page.tsx` | batch-3 | admin | 847 | 4 |
 | `cmdb/page.tsx` | batch-1 | list | 826 | 4 |
 | `admin/service-catalogs/page.tsx` | batch-3 | admin | 799 | 2 |
 | `admin/escalation-rules/page.tsx` | batch-3 | admin | 772 | 2 |
 | `admin/sla-definitions/page.tsx` | batch-3 | admin | 753 | 2 |
 | `tickets/[ticketId]/page.tsx` | batch-1 | list | 753 | 2 |
-| `notifications/page.tsx` | batch-3 | list | 741 | 3 |
+| `notifications/page.tsx` | batch-3 | list | 752 | 3 |
 | `admin/users/page.tsx` | batch-3 | admin | 695 | 3 |
 | `admin/permissions/page.tsx` | batch-3 | admin | 675 | 2 |
-| `workflow/versions/page.tsx` | batch-1 | list | 655 | 3 |
+| `tickets/create/page.tsx` | batch-1 | create | 619 | 2 |
+| `admin/groups/page.tsx` | batch-3 | admin | 617 | 2 |
 
 ## Highest Complexity workflow/cmdb Components
 
@@ -41,13 +41,13 @@ Generated at: 2026-06-06T23:09:18.803Z
 | `src/components/cmdb/CIList.tsx` | cmdb | 324 | 1 |
 | `src/components/workflow/designer/WorkflowProperties.tsx` | workflow | 322 | 0 |
 | `src/components/workflow/designer/WorkflowContext.tsx` | workflow | 238 | 0 |
+| `src/components/cmdb/CIEditorForm.tsx` | cmdb | 224 | 0 |
 | `src/components/cmdb/ci-detail/sections/CIImpactAnalysisTab.tsx` | cmdb | 189 | 0 |
 | `src/components/workflow/designer/WorkflowNodePalette.tsx` | workflow | 187 | 0 |
 | `src/components/cmdb/ci-detail/CIDetail.tsx` | cmdb | 169 | 0 |
 | `src/components/workflow/designer/WorkflowToolbar.tsx` | workflow | 162 | 0 |
 | `src/components/cmdb/ci-detail/__tests__/CIImpactAnalysisTab.test.tsx` | cmdb | 161 | 0 |
-| `src/components/cmdb/ci-detail/__tests__/CIChangeHistoryTab.test.tsx` | cmdb | 157 | 0 |
-| `src/components/cmdb/ci-detail/__tests__/CIBasicInfo.test.tsx` | cmdb | 156 | 0 |
+| `src/components/cmdb/ci-editor-shared.ts` | cmdb | 160 | 0 |
 
 ## Notes
 

@@ -22,6 +22,13 @@ const { Header: AntHeader } = Layout;
 const NOTIFICATION_REFRESH_INTERVAL_MS = 30000; // 30秒
 const NOTIFICATION_PAGE_SIZE = 10;
 
+const normalizeNotification = (notification: TicketNotification): TicketNotification => ({
+  ...notification,
+  createdAt: notification.createdAt || notification.created_at,
+  readAt: notification.readAt || notification.read_at,
+  sentAt: notification.sentAt || notification.sent_at,
+});
+
 interface HeaderProps {
   collapsed: boolean;
   onCollapse: (collapsed: boolean) => void;
@@ -62,6 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
   const [searchResults, setSearchResults] = useState<GlobalSearchResponse | null>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -82,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
         page: 1,
         page_size: NOTIFICATION_PAGE_SIZE,
       });
-      setNotifications(response.notifications || []);
+      setNotifications((response.notifications || []).map(normalizeNotification));
     } catch (error) {
       console.error('Failed to load notifications:', error);
     } finally {
@@ -99,7 +107,8 @@ export const Header: React.FC<HeaderProps> = ({
       });
 
       const unsubscribe = notificationWS.onNotification((notification: TicketNotification) => {
-        setNotifications(prev => [notification, ...prev]);
+        const normalized = normalizeNotification(notification);
+        setNotifications(prev => [normalized, ...prev]);
         message.info(notification.content);
       });
 
@@ -230,8 +239,8 @@ export const Header: React.FC<HeaderProps> = ({
         <div className={styles.right}>
           {/* 搜索 */}
           <SearchInput
-            value=""
-            onChange={() => {}}
+            value={searchValue}
+            onChange={setSearchValue}
             onSearch={handleSearch}
             onFocus={() => setSearchModalVisible(true)}
           />
@@ -330,7 +339,11 @@ export const Header: React.FC<HeaderProps> = ({
       />
 
       {/* 全局搜索 */}
-      <GlobalSearch open={searchModalVisible} onClose={() => setSearchModalVisible(false)} />
+      <GlobalSearch
+        open={searchModalVisible}
+        onClose={() => setSearchModalVisible(false)}
+        initialResults={searchResults}
+      />
     </AntHeader>
   );
 };

@@ -59,10 +59,10 @@ type CustomFieldDefinition struct {
 	Required           bool                           `json:"required"`
 	Description        string                         `json:"description,omitempty"`
 	Placeholder        string                         `json:"placeholder,omitempty"`
-	DefaultValue       interface{}                    `json:"default_value,omitempty"`
+	DefaultValue       interface{}                    `json:"defaultValue,omitempty"`
 	Options            []CustomFieldOption            `json:"options,omitempty"`
 	Validation         *CustomFieldValidation         `json:"validation,omitempty"`
-	ConditionalDisplay *CustomFieldConditionalDisplay `json:"conditional_display,omitempty"`
+	ConditionalDisplay *CustomFieldConditionalDisplay `json:"conditionalDisplay,omitempty"`
 	Order              int                            `json:"order"`
 }
 
@@ -86,15 +86,15 @@ type ApprovalChainDefinition struct {
 	Level            int                 `json:"level"`
 	Name             string              `json:"name"`
 	Approvers        []ApproverInfo      `json:"approvers"`
-	ApprovalType     string              `json:"approval_type"` // any, all, majority
-	MinimumApprovals *int                `json:"minimum_approvals,omitempty"`
-	AllowReject      bool                `json:"allow_reject"`
-	AllowDelegate    bool                `json:"allow_delegate"`
-	RejectAction     string              `json:"reject_action"` // end, return, custom
-	ReturnToLevel    *int                `json:"return_to_level,omitempty"`
+	ApprovalType     string              `json:"approvalType"` // any, all, majority
+	MinimumApprovals *int                `json:"minimumApprovals,omitempty"`
+	AllowReject      bool                `json:"allowReject"`
+	AllowDelegate    bool                `json:"allowDelegate"`
+	RejectAction     string              `json:"rejectAction"` // end, return, custom
+	ReturnToLevel    *int                `json:"returnToLevel,omitempty"`
 	Conditions       []ApprovalCondition `json:"conditions,omitempty"`
 	Timeout          *int                `json:"timeout,omitempty"`        // 超时时间（小时）
-	TimeoutAction    string              `json:"timeout_action,omitempty"` // auto_approve, auto_reject, escalate
+	TimeoutAction    string              `json:"timeoutAction,omitempty"`  // auto_approve, auto_reject, escalate
 }
 
 // AssignToConfig 分配目标配置
@@ -116,7 +116,7 @@ type AssignmentRule struct {
 	Name       string                    `json:"name"`
 	Priority   int                       `json:"priority"`
 	Conditions []AssignmentRuleCondition `json:"conditions"`
-	AssignTo   AssignToConfig            `json:"assign_to"`
+	AssignTo   AssignToConfig            `json:"assignTo"`
 	Enabled    bool                      `json:"enabled"`
 }
 
@@ -129,20 +129,20 @@ type NotificationRecipients struct {
 
 // NotificationConfig 通知配置
 type NotificationConfig struct {
-	OnCreate   NotificationRecipients `json:"on_create"`
-	OnUpdate   NotificationRecipients `json:"on_update"`
-	OnApproval NotificationRecipients `json:"on_approval"`
-	OnReject   NotificationRecipients `json:"on_reject"`
-	OnComplete NotificationRecipients `json:"on_complete"`
+	OnCreate   NotificationRecipients `json:"onCreate"`
+	OnUpdate   NotificationRecipients `json:"onUpdate"`
+	OnApproval NotificationRecipients `json:"onApproval"`
+	OnReject   NotificationRecipients `json:"onReject"`
+	OnComplete NotificationRecipients `json:"onComplete"`
 }
 
 // PermissionConfig 权限配置
 type PermissionConfig struct {
-	CanCreate  []string `json:"can_create"`
-	CanView    []string `json:"can_view"`
-	CanEdit    []string `json:"can_edit"`
-	CanDelete  []string `json:"can_delete"`
-	CanApprove []string `json:"can_approve"`
+	CanCreate  []string `json:"canCreate"`
+	CanView    []string `json:"canView"`
+	CanEdit    []string `json:"canEdit"`
+	CanDelete  []string `json:"canDelete"`
+	CanApprove []string `json:"canApprove"`
 }
 
 // TicketTypeDefinition 工单类型定义
@@ -154,24 +154,24 @@ type TicketTypeDefinition struct {
 	Icon               string                    `json:"icon,omitempty"`
 	Color              string                    `json:"color,omitempty"`
 	Status             TicketTypeStatus          `json:"status"`
-	CustomFields       []CustomFieldDefinition   `json:"custom_fields"`
-	ApprovalEnabled    bool                      `json:"approval_enabled"`
-	ApprovalWorkflowID *string                   `json:"approval_workflow_id,omitempty"`
-	ApprovalChain      []ApprovalChainDefinition `json:"approval_chain,omitempty"`
-	SLAEnabled         bool                      `json:"sla_enabled"`
-	DefaultSLAID       *int                      `json:"default_sla_id,omitempty"`
-	AutoAssignEnabled  bool                      `json:"auto_assign_enabled"`
-	AssignmentRules    []AssignmentRule          `json:"assignment_rules,omitempty"`
-	NotificationConfig *NotificationConfig       `json:"notification_config,omitempty"`
-	PermissionConfig   *PermissionConfig         `json:"permission_config,omitempty"`
-	CreatedBy          int                       `json:"created_by"`
-	CreatedByName      string                    `json:"created_by_name"`
-	UpdatedBy          *int                      `json:"updated_by,omitempty"`
-	UpdatedByName      *string                   `json:"updated_by_name,omitempty"`
-	CreatedAt          time.Time                 `json:"created_at"`
-	UpdatedAt          time.Time                 `json:"updated_at"`
-	TenantID           int                       `json:"tenant_id"`
-	UsageCount         int                       `json:"usage_count,omitempty"`
+	CustomFields       []CustomFieldDefinition   `json:"customFields"`
+	ApprovalEnabled    bool                      `json:"approvalEnabled"`
+	ApprovalWorkflowID *string                   `json:"approvalWorkflowId,omitempty"`
+	ApprovalChain      []ApprovalChainDefinition `json:"approvalChain,omitempty"`
+	SLAEnabled         bool                      `json:"slaEnabled"`
+	DefaultSLAID       *int                      `json:"defaultSlaId,omitempty"`
+	AutoAssignEnabled  bool                      `json:"autoAssignEnabled"`
+	AssignmentRules    []AssignmentRule          `json:"assignmentRules,omitempty"`
+	NotificationConfig *NotificationConfig       `json:"notificationConfig,omitempty"`
+	PermissionConfig   *PermissionConfig         `json:"permissionConfig,omitempty"`
+	CreatedBy          int                       `json:"createdBy"`
+	CreatedByName      string                    `json:"createdByName"`
+	UpdatedBy          *int                      `json:"updatedBy,omitempty"`
+	UpdatedByName      *string                   `json:"updatedByName,omitempty"`
+	CreatedAt          time.Time                 `json:"createdAt"`
+	UpdatedAt          time.Time                 `json:"updatedAt"`
+	TenantID           int                       `json:"tenantId"`
+	UsageCount         int                       `json:"usageCount,omitempty"`
 }
 
 // CreateTicketTypeRequest 创建工单类型请求
@@ -223,6 +223,6 @@ type TicketTypeListResponse struct {
 	Types      []TicketTypeDefinition `json:"types"`
 	Total      int64                  `json:"total"`
 	Page       int                    `json:"page"`
-	PageSize   int                    `json:"page_size"`
-	TotalPages int                    `json:"total_pages"`
+	PageSize   int                    `json:"pageSize"`
+	TotalPages int                    `json:"totalPages"`
 }

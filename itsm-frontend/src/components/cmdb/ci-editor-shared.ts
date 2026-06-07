@@ -70,7 +70,7 @@ export interface CIFormValues {
   cloud_resource_type?: string;
   cloud_sync_status?: string;
   cloud_resource_ref_id?: number;
-  cloud_metadata?: Record<string, unknown>;
+  cloud_metadata?: Record<string, {} | undefined>;
 }
 
 export const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
