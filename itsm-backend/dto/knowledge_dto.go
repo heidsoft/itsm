@@ -48,7 +48,7 @@ type KnowledgeArticleListResponse struct {
 	Articles []KnowledgeArticleResponse `json:"articles"`
 	Total    int                        `json:"total"`
 	Page     int                        `json:"page"`
-	Size     int                        `json:"size"`
+	PageSize int                        `json:"pageSize"`
 }
 
 // KnowledgeStatsResponse 知识库统计响应
@@ -93,7 +93,7 @@ type KnowledgeArticleVersionListResponse struct {
 	Versions []KnowledgeArticleVersionResponse `json:"versions"`
 	Total    int                               `json:"total"`
 	Page     int                               `json:"page"`
-	Size     int                               `json:"size"`
+	PageSize int                               `json:"pageSize"`
 }
 
 // RestoreArticleVersionRequest 恢复版本请求

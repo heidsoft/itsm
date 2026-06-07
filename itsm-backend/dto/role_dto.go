@@ -10,11 +10,11 @@ type RoleDTO struct {
 	Description string   `json:"description,omitempty"`
 	Permissions []string `json:"permissions"`
 	Status      string   `json:"status,omitempty"`
-	IsSystem    bool     `json:"is_system,omitempty"`
-	UserCount   int      `json:"user_count,omitempty"`
-	CreatedAt   string   `json:"created_at"`
-	UpdatedAt   string   `json:"updated_at"`
-	TenantID    int      `json:"tenant_id"`
+	IsSystem    bool     `json:"isSystem,omitempty"`
+	UserCount   int      `json:"userCount,omitempty"`
+	CreatedAt   string   `json:"createdAt"`
+	UpdatedAt   string   `json:"updatedAt"`
+	TenantID    int      `json:"tenantId"`
 }
 
 // RoleListResponse represents the response for listing roles
@@ -22,8 +22,8 @@ type RoleListResponse struct {
 	Roles     []RoleDTO `json:"roles"`
 	Total     int       `json:"total"`
 	Page      int       `json:"page"`
-	PageSize  int       `json:"page_size"`
-	TotalPage int       `json:"total_pages,omitempty"`
+	PageSize  int       `json:"pageSize"`
+	TotalPage int       `json:"totalPages,omitempty"`
 }
 
 // CreateRoleRequest represents the request for creating a role
@@ -59,11 +59,11 @@ type RoleResponse struct {
 	Name        string           `json:"name"`
 	Code        string           `json:"code"`
 	Description string           `json:"description"`
-	IsSystem    bool             `json:"is_system"`
+	IsSystem    bool             `json:"isSystem"`
 	Permissions []PermissionInfo `json:"permissions"`
-	TenantID    int              `json:"tenant_id"`
-	CreatedAt   time.Time        `json:"created_at"`
-	UpdatedAt   time.Time        `json:"updated_at"`
+	TenantID    int              `json:"tenantId"`
+	CreatedAt   time.Time        `json:"createdAt"`
+	UpdatedAt   time.Time        `json:"updatedAt"`
 }
 
 // PermissionInfo 权限信息
@@ -75,7 +75,7 @@ type PermissionInfo struct {
 
 // AssignPermissionsRequest 分配权限请求
 type AssignPermissionsRequest struct {
-	PermissionIDs []int `json:"permission_ids" binding:"required"`
+	PermissionIDs []int `json:"permissionIds" binding:"required"`
 }
 
 // PermissionDTO represents a permission
@@ -85,8 +85,8 @@ type PermissionDTO struct {
 	Module      string    `json:"module"`
 	Action      string    `json:"action"`
 	Description string    `json:"description,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // PermissionListResponse represents the response for listing permissions
