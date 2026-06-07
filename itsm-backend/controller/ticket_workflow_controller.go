@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"database/sql"
+	"encoding/json"
 	"strconv"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -13,12 +16,14 @@ import (
 
 type TicketWorkflowController struct {
 	workflowService *service.TicketWorkflowService
+	db              *sql.DB
 	logger          *zap.SugaredLogger
 }
 
-func NewTicketWorkflowController(workflowService *service.TicketWorkflowService, logger *zap.SugaredLogger) *TicketWorkflowController {
+func NewTicketWorkflowController(workflowService *service.TicketWorkflowService, db *sql.DB, logger *zap.SugaredLogger) *TicketWorkflowController {
 	return &TicketWorkflowController{
 		workflowService: workflowService,
+		db:              db,
 		logger:          logger,
 	}
 }
@@ -323,4 +328,70 @@ func (tc *TicketWorkflowController) GetTicketWorkflowState(c *gin.Context) {
 	}
 
 	common.Success(c, state)
+}
+
+// GetTicketWorkflowHistory 获取工单流转历史
+// @Summary 获取工单流转历史
+// @Description 返回工单状态变更、分配、审批等操作历史记录
+// @Tags 工单流转
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Success 200 {object} common.Response{data=[]dto.TicketWorkflowRecordResponse}
+// @Router /api/v1/tickets/:id/workflow-history [get]
+func (tc *TicketWorkflowController) GetTicketWorkflowHistory(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+	tenantID := c.GetInt("tenant_id")
+
+	query := `
+		SELECT id, ticket_id, action, from_status, to_status,
+		       operator_id, from_user_id, to_user_id,
+		       comment, reason, metadata, created_at
+		FROM ticket_workflow_records
+		WHERE ticket_id = $1 AND tenant_id = $2
+		ORDER BY created_at ASC, id ASC
+	`
+	rows, err := tc.db.QueryContext(c.Request.Context(), query, ticketID, tenantID)
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, "查询流转历史失败: "+err.Error())
+		return
+	}
+	defer rows.Close()
+
+	type workflowRec struct {
+		ID         int64                  `json:"id"`
+		TicketID   int64                  `json:"ticketId"`
+		Action     string                 `json:"action"`
+		FromStatus *string                `json:"fromStatus,omitempty"`
+		ToStatus   *string                `json:"toStatus,omitempty"`
+		OperatorID int64                  `json:"operatorId"`
+		FromUserID *int64                 `json:"fromUserId,omitempty"`
+		ToUserID   *int64                 `json:"toUserId,omitempty"`
+		Comment    string                 `json:"comment"`
+		Reason     string                 `json:"reason"`
+		Metadata   map[string]interface{} `json:"metadata"`
+		CreatedAt  time.Time              `json:"createdAt"`
+	}
+	var records []workflowRec
+	for rows.Next() {
+		var r workflowRec
+		var metaJSON []byte
+		if err := rows.Scan(&r.ID, &r.TicketID, &r.Action, &r.FromStatus, &r.ToStatus,
+			&r.OperatorID, &r.FromUserID, &r.ToUserID, &r.Comment, &r.Reason, &metaJSON, &r.CreatedAt); err != nil {
+			common.Fail(c, common.InternalErrorCode, "扫描流转记录失败: "+err.Error())
+			return
+		}
+		if len(metaJSON) > 0 {
+			_ = json.Unmarshal(metaJSON, &r.Metadata)
+		}
+		records = append(records, r)
+	}
+	if records == nil {
+		records = []workflowRec{}
+	}
+	common.Success(c, records)
 }

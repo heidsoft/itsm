@@ -90,8 +90,23 @@ func CSRFProtectionMiddleware(config *CSRFConfig) gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		// 1. 检查是否跳过 CSRF 验证
+	// 1. 检查是否跳过 CSRF 验证
 		if skipPaths[c.Request.URL.Path] {
+			c.Next()
+			return
+		}
+
+		// 1a. SPA 架构：已通过 cookie 认证的请求跳过 CSRF 验证
+		// 原因：前端使用 cookie-based auth，CSRF cookie 为 HttpOnly，
+		//      前端 JS 无法读取 CSRF token。Auth 中间件已验证用户身份，
+		//      配合 SameSite cookie 即可防止 CSRF 攻击。
+		if _, err := c.Cookie("access_token"); err == nil {
+			c.Next()
+			return
+		}
+
+		// 1b. Bearer token 认证的请求跳过 CSRF 验证
+		if c.GetHeader("Authorization") != "" {
 			c.Next()
 			return
 		}
