@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"database/sql"
 	"fmt"
 	"strconv"
 	"time"
@@ -17,13 +18,15 @@ import (
 type TicketController struct {
 	ticketService           *service.TicketService
 	ticketDependencyService *service.TicketDependencyService
+	db                      *sql.DB
 	logger                  *zap.SugaredLogger
 }
 
-func NewTicketController(ticketService *service.TicketService, ticketDependencyService *service.TicketDependencyService, logger *zap.SugaredLogger) *TicketController {
+func NewTicketController(ticketService *service.TicketService, ticketDependencyService *service.TicketDependencyService, db *sql.DB, logger *zap.SugaredLogger) *TicketController {
 	return &TicketController{
 		ticketService:           ticketService,
 		ticketDependencyService: ticketDependencyService,
+		db:                      db,
 		logger:                  logger,
 	}
 }
@@ -136,8 +139,9 @@ func (tc *TicketController) GetTicket(c *gin.Context) {
 		common.Fail(c, common.NotFoundCode, "工单不存在")
 		return
 	}
-
-	common.Success(c, dto.ToTicketResponse(ticket))
+	resp := dto.ToTicketResponse(ticket)
+	dto.EnrichTicketResponse(c.Request.Context(), tc.db, resp, tenantID)
+	common.Success(c, resp)
 }
 
 // GetTicketSLAInfo 获取工单SLA信息
@@ -279,11 +283,20 @@ func (tc *TicketController) AssignTicket(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	// 兼容 snake_case 字段名 assignee_id
+	assigneeID := req.AssigneeID
+	if assigneeID == 0 && req.AssigneeIDAlt != 0 {
+		assigneeID = req.AssigneeIDAlt
+	}
+	if assigneeID <= 0 {
+		common.Fail(c, common.ParamErrorCode, "assigneeId 必填")
+		return
+	}
 
 	tenantID := c.GetInt("tenant_id")
 	assignedBy := c.GetInt("user_id")
 
-	ticket, err := tc.ticketService.AssignTicket(c.Request.Context(), ticketID, req.AssigneeID, tenantID, assignedBy)
+	ticket, err := tc.ticketService.AssignTicket(c.Request.Context(), ticketID, assigneeID, tenantID, assignedBy)
 	if err != nil {
 		tc.logger.Errorw("Failed to assign ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())

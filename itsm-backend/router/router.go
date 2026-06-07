@@ -393,6 +393,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.POST("/workflow/close", config.TicketWorkflowController.CloseTicket)
 				tickets.POST("/workflow/reopen", config.TicketWorkflowController.ReopenTicket)
 				tickets.GET("/:id/workflow/state", config.TicketWorkflowController.GetTicketWorkflowState)
+				tickets.GET("/:id/workflow-history", config.TicketWorkflowController.GetTicketWorkflowHistory)
+				tickets.GET("/:id/workflow_records", config.TicketWorkflowController.GetTicketWorkflowHistory)
 			}
 
 			// 工单自动化规则
@@ -503,6 +505,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 				// 事件操作
 				inc.POST("/:id/escalate", middleware.RequirePermission("incident", "write"), config.IncidentController.EscalateIncident)
+				inc.POST("/:id/acknowledge", middleware.RequirePermission("incident", "write"), config.IncidentController.AcknowledgeIncident)
+				inc.POST("/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentController.ResolveIncident)
+				inc.POST("/:id/close", middleware.RequirePermission("incident", "write"), config.IncidentController.CloseIncident)
 				inc.POST("/:id/convert-to-problem", middleware.RequirePermission("incident", "write"), config.IncidentController.ConvertToProblem)
 				inc.GET("/:id/impact", middleware.RequirePermission("incident", "read"), config.IncidentController.AnalyzeIncidentImpact)
 
@@ -827,15 +832,17 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== Common & System (DDD) ====================
 		if config.CommonHandler != nil {
 			// Auth scoped
-			authGrp := tenant.(*gin.RouterGroup).Group("/auth")
+			// 修复 P0：auth/me, auth/tenants, auth/menus 不应在 tenant 分组内
+			// 否则 tenant RBAC 中间件会拦截端用户，导致 layout 崩溃
+			authGrp := r.Group("/api/v1/auth")
 			{
-				authGrp.GET("/me", config.CommonHandler.GetMe)
-				authGrp.GET("/tenants", config.CommonHandler.GetUserTenants) // For frontend: /api/v1/auth/tenants
+				authGrp.GET("/me", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe)
+				authGrp.GET("/tenants", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetUserTenants)
 			}
 
 			// User Menu (no permission required, will be filtered by role)
 			if config.MenuController != nil {
-				authGrp.GET("/menus", config.MenuController.GetUserMenus)
+				authGrp.GET("/menus", middleware.AuthMiddleware(config.JWTSecret), config.MenuController.GetUserMenus)
 			}
 
 			// Audit Logs (short path for frontend compatibility)

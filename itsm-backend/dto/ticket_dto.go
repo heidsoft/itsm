@@ -72,22 +72,30 @@ type ListTicketsRequest struct {
 
 // TicketResponse 工单响应
 type TicketResponse struct {
-	ID           int            `json:"id"`
-	Title        string         `json:"title"`
-	Description  string         `json:"description"`
-	Status       string         `json:"status"`
-	Priority     string         `json:"priority"`
-	Type         string         `json:"type"`
-	TicketNumber string         `json:"ticketNumber"`
-	RequesterID  int            `json:"requesterId"`
-	AssigneeID   int            `json:"assigneeId,omitempty"`
-	TenantID     int            `json:"tenantId"`
-	CategoryID   int            `json:"categoryId,omitempty"`
-	Version      int            `json:"version"`
-	CreatedAt    time.Time      `json:"createdAt"`
-	UpdatedAt    time.Time      `json:"updatedAt"`
-	Requester    *UserBasicInfo `json:"requester,omitempty"`
-	Assignee     *UserBasicInfo `json:"assignee,omitempty"`
+	ID                 int            `json:"id"`
+	Title              string         `json:"title"`
+	Description        string         `json:"description"`
+	Status             string         `json:"status"`
+	Priority           string         `json:"priority"`
+	Type               string         `json:"type"`
+	TicketNumber       string         `json:"ticketNumber"`
+	RequesterID        int            `json:"requesterId"`
+	AssigneeID         int            `json:"assigneeId,omitempty"`
+	TenantID           int            `json:"tenantId"`
+	CategoryID         int            `json:"categoryId,omitempty"`
+	DepartmentID       int            `json:"departmentId,omitempty"`
+	ParentTicketID     int            `json:"parentTicketId,omitempty"`
+	Version            int            `json:"version"`
+	CreatedAt          time.Time      `json:"createdAt"`
+	UpdatedAt          time.Time      `json:"updatedAt"`
+	Requester          *UserBasicInfo `json:"requester,omitempty"`
+	Assignee           *UserBasicInfo `json:"assignee,omitempty"`
+	Resolution         string         `json:"resolution,omitempty"`
+	ResolutionCategory string         `json:"resolutionCategory,omitempty"`
+	ResolvedAt         *time.Time     `json:"resolvedAt,omitempty"`
+	ClosedAt           *time.Time     `json:"closedAt,omitempty"`
+	FirstResponseAt    *time.Time     `json:"firstResponseAt,omitempty"`
+	Rating             int            `json:"rating,omitempty"`
 }
 
 // ListTicketsResponse 工单列表响应
@@ -225,8 +233,11 @@ type TicketAnalyticsResponse struct {
 }
 
 // AssignTicketRequest 分配工单请求
+// 兼容前端两种字段命名：assigneeId (camelCase) 和 assignee_id (snake_case)
+// 由控制器进行非零校验
 type AssignTicketRequest struct {
-	AssigneeID int `json:"assigneeId" binding:"required"`
+	AssigneeID    int `json:"assigneeId"`
+	AssigneeIDAlt int `json:"assignee_id"`
 }
 
 // EscalateTicketRequest 升级工单请求
@@ -237,6 +248,7 @@ type EscalateTicketRequest struct {
 // ResolveTicketRequest 解决工单请求
 type ResolveTicketRequest struct {
 	TicketID           int    `json:"ticketId"`
+	TicketIDAlt        int    `json:"ticket_id"`
 	Resolution         string `json:"resolution"` // 解决方案（可选，兼容前端发送 solution）
 	Solution           string `json:"solution"`   // 兼容前端字段名
 	ResolutionCategory string `json:"resolutionCategory,omitempty"`
@@ -246,6 +258,7 @@ type ResolveTicketRequest struct {
 // CloseTicketRequest 关闭工单请求
 type CloseTicketRequest struct {
 	TicketID    int    `json:"ticketId"`
+	TicketIDAlt int    `json:"ticket_id"`
 	CloseReason string `json:"closeReason,omitempty"`
 	CloseNotes  string `json:"closeNotes,omitempty"`
 	Feedback    string `json:"feedback,omitempty"`

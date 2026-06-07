@@ -150,7 +150,7 @@ func NewApplication() *Application {
 	toolRegistry := service.NewToolRegistry(ragService, incidentService, cmdbService, client)
 	toolQueue := service.NewToolQueue(client, toolRegistry, 100)
 
-	ticketController := controller.NewTicketController(ticketService, ticketDependencyService, sugar)
+	ticketController := controller.NewTicketController(ticketService, ticketDependencyService, database.GetRawDB(), sugar)
 	ticketDependencyController := controller.NewTicketDependencyController(ticketDependencyService)
 
 	ticketCommentService := service.NewTicketCommentService(client, sugar)
@@ -183,7 +183,7 @@ func NewApplication() *Application {
 
 	// Ticket Workflow Service & Controller
 	ticketWorkflowService := service.NewTicketWorkflowService(client, database.GetRawDB(), sugar)
-	ticketWorkflowController := controller.NewTicketWorkflowController(ticketWorkflowService, sugar)
+	ticketWorkflowController := controller.NewTicketWorkflowController(ticketWorkflowService, database.GetRawDB(), sugar)
 
 	// Ticket Automation Rule Service & Controller
 	ticketAutomationRuleService := service.NewTicketAutomationRuleService(client, sugar)

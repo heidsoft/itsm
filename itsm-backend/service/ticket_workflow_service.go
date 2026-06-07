@@ -378,6 +378,10 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 
 // ResolveTicket 解决工单
 func (s *TicketWorkflowService) ResolveTicket(ctx context.Context, req *dto.ResolveTicketRequest, userID, tenantID int) error {
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 	s.logger.Infow("Resolving ticket", "ticket_id", req.TicketID, "user_id", userID)
 
 	ticket, err := s.getTicket(ctx, req.TicketID, tenantID)
@@ -419,6 +423,10 @@ func (s *TicketWorkflowService) ResolveTicket(ctx context.Context, req *dto.Reso
 
 // CloseTicket 关闭工单
 func (s *TicketWorkflowService) CloseTicket(ctx context.Context, req *dto.CloseTicketRequest, userID, tenantID int) error {
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 	s.logger.Infow("Closing ticket", "ticket_id", req.TicketID, "user_id", userID)
 
 	ticket, err := s.getTicket(ctx, req.TicketID, tenantID)
