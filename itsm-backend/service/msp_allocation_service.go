@@ -130,6 +130,11 @@ func (s *MSPAllocationService) toDTO(a *ent.MSPAllocation) (*dto.MSPAllocationDT
 		customerTenantName = customers[0].Name
 	}
 
+	var deassignedAt *time.Time
+	if !a.DeassignedAt.IsZero() {
+		deassignedAt = &a.DeassignedAt
+	}
+
 	return &dto.MSPAllocationDTO{
 		ID:                 a.ID,
 		MSPUserID:          a.MspUserID,
@@ -138,7 +143,7 @@ func (s *MSPAllocationService) toDTO(a *ent.MSPAllocation) (*dto.MSPAllocationDT
 		CustomerTenantName: customerTenantName,
 		Role:               a.Role,
 		AssignedAt:         a.AssignedAt,
-		DeassignedAt:       &a.DeassignedAt,
+		DeassignedAt:       deassignedAt,
 	}, nil
 }
 
@@ -226,6 +231,11 @@ func (s *MSPAllocationService) GetActiveAllocations(ctx context.Context) ([]*dto
 			customerTenantName = a.Edges.CustomerTenant.Name
 		}
 
+		var deassignedAt *time.Time
+		if !a.DeassignedAt.IsZero() {
+			deassignedAt = &a.DeassignedAt
+		}
+
 		dtos = append(dtos, &dto.MSPAllocationDTO{
 			ID:                 a.ID,
 			MSPUserID:          a.MspUserID,
@@ -234,7 +244,7 @@ func (s *MSPAllocationService) GetActiveAllocations(ctx context.Context) ([]*dto
 			CustomerTenantName: customerTenantName,
 			Role:               a.Role,
 			AssignedAt:         a.AssignedAt,
-			DeassignedAt:       &a.DeassignedAt,
+			DeassignedAt:       deassignedAt,
 		})
 	}
 

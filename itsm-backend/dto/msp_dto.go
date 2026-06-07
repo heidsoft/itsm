@@ -43,13 +43,13 @@ const (
 // MSPAllocationDTO MSP 分配数据传输对象
 type MSPAllocationDTO struct {
 	ID                 int        `json:"id"`
-	MSPUserID          int        `json:"msp_user_id"`
-	MSPUsername        string     `json:"msp_username,omitempty"`
-	CustomerTenantID   int        `json:"customer_tenant_id"`
-	CustomerTenantName string     `json:"customer_tenant_name,omitempty"`
+	MSPUserID          int        `json:"mspUserId"`
+	MSPUsername        string     `json:"mspUsername,omitempty"`
+	CustomerTenantID   int        `json:"customerTenantId"`
+	CustomerTenantName string     `json:"customerTenantName,omitempty"`
 	Role               string     `json:"role"` // primary|backup|specialist
-	AssignedAt         time.Time  `json:"assigned_at"`
-	DeassignedAt       *time.Time `json:"deassigned_at,omitempty"`
+	AssignedAt         time.Time  `json:"assignedAt"`
+	DeassignedAt       *time.Time `json:"deassignedAt,omitempty"`
 }
 
 // CreateAllocationRequest 创建分配请求
@@ -70,12 +70,12 @@ type DeallocateRequest struct {
 
 // TicketMSPInfo 工单的 MSP 关联信息
 type TicketMSPInfo struct {
-	IsManagedByMSP    bool   `json:"is_managed_by_msp"`
-	MSPProviderID     *int   `json:"msp_provider_id,omitempty"`
-	MSPProviderName   string `json:"msp_provider_name,omitempty"`
-	ManagedByUserID   *int   `json:"managed_by_user_id,omitempty"`
-	ManagedByUsername string `json:"managed_by_username,omitempty"`
-	MSPTicketID       string `json:"msp_ticket_id,omitempty"`
+	IsManagedByMSP    bool   `json:"isManagedByMsp"`
+	MSPProviderID     *int   `json:"mspProviderId,omitempty"`
+	MSPProviderName   string `json:"mspProviderName,omitempty"`
+	ManagedByUserID   *int   `json:"managedByUserId,omitempty"`
+	ManagedByUsername string `json:"managedByUsername,omitempty"`
+	MSPTicketID       string `json:"mspTicketId,omitempty"`
 }
 
 // AssignMSPTechnicianRequest 为工单分配 MSP 技术员请求
@@ -88,11 +88,11 @@ type AssignMSPTechnicianRequest struct {
 
 // MSPContext MSP 访问上下文
 type MSPContext struct {
-	IsMSP            bool   `json:"is_msp"`
-	MSPUserID        int    `json:"msp_user_id,omitempty"`
-	CustomerTenantID *int   `json:"customer_tenant_id,omitempty"`
+	IsMSP            bool   `json:"isMsp"`
+	MSPUserID        int    `json:"mspUserId,omitempty"`
+	CustomerTenantID *int   `json:"customerTenantId,omitempty"`
 	Role             string `json:"role,omitempty"`
-	AllowedCustomers []int  `json:"allowed_customers,omitempty"`
+	AllowedCustomers []int  `json:"allowedCustomers,omitempty"`
 }
 
 // ==================== 客户与报表 DTO ====================
@@ -106,24 +106,24 @@ type CustomerDTO struct {
 
 // MSPCustomerReport MSP 客户服务报表
 type MSPCustomerReport struct {
-	CustomerTenantID   int     `json:"customer_tenant_id"`
-	CustomerName       string  `json:"customer_name"`
+	CustomerTenantID   int     `json:"customerTenantId"`
+	CustomerName       string  `json:"customerName"`
 	Period             string  `json:"period"`
-	TotalTickets       int     `json:"total_tickets"`
-	ResolvedTickets    int     `json:"resolved_tickets"`
-	MSPHandlingTimeAvg float64 `json:"msp_handling_time_avg"` // 小时
-	SLAComplianceRate  float64 `json:"sla_compliance_rate"`   // 0.0-1.0
+	TotalTickets       int     `json:"totalTickets"`
+	ResolvedTickets    int     `json:"resolvedTickets"`
+	MSPHandlingTimeAvg float64 `json:"mspHandlingTimeAvg"` // 小时
+	SLAComplianceRate  float64 `json:"slaComplianceRate"`  // 0.0-1.0
 }
 
 // MSPPerformanceReport MSP 员工绩效报表
 type MSPPerformanceReport struct {
-	MSPUserID            int     `json:"msp_user_id"`
-	MSPUsername          string  `json:"msp_username"`
+	MSPUserID            int     `json:"mspUserId"`
+	MSPUsername          string  `json:"mspUsername"`
 	Period               string  `json:"period"`
-	TotalTickets         int     `json:"total_tickets"`
-	ResolvedTickets      int     `json:"resolved_tickets"`
-	AvgHandleTime        float64 `json:"avg_handle_time"`
-	CustomerSatisfaction float64 `json:"customer_satisfaction,omitempty"`
+	TotalTickets         int     `json:"totalTickets"`
+	ResolvedTickets      int     `json:"resolvedTickets"`
+	AvgHandleTime        float64 `json:"avgHandleTime"`
+	CustomerSatisfaction float64 `json:"customerSatisfaction,omitempty"`
 }
 
 // ==================== 分配历史 DTO ====================
@@ -131,25 +131,48 @@ type MSPPerformanceReport struct {
 // MSPAllocationHistory 分配历史记录
 type MSPAllocationHistory struct {
 	ID                 int        `json:"id"`
-	MSPUserID          int        `json:"msp_user_id"`
-	MSPUsername        string     `json:"msp_username"`
-	CustomerTenantID   int        `json:"customer_tenant_id"`
-	CustomerName       string     `json:"customer_name"`
+	MSPUserID          int        `json:"mspUserId"`
+	MSPUsername        string     `json:"mspUsername"`
+	CustomerTenantID   int        `json:"customerTenantId"`
+	CustomerName       string     `json:"customerName"`
 	Role               string     `json:"role"`
-	AssignedAt         time.Time  `json:"assigned_at"`
-	DeassignedAt       *time.Time `json:"deassigned_at,omitempty"`
-	DeallocationReason string     `json:"deallocation_reason,omitempty"`
-	CreatedBy          int        `json:"created_by"`
-	CreatedByName      string     `json:"created_by_name,omitempty"`
+	AssignedAt         time.Time  `json:"assignedAt"`
+	DeassignedAt       *time.Time `json:"deassignedAt,omitempty"`
+	DeallocationReason string     `json:"deallocationReason,omitempty"`
+	CreatedBy          int        `json:"createdBy"`
+	CreatedByName      string     `json:"createdByName,omitempty"`
 }
 
 // ==================== 工作流节点 MSP 配置 DTO ====================
 
 // WorkflowNodeMSPConfig 工作流节点的 MSP 配置
 type WorkflowNodeMSPConfig struct {
-	EnableMSPSupport   bool     `json:"enable_msp_support"`
-	AllowedMSPRoles    []string `json:"allowed_msp_roles,omitempty"`
-	RequireMSPApproval bool     `json:"require_msp_approval"`
+	EnableMSPSupport   bool     `json:"enableMspSupport"`
+	AllowedMSPRoles    []string `json:"allowedMspRoles,omitempty"`
+	RequireMSPApproval bool     `json:"requireMspApproval"`
+}
+
+type MSPStatusResponse struct {
+	IsMSP     bool   `json:"isMsp"`
+	MSPUserID int    `json:"mspUserId,omitempty"`
+	Role      string `json:"role,omitempty"`
+	IsAdmin   bool   `json:"isAdmin"`
+	Message   string `json:"message,omitempty"`
+}
+
+type MSPAllocationListResponse struct {
+	Allocations []*MSPAllocationDTO `json:"allocations"`
+	Total       int                 `json:"total"`
+}
+
+type MSPCustomerListResponse struct {
+	Customers []*CustomerDTO `json:"customers"`
+	Total     int            `json:"total"`
+}
+
+type MSPReportListResponse[T any] struct {
+	Reports []T `json:"reports"`
+	Total   int `json:"total"`
 }
 
 // ==================== 查询参数 DTO ====================
