@@ -11,23 +11,33 @@ ENV CGO_ENABLED=0 \
     GOOS=${TARGETOS} \
     GOARCH=${TARGETARCH} \
     GOPROXY=${GOPROXY} \
-    GOSUMDB=${GOSUMDB}
-
-RUN apk add --no-cache git ca-certificates tzdata
+    GOSUMDB=${GOSUMDB} \
+    GOFLAGS=-p=1 \
+    GOMAXPROCS=1 \
+    GOGC=20 \
+    GOMEMLIMIT=1GiB \
+    HTTP_PROXY= \
+    HTTPS_PROXY= \
+    http_proxy= \
+    https_proxy= \
+    ALL_PROXY= \
+    all_proxy= \
+    NO_PROXY=localhost,127.0.0.1 \
+    no_proxy=localhost,127.0.0.1
 
 COPY go.mod go.sum ./
-RUN go mod download
+RUN env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy go mod download
 
 COPY . .
 
-RUN go build -trimpath -ldflags="-s -w" -o /out/main ./main.go
+RUN env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy \
+    go build -trimpath -ldflags="-s -w" -o /out/main ./main.go
 
 FROM alpine:3.20
 
 WORKDIR /app
 
 RUN addgroup -S app && adduser -S -G app app \
-    && apk add --no-cache ca-certificates tzdata wget \
     && mkdir -p /app/logs /app/uploads /app/temp \
     && chown -R app:app /app
 

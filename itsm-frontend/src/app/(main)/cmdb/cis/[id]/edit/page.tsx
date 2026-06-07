@@ -89,14 +89,36 @@ const EditCIPage: React.FC = () => {
 
   useEffect(() => {
     if (!ci || initializedRef.current) return;
-    const initialValues: Record<string, unknown> = {
-      ...ci,
+    const initialValues: Partial<CIFormValues> = {
+      name: ci.name,
+      ci_type_id: ci.ci_type_id ?? ci.ciTypeId ?? 0,
+      status: ci.status,
+      description: ci.description,
+      serial_number: ci.serial_number ?? ci.serialNumber,
+      model: ci.model,
+      vendor: ci.vendor,
+      location: ci.location,
+      asset_tag: ci.asset_tag ?? ci.assetTag,
+      assigned_to: ci.assigned_to ?? ci.assignedTo,
+      owned_by: ci.owned_by ?? ci.ownedBy,
+      environment: ci.environment,
+      criticality: ci.criticality,
+      discovery_source: ci.discovery_source ?? ci.discoverySource,
+      source: ci.source,
+      cloud_provider: ci.cloud_provider ?? ci.cloudProvider,
       cloud_account_id: ci.cloud_account_id ? String(ci.cloud_account_id) : undefined,
+      cloud_region: ci.cloud_region ?? ci.cloudRegion,
+      cloud_zone: ci.cloud_zone ?? ci.cloudZone,
+      cloud_resource_id: ci.cloud_resource_id ?? ci.cloudResourceId,
+      cloud_resource_type: ci.cloud_resource_type ?? ci.cloudResourceType,
+      cloud_sync_status: ci.cloud_sync_status ?? ci.cloudSyncStatus,
+      cloud_resource_ref_id: ci.cloud_resource_ref_id ?? ci.cloudResourceRefId,
+      cloud_metadata: ci.cloud_metadata as Record<string, {} | undefined> | undefined,
     };
     if (ci.attributes && typeof ci.attributes === 'object') {
       initialValues.attributes = JSON.stringify(ci.attributes, null, 2);
     }
-    form.setFieldsValue(initialValues as CIFormValues);
+    form.setFieldsValue(initialValues);
 
     if (ci.cloud_resource_ref_id && cloudResources.length && cloudServices.length) {
       const resource = cloudResources.find(item => item.id === ci.cloud_resource_ref_id);

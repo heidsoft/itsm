@@ -79,6 +79,7 @@ func (tvc *TicketViewController) CreateTicketView(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	req.Normalize()
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
@@ -111,6 +112,7 @@ func (tvc *TicketViewController) UpdateTicketView(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	req.Normalize()
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
@@ -169,6 +171,7 @@ func (tvc *TicketViewController) ShareTicketView(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	req.Normalize()
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
