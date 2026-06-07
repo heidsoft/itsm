@@ -9,16 +9,16 @@ import (
 // TicketAttachmentResponse 工单附件响应
 type TicketAttachmentResponse struct {
 	ID         int       `json:"id"`
-	TicketID   int       `json:"ticket_id"`
-	FileName   string    `json:"file_name"`
-	FilePath   string    `json:"file_path"`
-	FileURL    string    `json:"file_url"`
-	FileSize   int       `json:"file_size"`
-	FileType   string    `json:"file_type"`
-	MimeType   string    `json:"mime_type"`
-	UploadedBy int       `json:"uploaded_by"`
+	TicketID   int       `json:"ticketId"`
+	FileName   string    `json:"fileName"`
+	FilePath   string    `json:"filePath"`
+	FileURL    string    `json:"fileUrl"`
+	FileSize   int       `json:"fileSize"`
+	FileType   string    `json:"fileType"`
+	MimeType   string    `json:"mimeType"`
+	UploadedBy int       `json:"uploadedBy"`
 	Uploader   *UserInfo `json:"uploader,omitempty"` // 上传人信息
-	CreatedAt  time.Time `json:"created_at"`
+	CreatedAt  time.Time `json:"createdAt"`
 }
 
 // ListTicketAttachmentsResponse 工单附件列表响应
