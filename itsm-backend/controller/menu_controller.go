@@ -43,7 +43,10 @@ func (c *MenuController) ListMenus(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, menus)
+	common.Success(ctx, dto.MenuListResponse{
+		Menus: menus,
+		Total: len(menus),
+	})
 }
 
 // GetMenu 获取菜单详情
@@ -227,14 +230,14 @@ func (c *MenuController) InitDefaultMenus(ctx *gin.Context) {
 	// 检查是否已有菜单
 	existing, err := c.menuService.ListMenus(ctx.Request.Context(), tenantID)
 	if err == nil && len(existing) > 0 {
-		common.Success(ctx, gin.H{
-			"message": "菜单已初始化",
-			"count":   len(existing),
+		common.Success(ctx, dto.MenuInitResponse{
+			Message: "菜单已初始化",
+			Count:   len(existing),
 		})
 		return
 	}
 
-	common.Success(ctx, gin.H{
-		"message": "请通过种子数据初始化菜单",
+	common.Success(ctx, dto.MenuInitResponse{
+		Message: "请通过种子数据初始化菜单",
 	})
 }

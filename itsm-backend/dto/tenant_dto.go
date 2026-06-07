@@ -62,18 +62,18 @@ type TenantResponse struct {
 	Status          string                 `json:"status"`
 	Settings        map[string]interface{} `json:"settings,omitempty"`
 	Quota           map[string]interface{} `json:"quota,omitempty"`
-	ExpiresAt       *time.Time             `json:"expires_at,omitempty"`
-	ParentTenantID  *int                   `json:"parent_tenant_id,omitempty"`
-	MSPProviderID   *int                   `json:"msp_provider_id,omitempty"`
-	PlanCode        *string                `json:"plan_code,omitempty"`
-	BillingEnabled  bool                   `json:"billing_enabled"`
-	CostCenterCode  *string                `json:"cost_center_code,omitempty"`
-	LegalEntityCode *string                `json:"legal_entity_code,omitempty"`
+	ExpiresAt       *time.Time             `json:"expiresAt,omitempty"`
+	ParentTenantID  *int                   `json:"parentTenantId,omitempty"`
+	MSPProviderID   *int                   `json:"mspProviderId,omitempty"`
+	PlanCode        *string                `json:"planCode,omitempty"`
+	BillingEnabled  bool                   `json:"billingEnabled"`
+	CostCenterCode  *string                `json:"costCenterCode,omitempty"`
+	LegalEntityCode *string                `json:"legalEntityCode,omitempty"`
 	Currency        *string                `json:"currency,omitempty"`
-	ServiceTier     *string                `json:"service_tier,omitempty"`
-	OwnerContact    *string                `json:"owner_contact,omitempty"`
-	CreatedAt       time.Time              `json:"created_at"`
-	UpdatedAt       time.Time              `json:"updated_at"`
+	ServiceTier     *string                `json:"serviceTier,omitempty"`
+	OwnerContact    *string                `json:"ownerContact,omitempty"`
+	CreatedAt       time.Time              `json:"createdAt"`
+	UpdatedAt       time.Time              `json:"updatedAt"`
 }
 
 // TenantListResponse 租户列表响应
@@ -81,5 +81,5 @@ type TenantListResponse struct {
 	Tenants []TenantResponse `json:"tenants"`
 	Total   int              `json:"total"`
 	Page    int              `json:"page"`
-	Size    int              `json:"size"`
+	PageSize int             `json:"pageSize"`
 }

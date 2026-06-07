@@ -704,27 +704,41 @@ type WorkflowResponse struct {
 	Type         string                 `json:"type"`
 	Definition   map[string]interface{} `json:"definition"`
 	Version      string                 `json:"version"`
-	IsActive     bool                   `json:"is_active"`
-	TenantID     int                    `json:"tenant_id"`
-	DepartmentID *int                   `json:"department_id,omitempty"`
-	CreatedAt    time.Time              `json:"created_at"`
-	UpdatedAt    time.Time              `json:"updated_at"`
+	IsActive     bool                   `json:"isActive"`
+	TenantID     int                    `json:"tenantId"`
+	DepartmentID *int                   `json:"departmentId,omitempty"`
+	CreatedAt    time.Time              `json:"createdAt"`
+	UpdatedAt    time.Time              `json:"updatedAt"`
 }
 
 // WorkflowInstanceResponse 工作流实例响应
 type WorkflowInstanceResponse struct {
 	ID          int                    `json:"id"`
 	Status      string                 `json:"status"`
-	CurrentStep string                 `json:"current_step"`
+	CurrentStep string                 `json:"currentStep"`
 	Context     map[string]interface{} `json:"context"`
-	WorkflowID  int                    `json:"workflow_id"`
-	EntityID    int                    `json:"entity_id"`
-	EntityType  string                 `json:"entity_type"`
-	TenantID    int                    `json:"tenant_id"`
-	StartedAt   time.Time              `json:"started_at"`
-	CompletedAt *time.Time             `json:"completed_at,omitempty"`
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   time.Time              `json:"updated_at"`
+	WorkflowID  int                    `json:"workflowId"`
+	EntityID    int                    `json:"entityId"`
+	EntityType  string                 `json:"entityType"`
+	TenantID    int                    `json:"tenantId"`
+	StartedAt   time.Time              `json:"startedAt"`
+	CompletedAt *time.Time             `json:"completedAt,omitempty"`
+	CreatedAt   time.Time              `json:"createdAt"`
+	UpdatedAt   time.Time              `json:"updatedAt"`
+}
+
+type WorkflowListResponse struct {
+	Workflows []*WorkflowResponse `json:"workflows"`
+	Total     int                 `json:"total"`
+	Page      int                 `json:"page"`
+	PageSize  int                 `json:"pageSize"`
+}
+
+type WorkflowInstanceListResponse struct {
+	Instances []*WorkflowInstanceResponse `json:"instances"`
+	Total     int                        `json:"total"`
+	Page      int                        `json:"page"`
+	PageSize  int                        `json:"pageSize"`
 }
 
 // ToWorkflowResponse converts an ent.Workflow to WorkflowResponse

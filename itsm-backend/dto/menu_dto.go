@@ -6,12 +6,12 @@ type MenuDTO struct {
 	Name           string    `json:"name"`
 	Path           string    `json:"path"`
 	Icon           string    `json:"icon,omitempty"`
-	ParentID       *int      `json:"parent_id,omitempty"`
-	PermissionCode *string   `json:"permission_code,omitempty"`
-	SortOrder      int       `json:"sort_order"`
-	TenantID       int       `json:"tenant_id"`
-	IsVisible      bool      `json:"is_visible"`
-	IsEnabled      bool      `json:"is_enabled"`
+	ParentID       *int      `json:"parentId,omitempty"`
+	PermissionCode *string   `json:"permissionCode,omitempty"`
+	SortOrder      int       `json:"sortOrder"`
+	TenantID       int       `json:"tenantId"`
+	IsVisible      bool      `json:"isVisible"`
+	IsEnabled      bool      `json:"isEnabled"`
 	Description    string    `json:"description,omitempty"`
 	Children       []MenuDTO `json:"children,omitempty"`
 }
@@ -51,5 +51,15 @@ type MenuTreeResponse struct {
 // MenuWithPermission 菜单权限信息
 type MenuWithPermission struct {
 	MenuDTO
-	HasPermission bool `json:"has_permission"`
+	HasPermission bool `json:"hasPermission"`
+}
+
+type MenuListResponse struct {
+	Menus  []*MenuDTO `json:"menus"`
+	Total  int        `json:"total"`
+}
+
+type MenuInitResponse struct {
+	Message string `json:"message"`
+	Count   int    `json:"count,omitempty"`
 }

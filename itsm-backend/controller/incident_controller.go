@@ -199,14 +199,13 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 	}
 
 	// 返回前端期望的格式
-	common.Success(ctx, gin.H{
-		"incidents":   incidents,
-		"items":       incidents, // 保持向后兼容
-		"total":       total,
-		"page":        page,
-		"page_size":   size,
-		"pageSize":    size, // 保持向后兼容
-		"total_pages": totalPages,
+	common.Success(ctx, dto.IncidentListResponse{
+		Incidents:  incidents,
+		Items:      incidents,
+		Total:      total,
+		Page:       page,
+		PageSize:   size,
+		TotalPages: totalPages,
 	})
 }
 
@@ -816,11 +815,11 @@ func (c *IncidentController) GetActiveAlerts(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, gin.H{
-		"items":    alerts,
-		"total":    total,
-		"page":     page,
-		"pageSize": size,
+	common.Success(ctx, dto.IncidentAlertListResponse{
+		Items:    alerts,
+		Total:    total,
+		Page:     page,
+		PageSize: size,
 	})
 }
 

@@ -123,6 +123,13 @@ func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 		req.Page = 1
 	}
 	if req.PageSize == 0 {
+		if pageSizeStr := c.Query("page_size"); pageSizeStr != "" {
+			if pageSize, err := strconv.Atoi(pageSizeStr); err == nil && pageSize > 0 {
+				req.PageSize = pageSize
+			}
+		}
+	}
+	if req.PageSize == 0 {
 		req.PageSize = 10
 	}
 
@@ -153,7 +160,7 @@ func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 		Articles: articleResponses,
 		Total:    total,
 		Page:     req.Page,
-		Size:     req.PageSize,
+		PageSize: req.PageSize,
 	}
 
 	common.Success(c, response)
@@ -331,7 +338,7 @@ func (kc *KnowledgeController) ListVersions(c *gin.Context) {
 		Versions: versionResponses,
 		Total:    total,
 		Page:     req.Page,
-		Size:     req.PageSize,
+		PageSize: req.PageSize,
 	})
 }
 

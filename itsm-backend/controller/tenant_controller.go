@@ -91,10 +91,10 @@ func (tc *TenantController) ListTenants(c *gin.Context) {
 	}
 
 	response := &dto.TenantListResponse{
-		Tenants: tenantResponses,
-		Total:   total,
-		Page:    req.Page,
-		Size:    req.PageSize,
+		Tenants:  tenantResponses,
+		Total:    total,
+		Page:     req.Page,
+		PageSize: req.PageSize,
 	}
 
 	common.Success(c, response)

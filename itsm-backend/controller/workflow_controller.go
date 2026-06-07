@@ -215,9 +215,11 @@ func (wc *WorkflowController) ListWorkflows(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{
-		"workflows": dto.ToWorkflowResponseList(workflows),
-		"total":     total,
+	common.Success(c, dto.WorkflowListResponse{
+		Workflows: dto.ToWorkflowResponseList(workflows),
+		Total:     total,
+		Page:      page,
+		PageSize:  pageSize,
 	})
 }
 

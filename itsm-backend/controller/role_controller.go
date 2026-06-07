@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -98,11 +99,37 @@ func (rc *RoleController) ListRoles(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{
-		"roles": roles,
-		"total": total,
-		"page":  page,
-		"size":  pageSize,
+	totalPages := 0
+	if pageSize > 0 {
+		totalPages = (total + pageSize - 1) / pageSize
+	}
+
+	roleItems := make([]dto.RoleDTO, 0, len(roles))
+	for _, role := range roles {
+		permissionCodes := make([]string, 0, len(role.Permissions))
+		for _, permission := range role.Permissions {
+			permissionCodes = append(permissionCodes, permission.Code)
+		}
+
+		roleItems = append(roleItems, dto.RoleDTO{
+			ID:          role.ID,
+			Name:        role.Name,
+			Code:        role.Code,
+			Description: role.Description,
+			Permissions: permissionCodes,
+			IsSystem:    role.IsSystem,
+			CreatedAt:   role.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:   role.UpdatedAt.Format(time.RFC3339),
+			TenantID:    role.TenantID,
+		})
+	}
+
+	common.Success(c, dto.RoleListResponse{
+		Roles:     roleItems,
+		Total:     total,
+		Page:      page,
+		PageSize:  pageSize,
+		TotalPage: totalPages,
 	})
 }
 
