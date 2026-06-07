@@ -31,6 +31,7 @@ interface SidebarProps {
  * 将 API 菜单转换为 Sidebar 格式
  */
 function convertApiMenuToSidebar(menus: MenuItemType[]): MenuItem[] {
+  if (!menus) return [];
   return menus.map(menu => {
     const icon = getIconByName(menu.icon);
     const item: MenuItem = {

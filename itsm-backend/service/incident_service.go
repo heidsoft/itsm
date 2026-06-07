@@ -1055,6 +1055,34 @@ func (s *IncidentService) toIncidentMetricResponse(metric *ent.IncidentMetric) *
 }
 
 // GetIncidentStats 获取事件统计信息
+
+// AcknowledgeIncident 流转事件状态到 acknowledged
+func (s *IncidentService) AcknowledgeIncident(ctx context.Context, id, userID, tenantID int) error {
+	now := time.Now()
+	return s.client.Incident.UpdateOneID(id).
+		SetStatus(common.IncidentStatusAcknowledged).
+		SetUpdatedAt(now).
+		Exec(ctx)
+}
+
+// ResolveIncident 流转事件状态到 resolved
+func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenantID int, resolution, rootCause string) error {
+	now := time.Now()
+	return s.client.Incident.UpdateOneID(id).
+		SetStatus(common.IncidentStatusResolved).
+		SetUpdatedAt(now).
+		Exec(ctx)
+}
+
+// CloseIncident 流转事件状态到 closed
+func (s *IncidentService) CloseIncident(ctx context.Context, id, userID, tenantID int, closeNotes string) error {
+	now := time.Now()
+	return s.client.Incident.UpdateOneID(id).
+		SetStatus(common.IncidentStatusClosed).
+		SetUpdatedAt(now).
+		Exec(ctx)
+}
+
 func (s *IncidentService) GetIncidentStats(ctx context.Context, tenantID int) (*dto.IncidentStatsResponse, error) {
 	s.logger.Infow("Getting incident stats", "tenant_id", tenantID)
 

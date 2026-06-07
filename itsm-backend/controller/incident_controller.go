@@ -617,6 +617,90 @@ func (c *IncidentController) CreateIncidentAlert(ctx *gin.Context) {
 	common.SuccessWithMessage(ctx, "创建事件告警成功", response)
 }
 
+
+// AcknowledgeIncident 确认事件（业务流转）
+// @Summary 确认事件
+// @Description 将事件状态从 new 流转到 acknowledged
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/incidents/:id/acknowledge [post]
+func (c *IncidentController) AcknowledgeIncident(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+	userID := ctx.GetInt("user_id")
+	tenantID := ctx.GetInt("tenant_id")
+	if err := c.incidentService.AcknowledgeIncident(ctx.Request.Context(), id, userID, tenantID); err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(ctx, gin.H{"message": "事件已确认"})
+}
+
+// ResolveIncident 解决事件
+// @Summary 解决事件
+// @Description 将事件状态流转到 resolved
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Param id path int true "事件ID"
+// @Param body body object true "解决信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/incidents/:id/resolve [post]
+func (c *IncidentController) ResolveIncident(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+	var body struct {
+		Resolution string `json:"resolution"`
+		RootCause  string `json:"rootCause"`
+	}
+	_ = ctx.ShouldBindJSON(&body)
+	userID := ctx.GetInt("user_id")
+	tenantID := ctx.GetInt("tenant_id")
+	if err := c.incidentService.ResolveIncident(ctx.Request.Context(), id, userID, tenantID, body.Resolution, body.RootCause); err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(ctx, gin.H{"message": "事件已解决"})
+}
+
+// CloseIncident 关闭事件
+// @Summary 关闭事件
+// @Description 将已解决的事件关闭
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Param id path int true "事件ID"
+// @Param body body object true "关闭信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/incidents/:id/close [post]
+func (c *IncidentController) CloseIncident(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+	var body struct {
+		CloseNotes string `json:"closeNotes"`
+	}
+	_ = ctx.ShouldBindJSON(&body)
+	userID := ctx.GetInt("user_id")
+	tenantID := ctx.GetInt("tenant_id")
+	if err := c.incidentService.CloseIncident(ctx.Request.Context(), id, userID, tenantID, body.CloseNotes); err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(ctx, gin.H{"message": "事件已关闭"})
+}
+
 // AcknowledgeAlert 确认告警
 // @Summary 确认告警
 // @Description 确认指定告警
