@@ -128,6 +128,9 @@ type RouterConfig struct {
 
 	// Known Error Handler (KEDB)
 	KnownErrorHandler *known_error.Handler
+
+	// Connector Controller (连接器/插件/技能市场)
+	ConnectorController *controller.ConnectorController
 }
 
 // SetupRoutes 设置路由
@@ -199,8 +202,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			c.JSON(200, gin.H{"version": "1.0.0", "build": "dev"})
 		})
 
-		// Prometheus metrics 端点
-		r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+		// Prometheus metrics 端点（需要认证，防止信息泄露）
+		metricsAuth := r.Group("")
+		metricsAuth.Use(middleware.AuthMiddleware(config.JWTSecret))
+		metricsAuth.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	}
 
 	// 认证路由（需要JWT）
@@ -387,7 +392,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.POST("/workflow/reject", config.TicketWorkflowController.RejectTicket)
 				tickets.POST("/workflow/withdraw", config.TicketWorkflowController.WithdrawTicket)
 				tickets.POST("/workflow/forward", config.TicketWorkflowController.ForwardTicket)
-				tickets.POST("/workflow/cc", config.TicketWorkflowController.CCTicket)
 				tickets.POST("/workflow/approve", config.TicketWorkflowController.ApproveTicket)
 				tickets.POST("/workflow/resolve", config.TicketWorkflowController.ResolveTicket)
 				tickets.POST("/workflow/close", config.TicketWorkflowController.CloseTicket)
@@ -437,11 +441,24 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 			if config.AnalyticsController != nil {
 				tickets.POST("/analytics/export", config.AnalyticsController.ExportAnalytics)
+				// B8: GET /api/v1/analytics/tickets - 工单分析概览
+				// 挂在 tenant 顶层 group，路径 = /api/v1/analytics/tickets
 			}
 
 			if config.PredictionController != nil {
 				tickets.POST("/prediction/export", config.PredictionController.ExportPredictionReport)
 			}
+		}
+
+		// ==================== 顶层分析别名 ====================
+		if config.AnalyticsController != nil {
+			tenant.(*gin.RouterGroup).GET("/analytics/tickets", config.AnalyticsController.GetTicketAnalytics)
+		}
+
+		// B9: AI 工单总结 /ai/tickets/{id}/summary
+		aiGroup := tenant.(*gin.RouterGroup).Group("/ai")
+		{
+			aiGroup.GET("/tickets/:id/summary", config.AIHandler.SummarizeTicket)
 		}
 
 		// ==================== System Configs ====================
@@ -516,6 +533,22 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				inc.POST("/events", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncidentEvent)
 				inc.GET("/:id/alerts", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentAlerts)
 				inc.GET("/:id/metrics", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentMetrics)
+
+				// 根因分析
+				inc.GET("/:id/root-cause", middleware.RequirePermission("incident", "read"), config.IncidentController.GetRootCause)
+				inc.PUT("/:id/root-cause", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateRootCause)
+
+				// 影响评估
+				inc.GET("/:id/impact-assessment", middleware.RequirePermission("incident", "read"), config.IncidentController.GetImpactAssessment)
+				inc.PUT("/:id/impact-assessment", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateImpactAssessment)
+
+				// 事件分类
+				inc.GET("/:id/classification", middleware.RequirePermission("incident", "read"), config.IncidentController.GetClassification)
+				inc.PUT("/:id/classification", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateClassification)
+
+				// 评论
+				inc.GET("/:id/comments", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentComments)
+				inc.POST("/:id/comments", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncidentComment)
 
 				// 监控
 				inc.POST("/monitoring", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentMonitoring)
@@ -818,8 +851,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				aiGrp.POST("/tickets/:id/analyze", config.AIHandler.AnalyzeTicket)
 				aiGrp.POST("/feedback", config.AIHandler.SaveFeedback)
 				// RAG endpoints
-				aiGrp.POST("/knowledge/search", config.AIHandler.KnowledgeSearch)
-				aiGrp.POST("/triage", config.AIHandler.Triage)
+				aiGrp.GET("/rag/search", config.AIHandler.KnowledgeSearch)
+				aiGrp.POST("/rag/ask", config.AIHandler.Chat)
 			}
 
 			agentGrp := tenant.(*gin.RouterGroup).Group("/agent")
@@ -955,6 +988,20 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			{
 				sys.GET("/tags", config.CommonHandler.ListTags)
 				sys.GET("/audit-logs", config.CommonHandler.GetAuditLogs)
+			}
+
+			// B7/Bug10: 顶层路由别名（兼容前端 /api/v1/{departments,teams,tags,admin/tenants} 旧路径）
+			// 实际业务仍在 /org/* 与 /system/* 与 /tenants，旧路径保持只读 GET，避免破坏现有调用方
+			{
+				tenant.GET("/departments", config.CommonHandler.ListDepartments)
+				tenant.GET("/teams", config.CommonHandler.ListTeams)
+				tenant.GET("/tags", config.CommonHandler.ListTags)
+			}
+			if config.TenantController != nil {
+				admin := tenant.(*gin.RouterGroup).Group("/admin")
+				{
+					admin.GET("/tenants", config.TenantController.ListTenants)
+				}
 			}
 
 			// Role & Permission Controllers (database-backed with tenant isolation)
@@ -1112,9 +1159,27 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			config.KnownErrorHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
+		// Connector Controller (连接器/插件/技能市场)
+		if config.ConnectorController != nil {
+			conns := tenant.(*gin.RouterGroup).Group("/connectors")
+			{
+				conns.GET("", config.ConnectorController.ListMarket)
+				conns.GET("/configs", config.ConnectorController.ListConfigs)
+				conns.POST("/configs", middleware.RequirePermission("connector", "write"), config.ConnectorController.Provision)
+				conns.DELETE("/configs/:name", middleware.RequirePermission("connector", "write"), config.ConnectorController.Revoke)
+				conns.POST("/:name/send", middleware.RequirePermission("connector", "write"), config.ConnectorController.Send)
+				conns.POST("/:name/test", middleware.RequirePermission("connector", "write"), config.ConnectorController.Test)
+				conns.GET("/health", config.ConnectorController.Health)
+				// 飞书事件回调（独立签名校验）
+				conns.POST("/feishu/callback", config.ConnectorController.FeishuCallback)
+			}
+		}
+
 		if config.DashboardHandler != nil {
 			dashboard := tenant.(*gin.RouterGroup).Group("/dashboard")
 			{
+				// B5: 别名，/api/v1/dashboard 直接返回 overview 数据（前端默认调用）
+				dashboard.GET("", config.DashboardHandler.GetOverview)
 				dashboard.GET("/overview", config.DashboardHandler.GetOverview)
 				dashboard.GET("/stats", config.DashboardHandler.GetStats)
 				dashboard.GET("/stats/users", config.DashboardHandler.GetUserStats)
