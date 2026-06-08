@@ -7,6 +7,11 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/connector"
+	_ "itsm-backend/connector/builtin/console"
+	_ "itsm-backend/connector/builtin/feishu"
+	_ "itsm-backend/connector/builtin/webhook"
+	"itsm-backend/connector/marketplace"
 	"itsm-backend/config"
 	"itsm-backend/controller"
 	"itsm-backend/database"
@@ -246,6 +251,12 @@ func NewApplication() *Application {
 
 	// Known Error Handler (KEDB)
 	knownErrorHandler := known_error.NewHandler(client, sugar)
+
+
+	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
+	connectorManager := connector.NewManager(connector.Default(), sugar)
+	connectorMarket := marketplace.New()
+	connectorController := controller.NewConnectorController(connectorManager, connector.Default(), connectorMarket, sugar)
 
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)
@@ -498,6 +509,9 @@ func NewApplication() *Application {
 
 		// Known Error Handler (KEDB)
 		KnownErrorHandler: knownErrorHandler,
+
+		// Connector Controller
+		ConnectorController: connectorController,
 
 		// WebSocket Service
 		WebSocketService: wsService,
