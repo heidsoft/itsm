@@ -55,6 +55,8 @@ const (
 	TicketStatusClosed     = "closed"
 	TicketStatusCancelled  = "cancelled"
 	TicketStatusAssigned   = "assigned" // 分配中状态
+	TicketStatusApproved   = "approved"
+	TicketStatusRejected   = "rejected"
 )
 
 // ===================================

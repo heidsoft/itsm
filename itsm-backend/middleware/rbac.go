@@ -103,7 +103,7 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "sla", Action: "write"},
 		{Resource: "sla", Action: "delete"},
 		// 审计日志权限：仅管理员及以上可读
-		{Resource: "audit_logs", Action: "read"},
+		{Resource: "audit", Action: "read"},
 		{Resource: "ai", Action: "read"},
 		{Resource: "ai", Action: "write"},
 		{Resource: "role", Action: "read"},
@@ -114,6 +114,11 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "system_config", Action: "write"},
 		{Resource: "org", Action: "read"},
 		{Resource: "org", Action: "write"},
+		{Resource: "project", Action: "read"},
+		{Resource: "project", Action: "write"},
+		{Resource: "project", Action: "delete"},
+		{Resource: "application", Action: "read"},
+		{Resource: "application", Action: "write"},
 		// Groups management permissions
 		{Resource: "groups", Action: "read"},
 		{Resource: "groups", Action: "write"},
@@ -165,6 +170,17 @@ var RolePermissions = map[string][]Permission{
 		// Groups management permissions
 		{Resource: "groups", Action: "read"},
 		{Resource: "groups", Action: "write"},
+		// Organization permissions
+		{Resource: "org", Action: "read"},
+		{Resource: "org", Action: "write"},
+		// Project management permissions
+		{Resource: "project", Action: "read"},
+		{Resource: "project", Action: "write"},
+		// Application permissions
+		{Resource: "application", Action: "read"},
+		{Resource: "application", Action: "write"},
+		// AI permissions
+		{Resource: "ai", Action: "read"},
 	},
 	"agent": {
 		{Resource: "ticket", Action: "read"},
@@ -210,6 +226,18 @@ var RolePermissions = map[string][]Permission{
 	"security": {
 		// 安全角色需要基本的用户信息访问权限
 		{Resource: "user", Action: "read"}, // 查看自己的用户信息
+		// B12: 安全审批人需要查看知识库和通知
+		{Resource: "knowledge", Action: "read"},
+		{Resource: "notification", Action: "read"},
+		{Resource: "notification", Action: "write"},
+		// 安全审批人需要查看分配给自己的工单
+		{Resource: "ticket", Action: "read"},
+		{Resource: "incident", Action: "read"},
+		{Resource: "problem", Action: "read"},
+		{Resource: "change", Action: "read"},
+		// 审批权限
+		{Resource: "approval", Action: "read"},
+		{Resource: "approval", Action: "write"},
 		// V0：安全审批只需要查看/处理服务请求（以及读取服务目录用于上下文展示）
 		{Resource: "service_catalog", Action: "read"},
 		{Resource: "service_request", Action: "read"},
@@ -238,7 +266,8 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "service_request", Action: "write"},
 		{Resource: "user", Action: "read"}, // 查看自己的用户信息
 		{Resource: "sla", Action: "read"},
-		{Resource: "sla", Action: "write"},
+		// SLA write removed: only admin/manager should configure SLA policies
+		// {Resource: "sla", Action: "write"},
 		{Resource: "system_config", Action: "read"},
 		{Resource: "org", Action: "read"},
 		{Resource: "cmdb", Action: "read"}, // 查看配置项信息

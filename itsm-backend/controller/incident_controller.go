@@ -2,10 +2,14 @@ package controller
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
+	"itsm-backend/ent/incident"
+	"itsm-backend/ent/incidentevent"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -909,4 +913,468 @@ func (c *IncidentController) ConvertToProblem(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, problem)
+}
+
+// GetRootCause 获取根因分析
+// @Summary 获取根因分析
+// @Description 获取事件的根因分析
+// @Tags 事件管理
+// @Produce json
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/root-cause [get]
+func (c *IncidentController) GetRootCause(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get tenant ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	incident, err := c.incidentService.GetIncident(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			common.Fail(ctx, common.NotFoundErrorCode, "事件不存在")
+			return
+		}
+		c.logger.Errorw("Failed to get incident", "error", err, "id", id)
+		common.Fail(ctx, common.InternalErrorCode, "获取事件失败")
+		return
+	}
+
+	common.Success(ctx, gin.H{
+		"incident_id": incident.ID,
+		"root_cause":  incident.RootCause,
+	})
+}
+
+// UpdateRootCause 更新根因分析
+// @Summary 更新根因分析
+// @Description 更新事件的根因分析
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Param id path int true "事件ID"
+// @Param request body dto.RootCause true "根因分析"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/root-cause [put]
+func (c *IncidentController) UpdateRootCause(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+
+	var req dto.RootCause
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.Errorw("Invalid request body", "error", err)
+		common.Fail(ctx, common.ParamErrorCode, "请求参数无效")
+		return
+	}
+
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get tenant ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	_, err = c.incidentService.UpdateIncident(ctx.Request.Context(), id, &dto.UpdateIncidentRequest{
+		RootCause: &req,
+	}, tenantID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			common.Fail(ctx, common.NotFoundErrorCode, "事件不存在")
+			return
+		}
+		c.logger.Errorw("Failed to update root cause", "error", err, "id", id)
+		common.Fail(ctx, common.InternalErrorCode, "更新根因分析失败")
+		return
+	}
+
+	common.SuccessWithMessage(ctx, "根因分析已更新", nil)
+}
+
+// GetImpactAssessment 获取影响评估
+// @Summary 获取影响评估
+// @Description 获取事件的影响评估
+// @Tags 事件管理
+// @Produce json
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/impact-assessment [get]
+func (c *IncidentController) GetImpactAssessment(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get tenant ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	incident, err := c.incidentService.GetIncident(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			common.Fail(ctx, common.NotFoundErrorCode, "事件不存在")
+			return
+		}
+		c.logger.Errorw("Failed to get incident", "error", err, "id", id)
+		common.Fail(ctx, common.InternalErrorCode, "获取事件失败")
+		return
+	}
+
+	common.Success(ctx, gin.H{
+		"incident_id":        incident.ID,
+		"impact_assessment": incident.ImpactAnalysis,
+	})
+}
+
+// UpdateImpactAssessment 更新影响评估
+// @Summary 更新影响评估
+// @Description 更新事件的影响评估
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Param id path int true "事件ID"
+// @Param request body dto.ImpactAnalysis true "影响评估"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/impact-assessment [put]
+func (c *IncidentController) UpdateImpactAssessment(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+
+	var req dto.ImpactAnalysis
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.Errorw("Invalid request body", "error", err)
+		common.Fail(ctx, common.ParamErrorCode, "请求参数无效")
+		return
+	}
+
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get tenant ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	_, err = c.incidentService.UpdateIncident(ctx.Request.Context(), id, &dto.UpdateIncidentRequest{
+		ImpactAnalysis: &req,
+	}, tenantID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			common.Fail(ctx, common.NotFoundErrorCode, "事件不存在")
+			return
+		}
+		c.logger.Errorw("Failed to update impact assessment", "error", err, "id", id)
+		common.Fail(ctx, common.InternalErrorCode, "更新影响评估失败")
+		return
+	}
+
+	common.SuccessWithMessage(ctx, "影响评估已更新", nil)
+}
+
+// GetClassification 获取事件分类
+// @Summary 获取事件分类
+// @Description 获取事件的分类信息
+// @Tags 事件管理
+// @Produce json
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/classification [get]
+func (c *IncidentController) GetClassification(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get tenant ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	incident, err := c.incidentService.GetIncident(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			common.Fail(ctx, common.NotFoundErrorCode, "事件不存在")
+			return
+		}
+		c.logger.Errorw("Failed to get incident", "error", err, "id", id)
+		common.Fail(ctx, common.InternalErrorCode, "获取事件失败")
+		return
+	}
+
+	common.Success(ctx, gin.H{
+		"incident_id": incident.ID,
+		"category":    incident.Category,
+		"subcategory": incident.Subcategory,
+	})
+}
+
+// UpdateClassification 更新事件分类
+// @Summary 更新事件分类
+// @Description 更新事件的分类信息
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Param id path int true "事件ID"
+// @Param request body object{category=string,subcategory=string} true "分类信息"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/classification [put]
+func (c *IncidentController) UpdateClassification(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+
+	var req struct {
+		Category string `json:"category"`
+		Subcategory string `json:"subcategory"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.Errorw("Invalid request body", "error", err)
+		common.Fail(ctx, common.ParamErrorCode, "请求参数无效")
+		return
+	}
+
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get tenant ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	cat := req.Category
+	sub := req.Subcategory
+	_, err = c.incidentService.UpdateIncident(ctx.Request.Context(), id, &dto.UpdateIncidentRequest{
+		Category:    &cat,
+		Subcategory: &sub,
+	}, tenantID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			common.Fail(ctx, common.NotFoundErrorCode, "事件不存在")
+			return
+		}
+		c.logger.Errorw("Failed to update classification", "error", err, "id", id)
+		common.Fail(ctx, common.InternalErrorCode, "更新分类失败")
+		return
+	}
+
+	common.SuccessWithMessage(ctx, "分类已更新", nil)
+}
+
+// GetIncidentComments 获取事件评论列表
+// @Summary 获取事件评论列表
+// @Description 获取事件的评论列表
+// @Tags 事件管理
+// @Produce json
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response{data=[]gin.H}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/comments [get]
+func (c *IncidentController) GetIncidentComments(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get tenant ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	client, exists := ctx.Get("client")
+	if !exists {
+		common.Fail(ctx, common.InternalErrorCode, "数据库客户端未找到")
+		return
+	}
+	entClient := client.(*ent.Client)
+
+	// 验证事件存在且属于该租户
+	_, err = entClient.Incident.Query().
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
+		Only(ctx.Request.Context())
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(ctx, common.NotFoundErrorCode, "事件不存在")
+		} else {
+			c.logger.Errorw("Failed to query incident", "error", err, "id", id)
+			common.Fail(ctx, common.InternalErrorCode, "查询事件失败")
+		}
+		return
+	}
+
+	// 查询评论（使用 IncidentEvent with event_type=comment）
+	events, err := entClient.IncidentEvent.Query().
+		Where(
+			incidentevent.IncidentIDEQ(id),
+			incidentevent.TenantIDEQ(tenantID),
+			incidentevent.EventType("comment"),
+		).
+		All(ctx.Request.Context())
+	if err != nil {
+		c.logger.Errorw("Failed to query comments", "error", err, "incident_id", id)
+		common.Fail(ctx, common.InternalErrorCode, "查询评论失败")
+		return
+	}
+
+	var result []gin.H
+	for _, e := range events {
+		item := gin.H{
+			"id":           e.ID,
+			"incident_id":  e.IncidentID,
+			"content":      e.Description,
+			"event_type":   e.EventType,
+			"is_internal":  false,
+			"occurred_at":  e.OccurredAt,
+			"created_at":   e.CreatedAt,
+		}
+		if e.Data != nil {
+			if v, ok := e.Data["isInternal"].(bool); ok {
+				item["is_internal"] = v
+			}
+		}
+		result = append(result, item)
+	}
+
+	common.Success(ctx, result)
+}
+
+// CreateIncidentComment 创建事件评论
+// @Summary 创建事件评论
+// @Description 为事件创建评论
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Param id path int true "事件ID"
+// @Param request body dto.CreateIncidentCommentRequest true "创建评论请求"
+// @Success 200 {object} common.Response{data=gin.H}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/comments [post]
+func (c *IncidentController) CreateIncidentComment(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+
+	var req dto.CreateIncidentCommentRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.Errorw("Invalid request body", "error", err)
+		common.Fail(ctx, common.ParamErrorCode, "请求参数无效")
+		return
+	}
+
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get tenant ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get user ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取用户ID失败")
+		return
+	}
+
+	client, exists := ctx.Get("client")
+	if !exists {
+		common.Fail(ctx, common.InternalErrorCode, "数据库客户端未找到")
+		return
+	}
+	entClient := client.(*ent.Client)
+
+	// 验证事件存在且属于该租户
+	_, err = entClient.Incident.Query().
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
+		Only(ctx.Request.Context())
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(ctx, common.NotFoundErrorCode, "事件不存在")
+		} else {
+			c.logger.Errorw("Failed to query incident", "error", err, "id", id)
+			common.Fail(ctx, common.InternalErrorCode, "查询事件失败")
+		}
+		return
+	}
+
+	// 创建评论（使用 IncidentEvent with event_type=comment）
+	data := map[string]interface{}{"isInternal": req.IsInternal}
+	event, err := entClient.IncidentEvent.Create().
+		SetIncidentID(id).
+		SetEventType("comment").
+		SetEventName("用户评论").
+		SetDescription(req.Content).
+		SetStatus("active").
+		SetUserID(userID).
+		SetSource("user").
+		SetData(data).
+		SetTenantID(tenantID).
+		SetOccurredAt(time.Now()).
+		Save(ctx.Request.Context())
+	if err != nil {
+		c.logger.Errorw("Failed to create comment", "error", err, "incident_id", id)
+		common.Fail(ctx, common.InternalErrorCode, "创建评论失败")
+		return
+	}
+
+	common.Success(ctx, gin.H{
+		"id":          event.ID,
+		"incident_id": event.IncidentID,
+		"content":     event.Description,
+		"is_internal": req.IsInternal,
+		"created_at":  event.CreatedAt,
+	})
 }

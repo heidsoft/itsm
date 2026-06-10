@@ -398,8 +398,8 @@ export class IncidentAPI {
     return response;
   }
 
-  // 添加评论
-  static async addComment(id: number, data: { text: string }): Promise<Incident> {
+  // 添加评论（注意：后端期望 content 字段）
+  static async addComment(id: number, data: { content: string }): Promise<Incident> {
     const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/comments`, data);
     return response;
   }
@@ -720,13 +720,16 @@ export class IncidentAPI {
     return response;
   }
 
-  // 事件升级
-  static async escalateIncident(id: number, data: {
-    escalationLevel: number;
-    reason?: string;
-    notifyUsers?: number[];
-    autoAssign?: boolean;
-  }): Promise<any> {
+  // 事件升级（reason 为必填，后端 binding:"required"）
+  static async escalateIncident(
+    id: number,
+    data: {
+      escalationLevel: number;
+      reason: string;
+      notifyUsers?: number[];
+      autoAssign?: boolean;
+    }
+  ): Promise<any> {
     const response = await httpClient.post<any>(`/api/v1/incidents/${id}/escalate`, data);
     return response;
   }

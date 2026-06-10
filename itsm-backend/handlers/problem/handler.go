@@ -18,7 +18,7 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
-func (h *Handler) toDTO(p *Problem) *dto.ProblemDetailResponse {
+func (h *Handler) toDTO(p *Problem) *dto.ProblemResponse {
 	if p == nil {
 		return nil
 	}
@@ -41,7 +41,8 @@ func (h *Handler) toDTO(p *Problem) *dto.ProblemDetailResponse {
 		resp.AssigneeID = p.AssigneeID
 	}
 
-	return &dto.ProblemDetailResponse{Problem: resp}
+	// B11: 拍平为 ProblemResponse，与 tickets/incidents 一致
+	return &resp
 }
 
 func (h *Handler) Create(c *gin.Context) {

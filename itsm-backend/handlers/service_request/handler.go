@@ -116,7 +116,13 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	fullReq, approvals, _ := h.service.Get(c.Request.Context(), created.ID, tenantID.(int))
+	fullReq, approvals, err := h.service.Get(c.Request.Context(), created.ID, tenantID.(int))
+	if err != nil {
+		h.service.logger.Errorw("Create: failed to get created service request", "error", err, "id", created.ID)
+		// Return the created object even if Get fails - created.ID is valid
+		common.Success(c, h.toDTO(created, nil))
+		return
+	}
 	common.Success(c, h.toDTO(fullReq, approvals))
 }
 

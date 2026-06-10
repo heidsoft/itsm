@@ -98,14 +98,14 @@ func (ac *AuthController) RefreshToken(c *gin.Context) {
 // @Router /api/v1/auth/tenants [get]
 // @Security BearerAuth
 func (ac *AuthController) GetUserTenants(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID := c.GetInt("user_id")
+	if userID == 0 {
 		common.AuthFailed(c, "用户未认证")
 		return
 	}
 
 	ctx := c.Request.Context()
-	response, err := ac.authService.GetUserTenants(ctx, userID.(int))
+	response, err := ac.authService.GetUserTenants(ctx, userID)
 	if err != nil {
 		common.InternalError(c, err.Error())
 		return
@@ -134,14 +134,14 @@ func (ac *AuthController) SwitchTenant(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID := c.GetInt("user_id")
+	if userID == 0 {
 		common.AuthFailed(c, "用户未认证")
 		return
 	}
 
 	ctx := c.Request.Context()
-	response, err := ac.authService.SwitchTenant(ctx, userID.(int), req.TenantID)
+	response, err := ac.authService.SwitchTenant(ctx, userID, req.TenantID)
 	if err != nil {
 		common.Forbidden(c, err.Error())
 		return
@@ -165,14 +165,14 @@ func (ac *AuthController) SwitchTenant(c *gin.Context) {
 // @Router /api/v1/auth/me [get]
 // @Security BearerAuth
 func (ac *AuthController) GetUserInfo(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID := c.GetInt("user_id")
+	if userID == 0 {
 		common.AuthFailed(c, "用户未认证")
 		return
 	}
 
 	ctx := c.Request.Context()
-	response, err := ac.authService.GetUserInfo(ctx, userID.(int))
+	response, err := ac.authService.GetUserInfo(ctx, userID)
 	if err != nil {
 		common.InternalError(c, err.Error())
 		return
@@ -192,14 +192,14 @@ func (ac *AuthController) GetUserInfo(c *gin.Context) {
 // @Router /api/v1/auth/logout [post]
 // @Security BearerAuth
 func (ac *AuthController) Logout(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID := c.GetInt("user_id")
+	if userID == 0 {
 		common.AuthFailed(c, "用户未认证")
 		return
 	}
 
 	ctx := c.Request.Context()
-	err := ac.authService.Logout(ctx, userID.(int))
+	err := ac.authService.Logout(ctx, userID)
 	if err != nil {
 		common.InternalError(c, err.Error())
 		return

@@ -171,14 +171,30 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 	stats := &Stats{}
 
 	// Total
-	total, _ := r.client.Change.Query().Where(change.TenantID(tenantID)).Count(ctx)
+	total, err := r.client.Change.Query().Where(change.TenantID(tenantID)).Count(ctx)
+	if err != nil {
+		return nil, err
+	}
 	stats.Total = total
 
-	// By Status - include all possible statuses
-	statuses := []string{"draft", "review", "pending", "approved", "scheduled", "implementing", "implemented", "completed", "rolled_back", "rejected", "cancelled"}
-	for _, s := range statuses {
-		count, _ := r.client.Change.Query().Where(change.TenantID(tenantID), change.Status(s)).Count(ctx)
-		switch s {
+	// Single GROUP BY query instead of 11 sequential COUNT queries
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT status, COUNT(*) FROM changes
+		WHERE tenant_id = $1
+		GROUP BY status
+	`, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var status string
+		var count int
+		if err := rows.Scan(&status, &count); err != nil {
+			return nil, err
+		}
+		switch status {
 		case "draft":
 			stats.Draft = count
 		case "review":
@@ -202,6 +218,9 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 		case "cancelled":
 			stats.Cancelled = count
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	// Map to frontend-compatible structure

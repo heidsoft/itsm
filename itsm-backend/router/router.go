@@ -845,14 +845,14 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		if config.AIHandler != nil {
 			aiGrp := tenant.(*gin.RouterGroup).Group("/ai")
 			{
-				aiGrp.POST("/chat", config.AIHandler.Chat)
-				aiGrp.POST("/analytics", config.AIHandler.GetDeepAnalytics)
-				aiGrp.POST("/predictions", config.AIHandler.GetTrendPrediction)
-				aiGrp.POST("/tickets/:id/analyze", config.AIHandler.AnalyzeTicket)
-				aiGrp.POST("/feedback", config.AIHandler.SaveFeedback)
+				aiGrp.POST("/chat", middleware.RequirePermission("ai", "read"), config.AIHandler.Chat)
+				aiGrp.POST("/analytics", middleware.RequirePermission("ai", "read"), config.AIHandler.GetDeepAnalytics)
+				aiGrp.POST("/predictions", middleware.RequirePermission("ai", "read"), config.AIHandler.GetTrendPrediction)
+				aiGrp.POST("/tickets/:id/analyze", middleware.RequirePermission("ai", "read"), config.AIHandler.AnalyzeTicket)
+				aiGrp.POST("/feedback", middleware.RequirePermission("ai", "write"), config.AIHandler.SaveFeedback)
 				// RAG endpoints
-				aiGrp.GET("/rag/search", config.AIHandler.KnowledgeSearch)
-				aiGrp.POST("/rag/ask", config.AIHandler.Chat)
+				aiGrp.GET("/rag/search", middleware.RequirePermission("ai", "read"), config.AIHandler.KnowledgeSearch)
+				aiGrp.POST("/rag/ask", middleware.RequirePermission("ai", "read"), config.AIHandler.Chat)
 			}
 
 			agentGrp := tenant.(*gin.RouterGroup).Group("/agent")
@@ -879,7 +879,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 
 			// Audit Logs (short path for frontend compatibility)
-			tenant.GET("/audit-logs", config.CommonHandler.GetAuditLogs)
+			tenant.GET("/audit-logs", middleware.RequirePermission("audit", "read"), config.CommonHandler.GetAuditLogs)
 
 			// Users
 			if config.UserController != nil {
@@ -920,25 +920,25 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			// Organization
 			org := tenant.(*gin.RouterGroup).Group("/org")
 			{
-				org.GET("/departments/tree", config.CommonHandler.GetDepartmentTree)
-				org.POST("/departments", config.CommonHandler.CreateDepartment)
-				org.PUT("/departments/:id", config.CommonHandler.UpdateDepartment)
-				org.DELETE("/departments/:id", config.CommonHandler.DeleteDepartment)
-				org.GET("/teams", config.CommonHandler.ListTeams)
-				org.POST("/teams", config.CommonHandler.CreateTeam)
-				org.PUT("/teams/:id", config.CommonHandler.UpdateTeam)
-				org.DELETE("/teams/:id", config.CommonHandler.DeleteTeam)
+				org.GET("/departments/tree", middleware.RequirePermission("org", "read"), config.CommonHandler.GetDepartmentTree)
+				org.POST("/departments", middleware.RequirePermission("org", "write"), config.CommonHandler.CreateDepartment)
+				org.PUT("/departments/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.UpdateDepartment)
+				org.DELETE("/departments/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.DeleteDepartment)
+				org.GET("/teams", middleware.RequirePermission("org", "read"), config.CommonHandler.ListTeams)
+				org.POST("/teams", middleware.RequirePermission("org", "write"), config.CommonHandler.CreateTeam)
+				org.PUT("/teams/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.UpdateTeam)
+				org.DELETE("/teams/:id", middleware.RequirePermission("org", "write"), config.CommonHandler.DeleteTeam)
 			}
 
 			// Projects
 			if config.ProjectController != nil {
 				projects := tenant.(*gin.RouterGroup).Group("/projects")
 				{
-					projects.GET("", config.ProjectController.ListProjects)
-					projects.POST("", config.ProjectController.CreateProject)
-					projects.GET("/:id", config.ProjectController.GetProject)
-					projects.PUT("/:id", config.ProjectController.UpdateProject)
-					projects.DELETE("/:id", config.ProjectController.DeleteProject)
+					projects.GET("", middleware.RequirePermission("project", "read"), config.ProjectController.ListProjects)
+					projects.POST("", middleware.RequirePermission("project", "write"), config.ProjectController.CreateProject)
+					projects.GET("/:id", middleware.RequirePermission("project", "read"), config.ProjectController.GetProject)
+					projects.PUT("/:id", middleware.RequirePermission("project", "write"), config.ProjectController.UpdateProject)
+					projects.DELETE("/:id", middleware.RequirePermission("project", "write"), config.ProjectController.DeleteProject)
 				}
 			}
 
@@ -946,10 +946,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if config.ApplicationController != nil {
 				applications := tenant.(*gin.RouterGroup).Group("/applications")
 				{
-					applications.GET("", config.ApplicationController.ListApplications)
-					applications.POST("", config.ApplicationController.CreateApplication)
-					applications.GET("/microservices", config.ApplicationController.ListMicroservices)
-					applications.POST("/microservices", config.ApplicationController.CreateMicroservice)
+					applications.GET("", middleware.RequirePermission("application", "read"), config.ApplicationController.ListApplications)
+					applications.POST("", middleware.RequirePermission("application", "write"), config.ApplicationController.CreateApplication)
+					applications.GET("/microservices", middleware.RequirePermission("application", "read"), config.ApplicationController.ListMicroservices)
+					applications.POST("/microservices", middleware.RequirePermission("application", "write"), config.ApplicationController.CreateMicroservice)
 				}
 			}
 

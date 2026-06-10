@@ -481,6 +481,16 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 		return nil, fmt.Errorf("invalid status: %s", status)
 	}
 
+	// Validate state transition (prevent closed -> new type jumps)
+	if !IsValidTicketStatusTransition(ticket.Status, status) {
+		return nil, fmt.Errorf("invalid status transition: %s -> %s", ticket.Status, status)
+	}
+
+	// Validate state transition (prevent closed -> new type jumps)
+	if !IsValidTicketStatusTransition(ticket.Status, status) {
+		return nil, fmt.Errorf("invalid status transition: %s -> %s", ticket.Status, status)
+	}
+
 	// 更新状态
 	ticket, err = s.client.Ticket.UpdateOneID(ticketID).
 		SetStatus(status).
