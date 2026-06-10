@@ -119,5 +119,39 @@ func (c *A2UITicketController) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		a2ai.POST("/ticket/form", c.GenerateForm)
 		a2ai.POST("/ticket/action", c.HandleAction)
+		// B9: 前端实际调用的别名 POST /api/v1/a2ui/tickets
+		a2ai.POST("/tickets", c.ParseTicketIntent)
 	}
+}
+
+// ParseTicketIntentRequest 前端调用 /a2ui/tickets 时的入参
+type ParseTicketIntentRequest struct {
+	Description string `json:"description" binding:"required"`
+}
+
+// ParseTicketIntent B9: 解析自然语言描述，返回结构化字段供前端预填表单
+func (c *A2UITicketController) ParseTicketIntent(ctx *gin.Context) {
+	var req ParseTicketIntentRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code":    1001,
+			"message": "请求参数错误: " + err.Error(),
+		})
+		return
+	}
+
+	result, err := c.a2uiService.ParseTicketIntent(ctx.Request.Context(), req.Description)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code":    5001,
+			"message": "解析工单意图失败: " + err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data":    result,
+	})
 }

@@ -140,6 +140,16 @@ func (h *Handler) GetDepartmentTree(c *gin.Context) {
 	common.Success(c, tree)
 }
 
+func (h *Handler) ListDepartments(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	deps, err := h.svc.ListDepartments(c.Request.Context(), tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, deps)
+}
+
 func (h *Handler) CreateDepartment(c *gin.Context) {
 	var req struct {
 		Name        string `json:"name" binding:"required"`

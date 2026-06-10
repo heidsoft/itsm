@@ -164,7 +164,10 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 	// Update change status to pending if needed
 	if c.Status == "draft" {
 		c.Status = "pending"
-		s.repo.Update(ctx, c)
+		if _, err := s.repo.Update(ctx, c); err != nil {
+			s.logger.Errorw("SubmitApproval: failed to update change status to pending", "error", err, "change_id", c.ID)
+			return nil, fmt.Errorf("failed to update change status: %w", err)
+		}
 	}
 
 	return res, nil
@@ -188,22 +191,39 @@ func (s *Service) ProcessApproval(ctx context.Context, recordID int, status stri
 
 	// 2. Logic to check if all approvals are done
 	if status == "approved" {
-		s.checkAndTransitionChange(ctx, res.ChangeID, tenantID)
+		if err := s.checkAndTransitionChange(ctx, res.ChangeID, tenantID); err != nil {
+			s.logger.Errorw("ProcessApproval: checkAndTransitionChange failed", "error", err, "change_id", res.ChangeID)
+		}
 	} else if status == "rejected" {
 		// If one rejects, the whole change is rejected?
-		c, _ := s.repo.Get(ctx, res.ChangeID, tenantID)
+		c, err := s.repo.Get(ctx, res.ChangeID, tenantID)
+		if err != nil {
+			s.logger.Errorw("ProcessApproval: failed to get change on rejection", "error", err, "change_id", res.ChangeID)
+			return nil, fmt.Errorf("failed to get change: %w", err)
+		}
 		if c != nil {
 			c.Status = "rejected"
-			s.repo.Update(ctx, c)
+			if _, err := s.repo.Update(ctx, c); err != nil {
+				s.logger.Errorw("ProcessApproval: failed to update change status to rejected", "error", err, "change_id", res.ChangeID)
+				return nil, fmt.Errorf("failed to update change status: %w", err)
+			}
 		}
 	}
 
 	return res, nil
 }
 
-func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenantID int) {
-	chain, _ := s.repo.GetApprovalChain(ctx, changeID)
-	history, _ := s.repo.GetApprovalHistory(ctx, changeID, tenantID)
+func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenantID int) error {
+	chain, err := s.repo.GetApprovalChain(ctx, changeID)
+	if err != nil {
+		s.logger.Errorw("checkAndTransitionChange: failed to get approval chain", "error", err, "change_id", changeID)
+		return err
+	}
+	history, err := s.repo.GetApprovalHistory(ctx, changeID, tenantID)
+	if err != nil {
+		s.logger.Errorw("checkAndTransitionChange: failed to get approval history", "error", err, "change_id", changeID)
+		return err
+	}
 
 	// Simple logic: if all required members approved, transition to 'approved'
 	allApproved := true
@@ -226,18 +246,33 @@ func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenant
 	}
 
 	if allApproved && requiredCount > 0 {
-		c, _ := s.repo.Get(ctx, changeID, tenantID)
+		c, err := s.repo.Get(ctx, changeID, tenantID)
+		if err != nil {
+			s.logger.Errorw("checkAndTransitionChange: failed to get change", "error", err, "change_id", changeID)
+			return err
+		}
 		if c != nil {
 			c.Status = "approved"
-			s.repo.Update(ctx, c)
+			if _, err := s.repo.Update(ctx, c); err != nil {
+				s.logger.Errorw("checkAndTransitionChange: failed to update change status to approved", "error", err, "change_id", changeID)
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 func (s *Service) ConfigureWorkflow(ctx context.Context, changeID int, items []*ApprovalChain) error {
 	// Clear existing and set new
-	s.repo.DeleteApprovalChain(ctx, changeID)
-	return s.repo.CreateApprovalChain(ctx, items)
+	if err := s.repo.DeleteApprovalChain(ctx, changeID); err != nil {
+		s.logger.Errorw("ConfigureWorkflow: failed to delete approval chain", "error", err, "change_id", changeID)
+		return fmt.Errorf("failed to delete approval chain: %w", err)
+	}
+	if err := s.repo.CreateApprovalChain(ctx, items); err != nil {
+		s.logger.Errorw("ConfigureWorkflow: failed to create approval chain", "error", err, "change_id", changeID)
+		return fmt.Errorf("failed to create approval chain: %w", err)
+	}
+	return nil
 }
 
 func (s *Service) GetApprovalSummary(ctx context.Context, changeID, tenantID int) (interface{}, error) {

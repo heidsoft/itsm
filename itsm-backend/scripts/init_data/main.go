@@ -18,10 +18,23 @@ type User struct {
 	Role     string `gorm:"type:varchar(20);default:'user'"`
 }
 
+func getEnv(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
+}
+
 func main() {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "host=localhost user=itsm password=itsm_password_2026 dbname=itsm port=5432 sslmode=disable"
+		dbHost := getEnv("DB_HOST", "localhost")
+		dbUser := getEnv("DB_USER", "itsm")
+		dbPass := getEnv("DB_PASSWORD", "")
+		dbName := getEnv("DB_NAME", "itsm")
+		dbPort := getEnv("DB_PORT", "5432")
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+			dbHost, dbUser, dbPass, dbName, dbPort)
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -29,8 +42,14 @@ func main() {
 		log.Fatal("连接数据库失败:", err)
 	}
 
+	// 从环境变量获取管理员密码，避免硬编码
+	adminPassword := getEnv("ADMIN_PASSWORD", "")
+	if adminPassword == "" {
+		log.Fatal("ADMIN_PASSWORD 环境变量未设置，请设置管理员初始密码")
+	}
+
 	// 创建默认管理员账号
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
 
 	adminUser := User{
 		ID:       "admin-001",
@@ -51,16 +70,16 @@ func main() {
 		}
 		fmt.Println("✅ 默认管理员账号创建成功！")
 		fmt.Println("用户名：admin")
-		fmt.Println("密码：admin123")
+		fmt.Println("密码：" + adminPassword)
 	} else {
 		fmt.Println("ℹ️  管理员账号已存在")
 	}
 
 	// 更新密码（如果需要）
 	if result.Error == nil {
-		newHashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+		newHashedPassword, _ := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
 		db.Model(&User{}).Where("username = ?", "admin").Update("password", string(newHashedPassword))
-		fmt.Println("✅ 管理员密码已重置为：admin123")
+		fmt.Println("✅ 管理员密码已重置为：" + adminPassword)
 	}
 
 	fmt.Println("\n数据库初始化完成！")

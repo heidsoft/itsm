@@ -452,3 +452,47 @@ func (s *A2UITicketService) HandleUserAction(ctx context.Context, action string,
 
 	return messages, nil
 }
+
+// ParseTicketIntent B9: 解析自然语言描述，返回结构化字段供前端预填表单
+// 不直接创建工单，保持用户可控
+func (s *A2UITicketService) ParseTicketIntent(ctx context.Context, description string) (map[string]interface{}, error) {
+	fields := s.extractFieldsFromIntent(description)
+
+	// 提取 title：取 description 第一行前 30 字符
+	title := description
+	if idx := strings.Index(description, "\n"); idx > 0 && idx < 100 {
+		title = strings.TrimSpace(description[:idx])
+	}
+	if len([]rune(title)) > 30 {
+		title = string([]rune(title)[:30])
+	}
+	if fields["title"] == "" {
+		fields["title"] = title
+	}
+
+	// confidence 基于是否提取到 category/priority
+	confidence := 0.55
+	if fields["category"] != "" {
+		confidence += 0.15
+	}
+	if fields["priority"] != "" {
+		confidence += 0.15
+	}
+	if fields["title"] != "" {
+		confidence += 0.10
+	}
+	if confidence > 0.95 {
+		confidence = 0.95
+	}
+
+	return map[string]interface{}{
+		"suggested_title":       fields["title"],
+		"suggested_category":    fields["category"],
+		"suggested_priority":    fields["priority"],
+		"description":           description,
+		"confidence":            confidence,
+		"reasoning":             "A2UI intent parser (keyword + length heuristics)",
+		"surface_id":            "ticket-create",
+		"action_url":            "/tickets/create",
+	}, nil
+}

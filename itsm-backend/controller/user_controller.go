@@ -42,14 +42,14 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
 	// 确定目标租户：对于super_admin且请求中指定了tenant_id，使用请求中的；否则使用上下文中的
-	targetTenantID := tenantID.(int)
+	targetTenantID := tenantID
 	userRole, _ := c.Get("role")
 	if userRole == "super_admin" && req.TenantID > 0 {
 		targetTenantID = req.TenantID
@@ -103,13 +103,13 @@ func (uc *UserController) ListUsers(c *gin.Context) {
 		req.PageSize = 10
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	result, err := uc.userService.ListUsers(c.Request.Context(), &req, tenantID.(int))
+	result, err := uc.userService.ListUsers(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		uc.logger.Errorf("获取用户列表失败: %v", err)
 		common.Fail(c, 5001, "获取用户列表失败: "+err.Error())
@@ -138,13 +138,13 @@ func (uc *UserController) GetUser(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	user, err := uc.userService.GetUserByID(c.Request.Context(), id, tenantID.(int))
+	user, err := uc.userService.GetUserByID(c.Request.Context(), id, tenantID)
 	if err != nil {
 		uc.logger.Errorf("获取用户详情失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
@@ -187,13 +187,13 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	user, err := uc.userService.UpdateUser(c.Request.Context(), id, &req, tenantID.(int))
+	user, err := uc.userService.UpdateUser(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
 		uc.logger.Errorf("更新用户失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
@@ -232,13 +232,13 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	err = uc.userService.DeleteUser(c.Request.Context(), id, tenantID.(int))
+	err = uc.userService.DeleteUser(c.Request.Context(), id, tenantID)
 	if err != nil {
 		uc.logger.Errorf("删除用户失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
@@ -281,13 +281,13 @@ func (uc *UserController) ChangeUserStatus(c *gin.Context) {
 
 	// 获取当前登录用户ID
 	currentUserID := c.GetInt("user_id")
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	err = uc.userService.ChangeUserStatus(c.Request.Context(), id, req.Active, currentUserID, tenantID.(int))
+	err = uc.userService.ChangeUserStatus(c.Request.Context(), id, req.Active, currentUserID, tenantID)
 	if err != nil {
 		uc.logger.Errorf("更改用户状态失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
@@ -328,13 +328,13 @@ func (uc *UserController) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	err = uc.userService.ResetPassword(c.Request.Context(), id, req.NewPassword, tenantID.(int))
+	err = uc.userService.ResetPassword(c.Request.Context(), id, req.NewPassword, tenantID)
 	if err != nil {
 		uc.logger.Errorf("重置密码失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
@@ -359,13 +359,13 @@ func (uc *UserController) ResetPassword(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Router /api/v1/users/stats [get]
 func (uc *UserController) GetUserStats(c *gin.Context) {
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	stats, err := uc.userService.GetUserStats(c.Request.Context(), tenantID.(int))
+	stats, err := uc.userService.GetUserStats(c.Request.Context(), tenantID)
 	if err != nil {
 		uc.logger.Errorf("获取用户统计失败: %v", err)
 		common.Fail(c, 5001, "获取用户统计失败: "+err.Error())
@@ -393,13 +393,13 @@ func (uc *UserController) BatchUpdateUsers(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	err := uc.userService.BatchUpdateUsers(c.Request.Context(), &req, tenantID.(int))
+	err := uc.userService.BatchUpdateUsers(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		uc.logger.Errorf("批量更新用户失败: %v", err)
 		common.Fail(c, 5001, "批量更新用户失败: "+err.Error())
@@ -448,13 +448,13 @@ func (uc *UserController) SearchUsers(c *gin.Context) {
 		req.Limit = 10
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	users, err := uc.userService.SearchUsers(c.Request.Context(), &req, tenantID.(int))
+	users, err := uc.userService.SearchUsers(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		uc.logger.Errorf("搜索用户失败: %v", err)
 		common.Fail(c, 5001, "搜索用户失败: "+err.Error())

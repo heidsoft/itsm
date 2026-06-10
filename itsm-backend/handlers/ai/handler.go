@@ -146,6 +146,26 @@ func (h *Handler) AnalyzeTicket(c *gin.Context) {
 	common.Success(c, res)
 }
 
+// SummarizeTicket handles GET /api/v1/ai/tickets/:id/summary
+// B9: AI 工单总结 - 优先用 LLM，fallback 用字段拼接
+func (h *Handler) SummarizeTicket(c *gin.Context) {
+	idStr := c.Param("id")
+	id, _ := strconv.Atoi(idStr)
+	tenantID := c.GetInt("tenant_id")
+
+	if id <= 0 {
+		common.Fail(c, http.StatusBadRequest, "invalid ticket id")
+		return
+	}
+
+	summary, err := h.svc.SummarizeTicket(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, summary)
+}
+
 // SaveFeedback handles POST /api/v1/ai/feedback
 func (h *Handler) SaveFeedback(c *gin.Context) {
 	var req struct {

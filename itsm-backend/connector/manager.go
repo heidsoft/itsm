@@ -37,7 +37,7 @@ func NewManager(registry *Registry, logger *zap.SugaredLogger) *Manager {
 }
 
 func instanceKey(c Config) string {
-	return fmt.Sprintf("%d/%s/%s", c.TenantID, c.Name, c.Name+":"+c.Provider)
+	return fmt.Sprintf("%d/%s/%s", c.TenantID, c.Name, c.Provider)
 }
 
 // Provision 根据配置创建/更新一个连接器实例

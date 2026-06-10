@@ -85,7 +85,7 @@ export interface ChangeStatsResponse {
   approved: number;
   inProgress: number;
   completed: number;
-  rolled_back: number;
+  rolledBack: number;
   rejected: number;
   cancelled: number;
 }

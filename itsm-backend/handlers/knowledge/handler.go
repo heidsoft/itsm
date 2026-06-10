@@ -151,7 +151,7 @@ func (h *Handler) ListArticles(c *gin.Context) {
 		Articles: dtos,
 		Total:    total,
 		Page:     page,
-		Size:     pageSize,
+		PageSize: pageSize,
 	})
 }
 
@@ -271,10 +271,15 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	tenantIDInt, _ := tenantID.(int)
-	if tenantIDInt == 0 {
-		tenantIDInt = 1
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		return
+	}
+	tenantIDInt, ok := tenantIDVal.(int)
+	if !ok || tenantIDInt == 0 {
+		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		return
 	}
 
 	limit := req.Limit

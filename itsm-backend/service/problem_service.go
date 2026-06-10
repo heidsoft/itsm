@@ -181,6 +181,10 @@ func (s *ProblemService) UpdateProblem(ctx context.Context, id int, req *dto.Upd
 		update.SetPriority(*req.Priority)
 	}
 	if req.Status != nil {
+		if existing.Status != *req.Status && !isValidProblemStatusTransition(existing.Status, *req.Status) {
+			s.logger.Warnw("Invalid problem status transition", "id", id, "from", existing.Status, "to", *req.Status)
+			return nil, fmt.Errorf("invalid problem status transition: %s -> %s", existing.Status, *req.Status)
+		}
 		update.SetStatus(*req.Status)
 		// 如果状态变更为resolved，设置解决时间
 		if *req.Status == "resolved" {
@@ -375,4 +379,34 @@ func (s *ProblemService) mapProcessStatus(status string) dto.ProcessStatus {
 	default:
 		return dto.ProcessStatusPending
 	}
+}
+
+// isValidProblemStatusTransition checks problem status transitions
+// state machine:
+//   new           -> investigating, identified, resolved, closed
+//   investigating -> identified, resolved, closed
+//   identified    -> resolved, closed, investigating
+//   resolved      -> closed, investigating (reopen)
+//   closed        -> terminal
+func isValidProblemStatusTransition(currentStatus, newStatus string) bool {
+	if currentStatus == newStatus {
+		return true
+	}
+	validTransitions := map[string][]string{
+		"new":           {"investigating", "identified", "resolved", "closed"},
+		"investigating": {"identified", "resolved", "closed"},
+		"identified":    {"resolved", "closed", "investigating"},
+		"resolved":      {"closed", "investigating"},
+		"closed":        {},
+	}
+	allowed, ok := validTransitions[currentStatus]
+	if !ok {
+		return true
+	}
+	for _, st := range allowed {
+		if st == newStatus {
+			return true
+		}
+	}
+	return false
 }

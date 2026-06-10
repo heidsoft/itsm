@@ -308,3 +308,71 @@ func (s *AnalyticsService) exportToExcel(response *dto.DeepAnalyticsResponse) ([
 func (s *AnalyticsService) exportToPDF(response *dto.DeepAnalyticsResponse) ([]byte, string, error) {
 	return s.reportExport.ExportToPDF(context.Background(), response)
 }
+
+// GetTicketStats 获取工单分析概览（轻量聚合，/api/v1/analytics/tickets 用）
+func (s *AnalyticsService) GetTicketStats(ctx context.Context, tenantID int) (map[string]interface{}, error) {
+	// 1. 按状态分组
+	type StatusGroup struct {
+		Status string `json:"status"`
+		Count  int    `json:"count"`
+	}
+	var statusGroups []StatusGroup
+	err := s.client.Ticket.Query().
+		Where(ticket.TenantIDEQ(tenantID)).
+		GroupBy(ticket.FieldStatus).
+		Aggregate(ent.Count()).
+		Scan(ctx, &statusGroups)
+	if err != nil {
+		return nil, fmt.Errorf("failed to group by status: %w", err)
+	}
+
+	// 2. 总数
+	total, err := s.client.Ticket.Query().
+		Where(ticket.TenantIDEQ(tenantID)).
+		Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count tickets: %w", err)
+	}
+
+	// 3. 30 天趋势（按天）
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+	rawDB, err := s.client.Ticket.Query().
+		Where(ticket.TenantIDEQ(tenantID)).
+		Where(ticket.CreatedAtGTE(thirtyDaysAgo)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query trend: %w", err)
+	}
+	trend := make(map[string]int)
+	for _, t := range rawDB {
+		day := t.CreatedAt.Format("2006-01-02")
+		trend[day]++
+	}
+	trendSlice := make([]map[string]interface{}, 0, len(trend))
+	for day, cnt := range trend {
+		trendSlice = append(trendSlice, map[string]interface{}{"date": day, "count": cnt})
+	}
+
+	// 4. 按优先级
+	type PriorityGroup struct {
+		Priority string `json:"priority"`
+		Count    int    `json:"count"`
+	}
+	var priorityGroups []PriorityGroup
+	err = s.client.Ticket.Query().
+		Where(ticket.TenantIDEQ(tenantID)).
+		GroupBy(ticket.FieldPriority).
+		Aggregate(ent.Count()).
+		Scan(ctx, &priorityGroups)
+	if err != nil {
+		return nil, fmt.Errorf("failed to group by priority: %w", err)
+	}
+
+	return map[string]interface{}{
+		"total":           total,
+		"status_groups":   statusGroups,
+		"priority_groups": priorityGroups,
+		"trend_30d":       trendSlice,
+		"generated_at":    time.Now().Format(time.RFC3339),
+	}, nil
+}

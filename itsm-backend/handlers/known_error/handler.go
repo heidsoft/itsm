@@ -1,8 +1,10 @@
 package known_error
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -346,16 +348,28 @@ func (h *Handler) GetStats(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	query := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID))
+	// Run total count and all group counts in parallel with error collection
+	var total, active, resolved, deprecated, critical, high, medium, low int
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	errs := make([]error, 0)
 
-	total, _ := query.Count(ctx)
-	active, _ := query.Where(entknownerror.Status("active")).Count(ctx)
-	resolved, _ := query.Where(entknownerror.Status("resolved")).Count(ctx)
-	deprecated, _ := query.Where(entknownerror.Status("deprecated")).Count(ctx)
-	critical, _ := query.Where(entknownerror.Severity("critical")).Count(ctx)
-	high, _ := query.Where(entknownerror.Severity("high")).Count(ctx)
-	medium, _ := query.Where(entknownerror.Severity("medium")).Count(ctx)
-	low, _ := query.Where(entknownerror.Severity("low")).Count(ctx)
+	wg.Add(8)
+	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID)).Count(ctx); mu.Lock(); total = n; if err != nil { errs = append(errs, fmt.Errorf("total count: %w", err)) }; mu.Unlock() }()
+	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("active")).Count(ctx); mu.Lock(); active = n; if err != nil { errs = append(errs, fmt.Errorf("active count: %w", err)) }; mu.Unlock() }()
+	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("resolved")).Count(ctx); mu.Lock(); resolved = n; if err != nil { errs = append(errs, fmt.Errorf("resolved count: %w", err)) }; mu.Unlock() }()
+	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("deprecated")).Count(ctx); mu.Lock(); deprecated = n; if err != nil { errs = append(errs, fmt.Errorf("deprecated count: %w", err)) }; mu.Unlock() }()
+	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("critical")).Count(ctx); mu.Lock(); critical = n; if err != nil { errs = append(errs, fmt.Errorf("critical count: %w", err)) }; mu.Unlock() }()
+	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("high")).Count(ctx); mu.Lock(); high = n; if err != nil { errs = append(errs, fmt.Errorf("high count: %w", err)) }; mu.Unlock() }()
+	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("medium")).Count(ctx); mu.Lock(); medium = n; if err != nil { errs = append(errs, fmt.Errorf("medium count: %w", err)) }; mu.Unlock() }()
+	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("low")).Count(ctx); mu.Lock(); low = n; if err != nil { errs = append(errs, fmt.Errorf("low count: %w", err)) }; mu.Unlock() }()
+	wg.Wait()
+
+	if len(errs) > 0 {
+		h.logger.Errorw("GetStats: DB queries failed", "errors", errs)
+		common.Fail(c, http.StatusInternalServerError, "Failed to retrieve known error statistics")
+		return
+	}
 
 	common.Success(c, &dto.KEDBStatsResponse{
 		Total:      total,
