@@ -2,6 +2,8 @@ package sla
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"time"
 
 	"itsm-backend/ent"
@@ -410,30 +412,64 @@ func (r *EntRepository) GetMetrics(ctx context.Context, tenantID int, filters ma
 }
 
 func (r *EntRepository) GetSLAMonitoring(ctx context.Context, tenantID int, startTime, endTime string) (map[string]interface{}, error) {
-	// Count violations
-	totalViolations, _ := r.client.SLAViolation.Query().
-		Where(slaviolation.TenantID(tenantID)).
-		Count(ctx)
+	// Parallel stats collection
+	var totalViolations, resolvedViolations, activeSLAs, alertRules int
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	errs := make([]error, 0)
 
-	resolvedViolations, _ := r.client.SLAViolation.Query().
-		Where(slaviolation.TenantID(tenantID), slaviolation.IsResolved(true)).
-		Count(ctx)
+	wg.Add(4)
+	go func() {
+		defer wg.Done()
+		n, err := r.client.SLAViolation.Query().Where(slaviolation.TenantID(tenantID)).Count(ctx)
+		mu.Lock()
+		totalViolations = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("total violations: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := r.client.SLAViolation.Query().Where(slaviolation.TenantID(tenantID), slaviolation.IsResolved(true)).Count(ctx)
+		mu.Lock()
+		resolvedViolations = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("resolved violations: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := r.client.SLADefinition.Query().Where(sladefinition.TenantID(tenantID), sladefinition.IsActive(true)).Count(ctx)
+		mu.Lock()
+		activeSLAs = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("active SLAs: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := r.client.SLAAlertRule.Query().Where(slaalertrule.TenantID(tenantID), slaalertrule.IsActive(true)).Count(ctx)
+		mu.Lock()
+		alertRules = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("alert rules: %w", err))
+		}
+		mu.Unlock()
+	}()
+	wg.Wait()
+
+	if len(errs) > 0 {
+		return nil, fmt.Errorf("GetSLAMonitoring DB errors: %v", errs)
+	}
 
 	// Calculate compliance rate
 	var complianceRate float64
 	if totalViolations > 0 {
 		complianceRate = float64(totalViolations-resolvedViolations) / float64(totalViolations)
 	}
-
-	// Get active SLA definitions
-	activeSLAs, _ := r.client.SLADefinition.Query().
-		Where(sladefinition.TenantID(tenantID), sladefinition.IsActive(true)).
-		Count(ctx)
-
-	// Get alert rules count
-	alertRules, _ := r.client.SLAAlertRule.Query().
-		Where(slaalertrule.TenantID(tenantID), slaalertrule.IsActive(true)).
-		Count(ctx)
 
 	return map[string]interface{}{
 		"total_violations":    totalViolations,
@@ -473,11 +509,10 @@ func (r *EntRepository) GetComplianceReportData(ctx context.Context, tenantID in
 		).
 		GroupBy(slaviolation.FieldTicketID).
 		Scan(ctx, &groups)
-	if scanErr == nil {
-		violatedCount = len(groups)
-	} else {
-		violatedCount = 0
+	if scanErr != nil {
+		return 0, 0, 0, 0, 0, fmt.Errorf("compliance scan query failed: %w", scanErr)
 	}
+	violatedCount = len(groups)
 	violatedSLA = violatedCount
 	metSLA = totalTickets - violatedSLA
 

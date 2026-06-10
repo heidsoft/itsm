@@ -88,13 +88,8 @@ export interface Ticket {
   version?: number;
 }
 
-export interface TicketListResponse {
-  tickets: Ticket[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages?: number;
-}
+// TicketListResponse 已迁移到 api-config.ts（扩展 BaseTicket 含租户字段）
+// 引用: import type { TicketListResponse } from './api-config';
 
 export interface TicketCreateRequest {
   title: string;

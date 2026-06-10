@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"net/http"
+
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
@@ -47,9 +49,10 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, _ := middleware.GetTenantID(ctx)
-	if tenantID == 0 {
-		tenantID = 1 // 默认租户
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, http.StatusBadRequest, "租户上下文缺失")
+		return
 	}
 
 	results := make([]*SearchResult, 0)

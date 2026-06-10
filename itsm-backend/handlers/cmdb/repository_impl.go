@@ -2,6 +2,8 @@ package cmdb
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"time"
 
 	"itsm-backend/ent"
@@ -254,14 +256,59 @@ func (r *EntRepository) DeleteCI(ctx context.Context, id int, tenantID int) erro
 }
 
 func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, error) {
-	total, _ := r.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID)).Count(ctx)
-	active, _ := r.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID), configurationitem.Status("active")).Count(ctx)
-	inactive, _ := r.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID), configurationitem.Status("inactive")).Count(ctx)
-	maintenance, _ := r.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID), configurationitem.Status("maintenance")).Count(ctx)
+	var total, active, inactive, maintenance int
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	errs := make([]error, 0)
 
-	// Simple type distribution
+	wg.Add(4)
+	go func() {
+		defer wg.Done()
+		n, err := r.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID)).Count(ctx)
+		mu.Lock()
+		total = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("total CI count: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := r.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID), configurationitem.Status("active")).Count(ctx)
+		mu.Lock()
+		active = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("active CI count: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := r.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID), configurationitem.Status("inactive")).Count(ctx)
+		mu.Lock()
+		inactive = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("inactive CI count: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := r.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID), configurationitem.Status("maintenance")).Count(ctx)
+		mu.Lock()
+		maintenance = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("maintenance CI count: %w", err))
+		}
+		mu.Unlock()
+	}()
+	wg.Wait()
+
+	if len(errs) > 0 {
+		return nil, fmt.Errorf("GetStats DB errors: %v", errs)
+	}
+
 	dist := make(map[string]int)
-	// We might need a aggregation query for this, but for now we can do a simplified version or skip if too complex for Ent raw
 
 	return &Stats{
 		TotalCount:       total,

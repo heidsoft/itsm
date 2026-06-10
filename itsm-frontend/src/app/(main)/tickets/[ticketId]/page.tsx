@@ -375,19 +375,28 @@ const TicketDetailPage: React.FC = () => {
         <AISuggestionPanel
           title={ticket.title}
           description={ticket.description}
-          onAccept={suggestion => {
-            // Apply AI suggestion to ticket
+          onAccept={async suggestion => {
+            // Bug 11 修复：onAccept 之前只打开编辑弹窗没有真正落库
+            // 现在直接调 updateTicket 写入 AI 建议的 category + priority
             if (
-              suggestion.priority !== ticket.priority ||
-              suggestion.category !== ticket.category
+              suggestion.priority === ticket.priority &&
+              suggestion.category === ticket.category
             ) {
-              editForm.setFieldsValue({
+              antMessage.info('AI建议与当前分类/优先级一致，无需更新');
+              return;
+            }
+            try {
+              await TicketApi.updateTicket(ticketId, {
+                category: suggestion.category,
                 priority: suggestion.priority,
+                version: ticket.version,
               });
-              handleUpdate();
               antMessage.success(
-                `已采纳AI建议：优先级调整为${suggestion.priority === 'high' ? '高' : suggestion.priority === 'medium' ? '中' : '低'}`
+                `已采纳AI建议：分类 ${suggestion.category}，优先级 ${suggestion.priority}`,
               );
+              fetchTicket();
+            } catch (err) {
+              handleError(err, 'applyAISuggestion', '采纳建议失败');
             }
           }}
         />

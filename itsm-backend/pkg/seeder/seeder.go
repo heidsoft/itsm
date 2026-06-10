@@ -683,13 +683,18 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 	}
 	existing, err := s.client.User.Query().Where(user.UsernameEQ("admin"), user.TenantIDEQ(t.ID)).First(ctx)
 
-	passHash, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
-	if err != nil {
-		s.sugar.Warnw("generate bcrypt for admin failed", "error", err)
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	if adminPassword == "" {
+		s.sugar.Warnw("ADMIN_PASSWORD env var not set; skip admin seed")
+		return
+	}
+	passHash, bcryptErr := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
+	if bcryptErr != nil {
+		s.sugar.Warnw("generate bcrypt for admin failed", "error", bcryptErr)
 		return
 	}
 
-	if err == nil && existing != nil {
+	if existing != nil {
 		_, err = s.client.User.Update().
 			Where(user.ID(existing.ID)).
 			SetPasswordHash(string(passHash)).
@@ -838,7 +843,12 @@ func (s *Seeder) seedUser1(ctx context.Context) {
 		s.sugar.Infow("seed user1 already exists")
 		return
 	}
-	passHash, err := bcrypt.GenerateFromPassword([]byte("user123"), bcrypt.DefaultCost)
+	user1Password := os.Getenv("SEED_USER1_PASSWORD")
+	if user1Password == "" {
+		s.sugar.Infow("SEED_USER1_PASSWORD env var not set; skip user1 seed")
+		return
+	}
+	passHash, err := bcrypt.GenerateFromPassword([]byte(user1Password), bcrypt.DefaultCost)
 	if err != nil {
 		s.sugar.Warnw("generate bcrypt for user1 failed", "error", err)
 		return
@@ -870,7 +880,12 @@ func (s *Seeder) seedSecurity1(ctx context.Context) {
 		s.sugar.Infow("seed security1 already exists")
 		return
 	}
-	passHash, err := bcrypt.GenerateFromPassword([]byte("security123"), bcrypt.DefaultCost)
+	security1Password := os.Getenv("SEED_SECURITY1_PASSWORD")
+	if security1Password == "" {
+		s.sugar.Infow("SEED_SECURITY1_PASSWORD env var not set; skip security1 seed")
+		return
+	}
+	passHash, err := bcrypt.GenerateFromPassword([]byte(security1Password), bcrypt.DefaultCost)
 	if err != nil {
 		s.sugar.Warnw("generate bcrypt for security1 failed", "error", err)
 		return

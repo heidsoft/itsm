@@ -46,13 +46,13 @@ func (sc *ServiceController) GetServiceCatalogs(c *gin.Context) {
 	}
 
 	// 从上下文获取租户ID
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	result, err := sc.serviceCatalogService.ListServiceCatalogs(c.Request.Context(), &req, tenantID.(int))
+	result, err := sc.serviceCatalogService.ListServiceCatalogs(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -81,19 +81,19 @@ func (sc *ServiceController) CreateServiceRequest(c *gin.Context) {
 	}
 
 	// 从上下文获取用户ID和租户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		common.Fail(c, 2001, "用户未认证")
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	serviceRequest, err := sc.serviceRequestService.CreateServiceRequest(c.Request.Context(), &req, userID.(int), tenantID.(int))
+	serviceRequest, err := sc.serviceRequestService.CreateServiceRequest(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -124,21 +124,21 @@ func (sc *ServiceController) GetUserServiceRequests(c *gin.Context) {
 	}
 
 	// 从上下文获取用户ID和租户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		common.Fail(c, 2001, "用户未认证")
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	req.UserID = userID.(int)
+	req.UserID = userID
 
-	result, err := sc.serviceRequestService.ListServiceRequests(c.Request.Context(), &req, tenantID.(int))
+	result, err := sc.serviceRequestService.ListServiceRequests(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -169,13 +169,13 @@ func (sc *ServiceController) GetServiceRequestByID(c *gin.Context) {
 	}
 
 	// 从上下文获取租户ID
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	serviceRequest, err := sc.serviceRequestService.GetServiceRequestDetail(c.Request.Context(), id, tenantID.(int))
+	serviceRequest, err := sc.serviceRequestService.GetServiceRequestDetail(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -212,18 +212,18 @@ func (sc *ServiceController) ApplyServiceRequestApproval(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		common.Fail(c, 2001, "用户未认证")
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
 		return
 	}
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	updated, err := sc.serviceRequestService.ApplyApprovalAction(c.Request.Context(), id, tenantID.(int), userID.(int), req.Action, req.Comment)
+	updated, err := sc.serviceRequestService.ApplyApprovalAction(c.Request.Context(), id, tenantID, userID, req.Action, req.Comment)
 	if err != nil {
 		// 统一按业务错误返回 400/403 由 common.Fail code 区分，这里简单用 5001 并透传 message
 		common.Fail(c, 5001, err.Error())
@@ -252,13 +252,13 @@ func (sc *ServiceController) GetServiceRequestApprovals(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	detail, err := sc.serviceRequestService.GetServiceRequestDetail(c.Request.Context(), id, tenantID.(int))
+	detail, err := sc.serviceRequestService.GetServiceRequestDetail(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -283,18 +283,18 @@ func (sc *ServiceController) GetPendingServiceRequestApprovals(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		common.Fail(c, 2001, "用户未认证")
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
 		return
 	}
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	result, err := sc.serviceRequestService.ListPendingApprovals(c.Request.Context(), tenantID.(int), userID.(int), page, size)
+	result, err := sc.serviceRequestService.ListPendingApprovals(c.Request.Context(), tenantID, userID, page, size)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -331,20 +331,20 @@ func (sc *ServiceController) UpdateServiceRequestStatus(c *gin.Context) {
 	}
 
 	// 从上下文获取租户ID
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	err = sc.serviceRequestService.UpdateServiceRequestStatus(c.Request.Context(), id, req.Status, tenantID.(int))
+	err = sc.serviceRequestService.UpdateServiceRequestStatus(c.Request.Context(), id, req.Status, tenantID)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
 	}
 
 	// 获取更新后的服务请求
-	serviceRequest, err := sc.serviceRequestService.GetServiceRequestDetail(c.Request.Context(), id, tenantID.(int))
+	serviceRequest, err := sc.serviceRequestService.GetServiceRequestDetail(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, 5001, "获取更新后的服务请求失败")
 		return
@@ -373,13 +373,13 @@ func (sc *ServiceController) CreateServiceCatalog(c *gin.Context) {
 	}
 
 	// 从上下文获取租户ID
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	catalog, err := sc.serviceCatalogService.CreateServiceCatalog(c.Request.Context(), &req, tenantID.(int))
+	catalog, err := sc.serviceCatalogService.CreateServiceCatalog(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -417,13 +417,13 @@ func (sc *ServiceController) UpdateServiceCatalog(c *gin.Context) {
 	}
 
 	// 从上下文获取租户ID
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	catalog, err := sc.serviceCatalogService.UpdateServiceCatalog(c.Request.Context(), id, &req, tenantID.(int))
+	catalog, err := sc.serviceCatalogService.UpdateServiceCatalog(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -440,13 +440,13 @@ func (sc *ServiceController) DeleteServiceCatalog(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	err = sc.serviceCatalogService.DeleteServiceCatalog(c.Request.Context(), id, tenantID.(int))
+	err = sc.serviceCatalogService.DeleteServiceCatalog(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -463,13 +463,13 @@ func (sc *ServiceController) GetServiceCatalogByID(c *gin.Context) {
 		return
 	}
 
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, 2001, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
 
-	catalog, err := sc.serviceCatalogService.GetServiceCatalogByID(c.Request.Context(), id, tenantID.(int))
+	catalog, err := sc.serviceCatalogService.GetServiceCatalogByID(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return

@@ -100,3 +100,25 @@ func (c *AnalyticsController) ExportAnalytics(ctx *gin.Context) {
 	ctx.Header("Content-Disposition", "attachment; filename="+filename)
 	ctx.Data(200, contentType, data)
 }
+
+// GetTicketAnalytics 获取工单分析概览
+// B8: GET /api/v1/analytics/tickets - 前端工单分析页面用
+// @Summary 获取工单分析概览
+// @Description 聚合工单的 status / priority 分布与 30 天趋势
+// @Tags 数据分析
+// @Produce json
+// @Success 200 {object} common.Response
+// @Router /api/v1/analytics/tickets [get]
+func (c *AnalyticsController) GetTicketAnalytics(ctx *gin.Context) {
+	tenantID, exists := ctx.Get("tenant_id")
+	if !exists {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+	stats, err := c.analyticsService.GetTicketStats(ctx.Request.Context(), tenantID.(int))
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取工单分析失败: "+err.Error())
+		return
+	}
+	common.Success(ctx, stats)
+}

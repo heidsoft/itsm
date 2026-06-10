@@ -9,6 +9,8 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/connector"
 	_ "itsm-backend/connector/builtin/console"
+	_ "itsm-backend/connector/builtin/dingtalk"
+	_ "itsm-backend/connector/builtin/wecom"
 	_ "itsm-backend/connector/builtin/feishu"
 	_ "itsm-backend/connector/builtin/webhook"
 	"itsm-backend/connector/marketplace"

@@ -175,6 +175,11 @@ func (s *Service) AnalyzeTicket(ctx context.Context, ticketID int, tenantID int)
 	return s.rca.AnalyzeTicket(ctx, ticketID, tenantID)
 }
 
+// SummarizeTicket B9: AI 工单总结 - 委托 RootCauseService 处理（有 ent 访问）
+func (s *Service) SummarizeTicket(ctx context.Context, ticketID int, tenantID int) (interface{}, error) {
+	return s.rca.SummarizeTicket(ctx, ticketID, tenantID)
+}
+
 func (s *Service) GetAnalysisReport(ctx context.Context, ticketID int, tenantID int) (interface{}, error) {
 	return s.rca.GetAnalysisReport(ctx, ticketID, tenantID)
 }

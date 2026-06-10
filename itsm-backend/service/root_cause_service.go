@@ -388,3 +388,76 @@ func (s *RootCauseService) ResolveRootCause(ctx context.Context, ticketID int, r
 
 	return nil
 }
+
+// SummarizeTicket B9: AI 工单总结（轻量版：先尝试 LLM，fallback 用字段拼接）
+// 返回一个简洁的字符串 summary 供前端展示
+func (s *RootCauseService) SummarizeTicket(ctx context.Context, ticketID int, tenantID int) (map[string]interface{}, error) {
+	ticketEntity, err := s.client.Ticket.Query().
+		Where(
+			ticket.IDEQ(ticketID),
+			ticket.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("ticket not found: %w", err)
+	}
+
+	// 简化：评论数从 ent 反查需要先建关联，这里 fallback 0
+	commentCount := 0
+	_ = commentCount
+
+	// 字段拼接 fallback summary
+	fallback := fmt.Sprintf(
+		"工单 #%s（%s）当前状态为 %s，优先级 %s。标题：%s。",
+		ticketEntity.TicketNumber,
+		ticketEntity.Type,
+		ticketEntity.Status,
+		ticketEntity.Priority,
+		ticketEntity.Title,
+	)
+	if ticketEntity.Description != "" {
+		desc := ticketEntity.Description
+		if len([]rune(desc)) > 200 {
+			desc = string([]rune(desc)[:200]) + "..."
+		}
+		fallback += " 描述摘要：" + desc
+	}
+	if commentCount > 0 {
+		fallback += fmt.Sprintf("（已有 %d 条沟通记录）", commentCount)
+	}
+
+	// 尝试 LLM（如果 gateway 不可用直接 fallback，不阻塞）
+	summary := fallback
+	method := "fallback"
+	if s.gateway != nil {
+		// 限制 prompt 长度
+		desc := ticketEntity.Description
+		if len([]rune(desc)) > 500 {
+			desc = string([]rune(desc)[:500])
+		}
+		prompt := fmt.Sprintf(
+			"请用 2-3 句中文总结这个IT工单：\n工单号：%s\n标题：%s\n描述：%s\n状态：%s\n优先级：%s",
+			ticketEntity.TicketNumber,
+			ticketEntity.Title,
+			desc,
+			ticketEntity.Status,
+			ticketEntity.Priority,
+		)
+		messages := []LLMMessage{{Role: "user", Content: prompt}}
+		resp, llmErr := s.gateway.Chat(ctx, "", messages)
+		if llmErr == nil && resp != "" {
+			summary = resp
+			method = "llm"
+		} else if llmErr != nil {
+			s.logger.Warnw("LLM summary failed, using fallback", "error", llmErr)
+		}
+	}
+
+	return map[string]interface{}{
+		"ticket_id":   ticketID,
+		"summary":     summary,
+		"method":      method,
+		"comment_count": commentCount,
+		"generated_at": time.Now().Format(time.RFC3339),
+	}, nil
+}

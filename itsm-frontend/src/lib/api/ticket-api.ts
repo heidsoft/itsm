@@ -87,7 +87,7 @@ export class TicketApi {
       username: string;
     };
   }> {
-    return httpClient.post(`/api/v1/tickets/${id}/comment`, { content });
+    return httpClient.post(`/api/v1/tickets/${id}/comments`, { content });
   }
 
   // Assign ticket

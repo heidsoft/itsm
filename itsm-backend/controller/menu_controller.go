@@ -31,9 +31,14 @@ func NewMenuController(menuService *service.MenuService) *MenuController {
 // @Success 200 {object} common.Response
 // @Router /api/v1/tenants/{tenant_id}/menus [get]
 func (c *MenuController) ListMenus(ctx *gin.Context) {
-	tenantID, err := strconv.Atoi(ctx.Param("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的租户ID")
+	tid, ok := ctx.Get("tenant_id")
+	if !ok {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+	tenantID, ok2 := tid.(int)
+	if !ok2 {
+		common.Fail(ctx, common.UnauthorizedCode, "租户上下文类型错误")
 		return
 	}
 
@@ -59,9 +64,14 @@ func (c *MenuController) ListMenus(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/tenants/{tenant_id}/menus/{id} [get]
 func (c *MenuController) GetMenu(ctx *gin.Context) {
-	tenantID, err := strconv.Atoi(ctx.Param("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的租户ID")
+	tid, ok := ctx.Get("tenant_id")
+	if !ok {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+	tenantID, ok2 := tid.(int)
+	if !ok2 {
+		common.Fail(ctx, common.UnauthorizedCode, "租户上下文类型错误")
 		return
 	}
 
@@ -90,9 +100,14 @@ func (c *MenuController) GetMenu(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/tenants/{tenant_id}/menus [post]
 func (c *MenuController) CreateMenu(ctx *gin.Context) {
-	tenantID, err := strconv.Atoi(ctx.Param("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的租户ID")
+	tid, ok := ctx.Get("tenant_id")
+	if !ok {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+	tenantID, ok2 := tid.(int)
+	if !ok2 {
+		common.Fail(ctx, common.UnauthorizedCode, "租户上下文类型错误")
 		return
 	}
 
@@ -122,9 +137,14 @@ func (c *MenuController) CreateMenu(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/tenants/{tenant_id}/menus/{id} [put]
 func (c *MenuController) UpdateMenu(ctx *gin.Context) {
-	tenantID, err := strconv.Atoi(ctx.Param("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的租户ID")
+	tid, ok := ctx.Get("tenant_id")
+	if !ok {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+	tenantID, ok2 := tid.(int)
+	if !ok2 {
+		common.Fail(ctx, common.UnauthorizedCode, "租户上下文类型错误")
 		return
 	}
 
@@ -159,9 +179,14 @@ func (c *MenuController) UpdateMenu(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/tenants/{tenant_id}/menus/{id} [delete]
 func (c *MenuController) DeleteMenu(ctx *gin.Context) {
-	tenantID, err := strconv.Atoi(ctx.Param("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的租户ID")
+	tid, ok := ctx.Get("tenant_id")
+	if !ok {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+	tenantID, ok2 := tid.(int)
+	if !ok2 {
+		common.Fail(ctx, common.UnauthorizedCode, "租户上下文类型错误")
 		return
 	}
 
@@ -221,9 +246,14 @@ func (c *MenuController) GetUserMenus(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/tenants/{tenant_id}/menus/init [post]
 func (c *MenuController) InitDefaultMenus(ctx *gin.Context) {
-	tenantID, err := strconv.Atoi(ctx.Param("tenant_id"))
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的租户ID")
+	tid, ok := ctx.Get("tenant_id")
+	if !ok {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+	tenantID, ok2 := tid.(int)
+	if !ok2 {
+		common.Fail(ctx, common.UnauthorizedCode, "租户上下文类型错误")
 		return
 	}
 

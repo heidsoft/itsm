@@ -396,7 +396,7 @@ describe('TicketApi', () => {
       const result = await TicketApi.addComment(1, 'Test comment');
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/tickets/1/comment'),
+        expect.stringContaining('/api/v1/tickets/1/comments'),
         expect.objectContaining({
           method: 'POST',
         })

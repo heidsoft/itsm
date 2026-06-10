@@ -35,18 +35,16 @@ func (pc *ProvisioningController) StartProvisioning(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "无效的服务请求ID")
 		return
 	}
-	tenantIDAny, ok := c.Get("tenant_id")
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
-	userIDAny, ok := c.Get("user_id")
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "用户未认证")
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
 		return
 	}
-	tenantID := tenantIDAny.(int)
-	userID := userIDAny.(int)
 
 	task, err := pc.provisioningService.CreateTaskFromServiceRequest(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
@@ -85,12 +83,11 @@ func (pc *ProvisioningController) ListProvisioningTasks(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "无效的服务请求ID")
 		return
 	}
-	tenantIDAny, ok := c.Get("tenant_id")
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
-	tenantID := tenantIDAny.(int)
 
 	tasks, err := pc.provisioningService.ListTasksByServiceRequest(c.Request.Context(), id, tenantID)
 	if err != nil {
@@ -131,18 +128,16 @@ func (pc *ProvisioningController) ExecuteProvisioningTask(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "无效的交付任务ID")
 		return
 	}
-	tenantIDAny, ok := c.Get("tenant_id")
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
 		return
 	}
-	userIDAny, ok := c.Get("user_id")
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "用户未认证")
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
 		return
 	}
-	tenantID := tenantIDAny.(int)
-	userID := userIDAny.(int)
 
 	task, err := pc.provisioningService.ExecuteTask(c.Request.Context(), id, tenantID, userID)
 	if err != nil {

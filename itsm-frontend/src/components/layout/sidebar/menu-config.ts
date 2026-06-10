@@ -624,6 +624,13 @@ export function getMenuConfig(): MenuConfig {
             permission: 'permission:manage',
           },
           {
+            key: '/admin/connectors',
+            icon: getIconByName('Plug')!,
+            label: '连接器/插件市场',
+            path: '/admin/connectors',
+            permission: 'connector:manage',
+          },
+          {
             key: '/admin/system-config',
             icon: getIconByName('Settings')!,
             label: '系统配置',

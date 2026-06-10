@@ -112,11 +112,15 @@ func (mc *MSPController) GetMSPContext(c *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/msp/allocations [get]
 func (mc *MSPController) GetAllocations(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		return
+	}
 
 	allocations, err := mc.mspAllocationService.ListByMSPUser(
 		c.Request.Context(),
-		userID.(int),
+		userID,
 	)
 	if err != nil {
 		mc.logger.Errorw("Failed to list allocations", "error", err, "user_id", userID)
@@ -148,7 +152,11 @@ func (mc *MSPController) CreateAllocation(c *gin.Context) {
 	}
 
 	// 获取当前操作人（MSP Manager）
-	operatorID, _ := c.Get("user_id")
+	operatorID := c.GetInt("user_id")
+	if operatorID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		return
+	}
 	roleVal, _ := c.Get("role")
 	operatorRole, _ := roleVal.(string)
 
@@ -188,7 +196,11 @@ func (mc *MSPController) Deallocate(c *gin.Context) {
 		return
 	}
 
-	operatorID, _ := c.Get("user_id")
+	operatorID := c.GetInt("user_id")
+	if operatorID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		return
+	}
 
 	err := mc.mspAllocationService.Deactivate(
 		c.Request.Context(),
@@ -217,11 +229,15 @@ func (mc *MSPController) Deallocate(c *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/msp/customers [get]
 func (mc *MSPController) GetAllCustomers(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		return
+	}
 
 	customers, err := mc.mspAllocationService.GetMSPCustomers(
 		c.Request.Context(),
-		userID.(int),
+		userID,
 	)
 	if err != nil {
 		mc.logger.Errorw("Failed to list customers", "error", err, "user_id", userID)
@@ -314,13 +330,17 @@ func (mc *MSPController) AssignMSPTechnician(c *gin.Context) {
 		return
 	}
 
-	assignerID, _ := c.Get("user_id")
+	assignerID := c.GetInt("user_id")
+	if assignerID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		return
+	}
 
 	ticket, err := mc.ticketService.AssignMSPTechnician(
 		c.Request.Context(),
 		ticketID,
 		req.CustomerTenantID,
-		assignerID.(int),
+		assignerID,
 	)
 	if err != nil {
 		mc.logger.Errorw("Failed to assign MSP technician", "error", err, "ticket_id", ticketID)
@@ -364,8 +384,12 @@ func (mc *MSPController) GetCustomerReports(c *gin.Context) {
 		customerTenantID = &id
 	}
 
-	userID, _ := c.Get("user_id")
-	mspUserID, _ := userID.(int)
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		return
+	}
+	mspUserID := userID
 
 	reports, err := mc.ticketService.GetMSPCustomerReports(
 		c.Request.Context(),

@@ -287,7 +287,7 @@ export const changeHandlers = {
       approved: changes.filter(c => c.status === 'approved').length,
       inProgress: changes.filter(c => c.status === 'in_progress').length,
       completed: changes.filter(c => c.status === 'completed').length,
-      rolled_back: changes.filter(c => c.status === 'rolled_back').length,
+      rolledBack: changes.filter(c => c.status === 'rolled_back').length,
       rejected: changes.filter(c => c.status === 'rejected').length,
       cancelled: changes.filter(c => c.status === 'cancelled').length,
     };
