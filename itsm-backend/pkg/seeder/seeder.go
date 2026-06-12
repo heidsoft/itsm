@@ -1751,6 +1751,18 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			"problem:read", "change:read", "team:read",
 			"user:read", "knowledge:read",
 		},
+		// 安全审批人：可读工单/事件/问题/变更/知识库/通知，做安全审批
+		"security": {
+			"ticket:read", "ticket:write",
+			"incident:read", "incident:write",
+			"problem:read",
+			"change:read", "change:write",
+			"release:read",
+			"knowledge:read",
+			"notification:read",
+			"asset:read",
+			"team:read", "user:read",
+		},
 		// 普通用户
 		"end_user": {
 			"ticket:read", "ticket:write", "knowledge:read",
