@@ -46,16 +46,19 @@ func (s *TicketCategoryService) CreateCategory(ctx context.Context, req *CreateC
 		level = parent.Level + 1
 	}
 
-	category, err := s.client.TicketCategory.Create().
+	create := s.client.TicketCategory.Create().
 		SetName(req.Name).
 		SetDescription(req.Description).
 		SetCode(req.Code).
-		SetParentID(req.ParentID).
 		SetLevel(level).
 		SetSortOrder(req.SortOrder).
 		SetIsActive(req.IsActive).
-		SetTenantID(req.TenantID).
-		Save(ctx)
+		SetTenantID(req.TenantID)
+	if req.ParentID > 0 {
+		create.SetParentID(req.ParentID)
+	}
+
+	category, err := create.Save(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +198,7 @@ func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req 
 			update.SetParentID(*req.ParentID)
 			update.SetLevel(parent.Level + 1)
 		} else {
-			update.SetParentID(0)
+			update.ClearParentID()
 			update.SetLevel(1)
 		}
 	}
@@ -246,6 +249,120 @@ func (s *TicketCategoryService) DeleteCategory(ctx context.Context, id int, tena
 		Exec(ctx)
 }
 
+// MoveCategory 移动分类到新的父级或排序位置。
+func (s *TicketCategoryService) MoveCategory(ctx context.Context, id int, req *MoveCategoryRequest, tenantID int) (*ent.TicketCategory, error) {
+	category, err := s.client.TicketCategory.Query().
+		Where(ticketcategory.ID(id), ticketcategory.TenantID(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return nil, errors.New("分类不存在")
+	}
+
+	newParentID := category.ParentID
+	newLevel := category.Level
+	if req.NewParentID != nil {
+		if *req.NewParentID == id {
+			return nil, errors.New("不能将分类移动到自身下级")
+		}
+		newParentID = *req.NewParentID
+		newLevel = 1
+
+		if newParentID > 0 {
+			parent, err := s.client.TicketCategory.Query().
+				Where(ticketcategory.ID(newParentID), ticketcategory.TenantID(tenantID)).
+				Only(ctx)
+			if err != nil {
+				return nil, errors.New("父分类不存在")
+			}
+
+			isDescendant, err := s.isDescendantCategory(ctx, parent.ID, id, tenantID)
+			if err != nil {
+				return nil, err
+			}
+			if isDescendant {
+				return nil, errors.New("不能将分类移动到其子分类下")
+			}
+			newLevel = parent.Level + 1
+		}
+	}
+
+	update := s.client.TicketCategory.UpdateOneID(id).
+		Where(ticketcategory.TenantID(tenantID)).
+		SetLevel(newLevel).
+		SetUpdatedAt(time.Now())
+	if req.NewParentID != nil {
+		if newParentID > 0 {
+			update.SetParentID(newParentID)
+		} else {
+			update.ClearParentID()
+		}
+	}
+	if req.NewSortOrder != nil {
+		update.SetSortOrder(*req.NewSortOrder)
+	}
+
+	moved, err := update.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if newLevel != category.Level {
+		if err := s.refreshDescendantLevels(ctx, id, newLevel, tenantID); err != nil {
+			return nil, err
+		}
+	}
+
+	return moved, nil
+}
+
+func (s *TicketCategoryService) isDescendantCategory(ctx context.Context, candidateID, ancestorID, tenantID int) (bool, error) {
+	currentID := candidateID
+	visited := map[int]bool{}
+	for currentID > 0 {
+		if currentID == ancestorID {
+			return true, nil
+		}
+		if visited[currentID] {
+			return false, errors.New("分类层级存在循环引用")
+		}
+		visited[currentID] = true
+
+		category, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.ID(currentID), ticketcategory.TenantID(tenantID)).
+			Only(ctx)
+		if err != nil {
+			return false, err
+		}
+		currentID = category.ParentID
+	}
+	return false, nil
+}
+
+func (s *TicketCategoryService) refreshDescendantLevels(ctx context.Context, parentID, parentLevel, tenantID int) error {
+	children, err := s.client.TicketCategory.Query().
+		Where(ticketcategory.ParentIDEQ(parentID), ticketcategory.TenantID(tenantID)).
+		All(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, child := range children {
+		childLevel := parentLevel + 1
+		if err := s.client.TicketCategory.UpdateOneID(child.ID).
+			Where(ticketcategory.TenantID(tenantID)).
+			SetLevel(childLevel).
+			SetUpdatedAt(time.Now()).
+			Exec(ctx); err != nil {
+			return err
+		}
+		if err := s.refreshDescendantLevels(ctx, child.ID, childLevel, tenantID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // CreateCategoryRequest 创建分类请求
 type CreateCategoryRequest struct {
 	Name        string `json:"name" binding:"required"`
@@ -265,6 +382,12 @@ type UpdateCategoryRequest struct {
 	ParentID    *int   `json:"parent_id"`
 	SortOrder   *int   `json:"sort_order"`
 	IsActive    *bool  `json:"is_active"`
+}
+
+// MoveCategoryRequest 移动分类请求
+type MoveCategoryRequest struct {
+	NewParentID  *int `json:"new_parent_id"`
+	NewSortOrder *int `json:"new_sort_order"`
 }
 
 // ListCategoriesRequest 获取分类列表请求

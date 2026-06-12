@@ -6,6 +6,7 @@ import { TicketApi } from '@/lib/api/ticket-api';
 import { UserApi } from '@/lib/api/user-api';
 import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
+import type { TicketPriority } from '@/types/ticket';
 import {
   ArrowLeft,
   AlertCircle,
@@ -45,6 +46,10 @@ import {
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+
+const ticketPriorities: TicketPriority[] = ['low', 'medium', 'high', 'urgent', 'critical'];
+const toTicketPriority = (value: string): TicketPriority =>
+  ticketPriorities.includes(value as TicketPriority) ? (value as TicketPriority) : 'medium';
 
 const statusMap: Record<
   string,
@@ -388,7 +393,7 @@ const TicketDetailPage: React.FC = () => {
             try {
               await TicketApi.updateTicket(ticketId, {
                 category: suggestion.category,
-                priority: suggestion.priority,
+                priority: toTicketPriority(suggestion.priority),
                 version: ticket.version,
               });
               antMessage.success(

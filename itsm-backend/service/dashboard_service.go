@@ -8,7 +8,6 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/ticket"
@@ -55,7 +54,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, tenantID int) (
 	}
 
 	// 获取资源指标
-	resourceMetrics, err := s.getResourceMetrics(ctx, tenantID)
+	resourceMetrics, err := s.getResourceMetrics(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get resource metrics", "error", err)
 		return nil, fmt.Errorf("获取资源指标失败: %w", err)
