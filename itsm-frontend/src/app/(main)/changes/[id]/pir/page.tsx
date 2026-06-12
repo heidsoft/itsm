@@ -286,12 +286,7 @@ export default function PIRPage() {
             </Form.Item>
 
             <Form.Item name="issuesEncountered" label="遇到的问题">
-              <TextArea
-                rows={4}
-                placeholder="实施中遇到了什么阻碍？"
-                showCount
-                maxLength={300}
-              />
+              <TextArea rows={4} placeholder="实施中遇到了什么阻碍？" showCount maxLength={300} />
             </Form.Item>
 
             <Form.Item name="lessonsLearned" label="经验教训">
@@ -304,12 +299,7 @@ export default function PIRPage() {
             </Form.Item>
 
             <Form.Item name="improvementRecommendations" label="改进建议">
-              <TextArea
-                rows={4}
-                placeholder="下次如何做得更稳、更快？"
-                showCount
-                maxLength={300}
-              />
+              <TextArea rows={4} placeholder="下次如何做得更稳、更快？" showCount maxLength={300} />
             </Form.Item>
 
             <Divider>实施时间</Divider>
