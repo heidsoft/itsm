@@ -52,9 +52,8 @@ export default function NewKnowledgeArticlePage() {
       const created = await KnowledgeBaseApi.createArticle({
         title: values.title,
         content: values.content,
-        category_id: values.category_id,
+        category: categories.find(c => c.id === values.category_id)?.name || String(values.category_id),
         tags: values.tags || [],
-        status: 'draft',
       });
       message.success('文章创建成功');
       router.push(`/knowledge/articles/${(created as any).id}`);

@@ -111,6 +111,7 @@ func SetupTicketRoutes(
 		categories.POST("", middleware.RequirePermission("ticket_category", "create"), ticketCategoryController.CreateCategory)
 		categories.GET("/:id", ticketCategoryController.GetCategory)
 		categories.PUT("/:id", middleware.RequirePermission("ticket_category", "update"), ticketCategoryController.UpdateCategory)
+		categories.PUT("/:id/move", middleware.RequirePermission("ticket_category", "update"), ticketCategoryController.MoveCategory)
 		categories.DELETE("/:id", middleware.RequirePermission("ticket_category", "delete"), ticketCategoryController.DeleteCategory)
 	}
 

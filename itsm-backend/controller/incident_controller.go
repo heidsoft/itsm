@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentevent"
+	"itsm-backend/ent/user"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -620,7 +621,6 @@ func (c *IncidentController) CreateIncidentAlert(ctx *gin.Context) {
 	common.SuccessWithMessage(ctx, "创建事件告警成功", response)
 }
 
-
 // AcknowledgeIncident 确认事件（业务流转）
 // @Summary 确认事件
 // @Description 将事件状态从 new 流转到 acknowledged
@@ -1047,7 +1047,7 @@ func (c *IncidentController) GetImpactAssessment(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, gin.H{
-		"incident_id":        incident.ID,
+		"incident_id":       incident.ID,
 		"impact_assessment": incident.ImpactAnalysis,
 	})
 }
@@ -1169,7 +1169,7 @@ func (c *IncidentController) UpdateClassification(ctx *gin.Context) {
 	}
 
 	var req struct {
-		Category string `json:"category"`
+		Category    string `json:"category"`
 		Subcategory string `json:"subcategory"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -1265,23 +1265,30 @@ func (c *IncidentController) GetIncidentComments(ctx *gin.Context) {
 		return
 	}
 
-	var result []gin.H
+	userIDs := make([]int, 0, len(events))
 	for _, e := range events {
-		item := gin.H{
-			"id":           e.ID,
-			"incident_id":  e.IncidentID,
-			"content":      e.Description,
-			"event_type":   e.EventType,
-			"is_internal":  false,
-			"occurred_at":  e.OccurredAt,
-			"created_at":   e.CreatedAt,
+		if e.UserID > 0 {
+			userIDs = append(userIDs, e.UserID)
 		}
-		if e.Data != nil {
-			if v, ok := e.Data["isInternal"].(bool); ok {
-				item["is_internal"] = v
+	}
+
+	usersByID := map[int]*ent.User{}
+	if len(userIDs) > 0 {
+		users, err := entClient.User.Query().
+			Where(user.IDIn(userIDs...), user.TenantIDEQ(tenantID)).
+			All(ctx.Request.Context())
+		if err != nil {
+			c.logger.Warnw("Failed to query comment users", "error", err, "incident_id", id)
+		} else {
+			for _, u := range users {
+				usersByID[u.ID] = u
 			}
 		}
-		result = append(result, item)
+	}
+
+	result := make([]*dto.IncidentCommentResponse, 0, len(events))
+	for _, e := range events {
+		result = append(result, dto.ToIncidentCommentResponse(e, usersByID[e.UserID]))
 	}
 
 	common.Success(ctx, result)
@@ -1351,7 +1358,11 @@ func (c *IncidentController) CreateIncidentComment(ctx *gin.Context) {
 	}
 
 	// 创建评论（使用 IncidentEvent with event_type=comment）
-	data := map[string]interface{}{"isInternal": req.IsInternal}
+	data := map[string]interface{}{
+		"isInternal":  req.IsInternal,
+		"mentions":    req.Mentions,
+		"attachments": req.Attachments,
+	}
 	event, err := entClient.IncidentEvent.Create().
 		SetIncidentID(id).
 		SetEventType("comment").
@@ -1370,11 +1381,12 @@ func (c *IncidentController) CreateIncidentComment(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, gin.H{
-		"id":          event.ID,
-		"incident_id": event.IncidentID,
-		"content":     event.Description,
-		"is_internal": req.IsInternal,
-		"created_at":  event.CreatedAt,
-	})
+	userEntity, err := entClient.User.Query().
+		Where(user.IDEQ(userID), user.TenantIDEQ(tenantID)).
+		Only(ctx.Request.Context())
+	if err != nil {
+		c.logger.Warnw("Failed to query comment user", "error", err, "user_id", userID)
+	}
+
+	common.Success(ctx, dto.ToIncidentCommentResponse(event, userEntity))
 }

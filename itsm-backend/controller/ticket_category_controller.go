@@ -210,21 +210,30 @@ func (tc *TicketCategoryController) GetCategoryTree(c *gin.Context) {
 
 // MoveCategory 移动分类位置
 func (tc *TicketCategoryController) MoveCategory(c *gin.Context) {
-	_, err := strconv.Atoi(c.Param("id"))
+	categoryID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		common.Fail(c, common.ParamErrorCode, "无效的分类ID")
 		return
 	}
 
-	var req struct {
-		NewParentID  *int `json:"new_parent_id"`
-		NewSortOrder *int `json:"new_sort_order"`
-	}
+	var req service.MoveCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
-	// 注意：MoveCategory 方法尚未在服务中实现
-	common.Fail(c, common.InternalErrorCode, "分类移动功能尚未实现")
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	category, err := tc.categoryService.MoveCategory(c.Request.Context(), categoryID, &req, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to move ticket category", "error", err, "category_id", categoryID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, dto.ToTicketCategoryResponse(category))
 }
