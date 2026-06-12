@@ -150,3 +150,6 @@ itsm-rag
 itsm-rag/*
 itsm-skill
 itsm-skill/*
+# Binaries
+itsm-backend/deploy/itsm-new
+itsm-backend/deploy/itsm-new-linux
