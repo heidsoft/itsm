@@ -153,3 +153,12 @@ itsm-skill/*
 # Binaries
 itsm-backend/deploy/itsm-new
 itsm-backend/deploy/itsm-new-linux
+
+# Build artifacts
+itsm-backend/itsm-backend
+itsm-backend/deploy/itsm
+itsm-backend/deploy/itsm-new*
+itsm-backend/service.test
+itsm-backend/logs/
+itsm-frontend/.next/
+itsm-frontend/tests/e2e/venv/
