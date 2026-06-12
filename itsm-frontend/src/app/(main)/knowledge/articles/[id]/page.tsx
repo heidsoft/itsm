@@ -6,12 +6,8 @@
  */
 
 import React from 'react';
-import { useParams } from 'next/navigation';
 import ArticleDetail from '@/components/knowledge/ArticleDetail';
 
 export default function KnowledgeArticleDetailPage() {
-  const params = useParams();
-  const id = (params?.id as string) || '';
-
-  return <ArticleDetail id={id} />;
+  return <ArticleDetail />;
 }

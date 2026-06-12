@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"encoding/json"
 	"time"
 
 	"itsm-backend/ent"
@@ -8,7 +9,7 @@ import (
 
 // CreateIncidentCommentRequest 创建事件评论请求
 type CreateIncidentCommentRequest struct {
-	Content string `json:"content" binding:"required,min=1,max=5000"`
+	Content     string `json:"content" binding:"required,min=1,max=5000"`
 	IsInternal  bool   `json:"isInternal"`
 	Mentions    []int  `json:"mentions"`
 	Attachments []int  `json:"attachments"`
@@ -21,7 +22,7 @@ type IncidentCommentResponse struct {
 	UserID      int       `json:"userId"`
 	Content     string    `json:"content"`
 	IsInternal  bool      `json:"isInternal"`
-	Mentions    []int `json:"mentions"`
+	Mentions    []int     `json:"mentions"`
 	Attachments []int     `json:"attachments"`
 	User        *UserInfo `json:"user,omitempty"`
 	CreatedAt   time.Time `json:"createdAt"`
@@ -45,12 +46,8 @@ func ToIncidentCommentResponse(event *ent.IncidentEvent, user *ent.User) *Incide
 		if v, ok := event.Data["isInternal"].(bool); ok {
 			resp.IsInternal = v
 		}
-		if v, ok := event.Data["mentions"].([]int); ok {
-			resp.Mentions = v
-		}
-		if v, ok := event.Data["attachments"].([]int); ok {
-			resp.Attachments = v
-		}
+		resp.Mentions = toIntSlice(event.Data["mentions"])
+		resp.Attachments = toIntSlice(event.Data["attachments"])
 	}
 
 	// 设置用户信息
@@ -67,4 +64,36 @@ func ToIncidentCommentResponse(event *ent.IncidentEvent, user *ent.User) *Incide
 	}
 
 	return resp
+}
+
+func toIntSlice(value interface{}) []int {
+	switch v := value.(type) {
+	case []int:
+		return v
+	case []interface{}:
+		result := make([]int, 0, len(v))
+		for _, item := range v {
+			switch n := item.(type) {
+			case int:
+				result = append(result, n)
+			case int64:
+				result = append(result, int(n))
+			case float64:
+				result = append(result, int(n))
+			case json.Number:
+				if i, err := n.Int64(); err == nil {
+					result = append(result, int(i))
+				}
+			}
+		}
+		return result
+	case []float64:
+		result := make([]int, 0, len(v))
+		for _, n := range v {
+			result = append(result, int(n))
+		}
+		return result
+	default:
+		return nil
+	}
 }

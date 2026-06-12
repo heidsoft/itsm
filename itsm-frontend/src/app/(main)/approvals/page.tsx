@@ -32,7 +32,7 @@ import {
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import httpClient from '@/lib/api/http-client';
+import { httpClient } from '@/lib/api/http-client';
 import { useAuthStore } from '@/lib/store/auth-store';
 
 const { Title, Text } = Typography;

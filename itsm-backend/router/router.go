@@ -305,6 +305,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				categories.POST("", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryController.CreateCategory)
 				categories.GET("/:id", config.TicketCategoryController.GetCategory)
 				categories.PUT("/:id", middleware.RequirePermission("ticket_category", "update"), config.TicketCategoryController.UpdateCategory)
+				categories.PUT("/:id/move", middleware.RequirePermission("ticket_category", "update"), config.TicketCategoryController.MoveCategory)
 				categories.DELETE("/:id", middleware.RequirePermission("ticket_category", "delete"), config.TicketCategoryController.DeleteCategory)
 				categories.GET("/tree", config.TicketCategoryController.GetCategoryTree)
 			}
