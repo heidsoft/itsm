@@ -53,9 +53,6 @@ export default function PIRPage() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    fetchPIR();
-  }, [fetchPIR]);
   const fetchPIR = useCallback(async () => {
     setLoading(true);
     try {
