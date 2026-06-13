@@ -160,6 +160,9 @@ docker compose ps
 # 检查服务健康状态
 curl http://localhost:8090/api/v1/health
 
+# 检查 v1.0 GA 就绪度（默认功能模板、连接器、AI 审计契约）
+curl http://localhost:8090/api/v1/readiness/ga
+
 # 查看日志
 docker compose logs -f
 
@@ -198,6 +201,21 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 - `private`: 创建默认根租户和管理员，适合集团/事业部/子公司模式
 - `saas`: 创建平台系统租户，不预置客户业务数据
 - `saas_msp`: 创建 MSP 提供方租户、示例客户租户和基础分配关系
+
+### v1.0 GA 初始化检查
+
+默认 seed 会加载 `itsm-backend/config/seed/default.json`，用于 10 分钟内确认产品基础能力已可配置：
+
+1. 使用 `admin / admin123` 登录。
+2. 检查菜单、角色、权限和默认租户是否已初始化。
+3. 检查服务目录模板：账号申请、软件安装、网络接入、云资源、数据库、安全扫描等。
+4. 检查 SLA、审批流、流程绑定、CI 类型和标准变更模板是否可配置。
+5. 进入连接器市场，使用 `/api/v1/connectors/lifecycle` 验证内置飞书、钉钉、企微、Webhook、Console 连接器生命周期。
+6. 使用 `/api/v1/ai/audit` 验证 AI 建议可追踪，不自动执行高风险动作。
+
+默认初始化不预置虚构事件、问题、变更或真实资产业务数据；企业可通过 `ITSM_SEED_CONFIG` 或 `config/seed/default.json` 定制自己的初始化模板。
+
+更多验收项见 [v1.0 GA 收口验收指南](./docs/V1_GA_READINESS.md)。
 
 ---
 

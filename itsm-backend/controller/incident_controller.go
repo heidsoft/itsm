@@ -206,7 +206,6 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 	// 返回前端期望的格式
 	common.Success(ctx, dto.IncidentListResponse{
 		Incidents:  incidents,
-		Items:      incidents,
 		Total:      total,
 		Page:       page,
 		PageSize:   size,

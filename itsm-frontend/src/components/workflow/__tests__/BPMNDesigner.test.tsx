@@ -6,6 +6,7 @@ import { Button, Tooltip } from 'antd';
 // Mock bpmn-js before importing the component
 jest.mock('bpmn-js/lib/Modeler', () => {
   return jest.fn().mockImplementation(() => ({
+    createDiagram: jest.fn().mockResolvedValue({}),
     importXML: jest.fn().mockResolvedValue({}),
     saveXML: jest.fn().mockResolvedValue({ xml: '<?xml version="1.0"?><bpmn:definitions/>' }),
     saveSVG: jest.fn().mockResolvedValue({ svg: '<svg/>' }),

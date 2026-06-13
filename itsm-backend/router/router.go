@@ -201,6 +201,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		public.GET("/version", func(c *gin.Context) {
 			c.JSON(200, gin.H{"version": "1.0.0", "build": "dev"})
 		})
+		public.GET("/readiness/ga", func(c *gin.Context) {
+			common.Success(c, buildGAReadiness(c.Request.Context(), config.Client))
+		})
 
 		// Prometheus metrics 端点（需要认证，防止信息泄露）
 		metricsAuth := r.Group("")
@@ -851,6 +854,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				aiGrp.POST("/predictions", middleware.RequirePermission("ai", "read"), config.AIHandler.GetTrendPrediction)
 				aiGrp.POST("/tickets/:id/analyze", middleware.RequirePermission("ai", "read"), config.AIHandler.AnalyzeTicket)
 				aiGrp.POST("/feedback", middleware.RequirePermission("ai", "write"), config.AIHandler.SaveFeedback)
+				aiGrp.POST("/audit", middleware.RequirePermission("ai", "write"), config.AIHandler.RecordAudit)
+				aiGrp.GET("/metrics", middleware.RequirePermission("ai", "read"), config.AIHandler.GetMetrics)
+				aiGrp.POST("/triage", middleware.RequirePermission("ai", "read"), config.AIHandler.Triage)
 				// RAG endpoints
 				aiGrp.GET("/rag/search", middleware.RequirePermission("ai", "read"), config.AIHandler.KnowledgeSearch)
 				aiGrp.POST("/rag/ask", middleware.RequirePermission("ai", "read"), config.AIHandler.Chat)
@@ -1166,6 +1172,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			{
 				conns.GET("", config.ConnectorController.ListMarket)
 				conns.GET("/configs", config.ConnectorController.ListConfigs)
+				conns.GET("/lifecycle", config.ConnectorController.Lifecycle)
 				conns.POST("/configs", middleware.RequirePermission("connector", "write"), config.ConnectorController.Provision)
 				conns.DELETE("/configs/:name", middleware.RequirePermission("connector", "write"), config.ConnectorController.Revoke)
 				conns.POST("/:name/send", middleware.RequirePermission("connector", "write"), config.ConnectorController.Send)

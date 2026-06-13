@@ -113,8 +113,11 @@ type AssetResponse struct {
 
 // AssetListResponse 资产列表响应
 type AssetListResponse struct {
-	Total  int             `json:"total"`  // 总数
-	Assets []AssetResponse `json:"assets"` // 资产列表
+	Total      int             `json:"total"`      // 总数
+	Assets     []AssetResponse `json:"assets"`     // 资产列表
+	Page       int             `json:"page"`       // 当前页
+	PageSize   int             `json:"pageSize"`   // 每页数量
+	TotalPages int             `json:"totalPages"` // 总页数
 }
 
 // AssetStatsResponse 资产统计响应

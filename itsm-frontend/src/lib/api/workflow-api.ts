@@ -59,18 +59,78 @@ export class WorkflowApi {
     // 修正: 确保路径与后端一致，后端可能是 /api/v1/bpmn/process-definitions
     const res = await httpClient.get<
       | Array<{ id: number; key: string; name: string; description?: string; version: number; status: string; created_at: string; updated_at: string; }>
-      | { items: Array<{ id: number; key: string; name: string; description?: string; version: number; status: string; created_at: string; updated_at: string; }>; pagination?: { total: number } }
+      | {
+          data?: Array<{
+            id: number;
+            key: string;
+            name: string;
+            description?: string;
+            version: number | string;
+            status?: string;
+            is_active?: boolean;
+            category?: string;
+            bpmn_xml?: string;
+            created_at: string;
+            updated_at: string;
+          }>;
+          items?: Array<{
+            id: number;
+            key: string;
+            name: string;
+            description?: string;
+            version: number | string;
+            status?: string;
+            is_active?: boolean;
+            category?: string;
+            bpmn_xml?: string;
+            created_at: string;
+            updated_at: string;
+          }>;
+          list?: Array<{
+            id: number;
+            key: string;
+            name: string;
+            description?: string;
+            version: number | string;
+            status?: string;
+            is_active?: boolean;
+            category?: string;
+            bpmn_xml?: string;
+            created_at: string;
+            updated_at: string;
+          }>;
+          total?: number;
+          pagination?: { total: number };
+        }
     >('/api/v1/bpmn/process-definitions', params);
 
-    const list = Array.isArray(res) ? res : ((res as any).items || []);
-    const total = Array.isArray(res) ? list.length : ((res as any).pagination?.total ?? list.length);
-    const workflows: WorkflowDefinition[] = list.map((item: { id: number; key: string; name: string; description?: string; version: number; status: string; created_at: string; updated_at: string }) => ({
+    const list = Array.isArray(res) ? res : ((res as any).data || (res as any).items || (res as any).list || []);
+    const total = Array.isArray(res)
+      ? list.length
+      : ((res as any).total ?? (res as any).pagination?.total ?? list.length);
+    const workflows: WorkflowDefinition[] = list.map((item: {
+      id: number;
+      key: string;
+      name: string;
+      description?: string;
+      version: number | string;
+      status?: string;
+      is_active?: boolean;
+      category?: string;
+      bpmn_xml?: string;
+      created_at: string;
+      updated_at: string;
+    }) => ({
       id: String(item.id || ''),
       code: item.key || '',
       name: item.name || '',
       type: WorkflowType.TICKET,
-      version: item.version || 1,
-      status: item.status ? (item.status as WorkflowStatus) : WorkflowStatus.DRAFT,
+      version: Number(item.version) || 1,
+      status: item.status
+        ? (item.status as WorkflowStatus)
+        : item.is_active
+          ? WorkflowStatus.ACTIVE
+          : WorkflowStatus.DRAFT,
       nodes: [],
       connections: [],
       variables: [],
@@ -85,6 +145,8 @@ export class WorkflowApi {
       createdAt: item.created_at ? new Date(item.created_at) : new Date(),
       updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
       description: item.description,
+      category: item.category,
+      bpmn_xml: item.bpmn_xml || (item as any).bpmnXml,
     })) as WorkflowDefinition[];
     return { workflows, total };
   }

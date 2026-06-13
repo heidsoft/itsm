@@ -59,6 +59,11 @@ func (c *CMDBController) CreateCI(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+errMsg)
 		return
 	}
+	normalizeCreateCIRequest(&dtoReq)
+	if dtoReq.CITypeID <= 0 {
+		common.Fail(ctx, common.ParamErrorCode, "CI类型不能为空，请提供有效的 ciTypeId 或 ci_type_id")
+		return
+	}
 
 	// 将 ci_type_id 解析为 ci_type 字符串
 	ciType := dtoReq.Type
@@ -74,51 +79,84 @@ func (c *CMDBController) CreateCI(ctx *gin.Context) {
 		return
 	}
 
-	assetTag := dtoReq.AssetTag
-	serialNumber := dtoReq.SerialNumber
-	location := dtoReq.Location
-	assignedTo := dtoReq.AssignedTo
-	ownedBy := dtoReq.OwnedBy
-	discoverySource := dtoReq.DiscoverySource
+	if c.dddSvc == nil {
+		req := &service.CreateCIRequest{
+			Name:        dtoReq.Name,
+			CiType:      ciType,
+			CiTypeID:    dtoReq.CITypeID,
+			Status:      dtoReq.Status,
+			Environment: dtoReq.Environment,
+			Criticality: dtoReq.Criticality,
+			TenantID:    tenantID,
+		}
+		if dtoReq.AssetTag != "" {
+			req.AssetTag = &dtoReq.AssetTag
+		}
+		if dtoReq.SerialNumber != "" {
+			req.SerialNumber = &dtoReq.SerialNumber
+		}
+		if dtoReq.Location != "" {
+			req.Location = &dtoReq.Location
+		}
+		if dtoReq.AssignedTo != "" {
+			req.AssignedTo = &dtoReq.AssignedTo
+		}
+		if dtoReq.OwnedBy != "" {
+			req.OwnedBy = &dtoReq.OwnedBy
+		}
+		if dtoReq.DiscoverySource != "" {
+			req.DiscoverySource = &dtoReq.DiscoverySource
+		}
+		if dtoReq.Attributes != nil {
+			req.Attributes = &dtoReq.Attributes
+		}
+		ci, err := c.cmdbService.CreateCI(ctx.Request.Context(), req)
+		if err != nil {
+			common.Fail(ctx, common.InternalErrorCode, "操作失败，请稍后重试")
+			return
+		}
+		common.Success(ctx, ci)
+		return
+	}
 
-	req := &service.CreateCIRequest{
-		Name:        dtoReq.Name,
-		CiType:      ciType,
-		CiTypeID:    dtoReq.CITypeID,
-		Status:      dtoReq.Status,
-		Environment: dtoReq.Environment,
-		Criticality: dtoReq.Criticality,
-		TenantID:    tenantID,
-	}
-	if assetTag != "" {
-		req.AssetTag = &assetTag
-	}
-	if serialNumber != "" {
-		req.SerialNumber = &serialNumber
-	}
-	if location != "" {
-		req.Location = &location
-	}
-	if assignedTo != "" {
-		req.AssignedTo = &assignedTo
-	}
-	if ownedBy != "" {
-		req.OwnedBy = &ownedBy
-	}
-	if discoverySource != "" {
-		req.DiscoverySource = &discoverySource
-	}
-	if dtoReq.Attributes != nil {
-		req.Attributes = &dtoReq.Attributes
-	}
-
-	ci, err := c.cmdbService.CreateCI(ctx.Request.Context(), req)
+	ci, err := c.dddSvc.CreateCI(ctx.Request.Context(), &dddcmdb.ConfigurationItem{
+		Name:               dtoReq.Name,
+		Description:        dtoReq.Description,
+		Type:               ciType,
+		CITypeID:           dtoReq.CITypeID,
+		Status:             dtoReq.Status,
+		Environment:        dtoReq.Environment,
+		Criticality:        dtoReq.Criticality,
+		AssetTag:           dtoReq.AssetTag,
+		SerialNumber:       dtoReq.SerialNumber,
+		Model:              dtoReq.Model,
+		Vendor:             dtoReq.Vendor,
+		Location:           dtoReq.Location,
+		AssignedTo:         dtoReq.AssignedTo,
+		OwnedBy:            dtoReq.OwnedBy,
+		DiscoverySource:    dtoReq.DiscoverySource,
+		Source:             dtoReq.Source,
+		CloudProvider:      dtoReq.CloudProvider,
+		CloudAccountID:     dtoReq.CloudAccountID,
+		CloudRegion:        dtoReq.CloudRegion,
+		CloudZone:          dtoReq.CloudZone,
+		CloudResourceID:    dtoReq.CloudResourceID,
+		CloudResourceType:  dtoReq.CloudResourceType,
+		CloudMetadata:      dtoReq.CloudMetadata,
+		CloudTags:          dtoReq.CloudTags,
+		CloudMetrics:       dtoReq.CloudMetrics,
+		CloudSyncTime:      dtoReq.CloudSyncTime,
+		CloudSyncStatus:    dtoReq.CloudSyncStatus,
+		CloudResourceRefID: dtoReq.CloudResourceRefID,
+		TenantID:           tenantID,
+		Attributes:         dtoReq.Attributes,
+	})
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
-	common.Success(ctx, ci)
+	common.Success(ctx, toCMDBCIDTO(ci))
 }
 
 // GetCI 获取配置项
@@ -151,32 +189,62 @@ func (c *CMDBController) ListCIs(ctx *gin.Context) {
 	tenantIDVal, _ := ctx.Get("tenant_id")
 	tenantID, _ := tenantIDVal.(int)
 
-	req := service.ListCIsRequest{
-		TenantID:    tenantID,
-		CiType:      ctx.Query("ci_type"),
-		Status:      ctx.Query("status"),
-		Environment: ctx.Query("environment"),
-		Limit:       20,
-	}
+	limit := 20
+	offset := 0
 
-	if offset := ctx.Query("offset"); offset != "" {
-		if o, err := strconv.Atoi(offset); err == nil {
-			req.Offset = o
+	if offsetParam := ctx.Query("offset"); offsetParam != "" {
+		if o, err := strconv.Atoi(offsetParam); err == nil {
+			offset = o
 		}
 	}
-	if limit := ctx.Query("limit"); limit != "" {
-		if l, err := strconv.Atoi(limit); err == nil && l > 0 {
-			req.Limit = l
+	if limitParam := ctx.Query("limit"); limitParam != "" {
+		if l, err := strconv.Atoi(limitParam); err == nil && l > 0 {
+			limit = l
 		}
 	}
 
-	items, total, err := c.cmdbService.ListCIs(ctx.Request.Context(), &req)
+	ciTypeID := 0
+	if v := ctx.Query("ci_type_id"); v != "" {
+		if parsed, err := strconv.Atoi(v); err == nil {
+			ciTypeID = parsed
+		}
+	}
+	page := offset/limit + 1
+	if c.dddSvc == nil {
+		req := service.ListCIsRequest{
+			TenantID: tenantID,
+			Status:   ctx.Query("status"),
+			Offset:   offset,
+			Limit:    limit,
+		}
+		items, total, err := c.cmdbService.ListCIs(ctx.Request.Context(), &req)
+		if err != nil {
+			common.Fail(ctx, common.InternalErrorCode, "操作失败，请稍后重试")
+			return
+		}
+		common.Success(ctx, gin.H{"items": items, "total": total})
+		return
+	}
+
+	items, total, err := c.dddSvc.ListCIs(
+		ctx.Request.Context(),
+		tenantID,
+		page,
+		limit,
+		ciTypeID,
+		ctx.Query("status"),
+		ctx.Query("search"),
+	)
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "操作失败，请稍后重试")
 		return
 	}
 
-	common.Success(ctx, gin.H{"items": items, "total": total})
+	resp := make([]*dto.CIResponse, 0, len(items))
+	for _, item := range items {
+		resp = append(resp, toCMDBCIDTO(item))
+	}
+	common.Success(ctx, gin.H{"items": resp, "total": total})
 }
 
 // UpdateCI 更新配置项 (via DDD service)
@@ -191,6 +259,7 @@ func (c *CMDBController) UpdateCI(ctx *gin.Context) {
 		common.ParamError(ctx, "Invalid request body")
 		return
 	}
+	normalizeUpdateCIRequest(&req)
 
 	existing, err := c.dddSvc.GetCI(ctx.Request.Context(), id, tenantID)
 	if err != nil {
@@ -239,6 +308,48 @@ func (c *CMDBController) UpdateCI(ctx *gin.Context) {
 	}
 	if req.Attributes != nil {
 		existing.Attributes = req.Attributes
+	}
+	if req.DiscoverySource != "" {
+		existing.DiscoverySource = req.DiscoverySource
+	}
+	if req.Source != "" {
+		existing.Source = req.Source
+	}
+	if req.CloudProvider != "" {
+		existing.CloudProvider = req.CloudProvider
+	}
+	if req.CloudAccountID != "" {
+		existing.CloudAccountID = req.CloudAccountID
+	}
+	if req.CloudRegion != "" {
+		existing.CloudRegion = req.CloudRegion
+	}
+	if req.CloudZone != "" {
+		existing.CloudZone = req.CloudZone
+	}
+	if req.CloudResourceID != "" {
+		existing.CloudResourceID = req.CloudResourceID
+	}
+	if req.CloudResourceType != "" {
+		existing.CloudResourceType = req.CloudResourceType
+	}
+	if req.CloudMetadata != nil {
+		existing.CloudMetadata = req.CloudMetadata
+	}
+	if req.CloudTags != nil {
+		existing.CloudTags = req.CloudTags
+	}
+	if req.CloudMetrics != nil {
+		existing.CloudMetrics = req.CloudMetrics
+	}
+	if req.CloudSyncTime != nil {
+		existing.CloudSyncTime = req.CloudSyncTime
+	}
+	if req.CloudSyncStatus != "" {
+		existing.CloudSyncStatus = req.CloudSyncStatus
+	}
+	if req.CloudResourceRefID > 0 {
+		existing.CloudResourceRefID = req.CloudResourceRefID
 	}
 
 	res, err := c.dddSvc.UpdateCI(ctx.Request.Context(), existing)
@@ -1093,6 +1204,120 @@ func (c *CMDBController) RunDiscovery(ctx *gin.Context) {
 }
 
 // ==================== Helper mappers ====================
+
+func normalizeCreateCIRequest(req *dto.CreateCIRequest) {
+	if req.CITypeID == 0 {
+		req.CITypeID = req.CITypeIDSnake
+	}
+	if req.AssetTag == "" {
+		req.AssetTag = req.AssetTagSnake
+	}
+	if req.SerialNumber == "" {
+		req.SerialNumber = req.SerialNumberSnake
+	}
+	if req.AssignedTo == "" {
+		req.AssignedTo = req.AssignedToSnake
+	}
+	if req.OwnedBy == "" {
+		req.OwnedBy = req.OwnedBySnake
+	}
+	if req.DiscoverySource == "" {
+		req.DiscoverySource = req.DiscoverySourceSnake
+	}
+	if req.CloudProvider == "" {
+		req.CloudProvider = req.CloudProviderSnake
+	}
+	if req.CloudAccountID == "" {
+		req.CloudAccountID = req.CloudAccountIDSnake
+	}
+	if req.CloudRegion == "" {
+		req.CloudRegion = req.CloudRegionSnake
+	}
+	if req.CloudZone == "" {
+		req.CloudZone = req.CloudZoneSnake
+	}
+	if req.CloudResourceID == "" {
+		req.CloudResourceID = req.CloudResourceIDSnake
+	}
+	if req.CloudResourceType == "" {
+		req.CloudResourceType = req.CloudResourceTypeSnake
+	}
+	if req.CloudMetadata == nil {
+		req.CloudMetadata = req.CloudMetadataSnake
+	}
+	if req.CloudTags == nil {
+		req.CloudTags = req.CloudTagsSnake
+	}
+	if req.CloudMetrics == nil {
+		req.CloudMetrics = req.CloudMetricsSnake
+	}
+	if req.CloudSyncTime == nil {
+		req.CloudSyncTime = req.CloudSyncTimeSnake
+	}
+	if req.CloudSyncStatus == "" {
+		req.CloudSyncStatus = req.CloudSyncStatusSnake
+	}
+	if req.CloudResourceRefID == 0 {
+		req.CloudResourceRefID = req.CloudResourceRefIDSnake
+	}
+}
+
+func normalizeUpdateCIRequest(req *dto.UpdateCIRequest) {
+	if req.CITypeID == 0 {
+		req.CITypeID = req.CITypeIDSnake
+	}
+	if req.AssetTag == "" {
+		req.AssetTag = req.AssetTagSnake
+	}
+	if req.SerialNumber == "" {
+		req.SerialNumber = req.SerialNumberSnake
+	}
+	if req.AssignedTo == "" {
+		req.AssignedTo = req.AssignedToSnake
+	}
+	if req.OwnedBy == "" {
+		req.OwnedBy = req.OwnedBySnake
+	}
+	if req.DiscoverySource == "" {
+		req.DiscoverySource = req.DiscoverySourceSnake
+	}
+	if req.CloudProvider == "" {
+		req.CloudProvider = req.CloudProviderSnake
+	}
+	if req.CloudAccountID == "" {
+		req.CloudAccountID = req.CloudAccountIDSnake
+	}
+	if req.CloudRegion == "" {
+		req.CloudRegion = req.CloudRegionSnake
+	}
+	if req.CloudZone == "" {
+		req.CloudZone = req.CloudZoneSnake
+	}
+	if req.CloudResourceID == "" {
+		req.CloudResourceID = req.CloudResourceIDSnake
+	}
+	if req.CloudResourceType == "" {
+		req.CloudResourceType = req.CloudResourceTypeSnake
+	}
+	if req.CloudMetadata == nil {
+		req.CloudMetadata = req.CloudMetadataSnake
+	}
+	if req.CloudTags == nil {
+		req.CloudTags = req.CloudTagsSnake
+	}
+	if req.CloudMetrics == nil {
+		req.CloudMetrics = req.CloudMetricsSnake
+	}
+	if req.CloudSyncTime == nil {
+		req.CloudSyncTime = req.CloudSyncTimeSnake
+	}
+	if req.CloudSyncStatus == "" {
+		req.CloudSyncStatus = req.CloudSyncStatusSnake
+	}
+	if req.CloudResourceRefID == 0 {
+		req.CloudResourceRefID = req.CloudResourceRefIDSnake
+	}
+}
 
 func toCMDBCIDTO(ci *dddcmdb.ConfigurationItem) *dto.CIResponse {
 	if ci == nil {

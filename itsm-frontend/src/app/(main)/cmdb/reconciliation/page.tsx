@@ -78,17 +78,17 @@ export default function ReconciliationPage() {
       return;
     }
     try {
-      const service = serviceMap.get(bindResource.service_id);
+      const service = serviceMap.get(bindResource.serviceId ?? bindResource.service_id);
       await CMDBApi.updateCI(String(ciID), {
-        cloud_resource_ref_id: bindResource.id,
-        cloud_provider: service?.provider,
-        cloud_account_id: String(bindResource.cloud_account_id),
-        cloud_region: bindResource.region,
-        cloud_zone: bindResource.zone,
-        cloud_resource_id: bindResource.resource_id,
-        cloud_resource_type: service?.resource_type_code,
-        cloud_metadata: bindResource.metadata,
-        cloud_sync_status: 'success',
+        cloudResourceRefId: bindResource.id,
+        cloudProvider: service?.provider,
+        cloudAccountId: String(bindResource.cloudAccountId ?? bindResource.cloud_account_id),
+        cloudRegion: bindResource.region,
+        cloudZone: bindResource.zone,
+        cloudResourceId: bindResource.resourceId ?? bindResource.resource_id,
+        cloudResourceType: service?.resourceTypeCode ?? service?.resource_type_code,
+        cloudMetadata: bindResource.metadata,
+        cloudSyncStatus: 'success',
       });
       message.success('绑定成功');
       setBindOpen(false);
@@ -103,21 +103,23 @@ export default function ReconciliationPage() {
   const resourceColumns = [
     {
       title: '资源名称',
-      dataIndex: 'resource_name',
       width: 180,
-      render: (value: string | undefined, record: CloudResource) => value || record.resource_id,
+      render: (_: unknown, record: CloudResource) =>
+        record.resourceName || record.resource_name || record.resourceId || record.resource_id,
     },
     {
       title: '资源ID',
-      dataIndex: 'resource_id',
+      dataIndex: 'resourceId',
       width: 200,
     },
     {
       title: '资源类型',
-      dataIndex: 'service_id',
       width: 160,
-      render: (serviceID: number) =>
-        serviceMap.get(serviceID)?.resource_type_name || `#${serviceID}`,
+      render: (_: unknown, record: CloudResource) => {
+        const serviceID = record.serviceId ?? record.service_id;
+        const service = serviceMap.get(serviceID);
+        return service?.resourceTypeName ?? service?.resource_type_name ?? `#${serviceID}`;
+      },
     },
     {
       title: 'Region',
@@ -133,9 +135,11 @@ export default function ReconciliationPage() {
     },
     {
       title: '最近发现',
-      dataIndex: 'last_seen_at',
       width: 160,
-      render: (value?: string) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-'),
+      render: (_: unknown, record: CloudResource) => {
+        const value = record.lastSeenAt ?? record.last_seen_at;
+        return value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-';
+      },
     },
     {
       title: '操作',
@@ -182,20 +186,25 @@ export default function ReconciliationPage() {
     },
     {
       title: '云资源ID',
-      dataIndex: 'cloud_resource_id',
       width: 200,
-      render: (value?: string) => value || '-',
+      render: (_: unknown, record: ConfigurationItem) =>
+        record.cloudResourceId ?? record.cloud_resource_id ?? '-',
     },
     {
       title: '云厂商',
-      dataIndex: 'cloud_provider',
       width: 120,
-      render: (value?: string) => value || '-',
+      render: (_: unknown, record: ConfigurationItem) =>
+        record.cloudProvider ?? record.cloud_provider ?? '-',
     },
   ];
 
   return (
     <Card>
+      <div style={{ marginBottom: 16 }}>
+        <h1 className="text-2xl font-bold">云资源核对</h1>
+        <p className="text-gray-500 mt-1">核对云资源与 CMDB 配置项绑定状态，处理待绑定、孤儿和未关联资产。</p>
+      </div>
+
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[
