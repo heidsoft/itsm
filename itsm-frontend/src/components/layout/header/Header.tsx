@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Layout, Button, Tooltip, Badge, Dropdown, message, Breadcrumb } from 'antd';
 import { PanelLeftClose, PanelLeftOpen, Bell, Globe, Home, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/lib/design-system/theme';
@@ -9,7 +9,7 @@ import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { DESIGN } from '@/design-system/tokens';
 import { useI18n } from '@/lib/i18n';
 import { TicketNotificationApi, type TicketNotification } from '@/lib/api/ticket-notification-api';
-import { globalSearch, type GlobalSearchResponse } from '@/lib/api/global-search-api';
+import type { GlobalSearchResponse } from '@/lib/api/global-search-api';
 import { notificationWS } from '@/lib/services/notification-ws';
 import { UserMenuDropdown } from './UserMenuDropdown';
 import { NotificationDrawer } from './NotificationDrawer';
@@ -72,6 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [searchValue, setSearchValue] = useState('');
   const [searchResults, setSearchResults] = useState<GlobalSearchResponse | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const suppressSearchOpenRef = useRef(false);
 
   // 通知状态
   const [notifications, setNotifications] = useState<TicketNotification[]>([]);
@@ -146,11 +147,26 @@ export const Header: React.FC<HeaderProps> = ({
 
   // 搜索处理
   const handleSearch = async (value: string) => {
-    if (value.trim()) {
-      const results = await globalSearch(value);
-      setSearchResults(results);
+    const keyword = value.trim();
+    if (keyword) {
+      setSearchValue(keyword);
+      setSearchResults(null);
       setSearchModalVisible(true);
     }
+  };
+
+  const handleOpenSearch = () => {
+    if (suppressSearchOpenRef.current) return;
+    setSearchModalVisible(true);
+  };
+
+  const handleCloseSearch = () => {
+    suppressSearchOpenRef.current = true;
+    setSearchModalVisible(false);
+
+    window.setTimeout(() => {
+      suppressSearchOpenRef.current = false;
+    }, 1500);
   };
 
   // 标记已读
@@ -240,9 +256,12 @@ export const Header: React.FC<HeaderProps> = ({
           {/* 搜索 */}
           <SearchInput
             value={searchValue}
-            onChange={setSearchValue}
+            onChange={value => {
+              setSearchValue(value);
+              setSearchResults(null);
+            }}
             onSearch={handleSearch}
-            onFocus={() => setSearchModalVisible(true)}
+            onOpen={handleOpenSearch}
           />
 
           {/* 通知 */}
@@ -341,7 +360,8 @@ export const Header: React.FC<HeaderProps> = ({
       {/* 全局搜索 */}
       <GlobalSearch
         open={searchModalVisible}
-        onClose={() => setSearchModalVisible(false)}
+        onClose={handleCloseSearch}
+        initialKeyword={searchValue}
         initialResults={searchResults}
       />
     </AntHeader>

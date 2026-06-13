@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Input, Modal, List, Typography } from 'antd';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Input, Modal, List, Spin } from 'antd';
+import type { InputRef } from 'antd';
 import { Search, Ticket } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
@@ -10,31 +11,70 @@ import {
   type SearchResult,
 } from '@/lib/api/global-search-api';
 import { DESIGN } from '@/design-system/tokens';
-
-const { Text } = Typography;
+import styles from './Header.module.css';
 
 interface GlobalSearchProps {
   open: boolean;
   onClose: () => void;
+  initialKeyword?: string;
   initialResults?: GlobalSearchResponse | null;
 }
 
 export const GlobalSearch: React.FC<GlobalSearchProps> = ({
   open,
   onClose,
+  initialKeyword = '',
   initialResults = null,
 }) => {
   const router = useRouter();
+  const searchInputRef = useRef<InputRef>(null);
   const [searchValue, setSearchValue] = useState('');
   const [searchResults, setSearchResults] = useState<GlobalSearchResponse | null>(initialResults);
   const [isSearching, setIsSearching] = useState(false);
 
+  const handleSearch = useCallback(async (value: string) => {
+    const keyword = value.trim();
+    if (!keyword) {
+      setSearchResults(null);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await globalSearch(keyword);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Search failed:', error);
+      setSearchResults({ results: [], total: 0 });
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!open) {
       setSearchValue('');
+      setSearchResults(null);
+      return;
     }
+
+    setSearchValue(initialKeyword);
     setSearchResults(initialResults);
-  }, [initialResults, open]);
+
+    if (initialKeyword.trim() && !initialResults) {
+      void handleSearch(initialKeyword);
+    }
+  }, [handleSearch, initialKeyword, initialResults, open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const focusTimer = window.setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 0);
+
+    return () => window.clearTimeout(focusTimer);
+  }, [open]);
 
   // Ctrl+K 快捷键
   useEffect(() => {
@@ -46,21 +86,6 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  // 搜索处理
-  const handleSearch = async (value: string) => {
-    if (value.trim()) {
-      setIsSearching(true);
-      try {
-        const results = await globalSearch(value);
-        setSearchResults(results);
-      } catch (error) {
-        console.error('Search failed:', error);
-      } finally {
-        setIsSearching(false);
-      }
-    }
-  };
 
   const handleItemClick = (item: SearchResult) => {
     const pathMap: Record<string, string> = {
@@ -89,14 +114,18 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       width={560}
       centered
       destroyOnHidden
+      focusTriggerAfterClose={false}
     >
       <div style={{ padding: '0 20px' }}>
         <Input
+          ref={searchInputRef}
+          className={styles.globalSearchModalInput}
           placeholder="搜索工单、事件..."
           prefix={<Search size={16} style={{ color: DESIGN.colors.textMuted }} />}
           value={searchValue}
           onChange={e => setSearchValue(e.target.value)}
           onPressEnter={() => handleSearch(searchValue)}
+          suffix={isSearching ? <Spin size="small" /> : null}
           style={{
             width: '100%',
             height: 40,
@@ -123,7 +152,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
             )}
           />
         </div>
-      ) : searchResults ? (
+      ) : searchResults && !isSearching ? (
         <div style={{ padding: 40, textAlign: 'center', color: DESIGN.colors.textMuted }}>
           未找到结果
         </div>
@@ -141,12 +170,13 @@ interface SearchInputProps {
   value: string;
   onChange: (value: string) => void;
   onSearch: (value: string) => void;
-  onFocus?: () => void;
+  onOpen?: () => void;
 }
 
-export const SearchInput: React.FC<SearchInputProps> = ({ value, onChange, onSearch, onFocus }) => {
+export const SearchInput: React.FC<SearchInputProps> = ({ value, onChange, onSearch, onOpen }) => {
   return (
     <Input
+      className={styles.headerSearchInput}
       placeholder="搜索..."
       prefix={<Search size={14} style={{ color: DESIGN.colors.textMuted }} />}
       suffix={
@@ -167,10 +197,14 @@ export const SearchInput: React.FC<SearchInputProps> = ({ value, onChange, onSea
       value={value}
       onChange={e => onChange(e.target.value)}
       onPressEnter={() => onSearch(value)}
-      onFocus={onFocus}
+      onClick={onOpen}
       style={{
         width: 180,
         height: 32,
+        minHeight: 32,
+        padding: '0 10px',
+        display: 'inline-flex',
+        alignItems: 'center',
         borderRadius: DESIGN.radius.md,
         border: `1px solid ${DESIGN.colors.border}`,
         background: DESIGN.colors.bgSubtle,
