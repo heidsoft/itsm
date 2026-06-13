@@ -272,7 +272,7 @@ func loadSeedConfig(sugar *zap.SugaredLogger) *SeedConfig {
 			var config SeedConfig
 			if err := json.Unmarshal(data, &config); err == nil {
 				sugar.Infow("loaded seed config from env", "path", configPath)
-				return &config
+				return mergeSeedConfig(getProductDefaultConfig(), &config)
 			}
 		}
 	}
@@ -287,14 +287,87 @@ func loadSeedConfig(sugar *zap.SugaredLogger) *SeedConfig {
 			var config SeedConfig
 			if err := json.Unmarshal(data, &config); err == nil {
 				sugar.Infow("loaded seed config from file", "path", path)
-				return &config
+				return mergeSeedConfig(getProductDefaultConfig(), &config)
 			}
 		}
 	}
 
 	// 3. 内置默认
 	sugar.Infow("using embedded default seed config")
-	return getEmbeddedConfig()
+	return getProductDefaultConfig()
+}
+
+func getProductDefaultConfig() *SeedConfig {
+	cfg := getEmbeddedConfig()
+	cfg.Incidents = []IncidentSeed{}
+	cfg.Problems = []ProblemSeed{}
+	cfg.Changes = []ChangeSeed{}
+	cfg.KnowledgeArticles = []KnowledgeArticleSeed{}
+	return cfg
+}
+
+func mergeSeedConfig(base *SeedConfig, override *SeedConfig) *SeedConfig {
+	if base == nil {
+		return override
+	}
+	if override == nil {
+		return base
+	}
+	if override.Departments != nil {
+		base.Departments = override.Departments
+	}
+	if override.Teams != nil {
+		base.Teams = override.Teams
+	}
+	if override.Roles != nil {
+		base.Roles = override.Roles
+	}
+	if override.SLADefinitions != nil {
+		base.SLADefinitions = override.SLADefinitions
+	}
+	if override.ServiceCatalog != nil {
+		base.ServiceCatalog = override.ServiceCatalog
+	}
+	if override.ApprovalWorkflows != nil {
+		base.ApprovalWorkflows = override.ApprovalWorkflows
+	}
+	if override.ProcessBindings != nil {
+		base.ProcessBindings = override.ProcessBindings
+	}
+	if override.TicketViews != nil {
+		base.TicketViews = override.TicketViews
+	}
+	if override.CITypes != nil {
+		base.CITypes = override.CITypes
+	}
+	if override.Incidents != nil {
+		base.Incidents = override.Incidents
+	}
+	if override.Problems != nil {
+		base.Problems = override.Problems
+	}
+	if override.Changes != nil {
+		base.Changes = override.Changes
+	}
+	if override.KnowledgeArticles != nil {
+		base.KnowledgeArticles = override.KnowledgeArticles
+	}
+	if override.IncidentCategories != nil {
+		base.IncidentCategories = override.IncidentCategories
+	}
+	if override.StandardChanges != nil {
+		base.StandardChanges = override.StandardChanges
+	}
+	if override.KnownErrors != nil {
+		base.KnownErrors = override.KnownErrors
+	}
+	if override.TicketTags != nil {
+		base.TicketTags = override.TicketTags
+	}
+	if override.SeedWorkflows {
+		base.SeedWorkflows = true
+	}
+	return base
 }
 
 // getEmbeddedConfig 返回内置的默认配置
@@ -2086,7 +2159,7 @@ func (s *Seeder) seedIncidents(ctx context.Context) {
 
 	// 使用配置中的数据，如果没有配置则使用默认值
 	incidents := s.config.Incidents
-	if len(incidents) == 0 {
+	if incidents == nil {
 		// 默认事件种子数据
 		incidents = []IncidentSeed{
 			{Title: "服务器宕机", Description: "生产环境服务器突然宕机，无法访问", Status: "resolved", Priority: "critical", Severity: "critical", IncidentNumber: "INC-001", Category: "硬件故障"},
@@ -2098,6 +2171,9 @@ func (s *Seeder) seedIncidents(ctx context.Context) {
 			{Title: "VPN连接断开", Description: "远程办公用户VPN连接不稳定", Status: "new", Priority: "high", Severity: "major", IncidentNumber: "INC-007", Category: "网络故障"},
 			{Title: "存储空间不足", Description: "文件服务器存储空间即将用尽", Status: "in_progress", Priority: "medium", Severity: "minor", IncidentNumber: "INC-008", Category: "存储问题"},
 		}
+	} else if len(incidents) == 0 {
+		s.sugar.Infow("incident business sample seed disabled by config")
+		return
 	}
 
 	for _, inc := range incidents {
@@ -2150,7 +2226,7 @@ func (s *Seeder) seedProblems(ctx context.Context) {
 
 	// 使用配置中的数据，如果没有配置则使用默认值
 	problems := s.config.Problems
-	if len(problems) == 0 {
+	if problems == nil {
 		problems = []ProblemSeed{
 			{Title: "频繁的网络中断", Description: "过去一个月内发生多次网络中断事件，影响业务连续性", Status: "analyzing", Priority: "high", Category: "网络问题", RootCause: "核心交换机老化", Impact: "全公司网络受影响"},
 			{Title: "数据库性能下降", Description: "数据库查询响应时间逐渐变慢", Status: "open", Priority: "medium", Category: "数据库问题", RootCause: "缺少索引和缓存配置", Impact: "影响所有业务系统"},
@@ -2159,6 +2235,9 @@ func (s *Seeder) seedProblems(ctx context.Context) {
 			{Title: "邮件延迟严重", Description: "邮件收发延迟超过1小时", Status: "open", Priority: "medium", Category: "邮件问题", RootCause: "邮件服务器资源不足", Impact: "影响内外沟通"},
 			{Title: "VPN不稳定", Description: "远程用户VPN连接经常断开", Status: "analyzing", Priority: "low", Category: "网络问题", RootCause: "带宽不足", Impact: "远程办公受影响"},
 		}
+	} else if len(problems) == 0 {
+		s.sugar.Infow("problem business sample seed disabled by config")
+		return
 	}
 
 	for _, p := range problems {
@@ -2211,7 +2290,7 @@ func (s *Seeder) seedChanges(ctx context.Context) {
 
 	// 使用配置中的数据，如果没有配置则使用默认值
 	changes := s.config.Changes
-	if len(changes) == 0 {
+	if changes == nil {
 		changes = []ChangeSeed{
 			{Title: "数据库版本升级", Description: "将MySQL 5.7升级到8.0版本", Type: "normal", Status: "approved", Priority: "high", ImpactScope: "全局", RiskLevel: "medium", Justification: "提升性能和安全性"},
 			{Title: "应用服务器扩容", Description: "增加2台应用服务器以应对流量高峰", Type: "normal", Status: "implemented", Priority: "medium", ImpactScope: "局部", RiskLevel: "low", Justification: "提升系统可用性"},
@@ -2220,6 +2299,9 @@ func (s *Seeder) seedChanges(ctx context.Context) {
 			{Title: "SSL证书更新", Description: "更新即将过期的SSL证书", Type: "emergency", Status: "scheduled", Priority: "low", ImpactScope: "无", RiskLevel: "low", Justification: "证书即将过期"},
 			{Title: "负载均衡配置优化", Description: "优化负载均衡算法和健康检查配置", Type: "normal", Status: "cancelled", Priority: "medium", ImpactScope: "局部", RiskLevel: "low", Justification: "提升访问体验"},
 		}
+	} else if len(changes) == 0 {
+		s.sugar.Infow("change business sample seed disabled by config")
+		return
 	}
 
 	for _, c := range changes {
@@ -2589,6 +2671,15 @@ func (s *Seeder) seedKnowledgeArticles(ctx context.Context) {
 		return
 	}
 
+	// Product defaults intentionally do not create fictional knowledge articles.
+	// Explicit empty arrays in seed config mean "leave article content to the
+	// customer"; nil is kept as a compatibility path for legacy embedded seeds.
+	articles := s.config.KnowledgeArticles
+	if articles != nil && len(articles) == 0 {
+		s.sugar.Infow("knowledge article business sample seed disabled by config")
+		return
+	}
+
 	// 获取测试用户
 	users, err := s.client.User.Query().Where(user.TenantIDEQ(t.ID)).Limit(1).All(ctx)
 	if err != nil || len(users) == 0 {
@@ -2640,44 +2731,53 @@ func (s *Seeder) seedKnowledgeArticles(ctx context.Context) {
 		}
 	}
 
-	// 知识库文章种子数据
-	articles := []struct {
-		Title       string
-		Content     string
-		Category    string
-		IsPublished bool
-		ViewCount   int
-	}{
-		{
-			"如何申请云服务器 ECS",
-			"# 云服务器申请指南\n\n## 申请流程\n\n1. 登录IT服务门户\n2. 选择服务目录->云资源申请->云服务器\n3. 填写申请表单\n   - 选择配置(CPU/内存)\n   - 选择地域和可用区\n   - 设置登录密码\n4. 提交申请\n5. 等待审批(通常1-2个工作日)\n\n## 常见配置推荐\n\n- **开发测试环境**: 2核4G\n- **生产环境**: 4核8G起\n\n如有疑问请联系IT支持。",
-			"云资源", true, 1250,
-		},
-		{
-			"VPN连接配置指南",
-			"# VPN连接配置指南\n\n## Windows系统配置\n\n1. 下载VPN客户端\n2. 安装并运行客户端\n3. 配置连接信息:\n   - 服务器地址: vpn.company.com\n   - 用户名: 域账号\n   - 密码: 域密码\n4. 点击连接\n\n## 常见问题\n\n- **无法连接**: 检查网络环境，确认VPN端口(443)未被阻断\n- **连接后无法访问内网**: 尝试刷新DNS缓存 `ipconfig /flushdns`",
-			"网络问题", true, 980,
-		},
-		{
-			"账号权限申请流程",
-			"# 账号权限申请指南\n\n## 需要的权限\n\n根据岗位职责申请相应权限:\n\n| 角色 | 系统权限 | 申请流程 |\n|------|----------|----------|\n| 普通员工 | 基础访问 | 主管审批 |\n| 开发者 | 代码仓库访问 | 技术主管审批 |\n| 管理员 | 系统管理 | IT经理审批 |\n\n## 申请入口\n\nIT服务门户 - 服务目录 - 账号与权限申请",
-			"账号权限", true, 856,
-		},
-		{
-			"数据库备份与恢复",
-			"# 数据库备份恢复指南\n\n## 自动备份\n\n系统每天凌晨2点自动执行全量备份，保留30天。\n\n## 手动备份\n\n```bash\nmysqldump -u root -p database_name > backup.sql\n```\n\n## 恢复数据\n\n```bash\nmysql -u root -p database_name < backup.sql\n```\n\n**注意**: 恢复操作需要DBA权限，请提交工单联系数据库管理员。",
-			"数据库", true, 742,
-		},
-		{
-			"IT服务请求常见问题解答",
-			"# IT服务常见问题FAQ\n\n## 如何提交IT工单?\n\n1. 登录IT服务门户\n2. 点击\"提交工单\"\n3. 选择工单类型\n4. 填写详细信息\n5. 提交\n\n## 工单处理时限多久?\n\n- 紧急: 4小时内响应\n- 高优先级: 8小时内响应\n- 中优先级: 24小时内响应\n- 低优先级: 72小时内响应\n\n## 如何查询工单进度?\n\n在\"我的工单\"页面查看所有提交的工单及状态。",
-			"常见问题", true, 3560,
-		},
-		{
-			"安全组配置最佳实践",
-			"# 安全组配置指南\n\n## 基本原则\n\n1. **最小权限**: 只开放必要的端口\n2. **分层控制**: 不同层级使用不同的安全组\n3. **禁止0.0.0.0/0**: 避免直接对公网开放敏感服务\n\n## 常用端口配置\n\n| 服务 | 端口 | 协议 | 建议 |\n|------|------|------|------|\n| SSH | 22 | TCP | 仅内网访问 |\n| HTTP | 80 | TCP | 可公网访问 |\n| HTTPS | 443 | TCP | 可公网访问 |\n| MySQL | 3306 | TCP | 仅内网访问 |\n\n## 审批要求\n\n安全组规则变更需要安全团队审批。",
-			"安全", true, 625,
-		},
+	if articles == nil {
+		// Legacy embedded examples are only used when no product/default seed
+		// config is loaded. Current product defaults set this slice to [].
+		articles = []KnowledgeArticleSeed{
+			{
+				Title:       "如何申请云服务器 ECS",
+				Content:     "# 云服务器申请指南\n\n## 申请流程\n\n1. 登录IT服务门户\n2. 选择服务目录->云资源申请->云服务器\n3. 填写申请表单\n   - 选择配置(CPU/内存)\n   - 选择地域和可用区\n   - 设置登录密码\n4. 提交申请\n5. 等待审批(通常1-2个工作日)\n\n## 常见配置推荐\n\n- **开发测试环境**: 2核4G\n- **生产环境**: 4核8G起\n\n如有疑问请联系IT支持。",
+				Category:    "云资源",
+				IsPublished: true,
+				ViewCount:   1250,
+			},
+			{
+				Title:       "VPN连接配置指南",
+				Content:     "# VPN连接配置指南\n\n## Windows系统配置\n\n1. 下载VPN客户端\n2. 安装并运行客户端\n3. 配置连接信息:\n   - 服务器地址: vpn.company.com\n   - 用户名: 域账号\n   - 密码: 域密码\n4. 点击连接\n\n## 常见问题\n\n- **无法连接**: 检查网络环境，确认VPN端口(443)未被阻断\n- **连接后无法访问内网**: 尝试刷新DNS缓存 `ipconfig /flushdns`",
+				Category:    "网络问题",
+				IsPublished: true,
+				ViewCount:   980,
+			},
+			{
+				Title:       "账号权限申请流程",
+				Content:     "# 账号权限申请指南\n\n## 需要的权限\n\n根据岗位职责申请相应权限:\n\n| 角色 | 系统权限 | 申请流程 |\n|------|----------|----------|\n| 普通员工 | 基础访问 | 主管审批 |\n| 开发者 | 代码仓库访问 | 技术主管审批 |\n| 管理员 | 系统管理 | IT经理审批 |\n\n## 申请入口\n\nIT服务门户 - 服务目录 - 账号与权限申请",
+				Category:    "账号权限",
+				IsPublished: true,
+				ViewCount:   856,
+			},
+			{
+				Title:       "数据库备份与恢复",
+				Content:     "# 数据库备份恢复指南\n\n## 自动备份\n\n系统每天凌晨2点自动执行全量备份，保留30天。\n\n## 手动备份\n\n```bash\nmysqldump -u root -p database_name > backup.sql\n```\n\n## 恢复数据\n\n```bash\nmysql -u root -p database_name < backup.sql\n```\n\n**注意**: 恢复操作需要DBA权限，请提交工单联系数据库管理员。",
+				Category:    "数据库",
+				IsPublished: true,
+				ViewCount:   742,
+			},
+			{
+				Title:       "IT服务请求常见问题解答",
+				Content:     "# IT服务常见问题FAQ\n\n## 如何提交IT工单?\n\n1. 登录IT服务门户\n2. 点击\"提交工单\"\n3. 选择工单类型\n4. 填写详细信息\n5. 提交\n\n## 工单处理时限多久?\n\n- 紧急: 4小时内响应\n- 高优先级: 8小时内响应\n- 中优先级: 24小时内响应\n- 低优先级: 72小时内响应\n\n## 如何查询工单进度?\n\n在\"我的工单\"页面查看所有提交的工单及状态。",
+				Category:    "常见问题",
+				IsPublished: true,
+				ViewCount:   3560,
+			},
+			{
+				Title:       "安全组配置最佳实践",
+				Content:     "# 安全组配置指南\n\n## 基本原则\n\n1. **最小权限**: 只开放必要的端口\n2. **分层控制**: 不同层级使用不同的安全组\n3. **禁止0.0.0.0/0**: 避免直接对公网开放敏感服务\n\n## 常用端口配置\n\n| 服务 | 端口 | 协议 | 建议 |\n|------|------|------|------|\n| SSH | 22 | TCP | 仅内网访问 |\n| HTTP | 80 | TCP | 可公网访问 |\n| HTTPS | 443 | TCP | 可公网访问 |\n| MySQL | 3306 | TCP | 仅内网访问 |\n\n## 审批要求\n\n安全组规则变更需要安全团队审批。",
+				Category:    "安全",
+				IsPublished: true,
+				ViewCount:   625,
+			},
+		}
 	}
 
 	// Remove the category ID mapping since we now use category name directly

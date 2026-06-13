@@ -108,23 +108,10 @@ func (s *AITelemetryService) GetMetrics(ctx context.Context, tenantID int, lookb
 	}
 	metrics["by_kind"] = kindMetrics
 
-	// Get average response time (estimated from audit logs)
-	var avgResponseTime float64
-	query = `
-		SELECT AVG(EXTRACT(EPOCH FROM (updated_at - created_at))) 
-		FROM audit_logs 
-		WHERE tenant_id = $1 AND action LIKE '%ai%' 
-		AND created_at >= NOW() - INTERVAL '1 day' * $2
-		AND updated_at IS NOT NULL
-	`
-	err = s.db.QueryRowContext(ctx, query, tenantID, lookbackDays).Scan(&avgResponseTime)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, fmt.Errorf("failed to get avg response time: %w", err)
-	}
-	if err == sql.ErrNoRows {
-		avgResponseTime = 0.0
-	}
-	metrics["avg_response_time_seconds"] = avgResponseTime
+	// Response latency is not captured in the current AI audit schema. Keep the
+	// metric stable for callers without querying columns that do not exist.
+	metrics["avg_response_time_seconds"] = 0.0
+	metrics["response_time_available"] = false
 
 	return metrics, nil
 }
