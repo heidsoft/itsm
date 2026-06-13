@@ -1972,6 +1972,30 @@ html:not(.dark) .ant-input-suffix {
   align-items: center;
 }
 
+html:not(.dark) .ant-select-multiple .ant-select-selection-item {
+  color: #334155 !important;
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) .ant-select-multiple .ant-select-selection-item-content {
+  color: #334155 !important;
+}
+
+html:not(.dark) .ant-select-multiple .ant-select-selection-item-remove {
+  color: #64748b !important;
+}
+
+html:not(.dark) .ant-select-multiple .ant-select-selection-item-remove:hover {
+  color: #1e293b !important;
+}
+
+html:not(.dark) .ant-tag:not(.ant-tag-blue):not(.ant-tag-green):not(.ant-tag-red):not(.ant-tag-orange):not(.ant-tag-gold):not(.ant-tag-purple):not(.ant-tag-cyan):not(.ant-tag-geekblue):not(.ant-tag-magenta):not(.ant-tag-volcano):not(.ant-tag-lime):not(.ant-tag-success):not(.ant-tag-processing):not(.ant-tag-error):not(.ant-tag-warning) {
+  color: #334155 !important;
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
 html:not(.dark) .ant-input::placeholder,
 html:not(.dark) .ant-input-number-input::placeholder,
 html:not(.dark) .ant-select-selection-placeholder,

@@ -8,7 +8,7 @@ import { format, subDays } from 'date-fns';
 
 import { FilterToolbarCard } from '@/components/ui/FilterToolbarCard';
 import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
-import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
+import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview } from '@/components/ui/StatsOverview';
 import {
   TicketAnalyticsApi,
@@ -245,7 +245,11 @@ const ReportsPage: React.FC = () => {
       ),
       children: (
         <Card title="自定义分析报告">
-          <ReportGenerator onGenerate={fetchAnalyticsData} loading={loading} timeRange={timeRange} />
+          <ReportGenerator
+            onGenerate={fetchAnalyticsData}
+            loading={loading}
+            timeRange={timeRange}
+          />
         </Card>
       ),
     },
@@ -265,14 +269,7 @@ const ReportsPage: React.FC = () => {
     <div className="space-y-6 p-6">
       <ManagementPageHeader
         title="报表中心"
-        description="统一查看 ITSM 趋势、SLA 表现和自定义分析结果，即使后端分析接口波动也能保持前端可用。"
-        notice={
-          <ManagementNotice
-            message="报表页已切换为稳态渲染"
-            description="图表数据失败时会显示可恢复空态，不再因为接口异常或子组件延迟导致整页不可用。"
-            type={error ? 'warning' : 'info'}
-          />
-        }
+        description="统一查看 ITSM 趋势、SLA 表现和自定义分析结果。"
       />
 
       <FilterToolbarCard
@@ -287,10 +284,24 @@ const ReportsPage: React.FC = () => {
                 label: report.name,
               }))}
             />
-            <Button onClick={() => setTimeRange([format(subDays(new Date(), 7), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd')])}>
+            <Button
+              onClick={() =>
+                setTimeRange([
+                  format(subDays(new Date(), 7), 'yyyy-MM-dd'),
+                  format(new Date(), 'yyyy-MM-dd'),
+                ])
+              }
+            >
               最近 7 天
             </Button>
-            <Button onClick={() => setTimeRange([format(subDays(new Date(), 30), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd')])}>
+            <Button
+              onClick={() =>
+                setTimeRange([
+                  format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+                  format(new Date(), 'yyyy-MM-dd'),
+                ])
+              }
+            >
               最近 30 天
             </Button>
           </>

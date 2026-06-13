@@ -36,7 +36,7 @@ import { useRouter } from 'next/navigation';
 import CIList from '@/components/cmdb/CIList';
 import { FilterToolbarCard } from '@/components/ui/FilterToolbarCard';
 import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
-import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
+import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview } from '@/components/ui/StatsOverview';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { httpClient } from '@/lib/api/http-client';
@@ -387,11 +387,7 @@ export default function CMDBPage() {
             同步
           </Button>
           <Tooltip title="忽略功能需要后端支持，暂未实现">
-            <Button
-              size="small"
-              type="link"
-              disabled
-            >
+            <Button size="small" type="link" disabled>
               忽略
             </Button>
           </Tooltip>
@@ -444,10 +440,18 @@ export default function CMDBPage() {
 
   const headerActions = (
     <>
-      <Button icon={<RefreshCw className="w-4 h-4" />} loading={loading} onClick={handleSyncCloudResources}>
+      <Button
+        icon={<RefreshCw className="w-4 h-4" />}
+        loading={loading}
+        onClick={handleSyncCloudResources}
+      >
         同步云资源
       </Button>
-      <Button type="primary" icon={<Plus className="w-4 h-4" />} onClick={() => router.push('/cmdb/cis/create')}>
+      <Button
+        type="primary"
+        icon={<Plus className="w-4 h-4" />}
+        onClick={() => router.push('/cmdb/cis/create')}
+      >
         新增配置项
       </Button>
     </>
@@ -490,12 +494,6 @@ export default function CMDBPage() {
         title="配置管理数据库 (CMDB)"
         description="管理配置项、云资源同步、关系拓扑和核对结果。"
         actions={headerActions}
-        notice={
-          <ManagementNotice
-            message="复杂域页面开始统一收口"
-            description="总览、云资源、核对和配置项详情将逐步复用同一套页面头部、统计卡和筛选栏基线。"
-          />
-        }
       />
 
       <StatsOverview items={statsItems} className="mb-6" />
@@ -680,7 +678,10 @@ export default function CMDBPage() {
                     actions={
                       <>
                         <Text type="secondary">筛选后 {filteredCloudResources.length} 条</Text>
-                        <Button icon={<Filter className="w-4 h-4" />} onClick={handleResetCloudFilters}>
+                        <Button
+                          icon={<Filter className="w-4 h-4" />}
+                          onClick={handleResetCloudFilters}
+                        >
                           重置
                         </Button>
                       </>

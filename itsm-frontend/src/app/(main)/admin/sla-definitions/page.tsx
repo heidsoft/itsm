@@ -385,9 +385,9 @@ const SLADefinitionManagement = () => {
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
+      <Row gutter={[16, 16]} className="mb-6" align="stretch">
+        <Col xs={24} sm={12} lg={6} className="flex">
+          <Card className="enterprise-card h-full w-full">
             <Statistic
               title="SLA定义总数"
               value={stats.total}
@@ -396,8 +396,8 @@ const SLADefinitionManagement = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
+        <Col xs={24} sm={12} lg={6} className="flex">
+          <Card className="enterprise-card h-full w-full">
             <Statistic
               title="已启用"
               value={stats.active}
@@ -406,8 +406,8 @@ const SLADefinitionManagement = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
+        <Col xs={24} sm={12} lg={6} className="flex">
+          <Card className="enterprise-card h-full w-full">
             <Statistic
               title="草稿状态"
               value={stats.draft}
@@ -416,8 +416,8 @@ const SLADefinitionManagement = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
+        <Col xs={24} sm={12} lg={6} className="flex">
+          <Card className="enterprise-card h-full w-full">
             <Statistic
               title="平均可用性"
               value={stats.avgAvailability}

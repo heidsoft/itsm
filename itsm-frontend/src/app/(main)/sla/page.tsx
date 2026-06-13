@@ -57,9 +57,9 @@ export default function SLAPage() {
       label: 'SLA仪表盘',
       children: (
         <div>
-          <Row gutter={[16, 16]} className="mb-6">
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
+          <Row gutter={[16, 16]} className="mb-6" align="stretch">
+            <Col xs={24} sm={12} lg={6} className="flex">
+              <Card className="h-full w-full">
                 <Statistic
                   title="总SLA数量"
                   value={stats.totalDefinitions}
@@ -67,8 +67,8 @@ export default function SLAPage() {
                 />
               </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
+            <Col xs={24} sm={12} lg={6} className="flex">
+              <Card className="h-full w-full">
                 <Statistic
                   title="生效中"
                   value={stats.activeDefinitions}
@@ -76,8 +76,8 @@ export default function SLAPage() {
                 />
               </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
+            <Col xs={24} sm={12} lg={6} className="flex">
+              <Card className="h-full w-full">
                 <Statistic
                   title="违规数量"
                   value={stats.openViolations}
@@ -85,8 +85,8 @@ export default function SLAPage() {
                 />
               </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
+            <Col xs={24} sm={12} lg={6} className="flex">
+              <Card className="h-full w-full">
                 <Statistic
                   title="合规率"
                   value={stats.overallComplianceRate}
@@ -96,6 +96,10 @@ export default function SLAPage() {
                     content: { color: stats.overallComplianceRate >= 95 ? '#52c41a' : '#faad14' },
                   }}
                 />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={6} className="flex">
+              <Card className="h-full w-full">
                 <Statistic
                   title="总违规"
                   value={stats.totalViolations}
@@ -124,9 +128,9 @@ export default function SLAPage() {
         <div className="space-y-4">
           <Card title="实时SLA监控">
             <p className="text-gray-500">监控正在运行的SLA实例和违规情况</p>
-            <Row gutter={[16, 16]} className="mt-4">
-              <Col xs={24} sm={12} lg={6}>
-                <Card>
+            <Row gutter={[16, 16]} className="mt-4" align="stretch">
+              <Col xs={24} sm={12} lg={6} className="flex">
+                <Card className="h-full w-full">
                   <Statistic
                     title="运行中实例"
                     value={0}
@@ -134,8 +138,8 @@ export default function SLAPage() {
                   />
                 </Card>
               </Col>
-              <Col xs={24} sm={12} lg={6}>
-                <Card>
+              <Col xs={24} sm={12} lg={6} className="flex">
+                <Card className="h-full w-full">
                   <Statistic
                     title="即将超时"
                     value={0}
@@ -143,13 +147,13 @@ export default function SLAPage() {
                   />
                 </Card>
               </Col>
-              <Col xs={24} sm={12} lg={6}>
-                <Card>
+              <Col xs={24} sm={12} lg={6} className="flex">
+                <Card className="h-full w-full">
                   <Statistic title="已超时" value={0} styles={{ content: { color: '#f5222d' } }} />
                 </Card>
               </Col>
-              <Col xs={24} sm={12} lg={6}>
-                <Card>
+              <Col xs={24} sm={12} lg={6} className="flex">
+                <Card className="h-full w-full">
                   <Statistic
                     title="完成率"
                     value={'0%'}

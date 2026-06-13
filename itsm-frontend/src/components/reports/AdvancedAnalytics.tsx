@@ -219,7 +219,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
     };
 
     return (
-      <Card className="kpi-card">
+      <Card className="kpi-card h-full w-full">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
             <div style={{ color: kpi.color }}>{kpi.icon}</div>
@@ -306,9 +306,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
   return (
     <div className="space-y-6">
       {/* KPI卡片区域 */}
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]} align="stretch">
         {kpiData.map((kpi, index) => (
-          <Col xs={24} sm={12} md={6} key={index}>
+          <Col xs={24} sm={12} md={6} key={index} className="flex">
             {renderKPI(kpi)}
           </Col>
         ))}

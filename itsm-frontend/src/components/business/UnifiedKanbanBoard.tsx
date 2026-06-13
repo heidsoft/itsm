@@ -218,7 +218,7 @@ function DefaultCard<T>({
 
         {description && <div className="text-xs text-gray-500 line-clamp-2">{description}</div>}
 
-        <div className="flex items-center justify-between text-xs text-gray-400">
+        <div className="flex items-center justify-between text-xs text-slate-600">
           <div className="flex items-center gap-2">
             {assignee ? (
               <>
@@ -494,7 +494,7 @@ export function UnifiedKanbanBoard<T>({
               <div className="space-y-2">
                 {column.items.map(item => renderCard(item, column))}
                 {column.items.length === 0 && (
-                  <div className="text-center text-gray-400 py-8 text-sm">暂无数据</div>
+                  <div className="text-center text-slate-500 py-8 text-sm">暂无数据</div>
                 )}
               </div>
             </Card>
