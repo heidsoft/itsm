@@ -18,14 +18,14 @@
 }
 
 .ant-tooltip-inner {
-  background-color: #333 !important;
-  color: #fff !important;
+  background-color: var(--color-bg-elevated) !important;
+  color: var(--color-text-inverse) !important;
   border-radius: 4px !important;
   padding: 8px 12px !important;
 }
 
 .ant-tooltip-arrow::before {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
 }
 
 /* Popover 样式修复 - 同样的问题 */
@@ -35,13 +35,13 @@
 }
 
 .ant-popover-inner {
-  background-color: #333 !important;
-  color: #fff !important;
+  background-color: var(--color-bg-elevated) !important;
+  color: var(--color-text-inverse) !important;
   border-radius: 4px !important;
 }
 
 .ant-popover-arrow::before {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
 }
 
 /* Dropdown 样式修复 */
@@ -51,8 +51,8 @@
 }
 
 .ant-dropdown-menu {
-  background-color: #333 !important;
-  color: #fff !important;
+  background-color: var(--color-bg-elevated) !important;
+  color: var(--color-text-inverse) !important;
   border-radius: 4px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
@@ -60,18 +60,18 @@
 
 .ant-dropdown-menu-item,
 .ant-dropdown-menu-submenu-title {
-  color: #fff !important;
+  color: var(--color-text-inverse) !important;
 }
 
 .ant-dropdown-menu-item:hover,
 .ant-dropdown-menu-submenu-title:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
-  color: #fff !important;
+  color: var(--color-text-inverse) !important;
 }
 
 .ant-dropdown-menu-item-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
-  color: #fff !important;
+  color: var(--color-text-inverse) !important;
 }
 
 .ant-dropdown-menu-item.danger {
@@ -299,7 +299,7 @@
 /* Select 下拉框样式修复 - 暗色模式 */
 .dark .ant-select-dropdown,
 :root:not(.light) .ant-select-dropdown {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 8px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -346,7 +346,7 @@
 :root:not(.light) .ant-picker-dropdown.ant-picker-dropdown-placement-bottomLeft,
 .dark .ant-picker-dropdown.ant-picker-dropdown-placement-bottomRight,
 :root:not(.light) .ant-picker-dropdown.ant-picker-dropdown-placement-bottomRight {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 4px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -355,7 +355,7 @@
 
 .dark .ant-picker-panel,
 :root:not(.light) .ant-picker-panel {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
 }
 
@@ -407,7 +407,7 @@
 /* ColorPicker 下拉样式修复 - 仅在暗色主题下生效 */
 .dark .ant-color-dropdown,
 :root:not(.light) .ant-color-dropdown {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
   border-radius: 4px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08) !important;
@@ -428,7 +428,7 @@
 /* TreeSelect 下拉样式修复 - 仅在暗色主题下生效 */
 .dark .ant-select-tree-dropdown,
 :root:not(.light) .ant-select-tree-dropdown {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 4px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -458,7 +458,7 @@
 /* Cascader 下拉样式修复 - 仅在暗色主题下生效 */
 .dark .ant-cascader-dropdown,
 :root:not(.light) .ant-cascader-dropdown {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 4px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -491,7 +491,7 @@
 /* Mentions 下拉样式修复 - 仅在暗色主题下生效 */
 .dark .ant-mentions-dropdown,
 :root:not(.light) .ant-mentions-dropdown {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 4px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -513,7 +513,7 @@
 /* AutoComplete 下拉样式修复 - 仅在暗色主题下生效 */
 .dark .ant-autocomplete-dropdown,
 :root:not(.light) .ant-autocomplete-dropdown {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
   border-radius: 4px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -535,13 +535,13 @@
 /* Transfer 左右选择框样式修复 - 仅在暗色主题下生效 */
 .dark .ant-transfer-dropdown,
 :root:not(.light) .ant-transfer-dropdown {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
   color: #fff !important;
 }
 
 .dark .ant-transfer-list,
 :root:not(.light) .ant-transfer-list {
-  background-color: #333 !important;
+  background-color: var(--color-bg-elevated) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 4px !important;
 }
@@ -680,6 +680,8 @@
   --bg-color: #ffffff;
   --border-color: #e4e4e7;
   --link-color: #2563eb;
+  /* 提升层背景色 - 用于 tooltip/popover/dropdown 等浮层 */
+  --color-bg-elevated: #333;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -962,6 +964,9 @@
   --color-text-tertiary: #64748b;
   --color-text-disabled: #94a3b8;
   --color-text-inverse: #ffffff;
+
+  /* 提升层级背景色（tooltips, popovers, dropdowns） */
+  --color-bg-elevated: #ffffff;
 
   /* 字体 */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
@@ -1580,6 +1585,47 @@
   --color-neutral-950: #f8fafc;
 
   /* 功能色（暗色主题） */
+  --color-info-50: #e0f2fe;
+  --color-info-100: #bae6fd;
+  --color-info-200: #7dd3fc;
+  --color-info-300: #38bdf8;
+  --color-info-400: #22d3ee;
+  --color-info-500: #06b6d4;
+  --color-info-600: #0891b2;
+  --color-info-700: #0e7490;
+  --color-info-800: #155e75;
+  --color-info-900: #164e63;
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-200: #fecaca;
+  --color-error-300: #fca5a5;
+  --color-error-400: #f87171;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+  --color-error-800: #991b1b;
+  --color-error-900: #7f1d1d;
+  --color-bg-elevated: #1e293b;
   --color-background-primary: #0f172a;
   --color-background-secondary: #1e293b;
   --color-background-tertiary: #334155;
@@ -1626,6 +1672,47 @@
     --color-neutral-950: #f8fafc;
 
     /* 功能色（暗色主题） */
+    --color-info-50: #e0f2fe;
+    --color-info-100: #bae6fd;
+    --color-info-200: #7dd3fc;
+    --color-info-300: #38bdf8;
+    --color-info-400: #22d3ee;
+    --color-info-500: #06b6d4;
+    --color-info-600: #0891b2;
+    --color-info-700: #0e7490;
+    --color-info-800: #155e75;
+    --color-info-900: #164e63;
+    --color-success-50: #f0fdf4;
+    --color-success-100: #dcfce7;
+    --color-success-200: #bbf7d0;
+    --color-success-300: #86efac;
+    --color-success-400: #4ade80;
+    --color-success-500: #22c55e;
+    --color-success-600: #16a34a;
+    --color-success-700: #15803d;
+    --color-success-800: #166534;
+    --color-success-900: #14532d;
+    --color-warning-50: #fffbeb;
+    --color-warning-100: #fef3c7;
+    --color-warning-200: #fde68a;
+    --color-warning-300: #fcd34d;
+    --color-warning-400: #fbbf24;
+    --color-warning-500: #f59e0b;
+    --color-warning-600: #d97706;
+    --color-warning-700: #b45309;
+    --color-warning-800: #92400e;
+    --color-warning-900: #78350f;
+    --color-error-50: #fef2f2;
+    --color-error-100: #fee2e2;
+    --color-error-200: #fecaca;
+    --color-error-300: #fca5a5;
+    --color-error-400: #f87171;
+    --color-error-500: #ef4444;
+    --color-error-600: #dc2626;
+    --color-error-700: #b91c1c;
+    --color-error-800: #991b1b;
+    --color-error-900: #7f1d1d;
+    --color-bg-elevated: #1e293b;
     --color-background-primary: #0f172a;
     --color-background-secondary: #1e293b;
     --color-background-tertiary: #334155;

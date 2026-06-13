@@ -120,9 +120,17 @@ func (s *AssetService) ListAssets(ctx context.Context, tenantID int, page, pageS
 
 	assets := dto.ToAssetResponseList(assetEntities)
 
+	totalPages := 0
+	if pageSize > 0 {
+		totalPages = (total + pageSize - 1) / pageSize
+	}
+
 	return &dto.AssetListResponse{
-		Total:  total,
-		Assets: assets,
+		Total:      total,
+		Assets:     assets,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
 	}, nil
 }
 

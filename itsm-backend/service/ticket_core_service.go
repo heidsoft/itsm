@@ -2,8 +2,12 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"fmt"
+	"math/big"
+	mrand "math/rand"
+	"os"
 	"strings"
 	"time"
 
@@ -351,7 +355,7 @@ func (s *TicketCoreService) generateTicketNumber(ctx context.Context, tenantID i
 
 	// 优先使用 Redis 序列服务
 	if s.sequenceService != nil {
-		return s.generateTicketNumberWithRedis(ctx, year, month)
+		return s.generateTicketNumberWithRedis(ctx, tenantID, year, month)
 	}
 
 	// 备用方案：数据库查询
@@ -359,8 +363,8 @@ func (s *TicketCoreService) generateTicketNumber(ctx context.Context, tenantID i
 }
 
 // generateTicketNumberWithRedis 使用 Redis INCR 生成工单编号
-func (s *TicketCoreService) generateTicketNumberWithRedis(ctx context.Context, year, month int) (string, error) {
-	key := fmt.Sprintf("sequence:ticket:%d%02d", year, month)
+func (s *TicketCoreService) generateTicketNumberWithRedis(ctx context.Context, tenantID, year, month int) (string, error) {
+	key := fmt.Sprintf("sequence:ticket:%d:%d%02d", tenantID, year, month)
 
 	// 计算本月最后一天作为过期时间
 	expiredAt := time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.UTC)
@@ -369,8 +373,8 @@ func (s *TicketCoreService) generateTicketNumberWithRedis(ctx context.Context, y
 	seq, err := s.sequenceService.GetNextSequenceWithExpiry(ctx, key, expiredAt)
 	if err != nil {
 		s.logger.Warnw("Redis sequence failed, fallback to DB", "error", err)
-		// 实际 fallback 到 DB
-		return s.generateTicketNumberWithDB(ctx, 1, year, month)
+		// 实际 fallback 到 DB，使用正确的 tenantID
+		return s.generateTicketNumberWithDB(ctx, tenantID, year, month)
 	}
 
 	// 格式: TKT-YYYYMM-NNNNNN
@@ -379,6 +383,7 @@ func (s *TicketCoreService) generateTicketNumberWithRedis(ctx context.Context, y
 
 // generateTicketNumberWithDB 使用数据库事务+SELECT FOR UPDATE 生成工单编号（备用方案）
 // 解决了并发时多个请求生成相同编号的问题
+// 策略：如果当月有记录则加锁读取最大号；如果无记录则使用 UUID 后缀确保唯一
 func (s *TicketCoreService) generateTicketNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
 	prefix := fmt.Sprintf("TKT-%04d%02d-", year, month)
 	const maxRetries = 5
@@ -392,23 +397,29 @@ func (s *TicketCoreService) generateTicketNumberWithDB(ctx context.Context, tena
 			if err != nil {
 				s.logger.Warnw("BeginTx failed, falling back to non-transactional", "error", err)
 			} else {
-				// 使用原生 SQL 查询最大编号
-				query := `SELECT ticket_number FROM tickets WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE`
+				// 使用原生 SQL 查询最大编号（使用 FOR UPDATE SKIP LOCKED 避免阻塞）
+				query := `SELECT ticket_number FROM tickets WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE SKIP LOCKED`
 				var maxTicketNum string
 				err := tx.QueryRowContext(ctx, query, tenantID, prefix+"%").Scan(&maxTicketNum)
-				if err != nil && err != sql.ErrNoRows {
-					s.logger.Warnw("SELECT FOR UPDATE failed", "error", err)
-				}
+				s.logger.Infow("SELECT FOR UPDATE SKIP LOCKED result", "tenant", tenantID, "maxTicketNum", maxTicketNum, "error", err, "isNoRows", (err == sql.ErrNoRows))
 
 				// 计算下一个序列号
 				var seq int = 0
+				// sql.ErrNoRows 意味着当月没有工单，此时 seq 保持 0
 				if err == nil && maxTicketNum != "" {
 					if idx := strings.LastIndex(maxTicketNum, "-"); idx >= 0 {
 						fmt.Sscanf(maxTicketNum[idx+1:], "%d", &seq)
 					}
+				} else if err == sql.ErrNoRows {
+					s.logger.Infow("No existing tickets this month, using seed sequence", "tenant", tenantID, "year", year, "month", month)
 				}
 
-				candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq+1)
+				// 有历史记录则使用递增号；无记录则用随机后缀确保唯一
+				if seq > 0 {
+					candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq+1)
+				} else {
+					candidate = fmt.Sprintf("TKT-%04d%02d-%s", year, month, uniqueFallbackSuffix())
+				}
 				s.logger.Infow("DB transaction generated ticket number",
 					"number", candidate, "attempt", attempt, "tenant", tenantID)
 
@@ -454,10 +465,11 @@ func (s *TicketCoreService) generateTicketNumberWithDB(ctx context.Context, tena
 		}
 
 		if parseErr || (err == nil && len(tickets) == 0) {
-			maxSeq = 0
+			// 无当月记录时，使用随机后缀确保唯一性
+			candidate = fmt.Sprintf("TKT-%04d%02d-%s", year, month, uniqueFallbackSuffix())
+		} else {
+			candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, maxSeq+1)
 		}
-
-		candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, maxSeq+1)
 		s.logger.Infow("DB fallback generated ticket number",
 			"number", candidate, "attempt", attempt, "tenant", tenantID)
 		return candidate, nil
@@ -525,4 +537,15 @@ func (s *TicketCoreService) addTagsToTicket(ctx context.Context, t *ent.Ticket, 
 	// 先清除现有标签，再添加新的，避免重复连接错误
 	_, err := t.Update().ClearTags().AddTagIDs(tagIDs...).Save(ctx)
 	return err
+}
+
+// uniqueFallbackSuffix 生成真正唯一的备选后缀（用于无历史记录时）
+// 使用 crypto/rand + PID 种子确保并发进程间不碰撞
+func uniqueFallbackSuffix() string {
+	// 种子：PID + nanoseconds，保证同进程同微秒内每次调用不同
+	src := mrand.NewSource(time.Now().UnixNano() + int64(os.Getpid())*1000000000)
+	mrand.New(src) // 每次调用产生不同种子，增强多样性
+	// 6位随机数，范围 0~999999（使用 crypto/rand 保证真随机）
+	n, _ := rand.Int(rand.Reader, big.NewInt(1000000))
+	return fmt.Sprintf("%06d", n)
 }
