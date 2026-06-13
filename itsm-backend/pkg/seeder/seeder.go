@@ -26,6 +26,7 @@ import (
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/standardchange"
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
@@ -55,6 +56,7 @@ var (
 	_ = tag.NameEQ               // Used to ensure tag package is imported
 	_ = assetlicense.NameEQ      // Used to ensure assetlicense package is imported
 	_ = release.TitleEQ          // Used to ensure release package is imported
+	_ = slapolicy.NameEQ         // Used to ensure slapolicy package is imported
 )
 
 // SeedConfig 种子数据配置结构
@@ -63,6 +65,7 @@ type SeedConfig struct {
 	Teams             []TeamSeed             `json:"teams"`
 	Roles             []RoleSeed             `json:"roles"`
 	SLADefinitions    []SLADefinitionSeed    `json:"sla_definitions"`
+	SLAPolicies      []SLAPolicySeed       `json:"sla_policies"`
 	ServiceCatalog    []ServiceCatalogSeed   `json:"service_catalog"`
 	ApprovalWorkflows []ApprovalWorkflowSeed `json:"approval_workflows"`
 	ProcessBindings   []ProcessBindingSeed   `json:"process_bindings"`
@@ -237,6 +240,19 @@ type TicketTagSeed struct {
 	Code        string `json:"code"`
 	Description string `json:"description"`
 	Color       string `json:"color"`
+}
+
+// SLAPolicySeed SLA策略种子数据结构
+type SLAPolicySeed struct {
+	Name                  string `json:"name"`
+	Description           string `json:"description"`
+	Priority             string `json:"priority"`
+	ResponseTimeMinutes  int    `json:"response_time_minutes"`
+	ResolutionTimeMinutes int    `json:"resolution_time_minutes"`
+	ExcludeWeekends      bool   `json:"exclude_weekends"`
+	ExcludeHolidays      bool   `json:"exclude_holidays"`
+	IsActive             bool   `json:"is_active"`
+	PriorityScore        int    `json:"priority_score"`
 }
 
 // Seeder manages database seeding operations
@@ -506,6 +522,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedReleases(ctx)
 	// 使用配置的初始化数据
 	s.seedSLADefinitions(ctx)
+	s.seedSLAPolicies(ctx)
 	s.seedSLAAlertRules(ctx)
 	s.seedApprovalWorkflows(ctx)
 	s.seedProcessBindings(ctx)
@@ -989,6 +1006,100 @@ func (s *Seeder) backfillUserRole(ctx context.Context) {
 	} else if n > 0 {
 		s.sugar.Infow("backfilled roles", "updated", n)
 	}
+
+	// T005: 为测试方案 seed 额外的角色账号
+	s.seedRoleTestAccounts(ctx)
+}
+
+// T005: 角色测试账号 seeder
+// FR-604, R-07: engineer1 / manager1 / tenant1admin
+func (s *Seeder) seedRoleTestAccounts(ctx context.Context) {
+	// 确保 tenant_test 租户存在
+	testTenant := s.ensureTenant(ctx, tenantSeed{
+		Code:   "tenant_test",
+		Name:   "测试租户",
+		Type:   "customer",
+	})
+	if testTenant == nil {
+		s.sugar.Warnw("tenant_test 创建失败，跳过角色测试账号 seed")
+		return
+	}
+
+	// 创建 engineer1 (角色: technician 用于处理工单)
+	s.createTestUser(ctx, testTenant, "engineer1", "eng123", "technician", "工程师")
+	// 创建 manager1 (角色: manager 用于审批)
+	s.createTestUser(ctx, testTenant, "manager1", "mgr123", "manager", "审批经理")
+	// 创建 tenant1admin (角色: admin 用于租户管理)
+	s.createTestUser(ctx, testTenant, "tenant1admin", "ta123456", "admin", "租户管理员")
+}
+
+func (s *Seeder) createTestUser(ctx context.Context, t *ent.Tenant, username, password, roleName, displayName string) {
+	// 检查用户是否已存在
+	existing, err := s.client.User.Query().Where(user.UsernameEQ(username), user.TenantIDEQ(t.ID)).First(ctx)
+	if err == nil && existing != nil {
+		s.sugar.Infow("测试用户已存在", "username", username)
+		return
+	}
+
+	// 创建新用户 - 使用 switch 确保类型正确
+	passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		s.sugar.Warnw("bcrypt 密码生成失败", "username", username, "error", err)
+		return
+	}
+
+	switch roleName {
+	case "technician":
+		_, err = s.client.User.Create().
+			SetUsername(username).
+			SetRole("technician").
+			SetPasswordHash(string(passHash)).
+			SetEmail(username + "@test.com").
+			SetName(displayName).
+			SetDepartment("IT部门").
+			SetActive(true).
+			SetTenantID(t.ID).
+			Save(ctx)
+	case "manager":
+		_, err = s.client.User.Create().
+			SetUsername(username).
+			SetRole("manager").
+			SetPasswordHash(string(passHash)).
+			SetEmail(username + "@test.com").
+			SetName(displayName).
+			SetDepartment("IT部门").
+			SetActive(true).
+			SetTenantID(t.ID).
+			Save(ctx)
+	case "admin":
+		_, err = s.client.User.Create().
+			SetUsername(username).
+			SetRole("admin").
+			SetPasswordHash(string(passHash)).
+			SetEmail(username + "@test.com").
+			SetName(displayName).
+			SetDepartment("IT部门").
+			SetActive(true).
+			SetTenantID(t.ID).
+			Save(ctx)
+	default:
+		_, err = s.client.User.Create().
+			SetUsername(username).
+			SetRole("end_user").
+			SetPasswordHash(string(passHash)).
+			SetEmail(username + "@test.com").
+			SetName(displayName).
+			SetDepartment("IT部门").
+			SetActive(true).
+			SetTenantID(t.ID).
+			Save(ctx)
+	}
+
+	if err != nil {
+		s.sugar.Warnw("创建测试用户失败", "username", username, "error", err)
+	} else {
+		s.sugar.Infow("测试用户已创建", "username", username, "role", roleName)
+	}
 }
 
 // seedCloudServiceTemplates, seedAssets, seedAssets, seedReleases
@@ -1171,6 +1282,44 @@ func (s *Seeder) seedSLADefinitions(ctx context.Context) {
 	}
 	s.sugar.Infow("SLA definitions seeded", "count", len(s.config.SLADefinitions))
 	_ = slaIDMap
+}
+
+func (s *Seeder) seedSLAPolicies(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip SLA policies seed", "error", err)
+		return
+	}
+
+	existing, err := s.client.SLAPolicy.Query().Where(slapolicy.TenantIDEQ(t.ID)).Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("check existing SLA policies failed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("SLA policies already seeded")
+		return
+	}
+
+	for _, sla := range s.config.SLAPolicies {
+		_, err := s.client.SLAPolicy.Create().
+			SetName(sla.Name).
+			SetDescription(sla.Description).
+			SetPriority(sla.Priority).
+			SetResponseTimeMinutes(sla.ResponseTimeMinutes).
+			SetResolutionTimeMinutes(sla.ResolutionTimeMinutes).
+			SetExcludeWeekends(sla.ExcludeWeekends).
+			SetExcludeHolidays(sla.ExcludeHolidays).
+			SetIsActive(sla.IsActive).
+			SetPriorityScore(sla.PriorityScore).
+			SetTenantID(t.ID).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed SLA policy failed", "error", err, "name", sla.Name)
+			continue
+		}
+	}
+	s.sugar.Infow("SLA policies seeded", "count", len(s.config.SLAPolicies))
 }
 
 func (s *Seeder) seedSLAAlertRules(ctx context.Context) {

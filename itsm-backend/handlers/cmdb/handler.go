@@ -215,7 +215,7 @@ func (h *Handler) ListCIs(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
 
-	list, total, err := h.svc.ListCIs(c.Request.Context(), tenantID, page, pageSize, typeID, status)
+	list, total, err := h.svc.ListCIs(c.Request.Context(), tenantID, page, pageSize, typeID, status, c.Query("search"))
 	if err != nil {
 		common.Fail(c, http.StatusInternalServerError, err.Error())
 		return

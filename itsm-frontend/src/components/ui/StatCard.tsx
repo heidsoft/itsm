@@ -4,6 +4,16 @@ import React from 'react';
 import { Card, Statistic } from 'antd';
 import { LucideIcon } from 'lucide-react';
 
+/**
+ * StatCard - Statistics display card component
+ * @param title - Card title/label text
+ * @param value - Numeric value to display
+ * @param icon - Optional LucideIcon or ReactNode to display alongside value
+ * @param prefix - ReactNode displayed before the numeric value (e.g. currency symbol)
+ * @param suffix - ReactNode displayed after the numeric value (e.g. unit label)
+ * @param color - Hex color string for the icon background (default: #1890ff)
+ * @param loading - Boolean; when true shows loading skeleton state
+ */
 export interface StatCardProps {
   title: string;
   value: number;

@@ -28,8 +28,8 @@ func (s *Service) GetCI(ctx context.Context, id int, tenantID int) (*Configurati
 	return s.repo.GetCI(ctx, id, tenantID)
 }
 
-func (s *Service) ListCIs(ctx context.Context, tenantID int, page, size int, ciTypeID int, status string) ([]*ConfigurationItem, int, error) {
-	return s.repo.ListCIs(ctx, tenantID, page, size, ciTypeID, status)
+func (s *Service) ListCIs(ctx context.Context, tenantID int, page, size int, ciTypeID int, status string, search string) ([]*ConfigurationItem, int, error) {
+	return s.repo.ListCIs(ctx, tenantID, page, size, ciTypeID, status, search)
 }
 
 func (s *Service) UpdateCI(ctx context.Context, ci *ConfigurationItem) (*ConfigurationItem, error) {

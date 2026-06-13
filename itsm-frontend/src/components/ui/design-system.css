@@ -1,5 +1,19 @@
 /* ITSM Design System - Component Styles */
 
+/* Border Radius Semantic System:
+ * --radius-sm: 4px - inputs, small buttons
+ * --radius-md: 8px - cards, dropdowns
+ * --radius-lg: 12px - modals, large panels
+ * Use explicit values instead of .rounded-* utility classes where consistency matters.
+ */
+
+/* Spacing Rhythm:
+ * gap-2 (8px): tight layouts, form fields
+ * gap-3 (12px): default component spacing
+ * gap-4 (16px): comfortable spacing, card padding
+ * gap-6 (24px): section separation, group spacing
+ */
+
 /* Card Variants */
 .card-default {
   @apply bg-white border border-gray-200 rounded-lg shadow-sm;
@@ -14,28 +28,49 @@
 }
 
 .card-interactive {
-  @apply transition-all duration-200 hover:shadow-md hover:border-gray-300;
+  @apply hover:shadow-md hover:border-gray-300;
+  transition: color 150ms, background-color 150ms, border-color 150ms, box-shadow 150ms, transform 150ms;
 }
 
 /* Button Variants */
 .btn-primary {
-  @apply bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200 rounded-lg;
+  @apply bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-md hover:shadow-lg rounded-lg;
+  transition: color 150ms, background-color 150ms, border-color 150ms, box-shadow 150ms, transform 150ms;
 }
 
 .btn-secondary {
-  @apply bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 rounded-lg;
+  @apply bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 rounded-lg;
+  transition: color 150ms, background-color 150ms, border-color 150ms, box-shadow 150ms, transform 150ms;
 }
 
 .btn-outline {
-  @apply bg-white border border-gray-200 text-gray-700 hover:border-blue-400 hover:text-blue-600 transition-all duration-200 rounded-lg;
+  @apply bg-white border border-gray-200 text-gray-700 hover:border-blue-400 hover:text-blue-600 rounded-lg;
+  transition: color 150ms, background-color 150ms, border-color 150ms, box-shadow 150ms, transform 150ms;
 }
 
 .btn-ghost {
-  @apply bg-transparent text-gray-700 hover:bg-gray-100 transition-all duration-200 rounded-lg;
+  @apply bg-transparent text-gray-700 hover:bg-gray-100 rounded-lg;
+  transition: color 150ms, background-color 150ms, border-color 150ms, box-shadow 150ms, transform 150ms;
 }
 
 .btn-danger {
-  @apply bg-red-500 hover:bg-red-600 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200 rounded-lg;
+  @apply bg-red-500 hover:bg-red-600 text-white border-0 shadow-md hover:shadow-lg rounded-lg;
+  transition: color 150ms, background-color 150ms, border-color 150ms, box-shadow 150ms, transform 150ms;
+}
+
+/* Button States */
+/* Button Loading State:
+ * .btn.loading - spinner icon positioned right, label shows "Loading..."
+ * Maintain button width to prevent layout shift.
+ */
+/* Disabled button state */
+.btn:disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Status Tags */
@@ -44,7 +79,7 @@
 }
 
 .status-open {
-  @apply bg-orange-100 text-orange-800;
+  @apply bg-blue-100 text-blue-800;
 }
 
 .status-in-progress {
@@ -73,7 +108,7 @@
 }
 
 .priority-high {
-  @apply bg-orange-100 text-orange-800;
+  @apply bg-amber-100 text-amber-800;
 }
 
 .priority-urgent {
@@ -108,6 +143,23 @@
 
 .form-textarea {
   @apply w-full rounded-lg border border-gray-200 hover:border-blue-400 focus:border-blue-500 transition-colors resize-none;
+}
+
+/* Form input validation states */
+.form-input.is-invalid {
+  border-color: var(--color-error-500, #ef4444);
+  box-shadow: 0 0 0 2px var(--color-error-100, #fee2e2);
+}
+.form-input.is-valid {
+  border-color: var(--color-success-500, #22c55e);
+}
+
+/* Active filter chip state */
+.filter-chip-active,
+.filter-chip[aria-selected="true"] {
+  background-color: var(--color-primary-100, #dbeafe);
+  border-color: var(--color-primary-500, #3b82f6);
+  color: var(--color-primary-700, #1d4ed8);
 }
 
 /* Table Styles */
@@ -223,8 +275,15 @@
 }
 
 /* Statistics Cards */
+/* Icon Size Standards:
+ * button-icon: 16x16px (inline action buttons)
+ * stat-card-icon: 48x48px (statistics display)
+ * empty-state-icon: 48x48px (empty states)
+ * error-icon: 48x48px (error displays)
+ */
 .stats-card {
-  @apply border-0 shadow-sm hover:shadow-md transition-all duration-300;
+  @apply border-0 shadow-sm hover:shadow-md;
+  transition: box-shadow 300ms ease, transform 300ms ease;
 }
 
 .stats-card-blue {
@@ -232,7 +291,7 @@
 }
 
 .stats-card-orange {
-  @apply bg-gradient-to-br from-orange-50 to-orange-100;
+  @apply bg-gradient-to-br from-amber-50 to-amber-100;
 }
 
 .stats-card-green {
@@ -252,7 +311,7 @@
 }
 
 .stats-icon-orange {
-  @apply bg-orange-500;
+  @apply bg-amber-500;
 }
 
 .stats-icon-green {
@@ -272,7 +331,7 @@
 }
 
 .stats-value-orange {
-  @apply text-orange-600;
+  @apply text-amber-600;
 }
 
 .stats-value-green {
@@ -313,6 +372,39 @@
   @apply animate-scale-in;
 }
 
+/* Animation Timing Specifications:
+ * fade-in: 300ms ease-out
+ * slide-up: 300ms ease-out
+ * scale-in: 200ms ease-out
+ * hover-lift: 200ms ease
+ * Ensure all interactive elements respect prefers-reduced-motion
+ */
+
+/* Focus States - ARIA Requirements:
+ * All interactive elements MUST have visible focus indicators.
+ * Use: outline: 2px solid var(--color-focus-ring, #3b82f6);
+ * Focus ring must be visible against all backgrounds.
+ */
+
+/* Modal Focus Trap:
+ * When modal opens, focus MUST be trapped within the modal.
+ * Tab key cycles through focusable elements only within modal.
+ * On close, focus returns to the element that opened the modal.
+ */
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 /* Focus States */
 .focus-ring {
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
@@ -320,7 +412,8 @@
 
 /* Hover States */
 .hover-lift {
-  @apply hover:shadow-lg hover:-translate-y-1 transition-all duration-200;
+  @apply hover:shadow-lg hover:-translate-y-1;
+  transition: box-shadow 200ms ease, transform 200ms ease;
 }
 
 .hover-scale {

@@ -57,6 +57,41 @@
     {"name": "Change-普通", "description": "普通变更评审与实施SLA", "service_type": "change", "priority": "medium", "response_time": 480, "resolution_time": 10080},
     {"name": "Change-紧急", "description": "紧急变更快速评审与实施SLA", "service_type": "change", "priority": "high", "response_time": 60, "resolution_time": 1440}
   ],
+  "sla_policies": [
+    {
+      "name": "P1-紧急响应",
+      "description": "P1级别紧急响应SLA，15分钟响应，60分钟解决",
+      "priority": "critical",
+      "response_time_minutes": 15,
+      "resolution_time_minutes": 60,
+      "exclude_weekends": false,
+      "exclude_holidays": false,
+      "is_active": true,
+      "priority_score": 1
+    },
+    {
+      "name": "P2-标准响应",
+      "description": "P2级别标准响应SLA，30分钟响应，4小时解决",
+      "priority": "high",
+      "response_time_minutes": 30,
+      "resolution_time_minutes": 240,
+      "exclude_weekends": false,
+      "exclude_holidays": false,
+      "is_active": true,
+      "priority_score": 2
+    },
+    {
+      "name": "P3-一般响应",
+      "description": "P3级别一般响应SLA，2小时响应，8小时解决",
+      "priority": "medium",
+      "response_time_minutes": 120,
+      "resolution_time_minutes": 480,
+      "exclude_weekends": false,
+      "exclude_holidays": false,
+      "is_active": true,
+      "priority_score": 3
+    }
+  ],
   "service_catalog": [
     {"name": "账号申请", "description": "新员工或岗位变更账号开通", "category": "账号与权限", "service_type": "access", "requires_approval": true, "delivery_time": 1},
     {"name": "权限变更", "description": "业务系统、数据库或基础设施权限调整", "category": "账号与权限", "service_type": "access", "requires_approval": true, "delivery_time": 2},
