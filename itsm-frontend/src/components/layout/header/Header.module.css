@@ -144,6 +144,25 @@
   justify-content: center;
   border-radius: 6px;
   position: relative;
+  color: #64748b !important;
+  background: transparent !important;
+}
+
+.notificationButton svg {
+  color: #64748b !important;
+  stroke: #64748b !important;
+}
+
+.notificationButton:hover,
+.notificationButton:focus {
+  color: #1e293b !important;
+  background: #f8fafc !important;
+}
+
+.notificationButton:hover svg,
+.notificationButton:focus svg {
+  color: #1e293b !important;
+  stroke: #1e293b !important;
 }
 
 .userMenu {

@@ -154,6 +154,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
   const [loading, setLoading] = useState(true);
   const [graph, setGraph] = useState<TopologyGraph | null>(null);
   const [depth, setDepth] = useState(initialDepth);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<TopologyNode | null>(null);
   const [impactAnalysis, setImpactAnalysis] = useState<ImpactAnalysisResponse | null>(null);
   const [impactDrawerOpen, setImpactDrawerOpen] = useState(false);
@@ -164,6 +165,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
   // 加载拓扑数据
   const loadTopology = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await CIRelationshipAPI.getTopologyGraph(ciId, depth);
       setGraph(data);
@@ -199,6 +201,11 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
       }));
       setEdges(flowEdges);
     } catch (error) {
+      console.error('Load topology graph failed:', error);
+      setGraph(null);
+      setNodes([]);
+      setEdges([]);
+      setLoadError('拓扑数据加载失败，请稍后重试。');
       message.error('加载拓扑图失败');
     } finally {
       setLoading(false);
@@ -306,6 +313,28 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
             >
               <Spin size="large" description="加载拓扑图..." />
             </div>
+          ) : loadError ? (
+            <div
+              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height }}
+            >
+              <Alert
+                type="warning"
+                showIcon
+                message="拓扑图暂不可用"
+                description={loadError}
+                action={
+                  <Button size="small" onClick={loadTopology}>
+                    重试
+                  </Button>
+                }
+              />
+            </div>
+          ) : nodes.length === 0 ? (
+            <div
+              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height }}
+            >
+              <Empty description="暂无拓扑数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            </div>
           ) : (
             <ReactFlow
               nodes={nodes}
@@ -325,7 +354,8 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
                     warning: '#faad14',
                     error: '#ff4d4f',
                   };
-                  return statusColors[node.data.status] || '#8c8c8c';
+                  const status = String(node.data?.status || 'unknown');
+                  return statusColors[status] || '#8c8c8c';
                 }}
               />
             </ReactFlow>

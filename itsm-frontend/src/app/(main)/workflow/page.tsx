@@ -45,7 +45,7 @@ import {
 import BPMNDesigner from '@/components/workflow/BPMNDesigner';
 import { FilterToolbarCard } from '@/components/ui/FilterToolbarCard';
 import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
-import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
+import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview } from '@/components/ui/StatsOverview';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { WorkflowType } from '@/types/workflow';
@@ -785,7 +785,9 @@ const WorkflowManagementPage = () => {
         prefix: <BarChart3 className="w-5 h-5" />,
         accentColor: '#722ed1',
         helper:
-          stats.avgExecutionTime < 60 ? t('workflow.goodEfficiency') : t('workflow.optimizableSpace'),
+          stats.avgExecutionTime < 60
+            ? t('workflow.goodEfficiency')
+            : t('workflow.optimizableSpace'),
       },
     ],
     [stats, t]
@@ -832,10 +834,17 @@ const WorkflowManagementPage = () => {
       >
         发起流程
       </Button>
-      <Button icon={<Upload className="w-4 h-4" />} onClick={handleImportWorkflow} aria-label="导入工作流">
+      <Button
+        icon={<Upload className="w-4 h-4" />}
+        onClick={handleImportWorkflow}
+        aria-label="导入工作流"
+      >
         {t('workflow.import')}
       </Button>
-      <Button icon={<RefreshCw className="w-4 h-4" />} onClick={() => loadWorkflows(pagination.current, pagination.pageSize)}>
+      <Button
+        icon={<RefreshCw className="w-4 h-4" />}
+        onClick={() => loadWorkflows(pagination.current, pagination.pageSize)}
+      >
         {t('workflow.refresh')}
       </Button>
     </>
@@ -883,12 +892,6 @@ const WorkflowManagementPage = () => {
         title={t('workflow.workflowManagement')}
         description="统一管理工作流定义、运行状态、设计入口和批量操作。"
         actions={headerActions}
-        notice={
-          <ManagementNotice
-            message="设计态与运行态已分离处理"
-            description="工作流定义、实例管理和设计器入口保持分层，筛选、批量操作和主表格统一走页面基线。"
-          />
-        }
       />
 
       <StatsOverview items={statsItems} className="mb-6" />

@@ -31,8 +31,8 @@ export function StatsOverview({
   return (
     <Row gutter={[16, 16]} className={className}>
       {items.map(item => (
-        <Col key={item.key} xs={columns.xs} sm={columns.sm} lg={columns.lg}>
-          <Card className="h-full rounded-xl shadow-sm">
+        <Col key={item.key} xs={columns.xs} sm={columns.sm} lg={columns.lg} className="flex">
+          <Card className="h-full w-full rounded-xl shadow-sm">
             <Statistic
               title={item.title}
               value={item.value}
@@ -47,4 +47,3 @@ export function StatsOverview({
     </Row>
   );
 }
-

@@ -60,46 +60,46 @@ export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className
 
   return (
     <div className={`mb-6 ${className || ''}`}>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6} lg={6}>
+      <Row gutter={[16, 16]} align="stretch">
+        <Col xs={24} sm={12} md={6} lg={6} className="flex">
           <Card
-            className="text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden relative"
+            className="h-full w-full text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden relative"
             styles={{ body: { padding: '16px' } }}
           >
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
               <AlertTriangle className="w-5 h-5 text-white" />
             </div>
             <div className="text-2xl font-bold mb-1">{metrics.totalIncidents ?? '-'}</div>
-            <div className="text-blue-100 font-medium text-xs">{t('incidents.total')}</div>
+            <div className="text-white/90 font-semibold text-xs">{t('incidents.total')}</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={6} lg={6} className="flex">
           <Card
-            className="text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-orange-500 to-orange-600 text-white overflow-hidden relative"
+            className="h-full w-full text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-orange-500 to-orange-600 text-white overflow-hidden relative"
             styles={{ body: { padding: '16px' } }}
           >
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
               <Clock className="w-5 h-5 text-white" />
             </div>
             <div className="text-2xl font-bold mb-1">{metrics.criticalIncidents ?? '-'}</div>
-            <div className="text-orange-100 font-medium text-xs">{t('incidents.critical')}</div>
+            <div className="text-white/90 font-semibold text-xs">{t('incidents.critical')}</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={6} lg={6} className="flex">
           <Card
-            className="text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-green-500 to-green-600 text-white overflow-hidden relative"
+            className="h-full w-full text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-green-500 to-green-600 text-white overflow-hidden relative"
             styles={{ body: { padding: '16px' } }}
           >
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
               <CheckCircle className="w-5 h-5 text-white" />
             </div>
             <div className="text-2xl font-bold mb-1">{metrics.majorIncidents ?? '-'}</div>
-            <div className="text-green-100 font-medium text-xs">{t('incidents.major')}</div>
+            <div className="text-white/90 font-semibold text-xs">{t('incidents.major')}</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={6} lg={6} className="flex">
           <Card
-            className="text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white overflow-hidden relative"
+            className="h-full w-full text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white overflow-hidden relative"
             styles={{ body: { padding: '16px' } }}
           >
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
@@ -108,7 +108,7 @@ export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className
             <div className="text-2xl font-bold mb-1">
               {formatAvgResolutionTime(metrics.avgResolutionTime)}
             </div>
-            <div className="text-purple-100 font-medium text-xs">
+            <div className="text-white/90 font-semibold text-xs">
               {t('incidents.avgResolutionTime')}
             </div>
           </Card>

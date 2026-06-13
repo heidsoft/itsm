@@ -269,6 +269,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Badge count={unreadCount} size="small" offset={[-2, 2]}>
               <Button
                 type="text"
+                className={styles.notificationButton}
                 onClick={() => setNotificationsOpen(true)}
                 aria-label="通知中心"
                 title="通知中心"

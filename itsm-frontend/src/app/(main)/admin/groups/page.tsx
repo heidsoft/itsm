@@ -67,9 +67,7 @@ const GroupManagement = () => {
         description: role.description || '',
         type: role.isSystem ? 'system' : 'custom',
         memberCount: role.userCount || 0,
-        permissions: Array.isArray(role.permissions)
-          ? role.permissions.map(formatPermission)
-          : [],
+        permissions: Array.isArray(role.permissions) ? role.permissions.map(formatPermission) : [],
         createdAt: role.createdAt,
         updatedAt: role.updatedAt,
         status: role.status || 'active',
@@ -533,7 +531,7 @@ const GroupManagement = () => {
         <Form
           layout="vertical"
           initialValues={selectedGroup || { type: 'custom', status: 'active' }}
-          onFinish={async (values) => {
+          onFinish={async values => {
             try {
               const { RoleAPI } = await import('@/lib/api/role-api');
               if (selectedGroup) {
@@ -568,18 +566,25 @@ const GroupManagement = () => {
             <Input placeholder="请输入用户组名称" />
           </Form.Item>
 
-          <Form.Item
-            name="description"
-            label="描述"
-          >
+          <Form.Item name="description" label="描述">
             <Input.TextArea rows={3} placeholder="请输入描述" />
           </Form.Item>
 
-          <Form.Item
-            name="permissions"
-            label="权限"
-          >
-            <Select mode="multiple" placeholder="选择权限" allowClear>
+          <Form.Item name="permissions" label="权限">
+            <Select
+              mode="multiple"
+              placeholder="选择权限"
+              allowClear
+              tagRender={({ label, closable, onClose }) => (
+                <Tag
+                  closable={closable}
+                  onClose={onClose}
+                  className="bg-blue-100 text-blue-800 border-blue-300 mr-1 mb-1"
+                >
+                  {label}
+                </Tag>
+              )}
+            >
               <Select.Option value="ticket:read">工单查看</Select.Option>
               <Select.Option value="ticket:write">工单编辑</Select.Option>
               <Select.Option value="ticket:delete">工单删除</Select.Option>
@@ -599,10 +604,12 @@ const GroupManagement = () => {
               <Button type="primary" htmlType="submit">
                 {selectedGroup ? '保存' : '创建'}
               </Button>
-              <Button onClick={() => {
-                setShowModal(false);
-                setSelectedGroup(null);
-              }}>
+              <Button
+                onClick={() => {
+                  setShowModal(false);
+                  setSelectedGroup(null);
+                }}
+              >
                 取消
               </Button>
             </Space>
