@@ -11,7 +11,6 @@ import (
 func TestIncidentListResponseUsesCamelCaseJSON(t *testing.T) {
 	resp := IncidentListResponse{
 		Incidents:  []*IncidentResponse{{ID: 1, Title: "CPU alert"}},
-		Items:      []*IncidentResponse{{ID: 1, Title: "CPU alert"}},
 		Total:      1,
 		Page:       2,
 		PageSize:   20,

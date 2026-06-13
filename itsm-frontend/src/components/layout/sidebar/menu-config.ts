@@ -54,13 +54,6 @@ export function getMenuConfig(): MenuConfig {
             permission: 'ticket:read',
           },
           {
-            key: '/tickets/templates',
-            icon: getIconByName('FileText')!,
-            label: '服务请求模板',
-            path: '/tickets/templates',
-            permission: 'ticket:write',
-          },
-          {
             key: '/tickets/analytics',
             icon: getIconByName('BarChart3')!,
             label: '工单统计',
@@ -333,58 +326,11 @@ export function getMenuConfig(): MenuConfig {
           },
         ],
       },
-      {
-        key: '/reports',
-        icon: getIconByName('TrendingUp')!,
-        label: '报表中心',
-        path: '/reports',
-        permission: 'report:read',
-        description: '报表与分析',
-        children: [
-          {
-            key: '/reports/overview',
-            icon: getIconByName('TrendingUp')!,
-            label: '报表中心',
-            path: '/reports',
-            permission: 'report:read',
-          },
-          {
-            key: '/reports/sla-performance',
-            icon: getIconByName('Calendar')!,
-            label: 'SLA性能',
-            path: '/reports/sla-performance',
-            permission: 'report:read',
-          },
-          {
-            key: '/reports/cmdb-quality',
-            icon: getIconByName('Database')!,
-            label: 'CMDB质量',
-            path: '/reports/cmdb-quality',
-            permission: 'report:read',
-          },
-          {
-            key: '/reports/incident-trends',
-            icon: getIconByName('AlertCircle')!,
-            label: '事件趋势',
-            path: '/reports/incident-trends',
-            permission: 'report:read',
-          },
-          {
-            key: '/reports/change-success',
-            icon: getIconByName('CheckCircle')!,
-            label: '变更成功率',
-            path: '/reports/change-success',
-            permission: 'report:read',
-          },
-          {
-            key: '/reports/problem-efficiency',
-            icon: getIconByName('HelpCircle')!,
-            label: '问题效率',
-            path: '/reports/problem-efficiency',
-            permission: 'report:read',
-          },
-        ],
-      },
+      // ===== 报表中心（GA 后置：FR-1001/FR-1003 在后端报表 API 落地后再启用） =====
+      // {
+      //   key: '/reports', label: '报表中心', path: '/reports', permission: 'report:read',
+      //   children: [ ... 已移除 cmdb-quality / incident-trends / change-success / problem-efficiency ]
+      // },
       // ===== 自动化 =====
       {
         key: '/workflow',

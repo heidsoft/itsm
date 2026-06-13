@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -16,19 +17,20 @@ import (
 
 // ConnectorController 连接器 HTTP API
 // 路由：
-//   GET    /api/v1/connectors              -> 列出已注册连接器（市场视图）
-//   GET    /api/v1/connectors/configs      -> 列出当前租户已配置的连接器实例
-//   POST   /api/v1/connectors/configs      -> 创建/更新一个连接器配置（provision）
-//   DELETE /api/v1/connectors/configs/:name -> 停用并移除一个连接器实例
-//   POST   /api/v1/connectors/:name/send   -> 通过指定连接器发消息
-//   POST   /api/v1/connectors/:name/test   -> 发送一条测试消息
-//   GET    /api/v1/connectors/health       -> 所有实例的健康检查
-//   POST   /api/v1/connectors/feishu/callback -> 飞书事件回调入口（如果安装了 feishu）
+//
+//	GET    /api/v1/connectors              -> 列出已注册连接器（市场视图）
+//	GET    /api/v1/connectors/configs      -> 列出当前租户已配置的连接器实例
+//	POST   /api/v1/connectors/configs      -> 创建/更新一个连接器配置（provision）
+//	DELETE /api/v1/connectors/configs/:name -> 停用并移除一个连接器实例
+//	POST   /api/v1/connectors/:name/send   -> 通过指定连接器发消息
+//	POST   /api/v1/connectors/:name/test   -> 发送一条测试消息
+//	GET    /api/v1/connectors/health       -> 所有实例的健康检查
+//	POST   /api/v1/connectors/feishu/callback -> 飞书事件回调入口（如果安装了 feishu）
 type ConnectorController struct {
-	manager    *connector.Manager
-	market     *marketplace.Market // optional
-	registry   *connector.Registry
-	logger     *zap.SugaredLogger
+	manager  *connector.Manager
+	market   *marketplace.Market // optional
+	registry *connector.Registry
+	logger   *zap.SugaredLogger
 }
 
 func NewConnectorController(mgr *connector.Manager, reg *connector.Registry, mkt *marketplace.Market, logger *zap.SugaredLogger) *ConnectorController {
@@ -45,27 +47,36 @@ func (c *ConnectorController) ListMarket(ctx *gin.Context) {
 	tenantID := ctx.GetInt("tenant_id")
 	configs := c.manager.ListByTenant(tenantID)
 	installed := make(map[string]bool, len(configs))
+	enabled := make(map[string]bool, len(configs))
 	for _, cfg := range configs {
 		installed[cfg.Name] = true
+		enabled[cfg.Name] = cfg.Enabled
 	}
+	health := c.manager.HealthCheckAll(ctx.Request.Context())
 	out := make([]dto.ConnectorManifestDTO, 0, len(mfs))
 	for _, m := range mfs {
+		healthy, checkedAt, lastErr := healthForManifest(health, tenantID, m.Name)
 		out = append(out, dto.ConnectorManifestDTO{
-			Name:         m.Name,
-			Version:      m.Version,
-			Title:        m.Title,
-			Provider:     m.Provider,
-			Type:         string(m.Type),
-			Description:  m.Description,
-			Author:       m.Author,
-			Homepage:     m.Homepage,
-			IconURL:      m.IconURL,
-			Capabilities: capToString(m.Capabilities),
-			Tags:         m.Tags,
-			MinITSMVer:   m.MinITSMVer,
-			Local:        true,
-			Installed:    installed[m.Name],
-			Category:     string(m.Type),
+			Name:          m.Name,
+			Version:       m.Version,
+			Title:         m.Title,
+			Provider:      m.Provider,
+			Type:          string(m.Type),
+			Description:   m.Description,
+			Author:        m.Author,
+			Homepage:      m.Homepage,
+			IconURL:       m.IconURL,
+			Capabilities:  capToString(m.Capabilities),
+			Tags:          m.Tags,
+			MinITSMVer:    m.MinITSMVer,
+			Local:         true,
+			Installed:     installed[m.Name],
+			Enabled:       enabled[m.Name],
+			Healthy:       healthy,
+			LastCheckedAt: checkedAt,
+			LastError:     lastErr,
+			Lifecycle:     connectorLifecycle(installed[m.Name], enabled[m.Name], healthy, lastErr),
+			Category:      string(m.Type),
 		})
 	}
 	common.Success(ctx, gin.H{"items": out, "total": len(out)})
@@ -75,9 +86,10 @@ func (c *ConnectorController) ListMarket(ctx *gin.Context) {
 func (c *ConnectorController) ListConfigs(ctx *gin.Context) {
 	tenantID := ctx.GetInt("tenant_id")
 	cfgs := c.manager.ListByTenant(tenantID)
+	health := c.manager.HealthCheckAll(ctx.Request.Context())
 	out := make([]dto.ConnectorConfigDTO, 0, len(cfgs))
 	for _, cfg := range cfgs {
-		out = append(out, maskConfig(cfg))
+		out = append(out, maskConfig(cfg, health))
 	}
 	common.Success(ctx, gin.H{"items": out, "total": len(out)})
 }
@@ -105,7 +117,7 @@ func (c *ConnectorController) Provision(ctx *gin.Context) {
 		common.Fail(ctx, common.InternalErrorCode, err.Error())
 		return
 	}
-	common.Success(ctx, maskConfig(cfg))
+	common.Success(ctx, maskConfig(cfg, c.manager.HealthCheckAll(ctx.Request.Context())))
 }
 
 // Revoke 停用并移除一个连接器实例
@@ -189,6 +201,41 @@ func (c *ConnectorController) Health(ctx *gin.Context) {
 	common.Success(ctx, out)
 }
 
+// Lifecycle returns a tenant-scoped connector lifecycle view for GA readiness checks.
+func (c *ConnectorController) Lifecycle(ctx *gin.Context) {
+	reg := c.registry
+	if reg == nil {
+		reg = connector.Default()
+	}
+	tenantID := ctx.GetInt("tenant_id")
+	configs := c.manager.ListByTenant(tenantID)
+	configByName := make(map[string]connector.Config, len(configs))
+	for _, cfg := range configs {
+		configByName[cfg.Name] = cfg
+	}
+	health := c.manager.HealthCheckAll(ctx.Request.Context())
+	manifests := reg.List()
+	out := make([]dto.ConnectorLifecycleDTO, 0, len(manifests))
+	for _, m := range manifests {
+		cfg, installed := configByName[m.Name]
+		enabled := installed && cfg.Enabled
+		healthy, checkedAt, lastErr := healthForManifest(health, tenantID, m.Name)
+		out = append(out, dto.ConnectorLifecycleDTO{
+			Name:          m.Name,
+			Provider:      m.Provider,
+			Type:          string(m.Type),
+			Installed:     installed,
+			Enabled:       enabled,
+			Healthy:       healthy,
+			Lifecycle:     connectorLifecycle(installed, enabled, healthy, lastErr),
+			LastCheckedAt: checkedAt,
+			LastError:     lastErr,
+			Capabilities:  capToString(m.Capabilities),
+		})
+	}
+	common.Success(ctx, gin.H{"items": out, "total": len(out)})
+}
+
 // FeishuCallback 飞书事件回调入口
 // 注意：本方法假定 manager 中已经配置了 feishu 连接器；
 // 实际签名校验和负载解析由该连接器自身完成。
@@ -236,19 +283,67 @@ func (c *ConnectorController) FeishuCallback(ctx *gin.Context) {
 
 // helpers
 
-func maskConfig(cfg connector.Config) dto.ConnectorConfigDTO {
+func maskConfig(cfg connector.Config, health map[string]connector.HealthStatus) dto.ConnectorConfigDTO {
 	masked := make(map[string]string, len(cfg.Credentials))
 	for k := range cfg.Credentials {
 		masked[k] = "******"
 	}
+	healthy, checkedAt, lastErr := healthForConfig(health, cfg)
 	return dto.ConnectorConfigDTO{
-		Name:        cfg.Name,
-		Provider:    cfg.Provider,
-		Type:        string(cfg.Type),
-		Enabled:     cfg.Enabled,
-		Credentials: masked,
-		Settings:    cfg.Settings,
-		Labels:      cfg.Labels,
+		Name:          cfg.Name,
+		Provider:      cfg.Provider,
+		Type:          string(cfg.Type),
+		Enabled:       cfg.Enabled,
+		Healthy:       healthy,
+		Lifecycle:     connectorLifecycle(true, cfg.Enabled, healthy, lastErr),
+		LastCheckedAt: checkedAt,
+		LastError:     lastErr,
+		CreatedAt:     cfg.CreatedAt,
+		UpdatedAt:     cfg.UpdatedAt,
+		Credentials:   masked,
+		Settings:      cfg.Settings,
+		Labels:        cfg.Labels,
+	}
+}
+
+func healthForConfig(health map[string]connector.HealthStatus, cfg connector.Config) (bool, *time.Time, string) {
+	key := fmt.Sprintf("%d/%s/%s", cfg.TenantID, cfg.Name, cfg.Provider)
+	if h, ok := health[key]; ok {
+		checkedAt := h.CheckedAt
+		if h.OK {
+			return true, &checkedAt, ""
+		}
+		return false, &checkedAt, h.Message
+	}
+	return false, nil, ""
+}
+
+func healthForManifest(health map[string]connector.HealthStatus, tenantID int, name string) (bool, *time.Time, string) {
+	for key, h := range health {
+		prefix := fmt.Sprintf("%d/%s/", tenantID, name)
+		if len(key) >= len(prefix) && key[:len(prefix)] == prefix {
+			checkedAt := h.CheckedAt
+			if h.OK {
+				return true, &checkedAt, ""
+			}
+			return false, &checkedAt, h.Message
+		}
+	}
+	return false, nil, ""
+}
+
+func connectorLifecycle(installed, enabled, healthy bool, lastErr string) string {
+	switch {
+	case healthy:
+		return "healthy"
+	case enabled && lastErr != "":
+		return "unhealthy"
+	case enabled:
+		return "enabled"
+	case installed:
+		return "installed"
+	default:
+		return "available"
 	}
 }
 

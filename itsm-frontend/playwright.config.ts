@@ -6,6 +6,7 @@ const enableEdge = process.env.PLAYWRIGHT_ENABLE_EDGE === '1';
 
 export default defineConfig({
   testDir: './tests/e2e',
+  outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR || '/tmp/itsm-playwright-results',
   timeout: 30_000, // 减少超时时间，快速失败
   expect: {
     timeout: 5_000,
@@ -17,7 +18,7 @@ export default defineConfig({
     video: 'retain-on-failure',
     actionTimeout: 10_000, // 单个操作超时
     launchOptions: {
-      args: ['--disable-crashpad', '--disable-breakpad'],
+      args: ['--disable-crashpad', '--disable-breakpad', '--allow-insecure-localhost'],
     },
   },
   reporter: [['list'], ['html', { open: 'never' }]],

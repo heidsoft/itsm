@@ -82,6 +82,7 @@ export class ServiceCatalogApi {
 
     const resp = await httpClient.get<{
       catalogs: unknown[];
+      services: unknown[];
       total: number;
       page: number;
       size: number;
@@ -92,7 +93,10 @@ export class ServiceCatalogApi {
       ...(status ? { status } : {}),
     });
 
-    let services = (resp.catalogs || []).map(ServiceCatalogApi.toServiceItem);
+    // 优先使用 services 字段，否则降级使用 catalogs
+    const rawItems = resp.services || resp.catalogs || [];
+
+    let services = rawItems.map(ServiceCatalogApi.toServiceItem);
     // 后端当前不支持 search；先在前端做兜底过滤
     if (query?.search) {
       const q = query.search.toLowerCase();

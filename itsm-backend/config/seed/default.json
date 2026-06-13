@@ -9,7 +9,7 @@
     {"name": "运营管理部", "code": "OPS", "description": "IT运营管理"},
     {"name": "服务台", "code": "OPS-SD", "description": "一线服务支持", "parent_code": "OPS"},
     {"name": "运维中心", "code": "OPS-NOC", "description": "7x24运维监控", "parent_code": "OPS"},
-    {"name": "客户服务", "code": "OPS-CS", "description": "客户服务体验", "parent_code": "OPS"},
+    {"name": "安全运营", "code": "OPS-SEC", "description": "安全监控与响应", "parent_code": "OPS"},
     {"name": "研发部", "code": "RD", "description": "产品研发"},
     {"name": "测试部", "code": "QA", "description": "质量保证"},
     {"name": "人力资源部", "code": "HR", "description": "人力资源管理"},
@@ -17,24 +17,16 @@
     {"name": "行政部", "code": "ADMIN", "description": "行政管理"}
   ],
   "teams": [
-    {"name": "服务台-L1", "description": "一线服务支持，处理简单问题"},
-    {"name": "服务台-L2", "description": "二线技术支持，处理复杂问题"},
-    {"name": "服务台-L3", "description": "三线技术专家，处理疑难问题"},
-    {"name": "服务器运维", "description": "服务器运维管理"},
-    {"name": "网络运维", "description": "网络设备运维"},
-    {"name": "数据库运维", "description": "数据库运维管理"},
-    {"name": "云平台运维", "description": "云计算平台运维"},
-    {"name": "ERP支持", "description": "ERP系统支持"},
-    {"name": "CRM支持", "description": "CRM系统支持"},
-    {"name": "OA支持", "description": "OA办公系统支持"},
-    {"name": "安全运营", "description": "安全监控与响应"},
-    {"name": "安全合规", "description": "安全合规管理"},
-    {"name": "后端开发", "description": "后端开发团队"},
-    {"name": "前端开发", "description": "前端开发团队"},
-    {"name": "移动开发", "description": "移动端开发团队"},
-    {"name": "测试团队", "description": "测试与质量保证"},
-    {"name": "客户成功", "description": "客户成功管理"},
-    {"name": "技术支持", "description": "客户服务技术支持"}
+    {"name": "服务台-L1", "description": "一线服务支持，处理咨询、账号和标准请求"},
+    {"name": "服务台-L2", "description": "二线技术支持，处理复杂事件和升级工单"},
+    {"name": "服务台-L3", "description": "三线技术专家，处理疑难问题和根因分析"},
+    {"name": "服务器运维", "description": "服务器、虚拟化和操作系统运维"},
+    {"name": "网络运维", "description": "网络设备、链路和安全域运维"},
+    {"name": "数据库运维", "description": "数据库实例、备份和性能运维"},
+    {"name": "云平台运维", "description": "公有云、私有云和容器平台运维"},
+    {"name": "应用支持", "description": "企业应用、接口和中间件支持"},
+    {"name": "安全运营", "description": "安全事件响应、漏洞和合规运营"},
+    {"name": "变更委员会", "description": "变更评审、发布窗口和风险控制"}
   ],
   "roles": [
     {"name": "IT总监", "code": "it_director", "description": "IT部门总监"},
@@ -45,70 +37,92 @@
     {"name": "运维经理", "code": "ops_manager", "description": "运维团队经理"},
     {"name": "运维工程师", "code": "ops_engineer", "description": "运维工程师"},
     {"name": "DBA工程师", "code": "dba", "description": "数据库管理员"},
-    {"name": "网络安全工程师", "code": "network_eng", "description": "网络工程师"},
+    {"name": "网络工程师", "code": "network_eng", "description": "网络工程师"},
     {"name": "服务台主管", "code": "sd_manager", "description": "服务台主管"},
     {"name": "一线工程师", "code": "l1_support", "description": "一线支持工程师"},
     {"name": "二线工程师", "code": "l2_support", "description": "二线支持工程师"},
     {"name": "三线专家", "code": "l3_expert", "description": "三线技术专家"},
-    {"name": "研发经理", "code": "rd_manager", "description": "研发团队经理"},
-    {"name": "开发工程师", "code": "developer", "description": "开发工程师"},
-    {"name": "测试工程师", "code": "qa_engineer", "description": "测试工程师"},
+    {"name": "变更经理", "code": "change_manager", "description": "变更流程负责人"},
+    {"name": "服务目录管理员", "code": "service_catalog_admin", "description": "服务目录与请求模板管理员"},
     {"name": "部门经理", "code": "dept_manager", "description": "部门经理"},
-    {"name": "团队主管", "code": "team_lead", "description": "团队主管"},
     {"name": "普通用户", "code": "end_user", "description": "普通终端用户"},
     {"name": "访客", "code": "guest", "description": "访客用户"}
   ],
   "sla_definitions": [
-    {"name": "SLA-P0-紧急", "description": "P0紧急级别SLA", "service_type": "incident", "priority": "urgent", "response_time": 15, "resolution_time": 120},
-    {"name": "SLA-P1-高", "description": "P1高级别SLA", "service_type": "incident", "priority": "high", "response_time": 30, "resolution_time": 240},
-    {"name": "SLA-P2-中", "description": "P2中级别SLA", "service_type": "incident", "priority": "medium", "response_time": 120, "resolution_time": 480},
-    {"name": "SLA-P3-低", "description": "P3低级别SLA", "service_type": "incident", "priority": "low", "response_time": 240, "resolution_time": 1440},
-    {"name": "SLA-服务请求", "description": "服务请求标准SLA", "service_type": "service_request", "priority": "medium", "response_time": 480, "resolution_time": 4320},
-    {"name": "SLA-变更", "description": "变更请求SLA", "service_type": "change", "priority": "high", "response_time": 60, "resolution_time": 1440}
+    {"name": "Incident-P0-紧急", "description": "核心业务中断或重大安全事件", "service_type": "incident", "priority": "urgent", "response_time": 15, "resolution_time": 120},
+    {"name": "Incident-P1-高", "description": "重要业务受影响，需要快速恢复", "service_type": "incident", "priority": "high", "response_time": 30, "resolution_time": 240},
+    {"name": "Incident-P2-中", "description": "局部功能受影响，有替代方案", "service_type": "incident", "priority": "medium", "response_time": 120, "resolution_time": 480},
+    {"name": "Incident-P3-低", "description": "咨询、轻微影响或非紧急问题", "service_type": "incident", "priority": "low", "response_time": 240, "resolution_time": 1440},
+    {"name": "ServiceRequest-标准", "description": "标准服务请求交付SLA", "service_type": "service_request", "priority": "medium", "response_time": 480, "resolution_time": 4320},
+    {"name": "Change-普通", "description": "普通变更评审与实施SLA", "service_type": "change", "priority": "medium", "response_time": 480, "resolution_time": 10080},
+    {"name": "Change-紧急", "description": "紧急变更快速评审与实施SLA", "service_type": "change", "priority": "high", "response_time": 60, "resolution_time": 1440}
+  ],
+  "sla_policies": [
+    {
+      "name": "P1-紧急响应",
+      "description": "P1级别紧急响应SLA，15分钟响应，60分钟解决",
+      "priority": "critical",
+      "response_time_minutes": 15,
+      "resolution_time_minutes": 60,
+      "exclude_weekends": false,
+      "exclude_holidays": false,
+      "is_active": true,
+      "priority_score": 1
+    },
+    {
+      "name": "P2-标准响应",
+      "description": "P2级别标准响应SLA，30分钟响应，4小时解决",
+      "priority": "high",
+      "response_time_minutes": 30,
+      "resolution_time_minutes": 240,
+      "exclude_weekends": false,
+      "exclude_holidays": false,
+      "is_active": true,
+      "priority_score": 2
+    },
+    {
+      "name": "P3-一般响应",
+      "description": "P3级别一般响应SLA，2小时响应，8小时解决",
+      "priority": "medium",
+      "response_time_minutes": 120,
+      "resolution_time_minutes": 480,
+      "exclude_weekends": false,
+      "exclude_holidays": false,
+      "is_active": true,
+      "priority_score": 3
+    }
   ],
   "service_catalog": [
-    {"name": "云服务器 ECS", "description": "弹性云服务器", "category": "云计算", "service_type": "vm", "requires_approval": true, "delivery_time": 1},
-    {"name": "云数据库 RDS", "description": "MySQL/PostgreSQL数据库", "category": "数据库", "service_type": "rds", "requires_approval": true, "delivery_time": 1},
-    {"name": "对象存储 OSS", "description": "海量云存储", "category": "存储", "service_type": "oss", "requires_approval": false, "delivery_time": 0},
-    {"name": "CDN 加速", "description": "内容分发加速", "category": "网络", "service_type": "network", "requires_approval": false, "delivery_time": 0},
-    {"name": "负载均衡 SLB", "description": "流量分发服务", "category": "网络", "service_type": "network", "requires_approval": true, "delivery_time": 1},
-    {"name": "VPN 网关", "description": "VPN加密通道", "category": "安全", "service_type": "security", "requires_approval": true, "delivery_time": 2},
-    {"name": "企业邮箱", "description": "企业域名邮箱", "category": "通讯", "service_type": "custom", "requires_approval": false, "delivery_time": 1},
-    {"name": "企业网盘", "description": "文件存储共享", "category": "协作", "service_type": "custom", "requires_approval": false, "delivery_time": 0},
-    {"name": "视频会议", "description": "高清视频会议", "category": "通讯", "service_type": "custom", "requires_approval": false, "delivery_time": 0},
-    {"name": "企业IM", "description": "即时通讯工具", "category": "通讯", "service_type": "custom", "requires_approval": false, "delivery_time": 0},
-    {"name": "漏洞扫描", "description": "Web漏洞扫描", "category": "安全", "service_type": "security", "requires_approval": true, "delivery_time": 1},
-    {"name": "渗透测试", "description": "安全渗透测试", "category": "安全", "service_type": "security", "requires_approval": true, "delivery_time": 5},
-    {"name": "等保合规", "description": "等级保护咨询", "category": "安全", "service_type": "security", "requires_approval": true, "delivery_time": 30},
-    {"name": "IT服务台", "description": "IT问题咨询支持", "category": "支持", "service_type": "custom", "requires_approval": false, "delivery_time": 0},
-    {"name": "软件安装", "description": "标准软件安装", "category": "支持", "service_type": "custom", "requires_approval": false, "delivery_time": 1},
-    {"name": "账户申请", "description": "新员工账户开通", "category": "支持", "service_type": "custom", "requires_approval": true, "delivery_time": 1},
-    {"name": "网络接入", "description": "网络接入申请", "category": "支持", "service_type": "custom", "requires_approval": true, "delivery_time": 2},
-    {"name": "域名申请", "description": "内部域名注册", "category": "支持", "service_type": "custom", "requires_approval": true, "delivery_time": 3},
-    {"name": "代码仓库", "description": "Git代码仓库", "category": "开发", "service_type": "custom", "requires_approval": false, "delivery_time": 0},
-    {"name": "CI/CD流水线", "description": "自动化部署", "category": "开发", "service_type": "custom", "requires_approval": false, "delivery_time": 0},
-    {"name": "测试环境", "description": "预发布测试环境", "category": "开发", "service_type": "custom", "requires_approval": true, "delivery_time": 2},
-    {"name": "API网关", "description": "API接口管理", "category": "开发", "service_type": "custom", "requires_approval": true, "delivery_time": 3}
+    {"name": "账号申请", "description": "新员工或岗位变更账号开通", "category": "账号与权限", "service_type": "access", "requires_approval": true, "delivery_time": 1},
+    {"name": "权限变更", "description": "业务系统、数据库或基础设施权限调整", "category": "账号与权限", "service_type": "access", "requires_approval": true, "delivery_time": 2},
+    {"name": "软件安装", "description": "标准办公软件和开发工具安装", "category": "终端支持", "service_type": "software", "requires_approval": false, "delivery_time": 1},
+    {"name": "网络接入", "description": "办公网络、VPN、无线网络接入申请", "category": "网络", "service_type": "network", "requires_approval": true, "delivery_time": 2},
+    {"name": "云服务器申请", "description": "云主机、虚拟机或容器资源申请", "category": "云资源", "service_type": "vm", "requires_approval": true, "delivery_time": 2},
+    {"name": "数据库申请", "description": "数据库实例、账号或备份策略申请", "category": "数据库", "service_type": "database", "requires_approval": true, "delivery_time": 3},
+    {"name": "安全扫描", "description": "漏洞扫描、基线检查或渗透测试申请", "category": "安全", "service_type": "security", "requires_approval": true, "delivery_time": 5},
+    {"name": "代码仓库", "description": "代码仓库、CI/CD流水线与制品库申请", "category": "研发效能", "service_type": "devops", "requires_approval": false, "delivery_time": 1}
   ],
   "approval_workflows": [
-    {"name": "P0/P1事件审批", "description": "紧急和高优先级事件需要主管审批", "ticket_type": "incident", "priority": "urgent,high", "nodes": [{"type": "approval", "name": "主管审批", "approver_type": "manager", "timeout": 60}]},
-    {"name": "变更审批", "description": "所有变更请求需要多级审批", "ticket_type": "change", "priority": "", "nodes": [{"type": "approval", "name": "技术审批", "approver_type": "role", "role": "engineer", "timeout": 240}, {"type": "approval", "name": "经理审批", "approver_type": "role", "role": "manager", "timeout": 480}]},
-    {"name": "服务请求审批", "description": "高价值服务请求需要审批", "ticket_type": "service_request", "priority": "high", "nodes": [{"type": "approval", "name": "服务审批", "approver_type": "manager", "timeout": 120}]}
+    {"name": "服务请求审批", "description": "涉及资源、权限或费用的服务请求需要部门负责人审批", "ticket_type": "service_request", "priority": "", "nodes": [{"type": "approval", "name": "部门负责人审批", "approver_type": "role", "role": "dept_manager", "timeout": 480}]},
+    {"name": "普通变更审批", "description": "普通变更需要技术负责人和变更经理审批", "ticket_type": "change", "priority": "medium,high", "nodes": [{"type": "approval", "name": "技术负责人审批", "approver_type": "role", "role": "ops_manager", "timeout": 480}, {"type": "approval", "name": "变更经理审批", "approver_type": "role", "role": "change_manager", "timeout": 480}]},
+    {"name": "紧急变更审批", "description": "紧急变更采用快速审批并要求事后复盘", "ticket_type": "change", "priority": "urgent", "nodes": [{"type": "approval", "name": "值班经理审批", "approver_type": "role", "role": "ops_manager", "timeout": 60}, {"type": "approval", "name": "安全确认", "approver_type": "role", "role": "security_admin", "timeout": 120}]},
+    {"name": "权限申请审批", "description": "高权限申请需要直属负责人和安全管理员审批", "ticket_type": "service_request", "priority": "high", "nodes": [{"type": "approval", "name": "直属负责人审批", "approver_type": "role", "role": "dept_manager", "timeout": 480}, {"type": "approval", "name": "安全管理员审批", "approver_type": "role", "role": "security_admin", "timeout": 480}]}
   ],
   "process_bindings": [
-    {"business_type": "incident", "process_definition_key": "incident_process", "is_default": true},
-    {"business_type": "problem", "process_definition_key": "problem_process", "is_default": true},
-    {"business_type": "change", "process_definition_key": "change_process", "is_default": true},
-    {"business_type": "service_request", "process_definition_key": "service_request_process", "is_default": true},
-    {"business_type": "improvement", "process_definition_key": "improvement_process", "is_default": true},
-    {"business_type": "cloud_public_ops", "process_definition_key": "cloud_public_ops", "is_default": false},
-    {"business_type": "cloud_private_ops", "process_definition_key": "cloud_private_ops", "is_default": false},
-    {"business_type": "cloud_security_scan", "process_definition_key": "cloud_security_scan", "is_default": false}
+    {"business_type": "ticket", "process_definition_key": "ticket_general_flow", "is_default": true},
+    {"business_type": "incident", "process_definition_key": "incident_emergency_flow", "is_default": true},
+    {"business_type": "problem", "process_definition_key": "problem_management_flow", "is_default": true},
+    {"business_type": "change", "process_definition_key": "change_normal_flow", "is_default": true},
+    {"business_type": "service_request", "process_definition_key": "service_request_flow", "is_default": true},
+    {"business_type": "release", "process_definition_key": "release_approval_flow", "is_default": true},
+    {"business_type": "cloud_public_ops", "process_definition_key": "cloud_public_ops_flow", "is_default": false},
+    {"business_type": "cloud_private_ops", "process_definition_key": "cloud_private_ops_flow", "is_default": false},
+    {"business_type": "cloud_security_scan", "process_definition_key": "cloud_security_scan_flow", "is_default": false}
   ],
   "ticket_views": [
     {"name": "我的待办工单", "description": "分配给我的未关闭工单", "is_shared": false, "columns": ["id", "title", "priority", "status", "assignee", "created_at"]},
     {"name": "我创建的工单", "description": "我提交的工单", "is_shared": false, "columns": ["id", "title", "priority", "status", "assignee", "created_at"]},
-    {"name": "紧急工单", "description": "紧急和高优先级工单", "is_shared": true, "columns": ["id", "title", "priority", "status", "assignee", "created_at"]},
+    {"name": "高优先级工单", "description": "P0/P1或高优先级工单", "is_shared": true, "columns": ["id", "title", "priority", "status", "assignee", "created_at"]},
     {"name": "未分配工单", "description": "尚未分配的工单", "is_shared": true, "columns": ["id", "title", "priority", "status", "creator", "created_at"]},
     {"name": "已关闭工单", "description": "已完成的工单", "is_shared": false, "columns": ["id", "title", "priority", "status", "assignee", "closed_at"]}
   ],
@@ -123,47 +137,31 @@
     {"name": "kubernetes", "description": "Kubernetes资源", "icon": "kubernetes", "color": "#20c997", "is_active": true}
   ],
   "incident_categories": [
-    {"name": "硬件故障", "description": "服务器、存储、网络设备等硬件故障"},
-    {"name": "软件故障", "description": "操作系统、应用软件故障"},
-    {"name": "网络故障", "description": "网络连接、网络设备问题"},
-    {"name": "数据库问题", "description": "数据库性能、连接问题"},
-    {"name": "安全问题", "description": "安全事件、漏洞"},
-    {"name": "性能问题", "description": "系统响应慢、卡顿"},
-    {"name": "配置问题", "description": "系统配置错误"},
-    {"name": "其他", "description": "其他类型事件"}
+    {"name": "硬件故障", "code": "hardware", "description": "服务器、存储、网络设备等硬件故障"},
+    {"name": "软件故障", "code": "software", "description": "操作系统、应用软件故障"},
+    {"name": "网络故障", "code": "network", "description": "网络连接、网络设备问题"},
+    {"name": "数据库问题", "code": "database", "description": "数据库性能、连接、备份和权限问题"},
+    {"name": "安全问题", "code": "security", "description": "安全事件、漏洞和合规问题"},
+    {"name": "性能问题", "code": "performance", "description": "系统响应慢、容量或资源瓶颈"},
+    {"name": "配置问题", "code": "configuration", "description": "系统配置、发布配置或参数错误"},
+    {"name": "其他", "code": "other", "description": "其他类型事件"}
   ],
-  "incidents": [
-    {"title": "服务器宕机", "description": "生产环境服务器突然宕机，无法访问", "status": "resolved", "priority": "critical", "severity": "critical", "incident_number": "INC-001", "category": "硬件故障"},
-    {"title": "网络无法访问", "description": "办公区网络无法访问外网", "status": "resolved", "priority": "high", "severity": "major", "incident_number": "INC-002", "category": "网络故障"},
-    {"title": "应用响应慢", "description": "核心业务系统响应时间超过10秒", "status": "in_progress", "priority": "medium", "severity": "minor", "incident_number": "INC-003", "category": "性能问题"},
-    {"title": "数据库连接失败", "description": "应用无法连接数据库", "status": "new", "priority": "high", "severity": "major", "incident_number": "INC-004", "category": "数据库问题"},
-    {"title": "用户无法登录", "description": "部分用户报告无法登录系统", "status": "investigating", "priority": "critical", "severity": "critical", "incident_number": "INC-005", "category": "安全问题"},
-    {"title": "邮件服务异常", "description": "企业邮件收发延迟严重", "status": "resolved", "priority": "medium", "severity": "minor", "incident_number": "INC-006", "category": "其他"},
-    {"title": "VPN连接断开", "description": "远程办公用户VPN连接不稳定", "status": "new", "priority": "high", "severity": "major", "incident_number": "INC-007", "category": "网络故障"},
-    {"title": "存储空间不足", "description": "文件服务器存储空间即将用尽", "status": "in_progress", "priority": "medium", "severity": "minor", "incident_number": "INC-008", "category": "其他"}
+  "standard_changes": [
+    {"title": "标准软件安装", "description": "安装已批准的软件白名单中的客户端或工具", "implementation_plan": "确认软件版本和授权，按标准安装步骤执行，完成后验证可用性。", "rollback_plan": "卸载软件并恢复原配置。", "justification": "提升终端支持效率。", "category": "终端支持", "risk_level": "low", "impact_scope": "单用户或单设备", "expected_duration": 30, "approval_required": false, "affected_cis": [], "prerequisites": ["软件已进入白名单"], "remarks": "可由服务台执行。"},
+    {"title": "低风险防火墙规则调整", "description": "在已批准范围内新增或调整访问控制规则", "implementation_plan": "核对源、目的、端口、有效期和业务负责人，变更后执行连通性验证。", "rollback_plan": "删除新增规则或恢复原规则快照。", "justification": "满足业务系统访问需求。", "category": "网络", "risk_level": "low", "impact_scope": "单业务系统", "expected_duration": 45, "approval_required": true, "affected_cis": ["firewall"], "prerequisites": ["业务负责人确认", "安全策略审核通过"], "remarks": "高风险开放需走普通变更。"},
+    {"title": "数据库账号权限调整", "description": "按最小权限原则调整数据库账号权限", "implementation_plan": "确认账号、库表范围和权限级别，执行授权并记录审计。", "rollback_plan": "回收新增权限或恢复原授权快照。", "justification": "支持业务运维和数据访问需求。", "category": "数据库", "risk_level": "medium", "impact_scope": "指定数据库实例", "expected_duration": 30, "approval_required": true, "affected_cis": ["database"], "prerequisites": ["数据 owner 审批", "权限范围明确"], "remarks": "生产写权限需安全复核。"}
   ],
-  "problems": [
-    {"title": "频繁的网络中断", "description": "过去一个月内发生多次网络中断事件，影响业务连续性", "status": "analyzing", "priority": "high", "category": "网络故障", "root_cause": "核心交换机老化", "impact": "全公司网络受影响"},
-    {"title": "数据库性能下降", "description": "数据库查询响应时间逐渐变慢", "status": "open", "priority": "medium", "category": "数据库问题", "root_cause": "缺少索引和缓存配置", "impact": "影响所有业务系统"},
-    {"title": "用户认证失败", "description": "部分用户频繁出现认证失败", "status": "resolved", "priority": "high", "category": "安全问题", "root_cause": "LDAP同步延迟", "impact": "用户无法正常登录"},
-    {"title": "存储容量告警", "description": "存储系统频繁告警容量不足", "status": "monitoring", "priority": "medium", "category": "其他", "root_cause": "数据增长未预估", "impact": "文件存储风险"},
-    {"title": "邮件延迟严重", "description": "邮件收发延迟超过1小时", "status": "open", "priority": "medium", "category": "其他", "root_cause": "邮件服务器资源不足", "impact": "影响内外沟通"},
-    {"title": "VPN不稳定", "description": "远程用户VPN连接经常断开", "status": "analyzing", "priority": "low", "category": "网络故障", "root_cause": "带宽不足", "impact": "远程办公受影响"}
+  "known_errors": [
+    {"title": "Known Error 模板：请替换为真实问题标题", "description": "用于指导企业配置已知错误库字段，不代表真实故障。", "symptoms": "描述用户可感知症状、监控告警和日志特征。", "root_cause": "记录已确认根因或调查结论。", "workaround": "记录临时绕行方案。", "resolution": "记录永久修复方案。", "status": "template", "category": "模板", "severity": "minor", "affected_products": [], "affected_cis": [], "keywords": ["template", "known-error"]}
   ],
-  "changes": [
-    {"title": "数据库版本升级", "description": "将MySQL 5.7升级到8.0版本", "type": "normal", "status": "approved", "priority": "high", "impact_scope": "全局", "risk_level": "medium", "justification": "提升性能和安全性"},
-    {"title": "应用服务器扩容", "description": "增加2台应用服务器以应对流量高峰", "type": "normal", "status": "implemented", "priority": "medium", "impact_scope": "局部", "risk_level": "low", "justification": "提升系统可用性"},
-    {"title": "网络安全策略调整", "description": "更新防火墙规则，开放新的API端口", "type": "normal", "status": "review", "priority": "high", "impact_scope": "全局", "risk_level": "high", "justification": "支持新业务上线"},
-    {"title": "存储系统迁移", "description": "将文件存储从NAS迁移到对象存储", "type": "major", "status": "draft", "priority": "medium", "impact_scope": "局部", "risk_level": "medium", "justification": "降低存储成本"},
-    {"title": "SSL证书更新", "description": "更新即将过期的SSL证书", "type": "emergency", "status": "scheduled", "priority": "low", "impact_scope": "无", "risk_level": "low", "justification": "证书即将过期"},
-    {"title": "负载均衡配置优化", "description": "优化负载均衡算法和健康检查配置", "type": "normal", "status": "cancelled", "priority": "medium", "impact_scope": "局部", "risk_level": "low", "justification": "提升访问体验"}
+  "ticket_tags": [
+    {"name": "高优先级", "code": "high-priority", "description": "需要优先处理的记录", "color": "#f5222d"},
+    {"name": "需审批", "code": "approval-required", "description": "需要审批流程的记录", "color": "#faad14"},
+    {"name": "AI建议", "code": "ai-suggestion", "description": "包含AI辅助建议的记录", "color": "#52c41a"},
+    {"name": "客户影响", "code": "customer-impact", "description": "已影响客户或终端用户的记录", "color": "#1677ff"}
   ],
-  "knowledge_articles": [
-    {"title": "如何申请云服务器 ECS", "content": "# 云服务器申请指南\n\n## 申请流程\n\n1. 登录IT服务门户\n2. 选择服务目录->云资源申请->云服务器\n3. 填写申请表单\n4. 提交申请\n5. 等待审批", "category": "云资源", "is_published": true, "view_count": 1250},
-    {"title": "VPN连接配置指南", "content": "# VPN连接配置指南\n\n## 配置步骤\n\n1. 下载VPN客户端\n2. 配置连接信息\n3. 连接", "category": "网络问题", "is_published": true, "view_count": 980},
-    {"title": "账号权限申请流程", "content": "# 账号权限申请指南\n\n## 申请流程\n\n根据岗位职责申请相应权限。", "category": "账号权限", "is_published": true, "view_count": 856},
-    {"title": "数据库备份与恢复", "content": "# 数据库备份恢复指南\n\n## 自动备份\n\n系统每天凌晨2点自动执行全量备份。\n\n## 手动备份\n\n使用mysqldump命令备份。", "category": "数据库", "is_published": true, "view_count": 742},
-    {"title": "IT服务请求常见问题解答", "content": "# IT服务常见问题FAQ\n\n## 如何提交IT工单?\n\n1. 登录IT服务门户\n2. 点击提交工单\n3. 填写详细信息\n\n## 工单处理时限\n\n- 紧急: 4小时内响应\n- 高优先级: 8小时内响应", "category": "常见问题", "is_published": true, "view_count": 3560},
-    {"title": "安全组配置最佳实践", "content": "# 安全组配置指南\n\n## 基本原则\n\n1. 最小权限\n2. 分层控制\n3. 禁止0.0.0.0/0", "category": "安全", "is_published": true, "view_count": 625}
-  ]
+  "incidents": [],
+  "problems": [],
+  "changes": [],
+  "knowledge_articles": []
 }

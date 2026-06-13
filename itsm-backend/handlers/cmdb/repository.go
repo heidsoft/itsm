@@ -9,7 +9,7 @@ type Repository interface {
 	// CI CRUD
 	CreateCI(ctx context.Context, ci *ConfigurationItem) (*ConfigurationItem, error)
 	GetCI(ctx context.Context, id int, tenantID int) (*ConfigurationItem, error)
-	ListCIs(ctx context.Context, tenantID int, page, size int, ciTypeID int, status string) ([]*ConfigurationItem, int, error)
+	ListCIs(ctx context.Context, tenantID int, page, size int, ciTypeID int, status string, search string) ([]*ConfigurationItem, int, error)
 	UpdateCI(ctx context.Context, ci *ConfigurationItem) (*ConfigurationItem, error)
 	DeleteCI(ctx context.Context, id int, tenantID int) error
 	GetStats(ctx context.Context, tenantID int) (*Stats, error)

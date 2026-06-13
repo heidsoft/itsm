@@ -56,10 +56,6 @@ const TicketAnalytics: React.FC = () => {
   const [analyticsData, setAnalyticsData] = useState<TicketAnalyticsResponse | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // 获取分析数据
-  useEffect(() => {
-    fetchData();
-  }, [dateRange, fetchData]);
   function getInitialData(): TicketAnalyticsResponse {
     return {
       total_tickets: 0,
@@ -123,8 +119,6 @@ const TicketAnalytics: React.FC = () => {
     }
   }, [dateRange]);
 
-  useEffect(() => {
-    fetchData();
   useEffect(() => {
     fetchData();
   }, [dateRange, fetchData]);
