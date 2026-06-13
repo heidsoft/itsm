@@ -812,10 +812,10 @@
 /* 触摸设备优化 */
 @media (hover: none) and (pointer: coarse) {
 
-  button,
+  button:not(.ant-btn-icon-only),
   input[type="button"],
   input[type="submit"],
-  [role="button"] {
+  [role="button"]:not(.ant-btn-icon-only) {
     min-height: var(--touch-target-min);
     min-width: var(--touch-target-min);
     padding: 8px 16px;
@@ -931,7 +931,7 @@
     font-size: var(--font-size-sm);
   }
 
-  .ant-btn {
+  .ant-btn:not(.ant-btn-icon-only):not(.ant-btn-sm) {
     min-height: var(--touch-target-comfortable);
   }
 }
@@ -1960,8 +1960,9 @@ html:not(.dark) .ant-input-affix-wrapper {
 }
 
 html:not(.dark) .ant-input-affix-wrapper > .ant-input {
-  min-height: 0;
-  line-height: 1.5715;
+  min-height: 0 !important;
+  height: auto !important;
+  line-height: 1.5715 !important;
   background: transparent !important;
 }
 
@@ -2118,7 +2119,7 @@ html:not(.dark) .ant-btn-default:focus {
   }
 
   /* 移动端按钮调整 */
-  .ant-btn {
+  .ant-btn:not(.ant-btn-icon-only):not(.ant-btn-sm) {
     font-size: 12px !important;
     padding: 0 10px !important;
   }
