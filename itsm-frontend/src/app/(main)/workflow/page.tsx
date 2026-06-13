@@ -57,15 +57,15 @@ const { Option } = Select;
 const { Text } = Typography;
 
 interface Workflow {
-  id: number;
+  id: string;
   name: string;
   description: string;
   category: string;
   version: string;
   status: 'draft' | 'active' | 'inactive' | 'archived';
   bpmn_xml?: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   instances_count: number;
   running_instances: number;
   created_by: string;
@@ -81,7 +81,7 @@ const WorkflowManagementPage = () => {
   const [designerVisible, setDesignerVisible] = useState(false);
 
   const [editingWorkflow, setEditingWorkflow] = useState<Workflow | null>(null);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [filters, setFilters] = useState({
     status: '',
     category: '',
@@ -116,15 +116,15 @@ const WorkflowManagementPage = () => {
         });
         // 适配后端返回格式
         const adaptedWorkflows: Workflow[] = (response.workflows || []).map((w: any) => ({
-          id: w.key || w.id || 0, // 使用 key 作为 id，因为后端 API 需要 key
+          id: String(w.key || w.code || w.id || ''), // 使用流程 key 作为 id，因为后端 API 需要 key
           name: w.name || w.code || 'Unknown',
           description: w.description || '',
           category: w.category || 'general',
           version: w.version || '1.0.0',
           status: w.status === 'active' || w.deployed ? 'active' : 'draft',
-          bpmn_xml: w.bpmn_xml || w.xml || '',
-          created_at: w.created_at || new Date().toISOString(),
-          updated_at: w.updated_at || new Date().toISOString(),
+          bpmn_xml: w.bpmn_xml || w.bpmnXml || w.xml || '',
+          createdAt: w.createdAt || w.created_at || new Date().toISOString(),
+          updatedAt: w.updatedAt || w.updated_at || new Date().toISOString(),
           instances_count: w.instances_count || 0,
           running_instances: w.running_instances || 0,
           created_by: w.created_by || 'System',
@@ -238,7 +238,7 @@ const WorkflowManagementPage = () => {
     });
   };
 
-  const handleDeleteWorkflow = async (id: number) => {
+  const handleDeleteWorkflow = async (id: React.Key) => {
     modal.confirm({
       title: t('workflow.confirmDelete'),
       content: t('workflow.deleteConfirmation'),
@@ -248,7 +248,7 @@ const WorkflowManagementPage = () => {
       onOk: async () => {
         try {
           await WorkflowAPI.deleteWorkflow(String(id));
-          setWorkflows(prev => prev.filter(w => w.id !== id));
+          setWorkflows(prev => prev.filter(w => w.id !== String(id)));
           message.success(t('workflow.deleteSuccess'));
           loadStats();
         } catch {
@@ -258,7 +258,7 @@ const WorkflowManagementPage = () => {
     });
   };
 
-  const handleDeployWorkflow = async (id: number) => {
+  const handleDeployWorkflow = async (id: React.Key) => {
     modal.confirm({
       title: t('workflow.confirmDeploy'),
       content: t('workflow.deployConfirmation'),
@@ -287,12 +287,12 @@ const WorkflowManagementPage = () => {
       );
       const newWorkflow: Workflow = {
         ...workflow,
-        id: Number(result.id) || Date.now(),
+        id: String(result.id || `${workflow.id}_copy_${Date.now()}`),
         name: result.name || '',
         status: 'draft',
         version: String(result.version) || '1.0.0',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         instances_count: 0,
         running_instances: 0,
         created_by: t('workflow.currentUser'),
@@ -345,9 +345,9 @@ const WorkflowManagementPage = () => {
 
         const newWorkflow: Workflow = {
           ...importData.workflow,
-          id: Date.now(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          id: String(importData.workflow.id || importData.workflow.key || Date.now()),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           status: 'draft',
           instances_count: 0,
           running_instances: 0,
@@ -364,7 +364,7 @@ const WorkflowManagementPage = () => {
     input.click();
   };
 
-  const handleStopWorkflow = async (id: number) => {
+  const handleStopWorkflow = async (id: React.Key) => {
     modal.confirm({
       title: t('workflow.confirmDeactivate'),
       content: t('workflow.deactivateConfirmation'),
@@ -386,7 +386,7 @@ const WorkflowManagementPage = () => {
     });
   };
 
-  const handleActivateWorkflow = async (id: number) => {
+  const handleActivateWorkflow = async (id: React.Key) => {
     try {
       await WorkflowAPI.activateWorkflow(String(id));
       setWorkflows(prev => prev.map(w => (w.id === id ? { ...w, status: 'active' as const } : w)));
@@ -771,7 +771,11 @@ const WorkflowManagementPage = () => {
         value: stats.completed,
         prefix: <CheckCircle className="w-5 h-5" />,
         accentColor: '#52c41a',
-        helper: `${t('workflow.completionRate')} ${stats.total > 0 ? Math.round((stats.completed / (stats.completed + stats.running)) * 100) : 0}%`,
+        helper: `${t('workflow.completionRate')} ${
+          stats.completed + stats.running > 0
+            ? Math.round((stats.completed / (stats.completed + stats.running)) * 100)
+            : 0
+        }%`,
       },
       {
         key: 'efficiency',
@@ -953,7 +957,7 @@ const WorkflowManagementPage = () => {
             rowSelection={{
               selectedRowKeys,
               onChange: (selectedRowKeys: React.Key[]) => {
-                setSelectedRowKeys(selectedRowKeys.map(key => Number(key)));
+                setSelectedRowKeys(selectedRowKeys);
               },
               selections: [
                 Table.SELECTION_ALL,

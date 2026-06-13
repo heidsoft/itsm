@@ -14,7 +14,6 @@ import {
   Tooltip,
   Input,
   Select,
-  Form,
   App,
   Modal,
   Breadcrumb,
@@ -57,9 +56,21 @@ const CIList: React.FC = () => {
   const [data, setData] = useState<ConfigurationItem[]>([]);
   const [total, setTotal] = useState(0);
   const [types, setTypes] = useState<CIType[]>([]);
-  const [form] = Form.useForm();
   const requestIdRef = useRef(0);
   const isMountedRef = useRef(true);
+  const [filters, setFilters] = useState<{
+    search: string;
+    ciTypeId?: number;
+    status?: string;
+  }>({
+    search: '',
+  });
+  const filtersRef = useRef(filters);
+
+  const updateFilters = (next: typeof filters) => {
+    filtersRef.current = next;
+    setFilters(next);
+  };
 
   const [query, setQuery] = useState({
     offset: 0,
@@ -82,12 +93,13 @@ const CIList: React.FC = () => {
     const requestId = ++requestIdRef.current;
     setLoading(true);
     try {
-      const values = form.getFieldsValue();
+      const currentFilters = filtersRef.current;
       const resp = await CMDBApi.getCIs({
         offset: query.offset,
         limit: query.limit,
-        ci_type: values.ci_type_id ? String(values.ci_type_id) : undefined,
-        status: values.status,
+        ci_type_id: currentFilters.ciTypeId,
+        search: currentFilters.search || undefined,
+        status: currentFilters.status,
       });
       if (!isMountedRef.current || requestId !== requestIdRef.current) return;
       setData((resp as any).items ?? (resp as any).cis ?? []);
@@ -101,9 +113,10 @@ const CIList: React.FC = () => {
         setLoading(false);
       }
     }
-  }, [query, form]);
+  }, [query]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };
@@ -118,6 +131,10 @@ const CIList: React.FC = () => {
   }, [loadData]);
 
   const handleSearch = () => {
+    if (query.offset === 0) {
+      loadData();
+      return;
+    }
     setQuery(prev => ({ ...prev, offset: 0 }));
   };
 
@@ -160,15 +177,16 @@ const CIList: React.FC = () => {
     },
     {
       title: '类型',
-      dataIndex: 'ci_type_id',
       width: 120,
-      render: (id: number) => types.find(t => t.id === id)?.name || `类型 ${id}`,
+      render: (_: unknown, record: ConfigurationItem) => {
+        const typeId = record.ciTypeId ?? record.ci_type_id;
+        return types.find(t => t.id === typeId)?.name || record.type || `类型 ${typeId}`;
+      },
     },
     {
       title: '云厂商',
-      dataIndex: 'cloud_provider',
       width: 120,
-      render: (value?: string) => value || '-',
+      render: (_: unknown, record: ConfigurationItem) => record.cloudProvider ?? record.cloud_provider ?? '-',
     },
     {
       title: '状态',
@@ -190,9 +208,11 @@ const CIList: React.FC = () => {
     },
     {
       title: '最后更新',
-      dataIndex: 'updated_at',
       width: 160,
-      render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
+      render: (_: unknown, record: ConfigurationItem) => {
+        const date = record.updatedAt ?? record.updated_at;
+        return date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-';
+      },
     },
     {
       title: '操作',
@@ -240,34 +260,54 @@ const CIList: React.FC = () => {
       </div>
 
       <Card className="rounded-lg shadow-sm border border-gray-200">
-        <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">
-          <Form.Item name="search" className="mb-0">
+        <div className="mb-6 flex flex-wrap items-center gap-3">
             <Input
               placeholder="搜索名称/序列号"
               allowClear
+              value={filters.search}
+              onChange={event =>
+                updateFilters({
+                  ...filtersRef.current,
+                  search: event.target.value,
+                })
+              }
+              onClear={() =>
+                updateFilters({
+                  ...filtersRef.current,
+                  search: '',
+                })
+              }
               prefix={<SearchOutlined className="text-gray-400" />}
               className="w-64"
             />
-          </Form.Item>
-          <Form.Item name="ci_type_id" className="mb-0">
-            <Select placeholder="资产类型" style={{ width: 140 }} allowClear>
+            <Select
+              aria-label="资产类型"
+              placeholder="资产类型"
+              style={{ width: 140 }}
+              allowClear
+              value={filters.ciTypeId}
+              onChange={value => updateFilters({ ...filtersRef.current, ciTypeId: value })}
+            >
               {types.map(t => (
                 <Option key={t.id} value={t.id}>
                   {t.name}
                 </Option>
               ))}
             </Select>
-          </Form.Item>
-          <Form.Item name="status" className="mb-0">
-            <Select placeholder="状态" style={{ width: 110 }} allowClear>
+            <Select
+              aria-label="状态"
+              placeholder="状态"
+              style={{ width: 110 }}
+              allowClear
+              value={filters.status}
+              onChange={value => updateFilters({ ...filtersRef.current, status: value })}
+            >
               {Object.entries(CIStatusLabels).map(([value, label]) => (
                 <Option key={value} value={value}>
                   {label}
                 </Option>
               ))}
             </Select>
-          </Form.Item>
-          <Form.Item className="mb-0">
             <Space>
               <Button type="primary" onClick={handleSearch}>
                 查询
@@ -285,8 +325,7 @@ const CIList: React.FC = () => {
                 ]}
               />
             </Space>
-          </Form.Item>
-        </Form>
+        </div>
 
         <Table
           rowKey="id"

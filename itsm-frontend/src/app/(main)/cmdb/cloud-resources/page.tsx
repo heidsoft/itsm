@@ -60,7 +60,9 @@ export default function CloudResourcePage() {
         region: values.region,
       });
       if (isMounted) {
-        setResources((list as any).items || (list as any).data || []);
+        setResources(
+          Array.isArray(list) ? (list as CloudResource[]) : ((list as any).items || (list as any).data || [])
+        );
       }
     } catch (error) {
       if (isMounted) {
@@ -85,35 +87,39 @@ export default function CloudResourcePage() {
   const columns = [
     {
       title: '厂商',
-      dataIndex: 'service_id',
       width: 110,
-      render: (serviceId: number) => {
+      render: (_: unknown, record: CloudResource) => {
+        const serviceId = record.serviceId ?? record.service_id;
         const providerValue = serviceMap.get(serviceId)?.provider;
         return providerOptions.find(p => p.value === providerValue)?.label || providerValue || '-';
       },
     },
     {
       title: '服务',
-      dataIndex: 'service_id',
       width: 160,
-      render: (serviceId: number) => serviceMap.get(serviceId)?.service_name || `#${serviceId}`,
+      render: (_: unknown, record: CloudResource) => {
+        const serviceId = record.serviceId ?? record.service_id;
+        return serviceMap.get(serviceId)?.serviceName ?? serviceMap.get(serviceId)?.service_name ?? `#${serviceId}`;
+      },
     },
     {
       title: '资源类型',
-      dataIndex: 'service_id',
       width: 160,
-      render: (serviceId: number) => serviceMap.get(serviceId)?.resource_type_name || '-',
+      render: (_: unknown, record: CloudResource) => {
+        const serviceId = record.serviceId ?? record.service_id;
+        const service = serviceMap.get(serviceId);
+        return service?.resourceTypeName ?? service?.resource_type_name ?? '-';
+      },
     },
     {
       title: '资源ID',
-      dataIndex: 'resource_id',
+      dataIndex: 'resourceId',
       width: 200,
     },
     {
       title: '资源名称',
-      dataIndex: 'resource_name',
       width: 180,
-      render: (value?: string) => value || '-',
+      render: (_: unknown, record: CloudResource) => record.resourceName ?? record.resource_name ?? '-',
     },
     {
       title: 'Region',
@@ -135,9 +141,11 @@ export default function CloudResourcePage() {
     },
     {
       title: '最近发现',
-      dataIndex: 'last_seen_at',
       width: 160,
-      render: (value?: string) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-'),
+      render: (_: unknown, record: CloudResource) => {
+        const value = record.lastSeenAt ?? record.last_seen_at;
+        return value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-';
+      },
     },
     {
       title: '操作',
@@ -170,18 +178,18 @@ export default function CloudResourcePage() {
     if (!binding) return;
     try {
       const values = await bindForm.validateFields();
-      const service = serviceMap.get(binding.service_id);
+      const service = serviceMap.get(binding.serviceId ?? binding.service_id);
       setBindSubmitting(true);
       await CMDBApi.updateCI(values.ci_id, {
-        cloud_resource_ref_id: binding.id,
-        cloud_provider: service?.provider,
-        cloud_account_id: String(binding.cloud_account_id),
-        cloud_region: binding.region,
-        cloud_zone: binding.zone,
-        cloud_resource_id: binding.resource_id,
-        cloud_resource_type: service?.resource_type_code,
-        cloud_metadata: binding.metadata,
-        cloud_sync_status: 'success',
+        cloudResourceRefId: binding.id,
+        cloudProvider: service?.provider,
+        cloudAccountId: String(binding.cloudAccountId ?? binding.cloud_account_id),
+        cloudRegion: binding.region,
+        cloudZone: binding.zone,
+        cloudResourceId: binding.resourceId ?? binding.resource_id,
+        cloudResourceType: service?.resourceTypeCode ?? service?.resource_type_code,
+        cloudMetadata: binding.metadata,
+        cloudSyncStatus: 'success',
       });
       message.success('已绑定到配置项');
       setBinding(null);
@@ -198,6 +206,11 @@ export default function CloudResourcePage() {
 
   return (
     <Card>
+      <div style={{ marginBottom: 16 }}>
+        <h1 className="text-2xl font-bold">云资源列表</h1>
+        <p className="text-gray-500 mt-1">查看已发现的云资源，并将资源新建或绑定为 CMDB 配置项。</p>
+      </div>
+
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[
@@ -234,7 +247,7 @@ export default function CloudResourcePage() {
                   value={service.id}
                   label={`${service.service_name} (${service.resource_type_name})`}
                 >
-                  {service.service_name} ({service.resource_type_name})
+                  {service.serviceName ?? service.service_name} ({service.resourceTypeName ?? service.resource_type_name})
                 </Option>
               ))}
           </Select>
@@ -276,7 +289,7 @@ export default function CloudResourcePage() {
           </Form.Item>
           {binding && (
             <div style={{ color: '#888' }}>
-              将绑定资源：{binding.resource_name || binding.resource_id}
+              将绑定资源：{binding.resourceName || binding.resource_name || binding.resourceId || binding.resource_id}
             </div>
           )}
         </Form>

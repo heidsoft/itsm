@@ -97,10 +97,10 @@ export default function CMDBPage() {
       // Backend returns: { total_count, active_count, inactive_count, maintenance_count, ... }
       const d = (statsData as any)?.data ?? statsData;
       setStats({
-        totalCIs: d?.total_count ?? d?.totalCIs ?? d?.total_cis ?? 0,
-        online: d?.active_count ?? d?.online ?? 0,
-        offline: d?.inactive_count ?? d?.offline ?? 0,
-        maintenance: d?.maintenance_count ?? d?.maintenance ?? 0,
+        totalCIs: d?.totalCount ?? d?.total_count ?? d?.totalCIs ?? d?.total_cis ?? 0,
+        online: d?.activeCount ?? d?.active_count ?? d?.online ?? 0,
+        offline: d?.inactiveCount ?? d?.inactive_count ?? d?.offline ?? 0,
+        maintenance: d?.maintenanceCount ?? d?.maintenance_count ?? d?.maintenance ?? 0,
       });
     } catch (error) {
       console.error('Failed to fetch CMDB stats:', error);
