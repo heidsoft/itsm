@@ -101,6 +101,41 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
+.headerSearchInput {
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 32px !important;
+}
+
+.headerSearchInput :global(.ant-input) {
+  min-height: 0 !important;
+  height: 30px !important;
+  line-height: 30px !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.headerSearchInput :global(.ant-input-prefix),
+.headerSearchInput :global(.ant-input-suffix) {
+  min-height: 0 !important;
+  height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.headerSearchInput kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+}
+
+.globalSearchModalInput :global(.ant-input) {
+  line-height: 40px !important;
+}
+
 .notificationButton {
   width: 36px;
   height: 36px;

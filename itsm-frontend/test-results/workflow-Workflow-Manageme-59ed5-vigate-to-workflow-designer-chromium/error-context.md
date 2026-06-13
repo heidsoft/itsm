@@ -1,0 +1,270 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - link "跳转到主要内容" [ref=e4] [cursor=pointer]:
+        - /url: "#main-content"
+      - generic [ref=e5]:
+        - complementary [ref=e6]:
+          - generic [ref=e7]:
+            - generic [ref=e8]:
+              - generic [ref=e9]: IT
+              - generic [ref=e10]:
+                - generic [ref=e11]: ITSM
+                - generic [ref=e12]: 系统
+            - menu [ref=e14]:
+              - menuitem "仪表盘" [ref=e15] [cursor=pointer]:
+                - img [ref=e16]
+                - generic "仪表盘" [ref=e22]:
+                  - generic [ref=e23]: 仪表盘
+              - menuitem "工单管理" [ref=e24] [cursor=pointer]:
+                - img [ref=e25]
+                - generic "工单管理" [ref=e29]:
+                  - generic [ref=e30]: 工单管理
+              - menuitem "事件管理" [ref=e31] [cursor=pointer]:
+                - img [ref=e32]
+                - generic "事件管理" [ref=e35]:
+                  - generic [ref=e36]: 事件管理
+              - menuitem "问题管理" [ref=e37] [cursor=pointer]:
+                - img [ref=e38]
+                - generic "问题管理" [ref=e42]:
+                  - generic [ref=e43]: 问题管理
+              - menuitem "变更管理" [ref=e44] [cursor=pointer]:
+                - img [ref=e45]
+                - generic "变更管理" [ref=e48]:
+                  - generic [ref=e49]: 变更管理
+              - menuitem "CMDB" [ref=e50] [cursor=pointer]:
+                - img [ref=e51]
+                - generic "CMDB" [ref=e56]:
+                  - generic [ref=e57]: CMDB
+              - menuitem "服务目录" [ref=e58] [cursor=pointer]:
+                - img [ref=e59]
+                - generic "服务目录" [ref=e62]:
+                  - generic [ref=e63]: 服务目录
+              - menuitem "知识库" [ref=e64] [cursor=pointer]:
+                - img [ref=e65]
+                - generic "知识库" [ref=e69]:
+                  - generic [ref=e70]: 知识库
+              - menuitem "SLA监控" [ref=e71] [cursor=pointer]:
+                - img [ref=e72]
+                - generic "SLA监控" [ref=e75]:
+                  - generic [ref=e76]: SLA监控
+              - menuitem "报表" [ref=e77] [cursor=pointer]:
+                - img [ref=e78]
+                - generic "报表" [ref=e82]:
+                  - generic [ref=e83]: 报表
+              - menuitem "发布管理" [ref=e84] [cursor=pointer]:
+                - img [ref=e85]
+                - generic "发布管理" [ref=e91]:
+                  - generic [ref=e92]: 发布管理
+              - menuitem "资产管理" [ref=e93] [cursor=pointer]:
+                - img [ref=e94]
+                - generic "资产管理" [ref=e97]:
+                  - generic [ref=e98]: 资产管理
+              - menuitem "许可证管理" [ref=e99] [cursor=pointer]:
+                - img [ref=e100]
+                - generic "许可证管理" [ref=e105]:
+                  - generic [ref=e106]: 许可证管理
+              - menuitem "MSP管理" [ref=e107] [cursor=pointer]:
+                - img [ref=e108]
+                - generic "MSP管理" [ref=e111]:
+                  - generic [ref=e112]: MSP管理
+            - generic [ref=e113]:
+              - generic [ref=e114]: 管理功能
+              - menu [ref=e116]:
+                - menuitem "工作流" [ref=e117] [cursor=pointer]:
+                  - img [ref=e118]
+                  - generic "工作流" [ref=e123]:
+                    - generic [ref=e124]: 工作流
+                - menuitem "用户管理" [ref=e125] [cursor=pointer]:
+                  - img [ref=e126]
+                  - generic "用户管理" [ref=e132]:
+                    - generic [ref=e133]: 用户管理
+                - menuitem "角色管理" [ref=e134] [cursor=pointer]:
+                  - img [ref=e135]
+                  - generic "角色管理" [ref=e138]:
+                    - generic [ref=e139]: 角色管理
+                - menuitem "组管理" [ref=e140] [cursor=pointer]:
+                  - img [ref=e141]
+                  - generic "组管理" [ref=e147]:
+                    - generic [ref=e148]: 组管理
+                - menuitem "部门管理" [ref=e149] [cursor=pointer]:
+                  - img [ref=e150]
+                  - generic "部门管理" [ref=e153]:
+                    - generic [ref=e154]: 部门管理
+                - menuitem "团队管理" [ref=e155] [cursor=pointer]:
+                  - img [ref=e156]
+                  - generic "团队管理" [ref=e162]:
+                    - generic [ref=e163]: 团队管理
+                - menuitem "审批管理" [ref=e164] [cursor=pointer]:
+                  - img [ref=e165]
+                  - generic "审批管理" [ref=e169]:
+                    - generic [ref=e170]: 审批管理
+                - menuitem "SLA配置" [ref=e171] [cursor=pointer]:
+                  - img [ref=e172]
+                  - generic "SLA配置" [ref=e175]:
+                    - generic [ref=e176]: SLA配置
+                - menuitem "工单分类" [ref=e177] [cursor=pointer]:
+                  - img [ref=e178]
+                  - generic "工单分类" [ref=e182]:
+                    - generic [ref=e183]: 工单分类
+                - menuitem "系统配置" [ref=e184] [cursor=pointer]:
+                  - img [ref=e185]
+                  - generic "系统配置" [ref=e189]:
+                    - generic [ref=e190]: 系统配置
+                - menuitem "CI类型管理" [ref=e191] [cursor=pointer]:
+                  - img [ref=e192]
+                  - generic "CI类型管理" [ref=e197]:
+                    - generic [ref=e198]: CI类型管理
+            - generic [ref=e200] [cursor=pointer]:
+              - generic [ref=e201]: 系
+              - generic [ref=e202]:
+                - generic [ref=e203]: 系统管理员
+                - generic [ref=e204]: super_admin
+        - generic [ref=e205]:
+          - banner [ref=e206]:
+            - generic [ref=e207]:
+              - generic [ref=e208]:
+                - button "收起侧边栏" [ref=e209] [cursor=pointer]:
+                  - img [ref=e211]
+                - navigation "面包屑导航" [ref=e214]:
+                  - navigation [ref=e215]:
+                    - list [ref=e216]:
+                      - listitem [ref=e217]:
+                        - link "首页" [ref=e218] [cursor=pointer]:
+                          - /url: /dashboard
+              - generic [ref=e219]:
+                - generic [ref=e220]:
+                  - img [ref=e222]
+                  - textbox "搜索..." [ref=e225]
+                  - generic [ref=e227]: Ctrl K
+                - button "通知中心" [ref=e229] [cursor=pointer]:
+                  - img [ref=e230]
+                - button "切换到暗色" [ref=e233] [cursor=pointer]:
+                  - img [ref=e234]
+                - button "切换语言" [ref=e236] [cursor=pointer]:
+                  - img [ref=e237]
+                - generic [ref=e240] [cursor=pointer]:
+                  - generic [ref=e242]: 系
+                  - generic [ref=e243]:
+                    - generic [ref=e244]: 系统管理员
+                    - generic [ref=e245]: 超级管理员
+                  - img [ref=e246]
+          - main [ref=e248]:
+            - generic [ref=e250]:
+              - generic [ref=e252]:
+                - generic [ref=e253]:
+                  - button "返回" [ref=e254] [cursor=pointer]:
+                    - img [ref=e256]
+                    - generic [ref=e258]: 返回
+                  - generic [ref=e259]:
+                    - heading "工作流设计器" [level=4] [ref=e260]
+                    - generic [ref=e261]:
+                      - generic [ref=e263]:
+                        - img [ref=e264]
+                        - text: 草稿
+                      - generic [ref=e266]: 版本
+                - generic [ref=e267]:
+                  - button "版本管理" [ref=e269] [cursor=pointer]:
+                    - img [ref=e271]
+                    - generic [ref=e275]: 版本管理
+                  - button "流程设置" [ref=e277] [cursor=pointer]:
+                    - img [ref=e279]
+                    - generic [ref=e282]: 流程设置
+                  - button "保存" [ref=e284] [cursor=pointer]:
+                    - img [ref=e286]
+                    - generic [ref=e290]: 保存
+                  - button "保存并部署" [disabled] [ref=e292]:
+                    - generic:
+                      - img
+                    - generic: 保存并部署
+                  - button "部署" [disabled] [ref=e294]:
+                    - generic:
+                      - img
+                    - generic: 部署
+              - main [ref=e295]:
+                - generic [ref=e296]:
+                  - tablist [ref=e297]:
+                    - generic [ref=e299]:
+                      - tab "流程设计" [selected] [ref=e301] [cursor=pointer]
+                      - tab "版本历史" [ref=e303] [cursor=pointer]
+                      - tab "流程配置" [ref=e305] [cursor=pointer]
+                  - tabpanel "流程设计" [ref=e308]:
+                    - generic [ref=e318]: 加载流程设计器...
+          - contentinfo [ref=e319]: ITSM Platform ©2026 - IT服务管理平台
+    - generic [ref=e320]:
+      - img [ref=e322]
+      - button "Open Tanstack query devtools" [ref=e370] [cursor=pointer]:
+        - img [ref=e371]
+  - button "Open Next.js Dev Tools" [ref=e424] [cursor=pointer]:
+    - img [ref=e425]
+  - alert [ref=e428]
+  - generic [ref=e429]:
+    - dialog "选择工作流模板":
+      - generic [ref=e430]:
+        - button "Close" [active] [ref=e431] [cursor=pointer]:
+          - generic "关闭" [ref=e432]:
+            - img "close" [ref=e433]:
+              - img [ref=e434]
+        - generic [ref=e437]: 选择工作流模板
+        - generic [ref=e438]:
+          - generic [ref=e440]:
+            - searchbox "搜索模板..." [ref=e441]
+            - button "search" [ref=e442] [cursor=pointer]:
+              - img "search" [ref=e444]:
+                - img [ref=e445]
+          - generic [ref=e447]:
+            - generic [ref=e448] [cursor=pointer]:
+              - generic [ref=e449]:
+                - img [ref=e451]
+                - generic [ref=e454]:
+                  - generic [ref=e455]: 请假审批流程
+                  - generic [ref=e456]: 人力资源
+              - generic [ref=e457]: 员工请假申请审批，支持年假、病假、事假等类型
+            - generic [ref=e458] [cursor=pointer]:
+              - generic [ref=e459]:
+                - img [ref=e461]
+                - generic [ref=e464]:
+                  - generic [ref=e465]: 费用报销流程
+                  - generic [ref=e466]: 财务费用
+              - generic [ref=e467]: 员工费用报销审批，支持差旅、招待、采购等费用类型
+            - generic [ref=e468] [cursor=pointer]:
+              - generic [ref=e469]:
+                - img [ref=e471]
+                - generic [ref=e474]:
+                  - generic [ref=e475]: 采购审批流程
+                  - generic [ref=e476]: 采购管理
+              - generic [ref=e477]: 办公用品、设备采购审批流程，支持金额阈值自动路由
+            - generic [ref=e478] [cursor=pointer]:
+              - generic [ref=e479]:
+                - img [ref=e481]
+                - generic [ref=e484]:
+                  - generic [ref=e485]: 变更管理流程
+                  - generic [ref=e486]: IT管理
+              - generic [ref=e487]: IT系统变更、配置变更审批流程，包含评估和测试环节
+            - generic [ref=e488] [cursor=pointer]:
+              - generic [ref=e489]:
+                - img [ref=e491]
+                - generic [ref=e494]:
+                  - generic [ref=e495]: 合同审批流程
+                  - generic [ref=e496]: 法务合同
+              - generic [ref=e497]: 合同签订审批流程，包含法务审核和会签环节
+            - generic [ref=e498] [cursor=pointer]:
+              - generic [ref=e499]:
+                - img [ref=e501]
+                - generic [ref=e504]:
+                  - generic [ref=e505]: 空白流程
+                  - generic [ref=e506]: 自定义
+              - generic [ref=e507]: 从零开始创建自定义流程
+          - generic [ref=e508]:
+            - generic [ref=e509]: 或者自定义创建
+            - generic [ref=e511]:
+              - generic [ref=e513]:
+                - generic "工作流名称" [ref=e515]: "* 工作流名称"
+                - textbox "* 工作流名称" [ref=e519]:
+                  - /placeholder: 自定义流程名称
+              - button "创建空白流程" [ref=e525] [cursor=pointer]:
+                - generic [ref=e526]: 创建空白流程
+```

@@ -1947,12 +1947,28 @@ html:not(.dark) .ant-input-number,
 html:not(.dark) .ant-select-selector,
 html:not(.dark) .ant-picker,
 html:not(.dark) .ant-mentions {
-  min-height: 40px;
   border-color: #cbd5e1 !important;
   border-radius: 10px !important;
   box-shadow: none !important;
   background: #ffffff !important;
   color: #0f172a !important;
+}
+
+html:not(.dark) .ant-input-affix-wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+html:not(.dark) .ant-input-affix-wrapper > .ant-input {
+  min-height: 0;
+  line-height: 1.5715;
+  background: transparent !important;
+}
+
+html:not(.dark) .ant-input-prefix,
+html:not(.dark) .ant-input-suffix {
+  display: inline-flex;
+  align-items: center;
 }
 
 html:not(.dark) .ant-input::placeholder,
@@ -1984,9 +2000,35 @@ html:not(.dark) .ant-mentions-focused {
 }
 
 html:not(.dark) .ant-btn {
-  min-height: 40px;
   border-radius: 10px !important;
   font-weight: 600 !important;
+}
+
+html:not(.dark) .ant-btn:not(.ant-btn-icon-only):not(.ant-btn-sm) {
+  min-height: 40px;
+}
+
+html:not(.dark) .ant-btn-text,
+html:not(.dark) .ant-btn-link {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html:not(.dark) .ant-btn-text:not(:disabled),
+html:not(.dark) .ant-btn-link:not(:disabled) {
+  color: #64748b !important;
+}
+
+html:not(.dark) .ant-btn-text:not(:disabled):hover,
+html:not(.dark) .ant-btn-text:not(:disabled):focus {
+  color: #1e293b !important;
+  background: #f8fafc !important;
+}
+
+html:not(.dark) .ant-btn-icon-only {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 html:not(.dark) .ant-btn:not(.ant-btn-link):not(.ant-btn-text) {

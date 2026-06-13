@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="21" failures="0" errors="0" time="3.017">
+  <testsuite name="src/lib/api/__tests__/workflow-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-06-13T11:26:40" time="1.53" tests="13">
+    <testcase classname="WorkflowApi › getWorkflows" name="should fetch workflows successfully" time="0.008">
+    </testcase>
+    <testcase classname="WorkflowApi › getWorkflows" name="should handle empty workflow list" time="0.002">
+    </testcase>
+    <testcase classname="WorkflowApi › getWorkflows" name="should pass pagination parameters correctly" time="0.002">
+    </testcase>
+    <testcase classname="WorkflowApi › getWorkflow" name="should fetch single workflow successfully" time="0.002">
+    </testcase>
+    <testcase classname="WorkflowApi › getWorkflow" name="should handle workflow not found" time="0.004">
+    </testcase>
+    <testcase classname="WorkflowApi › getProcessDefinition (backward compatible)" name="should fetch process definition using key" time="0.002">
+    </testcase>
+    <testcase classname="WorkflowApi › getProcessVersions" name="should fetch all versions of a process" time="0.002">
+    </testcase>
+    <testcase classname="WorkflowApi › listWorkflowInstances" name="should fetch workflow instances" time="0.003">
+    </testcase>
+    <testcase classname="WorkflowApi › startWorkflow" name="should start a new workflow" time="0.001">
+    </testcase>
+    <testcase classname="WorkflowApi › suspendWorkflow" name="should suspend a running workflow" time="0.001">
+    </testcase>
+    <testcase classname="WorkflowApi › resumeWorkflow" name="should resume a suspended workflow" time="0.002">
+    </testcase>
+    <testcase classname="WorkflowApi › terminateWorkflow" name="should terminate a running workflow" time="0.003">
+    </testcase>
+    <testcase classname="WorkflowApi › deleteWorkflow" name="should delete a workflow" time="0.003">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/lib/__tests__/ticket-approval.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-06-13T11:26:41" time="0.187" tests="8">
+    <testcase classname="TicketApprovalApi › getWorkflows" name="should fetch approval workflows successfully" time="0.004">
+    </testcase>
+    <testcase classname="TicketApprovalApi › getWorkflows" name="should handle empty workflow list" time="0.002">
+    </testcase>
+    <testcase classname="TicketApprovalApi › createWorkflow" name="should create approval workflow successfully" time="0.003">
+    </testcase>
+    <testcase classname="TicketApprovalApi › submitApproval" name="should submit approval successfully" time="0.001">
+    </testcase>
+    <testcase classname="TicketApprovalApi › submitApproval" name="should handle rejection action" time="0.001">
+    </testcase>
+    <testcase classname="TicketApprovalApi › submitApproval" name="should handle delegation action" time="0.002">
+    </testcase>
+    <testcase classname="TicketApprovalApi › getApprovalRecords" name="getApprovalRecords returns correct data" time="0.005">
+    </testcase>
+    <testcase classname="TicketApprovalApi › getApprovalRecords" name="should filter by status" time="0.002">
+    </testcase>
+  </testsuite>
+</testsuites>

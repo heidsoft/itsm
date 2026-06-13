@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
@@ -43,7 +44,7 @@ type SearchResponse struct {
 
 // Search 全局搜索
 func (c *GlobalSearchController) Search(ctx *gin.Context) {
-	keyword := ctx.Query("keyword")
+	keyword := strings.TrimSpace(ctx.Query("keyword"))
 	if keyword == "" {
 		common.Success(ctx, &SearchResponse{Results: []*SearchResult{}, Total: 0})
 		return
@@ -62,9 +63,9 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 		Where(
 			ticket.TenantID(tenantID),
 			ticket.Or(
-				ticket.TitleContains(keyword),
-				ticket.DescriptionContains(keyword),
-				ticket.TicketNumberContains(keyword),
+				ticket.TitleContainsFold(keyword),
+				ticket.DescriptionContainsFold(keyword),
+				ticket.TicketNumberContainsFold(keyword),
 			),
 		).
 		Limit(10).
@@ -87,9 +88,9 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 		Where(
 			incident.TenantID(tenantID),
 			incident.Or(
-				incident.TitleContains(keyword),
-				incident.DescriptionContains(keyword),
-				incident.IncidentNumberContains(keyword),
+				incident.TitleContainsFold(keyword),
+				incident.DescriptionContainsFold(keyword),
+				incident.IncidentNumberContainsFold(keyword),
 			),
 		).
 		Limit(10).
@@ -112,8 +113,8 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 		Where(
 			problem.TenantID(tenantID),
 			problem.Or(
-				problem.TitleContains(keyword),
-				problem.DescriptionContains(keyword),
+				problem.TitleContainsFold(keyword),
+				problem.DescriptionContainsFold(keyword),
 			),
 		).
 		Limit(10).
@@ -135,8 +136,8 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 		Where(
 			change.TenantID(tenantID),
 			change.Or(
-				change.TitleContains(keyword),
-				change.DescriptionContains(keyword),
+				change.TitleContainsFold(keyword),
+				change.DescriptionContainsFold(keyword),
 			),
 		).
 		Limit(10).
@@ -158,8 +159,8 @@ func (c *GlobalSearchController) Search(ctx *gin.Context) {
 		Where(
 			knowledgearticle.TenantID(tenantID),
 			knowledgearticle.Or(
-				knowledgearticle.TitleContains(keyword),
-				knowledgearticle.ContentContains(keyword),
+				knowledgearticle.TitleContainsFold(keyword),
+				knowledgearticle.ContentContainsFold(keyword),
 			),
 		).
 		Limit(10).
