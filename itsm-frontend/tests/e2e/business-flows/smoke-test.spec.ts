@@ -90,7 +90,7 @@ test.describe('冒烟测试 - 快速验证所有主要页面', () => {
     const refreshPromise = page.waitForResponse((resp) => {
       return resp.url().includes('/api/v1/sla/monitoring') && resp.request().method() === 'POST';
     });
-    await page.getByRole('button', { name: '刷新' }).click();
+    await page.getByRole('button', { name: '刷新', exact: true }).click();
     const refreshResp = await refreshPromise;
     expect(refreshResp.status()).toBeGreaterThanOrEqual(200);
     expect(refreshResp.status()).toBeLessThan(300);
