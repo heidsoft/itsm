@@ -77,6 +77,8 @@ export interface CITopology {
 
 export interface GetCIListRequest {
   ci_type?: string;
+  ci_type_id?: number;
+  search?: string;
   status?: string;
   environment?: string;
   offset?: number;

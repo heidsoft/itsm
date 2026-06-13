@@ -162,13 +162,20 @@ func (r *EntRepository) GetCI(ctx context.Context, id int, tenantID int) (*Confi
 	return toCIDomain(e), nil
 }
 
-func (r *EntRepository) ListCIs(ctx context.Context, tenantID int, page, size int, ciTypeID int, status string) ([]*ConfigurationItem, int, error) {
+func (r *EntRepository) ListCIs(ctx context.Context, tenantID int, page, size int, ciTypeID int, status string, search string) ([]*ConfigurationItem, int, error) {
 	q := r.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID))
 	if ciTypeID > 0 {
 		q = q.Where(configurationitem.CiTypeID(ciTypeID))
 	}
 	if status != "" {
 		q = q.Where(configurationitem.Status(status))
+	}
+	if search != "" {
+		q = q.Where(configurationitem.Or(
+			configurationitem.NameContainsFold(search),
+			configurationitem.SerialNumberContainsFold(search),
+			configurationitem.AssetTagContainsFold(search),
+		))
 	}
 
 	total, err := q.Count(ctx)

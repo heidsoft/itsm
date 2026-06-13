@@ -1,6 +1,7 @@
 package ai
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -202,6 +203,90 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 	common.Success(c, gin.H{"message": "Feedback saved"})
 }
 
+// RecordAudit handles POST /api/v1/ai/audit.
+// It records the GA AI trace contract without allowing the AI to auto-apply high-risk actions.
+func (h *Handler) RecordAudit(c *gin.Context) {
+	var req struct {
+		Scenario      string                 `json:"scenario" binding:"required"`
+		InputRef      string                 `json:"input_ref" binding:"required"`
+		PromptVersion string                 `json:"prompt_version"`
+		Model         string                 `json:"model"`
+		Confidence    float64                `json:"confidence"`
+		Suggestion    map[string]interface{} `json:"suggestion" binding:"required"`
+		Accepted      bool                   `json:"accepted"`
+		Notes         string                 `json:"notes"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	userID := c.GetInt("user_id")
+	requestID := c.GetString("request_id")
+	if requestID == "" {
+		requestID = fmt.Sprintf("ai_audit_%d_%d", time.Now().Unix(), userID)
+	}
+
+	notePayload := map[string]interface{}{
+		"prompt_version": req.PromptVersion,
+		"model":          req.Model,
+		"confidence":     req.Confidence,
+		"suggestion":     req.Suggestion,
+		"notes":          req.Notes,
+	}
+	noteBytes, _ := json.Marshal(notePayload)
+	note := string(noteBytes)
+	itemType := "ai_audit"
+	score := int(req.Confidence * 100)
+	if score < 0 {
+		score = 0
+	}
+	if score > 100 {
+		score = 100
+	}
+
+	if err := h.svc.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Scenario, req.InputRef, itemType, nil, req.Accepted, &score, &note); err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{
+		"request_id":     requestID,
+		"scenario":       req.Scenario,
+		"input_ref":      req.InputRef,
+		"prompt_version": req.PromptVersion,
+		"model":          req.Model,
+		"confidence":     req.Confidence,
+		"accepted":       req.Accepted,
+	})
+}
+
+// GetMetrics handles GET /api/v1/ai/metrics.
+func (h *Handler) GetMetrics(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	lookbackDays := 7
+	if daysStr := c.Query("days"); daysStr != "" {
+		if days, err := strconv.Atoi(daysStr); err == nil && days > 0 && days <= 365 {
+			lookbackDays = days
+		}
+	}
+	metrics, err := h.svc.GetMetrics(c.Request.Context(), tenantID, lookbackDays)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, metrics)
+}
+
 // KnowledgeSearch handles POST /api/v1/ai/knowledge/search - RAG search over knowledge base
 func (h *Handler) KnowledgeSearch(c *gin.Context) {
 	var req struct {
@@ -216,7 +301,8 @@ func (h *Handler) KnowledgeSearch(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		tenantID = 1 // default tenant
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
 	}
 
 	limit := req.Limit
@@ -248,7 +334,8 @@ func (h *Handler) Triage(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		tenantID = 1 // default tenant
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
 	}
 
 	result, err := h.svc.TriageTicket(c.Request.Context(), tenantID, req.Title, req.Description, req.Category, req.Priority)

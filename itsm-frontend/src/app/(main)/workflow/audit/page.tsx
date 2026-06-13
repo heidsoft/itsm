@@ -35,6 +35,30 @@ import { useAuthStore } from '@/lib/store/auth-store';
 
 const { RangePicker } = DatePicker;
 
+const normalizeAuditLog = (log: ProcessAuditLog): ProcessAuditLog => {
+  const raw = log as any;
+  return {
+    ...log,
+    process_instance_id: raw.process_instance_id ?? raw.processInstanceId,
+    process_instance_key: raw.process_instance_key ?? raw.processInstanceKey ?? '',
+    process_definition_key: raw.process_definition_key ?? raw.processDefinitionKey ?? '',
+    process_definition_id: raw.process_definition_id ?? raw.processDefinitionId,
+    activity_id: raw.activity_id ?? raw.activityId ?? '',
+    activity_name: raw.activity_name ?? raw.activityName ?? '',
+    activity_type: raw.activity_type ?? raw.activityType ?? '',
+    user_id: raw.user_id ?? raw.userId,
+    user_name: raw.user_name ?? raw.userName ?? '',
+    assignee_id: raw.assignee_id ?? raw.assigneeId,
+    assignee_name: raw.assignee_name ?? raw.assigneeName ?? '',
+    variables_before: raw.variables_before ?? raw.variablesBefore ?? {},
+    variables_after: raw.variables_after ?? raw.variablesAfter ?? {},
+    ip_address: raw.ip_address ?? raw.ipAddress ?? '',
+    user_agent: raw.user_agent ?? raw.userAgent ?? '',
+    tenant_id: raw.tenant_id ?? raw.tenantId,
+    duration_ms: raw.duration_ms ?? raw.durationMs,
+  };
+};
+
 export default function AuditLogsPage() {
   const { t } = useI18n();
   const [loading, setLoading] = useState(false);
@@ -71,7 +95,7 @@ export default function AuditLogsPage() {
         page_size: pageSize,
       };
       const result = await BPMNDashboardApi.queryAuditLogs(request);
-      setLogs(result.list || []);
+      setLogs((result.list || []).map(normalizeAuditLog));
       setTotal(result.total || 0);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
@@ -90,7 +114,7 @@ export default function AuditLogsPage() {
     setTimelineLoading(true);
     try {
       const data = await BPMNDashboardApi.getProcessTimeline(processInstanceKey);
-      setTimeline(data);
+      setTimeline(data.map(normalizeAuditLog));
       setTimelineVisible(true);
     } catch (error) {
       console.error('Failed to fetch timeline:', error);
@@ -238,7 +262,7 @@ export default function AuditLogsPage() {
       <Card size="small">
         <Space wrap>
           <Input
-            placeholder={t('bpmn.audit.process_instance_key') || '流程实例Key'}
+            placeholder={t('bpmn.audit.process_definition_key') || '流程定义Key'}
             style={{ width: 200 }}
             onChange={(e) => setFilters({ ...filters, process_definition_key: e.target.value || undefined })}
             allowClear

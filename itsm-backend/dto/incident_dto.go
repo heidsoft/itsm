@@ -110,7 +110,6 @@ type IncidentResponse struct {
 
 type IncidentListResponse struct {
 	Incidents  []*IncidentResponse `json:"incidents"`
-	Items      []*IncidentResponse `json:"items,omitempty"`
 	Total      int                 `json:"total"`
 	Page       int                 `json:"page"`
 	PageSize   int                 `json:"pageSize"`

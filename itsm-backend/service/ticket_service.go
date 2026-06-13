@@ -1797,9 +1797,14 @@ func (s *TicketService) generateTicketNumber(ctx context.Context, tenantID int) 
 	year := now.Year()
 	month := int(now.Month())
 
-	// 优先使用 Redis 序列服务
+	// 优先使用 Redis 序列服务（key 包含 tenant_id 以支持多租户隔离）
 	if s.sequenceService != nil {
-		return s.generateTicketNumberWithRedis(ctx, year, month)
+		num, err := s.generateTicketNumberWithRedis(ctx, tenantID, year, month)
+		if err == nil {
+			return num, nil
+		}
+		// Redis 失败，记录并回退到数据库方案
+		s.logger.Warnw("Redis sequence failed, fallback to DB", "error", err, "tenant_id", tenantID)
 	}
 
 	// 备用方案：数据库查询
@@ -1807,9 +1812,10 @@ func (s *TicketService) generateTicketNumber(ctx context.Context, tenantID int) 
 }
 
 // generateTicketNumberWithRedis 使用 Redis INCR 生成请求编号
-func (s *TicketService) generateTicketNumberWithRedis(ctx context.Context, year, month int) (string, error) {
-	// 构造 Redis 键：sequence:req:YYYYMM
-	key := fmt.Sprintf("sequence:req:%d%02d", year, month)
+// key 包含 tenant_id 以支持多租户隔离
+func (s *TicketService) generateTicketNumberWithRedis(ctx context.Context, tenantID, year, month int) (string, error) {
+	// 构造 Redis 键：包含 tenant_id 支持多租户隔离
+	key := fmt.Sprintf("sequence:req:%d:%d%02d", tenantID, year, month)
 
 	// 计算本月最后一天作为过期时间
 	expiredAt := time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.UTC)

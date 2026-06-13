@@ -241,10 +241,16 @@ func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredict
 // Telemetry
 
 func (s *Service) SaveFeedback(ctx context.Context, tenantID, userID int, requestID, kind, query, itemType string, itemID *int, useful bool, score *int, notes *string) error {
+	if s.aiTelemetryService == nil {
+		return fmt.Errorf("AI telemetry service not initialized")
+	}
 	return s.aiTelemetryService.SaveFeedback(ctx, tenantID, userID, requestID, kind, query, itemType, itemID, useful, score, notes)
 }
 
 func (s *Service) GetMetrics(ctx context.Context, tenantID int, lookbackDays int) (interface{}, error) {
+	if s.aiTelemetryService == nil {
+		return nil, fmt.Errorf("AI telemetry service not initialized")
+	}
 	return s.aiTelemetryService.GetMetrics(ctx, tenantID, lookbackDays)
 }
 

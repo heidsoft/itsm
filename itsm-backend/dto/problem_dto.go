@@ -57,10 +57,11 @@ type ProblemResponse struct {
 
 // ListProblemsResponse 问题列表响应
 type ListProblemsResponse struct {
-	Problems []*ProblemResponse `json:"problems"`
-	Total    int                `json:"total"`
-	Page     int                `json:"page"`
-	PageSize int                `json:"pageSize"`
+	Problems   []*ProblemResponse `json:"problems"`
+	Total      int                `json:"total"`
+	Page       int                `json:"page"`
+	PageSize   int                `json:"pageSize"`
+	TotalPages int                `json:"totalPages"`
 }
 
 // ProblemStatsResponse 问题统计响应

@@ -3,6 +3,12 @@
 import React from 'react';
 import { Card, Space } from 'antd';
 
+/**
+ * FilterToolbarCard - Combined filter and action toolbar card
+ * @param filters - ReactNode(s) for filter controls (Select, DatePicker, Input, etc.)
+ * @param actions - ReactNode(s) for action buttons (primary CTA, reset, export, etc.)
+ * @param className - Optional additional CSS class names
+ */
 interface FilterToolbarCardProps {
   filters?: React.ReactNode;
   actions?: React.ReactNode;

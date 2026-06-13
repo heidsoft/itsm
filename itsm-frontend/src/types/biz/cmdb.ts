@@ -75,17 +75,27 @@ export interface CIType {
 export interface CloudService {
   id: number;
   parent_id?: number;
+  parentId?: number;
   provider: string;
   category?: string;
   service_code: string;
+  serviceCode?: string;
   service_name: string;
+  serviceName?: string;
   resource_type_code: string;
+  resourceTypeCode?: string;
   resource_type_name: string;
+  resourceTypeName?: string;
   api_version?: string;
+  apiVersion?: string;
   attribute_schema?: Record<string, any>;
+  attributeSchema?: Record<string, any>;
   is_system?: boolean;
+  isSystem?: boolean;
   is_active: boolean;
+  isActive?: boolean;
   tenant_id: number;
+  tenantId?: number;
 }
 
 export interface CloudAccount {
@@ -102,18 +112,26 @@ export interface CloudAccount {
 export interface CloudResource {
   id: number;
   cloud_account_id: number;
+  cloudAccountId?: number;
   service_id: number;
+  serviceId?: number;
   resource_id: string;
+  resourceId?: string;
   resource_name?: string;
+  resourceName?: string;
   region?: string;
   zone?: string;
   status?: string;
   tags?: Record<string, string>;
   metadata?: Record<string, any>;
   first_seen_at?: string;
+  firstSeenAt?: string;
   last_seen_at?: string;
+  lastSeenAt?: string;
   lifecycle_state?: string;
+  lifecycleState?: string;
   tenant_id: number;
+  tenantId?: number;
 }
 
 export interface RelationshipType {

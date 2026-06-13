@@ -80,35 +80,53 @@ type ConfigurationItemStatsResponse struct {
 
 // CreateCIRequest 创建配置项请求
 type CreateCIRequest struct {
-	Name               string                 `json:"name" binding:"required,max=255"`
-	CITypeID           int                    `json:"ciTypeId" binding:"required"`
-	Description        string                 `json:"description"`
-	Status             string                 `json:"status" binding:"required"`
-	Environment        string                 `json:"environment,omitempty"`
-	Criticality        string                 `json:"criticality,omitempty"`
-	AssetTag           string                 `json:"assetTag,omitempty"`
-	Attributes         map[string]interface{} `json:"attributes,omitempty"`
-	SerialNumber       string                 `json:"serialNumber,omitempty"`
-	Model              string                 `json:"model,omitempty"`
-	Vendor             string                 `json:"vendor,omitempty"`
-	Location           string                 `json:"location,omitempty"`
-	AssignedTo         string                 `json:"assignedTo,omitempty"`
-	OwnedBy            string                 `json:"ownedBy,omitempty"`
-	DiscoverySource    string                 `json:"discoverySource,omitempty"`
-	Source             string                 `json:"source,omitempty"`
-	CloudProvider      string                 `json:"cloudProvider,omitempty"`
-	CloudAccountID     string                 `json:"cloudAccountId,omitempty"`
-	CloudRegion        string                 `json:"cloudRegion,omitempty"`
-	CloudZone          string                 `json:"cloudZone,omitempty"`
-	CloudResourceID    string                 `json:"cloudResourceId,omitempty"`
-	CloudResourceType  string                 `json:"cloudResourceType,omitempty"`
-	CloudMetadata      map[string]interface{} `json:"cloudMetadata,omitempty"`
-	CloudTags          map[string]interface{} `json:"cloudTags,omitempty"`
-	CloudMetrics       map[string]interface{} `json:"cloudMetrics,omitempty"`
-	CloudSyncTime      *time.Time             `json:"cloudSyncTime,omitempty"`
-	CloudSyncStatus    string                 `json:"cloudSyncStatus,omitempty"`
-	CloudResourceRefID int                    `json:"cloudResourceRefId,omitempty"`
-	TenantID           int                    `json:"tenantId,omitempty"`
+	Name                    string                 `json:"name" binding:"required,max=255"`
+	CITypeID                int                    `json:"ciTypeId"`
+	CITypeIDSnake           int                    `json:"ci_type_id,omitempty"`
+	Description             string                 `json:"description"`
+	Status                  string                 `json:"status" binding:"required"`
+	Environment             string                 `json:"environment,omitempty"`
+	Criticality             string                 `json:"criticality,omitempty"`
+	AssetTag                string                 `json:"assetTag,omitempty"`
+	AssetTagSnake           string                 `json:"asset_tag,omitempty"`
+	Attributes              map[string]interface{} `json:"attributes,omitempty"`
+	SerialNumber            string                 `json:"serialNumber,omitempty"`
+	SerialNumberSnake       string                 `json:"serial_number,omitempty"`
+	Model                   string                 `json:"model,omitempty"`
+	Vendor                  string                 `json:"vendor,omitempty"`
+	Location                string                 `json:"location,omitempty"`
+	AssignedTo              string                 `json:"assignedTo,omitempty"`
+	AssignedToSnake         string                 `json:"assigned_to,omitempty"`
+	OwnedBy                 string                 `json:"ownedBy,omitempty"`
+	OwnedBySnake            string                 `json:"owned_by,omitempty"`
+	DiscoverySource         string                 `json:"discoverySource,omitempty"`
+	DiscoverySourceSnake    string                 `json:"discovery_source,omitempty"`
+	Source                  string                 `json:"source,omitempty"`
+	CloudProvider           string                 `json:"cloudProvider,omitempty"`
+	CloudProviderSnake      string                 `json:"cloud_provider,omitempty"`
+	CloudAccountID          string                 `json:"cloudAccountId,omitempty"`
+	CloudAccountIDSnake     string                 `json:"cloud_account_id,omitempty"`
+	CloudRegion             string                 `json:"cloudRegion,omitempty"`
+	CloudRegionSnake        string                 `json:"cloud_region,omitempty"`
+	CloudZone               string                 `json:"cloudZone,omitempty"`
+	CloudZoneSnake          string                 `json:"cloud_zone,omitempty"`
+	CloudResourceID         string                 `json:"cloudResourceId,omitempty"`
+	CloudResourceIDSnake    string                 `json:"cloud_resource_id,omitempty"`
+	CloudResourceType       string                 `json:"cloudResourceType,omitempty"`
+	CloudResourceTypeSnake  string                 `json:"cloud_resource_type,omitempty"`
+	CloudMetadata           map[string]interface{} `json:"cloudMetadata,omitempty"`
+	CloudMetadataSnake      map[string]interface{} `json:"cloud_metadata,omitempty"`
+	CloudTags               map[string]interface{} `json:"cloudTags,omitempty"`
+	CloudTagsSnake          map[string]interface{} `json:"cloud_tags,omitempty"`
+	CloudMetrics            map[string]interface{} `json:"cloudMetrics,omitempty"`
+	CloudMetricsSnake       map[string]interface{} `json:"cloud_metrics,omitempty"`
+	CloudSyncTime           *time.Time             `json:"cloudSyncTime,omitempty"`
+	CloudSyncTimeSnake      *time.Time             `json:"cloud_sync_time,omitempty"`
+	CloudSyncStatus         string                 `json:"cloudSyncStatus,omitempty"`
+	CloudSyncStatusSnake    string                 `json:"cloud_sync_status,omitempty"`
+	CloudResourceRefID      int                    `json:"cloudResourceRefId,omitempty"`
+	CloudResourceRefIDSnake int                    `json:"cloud_resource_ref_id,omitempty"`
+	TenantID                int                    `json:"tenantId,omitempty"`
 	// Type is optional; will be set from CIType if not provided
 	Type string `json:"type,omitempty"`
 }
@@ -167,34 +185,52 @@ type ListCIsResponse struct {
 
 // UpdateCIRequest 更新配置项请求
 type UpdateCIRequest struct {
-	CITypeID           int                    `json:"ciTypeId,omitempty"`
-	Name               string                 `json:"name,omitempty"`
-	Description        string                 `json:"description,omitempty"`
-	Status             string                 `json:"status,omitempty"`
-	Environment        string                 `json:"environment,omitempty"`
-	Criticality        string                 `json:"criticality,omitempty"`
-	AssetTag           string                 `json:"assetTag,omitempty"`
-	Attributes         map[string]interface{} `json:"attributes,omitempty"`
-	SerialNumber       string                 `json:"serialNumber,omitempty"`
-	Model              string                 `json:"model,omitempty"`
-	Vendor             string                 `json:"vendor,omitempty"`
-	Location           string                 `json:"location,omitempty"`
-	AssignedTo         string                 `json:"assignedTo,omitempty"`
-	OwnedBy            string                 `json:"ownedBy,omitempty"`
-	DiscoverySource    string                 `json:"discoverySource,omitempty"`
-	Source             string                 `json:"source,omitempty"`
-	CloudProvider      string                 `json:"cloudProvider,omitempty"`
-	CloudAccountID     string                 `json:"cloudAccountId,omitempty"`
-	CloudRegion        string                 `json:"cloudRegion,omitempty"`
-	CloudZone          string                 `json:"cloudZone,omitempty"`
-	CloudResourceID    string                 `json:"cloudResourceId,omitempty"`
-	CloudResourceType  string                 `json:"cloudResourceType,omitempty"`
-	CloudMetadata      map[string]interface{} `json:"cloudMetadata,omitempty"`
-	CloudTags          map[string]interface{} `json:"cloudTags,omitempty"`
-	CloudMetrics       map[string]interface{} `json:"cloudMetrics,omitempty"`
-	CloudSyncTime      *time.Time             `json:"cloudSyncTime,omitempty"`
-	CloudSyncStatus    string                 `json:"cloudSyncStatus,omitempty"`
-	CloudResourceRefID int                    `json:"cloudResourceRefId,omitempty"`
+	CITypeID                int                    `json:"ciTypeId,omitempty"`
+	CITypeIDSnake           int                    `json:"ci_type_id,omitempty"`
+	Name                    string                 `json:"name,omitempty"`
+	Description             string                 `json:"description,omitempty"`
+	Status                  string                 `json:"status,omitempty"`
+	Environment             string                 `json:"environment,omitempty"`
+	Criticality             string                 `json:"criticality,omitempty"`
+	AssetTag                string                 `json:"assetTag,omitempty"`
+	AssetTagSnake           string                 `json:"asset_tag,omitempty"`
+	Attributes              map[string]interface{} `json:"attributes,omitempty"`
+	SerialNumber            string                 `json:"serialNumber,omitempty"`
+	SerialNumberSnake       string                 `json:"serial_number,omitempty"`
+	Model                   string                 `json:"model,omitempty"`
+	Vendor                  string                 `json:"vendor,omitempty"`
+	Location                string                 `json:"location,omitempty"`
+	AssignedTo              string                 `json:"assignedTo,omitempty"`
+	AssignedToSnake         string                 `json:"assigned_to,omitempty"`
+	OwnedBy                 string                 `json:"ownedBy,omitempty"`
+	OwnedBySnake            string                 `json:"owned_by,omitempty"`
+	DiscoverySource         string                 `json:"discoverySource,omitempty"`
+	DiscoverySourceSnake    string                 `json:"discovery_source,omitempty"`
+	Source                  string                 `json:"source,omitempty"`
+	CloudProvider           string                 `json:"cloudProvider,omitempty"`
+	CloudProviderSnake      string                 `json:"cloud_provider,omitempty"`
+	CloudAccountID          string                 `json:"cloudAccountId,omitempty"`
+	CloudAccountIDSnake     string                 `json:"cloud_account_id,omitempty"`
+	CloudRegion             string                 `json:"cloudRegion,omitempty"`
+	CloudRegionSnake        string                 `json:"cloud_region,omitempty"`
+	CloudZone               string                 `json:"cloudZone,omitempty"`
+	CloudZoneSnake          string                 `json:"cloud_zone,omitempty"`
+	CloudResourceID         string                 `json:"cloudResourceId,omitempty"`
+	CloudResourceIDSnake    string                 `json:"cloud_resource_id,omitempty"`
+	CloudResourceType       string                 `json:"cloudResourceType,omitempty"`
+	CloudResourceTypeSnake  string                 `json:"cloud_resource_type,omitempty"`
+	CloudMetadata           map[string]interface{} `json:"cloudMetadata,omitempty"`
+	CloudMetadataSnake      map[string]interface{} `json:"cloud_metadata,omitempty"`
+	CloudTags               map[string]interface{} `json:"cloudTags,omitempty"`
+	CloudTagsSnake          map[string]interface{} `json:"cloud_tags,omitempty"`
+	CloudMetrics            map[string]interface{} `json:"cloudMetrics,omitempty"`
+	CloudMetricsSnake       map[string]interface{} `json:"cloud_metrics,omitempty"`
+	CloudSyncTime           *time.Time             `json:"cloudSyncTime,omitempty"`
+	CloudSyncTimeSnake      *time.Time             `json:"cloud_sync_time,omitempty"`
+	CloudSyncStatus         string                 `json:"cloudSyncStatus,omitempty"`
+	CloudSyncStatusSnake    string                 `json:"cloud_sync_status,omitempty"`
+	CloudResourceRefID      int                    `json:"cloudResourceRefId,omitempty"`
+	CloudResourceRefIDSnake int                    `json:"cloud_resource_ref_id,omitempty"`
 }
 
 // CloudService DTOs

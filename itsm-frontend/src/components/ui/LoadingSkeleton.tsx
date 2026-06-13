@@ -3,6 +3,13 @@
 import React from 'react';
 import { Skeleton } from 'antd';
 
+/**
+ * LoadingSkeleton - Skeleton placeholder during data loading
+ * @param type - Skeleton variant: 'table' (full rows+columns), 'card' (single card), 'form' (labeled fields), 'list' (stacked items), 'chart' (bar chart bars)
+ * @param rows - Number of skeleton rows to render (default: 3)
+ * @param columns - Number of skeleton columns/fields per row (default: 1)
+ * @param className - Optional additional CSS class names
+ */
 interface LoadingSkeletonProps {
   type?: 'table' | 'card' | 'form' | 'list' | 'chart';
   rows?: number;

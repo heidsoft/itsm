@@ -310,9 +310,16 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 		changeResponses = append(changeResponses, response)
 	}
 
+	totalPages := 0
+	if pageSize > 0 {
+		totalPages = (total + pageSize - 1) / pageSize
+	}
+
 	return &dto.ChangeListResponse{
-		Total:   total,
-		Changes: changeResponses,
+		Total:      total,
+		Changes:    changeResponses,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
 	}, nil
 }
 
