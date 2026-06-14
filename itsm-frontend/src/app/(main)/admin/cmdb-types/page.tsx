@@ -38,8 +38,73 @@ import type { CIType } from '@/types/biz/cmdb';
 const { Title, Text } = Typography;
 const { Option } = Select;
 
+const DEFAULT_ATTRIBUTE_SCHEMA = JSON.stringify(
+  {
+    fields: [
+      {
+        key: 'environment',
+        label: '环境',
+        type: 'select',
+        options: ['production', 'staging', 'development'],
+        required: true,
+      },
+      {
+        key: 'owner',
+        label: '负责人',
+        type: 'select',
+        options: ['ops', 'platform', 'security'],
+      },
+    ],
+  },
+  null,
+  2
+);
+
+const validateAttributeSchema = (value?: string) => {
+  if (!value || !value.trim()) {
+    return null;
+  }
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    return '请输入合法的 JSON';
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return '属性模式必须是对象 JSON';
+  }
+
+  if (parsed.fields === undefined) {
+    return null;
+  }
+
+  if (!Array.isArray(parsed.fields)) {
+    return 'attribute_schema.fields 必须是数组';
+  }
+
+  for (let index = 0; index < parsed.fields.length; index += 1) {
+    const field = parsed.fields[index];
+    if (!field || typeof field !== 'object' || Array.isArray(field)) {
+      return `attribute_schema.fields[${index}] 必须是对象`;
+    }
+    const fieldType = field.type;
+    const fieldKey = field.key || field.name || `字段${index + 1}`;
+    if (fieldType !== 'select') {
+      return `attribute_schema.fields[${index}]（${fieldKey}）仅支持 type=select`;
+    }
+    if (!Array.isArray(field.options) || field.options.length === 0) {
+      return `attribute_schema.fields[${index}]（${fieldKey}）必须提供非空 options`;
+    }
+  }
+
+  return null;
+};
+
 const CMDBTypesManagement = () => {
   const { message } = App.useApp();
+  const formId = 'cmdb-type-form';
   const [ciTypes, setCiTypes] = useState<CIType[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -112,12 +177,19 @@ const CMDBTypesManagement = () => {
   // 处理表单提交
   const handleSubmit = async (values: Record<string, any>) => {
     try {
+      const schemaText = typeof values.attribute_schema === 'string' ? values.attribute_schema.trim() : '';
+      const schemaError = validateAttributeSchema(schemaText);
+      if (schemaError) {
+        message.error(schemaError);
+        return;
+      }
+
       const payload = {
         name: values.name,
         description: values.description || '',
         icon: values.icon || '',
         color: values.color || '#1890ff',
-        attribute_schema: values.attribute_schema || '',
+        attribute_schema: schemaText,
         is_active: values.is_active ?? true,
       };
 
@@ -140,15 +212,23 @@ const CMDBTypesManagement = () => {
   // 编辑CI类型
   const handleEdit = (type: CIType) => {
     setEditingType(type);
-    form.setFieldsValue({
-      name: type.name,
-      description: type.description,
-      icon: type.icon,
-      color: type.color,
-      attribute_schema: type.attribute_schema,
-      is_active: type.is_active,
-    });
-    setShowModal(true);
+      form.setFieldsValue({
+        name: type.name,
+        description: type.description,
+        icon: type.icon,
+        color: type.color,
+        attribute_schema: type.attribute_schema
+          ? (() => {
+              try {
+                return JSON.stringify(JSON.parse(type.attribute_schema), null, 2);
+              } catch {
+                return type.attribute_schema;
+              }
+            })()
+          : '',
+        is_active: type.is_active,
+      });
+      setShowModal(true);
   };
 
   // 删除CI类型
@@ -410,7 +490,7 @@ const CMDBTypesManagement = () => {
             >
               取消
             </Button>
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit" form={formId}>
               {editingType ? '更新' : '创建'}
             </Button>
           </Space>
@@ -419,6 +499,7 @@ const CMDBTypesManagement = () => {
         destroyOnClose
       >
         <Form
+          id={formId}
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
@@ -441,6 +522,29 @@ const CMDBTypesManagement = () => {
             rules={[{ max: 1000, message: '描述不能超过1000个字符' }]}
           >
             <Input.TextArea rows={3} placeholder="请输入类型描述" showCount maxLength={1000} />
+          </Form.Item>
+
+          <Form.Item
+            name="attribute_schema"
+            label="属性模式 (JSON)"
+            rules={[
+              {
+                validator: async (_, value) => {
+                  const error = validateAttributeSchema(value);
+                  if (error) {
+                    throw new Error(error);
+                  }
+                },
+              },
+            ]}
+            extra="定义该类型下可用于动态录入的扩展字段。仅支持 JSON 对象，fields 数组里目前建议使用 type=select。"
+          >
+            <Input.TextArea
+              rows={8}
+              placeholder={DEFAULT_ATTRIBUTE_SCHEMA}
+              allowClear
+              showCount
+            />
           </Form.Item>
 
           <Row gutter={16}>
@@ -478,22 +582,6 @@ const CMDBTypesManagement = () => {
             <Switch checkedChildren="激活" unCheckedChildren="停用" />
           </Form.Item>
 
-          <Form.Item className="mb-0 mt-6">
-            <Space className="w-full justify-end">
-              <Button
-                onClick={() => {
-                  setShowModal(false);
-                  setEditingType(null);
-                  form.resetFields();
-                }}
-              >
-                取消
-              </Button>
-              <Button type="primary" htmlType="submit">
-                {editingType ? '更新' : '创建'}
-              </Button>
-            </Space>
-          </Form.Item>
         </Form>
       </Modal>
     </div>

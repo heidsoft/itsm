@@ -1,79 +1,53 @@
 'use client';
 
+import React, { useEffect, useState } from 'react';
 import {
-  UserPlus,
-  UserMinus,
-  Plus,
-  Users,
-  Shield,
-  Search,
-  Edit,
-  Trash2,
-  MoreHorizontal,
-} from 'lucide-react';
+  App,
+  Button,
+  Card,
+  Empty,
+  Form,
+  Input,
+  Modal,
+  Space,
+  Table,
+  Typography,
+} from 'antd';
+import type { TablePaginationConfig } from 'antd';
+import { Edit, Plus, Search, Trash2, UserPlus, Users } from 'lucide-react';
+import BusinessStatsGrid from '@/components/common/BusinessStatsGrid';
+import { GroupAPI, type Group } from '@/lib/api/group-api';
 
-import React, { useState } from 'react';
-import { App, Modal, Form, Input, Select, Tag, Button, Space, Table, message } from 'antd';
-import type { MenuProps } from 'antd';
-// 用户组数据类型定义
-interface Group {
-  id: number;
-  name: string;
-  description: string;
-  type: 'system' | 'custom';
-  memberCount: number;
-  permissions: string[];
-  createdAt: string;
-  updatedAt: string;
-  status: 'active' | 'inactive';
-}
+const { Title, Text } = Typography;
+const { Search: AntSearch } = Input;
 
-const formatPermission = (permission: unknown): string => {
-  if (typeof permission === 'string') return permission;
-  if (permission && typeof permission === 'object') {
-    const item = permission as Record<string, unknown>;
-    const code = item.code || item.name || item.id;
-    return code !== undefined && code !== null ? String(code) : '未知权限';
-  }
-  return '未知权限';
-};
-
-const GroupManagement = () => {
+const GroupManagement: React.FC = () => {
   const { message, modal } = App.useApp();
+  const [form] = Form.useForm();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  // 加载用户组数据
-  React.useEffect(() => {
-    loadGroups();
-  }, []);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
 
   const loadGroups = async () => {
     setLoading(true);
     try {
-      const { RoleAPI } = await import('@/lib/api/role-api');
-      const response = await RoleAPI.getRoles({ size: 100 }); // 获取所有角色（暂用角色API）
-
-      const mappedGroups: Group[] = response.roles.map((role: any) => ({
-        id: role.id,
-        name: role.name,
-        description: role.description || '',
-        type: role.isSystem ? 'system' : 'custom',
-        memberCount: role.userCount || 0,
-        permissions: Array.isArray(role.permissions) ? role.permissions.map(formatPermission) : [],
-        createdAt: role.createdAt,
-        updatedAt: role.updatedAt,
-        status: role.status || 'active',
+      const response = await GroupAPI.getGroups({
+        page: pagination.current,
+        page_size: pagination.pageSize,
+        search: search || undefined,
+      });
+      setGroups(response.groups);
+      setPagination(prev => ({
+        ...prev,
+        total: response.pagination.total,
       }));
-
-      setGroups(mappedGroups);
     } catch (error) {
       console.error('Failed to load groups:', error);
       message.error('加载用户组失败');
@@ -82,532 +56,255 @@ const GroupManagement = () => {
     }
   };
 
-  // 过滤用户组
-  const filteredGroups = groups.filter(group => {
-    const matchesSearch =
-      group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      group.description.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    loadGroups();
+  }, [pagination.current, pagination.pageSize, search]);
 
-    const matchesType = typeFilter === 'all' || group.type === typeFilter;
-    const matchesStatus = statusFilter === 'all' || group.status === statusFilter;
-
-    return matchesSearch && matchesType && matchesStatus;
-  });
-
-  // 分页计算
-  const totalPages = Math.ceil(filteredGroups.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedGroups = filteredGroups.slice(startIndex, startIndex + itemsPerPage);
-
-  // 状态样式映射
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const openCreateModal = () => {
+    setSelectedGroup(null);
+    form.resetFields();
+    setModalOpen(true);
   };
 
-  // 类型样式映射
-  const getTypeStyle = (type: string) => {
-    switch (type) {
-      case 'system':
-        return 'bg-blue-100 text-blue-800';
-      case 'custom':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // 状态文本映射
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active':
-        return '活跃';
-      case 'inactive':
-        return '停用';
-      default:
-        return '未知';
-    }
-  };
-
-  // 类型文本映射
-  const getTypeText = (type: string) => {
-    switch (type) {
-      case 'system':
-        return '系统组';
-      case 'custom':
-        return '自定义组';
-      default:
-        return '未知';
-    }
-  };
-
-  // 处理用户组操作
-  const handleEditGroup = (group: Group) => {
+  const openEditModal = (group: Group) => {
     setSelectedGroup(group);
-    setShowModal(true);
+    form.setFieldsValue({
+      name: group.name,
+      description: group.description,
+    });
+    setModalOpen(true);
   };
 
-  const handleDeleteGroup = async (groupId: number) => {
-    const group = groups.find(g => g.id === groupId);
-    if (group?.type === 'system') {
-      message.warning('系统组不能删除！');
-      return;
+  const handleSave = async (values: { name: string; description?: string }) => {
+    setLoading(true);
+    try {
+      if (selectedGroup) {
+        await GroupAPI.updateGroup(selectedGroup.id, values);
+        message.success('用户组更新成功');
+      } else {
+        await GroupAPI.createGroup(values);
+        message.success('用户组创建成功');
+      }
+      setModalOpen(false);
+      setSelectedGroup(null);
+      form.resetFields();
+      await loadGroups();
+    } catch (error) {
+      console.error('Failed to save group:', error);
+      message.error('保存用户组失败');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleDelete = (group: Group) => {
     modal.confirm({
-      title: '确认删除',
-      content: '确定要删除这个用户组吗？',
-      okText: '确认',
+      title: '确认删除用户组',
+      content: `删除「${group.name}」后，关联成员关系也会被移除。确定继续吗？`,
+      okText: '删除',
+      okButtonProps: { danger: true },
       cancelText: '取消',
       onOk: async () => {
         try {
-          const { RoleAPI } = await import('@/lib/api/role-api');
-          await RoleAPI.deleteRole(groupId);
-          setGroups(groups.filter(g => g.id !== groupId));
-          message.success('删除成功');
+          await GroupAPI.deleteGroup(group.id);
+          message.success('用户组删除成功');
+          await loadGroups();
         } catch (error) {
           console.error('Failed to delete group:', error);
-          message.error('删除失败');
+          message.error('删除用户组失败');
         }
       },
     });
   };
 
-  const handleToggleStatus = async (groupId: number) => {
-    const group = groups.find(g => g.id === groupId);
-    if (!group) return;
-
-    const newStatus = group.status === 'active' ? 'inactive' : 'active';
-
-    try {
-      const { RoleAPI } = await import('@/lib/api/role-api');
-      await RoleAPI.updateRole(groupId, {
-        status: newStatus,
-      });
-      setGroups(
-        groups.map(g => {
-          if (g.id === groupId) {
-            return {
-              ...g,
-              status: newStatus,
-            };
-          }
-          return g;
-        })
-      );
-      message.success(newStatus === 'active' ? '用户组已启用' : '用户组已禁用');
-    } catch (error) {
-      console.error('Failed to toggle group status:', error);
-      message.error('状态更新失败');
-    }
+  const handleTableChange = (nextPagination: TablePaginationConfig) => {
+    setPagination(prev => ({
+      ...prev,
+      current: nextPagination.current || 1,
+      pageSize: nextPagination.pageSize || prev.pageSize,
+    }));
   };
 
-  // 统计数据
-  const activeGroups = groups.filter(g => g.status === 'active').length;
-  const systemGroups = groups.filter(g => g.type === 'system').length;
-  const totalMembers = groups.reduce((sum, g) => sum + g.memberCount, 0);
+  const statsItems = [
+    {
+      label: '总用户组数',
+      value: pagination.total,
+      icon: <Users size={20} />,
+      tone: 'blue' as const,
+    },
+    {
+      label: '当前页用户组',
+      value: groups.length,
+      icon: <UserPlus size={20} />,
+      tone: 'green' as const,
+    },
+    {
+      label: '搜索结果',
+      value: search ? pagination.total : '-',
+      icon: <Search size={20} />,
+      tone: 'cyan' as const,
+    },
+    {
+      label: '业务类型',
+      value: '用户组',
+      icon: <Users size={20} />,
+      tone: 'purple' as const,
+    },
+  ];
+
+  const columns = [
+    {
+      title: '用户组名称',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text: string, record: Group) => (
+        <Space direction="vertical" size={0}>
+          <Text strong>{text}</Text>
+          <Text type="secondary">{record.description || '暂无描述'}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: '租户ID',
+      dataIndex: 'tenantId',
+      key: 'tenantId',
+      width: 120,
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (value: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
+      width: 180,
+    },
+    {
+      title: '更新时间',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      render: (value: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
+      width: 180,
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      width: 160,
+      render: (_: unknown, record: Group) => (
+        <Space>
+          <Button type="link" icon={<Edit size={16} />} onClick={() => openEditModal(record)}>
+            编辑
+          </Button>
+          <Button
+            type="link"
+            danger
+            icon={<Trash2 size={16} />}
+            onClick={() => handleDelete(record)}
+          >
+            删除
+          </Button>
+        </Space>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* 页面头部 */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">用户组管理</h1>
-          <p className="text-gray-600 mt-1">管理用户组、权限分配和成员关系</p>
+          <Title level={2} style={{ margin: 0 }}>
+            用户组管理
+          </Title>
+          <Text type="secondary">管理用户组基础信息，为后续成员关系和审批候选组提供组织基础。</Text>
         </div>
-        <button
-          onClick={() => {
-            setSelectedGroup(null);
-            setShowModal(true);
-          }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
+        <Button type="primary" icon={<Plus size={16} />} onClick={openCreateModal}>
           新建用户组
-        </button>
+        </Button>
       </div>
 
-      {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">总用户组数</p>
-              <p className="text-2xl font-bold text-gray-900">{groups.length}</p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Users className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
+      <BusinessStatsGrid items={statsItems} loading={loading && groups.length === 0} />
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">活跃用户组</p>
-              <p className="text-2xl font-bold text-green-600">{activeGroups}</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <Shield className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </div>
+      <Card>
+        <Space wrap className="w-full justify-between">
+          <AntSearch
+            allowClear
+            enterButton
+            placeholder="搜索用户组名称或描述"
+            style={{ width: 320 }}
+            onSearch={value => {
+              setSearch(value.trim());
+              setPagination(prev => ({ ...prev, current: 1 }));
+            }}
+          />
+          <Button onClick={loadGroups}>刷新</Button>
+        </Space>
+      </Card>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">系统用户组</p>
-              <p className="text-2xl font-bold text-purple-600">{systemGroups}</p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-full">
-              <Shield className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
+      <Card>
+        <Table
+          columns={columns}
+          dataSource={groups}
+          rowKey="id"
+          loading={loading}
+          onChange={handleTableChange}
+          scroll={{ x: 860 }}
+          locale={{
+            emptyText: (
+              <Empty description={search ? '没有匹配的用户组' : '暂无用户组'}>
+                <Button type="primary" onClick={openCreateModal}>
+                  创建用户组
+                </Button>
+              </Empty>
+            ),
+          }}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+          }}
+        />
+      </Card>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">总成员数</p>
-              <p className="text-2xl font-bold text-orange-600">{totalMembers}</p>
-            </div>
-            <div className="p-3 bg-orange-100 rounded-full">
-              <UserPlus className="w-6 h-6 text-orange-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 搜索和过滤 */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="搜索用户组名称或描述..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-          <div className="flex gap-4">
-            <select
-              value={typeFilter}
-              onChange={e => setTypeFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">所有类型</option>
-              <option value="system">系统组</option>
-              <option value="custom">自定义组</option>
-            </select>
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">所有状态</option>
-              <option value="active">活跃</option>
-              <option value="inactive">停用</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* 用户组列表 */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  用户组信息
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  类型
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  成员数量
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  权限
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  状态
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  更新时间
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedGroups.map(group => (
-                <tr key={group.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{group.name}</div>
-                      <div className="text-sm text-gray-500">{group.description}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeStyle(
-                        group.type
-                      )}`}
-                    >
-                      {getTypeText(group.type)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <Users className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-900">{group.memberCount}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1">
-                      {group.permissions.slice(0, 2).map((permission, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded"
-                        >
-                          {permission}
-                        </span>
-                      ))}
-                      {group.permissions.length > 2 && (
-                        <span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">
-                          +{group.permissions.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusStyle(
-                        group.status
-                      )}`}
-                    >
-                      {getStatusText(group.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {group.updatedAt}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleEditGroup(group)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded"
-                        title="编辑"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleToggleStatus(group.id)}
-                        className={`p-1 rounded ${
-                          group.status === 'active'
-                            ? 'text-red-600 hover:text-red-900'
-                            : 'text-green-600 hover:text-green-900'
-                        }`}
-                        title={group.status === 'active' ? '停用' : '启用'}
-                      >
-                        {group.status === 'active' ? (
-                          <UserMinus className="w-4 h-4" />
-                        ) : (
-                          <UserPlus className="w-4 h-4" />
-                        )}
-                      </button>
-                      {group.type !== 'system' && (
-                        <button
-                          onClick={() => handleDeleteGroup(group.id)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded"
-                          title="删除"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button
-                        className="text-gray-600 hover:text-gray-900 p-1 rounded"
-                        title="更多操作"
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* 分页 */}
-        {totalPages > 1 && (
-          <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 flex justify-between sm:hidden">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  上一页
-                </button>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  下一页
-                </button>
-              </div>
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700">
-                    显示第 <span className="font-medium">{startIndex + 1}</span> 到{' '}
-                    <span className="font-medium">
-                      {Math.min(startIndex + itemsPerPage, filteredGroups.length)}
-                    </span>{' '}
-                    条，共 <span className="font-medium">{filteredGroups.length}</span> 条记录
-                  </p>
-                </div>
-                <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                    <button
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      上一页
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page
-                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      下一页
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 用户组编辑模态框 */}
       <Modal
         title={selectedGroup ? '编辑用户组' : '新建用户组'}
-        open={showModal}
+        open={modalOpen}
         onCancel={() => {
-          setShowModal(false);
+          setModalOpen(false);
           setSelectedGroup(null);
+          form.resetFields();
         }}
         footer={null}
         width={600}
       >
-        <Form
-          layout="vertical"
-          initialValues={selectedGroup || { type: 'custom', status: 'active' }}
-          onFinish={async values => {
-            try {
-              const { RoleAPI } = await import('@/lib/api/role-api');
-              if (selectedGroup) {
-                await RoleAPI.updateRole(selectedGroup.id, {
-                  name: values.name,
-                  description: values.description,
-                  permissions: values.permissions,
-                });
-                message.success('用户组更新成功');
-              } else {
-                await RoleAPI.createRole({
-                  name: values.name,
-                  description: values.description,
-                  permissions: values.permissions || [],
-                  status: 'active',
-                });
-                message.success('用户组创建成功');
-              }
-              setShowModal(false);
-              setSelectedGroup(null);
-              loadGroups();
-            } catch (error) {
-              message.error('操作失败，请重试');
-            }
-          }}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSave}>
           <Form.Item
             name="name"
             label="用户组名称"
-            rules={[{ required: true, message: '请输入用户组名称' }]}
+            rules={[
+              { required: true, message: '请输入用户组名称' },
+              { max: 100, message: '用户组名称不能超过100个字符' },
+            ]}
           >
-            <Input placeholder="请输入用户组名称" />
+            <Input placeholder="例如：一线支持组、变更审批组" />
           </Form.Item>
-
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={3} placeholder="请输入描述" />
+          <Form.Item
+            name="description"
+            label="描述"
+            rules={[{ max: 500, message: '描述不能超过500个字符' }]}
+          >
+            <Input.TextArea rows={4} placeholder="说明这个用户组的职责范围" />
           </Form.Item>
-
-          <Form.Item name="permissions" label="权限">
-            <Select
-              mode="multiple"
-              placeholder="选择权限"
-              allowClear
-              tagRender={({ label, closable, onClose }) => (
-                <Tag
-                  closable={closable}
-                  onClose={onClose}
-                  className="bg-blue-100 text-blue-800 border-blue-300 mr-1 mb-1"
-                >
-                  {label}
-                </Tag>
-              )}
-            >
-              <Select.Option value="ticket:read">工单查看</Select.Option>
-              <Select.Option value="ticket:write">工单编辑</Select.Option>
-              <Select.Option value="ticket:delete">工单删除</Select.Option>
-              <Select.Option value="incident:read">事件查看</Select.Option>
-              <Select.Option value="incident:write">事件编辑</Select.Option>
-              <Select.Option value="problem:read">问题查看</Select.Option>
-              <Select.Option value="problem:write">问题编辑</Select.Option>
-              <Select.Option value="change:read">变更查看</Select.Option>
-              <Select.Option value="change:write">变更编辑</Select.Option>
-              <Select.Option value="user:manage">用户管理</Select.Option>
-              <Select.Option value="system:config">系统配置</Select.Option>
-            </Select>
-          </Form.Item>
-
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit">
+              <Button type="primary" htmlType="submit" loading={loading}>
                 {selectedGroup ? '保存' : '创建'}
               </Button>
               <Button
                 onClick={() => {
-                  setShowModal(false);
+                  setModalOpen(false);
                   setSelectedGroup(null);
+                  form.resetFields();
                 }}
               >
                 取消

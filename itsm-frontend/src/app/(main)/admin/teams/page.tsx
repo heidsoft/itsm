@@ -19,6 +19,7 @@ import {
   Row,
   Col,
   Statistic,
+  Empty,
 } from 'antd';
 import {
   Plus,
@@ -27,6 +28,7 @@ import {
   Users,
   RefreshCw,
   User,
+  Search,
 } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import { teamService, Team, CreateTeamRequest } from '@/lib/services/team-service';
@@ -43,6 +45,7 @@ export default function TeamManagement() {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [form] = Form.useForm();
   const [users, setUsers] = useState<{ label: string; value: number }[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // 加载团队数据
   const loadTeams = useCallback(async () => {
@@ -84,6 +87,16 @@ export default function TeamManagement() {
     totalTeams: teams.length,
     totalMembers: teams.reduce((sum, team) => sum + (team.edges?.users?.length || 0), 0),
   };
+
+  const filteredTeams = teams.filter(team => {
+    const keyword = searchTerm.trim().toLowerCase();
+    if (!keyword) return true;
+    return (
+      team.name.toLowerCase().includes(keyword) ||
+      team.code.toLowerCase().includes(keyword) ||
+      (team.description || '').toLowerCase().includes(keyword)
+    );
+  });
 
   // 处理保存
   const handleSave = async () => {
@@ -243,7 +256,15 @@ export default function TeamManagement() {
 
       {/* 操作栏 */}
       <Card className="mb-6">
-        <Space>
+        <Space wrap>
+          <Input
+            allowClear
+            placeholder="搜索团队名称、编码或描述"
+            prefix={<Search size={16} />}
+            value={searchTerm}
+            onChange={event => setSearchTerm(event.target.value)}
+            style={{ width: 280 }}
+          />
           <Button
             type="primary"
             icon={<Plus size={16} />}
@@ -269,11 +290,21 @@ export default function TeamManagement() {
       <Card className="enterprise-card">
         <Table
           columns={columns}
-          dataSource={teams}
+          dataSource={filteredTeams}
           rowKey="id"
           loading={fetching}
+          scroll={{ x: 820 }}
+          locale={{
+            emptyText: (
+              <Empty description={searchTerm ? '没有匹配的团队' : '暂无团队'}>
+                <Button type="primary" onClick={() => setShowModal(true)}>
+                  新建团队
+                </Button>
+              </Empty>
+            ),
+          }}
           pagination={{
-            total: teams.length,
+            total: filteredTeams.length,
             pageSize: 10,
             showSizeChanger: true,
             showTotal: total => `共 ${total} 条记录`,

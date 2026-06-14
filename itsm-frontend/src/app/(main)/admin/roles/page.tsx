@@ -38,6 +38,9 @@ import {
   Tabs,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { RoleAPI } from '@/lib/api/role-api';
+import { UserApi } from '@/lib/api/user-api';
+
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -67,11 +70,6 @@ const PERMISSION_ACTIONS = {
   EXPORT: 'export',
   IMPORT: 'import',
 } as const;
-
-// 引入角色API
-import { RoleAPI } from '@/lib/api/role-api';
-import { UserApi } from '@/lib/api/user-api';
-import type { Role } from '@/lib/api/api-config';
 
 // 权限定义
 const PERMISSIONS = [
@@ -288,10 +286,10 @@ export default function RoleManagement() {
       title: '状态',
       key: 'status',
       render: (_: unknown, record: RoleItem) => {
-        // 后端 Role 实体没有 status 字段，默认所有角色为启用状态
-        const isActive = record.status === 'active';
+        // 后端 Role 实体没有 status 字段时，按启用处理，避免空值显示为灰色但文本仍是启用。
+        const isActive = record.status !== 'inactive';
         return (
-          <Badge status={isActive ? 'success' : 'default'} text={isActive ? '启用' : '启用'} />
+          <Badge status={isActive ? 'success' : 'default'} text={isActive ? '启用' : '禁用'} />
         );
       },
     },
@@ -325,7 +323,7 @@ export default function RoleManagement() {
                 const formValues: Record<string, unknown> = {
                   name: record.name,
                   description: record.description,
-                  status: record.status === 'active',
+                  status: record.status !== 'inactive',
                 };
 
                 // 设置权限值
@@ -565,6 +563,7 @@ export default function RoleManagement() {
             showQuickJumper: true,
             showTotal: total => `共 ${total} 条记录`,
           }}
+          scroll={{ x: 760 }}
           className="enterprise-table"
         />
       </Card>

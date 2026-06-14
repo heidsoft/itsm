@@ -14,6 +14,12 @@ export interface Team {
   };
 }
 
+type RawTeam = Partial<Team> & {
+  managerId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export interface CreateTeamRequest {
   name: string;
   code: string;
@@ -29,8 +35,22 @@ export interface AddMemberRequest {
 class TeamService {
   private readonly baseUrl = '/api/v1/org/teams';
 
+  private normalizeTeam(team: RawTeam): Team {
+    return {
+      id: team.id || 0,
+      name: team.name || '',
+      code: team.code || '',
+      description: team.description,
+      manager_id: team.manager_id ?? team.managerId,
+      created_at: team.created_at || team.createdAt,
+      updated_at: team.updated_at || team.updatedAt,
+      edges: team.edges,
+    };
+  }
+
   async listTeams(): Promise<Team[]> {
-    return httpClient.get<Team[]>(this.baseUrl);
+    const data = await httpClient.get<RawTeam[]>(this.baseUrl);
+    return data.map(team => this.normalizeTeam(team));
   }
 
   async createTeam(data: CreateTeamRequest): Promise<Team> {

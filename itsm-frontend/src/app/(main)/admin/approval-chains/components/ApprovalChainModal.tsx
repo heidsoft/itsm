@@ -71,6 +71,7 @@ export function ApprovalChainModal({
         form.setFieldsValue({
           name: editingChain.name,
           description: editingChain.description,
+          entityType: editingChain.entityType || 'ticket',
           isActive: editingChain.isActive,
         });
         setSteps(
@@ -280,6 +281,20 @@ export function ApprovalChainModal({
             rules={[{ max: 500, message: '描述不能超过500个字符' }]}
           >
             <TextArea rows={3} placeholder="请输入审批链描述" />
+          </Form.Item>
+
+          <Form.Item
+            name="entityType"
+            label="适用对象"
+            initialValue="ticket"
+            rules={[{ required: true, message: '请选择适用对象' }]}
+          >
+            <Select placeholder="请选择适用对象">
+              <Option value="ticket">工单</Option>
+              <Option value="incident">事件</Option>
+              <Option value="problem">问题</Option>
+              <Option value="change">变更</Option>
+            </Select>
           </Form.Item>
 
           <Form.Item name="isActive" label="状态" valuePropName="checked" initialValue={true}>
