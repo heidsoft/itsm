@@ -1,6 +1,6 @@
 # ITSM 前端 UI 开发规范
 
-> **版本**: 1.0
+> **版本**: 1.1
 > **最后更新**: 2026-06-14
 > **目的**: 针对 ITSM 前端开发中的常见 UI 问题制定约束，确保界面的一致性、可读性和专业性。
 
@@ -8,14 +8,41 @@
 
 ## 速查表
 
-| 问题类型 | 检查点 | 修复优先级 |
-|----------|--------|------------|
-| 配色对比度 | 无灰色透明背景 + 白色文字组合 | P0 |
-| 开发状态文字 | 无"开发中"、"Under construction"等提示 | P0 |
-| 卡片尺寸 | 同一行卡片结构一致，无堆叠 Statistic | P1 |
-| 标签样式 | Tag 颜色清晰可读，非透明背景 | P1 |
-| 按钮状态 | 激活/非激活状态有明显区分 | P2 |
-| 错误处理 | 可能报错的功能有 try-catch 包装 | P2 |
+| 问题类型 | 检查点 | 修复优先级 | 关联规则 |
+|----------|--------|------------|----------|
+| 配色对比度 | 无灰色透明背景 + 白色文字组合 | P0 | FRONTEND-NO-GO.md §1 |
+| 开发状态文字 | 无"开发中"、"Under construction"等提示 | P0 | FRONTEND-NO-GO.md §2 |
+| 看板卡片文字 | 数字下方次要文字不使用透明背景 | P0 | FRONTEND-NO-GO.md §0.5 |
+| 通知按钮状态 | 入口按钮有明确激活/非激活区分 | P0 | FRONTEND-NO-GO.md §5.1 |
+| 标签输入样式 | Select mode="tags" 使用自定义 tagRender | P0 | FRONTEND-NO-GO.md §5.2 |
+| 导航错误处理 | 可能报错的功能有 try-catch 包装 | P0 | FRONTEND-NO-GO.md §6.1 |
+| 卡片尺寸 | 同一行卡片结构一致，无堆叠 Statistic | P1 | FRONTEND-NO-GO.md §3 |
+| Focus 样式 | 输入框无过于醒目的蓝色 focus ring | P1 | FRONTEND-NO-GO.md §5.3 |
+| 按钮状态 | 激活/非激活状态有明显区分 | P2 | FRONTEND-NO-GO.md §5 |
+
+---
+
+### 0.5 看板卡片数字下方文字透明度
+
+**问题**：事件管理页的看板卡片，数字下方文字太透明了，看不清楚。
+
+```tsx
+// ❌ 错误：数字下方文字使用透明背景 + 白色文字
+<Card className="bg-gray-800">
+  <Statistic value={42} />
+  <Text className="text-white/40">个待处理</Text>  {/* 透明度太高，不可读 */}
+</Card>
+
+// ✅ 正确：使用 Ant Design 文字类型，自动适配主题
+<Statistic value={42} />
+<Typography.Text type="secondary">个待处理</Typography.Text>
+
+// ✅ 正确：使用固定颜色（非透明）
+<Card>
+  <Statistic value={42} />
+  <span className="text-gray-400">个待处理</span>  {/* 固定颜色，无透明度 */}
+</Card>
+```
 
 ---
 
@@ -224,20 +251,42 @@
 
 ### 4.2 Focus 状态样式
 
-**问题**：输入框光标出现蓝色框。
+**问题**：新建知识库文章标签输入框光标出现蓝色框（focus ring 过强）。
 
 **解决方案**：
 
 ```tsx
-// ✅ 确保 focus 样式不干扰输入体验
-<input
-  className="focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-/>
+// ❌ 错误：focus ring 过强，覆盖过多区域
+<Select className="focus:ring-4 focus:ring-blue-500" />
 
-// Ant Design Select focus 问题
+// ✅ 正确：使用适度的 focus 样式
+<Select className="focus:ring-2 focus:ring-primary focus:ring-offset-0" />
+
+// ✅ 正确：禁用 focus ring，改用 border 颜色变化
 <Select
-  className="focus-visible:ring-2 focus-visible:ring-blue-500"
+  className="focus:border-primary border-gray-300 transition-colors"
+  styles={{
+    focus: { borderColor: 'var(--ant-primary-color)' },
+  }}
 />
+```
+
+### 4.3 看板卡片数字下方文字
+
+**问题**：事件管理页的看板卡片，数字下方文字太透明了。
+
+**解决方案**：
+
+```tsx
+// ✅ 使用 Ant Design 文字类型
+<Statistic value={42} />
+<Typography.Text type="secondary">个待处理</Typography.Text>
+
+// ✅ 或使用固定颜色（非透明）
+<Card>
+  <Statistic value={42} />
+  <span className="text-gray-400">个待处理</span>
+</Card>
 ```
 
 ---
@@ -335,51 +384,91 @@ const ServiceTopology = ({ assetId }) => {
 
 - [ ] 没有灰色透明背景配白色文字的组合
 - [ ] 所有"开发中"、"Under construction"等状态文字已移除
-- [ ] 统计卡片/KPI 卡片尺寸一致
-- [ ] Tag 输入框的标签样式清晰可读
-- [ ] 按钮和导航有明确的激活/非激活状态
-- [ ] 所有可能导致报错的操作有错误处理
-- [ ] 表单输入框的 focus 状态不干扰输入
+- [ ] 看板卡片数字下方次要文字不使用透明背景
+- [ ] 统计卡片/KPI 卡片尺寸一致，无堆叠多个 Statistic
+- [ ] Tag 输入框（Select mode="tags"）使用自定义 tagRender，标签清晰可读
+- [ ] 通知中心入口按钮有明确的激活/非激活状态区分（Badge + type）
+- [ ] 所有可能导致报错的操作有 try-catch 错误处理
+- [ ] 表单输入框的 focus 状态不过于醒目（focus:ring-2 而非 focus:ring-4）
+- [ ] 所有导航按钮（router.push）有错误处理
 
 ---
 
 ## 8. 快速修复命令
 
 ```bash
+# === P0 必检 ===
+
 # 检查是否包含开发状态文字
-grep -rn "开发中\|Under construction\|开发状态\|逐步复用\|稳态渲染\|设计态与运行态" src --include="*.tsx"
+grep -rEn "开发中|Under construction|开发状态|逐步复用|稳态渲染|设计态与运行态|复杂域页面|统一收口" src --include="*.tsx"
 
-# 检查是否有灰色透明背景
-grep -rn "bg-gray-\d\+/[0-4][0-9] text-white" src --include="*.tsx"
+# 检查是否有灰色透明背景 + 白色文字
+grep -rEn "bg-gray-[0-9]+/[0-4][0-9] text-white|text-white/[0-9] text-white" src --include="*.tsx"
 
-# 检查标签样式
-grep -rn "bg-gray-\d*/[0-4][0-9] text-white" src --include="*.tsx"
+# 检查 Select mode="tags" 是否缺少 tagRender
+grep -rEn 'mode="tags"' src --include="*.tsx" | while read f; do
+  file=$(echo "$f" | cut -d: -f1)
+  if ! grep -q "tagRender" "$file"; then
+    echo "MISSING tagRender: $file"
+  fi
+done
+
+# 检查通知中心按钮是否缺少状态区分
+grep -rEn "<Button[^>]*icon=\{<Bell" src --include="*.tsx" | grep -v "Badge\|notificationsOpen\|type=.*primary"
+
+# 检查看板卡片数字下方文字是否使用透明背景
+grep -rEn "text-white/[0-9]" src --include="*.tsx"
+
+# === P1 推荐检查 ===
+
+# 检查 focus ring 样式是否过于醒目
+grep -rEn "focus:ring-[4-9]" src --include="*.tsx"
+
+# 检查无错误处理的导航按钮
+grep -rEn "onClick=\{.*router\.push" src --include="*.tsx" | grep -v "try\|catch\|error\|message\." | grep -v "disabled="
+
+# === P2 可选检查 ===
+
+# 检查大文件（超过 800 行）
+find src -name "*.tsx" -exec wc -l {} \; | awk '$1 > 800 {print $2, $1" lines"}'
 ```
 
 ---
 
-## 9. 参考文件
+## 9. 参考文件与常见问题映射
 
-| 页面 | 文件路径 | 常见问题 |
-|------|----------|----------|
-| CMDB | `app/(main)/cmdb/page.tsx` | 页面头部有开发状态提示 |
-| 报表中心 | `app/(main)/reports/page.tsx` | 有"稳态渲染"提示 |
-| 工作流管理 | `app/(main)/workflow/page.tsx` | 有"设计态与运行态"提示 |
-| SLA服务级别 | `app/(main)/sla/page.tsx` | 合规率卡片有额外 Statistic |
-| 高级分析 | `components/reports/AdvancedAnalytics.tsx` | KPI 卡片尺寸 |
-| 知识库新建 | `app/(main)/knowledge/articles/new/page.tsx` | 标签输入框样式 |
-| 用户组管理 | `app/(main)/admin/groups/page.tsx` | 权限标签样式 |
+| 页面 | 文件路径 | 常见问题 | 关联规则 |
+|------|----------|----------|----------|
+| CMDB | `app/(main)/cmdb/page.tsx` | 页面头部有开发状态提示 | NO-GO §2 |
+| 报表中心 | `app/(main)/reports/page.tsx` | 有"稳态渲染"提示 | NO-GO §2 |
+| 工作流管理 | `app/(main)/workflow/page.tsx` | 有"设计态与运行态"提示 | NO-GO §2 |
+| SLA服务级别 | `app/(main)/sla/page.tsx` | 合规率卡片有堆叠 Statistic，卡片高度不一致 | NO-GO §3 |
+| 高级分析 | `components/reports/AdvancedAnalytics.tsx` | KPI 卡片尺寸不一致 | NO-GO §3 |
+| 知识库新建 | `app/(main)/knowledge/articles/new/page.tsx` | 标签输入框缺少 tagRender，focus ring 过强 | NO-GO §5.2, §5.3 |
+| 用户组管理 | `app/(main)/admin/groups/page.tsx` | 权限标签样式不清晰 | NO-GO §1.2 |
+| 事件管理 | `app/(main)/tickets/page.tsx` | 看板卡片数字下方文字透明度太高 | NO-GO §0.5 |
+| 全局 | 通知中心组件 | 入口按钮无状态变化 | NO-GO §5.1 |
+| 全局 | 资产服务拓扑入口 | 导航无错误处理 | NO-GO §6.1 |
 
 ---
 
 ## 10. 已修复问题记录
 
-| 修复日期 | 页面 | 问题 | 状态 |
-|----------|------|------|------|
-| 2026-06-14 | `workflow/page.tsx` | 移除"设计态与运行态已分离处理"提示 | ✅ |
-| 2026-06-14 | `cmdb/page.tsx` | 移除"复杂域页面开始统一收口"提示 | ✅ |
-| 2026-06-14 | `reports/page.tsx` | 移除"稳态渲染"提示 | ✅ |
-| 2026-06-14 | `sla/page.tsx` | 合规率卡片拆分为独立 Card | ✅ |
-| 2026-06-14 | `knowledge/articles/new/page.tsx` | 标签使用自定义样式 `bg-blue-100 text-blue-800` | ✅ |
-| 2026-06-14 | `admin/groups/page.tsx` | 权限标签使用自定义样式 | ✅ |
-| 2026-06-14 | `sla/page.tsx` | SLA 卡片改用 `align="stretch"` 和 `h-full w-full` 确保高度一致 | ✅ |
+| 修复日期 | 页面 | 问题 | 状态 | 关联规则 |
+|----------|------|------|------|----------|
+| 2026-06-14 | `workflow/page.tsx` | 移除"设计态与运行态已分离处理"提示 | ✅ | NO-GO §2 |
+| 2026-06-14 | `cmdb/page.tsx` | 移除"复杂域页面开始统一收口"提示 | ✅ | NO-GO §2 |
+| 2026-06-14 | `reports/page.tsx` | 移除"稳态渲染"提示 | ✅ | NO-GO §2 |
+| 2026-06-14 | `sla/page.tsx` | 合规率卡片拆分为独立 Card | ✅ | NO-GO §3 |
+| 2026-06-14 | `sla/page.tsx` | SLA 卡片改用 `align="stretch"` 和 `h-full w-full` 确保高度一致 | ✅ | NO-GO §3 |
+| 2026-06-14 | `knowledge/articles/new/page.tsx` | 标签使用自定义样式 `bg-blue-100 text-blue-800` | ✅ | NO-GO §5.2 |
+| 2026-06-14 | `admin/groups/page.tsx` | 权限标签使用自定义样式 | ✅ | NO-GO §1.2 |
+
+---
+
+## 11. 规则文件索引
+
+| 文件 | 用途 |
+|------|------|
+| `UI-DEVELOPMENT.md` | 开发规范和解决方案示例 |
+| `FRONTEND-NO-GO.md` | 负面清单（禁止的反模式），含自检命令 |

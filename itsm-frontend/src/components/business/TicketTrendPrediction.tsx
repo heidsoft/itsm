@@ -274,7 +274,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
         error instanceof Error &&
         (error.message.includes('404') || error.message.includes('not found'))
       ) {
-        antMessage.info('导出功能正在开发中，请稍后再试');
+        antMessage.info('导出功能即将推出');
       } else {
         antMessage.error('导出失败，请稍后再试');
       }

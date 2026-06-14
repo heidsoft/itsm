@@ -19,6 +19,7 @@ import {
   Descriptions,
   Empty,
   Tooltip,
+  DatePicker,
 } from 'antd';
 import {
   Plus,
@@ -505,10 +506,10 @@ export default function StandardChangesPage() {
                 <Input />
               </Form.Item>
               <Form.Item name="planned_start_date" label="计划开始时间">
-                <Input type="datetime-local" />
+                <DatePicker showTime style={{ width: '100%' }} placeholder="选择计划开始时间" />
               </Form.Item>
               <Form.Item name="planned_end_date" label="计划结束时间">
-                <Input type="datetime-local" />
+                <DatePicker showTime style={{ width: '100%' }} placeholder="选择计划结束时间" />
               </Form.Item>
             </Form>
           </div>

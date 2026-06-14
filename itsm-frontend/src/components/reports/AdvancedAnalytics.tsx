@@ -318,7 +318,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
       <Card
         title="数据分析控制台"
         extra={
-          <Button icon={<Download />} onClick={() => message.info('导出功能开发中')}>
+          <Button icon={<Download />} onClick={() => message.info('导出功能即将推出')}>
             导出报告
           </Button>
         }

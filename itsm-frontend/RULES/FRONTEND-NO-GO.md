@@ -1,14 +1,61 @@
 # ITSM 前端开发负面清单
 
-> **版本**: 1.0
+> **版本**: 1.1
 > **最后更新**: 2026-06-14
-> **目的**: 列出前端开发中不应使用的反模式和坏习惯，供 AI 开发助手遵循
+> **目的**: 列出前端开发中不应使用的反模式和坏习惯，供 AI 开发助手遵循。AI 开发任何新功能或修改现有代码前，必须先检查本清单。
+
+---
+
+## 0. 规则优先级
+
+| 级别 | 含义 | AI 行为 |
+|------|------|---------|
+| P0 / CRITICAL | 会导致用户不可用或严重体验问题 | **必须修复**，禁止合入 |
+| P1 / HIGH | 明显影响用户体验 | **必须修复**，尽量在同一次提交中解决 |
+| P2 / MEDIUM | 可维护性或健壮性问题 | **应修复**，不阻塞但需跟进 |
+
+---
+
+## 0.5 看板卡片数字下方文字透明度
+
+### 0.5.1 禁止数字下方次要文字使用透明背景配白色文字
+
+**优先级**: P0
+
+```tsx
+// ❌ 错误模式：数字下方文字使用透明背景 + 白色文字
+<Card>
+  <Statistic value={123} />
+  <Text className="text-white/60">处理中</Text>  {/* 对比度不足 */}
+</Card>
+
+// ❌ 错误模式：使用灰色透明背景
+<Card className="bg-gray-100/30">
+  <Text className="text-white">{count}</Text>
+  <Text className="text-gray-300">个待处理</Text>
+</Card>
+
+// ✅ 正确模式：使用 Ant Design 文字类型，自动适配主题
+<Statistic value={123} />
+<Typography.Text type="secondary">处理中</Typography.Text>
+
+// ✅ 正确模式：使用语义化颜色（非透明）
+<Card>
+  <Statistic value={123} />
+  <span className="text-gray-500">处理中</span>  {/* 固定颜色，无透明度 */}
+</Card>
+```
+
+**检测命令**:
+```bash
+grep -rn "text-white/[0-9] text-white\|text-gray-[0-9]*/[0-9] text-white\|bg-gray-[0-9]*/[0-4][0-9] text-white" src --include="*.tsx"
+```
 
 ---
 
 ## 1. 配色与对比度反模式
 
-### 1.1 禁止灰色透明背景配白色文字
+### 1.1 [P0] 禁止灰色透明背景配白色文字
 
 ```tsx
 // ❌ 错误模式：灰色透明背景 + 白色文字 = 对比度不足，不可读
@@ -209,7 +256,7 @@
 
 ## 5. 按钮状态反模式
 
-### 5.1 禁止通知中心入口按钮无状态变化
+### 5.1 [P0] 禁止通知中心入口按钮无状态变化
 
 ```tsx
 // ❌ 错误模式：按钮状态无明显区分
@@ -227,7 +274,51 @@
 </Badge>
 ```
 
-### 5.2 禁止悬停状态无反馈
+### 5.2 [P0] 禁止 Select mode="tags" 使用默认标签样式
+
+**问题**：输入文字确认后标签是灰色透明背景配白色文字，看不清楚。
+
+```tsx
+// ❌ 错误模式：使用默认标签样式，在深色背景上不可见
+<Select mode="tags" placeholder="输入标签后回车" />
+
+// ✅ 正确模式：自定义 tagRender 确保可读性
+<Select
+  mode="tags"
+  placeholder="输入标签后回车"
+  tagRender={({ label, closable, onClose }) => (
+    <Tag
+      closable={closable}
+      onClose={onClose}
+      className="bg-blue-100 text-blue-800 border-blue-300 mr-1 mb-1"
+    >
+      {label}
+    </Tag>
+  )}
+/>
+```
+
+### 5.3 [P1] 禁止输入框 focus 状态出现蓝色边框干扰输入
+
+**问题**：新建知识库文章标签输入框光标出现蓝色框。
+
+```tsx
+// ❌ 错误模式：focus 样式过于醒目或与 Ant Design 主题冲突
+<Select className="focus:ring-4 focus:ring-blue-500" />
+
+// ✅ 正确模式：使用适度的 focus 样式或依赖 Ant Design 默认样式
+<Select className="focus:ring-2 focus:ring-primary focus:ring-offset-0" />
+
+// ✅ 正确模式：禁用 focus ring，改用 border 颜色变化
+<Select
+  className="focus:border-primary border-gray-300 transition-colors"
+  styles={{
+    focus: { borderColor: 'var(--ant-primary-color)' },
+  }}
+/>
+```
+
+### 5.4 禁止悬停状态无反馈
 
 ```tsx
 // ❌ 错误模式：悬停状态无变化
@@ -241,15 +332,17 @@
 
 ## 6. 错误处理反模式
 
-### 6.1 禁止链接/按钮无错误处理
+### 6.1 [P0] 禁止链接/按钮无错误处理（导致页面报错）
+
+**问题**：点击"资产服务拓扑"弹出报错。
 
 ```tsx
-// ❌ 错误模式：可能导致页面报错
+// ❌ 错误模式：可能导致页面报错，无任何错误处理
 <Button onClick={() => router.push('/cmdb/topology')}>
   资产服务拓扑
 </Button>
 
-// ✅ 正确模式：添加错误处理
+// ✅ 正确模式：添加 try-catch 和错误提示
 <Button
   onClick={async () => {
     try {
@@ -258,6 +351,14 @@
       message.error('页面加载失败，请稍后重试');
     }
   }}
+>
+  资产服务拓扑
+</Button>
+
+// ✅ 正确模式：使用 disabled 状态防止错误操作（功能不可用时）
+<Button
+  disabled={!isTopologyAvailable}
+  onClick={() => router.push('/cmdb/topology')}
 >
   资产服务拓扑
 </Button>
@@ -359,32 +460,59 @@ const limit = data.length > MAX_DISPLAY_ITEMS ? data.slice(0, MAX_DISPLAY_ITEMS)
 
 ---
 
-## 9. Git 提交检查命令
+## 9. Git 提交前自检命令
+
+> AI 开发在每次提交前必须运行以下命令，确保无负面清单中的问题。
 
 ```bash
+# === P0 检查（必须全部通过）===
+
 # 检查是否包含开发状态文字
-grep -rn "开发中\|Under construction\|开发状态\|逐步复用\|稳态渲染\|设计态与运行态" src --include="*.tsx"
+grep -rEn "开发中|Under construction|开发状态|逐步复用|稳态渲染|设计态与运行态|复杂域页面|统一收口" src --include="*.tsx"
 
-# 检查是否有灰色透明背景
-grep -rn "bg-gray-[0-9]\+/[0-4][0-9] text-white" src --include="*.tsx"
+# 检查是否有灰色透明背景 + 白色文字
+grep -rEn "bg-gray-[0-9]+/[0-4][0-9] text-white|text-white/[0-9] text-white" src --include="*.tsx"
 
-# 检查标签样式
-grep -rn "bg-gray-[0-9]*/[0-4][0-9] text-white" src --include="*.tsx"
+# 检查是否有通知中心按钮缺少状态区分（排除已有 Badge 的）
+grep -rEn "<Button[^>]*icon=\{<Bell" src --include="*.tsx" | grep -v "Badge\|notificationsOpen\|type=.*primary"
+
+# 检查 Select mode="tags" 是否缺少 tagRender
+grep -rEn 'mode="tags"' src --include="*.tsx" | while read f; do
+  file=$(echo "$f" | cut -d: -f1)
+  if ! grep -q "tagRender" "$file"; then
+    echo "MISSING tagRender: $file"
+  fi
+done
+
+# === P1 检查 ===
+
+# 检查 focus ring 样式是否过于醒目
+grep -rEn "focus:ring-4|focus:ring-[5-9]" src --include="*.tsx"
+
+# 检查看板卡片数字下方文字是否使用透明背景
+grep -rEn "text-white/[0-9]|bg-gray-[0-9]+/[0-3][0-9]" src --include="*.tsx"
+
+# === P2 检查 ===
 
 # 检查大文件（超过 800 行）
-find src -name "*.tsx" -exec wc -l {} \; | awk '$1 > 800 {print $2, $1}'
+find src -name "*.tsx" -exec wc -l {} \; | awk '$1 > 800 {print $2, $1" lines"}'
+
+# 检查无错误处理的导航按钮
+grep -rEn "onClick=\{.*router\.push" src --include="*.tsx" | grep -v "try\|catch\|error\|message\." | grep -v "disabled="
 ```
 
 ---
 
 ## 10. 快速修复对照表
 
-| 反模式 | 错误示例 | 正确示例 |
-|--------|----------|----------|
-| 透明背景+白字 | `bg-gray-100/50 text-white` | `bg-gray-900 text-white` |
-| 开发状态提示 | `<ManagementNotice message="..." />` | 移除或功能描述 |
-| 堆叠 Statistic | `<Card><Statistic/><Statistic/></Card>` | 拆分独立 Card |
-| 默认 tags 样式 | `<Select mode="tags" />` | 添加 `tagRender` |
-| 无错误处理 | `<Button onClick={navigate} />` | 添加 try-catch |
-| 硬编码颜色 | `style={{ color: '#1890ff' }}` | 使用 CSS 类或变量 |
-| 魔法数字 | `setTimeout(fn, 3000)` | `const INTERVAL = 3000` |
+| 优先级 | 反模式 | 错误示例 | 正确示例 |
+|--------|--------|----------|----------|
+| P0 | 透明背景+白字 | `bg-gray-100/50 text-white` | `bg-gray-900 text-white` |
+| P0 | 开发状态提示 | `<ManagementNotice message="..." />` | 移除或功能描述 |
+| P0 | 无 tagRender | `<Select mode="tags" />` | 添加 `tagRender` 自定义样式 |
+| P0 | 无通知状态 | `<Button icon={<Bell />}>` | 加 `Badge` + `type` 区分 |
+| P0 | 无错误处理导航 | `<Button onClick={push}>` | 加 `try-catch` |
+| P1 | 看板卡片透明文字 | `text-white/60` | `type="secondary"` |
+| P1 | focus ring 过强 | `focus:ring-4` | `focus:ring-2` |
+| P2 | 堆叠 Statistic | `<Card><Statistic/><Statistic/></Card>` | 拆分独立 Card |
+| P2 | 硬编码颜色 | `style={{ color: '#1890ff' }}` | 使用 CSS 类或变量 |

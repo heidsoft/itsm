@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Row, Col, Statistic, Button, message, Input, Select, Space, Tabs } from 'antd';
+import { Card, Row, Col, Statistic, Button, message, Input, Select, Space, Tabs, Empty } from 'antd';
 import {
   GitPullRequest,
   CheckCircle,
@@ -317,8 +317,10 @@ export default function ChangesPage() {
               ),
               children: (
                 <Card className="text-center py-12">
-                  <Calendar className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-500">日历视图开发中，敬请期待...</p>
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="暂无日历视图数据"
+                  />
                 </Card>
               ),
             },
