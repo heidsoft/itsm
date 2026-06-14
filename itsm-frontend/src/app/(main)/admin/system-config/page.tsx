@@ -46,6 +46,48 @@ const { Password } = Input;
 // 引入系统配置API
 import { SystemConfigAPI } from '@/lib/api/system-config-api';
 
+const BOOLEAN_CONFIG_KEYS = new Set([
+  'passwordRequireUppercase',
+  'passwordRequireLowercase',
+  'passwordRequireNumbers',
+  'passwordRequireSpecialChars',
+  'enable2FA',
+  'smtpEnableSSL',
+]);
+
+const NUMBER_CONFIG_KEYS = new Set([
+  'sessionTimeout',
+  'maxFileSize',
+  'passwordMinLength',
+  'loginMaxAttempts',
+  'accountLockoutDuration',
+  'smtpPort',
+]);
+
+const normalizeConfigValue = (key: string, value: unknown): unknown => {
+  if (BOOLEAN_CONFIG_KEYS.has(key)) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    return Boolean(value);
+  }
+
+  if (NUMBER_CONFIG_KEYS.has(key)) {
+    if (typeof value === 'number') return value;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return value;
+};
+
+const serializeConfigValue = (value: unknown): string => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (typeof value === 'number') return String(value);
+  return JSON.stringify(value);
+};
+
 export default function SystemConfiguration() {
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState('general');
@@ -67,7 +109,7 @@ export default function SystemConfiguration() {
       const configMap: Record<string, unknown> = {};
 
       response.configs.forEach((item: { key: string; value: unknown }) => {
-        configMap[item.key] = item.value;
+        configMap[item.key] = normalizeConfigValue(item.key, item.value);
       });
 
       setConfig(configMap);
@@ -144,7 +186,7 @@ export default function SystemConfiguration() {
       // 构造更新请求
       const updateRequests = Object.entries(values).map(([key, value]) => ({
         key,
-        value: String(value),
+        value: serializeConfigValue(value),
       }));
 
       await SystemConfigAPI.updateConfigs(updateRequests);

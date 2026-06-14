@@ -273,6 +273,10 @@ export class CMDBApi {
     return httpClient.get(`${BASE}/discovery-sources`);
   }
 
+  static async getDiscoverySources(): Promise<Array<Record<string, unknown>>> {
+    return httpClient.get(`${BASE}/discovery-sources`);
+  }
+
   static async getDiscoveryHistory(ruleId?: string): Promise<Array<Record<string, unknown>>> {
     return httpClient.get(`${BASE}/discovery/results`, ruleId ? { source_id: ruleId } : undefined);
   }

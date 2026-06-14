@@ -570,6 +570,18 @@ export const routes: RouteConfig[] = [
     },
     children: [
       {
+        path: '/admin',
+        name: 'admin-overview',
+        title: '系统概览',
+        component: 'AdminDashboard',
+        permissions: [{ resource: 'admin', action: 'read' }],
+        meta: {
+          requireAuth: true,
+          roles: ['admin', 'super_admin'],
+          keepAlive: true,
+        },
+      },
+      {
         path: '/admin/users',
         name: 'user-management',
         title: '用户管理',
@@ -603,10 +615,43 @@ export const routes: RouteConfig[] = [
         },
       },
       {
-        path: '/admin/system',
+        path: '/notifications',
+        name: 'notification-settings',
+        title: '通知配置',
+        component: 'NotificationsPage',
+        permissions: [{ resource: 'system', action: 'manage' }],
+        meta: {
+          requireAuth: true,
+          roles: ['admin', 'super_admin'],
+        },
+      },
+      {
+        path: '/workflow/audit',
+        name: 'audit-logs',
+        title: '操作日志',
+        component: 'AuditLogsPage',
+        permissions: [{ resource: 'system', action: 'view_logs' }],
+        meta: {
+          requireAuth: true,
+          roles: ['admin', 'super_admin'],
+        },
+      },
+      {
+        path: '/admin/cmdb-types',
+        name: 'cmdb-types',
+        title: 'CMDB 类型',
+        component: 'CMDBTypesManagement',
+        permissions: [{ resource: 'cmdb', action: 'manage' }],
+        meta: {
+          requireAuth: true,
+          roles: ['admin', 'super_admin'],
+        },
+      },
+      {
+        path: '/admin/system-config',
         name: 'system-settings',
         title: '系统设置',
-        component: 'SystemSettings',
+        component: 'SystemConfiguration',
         permissions: [{ resource: 'system', action: 'manage' }],
         meta: {
           requireAuth: true,

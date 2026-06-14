@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { Card, Col, List, Row, Space, Tag, Typography, theme } from 'antd';
 import { Settings, FileText, ArrowUpRight } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
@@ -23,6 +22,7 @@ export const SystemInfo: React.FC = () => {
             <Space>
               <Settings className="w-5 h-5" />
               {t('admin.systemInfo')}
+              <Tag color="gold">静态展示</Tag>
             </Space>
           }
           style={{ height: '100%' }}
@@ -55,33 +55,35 @@ export const SystemInfo: React.FC = () => {
             <Space>
               <FileText className="w-5 h-5" />
               {t('admin.helpSupport')}
+              <Tag color="blue">待接入</Tag>
             </Space>
           }
           style={{ height: '100%' }}
         >
           <List
             dataSource={[
-              { title: t('admin.configGuide'), href: '#' },
-              { title: t('admin.apiDocs'), href: '#' },
-              { title: t('admin.techSupport'), href: '#' },
-              { title: t('admin.updateLog'), href: '#' },
+              { title: t('admin.configGuide'), status: '规划中' },
+              { title: t('admin.apiDocs'), status: '规划中' },
+              { title: t('admin.techSupport'), status: '规划中' },
+              { title: t('admin.updateLog'), status: '规划中' },
             ]}
             renderItem={item => (
               <List.Item>
-                <Link href={item.href} style={{ textDecoration: 'none', width: '100%' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: `${token.paddingSM}px 0`,
-                      width: '100%',
-                    }}
-                  >
-                    <Text>{item.title}</Text>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: `${token.paddingSM}px 0`,
+                    width: '100%',
+                  }}
+                >
+                  <Text>{item.title}</Text>
+                  <Space size={8}>
+                    <Tag>{item.status}</Tag>
                     <ArrowUpRight className="w-4 h-4" style={{ color: token.colorTextSecondary }} />
-                  </div>
-                </Link>
+                  </Space>
+                </div>
               </List.Item>
             )}
           />

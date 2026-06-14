@@ -2,16 +2,12 @@
 
 import {
   Plus,
-  Search,
-  Filter,
   Edit,
   Trash2,
   MoreHorizontal,
   Users,
   UserCheck,
   Download,
-  Upload,
-  Eye,
   Key,
   UserX,
 } from 'lucide-react';
@@ -72,7 +68,6 @@ const UserManagement: React.FC = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
 
   // 表单
   const [createForm] = Form.useForm();
@@ -93,11 +88,8 @@ const UserManagement: React.FC = () => {
       const response = await UserApi.getUsers(params);
       setUsers(response.users);
       setPagination(prev => ({ ...prev, total: response.pagination.total }));
-      setStats({
-        total: response.pagination.total,
-        active: response.users.filter(u => u.active).length,
-        inactive: response.users.filter(u => !u.active).length,
-      });
+      const userStats = await UserApi.getUserStats(currentTenant?.id);
+      setStats(userStats);
     } catch (error) {
       message.error('加载用户列表失败');
     } finally {
@@ -379,14 +371,14 @@ const UserManagement: React.FC = () => {
               <AntSearch
                 placeholder="搜索用户名、姓名、邮箱"
                 style={{ width: 280 }}
-                onSearch={value => setFilters(prev => ({ ...prev, search: value }))}
+                onSearch={handleSearch}
                 allowClear
               />
               <Select
                 placeholder="状态筛选"
                 style={{ width: 120 }}
                 allowClear
-                onChange={value => setFilters(prev => ({ ...prev, status: value || '' }))}
+                onChange={value => handleFilterChange('status', value || '')}
               >
                 <Option value="active">激活</Option>
                 <Option value="inactive">禁用</Option>
@@ -395,7 +387,7 @@ const UserManagement: React.FC = () => {
                 placeholder="部门筛选"
                 style={{ width: 160 }}
                 allowClear
-                onChange={value => setFilters(prev => ({ ...prev, department: value || '' }))}
+                onChange={value => handleFilterChange('department', value || '')}
               >
                 <Option value="IT部门">IT部门</Option>
                 <Option value="财务部门">财务部门</Option>
@@ -426,9 +418,10 @@ const UserManagement: React.FC = () => {
                     状态: user.active ? '激活' : '禁用',
                     创建时间: user.createdAt,
                   }));
+                  const headers = ['用户名', '姓名', '邮箱', '部门', '电话', '状态', '创建时间'];
                   const csvContent = [
-                    Object.keys(exportData[0] || {}).join(','),
-                    ...exportData.map(row => Object.values(row).join(',')),
+                    headers.join(','),
+                    ...exportData.map(row => headers.map(header => row[header as keyof typeof row]).join(',')),
                   ].join('\n');
                   const blob = new Blob(['\ufeff' + csvContent], {
                     type: 'text/csv;charset=utf-8;',
@@ -463,6 +456,7 @@ const UserManagement: React.FC = () => {
             dataSource={users}
             rowKey="id"
             loading={loading}
+            scroll={{ x: 980 }}
             pagination={{
               current: pagination.current,
               pageSize: pagination.pageSize,

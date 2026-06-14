@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Button, App, Modal } from 'antd';
-import { Plus } from 'lucide-react';
+import { App, Modal, Tag, Typography } from 'antd';
 import { ApprovalChainStatsCards } from './components/ApprovalChainStats';
 import { ApprovalChainFilters } from './components/ApprovalChainFilters';
 import { ApprovalChainTable } from './components/ApprovalChainTable';
@@ -13,6 +12,74 @@ import {
   ApprovalChainStats,
 } from '@/types/approval-chain';
 import { httpClient } from '@/lib/api/http-client';
+
+const { Text } = Typography;
+
+type BackendApprovalStep = {
+  level?: number;
+  approverId?: number;
+  role?: string;
+  name?: string;
+  isRequired?: boolean;
+};
+
+type BackendApprovalChain = {
+  id: number;
+  name: string;
+  description?: string;
+  entityType?: string;
+  chain?: BackendApprovalStep[];
+  status?: string;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ApprovalChainSubmitData = {
+  name?: string;
+  description?: string;
+  entityType?: string;
+  isActive?: boolean;
+  steps?: ApprovalChain['steps'];
+};
+
+const normalizeChain = (chain: BackendApprovalChain): ApprovalChain => ({
+  id: chain.id,
+  name: chain.name,
+  description: chain.description,
+  entityType: chain.entityType || 'ticket',
+  status: chain.status || 'active',
+  isActive: chain.status !== 'inactive',
+  tenantId: chain.tenantId,
+  createdAt: chain.createdAt,
+  updatedAt: chain.updatedAt,
+  steps: (chain.chain || []).map((step, index) => ({
+    id: index + 1,
+    chainId: chain.id,
+    stepOrder: step.level || index + 1,
+    stepName: step.name || `步骤 ${index + 1}`,
+    approverType: step.role ? 'role' : 'user',
+    approverId: step.approverId || 0,
+    approverName: step.name || step.role || '',
+    isRequired: step.isRequired !== false,
+    createdAt: chain.createdAt,
+    updatedAt: chain.updatedAt,
+  })),
+});
+
+const toBackendPayload = (data: ApprovalChainSubmitData, fallback?: ApprovalChain) => ({
+  name: data.name || fallback?.name || '',
+  description: data.description || fallback?.description || '',
+  entityType: data.entityType || fallback?.entityType || 'ticket',
+  status: data.isActive ?? fallback?.isActive ? 'active' : 'inactive',
+  chain: (data.steps || fallback?.steps || []).map((step, index) => ({
+    level: index + 1,
+    approver_id: step.approverId || undefined,
+    role: step.approverType === 'role' ? step.approverName : '',
+    name: step.approverName || step.stepName,
+    isRequired: step.isRequired,
+  })),
+});
 
 export default function ApprovalChainsPage() {
   const { message } = App.useApp();
@@ -69,7 +136,7 @@ export default function ApprovalChainsPage() {
         params
       );
 
-      setChains(response.data);
+      setChains((response.data as unknown as BackendApprovalChain[]).map(normalizeChain));
       setPagination(prev => ({
         ...prev,
         total: response.total || response.data.length,
@@ -134,8 +201,40 @@ export default function ApprovalChainsPage() {
 
   // 处理查看审批链
   const handleViewChain = useCallback((chain: ApprovalChain) => {
-    // 这里可以打开详情页面或模态框
-    message.info(`查看审批链: ${chain.name}`);
+    Modal.info({
+      title: '审批链详情',
+      width: 640,
+      content: (
+        <div className="space-y-3 pt-2">
+          <p>
+            <Text strong>名称：</Text>
+            {chain.name}
+          </p>
+          <p>
+            <Text strong>适用对象：</Text>
+            <Tag>{chain.entityType || 'ticket'}</Tag>
+          </p>
+          <p>
+            <Text strong>状态：</Text>
+            <Tag color={chain.isActive ? 'green' : 'red'}>{chain.isActive ? '启用' : '停用'}</Tag>
+          </p>
+          <p>
+            <Text strong>描述：</Text>
+            {chain.description || '-'}
+          </p>
+          <div>
+            <Text strong>审批步骤：</Text>
+            <ol className="mt-2 list-decimal pl-5">
+              {chain.steps.map(step => (
+                <li key={`${chain.id}-${step.stepOrder}`}>
+                  {step.stepName}：{step.approverName || '未指定审批人'}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      ),
+    });
   }, []);
 
   // 处理删除审批链
@@ -166,8 +265,9 @@ export default function ApprovalChainsPage() {
   const handleToggleStatus = useCallback(
     async (chain: ApprovalChain) => {
       try {
-        await httpClient.patch(`/api/v1/approval-chains/${chain.id}`, {
-          isActive: !chain.isActive,
+        await httpClient.put(`/api/v1/approval-chains/${chain.id}`, {
+          ...toBackendPayload(chain, chain),
+          status: chain.isActive ? 'inactive' : 'active',
         });
         message.success(`${chain.isActive ? '停用' : '启用'}成功`);
         loadChains();
@@ -184,19 +284,9 @@ export default function ApprovalChainsPage() {
     async (chain: ApprovalChain) => {
       try {
         await httpClient.post('/api/v1/approval-chains', {
+          ...toBackendPayload(chain, chain),
           name: `${chain.name} - 副本`,
-          description: chain.description,
-          isActive: false,
-          steps: chain.steps.map(step => ({
-            stepOrder: step.stepOrder,
-            stepName: step.stepName,
-            approverType: step.approverType,
-            approverId: step.approverId,
-            approverName: step.approverName,
-            isRequired: step.isRequired,
-            timeoutHours: step.timeoutHours,
-            conditions: step.conditions,
-          })),
+          status: 'inactive',
         });
         message.success('复制成功');
         loadChains();
@@ -219,10 +309,8 @@ export default function ApprovalChainsPage() {
         cancelText: '取消',
         onOk: async () => {
           try {
-            await httpClient.batchOperation(
-              '/api/v1/approval-chains/batch',
-              'delete',
-              ids as number[]
+            await Promise.all(
+              ids.map(id => httpClient.delete(`/api/v1/approval-chains/${String(id)}`))
             );
             message.success('批量删除成功');
             setSelectedRowKeys([]);
@@ -241,11 +329,12 @@ export default function ApprovalChainsPage() {
   const handleModalSubmit = useCallback(
     async (data: unknown) => {
       try {
+        const payload = toBackendPayload(data as ApprovalChainSubmitData, editingChain || undefined);
         if (editingChain) {
-          await httpClient.put(`/api/v1/approval-chains/${editingChain.id}`, data);
+          await httpClient.put(`/api/v1/approval-chains/${editingChain.id}`, payload);
           message.success('更新成功');
         } else {
-          await httpClient.post('/api/v1/approval-chains', data);
+          await httpClient.post('/api/v1/approval-chains', payload);
           message.success('创建成功');
         }
 

@@ -105,6 +105,7 @@ export const SystemHealth: React.FC = () => {
         <Space>
           <Activity className="w-5 h-5" />
           {t('admin.systemHealth')}
+          <Tag color="gold">示例数据</Tag>
         </Space>
       }
       extra={<Button type="text" icon={<RefreshCw className="w-4 h-4" />} size="small" />}

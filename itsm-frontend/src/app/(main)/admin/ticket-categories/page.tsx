@@ -20,24 +20,20 @@ import {
   Switch,
   InputNumber,
   Table,
+  Empty,
 } from 'antd';
 import {
   Plus,
   Edit,
   Delete,
   Eye,
-  FolderOpen,
   Folder,
   GripVertical,
-  Settings,
   Copy,
+  Table as TableIcon,
 } from 'lucide-react';
-import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
-import {
-  TicketCategoryApi,
-  TicketCategory as TicketCategoryType,
-} from '@/lib/api/ticket-category-api';
+import { TicketCategoryApi } from '@/lib/api/ticket-category-api';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -60,6 +56,16 @@ interface TicketCategory {
   children?: TicketCategory[];
   ticket_count?: number;
 }
+
+type RawTicketCategory = Partial<TicketCategory> & {
+  parentId?: number | null;
+  sortOrder?: number;
+  isActive?: boolean;
+  isDefault?: boolean;
+  ticketCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 interface TicketCategoryFormData {
   name: string;
@@ -89,7 +95,7 @@ const TicketCategoryManagementPage = () => {
     try {
       const data = await TicketCategoryApi.getCategories();
       // Handle backend response format: {categories: [...], total: X} or {items: [...], total: X}
-      const list = data.categories || data.items || [];
+      const list = normalizeCategories(data.categories || data.items || []);
       setCategories(list);
     } catch (error) {
       console.error('Failed to load categories:', error);
@@ -99,6 +105,26 @@ const TicketCategoryManagementPage = () => {
       setLoading(false);
     }
   };
+
+  const normalizeCategory = (category: RawTicketCategory): TicketCategory => ({
+    id: category.id || 0,
+    name: category.name || '',
+    description: category.description || '',
+    parent_id: category.parent_id ?? category.parentId ?? null,
+    level: category.level || 1,
+    path: category.path || category.name || '',
+    sort_order: category.sort_order ?? category.sortOrder ?? 1,
+    is_active: category.is_active ?? category.isActive ?? true,
+    is_default: category.is_default ?? category.isDefault ?? false,
+    color: category.color || '#1890ff',
+    icon: category.icon,
+    created_at: category.created_at || category.createdAt || '',
+    updated_at: category.updated_at || category.updatedAt || '',
+    ticket_count: category.ticket_count ?? category.ticketCount ?? 0,
+    children: category.children ? normalizeCategories(category.children) : undefined,
+  });
+
+  const normalizeCategories = (list: RawTicketCategory[]) => list.map(normalizeCategory);
 
   const handleCreateCategory = () => {
     setEditingCategory(null);
@@ -120,25 +146,31 @@ const TicketCategoryManagementPage = () => {
     setModalVisible(true);
   };
 
-  const handleCopyCategory = (category: TicketCategory) => {
-    const newCategory = {
-      ...category,
-      id: Date.now(),
-      name: `${category.name} - 副本`,
-      is_default: false,
-      created_at: new Date().toLocaleString(),
-      updated_at: new Date().toLocaleString(),
-    };
-
-    setCategories(prev => [newCategory, ...prev]);
-    message.success('分类复制成功');
+  const handleCopyCategory = async (category: TicketCategory) => {
+    try {
+      await TicketCategoryApi.createCategory({
+        name: `${category.name} - 副本`,
+        description: category.description,
+        parent_id: category.parent_id || undefined,
+        sort_order: category.sort_order,
+        is_active: category.is_active,
+        is_default: false,
+        color: category.color,
+        icon: category.icon,
+      });
+      message.success('分类复制成功');
+      loadCategories();
+    } catch (error) {
+      console.error('Failed to copy category:', error);
+      message.error('复制分类失败');
+    }
   };
 
   const handleDeleteCategory = async (id: number) => {
     try {
       await TicketCategoryApi.deleteCategory(id);
-      setCategories(prev => prev.filter(c => c.id !== id));
       message.success('分类删除成功');
+      loadCategories();
     } catch (error) {
       console.error('Failed to delete category:', error);
       message.error('删除失败');
@@ -152,50 +184,59 @@ const TicketCategoryManagementPage = () => {
       if (editingCategory) {
         // 更新分类
         await TicketCategoryApi.updateCategory(editingCategory.id, values);
-        const updatedCategory = {
-          ...editingCategory,
-          ...values,
-          updated_at: new Date().toLocaleString(),
-        };
-
-        setCategories(prev => prev.map(c => (c.id === editingCategory.id ? updatedCategory : c)));
         message.success('分类更新成功');
       } else {
         // 创建新分类
-        const result = await TicketCategoryApi.createCategory(values);
-        const newCategory: TicketCategory = {
-          ...result,
-          id: result.id,
-          level: values.parent_id ? 2 : 1,
-          path: values.parent_id ? `父分类/${values.name}` : values.name,
-          sort_order: values.sort_order || 1,
-          is_active: values.is_active !== false,
-          is_default: false,
-          created_at: new Date().toLocaleString(),
-          updated_at: new Date().toLocaleString(),
-          ticket_count: 0,
-        };
-
-        setCategories(prev => [newCategory, ...prev]);
+        await TicketCategoryApi.createCategory(values);
         message.success('分类创建成功');
       }
 
       setModalVisible(false);
       form.resetFields();
+      loadCategories();
     } catch (error) {
       console.error('保存分类失败:', error);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'green';
-      case 'inactive':
-        return 'red';
-      default:
-        return 'default';
+  const handleToggleStatus = async (category: TicketCategory, checked: boolean) => {
+    try {
+      await TicketCategoryApi.updateCategory(category.id, { is_active: checked });
+      setCategories(prev =>
+        prev.map(c => (c.id === category.id ? { ...c, is_active: checked } : c))
+      );
+      message.success(checked ? '分类已启用' : '分类已停用');
+    } catch (error) {
+      console.error('Failed to update category status:', error);
+      message.error('状态更新失败');
     }
+  };
+
+  const handleViewCategory = (category: TicketCategory) => {
+    Modal.info({
+      title: '分类详情',
+      width: 560,
+      content: (
+        <div className="space-y-2 pt-2">
+          <p>
+            <Text strong>名称：</Text>
+            {category.name}
+          </p>
+          <p>
+            <Text strong>路径：</Text>
+            {category.path || '-'}
+          </p>
+          <p>
+            <Text strong>描述：</Text>
+            {category.description || '-'}
+          </p>
+          <p>
+            <Text strong>状态：</Text>
+            {category.is_active ? '启用' : '停用'}
+          </p>
+        </div>
+      ),
+    });
   };
 
   const columns = [
@@ -256,11 +297,7 @@ const TicketCategoryManagementPage = () => {
           <Switch
             checked={record.is_active}
             size="small"
-            onChange={checked => {
-              setCategories(prev =>
-                prev.map(c => (c.id === record.id ? { ...c, is_active: checked } : c))
-              );
-            }}
+            onChange={checked => handleToggleStatus(record, checked)}
           />
           {record.is_default && <Tag color="green">默认</Tag>}
         </div>
@@ -272,7 +309,7 @@ const TicketCategoryManagementPage = () => {
       render: (record: TicketCategory) => (
         <Space>
           <Tooltip title="查看详情">
-            <Button size="small" icon={<Eye size={14} />} />
+            <Button size="small" icon={<Eye size={14} />} onClick={() => handleViewCategory(record)} />
           </Tooltip>
           <Tooltip title="编辑">
             <Button
@@ -314,11 +351,7 @@ const TicketCategoryManagementPage = () => {
           <Switch
             checked={category.is_active}
             size="small"
-            onChange={checked => {
-              setCategories(prev =>
-                prev.map(c => (c.id === category.id ? { ...c, is_active: checked } : c))
-              );
-            }}
+            onChange={checked => handleToggleStatus(category, checked)}
           />
           <Button
             size="small"
@@ -345,11 +378,7 @@ const TicketCategoryManagementPage = () => {
               <Switch
                 checked={child.is_active}
                 size="small"
-                onChange={checked => {
-                  setCategories(prev =>
-                    prev.map(c => (c.id === child.id ? { ...c, is_active: checked } : c))
-                  );
-                }}
+                onChange={checked => handleToggleStatus(child, checked)}
               />
               <Button
                 size="small"
@@ -369,20 +398,6 @@ const TicketCategoryManagementPage = () => {
     return <LoadingSkeleton type="table" rows={8} columns={7} />;
   }
 
-  if (categories.length === 0) {
-    return (
-      <LoadingEmptyError
-        state="empty"
-        empty={{
-          title: '暂无工单分类',
-          description: '创建第一个工单分类来组织工单管理',
-          actionText: '创建分类',
-          onAction: handleCreateCategory,
-        }}
-      />
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* 头部操作区 */}
@@ -398,7 +413,7 @@ const TicketCategoryManagementPage = () => {
             <Button.Group>
               <Button
                 type={viewMode === 'table' ? 'primary' : 'default'}
-                icon={<Table />}
+                icon={<TableIcon size={16} />}
                 onClick={() => setViewMode('table')}
               >
                 表格视图
@@ -425,6 +440,16 @@ const TicketCategoryManagementPage = () => {
             columns={columns}
             dataSource={categories}
             rowKey="id"
+            scroll={{ x: 960 }}
+            locale={{
+              emptyText: (
+                <Empty description="暂无工单分类">
+                  <Button type="primary" onClick={handleCreateCategory}>
+                    创建分类
+                  </Button>
+                </Empty>
+              ),
+            }}
             pagination={{
               pageSize: 20,
               showSizeChanger: true,

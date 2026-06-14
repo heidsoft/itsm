@@ -7,6 +7,8 @@ import { BaseEntity } from './common';
 export interface ApprovalChain extends BaseEntity {
   name: string;
   description?: string;
+  entityType?: string;
+  status?: string;
   isActive: boolean;
   tenantId: number;
   steps: ApprovalStep[];
@@ -54,6 +56,7 @@ export interface ApprovalChainFilters {
 export interface CreateApprovalChainRequest {
   name: string;
   description?: string;
+  entityType?: string;
   isActive: boolean;
   steps: Omit<ApprovalStep, 'id' | 'chainId' | 'createdAt' | 'updatedAt'>[];
 }
@@ -61,6 +64,7 @@ export interface CreateApprovalChainRequest {
 export interface UpdateApprovalChainRequest {
   name?: string;
   description?: string;
+  entityType?: string;
   isActive?: boolean;
   steps?: Omit<ApprovalStep, 'id' | 'chainId' | 'createdAt' | 'updatedAt'>[];
 }

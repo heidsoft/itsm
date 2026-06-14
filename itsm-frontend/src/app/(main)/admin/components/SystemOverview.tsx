@@ -55,61 +55,71 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
   const { t } = useI18n();
   const { token } = theme.useToken();
 
+  const formatValue = (value: string | number | null | undefined) => {
+    if (value === null || value === undefined || value === '') {
+      return '—';
+    }
+    return value;
+  };
+
   const systemStats = [
     {
       title: '活跃用户',
-      value: stats?.activeUsers ?? '1,234',
+      value: formatValue(stats?.activeUsers),
       change: '+12%',
       changeValue: '+132',
       icon: Users,
       color: DESIGN_SYSTEM.colors.accent,
       gradient: DESIGN_SYSTEM.colors.gradient.accent,
       trend: 'up',
-      description: '较上月新增132位活跃用户',
+      description: stats?.activeUsers == null ? '暂无真实数据接入' : '较上月新增132位活跃用户',
       progress: 78,
+      placeholder: stats?.activeUsers == null,
     },
     {
       title: '运行中的流程',
-      value: stats?.runningWorkflows ?? '45',
+      value: formatValue(stats?.runningWorkflows),
       change: '+6.7%',
       changeValue: '+3',
       icon: Workflow,
       color: DESIGN_SYSTEM.colors.success,
       gradient: DESIGN_SYSTEM.colors.gradient.success,
       trend: 'up',
-      description: '3个工作流新启动',
+      description: stats?.runningWorkflows == null ? '暂无真实数据接入' : '3个工作流新启动',
       progress: 65,
+      placeholder: stats?.runningWorkflows == null,
     },
     {
       title: '服务目录项',
-      value: stats?.serviceCatalogItems ?? '89',
+      value: formatValue(stats?.serviceCatalogItems),
       change: '+5.9%',
       changeValue: '+5',
       icon: BookOpen,
       color: '#8b5cf6',
       gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
       trend: 'up',
-      description: '新增5项服务目录',
+      description: stats?.serviceCatalogItems == null ? '服务目录数据待接入' : '新增5项服务目录',
       progress: 82,
+      placeholder: stats?.serviceCatalogItems == null,
     },
     {
       title: '系统告警',
-      value: stats?.systemAlerts ?? '2',
+      value: formatValue(stats?.systemAlerts),
       change: '-33%',
       changeValue: '-1',
       icon: AlertCircle,
       color: DESIGN_SYSTEM.colors.warning,
       gradient: DESIGN_SYSTEM.colors.gradient.warning,
       trend: 'down',
-      description: '较昨日减少1个告警',
+      description: stats?.systemAlerts == null ? '告警数据待接入' : '较昨日减少1个告警',
       progress: 15,
+      placeholder: stats?.systemAlerts == null,
     },
   ];
 
-  const EnhancedStatCard = ({ stat, index }: { stat: typeof systemStats[0]; index: number }) => {
+  const EnhancedStatCard = ({ stat, index }: { stat: (typeof systemStats)[0]; index: number }) => {
     const Icon = stat.icon;
     const isPositive = stat.trend === 'up';
-    const delay = index * 100;
 
     return (
       <Card
@@ -198,7 +208,7 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
           style={{
             fontSize: 32,
             fontWeight: 700,
-            color: DESIGN_SYSTEM.colors.textPrimary,
+            color: stat.placeholder ? DESIGN_SYSTEM.colors.textSecondary : DESIGN_SYSTEM.colors.textPrimary,
             lineHeight: 1.2,
             marginBottom: 12,
             fontFamily: DESIGN_SYSTEM.fonts.display,
@@ -214,9 +224,11 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
             <Text style={{ fontSize: 12, color: DESIGN_SYSTEM.colors.textSecondary }}>
               {stat.description}
             </Text>
-            <Text style={{ fontSize: 12, fontWeight: 600, color: stat.color }}>
-              {stat.progress}%
-            </Text>
+            {!stat.placeholder && (
+              <Text style={{ fontSize: 12, fontWeight: 600, color: stat.color }}>
+                {stat.progress}%
+              </Text>
+            )}
           </div>
           <div
             style={{
@@ -224,12 +236,13 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
               borderRadius: 3,
               background: '#f1f5f9',
               overflow: 'hidden',
+              opacity: stat.placeholder ? 0.5 : 1,
             }}
           >
             <div
               style={{
                 height: '100%',
-                width: `${stat.progress}%`,
+                width: `${stat.placeholder ? 6 : stat.progress}%`,
                 borderRadius: 3,
                 background: stat.gradient,
                 transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)',

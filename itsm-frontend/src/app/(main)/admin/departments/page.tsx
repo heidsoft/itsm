@@ -18,6 +18,7 @@ import {
   Row,
   Col,
   Statistic,
+  Empty,
 } from 'antd';
 import {
   Plus,
@@ -25,6 +26,7 @@ import {
   Trash2,
   Users,
   RefreshCw,
+  Search,
 } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import { departmentService, Department, CreateDepartmentRequest } from '@/lib/services/department-service';
@@ -42,6 +44,7 @@ export default function DepartmentManagement() {
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const [form] = Form.useForm();
   const [users, setUsers] = useState<{ label: string; value: number }[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // 加载部门数据
   const loadDepartments = useCallback(async () => {
@@ -92,7 +95,7 @@ export default function DepartmentManagement() {
   const flattenDepartments = (depts: Department[], level = 0): Department[] => {
     const result: Department[] = [];
     depts.forEach(dept => {
-      result.push({ ...dept, key: dept.id });
+      result.push({ ...dept, key: dept.id, level } as Department);
       if (dept.children && dept.children.length > 0) {
         result.push(...flattenDepartments(dept.children, level + 1));
       }
@@ -100,7 +103,15 @@ export default function DepartmentManagement() {
     return result;
   };
 
-  const flatDepartments = flattenDepartments(departments);
+  const flatDepartments = flattenDepartments(departments).filter(dept => {
+    const keyword = searchTerm.trim().toLowerCase();
+    if (!keyword) return true;
+    return (
+      dept.name.toLowerCase().includes(keyword) ||
+      dept.code.toLowerCase().includes(keyword) ||
+      (dept.description || '').toLowerCase().includes(keyword)
+    );
+  });
 
   // 统计信息
   const stats = {
@@ -168,7 +179,7 @@ export default function DepartmentManagement() {
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: Department) => (
-        <Space>
+        <Space style={{ paddingLeft: `${((record as Department & { level?: number }).level || 0) * 20}px` }}>
           <Users />
           <span className="font-medium">{text}</span>
         </Space>
@@ -254,7 +265,15 @@ export default function DepartmentManagement() {
 
       {/* 操作栏 */}
       <Card className="mb-6">
-        <Space>
+        <Space wrap>
+          <Input
+            allowClear
+            placeholder="搜索部门名称、编码或描述"
+            prefix={<Search size={16} />}
+            value={searchTerm}
+            onChange={event => setSearchTerm(event.target.value)}
+            style={{ width: 280 }}
+          />
           <Button
             type="primary"
             icon={<Plus size={16} />}
@@ -284,6 +303,16 @@ export default function DepartmentManagement() {
           rowKey="id"
           loading={fetching}
           pagination={false}
+          scroll={{ x: 760 }}
+          locale={{
+            emptyText: (
+              <Empty description={searchTerm ? '没有匹配的部门' : '暂无部门'}>
+                <Button type="primary" onClick={() => setShowModal(true)}>
+                  新建部门
+                </Button>
+              </Empty>
+            ),
+          }}
           className="enterprise-table"
         />
       </Card>
@@ -329,7 +358,7 @@ export default function DepartmentManagement() {
           >
             <TreeSelect
               placeholder="选择上级部门（可选）"
-              treeData={treeData}
+              treeData={treeData.filter(dept => dept.id !== selectedDepartment?.id)}
               treeNodeFilterProp="title"
               allowClear
               style={{ width: '100%' }}

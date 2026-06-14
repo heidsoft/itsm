@@ -479,10 +479,10 @@ export function getMenuConfig(): MenuConfig {
         description: '系统管理',
         children: [
           {
-            key: '/admin/overview',
+            key: '/admin',
             icon: getIconByName('LayoutDashboard')!,
             label: '系统概览',
-            path: '/admin/overview',
+            path: '/admin',
             permission: 'admin:write',
           },
           {
@@ -584,24 +584,24 @@ export function getMenuConfig(): MenuConfig {
             permission: 'system:config',
           },
           {
-            key: '/admin/notifications',
+            key: '/notifications',
             icon: getIconByName('Bell')!,
             label: '通知配置',
             path: '/notifications',
             permission: 'system:config',
           },
           {
-            key: '/admin/audit-logs',
+            key: '/workflow/audit',
             icon: getIconByName('ClipboardList')!,
             label: '操作日志',
-            path: '/admin/overview',
+            path: '/workflow/audit',
             permission: 'system:audit',
           },
           {
             key: '/admin/cmdb-types',
             icon: getIconByName('Database')!,
             label: 'CMDB 类型',
-            path: '/admin/overview',
+            path: '/admin/cmdb-types',
             permission: 'cmdb:manage',
           },
           {

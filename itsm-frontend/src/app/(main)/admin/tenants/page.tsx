@@ -8,15 +8,15 @@ import {
   Plus,
   Search,
   Edit,
-  Copy,
   Trash2,
   Eye,
-  Settings,
   Users,
   Calendar,
 } from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 import {
   Card,
   Table,
@@ -30,15 +30,15 @@ import {
   Row,
   Col,
   Statistic,
-  Badge,
   Tooltip,
   Popconfirm,
   message,
-  Divider,
   Tag,
   DatePicker,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { TenantAPI } from '@/lib/api/tenant-api';
+
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -66,9 +66,6 @@ const TENANT_TYPES = {
   enterprise: { label: '企业版', color: 'gold' },
 };
 
-// 引入租户API
-import { TenantAPI } from '@/lib/api/tenant-api';
-
 type Tenant = {
   id: number;
   name: string;
@@ -78,14 +75,24 @@ type Tenant = {
   status: keyof typeof TENANT_STATUS;
   userCount?: number;
   ticketCount?: number;
-  expires_at?: string;
+  expiresAt?: string;
+};
+
+type TenantFormValues = {
+  name: string;
+  code: string;
+  domain?: string;
+  type: string;
+  status: string;
+  expiresAt?: Dayjs;
 };
 
 export default function TenantManagement() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [selectedTenant, setSelectedTenant] = useState<any>(null);
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [viewOnly, setViewOnly] = useState(false);
   const [form] = Form.useForm();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -140,15 +147,25 @@ export default function TenantManagement() {
   // 处理保存租户
   const handleSaveTenant = async () => {
     try {
-      const values = await form.validateFields();
+      const values = (await form.validateFields()) as TenantFormValues;
+      const payload = {
+        name: values.name,
+        domain: values.domain,
+        type: values.type,
+        status: values.status,
+        expiresAt: values.expiresAt ? values.expiresAt.toISOString() : undefined,
+      };
 
       if (selectedTenant) {
         // 更新租户
-        await TenantAPI.updateTenant(selectedTenant.id, values);
+        await TenantAPI.updateTenant(selectedTenant.id, payload);
         message.success('租户更新成功');
       } else {
         // 创建租户
-        await TenantAPI.createTenant(values);
+        await TenantAPI.createTenant({
+          ...payload,
+          code: values.code,
+        });
         message.success('租户创建成功');
       }
 
@@ -159,6 +176,20 @@ export default function TenantManagement() {
     } catch (error) {
       message.error('保存租户失败');
     }
+  };
+
+  const openTenantModal = (tenant: Tenant | null, readonly = false) => {
+    setSelectedTenant(tenant);
+    setViewOnly(readonly);
+    if (tenant) {
+      form.setFieldsValue({
+        ...tenant,
+        expiresAt: tenant.expiresAt ? dayjs(tenant.expiresAt) : undefined,
+      });
+    } else {
+      form.resetFields();
+    }
+    setShowModal(true);
   };
 
   // 处理删除租户
@@ -223,7 +254,7 @@ export default function TenantManagement() {
     {
       title: '到期时间',
       key: 'expires',
-      dataIndex: 'expires_at',
+      dataIndex: 'expiresAt',
       render: (expiresAt: string) => (
         <div className="flex items-center">
           <Calendar className="w-4 h-4 mr-1 text-gray-400" />
@@ -241,22 +272,14 @@ export default function TenantManagement() {
             <Button
               type="text"
               icon={<Edit className="w-4 h-4" />}
-              onClick={() => {
-                setSelectedTenant(record);
-                form.setFieldsValue(record);
-                setShowModal(true);
-              }}
+              onClick={() => openTenantModal(record)}
             />
           </Tooltip>
           <Tooltip title="查看">
             <Button
               type="text"
               icon={<Eye className="w-4 h-4" />}
-              onClick={() => {
-                setSelectedTenant(record);
-                form.setFieldsValue(record);
-                setShowModal(true);
-              }}
+              onClick={() => openTenantModal(record, true)}
             />
           </Tooltip>
           <Popconfirm
@@ -373,9 +396,7 @@ export default function TenantManagement() {
               type="primary"
               icon={<Plus className="w-4 h-4" />}
               onClick={() => {
-                setSelectedTenant(null);
-                form.resetFields();
-                setShowModal(true);
+                openTenantModal(null);
               }}
             >
               新建租户
@@ -391,6 +412,7 @@ export default function TenantManagement() {
           dataSource={tenants}
           rowKey="id"
           loading={loading}
+          scroll={{ x: 920 }}
           pagination={{
             total: tenants.length,
             pageSize: 10,
@@ -409,7 +431,7 @@ export default function TenantManagement() {
             {selectedTenant ? (
               <>
                 <Edit className="w-4 h-4 mr-2" />
-                编辑租户
+                {viewOnly ? '查看租户' : '编辑租户'}
               </>
             ) : (
               <>
@@ -420,18 +442,36 @@ export default function TenantManagement() {
           </span>
         }
         open={showModal}
-        onOk={handleSaveTenant}
+        onOk={viewOnly ? undefined : handleSaveTenant}
         onCancel={() => {
           setShowModal(false);
           setSelectedTenant(null);
+          setViewOnly(false);
           form.resetFields();
         }}
         width={600}
         confirmLoading={loading}
         okText="保存"
         cancelText="取消"
+        footer={
+          viewOnly
+            ? [
+                <Button
+                  key="close"
+                  onClick={() => {
+                    setShowModal(false);
+                    setSelectedTenant(null);
+                    setViewOnly(false);
+                    form.resetFields();
+                  }}
+                >
+                  关闭
+                </Button>,
+              ]
+            : undefined
+        }
       >
-        <Form form={form} layout="vertical" className="mt-4">
+        <Form form={form} layout="vertical" className="mt-4" disabled={viewOnly}>
           <Form.Item
             label="租户名称"
             name="name"
@@ -445,7 +485,7 @@ export default function TenantManagement() {
             name="code"
             rules={[{ required: true, message: '请输入租户编码' }]}
           >
-            <Input placeholder="请输入租户编码" />
+            <Input disabled={!!selectedTenant} placeholder="请输入租户编码" />
           </Form.Item>
 
           <Form.Item label="域名" name="domain">
@@ -484,7 +524,7 @@ export default function TenantManagement() {
             </Col>
           </Row>
 
-          <Form.Item label="到期时间" name="expires_at">
+          <Form.Item label="到期时间" name="expiresAt">
             <DatePicker style={{ width: '100%' }} placeholder="选择到期时间" />
           </Form.Item>
         </Form>

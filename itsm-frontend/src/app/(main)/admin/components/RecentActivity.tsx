@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, List, Space, Typography, Avatar, Button, theme } from 'antd';
+import { Card, List, Space, Typography, Avatar, Button, Tag, theme } from 'antd';
 import { Activity, Users, Workflow, Shield, BookOpen, Bell, Clock } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
@@ -65,6 +65,7 @@ export const RecentActivity: React.FC = () => {
         <Space>
           <Activity className="w-5 h-5" />
           {t('admin.recentActivity')}
+          <Tag color="gold">示例数据</Tag>
         </Space>
       }
       extra={

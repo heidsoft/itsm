@@ -5,19 +5,19 @@ import { DashboardAPI } from '@/lib/api/dashboard-api';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 
 export interface AdminStats {
-  activeUsers: string | number;
-  runningWorkflows: string | number;
-  serviceCatalogItems: string | number;
-  systemAlerts: string | number;
+  activeUsers: string | number | null;
+  runningWorkflows: string | number | null;
+  serviceCatalogItems: string | number | null;
+  systemAlerts: string | number | null;
 }
 
 export const useAdminData = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<AdminStats>({
-    activeUsers: 0,
-    runningWorkflows: 0,
-    serviceCatalogItems: 0,
-    systemAlerts: 0,
+    activeUsers: null,
+    runningWorkflows: null,
+    serviceCatalogItems: null,
+    systemAlerts: null,
   });
 
   useEffect(() => {
