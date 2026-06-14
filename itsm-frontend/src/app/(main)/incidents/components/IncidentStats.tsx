@@ -16,6 +16,17 @@ interface IncidentStatsProps {
   className?: string;
 }
 
+const CARD_STYLES = [
+  { bg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }, // blue
+  { bg: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' }, // orange
+  { bg: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }, // green
+  { bg: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)' }, // purple
+];
+
+const ICON_BG = 'rgba(255,255,255,0.2)';
+const TEXT_COLOR = '#ffffff';
+const LABEL_COLOR = 'rgba(255,255,255,0.9)';
+
 /**
  * 格式化平均解决时间
  * 输入: 小时为单位的数值
@@ -25,21 +36,63 @@ const formatAvgResolutionTime = (hours: number | undefined): string => {
   if (!hours || hours <= 0) return '-';
 
   if (hours < 1) {
-    // 少于1小时，显示为分钟
     const minutes = Math.round(hours * 60);
     return `${minutes}分钟`;
   }
 
   if (hours < 24) {
-    // 少于24小时，显示为小时
     return `${hours.toFixed(1)}小时`;
   }
 
-  // 超过24小时，显示为天和小时
   const days = Math.floor(hours / 24);
   const remainingHours = (hours % 24).toFixed(1);
   return `${days}天${remainingHours}小时`;
 };
+
+const StatCard: React.FC<{
+  bg: string;
+  icon: React.ReactNode;
+  value: string | number;
+  label: string;
+}> = ({ bg, icon, value, label }) => (
+  <Card
+    style={{
+      backgroundImage: bg,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      border: 'none',
+      borderRadius: '0.5rem',
+    }}
+    styles={{ body: { padding: '16px', color: TEXT_COLOR } }}
+    className="shadow-sm overflow-hidden relative"
+  >
+    <div
+      style={{
+        width: '2.5rem',
+        height: '2.5rem',
+        background: ICON_BG,
+        borderRadius: '0.5rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '0 auto 0.75rem',
+      }}
+    >
+      {React.cloneElement(
+        icon as React.ReactElement<{ className?: string; style?: React.CSSProperties }>,
+        {
+          style: { color: TEXT_COLOR },
+        }
+      )}
+    </div>
+    <div className="text-2xl font-bold mb-1" style={{ color: TEXT_COLOR }}>
+      {value}
+    </div>
+    <div className="font-semibold text-xs" style={{ color: LABEL_COLOR }}>
+      {label}
+    </div>
+  </Card>
+);
 
 export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className }) => {
   const { t } = useI18n();
@@ -58,61 +111,41 @@ export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className
     );
   }
 
+  const cards = [
+    {
+      bg: CARD_STYLES[0].bg,
+      icon: <AlertTriangle className="w-5 h-5" />,
+      value: metrics.totalIncidents ?? '-',
+      label: t('incidents.total'),
+    },
+    {
+      bg: CARD_STYLES[1].bg,
+      icon: <Clock className="w-5 h-5" />,
+      value: metrics.criticalIncidents ?? '-',
+      label: t('incidents.critical'),
+    },
+    {
+      bg: CARD_STYLES[2].bg,
+      icon: <CheckCircle className="w-5 h-5" />,
+      value: metrics.majorIncidents ?? '-',
+      label: t('incidents.major'),
+    },
+    {
+      bg: CARD_STYLES[3].bg,
+      icon: <AlertCircle className="w-5 h-5" />,
+      value: formatAvgResolutionTime(metrics.avgResolutionTime),
+      label: t('incidents.avgResolutionTime'),
+    },
+  ];
+
   return (
     <div className={`mb-6 ${className || ''}`}>
       <Row gutter={[16, 16]} align="stretch">
-        <Col xs={24} sm={12} md={6} lg={6} className="flex">
-          <Card
-            className="h-full w-full text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden relative"
-            styles={{ body: { padding: '16px' } }}
-          >
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-              <AlertTriangle className="w-5 h-5 text-white" />
-            </div>
-            <div className="text-2xl font-bold mb-1">{metrics.totalIncidents ?? '-'}</div>
-            <div className="text-white/90 font-semibold text-xs">{t('incidents.total')}</div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6} lg={6} className="flex">
-          <Card
-            className="h-full w-full text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-orange-500 to-orange-600 text-white overflow-hidden relative"
-            styles={{ body: { padding: '16px' } }}
-          >
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-              <Clock className="w-5 h-5 text-white" />
-            </div>
-            <div className="text-2xl font-bold mb-1">{metrics.criticalIncidents ?? '-'}</div>
-            <div className="text-white/90 font-semibold text-xs">{t('incidents.critical')}</div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6} lg={6} className="flex">
-          <Card
-            className="h-full w-full text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-green-500 to-green-600 text-white overflow-hidden relative"
-            styles={{ body: { padding: '16px' } }}
-          >
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-              <CheckCircle className="w-5 h-5 text-white" />
-            </div>
-            <div className="text-2xl font-bold mb-1">{metrics.majorIncidents ?? '-'}</div>
-            <div className="text-white/90 font-semibold text-xs">{t('incidents.major')}</div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6} lg={6} className="flex">
-          <Card
-            className="h-full w-full text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white overflow-hidden relative"
-            styles={{ body: { padding: '16px' } }}
-          >
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-              <AlertCircle className="w-5 h-5 text-white" />
-            </div>
-            <div className="text-2xl font-bold mb-1">
-              {formatAvgResolutionTime(metrics.avgResolutionTime)}
-            </div>
-            <div className="text-white/90 font-semibold text-xs">
-              {t('incidents.avgResolutionTime')}
-            </div>
-          </Card>
-        </Col>
+        {cards.map((card, i) => (
+          <Col key={i} xs={24} sm={12} md={6} lg={6} className="flex">
+            <StatCard {...card} />
+          </Col>
+        ))}
       </Row>
     </div>
   );

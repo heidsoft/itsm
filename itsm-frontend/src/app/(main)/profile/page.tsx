@@ -830,7 +830,7 @@ export default function ProfilePage() {
                                 为账户添加额外的安全保护
                               </div>
                             </div>
-                            <Tooltip title="两步验证功能开发中">
+                            <Tooltip title="该功能即将推出">
                               <Button type="primary" ghost disabled>
                                 启用
                               </Button>
@@ -858,7 +858,7 @@ export default function ProfilePage() {
                                 查看账户的登录历史记录
                               </div>
                             </div>
-                            <Tooltip title="登录历史功能开发中">
+                            <Tooltip title="该功能即将推出">
                               <Button disabled>查看</Button>
                             </Tooltip>
                           </div>

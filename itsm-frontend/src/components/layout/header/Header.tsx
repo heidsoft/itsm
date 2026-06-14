@@ -269,20 +269,12 @@ export const Header: React.FC<HeaderProps> = ({
             <Badge count={unreadCount} size="small" offset={[-2, 2]}>
               <Button
                 type="text"
-                className={styles.notificationButton}
+                className={`${styles.actionButton} ${styles.notificationButton}${notificationsOpen ? ` ${styles.active}` : ''}`}
                 onClick={() => setNotificationsOpen(true)}
                 aria-label="通知中心"
                 title="通知中心"
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: DESIGN.radius.md,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
               >
-                <Bell size={18} style={{ color: DESIGN.colors.textMuted }} />
+                <Bell size={18} />
               </Button>
             </Badge>
           </Tooltip>
@@ -291,23 +283,12 @@ export const Header: React.FC<HeaderProps> = ({
           <Tooltip title={isDark ? '切换到亮色' : '切换到暗色'}>
             <Button
               type="text"
+              className={styles.actionButton}
               onClick={toggleTheme}
               aria-label={isDark ? '切换到亮色' : '切换到暗色'}
               title={isDark ? '切换到亮色' : '切换到暗色'}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: DESIGN.radius.md,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
             >
-              {isDark ? (
-                <Sun size={18} style={{ color: DESIGN.colors.textMuted }} />
-              ) : (
-                <Moon size={18} style={{ color: DESIGN.colors.textMuted }} />
-              )}
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </Button>
           </Tooltip>
 
@@ -316,18 +297,11 @@ export const Header: React.FC<HeaderProps> = ({
             <Tooltip title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}>
               <Button
                 type="text"
+                className={styles.actionButton}
                 aria-label={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
                 title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: DESIGN.radius.md,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
               >
-                <Globe size={18} style={{ color: DESIGN.colors.textMuted }} />
+                <Globe size={18} />
               </Button>
             </Tooltip>
           </Dropdown>

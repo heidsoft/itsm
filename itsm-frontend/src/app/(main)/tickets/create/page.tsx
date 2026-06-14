@@ -17,6 +17,7 @@ import {
   Col,
   Spin,
   Alert,
+  DatePicker,
 } from 'antd';
 import {
   ArrowLeft,
@@ -430,7 +431,11 @@ export default function CreateTicketPage() {
                               aria-label={field.label}
                             />
                           ) : field.type === 'date' ? (
-                            <Input type="date" aria-label={field.label} />
+                            <DatePicker
+                              style={{ width: '100%' }}
+                              aria-label={field.label}
+                              placeholder={field.placeholder || `请选择${field.label}`}
+                            />
                           ) : (
                             <Input placeholder={field.placeholder} aria-label={field.label} />
                           )}

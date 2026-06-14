@@ -136,33 +136,86 @@
   line-height: 40px !important;
 }
 
-.notificationButton {
+.actionButton {
   width: 36px;
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
+  color: #1e293b !important;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.actionButton:hover {
+  color: #0f172a !important;
+  background: #f1f5f9;
+}
+
+.actionButton:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.actionButton svg {
+  color: #1e293b;
+  stroke: #1e293b;
+  stroke-width: 2.25;
+  flex-shrink: 0;
+}
+
+.actionButton:hover svg,
+.actionButton:focus svg {
+  color: #0f172a;
+  stroke: #0f172a;
+}
+
+.actionButton.active {
+  color: #2563eb !important;
+  background: #dbeafe;
+}
+
+.actionButton.active svg {
+  color: #2563eb;
+  stroke: #2563eb;
+}
+
+/* 通知按钮：复用 actionButton 基础样式，只需覆盖特定差异 */
+.notificationButton {
   position: relative;
-  color: #64748b !important;
-  background: transparent !important;
 }
 
 .notificationButton svg {
-  color: #64748b !important;
-  stroke: #64748b !important;
+  color: #64748b;
+  stroke: #64748b;
 }
 
 .notificationButton:hover,
 .notificationButton:focus {
-  color: #1e293b !important;
-  background: #f8fafc !important;
+  background: #f8fafc;
 }
 
 .notificationButton:hover svg,
 .notificationButton:focus svg {
-  color: #1e293b !important;
-  stroke: #1e293b !important;
+  color: #1e293b;
+  stroke: #1e293b;
+}
+
+/* 激活状态：使用两个类选择器组合，特异性高于 .notificationButton */
+.actionButton.notificationButton.active,
+.notificationButton.active {
+  color: #3b82f6 !important;
+  background: #eff6ff;
+}
+
+.actionButton.notificationButton.active svg,
+.notificationButton.active svg {
+  color: #3b82f6 !important;
+  stroke: #3b82f6 !important;
 }
 
 .userMenu {
