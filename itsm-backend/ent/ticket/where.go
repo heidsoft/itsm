@@ -150,6 +150,16 @@ func Resolution(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldResolution, v))
 }
 
+// ResolutionCategory applies equality check predicate on the "resolution_category" field. It's identical to ResolutionCategoryEQ.
+func ResolutionCategory(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldResolutionCategory, v))
+}
+
+// ClosedAt applies equality check predicate on the "closed_at" field. It's identical to ClosedAtEQ.
+func ClosedAt(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldClosedAt, v))
+}
+
 // Rating applies equality check predicate on the "rating" field. It's identical to RatingEQ.
 func Rating(v int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldRating, v))
@@ -1165,6 +1175,131 @@ func ResolutionContainsFold(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldContainsFold(FieldResolution, v))
 }
 
+// ResolutionCategoryEQ applies the EQ predicate on the "resolution_category" field.
+func ResolutionCategoryEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldResolutionCategory, v))
+}
+
+// ResolutionCategoryNEQ applies the NEQ predicate on the "resolution_category" field.
+func ResolutionCategoryNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldResolutionCategory, v))
+}
+
+// ResolutionCategoryIn applies the In predicate on the "resolution_category" field.
+func ResolutionCategoryIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldResolutionCategory, vs...))
+}
+
+// ResolutionCategoryNotIn applies the NotIn predicate on the "resolution_category" field.
+func ResolutionCategoryNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldResolutionCategory, vs...))
+}
+
+// ResolutionCategoryGT applies the GT predicate on the "resolution_category" field.
+func ResolutionCategoryGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldResolutionCategory, v))
+}
+
+// ResolutionCategoryGTE applies the GTE predicate on the "resolution_category" field.
+func ResolutionCategoryGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldResolutionCategory, v))
+}
+
+// ResolutionCategoryLT applies the LT predicate on the "resolution_category" field.
+func ResolutionCategoryLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldResolutionCategory, v))
+}
+
+// ResolutionCategoryLTE applies the LTE predicate on the "resolution_category" field.
+func ResolutionCategoryLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldResolutionCategory, v))
+}
+
+// ResolutionCategoryContains applies the Contains predicate on the "resolution_category" field.
+func ResolutionCategoryContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldResolutionCategory, v))
+}
+
+// ResolutionCategoryHasPrefix applies the HasPrefix predicate on the "resolution_category" field.
+func ResolutionCategoryHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldResolutionCategory, v))
+}
+
+// ResolutionCategoryHasSuffix applies the HasSuffix predicate on the "resolution_category" field.
+func ResolutionCategoryHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldResolutionCategory, v))
+}
+
+// ResolutionCategoryIsNil applies the IsNil predicate on the "resolution_category" field.
+func ResolutionCategoryIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldResolutionCategory))
+}
+
+// ResolutionCategoryNotNil applies the NotNil predicate on the "resolution_category" field.
+func ResolutionCategoryNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldResolutionCategory))
+}
+
+// ResolutionCategoryEqualFold applies the EqualFold predicate on the "resolution_category" field.
+func ResolutionCategoryEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldResolutionCategory, v))
+}
+
+// ResolutionCategoryContainsFold applies the ContainsFold predicate on the "resolution_category" field.
+func ResolutionCategoryContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldResolutionCategory, v))
+}
+
+// ClosedAtEQ applies the EQ predicate on the "closed_at" field.
+func ClosedAtEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldClosedAt, v))
+}
+
+// ClosedAtNEQ applies the NEQ predicate on the "closed_at" field.
+func ClosedAtNEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldClosedAt, v))
+}
+
+// ClosedAtIn applies the In predicate on the "closed_at" field.
+func ClosedAtIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldClosedAt, vs...))
+}
+
+// ClosedAtNotIn applies the NotIn predicate on the "closed_at" field.
+func ClosedAtNotIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldClosedAt, vs...))
+}
+
+// ClosedAtGT applies the GT predicate on the "closed_at" field.
+func ClosedAtGT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldClosedAt, v))
+}
+
+// ClosedAtGTE applies the GTE predicate on the "closed_at" field.
+func ClosedAtGTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldClosedAt, v))
+}
+
+// ClosedAtLT applies the LT predicate on the "closed_at" field.
+func ClosedAtLT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldClosedAt, v))
+}
+
+// ClosedAtLTE applies the LTE predicate on the "closed_at" field.
+func ClosedAtLTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldClosedAt, v))
+}
+
+// ClosedAtIsNil applies the IsNil predicate on the "closed_at" field.
+func ClosedAtIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldClosedAt))
+}
+
+// ClosedAtNotNil applies the NotNil predicate on the "closed_at" field.
+func ClosedAtNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldClosedAt))
+}
+
 // RatingEQ applies the EQ predicate on the "rating" field.
 func RatingEQ(v int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldRating, v))
@@ -2128,6 +2263,75 @@ func HasProblems() predicate.Ticket {
 func HasProblemsWith(preds ...predicate.Problem) predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
 		step := newProblemsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasApprovals applies the HasEdge predicate on the "approvals" edge.
+func HasApprovals() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ApprovalsTable, ApprovalsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasApprovalsWith applies the HasEdge predicate on the "approvals" edge with a given conditions (other predicates).
+func HasApprovalsWith(preds ...predicate.TicketApproval) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newApprovalsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasWorkflowRecords applies the HasEdge predicate on the "workflow_records" edge.
+func HasWorkflowRecords() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, WorkflowRecordsTable, WorkflowRecordsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasWorkflowRecordsWith applies the HasEdge predicate on the "workflow_records" edge with a given conditions (other predicates).
+func HasWorkflowRecordsWith(preds ...predicate.TicketWorkflowRecord) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newWorkflowRecordsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCcUsers applies the HasEdge predicate on the "cc_users" edge.
+func HasCcUsers() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CcUsersTable, CcUsersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCcUsersWith applies the HasEdge predicate on the "cc_users" edge with a given conditions (other predicates).
+func HasCcUsersWith(preds ...predicate.TicketCC) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newCcUsersStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

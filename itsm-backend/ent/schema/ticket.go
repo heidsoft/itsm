@@ -75,6 +75,13 @@ func (Ticket) Fields() []ent.Field {
 		field.Text("resolution").
 			Comment("解决方案").
 			Optional(),
+		field.String("resolution_category").
+			Comment("解决方案分类").
+			Optional(),
+		field.Time("closed_at").
+			Comment("关闭时间").
+			Optional().
+			Nillable(),
 		field.Int("rating").
 			Comment("评分（1-5星）").
 			Optional().
@@ -172,6 +179,12 @@ func (Ticket) Edges() []ent.Edge {
 		edge.From("problems", Problem.Type).
 			Ref("tickets").
 			Comment("关联的问题"),
+		edge.To("approvals", TicketApproval.Type).
+			Comment("审批记录"),
+		edge.To("workflow_records", TicketWorkflowRecord.Type).
+			Comment("流转记录"),
+		edge.To("cc_users", TicketCC.Type).
+			Comment("抄送人"),
 	}
 }
 

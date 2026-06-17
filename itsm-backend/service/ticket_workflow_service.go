@@ -2,74 +2,92 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketapproval"
+	"itsm-backend/ent/ticketcc"
 
 	"go.uber.org/zap"
 )
 
 type TicketWorkflowService struct {
 	client *ent.Client
-	rawDB  *sql.DB
 	logger *zap.SugaredLogger
 }
 
-func NewTicketWorkflowService(client *ent.Client, rawDB *sql.DB, logger *zap.SugaredLogger) *TicketWorkflowService {
+func NewTicketWorkflowService(client *ent.Client, logger *zap.SugaredLogger) *TicketWorkflowService {
 	return &TicketWorkflowService{
 		client: client,
-		rawDB:  rawDB,
 		logger: logger,
 	}
 }
 
-// AcceptTicket 接单
+// AcceptTicket 接单（事务保护，保证工单状态更新与流转记录的原子性）
 func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.AcceptTicketRequest, userID, tenantID int) error {
 	s.logger.Infow("Accepting ticket", "ticket_id", req.TicketID, "user_id", userID)
 
-	// 检查工单是否存在且未分配或分配给当前用户
-	ticket, err := s.getTicket(ctx, req.TicketID, tenantID)
+	// 检查工单是否存在且状态允许接单（读操作，事务外执行）
+	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
 	if err != nil {
 		return err
 	}
 
-	if ticket.Status != "new" && ticket.Status != "open" {
-		return fmt.Errorf("工单当前状态不允许接单: %s", ticket.Status)
+	if tk.Status != "new" && tk.Status != "open" {
+		return fmt.Errorf("工单当前状态不允许接单: %s", tk.Status)
 	}
 
-	// 更新工单状态和分配人
-	updateQuery := `
-		UPDATE tickets 
-		SET assignee_id = $1, status = 'in_progress', updated_at = $2
-		WHERE id = $3 AND tenant_id = $4
-	`
-	_, err = s.rawDB.ExecContext(ctx, updateQuery, userID, time.Now(), req.TicketID, tenantID)
+	// 开启事务，保证原子性
+	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to accept ticket: %w", err)
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	var txErr error
+	defer func() {
+		if txErr != nil {
+			tx.Rollback()
+		}
+	}()
+
+	txClient := tx.Client()
+
+	// 更新工单状态和分配人
+	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+		SetAssigneeID(userID).
+		SetStatus("in_progress").
+		Save(ctx)
+	if err != nil {
+		txErr = fmt.Errorf("failed to accept ticket: %w", err)
+		return txErr
 	}
 
 	// 记录流转记录
-	err = s.createWorkflowRecord(ctx, &dto.TicketWorkflowRecord{
+	err = s.createWorkflowRecordWithClient(ctx, txClient, &dto.TicketWorkflowRecord{
 		TicketID:   req.TicketID,
 		Action:     dto.WorkflowActionAccept,
-		FromStatus: &ticket.Status,
+		FromStatus: &tk.Status,
 		ToStatus:   ptrString("in_progress"),
 		Operator:   dto.WorkflowUserInfo{ID: userID},
 		Comment:    req.Comment,
 		CreatedAt:  time.Now(),
 	}, tenantID)
+	if err != nil {
+		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		return txErr
+	}
 
-	return err
+	txErr = tx.Commit()
+	return txErr
 }
 
-// RejectTicket 驳回工单
+// RejectTicket 驳回工单（事务保护，保证工单状态更新与流转记录的原子性）
 func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.RejectTicketRequest, userID, tenantID int) error {
 	s.logger.Infow("Rejecting ticket", "ticket_id", req.TicketID, "user_id", userID)
 
-	ticket, err := s.getTicket(ctx, req.TicketID, tenantID)
+	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
 	if err != nil {
 		return err
 	}
@@ -80,56 +98,70 @@ func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.Rejec
 		returnToStatus = *req.ReturnToStatus
 	}
 
-	updateQuery := `
-		UPDATE tickets 
-		SET status = $1, updated_at = $2
-		WHERE id = $3 AND tenant_id = $4
-	`
-	_, err = s.rawDB.ExecContext(ctx, updateQuery, returnToStatus, time.Now(), req.TicketID, tenantID)
+	// 开启事务，保证原子性
+	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to reject ticket: %w", err)
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	var txErr error
+	defer func() {
+		if txErr != nil {
+			tx.Rollback()
+		}
+	}()
+
+	txClient := tx.Client()
+
+	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+		SetStatus(returnToStatus).
+		Save(ctx)
+	if err != nil {
+		txErr = fmt.Errorf("failed to reject ticket: %w", err)
+		return txErr
 	}
 
 	// 记录流转记录
-	err = s.createWorkflowRecord(ctx, &dto.TicketWorkflowRecord{
+	err = s.createWorkflowRecordWithClient(ctx, txClient, &dto.TicketWorkflowRecord{
 		TicketID:   req.TicketID,
 		Action:     dto.WorkflowActionReject,
-		FromStatus: &ticket.Status,
+		FromStatus: &tk.Status,
 		ToStatus:   &returnToStatus,
 		Operator:   dto.WorkflowUserInfo{ID: userID},
 		Reason:     req.Reason,
 		Comment:    req.Comment,
 		CreatedAt:  time.Now(),
 	}, tenantID)
+	if err != nil {
+		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		return txErr
+	}
 
-	return err
+	txErr = tx.Commit()
+	return txErr
 }
 
 // WithdrawTicket 撤回工单
 func (s *TicketWorkflowService) WithdrawTicket(ctx context.Context, req *dto.WithdrawTicketRequest, userID, tenantID int) error {
 	s.logger.Infow("Withdrawing ticket", "ticket_id", req.TicketID, "user_id", userID)
 
-	ticket, err := s.getTicket(ctx, req.TicketID, tenantID)
+	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
 	if err != nil {
 		return err
 	}
 
 	// 检查是否是工单创建者
-	if ticket.RequesterID != userID {
+	if tk.RequesterID != userID {
 		return fmt.Errorf("只有工单创建者可以撤回工单")
 	}
 
-	if ticket.Status == "closed" || ticket.Status == "cancelled" {
+	if tk.Status == "closed" || tk.Status == "cancelled" {
 		return fmt.Errorf("工单已关闭或取消，无法撤回")
 	}
 
 	// 更新工单状态
-	updateQuery := `
-		UPDATE tickets 
-		SET status = 'cancelled', updated_at = $1
-		WHERE id = $2 AND tenant_id = $3
-	`
-	_, err = s.rawDB.ExecContext(ctx, updateQuery, time.Now(), req.TicketID, tenantID)
+	_, err = s.client.Ticket.UpdateOneID(req.TicketID).
+		SetStatus("cancelled").
+		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to withdraw ticket: %w", err)
 	}
@@ -139,7 +171,7 @@ func (s *TicketWorkflowService) WithdrawTicket(ctx context.Context, req *dto.Wit
 	err = s.createWorkflowRecord(ctx, &dto.TicketWorkflowRecord{
 		TicketID:   req.TicketID,
 		Action:     dto.WorkflowActionWithdraw,
-		FromStatus: &ticket.Status,
+		FromStatus: &tk.Status,
 		ToStatus:   &newStatus,
 		Operator:   dto.WorkflowUserInfo{ID: userID},
 		Reason:     req.Reason,
@@ -160,12 +192,9 @@ func (s *TicketWorkflowService) ForwardTicket(ctx context.Context, req *dto.Forw
 
 	// 如果转移所有权，更新assignee
 	if req.TransferOwnership {
-		updateQuery := `
-			UPDATE tickets 
-			SET assignee_id = $1, updated_at = $2
-			WHERE id = $3 AND tenant_id = $4
-		`
-		_, err = s.rawDB.ExecContext(ctx, updateQuery, req.ToUserID, time.Now(), req.TicketID, tenantID)
+		_, err = s.client.Ticket.UpdateOneID(req.TicketID).
+			SetAssigneeID(req.ToUserID).
+			Save(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to forward ticket: %w", err)
 		}
@@ -200,14 +229,28 @@ func (s *TicketWorkflowService) CCTicket(ctx context.Context, req *dto.CCTicketR
 
 	// 添加抄送人
 	for _, ccUserID := range req.CCUsers {
-		insertQuery := `
-			INSERT INTO ticket_cc (ticket_id, user_id, added_by, tenant_id, added_at, is_active)
-			VALUES ($1, $2, $3, $4, $5, true)
-			ON CONFLICT (ticket_id, user_id, tenant_id) DO NOTHING
-		`
-		_, err = s.rawDB.ExecContext(ctx, insertQuery, req.TicketID, ccUserID, userID, tenantID, time.Now())
+		// 检查是否已存在抄送记录
+		exists, err := s.client.TicketCC.Query().
+			Where(ticketcc.TicketID(req.TicketID),
+				ticketcc.UserID(ccUserID),
+				ticketcc.TenantID(tenantID)).
+			Exist(ctx)
 		if err != nil {
-			s.logger.Warnw("Failed to add CC user", "error", err, "user_id", ccUserID)
+			s.logger.Warnw("Failed to check CC existence", "error", err, "user_id", ccUserID)
+			continue
+		}
+		if !exists {
+			err = s.client.TicketCC.Create().
+				SetTicketID(req.TicketID).
+				SetUserID(ccUserID).
+				SetAddedBy(userID).
+				SetTenantID(tenantID).
+				SetAddedAt(time.Now()).
+				SetIsActive(true).
+				Exec(ctx)
+			if err != nil {
+				s.logger.Warnw("Failed to add CC user", "error", err, "user_id", ccUserID)
+			}
 		}
 	}
 
@@ -231,35 +274,35 @@ func (s *TicketWorkflowService) CCTicket(ctx context.Context, req *dto.CCTicketR
 	return err
 }
 
-// ApproveTicket 审批工单
+// ApproveTicket 审批工单（事务保护，保证审批记录更新、工单状态变更与流转记录的原子性）
 func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.ApproveTicketRequest, userID, tenantID int) error {
 	s.logger.Infow("Approving ticket", "ticket_id", req.TicketID, "action", req.Action, "user_id", userID)
 
-	// 检查工单是否存在
-	ticket, err := s.getTicket(ctx, req.TicketID, tenantID)
+	// 检查工单是否存在（读操作，事务外执行）
+	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
 	if err != nil {
 		return err
 	}
 
 	// 检查审批记录是否存在
-	var approvalLevel int
-	var approvalStatus string
-	var approvalApproverID int
-	approvalQuery := "SELECT level, status, approver_id FROM ticket_approvals WHERE id = $1 AND ticket_id = $2 AND tenant_id = $3"
-	err = s.rawDB.QueryRowContext(ctx, approvalQuery, req.ApprovalID, req.TicketID, tenantID).Scan(&approvalLevel, &approvalStatus, &approvalApproverID)
+	approval, err := s.client.TicketApproval.Query().
+		Where(ticketapproval.ID(req.ApprovalID), ticketapproval.TicketID(req.TicketID), ticketapproval.TenantID(tenantID)).
+		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("审批记录不存在")
 	}
 
-	if approvalStatus != string(dto.ApprovalStatusPending) {
-		return fmt.Errorf("审批已处理，当前状态: %s", approvalStatus)
+	if approval.Status != string(dto.ApprovalStatusPending) {
+		return fmt.Errorf("审批已处理，当前状态: %s", approval.Status)
 	}
 
-	if approvalApproverID != userID {
+	if approval.ApproverID != userID {
 		return fmt.Errorf("无权限审批该记录")
 	}
 
-	// 更新审批记录
+	approvalLevel := approval.Level
+
+	// 确定审批结果状态
 	var newApprovalStatus string
 	switch req.Action {
 	case "approve":
@@ -275,75 +318,94 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 		return fmt.Errorf("无效的审批操作: %s", req.Action)
 	}
 
-	updateApprovalQuery := `
-		UPDATE ticket_approvals 
-		SET status = $1, action = $2, comment = $3, delegate_to_user_id = $4, processed_at = $5, updated_at = $6
-		WHERE id = $7 AND tenant_id = $8
-	`
-	_, err = s.rawDB.ExecContext(ctx, updateApprovalQuery,
-		newApprovalStatus, req.Action, req.Comment, req.DelegateToUserID, time.Now(), time.Now(),
-		req.ApprovalID, tenantID)
+	// 开启事务，保证原子性
+	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to update approval: %w", err)
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	var txErr error
+	defer func() {
+		if txErr != nil {
+			tx.Rollback()
+		}
+	}()
+
+	txClient := tx.Client()
+
+	// 更新审批记录
+	updateBuilder := txClient.TicketApproval.UpdateOneID(req.ApprovalID).
+		SetStatus(newApprovalStatus).
+		SetAction(req.Action).
+		SetComment(req.Comment).
+		SetProcessedAt(time.Now())
+
+	if req.DelegateToUserID != nil {
+		updateBuilder.SetDelegateToUserID(*req.DelegateToUserID)
+	}
+
+	err = updateBuilder.Exec(ctx)
+	if err != nil {
+		txErr = fmt.Errorf("failed to update approval: %w", err)
+		return txErr
 	}
 
 	// 如果是委派，创建新的审批记录
 	if req.Action == "delegate" && req.DelegateToUserID != nil {
-		insertApprovalQuery := `
-			INSERT INTO ticket_approvals (ticket_id, level, level_name, approver_id, status, tenant_id, created_at, updated_at)
-			SELECT ticket_id, level, level_name, $1, $2, tenant_id, $3, $4
-			FROM ticket_approvals
-			WHERE id = $5
-		`
-		_, err = s.rawDB.ExecContext(ctx, insertApprovalQuery,
-			*req.DelegateToUserID, string(dto.ApprovalStatusPending), time.Now(), time.Now(),
-			req.ApprovalID)
+		_, err = txClient.TicketApproval.Create().
+			SetTicketID(req.TicketID).
+			SetLevel(approval.Level).
+			SetLevelName(approval.LevelName).
+			SetApproverID(*req.DelegateToUserID).
+			SetStatus(string(dto.ApprovalStatusPending)).
+			SetTenantID(tenantID).
+			Save(ctx)
 		if err != nil {
-			s.logger.Warnw("Failed to create delegated approval", "error", err)
+			txErr = fmt.Errorf("创建委派审批记录失败: %w", err)
+			return txErr
 		}
 	}
 
 	if req.Action == "approve" {
-		pendingCountQuery := `
-			SELECT COUNT(1)
-			FROM ticket_approvals
-			WHERE ticket_id = $1 AND tenant_id = $2 AND status = $3
-		`
-		var pendingCount int
-		err = s.rawDB.QueryRowContext(ctx, pendingCountQuery, req.TicketID, tenantID, string(dto.ApprovalStatusPending)).Scan(&pendingCount)
+		// 检查是否还有待审批的记录
+		pendingCount, err := txClient.TicketApproval.Query().
+			Where(ticketapproval.TicketID(req.TicketID),
+				ticketapproval.TenantID(tenantID),
+				ticketapproval.Status(string(dto.ApprovalStatusPending))).
+			Count(ctx)
 		if err != nil {
-			s.logger.Warnw("Failed to count pending approvals", "error", err)
-		} else if pendingCount == 0 {
-			updateTicketQuery := `
-				UPDATE tickets
-				SET status = 'approved', updated_at = $1
-				WHERE id = $2 AND tenant_id = $3
-			`
-			_, err = s.rawDB.ExecContext(ctx, updateTicketQuery, time.Now(), req.TicketID, tenantID)
+			txErr = fmt.Errorf("查询待审批记录失败: %w", err)
+			return txErr
+		}
+		if pendingCount == 0 {
+			_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+				SetStatus("approved").
+				Save(ctx)
 			if err != nil {
-				s.logger.Warnw("Failed to update ticket status to approved", "error", err)
+				txErr = fmt.Errorf("更新工单状态为已审批失败: %w", err)
+				return txErr
 			}
 		}
 	} else if req.Action == "reject" {
 		// 审批拒绝，更新工单状态
-		updateTicketQuery := `
-			UPDATE tickets
-			SET status = 'rejected', updated_at = $1
-			WHERE id = $2 AND tenant_id = $3
-		`
-		_, err = s.rawDB.ExecContext(ctx, updateTicketQuery, time.Now(), req.TicketID, tenantID)
+		_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+			SetStatus("rejected").
+			Save(ctx)
 		if err != nil {
-			s.logger.Warnw("Failed to update ticket status", "error", err)
+			txErr = fmt.Errorf("更新工单状态为已拒绝失败: %w", err)
+			return txErr
 		}
 
-		cancelPendingQuery := `
-			UPDATE ticket_approvals
-			SET status = $1, updated_at = $2
-			WHERE ticket_id = $3 AND tenant_id = $4 AND status = $5 AND id <> $6
-		`
-		_, err = s.rawDB.ExecContext(ctx, cancelPendingQuery, string(dto.ApprovalStatusCancelled), time.Now(), req.TicketID, tenantID, string(dto.ApprovalStatusPending), req.ApprovalID)
+		// 取消其他待审批记录
+		_, err = txClient.TicketApproval.Update().
+			Where(ticketapproval.TicketID(req.TicketID),
+				ticketapproval.TenantID(tenantID),
+				ticketapproval.Status(string(dto.ApprovalStatusPending)),
+				ticketapproval.IDNEQ(req.ApprovalID)).
+			SetStatus(string(dto.ApprovalStatusCancelled)).
+			Save(ctx)
 		if err != nil {
-			s.logger.Warnw("Failed to cancel pending approvals", "error", err)
+			txErr = fmt.Errorf("取消其他待审批记录失败: %w", err)
+			return txErr
 		}
 	}
 
@@ -363,20 +425,25 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 		metadata["delegate_to_user_id"] = *req.DelegateToUserID
 	}
 
-	err = s.createWorkflowRecord(ctx, &dto.TicketWorkflowRecord{
+	err = s.createWorkflowRecordWithClient(ctx, txClient, &dto.TicketWorkflowRecord{
 		TicketID:   req.TicketID,
 		Action:     action,
-		FromStatus: &ticket.Status,
+		FromStatus: &tk.Status,
 		Operator:   dto.WorkflowUserInfo{ID: userID},
 		Comment:    req.Comment,
 		CreatedAt:  time.Now(),
 		Metadata:   metadata,
 	}, tenantID)
+	if err != nil {
+		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		return txErr
+	}
 
-	return err
+	txErr = tx.Commit()
+	return txErr
 }
 
-// ResolveTicket 解决工单
+// ResolveTicket 解决工单（事务保护，保证工单状态更新与流转记录的原子性）
 func (s *TicketWorkflowService) ResolveTicket(ctx context.Context, req *dto.ResolveTicketRequest, userID, tenantID int) error {
 	// 兼容 ticket_id 和 ticketId 两种字段名
 	if req.TicketID == 0 && req.TicketIDAlt != 0 {
@@ -384,30 +451,43 @@ func (s *TicketWorkflowService) ResolveTicket(ctx context.Context, req *dto.Reso
 	}
 	s.logger.Infow("Resolving ticket", "ticket_id", req.TicketID, "user_id", userID)
 
-	ticket, err := s.getTicket(ctx, req.TicketID, tenantID)
+	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
 	if err != nil {
 		return err
 	}
 
-	// 更新工单状态
-	updateQuery := `
-		UPDATE tickets 
-		SET status = 'resolved', resolution = $1, resolution_category = $2, resolved_at = $3, updated_at = $4
-		WHERE id = $5 AND tenant_id = $6
-	`
-	_, err = s.rawDB.ExecContext(ctx, updateQuery,
-		req.Resolution, req.ResolutionCategory, time.Now(), time.Now(),
-		req.TicketID, tenantID)
+	// 开启事务，保证原子性
+	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to resolve ticket: %w", err)
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	var txErr error
+	defer func() {
+		if txErr != nil {
+			tx.Rollback()
+		}
+	}()
+
+	txClient := tx.Client()
+
+	// 更新工单状态
+	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+		SetStatus("resolved").
+		SetResolution(req.Resolution).
+		SetResolutionCategory(req.ResolutionCategory).
+		SetResolvedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		txErr = fmt.Errorf("failed to resolve ticket: %w", err)
+		return txErr
 	}
 
 	// 记录流转记录
 	newStatus := "resolved"
-	err = s.createWorkflowRecord(ctx, &dto.TicketWorkflowRecord{
+	err = s.createWorkflowRecordWithClient(ctx, txClient, &dto.TicketWorkflowRecord{
 		TicketID:   req.TicketID,
 		Action:     dto.WorkflowActionResolve,
-		FromStatus: &ticket.Status,
+		FromStatus: &tk.Status,
 		ToStatus:   &newStatus,
 		Operator:   dto.WorkflowUserInfo{ID: userID},
 		Comment:    req.Resolution,
@@ -417,11 +497,16 @@ func (s *TicketWorkflowService) ResolveTicket(ctx context.Context, req *dto.Reso
 			"work_notes":          req.WorkNotes,
 		},
 	}, tenantID)
+	if err != nil {
+		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		return txErr
+	}
 
-	return err
+	txErr = tx.Commit()
+	return txErr
 }
 
-// CloseTicket 关闭工单
+// CloseTicket 关闭工单（事务保护，保证工单状态更新与流转记录的原子性）
 func (s *TicketWorkflowService) CloseTicket(ctx context.Context, req *dto.CloseTicketRequest, userID, tenantID int) error {
 	// 兼容 ticket_id 和 ticketId 两种字段名
 	if req.TicketID == 0 && req.TicketIDAlt != 0 {
@@ -429,32 +514,45 @@ func (s *TicketWorkflowService) CloseTicket(ctx context.Context, req *dto.CloseT
 	}
 	s.logger.Infow("Closing ticket", "ticket_id", req.TicketID, "user_id", userID)
 
-	ticket, err := s.getTicket(ctx, req.TicketID, tenantID)
+	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
 	if err != nil {
 		return err
 	}
 
-	if ticket.Status != "resolved" {
+	if tk.Status != "resolved" {
 		return fmt.Errorf("只有已解决的工单才能关闭")
 	}
 
-	// 更新工单状态
-	updateQuery := `
-		UPDATE tickets 
-		SET status = 'closed', closed_at = $1, updated_at = $2
-		WHERE id = $3 AND tenant_id = $4
-	`
-	_, err = s.rawDB.ExecContext(ctx, updateQuery, time.Now(), time.Now(), req.TicketID, tenantID)
+	// 开启事务，保证原子性
+	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to close ticket: %w", err)
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	var txErr error
+	defer func() {
+		if txErr != nil {
+			tx.Rollback()
+		}
+	}()
+
+	txClient := tx.Client()
+
+	// 更新工单状态
+	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+		SetStatus("closed").
+		SetClosedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		txErr = fmt.Errorf("failed to close ticket: %w", err)
+		return txErr
 	}
 
 	// 记录流转记录
 	newStatus := "closed"
-	err = s.createWorkflowRecord(ctx, &dto.TicketWorkflowRecord{
+	err = s.createWorkflowRecordWithClient(ctx, txClient, &dto.TicketWorkflowRecord{
 		TicketID:   req.TicketID,
 		Action:     dto.WorkflowActionClose,
-		FromStatus: &ticket.Status,
+		FromStatus: &tk.Status,
 		ToStatus:   &newStatus,
 		Operator:   dto.WorkflowUserInfo{ID: userID},
 		Comment:    req.CloseNotes,
@@ -463,89 +561,86 @@ func (s *TicketWorkflowService) CloseTicket(ctx context.Context, req *dto.CloseT
 			"close_reason": req.CloseReason,
 		},
 	}, tenantID)
+	if err != nil {
+		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		return txErr
+	}
 
-	return err
+	txErr = tx.Commit()
+	return txErr
 }
 
-// ReopenTicket 重开工单
+// ReopenTicket 重开工单（事务保护，保证工单状态更新与流转记录的原子性）
 func (s *TicketWorkflowService) ReopenTicket(ctx context.Context, req *dto.ReopenTicketRequest, userID, tenantID int) error {
 	s.logger.Infow("Reopening ticket", "ticket_id", req.TicketID, "user_id", userID)
 
-	ticket, err := s.getTicket(ctx, req.TicketID, tenantID)
+	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
 	if err != nil {
 		return err
 	}
 
-	if ticket.Status != "closed" && ticket.Status != "resolved" {
+	if tk.Status != "closed" && tk.Status != "resolved" {
 		return fmt.Errorf("只有已关闭或已解决的工单才能重开")
 	}
 
-	// 更新工单状态
-	updateQuery := `
-		UPDATE tickets 
-		SET status = 'open', updated_at = $1
-		WHERE id = $2 AND tenant_id = $3
-	`
-	_, err = s.rawDB.ExecContext(ctx, updateQuery, time.Now(), req.TicketID, tenantID)
+	// 开启事务，保证原子性
+	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to reopen ticket: %w", err)
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	var txErr error
+	defer func() {
+		if txErr != nil {
+			tx.Rollback()
+		}
+	}()
+
+	txClient := tx.Client()
+
+	// 更新工单状态
+	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+		SetStatus("open").
+		Save(ctx)
+	if err != nil {
+		txErr = fmt.Errorf("failed to reopen ticket: %w", err)
+		return txErr
 	}
 
 	// 记录流转记录
 	newStatus := "open"
-	err = s.createWorkflowRecord(ctx, &dto.TicketWorkflowRecord{
+	err = s.createWorkflowRecordWithClient(ctx, txClient, &dto.TicketWorkflowRecord{
 		TicketID:   req.TicketID,
 		Action:     dto.WorkflowActionReopen,
-		FromStatus: &ticket.Status,
+		FromStatus: &tk.Status,
 		ToStatus:   &newStatus,
 		Operator:   dto.WorkflowUserInfo{ID: userID},
 		Reason:     req.Reason,
 		CreatedAt:  time.Now(),
 	}, tenantID)
+	if err != nil {
+		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		return txErr
+	}
 
-	return err
+	txErr = tx.Commit()
+	return txErr
 }
 
 // GetTicketWorkflowState 获取工单流转状态
 func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, ticketID, userID, tenantID int) (*dto.TicketWorkflowState, error) {
 	// 查询工单信息
-	ticket, err := s.getTicket(ctx, ticketID, tenantID)
+	tk, err := s.getTicket(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, err
 	}
 
 	// 查询审批信息
-	approvalQuery := `
-		SELECT id, level, level_name, status, approver_id FROM ticket_approvals
-		WHERE ticket_id = $1 AND tenant_id = $2
-		ORDER BY level ASC
-	`
-	rows, err := s.rawDB.QueryContext(ctx, approvalQuery, ticketID, tenantID)
+	approvals, err := s.client.TicketApproval.Query().
+		Where(ticketapproval.TicketID(ticketID), ticketapproval.TenantID(tenantID)).
+		Order(ent.Asc(ticketapproval.FieldLevel)).
+		All(ctx)
 	if err != nil {
 		s.logger.Warnw("Failed to query approval status", "error", err)
-	}
-	defer rows.Close()
-
-	var approvals []struct {
-		ID         int
-		Level      int
-		LevelName  string
-		Status     string
-		ApproverID int
-	}
-	for rows.Next() {
-		var a struct {
-			ID         int
-			Level      int
-			LevelName  string
-			Status     string
-			ApproverID int
-		}
-		if err := rows.Scan(&a.ID, &a.Level, &a.LevelName, &a.Status, &a.ApproverID); err != nil {
-			s.logger.Warnw("Failed to scan approval row", "error", err)
-			continue
-		}
-		approvals = append(approvals, a)
 	}
 
 	var approvalStatus *dto.ApprovalStatus
@@ -557,13 +652,16 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 		// 找到当前待审批的级别
 		for _, a := range approvals {
 			if a.Status == string(dto.ApprovalStatusPending) {
-				currentLevel = &a.Level
-				approvalStatus = ptrToApprovalStatus(a.Status)
+				lv := a.Level
+				currentLevel = &lv
+				st := dto.ApprovalStatus(a.Status)
+				approvalStatus = &st
 				break
 			}
 			// 如果有已拒绝的，状态就是已拒绝
 			if a.Status == string(dto.ApprovalStatusRejected) {
-				approvalStatus = ptrToApprovalStatus(a.Status)
+				st := dto.ApprovalStatus(a.Status)
+				approvalStatus = &st
 			}
 		}
 
@@ -576,14 +674,15 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 			}
 		}
 		if allApproved {
-			approvalStatus = ptrToApprovalStatus(string(dto.ApprovalStatusApproved))
+			st := dto.ApprovalStatus(string(dto.ApprovalStatusApproved))
+			approvalStatus = &st
 		}
 	}
 
 	// 构建工单流转状态
 	state := &dto.TicketWorkflowState{
 		TicketID:             ticketID,
-		CurrentStatus:        ticket.Status,
+		CurrentStatus:        tk.Status,
 		ApprovalStatus:       approvalStatus,
 		CurrentApprovalLevel: currentLevel,
 		TotalApprovalLevels:  totalLevels,
@@ -591,7 +690,7 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 	}
 
 	// 根据当前状态和用户权限判断可执行的操作
-	switch ticket.Status {
+	switch tk.Status {
 	case "new", "open":
 		state.CanAccept = true
 		state.CanForward = true
@@ -601,7 +700,7 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 			dto.WorkflowActionForward,
 			dto.WorkflowActionCC)
 
-		if ticket.RequesterID == userID {
+		if tk.RequesterID == userID {
 			state.CanWithdraw = true
 			state.AvailableActions = append(state.AvailableActions, dto.WorkflowActionWithdraw)
 		}
@@ -653,62 +752,55 @@ func ptrToApprovalStatus(s string) *dto.ApprovalStatus {
 
 // 辅助函数
 
-func (s *TicketWorkflowService) getTicket(ctx context.Context, ticketID, tenantID int) (*struct {
-	ID          int
-	Status      string
-	RequesterID int
-	AssigneeID  *int
-}, error,
-) {
-	query := "SELECT id, status, requester_id, assignee_id FROM tickets WHERE id = $1 AND tenant_id = $2"
-
-	var ticket struct {
-		ID          int
-		Status      string
-		RequesterID int
-		AssigneeID  *int
-	}
-
-	err := s.rawDB.QueryRowContext(ctx, query, ticketID, tenantID).Scan(
-		&ticket.ID, &ticket.Status, &ticket.RequesterID, &ticket.AssigneeID,
-	)
-
-	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("工单不存在")
-	}
+func (s *TicketWorkflowService) getTicket(ctx context.Context, ticketID, tenantID int) (*ent.Ticket, error) {
+	tk, err := s.client.Ticket.Query().
+		Where(ticket.ID(ticketID), ticket.TenantID(tenantID)).
+		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("工单不存在")
+		}
 		return nil, fmt.Errorf("failed to get ticket: %w", err)
 	}
-
-	return &ticket, nil
+	return tk, nil
 }
 
 func (s *TicketWorkflowService) createWorkflowRecord(ctx context.Context, record *dto.TicketWorkflowRecord, tenantID int) error {
-	metadataJSON := SafeMarshal(record.Metadata)
+	return s.createWorkflowRecordWithClient(ctx, s.client, record, tenantID)
+}
 
-	query := `
-		INSERT INTO ticket_workflow_records (
-			ticket_id, action, from_status, to_status, operator_id, from_user_id, to_user_id,
-			comment, reason, metadata, tenant_id, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-	`
+// createWorkflowRecordWithClient 使用指定的 Ent 客户端创建流转记录（支持事务内复用）
+func (s *TicketWorkflowService) createWorkflowRecordWithClient(ctx context.Context, client *ent.Client, record *dto.TicketWorkflowRecord, tenantID int) error {
+	create := client.TicketWorkflowRecord.Create().
+		SetTicketID(record.TicketID).
+		SetAction(string(record.Action)).
+		SetOperatorID(record.Operator.ID).
+		SetTenantID(tenantID).
+		SetCreatedAt(record.CreatedAt)
 
-	var fromUserID, toUserID *int
+	if record.FromStatus != nil {
+		create.SetFromStatus(*record.FromStatus)
+	}
+	if record.ToStatus != nil {
+		create.SetToStatus(*record.ToStatus)
+	}
 	if record.FromUser != nil {
-		fromUserID = &record.FromUser.ID
+		create.SetFromUserID(record.FromUser.ID)
 	}
 	if record.ToUser != nil {
-		toUserID = &record.ToUser.ID
+		create.SetToUserID(record.ToUser.ID)
+	}
+	if record.Comment != "" {
+		create.SetComment(record.Comment)
+	}
+	if record.Reason != "" {
+		create.SetReason(record.Reason)
+	}
+	if record.Metadata != nil {
+		create.SetMetadata(record.Metadata)
 	}
 
-	_, err := s.rawDB.ExecContext(
-		ctx, query,
-		record.TicketID, record.Action, record.FromStatus, record.ToStatus,
-		record.Operator.ID, fromUserID, toUserID,
-		record.Comment, record.Reason, metadataJSON,
-		tenantID, record.CreatedAt,
-	)
-
+	_, err := create.Save(ctx)
 	return err
 }
 

@@ -21,6 +21,20 @@ type CIRelationshipCreate struct {
 	hooks    []Hook
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (_c *CIRelationshipCreate) SetTenantID(v int) *CIRelationshipCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (_c *CIRelationshipCreate) SetNillableTenantID(v *int) *CIRelationshipCreate {
+	if v != nil {
+		_c.SetTenantID(*v)
+	}
+	return _c
+}
+
 // SetRelationshipType sets the "relationship_type" field.
 func (_c *CIRelationshipCreate) SetRelationshipType(v string) *CIRelationshipCreate {
 	_c.mutation.SetRelationshipType(v)
@@ -216,6 +230,11 @@ func (_c *CIRelationshipCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *CIRelationshipCreate) check() error {
+	if v, ok := _c.mutation.TenantID(); ok {
+		if err := cirelationship.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.tenant_id": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.RelationshipType(); !ok {
 		return &ValidationError{Name: "relationship_type", err: errors.New(`ent: missing required field "CIRelationship.relationship_type"`)}
 	}
@@ -290,6 +309,10 @@ func (_c *CIRelationshipCreate) createSpec() (*CIRelationship, *sqlgraph.CreateS
 		_node = &CIRelationship{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(cirelationship.Table, sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt))
 	)
+	if value, ok := _c.mutation.TenantID(); ok {
+		_spec.SetField(cirelationship.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
+	}
 	if value, ok := _c.mutation.RelationshipType(); ok {
 		_spec.SetField(cirelationship.FieldRelationshipType, field.TypeString, value)
 		_node.RelationshipType = value

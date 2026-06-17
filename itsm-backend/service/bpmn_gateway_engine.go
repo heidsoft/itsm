@@ -248,12 +248,8 @@ func (e *GatewayEngine) evaluateExclusiveGatewayConditions(ctx context.Context, 
 		return defaultFlow, nil
 	}
 
-	// 如果没有默认流，选择第一个输出
-	if len(outputs) > 0 {
-		return outputs[0], nil
-	}
-
-	return "", fmt.Errorf("排他网关没有可用的输出流")
+	// SEC-002 修复：排他网关无条件匹配且无默认流时，返回错误而非选择第一个输出流
+	return "", fmt.Errorf("排他网关无条件匹配且无默认流")
 }
 
 // evaluateInclusiveGatewayConditions 评估包容网关条件
@@ -290,13 +286,9 @@ func (e *GatewayEngine) evaluateInclusiveGatewayConditions(ctx context.Context, 
 		}
 	}
 
-	// 如果仍然没有输出，选择第一个输出
-	if len(nextActivities) == 0 && len(outputs) > 0 {
-		nextActivities = append(nextActivities, outputs[0])
-	}
-
+	// 如果仍然没有输出，返回错误而非选择第一个输出（安全侧兜底）
 	if len(nextActivities) == 0 {
-		return nil, fmt.Errorf("包容网关没有可用的输出流")
+		return nil, fmt.Errorf("包容网关无条件匹配且无默认流")
 	}
 
 	return nextActivities, nil

@@ -20,6 +20,7 @@ import {
   Alert,
   App,
   Typography,
+  Descriptions,
 } from 'antd';
 import {
   Plus,
@@ -40,6 +41,9 @@ import {
   Clock,
   CheckCircle,
   Code,
+  Activity,
+  ShieldCheck,
+  Workflow,
 } from 'lucide-react';
 
 import BPMNDesigner from '@/components/workflow/BPMNDesigner';
@@ -79,6 +83,7 @@ const WorkflowManagementPage = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [designerVisible, setDesignerVisible] = useState(false);
+  const [viewingWorkflow, setViewingWorkflow] = useState<Workflow | null>(null);
 
   const [editingWorkflow, setEditingWorkflow] = useState<Workflow | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -201,6 +206,64 @@ const WorkflowManagementPage = () => {
     setEditingWorkflow(workflow);
     setModalVisible(true);
   };
+
+  const handleViewWorkflow = (workflow: Workflow) => {
+    setViewingWorkflow(workflow);
+  };
+
+  const workflowConsoleEntries = useMemo(
+    () => [
+      {
+        key: 'dashboard',
+        title: '监控仪表盘',
+        description: '查看流程健康度、SLA 风险和运行趋势',
+        icon: <BarChart3 className="h-5 w-5" />,
+        path: '/workflow/dashboard',
+        accent: '#1677ff',
+      },
+      {
+        key: 'instances',
+        title: '实例监控',
+        description: '追踪运行中实例、异常实例和关键节点',
+        icon: <Activity className="h-5 w-5" />,
+        path: '/workflow/instances',
+        accent: '#52c41a',
+      },
+      {
+        key: 'versions',
+        title: '版本治理',
+        description: '管理历史版本、激活、回滚与比较',
+        icon: <GitBranch className="h-5 w-5" />,
+        path: '/workflow/versions',
+        accent: '#722ed1',
+      },
+      {
+        key: 'automation',
+        title: '自动化规则',
+        description: '配置自动分配、路由与升级规则',
+        icon: <Workflow className="h-5 w-5" />,
+        path: '/workflow/automation',
+        accent: '#faad14',
+      },
+      {
+        key: 'audit',
+        title: '审计追踪',
+        description: '查看流程动作、用户行为和时间线',
+        icon: <ShieldCheck className="h-5 w-5" />,
+        path: '/workflow/audit',
+        accent: '#13c2c2',
+      },
+      {
+        key: 'designer',
+        title: '审批设计器',
+        description: '快速进入工单审批与 BPMN 设计',
+        icon: <Code className="h-5 w-5" />,
+        path: '/workflow/ticket-approval',
+        accent: '#eb2f96',
+      },
+    ],
+    []
+  );
 
   const handleDesignWorkflow = (workflow: Workflow) => {
     setEditingWorkflow(workflow);
@@ -542,6 +605,36 @@ const WorkflowManagementPage = () => {
     return texts[status as keyof typeof texts] || status;
   };
 
+  const getCategoryLabel = (category: string) => {
+    const labels: Record<string, string> = {
+      general: t('workflow.generalWorkflow'),
+      approval: t('workflow.approvalProcess'),
+      incident: t('workflow.incidentHandling'),
+      change: t('workflow.changeManagement'),
+      ticket: t('workflow.ticketApprovalProcess'),
+    };
+    return labels[category] || category;
+  };
+
+  const normalizeCategory = (category: string) => {
+    const normalized: Record<string, string> = {
+      [t('workflow.generalWorkflow')]: 'general',
+      [t('workflow.approvalProcess')]: 'approval',
+      [t('workflow.incidentHandling')]: 'incident',
+      [t('workflow.changeManagement')]: 'change',
+      [t('workflow.ticketApprovalProcess')]: 'ticket',
+    };
+    return normalized[category] || category;
+  };
+
+  const workflowCategoryOptions = [
+    { value: 'general', label: t('workflow.generalWorkflow') },
+    { value: 'approval', label: t('workflow.approvalProcess') },
+    { value: 'incident', label: t('workflow.incidentHandling') },
+    { value: 'change', label: t('workflow.changeManagement') },
+    { value: 'ticket', label: t('workflow.ticketApprovalProcess') },
+  ];
+
   const columns = [
     {
       title: t('workflow.name'),
@@ -559,7 +652,7 @@ const WorkflowManagementPage = () => {
       dataIndex: 'category',
       key: 'category',
       width: 120,
-      render: (category: string) => <Tag color="blue">{category}</Tag>,
+      render: (category: string) => <Tag color="blue">{getCategoryLabel(category)}</Tag>,
     },
     {
       title: t('workflow.version'),
@@ -640,7 +733,7 @@ const WorkflowManagementPage = () => {
             <Button
               type="text"
               icon={<Eye className="w-4 h-4" />}
-              onClick={() => router.push(`/workflow/designer?id=${record.id}&key=${record.id}`)}
+              onClick={() => handleViewWorkflow(record)}
               aria-label="查看工作流"
             />
           </Tooltip>
@@ -741,7 +834,7 @@ const WorkflowManagementPage = () => {
 
   const filteredWorkflows = workflows.filter(workflow => {
     if (filters.status && workflow.status !== filters.status) return false;
-    if (filters.category && workflow.category !== filters.category) return false;
+    if (filters.category && normalizeCategory(workflow.category) !== filters.category) return false;
     if (filters.keyword && !workflow.name.toLowerCase().includes(filters.keyword.toLowerCase()))
       return false;
     return true;
@@ -879,9 +972,10 @@ const WorkflowManagementPage = () => {
         allowClear
         className="min-w-[180px]"
       >
-        <Option value={t('workflow.approvalProcess')}>{t('workflow.approvalProcess')}</Option>
-        <Option value={t('workflow.incidentHandling')}>{t('workflow.incidentHandling')}</Option>
-        <Option value={t('workflow.changeManagement')}>{t('workflow.changeManagement')}</Option>
+        <Option value="general">{t('workflow.generalWorkflow')}</Option>
+        <Option value="approval">{t('workflow.approvalProcess')}</Option>
+        <Option value="incident">{t('workflow.incidentHandling')}</Option>
+        <Option value="change">{t('workflow.changeManagement')}</Option>
       </Select>
     </>
   );
@@ -890,9 +984,48 @@ const WorkflowManagementPage = () => {
     <>
       <ManagementPageHeader
         title={t('workflow.workflowManagement')}
-        description="统一管理工作流定义、运行状态、设计入口和批量操作。"
+        description="统一管理工作流定义、运行状态、设计入口和批量操作，作为工作流控制台主入口。"
         actions={headerActions}
       />
+
+      <Row gutter={[16, 16]} className="mb-6">
+        {workflowConsoleEntries.map(entry => (
+          <Col key={entry.key} xs={24} sm={12} lg={8}>
+            <Card
+              hoverable
+              className="h-full border border-gray-200 shadow-sm"
+              onClick={() => router.push(entry.path)}
+              styles={{
+                body: {
+                  padding: 20,
+                },
+              }}
+            >
+              <Space align="start" size={14} className="w-full">
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 12,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: entry.accent,
+                    background: `${entry.accent}15`,
+                    flex: '0 0 auto',
+                  }}
+                >
+                  {entry.icon}
+                </div>
+                <div className="flex-1">
+                  <div className="text-base font-semibold text-gray-900">{entry.title}</div>
+                  <div className="mt-1 text-sm text-gray-500">{entry.description}</div>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+        ))}
+      </Row>
 
       <StatsOverview items={statsItems} className="mb-6" />
 
@@ -1057,15 +1190,11 @@ const WorkflowManagementPage = () => {
                 rules={[{ required: true, message: t('workflow.categoryRequired') }]}
               >
                 <Select placeholder={t('workflow.categoryPlaceholder')}>
-                  <Option value={t('workflow.approvalProcess')}>
-                    {t('workflow.approvalProcess')}
-                  </Option>
-                  <Option value={t('workflow.incidentHandling')}>
-                    {t('workflow.incidentHandling')}
-                  </Option>
-                  <Option value={t('workflow.changeManagement')}>
-                    {t('workflow.changeManagement')}
-                  </Option>
+                  {workflowCategoryOptions.map(option => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
             </Col>
@@ -1158,6 +1287,69 @@ const WorkflowManagementPage = () => {
           }}
           height={700}
         />
+      </Modal>
+
+      <Modal
+        title={viewingWorkflow ? `${viewingWorkflow.name} · ${t('workflow.viewDetails')}` : t('workflow.viewDetails')}
+        open={!!viewingWorkflow}
+        onCancel={() => setViewingWorkflow(null)}
+        footer={null}
+        width={720}
+        destroyOnHidden
+      >
+        {viewingWorkflow && (
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Descriptions bordered size="small" column={2}>
+              <Descriptions.Item label={t('workflow.name')} span={2}>
+                {viewingWorkflow.name}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('workflow.description')} span={2}>
+                {viewingWorkflow.description || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('workflow.category')}>
+                <Tag color="blue">{getCategoryLabel(viewingWorkflow.category)}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('workflow.status')}>
+                <Tag color={getStatusColor(viewingWorkflow.status)}>{getStatusText(viewingWorkflow.status)}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('workflow.version')}>
+                <span className="font-mono">{viewingWorkflow.version}</span>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('workflow.bpmnStatus')}>
+                <Tag color={viewingWorkflow.bpmn_xml ? 'green' : 'orange'}>
+                  {viewingWorkflow.bpmn_xml ? t('workflow.defined') : t('workflow.undefined')}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('workflow.total')}>
+                {viewingWorkflow.instances_count}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('workflow.running')}>
+                {viewingWorkflow.running_instances}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('workflow.createdAt')}>
+                {new Date(viewingWorkflow.createdAt).toLocaleString('zh-CN')}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('workflow.updatedAt')}>
+                {new Date(viewingWorkflow.updatedAt).toLocaleString('zh-CN')}
+              </Descriptions.Item>
+              <Descriptions.Item label="创建人" span={2}>
+                {viewingWorkflow.created_by}
+              </Descriptions.Item>
+            </Descriptions>
+
+            <Space wrap>
+              <Button type="primary" onClick={() => handleDesignWorkflow(viewingWorkflow)}>
+                {t('workflow.designWorkflow')}
+              </Button>
+              <Button onClick={() => window.open(`/workflow/instances?workflowId=${viewingWorkflow.id}`, '_blank')}>
+                {t('workflow.viewInstances')}
+              </Button>
+              <Button onClick={() => window.open(`/workflow/versions?workflowId=${viewingWorkflow.id}`, '_blank')}>
+                {t('workflow.versionManagement')}
+              </Button>
+            </Space>
+          </Space>
+        )}
       </Modal>
     </>
   );

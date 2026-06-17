@@ -28,10 +28,12 @@ interface CIEditorFormProps {
   cloudServices: CloudService[];
   cloudLoading: boolean;
   schemaFields: SchemaField[];
+  typeSchemaFields: SchemaField[];
   saving: boolean;
   submitText: string;
   onSubmit: (values: CIFormValues) => Promise<void> | void;
   onCancel: () => void;
+  onCITypeChange: (value?: number) => void;
   onCloudResourceChange: (value?: number) => void;
 }
 
@@ -43,10 +45,12 @@ export function CIEditorForm({
   cloudServices,
   cloudLoading,
   schemaFields,
+  typeSchemaFields,
   saving,
   submitText,
   onSubmit,
   onCancel,
+  onCITypeChange,
   onCloudResourceChange,
 }: CIEditorFormProps) {
   const cloudServiceMap = React.useMemo(
@@ -75,6 +79,7 @@ export function CIEditorForm({
             loading={typesLoading}
             showSearch
             optionFilterProp="label"
+            onChange={onCITypeChange}
             options={types.map(type => ({
               label: type.name,
               value: type.id,
@@ -133,6 +138,42 @@ export function CIEditorForm({
         <Select placeholder="请选择数据来源" allowClear options={sourceOptions} />
       </Form.Item>
 
+      {typeSchemaFields.length > 0 && (
+        <>
+          <Divider>类型扩展属性</Divider>
+          <div className="mb-3 text-sm text-slate-500">
+            这些字段来自所选 CI 类型模板，会保存到配置项扩展属性中，用于统一检索、报表和后续流程引用。
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {typeSchemaFields.map(field => (
+              <Form.Item
+                key={field.key}
+                label={field.label || field.key}
+                name={['custom_attributes', field.key]}
+                rules={
+                  field.required
+                    ? [{ required: true, message: `请选择${field.label || field.key}` }]
+                    : undefined
+                }
+              >
+                {field.type === 'select' ? (
+                  <Select
+                    placeholder={field.placeholder || `请选择${field.label || field.key}`}
+                    allowClear
+                    options={(field.options || []).map(option => ({
+                      label: option,
+                      value: option,
+                    }))}
+                  />
+                ) : (
+                  <Input placeholder={field.placeholder || `请输入${field.label || field.key}`} allowClear />
+                )}
+              </Form.Item>
+            ))}
+          </div>
+        </>
+      )}
+
       <Divider>云资源信息</Divider>
 
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
@@ -176,7 +217,7 @@ export function CIEditorForm({
         <>
           <Divider>云资源动态属性</Divider>
           <div className="mb-3 text-sm text-slate-500">
-            动态属性会跟随所选云资源类型变化，优先使用枚举选择，减少手填错误。
+            动态属性会跟随所选云资源类型变化，并保存到云资源元数据中，优先使用枚举选择，减少手填错误。
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
             {schemaFields.map(field => (

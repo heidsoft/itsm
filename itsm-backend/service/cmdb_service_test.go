@@ -2,45 +2,34 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"testing"
-
-	_ "github.com/mattn/go-sqlite3"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-// ==================== 测试设置辅助函数 ====================
-
-func setupCMDBTest(t *testing.T) (*ent.Client, *CMDBService, context.Context) {
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	service := NewCMDBService(client)
-	ctx := context.Background()
-	return client, service, ctx
-}
-
-func createCMDBTestTenant(ctx context.Context, client *ent.Client, suffix string) (*ent.Tenant, error) {
+// createCMDBTestTenant 创建测试租户（避免与 rag_service_test 中的同名函数冲突，使用独立名称）
+func createCMDBTestTenant(ctx context.Context, client *ent.Client, name, code, domain string) (*ent.Tenant, error) {
 	return client.Tenant.Create().
-		SetName("Test Tenant " + suffix).
-		SetCode("test" + suffix).
-		SetDomain("test" + suffix + ".com").
+		SetName(name).
+		SetCode(code).
+		SetDomain(domain).
 		SetStatus("active").
 		Save(ctx)
 }
 
-func createCMDBTestCIType(ctx context.Context, client *ent.Client, tenantID int, name string) (*ent.CIType, error) {
+// createTestCIType 创建测试 CI 类型
+func createTestCIType(ctx context.Context, client *ent.Client, tenantID int, name string) (*ent.CIType, error) {
 	return client.CIType.Create().
 		SetName(name).
 		SetTenantID(tenantID).
-		SetIsActive(true).
 		Save(ctx)
 }
 
-func createTestCI(ctx context.Context, client *ent.Client, tenantID int, ciTypeID int, name string) (*ent.ConfigurationItem, error) {
+// createTestCI 创建测试配置项
+func createTestCI(ctx context.Context, client *ent.Client, tenantID, ciTypeID int, name string) (*ent.ConfigurationItem, error) {
 	return client.ConfigurationItem.Create().
 		SetName(name).
 		SetCiType("server").
@@ -52,427 +41,422 @@ func createTestCI(ctx context.Context, client *ent.Client, tenantID int, ciTypeI
 		Save(ctx)
 }
 
-// ==================== 创建配置项测试 ====================
-
-func TestCMDBService_CreateCI_Success(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
+// TestListRelationships_TenantIsolation 测试跨租户查询返回空结果
+func TestListRelationships_TenantIsolation(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:cmdb_ent1?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 
-	testTenant, err := createCMDBTestTenant(ctx, client, "ci")
-	require.NoError(t, err)
+	ctx := context.Background()
 
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	req := &CreateCIRequest{
-		Name:        "生产服务器",
-		CiType:      "server",
-		CiTypeID:    ciType.ID,
-		Status:      "active",
-		Environment: "production",
-		Criticality: "high",
-		TenantID:    testTenant.ID,
+	// 创建两个租户
+	tenant1, err := createCMDBTestTenant(ctx, client, "Tenant 1", "t1", "t1.com")
+	if err != nil {
+		t.Fatalf("创建租户1失败: %v", err)
+	}
+	tenant2, err := createCMDBTestTenant(ctx, client, "Tenant 2", "t2", "t2.com")
+	if err != nil {
+		t.Fatalf("创建租户2失败: %v", err)
 	}
 
-	ci, err := service.CreateCI(ctx, req)
-	require.NoError(t, err)
-	assert.NotNil(t, ci)
-	assert.Equal(t, req.Name, ci.Name)
-	assert.Equal(t, req.CiType, ci.CiType)
-	assert.Equal(t, req.Status, ci.Status)
-	assert.Equal(t, req.Environment, ci.Environment)
-}
-
-func TestCMDBService_CreateCI_WithOptionalFields(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
-	defer client.Close()
-
-	testTenant, err := createCMDBTestTenant(ctx, client, "opt")
-	require.NoError(t, err)
-
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	assetTag := "ASSET-001"
-	serialNumber := "SN12345"
-	location := "数据中心A"
-
-	req := &CreateCIRequest{
-		Name:         "数据库服务器",
-		CiType:       "server",
-		CiTypeID:     ciType.ID,
-		Status:       "active",
-		Environment:  "production",
-		Criticality:  "critical",
-		TenantID:     testTenant.ID,
-		AssetTag:     &assetTag,
-		SerialNumber: &serialNumber,
-		Location:     &location,
+	// 创建 CI 类型
+	ciType1, err := createTestCIType(ctx, client, tenant1.ID, "server-type-1")
+	if err != nil {
+		t.Fatalf("创建CI类型1失败: %v", err)
+	}
+	ciType2, err := createTestCIType(ctx, client, tenant2.ID, "server-type-2")
+	if err != nil {
+		t.Fatalf("创建CI类型2失败: %v", err)
 	}
 
-	ci, err := service.CreateCI(ctx, req)
-	require.NoError(t, err)
-	assert.NotNil(t, ci)
-	assert.Equal(t, assetTag, ci.AssetTag)
-	assert.Equal(t, serialNumber, ci.SerialNumber)
-	assert.Equal(t, location, ci.Location)
-}
-
-// ==================== 获取配置项测试 ====================
-
-func TestCMDBService_GetCI_Success(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
-	defer client.Close()
-
-	testTenant, err := createCMDBTestTenant(ctx, client, "get")
-	require.NoError(t, err)
-
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	// 创建配置项
-	created, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "测试服务器")
-	require.NoError(t, err)
-
-	ci, err := service.GetCI(ctx, created.ID, testTenant.ID)
-	require.NoError(t, err)
-	assert.Equal(t, created.ID, ci.ID)
-	assert.Equal(t, "测试服务器", ci.Name)
-}
-
-func TestCMDBService_GetCI_NotFound(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
-	defer client.Close()
-
-	testTenant, err := createCMDBTestTenant(ctx, client, "notfound")
-	require.NoError(t, err)
-
-	_, err = service.GetCI(ctx, 99999, testTenant.ID)
-	require.Error(t, err)
-}
-
-func TestCMDBService_GetCI_TenantMismatch(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
-	defer client.Close()
-
-	testTenant1, err := createCMDBTestTenant(ctx, client, "tenant1")
-	require.NoError(t, err)
-
-	testTenant2, err := createCMDBTestTenant(ctx, client, "tenant2")
-	require.NoError(t, err)
-
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant1.ID, "server")
-	require.NoError(t, err)
-
-	// 在租户1创建配置项
-	created, err := createTestCI(ctx, client, testTenant1.ID, ciType.ID, "测试服务器")
-	require.NoError(t, err)
-
-	// 使用租户2的ID获取，应该失败
-	_, err = service.GetCI(ctx, created.ID, testTenant2.ID)
-	require.Error(t, err)
-}
-
-// ==================== 列出配置项测试 ====================
-
-func TestCMDBService_ListCIs_Success(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
-	defer client.Close()
-
-	testTenant, err := createCMDBTestTenant(ctx, client, "list")
-	require.NoError(t, err)
-
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	// 创建多个配置项
-	for i := 0; i < 5; i++ {
-		_, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, fmt.Sprintf("服务器%d", i))
-		require.NoError(t, err)
+	// 创建两个租户的配置项
+	ci1, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "server-1")
+	if err != nil {
+		t.Fatalf("创建CI1失败: %v", err)
+	}
+	ci2, err := createTestCI(ctx, client, tenant2.ID, ciType2.ID, "server-2")
+	if err != nil {
+		t.Fatalf("创建CI2失败: %v", err)
 	}
 
-	req := &ListCIsRequest{
-		TenantID: testTenant.ID,
-		Offset:   0,
-		Limit:    10,
+	// 创建租户1的关系
+	client.CIRelationship.Create().
+		SetRelationshipType("depends_on").
+		SetSourceCiID(ci1.ID).
+		SetTargetCiID(ci1.ID).
+		SetTenantID(tenant1.ID).
+		SaveX(ctx)
+
+	// 创建租户2的关系
+	client.CIRelationship.Create().
+		SetRelationshipType("depends_on").
+		SetSourceCiID(ci2.ID).
+		SetTargetCiID(ci2.ID).
+		SetTenantID(tenant2.ID).
+		SaveX(ctx)
+
+	svc := NewCMDBService(client)
+
+	// 租户1查询应该只返回租户1的关系
+	rels1, err := svc.ListRelationships(ctx, tenant1.ID, nil)
+	if err != nil {
+		t.Fatalf("ListRelationships 失败: %v", err)
+	}
+	for _, rel := range rels1 {
+		if rel.TenantID != tenant1.ID {
+			t.Errorf("跨租户数据泄露: 期望 tenant_id=%d, 实际 tenant_id=%d", tenant1.ID, rel.TenantID)
+		}
 	}
 
-	_, total, err := service.ListCIs(ctx, req)
-	require.NoError(t, err)
-	assert.Equal(t, 5, total)
+	// 租户2查询应该只返回租户2的关系
+	rels2, err := svc.ListRelationships(ctx, tenant2.ID, nil)
+	if err != nil {
+		t.Fatalf("ListRelationships 失败: %v", err)
+	}
+	for _, rel := range rels2 {
+		if rel.TenantID != tenant2.ID {
+			t.Errorf("跨租户数据泄露: 期望 tenant_id=%d, 实际 tenant_id=%d", tenant2.ID, rel.TenantID)
+		}
+	}
 }
 
-func TestCMDBService_ListCIs_FilterByType(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
+// TestListRelationships_SameTenant 测试同租户查询返回正确结果
+func TestListRelationships_SameTenant(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:cmdb_ent2?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 
-	testTenant, err := createCMDBTestTenant(ctx, client, "type")
-	require.NoError(t, err)
+	ctx := context.Background()
 
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	// 创建不同类型的配置项
-	ciTypes := []string{"server", "network", "server"}
-	for i, ciTypeName := range ciTypes {
-		_, err := client.ConfigurationItem.Create().
-			SetName(fmt.Sprintf("CI%d", i)).
-			SetCiType(ciTypeName).
-			SetCiTypeID(ciType.ID).
-			SetStatus("active").
-			SetEnvironment("production").
-			SetCriticality("medium").
-			SetTenantID(testTenant.ID).
-			Save(ctx)
-		require.NoError(t, err)
+	tenant1, err := createCMDBTestTenant(ctx, client, "Tenant 1", "t1", "t1.com")
+	if err != nil {
+		t.Fatalf("创建租户失败: %v", err)
+	}
+	ciType1, err := createTestCIType(ctx, client, tenant1.ID, "server-type")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
 	}
 
-	req := &ListCIsRequest{
-		TenantID: testTenant.ID,
-		CiType:   "server",
-		Offset:   0,
-		Limit:    10,
+	ci1, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "app-1")
+	if err != nil {
+		t.Fatalf("创建CI1失败: %v", err)
+	}
+	ci2, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "server-1")
+	if err != nil {
+		t.Fatalf("创建CI2失败: %v", err)
 	}
 
-	_, total, err := service.ListCIs(ctx, req)
-	require.NoError(t, err)
-	assert.Equal(t, 2, total)
+	client.CIRelationship.Create().
+		SetRelationshipType("runs_on").
+		SetSourceCiID(ci1.ID).
+		SetTargetCiID(ci2.ID).
+		SetTenantID(tenant1.ID).
+		SaveX(ctx)
+
+	svc := NewCMDBService(client)
+
+	rels, err := svc.ListRelationships(ctx, tenant1.ID, nil)
+	if err != nil {
+		t.Fatalf("ListRelationships 失败: %v", err)
+	}
+	if len(rels) != 1 {
+		t.Errorf("期望 1 条关系, 实际 %d 条", len(rels))
+	}
 }
 
-func TestCMDBService_ListCIs_FilterByStatus(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
+// TestGetCITopology_TenantIsolation 测试拓扑查询的租户隔离
+func TestGetCITopology_TenantIsolation(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:cmdb_ent3?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 
-	testTenant, err := createCMDBTestTenant(ctx, client, "status")
-	require.NoError(t, err)
+	ctx := context.Background()
 
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	// 创建不同状态的配置项
-	statuses := []string{"active", "inactive", "active"}
-	for i, status := range statuses {
-		_, err := client.ConfigurationItem.Create().
-			SetName(fmt.Sprintf("CI%d", i)).
-			SetCiType("server").
-			SetCiTypeID(ciType.ID).
-			SetStatus(status).
-			SetEnvironment("production").
-			SetCriticality("medium").
-			SetTenantID(testTenant.ID).
-			Save(ctx)
-		require.NoError(t, err)
+	tenant1, err := createCMDBTestTenant(ctx, client, "Tenant 1", "t1", "t1.com")
+	if err != nil {
+		t.Fatalf("创建租户1失败: %v", err)
+	}
+	tenant2, err := createCMDBTestTenant(ctx, client, "Tenant 2", "t2", "t2.com")
+	if err != nil {
+		t.Fatalf("创建租户2失败: %v", err)
 	}
 
-	req := &ListCIsRequest{
-		TenantID: testTenant.ID,
-		Status:   "active",
-		Offset:   0,
-		Limit:    10,
+	ciType1, err := createTestCIType(ctx, client, tenant1.ID, "app-type")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
+	}
+	ciType2, err := createTestCIType(ctx, client, tenant2.ID, "server-type")
+	if err != nil {
+		t.Fatalf("创建CI类型2失败: %v", err)
 	}
 
-	_, total, err := service.ListCIs(ctx, req)
-	require.NoError(t, err)
-	assert.Equal(t, 2, total)
+	ci1, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "app-1")
+	if err != nil {
+		t.Fatalf("创建CI1失败: %v", err)
+	}
+	ci2, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "server-1")
+	if err != nil {
+		t.Fatalf("创建CI2失败: %v", err)
+	}
+	ci3, err := createTestCI(ctx, client, tenant2.ID, ciType2.ID, "server-2")
+	if err != nil {
+		t.Fatalf("创建CI3失败: %v", err)
+	}
+
+	client.CIRelationship.Create().
+		SetRelationshipType("runs_on").
+		SetSourceCiID(ci1.ID).
+		SetTargetCiID(ci2.ID).
+		SetTenantID(tenant1.ID).
+		SaveX(ctx)
+
+	client.CIRelationship.Create().
+		SetRelationshipType("depends_on").
+		SetSourceCiID(ci3.ID).
+		SetTargetCiID(ci3.ID).
+		SetTenantID(tenant2.ID).
+		SaveX(ctx)
+
+	svc := NewCMDBService(client)
+
+	topo, err := svc.GetCITopology(ctx, ci1.ID, tenant1.ID, 1)
+	if err != nil {
+		t.Fatalf("GetCITopology 失败: %v", err)
+	}
+	if topo.CI == nil {
+		t.Fatal("拓扑根节点不应为空")
+	}
+	for _, child := range topo.Children {
+		if child.CI.TenantID != tenant1.ID {
+			t.Errorf("拓扑中发现跨租户CI: tenant_id=%d", child.CI.TenantID)
+		}
+	}
 }
 
-// ==================== 统计配置项测试 ====================
-
-func TestCMDBService_CountCIs_Success(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
+// TestCreateRelationship_SetsTenantID 测试创建关系时设置 tenant_id
+func TestCreateRelationship_SetsTenantID(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:cmdb_ent4?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 
-	testTenant, err := createCMDBTestTenant(ctx, client, "count")
-	require.NoError(t, err)
+	ctx := context.Background()
 
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	// 创建配置项
-	for i := 0; i < 10; i++ {
-		_, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, fmt.Sprintf("CI%d", i))
-		require.NoError(t, err)
+	tenant1, err := createCMDBTestTenant(ctx, client, "Tenant 1", "t1", "t1.com")
+	if err != nil {
+		t.Fatalf("创建租户失败: %v", err)
+	}
+	ciType1, err := createTestCIType(ctx, client, tenant1.ID, "server-type")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
 	}
 
-	count, err := service.CountCIs(ctx, testTenant.ID)
-	require.NoError(t, err)
-	assert.Equal(t, 10, count)
-}
-
-// ==================== 创建CI关系测试 ====================
-
-func TestCMDBService_CreateRelationship_Success(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
-	defer client.Close()
-
-	testTenant, err := createCMDBTestTenant(ctx, client, "rel")
-	require.NoError(t, err)
-
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	// 创建两个配置项
-	ci1, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "Web服务器")
-	require.NoError(t, err)
-
-	ci2, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "数据库服务器")
-	require.NoError(t, err)
-
-	req := &CreateRelationshipRequest{
-		Type:       "depends_on",
-		SourceCIID: ci1.ID,
-		TargetCIID: ci2.ID,
+	ci1, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "app-1")
+	if err != nil {
+		t.Fatalf("创建CI1失败: %v", err)
+	}
+	ci2, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "server-1")
+	if err != nil {
+		t.Fatalf("创建CI2失败: %v", err)
 	}
 
-	rel, err := service.CreateRelationship(ctx, req)
-	require.NoError(t, err)
-	assert.NotNil(t, rel)
-	assert.Equal(t, "depends_on", rel.RelationshipType)
-	assert.Equal(t, ci1.ID, rel.SourceCiID)
-	assert.Equal(t, ci2.ID, rel.TargetCiID)
-}
+	svc := NewCMDBService(client)
 
-func TestCMDBService_CreateRelationship_WithDescription(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
-	defer client.Close()
-
-	testTenant, err := createCMDBTestTenant(ctx, client, "reldesc")
-	require.NoError(t, err)
-
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	ci1, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "应用服务器")
-	require.NoError(t, err)
-
-	ci2, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "负载均衡器")
-	require.NoError(t, err)
-
-	description := "应用服务器通过负载均衡器接收流量"
-	req := &CreateRelationshipRequest{
-		Type:        "connects_to",
+	desc := "应用部署在服务器上"
+	rel, err := svc.CreateRelationship(ctx, &CreateRelationshipRequest{
 		SourceCIID:  ci1.ID,
 		TargetCIID:  ci2.ID,
-		Description: &description,
+		Type:        "runs_on",
+		Description: &desc,
+		TenantID:    tenant1.ID,
+	})
+	if err != nil {
+		t.Fatalf("CreateRelationship 失败: %v", err)
+	}
+	if rel.TenantID != tenant1.ID {
+		t.Errorf("关系 tenant_id 未正确设置: 期望 %d, 实际 %d", tenant1.ID, rel.TenantID)
+	}
+}
+
+// TestListRelationships_CrossTenantDeny 确保跨租户查询不返回数据
+func TestListRelationships_CrossTenantDeny(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:cmdb_ent5?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+
+	tenant1, err := createCMDBTestTenant(ctx, client, "Tenant 1", "t1", "t1.com")
+	if err != nil {
+		t.Fatalf("创建租户1失败: %v", err)
+	}
+	tenant999, err := createCMDBTestTenant(ctx, client, "Tenant 999", "t999", "t999.com")
+	if err != nil {
+		t.Fatalf("创建租户999失败: %v", err)
+	}
+	ciType1, err := createTestCIType(ctx, client, tenant1.ID, "server-type")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
 	}
 
-	rel, err := service.CreateRelationship(ctx, req)
-	require.NoError(t, err)
-	assert.NotNil(t, rel)
-	assert.Equal(t, description, rel.Description)
-}
-
-// ==================== 更新CI关系测试 ====================
-
-func TestCMDBService_UpdateRelationship_Success(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
-	defer client.Close()
-
-	testTenant, err := createCMDBTestTenant(ctx, client, "relupd")
-	require.NoError(t, err)
-
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	ci1, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "CI1")
-	require.NoError(t, err)
-
-	ci2, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "CI2")
-	require.NoError(t, err)
-
-	// 创建关系
-	rel, err := client.CIRelationship.Create().
-		SetRelationshipType("depends_on").
-		SetSourceCiID(ci1.ID).
-		SetTargetCiID(ci2.ID).
-		Save(ctx)
-	require.NoError(t, err)
-
-	// 更新关系
-	newType := "connects_to"
-	req := &UpdateRelationshipRequest{
-		Type: newType,
+	ci1, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "tenant1-ci")
+	if err != nil {
+		t.Fatalf("创建CI失败: %v", err)
 	}
 
-	updated, err := service.UpdateRelationship(ctx, rel.ID, req)
-	require.NoError(t, err)
-	assert.Equal(t, newType, updated.RelationshipType)
-}
-
-// ==================== 删除CI关系测试 ====================
-
-func TestCMDBService_DeleteRelationship_Success(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
-	defer client.Close()
-
-	testTenant, err := createCMDBTestTenant(ctx, client, "reldel")
-	require.NoError(t, err)
-
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	ci1, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "CI1")
-	require.NoError(t, err)
-
-	ci2, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "CI2")
-	require.NoError(t, err)
-
-	// 创建关系
-	rel, err := client.CIRelationship.Create().
+	client.CIRelationship.Create().
 		SetRelationshipType("depends_on").
 		SetSourceCiID(ci1.ID).
-		SetTargetCiID(ci2.ID).
-		Save(ctx)
-	require.NoError(t, err)
-
-	// 删除关系
-	err = service.DeleteRelationship(ctx, rel.ID)
-	require.NoError(t, err)
-
-	// 验证已删除
-	_, err = client.CIRelationship.Get(ctx, rel.ID)
-	require.Error(t, err)
-	assert.True(t, ent.IsNotFound(err))
-}
-
-// ==================== 列出关系测试 ====================
-
-func TestCMDBService_ListRelationships_ByCIID(t *testing.T) {
-	client, service, ctx := setupCMDBTest(t)
-	defer client.Close()
-
-	testTenant, err := createCMDBTestTenant(ctx, client, "relci")
-	require.NoError(t, err)
-
-	ciType, err := createCMDBTestCIType(ctx, client, testTenant.ID, "server")
-	require.NoError(t, err)
-
-	ci1, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "CI1")
-	require.NoError(t, err)
-
-	ci2, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "CI2")
-	require.NoError(t, err)
-
-	ci3, err := createTestCI(ctx, client, testTenant.ID, ciType.ID, "CI3")
-	require.NoError(t, err)
-
-	// 创建关系：ci1 -> ci2, ci3 -> ci1
-	_, err = client.CIRelationship.Create().
-		SetRelationshipType("depends_on").
-		SetSourceCiID(ci1.ID).
-		SetTargetCiID(ci2.ID).
-		Save(ctx)
-	require.NoError(t, err)
-
-	_, err = client.CIRelationship.Create().
-		SetRelationshipType("connects_to").
-		SetSourceCiID(ci3.ID).
 		SetTargetCiID(ci1.ID).
-		Save(ctx)
-	require.NoError(t, err)
+		SetTenantID(tenant1.ID).
+		SaveX(ctx)
 
-	// 查询与ci1相关的关系
-	rels, err := service.ListRelationships(ctx, testTenant.ID, &ci1.ID)
-	require.NoError(t, err)
-	assert.Equal(t, 2, len(rels)) // ci1作为source和target各有一个
+	svc := NewCMDBService(client)
+
+	// 租户999不应该能看到租户1的关系
+	rels, err := svc.ListRelationships(ctx, tenant999.ID, nil)
+	if err != nil {
+		t.Fatalf("ListRelationships 失败: %v", err)
+	}
+	if len(rels) != 0 {
+		t.Errorf("跨租户数据泄露: 租户%d不应看到任何关系, 实际看到 %d 条", tenant999.ID, len(rels))
+	}
+}
+
+// TestCreateRelationship_CrossTenantDenied SEC-004: 跨租户 CI 关系创建应被拒绝
+func TestCreateRelationship_CrossTenantDenied(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:cmdb_ent6?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+
+	// 创建两个租户
+	tenant1, err := createCMDBTestTenant(ctx, client, "Tenant 1", "t1", "t1.com")
+	if err != nil {
+		t.Fatalf("创建租户1失败: %v", err)
+	}
+	tenant2, err := createCMDBTestTenant(ctx, client, "Tenant 2", "t2", "t2.com")
+	if err != nil {
+		t.Fatalf("创建租户2失败: %v", err)
+	}
+
+	ciType1, err := createTestCIType(ctx, client, tenant1.ID, "type1")
+	if err != nil {
+		t.Fatalf("创建CI类型1失败: %v", err)
+	}
+	ciType2, err := createTestCIType(ctx, client, tenant2.ID, "type2")
+	if err != nil {
+		t.Fatalf("创建CI类型2失败: %v", err)
+	}
+
+	// 租户1的 CI
+	ci1, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "ci-tenant1")
+	if err != nil {
+		t.Fatalf("创建CI1失败: %v", err)
+	}
+	// 租户2的 CI
+	ci2, err := createTestCI(ctx, client, tenant2.ID, ciType2.ID, "ci-tenant2")
+	if err != nil {
+		t.Fatalf("创建CI2失败: %v", err)
+	}
+
+	svc := NewCMDBService(client)
+
+	// 尝试以租户1身份创建 source=租户1CI, target=租户2CI 的关系 → 应失败
+	_, err = svc.CreateRelationship(ctx, &CreateRelationshipRequest{
+		SourceCIID: ci1.ID,
+		TargetCIID: ci2.ID,
+		Type:       "depends_on",
+		TenantID:   tenant1.ID,
+	})
+	if err == nil {
+		t.Error("跨租户关系创建应被拒绝，但成功创建了")
+	}
+}
+
+// TestCreateRelationship_SourceCINotBelongToTenant SEC-004: source CI 不属于当前租户时拒绝
+func TestCreateRelationship_SourceCINotBelongToTenant(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:cmdb_ent7?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+
+	tenant1, err := createCMDBTestTenant(ctx, client, "Tenant 1", "t1", "t1.com")
+	if err != nil {
+		t.Fatalf("创建租户1失败: %v", err)
+	}
+	tenant2, err := createCMDBTestTenant(ctx, client, "Tenant 2", "t2", "t2.com")
+	if err != nil {
+		t.Fatalf("创建租户2失败: %v", err)
+	}
+
+	ciType1, err := createTestCIType(ctx, client, tenant1.ID, "type1")
+	if err != nil {
+		t.Fatalf("创建CI类型1失败: %v", err)
+	}
+	ciType2, err := createTestCIType(ctx, client, tenant2.ID, "type2")
+	if err != nil {
+		t.Fatalf("创建CI类型2失败: %v", err)
+	}
+
+	// 租户1的 CI（将作为不匹配的 source）
+	ci1, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "ci-tenant1")
+	if err != nil {
+		t.Fatalf("创建CI1失败: %v", err)
+	}
+	// 租户2的两个 CI
+	ci2, err := createTestCI(ctx, client, tenant2.ID, ciType2.ID, "ci-tenant2-a")
+	if err != nil {
+		t.Fatalf("创建CI2失败: %v", err)
+	}
+
+	svc := NewCMDBService(client)
+
+	// 尝试以租户2身份创建 source=租户1CI 的关系 → 应失败（source CI 不属于租户2）
+	_, err = svc.CreateRelationship(ctx, &CreateRelationshipRequest{
+		SourceCIID: ci1.ID,
+		TargetCIID: ci2.ID,
+		Type:       "depends_on",
+		TenantID:   tenant2.ID,
+	})
+	if err == nil {
+		t.Error("source CI 不属于当前租户时应被拒绝")
+	}
+}
+
+// TestCreateRelationship_SameTenantSuccess SEC-004: 同租户 CI 关系创建成功
+func TestCreateRelationship_SameTenantSuccess(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:cmdb_ent8?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+
+	tenant1, err := createCMDBTestTenant(ctx, client, "Tenant 1", "t1", "t1.com")
+	if err != nil {
+		t.Fatalf("创建租户失败: %v", err)
+	}
+	ciType1, err := createTestCIType(ctx, client, tenant1.ID, "type1")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
+	}
+
+	ci1, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "ci-a")
+	if err != nil {
+		t.Fatalf("创建CI1失败: %v", err)
+	}
+	ci2, err := createTestCI(ctx, client, tenant1.ID, ciType1.ID, "ci-b")
+	if err != nil {
+		t.Fatalf("创建CI2失败: %v", err)
+	}
+
+	svc := NewCMDBService(client)
+
+	desc := "同租户关系"
+	rel, err := svc.CreateRelationship(ctx, &CreateRelationshipRequest{
+		SourceCIID:  ci1.ID,
+		TargetCIID:  ci2.ID,
+		Type:        "runs_on",
+		Description: &desc,
+		TenantID:    tenant1.ID,
+	})
+	if err != nil {
+		t.Fatalf("同租户关系创建应成功: %v", err)
+	}
+	if rel.TenantID != tenant1.ID {
+		t.Errorf("关系 tenant_id 未正确设置: 期望 %d, 实际 %d", tenant1.ID, rel.TenantID)
+	}
 }

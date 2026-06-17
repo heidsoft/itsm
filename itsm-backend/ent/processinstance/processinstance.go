@@ -40,6 +40,8 @@ const (
 	FieldSuspendedReason = "suspended_reason"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
+	// FieldVersion holds the string denoting the version field in the database.
+	FieldVersion = "version"
 	// FieldInitiator holds the string denoting the initiator field in the database.
 	FieldInitiator = "initiator"
 	// FieldParentProcessInstanceID holds the string denoting the parent_process_instance_id field in the database.
@@ -108,6 +110,7 @@ var Columns = []string{
 	FieldSuspendedTime,
 	FieldSuspendedReason,
 	FieldTenantID,
+	FieldVersion,
 	FieldInitiator,
 	FieldParentProcessInstanceID,
 	FieldRootProcessInstanceID,
@@ -139,6 +142,8 @@ var (
 	DefaultStartTime func() time.Time
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
+	// DefaultVersion holds the default value on creation for the "version" field.
+	DefaultVersion int
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -213,6 +218,11 @@ func BySuspendedReason(opts ...sql.OrderTermOption) OrderOption {
 // ByTenantID orders the results by the tenant_id field.
 func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
+}
+
+// ByVersion orders the results by the version field.
+func ByVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVersion, opts...).ToFunc()
 }
 
 // ByInitiator orders the results by the initiator field.

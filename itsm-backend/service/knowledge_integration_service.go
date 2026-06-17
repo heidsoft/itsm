@@ -11,17 +11,21 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/tickettag"
+
+	"go.uber.org/zap"
 )
 
 // KnowledgeIntegrationService 知识库集成服务
 type KnowledgeIntegrationService struct {
 	client *ent.Client
+	logger *zap.SugaredLogger
 }
 
 // NewKnowledgeIntegrationService 创建知识库集成服务实例
 func NewKnowledgeIntegrationService(client *ent.Client) *KnowledgeIntegrationService {
 	return &KnowledgeIntegrationService{
 		client: client,
+		logger: zap.L().Sugar(),
 	}
 }
 
@@ -277,7 +281,7 @@ func (s *KnowledgeIntegrationService) AssociateWithKnowledge(ctx context.Context
 	err = s.addKnowledgeTagToTicket(ctx, ticketID, "knowledge_linked")
 	if err != nil {
 		// 记录错误但不影响主要流程
-		fmt.Printf("添加知识库标签失败: %v\n", err)
+		s.logger.Warnw("添加知识库标签失败", "error", err, "ticketID", ticketID)
 	}
 
 	return association, nil

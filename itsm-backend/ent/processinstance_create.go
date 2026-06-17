@@ -166,6 +166,20 @@ func (_c *ProcessInstanceCreate) SetTenantID(v int) *ProcessInstanceCreate {
 	return _c
 }
 
+// SetVersion sets the "version" field.
+func (_c *ProcessInstanceCreate) SetVersion(v int) *ProcessInstanceCreate {
+	_c.mutation.SetVersion(v)
+	return _c
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_c *ProcessInstanceCreate) SetNillableVersion(v *int) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetVersion(*v)
+	}
+	return _c
+}
+
 // SetInitiator sets the "initiator" field.
 func (_c *ProcessInstanceCreate) SetInitiator(v string) *ProcessInstanceCreate {
 	_c.mutation.SetInitiator(v)
@@ -341,6 +355,10 @@ func (_c *ProcessInstanceCreate) defaults() {
 		v := processinstance.DefaultStartTime()
 		_c.mutation.SetStartTime(v)
 	}
+	if _, ok := _c.mutation.Version(); !ok {
+		v := processinstance.DefaultVersion
+		_c.mutation.SetVersion(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := processinstance.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -390,6 +408,9 @@ func (_c *ProcessInstanceCreate) check() error {
 		if err := processinstance.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.tenant_id": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.Version(); !ok {
+		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "ProcessInstance.version"`)}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProcessInstance.created_at"`)}
@@ -473,6 +494,10 @@ func (_c *ProcessInstanceCreate) createSpec() (*ProcessInstance, *sqlgraph.Creat
 	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(processinstance.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
+	}
+	if value, ok := _c.mutation.Version(); ok {
+		_spec.SetField(processinstance.FieldVersion, field.TypeInt, value)
+		_node.Version = value
 	}
 	if value, ok := _c.mutation.Initiator(); ok {
 		_spec.SetField(processinstance.FieldInitiator, field.TypeString, value)

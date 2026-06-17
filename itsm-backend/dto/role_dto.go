@@ -43,6 +43,7 @@ type UpdateRoleRequest struct {
 	Description *string  `json:"description"`
 	Permissions []string `json:"permissions"`
 	Status      *string  `json:"status"`
+	IsActive    *bool    `json:"is_active"` // 是否启用角色
 }
 
 // GetRolesParams represents the query parameters for listing roles
@@ -60,6 +61,7 @@ type RoleResponse struct {
 	Code        string           `json:"code"`
 	Description string           `json:"description"`
 	IsSystem    bool             `json:"isSystem"`
+	IsActive    bool             `json:"isActive"` // 角色是否启用
 	Permissions []PermissionInfo `json:"permissions"`
 	TenantID    int              `json:"tenantId"`
 	CreatedAt   time.Time        `json:"createdAt"`

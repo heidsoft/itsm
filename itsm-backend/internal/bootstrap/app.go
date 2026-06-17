@@ -137,6 +137,17 @@ func NewApplication() *Application {
 	ragService := service.NewRAGServiceWithAutoConfig(client, vectorStore, embedder, sugar)
 	aiTelemetryService := service.NewAITelemetryService(database.GetRawDB())
 
+	// 非阻塞初始化：向量扩展检测与 Embedding 管道预热
+	// 如果 pgvector 扩展未就绪，RAG 功能自动降级为关键字搜索
+	go func() {
+		ctx := context.Background()
+		if err := vectorStore.EnsureExtension(ctx); err != nil {
+			sugar.Warnw("pgvector 扩展未就绪，RAG功能降级为关键字搜索", "error", err)
+			return
+		}
+		sugar.Infow("pgvector 扩展初始化成功")
+	}()
+
 	// 控制器依赖
 	incidentRuleEngine := service.NewIncidentRuleEngine(client, sugar)
 	incidentMonitoringService := service.NewIncidentMonitoringService(client, sugar)
@@ -189,7 +200,7 @@ func NewApplication() *Application {
 	ticketAssignmentSmartController := controller.NewTicketAssignmentSmartController(ticketAssignmentSmartService, ticketAssignmentRuleService, sugar)
 
 	// Ticket Workflow Service & Controller
-	ticketWorkflowService := service.NewTicketWorkflowService(client, database.GetRawDB(), sugar)
+	ticketWorkflowService := service.NewTicketWorkflowService(client, sugar)
 	ticketWorkflowController := controller.NewTicketWorkflowController(ticketWorkflowService, database.GetRawDB(), sugar)
 
 	// Ticket Automation Rule Service & Controller

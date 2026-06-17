@@ -57,6 +57,9 @@ func (ProcessInstance) Fields() []ent.Field {
 		field.Int("tenant_id").
 			Comment("租户ID").
 			Positive(),
+		field.Int("version").
+			Comment("乐观锁版本号").
+			Default(1),
 		field.String("initiator").
 			Comment("流程发起人").
 			Optional(),

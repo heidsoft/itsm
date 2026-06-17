@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strconv"
 )
 
@@ -16,6 +17,34 @@ func (s *VectorStore) TestConnection() error {
 	var count int
 	err := s.db.QueryRow("SELECT COUNT(*) FROM vectors LIMIT 1").Scan(&count)
 	return err
+}
+
+// EnsureExtension 确保 pgvector 扩展已安装，并初始化 vectors 表。
+// 如果扩展不可用，将返回错误（调用方应降级为关键字搜索）。
+func (s *VectorStore) EnsureExtension(ctx context.Context) error {
+	// 尝试创建 pgvector 扩展（幂等操作，已存在时不报错）
+	_, err := s.db.ExecContext(ctx, "CREATE EXTENSION IF NOT EXISTS vector")
+	if err != nil {
+		return fmt.Errorf("pgvector 扩展不可用: %w", err)
+	}
+	// 确保 vectors 表存在
+	_, err = s.db.ExecContext(ctx, `
+		CREATE TABLE IF NOT EXISTS vectors (
+			id           SERIAL PRIMARY KEY,
+			tenant_id    INT NOT NULL,
+			object_type  TEXT NOT NULL,
+			object_id    INT NOT NULL,
+			embedding    vector(1536),
+			content      TEXT,
+			source       TEXT,
+			created_at   TIMESTAMPTZ DEFAULT NOW(),
+			UNIQUE(tenant_id, object_type, object_id)
+		)
+	`)
+	if err != nil {
+		return fmt.Errorf("初始化 vectors 表失败: %w", err)
+	}
+	return nil
 }
 
 func (s *VectorStore) Upsert(ctx context.Context, tenantID int, objectType string, objectID int, embedding []float32, content string, source string) error {

@@ -20,6 +20,7 @@ import {
   Input,
   Modal,
   Form,
+  Alert,
   Select,
   Space,
   Row,
@@ -37,6 +38,15 @@ import type { CIType } from '@/types/biz/cmdb';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+
+type AttributeTemplateField = {
+  key?: string;
+  label?: string;
+  type?: 'select';
+  options?: string;
+  required?: boolean;
+  placeholder?: string;
+};
 
 const DEFAULT_ATTRIBUTE_SCHEMA = JSON.stringify(
   {
@@ -102,6 +112,88 @@ const validateAttributeSchema = (value?: string) => {
   return null;
 };
 
+const normalizeAttributeTemplateFields = (fields?: AttributeTemplateField[]) =>
+  (fields || [])
+    .map(field => ({
+      key: field.key?.trim(),
+      label: field.label?.trim(),
+      type: 'select' as const,
+      required: Boolean(field.required),
+      placeholder: field.placeholder?.trim(),
+      options: (field.options || '')
+        .split(/[\n,，]/)
+        .map(option => option.trim())
+        .filter(Boolean),
+    }))
+    .filter(field => field.key || field.label || field.options.length > 0);
+
+const buildAttributeSchemaFromFields = (fields?: AttributeTemplateField[]) => {
+  const normalizedFields = normalizeAttributeTemplateFields(fields);
+  if (normalizedFields.length === 0) {
+    return '';
+  }
+
+  return JSON.stringify(
+    {
+      fields: normalizedFields.map(field => ({
+        key: field.key,
+        label: field.label || field.key,
+        type: field.type,
+        options: field.options,
+        required: field.required,
+        ...(field.placeholder ? { placeholder: field.placeholder } : {}),
+      })),
+    },
+    null,
+    2
+  );
+};
+
+const parseAttributeSchemaToFields = (schemaText?: string): AttributeTemplateField[] => {
+  if (!schemaText || !schemaText.trim()) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(schemaText);
+    const fields = Array.isArray(parsed?.fields) ? parsed.fields : [];
+    return fields
+      .filter((field: unknown) => field && typeof field === 'object' && !Array.isArray(field))
+      .map((field: Record<string, unknown>) => ({
+        key: typeof field.key === 'string' ? field.key : typeof field.name === 'string' ? field.name : '',
+        label: typeof field.label === 'string' ? field.label : '',
+        type: 'select' as const,
+        options: Array.isArray(field.options)
+          ? field.options.filter((option): option is string => typeof option === 'string').join('\n')
+          : '',
+        required: Boolean(field.required),
+        placeholder: typeof field.placeholder === 'string' ? field.placeholder : '',
+      }));
+  } catch {
+    return [];
+  }
+};
+
+const getAttributeSchemaFieldCount = (value?: string) => {
+  if (!value || !value.trim()) {
+    return 0;
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed?.fields)) {
+      return parsed.fields.length;
+    }
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return Object.keys(parsed).length;
+    }
+  } catch {
+    return 0;
+  }
+
+  return 0;
+};
+
 const CMDBTypesManagement = () => {
   const { message } = App.useApp();
   const formId = 'cmdb-type-form';
@@ -112,6 +204,11 @@ const CMDBTypesManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [form] = Form.useForm();
+  const schemaFields = Form.useWatch('schema_fields', form) as AttributeTemplateField[] | undefined;
+  const attributeSchemaPreview = React.useMemo(
+    () => buildAttributeSchemaFromFields(schemaFields),
+    [schemaFields]
+  );
 
   // 预设图标列表
   const iconOptions = [
@@ -177,7 +274,16 @@ const CMDBTypesManagement = () => {
   // 处理表单提交
   const handleSubmit = async (values: Record<string, any>) => {
     try {
-      const schemaText = typeof values.attribute_schema === 'string' ? values.attribute_schema.trim() : '';
+      const normalizedFields = normalizeAttributeTemplateFields(values.schema_fields);
+      const duplicateKeys = normalizedFields
+        .map(field => field.key)
+        .filter((key, index, keys): key is string => Boolean(key) && keys.indexOf(key) !== index);
+      if (duplicateKeys.length > 0) {
+        message.error(`字段标识不能重复：${Array.from(new Set(duplicateKeys)).join('、')}`);
+        return;
+      }
+
+      const schemaText = buildAttributeSchemaFromFields(values.schema_fields);
       const schemaError = validateAttributeSchema(schemaText);
       if (schemaError) {
         message.error(schemaError);
@@ -212,23 +318,24 @@ const CMDBTypesManagement = () => {
   // 编辑CI类型
   const handleEdit = (type: CIType) => {
     setEditingType(type);
-      form.setFieldsValue({
-        name: type.name,
-        description: type.description,
-        icon: type.icon,
-        color: type.color,
-        attribute_schema: type.attribute_schema
-          ? (() => {
-              try {
-                return JSON.stringify(JSON.parse(type.attribute_schema), null, 2);
-              } catch {
-                return type.attribute_schema;
-              }
-            })()
-          : '',
-        is_active: type.is_active,
-      });
-      setShowModal(true);
+    form.setFieldsValue({
+      name: type.name,
+      description: type.description,
+      icon: type.icon,
+      color: type.color,
+      attribute_schema: type.attribute_schema
+        ? (() => {
+            try {
+              return JSON.stringify(JSON.parse(type.attribute_schema), null, 2);
+            } catch {
+              return type.attribute_schema;
+            }
+          })()
+        : '',
+      schema_fields: parseAttributeSchemaToFields(type.attribute_schema),
+      is_active: type.is_active,
+    });
+    setShowModal(true);
   };
 
   // 删除CI类型
@@ -239,6 +346,28 @@ const CMDBTypesManagement = () => {
       fetchCITypes();
     } catch (error: any) {
       message.error(error?.message || '删除失败');
+    }
+  };
+
+  const handleUseDefaultAttributeSchema = () => {
+    form.setFieldsValue({
+      attribute_schema: DEFAULT_ATTRIBUTE_SCHEMA,
+      schema_fields: parseAttributeSchemaToFields(DEFAULT_ATTRIBUTE_SCHEMA),
+    });
+  };
+
+  const handleFormatAttributeSchema = () => {
+    const schemaText = buildAttributeSchemaFromFields(form.getFieldValue('schema_fields'));
+    if (!schemaText) {
+      message.info('请先添加至少一个字段');
+      return;
+    }
+
+    try {
+      form.setFieldValue('attribute_schema', JSON.stringify(JSON.parse(schemaText), null, 2));
+      message.success('属性模板预览已更新');
+    } catch {
+      message.error('字段配置不完整，暂时无法生成 JSON');
     }
   };
 
@@ -300,6 +429,16 @@ const CMDBTypesManagement = () => {
           <span className="text-sm">{color || '-'}</span>
         </div>
       ),
+    },
+    {
+      title: '属性模板',
+      dataIndex: 'attribute_schema',
+      key: 'attribute_schema',
+      width: 120,
+      render: (schema: string) => {
+        const fieldCount = getAttributeSchemaFieldCount(schema);
+        return fieldCount > 0 ? <Tag color="blue">{fieldCount} 个字段</Tag> : <Tag>未配置</Tag>;
+      },
     },
     {
       title: '状态',
@@ -435,7 +574,7 @@ const CMDBTypesManagement = () => {
                 onClick={() => {
                   setEditingType(null);
                   form.resetFields();
-                  form.setFieldsValue({ is_active: true, color: '#1890ff' });
+                  form.setFieldsValue({ is_active: true, color: '#1890ff', schema_fields: [] });
                   setShowModal(true);
                 }}
               >
@@ -495,7 +634,7 @@ const CMDBTypesManagement = () => {
             </Button>
           </Space>
         }
-        width={600}
+        width={760}
         destroyOnClose
       >
         <Form
@@ -525,25 +664,136 @@ const CMDBTypesManagement = () => {
           </Form.Item>
 
           <Form.Item
-            name="attribute_schema"
-            label="属性模式 (JSON)"
-            rules={[
-              {
-                validator: async (_, value) => {
-                  const error = validateAttributeSchema(value);
-                  if (error) {
-                    throw new Error(error);
-                  }
-                },
-              },
-            ]}
-            extra="定义该类型下可用于动态录入的扩展字段。仅支持 JSON 对象，fields 数组里目前建议使用 type=select。"
+            label="属性模板"
+            extra="这些字段会出现在配置项录入表单中。当前先支持枚举选择，适合环境、负责人团队、实例规格等标准字段。"
           >
+            <Alert
+              className="mb-3"
+              type="info"
+              showIcon
+              message="不用手写 JSON，按字段逐项配置即可"
+              description="字段标识用于保存数据，建议使用英文小写和下划线；选项可用换行或逗号分隔。"
+            />
+            <Form.List name="schema_fields">
+              {(fields, { add, remove }) => (
+                <div className="space-y-3">
+                  {fields.map(({ key, name, ...restField }, index) => (
+                    <Card
+                      key={key}
+                      size="small"
+                      title={`字段 ${index + 1}`}
+                      extra={
+                        <Button size="small" danger type="text" onClick={() => remove(name)}>
+                          删除
+                        </Button>
+                      }
+                    >
+                      <Row gutter={12}>
+                        <Col xs={24} md={12}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'key']}
+                            label="字段标识"
+                            rules={[
+                              { required: true, message: '请输入字段标识' },
+                              {
+                                pattern: /^[a-z][a-z0-9_]*$/,
+                                message: '仅支持英文小写、数字和下划线，并以字母开头',
+                              },
+                            ]}
+                          >
+                            <Input placeholder="例如 environment" allowClear />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={12}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'label']}
+                            label="字段名称"
+                            rules={[{ required: true, message: '请输入字段名称' }]}
+                          >
+                            <Input placeholder="例如 环境" allowClear />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Row gutter={12}>
+                        <Col xs={24} md={12}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'options']}
+                            label="可选项"
+                            rules={[{ required: true, message: '请输入至少一个可选项' }]}
+                          >
+                            <Input.TextArea
+                              rows={3}
+                              placeholder={'生产\n预发布\n开发'}
+                              allowClear
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={12}>
+                          <Form.Item {...restField} name={[name, 'placeholder']} label="输入提示">
+                            <Input placeholder="例如 请选择环境" allowClear />
+                          </Form.Item>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'required']}
+                            label="是否必填"
+                            valuePropName="checked"
+                          >
+                            <Switch checkedChildren="必填" unCheckedChildren="选填" />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                    </Card>
+                  ))}
+                  <Button
+                    type="dashed"
+                    block
+                    icon={<Plus className="w-4 h-4" />}
+                    onClick={() =>
+                      add({
+                        key: '',
+                        label: '',
+                        type: 'select',
+                        options: '',
+                        required: false,
+                      })
+                    }
+                  >
+                    添加字段
+                  </Button>
+                </div>
+              )}
+            </Form.List>
+          </Form.Item>
+
+          <div className="-mt-4 mb-4 flex flex-wrap gap-2">
+            <Button size="small" onClick={handleUseDefaultAttributeSchema}>
+              使用示例模板
+            </Button>
+            <Button size="small" onClick={handleFormatAttributeSchema}>
+              生成 JSON 预览
+            </Button>
+            <Button
+              size="small"
+              onClick={() =>
+                form.setFieldsValue({
+                  schema_fields: [],
+                  attribute_schema: '',
+                })
+              }
+            >
+              清空模板
+            </Button>
+          </div>
+
+          <Form.Item label="JSON 预览" extra="提交时会自动保存该 JSON。高级用户可用于核对最终结构。">
             <Input.TextArea
-              rows={8}
+              rows={5}
+              value={attributeSchemaPreview || ''}
               placeholder={DEFAULT_ATTRIBUTE_SCHEMA}
-              allowClear
-              showCount
+              readOnly
             />
           </Form.Item>
 

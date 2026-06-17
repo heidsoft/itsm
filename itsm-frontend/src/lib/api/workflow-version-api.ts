@@ -19,6 +19,7 @@ export class WorkflowVersionApi {
         key: string;
         name: string;
         description?: string;
+        bpmn_xml?: string;
         version: number;
         status: string;
         created_at: string;
@@ -48,6 +49,7 @@ export class WorkflowVersionApi {
       createdAt: item.created_at ? new Date(item.created_at) : new Date(),
       updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
       description: item.description,
+      bpmn_xml: item.bpmn_xml || (item as any).bpmnXml,
     })) as WorkflowDefinition[];
   }
 

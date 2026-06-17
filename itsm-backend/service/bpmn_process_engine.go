@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/user"
 	"itsm-backend/ent/workflowtask"
+	"itsm-backend/service/bpmn"
 
 	"go.uber.org/zap"
 )
@@ -85,11 +86,12 @@ type TaskService interface {
 // CustomProcessEngine 是ProcessEngine接口的实现
 // 充当领域服务(Domain Service)，协调流程定义、实例和任务实体的生命周期
 type CustomProcessEngine struct {
-	client         *ent.Client
-	logger         *zap.SugaredLogger
-	parser         *BPMNParser            // 使用自定义的BPMN解析器
-	exprEngine     *ExpressionEngine      // 表达式引擎
-	expressionVars map[string]interface{} // 表达式变量
+	client             *ent.Client
+	logger             *zap.SugaredLogger
+	parser             *BPMNParser            // 使用自定义的BPMN解析器
+	exprEngine         *ExpressionEngine      // 表达式引擎
+	expressionVars     map[string]interface{} // 表达式变量
+	callbackRegistry   *bpmn.CallbackRegistry // 服务任务回调注册中心
 	// 内部服务
 	processDefinitionService *bpmnProcessDefinitionService
 	processInstanceService   *bpmnProcessInstanceService
@@ -101,11 +103,12 @@ type CustomProcessEngine struct {
 // NewCustomProcessEngine 创建自定义流程引擎实例
 func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) ProcessEngine {
 	engine := &CustomProcessEngine{
-		client:         client,
-		logger:         logger,
-		parser:         NewBPMNParser(),
-		exprEngine:     NewExpressionEngine(),
-		expressionVars: make(map[string]interface{}),
+		client:           client,
+		logger:           logger,
+		parser:           NewBPMNParser(),
+		exprEngine:       NewExpressionEngine(),
+		expressionVars:   make(map[string]interface{}),
+		callbackRegistry: bpmn.NewCallbackRegistry(client, logger),
 	}
 	engine.processDefinitionService = &bpmnProcessDefinitionService{client: client, logger: logger}
 	engine.processInstanceService = &bpmnProcessInstanceService{client: client, logger: logger}
@@ -258,7 +261,7 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 	return instance, nil
 }
 
-// CompleteTask 完成任务
+// CompleteTask 完成任务（使用乐观锁保护变量合并，防止并发覆写）
 func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error {
 	// 1. 获取任务
 	task, err := e.client.ProcessTask.Query().
@@ -300,24 +303,14 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 		return fmt.Errorf("更新任务状态失败: %w", err)
 	}
 
-	// 5. 合并变量
-	currentVars := instance.Variables
-	if currentVars == nil {
-		currentVars = make(map[string]interface{})
-	}
-	for k, v := range variables {
-		currentVars[k] = v
-	}
-
-	instance, err = e.client.ProcessInstance.UpdateOne(instance).
-		SetVariables(currentVars).
-		Save(ctx)
+	// 5. 使用乐观锁合并变量（最多重试3次）
+	instance, err = e.mergeVariablesWithOptimisticLock(ctx, instance.ID, variables)
 	if err != nil {
-		return fmt.Errorf("更新实例变量失败: %w", err)
+		return fmt.Errorf("合并实例变量失败: %w", err)
 	}
 
 	// 6. 执行流程推进（从当前UserTask继续）
-	if err := e.executeStep(ctx, instance, process, task.TaskDefinitionKey, currentVars); err != nil {
+	if err := e.executeStep(ctx, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
 		return err
 	}
 
@@ -334,6 +327,67 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	}
 
 	return nil
+}
+
+// mergeVariablesWithOptimisticLock 使用乐观锁合并流程实例变量，防止并发覆写
+func (e *CustomProcessEngine) mergeVariablesWithOptimisticLock(ctx context.Context, instanceID int, newVars map[string]interface{}) (*ent.ProcessInstance, error) {
+	const maxRetries = 3
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		tx, err := e.client.Tx(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("开启事务失败: %w", err)
+		}
+
+		// 在事务内读取最新实例
+		inst, err := tx.Client().ProcessInstance.Get(ctx, instanceID)
+		if err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("查询流程实例失败: %w", err)
+		}
+
+		// 合并变量
+		merged := make(map[string]interface{})
+		if inst.Variables != nil {
+			for k, v := range inst.Variables {
+				merged[k] = v
+			}
+		}
+		for k, v := range newVars {
+			merged[k] = v
+		}
+
+		// 带版本号条件更新（乐观锁）
+		count, err := tx.Client().ProcessInstance.Update().
+			Where(
+				processinstance.ID(instanceID),
+				processinstance.Version(inst.Version), // 乐观锁条件
+			).
+			SetVariables(merged).
+			SetVersion(inst.Version + 1).
+			Save(ctx)
+		if err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("更新实例变量失败: %w", err)
+		}
+
+		if count > 0 {
+			// 更新成功，提交事务
+			if err := tx.Commit(); err != nil {
+				return nil, fmt.Errorf("提交事务失败: %w", err)
+			}
+			// 返回更新后的实例（包含新变量）
+			inst.Variables = merged
+			inst.Version = inst.Version + 1
+			return inst, nil
+		}
+
+		// count == 0，版本冲突，回滚并重试
+		tx.Rollback()
+		e.logger.Infow("变量更新版本冲突，重试", "attempt", attempt+1, "instance_id", instanceID)
+	}
+
+	return nil, fmt.Errorf("变量更新冲突，已重试%d次", maxRetries)
 }
 
 // executeStep 执行流程步骤
@@ -390,7 +444,37 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.P
 	} else if gateway := e.findExclusiveGateway(process, elementID); gateway != nil {
 		return e.executeStep(ctx, instance, process, elementID, instance.Variables)
 	} else if serviceTask := e.findServiceTask(process, elementID); serviceTask != nil {
-		fmt.Printf("自动执行服务任务: %s\n", serviceTask.Name)
+		// 通过 CallbackRegistry 执行真实的服务任务逻辑
+		serviceRef := serviceTask.ID
+		if serviceTask.Name != "" {
+			serviceRef = serviceTask.Name
+		}
+		// 尝试通过实现类或表达式属性获取服务引用
+		if serviceTask.Implementation != "" {
+			serviceRef = serviceTask.Implementation
+		} else if serviceTask.Class != "" {
+			serviceRef = serviceTask.Class
+		} else if serviceTask.DelegateExpression != "" {
+			serviceRef = serviceTask.DelegateExpression
+		}
+
+		// 查找并执行 Callback
+		if e.callbackRegistry != nil {
+			handler := e.callbackRegistry.GetHandler(serviceRef)
+			if handler == nil {
+				// 尝试按任务类型匹配
+				handler = e.callbackRegistry.GetHandler(serviceTask.GetType())
+			}
+			if handler != nil {
+				e.logger.Infow("执行 ServiceTask 回调", "serviceRef", serviceRef, "elementID", elementID)
+				if _, err := handler.Execute(ctx, nil, instance.Variables); err != nil {
+					return fmt.Errorf("ServiceTask %s 执行失败: %w", serviceRef, err)
+				}
+			} else {
+				// 未注册的 ServiceTask 视为 NoOp，仅记录警告不阻断流程
+				e.logger.Warnw("未注册的 ServiceTask，跳过执行", "serviceRef", serviceRef, "elementID", elementID)
+			}
+		}
 		return e.executeStep(ctx, instance, process, elementID, instance.Variables)
 	}
 
@@ -464,10 +548,37 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, instance *ent.
 }
 
 // getDefaultAssigntee 根据任务类型和业务逻辑获取默认分配人
+// 优先级：1.流程变量显式指定 > 2.数据库规则匹配 > 3.中文关键词兜底（deprecated）
 func (e *CustomProcessEngine) getDefaultAssigntee(ctx context.Context, instance *ent.ProcessInstance, task *BPMNUserTask) string {
 	taskName := task.Name
 
-	// 1. 审批类任务 - 尝试分配给管理员或安全审批人
+	// 第一优先：流程变量中显式指定 assignee
+	if instance.Variables != nil {
+		if assignee, ok := instance.Variables["assignee"]; ok {
+			switch val := assignee.(type) {
+			case float64:
+				if val > 0 {
+					return strconv.FormatFloat(val, 'f', 0, 64)
+				}
+			case int:
+				if val > 0 {
+					return strconv.Itoa(val)
+				}
+			case string:
+				if val != "" && val != "0" {
+					return val
+				}
+			}
+		}
+	}
+
+	// 第二优先：数据库 ticket_assignment_rules 规则匹配
+	if assigneeFromRule := e.getAssigneeFromDBRules(ctx, instance, taskName); assigneeFromRule != "" {
+		return assigneeFromRule
+	}
+
+	// 第三优先：中文关键词兜底（deprecated，未来版本将移除）
+	// 审批类任务 - 尝试分配给管理员或安全审批人
 	if strings.Contains(taskName, "审批") || strings.Contains(taskName, "审核") || strings.Contains(taskName, "批准") {
 		// 查找有审批权限的用户 (角色为 admin 或 security)
 		users, err := e.client.User.Query().
@@ -481,8 +592,8 @@ func (e *CustomProcessEngine) getDefaultAssigntee(ctx context.Context, instance 
 		}
 	}
 
-	// 2. 处理类任务 - 分配给工程师
-	if strings.Contains(taskName, "处理") || strings.Contains(taskName, "执行") || strings.Contains(taskName, "处理") {
+	// 处理类任务 - 分配给工程师
+	if strings.Contains(taskName, "处理") || strings.Contains(taskName, "执行") {
 		users, err := e.client.User.Query().
 			Where(user.RoleIn("engineer", "admin")).
 			Where(user.TenantID(instance.TenantID)).
@@ -494,7 +605,7 @@ func (e *CustomProcessEngine) getDefaultAssigntee(ctx context.Context, instance 
 		}
 	}
 
-	// 3. 默认分配 - 返回第一个活跃用户
+	// 默认分配 - 返回第一个活跃用户
 	users, err := e.client.User.Query().
 		Where(user.TenantID(instance.TenantID)).
 		Where(user.Active(true)).
@@ -505,6 +616,85 @@ func (e *CustomProcessEngine) getDefaultAssigntee(ctx context.Context, instance 
 	}
 
 	return ""
+}
+
+// getAssigneeFromDBRules 从数据库 ticket_assignment_rules 表查询匹配的分配规则
+func (e *CustomProcessEngine) getAssigneeFromDBRules(ctx context.Context, instance *ent.ProcessInstance, taskName string) string {
+	// 查询当前租户下所有激活的分配规则，按优先级降序排列
+	rules, err := e.client.TicketAssignmentRule.Query().
+		Where(
+			// 条件将在内存中匹配，这里只过滤租户和激活状态
+		).
+		All(ctx)
+	if err != nil {
+		e.logger.Warnw("查询分配规则失败", "error", err)
+		return ""
+	}
+
+	// 在内存中匹配规则条件
+	for _, rule := range rules {
+		if !rule.IsActive {
+			continue
+		}
+		// 检查条件是否匹配任务名称
+		if matchRuleConditions(rule.Conditions, taskName) {
+			// 从 actions 中提取 assignee
+			if assigneeVal, ok := rule.Actions["assignee_id"]; ok {
+				switch v := assigneeVal.(type) {
+				case float64:
+					if v > 0 {
+						return strconv.FormatFloat(v, 'f', 0, 64)
+					}
+				case int:
+					if v > 0 {
+						return strconv.Itoa(v)
+					}
+				case string:
+					if v != "" && v != "0" {
+						return v
+					}
+				}
+			}
+		}
+	}
+
+	return ""
+}
+
+// matchRuleConditions 检查规则条件是否与任务名称匹配
+func matchRuleConditions(conditions []map[string]interface{}, taskName string) bool {
+	if len(conditions) == 0 {
+		return false
+	}
+	for _, cond := range conditions {
+		field, _ := cond["field"].(string)
+		operator, _ := cond["operator"].(string)
+		value, _ := cond["value"].(string)
+
+		if field != "task_name" {
+			continue
+		}
+
+		switch operator {
+		case "equals":
+			if taskName == value {
+				return true
+			}
+		case "contains":
+			if strings.Contains(taskName, value) {
+				return true
+			}
+		case "prefix":
+			if strings.HasPrefix(taskName, value) {
+				return true
+			}
+		case "suffix":
+			if strings.HasSuffix(taskName, value) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (e *CustomProcessEngine) completeProcess(ctx context.Context, instance *ent.ProcessInstance) error {
@@ -544,12 +734,13 @@ func (e *CustomProcessEngine) evaluateCondition(flow *BPMNSequenceFlow, variable
 	// 使用表达式引擎评估条件
 	result, err := e.exprEngine.EvaluateCondition(flow.ConditionExpression.Expression, evalVars)
 	if err != nil {
-		e.logger.Warnw(
-			"Failed to evaluate condition, defaulting to true",
+		// SEC-002 修复：评估失败时默认拒绝（return false），而非放行
+		e.logger.Errorw(
+			"条件评估失败，默认拒绝流转",
 			"expression", flow.ConditionExpression.Expression,
 			"error", err,
 		)
-		return true // 评估失败时默认通过
+		return false
 	}
 
 	return result

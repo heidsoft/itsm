@@ -62,6 +62,20 @@ func (_c *RoleCreate) SetNillableIsSystem(v *bool) *RoleCreate {
 	return _c
 }
 
+// SetIsActive sets the "is_active" field.
+func (_c *RoleCreate) SetIsActive(v bool) *RoleCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (_c *RoleCreate) SetNillableIsActive(v *bool) *RoleCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
+	}
+	return _c
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_c *RoleCreate) SetTenantID(v int) *RoleCreate {
 	_c.mutation.SetTenantID(v)
@@ -165,6 +179,10 @@ func (_c *RoleCreate) defaults() {
 		v := role.DefaultIsSystem
 		_c.mutation.SetIsSystem(v)
 	}
+	if _, ok := _c.mutation.IsActive(); !ok {
+		v := role.DefaultIsActive
+		_c.mutation.SetIsActive(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := role.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -195,6 +213,9 @@ func (_c *RoleCreate) check() error {
 	}
 	if _, ok := _c.mutation.IsSystem(); !ok {
 		return &ValidationError{Name: "is_system", err: errors.New(`ent: missing required field "Role.is_system"`)}
+	}
+	if _, ok := _c.mutation.IsActive(); !ok {
+		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Role.is_active"`)}
 	}
 	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Role.tenant_id"`)}
@@ -251,6 +272,10 @@ func (_c *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IsSystem(); ok {
 		_spec.SetField(role.FieldIsSystem, field.TypeBool, value)
 		_node.IsSystem = value
+	}
+	if value, ok := _c.mutation.IsActive(); ok {
+		_spec.SetField(role.FieldIsActive, field.TypeBool, value)
+		_node.IsActive = value
 	}
 	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(role.FieldTenantID, field.TypeInt, value)

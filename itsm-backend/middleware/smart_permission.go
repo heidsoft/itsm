@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"itsm-backend/ent"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -104,7 +106,7 @@ func InvalidateTenantACLCache(tenantID int) {
 
 // SmartCheckPermission checks permission using 4-layer fallback
 // This is the main entry point for permission checking
-func SmartCheckPermission(c *gin.Context, db DBQuerier, role string, method, path string, tenantID int) bool {
+func SmartCheckPermission(c *gin.Context, db DBQuerier, client *ent.Client, role string, method, path string, tenantID int) bool {
 	// L1: Check auth whitelist (public endpoints)
 	if isAuthWhitelist(path, method) {
 		zap.S().Debugw("Auth whitelist match", "path", path, "method", method)
@@ -112,7 +114,7 @@ func SmartCheckPermission(c *gin.Context, db DBQuerier, role string, method, pat
 	}
 
 	// L2: Check database ACL (dynamic configuration)
-	if checkDatabaseACL(db, role, method, path, tenantID) {
+	if checkDatabaseACL(db, client, role, method, path, tenantID) {
 		return true
 	}
 
@@ -145,7 +147,7 @@ func isAuthWhitelist(path, method string) bool {
 // L2: Database ACL Check
 // =============================================================================
 
-func checkDatabaseACL(db DBQuerier, role, method, path string, tenantID int) bool {
+func checkDatabaseACL(db DBQuerier, client *ent.Client, role, method, path string, tenantID int) bool {
 	if db == nil {
 		return false
 	}
@@ -167,7 +169,7 @@ func checkDatabaseACL(db DBQuerier, role, method, path string, tenantID int) boo
 			}
 
 			// Found matching ACL - check role permission
-			if checkRolePermissionFromDB(db, role, acl.Resource, acl.Action, tenantID) {
+			if checkRolePermissionFromDB(client, role, acl.Resource, acl.Action, tenantID) {
 				zap.S().Debugw("Database ACL permission granted",
 					"path", path, "method", method,
 					"resource", acl.Resource, "action", acl.Action)
@@ -385,15 +387,23 @@ func checkRoleBasedPermission(role, method, path string) bool {
 
 // checkRolePermissionFromDB checks if a role has permission for a resource:action
 // using the database-driven approach
-// NOTE: This function falls back to hardcoded RolePermissions if no DB permissions found
-func checkRolePermissionFromDB(db DBQuerier, role, resource, action string, tenantID int) bool {
+// SEC-005 修复：真正查询数据库获取角色权限，而非仅使用硬编码权限
+func checkRolePermissionFromDB(client *ent.Client, role, resource, action string, tenantID int) bool {
 	// Super admin has all permissions
 	if role == "super_admin" || role == "sysadmin" {
 		return true
 	}
 
-	// Check hardcoded permissions first (L3 fallback)
-	if hasResourcePermissionFromRole(role, resource, action) {
+	// SEC-005: 通过 loadPermissionsByMode 从数据库加载权限
+	// 该函数根据 PermissionConfig.Mode 决定查询策略：
+	//   - DBOnly: 仅数据库，数据库为空时 fallback 硬编码
+	//   - HardcodeOnly: 仅硬编码
+	//   - Merge: 数据库 + 硬编码并集
+	//   - Fallback: 先数据库，失败则硬编码
+	permissions := loadPermissionsByMode(client, role, tenantID)
+
+	// 使用统一的权限匹配逻辑检查
+	if checkPermissionMatch(permissions, resource, action) {
 		return true
 	}
 
@@ -445,14 +455,23 @@ func EvaluateACLScript(script string, ctx ACLScriptContext) bool {
 		return true
 	}
 
-	// In production, this would execute the script in a sandboxed environment
-	// For now, we just return true (script evaluation not implemented)
-	// This is a placeholder for advanced ACL scenarios
+	// SEC-003 修复：使用 ACL 表达式引擎替代空实现
+	engine := NewACLExpressionEngine()
+	variables := map[string]interface{}{
+		"ctx.user_id":       ctx.UserID,
+		"ctx.tenant_id":     ctx.TenantID,
+		"ctx.role":          ctx.Role,
+		"ctx.resource_id":   ctx.ResourceID,
+		"ctx.resource_type": ctx.ResourceType,
+	}
 
-	zap.S().Debugw("ACL script evaluation",
+	result := engine.Evaluate(script, variables)
+
+	zap.S().Debugw("ACL 脚本评估完成",
 		"script_length", len(script),
 		"user_id", ctx.UserID,
-		"resource_type", ctx.ResourceType)
+		"resource_type", ctx.ResourceType,
+		"result", result)
 
-	return true
+	return result
 }

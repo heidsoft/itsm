@@ -162,8 +162,14 @@ export class WorkflowApi {
       key: string;
       name: string;
       description?: string;
+      category?: string;
+      type?: string;
       version: number;
       status: string;
+      is_active?: boolean;
+      bpmn_xml?: string;
+      approval_config?: Record<string, unknown>;
+      sla_config?: Record<string, unknown>;
       created_at: string;
       updated_at: string;
     }>(`/api/v1/bpmn/process-definitions/${id}`);
@@ -175,7 +181,11 @@ export class WorkflowApi {
       name: item.name || '',
       type: WorkflowType.TICKET,
       version: item.version || 1,
-      status: item.status ? (item.status as WorkflowStatus) : WorkflowStatus.DRAFT,
+      status: item.status
+        ? (item.status as WorkflowStatus)
+        : item.is_active
+          ? WorkflowStatus.ACTIVE
+          : WorkflowStatus.DRAFT,
       nodes: [],
       connections: [],
       variables: [],
@@ -190,7 +200,11 @@ export class WorkflowApi {
       createdAt: item.created_at ? new Date(item.created_at) : new Date(),
       updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
       description: item.description,
-    };
+      bpmn_xml: item.bpmn_xml || (item as any).bpmnXml,
+      category: item.category || item.type || 'general',
+      approval_config: item.approval_config as any,
+      sla_config: item.sla_config as any,
+    } as any;
   }
 
   // ==================== Backward-compatible method aliases (legacy pages) ====================
@@ -453,6 +467,7 @@ export class WorkflowApi {
       key?: string;
       name?: string;
       description?: string;
+      bpmn_xml?: string;
       version?: number;
       status?: string;
       created_at?: string;
@@ -472,6 +487,7 @@ export class WorkflowApi {
         key: string;
         name: string;
         description?: string;
+        bpmn_xml?: string;
         version: number;
         status: string;
         created_at: string;
@@ -501,6 +517,7 @@ export class WorkflowApi {
       createdAt: item.created_at ? new Date(item.created_at) : new Date(),
       updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
       description: item.description,
+      bpmn_xml: item.bpmn_xml || (item as any).bpmnXml,
     })) as WorkflowDefinition[];
   }
 

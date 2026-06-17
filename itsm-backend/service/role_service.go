@@ -93,6 +93,7 @@ func (s *RoleService) buildRoleResponse(roleEntity *ent.Role) *dto.RoleResponse 
 		Code:        roleEntity.Code,
 		Description: roleEntity.Description,
 		IsSystem:    roleEntity.IsSystem,
+		IsActive:    roleEntity.IsActive,
 		Permissions: []dto.PermissionInfo{},
 		TenantID:    roleEntity.TenantID,
 		CreatedAt:   roleEntity.CreatedAt,
@@ -115,12 +116,23 @@ func (s *RoleService) CreateRole(ctx context.Context, req *dto.CreateRoleRequest
 		SetCode(code).
 		SetTenantID(tenantID).
 		SetIsSystem(req.IsSystem).
+		SetIsActive(true). // 新建角色默认启用
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("创建角色失败: %w", err)
 	}
 
-	return s.buildRoleResponse(roleEntity), nil
+	if len(req.Permissions) > 0 {
+		permissionIDs, err := s.permissionIDsByCodes(ctx, req.Permissions, tenantID)
+		if err != nil {
+			return nil, err
+		}
+		if err := s.AssignPermissions(ctx, roleEntity.ID, permissionIDs, tenantID); err != nil {
+			return nil, err
+		}
+	}
+
+	return s.GetRole(ctx, roleEntity.ID, tenantID)
 }
 
 // GetRole 获取角色详情
@@ -151,9 +163,18 @@ func (s *RoleService) GetRole(ctx context.Context, id int, tenantID int) (*dto.R
 }
 
 // ListRoles 获取角色列表
-func (s *RoleService) ListRoles(ctx context.Context, tenantID int, page, pageSize int) ([]*dto.RoleResponse, int, error) {
+func (s *RoleService) ListRoles(ctx context.Context, tenantID int, page, pageSize int, search string) ([]*dto.RoleResponse, int, error) {
 	query := s.client.Role.Query().
 		Where(role.TenantID(tenantID))
+
+	if strings.TrimSpace(search) != "" {
+		keyword := strings.TrimSpace(search)
+		query = query.Where(role.Or(
+			role.NameContainsFold(keyword),
+			role.CodeContainsFold(keyword),
+			role.DescriptionContainsFold(keyword),
+		))
+	}
 
 	total, err := query.Clone().Count(ctx)
 	if err != nil {
@@ -214,15 +235,80 @@ func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRol
 	if req.Description != nil {
 		update = update.SetDescription(*req.Description)
 	}
+	if req.Code != nil && strings.TrimSpace(*req.Code) != "" {
+		update = update.SetCode(strings.TrimSpace(*req.Code))
+	}
+	// 支持更新角色启用状态
+	if req.IsActive != nil {
+		update = update.SetIsActive(*req.IsActive)
+	}
 
 	_, err = update.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("更新角色失败: %w", err)
 	}
 
+	if req.Permissions != nil {
+		permissionIDs, err := s.permissionIDsByCodes(ctx, req.Permissions, tenantID)
+		if err != nil {
+			return nil, err
+		}
+		if err := s.AssignPermissions(ctx, id, permissionIDs, tenantID); err != nil {
+			return nil, err
+		}
+	}
+
 	middleware.InvalidateRolePermissionCache(roleEntity.Code, tenantID)
 
 	return s.GetRole(ctx, id, tenantID)
+}
+
+func (s *RoleService) permissionIDsByCodes(ctx context.Context, permissionCodes []string, tenantID int) ([]int, error) {
+	normalizedCodes := make([]string, 0, len(permissionCodes))
+	seen := make(map[string]struct{}, len(permissionCodes))
+	for _, code := range permissionCodes {
+		trimmed := strings.TrimSpace(code)
+		if trimmed == "" {
+			continue
+		}
+		if _, ok := seen[trimmed]; ok {
+			continue
+		}
+		seen[trimmed] = struct{}{}
+		normalizedCodes = append(normalizedCodes, trimmed)
+	}
+	if len(normalizedCodes) == 0 {
+		return []int{}, nil
+	}
+
+	perms, err := s.client.Permission.Query().
+		Where(
+			permission.TenantID(tenantID),
+			permission.CodeIn(normalizedCodes...),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("查询权限失败: %w", err)
+	}
+	if len(perms) != len(normalizedCodes) {
+		found := make(map[string]struct{}, len(perms))
+		for _, permEntity := range perms {
+			found[permEntity.Code] = struct{}{}
+		}
+		missing := make([]string, 0)
+		for _, code := range normalizedCodes {
+			if _, ok := found[code]; !ok {
+				missing = append(missing, code)
+			}
+		}
+		return nil, fmt.Errorf("权限不存在，请先初始化权限字典: %s", strings.Join(missing, ", "))
+	}
+
+	ids := make([]int, 0, len(perms))
+	for _, permEntity := range perms {
+		ids = append(ids, permEntity.ID)
+	}
+	return ids, nil
 }
 
 // DeleteRole 删除角色
@@ -388,22 +474,51 @@ func (s *PermissionService) ListPermissions(ctx context.Context, tenantID int, r
 
 // InitDefaultPermissions 初始化默认权限
 func (s *PermissionService) InitDefaultPermissions(ctx context.Context, tenantID int) error {
-	defaultPermissions := []dto.CreatePermissionRequest{
-		{Code: "ticket:create", Name: "创建工单", Resource: "ticket", Action: "create"},
-		{Code: "ticket:read", Name: "查看工单", Resource: "ticket", Action: "read"},
-		{Code: "ticket:update", Name: "更新工单", Resource: "ticket", Action: "update"},
-		{Code: "ticket:delete", Name: "删除工单", Resource: "ticket", Action: "delete"},
-		{Code: "ticket:assign", Name: "分配工单", Resource: "ticket", Action: "assign"},
-		{Code: "incident:create", Name: "创建事件", Resource: "incident", Action: "create"},
-		{Code: "incident:read", Name: "查看事件", Resource: "incident", Action: "read"},
-		{Code: "incident:update", Name: "更新事件", Resource: "incident", Action: "update"},
-		{Code: "change:create", Name: "创建变更", Resource: "change", Action: "create"},
-		{Code: "change:approve", Name: "审批变更", Resource: "change", Action: "approve"},
-		{Code: "user:manage", Name: "管理用户", Resource: "user", Action: "manage"},
-		{Code: "role:manage", Name: "管理角色", Resource: "role", Action: "manage"},
-		{Code: "report:view", Name: "查看报表", Resource: "report", Action: "view"},
-		{Code: "admin:all", Name: "完全管理", Resource: "*", Action: "*"},
+	defaultPermissions := []dto.CreatePermissionRequest{}
+	resourceActions := map[string][]string{
+		"dashboard":       {"read", "view"},
+		"ticket":          {"create", "read", "write", "update", "delete", "assign", "export"},
+		"ticket_category": {"create", "read", "write", "update", "delete"},
+		"incident":        {"create", "read", "write", "update", "delete", "assign", "export"},
+		"problem":         {"create", "read", "write", "update", "delete", "export"},
+		"change":          {"create", "read", "write", "update", "delete", "approve", "export"},
+		"service_catalog": {"create", "read", "write", "update", "delete"},
+		"service_request": {"create", "read", "write", "update", "delete", "approve"},
+		"knowledge":       {"create", "read", "write", "update", "delete"},
+		"cmdb":            {"create", "read", "write", "update", "delete", "export"},
+		"asset":           {"create", "read", "write", "update", "delete", "assign"},
+		"license":         {"create", "read", "write", "update", "delete", "assign"},
+		"release":         {"create", "read", "write", "update", "delete"},
+		"report":          {"read", "view", "export"},
+		"user":            {"read", "write", "delete", "manage"},
+		"role":            {"read", "write", "delete", "manage"},
+		"groups":          {"read", "write", "delete"},
+		"org":             {"read", "write"},
+		"bpmn":            {"read", "write", "delete"},
+		"workflow":        {"read", "write", "delete"},
+		"system_config":   {"read", "write", "update"},
+		"admin":           {"read", "write", "all"},
+		"ai":              {"read", "write"},
 	}
+
+	for resource, actions := range resourceActions {
+		for _, action := range actions {
+			defaultPermissions = append(defaultPermissions, dto.CreatePermissionRequest{
+				Code:        fmt.Sprintf("%s:%s", resource, action),
+				Name:        fmt.Sprintf("%s %s", resource, action),
+				Description: fmt.Sprintf("允许对 %s 执行 %s 操作", resource, action),
+				Resource:    resource,
+				Action:      action,
+			})
+		}
+	}
+	defaultPermissions = append(defaultPermissions, dto.CreatePermissionRequest{
+		Code:        "admin:all",
+		Name:        "完全管理",
+		Description: "平台级全部管理权限",
+		Resource:    "admin",
+		Action:      "all",
+	})
 
 	for _, req := range defaultPermissions {
 		exists, _ := s.client.Permission.Query().

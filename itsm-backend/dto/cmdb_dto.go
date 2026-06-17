@@ -387,3 +387,49 @@ type ReconciliationResponse struct {
 	OrphanCIs        []*CIResponse            `json:"orphanCIs"`
 	UnlinkedCIs      []*CIResponse            `json:"unlinkedCIs"`
 }
+
+// ---- 以下为从 service/cmdb_service.go 迁移过来的内部服务请求/响应体 ----
+// 保留 snake_case json 标签风格，供 CMDBService 内部使用
+
+// CMDBCreateCIRequest service 层创建配置项请求（内部使用）
+type CMDBCreateCIRequest struct {
+	Name            string                  `json:"name"`
+	CiType          string                  `json:"ci_type"`
+	CiTypeID        int                     `json:"ci_type_id"`
+	Status          string                  `json:"status"`
+	Environment     string                  `json:"environment"`
+	Criticality     string                  `json:"criticality"`
+	TenantID        int                     `json:"tenant_id"`
+	AssetTag        *string                 `json:"asset_tag,omitempty"`
+	SerialNumber    *string                 `json:"serial_number,omitempty"`
+	Location        *string                 `json:"location,omitempty"`
+	AssignedTo      *string                 `json:"assigned_to,omitempty"`
+	OwnedBy         *string                 `json:"owned_by,omitempty"`
+	DiscoverySource *string                 `json:"discovery_source,omitempty"`
+	Attributes      *map[string]interface{} `json:"attributes,omitempty"`
+}
+
+// CMDBListCIsRequest service 层查询配置项列表请求（内部使用）
+type CMDBListCIsRequest struct {
+	TenantID    int    `json:"tenant_id,omitempty"`
+	CiType      string `json:"ci_type,omitempty"`
+	Status      string `json:"status,omitempty"`
+	Environment string `json:"environment,omitempty"`
+	Offset      int    `json:"offset"`
+	Limit       int    `json:"limit"`
+}
+
+// CMDBCreateRelationshipRequest service 层创建 CI 关系请求（内部使用）
+type CMDBCreateRelationshipRequest struct {
+	SourceCIID  int     `json:"source_ci_id"`
+	TargetCIID  int     `json:"target_ci_id"`
+	Type        string  `json:"type"`
+	Description *string `json:"description,omitempty"`
+	TenantID    int     `json:"tenant_id"`
+}
+
+// CMDBUpdateRelationshipRequest service 层更新 CI 关系请求（内部使用）
+type CMDBUpdateRelationshipRequest struct {
+	Type        string  `json:"type,omitempty"`
+	Description *string `json:"description,omitempty"`
+}

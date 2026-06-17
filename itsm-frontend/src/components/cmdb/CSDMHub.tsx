@@ -4,11 +4,11 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { App, Button, Card, Col, Divider, Row, Space, Tag, Typography } from 'antd';
 import {
-  ArrowRight,
   Cloud,
   Database,
   GitBranch,
   Layers3,
+  Plus,
   RefreshCw,
   Shield,
   Server,
@@ -51,6 +51,14 @@ type HubCardProps = {
   actions: Array<{ label: string; href: string; icon?: React.ReactNode }>;
 };
 
+type WorkbenchAction = {
+  title: string;
+  description: string;
+  href: string;
+  primary?: boolean;
+  icon: React.ReactNode;
+};
+
 const normalizeList = <T,>(response: unknown): T[] => {
   if (Array.isArray(response)) return response as T[];
   if (response && typeof response === 'object') {
@@ -83,7 +91,7 @@ function HubCard({ title, description, accent, icon, metrics, actions }: HubCard
           </div>
           <Text type="secondary">{description}</Text>
         </div>
-        <Tag color="blue">CSDM</Tag>
+        <Tag color="blue">分区</Tag>
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -216,8 +224,8 @@ export function CSDMHub() {
 
   const hubCards: HubCardProps[] = [
     {
-      title: 'Foundation Data',
-      description: '先建基础数据，再让服务、关系和发现自动落到统一模型里。',
+      title: '基础资料',
+      description: '维护类型、云账号和发现源，保证后续录入和同步有标准可依。',
       accent: '#1890ff',
       icon: <Database className="h-5 w-5" />,
       metrics: [
@@ -232,8 +240,8 @@ export function CSDMHub() {
       ],
     },
     {
-      title: 'Service Model',
-      description: '把配置项提升为业务服务、应用服务和技术服务的可管理对象。',
+      title: '服务建模',
+      description: '把配置项、服务目录和关系串起来，支撑故障、变更和影响分析。',
       accent: '#722ed1',
       icon: <Layers3 className="h-5 w-5" />,
       metrics: [
@@ -248,8 +256,8 @@ export function CSDMHub() {
       ],
     },
     {
-      title: 'Service Graph',
-      description: '从发现、绑定、关联到影响分析，形成可追溯的服务图谱。',
+      title: '服务图谱',
+      description: '从发现、绑定、关联到拓扑分析，形成可追溯的运行视图。',
       accent: '#13c2c2',
       icon: <GitBranch className="h-5 w-5" />,
       metrics: [
@@ -263,6 +271,50 @@ export function CSDMHub() {
         { label: '云资源列表', href: '/cmdb/cloud-resources', icon: <Cloud className="h-4 w-4" /> },
         { label: '对账中心', href: '/cmdb/reconciliation', icon: <SlidersHorizontal className="h-4 w-4" /> },
       ],
+    },
+  ];
+
+  const governanceTotal =
+    state.counts.unboundResources + state.counts.orphanCIs + state.counts.unlinkedCIs;
+
+  const workbenchActions: WorkbenchAction[] = [
+    {
+      title: '录入配置项',
+      description: '手工录入或从云资源带入基础信息。',
+      href: '/cmdb/cis/create',
+      primary: true,
+      icon: <Plus className="h-5 w-5" />,
+    },
+    {
+      title: '处理待绑定资源',
+      description: `${state.counts.unboundResources} 个云资源还没有进入 CMDB。`,
+      href: '/cmdb/reconciliation',
+      primary: governanceTotal > 0,
+      icon: <SlidersHorizontal className="h-5 w-5" />,
+    },
+    {
+      title: '维护类型模板',
+      description: '配置字段模板，让录入表单更标准。',
+      href: '/admin/cmdb-types',
+      icon: <Database className="h-5 w-5" />,
+    },
+    {
+      title: '管理关系',
+      description: '补齐依赖、托管、影响关系。',
+      href: '/cmdb/relationships',
+      icon: <GitBranch className="h-5 w-5" />,
+    },
+    {
+      title: '接入云资源',
+      description: '维护云账号、云服务目录和发现源。',
+      href: '/cmdb/registry',
+      icon: <Cloud className="h-5 w-5" />,
+    },
+    {
+      title: '查看拓扑影响',
+      description: '从 CI 出发查看上下游影响范围。',
+      href: '/cmdb/topology',
+      icon: <Layers3 className="h-5 w-5" />,
     },
   ];
 
@@ -296,15 +348,15 @@ export function CSDMHub() {
   return (
     <div className="space-y-6 p-6">
       <ManagementPageHeader
-        title="CSDM / Service Graph CMDB"
-        description="不是资产表，而是围绕 Foundation Data、Service Model、Service Graph 和 Quality Governance 的控制台。"
+        title="配置管理数据库 (CMDB)"
+        description="围绕配置项、云资源、关系拓扑和数据质量的日常工作台。"
         actions={
           <Space wrap>
             <Button icon={<RefreshCw className="h-4 w-4" />} loading={state.loading} onClick={load}>
               刷新总览
             </Button>
             <Button type="primary" icon={<Sparkles className="h-4 w-4" />} onClick={() => router.push('/cmdb/ci')}>
-              进入配置项工作台
+              配置项工作台
             </Button>
           </Space>
         }
@@ -312,11 +364,71 @@ export function CSDMHub() {
 
       <StatsOverview items={statsItems} />
 
+      <Card loading={state.loading} className="border-slate-200 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Title level={4} className="!mb-0">
+                当前最需要处理的事
+              </Title>
+              {governanceTotal > 0 ? <Tag color="orange">{governanceTotal} 个待治理项</Tag> : <Tag color="green">数据状态良好</Tag>}
+            </div>
+            <Text type="secondary" className="mt-2 block">
+              优先处理未绑定云资源、孤儿 CI 和未关联 CI，避免工单、变更和故障分析引用到不可信数据。
+            </Text>
+          </div>
+          <Space wrap>
+            <Button type="primary" href="/cmdb/reconciliation">
+              打开对账中心
+            </Button>
+            <Button href="/cmdb/cloud-resources">查看云资源</Button>
+            <Button href="/reports/cmdb-quality">CMDB 质量报表</Button>
+          </Space>
+        </div>
+      </Card>
+
+      <Card
+        title={
+          <span className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4" />
+            常用工作
+          </span>
+        }
+        loading={state.loading}
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {workbenchActions.map(action => (
+            <a
+              key={action.href}
+              href={action.href}
+              className="block rounded-lg border border-slate-200 p-4 text-inherit transition hover:border-blue-300 hover:bg-blue-50/40"
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                    action.primary ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  {action.icon}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 font-medium text-slate-900">
+                    {action.title}
+                    {action.primary && <Tag color="blue">推荐</Tag>}
+                  </div>
+                  <div className="mt-1 text-sm text-slate-500">{action.description}</div>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </Card>
+
       <Card
         title={
           <span className="flex items-center gap-2">
             <Workflow className="h-4 w-4" />
-            CSDM 分层
+            能力分区
           </span>
         }
         loading={state.loading}
@@ -339,8 +451,8 @@ export function CSDMHub() {
       <Card
         title={
           <span className="flex items-center gap-2">
-            <ArrowRight className="h-4 w-4" />
-            Service Graph 流程
+            <Workflow className="h-4 w-4" />
+            建模与治理流程
           </span>
         }
       >
@@ -375,14 +487,7 @@ export function CSDMHub() {
         </Row>
       </Card>
 
-      <Card
-        title={
-          <span className="flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4" />
-            质量与现状
-          </span>
-        }
-      >
+      <Card title="质量与现状">
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Card size="small" className="h-full bg-slate-50">
@@ -424,23 +529,43 @@ export function CSDMHub() {
         </Row>
       </Card>
 
-      <Card title="下一步建议" loading={state.loading}>
+      <Card title="日常巡检清单" loading={state.loading}>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-lg border border-dashed border-slate-200 p-4">
-            <div className="font-medium">1. 建模优先</div>
-            <div className="mt-1 text-sm text-slate-500">先把 CI 类型和属性模式做成标准模板。</div>
+            <div className="font-medium">1. 新资源是否已入库</div>
+            <div className="mt-1 text-sm text-slate-500">
+              还有 {state.counts.unboundResources} 个云资源待绑定到配置项。
+            </div>
+            <Button className="mt-3" size="small" href="/cmdb/reconciliation">
+              去处理
+            </Button>
           </div>
           <div className="rounded-lg border border-dashed border-slate-200 p-4">
-            <div className="font-medium">2. 服务优先</div>
-            <div className="mt-1 text-sm text-slate-500">把业务服务、应用服务、技术服务串起来。</div>
+            <div className="font-medium">2. 类型模板是否够用</div>
+            <div className="mt-1 text-sm text-slate-500">
+              当前有 {state.counts.ciTypes} 个 CI 类型，检查核心字段是否已标准化。
+            </div>
+            <Button className="mt-3" size="small" href="/admin/cmdb-types">
+              维护模板
+            </Button>
           </div>
           <div className="rounded-lg border border-dashed border-slate-200 p-4">
-            <div className="font-medium">3. 关系优先</div>
-            <div className="mt-1 text-sm text-slate-500">关系和拓扑是 Service Graph 的核心，不是附属字段。</div>
+            <div className="font-medium">3. 关键 CI 是否有关联</div>
+            <div className="mt-1 text-sm text-slate-500">
+              还有 {state.counts.unlinkedCIs} 个 CI 缺少关系，影响故障和变更分析。
+            </div>
+            <Button className="mt-3" size="small" href="/cmdb/relationships">
+              补关系
+            </Button>
           </div>
           <div className="rounded-lg border border-dashed border-slate-200 p-4">
-            <div className="font-medium">4. 质量优先</div>
-            <div className="mt-1 text-sm text-slate-500">对账、绑定、孤儿治理要有闭环，不要只看导入结果。</div>
+            <div className="font-medium">4. 数据质量是否可用</div>
+            <div className="mt-1 text-sm text-slate-500">
+              孤儿 CI 当前 {state.counts.orphanCIs} 个，建议纳入每周巡检。
+            </div>
+            <Button className="mt-3" size="small" href="/reports/cmdb-quality">
+              看报表
+            </Button>
           </div>
         </div>
       </Card>

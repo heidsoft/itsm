@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 	"strconv"
 	"time"
 
@@ -14,16 +13,21 @@ import (
 	"itsm-backend/ent/ticket"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 // CIRelationshipService CI关系服务
 type CIRelationshipService struct {
 	client *ent.Client
+	logger *zap.SugaredLogger
 }
 
 // NewCIRelationshipService 创建CI关系服务
 func NewCIRelationshipService(client *ent.Client) *CIRelationshipService {
-	return &CIRelationshipService{client: client}
+	return &CIRelationshipService{
+		client: client,
+		logger: zap.L().Sugar(),
+	}
 }
 
 // CreateCIRelationship 创建CI关系
@@ -85,6 +89,7 @@ func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *d
 		SetImpactLevel(cirelationship.ImpactLevel(impactLevel)).
 		SetDescription(req.Description).
 		SetMetadata(req.Metadata).
+		SetTenantID(tenantID). // SEC-004: 创建关系时设置 tenant_id
 		Save(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "创建CI关系失败")
@@ -486,7 +491,7 @@ func (s *CIRelationshipService) BatchCreateCIRelationships(ctx context.Context, 
 		} else {
 			response.CreatedCount++
 		}
-		log.Printf("创建CI关系 %d/%d: %d -> %d (%s)", i+1, len(req.Relationships), rel.SourceCIID, rel.TargetCIID, rel.RelationshipType)
+		s.logger.Infow("创建CI关系", "index", i+1, "total", len(req.Relationships), "sourceCIID", rel.SourceCIID, "targetCIID", rel.TargetCIID, "type", rel.RelationshipType)
 	}
 
 	return response, nil
