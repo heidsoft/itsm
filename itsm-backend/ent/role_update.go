@@ -92,6 +92,20 @@ func (_u *RoleUpdate) SetNillableIsSystem(v *bool) *RoleUpdate {
 	return _u
 }
 
+// SetIsActive sets the "is_active" field.
+func (_u *RoleUpdate) SetIsActive(v bool) *RoleUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (_u *RoleUpdate) SetNillableIsActive(v *bool) *RoleUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
+	}
+	return _u
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_u *RoleUpdate) SetTenantID(v int) *RoleUpdate {
 	_u.mutation.ResetTenantID()
@@ -293,6 +307,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.IsSystem(); ok {
 		_spec.SetField(role.FieldIsSystem, field.TypeBool, value)
 	}
+	if value, ok := _u.mutation.IsActive(); ok {
+		_spec.SetField(role.FieldIsActive, field.TypeBool, value)
+	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(role.FieldTenantID, field.TypeInt, value)
 	}
@@ -473,6 +490,20 @@ func (_u *RoleUpdateOne) SetIsSystem(v bool) *RoleUpdateOne {
 func (_u *RoleUpdateOne) SetNillableIsSystem(v *bool) *RoleUpdateOne {
 	if v != nil {
 		_u.SetIsSystem(*v)
+	}
+	return _u
+}
+
+// SetIsActive sets the "is_active" field.
+func (_u *RoleUpdateOne) SetIsActive(v bool) *RoleUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (_u *RoleUpdateOne) SetNillableIsActive(v *bool) *RoleUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
 	return _u
 }
@@ -707,6 +738,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 	}
 	if value, ok := _u.mutation.IsSystem(); ok {
 		_spec.SetField(role.FieldIsSystem, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.IsActive(); ok {
+		_spec.SetField(role.FieldIsActive, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(role.FieldTenantID, field.TypeInt, value)

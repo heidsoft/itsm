@@ -91,7 +91,14 @@ func (h *Handler) Chat(c *gin.Context) {
 
 	answers, convID, err := h.svc.Chat(c.Request.Context(), tenantID, userID, req.Query, req.Limit, req.ConversationID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		// RAG 失败时降级处理：返回空结果而非 500 错误，避免前端崩溃
+		h.svc.logger.Warnw("AI Chat RAG 检索失败，返回降级响应", "error", err, "tenantID", tenantID)
+		common.Success(c, gin.H{
+			"answers":         []interface{}{},
+			"conversation_id": 0,
+			"degraded":        true,
+			"message":         "AI 服务暂时不可用，请稍后重试",
+		})
 		return
 	}
 
@@ -344,4 +351,40 @@ func (h *Handler) Triage(c *gin.Context) {
 		return
 	}
 	common.Success(c, result)
+}
+
+// CreateTicketByAI handles POST /api/v1/ai/ticket/create
+// 通过 AI 解析自然语言描述，智能分析描述并返回工单创建建议
+func (h *Handler) CreateTicketByAI(c *gin.Context) {
+	var req struct {
+		Description string `json:"description" binding:"required"`
+		TenantID    int    `json:"tenant_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		tenantID = req.TenantID
+	}
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	// 调用 AI 分析描述，返回工单创建建议
+	result, err := h.svc.CreateTicketByAI(c.Request.Context(), req.Description, tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, "AI 工单创建失败: "+err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+// SummarizeTicketPost handles POST /api/v1/ai/tickets/:id/summarize
+// POST 版本的工单总结，复用 GET SummarizeTicket 逻辑
+func (h *Handler) SummarizeTicketPost(c *gin.Context) {
+	h.SummarizeTicket(c)
 }

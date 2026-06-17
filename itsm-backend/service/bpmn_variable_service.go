@@ -9,16 +9,22 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/processvariable"
+
+	"go.uber.org/zap"
 )
 
 // BPMNVariableService BPMN流程变量管理服务
 type BPMNVariableService struct {
 	client *ent.Client
+	logger *zap.SugaredLogger
 }
 
 // NewBPMNVariableService 创建BPMN变量管理服务实例
 func NewBPMNVariableService(client *ent.Client) *BPMNVariableService {
-	return &BPMNVariableService{client: client}
+	return &BPMNVariableService{
+		client: client,
+		logger: zap.L().Sugar(),
+	}
 }
 
 // VariableScope 变量作用域
@@ -561,7 +567,7 @@ func (s *BPMNVariableService) CopyVariables(ctx context.Context, fromScope Varia
 		// 创建变量
 		if _, err := s.CreateVariable(ctx, req); err != nil {
 			// 记录错误但继续处理其他变量
-			fmt.Printf("复制变量 %s 失败: %v\n", sourceVariable.VariableName, err)
+			s.logger.Errorw("复制变量失败", "变量名", sourceVariable.VariableName, "error", err)
 		}
 	}
 

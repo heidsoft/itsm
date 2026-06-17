@@ -45,6 +45,8 @@ type ProcessInstance struct {
 	SuspendedReason string `json:"suspended_reason,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
+	// 乐观锁版本号
+	Version int `json:"version,omitempty"`
 	// 流程发起人
 	Initiator string `json:"initiator,omitempty"`
 	// 父流程实例ID
@@ -123,7 +125,7 @@ func (*ProcessInstance) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case processinstance.FieldVariables, processinstance.FieldStateSnapshot:
 			values[i] = new([]byte)
-		case processinstance.FieldID, processinstance.FieldProcessDefinitionID, processinstance.FieldTenantID:
+		case processinstance.FieldID, processinstance.FieldProcessDefinitionID, processinstance.FieldTenantID, processinstance.FieldVersion:
 			values[i] = new(sql.NullInt64)
 		case processinstance.FieldProcessInstanceID, processinstance.FieldBusinessKey, processinstance.FieldProcessDefinitionKey, processinstance.FieldStatus, processinstance.FieldCurrentActivityID, processinstance.FieldCurrentActivityName, processinstance.FieldSuspendedReason, processinstance.FieldInitiator, processinstance.FieldParentProcessInstanceID, processinstance.FieldRootProcessInstanceID:
 			values[i] = new(sql.NullString)
@@ -229,6 +231,12 @@ func (_m *ProcessInstance) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
 				_m.TenantID = int(value.Int64)
+			}
+		case processinstance.FieldVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field version", values[i])
+			} else if value.Valid {
+				_m.Version = int(value.Int64)
 			}
 		case processinstance.FieldInitiator:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -362,6 +370,9 @@ func (_m *ProcessInstance) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
+	builder.WriteString(", ")
+	builder.WriteString("version=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Version))
 	builder.WriteString(", ")
 	builder.WriteString("initiator=")
 	builder.WriteString(_m.Initiator)

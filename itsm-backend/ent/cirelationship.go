@@ -19,6 +19,8 @@ type CIRelationship struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// 租户ID
+	TenantID int `json:"tenant_id,omitempty"`
 	// 关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, owned_by, owns, uses, used_by
 	RelationshipType string `json:"relationship_type,omitempty"`
 	// 源CI ID
@@ -89,7 +91,7 @@ func (*CIRelationship) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case cirelationship.FieldIsActive, cirelationship.FieldIsDiscovered:
 			values[i] = new(sql.NullBool)
-		case cirelationship.FieldID, cirelationship.FieldSourceCiID, cirelationship.FieldTargetCiID:
+		case cirelationship.FieldID, cirelationship.FieldTenantID, cirelationship.FieldSourceCiID, cirelationship.FieldTargetCiID:
 			values[i] = new(sql.NullInt64)
 		case cirelationship.FieldRelationshipType, cirelationship.FieldStrength, cirelationship.FieldImpactLevel, cirelationship.FieldDescription:
 			values[i] = new(sql.NullString)
@@ -116,6 +118,12 @@ func (_m *CIRelationship) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int(value.Int64)
+		case cirelationship.FieldTenantID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
+			} else if value.Valid {
+				_m.TenantID = int(value.Int64)
+			}
 		case cirelationship.FieldRelationshipType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field relationship_type", values[i])
@@ -230,6 +238,9 @@ func (_m *CIRelationship) String() string {
 	var builder strings.Builder
 	builder.WriteString("CIRelationship(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
+	builder.WriteString("tenant_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
+	builder.WriteString(", ")
 	builder.WriteString("relationship_type=")
 	builder.WriteString(_m.RelationshipType)
 	builder.WriteString(", ")

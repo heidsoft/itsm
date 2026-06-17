@@ -7,6 +7,7 @@ import { App, Card, Form, Spin } from 'antd';
 import { CIEditorForm } from '@/components/cmdb/CIEditorForm';
 import {
   CIFormValues,
+  compactRecord,
   extractCloudDataList,
   normalizeSchemaFields,
   SchemaField,
@@ -28,6 +29,7 @@ const CreateCIPage: React.FC = () => {
   const [cloudServices, setCloudServices] = useState<CloudService[]>([]);
   const [cloudLoading, setCloudLoading] = useState(true);
   const [schemaFields, setSchemaFields] = useState<SchemaField[]>([]);
+  const [typeSchemaFields, setTypeSchemaFields] = useState<SchemaField[]>([]);
   const [saving, setSaving] = useState(false);
 
   const cloudServiceMap = useMemo(
@@ -108,6 +110,12 @@ const CreateCIPage: React.FC = () => {
     });
   };
 
+  const handleCITypeChange = (value?: number) => {
+    const selectedType = types.find(type => type.id === value);
+    setTypeSchemaFields(normalizeSchemaFields(selectedType?.attribute_schema));
+    form.setFieldValue('custom_attributes', undefined);
+  };
+
   const handleSubmit = async (values: CIFormValues) => {
     try {
       let attributes: Record<string, unknown> | undefined;
@@ -121,6 +129,14 @@ const CreateCIPage: React.FC = () => {
           message.error(t('cmdb.invalidJSON'));
           return;
         }
+      }
+      const customAttributes = compactRecord(values.custom_attributes as Record<string, unknown> | undefined);
+      attributes = {
+        ...(attributes || {}),
+        ...(customAttributes || {}),
+      };
+      if (Object.keys(attributes).length === 0) {
+        attributes = undefined;
       }
 
       setSaving(true);
@@ -204,10 +220,12 @@ const CreateCIPage: React.FC = () => {
             cloudServices={cloudServices}
             cloudLoading={cloudLoading}
             schemaFields={schemaFields}
+            typeSchemaFields={typeSchemaFields}
             saving={saving}
             submitText="保存配置项"
             onSubmit={handleSubmit}
             onCancel={() => router.back()}
+            onCITypeChange={handleCITypeChange}
             onCloudResourceChange={handleCloudResourceChange}
           />
         ) : (

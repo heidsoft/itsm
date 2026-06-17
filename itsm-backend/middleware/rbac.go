@@ -228,13 +228,19 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "user", Action: "read"}, // 查看自己的用户信息
 		// B12: 安全审批人需要查看知识库和通知
 		{Resource: "knowledge", Action: "read"},
+		{Resource: "knowledge", Action: "list"},
 		{Resource: "notification", Action: "read"},
+		{Resource: "notification", Action: "list"},
 		{Resource: "notification", Action: "write"},
 		// 安全审批人需要查看分配给自己的工单
 		{Resource: "ticket", Action: "read"},
+		{Resource: "ticket", Action: "list"},
 		{Resource: "incident", Action: "read"},
+		{Resource: "incident", Action: "list"},
 		{Resource: "problem", Action: "read"},
+		{Resource: "problem", Action: "list"},
 		{Resource: "change", Action: "read"},
+		{Resource: "change", Action: "list"},
 		// 审批权限
 		{Resource: "approval", Action: "read"},
 		{Resource: "approval", Action: "write"},
@@ -251,6 +257,12 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "asset", Action: "read"},
 		// License Management permissions
 		{Resource: "license", Action: "read"},
+		// 安全角色需要查看仪表板
+		{Resource: "dashboard", Action: "read"},
+		// CMDB 读取权限
+		{Resource: "cmdb", Action: "read"},
+		// SLA 读取权限
+		{Resource: "sla", Action: "read"},
 	},
 	"end_user": {
 		{Resource: "ticket", Action: "read"},
@@ -929,7 +941,7 @@ func hasPermission(client *ent.Client, role, method, path string, userID, tenant
 	// 使用智能权限检查器（4层兜底架构）
 	// 获取底层数据库连接进行 ACL 查询
 	db := database.GetRawDB()
-	return SmartCheckPermission(c, db, role, method, path, tenantID)
+	return SmartCheckPermission(c, db, client, role, method, path, tenantID)
 }
 
 // hasResourcePermission 检查角色是否有指定资源的操作权限（支持多种配置模式）

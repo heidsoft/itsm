@@ -43,8 +43,19 @@ export interface Tenant {
   name: string;
   code: string;
   domain?: string;
-  type: 'trial' | 'standard' | 'professional' | 'enterprise';
-  status: 'active' | 'suspended' | 'expired' | 'trial';
+  type:
+    | 'standard'
+    | 'internal'
+    | 'saas_customer'
+    | 'msp_provider'
+    | 'msp_customer'
+    | 'msp'
+    | 'customer'
+    // Legacy frontend/session values kept for compatibility with existing auth state.
+    | 'trial'
+    | 'professional'
+    | 'enterprise';
+  status: 'active' | 'suspended' | 'expired' | 'deleted';
   createdAt: string;
   updatedAt: string;
   expiresAt?: string;
@@ -245,6 +256,7 @@ export interface ServiceRequest {
 export interface Role {
   id: number;
   name: string;
+  code?: string;
   description: string;
   permissions: string[];
   status?: 'active' | 'inactive';
@@ -264,6 +276,7 @@ export interface RoleListResponse {
 
 export interface CreateRoleRequest {
   name: string;
+  code?: string;
   description: string;
   permissions: string[];
   status: 'active' | 'inactive';
@@ -271,6 +284,7 @@ export interface CreateRoleRequest {
 
 export interface UpdateRoleRequest {
   name?: string;
+  code?: string;
   description?: string;
   permissions?: string[];
   status?: 'active' | 'inactive';
@@ -279,8 +293,21 @@ export interface UpdateRoleRequest {
 export interface GetRolesParams {
   page?: number;
   size?: number;
+  page_size?: number;
   status?: string;
   search?: string;
+}
+
+export interface PermissionCatalogItem {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+  resource: string;
+  action: string;
+  tenantId?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // 系统配置相关接口

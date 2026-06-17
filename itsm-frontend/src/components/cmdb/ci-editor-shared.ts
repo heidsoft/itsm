@@ -71,10 +71,19 @@ export interface CIFormValues {
   cloud_sync_status?: string;
   cloud_resource_ref_id?: number;
   cloud_metadata?: Record<string, {} | undefined>;
+  custom_attributes?: Record<string, {} | undefined>;
 }
 
 export const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
   if (!schema) return [];
+  if (typeof schema === 'string') {
+    if (!schema.trim()) return [];
+    try {
+      return normalizeSchemaFields(JSON.parse(schema));
+    } catch {
+      return [];
+    }
+  }
   if (Array.isArray(schema)) {
     return schema
       .map((item): SchemaField | null => {
@@ -89,7 +98,9 @@ export const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
           type: typeof record.type === 'string' ? record.type : undefined,
           required: Boolean(record.required),
           options: Array.isArray(record.options)
-            ? record.options.filter((option): option is string => typeof option === 'string')
+            ? record.options
+                .map(option => (typeof option === 'string' || typeof option === 'number' ? String(option) : ''))
+                .filter(Boolean)
             : undefined,
           placeholder: typeof record.placeholder === 'string' ? record.placeholder : undefined,
         };
@@ -115,7 +126,9 @@ export const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
           type: typeof entry.type === 'string' ? entry.type : undefined,
           required: Boolean(entry.required),
           options: Array.isArray(entry.options)
-            ? entry.options.filter((option): option is string => typeof option === 'string')
+            ? entry.options
+                .map(option => (typeof option === 'string' || typeof option === 'number' ? String(option) : ''))
+                .filter(Boolean)
             : undefined,
           placeholder: typeof entry.placeholder === 'string' ? entry.placeholder : undefined,
         };
@@ -145,6 +158,12 @@ export const getStatusSelectOptions = () =>
     label: CIStatusLabels[status],
     value: status,
   }));
+
+export const compactRecord = (record?: Record<string, unknown>) => {
+  if (!record) return undefined;
+  const entries = Object.entries(record).filter(([, value]) => value !== undefined && value !== null && value !== '');
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
+};
 
 export const extractCloudDataList = <T>(response: unknown): T[] => {
   if (Array.isArray(response)) {

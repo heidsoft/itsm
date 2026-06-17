@@ -333,12 +333,12 @@ func (_q *CIRelationshipQuery) WithTargetCi(opts ...func(*ConfigurationItemQuery
 // Example:
 //
 //	var v []struct {
-//		RelationshipType string `json:"relationship_type,omitempty"`
+//		TenantID int `json:"tenant_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.CIRelationship.Query().
-//		GroupBy(cirelationship.FieldRelationshipType).
+//		GroupBy(cirelationship.FieldTenantID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *CIRelationshipQuery) GroupBy(field string, fields ...string) *CIRelationshipGroupBy {
@@ -356,11 +356,11 @@ func (_q *CIRelationshipQuery) GroupBy(field string, fields ...string) *CIRelati
 // Example:
 //
 //	var v []struct {
-//		RelationshipType string `json:"relationship_type,omitempty"`
+//		TenantID int `json:"tenant_id,omitempty"`
 //	}
 //
 //	client.CIRelationship.Query().
-//		Select(cirelationship.FieldRelationshipType).
+//		Select(cirelationship.FieldTenantID).
 //		Scan(ctx, &v)
 func (_q *CIRelationshipQuery) Select(fields ...string) *CIRelationshipSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)

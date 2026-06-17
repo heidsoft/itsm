@@ -25,6 +25,8 @@ type Role struct {
 	Description string `json:"description,omitempty"`
 	// 是否系统角色
 	IsSystem bool `json:"is_system,omitempty"`
+	// 角色是否启用
+	IsActive bool `json:"is_active,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
@@ -72,7 +74,7 @@ func (*Role) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case role.FieldIsSystem:
+		case role.FieldIsSystem, role.FieldIsActive:
 			values[i] = new(sql.NullBool)
 		case role.FieldID, role.FieldTenantID:
 			values[i] = new(sql.NullInt64)
@@ -126,6 +128,12 @@ func (_m *Role) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_system", values[i])
 			} else if value.Valid {
 				_m.IsSystem = value.Bool
+			}
+		case role.FieldIsActive:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_active", values[i])
+			} else if value.Valid {
+				_m.IsActive = value.Bool
 			}
 		case role.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -209,6 +217,9 @@ func (_m *Role) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_system=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsSystem))
+	builder.WriteString(", ")
+	builder.WriteString("is_active=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))

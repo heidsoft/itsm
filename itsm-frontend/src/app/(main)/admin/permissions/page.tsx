@@ -43,29 +43,40 @@ const { Option } = Select;
 // 权限模块定义
 const PERMISSION_MODULES = {
   DASHBOARD: 'dashboard',
-  TICKETS: 'tickets',
-  INCIDENTS: 'incidents',
-  PROBLEMS: 'problems',
-  CHANGES: 'changes',
+  TICKETS: 'ticket',
+  INCIDENTS: 'incident',
+  PROBLEMS: 'problem',
+  CHANGES: 'change',
   SERVICE_CATALOG: 'service_catalog',
-  KNOWLEDGE_BASE: 'knowledge_base',
-  REPORTS: 'reports',
+  SERVICE_REQUEST: 'service_request',
+  KNOWLEDGE_BASE: 'knowledge',
+  CMDB: 'cmdb',
+  ASSETS: 'asset',
+  RELEASES: 'release',
+  REPORTS: 'report',
   ADMIN: 'admin',
-  USERS: 'users',
-  ROLES: 'roles',
-  WORKFLOWS: 'workflows',
+  USERS: 'user',
+  ROLES: 'role',
+  GROUPS: 'groups',
+  ORG: 'org',
+  WORKFLOWS: 'bpmn',
   SYSTEM_CONFIG: 'system_config',
+  AI: 'ai',
 } as const;
 
 // 权限操作类型
 const PERMISSION_ACTIONS = {
-  VIEW: 'view',
+  READ: 'read',
   CREATE: 'create',
-  EDIT: 'edit',
+  WRITE: 'write',
+  UPDATE: 'update',
   DELETE: 'delete',
+  MANAGE: 'manage',
   APPROVE: 'approve',
   ASSIGN: 'assign',
+  VIEW: 'view',
   EXPORT: 'export',
+  ALL: 'all',
 } as const;
 
 // 权限模块配置
@@ -76,24 +87,35 @@ const MODULE_CONFIG: Record<string, { label: string; icon: string; description: 
   [PERMISSION_MODULES.PROBLEMS]: { label: '问题管理', icon: '🔧', description: '根本原因分析和问题解决', category: '核心功能' },
   [PERMISSION_MODULES.CHANGES]: { label: '变更管理', icon: '🔄', description: 'IT变更的规划和实施', category: '核心功能' },
   [PERMISSION_MODULES.SERVICE_CATALOG]: { label: '服务目录', icon: '📋', description: 'IT服务目录管理', category: '服务管理' },
+  [PERMISSION_MODULES.SERVICE_REQUEST]: { label: '服务请求', icon: '🧾', description: '服务请求提交、审批和履约', category: '服务管理' },
   [PERMISSION_MODULES.KNOWLEDGE_BASE]: { label: '知识库', icon: '📚', description: '知识文档和解决方案', category: '服务管理' },
+  [PERMISSION_MODULES.CMDB]: { label: 'CMDB', icon: '🧩', description: '配置项、关系和拓扑管理', category: '核心功能' },
+  [PERMISSION_MODULES.ASSETS]: { label: '资产管理', icon: '💻', description: 'IT资产和许可证管理', category: '核心功能' },
+  [PERMISSION_MODULES.RELEASES]: { label: '发布管理', icon: '🚀', description: '发布计划和发布执行', category: '核心功能' },
   [PERMISSION_MODULES.REPORTS]: { label: '报告分析', icon: '📈', description: '数据报告和分析功能', category: '分析工具' },
   [PERMISSION_MODULES.ADMIN]: { label: '系统管理', icon: '⚙️', description: '系统管理和配置', category: '系统管理' },
   [PERMISSION_MODULES.USERS]: { label: '用户管理', icon: '👥', description: '用户账户管理', category: '系统管理' },
   [PERMISSION_MODULES.ROLES]: { label: '角色管理', icon: '🛡️', description: '角色和权限管理', category: '系统管理' },
+  [PERMISSION_MODULES.GROUPS]: { label: '用户组管理', icon: '👪', description: '用户组和候选组管理', category: '系统管理' },
+  [PERMISSION_MODULES.ORG]: { label: '组织架构', icon: '🏢', description: '部门、团队和组织架构管理', category: '系统管理' },
   [PERMISSION_MODULES.WORKFLOWS]: { label: '工作流', icon: '🔀', description: '业务流程配置', category: '系统管理' },
   [PERMISSION_MODULES.SYSTEM_CONFIG]: { label: '系统配置', icon: '🔧', description: '系统参数和设置', category: '系统管理' },
+  [PERMISSION_MODULES.AI]: { label: 'AI能力', icon: '🤖', description: 'AI 辅助与智能自动化能力', category: '系统管理' },
 };
 
 // 权限操作配置
 const ACTION_CONFIG: Record<string, { label: string; color: string; description: string }> = {
-  [PERMISSION_ACTIONS.VIEW]: { label: '查看', color: 'blue', description: '查看和浏览权限' },
+  [PERMISSION_ACTIONS.READ]: { label: '读取', color: 'blue', description: '读取和浏览权限' },
   [PERMISSION_ACTIONS.CREATE]: { label: '创建', color: 'green', description: '创建新记录权限' },
-  [PERMISSION_ACTIONS.EDIT]: { label: '编辑', color: 'orange', description: '修改现有记录权限' },
+  [PERMISSION_ACTIONS.WRITE]: { label: '写入', color: 'orange', description: '创建或修改业务数据权限' },
+  [PERMISSION_ACTIONS.UPDATE]: { label: '更新', color: 'orange', description: '更新现有记录权限' },
   [PERMISSION_ACTIONS.DELETE]: { label: '删除', color: 'red', description: '删除记录权限' },
+  [PERMISSION_ACTIONS.MANAGE]: { label: '管理', color: 'magenta', description: '管理配置和成员关系权限' },
   [PERMISSION_ACTIONS.APPROVE]: { label: '审批', color: 'purple', description: '审批和批准权限' },
   [PERMISSION_ACTIONS.ASSIGN]: { label: '分配', color: 'cyan', description: '分配和指派权限' },
+  [PERMISSION_ACTIONS.VIEW]: { label: '查看', color: 'geekblue', description: '兼容旧版查看权限' },
   [PERMISSION_ACTIONS.EXPORT]: { label: '导出', color: 'geekblue', description: '数据导出权限' },
+  [PERMISSION_ACTIONS.ALL]: { label: '全部', color: 'volcano', description: '平台级全部权限' },
 };
 
 // 分类配置
@@ -199,6 +221,7 @@ const PermissionConfiguration = () => {
   const [viewMode, setViewMode] = useState<'card' | 'tree'>('card');
   const [loading, setLoading] = useState(false);
   const [rolesLoading, setRolesLoading] = useState(false);
+  const [permissionCatalogCount, setPermissionCatalogCount] = useState(0);
 
   // 加载角色列表
   const loadRoles = useCallback(async () => {
@@ -206,6 +229,8 @@ const PermissionConfiguration = () => {
     try {
       const response = await RoleAPI.getRoles({ page: 1, size: 100 });
       setRoles(response.roles || []);
+      const catalog = await RoleAPI.getPermissionCatalog();
+      setPermissionCatalogCount(catalog.filter(item => item.id > 0).length);
     } catch (error) {
       console.error('Failed to load roles:', error);
       message.error('加载角色列表失败');
@@ -232,6 +257,20 @@ const PermissionConfiguration = () => {
       message.error('加载角色权限失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInitPermissions = async () => {
+    setSaving(true);
+    try {
+      await RoleAPI.initDefaultPermissions();
+      const catalog = await RoleAPI.getPermissionCatalog();
+      setPermissionCatalogCount(catalog.filter(item => item.id > 0).length);
+      message.success('默认权限字典初始化完成');
+    } catch (error) {
+      message.error('初始化权限字典失败');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -344,6 +383,7 @@ const PermissionConfiguration = () => {
     enabledModules: Object.values(permissionState).filter(m => m.isEnabled).length,
     totalActions: Object.values(permissionState).reduce((sum, m) => sum + Object.keys(m.actions).length, 0),
     enabledActions: Object.values(permissionState).reduce((sum, m) => sum + Object.values(m.actions).filter(v => v).length, 0),
+    catalogPermissions: permissionCatalogCount,
   };
 
   // 生成权限树数据
@@ -562,6 +602,9 @@ const PermissionConfiguration = () => {
           </Col>
           <Col xs={24} md={4} className="text-right">
             <Space>
+              <Button onClick={handleInitPermissions} loading={saving}>
+                初始化权限字典
+              </Button>
               <Button icon={<RefreshCw className="w-4 h-4" />} onClick={handleReset}>
                 重置
               </Button>
@@ -585,6 +628,16 @@ const PermissionConfiguration = () => {
           message="请先选择角色"
           description="从上方下拉框中选择一个角色，以查看和编辑该角色的权限配置。"
           type="info"
+          showIcon
+          className="mb-6"
+        />
+      )}
+
+      {permissionCatalogCount === 0 && (
+        <Alert
+          message="权限字典尚未初始化"
+          description="当前租户没有可用于真实授权的权限字典。请点击“初始化权限字典”，否则角色权限保存可能无法落到后端关联表。"
+          type="warning"
           showIcon
           className="mb-6"
         />

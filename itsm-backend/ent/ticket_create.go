@@ -15,12 +15,15 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketapproval"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/ticketcc"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
+	"itsm-backend/ent/ticketworkflowrecord"
 	"itsm-backend/ent/workflowinstance"
 	"time"
 
@@ -265,6 +268,34 @@ func (_c *TicketCreate) SetResolution(v string) *TicketCreate {
 func (_c *TicketCreate) SetNillableResolution(v *string) *TicketCreate {
 	if v != nil {
 		_c.SetResolution(*v)
+	}
+	return _c
+}
+
+// SetResolutionCategory sets the "resolution_category" field.
+func (_c *TicketCreate) SetResolutionCategory(v string) *TicketCreate {
+	_c.mutation.SetResolutionCategory(v)
+	return _c
+}
+
+// SetNillableResolutionCategory sets the "resolution_category" field if the given value is not nil.
+func (_c *TicketCreate) SetNillableResolutionCategory(v *string) *TicketCreate {
+	if v != nil {
+		_c.SetResolutionCategory(*v)
+	}
+	return _c
+}
+
+// SetClosedAt sets the "closed_at" field.
+func (_c *TicketCreate) SetClosedAt(v time.Time) *TicketCreate {
+	_c.mutation.SetClosedAt(v)
+	return _c
+}
+
+// SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
+func (_c *TicketCreate) SetNillableClosedAt(v *time.Time) *TicketCreate {
+	if v != nil {
+		_c.SetClosedAt(*v)
 	}
 	return _c
 }
@@ -642,6 +673,51 @@ func (_c *TicketCreate) AddProblems(v ...*Problem) *TicketCreate {
 	return _c.AddProblemIDs(ids...)
 }
 
+// AddApprovalIDs adds the "approvals" edge to the TicketApproval entity by IDs.
+func (_c *TicketCreate) AddApprovalIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddApprovalIDs(ids...)
+	return _c
+}
+
+// AddApprovals adds the "approvals" edges to the TicketApproval entity.
+func (_c *TicketCreate) AddApprovals(v ...*TicketApproval) *TicketCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddApprovalIDs(ids...)
+}
+
+// AddWorkflowRecordIDs adds the "workflow_records" edge to the TicketWorkflowRecord entity by IDs.
+func (_c *TicketCreate) AddWorkflowRecordIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddWorkflowRecordIDs(ids...)
+	return _c
+}
+
+// AddWorkflowRecords adds the "workflow_records" edges to the TicketWorkflowRecord entity.
+func (_c *TicketCreate) AddWorkflowRecords(v ...*TicketWorkflowRecord) *TicketCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddWorkflowRecordIDs(ids...)
+}
+
+// AddCcUserIDs adds the "cc_users" edge to the TicketCC entity by IDs.
+func (_c *TicketCreate) AddCcUserIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddCcUserIDs(ids...)
+	return _c
+}
+
+// AddCcUsers adds the "cc_users" edges to the TicketCC entity.
+func (_c *TicketCreate) AddCcUsers(v ...*TicketCC) *TicketCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCcUserIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (_c *TicketCreate) Mutation() *TicketMutation {
 	return _c.mutation
@@ -853,6 +929,14 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Resolution(); ok {
 		_spec.SetField(ticket.FieldResolution, field.TypeString, value)
 		_node.Resolution = value
+	}
+	if value, ok := _c.mutation.ResolutionCategory(); ok {
+		_spec.SetField(ticket.FieldResolutionCategory, field.TypeString, value)
+		_node.ResolutionCategory = value
+	}
+	if value, ok := _c.mutation.ClosedAt(); ok {
+		_spec.SetField(ticket.FieldClosedAt, field.TypeTime, value)
+		_node.ClosedAt = &value
 	}
 	if value, ok := _c.mutation.Rating(); ok {
 		_spec.SetField(ticket.FieldRating, field.TypeInt, value)
@@ -1172,6 +1256,54 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ApprovalsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalsTable,
+			Columns: []string{ticket.ApprovalsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketapproval.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.WorkflowRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.WorkflowRecordsTable,
+			Columns: []string{ticket.WorkflowRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketworkflowrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CcUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CcUsersTable,
+			Columns: []string{ticket.CcUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcc.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

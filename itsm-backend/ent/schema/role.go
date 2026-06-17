@@ -28,6 +28,9 @@ func (Role) Fields() []ent.Field {
 		field.Bool("is_system").
 			Comment("是否系统角色").
 			Default(false),
+		field.Bool("is_active").
+			Comment("角色是否启用").
+			Default(true),
 		field.Int("tenant_id").
 			Comment("租户ID").
 			Positive(),

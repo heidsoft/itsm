@@ -55,6 +55,11 @@ func IDLTE(id int) predicate.CIRelationship {
 	return predicate.CIRelationship(sql.FieldLTE(FieldID, id))
 }
 
+// TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
+func TenantID(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldTenantID, v))
+}
+
 // RelationshipType applies equality check predicate on the "relationship_type" field. It's identical to RelationshipTypeEQ.
 func RelationshipType(v string) predicate.CIRelationship {
 	return predicate.CIRelationship(sql.FieldEQ(FieldRelationshipType, v))
@@ -93,6 +98,56 @@ func CreatedAt(v time.Time) predicate.CIRelationship {
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.CIRelationship {
 	return predicate.CIRelationship(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// TenantIDEQ applies the EQ predicate on the "tenant_id" field.
+func TenantIDEQ(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldTenantID, v))
+}
+
+// TenantIDNEQ applies the NEQ predicate on the "tenant_id" field.
+func TenantIDNEQ(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNEQ(FieldTenantID, v))
+}
+
+// TenantIDIn applies the In predicate on the "tenant_id" field.
+func TenantIDIn(vs ...int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldIn(FieldTenantID, vs...))
+}
+
+// TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
+func TenantIDNotIn(vs ...int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNotIn(FieldTenantID, vs...))
+}
+
+// TenantIDGT applies the GT predicate on the "tenant_id" field.
+func TenantIDGT(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldGT(FieldTenantID, v))
+}
+
+// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
+func TenantIDGTE(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldGTE(FieldTenantID, v))
+}
+
+// TenantIDLT applies the LT predicate on the "tenant_id" field.
+func TenantIDLT(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldLT(FieldTenantID, v))
+}
+
+// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
+func TenantIDLTE(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldLTE(FieldTenantID, v))
+}
+
+// TenantIDIsNil applies the IsNil predicate on the "tenant_id" field.
+func TenantIDIsNil() predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldIsNull(FieldTenantID))
+}
+
+// TenantIDNotNil applies the NotNil predicate on the "tenant_id" field.
+func TenantIDNotNil() predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNotNull(FieldTenantID))
 }
 
 // RelationshipTypeEQ applies the EQ predicate on the "relationship_type" field.

@@ -256,6 +256,27 @@ func (_u *ProcessInstanceUpdate) AddTenantID(v int) *ProcessInstanceUpdate {
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *ProcessInstanceUpdate) SetVersion(v int) *ProcessInstanceUpdate {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *ProcessInstanceUpdate) SetNillableVersion(v *int) *ProcessInstanceUpdate {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *ProcessInstanceUpdate) AddVersion(v int) *ProcessInstanceUpdate {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // SetInitiator sets the "initiator" field.
 func (_u *ProcessInstanceUpdate) SetInitiator(v string) *ProcessInstanceUpdate {
 	_u.mutation.SetInitiator(v)
@@ -619,6 +640,12 @@ func (_u *ProcessInstanceUpdate) sqlSave(ctx context.Context) (_node int, err er
 	}
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processinstance.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(processinstance.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(processinstance.FieldVersion, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.Initiator(); ok {
 		_spec.SetField(processinstance.FieldInitiator, field.TypeString, value)
@@ -1062,6 +1089,27 @@ func (_u *ProcessInstanceUpdateOne) AddTenantID(v int) *ProcessInstanceUpdateOne
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *ProcessInstanceUpdateOne) SetVersion(v int) *ProcessInstanceUpdateOne {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *ProcessInstanceUpdateOne) SetNillableVersion(v *int) *ProcessInstanceUpdateOne {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *ProcessInstanceUpdateOne) AddVersion(v int) *ProcessInstanceUpdateOne {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // SetInitiator sets the "initiator" field.
 func (_u *ProcessInstanceUpdateOne) SetInitiator(v string) *ProcessInstanceUpdateOne {
 	_u.mutation.SetInitiator(v)
@@ -1455,6 +1503,12 @@ func (_u *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Process
 	}
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processinstance.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(processinstance.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(processinstance.FieldVersion, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.Initiator(); ok {
 		_spec.SetField(processinstance.FieldInitiator, field.TypeString, value)

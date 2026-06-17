@@ -12,6 +12,8 @@ import {
   Eye,
   Users,
   Calendar,
+  PauseCircle,
+  PlayCircle,
 } from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
@@ -55,15 +57,18 @@ const TENANT_STATUS = {
     icon: AlertCircle,
   },
   expired: { label: '过期', color: 'error', icon: AlertCircle },
-  trial: { label: '试用', color: 'processing', icon: Clock },
+  deleted: { label: '已删除', color: 'default', icon: AlertCircle },
 };
 
 // 租户类型配置
 const TENANT_TYPES = {
-  trial: { label: '试用版', color: 'default' },
-  standard: { label: '标准版', color: 'blue' },
-  professional: { label: '专业版', color: 'purple' },
-  enterprise: { label: '企业版', color: 'gold' },
+  standard: { label: '标准租户', color: 'blue' },
+  internal: { label: '内部组织', color: 'cyan' },
+  saas_customer: { label: 'SaaS客户', color: 'green' },
+  msp_provider: { label: 'MSP服务商', color: 'gold' },
+  msp_customer: { label: 'MSP客户', color: 'purple' },
+  msp: { label: 'MSP兼容', color: 'orange' },
+  customer: { label: '客户兼容', color: 'default' },
 };
 
 type Tenant = {
@@ -101,7 +106,7 @@ export default function TenantManagement() {
     total: 0,
     active: 0,
     suspended: 0,
-    trial: 0,
+    expired: 0,
   });
 
   // 加载租户数据
@@ -124,13 +129,15 @@ export default function TenantManagement() {
       const suspended = response.tenants.filter(
         (t: { status: string }) => t.status === 'suspended'
       ).length;
-      const trial = response.tenants.filter((t: { status: string }) => t.status === 'trial').length;
+      const expired = response.tenants.filter(
+        (t: { status: string }) => t.status === 'expired'
+      ).length;
 
       setStats({
         total,
         active,
         suspended,
-        trial,
+        expired,
       });
     } catch (error) {
       message.error('加载租户数据失败');
@@ -200,6 +207,19 @@ export default function TenantManagement() {
       loadTenants(); // 重新加载数据
     } catch (error) {
       message.error('删除租户失败');
+    }
+  };
+
+  const handleChangeTenantStatus = async (tenant: Tenant, status: keyof typeof TENANT_STATUS) => {
+    setLoading(true);
+    try {
+      await TenantAPI.updateTenant(tenant.id, { status });
+      message.success(`租户状态已更新为${TENANT_STATUS[status].label}`);
+      loadTenants();
+    } catch (error) {
+      message.error('更新租户状态失败');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -282,6 +302,23 @@ export default function TenantManagement() {
               onClick={() => openTenantModal(record, true)}
             />
           </Tooltip>
+          {record.status === 'active' ? (
+            <Tooltip title="暂停租户">
+              <Button
+                type="text"
+                icon={<PauseCircle className="w-4 h-4" />}
+                onClick={() => handleChangeTenantStatus(record, 'suspended')}
+              />
+            </Tooltip>
+          ) : (
+            <Tooltip title="恢复租户">
+              <Button
+                type="text"
+                icon={<PlayCircle className="w-4 h-4" />}
+                onClick={() => handleChangeTenantStatus(record, 'active')}
+              />
+            </Tooltip>
+          )}
           <Popconfirm
             title="确认删除"
             description="确定要删除这个租户吗？此操作不可恢复。"
@@ -342,8 +379,8 @@ export default function TenantManagement() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="试用租户"
-              value={stats.trial}
+              title="过期租户"
+              value={stats.expired}
               prefix={<Clock className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
             />
@@ -374,7 +411,7 @@ export default function TenantManagement() {
               <Option value="active">活跃</Option>
               <Option value="suspended">暂停</Option>
               <Option value="expired">过期</Option>
-              <Option value="trial">试用</Option>
+              <Option value="deleted">已删除</Option>
             </Select>
           </Col>
           <Col xs={24} md={8} lg={4}>
@@ -385,10 +422,11 @@ export default function TenantManagement() {
               style={{ width: '100%' }}
             >
               <Option value="all">全部类型</Option>
-              <Option value="trial">试用版</Option>
-              <Option value="standard">标准版</Option>
-              <Option value="professional">专业版</Option>
-              <Option value="enterprise">企业版</Option>
+              <Option value="standard">标准租户</Option>
+              <Option value="internal">内部组织</Option>
+              <Option value="saas_customer">SaaS客户</Option>
+              <Option value="msp_provider">MSP服务商</Option>
+              <Option value="msp_customer">MSP客户</Option>
             </Select>
           </Col>
           <Col xs={24} md={4} lg={8} className="text-right">
@@ -500,10 +538,11 @@ export default function TenantManagement() {
                 rules={[{ required: true, message: '请选择租户类型' }]}
               >
                 <Select placeholder="请选择租户类型">
-                  <Option value="trial">试用版</Option>
-                  <Option value="standard">标准版</Option>
-                  <Option value="professional">专业版</Option>
-                  <Option value="enterprise">企业版</Option>
+                  <Option value="standard">标准租户</Option>
+                  <Option value="internal">内部组织</Option>
+                  <Option value="saas_customer">SaaS客户</Option>
+                  <Option value="msp_provider">MSP服务商</Option>
+                  <Option value="msp_customer">MSP客户</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -518,7 +557,7 @@ export default function TenantManagement() {
                   <Option value="active">活跃</Option>
                   <Option value="suspended">暂停</Option>
                   <Option value="expired">过期</Option>
-                  <Option value="trial">试用</Option>
+                  <Option value="deleted">已删除</Option>
                 </Select>
               </Form.Item>
             </Col>

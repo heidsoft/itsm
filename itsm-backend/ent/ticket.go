@@ -59,6 +59,10 @@ type Ticket struct {
 	ResolvedAt time.Time `json:"resolved_at,omitempty"`
 	// 解决方案
 	Resolution string `json:"resolution,omitempty"`
+	// 解决方案分类
+	ResolutionCategory string `json:"resolution_category,omitempty"`
+	// 关闭时间
+	ClosedAt *time.Time `json:"closed_at,omitempty"`
 	// 评分（1-5星）
 	Rating int `json:"rating,omitempty"`
 	// 评分评论
@@ -127,9 +131,15 @@ type TicketEdges struct {
 	ConfigurationItems []*ConfigurationItem `json:"configuration_items,omitempty"`
 	// 关联的问题
 	Problems []*Problem `json:"problems,omitempty"`
+	// 审批记录
+	Approvals []*TicketApproval `json:"approvals,omitempty"`
+	// 流转记录
+	WorkflowRecords []*TicketWorkflowRecord `json:"workflow_records,omitempty"`
+	// 抄送人
+	CcUsers []*TicketCC `json:"cc_users,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [17]bool
+	loadedTypes [20]bool
 }
 
 // TemplateOrErr returns the Template value or an error if the edge
@@ -295,6 +305,33 @@ func (e TicketEdges) ProblemsOrErr() ([]*Problem, error) {
 	return nil, &NotLoadedError{edge: "problems"}
 }
 
+// ApprovalsOrErr returns the Approvals value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) ApprovalsOrErr() ([]*TicketApproval, error) {
+	if e.loadedTypes[17] {
+		return e.Approvals, nil
+	}
+	return nil, &NotLoadedError{edge: "approvals"}
+}
+
+// WorkflowRecordsOrErr returns the WorkflowRecords value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) WorkflowRecordsOrErr() ([]*TicketWorkflowRecord, error) {
+	if e.loadedTypes[18] {
+		return e.WorkflowRecords, nil
+	}
+	return nil, &NotLoadedError{edge: "workflow_records"}
+}
+
+// CcUsersOrErr returns the CcUsers value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) CcUsersOrErr() ([]*TicketCC, error) {
+	if e.loadedTypes[19] {
+		return e.CcUsers, nil
+	}
+	return nil, &NotLoadedError{edge: "cc_users"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Ticket) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -304,9 +341,9 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID, ticket.FieldRating, ticket.FieldRatedBy, ticket.FieldVersion, ticket.FieldMspProviderID, ticket.FieldManagedByUserID:
 			values[i] = new(sql.NullInt64)
-		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldType, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldResolution, ticket.FieldRatingComment, ticket.FieldMspTicketID:
+		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldType, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldResolution, ticket.FieldResolutionCategory, ticket.FieldRatingComment, ticket.FieldMspTicketID:
 			values[i] = new(sql.NullString)
-		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt, ticket.FieldDeletedAt:
+		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldClosedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt, ticket.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case ticket.ForeignKeys[0]: // sla_policy_tickets
 			values[i] = new(sql.NullInt64)
@@ -446,6 +483,19 @@ func (_m *Ticket) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field resolution", values[i])
 			} else if value.Valid {
 				_m.Resolution = value.String
+			}
+		case ticket.FieldResolutionCategory:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resolution_category", values[i])
+			} else if value.Valid {
+				_m.ResolutionCategory = value.String
+			}
+		case ticket.FieldClosedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field closed_at", values[i])
+			} else if value.Valid {
+				_m.ClosedAt = new(time.Time)
+				*_m.ClosedAt = value.Time
 			}
 		case ticket.FieldRating:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -632,6 +682,21 @@ func (_m *Ticket) QueryProblems() *ProblemQuery {
 	return NewTicketClient(_m.config).QueryProblems(_m)
 }
 
+// QueryApprovals queries the "approvals" edge of the Ticket entity.
+func (_m *Ticket) QueryApprovals() *TicketApprovalQuery {
+	return NewTicketClient(_m.config).QueryApprovals(_m)
+}
+
+// QueryWorkflowRecords queries the "workflow_records" edge of the Ticket entity.
+func (_m *Ticket) QueryWorkflowRecords() *TicketWorkflowRecordQuery {
+	return NewTicketClient(_m.config).QueryWorkflowRecords(_m)
+}
+
+// QueryCcUsers queries the "cc_users" edge of the Ticket entity.
+func (_m *Ticket) QueryCcUsers() *TicketCCQuery {
+	return NewTicketClient(_m.config).QueryCcUsers(_m)
+}
+
 // Update returns a builder for updating this Ticket.
 // Note that you need to call Ticket.Unwrap() before calling this method if this Ticket
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -711,6 +776,14 @@ func (_m *Ticket) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("resolution=")
 	builder.WriteString(_m.Resolution)
+	builder.WriteString(", ")
+	builder.WriteString("resolution_category=")
+	builder.WriteString(_m.ResolutionCategory)
+	builder.WriteString(", ")
+	if v := _m.ClosedAt; v != nil {
+		builder.WriteString("closed_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("rating=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Rating))

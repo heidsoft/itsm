@@ -8,6 +8,7 @@ import { Form } from 'antd';
 import { CIEditorForm } from '@/components/cmdb/CIEditorForm';
 import {
   CIFormValues,
+  compactRecord,
   extractCloudDataList,
   normalizeSchemaFields,
   SchemaField,
@@ -27,6 +28,7 @@ const EditCIPage: React.FC = () => {
   const [cloudServices, setCloudServices] = useState<CloudService[]>([]);
   const [cloudLoading, setCloudLoading] = useState(true);
   const [schemaFields, setSchemaFields] = useState<SchemaField[]>([]);
+  const [typeSchemaFields, setTypeSchemaFields] = useState<SchemaField[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [ci, setCi] = useState<ConfigurationItem | null>(null);
@@ -87,11 +89,28 @@ const EditCIPage: React.FC = () => {
     }
   }, [id, message]);
 
+  const omitSchemaFieldValues = (
+    attributes: Record<string, unknown> | undefined,
+    fields: SchemaField[]
+  ) => {
+    if (!attributes) return undefined;
+    const schemaKeys = new Set(fields.map(field => field.key));
+    const entries = Object.entries(attributes).filter(([key]) => !schemaKeys.has(key));
+    return entries.length > 0 ? Object.fromEntries(entries) : undefined;
+  };
+
   useEffect(() => {
-    if (!ci || initializedRef.current) return;
+    if (!ci || typesLoading || initializedRef.current) return;
+    const ciTypeId = ci.ci_type_id ?? ci.ciTypeId ?? 0;
+    const selectedType = types.find(type => type.id === ciTypeId);
+    const initialTypeSchemaFields = normalizeSchemaFields(selectedType?.attribute_schema);
+    const attributeRecord =
+      ci.attributes && typeof ci.attributes === 'object' ? (ci.attributes as Record<string, unknown>) : undefined;
+    const remainingAttributes = omitSchemaFieldValues(attributeRecord, initialTypeSchemaFields);
+
     const initialValues: Partial<CIFormValues> = {
       name: ci.name,
-      ci_type_id: ci.ci_type_id ?? ci.ciTypeId ?? 0,
+      ci_type_id: ciTypeId,
       status: ci.status,
       description: ci.description,
       serial_number: ci.serial_number ?? ci.serialNumber,
@@ -114,19 +133,24 @@ const EditCIPage: React.FC = () => {
       cloud_sync_status: ci.cloud_sync_status ?? ci.cloudSyncStatus,
       cloud_resource_ref_id: ci.cloud_resource_ref_id ?? ci.cloudResourceRefId,
       cloud_metadata: ci.cloud_metadata as Record<string, {} | undefined> | undefined,
+      custom_attributes: attributeRecord as Record<string, {} | undefined> | undefined,
     };
-    if (ci.attributes && typeof ci.attributes === 'object') {
-      initialValues.attributes = JSON.stringify(ci.attributes, null, 2);
+    if (remainingAttributes) {
+      initialValues.attributes = JSON.stringify(remainingAttributes, null, 2);
     }
     form.setFieldsValue(initialValues);
+    setTypeSchemaFields(initialTypeSchemaFields);
 
-    if (ci.cloud_resource_ref_id && cloudResources.length && cloudServices.length) {
-      const resource = cloudResources.find(item => item.id === ci.cloud_resource_ref_id);
+    initializedRef.current = true;
+  }, [ci, form, types, typesLoading]);
+
+  useEffect(() => {
+    const cloudResourceRefId = ci?.cloud_resource_ref_id ?? ci?.cloudResourceRefId;
+    if (!cloudResourceRefId || !cloudResources.length || !cloudServices.length) return;
+    const resource = cloudResources.find(item => item.id === cloudResourceRefId);
       const service = resource ? cloudServiceMap.get(resource.service_id) : undefined;
       setSchemaFields(normalizeSchemaFields(service?.attribute_schema));
-    }
-    initializedRef.current = true;
-  }, [ci, cloudResources, cloudServices, cloudServiceMap, form]);
+  }, [ci, cloudResources, cloudServices, cloudServiceMap]);
 
   const handleCloudResourceChange = (value?: number) => {
     if (!value) {
@@ -147,6 +171,12 @@ const EditCIPage: React.FC = () => {
     });
   };
 
+  const handleCITypeChange = (value?: number) => {
+    const selectedType = types.find(type => type.id === value);
+    setTypeSchemaFields(normalizeSchemaFields(selectedType?.attribute_schema));
+    form.setFieldValue('custom_attributes', undefined);
+  };
+
   const handleSubmit = async (values: CIFormValues) => {
     try {
       let attributes: Record<string, unknown> | undefined;
@@ -160,6 +190,14 @@ const EditCIPage: React.FC = () => {
           message.error('扩展属性需要是有效的 JSON');
           return;
         }
+      }
+      const customAttributes = compactRecord(values.custom_attributes as Record<string, unknown> | undefined);
+      attributes = {
+        ...(attributes || {}),
+        ...(customAttributes || {}),
+      };
+      if (Object.keys(attributes).length === 0) {
+        attributes = undefined;
       }
       setSaving(true);
       await CMDBApi.updateCI(id, {
@@ -224,10 +262,12 @@ const EditCIPage: React.FC = () => {
           cloudServices={cloudServices}
           cloudLoading={cloudLoading}
           schemaFields={schemaFields}
+          typeSchemaFields={typeSchemaFields}
           saving={saving}
           submitText="保存修改"
           onSubmit={handleSubmit}
           onCancel={() => router.back()}
+          onCITypeChange={handleCITypeChange}
           onCloudResourceChange={handleCloudResourceChange}
         />
       </Card>

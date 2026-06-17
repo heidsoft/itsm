@@ -86,15 +86,18 @@ import (
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketapproval"
 	"itsm-backend/ent/ticketassignmentrule"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketautomationrule"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/ticketcc"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
 	"itsm-backend/ent/ticketview"
+	"itsm-backend/ent/ticketworkflowrecord"
 	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
 	"itsm-backend/ent/vendor"
@@ -427,24 +430,28 @@ func init() {
 	ciattributedefinition.UpdateDefaultUpdatedAt = ciattributedefinitionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	cirelationshipFields := schema.CIRelationship{}.Fields()
 	_ = cirelationshipFields
+	// cirelationshipDescTenantID is the schema descriptor for tenant_id field.
+	cirelationshipDescTenantID := cirelationshipFields[0].Descriptor()
+	// cirelationship.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	cirelationship.TenantIDValidator = cirelationshipDescTenantID.Validators[0].(func(int) error)
 	// cirelationshipDescRelationshipType is the schema descriptor for relationship_type field.
-	cirelationshipDescRelationshipType := cirelationshipFields[0].Descriptor()
+	cirelationshipDescRelationshipType := cirelationshipFields[1].Descriptor()
 	// cirelationship.RelationshipTypeValidator is a validator for the "relationship_type" field. It is called by the builders before save.
 	cirelationship.RelationshipTypeValidator = cirelationshipDescRelationshipType.Validators[0].(func(string) error)
 	// cirelationshipDescIsActive is the schema descriptor for is_active field.
-	cirelationshipDescIsActive := cirelationshipFields[5].Descriptor()
+	cirelationshipDescIsActive := cirelationshipFields[6].Descriptor()
 	// cirelationship.DefaultIsActive holds the default value on creation for the is_active field.
 	cirelationship.DefaultIsActive = cirelationshipDescIsActive.Default.(bool)
 	// cirelationshipDescIsDiscovered is the schema descriptor for is_discovered field.
-	cirelationshipDescIsDiscovered := cirelationshipFields[6].Descriptor()
+	cirelationshipDescIsDiscovered := cirelationshipFields[7].Descriptor()
 	// cirelationship.DefaultIsDiscovered holds the default value on creation for the is_discovered field.
 	cirelationship.DefaultIsDiscovered = cirelationshipDescIsDiscovered.Default.(bool)
 	// cirelationshipDescCreatedAt is the schema descriptor for created_at field.
-	cirelationshipDescCreatedAt := cirelationshipFields[9].Descriptor()
+	cirelationshipDescCreatedAt := cirelationshipFields[10].Descriptor()
 	// cirelationship.DefaultCreatedAt holds the default value on creation for the created_at field.
 	cirelationship.DefaultCreatedAt = cirelationshipDescCreatedAt.Default.(func() time.Time)
 	// cirelationshipDescUpdatedAt is the schema descriptor for updated_at field.
-	cirelationshipDescUpdatedAt := cirelationshipFields[10].Descriptor()
+	cirelationshipDescUpdatedAt := cirelationshipFields[11].Descriptor()
 	// cirelationship.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	cirelationship.DefaultUpdatedAt = cirelationshipDescUpdatedAt.Default.(func() time.Time)
 	// cirelationship.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -1867,12 +1874,16 @@ func init() {
 	processinstanceDescTenantID := processinstanceFields[12].Descriptor()
 	// processinstance.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	processinstance.TenantIDValidator = processinstanceDescTenantID.Validators[0].(func(int) error)
+	// processinstanceDescVersion is the schema descriptor for version field.
+	processinstanceDescVersion := processinstanceFields[13].Descriptor()
+	// processinstance.DefaultVersion holds the default value on creation for the version field.
+	processinstance.DefaultVersion = processinstanceDescVersion.Default.(int)
 	// processinstanceDescCreatedAt is the schema descriptor for created_at field.
-	processinstanceDescCreatedAt := processinstanceFields[17].Descriptor()
+	processinstanceDescCreatedAt := processinstanceFields[18].Descriptor()
 	// processinstance.DefaultCreatedAt holds the default value on creation for the created_at field.
 	processinstance.DefaultCreatedAt = processinstanceDescCreatedAt.Default.(func() time.Time)
 	// processinstanceDescUpdatedAt is the schema descriptor for updated_at field.
-	processinstanceDescUpdatedAt := processinstanceFields[18].Descriptor()
+	processinstanceDescUpdatedAt := processinstanceFields[19].Descriptor()
 	// processinstance.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	processinstance.DefaultUpdatedAt = processinstanceDescUpdatedAt.Default.(func() time.Time)
 	// processinstance.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -2173,16 +2184,20 @@ func init() {
 	roleDescIsSystem := roleFields[3].Descriptor()
 	// role.DefaultIsSystem holds the default value on creation for the is_system field.
 	role.DefaultIsSystem = roleDescIsSystem.Default.(bool)
+	// roleDescIsActive is the schema descriptor for is_active field.
+	roleDescIsActive := roleFields[4].Descriptor()
+	// role.DefaultIsActive holds the default value on creation for the is_active field.
+	role.DefaultIsActive = roleDescIsActive.Default.(bool)
 	// roleDescTenantID is the schema descriptor for tenant_id field.
-	roleDescTenantID := roleFields[4].Descriptor()
+	roleDescTenantID := roleFields[5].Descriptor()
 	// role.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	role.TenantIDValidator = roleDescTenantID.Validators[0].(func(int) error)
 	// roleDescCreatedAt is the schema descriptor for created_at field.
-	roleDescCreatedAt := roleFields[5].Descriptor()
+	roleDescCreatedAt := roleFields[6].Descriptor()
 	// role.DefaultCreatedAt holds the default value on creation for the created_at field.
 	role.DefaultCreatedAt = roleDescCreatedAt.Default.(func() time.Time)
 	// roleDescUpdatedAt is the schema descriptor for updated_at field.
-	roleDescUpdatedAt := roleFields[6].Descriptor()
+	roleDescUpdatedAt := roleFields[7].Descriptor()
 	// role.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	role.DefaultUpdatedAt = roleDescUpdatedAt.Default.(func() time.Time)
 	// role.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -2892,29 +2907,45 @@ func init() {
 	// ticket.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	ticket.TenantIDValidator = ticketDescTenantID.Validators[0].(func(int) error)
 	// ticketDescRating is the schema descriptor for rating field.
-	ticketDescRating := ticketFields[19].Descriptor()
+	ticketDescRating := ticketFields[21].Descriptor()
 	// ticket.RatingValidator is a validator for the "rating" field. It is called by the builders before save.
 	ticket.RatingValidator = ticketDescRating.Validators[0].(func(int) error)
 	// ticketDescVersion is the schema descriptor for version field.
-	ticketDescVersion := ticketFields[23].Descriptor()
+	ticketDescVersion := ticketFields[25].Descriptor()
 	// ticket.DefaultVersion holds the default value on creation for the version field.
 	ticket.DefaultVersion = ticketDescVersion.Default.(int)
 	// ticket.VersionValidator is a validator for the "version" field. It is called by the builders before save.
 	ticket.VersionValidator = ticketDescVersion.Validators[0].(func(int) error)
 	// ticketDescCreatedAt is the schema descriptor for created_at field.
-	ticketDescCreatedAt := ticketFields[24].Descriptor()
+	ticketDescCreatedAt := ticketFields[26].Descriptor()
 	// ticket.DefaultCreatedAt holds the default value on creation for the created_at field.
 	ticket.DefaultCreatedAt = ticketDescCreatedAt.Default.(func() time.Time)
 	// ticketDescUpdatedAt is the schema descriptor for updated_at field.
-	ticketDescUpdatedAt := ticketFields[25].Descriptor()
+	ticketDescUpdatedAt := ticketFields[27].Descriptor()
 	// ticket.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	ticket.DefaultUpdatedAt = ticketDescUpdatedAt.Default.(func() time.Time)
 	// ticket.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	ticket.UpdateDefaultUpdatedAt = ticketDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// ticketDescIsManagedByMsp is the schema descriptor for is_managed_by_msp field.
-	ticketDescIsManagedByMsp := ticketFields[26].Descriptor()
+	ticketDescIsManagedByMsp := ticketFields[28].Descriptor()
 	// ticket.DefaultIsManagedByMsp holds the default value on creation for the is_managed_by_msp field.
 	ticket.DefaultIsManagedByMsp = ticketDescIsManagedByMsp.Default.(bool)
+	ticketapprovalFields := schema.TicketApproval{}.Fields()
+	_ = ticketapprovalFields
+	// ticketapprovalDescStatus is the schema descriptor for status field.
+	ticketapprovalDescStatus := ticketapprovalFields[4].Descriptor()
+	// ticketapproval.DefaultStatus holds the default value on creation for the status field.
+	ticketapproval.DefaultStatus = ticketapprovalDescStatus.Default.(string)
+	// ticketapprovalDescCreatedAt is the schema descriptor for created_at field.
+	ticketapprovalDescCreatedAt := ticketapprovalFields[9].Descriptor()
+	// ticketapproval.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ticketapproval.DefaultCreatedAt = ticketapprovalDescCreatedAt.Default.(func() time.Time)
+	// ticketapprovalDescUpdatedAt is the schema descriptor for updated_at field.
+	ticketapprovalDescUpdatedAt := ticketapprovalFields[10].Descriptor()
+	// ticketapproval.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ticketapproval.DefaultUpdatedAt = ticketapprovalDescUpdatedAt.Default.(func() time.Time)
+	// ticketapproval.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ticketapproval.UpdateDefaultUpdatedAt = ticketapprovalDescUpdatedAt.UpdateDefault.(func() time.Time)
 	ticketassignmentruleFields := schema.TicketAssignmentRule{}.Fields()
 	_ = ticketassignmentruleFields
 	// ticketassignmentruleDescName is the schema descriptor for name field.
@@ -3017,6 +3048,16 @@ func init() {
 	ticketautomationrule.DefaultUpdatedAt = ticketautomationruleDescUpdatedAt.Default.(func() time.Time)
 	// ticketautomationrule.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	ticketautomationrule.UpdateDefaultUpdatedAt = ticketautomationruleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ticketccFields := schema.TicketCC{}.Fields()
+	_ = ticketccFields
+	// ticketccDescAddedAt is the schema descriptor for added_at field.
+	ticketccDescAddedAt := ticketccFields[4].Descriptor()
+	// ticketcc.DefaultAddedAt holds the default value on creation for the added_at field.
+	ticketcc.DefaultAddedAt = ticketccDescAddedAt.Default.(func() time.Time)
+	// ticketccDescIsActive is the schema descriptor for is_active field.
+	ticketccDescIsActive := ticketccFields[5].Descriptor()
+	// ticketcc.DefaultIsActive holds the default value on creation for the is_active field.
+	ticketcc.DefaultIsActive = ticketccDescIsActive.Default.(bool)
 	ticketcategoryFields := schema.TicketCategory{}.Fields()
 	_ = ticketcategoryFields
 	// ticketcategoryDescName is the schema descriptor for name field.
@@ -3207,6 +3248,12 @@ func init() {
 	ticketview.DefaultUpdatedAt = ticketviewDescUpdatedAt.Default.(func() time.Time)
 	// ticketview.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	ticketview.UpdateDefaultUpdatedAt = ticketviewDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ticketworkflowrecordFields := schema.TicketWorkflowRecord{}.Fields()
+	_ = ticketworkflowrecordFields
+	// ticketworkflowrecordDescCreatedAt is the schema descriptor for created_at field.
+	ticketworkflowrecordDescCreatedAt := ticketworkflowrecordFields[11].Descriptor()
+	// ticketworkflowrecord.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ticketworkflowrecord.DefaultCreatedAt = ticketworkflowrecordDescCreatedAt.Default.(func() time.Time)
 	toolinvocationFields := schema.ToolInvocation{}.Fields()
 	_ = toolinvocationFields
 	// toolinvocationDescCreatedAt is the schema descriptor for created_at field.

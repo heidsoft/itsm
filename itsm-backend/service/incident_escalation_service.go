@@ -9,16 +9,22 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/slaviolation"
+
+	"go.uber.org/zap"
 )
 
 // IncidentEscalationService 事件升级服务
 type IncidentEscalationService struct {
 	client *ent.Client
+	logger *zap.SugaredLogger
 }
 
 // NewIncidentEscalationService 创建事件升级服务
 func NewIncidentEscalationService(client *ent.Client) *IncidentEscalationService {
-	return &IncidentEscalationService{client: client}
+	return &IncidentEscalationService{
+		client: client,
+		logger: zap.L().Sugar(),
+	}
 }
 
 // CreateEscalationRule 创建升级规则
@@ -269,22 +275,21 @@ func (s *IncidentEscalationService) sendEscalationNotification(ctx context.Conte
 		incidentEnt.ID, rule.EscalationLevel, rule.Name)
 
 	// 记录升级通知日志（实际发送需要集成邮件/短信/站内信服务）
-	fmt.Printf("[升级通知] 事件ID: %d, 级别: L%d, 规则: %s, 消息: %s\n",
-		incidentEnt.ID, rule.EscalationLevel, rule.Name, notificationMsg)
+	s.logger.Infow("升级通知", "事件ID", incidentEnt.ID, "级别", rule.EscalationLevel, "规则", rule.Name, "消息", notificationMsg)
 
 	// 如果有通知配置，根据配置发送通知
 	if rule.NotificationConfig != nil {
 		// 通知配置示例: {"email": true, "sms": false, "in_app": true}
 		if email, ok := rule.NotificationConfig["email"].(bool); ok && email {
-			fmt.Printf("[升级通知] 发送邮件通知 for 事件 #%d\n", incidentEnt.ID)
+			s.logger.Infow("发送邮件通知", "事件ID", incidentEnt.ID)
 			// 实际实现: 调用 email service 发送邮件
 		}
 		if sms, ok := rule.NotificationConfig["sms"].(bool); ok && sms {
-			fmt.Printf("[升级通知] 发送短信通知 for 事件 #%d\n", incidentEnt.ID)
+			s.logger.Infow("发送短信通知", "事件ID", incidentEnt.ID)
 			// 实际实现: 调用 sms service 发送短信
 		}
 		if inApp, ok := rule.NotificationConfig["in_app"].(bool); ok && inApp {
-			fmt.Printf("[升级通知] 发送站内信通知 for 事件 #%d\n", incidentEnt.ID)
+			s.logger.Infow("发送站内信通知", "事件ID", incidentEnt.ID)
 			// 实际实现: 调用 notification service 发送站内信
 		}
 	}
@@ -308,7 +313,7 @@ func (s *IncidentEscalationService) ProcessEscalations(ctx context.Context, tena
 		_, err := s.CheckAndEscalate(ctx, incidentEnt.ID)
 		if err != nil {
 			// 记录错误但继续处理其他事件
-			fmt.Printf("Error processing escalation for incident %d: %v\n", incidentEnt.ID, err)
+			s.logger.Errorw("处理事件升级失败", "incidentID", incidentEnt.ID, "error", err)
 		}
 	}
 

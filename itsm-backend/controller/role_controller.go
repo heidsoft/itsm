@@ -92,8 +92,9 @@ func (rc *RoleController) ListRoles(c *gin.Context) {
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	search := c.Query("search")
 
-	roles, total, err := rc.roleService.ListRoles(c.Request.Context(), tenantID, page, pageSize)
+	roles, total, err := rc.roleService.ListRoles(c.Request.Context(), tenantID, page, pageSize, search)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, "查询角色列表失败: "+err.Error())
 		return
@@ -267,13 +268,15 @@ func (pc *PermissionController) ListPermissions(c *gin.Context) {
 		return
 	}
 
-	// Convert to string array for frontend compatibility
+	// Keep the string array for legacy callers and expose catalog details for real RBAC assignment.
 	permStrings := make([]string, len(perms))
+	permItems := make([]*dto.PermissionResponse, len(perms))
 	for i, p := range perms {
 		permStrings[i] = fmt.Sprintf("%s:%s", p.Resource, p.Action)
+		permItems[i] = p
 	}
 
-	common.Success(c, gin.H{"permissions": permStrings})
+	common.Success(c, gin.H{"permissions": permStrings, "items": permItems})
 }
 
 // InitDefaultPermissions 初始化默认权限

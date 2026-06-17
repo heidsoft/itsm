@@ -16,12 +16,15 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketapproval"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/ticketcc"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
+	"itsm-backend/ent/ticketworkflowrecord"
 	"itsm-backend/ent/workflowinstance"
 	"time"
 
@@ -399,6 +402,46 @@ func (_u *TicketUpdate) SetNillableResolution(v *string) *TicketUpdate {
 // ClearResolution clears the value of the "resolution" field.
 func (_u *TicketUpdate) ClearResolution() *TicketUpdate {
 	_u.mutation.ClearResolution()
+	return _u
+}
+
+// SetResolutionCategory sets the "resolution_category" field.
+func (_u *TicketUpdate) SetResolutionCategory(v string) *TicketUpdate {
+	_u.mutation.SetResolutionCategory(v)
+	return _u
+}
+
+// SetNillableResolutionCategory sets the "resolution_category" field if the given value is not nil.
+func (_u *TicketUpdate) SetNillableResolutionCategory(v *string) *TicketUpdate {
+	if v != nil {
+		_u.SetResolutionCategory(*v)
+	}
+	return _u
+}
+
+// ClearResolutionCategory clears the value of the "resolution_category" field.
+func (_u *TicketUpdate) ClearResolutionCategory() *TicketUpdate {
+	_u.mutation.ClearResolutionCategory()
+	return _u
+}
+
+// SetClosedAt sets the "closed_at" field.
+func (_u *TicketUpdate) SetClosedAt(v time.Time) *TicketUpdate {
+	_u.mutation.SetClosedAt(v)
+	return _u
+}
+
+// SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
+func (_u *TicketUpdate) SetNillableClosedAt(v *time.Time) *TicketUpdate {
+	if v != nil {
+		_u.SetClosedAt(*v)
+	}
+	return _u
+}
+
+// ClearClosedAt clears the value of the "closed_at" field.
+func (_u *TicketUpdate) ClearClosedAt() *TicketUpdate {
+	_u.mutation.ClearClosedAt()
 	return _u
 }
 
@@ -850,6 +893,51 @@ func (_u *TicketUpdate) AddProblems(v ...*Problem) *TicketUpdate {
 	return _u.AddProblemIDs(ids...)
 }
 
+// AddApprovalIDs adds the "approvals" edge to the TicketApproval entity by IDs.
+func (_u *TicketUpdate) AddApprovalIDs(ids ...int) *TicketUpdate {
+	_u.mutation.AddApprovalIDs(ids...)
+	return _u
+}
+
+// AddApprovals adds the "approvals" edges to the TicketApproval entity.
+func (_u *TicketUpdate) AddApprovals(v ...*TicketApproval) *TicketUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddApprovalIDs(ids...)
+}
+
+// AddWorkflowRecordIDs adds the "workflow_records" edge to the TicketWorkflowRecord entity by IDs.
+func (_u *TicketUpdate) AddWorkflowRecordIDs(ids ...int) *TicketUpdate {
+	_u.mutation.AddWorkflowRecordIDs(ids...)
+	return _u
+}
+
+// AddWorkflowRecords adds the "workflow_records" edges to the TicketWorkflowRecord entity.
+func (_u *TicketUpdate) AddWorkflowRecords(v ...*TicketWorkflowRecord) *TicketUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddWorkflowRecordIDs(ids...)
+}
+
+// AddCcUserIDs adds the "cc_users" edge to the TicketCC entity by IDs.
+func (_u *TicketUpdate) AddCcUserIDs(ids ...int) *TicketUpdate {
+	_u.mutation.AddCcUserIDs(ids...)
+	return _u
+}
+
+// AddCcUsers adds the "cc_users" edges to the TicketCC entity.
+func (_u *TicketUpdate) AddCcUsers(v ...*TicketCC) *TicketUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCcUserIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (_u *TicketUpdate) Mutation() *TicketMutation {
 	return _u.mutation
@@ -1137,6 +1225,69 @@ func (_u *TicketUpdate) RemoveProblems(v ...*Problem) *TicketUpdate {
 	return _u.RemoveProblemIDs(ids...)
 }
 
+// ClearApprovals clears all "approvals" edges to the TicketApproval entity.
+func (_u *TicketUpdate) ClearApprovals() *TicketUpdate {
+	_u.mutation.ClearApprovals()
+	return _u
+}
+
+// RemoveApprovalIDs removes the "approvals" edge to TicketApproval entities by IDs.
+func (_u *TicketUpdate) RemoveApprovalIDs(ids ...int) *TicketUpdate {
+	_u.mutation.RemoveApprovalIDs(ids...)
+	return _u
+}
+
+// RemoveApprovals removes "approvals" edges to TicketApproval entities.
+func (_u *TicketUpdate) RemoveApprovals(v ...*TicketApproval) *TicketUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveApprovalIDs(ids...)
+}
+
+// ClearWorkflowRecords clears all "workflow_records" edges to the TicketWorkflowRecord entity.
+func (_u *TicketUpdate) ClearWorkflowRecords() *TicketUpdate {
+	_u.mutation.ClearWorkflowRecords()
+	return _u
+}
+
+// RemoveWorkflowRecordIDs removes the "workflow_records" edge to TicketWorkflowRecord entities by IDs.
+func (_u *TicketUpdate) RemoveWorkflowRecordIDs(ids ...int) *TicketUpdate {
+	_u.mutation.RemoveWorkflowRecordIDs(ids...)
+	return _u
+}
+
+// RemoveWorkflowRecords removes "workflow_records" edges to TicketWorkflowRecord entities.
+func (_u *TicketUpdate) RemoveWorkflowRecords(v ...*TicketWorkflowRecord) *TicketUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveWorkflowRecordIDs(ids...)
+}
+
+// ClearCcUsers clears all "cc_users" edges to the TicketCC entity.
+func (_u *TicketUpdate) ClearCcUsers() *TicketUpdate {
+	_u.mutation.ClearCcUsers()
+	return _u
+}
+
+// RemoveCcUserIDs removes the "cc_users" edge to TicketCC entities by IDs.
+func (_u *TicketUpdate) RemoveCcUserIDs(ids ...int) *TicketUpdate {
+	_u.mutation.RemoveCcUserIDs(ids...)
+	return _u
+}
+
+// RemoveCcUsers removes "cc_users" edges to TicketCC entities.
+func (_u *TicketUpdate) RemoveCcUsers(v ...*TicketCC) *TicketUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCcUserIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *TicketUpdate) Save(ctx context.Context) (int, error) {
 	_u.defaults()
@@ -1291,6 +1442,18 @@ func (_u *TicketUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.ResolutionCleared() {
 		_spec.ClearField(ticket.FieldResolution, field.TypeString)
+	}
+	if value, ok := _u.mutation.ResolutionCategory(); ok {
+		_spec.SetField(ticket.FieldResolutionCategory, field.TypeString, value)
+	}
+	if _u.mutation.ResolutionCategoryCleared() {
+		_spec.ClearField(ticket.FieldResolutionCategory, field.TypeString)
+	}
+	if value, ok := _u.mutation.ClosedAt(); ok {
+		_spec.SetField(ticket.FieldClosedAt, field.TypeTime, value)
+	}
+	if _u.mutation.ClosedAtCleared() {
+		_spec.ClearField(ticket.FieldClosedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.Rating(); ok {
 		_spec.SetField(ticket.FieldRating, field.TypeInt, value)
@@ -2052,6 +2215,141 @@ func (_u *TicketUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.ApprovalsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalsTable,
+			Columns: []string{ticket.ApprovalsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketapproval.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedApprovalsIDs(); len(nodes) > 0 && !_u.mutation.ApprovalsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalsTable,
+			Columns: []string{ticket.ApprovalsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketapproval.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ApprovalsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalsTable,
+			Columns: []string{ticket.ApprovalsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketapproval.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.WorkflowRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.WorkflowRecordsTable,
+			Columns: []string{ticket.WorkflowRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketworkflowrecord.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedWorkflowRecordsIDs(); len(nodes) > 0 && !_u.mutation.WorkflowRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.WorkflowRecordsTable,
+			Columns: []string{ticket.WorkflowRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketworkflowrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.WorkflowRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.WorkflowRecordsTable,
+			Columns: []string{ticket.WorkflowRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketworkflowrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CcUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CcUsersTable,
+			Columns: []string{ticket.CcUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcc.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCcUsersIDs(); len(nodes) > 0 && !_u.mutation.CcUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CcUsersTable,
+			Columns: []string{ticket.CcUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcc.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CcUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CcUsersTable,
+			Columns: []string{ticket.CcUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcc.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticket.Label}
@@ -2428,6 +2726,46 @@ func (_u *TicketUpdateOne) SetNillableResolution(v *string) *TicketUpdateOne {
 // ClearResolution clears the value of the "resolution" field.
 func (_u *TicketUpdateOne) ClearResolution() *TicketUpdateOne {
 	_u.mutation.ClearResolution()
+	return _u
+}
+
+// SetResolutionCategory sets the "resolution_category" field.
+func (_u *TicketUpdateOne) SetResolutionCategory(v string) *TicketUpdateOne {
+	_u.mutation.SetResolutionCategory(v)
+	return _u
+}
+
+// SetNillableResolutionCategory sets the "resolution_category" field if the given value is not nil.
+func (_u *TicketUpdateOne) SetNillableResolutionCategory(v *string) *TicketUpdateOne {
+	if v != nil {
+		_u.SetResolutionCategory(*v)
+	}
+	return _u
+}
+
+// ClearResolutionCategory clears the value of the "resolution_category" field.
+func (_u *TicketUpdateOne) ClearResolutionCategory() *TicketUpdateOne {
+	_u.mutation.ClearResolutionCategory()
+	return _u
+}
+
+// SetClosedAt sets the "closed_at" field.
+func (_u *TicketUpdateOne) SetClosedAt(v time.Time) *TicketUpdateOne {
+	_u.mutation.SetClosedAt(v)
+	return _u
+}
+
+// SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
+func (_u *TicketUpdateOne) SetNillableClosedAt(v *time.Time) *TicketUpdateOne {
+	if v != nil {
+		_u.SetClosedAt(*v)
+	}
+	return _u
+}
+
+// ClearClosedAt clears the value of the "closed_at" field.
+func (_u *TicketUpdateOne) ClearClosedAt() *TicketUpdateOne {
+	_u.mutation.ClearClosedAt()
 	return _u
 }
 
@@ -2879,6 +3217,51 @@ func (_u *TicketUpdateOne) AddProblems(v ...*Problem) *TicketUpdateOne {
 	return _u.AddProblemIDs(ids...)
 }
 
+// AddApprovalIDs adds the "approvals" edge to the TicketApproval entity by IDs.
+func (_u *TicketUpdateOne) AddApprovalIDs(ids ...int) *TicketUpdateOne {
+	_u.mutation.AddApprovalIDs(ids...)
+	return _u
+}
+
+// AddApprovals adds the "approvals" edges to the TicketApproval entity.
+func (_u *TicketUpdateOne) AddApprovals(v ...*TicketApproval) *TicketUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddApprovalIDs(ids...)
+}
+
+// AddWorkflowRecordIDs adds the "workflow_records" edge to the TicketWorkflowRecord entity by IDs.
+func (_u *TicketUpdateOne) AddWorkflowRecordIDs(ids ...int) *TicketUpdateOne {
+	_u.mutation.AddWorkflowRecordIDs(ids...)
+	return _u
+}
+
+// AddWorkflowRecords adds the "workflow_records" edges to the TicketWorkflowRecord entity.
+func (_u *TicketUpdateOne) AddWorkflowRecords(v ...*TicketWorkflowRecord) *TicketUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddWorkflowRecordIDs(ids...)
+}
+
+// AddCcUserIDs adds the "cc_users" edge to the TicketCC entity by IDs.
+func (_u *TicketUpdateOne) AddCcUserIDs(ids ...int) *TicketUpdateOne {
+	_u.mutation.AddCcUserIDs(ids...)
+	return _u
+}
+
+// AddCcUsers adds the "cc_users" edges to the TicketCC entity.
+func (_u *TicketUpdateOne) AddCcUsers(v ...*TicketCC) *TicketUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCcUserIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (_u *TicketUpdateOne) Mutation() *TicketMutation {
 	return _u.mutation
@@ -3166,6 +3549,69 @@ func (_u *TicketUpdateOne) RemoveProblems(v ...*Problem) *TicketUpdateOne {
 	return _u.RemoveProblemIDs(ids...)
 }
 
+// ClearApprovals clears all "approvals" edges to the TicketApproval entity.
+func (_u *TicketUpdateOne) ClearApprovals() *TicketUpdateOne {
+	_u.mutation.ClearApprovals()
+	return _u
+}
+
+// RemoveApprovalIDs removes the "approvals" edge to TicketApproval entities by IDs.
+func (_u *TicketUpdateOne) RemoveApprovalIDs(ids ...int) *TicketUpdateOne {
+	_u.mutation.RemoveApprovalIDs(ids...)
+	return _u
+}
+
+// RemoveApprovals removes "approvals" edges to TicketApproval entities.
+func (_u *TicketUpdateOne) RemoveApprovals(v ...*TicketApproval) *TicketUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveApprovalIDs(ids...)
+}
+
+// ClearWorkflowRecords clears all "workflow_records" edges to the TicketWorkflowRecord entity.
+func (_u *TicketUpdateOne) ClearWorkflowRecords() *TicketUpdateOne {
+	_u.mutation.ClearWorkflowRecords()
+	return _u
+}
+
+// RemoveWorkflowRecordIDs removes the "workflow_records" edge to TicketWorkflowRecord entities by IDs.
+func (_u *TicketUpdateOne) RemoveWorkflowRecordIDs(ids ...int) *TicketUpdateOne {
+	_u.mutation.RemoveWorkflowRecordIDs(ids...)
+	return _u
+}
+
+// RemoveWorkflowRecords removes "workflow_records" edges to TicketWorkflowRecord entities.
+func (_u *TicketUpdateOne) RemoveWorkflowRecords(v ...*TicketWorkflowRecord) *TicketUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveWorkflowRecordIDs(ids...)
+}
+
+// ClearCcUsers clears all "cc_users" edges to the TicketCC entity.
+func (_u *TicketUpdateOne) ClearCcUsers() *TicketUpdateOne {
+	_u.mutation.ClearCcUsers()
+	return _u
+}
+
+// RemoveCcUserIDs removes the "cc_users" edge to TicketCC entities by IDs.
+func (_u *TicketUpdateOne) RemoveCcUserIDs(ids ...int) *TicketUpdateOne {
+	_u.mutation.RemoveCcUserIDs(ids...)
+	return _u
+}
+
+// RemoveCcUsers removes "cc_users" edges to TicketCC entities.
+func (_u *TicketUpdateOne) RemoveCcUsers(v ...*TicketCC) *TicketUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCcUserIDs(ids...)
+}
+
 // Where appends a list predicates to the TicketUpdate builder.
 func (_u *TicketUpdateOne) Where(ps ...predicate.Ticket) *TicketUpdateOne {
 	_u.mutation.Where(ps...)
@@ -3350,6 +3796,18 @@ func (_u *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err erro
 	}
 	if _u.mutation.ResolutionCleared() {
 		_spec.ClearField(ticket.FieldResolution, field.TypeString)
+	}
+	if value, ok := _u.mutation.ResolutionCategory(); ok {
+		_spec.SetField(ticket.FieldResolutionCategory, field.TypeString, value)
+	}
+	if _u.mutation.ResolutionCategoryCleared() {
+		_spec.ClearField(ticket.FieldResolutionCategory, field.TypeString)
+	}
+	if value, ok := _u.mutation.ClosedAt(); ok {
+		_spec.SetField(ticket.FieldClosedAt, field.TypeTime, value)
+	}
+	if _u.mutation.ClosedAtCleared() {
+		_spec.ClearField(ticket.FieldClosedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.Rating(); ok {
 		_spec.SetField(ticket.FieldRating, field.TypeInt, value)
@@ -4104,6 +4562,141 @@ func (_u *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ApprovalsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalsTable,
+			Columns: []string{ticket.ApprovalsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketapproval.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedApprovalsIDs(); len(nodes) > 0 && !_u.mutation.ApprovalsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalsTable,
+			Columns: []string{ticket.ApprovalsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketapproval.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ApprovalsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalsTable,
+			Columns: []string{ticket.ApprovalsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketapproval.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.WorkflowRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.WorkflowRecordsTable,
+			Columns: []string{ticket.WorkflowRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketworkflowrecord.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedWorkflowRecordsIDs(); len(nodes) > 0 && !_u.mutation.WorkflowRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.WorkflowRecordsTable,
+			Columns: []string{ticket.WorkflowRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketworkflowrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.WorkflowRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.WorkflowRecordsTable,
+			Columns: []string{ticket.WorkflowRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketworkflowrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CcUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CcUsersTable,
+			Columns: []string{ticket.CcUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcc.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCcUsersIDs(); len(nodes) > 0 && !_u.mutation.CcUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CcUsersTable,
+			Columns: []string{ticket.CcUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcc.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CcUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CcUsersTable,
+			Columns: []string{ticket.CcUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcc.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

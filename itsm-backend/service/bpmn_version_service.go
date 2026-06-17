@@ -127,7 +127,7 @@ func (s *BPMNVersionService) CreateVersion(ctx context.Context, req *CreateVersi
 	// 记录版本变更日志 - processDef.ID是int类型
 	if err := s.recordVersionChangeLog(ctx, fmt.Sprintf("%d", processDef.ID), req.ChangeLog, req.CreatedBy, req.TenantID); err != nil {
 		// 记录失败不影响主流程，只记录警告
-		fmt.Printf("警告: 记录版本变更日志失败: %v\n", err)
+		s.logger.Warnw("记录版本变更日志失败", "error", err)
 	}
 
 	return &ProcessVersion{

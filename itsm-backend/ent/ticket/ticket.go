@@ -52,6 +52,10 @@ const (
 	FieldResolvedAt = "resolved_at"
 	// FieldResolution holds the string denoting the resolution field in the database.
 	FieldResolution = "resolution"
+	// FieldResolutionCategory holds the string denoting the resolution_category field in the database.
+	FieldResolutionCategory = "resolution_category"
+	// FieldClosedAt holds the string denoting the closed_at field in the database.
+	FieldClosedAt = "closed_at"
 	// FieldRating holds the string denoting the rating field in the database.
 	FieldRating = "rating"
 	// FieldRatingComment holds the string denoting the rating_comment field in the database.
@@ -110,6 +114,12 @@ const (
 	EdgeConfigurationItems = "configuration_items"
 	// EdgeProblems holds the string denoting the problems edge name in mutations.
 	EdgeProblems = "problems"
+	// EdgeApprovals holds the string denoting the approvals edge name in mutations.
+	EdgeApprovals = "approvals"
+	// EdgeWorkflowRecords holds the string denoting the workflow_records edge name in mutations.
+	EdgeWorkflowRecords = "workflow_records"
+	// EdgeCcUsers holds the string denoting the cc_users edge name in mutations.
+	EdgeCcUsers = "cc_users"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
 	// TemplateTable is the table that holds the template relation/edge.
@@ -221,6 +231,27 @@ const (
 	// ProblemsInverseTable is the table name for the Problem entity.
 	// It exists in this package in order to avoid circular dependency with the "problem" package.
 	ProblemsInverseTable = "problems"
+	// ApprovalsTable is the table that holds the approvals relation/edge.
+	ApprovalsTable = "ticket_approvals"
+	// ApprovalsInverseTable is the table name for the TicketApproval entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketapproval" package.
+	ApprovalsInverseTable = "ticket_approvals"
+	// ApprovalsColumn is the table column denoting the approvals relation/edge.
+	ApprovalsColumn = "ticket_id"
+	// WorkflowRecordsTable is the table that holds the workflow_records relation/edge.
+	WorkflowRecordsTable = "ticket_workflow_records"
+	// WorkflowRecordsInverseTable is the table name for the TicketWorkflowRecord entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketworkflowrecord" package.
+	WorkflowRecordsInverseTable = "ticket_workflow_records"
+	// WorkflowRecordsColumn is the table column denoting the workflow_records relation/edge.
+	WorkflowRecordsColumn = "ticket_id"
+	// CcUsersTable is the table that holds the cc_users relation/edge.
+	CcUsersTable = "ticket_ccs"
+	// CcUsersInverseTable is the table name for the TicketCC entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketcc" package.
+	CcUsersInverseTable = "ticket_ccs"
+	// CcUsersColumn is the table column denoting the cc_users relation/edge.
+	CcUsersColumn = "ticket_id"
 )
 
 // Columns holds all SQL columns for ticket fields.
@@ -245,6 +276,8 @@ var Columns = []string{
 	FieldFirstResponseAt,
 	FieldResolvedAt,
 	FieldResolution,
+	FieldResolutionCategory,
+	FieldClosedAt,
 	FieldRating,
 	FieldRatingComment,
 	FieldRatedAt,
@@ -422,6 +455,16 @@ func ByResolvedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByResolution orders the results by the resolution field.
 func ByResolution(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResolution, opts...).ToFunc()
+}
+
+// ByResolutionCategory orders the results by the resolution_category field.
+func ByResolutionCategory(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResolutionCategory, opts...).ToFunc()
+}
+
+// ByClosedAt orders the results by the closed_at field.
+func ByClosedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClosedAt, opts...).ToFunc()
 }
 
 // ByRating orders the results by the rating field.
@@ -686,6 +729,48 @@ func ByProblems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newProblemsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByApprovalsCount orders the results by approvals count.
+func ByApprovalsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newApprovalsStep(), opts...)
+	}
+}
+
+// ByApprovals orders the results by approvals terms.
+func ByApprovals(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newApprovalsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByWorkflowRecordsCount orders the results by workflow_records count.
+func ByWorkflowRecordsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newWorkflowRecordsStep(), opts...)
+	}
+}
+
+// ByWorkflowRecords orders the results by workflow_records terms.
+func ByWorkflowRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCcUsersCount orders the results by cc_users count.
+func ByCcUsersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCcUsersStep(), opts...)
+	}
+}
+
+// ByCcUsers orders the results by cc_users terms.
+func ByCcUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCcUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newTemplateStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -803,5 +888,26 @@ func newProblemsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProblemsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, ProblemsTable, ProblemsPrimaryKey...),
+	)
+}
+func newApprovalsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ApprovalsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ApprovalsTable, ApprovalsColumn),
+	)
+}
+func newWorkflowRecordsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WorkflowRecordsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowRecordsTable, WorkflowRecordsColumn),
+	)
+}
+func newCcUsersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CcUsersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CcUsersTable, CcUsersColumn),
 	)
 }

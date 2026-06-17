@@ -29,6 +29,33 @@ func (_u *CIRelationshipUpdate) Where(ps ...predicate.CIRelationship) *CIRelatio
 	return _u
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (_u *CIRelationshipUpdate) SetTenantID(v int) *CIRelationshipUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (_u *CIRelationshipUpdate) SetNillableTenantID(v *int) *CIRelationshipUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
+	}
+	return _u
+}
+
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *CIRelationshipUpdate) AddTenantID(v int) *CIRelationshipUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (_u *CIRelationshipUpdate) ClearTenantID() *CIRelationshipUpdate {
+	_u.mutation.ClearTenantID()
+	return _u
+}
+
 // SetRelationshipType sets the "relationship_type" field.
 func (_u *CIRelationshipUpdate) SetRelationshipType(v string) *CIRelationshipUpdate {
 	_u.mutation.SetRelationshipType(v)
@@ -244,6 +271,11 @@ func (_u *CIRelationshipUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *CIRelationshipUpdate) check() error {
+	if v, ok := _u.mutation.TenantID(); ok {
+		if err := cirelationship.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.tenant_id": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.RelationshipType(); ok {
 		if err := cirelationship.RelationshipTypeValidator(v); err != nil {
 			return &ValidationError{Name: "relationship_type", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.relationship_type": %w`, err)}
@@ -279,6 +311,15 @@ func (_u *CIRelationshipUpdate) sqlSave(ctx context.Context) (_node int, err err
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.TenantID(); ok {
+		_spec.SetField(cirelationship.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTenantID(); ok {
+		_spec.AddField(cirelationship.FieldTenantID, field.TypeInt, value)
+	}
+	if _u.mutation.TenantIDCleared() {
+		_spec.ClearField(cirelationship.FieldTenantID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.RelationshipType(); ok {
 		_spec.SetField(cirelationship.FieldRelationshipType, field.TypeString, value)
@@ -389,6 +430,33 @@ type CIRelationshipUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *CIRelationshipMutation
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (_u *CIRelationshipUpdateOne) SetTenantID(v int) *CIRelationshipUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (_u *CIRelationshipUpdateOne) SetNillableTenantID(v *int) *CIRelationshipUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
+	}
+	return _u
+}
+
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *CIRelationshipUpdateOne) AddTenantID(v int) *CIRelationshipUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (_u *CIRelationshipUpdateOne) ClearTenantID() *CIRelationshipUpdateOne {
+	_u.mutation.ClearTenantID()
+	return _u
 }
 
 // SetRelationshipType sets the "relationship_type" field.
@@ -619,6 +687,11 @@ func (_u *CIRelationshipUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *CIRelationshipUpdateOne) check() error {
+	if v, ok := _u.mutation.TenantID(); ok {
+		if err := cirelationship.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.tenant_id": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.RelationshipType(); ok {
 		if err := cirelationship.RelationshipTypeValidator(v); err != nil {
 			return &ValidationError{Name: "relationship_type", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.relationship_type": %w`, err)}
@@ -671,6 +744,15 @@ func (_u *CIRelationshipUpdateOne) sqlSave(ctx context.Context) (_node *CIRelati
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.TenantID(); ok {
+		_spec.SetField(cirelationship.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTenantID(); ok {
+		_spec.AddField(cirelationship.FieldTenantID, field.TypeInt, value)
+	}
+	if _u.mutation.TenantIDCleared() {
+		_spec.ClearField(cirelationship.FieldTenantID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.RelationshipType(); ok {
 		_spec.SetField(cirelationship.FieldRelationshipType, field.TypeString, value)

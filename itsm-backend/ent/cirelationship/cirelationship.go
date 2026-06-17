@@ -15,6 +15,8 @@ const (
 	Label = "ci_relationship"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldTenantID holds the string denoting the tenant_id field in the database.
+	FieldTenantID = "tenant_id"
 	// FieldRelationshipType holds the string denoting the relationship_type field in the database.
 	FieldRelationshipType = "relationship_type"
 	// FieldSourceCiID holds the string denoting the source_ci_id field in the database.
@@ -62,6 +64,7 @@ const (
 // Columns holds all SQL columns for cirelationship fields.
 var Columns = []string{
 	FieldID,
+	FieldTenantID,
 	FieldRelationshipType,
 	FieldSourceCiID,
 	FieldTargetCiID,
@@ -86,6 +89,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
 	// RelationshipTypeValidator is a validator for the "relationship_type" field. It is called by the builders before save.
 	RelationshipTypeValidator func(string) error
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
@@ -162,6 +167,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByTenantID orders the results by the tenant_id field.
+func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
 }
 
 // ByRelationshipType orders the results by the relationship_type field.

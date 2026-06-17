@@ -69,6 +69,11 @@ type CIRelationship struct {
 // Fields of the CIRelationship.
 func (CIRelationship) Fields() []ent.Field {
 	return []ent.Field{
+		// 租户ID
+		field.Int("tenant_id").
+			Comment("租户ID").
+			Positive().
+			Optional(), // 兼容存量数据，迁移脚本填充后改为 Required
 		// 关系类型
 		field.String("relationship_type").
 			Comment("关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, owned_by, owns, uses, used_by").
@@ -136,6 +141,7 @@ func (CIRelationship) Edges() []ent.Edge {
 // Indexes of the CIRelationship.
 func (CIRelationship) Indexes() []ent.Index {
 	return []ent.Index{
+		index.Fields("tenant_id"),
 		index.Fields("relationship_type"),
 		index.Fields("source_ci_id"),
 		index.Fields("target_ci_id"),

@@ -75,6 +75,11 @@ func IsSystem(v bool) predicate.Role {
 	return predicate.Role(sql.FieldEQ(FieldIsSystem, v))
 }
 
+// IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
+func IsActive(v bool) predicate.Role {
+	return predicate.Role(sql.FieldEQ(FieldIsActive, v))
+}
+
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
 func TenantID(v int) predicate.Role {
 	return predicate.Role(sql.FieldEQ(FieldTenantID, v))
@@ -303,6 +308,16 @@ func IsSystemEQ(v bool) predicate.Role {
 // IsSystemNEQ applies the NEQ predicate on the "is_system" field.
 func IsSystemNEQ(v bool) predicate.Role {
 	return predicate.Role(sql.FieldNEQ(FieldIsSystem, v))
+}
+
+// IsActiveEQ applies the EQ predicate on the "is_active" field.
+func IsActiveEQ(v bool) predicate.Role {
+	return predicate.Role(sql.FieldEQ(FieldIsActive, v))
+}
+
+// IsActiveNEQ applies the NEQ predicate on the "is_active" field.
+func IsActiveNEQ(v bool) predicate.Role {
+	return predicate.Role(sql.FieldNEQ(FieldIsActive, v))
 }
 
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.

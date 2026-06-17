@@ -89,15 +89,18 @@ import (
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketapproval"
 	"itsm-backend/ent/ticketassignmentrule"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketautomationrule"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/ticketcc"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
 	"itsm-backend/ent/ticketview"
+	"itsm-backend/ent/ticketworkflowrecord"
 	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
 	"itsm-backend/ent/vendor"
@@ -254,15 +257,18 @@ func checkColumn(t, c string) error {
 			team.Table:                        team.ValidColumn,
 			tenant.Table:                      tenant.ValidColumn,
 			ticket.Table:                      ticket.ValidColumn,
+			ticketapproval.Table:              ticketapproval.ValidColumn,
 			ticketassignmentrule.Table:        ticketassignmentrule.ValidColumn,
 			ticketattachment.Table:            ticketattachment.ValidColumn,
 			ticketautomationrule.Table:        ticketautomationrule.ValidColumn,
+			ticketcc.Table:                    ticketcc.ValidColumn,
 			ticketcategory.Table:              ticketcategory.ValidColumn,
 			ticketcomment.Table:               ticketcomment.ValidColumn,
 			ticketnotification.Table:          ticketnotification.ValidColumn,
 			tickettag.Table:                   tickettag.ValidColumn,
 			tickettemplate.Table:              tickettemplate.ValidColumn,
 			ticketview.Table:                  ticketview.ValidColumn,
+			ticketworkflowrecord.Table:        ticketworkflowrecord.ValidColumn,
 			toolinvocation.Table:              toolinvocation.ValidColumn,
 			user.Table:                        user.ValidColumn,
 			vendor.Table:                      vendor.ValidColumn,

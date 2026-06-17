@@ -860,6 +860,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				// RAG endpoints
 				aiGrp.GET("/rag/search", middleware.RequirePermission("ai", "read"), config.AIHandler.KnowledgeSearch)
 				aiGrp.POST("/rag/ask", middleware.RequirePermission("ai", "read"), config.AIHandler.Chat)
+				// AI 工单智能创建与总结
+				aiGrp.POST("/ticket/create", middleware.RequirePermission("ticket", "create"), config.AIHandler.CreateTicketByAI)
+				aiGrp.POST("/tickets/:id/summarize", middleware.RequirePermission("ticket", "read"), config.AIHandler.SummarizeTicketPost)
 			}
 
 			agentGrp := tenant.(*gin.RouterGroup).Group("/agent")

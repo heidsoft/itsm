@@ -47,28 +47,41 @@ const { Option } = Select;
 // 权限模块定义
 const PERMISSION_MODULES = {
   DASHBOARD: 'dashboard',
-  TICKETS: 'tickets',
-  INCIDENTS: 'incidents',
-  PROBLEMS: 'problems',
-  CHANGES: 'changes',
+  TICKETS: 'ticket',
+  INCIDENTS: 'incident',
+  PROBLEMS: 'problem',
+  CHANGES: 'change',
   SERVICE_CATALOG: 'service_catalog',
-  KNOWLEDGE_BASE: 'knowledge_base',
-  REPORTS: 'reports',
+  SERVICE_REQUEST: 'service_request',
+  KNOWLEDGE_BASE: 'knowledge',
+  CMDB: 'cmdb',
+  ASSETS: 'asset',
+  RELEASES: 'release',
+  REPORTS: 'report',
   ADMIN: 'admin',
-  USERS: 'users',
-  ROLES: 'roles',
-  WORKFLOWS: 'workflows',
+  USERS: 'user',
+  ROLES: 'role',
+  GROUPS: 'groups',
+  ORG: 'org',
+  WORKFLOWS: 'bpmn',
   SYSTEM_CONFIG: 'system_config',
+  AI: 'ai',
 } as const;
 
 // 权限操作类型
 const PERMISSION_ACTIONS = {
   VIEW: 'view',
+  READ: 'read',
   CREATE: 'create',
+  WRITE: 'write',
   UPDATE: 'update',
   DELETE: 'delete',
+  MANAGE: 'manage',
+  APPROVE: 'approve',
+  ASSIGN: 'assign',
   EXPORT: 'export',
   IMPORT: 'import',
+  ALL: 'all',
 } as const;
 
 // 权限定义
@@ -97,37 +110,57 @@ const PERMISSIONS = [
   {
     module: PERMISSION_MODULES.SERVICE_CATALOG,
     name: '服务目录',
-    permissions: ['view', 'create', 'update', 'delete'],
+    permissions: ['read', 'write', 'delete'],
+  },
+  {
+    module: PERMISSION_MODULES.SERVICE_REQUEST,
+    name: '服务请求',
+    permissions: ['read', 'write', 'delete', 'approve'],
   },
   {
     module: PERMISSION_MODULES.KNOWLEDGE_BASE,
     name: '知识库',
-    permissions: ['view', 'create', 'update', 'delete'],
+    permissions: ['read', 'write', 'delete'],
   },
-  { module: PERMISSION_MODULES.REPORTS, name: '报表分析', permissions: ['view'] },
-  { module: PERMISSION_MODULES.ADMIN, name: '系统管理', permissions: ['view'] },
+  { module: PERMISSION_MODULES.CMDB, name: 'CMDB', permissions: ['read', 'write', 'delete'] },
+  { module: PERMISSION_MODULES.ASSETS, name: '资产管理', permissions: ['read', 'write', 'delete'] },
+  { module: PERMISSION_MODULES.RELEASES, name: '发布管理', permissions: ['read', 'write', 'delete'] },
+  { module: PERMISSION_MODULES.REPORTS, name: '报表分析', permissions: ['read', 'view', 'export'] },
+  { module: PERMISSION_MODULES.ADMIN, name: '系统管理', permissions: ['read', 'write', 'all'] },
   {
     module: PERMISSION_MODULES.USERS,
     name: '用户管理',
-    permissions: ['view', 'create', 'update', 'delete'],
+    permissions: ['read', 'write', 'delete', 'manage'],
   },
   {
     module: PERMISSION_MODULES.ROLES,
     name: '角色管理',
-    permissions: ['view', 'create', 'update', 'delete'],
+    permissions: ['read', 'write', 'delete', 'manage'],
+  },
+  {
+    module: PERMISSION_MODULES.GROUPS,
+    name: '用户组管理',
+    permissions: ['read', 'write', 'delete'],
+  },
+  {
+    module: PERMISSION_MODULES.ORG,
+    name: '组织架构',
+    permissions: ['read', 'write'],
   },
   {
     module: PERMISSION_MODULES.WORKFLOWS,
     name: '工作流管理',
-    permissions: ['view', 'create', 'update', 'delete'],
+    permissions: ['read', 'write', 'delete'],
   },
-  { module: PERMISSION_MODULES.SYSTEM_CONFIG, name: '系统配置', permissions: ['view', 'update'] },
+  { module: PERMISSION_MODULES.SYSTEM_CONFIG, name: '系统配置', permissions: ['read', 'write', 'update'] },
+  { module: PERMISSION_MODULES.AI, name: 'AI 能力', permissions: ['read', 'write'] },
 ];
 
 export default function RoleManagement() {
   interface RoleItem {
     id: number;
     name: string;
+    code?: string;
     description?: string;
     status?: string;
     permissions: string[];
@@ -210,6 +243,7 @@ export default function RoleManagement() {
 
   // 处理保存角色
   const handleSaveRole = async () => {
+    setLoading(true);
     try {
       const values = await form.validateFields();
 
@@ -226,6 +260,7 @@ export default function RoleManagement() {
 
       const roleData = {
         name: values.name,
+        code: values.code,
         description: values.description,
         permissions,
         status: (values.status ? 'active' : 'inactive') as 'active' | 'inactive',
@@ -247,6 +282,21 @@ export default function RoleManagement() {
       loadRoles(); // 重新加载数据
     } catch (error) {
       message.error('保存角色失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInitPermissions = async () => {
+    setLoading(true);
+    try {
+      await RoleAPI.initDefaultPermissions();
+      await loadPermissions();
+      message.success('默认权限字典初始化完成');
+    } catch (error) {
+      message.error('初始化权限字典失败');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -264,7 +314,8 @@ export default function RoleManagement() {
   // 处理权限全选
   const handleSelectAllModule = (module: string, checked: boolean) => {
     const modulePermissions: Record<string, boolean> = {};
-    Object.values(PERMISSION_ACTIONS).forEach(action => {
+    const moduleConfig = PERMISSIONS.find(p => p.module === module);
+    (moduleConfig?.permissions || []).forEach(action => {
       modulePermissions[`${module}_${action}`] = checked;
     });
     form.setFieldsValue(modulePermissions);
@@ -278,7 +329,10 @@ export default function RoleManagement() {
       render: (_: unknown, record: RoleItem) => (
         <div>
           <div className="font-medium text-gray-900">{record.name}</div>
-          <div className="text-sm text-gray-500">{record.description}</div>
+          <div className="text-sm text-gray-500">
+            {record.code ? `${record.code} · ` : ''}
+            {record.description}
+          </div>
         </div>
       ),
     },
@@ -322,6 +376,7 @@ export default function RoleManagement() {
                 // 设置表单值
                 const formValues: Record<string, unknown> = {
                   name: record.name,
+                  code: record.code,
                   description: record.description,
                   status: record.status !== 'inactive',
                 };
@@ -394,7 +449,13 @@ export default function RoleManagement() {
                         view: '查看',
                         create: '创建',
                         update: '编辑',
+                        write: '写入',
+                        read: '读取',
                         delete: '删除',
+                        manage: '管理',
+                        approve: '审批',
+                        assign: '分配',
+                        all: '全部',
                         export: '导出',
                         import: '导入',
                       }[action] || action;
@@ -435,6 +496,13 @@ export default function RoleManagement() {
             rules={[{ required: true, message: '请输入角色名称' }]}
           >
             <Input placeholder="请输入角色名称" />
+          </Form.Item>
+          <Form.Item
+            label="角色编码"
+            name="code"
+            tooltip="编码用于权限缓存和系统集成，建议使用英文、数字、下划线"
+          >
+            <Input placeholder="例如：it_manager、change_approver" disabled={selectedRole?.isSystem} />
           </Form.Item>
           <Form.Item
             label="角色描述"
@@ -534,17 +602,22 @@ export default function RoleManagement() {
             </Select>
           </Col>
           <Col xs={24} md={4} lg={10} className="text-right">
-            <Button
-              type="primary"
-              icon={<Plus className="w-4 h-4" />}
-              onClick={() => {
-                setSelectedRole(null);
-                form.resetFields();
-                setShowModal(true);
-              }}
-            >
-              新建角色
-            </Button>
+            <Space>
+              <Button onClick={handleInitPermissions} loading={loading}>
+                初始化权限字典
+              </Button>
+              <Button
+                type="primary"
+                icon={<Plus className="w-4 h-4" />}
+                onClick={() => {
+                  setSelectedRole(null);
+                  form.resetFields();
+                  setShowModal(true);
+                }}
+              >
+                新建角色
+              </Button>
+            </Space>
           </Col>
         </Row>
       </Card>
