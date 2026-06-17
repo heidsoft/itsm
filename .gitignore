@@ -22,6 +22,7 @@ Thumbs.db
 *.dylib
 *.test
 *.out
+.gocache/
 bin/
 pkg/
 vendor/
