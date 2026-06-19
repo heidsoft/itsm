@@ -18,6 +18,17 @@ func (m *MockLLMGateway) Chat(ctx context.Context, model string, messages []LLMM
 	return m.MockChat(ctx, model, messages)
 }
 
+type fakeGuidanceClient struct {
+	result   *GuidanceTriageResponse
+	err      error
+	tenantID int
+}
+
+func (f *fakeGuidanceClient) Triage(ctx context.Context, title, description string, tenantID int) (*GuidanceTriageResponse, error) {
+	f.tenantID = tenantID
+	return f.result, f.err
+}
+
 func TestTriage_Suggest_Keyword_Database(t *testing.T) {
 	svc := NewTriageService(nil, zap.NewNop())
 	result := svc.Suggest(context.Background(), "MySQL connection failed", "database cannot be accessed")
@@ -113,6 +124,39 @@ func TestTriage_Suggest_LLM_Success(t *testing.T) {
 	assert.Equal(t, "critical", result.Priority)
 	assert.Equal(t, 100, result.AssigneeID)
 	assert.Equal(t, 0.9, result.Confidence)
+}
+
+func TestTriage_Suggest_LLM_IgnoresModelAssigneeID(t *testing.T) {
+	mockLLM := &MockLLMGateway{
+		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+			return `{"category":"security","priority":"critical","confidence":0.9,"assignee_id":999,"explanation":"security incident"}`, nil
+		},
+	}
+	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
+
+	svc := NewTriageService(gateway, zap.NewNop())
+	result := svc.Suggest(context.Background(), "发现恶意请求", "")
+
+	assert.Equal(t, "security", result.Category)
+	assert.Equal(t, 100, result.AssigneeID)
+}
+
+func TestTriage_SuggestForTenant_PassesTenantToGuidance(t *testing.T) {
+	svc := NewTriageService(nil, zap.NewNop())
+	guidance := &fakeGuidanceClient{
+		result: &GuidanceTriageResponse{
+			Category:   "database",
+			Priority:   "high",
+			Confidence: 0.8,
+		},
+	}
+	svc.guidanceClient = guidance
+
+	result := svc.SuggestForTenant(context.Background(), "数据库故障", "", 42)
+
+	assert.Equal(t, 42, guidance.tenantID)
+	assert.Equal(t, "database", result.Category)
+	assert.Equal(t, 101, result.AssigneeID)
 }
 
 func TestTriage_Suggest_LLM_ParseError_Fallback(t *testing.T) {
@@ -215,6 +259,43 @@ func TestTriage_Suggest_LLM_JSONWithMarkdown(t *testing.T) {
 	assert.Equal(t, "storage", result.Category)
 	assert.Equal(t, "high", result.Priority)
 	assert.Equal(t, 105, result.AssigneeID)
+}
+
+func TestTriage_Suggest_Guidance_NormalizesEmptyFields(t *testing.T) {
+	svc := NewTriageService(nil, zap.NewNop())
+	svc.guidanceClient = &fakeGuidanceClient{
+		result: &GuidanceTriageResponse{
+			Explanation: "sidecar returned partial result",
+		},
+	}
+
+	result := svc.Suggest(context.Background(), "无法判断", "")
+
+	assert.Equal(t, "general", result.Category)
+	assert.Equal(t, "medium", result.Priority)
+	assert.Equal(t, 0, result.AssigneeID)
+	assert.Equal(t, 0.6, result.Confidence)
+	assert.Equal(t, "sidecar returned partial result", result.Explanation)
+}
+
+func TestTriage_Suggest_Guidance_NormalizesInvalidEnumsAndConfidence(t *testing.T) {
+	svc := NewTriageService(nil, zap.NewNop())
+	svc.guidanceClient = &fakeGuidanceClient{
+		result: &GuidanceTriageResponse{
+			Category:    "billing",
+			Priority:    "p0",
+			Confidence:  1.7,
+			AssigneeID:  999,
+			Explanation: "invalid enum values",
+		},
+	}
+
+	result := svc.Suggest(context.Background(), "费用系统故障", "")
+
+	assert.Equal(t, "general", result.Category)
+	assert.Equal(t, "medium", result.Priority)
+	assert.Equal(t, 0, result.AssigneeID)
+	assert.Equal(t, 0.6, result.Confidence)
 }
 
 func TestTriage_BatchSuggest(t *testing.T) {
