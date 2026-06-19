@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/ticketassignmentrule"
 	"itsm-backend/ent/user"
 	"itsm-backend/ent/workflowtask"
 	"itsm-backend/service/bpmn"
@@ -86,12 +87,12 @@ type TaskService interface {
 // CustomProcessEngine 是ProcessEngine接口的实现
 // 充当领域服务(Domain Service)，协调流程定义、实例和任务实体的生命周期
 type CustomProcessEngine struct {
-	client             *ent.Client
-	logger             *zap.SugaredLogger
-	parser             *BPMNParser            // 使用自定义的BPMN解析器
-	exprEngine         *ExpressionEngine      // 表达式引擎
-	expressionVars     map[string]interface{} // 表达式变量
-	callbackRegistry   *bpmn.CallbackRegistry // 服务任务回调注册中心
+	client           *ent.Client
+	logger           *zap.SugaredLogger
+	parser           *BPMNParser            // 使用自定义的BPMN解析器
+	exprEngine       *ExpressionEngine      // 表达式引擎
+	expressionVars   map[string]interface{} // 表达式变量
+	callbackRegistry *bpmn.CallbackRegistry // 服务任务回调注册中心
 	// 内部服务
 	processDefinitionService *bpmnProcessDefinitionService
 	processInstanceService   *bpmnProcessInstanceService
@@ -264,9 +265,12 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 // CompleteTask 完成任务（使用乐观锁保护变量合并，防止并发覆写）
 func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error {
 	// 1. 获取任务
-	task, err := e.client.ProcessTask.Query().
-		Where(processtask.TaskID(taskID)).
-		First(ctx)
+	taskQuery := e.client.ProcessTask.Query().
+		Where(processtask.TaskID(taskID))
+	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+		taskQuery = taskQuery.Where(processtask.TenantID(tenantID))
+	}
+	task, err := taskQuery.First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取任务失败: %w", err)
 	}
@@ -623,8 +627,10 @@ func (e *CustomProcessEngine) getAssigneeFromDBRules(ctx context.Context, instan
 	// 查询当前租户下所有激活的分配规则，按优先级降序排列
 	rules, err := e.client.TicketAssignmentRule.Query().
 		Where(
-			// 条件将在内存中匹配，这里只过滤租户和激活状态
+			ticketassignmentrule.TenantID(instance.TenantID),
+			ticketassignmentrule.IsActive(true),
 		).
+		Order(ent.Desc(ticketassignmentrule.FieldPriority)).
 		All(ctx)
 	if err != nil {
 		e.logger.Warnw("查询分配规则失败", "error", err)
@@ -793,9 +799,12 @@ func (e *CustomProcessEngine) findServiceTask(process *BPMNProcess, id string) *
 
 func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanceID string, reason string) error {
 	// 1. 获取流程实例
-	instance, err := e.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID)).
-		First(ctx)
+	query := e.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(processInstanceID))
+	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+		query = query.Where(processinstance.TenantID(tenantID))
+	}
+	instance, err := query.First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取流程实例失败: %w", err)
 	}
@@ -839,9 +848,12 @@ func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanc
 
 func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstanceID string) error {
 	// 1. 获取流程实例
-	instance, err := e.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID)).
-		First(ctx)
+	query := e.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(processInstanceID))
+	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+		query = query.Where(processinstance.TenantID(tenantID))
+	}
+	instance, err := query.First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取流程实例失败: %w", err)
 	}
@@ -882,9 +894,12 @@ func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstance
 
 func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInstanceID string, reason string) error {
 	// 1. 获取流程实例
-	instance, err := e.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID)).
-		First(ctx)
+	query := e.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(processInstanceID))
+	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+		query = query.Where(processinstance.TenantID(tenantID))
+	}
+	instance, err := query.First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取流程实例失败: %w", err)
 	}
@@ -1187,7 +1202,12 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context,
 
 // GetProcessDefinitionByID 根据ID获取流程定义
 func (s *bpmnProcessDefinitionService) GetProcessDefinitionByID(ctx context.Context, id int) (*ent.ProcessDefinition, error) {
-	definition, err := s.client.ProcessDefinition.Get(ctx, id)
+	query := s.client.ProcessDefinition.Query().
+		Where(processdefinition.ID(id))
+	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+		query = query.Where(processdefinition.TenantID(tenantID))
+	}
+	definition, err := query.First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
@@ -1308,9 +1328,12 @@ type bpmnProcessInstanceService struct {
 }
 
 func (s *bpmnProcessInstanceService) GetProcessInstance(ctx context.Context, processInstanceID string) (*ent.ProcessInstance, error) {
-	instance, err := s.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID)).
-		First(ctx)
+	query := s.client.ProcessInstance.Query().
+		Where(processinstance.ProcessInstanceID(processInstanceID))
+	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+		query = query.Where(processinstance.TenantID(tenantID))
+	}
+	instance, err := query.First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程实例失败: %w", err)
 	}
@@ -1446,9 +1469,12 @@ type bpmnTaskService struct {
 
 // GetTask 根据任务ID (BPMN标准task_id字符串)获取任务
 func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error) {
-	task, err := s.client.ProcessTask.Query().
-		Where(processtask.TaskID(taskID)).
-		First(ctx)
+	query := s.client.ProcessTask.Query().
+		Where(processtask.TaskID(taskID))
+	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+		query = query.Where(processtask.TenantID(tenantID))
+	}
+	task, err := query.First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取任务失败: %w", err)
 	}
@@ -1458,7 +1484,12 @@ func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.Proc
 
 // GetTaskByID 根据数据库自增ID获取任务
 func (s *bpmnTaskService) GetTaskByID(ctx context.Context, id int) (*ent.ProcessTask, error) {
-	task, err := s.client.ProcessTask.Get(ctx, id)
+	query := s.client.ProcessTask.Query().
+		Where(processtask.ID(id))
+	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+		query = query.Where(processtask.TenantID(tenantID))
+	}
+	task, err := query.First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取任务失败: %w", err)
 	}
@@ -1469,7 +1500,7 @@ func (s *bpmnTaskService) GetTaskByID(ctx context.Context, id int) (*ent.Process
 // CompleteTaskByID 根据数据库自增ID完成任务
 func (s *bpmnTaskService) CompleteTaskByID(ctx context.Context, id int, variables map[string]interface{}) error {
 	engine := NewCustomProcessEngine(s.client, s.logger)
-	task, err := s.client.ProcessTask.Get(ctx, id)
+	task, err := s.GetTaskByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("获取任务失败: %w", err)
 	}
@@ -1479,10 +1510,6 @@ func (s *bpmnTaskService) CompleteTaskByID(ctx context.Context, id int, variable
 func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksRequest) ([]*ent.ProcessTask, int, error) {
 	s.logger.Debugw("ListUserTasks called", "assignee", req.Assignee, "tenantID", req.TenantID)
 	query := s.client.ProcessTask.Query()
-
-	// Debug: count all tasks
-	totalAll, _ := s.client.ProcessTask.Query().Count(ctx)
-	s.logger.Debugw("Total tasks in DB", "count", totalAll)
 
 	if req.Assignee != "" {
 		query = query.Where(processtask.Assignee(req.Assignee))

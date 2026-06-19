@@ -18,7 +18,7 @@ type CloudAccount struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// 云厂商标识（aliyun/huawei/tencent/azure/onprem）
+	// 云厂商标识（aliyun/tencent/huawei/aws/azure/onprem）
 	Provider string `json:"provider,omitempty"`
 	// 云账号ID
 	AccountID string `json:"account_id,omitempty"`

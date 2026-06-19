@@ -58,6 +58,7 @@ func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *d
 	exists, err := s.client.CIRelationship.Query().
 		Where(
 			cirelationship.And(
+				cirelationship.TenantID(tenantID),
 				cirelationship.SourceCiID(req.SourceCIID),
 				cirelationship.TargetCiID(req.TargetCIID),
 				cirelationship.RelationshipType(string(req.RelationshipType)),
@@ -105,7 +106,7 @@ func (s *CIRelationshipService) UpdateCIRelationship(ctx context.Context, id int
 		Where(
 			cirelationship.And(
 				cirelationship.ID(id),
-				cirelationship.HasSourceCiWith(configurationitem.TenantID(tenantID)),
+				cirelationship.TenantID(tenantID),
 			),
 		).
 		Only(ctx)
@@ -118,14 +119,14 @@ func (s *CIRelationshipService) UpdateCIRelationship(ctx context.Context, id int
 
 	// 获取关联的CI
 	sourceCI, err := s.client.ConfigurationItem.Query().
-		Where(configurationitem.ID(relationship.SourceCiID)).
+		Where(configurationitem.ID(relationship.SourceCiID), configurationitem.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
 		sourceCI = nil
 	}
 
 	targetCI, err := s.client.ConfigurationItem.Query().
-		Where(configurationitem.ID(relationship.TargetCiID)).
+		Where(configurationitem.ID(relationship.TargetCiID), configurationitem.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
 		targetCI = nil
@@ -160,7 +161,7 @@ func (s *CIRelationshipService) UpdateCIRelationship(ctx context.Context, id int
 
 	// 重新查询
 	relationship, err = s.client.CIRelationship.Query().
-		Where(cirelationship.ID(id)).
+		Where(cirelationship.ID(id), cirelationship.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "重新查询CI关系失败")
@@ -176,7 +177,7 @@ func (s *CIRelationshipService) DeleteCIRelationship(ctx context.Context, id int
 		Where(
 			cirelationship.And(
 				cirelationship.ID(id),
-				cirelationship.HasSourceCiWith(configurationitem.TenantID(tenantID)),
+				cirelationship.TenantID(tenantID),
 			),
 		).
 		Only(ctx)
@@ -215,35 +216,7 @@ func (s *CIRelationshipService) GetCIRelationships(ctx context.Context, req *dto
 	// 查询出边关系
 	if req.IncludeOutgoing {
 		query := s.client.CIRelationship.Query().
-			Where(cirelationship.SourceCiID(req.CIID))
-
-		if req.RelationshipType != "" {
-			query = query.Where(cirelationship.RelationshipType(string(req.RelationshipType)))
-		}
-		if req.ActiveOnly {
-			query = query.Where(cirelationship.IsActive(true))
-		}
-
-		relationships, err := query.
-			WithTargetCi().
-			All(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "查询出边关系失败")
-		}
-
-		response.TotalOutgoing = len(relationships)
-		for _, rel := range relationships {
-			resp, _ := s.toCIRelationshipResponse(rel, nil, rel.Edges.TargetCi)
-			if resp != nil {
-				response.OutgoingRelations = append(response.OutgoingRelations, *resp)
-			}
-		}
-	}
-
-	// 查询入边关系
-	if req.IncludeIncoming {
-		query := s.client.CIRelationship.Query().
-			Where(cirelationship.TargetCiID(req.CIID))
+			Where(cirelationship.SourceCiID(req.CIID), cirelationship.TenantID(tenantID))
 
 		if req.RelationshipType != "" {
 			query = query.Where(cirelationship.RelationshipType(string(req.RelationshipType)))
@@ -254,6 +227,36 @@ func (s *CIRelationshipService) GetCIRelationships(ctx context.Context, req *dto
 
 		relationships, err := query.
 			WithSourceCi().
+			WithTargetCi().
+			All(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "查询出边关系失败")
+		}
+
+		response.TotalOutgoing = len(relationships)
+		for _, rel := range relationships {
+			resp, _ := s.toCIRelationshipResponse(rel, rel.Edges.SourceCi, rel.Edges.TargetCi)
+			if resp != nil {
+				response.OutgoingRelations = append(response.OutgoingRelations, *resp)
+			}
+		}
+	}
+
+	// 查询入边关系
+	if req.IncludeIncoming {
+		query := s.client.CIRelationship.Query().
+			Where(cirelationship.TargetCiID(req.CIID), cirelationship.TenantID(tenantID))
+
+		if req.RelationshipType != "" {
+			query = query.Where(cirelationship.RelationshipType(string(req.RelationshipType)))
+		}
+		if req.ActiveOnly {
+			query = query.Where(cirelationship.IsActive(true))
+		}
+
+		relationships, err := query.
+			WithSourceCi().
+			WithTargetCi().
 			All(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "查询入边关系失败")
@@ -261,7 +264,7 @@ func (s *CIRelationshipService) GetCIRelationships(ctx context.Context, req *dto
 
 		response.TotalIncoming = len(relationships)
 		for _, rel := range relationships {
-			resp, _ := s.toCIRelationshipResponse(rel, rel.Edges.SourceCi, nil)
+			resp, _ := s.toCIRelationshipResponse(rel, rel.Edges.SourceCi, rel.Edges.TargetCi)
 			if resp != nil {
 				response.IncomingRelations = append(response.IncomingRelations, *resp)
 			}
@@ -318,7 +321,7 @@ func (s *CIRelationshipService) GetTopologyGraph(ctx context.Context, ciID int, 
 
 		// 获取CI详情
 		ci, err := s.client.ConfigurationItem.Query().
-			Where(configurationitem.ID(current.ciID)).
+			Where(configurationitem.ID(current.ciID), configurationitem.TenantID(tenantID)).
 			Only(ctx)
 		if err != nil {
 			continue
@@ -337,6 +340,7 @@ func (s *CIRelationshipService) GetTopologyGraph(ctx context.Context, ciID int, 
 			Where(
 				cirelationship.And(
 					cirelationship.SourceCiID(current.ciID),
+					cirelationship.TenantID(tenantID),
 					cirelationship.IsActive(true),
 				),
 			).
@@ -360,6 +364,7 @@ func (s *CIRelationshipService) GetTopologyGraph(ctx context.Context, ciID int, 
 			Where(
 				cirelationship.And(
 					cirelationship.TargetCiID(current.ciID),
+					cirelationship.TenantID(tenantID),
 					cirelationship.IsActive(true),
 				),
 			).
@@ -434,6 +439,7 @@ func (s *CIRelationshipService) AnalyzeImpact(ctx context.Context, ciID int, ten
 	tickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.HasConfigurationItemsWith(configurationitem.ID(ciID)),
+			ticket.TenantID(tenantID),
 		).
 		Limit(10).
 		All(ctx)
@@ -453,6 +459,7 @@ func (s *CIRelationshipService) AnalyzeImpact(ctx context.Context, ciID int, ten
 	incidents, err := s.client.Incident.Query().
 		Where(
 			incident.ConfigurationItemID(ciID),
+			incident.TenantID(tenantID),
 		).
 		Limit(10).
 		All(ctx)
@@ -629,6 +636,7 @@ func (s *CIRelationshipService) analyzeUpstreamImpact(ctx context.Context, ciID 
 		Where(
 			cirelationship.And(
 				cirelationship.TargetCiID(ciID),
+				cirelationship.TenantID(tenantID),
 				cirelationship.IsActive(true),
 			),
 		).
@@ -671,6 +679,7 @@ func (s *CIRelationshipService) analyzeDownstreamImpact(ctx context.Context, ciI
 		Where(
 			cirelationship.And(
 				cirelationship.SourceCiID(ciID),
+				cirelationship.TenantID(tenantID),
 				cirelationship.IsActive(true),
 			),
 		).

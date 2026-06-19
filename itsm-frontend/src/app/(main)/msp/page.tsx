@@ -26,7 +26,7 @@ import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
 } from '@ant-design/icons';
-import MSPService from '@/services/msp-service';
+import MSPService from '@/lib/services/msp-service';
 import type { MSPAllocation, MSPCustomerReport, MSPContext, MSPAllocationHistory } from '@/types/msp';
 
 const { RangePicker } = DatePicker;

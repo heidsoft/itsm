@@ -98,7 +98,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
 
   // 菜单点击处理
   const handleMenuClick = (key: string) => {
-    router.push(key);
+    if (!key) {
+      console.warn('Menu item has no path:', key);
+      return;
+    }
+    try {
+      router.push(key);
+    } catch (error) {
+      console.error('Menu navigation error:', error);
+      message.error('导航失败，请稍后重试');
+    }
   };
 
   // 转换动态菜单（当 API 返回空时使用静态配置作为 fallback）
@@ -120,10 +129,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       if (!seen.has(menu.key)) {
         seen.add(menu.key);
         // 递归去重子菜单
-        const dedupedMenu =
-          menu.children
-            ? { ...menu, children: deduplicateMenus(menu.children) }
-            : menu;
+        const dedupedMenu = menu.children
+          ? { ...menu, children: deduplicateMenus(menu.children) }
+          : menu;
         result.push(dedupedMenu);
       }
     }

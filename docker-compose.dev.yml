@@ -254,6 +254,10 @@ services:
         condition: service_healthy
     networks:
       - itsm-dev-network
+    volumes:
+      - ./itsm-frontend:/app
+      - /app/node_modules
+      - /app/.next
     restart: unless-stopped
     profiles: [ "dev" ]
 

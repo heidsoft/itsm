@@ -19,7 +19,18 @@ import {
   Select,
 } from 'antd';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, Settings, LayoutDashboard, Zap, LineChart, TrendingUp, Ticket, BookOpen, Database, Compass } from 'lucide-react';
+import {
+  RefreshCw,
+  Settings,
+  LayoutDashboard,
+  Zap,
+  LineChart,
+  TrendingUp,
+  Ticket,
+  BookOpen,
+  Database,
+  Compass,
+} from 'lucide-react';
 import { KPICards } from './components/KPICards';
 import { ChartsSection } from './components/ChartsSection';
 import { QuickActions } from './components/QuickActions';
@@ -84,10 +95,17 @@ export default function DashboardPage() {
   const handleQuickActionClick = useCallback(
     (action: QuickAction) => {
       if (action.path) {
-        router.push(action.path);
+        try {
+          router.push(action.path);
+        } catch (error) {
+          console.error('Navigation error:', error);
+          message.error('导航失败，请稍后重试');
+        }
+      } else {
+        console.warn('Quick action missing path:', action);
       }
     },
-    [router]
+    [router, message]
   );
 
   // 处理刷新间隔变化
@@ -114,11 +132,11 @@ export default function DashboardPage() {
       key: 'auto-refresh',
       label: (
         <div
-          className="flex items-center justify-between min-w-[200px]"
+          className='flex items-center justify-between min-w-[200px]'
           onClick={e => e.stopPropagation()}
         >
-          <span className="text-sm font-medium">自动刷新</span>
-          <Switch checked={autoRefresh} onChange={handleAutoRefreshToggle} size="small" />
+          <span className='text-sm font-medium'>自动刷新</span>
+          <Switch checked={autoRefresh} onChange={handleAutoRefreshToggle} size='small' />
         </div>
       ),
     },
@@ -126,15 +144,15 @@ export default function DashboardPage() {
       key: 'interval',
       label: (
         <div
-          className="flex items-center justify-between min-w-[200px]"
+          className='flex items-center justify-between min-w-[200px]'
           onClick={e => e.stopPropagation()}
         >
-          <span className="text-sm font-medium">刷新间隔</span>
+          <span className='text-sm font-medium'>刷新间隔</span>
           <Select
             value={refreshInterval}
             onChange={value => handleRefreshIntervalChange(Number(value))}
-            className="w-[100px]"
-            size="small"
+            className='w-[100px]'
+            size='small'
             disabled={!autoRefresh}
             onClick={e => e.stopPropagation()}
             options={[
@@ -151,8 +169,8 @@ export default function DashboardPage() {
     {
       key: 'connection',
       label: (
-        <div className="flex items-center justify-between min-w-[200px]">
-          <span className="text-sm font-medium">连接状态</span>
+        <div className='flex items-center justify-between min-w-[200px]'>
+          <span className='text-sm font-medium'>连接状态</span>
           <Badge
             status={isConnected ? 'success' : 'error'}
             text={isConnected ? '已连接' : '未连接'}
@@ -163,9 +181,9 @@ export default function DashboardPage() {
     {
       key: 'last-updated',
       label: (
-        <div className="flex items-center justify-between min-w-[200px]">
-          <span className="text-sm font-medium">最后更新</span>
-          <span className="text-xs text-gray-500 font-medium">
+        <div className='flex items-center justify-between min-w-[200px]'>
+          <span className='text-sm font-medium'>最后更新</span>
+          <span className='text-xs text-gray-500 font-medium'>
             {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : '从未'}
           </span>
         </div>
@@ -176,18 +194,18 @@ export default function DashboardPage() {
   // 错误状态
   if (error) {
     return (
-      <Card className="text-center py-16 rounded-xl border-0 shadow-sm">
-        <div className="text-red-500 mb-4 flex justify-center">
+      <Card className='text-center py-16 rounded-xl border-0 shadow-sm'>
+        <div className='text-red-500 mb-4 flex justify-center'>
           <LayoutDashboard size={64} />
         </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">仪表盘加载失败</h3>
-        <p className="text-gray-600 mb-6">{error}</p>
+        <h3 className='text-xl font-bold text-gray-900 mb-2'>仪表盘加载失败</h3>
+        <p className='text-gray-600 mb-6'>{error}</p>
         <Button
-          type="primary"
-          size="large"
+          type='primary'
+          size='large'
           onClick={() => refresh()}
           icon={<RefreshCw />}
-          className="h-11 rounded-lg"
+          className='h-11 rounded-lg'
         >
           重新加载
         </Button>
@@ -212,26 +230,29 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="p-6 min-h-screen" style={{ backgroundColor: 'var(--color-bg-secondary, #f9fafb)' }}>
+    <div
+      className='p-6 min-h-screen'
+      style={{ backgroundColor: 'var(--color-bg-secondary, #f9fafb)' }}
+    >
       {/* 简化顶部工具栏 */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+      <div className='flex items-center justify-between mb-6 pb-4 border-b border-gray-200'>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className='text-2xl font-bold text-gray-900 flex items-center gap-2'>
             AI-Native ITSM 运营仪表盘
-            {isConnected && <Badge status="success" text="在线" />}
+            {isConnected && <Badge status='success' text='在线' />}
           </h1>
-          <p className="text-sm text-gray-600 mt-1">实时监控系统运行状态和关键业务指标</p>
+          <p className='text-sm text-gray-600 mt-1'>实时监控系统运行状态和关键业务指标</p>
         </div>
 
-        <Space size="middle">
+        <Space size='middle'>
           {lastUpdated && (
-            <span className="text-sm text-gray-500">
+            <span className='text-sm text-gray-500'>
               更新于 {new Date(lastUpdated).toLocaleTimeString()}
             </span>
           )}
 
           <Button
-            type="default"
+            type='default'
             icon={<RefreshCw className={loading ? 'animate-spin' : ''} />}
             onClick={() => refresh()}
             loading={loading}
@@ -239,7 +260,7 @@ export default function DashboardPage() {
             刷新
           </Button>
 
-          <Dropdown menu={{ items: controlMenuItems }} trigger={['click']} placement="bottomRight">
+          <Dropdown menu={{ items: controlMenuItems }} trigger={['click']} placement='bottomRight'>
             <Button icon={<Settings />}>设置</Button>
           </Dropdown>
         </Space>
@@ -250,74 +271,74 @@ export default function DashboardPage() {
       ) : (
         <>
           {/* KPI指标卡片区域 */}
-          <div className="mb-6">
+          <div className='mb-6'>
             <KPICards metrics={data?.kpiMetrics || []} loading={loading} />
           </div>
 
-          <Divider className="my-8" />
+          <Divider className='my-8' />
 
           {/* 快速操作区域 */}
-          <div className="mb-6">
-            <div className="mb-4">
-              <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                <Zap className="text-orange-500 w-5 h-5" />
+          <div className='mb-6'>
+            <div className='mb-4'>
+              <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
+                <Zap className='text-orange-500 w-5 h-5' />
                 快速操作
               </h2>
-              <p className="text-sm text-gray-600">常用功能快捷入口，提升工作效率</p>
+              <p className='text-sm text-gray-600'>常用功能快捷入口，提升工作效率</p>
             </div>
             {(!data?.quickActions || data.quickActions.length === 0) && !loading ? (
               <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} lg={6}>
-                  <Card className="rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full">
-                    <div className="flex flex-col items-center text-center py-4">
-                      <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 mb-3">
-                        <Ticket className="w-6 h-6" />
+                  <Card className='rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full'>
+                    <div className='flex flex-col items-center text-center py-4'>
+                      <div className='w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 mb-3'>
+                        <Ticket className='w-6 h-6' />
                       </div>
-                      <h3 className="text-base font-semibold text-gray-900 mb-1">创建第一个工单</h3>
-                      <p className="text-sm text-gray-500 mb-4">提交 IT 服务请求或报告问题</p>
-                      <Button type="primary" onClick={() => router.push('/tickets/create')}>
+                      <h3 className='text-base font-semibold text-gray-900 mb-1'>创建第一个工单</h3>
+                      <p className='text-sm text-gray-500 mb-4'>提交 IT 服务请求或报告问题</p>
+                      <Button type='primary' onClick={() => router.push('/tickets/create')}>
                         去创建
                       </Button>
                     </div>
                   </Card>
                 </Col>
                 <Col xs={24} sm={12} lg={6}>
-                  <Card className="rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full">
-                    <div className="flex flex-col items-center text-center py-4">
-                      <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-600 mb-3">
-                        <Compass className="w-6 h-6" />
+                  <Card className='rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full'>
+                    <div className='flex flex-col items-center text-center py-4'>
+                      <div className='w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-600 mb-3'>
+                        <Compass className='w-6 h-6' />
                       </div>
-                      <h3 className="text-base font-semibold text-gray-900 mb-1">浏览服务目录</h3>
-                      <p className="text-sm text-gray-500 mb-4">查看可用的 IT 服务目录</p>
-                      <Button type="primary" onClick={() => router.push('/service-catalog')}>
+                      <h3 className='text-base font-semibold text-gray-900 mb-1'>浏览服务目录</h3>
+                      <p className='text-sm text-gray-500 mb-4'>查看可用的 IT 服务目录</p>
+                      <Button type='primary' onClick={() => router.push('/service-catalog')}>
                         去浏览
                       </Button>
                     </div>
                   </Card>
                 </Col>
                 <Col xs={24} sm={12} lg={6}>
-                  <Card className="rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full">
-                    <div className="flex flex-col items-center text-center py-4">
-                      <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 mb-3">
-                        <Database className="w-6 h-6" />
+                  <Card className='rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full'>
+                    <div className='flex flex-col items-center text-center py-4'>
+                      <div className='w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 mb-3'>
+                        <Database className='w-6 h-6' />
                       </div>
-                      <h3 className="text-base font-semibold text-gray-900 mb-1">配置 CMDB</h3>
-                      <p className="text-sm text-gray-500 mb-4">管理配置项和资产关系拓扑</p>
-                      <Button type="primary" onClick={() => router.push('/cmdb')}>
+                      <h3 className='text-base font-semibold text-gray-900 mb-1'>配置 CMDB</h3>
+                      <p className='text-sm text-gray-500 mb-4'>管理配置项和资产关系拓扑</p>
+                      <Button type='primary' onClick={() => router.push('/cmdb')}>
                         去配置
                       </Button>
                     </div>
                   </Card>
                 </Col>
                 <Col xs={24} sm={12} lg={6}>
-                  <Card className="rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full">
-                    <div className="flex flex-col items-center text-center py-4">
-                      <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 mb-3">
-                        <BookOpen className="w-6 h-6" />
+                  <Card className='rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full'>
+                    <div className='flex flex-col items-center text-center py-4'>
+                      <div className='w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 mb-3'>
+                        <BookOpen className='w-6 h-6' />
                       </div>
-                      <h3 className="text-base font-semibold text-gray-900 mb-1">查阅知识库</h3>
-                      <p className="text-sm text-gray-500 mb-4">搜索解决方案和 IT 知识文档</p>
-                      <Button type="primary" onClick={() => router.push('/knowledge')}>
+                      <h3 className='text-base font-semibold text-gray-900 mb-1'>查阅知识库</h3>
+                      <p className='text-sm text-gray-500 mb-4'>搜索解决方案和 IT 知识文档</p>
+                      <Button type='primary' onClick={() => router.push('/knowledge')}>
                         去查阅
                       </Button>
                     </div>
@@ -335,38 +356,34 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <Divider className="my-8" />
+          <Divider className='my-8' />
 
           {/* 图表分析区域 */}
-          <div className="mb-6">
-            <Card
-              className="rounded-xl border-0 shadow-sm"
-             
-              styles={{ body: { padding: '24px' } }}
-            >
-              <div className="mb-5">
-                <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                  <LineChart className="text-blue-500 w-5 h-5" />
+          <div className='mb-6'>
+            <Card className='rounded-xl border-0 shadow-sm' styles={{ body: { padding: '24px' } }}>
+              <div className='mb-5'>
+                <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
+                  <LineChart className='text-blue-500 w-5 h-5' />
                   数据分析与趋势
                 </h2>
-                <p className="text-sm text-gray-600">系统性能和业务趋势的可视化分析</p>
+                <p className='text-sm text-gray-600'>系统性能和业务趋势的可视化分析</p>
               </div>
 
               <Tabs
                 activeKey={activeChartTab}
                 onChange={setActiveChartTab}
-                size="large"
+                size='large'
                 items={[
                   {
                     key: 'all',
                     label: (
-                      <span className="flex items-center gap-2">
+                      <span className='flex items-center gap-2'>
                         <LayoutDashboard />
                         全部图表
                       </span>
                     ),
                     children: (
-                      <div className="pt-4">
+                      <div className='pt-4'>
                         <ChartsSection loading={loading}>
                           <Col xs={24} lg={12}>
                             <TicketTrendChart data={data?.ticketTrend || []} />
@@ -382,9 +399,19 @@ export default function DashboardPage() {
                           </Col>
                           <Col xs={24} lg={12}>
                             {(() => {
-                              const slaMetric = data?.kpiMetrics?.find(m => m.id === 'sla-compliance');
-                              const slaOverall = slaMetric?.value !== undefined ? Number(slaMetric.value) : undefined;
-                              return <SLAComplianceChart data={data?.slaData || []} overallValue={slaOverall} />;
+                              const slaMetric = data?.kpiMetrics?.find(
+                                m => m.id === 'sla-compliance'
+                              );
+                              const slaOverall =
+                                slaMetric?.value !== undefined
+                                  ? Number(slaMetric.value)
+                                  : undefined;
+                              return (
+                                <SLAComplianceChart
+                                  data={data?.slaData || []}
+                                  overallValue={slaOverall}
+                                />
+                              );
                             })()}
                           </Col>
                           <Col xs={24} lg={12}>
@@ -400,13 +427,13 @@ export default function DashboardPage() {
                   {
                     key: 'tickets',
                     label: (
-                      <span className="flex items-center gap-2">
+                      <span className='flex items-center gap-2'>
                         <LineChart />
                         工单与事件
                       </span>
                     ),
                     children: (
-                      <div className="pt-4">
+                      <div className='pt-4'>
                         <ChartsSection loading={loading}>
                           <Col xs={24} lg={12}>
                             <TicketTrendChart data={data?.ticketTrend || []} />
@@ -427,19 +454,29 @@ export default function DashboardPage() {
                   {
                     key: 'performance',
                     label: (
-                      <span className="flex items-center gap-2">
+                      <span className='flex items-center gap-2'>
                         <TrendingUp />
                         性能与满意度
                       </span>
                     ),
                     children: (
-                      <div className="pt-4">
+                      <div className='pt-4'>
                         <ChartsSection loading={loading}>
                           <Col xs={24} lg={12}>
                             {(() => {
-                              const slaMetric = data?.kpiMetrics?.find(m => m.id === 'sla-compliance');
-                              const slaOverall = slaMetric?.value !== undefined ? Number(slaMetric.value) : undefined;
-                              return <SLAComplianceChart data={data?.slaData || []} overallValue={slaOverall} />;
+                              const slaMetric = data?.kpiMetrics?.find(
+                                m => m.id === 'sla-compliance'
+                              );
+                              const slaOverall =
+                                slaMetric?.value !== undefined
+                                  ? Number(slaMetric.value)
+                                  : undefined;
+                              return (
+                                <SLAComplianceChart
+                                  data={data?.slaData || []}
+                                  overallValue={slaOverall}
+                                />
+                              );
                             })()}
                           </Col>
                           <Col xs={24} lg={12}>

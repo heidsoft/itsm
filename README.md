@@ -173,18 +173,37 @@ docker compose down
 docker compose down -v
 ```
 
-### 本地开发模式
+### 统一开发环境（推荐）
 
 ```bash
-# 仅启动数据库和Redis
-docker compose -f docker-compose.dev.yml up -d postgres redis
+# 方式1: 使用启动脚本（推荐）
+./scripts/start-dev.sh
 
-# 本地运行后端（需要Go 1.25+）
-cd itsm-backend && go run main.go
+# 方式2: 使用 Makefile
+make dev-start
 
-# 本地运行前端（需要Node 18+）
-cd itsm-frontend && npm run dev
+# 停止服务
+./scripts/stop-dev.sh
+# 或
+make dev-stop
+
+# 查看日志
+make dev-logs
+
+# 查看服务状态
+make dev-status
 ```
+
+**要求**: Docker Desktop 已启动
+
+**访问地址**:
+- 前端: http://localhost:3000
+- 后端API: http://localhost:8090
+- Swagger文档: http://localhost:8090/swagger/index.html
+- PostgreSQL: localhost:5432
+- Redis: localhost:6379
+
+**首次登录**: 用户名 `admin`，密码 `admin123`
 
 ### 初始化说明
 
@@ -445,11 +464,16 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 ./scripts/deploy-dev.sh doctor    # 诊断问题
 ./scripts/deploy-prod.sh deploy   # 部署生产环境
 
+# 统一开发环境（推荐）
+./scripts/start-dev.sh            # 启动所有开发服务
+./scripts/stop-dev.sh             # 停止所有开发服务
+
 # Docker 开发环境 (Makefile)
-make dev-up         # 启动开发环境
-make dev-down       # 停止开发环境
-make dev-logs       # 查看日志
-make dev-shell      # 进入后端容器
+make dev-start     # 启动开发环境（等同于 start-dev.sh）
+make dev-stop      # 停止开发环境（等同于 stop-dev.sh）
+make dev-logs      # 查看日志
+make dev-status    # 查看服务状态
+make dev-shell     # 进入后端容器
 
 # 构建
 make build          # 构建前后端镜像

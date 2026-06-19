@@ -16,7 +16,7 @@ import {
   Spin,
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import MSPService from '@/services/msp-service';
+import MSPService from '@/lib/services/msp-service';
 import { UserApi } from '@/lib/api/user-api';
 import type { MSPAllocation, CreateAllocationRequest } from '@/types/msp';
 

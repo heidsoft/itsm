@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -24,6 +25,15 @@ func NewBPMNWorkflowController(processEngine service.ProcessEngine, versionServi
 		processEngine:  processEngine,
 		versionService: versionService,
 	}
+}
+
+func getBPMNTenantContext(ctx *gin.Context) (context.Context, int, bool) {
+	tenantID := ctx.GetInt("tenant_id")
+	if tenantID <= 0 {
+		common.AuthFailed(ctx, "未授权访问")
+		return nil, 0, false
+	}
+	return context.WithValue(ctx.Request.Context(), "bpmn_tenant_id", tenantID), tenantID, true
 }
 
 // RegisterRoutes 注册路由
@@ -145,14 +155,18 @@ func (c *BPMNWorkflowController) ListProcessDefinitions(ctx *gin.Context) {
 func (c *BPMNWorkflowController) GetProcessDefinition(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
 	var definition *ent.ProcessDefinition
 	var err error
 
 	if version != "" {
-		definition, err = c.processEngine.ProcessDefinitionService().GetProcessDefinition(ctx, key, version)
+		definition, err = c.processEngine.ProcessDefinitionService().GetProcessDefinition(workflowCtx, key, version)
 	} else {
-		definition, err = c.processEngine.ProcessDefinitionService().GetLatestProcessDefinition(ctx, key)
+		definition, err = c.processEngine.ProcessDefinitionService().GetLatestProcessDefinition(workflowCtx, key)
 	}
 
 	if err != nil {
@@ -177,8 +191,12 @@ func (c *BPMNWorkflowController) UpdateProcessDefinition(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	definition, err := c.processEngine.ProcessDefinitionService().UpdateProcessDefinition(ctx, key, version, &req)
+	definition, err := c.processEngine.ProcessDefinitionService().UpdateProcessDefinition(workflowCtx, key, version, &req)
 	if err != nil {
 		common.InternalError(ctx, "更新流程定义失败: "+err.Error())
 		return
@@ -195,8 +213,12 @@ func (c *BPMNWorkflowController) DeleteProcessDefinition(ctx *gin.Context) {
 		common.Fail(ctx, common.BadRequestCode, "版本参数不能为空")
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	err := c.processEngine.ProcessDefinitionService().DeleteProcessDefinition(ctx, key, version)
+	err := c.processEngine.ProcessDefinitionService().DeleteProcessDefinition(workflowCtx, key, version)
 	if err != nil {
 		common.InternalError(ctx, "删除流程定义失败: "+err.Error())
 		return
@@ -212,8 +234,12 @@ func (c *BPMNWorkflowController) ExportProcessDefinition(ctx *gin.Context) {
 	if version == "" {
 		version = "1.0.0"
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	definition, err := c.processEngine.ProcessDefinitionService().GetProcessDefinition(ctx, key, version)
+	definition, err := c.processEngine.ProcessDefinitionService().GetProcessDefinition(workflowCtx, key, version)
 	if err != nil {
 		common.NotFound(ctx, "获取流程定义失败: "+err.Error())
 		return
@@ -252,9 +278,13 @@ func (c *BPMNWorkflowController) CloneProcessDefinition(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, tenantID, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
 	// 获取原流程定义
-	definition, err := c.processEngine.ProcessDefinitionService().GetProcessDefinition(ctx, key, version)
+	definition, err := c.processEngine.ProcessDefinitionService().GetProcessDefinition(workflowCtx, key, version)
 	if err != nil {
 		common.NotFound(ctx, "获取流程定义失败: "+err.Error())
 		return
@@ -268,10 +298,10 @@ func (c *BPMNWorkflowController) CloneProcessDefinition(ctx *gin.Context) {
 		Description: definition.Description,
 		Category:    definition.Category,
 		BPMNXML:     bpmnXML,
-		TenantID:    definition.TenantID,
+		TenantID:    tenantID,
 	}
 
-	created, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(ctx, newDefinition)
+	created, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(workflowCtx, newDefinition)
 	if err != nil {
 		common.InternalError(ctx, "复制流程定义失败: "+err.Error())
 		return
@@ -296,8 +326,12 @@ func (c *BPMNWorkflowController) SetProcessDefinitionActive(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	err := c.processEngine.ProcessDefinitionService().SetProcessDefinitionActive(ctx, key, version, req.Active)
+	err := c.processEngine.ProcessDefinitionService().SetProcessDefinitionActive(workflowCtx, key, version, req.Active)
 	if err != nil {
 		common.InternalError(ctx, "设置流程定义状态失败: "+err.Error())
 		return
@@ -322,8 +356,12 @@ func (c *BPMNWorkflowController) StartProcess(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	instance, err := c.processEngine.StartProcess(ctx, req.ProcessDefinitionKey, req.BusinessKey, req.Variables)
+	instance, err := c.processEngine.StartProcess(workflowCtx, req.ProcessDefinitionKey, req.BusinessKey, req.Variables)
 	if err != nil {
 		common.InternalError(ctx, "启动流程实例失败: "+err.Error())
 		return
@@ -370,8 +408,12 @@ func (c *BPMNWorkflowController) ListProcessInstances(ctx *gin.Context) {
 // GetProcessInstance 获取流程实例
 func (c *BPMNWorkflowController) GetProcessInstance(ctx *gin.Context) {
 	processInstanceID := ctx.Param("id")
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	instance, err := c.processEngine.ProcessInstanceService().GetProcessInstance(ctx, processInstanceID)
+	instance, err := c.processEngine.ProcessInstanceService().GetProcessInstance(workflowCtx, processInstanceID)
 	if err != nil {
 		common.NotFound(ctx, "流程实例不存在: "+err.Error())
 		return
@@ -391,8 +433,12 @@ func (c *BPMNWorkflowController) SetProcessInstanceVariables(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	err := c.processEngine.ProcessInstanceService().SetProcessInstanceVariables(ctx, processInstanceID, req.Variables)
+	err := c.processEngine.ProcessInstanceService().SetProcessInstanceVariables(workflowCtx, processInstanceID, req.Variables)
 	if err != nil {
 		common.InternalError(ctx, "设置流程实例变量失败: "+err.Error())
 		return
@@ -412,8 +458,12 @@ func (c *BPMNWorkflowController) SuspendProcess(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	err := c.processEngine.SuspendProcess(ctx, processInstanceID, req.Reason)
+	err := c.processEngine.SuspendProcess(workflowCtx, processInstanceID, req.Reason)
 	if err != nil {
 		common.InternalError(ctx, "暂停流程实例失败: "+err.Error())
 		return
@@ -425,8 +475,12 @@ func (c *BPMNWorkflowController) SuspendProcess(ctx *gin.Context) {
 // ResumeProcess 恢复流程实例
 func (c *BPMNWorkflowController) ResumeProcess(ctx *gin.Context) {
 	processInstanceID := ctx.Param("id")
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	err := c.processEngine.ResumeProcess(ctx, processInstanceID)
+	err := c.processEngine.ResumeProcess(workflowCtx, processInstanceID)
 	if err != nil {
 		common.InternalError(ctx, "恢复流程实例失败: "+err.Error())
 		return
@@ -446,8 +500,12 @@ func (c *BPMNWorkflowController) TerminateProcess(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	err := c.processEngine.TerminateProcess(ctx, processInstanceID, req.Reason)
+	err := c.processEngine.TerminateProcess(workflowCtx, processInstanceID, req.Reason)
 	if err != nil {
 		common.InternalError(ctx, "终止流程实例失败: "+err.Error())
 		return
@@ -501,16 +559,20 @@ func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 // GetTask 获取任务
 func (c *BPMNWorkflowController) GetTask(ctx *gin.Context) {
 	taskID := ctx.Param("id")
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
 	// 先尝试解析为数字ID（数据库自增ID）
 	id, err := strconv.Atoi(taskID)
 	var task interface{}
 	if err == nil {
 		// 数字ID，使用GetTaskByID
-		task, err = c.processEngine.TaskService().GetTaskByID(ctx, id)
+		task, err = c.processEngine.TaskService().GetTaskByID(workflowCtx, id)
 	} else {
 		// 字符串ID（BPMN标准task_id），使用GetTask
-		task, err = c.processEngine.TaskService().GetTask(ctx, taskID)
+		task, err = c.processEngine.TaskService().GetTask(workflowCtx, taskID)
 	}
 	if err != nil {
 		common.NotFound(ctx, "任务不存在: "+err.Error())
@@ -531,8 +593,12 @@ func (c *BPMNWorkflowController) AssignTask(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	err := c.processEngine.TaskService().AssignTask(ctx, taskID, req.Assignee)
+	err := c.processEngine.TaskService().AssignTask(workflowCtx, taskID, req.Assignee)
 	if err != nil {
 		common.InternalError(ctx, "分配任务失败: "+err.Error())
 		return
@@ -544,6 +610,10 @@ func (c *BPMNWorkflowController) AssignTask(ctx *gin.Context) {
 // ClaimTask 认领任务
 func (c *BPMNWorkflowController) ClaimTask(ctx *gin.Context) {
 	taskID := ctx.Param("id")
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
 	// 从上下文获取用户ID
 	userID, exists := ctx.Get("user_id")
@@ -565,10 +635,10 @@ func (c *BPMNWorkflowController) ClaimTask(ctx *gin.Context) {
 	var claimErr error
 	if err == nil {
 		// 数字ID
-		claimErr = c.processEngine.TaskService().ClaimTaskByID(ctx, id, userID.(int))
+		claimErr = c.processEngine.TaskService().ClaimTaskByID(workflowCtx, id, userID.(int))
 	} else {
 		// 字符串ID，使用ClaimTask
-		claimErr = c.processEngine.TaskService().ClaimTask(ctx, taskID, fmt.Sprintf("%d", userID))
+		claimErr = c.processEngine.TaskService().ClaimTask(workflowCtx, taskID, fmt.Sprintf("%d", userID))
 	}
 	if claimErr != nil {
 		common.InternalError(ctx, "认领任务失败: "+claimErr.Error())
@@ -589,15 +659,19 @@ func (c *BPMNWorkflowController) CompleteTask(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
 	// 尝试解析为数字ID
 	id, err := strconv.Atoi(taskID)
 	if err == nil {
 		// 数字ID，使用CompleteTaskByID
-		err = c.processEngine.TaskService().CompleteTaskByID(ctx, id, req.Variables)
+		err = c.processEngine.TaskService().CompleteTaskByID(workflowCtx, id, req.Variables)
 	} else {
 		// 字符串ID，使用原来的CompleteTask
-		err = c.processEngine.TaskService().CompleteTask(ctx, taskID, req.Variables)
+		err = c.processEngine.TaskService().CompleteTask(workflowCtx, taskID, req.Variables)
 	}
 	if err != nil {
 		common.InternalError(ctx, "完成任务失败: "+err.Error())
@@ -618,8 +692,12 @@ func (c *BPMNWorkflowController) CancelTask(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	err := c.processEngine.TaskService().CancelTask(ctx, taskID, req.Reason)
+	err := c.processEngine.TaskService().CancelTask(workflowCtx, taskID, req.Reason)
 	if err != nil {
 		common.InternalError(ctx, "取消任务失败: "+err.Error())
 		return
@@ -639,8 +717,12 @@ func (c *BPMNWorkflowController) SetTaskVariables(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	err := c.processEngine.TaskService().SetTaskVariables(ctx, taskID, req.Variables)
+	err := c.processEngine.TaskService().SetTaskVariables(workflowCtx, taskID, req.Variables)
 	if err != nil {
 		common.InternalError(ctx, "设置任务变量失败: "+err.Error())
 		return
@@ -661,7 +743,11 @@ func (c *BPMNWorkflowController) ListVersions(ctx *gin.Context) {
 
 	// 如果 process_key 是数字ID，尝试查找对应的流程定义key
 	if id, err := strconv.Atoi(processKey); err == nil {
-		def, err := c.processEngine.ProcessDefinitionService().GetProcessDefinitionByID(ctx, id)
+		workflowCtx, _, ok := getBPMNTenantContext(ctx)
+		if !ok {
+			return
+		}
+		def, err := c.processEngine.ProcessDefinitionService().GetProcessDefinitionByID(workflowCtx, id)
 		if err != nil {
 			common.NotFound(ctx, "流程定义不存在")
 			return
@@ -865,8 +951,12 @@ func (c *BPMNWorkflowController) CreateCounterSignTasks(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	tasks, err := c.processEngine.TaskService().CreateCounterSignTasks(ctx, taskID, &req)
+	tasks, err := c.processEngine.TaskService().CreateCounterSignTasks(workflowCtx, taskID, &req)
 	if err != nil {
 		common.InternalError(ctx, "创建会签任务失败: "+err.Error())
 		return
@@ -878,8 +968,12 @@ func (c *BPMNWorkflowController) CreateCounterSignTasks(ctx *gin.Context) {
 // GetCounterSignStatus 获取会签状态
 func (c *BPMNWorkflowController) GetCounterSignStatus(ctx *gin.Context) {
 	taskID := ctx.Param("id")
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	status, err := c.processEngine.TaskService().GetCounterSignStatus(ctx, taskID)
+	status, err := c.processEngine.TaskService().GetCounterSignStatus(workflowCtx, taskID)
 	if err != nil {
 		common.InternalError(ctx, "获取会签状态失败: "+err.Error())
 		return
@@ -897,8 +991,12 @@ func (c *BPMNWorkflowController) Vote(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	workflowCtx, _, ok := getBPMNTenantContext(ctx)
+	if !ok {
+		return
+	}
 
-	err := c.processEngine.TaskService().Vote(ctx, taskID, &req)
+	err := c.processEngine.TaskService().Vote(workflowCtx, taskID, &req)
 	if err != nil {
 		common.InternalError(ctx, "投票失败: "+err.Error())
 		return

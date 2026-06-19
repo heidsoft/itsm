@@ -20,7 +20,7 @@ type CloudService struct {
 	ID int `json:"id,omitempty"`
 	// 父级服务ID
 	ParentID int `json:"parent_id,omitempty"`
-	// 云厂商标识（aliyun/huawei/tencent/azure/onprem）
+	// 云厂商标识（aliyun/tencent/huawei/aws/azure/onprem）
 	Provider string `json:"provider,omitempty"`
 	// 服务分类
 	Category string `json:"category,omitempty"`
