@@ -296,14 +296,14 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 	items := make([]interface{}, 0, len(articles))
 	for _, a := range articles {
 		items = append(items, map[string]interface{}{
-			"id":          a.ID,
-			"title":       a.Title,
-			"category":    a.Category,
-			"snippet":     snippet(a.Content, 200),
-			"tags":        a.Tags,
+			"id":           a.ID,
+			"title":        a.Title,
+			"category":     a.Category,
+			"snippet":      snippet(a.Content, 200),
+			"tags":         a.Tags,
 			"is_published": a.IsPublished,
-			"score":       0.8,
-			"search_type": "keyword",
+			"score":        0.8,
+			"search_type":  "keyword",
 		})
 	}
 

@@ -355,14 +355,86 @@ func (h *Handler) GetStats(c *gin.Context) {
 	errs := make([]error, 0)
 
 	wg.Add(8)
-	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID)).Count(ctx); mu.Lock(); total = n; if err != nil { errs = append(errs, fmt.Errorf("total count: %w", err)) }; mu.Unlock() }()
-	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("active")).Count(ctx); mu.Lock(); active = n; if err != nil { errs = append(errs, fmt.Errorf("active count: %w", err)) }; mu.Unlock() }()
-	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("resolved")).Count(ctx); mu.Lock(); resolved = n; if err != nil { errs = append(errs, fmt.Errorf("resolved count: %w", err)) }; mu.Unlock() }()
-	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("deprecated")).Count(ctx); mu.Lock(); deprecated = n; if err != nil { errs = append(errs, fmt.Errorf("deprecated count: %w", err)) }; mu.Unlock() }()
-	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("critical")).Count(ctx); mu.Lock(); critical = n; if err != nil { errs = append(errs, fmt.Errorf("critical count: %w", err)) }; mu.Unlock() }()
-	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("high")).Count(ctx); mu.Lock(); high = n; if err != nil { errs = append(errs, fmt.Errorf("high count: %w", err)) }; mu.Unlock() }()
-	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("medium")).Count(ctx); mu.Lock(); medium = n; if err != nil { errs = append(errs, fmt.Errorf("medium count: %w", err)) }; mu.Unlock() }()
-	go func() { defer wg.Done(); n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("low")).Count(ctx); mu.Lock(); low = n; if err != nil { errs = append(errs, fmt.Errorf("low count: %w", err)) }; mu.Unlock() }()
+	go func() {
+		defer wg.Done()
+		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID)).Count(ctx)
+		mu.Lock()
+		total = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("total count: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("active")).Count(ctx)
+		mu.Lock()
+		active = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("active count: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("resolved")).Count(ctx)
+		mu.Lock()
+		resolved = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("resolved count: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("deprecated")).Count(ctx)
+		mu.Lock()
+		deprecated = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("deprecated count: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("critical")).Count(ctx)
+		mu.Lock()
+		critical = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("critical count: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("high")).Count(ctx)
+		mu.Lock()
+		high = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("high count: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("medium")).Count(ctx)
+		mu.Lock()
+		medium = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("medium count: %w", err))
+		}
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("low")).Count(ctx)
+		mu.Lock()
+		low = n
+		if err != nil {
+			errs = append(errs, fmt.Errorf("low count: %w", err))
+		}
+		mu.Unlock()
+	}()
 	wg.Wait()
 
 	if len(errs) > 0 {

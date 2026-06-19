@@ -10,10 +10,10 @@ import (
 )
 
 type DingTalk struct {
-	client     *Client
-	cfg        connector.Config
-	mu         sync.RWMutex
-	startedAt  time.Time
+	client    *Client
+	cfg       connector.Config
+	mu        sync.RWMutex
+	startedAt time.Time
 }
 
 func init() {
@@ -24,12 +24,12 @@ func New() *DingTalk { return &DingTalk{} }
 
 func (d *DingTalk) Manifest() connector.Manifest {
 	return connector.Manifest{
-		Name:         "dingtalk",
-		Version:      "1.0.0",
-		Title:        "钉钉 DingTalk",
-		Provider:     "dingtalk",
-		Type:         connector.TypeIM,
-		Description:  "钉钉开放平台连接器：工作通知 + 群机器人（加签模式），支持 text/markdown/actionCard。",
+		Name:        "dingtalk",
+		Version:     "1.0.0",
+		Title:       "钉钉 DingTalk",
+		Provider:    "dingtalk",
+		Type:        connector.TypeIM,
+		Description: "钉钉开放平台连接器：工作通知 + 群机器人（加签模式），支持 text/markdown/actionCard。",
 		Capabilities: []connector.Capability{
 			connector.CapSendMessage,
 			connector.CapSendCard,

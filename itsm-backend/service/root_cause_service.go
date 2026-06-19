@@ -454,10 +454,10 @@ func (s *RootCauseService) SummarizeTicket(ctx context.Context, ticketID int, te
 	}
 
 	return map[string]interface{}{
-		"ticket_id":   ticketID,
-		"summary":     summary,
-		"method":      method,
+		"ticket_id":     ticketID,
+		"summary":       summary,
+		"method":        method,
 		"comment_count": commentCount,
-		"generated_at": time.Now().Format(time.RFC3339),
+		"generated_at":  time.Now().Format(time.RFC3339),
 	}, nil
 }

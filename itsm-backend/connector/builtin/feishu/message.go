@@ -62,7 +62,7 @@ func buildFeishuMessageBody(msg *connector.Message) map[string]interface{} {
 		post := map[string]interface{}{
 			"zh_cn": map[string]interface{}{
 				"title":   msg.Title,
-				"content": [][]map[string]string{{{ "tag": "text", "text": msg.Content }}},
+				"content": [][]map[string]string{{{"tag": "text", "text": msg.Content}}},
 			},
 		}
 		b, _ := json.Marshal(post)

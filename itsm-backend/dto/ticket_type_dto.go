@@ -93,8 +93,8 @@ type ApprovalChainDefinition struct {
 	RejectAction     string              `json:"rejectAction"` // end, return, custom
 	ReturnToLevel    *int                `json:"returnToLevel,omitempty"`
 	Conditions       []ApprovalCondition `json:"conditions,omitempty"`
-	Timeout          *int                `json:"timeout,omitempty"`        // 超时时间（小时）
-	TimeoutAction    string              `json:"timeoutAction,omitempty"`  // auto_approve, auto_reject, escalate
+	Timeout          *int                `json:"timeout,omitempty"`       // 超时时间（小时）
+	TimeoutAction    string              `json:"timeoutAction,omitempty"` // auto_approve, auto_reject, escalate
 }
 
 // AssignToConfig 分配目标配置

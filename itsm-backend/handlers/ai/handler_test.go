@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"go.uber.org/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 
 	"itsm-backend/handlers/ai"
 )

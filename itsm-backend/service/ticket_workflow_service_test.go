@@ -8,9 +8,9 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/ticketworkflowrecord"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // TestAcceptTicket_UsesTransaction 验证 AcceptTicket 使用 Ent 事务保护

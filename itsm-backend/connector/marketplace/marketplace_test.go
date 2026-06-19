@@ -12,7 +12,7 @@ type fakeC struct{}
 func (f *fakeC) Manifest() connector.Manifest {
 	return connector.Manifest{Name: "fake", Title: "Fake", Type: connector.TypeCustom}
 }
-func (f *fakeC) Init(_ context.Context, _ connector.Config) error    { return nil }
+func (f *fakeC) Init(_ context.Context, _ connector.Config) error   { return nil }
 func (f *fakeC) Send(_ context.Context, _ *connector.Message) error { return nil }
 func (f *fakeC) HealthCheck(_ context.Context) connector.HealthStatus {
 	return connector.HealthStatus{OK: true}

@@ -15,7 +15,7 @@ type Manager struct {
 	registry *Registry
 	logger   *zap.SugaredLogger
 
-	mu       sync.RWMutex
+	mu        sync.RWMutex
 	instances map[string]*instance // key = tenantID + "/" + connectorName + "/" + instanceID
 }
 

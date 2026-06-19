@@ -26,12 +26,12 @@ import (
 const BaseURL = "https://qyapi.weixin.qq.com"
 
 type Client struct {
-	baseURL   string
-	corpID    string
+	baseURL    string
+	corpID     string
 	corpSecret string
-	agentID   string
-	logger    *zap.SugaredLogger
-	hc        *http.Client
+	agentID    string
+	logger     *zap.SugaredLogger
+	hc         *http.Client
 
 	mu    sync.Mutex
 	token string
@@ -91,10 +91,14 @@ func (c *Client) doJSON(ctx context.Context, method, path string, query map[stri
 	u := c.baseURL + path
 	if len(query) > 0 {
 		keys := make([]string, 0, len(query))
-		for k := range(query) { keys = append(keys, k) }
+		for k := range query {
+			keys = append(keys, k)
+		}
 		sort.Strings(keys)
 		parts := make([]string, 0, len(query))
-		for _, k := range keys { parts = append(parts, k+"="+query[k]) }
+		for _, k := range keys {
+			parts = append(parts, k+"="+query[k])
+		}
 		u += "?" + strings.Join(parts, "&")
 	}
 	req, _ := http.NewRequestWithContext(ctx, method, u, bytes.NewReader(body))

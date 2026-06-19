@@ -7,9 +7,9 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // TestCreateRole_DefaultIsActiveTrue 验证 CreateRole 默认 is_active=true

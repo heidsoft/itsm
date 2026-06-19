@@ -1,8 +1,8 @@
 package feishu
 
 import (
-	"encoding/json"
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -17,7 +17,7 @@ type Feishu struct {
 	cfg       connector.Config
 	startedAt time.Time
 
-	mu        sync.RWMutex
+	mu             sync.RWMutex
 	actionHandlers map[string]ActionHandler // card.action.trigger -> handler
 }
 
@@ -43,12 +43,12 @@ func New() *Feishu { return &Feishu{actionHandlers: map[string]ActionHandler{}} 
 
 func (f *Feishu) Manifest() connector.Manifest {
 	return connector.Manifest{
-		Name:         "feishu",
-		Version:      "1.0.0",
-		Title:        "飞书 / Lark",
-		Provider:     "feishu",
-		Type:         connector.TypeIM,
-		Description:  "飞书/Lark 开放平台连接器：发送/接收消息、卡片回调、签名校验。覆盖中国大陆及海外版本。",
+		Name:        "feishu",
+		Version:     "1.0.0",
+		Title:       "飞书 / Lark",
+		Provider:    "feishu",
+		Type:        connector.TypeIM,
+		Description: "飞书/Lark 开放平台连接器：发送/接收消息、卡片回调、签名校验。覆盖中国大陆及海外版本。",
 		Capabilities: []connector.Capability{
 			connector.CapSendMessage,
 			connector.CapReceiveMessage,

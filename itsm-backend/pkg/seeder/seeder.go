@@ -65,7 +65,7 @@ type SeedConfig struct {
 	Teams             []TeamSeed             `json:"teams"`
 	Roles             []RoleSeed             `json:"roles"`
 	SLADefinitions    []SLADefinitionSeed    `json:"sla_definitions"`
-	SLAPolicies      []SLAPolicySeed       `json:"sla_policies"`
+	SLAPolicies       []SLAPolicySeed        `json:"sla_policies"`
 	ServiceCatalog    []ServiceCatalogSeed   `json:"service_catalog"`
 	ApprovalWorkflows []ApprovalWorkflowSeed `json:"approval_workflows"`
 	ProcessBindings   []ProcessBindingSeed   `json:"process_bindings"`
@@ -246,13 +246,13 @@ type TicketTagSeed struct {
 type SLAPolicySeed struct {
 	Name                  string `json:"name"`
 	Description           string `json:"description"`
-	Priority             string `json:"priority"`
-	ResponseTimeMinutes  int    `json:"response_time_minutes"`
+	Priority              string `json:"priority"`
+	ResponseTimeMinutes   int    `json:"response_time_minutes"`
 	ResolutionTimeMinutes int    `json:"resolution_time_minutes"`
-	ExcludeWeekends      bool   `json:"exclude_weekends"`
-	ExcludeHolidays      bool   `json:"exclude_holidays"`
-	IsActive             bool   `json:"is_active"`
-	PriorityScore        int    `json:"priority_score"`
+	ExcludeWeekends       bool   `json:"exclude_weekends"`
+	ExcludeHolidays       bool   `json:"exclude_holidays"`
+	IsActive              bool   `json:"is_active"`
+	PriorityScore         int    `json:"priority_score"`
 }
 
 // Seeder manages database seeding operations
@@ -1016,9 +1016,9 @@ func (s *Seeder) backfillUserRole(ctx context.Context) {
 func (s *Seeder) seedRoleTestAccounts(ctx context.Context) {
 	// 确保 tenant_test 租户存在
 	testTenant := s.ensureTenant(ctx, tenantSeed{
-		Code:   "tenant_test",
-		Name:   "测试租户",
-		Type:   "customer",
+		Code: "tenant_test",
+		Name: "测试租户",
+		Type: "customer",
 	})
 	if testTenant == nil {
 		s.sugar.Warnw("tenant_test 创建失败，跳过角色测试账号 seed")

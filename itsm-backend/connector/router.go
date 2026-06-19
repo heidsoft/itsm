@@ -16,8 +16,8 @@ type InboundHandler func(ctx context.Context, msg *InboundMessage) error
 
 // Router 负责把"入站消息"分发到"业务处理器"
 // 典型用法：
-//   1. 飞书事件回调 -> 入站消息 -> 创建/查询工单 -> 回发卡片
-//   2. 钉钉机器人对话 -> 识别意图 -> 调 AI -> 回复用户
+//  1. 飞书事件回调 -> 入站消息 -> 创建/查询工单 -> 回发卡片
+//  2. 钉钉机器人对话 -> 识别意图 -> 调 AI -> 回复用户
 type Router struct {
 	logger *zap.SugaredLogger
 

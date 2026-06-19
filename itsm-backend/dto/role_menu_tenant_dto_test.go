@@ -68,9 +68,9 @@ func TestMenuDTOUsesCamelCaseJSON(t *testing.T) {
 
 func TestTenantListResponseUsesPageSizeJSON(t *testing.T) {
 	resp := TenantListResponse{
-		Tenants: []TenantResponse{{ID: 1, Name: "HQ", Code: "hq"}},
-		Total:   1,
-		Page:    2,
+		Tenants:  []TenantResponse{{ID: 1, Name: "HQ", Code: "hq"}},
+		Total:    1,
+		Page:     2,
 		PageSize: 20,
 	}
 

@@ -489,7 +489,6 @@ func (s *CloudDiscoveryService) upsertCloudResource(
 		SetLifecycleState(normalizeResourceLifecycle(resource.Status)).
 		SetTenantID(account.TenantID).
 		Save(ctx)
-
 	if err != nil {
 		return nil, err
 	}

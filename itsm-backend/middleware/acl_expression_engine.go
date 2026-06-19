@@ -204,7 +204,8 @@ func (e *ACLExpressionEngine) Evaluate(expression string, variables map[string]i
 	lexer := NewLexer(expression)
 	tokens, err := lexer.Tokenize()
 	if err != nil {
-		zap.S().Errorw("ACL 表达式词法分析失败",
+		zap.S().Errorw(
+			"ACL 表达式词法分析失败",
 			"expression", expression,
 			"error", err,
 		)
@@ -215,7 +216,8 @@ func (e *ACLExpressionEngine) Evaluate(expression string, variables map[string]i
 	parser := newACLParser(tokens, variables)
 	result, err := parser.parseOr()
 	if err != nil {
-		zap.S().Errorw("ACL 表达式解析/执行失败",
+		zap.S().Errorw(
+			"ACL 表达式解析/执行失败",
 			"expression", expression,
 			"error", err,
 		)

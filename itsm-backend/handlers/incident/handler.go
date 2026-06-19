@@ -302,13 +302,76 @@ func (h *Handler) GetStats(c *gin.Context) {
 	errs := make([]error, 0)
 
 	wg.Add(7)
-	go func() { defer wg.Done(); n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt)).Count(ctx); mu.Lock(); defer mu.Unlock(); total = n; if err != nil { errs = append(errs, err) } }()
-	go func() { defer wg.Done(); n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("open")).Count(ctx); mu.Lock(); defer mu.Unlock(); open = n; if err != nil { errs = append(errs, err) } }()
-	go func() { defer wg.Done(); n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("in_progress")).Count(ctx); mu.Lock(); defer mu.Unlock(); inProgress = n; if err != nil { errs = append(errs, err) } }()
-	go func() { defer wg.Done(); n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("resolved")).Count(ctx); mu.Lock(); defer mu.Unlock(); resolved = n; if err != nil { errs = append(errs, err) } }()
-	go func() { defer wg.Done(); n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("closed")).Count(ctx); mu.Lock(); defer mu.Unlock(); closed = n; if err != nil { errs = append(errs, err) } }()
-	go func() { defer wg.Done(); n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Priority("critical")).Count(ctx); mu.Lock(); defer mu.Unlock(); critical = n; if err != nil { errs = append(errs, err) } }()
-	go func() { defer wg.Done(); n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Priority("high")).Count(ctx); mu.Lock(); defer mu.Unlock(); major = n; if err != nil { errs = append(errs, err) } }()
+	go func() {
+		defer wg.Done()
+		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt)).Count(ctx)
+		mu.Lock()
+		defer mu.Unlock()
+		total = n
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("open")).Count(ctx)
+		mu.Lock()
+		defer mu.Unlock()
+		open = n
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("in_progress")).Count(ctx)
+		mu.Lock()
+		defer mu.Unlock()
+		inProgress = n
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("resolved")).Count(ctx)
+		mu.Lock()
+		defer mu.Unlock()
+		resolved = n
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("closed")).Count(ctx)
+		mu.Lock()
+		defer mu.Unlock()
+		closed = n
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Priority("critical")).Count(ctx)
+		mu.Lock()
+		defer mu.Unlock()
+		critical = n
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		n, err := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Priority("high")).Count(ctx)
+		mu.Lock()
+		defer mu.Unlock()
+		major = n
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}()
 
 	wg.Wait()
 
@@ -320,10 +383,10 @@ func (h *Handler) GetStats(c *gin.Context) {
 
 	common.Success(c, gin.H{
 		"total_incidents":     total,
-		"open_incidents":       open + inProgress,
-		"critical_incidents":   critical,
-		"major_incidents":      major,
-		"resolved_incidents":   resolved + closed,
+		"open_incidents":      open + inProgress,
+		"critical_incidents":  critical,
+		"major_incidents":     major,
+		"resolved_incidents":  resolved + closed,
 		"avg_resolution_time": 0,
 	})
 }
@@ -680,13 +743,13 @@ func (h *Handler) GetIncidentComments(c *gin.Context) {
 	var result []gin.H
 	for _, e := range events {
 		item := gin.H{
-			"id": e.ID,
-			"incident_id":  e.IncidentID,
-			"content":      e.Description,
-			"event_type":   e.EventType,
-			"is_internal":  false,
-			"occurred_at":  e.OccurredAt,
-			"created_at":   e.CreatedAt,
+			"id":          e.ID,
+			"incident_id": e.IncidentID,
+			"content":     e.Description,
+			"event_type":  e.EventType,
+			"is_internal": false,
+			"occurred_at": e.OccurredAt,
+			"created_at":  e.CreatedAt,
 		}
 		if e.Data != nil {
 			if v, ok := e.Data["isInternal"].(bool); ok {
@@ -759,10 +822,10 @@ func (h *Handler) CreateIncidentComment(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"id":           event.ID,
-		"incident_id":  event.IncidentID,
-		"content":      event.Description,
-		"is_internal":  req.IsInternal,
-		"created_at":   event.CreatedAt,
+		"id":          event.ID,
+		"incident_id": event.IncidentID,
+		"content":     event.Description,
+		"is_internal": req.IsInternal,
+		"created_at":  event.CreatedAt,
 	})
 }

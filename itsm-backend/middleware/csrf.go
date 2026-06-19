@@ -90,7 +90,7 @@ func CSRFProtectionMiddleware(config *CSRFConfig) gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-	// 1. 检查是否跳过 CSRF 验证
+		// 1. 检查是否跳过 CSRF 验证
 		if skipPaths[c.Request.URL.Path] {
 			c.Next()
 			return

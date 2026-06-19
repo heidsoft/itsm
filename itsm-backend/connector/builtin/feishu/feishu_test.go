@@ -1,10 +1,11 @@
 package feishu
 
 import (
-	"itsm-backend/connector"
 	"crypto/sha256"
 	"encoding/hex"
 	"testing"
+
+	"itsm-backend/connector"
 )
 
 func TestVerifyEventSignature(t *testing.T) {

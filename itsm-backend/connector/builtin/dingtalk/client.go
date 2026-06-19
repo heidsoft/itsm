@@ -6,10 +6,10 @@
 //   - 事件订阅: https://open.dingtalk.com/document/isvapp/stream
 //
 // 设计要点：
-//   1. access_token 缓存 + 自动刷新（TTL ~2h，提前 5 分钟）
-//   2. 支持两种发送通道：app 工作通知（精确到 userid）+ 群机器人 webhook
-//   3. 群机器人支持加签安全模式
-//   4. 消息类型：text / markdown / actionCard
+//  1. access_token 缓存 + 自动刷新（TTL ~2h，提前 5 分钟）
+//  2. 支持两种发送通道：app 工作通知（精确到 userid）+ 群机器人 webhook
+//  3. 群机器人支持加签安全模式
+//  4. 消息类型：text / markdown / actionCard
 package dingtalk
 
 import (
@@ -38,12 +38,12 @@ const (
 )
 
 type Client struct {
-	baseURL    string
-	appKey     string
-	appSecret  string
-	agentID    string // 发送工作通知必填
-	logger     *zap.SugaredLogger
-	hc         *http.Client
+	baseURL   string
+	appKey    string
+	appSecret string
+	agentID   string // 发送工作通知必填
+	logger    *zap.SugaredLogger
+	hc        *http.Client
 
 	mu    sync.Mutex
 	token string

@@ -9,8 +9,8 @@ import (
 
 // fakeConnector 测试用连接器
 type fakeConnector struct {
-	cfg      Config
-	sent     int32
+	cfg  Config
+	sent int32
 }
 
 func (f *fakeConnector) Manifest() Manifest {
@@ -21,18 +21,20 @@ func (f *fakeConnector) Send(_ context.Context, _ *Message) error {
 	atomic.AddInt32(&f.sent, 1)
 	return nil
 }
+
 func (f *fakeConnector) HealthCheck(_ context.Context) HealthStatus { return HealthStatus{OK: true} }
-func (f *fakeConnector) Close() error                                { return nil }
+func (f *fakeConnector) Close() error                               { return nil }
 
 type errorConnector struct{}
 
 func (e *errorConnector) Manifest() Manifest {
 	return Manifest{Name: "error-c", Title: "Err", Type: TypeCustom}
 }
-func (e *errorConnector) Init(_ context.Context, _ Config) error  { return nil }
+func (e *errorConnector) Init(_ context.Context, _ Config) error { return nil }
 func (e *errorConnector) Send(_ context.Context, _ *Message) error {
 	return errors.New("injected")
 }
+
 func (e *errorConnector) HealthCheck(_ context.Context) HealthStatus {
 	return HealthStatus{OK: false, Message: "always failing"}
 }
@@ -119,7 +121,6 @@ func TestManifest_RequiredFields(t *testing.T) {
 type emptyManifester struct{ fakeConnector }
 
 func (e *emptyManifester) Manifest() Manifest { return Manifest{} }
-
 
 func TestRouter_Dedup(t *testing.T) {
 	r := NewRouter(nil)

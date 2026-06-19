@@ -23,6 +23,7 @@ import (
 	marketplaceService "itsm-backend/service/marketplace"
 
 	"itsm-backend/database"
+	"itsm-backend/docs"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
@@ -36,7 +37,6 @@ import (
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/sla"
-	"itsm-backend/docs"
 	"itsm-backend/handlers/standard_change"
 	"itsm-backend/middleware"
 	"itsm-backend/pkg/seeder"

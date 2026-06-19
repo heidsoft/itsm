@@ -55,8 +55,8 @@ type MenuWithPermission struct {
 }
 
 type MenuListResponse struct {
-	Menus  []*MenuDTO `json:"menus"`
-	Total  int        `json:"total"`
+	Menus []*MenuDTO `json:"menus"`
+	Total int        `json:"total"`
 }
 
 type MenuInitResponse struct {

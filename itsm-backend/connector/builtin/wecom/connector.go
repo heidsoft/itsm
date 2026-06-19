@@ -24,12 +24,12 @@ func New() *WeCom { return &WeCom{} }
 
 func (w *WeCom) Manifest() connector.Manifest {
 	return connector.Manifest{
-		Name:         "wecom",
-		Version:      "1.0.0",
-		Title:        "企业微信 WeCom",
-		Provider:     "wecom",
-		Type:         connector.TypeIM,
-		Description:  "企业微信连接器：应用消息（精确到 UserID/部门/标签）+ 群机器人 Webhook。支持 text/markdown/textcard/news。",
+		Name:        "wecom",
+		Version:     "1.0.0",
+		Title:       "企业微信 WeCom",
+		Provider:    "wecom",
+		Type:        connector.TypeIM,
+		Description: "企业微信连接器：应用消息（精确到 UserID/部门/标签）+ 群机器人 Webhook。支持 text/markdown/textcard/news。",
 		Capabilities: []connector.Capability{
 			connector.CapSendMessage,
 			connector.CapSendCard,

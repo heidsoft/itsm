@@ -383,11 +383,12 @@ func (s *ProblemService) mapProcessStatus(status string) dto.ProcessStatus {
 
 // isValidProblemStatusTransition checks problem status transitions
 // state machine:
-//   new           -> investigating, identified, resolved, closed
-//   investigating -> identified, resolved, closed
-//   identified    -> resolved, closed, investigating
-//   resolved      -> closed, investigating (reopen)
-//   closed        -> terminal
+//
+//	new           -> investigating, identified, resolved, closed
+//	investigating -> identified, resolved, closed
+//	identified    -> resolved, closed, investigating
+//	resolved      -> closed, investigating (reopen)
+//	closed        -> terminal
 func isValidProblemStatusTransition(currentStatus, newStatus string) bool {
 	if currentStatus == newStatus {
 		return true

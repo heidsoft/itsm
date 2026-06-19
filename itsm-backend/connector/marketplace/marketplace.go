@@ -11,10 +11,10 @@ import (
 
 // Entry 市场中的一项
 type Entry struct {
-	Manifest connector.Manifest `json:"manifest"`
-	Local    bool               `json:"local"`    // 是否本地内置
-	Installed bool              `json:"installed"` // 是否已为此租户安装
-	Category string             `json:"category"`  // 分类：im / webhook / database / ...
+	Manifest  connector.Manifest `json:"manifest"`
+	Local     bool               `json:"local"`     // 是否本地内置
+	Installed bool               `json:"installed"` // 是否已为此租户安装
+	Category  string             `json:"category"`  // 分类：im / webhook / database / ...
 }
 
 // Source 远程市场数据源（可由外部实现 HTTP 拉取、文件加载等）
@@ -107,9 +107,15 @@ func equalsFold(a, b string) bool {
 	}
 	for i := 0; i < len(a); i++ {
 		ca, cb := a[i], b[i]
-		if ca >= 'A' && ca <= 'Z' { ca += 32 }
-		if cb >= 'A' && cb <= 'Z' { cb += 32 }
-		if ca != cb { return false }
+		if ca >= 'A' && ca <= 'Z' {
+			ca += 32
+		}
+		if cb >= 'A' && cb <= 'Z' {
+			cb += 32
+		}
+		if ca != cb {
+			return false
+		}
 	}
 	return true
 }

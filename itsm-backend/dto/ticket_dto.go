@@ -101,10 +101,10 @@ type TicketResponse struct {
 // ListTicketsResponse 工单列表响应
 type ListTicketsResponse struct {
 	Tickets    []*TicketResponse `json:"tickets"`
-	Total      int                `json:"total"`
-	Page       int                `json:"page"`
-	PageSize   int                `json:"pageSize"`
-	TotalPages int                `json:"totalPages"`
+	Total      int               `json:"total"`
+	Page       int               `json:"page"`
+	PageSize   int               `json:"pageSize"`
+	TotalPages int               `json:"totalPages"`
 }
 
 // TicketStatsResponse 工单统计响应

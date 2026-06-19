@@ -5,10 +5,10 @@
 //   - 签名校验：https://open.feishu.cn/document/server-docs/event-subscription-guide/signature-verification
 //
 // 设计要点：
-//   1. tenant_access_token 统一缓存 + 自动刷新
-//   2. 事件回调支持 URL Verification（首次握手）
-//   3. 事件回调支持 HMAC-SHA256 签名校验
-//   4. 卡片回调（card.action.trigger）支持 ActionHandler 注册
+//  1. tenant_access_token 统一缓存 + 自动刷新
+//  2. 事件回调支持 URL Verification（首次握手）
+//  3. 事件回调支持 HMAC-SHA256 签名校验
+//  4. 卡片回调（card.action.trigger）支持 ActionHandler 注册
 package feishu
 
 import (
@@ -34,13 +34,13 @@ const (
 )
 
 type Client struct {
-	baseURL   string
-	appID     string
-	appSecret string
-	verifyTok string
+	baseURL    string
+	appID      string
+	appSecret  string
+	verifyTok  string
 	encryptKey string
-	logger    *zap.SugaredLogger
-	hc        *http.Client
+	logger     *zap.SugaredLogger
+	hc         *http.Client
 
 	mu     sync.Mutex
 	token  string

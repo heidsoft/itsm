@@ -2,9 +2,9 @@ package dto
 
 import (
 	"context"
-	"strconv"
 	"database/sql"
 	"encoding/json"
+	"strconv"
 	"strings"
 	"time"
 
@@ -736,9 +736,9 @@ type WorkflowListResponse struct {
 
 type WorkflowInstanceListResponse struct {
 	Instances []*WorkflowInstanceResponse `json:"instances"`
-	Total     int                        `json:"total"`
-	Page      int                        `json:"page"`
-	PageSize  int                        `json:"pageSize"`
+	Total     int                         `json:"total"`
+	Page      int                         `json:"page"`
+	PageSize  int                         `json:"pageSize"`
 }
 
 // ToWorkflowResponse converts an ent.Workflow to WorkflowResponse
@@ -912,7 +912,6 @@ func ToTicketCategoryResponseList(categories []*ent.TicketCategory) []*TicketCat
 	}
 	return responses
 }
-
 
 // TicketExtraFields 后期通过 raw SQL 添加的列
 type TicketExtraFields struct {

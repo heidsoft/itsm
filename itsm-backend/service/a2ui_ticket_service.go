@@ -486,13 +486,13 @@ func (s *A2UITicketService) ParseTicketIntent(ctx context.Context, description s
 	}
 
 	return map[string]interface{}{
-		"suggested_title":       fields["title"],
-		"suggested_category":    fields["category"],
-		"suggested_priority":    fields["priority"],
-		"description":           description,
-		"confidence":            confidence,
-		"reasoning":             "A2UI intent parser (keyword + length heuristics)",
-		"surface_id":            "ticket-create",
-		"action_url":            "/tickets/create",
+		"suggested_title":    fields["title"],
+		"suggested_category": fields["category"],
+		"suggested_priority": fields["priority"],
+		"description":        description,
+		"confidence":         confidence,
+		"reasoning":          "A2UI intent parser (keyword + length heuristics)",
+		"surface_id":         "ticket-create",
+		"action_url":         "/tickets/create",
 	}, nil
 }
