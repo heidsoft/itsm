@@ -53,13 +53,20 @@ export async function loginAs(page: Page, role: TestUserRole): Promise<void> {
   // Submit form - only click the submit button
   await page.locator('button[type="submit"]').click();
 
-  // Wait to leave login page (any URL except login)
-  await page.waitForURL('**/!(login)**', { timeout: 20000 }).catch(async () => {
-    // Check for error message if still on login page
-    const errorVisible = await page.locator('.ant-message-error, .ant-alert-error').isVisible().catch(() => false);
-    if (errorVisible) {
-      throw new Error(`Login failed for ${role}`);
-    }
+  // Playwright glob patterns do not support a reliable "not login" route match.
+  // Treat login as successful when the app leaves /login and the authenticated
+  // shell is visible; otherwise surface the login error instead of burning the
+  // whole test timeout.
+  await Promise.race([
+    page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 15000 }),
+    page.locator('.ant-menu, [class*="sidebar"], nav').first().waitFor({ state: 'visible', timeout: 15000 }),
+  ]).catch(async () => {
+    const errorText = await page
+      .locator('.ant-message-error, .ant-alert-error, [role="alert"]')
+      .first()
+      .textContent({ timeout: 1000 })
+      .catch(() => '');
+    throw new Error(`Login failed for ${role}${errorText ? `: ${errorText}` : ''}`);
   });
 }
 
@@ -69,7 +76,7 @@ export async function loginAs(page: Page, role: TestUserRole): Promise<void> {
 export async function loginViaApi(page: Page, role: TestUserRole): Promise<void> {
   const user = TEST_USERS[role];
   const baseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090';
 
   // Get CSRF token first
   const csrfResponse = await page.request.get(`${apiUrl}/api/v1/auth/csrf`, {
