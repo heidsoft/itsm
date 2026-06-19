@@ -7,18 +7,18 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/config"
 	"itsm-backend/connector"
 	_ "itsm-backend/connector/builtin/console"
 	_ "itsm-backend/connector/builtin/dingtalk"
-	_ "itsm-backend/connector/builtin/wecom"
 	_ "itsm-backend/connector/builtin/feishu"
 	_ "itsm-backend/connector/builtin/webhook"
+	_ "itsm-backend/connector/builtin/wecom"
 	"itsm-backend/connector/marketplace"
-	"itsm-backend/config"
-	"itsm-backend/pkg/eventbus"
 	"itsm-backend/controller"
-	marketplaceService "itsm-backend/service/marketplace"
 	marketplaceController "itsm-backend/controller/marketplace"
+	"itsm-backend/pkg/eventbus"
+	marketplaceService "itsm-backend/service/marketplace"
 
 	"itsm-backend/database"
 	"itsm-backend/ent"
@@ -103,7 +103,7 @@ func NewApplication() *Application {
 	} else {
 		sugar.Warnw("Redis sequence service not available, will use database fallback for ticket number")
 	}
-	
+
 	// 初始化 EventBus 事件总线
 	eventBus, err := eventbus.NewWatermillEventBus(&cfg.Redis, sugar)
 	if err != nil {
@@ -112,15 +112,6 @@ func NewApplication() *Application {
 	eventbus.SetGlobalEventBus(eventBus)
 	sugar.Infow("Event bus initialized successfully")
 
-	// 初始化 EventBus
-	eventBus, err := eventbus.NewWatermillEventBus(&cfg.Redis, sugar)
-	if err != nil {
-		sugar.Fatalf("Failed to initialize event bus: %v", err)
-	}
-	eventbus.SetGlobalEventBus(eventBus)
-	sugar.Infow("Event bus initialized successfully")
-
-	}
 	ticketService := service.NewTicketServiceWithSequence(client, sugar, sequenceService)
 	ticketService.SetRawDB(database.GetRawDB())
 	// 为 IncidentService 注入序列服务
@@ -179,8 +170,8 @@ func NewApplication() *Application {
 	predictionService := service.NewPredictionService(client, sugar)
 	slaForecastSkill := service.NewSLAForecastSkill(client, llmGateway, sugar)
 	// 市场服务
-	marketplaceService := marketplaceService.NewService(client, sugar)
-
+	marketplaceSvc := marketplaceService.NewService(client, sugar)
+	marketplaceCtrl := marketplaceController.NewController(marketplaceSvc)
 
 	// Guidance sidecar for constrained JSON generation
 	guidanceClient := service.NewGuidanceClient("http://localhost:8091", sugar)
@@ -289,7 +280,6 @@ func NewApplication() *Application {
 
 	// Known Error Handler (KEDB)
 	knownErrorHandler := known_error.NewHandler(client, sugar)
-
 
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
 	connectorManager := connector.NewManager(connector.Default(), sugar)
@@ -549,7 +539,8 @@ func NewApplication() *Application {
 		KnownErrorHandler: knownErrorHandler,
 
 		// Connector Controller
-		ConnectorController: connectorController,
+		ConnectorController:   connectorController,
+		MarketplaceController: marketplaceCtrl,
 
 		// WebSocket Service
 		WebSocketService: wsService,
@@ -728,3 +719,4 @@ func (app *Application) startBackgroundTasks() {
 			}
 		}
 	}()
+}

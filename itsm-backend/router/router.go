@@ -9,6 +9,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/controller"
+	marketplaceController "itsm-backend/controller/marketplace"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
@@ -130,7 +131,8 @@ type RouterConfig struct {
 	KnownErrorHandler *known_error.Handler
 
 	// Connector Controller (连接器/插件/技能市场)
-	ConnectorController *controller.ConnectorController
+	ConnectorController   *controller.ConnectorController
+	MarketplaceController *marketplaceController.Controller
 }
 
 // SetupRoutes 设置路由
@@ -1167,6 +1169,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// Known Error Handler (KEDB)
 		if config.KnownErrorHandler != nil {
 			config.KnownErrorHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
+		if config.MarketplaceController != nil {
+			config.MarketplaceController.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
 		// Connector Controller (连接器/插件/技能市场)

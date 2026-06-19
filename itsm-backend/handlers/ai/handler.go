@@ -143,8 +143,16 @@ func (h *Handler) GetTrendPrediction(c *gin.Context) {
 // AnalyzeTicket handles POST /api/v1/ai/tickets/:id/analyze
 func (h *Handler) AnalyzeTicket(c *gin.Context) {
 	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		common.Fail(c, http.StatusBadRequest, "invalid ticket id")
+		return
+	}
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 
 	res, err := h.svc.AnalyzeTicket(c.Request.Context(), id, tenantID)
 	if err != nil {
@@ -158,11 +166,14 @@ func (h *Handler) AnalyzeTicket(c *gin.Context) {
 // B9: AI 工单总结 - 优先用 LLM，fallback 用字段拼接
 func (h *Handler) SummarizeTicket(c *gin.Context) {
 	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
-	tenantID := c.GetInt("tenant_id")
-
-	if id <= 0 {
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
 		common.Fail(c, http.StatusBadRequest, "invalid ticket id")
+		return
+	}
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
 

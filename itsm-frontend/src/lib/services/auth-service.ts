@@ -145,22 +145,11 @@ export class AuthService {
         }),
       });
 
-      // 根据 rememberMe 决定 token 存储位置
-      // rememberMe=true → localStorage（持久化）
-      // rememberMe=false → sessionStorage（关闭浏览器后清除）
-      if (typeof window !== 'undefined') {
-        const storage = rememberMe ? localStorage : sessionStorage;
-        if (data.access_token) {
-          storage.setItem('access_token', data.access_token);
-        }
-        if (data.refresh_token) {
-          storage.setItem('refresh_token', data.refresh_token);
-        }
-        // 同时设置 cookie 供 middleware 读取
+      // Token 仅通过 httpOnly cookie 管理（由后端设置）
+      // 前端仅设置 auth-token cookie 供 middleware 路由守卫使用
+      if (typeof window !== 'undefined' && data.access_token) {
         const cookieMaxAge = rememberMe ? 7 * 24 * 60 * 60 : 0; // 7天或会话级
-        if (data.access_token) {
-          document.cookie = `auth-token=${data.access_token}; path=/; max-age=${cookieMaxAge}; SameSite=Lax`;
-        }
+        document.cookie = `auth-token=${data.access_token}; path=/; max-age=${cookieMaxAge}; SameSite=Lax`;
       }
 
       // 使用store管理登录状态
