@@ -97,6 +97,7 @@ services:
       - JWT_SECRET=dev-secret-key-change-in-production-minimum-32-characters-long
       - LOG_LEVEL=debug
       - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
+      - ADMIN_PASSWORD=admin123
       - ITSM_BOOTSTRAP_ONLY=true
       - ITSM_AUTO_MIGRATE=true
       - ITSM_AUTO_SEED=true
@@ -150,6 +151,7 @@ services:
       - GIN_MODE=debug
       - SERVER_ENV=development
       - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
+      - ADMIN_PASSWORD=admin123
       - ITSM_AUTO_MIGRATE=false
       - ITSM_AUTO_SEED=false
 
