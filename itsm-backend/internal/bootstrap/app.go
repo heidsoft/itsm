@@ -15,7 +15,11 @@ import (
 	_ "itsm-backend/connector/builtin/webhook"
 	"itsm-backend/connector/marketplace"
 	"itsm-backend/config"
+	"itsm-backend/pkg/eventbus"
 	"itsm-backend/controller"
+	marketplaceService "itsm-backend/service/marketplace"
+	marketplaceController "itsm-backend/controller/marketplace"
+
 	"itsm-backend/database"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
@@ -99,6 +103,24 @@ func NewApplication() *Application {
 	} else {
 		sugar.Warnw("Redis sequence service not available, will use database fallback for ticket number")
 	}
+	
+	// 初始化 EventBus 事件总线
+	eventBus, err := eventbus.NewWatermillEventBus(&cfg.Redis, sugar)
+	if err != nil {
+		sugar.Fatalw("Failed to initialize event bus", "error", err)
+	}
+	eventbus.SetGlobalEventBus(eventBus)
+	sugar.Infow("Event bus initialized successfully")
+
+	// 初始化 EventBus
+	eventBus, err := eventbus.NewWatermillEventBus(&cfg.Redis, sugar)
+	if err != nil {
+		sugar.Fatalf("Failed to initialize event bus: %v", err)
+	}
+	eventbus.SetGlobalEventBus(eventBus)
+	sugar.Infow("Event bus initialized successfully")
+
+	}
 	ticketService := service.NewTicketServiceWithSequence(client, sugar, sequenceService)
 	ticketService.SetRawDB(database.GetRawDB())
 	// 为 IncidentService 注入序列服务
@@ -156,6 +178,9 @@ func NewApplication() *Application {
 	analyticsService := service.NewAnalyticsService(client, sugar)
 	predictionService := service.NewPredictionService(client, sugar)
 	slaForecastSkill := service.NewSLAForecastSkill(client, llmGateway, sugar)
+	// 市场服务
+	marketplaceService := marketplaceService.NewService(client, sugar)
+
 
 	// Guidance sidecar for constrained JSON generation
 	guidanceClient := service.NewGuidanceClient("http://localhost:8091", sugar)
@@ -554,6 +579,37 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 		sugar.Infow("database schema ensured", "deployment_mode", cfg.Deployment.Mode)
 	}
 
+	// Create non-Ent tables for change management approval chain
+	if rawDB := database.GetRawDB(); rawDB != nil {
+		_, err := rawDB.ExecContext(ctx, `
+			CREATE TABLE IF NOT EXISTS change_approvals (
+				id SERIAL PRIMARY KEY,
+				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+				approver_id INT NOT NULL,
+				status TEXT NOT NULL DEFAULT 'pending',
+				comment TEXT,
+				approved_at TIMESTAMP,
+				created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+				updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+			);
+			CREATE TABLE IF NOT EXISTS change_approval_chains (
+				id SERIAL PRIMARY KEY,
+				change_id INT NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+				level INT NOT NULL,
+				approver_id INT NOT NULL,
+				role TEXT DEFAULT 'approver',
+				status TEXT DEFAULT 'pending',
+				is_required BOOLEAN DEFAULT true,
+				created_at TIMESTAMP NOT NULL DEFAULT NOW()
+			);
+			CREATE INDEX IF NOT EXISTS idx_change_approvals_change_id ON change_approvals(change_id);
+			CREATE INDEX IF NOT EXISTS idx_change_approval_chains_change_id ON change_approval_chains(change_id);
+		`)
+		if err != nil {
+			sugar.Warnw("failed to create change approval tables (non-fatal)", "error", err)
+		}
+	}
+
 	if cfg.Deployment.AutoSeed {
 		s := seeder.NewSeeder(client, sugar, cfg)
 		s.SeedAll(ctx)
@@ -672,4 +728,3 @@ func (app *Application) startBackgroundTasks() {
 			}
 		}
 	}()
-}

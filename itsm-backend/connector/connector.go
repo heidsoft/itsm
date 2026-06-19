@@ -43,6 +43,11 @@ const (
 	CapQueryCI        Capability = "query_ci"         // 查询配置项
 	CapSyncAssets     Capability = "sync_assets"      // 同步资产
 	CapHealthCheck    Capability = "health_check"     // 健康检查
+	CapTriggerProcess   Capability = "trigger_process"    // 触发流程
+	CapApproveProcess   Capability = "approve_process"    // 审批流程
+	CapSyncOrganization Capability = "sync_organization"  // 同步组织架构
+	CapAutoDiscoverCI   Capability = "auto_discover_ci"   // 自动发现CI配置项
+
 )
 
 // Message 统一的出站消息结构（IM/邮件/短信复用）
@@ -152,6 +157,14 @@ type Manifest struct {
 	ConfigSchema string       `json:"config_schema,omitempty"` // JSON Schema
 	Tags         []string     `json:"tags,omitempty"`
 	MinITSMVer   string       `json:"min_itsm_ver,omitempty"`
+	Screenshots  []string     `json:"screenshots,omitempty"`  // 截图URL列表
+	Changelog    string       `json:"changelog,omitempty"`    // 版本更新日志
+	InstallCount int          `json:"install_count,omitempty"`// 安装次数
+	Rating       float64      `json:"rating,omitempty"`       // 评分，0-5
+	IsOfficial   bool         `json:"is_official,omitempty"`  // 是否是官方组件
+	Category     string       `json:"category,omitempty"`     // 分类
+	RequiredPermissions []string `json:"required_permissions,omitempty"` // 需要的系统权限列表
+
 }
 
 // InboundMessage 入站消息（来自 IM 回调 / Webhook）

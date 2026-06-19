@@ -17,7 +17,12 @@ if ('performance' in window) {
             perfData.loadEventEnd - perfData.loadEventStart + 'ms',
           '总加载时间': perfData.loadEventEnd - perfData.fetchStart + 'ms',
         };
-        console.log('性能指标:', metrics);
+        // 生产环境使用 console.debug（默认不显示），开发环境使用 console.log
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('性能指标:', metrics);
+        } else {
+          console.debug('性能指标:', metrics);
+        }
       }
     } catch (e) {
       // Ignore monitoring errors

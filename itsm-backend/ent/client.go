@@ -44,12 +44,14 @@ import (
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/incidentruleexecution"
+	"itsm-backend/ent/itemversion"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/knowledgearticleparticipant"
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/knownerror"
+	"itsm-backend/ent/marketplaceitem"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
@@ -93,6 +95,7 @@ import (
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/tenantinstallation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketapproval"
 	"itsm-backend/ent/ticketassignmentrule"
@@ -191,6 +194,8 @@ type Client struct {
 	IncidentRule *IncidentRuleClient
 	// IncidentRuleExecution is the client for interacting with the IncidentRuleExecution builders.
 	IncidentRuleExecution *IncidentRuleExecutionClient
+	// ItemVersion is the client for interacting with the ItemVersion builders.
+	ItemVersion *ItemVersionClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
 	// KnowledgeArticleLike is the client for interacting with the KnowledgeArticleLike builders.
@@ -205,6 +210,8 @@ type Client struct {
 	KnownError *KnownErrorClient
 	// MSPAllocation is the client for interacting with the MSPAllocation builders.
 	MSPAllocation *MSPAllocationClient
+	// MarketplaceItem is the client for interacting with the MarketplaceItem builders.
+	MarketplaceItem *MarketplaceItemClient
 	// Menu is the client for interacting with the Menu builders.
 	Menu *MenuClient
 	// Message is the client for interacting with the Message builders.
@@ -289,6 +296,8 @@ type Client struct {
 	Team *TeamClient
 	// Tenant is the client for interacting with the Tenant builders.
 	Tenant *TenantClient
+	// TenantInstallation is the client for interacting with the TenantInstallation builders.
+	TenantInstallation *TenantInstallationClient
 	// Ticket is the client for interacting with the Ticket builders.
 	Ticket *TicketClient
 	// TicketApproval is the client for interacting with the TicketApproval builders.
@@ -373,6 +382,7 @@ func (c *Client) init() {
 	c.IncidentMetric = NewIncidentMetricClient(c.config)
 	c.IncidentRule = NewIncidentRuleClient(c.config)
 	c.IncidentRuleExecution = NewIncidentRuleExecutionClient(c.config)
+	c.ItemVersion = NewItemVersionClient(c.config)
 	c.KnowledgeArticle = NewKnowledgeArticleClient(c.config)
 	c.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(c.config)
 	c.KnowledgeArticleParticipant = NewKnowledgeArticleParticipantClient(c.config)
@@ -380,6 +390,7 @@ func (c *Client) init() {
 	c.KnowledgeArticleVersion = NewKnowledgeArticleVersionClient(c.config)
 	c.KnownError = NewKnownErrorClient(c.config)
 	c.MSPAllocation = NewMSPAllocationClient(c.config)
+	c.MarketplaceItem = NewMarketplaceItemClient(c.config)
 	c.Menu = NewMenuClient(c.config)
 	c.Message = NewMessageClient(c.config)
 	c.Microservice = NewMicroserviceClient(c.config)
@@ -422,6 +433,7 @@ func (c *Client) init() {
 	c.Tag = NewTagClient(c.config)
 	c.Team = NewTeamClient(c.config)
 	c.Tenant = NewTenantClient(c.config)
+	c.TenantInstallation = NewTenantInstallationClient(c.config)
 	c.Ticket = NewTicketClient(c.config)
 	c.TicketApproval = NewTicketApprovalClient(c.config)
 	c.TicketAssignmentRule = NewTicketAssignmentRuleClient(c.config)
@@ -567,6 +579,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		IncidentMetric:              NewIncidentMetricClient(cfg),
 		IncidentRule:                NewIncidentRuleClient(cfg),
 		IncidentRuleExecution:       NewIncidentRuleExecutionClient(cfg),
+		ItemVersion:                 NewItemVersionClient(cfg),
 		KnowledgeArticle:            NewKnowledgeArticleClient(cfg),
 		KnowledgeArticleLike:        NewKnowledgeArticleLikeClient(cfg),
 		KnowledgeArticleParticipant: NewKnowledgeArticleParticipantClient(cfg),
@@ -574,6 +587,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		KnowledgeArticleVersion:     NewKnowledgeArticleVersionClient(cfg),
 		KnownError:                  NewKnownErrorClient(cfg),
 		MSPAllocation:               NewMSPAllocationClient(cfg),
+		MarketplaceItem:             NewMarketplaceItemClient(cfg),
 		Menu:                        NewMenuClient(cfg),
 		Message:                     NewMessageClient(cfg),
 		Microservice:                NewMicroserviceClient(cfg),
@@ -616,6 +630,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Tag:                         NewTagClient(cfg),
 		Team:                        NewTeamClient(cfg),
 		Tenant:                      NewTenantClient(cfg),
+		TenantInstallation:          NewTenantInstallationClient(cfg),
 		Ticket:                      NewTicketClient(cfg),
 		TicketApproval:              NewTicketApprovalClient(cfg),
 		TicketAssignmentRule:        NewTicketAssignmentRuleClient(cfg),
@@ -688,6 +703,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		IncidentMetric:              NewIncidentMetricClient(cfg),
 		IncidentRule:                NewIncidentRuleClient(cfg),
 		IncidentRuleExecution:       NewIncidentRuleExecutionClient(cfg),
+		ItemVersion:                 NewItemVersionClient(cfg),
 		KnowledgeArticle:            NewKnowledgeArticleClient(cfg),
 		KnowledgeArticleLike:        NewKnowledgeArticleLikeClient(cfg),
 		KnowledgeArticleParticipant: NewKnowledgeArticleParticipantClient(cfg),
@@ -695,6 +711,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		KnowledgeArticleVersion:     NewKnowledgeArticleVersionClient(cfg),
 		KnownError:                  NewKnownErrorClient(cfg),
 		MSPAllocation:               NewMSPAllocationClient(cfg),
+		MarketplaceItem:             NewMarketplaceItemClient(cfg),
 		Menu:                        NewMenuClient(cfg),
 		Message:                     NewMessageClient(cfg),
 		Microservice:                NewMicroserviceClient(cfg),
@@ -737,6 +754,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Tag:                         NewTagClient(cfg),
 		Team:                        NewTeamClient(cfg),
 		Tenant:                      NewTenantClient(cfg),
+		TenantInstallation:          NewTenantInstallationClient(cfg),
 		Ticket:                      NewTicketClient(cfg),
 		TicketApproval:              NewTicketApprovalClient(cfg),
 		TicketAssignmentRule:        NewTicketAssignmentRuleClient(cfg),
@@ -793,11 +811,11 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Conversation, c.Department, c.DiscoveryJob, c.DiscoveryResult,
 		c.DiscoverySource, c.EndpointACL, c.EngineerSkill, c.Group, c.Incident,
 		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
-		c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
+		c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion, c.KnowledgeArticle,
 		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
-		c.MSPAllocation, c.Menu, c.Message, c.Microservice, c.Notification,
-		c.NotificationPreference, c.PasswordResetToken, c.Permission,
+		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
+		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
 		c.PermissionDefinition, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
 		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
 		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
@@ -805,12 +823,12 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
 		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
 		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange,
-		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
-		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant,
+		c.TenantInstallation, c.Ticket, c.TicketApproval, c.TicketAssignmentRule,
+		c.TicketAttachment, c.TicketAutomationRule, c.TicketCC, c.TicketCategory,
+		c.TicketComment, c.TicketNotification, c.TicketTag, c.TicketTemplate,
+		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
+		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -827,11 +845,11 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Conversation, c.Department, c.DiscoveryJob, c.DiscoveryResult,
 		c.DiscoverySource, c.EndpointACL, c.EngineerSkill, c.Group, c.Incident,
 		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
-		c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
+		c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion, c.KnowledgeArticle,
 		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
-		c.MSPAllocation, c.Menu, c.Message, c.Microservice, c.Notification,
-		c.NotificationPreference, c.PasswordResetToken, c.Permission,
+		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
+		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
 		c.PermissionDefinition, c.Problem, c.ProcessAuditLog, c.ProcessBinding,
 		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
 		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.ProcessVersionChangelog,
@@ -839,12 +857,12 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
 		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
 		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange,
-		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
-		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant,
+		c.TenantInstallation, c.Ticket, c.TicketApproval, c.TicketAssignmentRule,
+		c.TicketAttachment, c.TicketAutomationRule, c.TicketCC, c.TicketCategory,
+		c.TicketComment, c.TicketNotification, c.TicketTag, c.TicketTemplate,
+		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
+		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -919,6 +937,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.IncidentRule.mutate(ctx, m)
 	case *IncidentRuleExecutionMutation:
 		return c.IncidentRuleExecution.mutate(ctx, m)
+	case *ItemVersionMutation:
+		return c.ItemVersion.mutate(ctx, m)
 	case *KnowledgeArticleMutation:
 		return c.KnowledgeArticle.mutate(ctx, m)
 	case *KnowledgeArticleLikeMutation:
@@ -933,6 +953,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.KnownError.mutate(ctx, m)
 	case *MSPAllocationMutation:
 		return c.MSPAllocation.mutate(ctx, m)
+	case *MarketplaceItemMutation:
+		return c.MarketplaceItem.mutate(ctx, m)
 	case *MenuMutation:
 		return c.Menu.mutate(ctx, m)
 	case *MessageMutation:
@@ -1017,6 +1039,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Team.mutate(ctx, m)
 	case *TenantMutation:
 		return c.Tenant.mutate(ctx, m)
+	case *TenantInstallationMutation:
+		return c.TenantInstallation.mutate(ctx, m)
 	case *TicketMutation:
 		return c.Ticket.mutate(ctx, m)
 	case *TicketApprovalMutation:
@@ -6299,6 +6323,155 @@ func (c *IncidentRuleExecutionClient) mutate(ctx context.Context, m *IncidentRul
 	}
 }
 
+// ItemVersionClient is a client for the ItemVersion schema.
+type ItemVersionClient struct {
+	config
+}
+
+// NewItemVersionClient returns a client for the ItemVersion from the given config.
+func NewItemVersionClient(c config) *ItemVersionClient {
+	return &ItemVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `itemversion.Hooks(f(g(h())))`.
+func (c *ItemVersionClient) Use(hooks ...Hook) {
+	c.hooks.ItemVersion = append(c.hooks.ItemVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `itemversion.Intercept(f(g(h())))`.
+func (c *ItemVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ItemVersion = append(c.inters.ItemVersion, interceptors...)
+}
+
+// Create returns a builder for creating a ItemVersion entity.
+func (c *ItemVersionClient) Create() *ItemVersionCreate {
+	mutation := newItemVersionMutation(c.config, OpCreate)
+	return &ItemVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ItemVersion entities.
+func (c *ItemVersionClient) CreateBulk(builders ...*ItemVersionCreate) *ItemVersionCreateBulk {
+	return &ItemVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ItemVersionClient) MapCreateBulk(slice any, setFunc func(*ItemVersionCreate, int)) *ItemVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ItemVersionCreateBulk{err: fmt.Errorf("calling to ItemVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ItemVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ItemVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ItemVersion.
+func (c *ItemVersionClient) Update() *ItemVersionUpdate {
+	mutation := newItemVersionMutation(c.config, OpUpdate)
+	return &ItemVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ItemVersionClient) UpdateOne(_m *ItemVersion) *ItemVersionUpdateOne {
+	mutation := newItemVersionMutation(c.config, OpUpdateOne, withItemVersion(_m))
+	return &ItemVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ItemVersionClient) UpdateOneID(id int) *ItemVersionUpdateOne {
+	mutation := newItemVersionMutation(c.config, OpUpdateOne, withItemVersionID(id))
+	return &ItemVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ItemVersion.
+func (c *ItemVersionClient) Delete() *ItemVersionDelete {
+	mutation := newItemVersionMutation(c.config, OpDelete)
+	return &ItemVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ItemVersionClient) DeleteOne(_m *ItemVersion) *ItemVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ItemVersionClient) DeleteOneID(id int) *ItemVersionDeleteOne {
+	builder := c.Delete().Where(itemversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ItemVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for ItemVersion.
+func (c *ItemVersionClient) Query() *ItemVersionQuery {
+	return &ItemVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeItemVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ItemVersion entity by its id.
+func (c *ItemVersionClient) Get(ctx context.Context, id int) (*ItemVersion, error) {
+	return c.Query().Where(itemversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ItemVersionClient) GetX(ctx context.Context, id int) *ItemVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryItem queries the item edge of a ItemVersion.
+func (c *ItemVersionClient) QueryItem(_m *ItemVersion) *MarketplaceItemQuery {
+	query := (&MarketplaceItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(itemversion.Table, itemversion.FieldID, id),
+			sqlgraph.To(marketplaceitem.Table, marketplaceitem.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, itemversion.ItemTable, itemversion.ItemColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ItemVersionClient) Hooks() []Hook {
+	return c.hooks.ItemVersion
+}
+
+// Interceptors returns the client interceptors.
+func (c *ItemVersionClient) Interceptors() []Interceptor {
+	return c.inters.ItemVersion
+}
+
+func (c *ItemVersionClient) mutate(ctx context.Context, m *ItemVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ItemVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ItemVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ItemVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ItemVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ItemVersion mutation op: %q", m.Op())
+	}
+}
+
 // KnowledgeArticleClient is a client for the KnowledgeArticle schema.
 type KnowledgeArticleClient struct {
 	config
@@ -7451,6 +7624,171 @@ func (c *MSPAllocationClient) mutate(ctx context.Context, m *MSPAllocationMutati
 		return (&MSPAllocationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown MSPAllocation mutation op: %q", m.Op())
+	}
+}
+
+// MarketplaceItemClient is a client for the MarketplaceItem schema.
+type MarketplaceItemClient struct {
+	config
+}
+
+// NewMarketplaceItemClient returns a client for the MarketplaceItem from the given config.
+func NewMarketplaceItemClient(c config) *MarketplaceItemClient {
+	return &MarketplaceItemClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `marketplaceitem.Hooks(f(g(h())))`.
+func (c *MarketplaceItemClient) Use(hooks ...Hook) {
+	c.hooks.MarketplaceItem = append(c.hooks.MarketplaceItem, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `marketplaceitem.Intercept(f(g(h())))`.
+func (c *MarketplaceItemClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MarketplaceItem = append(c.inters.MarketplaceItem, interceptors...)
+}
+
+// Create returns a builder for creating a MarketplaceItem entity.
+func (c *MarketplaceItemClient) Create() *MarketplaceItemCreate {
+	mutation := newMarketplaceItemMutation(c.config, OpCreate)
+	return &MarketplaceItemCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MarketplaceItem entities.
+func (c *MarketplaceItemClient) CreateBulk(builders ...*MarketplaceItemCreate) *MarketplaceItemCreateBulk {
+	return &MarketplaceItemCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MarketplaceItemClient) MapCreateBulk(slice any, setFunc func(*MarketplaceItemCreate, int)) *MarketplaceItemCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MarketplaceItemCreateBulk{err: fmt.Errorf("calling to MarketplaceItemClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MarketplaceItemCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MarketplaceItemCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MarketplaceItem.
+func (c *MarketplaceItemClient) Update() *MarketplaceItemUpdate {
+	mutation := newMarketplaceItemMutation(c.config, OpUpdate)
+	return &MarketplaceItemUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MarketplaceItemClient) UpdateOne(_m *MarketplaceItem) *MarketplaceItemUpdateOne {
+	mutation := newMarketplaceItemMutation(c.config, OpUpdateOne, withMarketplaceItem(_m))
+	return &MarketplaceItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MarketplaceItemClient) UpdateOneID(id int) *MarketplaceItemUpdateOne {
+	mutation := newMarketplaceItemMutation(c.config, OpUpdateOne, withMarketplaceItemID(id))
+	return &MarketplaceItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MarketplaceItem.
+func (c *MarketplaceItemClient) Delete() *MarketplaceItemDelete {
+	mutation := newMarketplaceItemMutation(c.config, OpDelete)
+	return &MarketplaceItemDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MarketplaceItemClient) DeleteOne(_m *MarketplaceItem) *MarketplaceItemDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MarketplaceItemClient) DeleteOneID(id int) *MarketplaceItemDeleteOne {
+	builder := c.Delete().Where(marketplaceitem.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MarketplaceItemDeleteOne{builder}
+}
+
+// Query returns a query builder for MarketplaceItem.
+func (c *MarketplaceItemClient) Query() *MarketplaceItemQuery {
+	return &MarketplaceItemQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMarketplaceItem},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MarketplaceItem entity by its id.
+func (c *MarketplaceItemClient) Get(ctx context.Context, id int) (*MarketplaceItem, error) {
+	return c.Query().Where(marketplaceitem.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MarketplaceItemClient) GetX(ctx context.Context, id int) *MarketplaceItem {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryVersions queries the versions edge of a MarketplaceItem.
+func (c *MarketplaceItemClient) QueryVersions(_m *MarketplaceItem) *ItemVersionQuery {
+	query := (&ItemVersionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(marketplaceitem.Table, marketplaceitem.FieldID, id),
+			sqlgraph.To(itemversion.Table, itemversion.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, marketplaceitem.VersionsTable, marketplaceitem.VersionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInstallations queries the installations edge of a MarketplaceItem.
+func (c *MarketplaceItemClient) QueryInstallations(_m *MarketplaceItem) *TenantInstallationQuery {
+	query := (&TenantInstallationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(marketplaceitem.Table, marketplaceitem.FieldID, id),
+			sqlgraph.To(tenantinstallation.Table, tenantinstallation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, marketplaceitem.InstallationsTable, marketplaceitem.InstallationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MarketplaceItemClient) Hooks() []Hook {
+	return c.hooks.MarketplaceItem
+}
+
+// Interceptors returns the client interceptors.
+func (c *MarketplaceItemClient) Interceptors() []Interceptor {
+	return c.inters.MarketplaceItem
+}
+
+func (c *MarketplaceItemClient) mutate(ctx context.Context, m *MarketplaceItemMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MarketplaceItemCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MarketplaceItemUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MarketplaceItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MarketplaceItemDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MarketplaceItem mutation op: %q", m.Op())
 	}
 }
 
@@ -13952,6 +14290,155 @@ func (c *TenantClient) mutate(ctx context.Context, m *TenantMutation) (Value, er
 	}
 }
 
+// TenantInstallationClient is a client for the TenantInstallation schema.
+type TenantInstallationClient struct {
+	config
+}
+
+// NewTenantInstallationClient returns a client for the TenantInstallation from the given config.
+func NewTenantInstallationClient(c config) *TenantInstallationClient {
+	return &TenantInstallationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tenantinstallation.Hooks(f(g(h())))`.
+func (c *TenantInstallationClient) Use(hooks ...Hook) {
+	c.hooks.TenantInstallation = append(c.hooks.TenantInstallation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tenantinstallation.Intercept(f(g(h())))`.
+func (c *TenantInstallationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TenantInstallation = append(c.inters.TenantInstallation, interceptors...)
+}
+
+// Create returns a builder for creating a TenantInstallation entity.
+func (c *TenantInstallationClient) Create() *TenantInstallationCreate {
+	mutation := newTenantInstallationMutation(c.config, OpCreate)
+	return &TenantInstallationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TenantInstallation entities.
+func (c *TenantInstallationClient) CreateBulk(builders ...*TenantInstallationCreate) *TenantInstallationCreateBulk {
+	return &TenantInstallationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TenantInstallationClient) MapCreateBulk(slice any, setFunc func(*TenantInstallationCreate, int)) *TenantInstallationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TenantInstallationCreateBulk{err: fmt.Errorf("calling to TenantInstallationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TenantInstallationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TenantInstallationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TenantInstallation.
+func (c *TenantInstallationClient) Update() *TenantInstallationUpdate {
+	mutation := newTenantInstallationMutation(c.config, OpUpdate)
+	return &TenantInstallationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TenantInstallationClient) UpdateOne(_m *TenantInstallation) *TenantInstallationUpdateOne {
+	mutation := newTenantInstallationMutation(c.config, OpUpdateOne, withTenantInstallation(_m))
+	return &TenantInstallationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TenantInstallationClient) UpdateOneID(id int) *TenantInstallationUpdateOne {
+	mutation := newTenantInstallationMutation(c.config, OpUpdateOne, withTenantInstallationID(id))
+	return &TenantInstallationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TenantInstallation.
+func (c *TenantInstallationClient) Delete() *TenantInstallationDelete {
+	mutation := newTenantInstallationMutation(c.config, OpDelete)
+	return &TenantInstallationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TenantInstallationClient) DeleteOne(_m *TenantInstallation) *TenantInstallationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TenantInstallationClient) DeleteOneID(id int) *TenantInstallationDeleteOne {
+	builder := c.Delete().Where(tenantinstallation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TenantInstallationDeleteOne{builder}
+}
+
+// Query returns a query builder for TenantInstallation.
+func (c *TenantInstallationClient) Query() *TenantInstallationQuery {
+	return &TenantInstallationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTenantInstallation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TenantInstallation entity by its id.
+func (c *TenantInstallationClient) Get(ctx context.Context, id int) (*TenantInstallation, error) {
+	return c.Query().Where(tenantinstallation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TenantInstallationClient) GetX(ctx context.Context, id int) *TenantInstallation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryItem queries the item edge of a TenantInstallation.
+func (c *TenantInstallationClient) QueryItem(_m *TenantInstallation) *MarketplaceItemQuery {
+	query := (&MarketplaceItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenantinstallation.Table, tenantinstallation.FieldID, id),
+			sqlgraph.To(marketplaceitem.Table, marketplaceitem.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, tenantinstallation.ItemTable, tenantinstallation.ItemColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TenantInstallationClient) Hooks() []Hook {
+	return c.hooks.TenantInstallation
+}
+
+// Interceptors returns the client interceptors.
+func (c *TenantInstallationClient) Interceptors() []Interceptor {
+	return c.inters.TenantInstallation
+}
+
+func (c *TenantInstallationClient) mutate(ctx context.Context, m *TenantInstallationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TenantInstallationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TenantInstallationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TenantInstallationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TenantInstallationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TenantInstallation mutation op: %q", m.Op())
+	}
+}
+
 // TicketClient is a client for the Ticket schema.
 type TicketClient struct {
 	config
@@ -17597,22 +18084,22 @@ type (
 		ConfigurationItem, Contract, Conversation, Department, DiscoveryJob,
 		DiscoveryResult, DiscoverySource, EndpointACL, EngineerSkill, Group, Incident,
 		IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
-		IncidentRule, IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
-		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
-		KnownError, MSPAllocation, Menu, Message, Microservice, Notification,
-		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,
-		Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition, ProcessDeployment,
-		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
-		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
-		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		StandardChange, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
-		Ticket, TicketApproval, TicketAssignmentRule, TicketAttachment,
-		TicketAutomationRule, TicketCC, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView,
-		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
-		WorkflowTask, WorkflowVersion []ent.Hook
+		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
+		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
+		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
+		Message, Microservice, Notification, NotificationPreference,
+		PasswordResetToken, Permission, PermissionDefinition, Problem, ProcessAuditLog,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
+		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
+		ServiceRequest, ServiceRequestApproval, StandardChange, Survey, SurveyResponse,
+		SystemConfig, Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
+		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
@@ -17621,21 +18108,21 @@ type (
 		ConfigurationItem, Contract, Conversation, Department, DiscoveryJob,
 		DiscoveryResult, DiscoverySource, EndpointACL, EngineerSkill, Group, Incident,
 		IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
-		IncidentRule, IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
-		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
-		KnownError, MSPAllocation, Menu, Message, Microservice, Notification,
-		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,
-		Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition, ProcessDeployment,
-		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
-		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
-		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		StandardChange, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
-		Ticket, TicketApproval, TicketAssignmentRule, TicketAttachment,
-		TicketAutomationRule, TicketCC, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView,
-		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
-		WorkflowTask, WorkflowVersion []ent.Interceptor
+		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
+		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
+		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
+		Message, Microservice, Notification, NotificationPreference,
+		PasswordResetToken, Permission, PermissionDefinition, Problem, ProcessAuditLog,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
+		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
+		ServiceRequest, ServiceRequestApproval, StandardChange, Survey, SurveyResponse,
+		SystemConfig, Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
+		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
 	}
 )

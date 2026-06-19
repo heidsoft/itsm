@@ -112,6 +112,12 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 		return nil, fmt.Errorf("failed to update change status: %w", err)
 	}
 
+	// 3.5. If no approvers specified, default to the change creator
+	if len(req.ApproverIDs) == 0 {
+		req.ApproverIDs = []int{c.CreatedBy}
+		s.logger.Infow("No approvers specified, defaulting to change creator", "change_id", changeID, "creator_id", c.CreatedBy)
+	}
+
 	// 4. Validate approvers belong to the same tenant before creating approval records
 	for _, approverID := range req.ApproverIDs {
 		valid, err := s.repo.ValidateApproverBelongsToTenant(ctx, approverID, tenantID)
@@ -140,7 +146,24 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 		}
 	}
 
-	// 5. Notify approvers (optional - to be implemented later or via async)
+	// 5.5. Create approval chain entries for each approver
+	chainItems := make([]*ApprovalChain, 0, len(req.ApproverIDs))
+	for i, approverID := range req.ApproverIDs {
+		chainItems = append(chainItems, &ApprovalChain{
+			ChangeID:   changeID,
+			Level:      i + 1,
+			ApproverID: approverID,
+			Role:       "approver",
+			Status:     "pending",
+			IsRequired: true,
+		})
+	}
+	if err := s.repo.CreateApprovalChain(ctx, chainItems); err != nil {
+		s.logger.Warnw("Failed to create approval chain", "error", err, "change_id", changeID)
+		// Non-fatal: approval records are already created
+	}
+
+	// 6. Notify approvers (optional - to be implemented later or via async)
 	// For now, just log the submission
 	s.logger.Infow("Change submitted for approval", "change_id", changeID, "submitter_id", submitterID, "approvers", req.ApproverIDs)
 
@@ -326,6 +349,25 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		}
 	}
 
+	// For approve action, update the approval record to approved
+	if targetStatus == "approved" {
+		history, err := s.repo.GetApprovalHistory(ctx, id, tenantID)
+		if err != nil {
+			s.logger.Warnw("TransitionStatus: failed to get approval history for record update", "error", err)
+		} else {
+			for _, h := range history {
+				if h.ApproverID == userID && h.Status == "pending" {
+					approvedStatus := "approved"
+					_, _ = s.repo.UpdateApprovalRecord(ctx, &ApprovalRecord{
+						ID:     h.ID,
+						Status: approvedStatus,
+					})
+					break
+				}
+			}
+		}
+	}
+
 	c.Status = targetStatus
 	return s.repo.Update(ctx, c)
 }
@@ -335,8 +377,9 @@ func isValidChangeStatusTransition(currentStatus, newStatus string) bool {
 	validTransitions := map[string][]string{
 		"draft":       {"pending", "cancelled"},
 		"pending":     {"approved", "rejected", "cancelled"},
-		"approved":    {"in_progress", "cancelled"},
+		"approved":    {"scheduled", "in_progress", "cancelled"},
 		"rejected":    {},
+		"scheduled":   {"in_progress", "cancelled"},
 		"in_progress": {"completed", "failed", "cancelled"},
 		"completed":   {},
 		"failed":      {"in_progress", "cancelled"},

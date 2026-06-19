@@ -1,7 +1,8 @@
 'use client';
 
-import React, { Component, ErrorInfo, ReactNode, useState } from 'react';
+import React, { ReactNode } from 'react';
 import { Spin, Alert, Button, Result } from 'antd';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 
 interface LoadingWrapperProps {
   loading: boolean;
@@ -70,52 +71,8 @@ export function AsyncDataWrapper<T>({
   return <>{children(data as T)}</>;
 }
 
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-}
-
-interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-}
-
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false, error: null };
-
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('[ErrorBoundary]', error, errorInfo);
-    this.props.onError?.(error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        this.props.fallback ?? (
-          <Result
-            status="error"
-            title="出错了"
-            subTitle={this.state.error?.message || '未知错误'}
-            extra={[
-              <Button key="retry" onClick={() => this.setState({ hasError: false, error: null })}>
-                重试
-              </Button>,
-              <Button key="reload" type="primary" onClick={() => window.location.reload()}>
-                刷新页面
-              </Button>,
-            ]}
-          />
-        )
-      );
-    }
-    return this.props.children;
-  }
-}
+// Re-export ErrorBoundary from the centralized component
+export { ErrorBoundary };
 
 interface ShowWhenProps {
   condition: boolean;

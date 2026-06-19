@@ -36,12 +36,14 @@ import (
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/incidentruleexecution"
+	"itsm-backend/ent/itemversion"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/knowledgearticleparticipant"
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/knownerror"
+	"itsm-backend/ent/marketplaceitem"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
@@ -85,6 +87,7 @@ import (
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/tenantinstallation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketapproval"
 	"itsm-backend/ent/ticketassignmentrule"
@@ -1250,6 +1253,26 @@ func init() {
 	incidentruleexecution.DefaultUpdatedAt = incidentruleexecutionDescUpdatedAt.Default.(func() time.Time)
 	// incidentruleexecution.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	incidentruleexecution.UpdateDefaultUpdatedAt = incidentruleexecutionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	itemversionFields := schema.ItemVersion{}.Fields()
+	_ = itemversionFields
+	// itemversionDescDownloadCount is the schema descriptor for download_count field.
+	itemversionDescDownloadCount := itemversionFields[8].Descriptor()
+	// itemversion.DefaultDownloadCount holds the default value on creation for the download_count field.
+	itemversion.DefaultDownloadCount = itemversionDescDownloadCount.Default.(int)
+	// itemversionDescReleasedAt is the schema descriptor for released_at field.
+	itemversionDescReleasedAt := itemversionFields[9].Descriptor()
+	// itemversion.DefaultReleasedAt holds the default value on creation for the released_at field.
+	itemversion.DefaultReleasedAt = itemversionDescReleasedAt.Default.(func() time.Time)
+	// itemversionDescCreatedAt is the schema descriptor for created_at field.
+	itemversionDescCreatedAt := itemversionFields[11].Descriptor()
+	// itemversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	itemversion.DefaultCreatedAt = itemversionDescCreatedAt.Default.(func() time.Time)
+	// itemversionDescUpdatedAt is the schema descriptor for updated_at field.
+	itemversionDescUpdatedAt := itemversionFields[12].Descriptor()
+	// itemversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	itemversion.DefaultUpdatedAt = itemversionDescUpdatedAt.Default.(func() time.Time)
+	// itemversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	itemversion.UpdateDefaultUpdatedAt = itemversionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	knowledgearticleFields := schema.KnowledgeArticle{}.Fields()
 	_ = knowledgearticleFields
 	// knowledgearticleDescTitle is the schema descriptor for title field.
@@ -1416,6 +1439,38 @@ func init() {
 	mspallocationDescCreatedAt := mspallocationFields[5].Descriptor()
 	// mspallocation.DefaultCreatedAt holds the default value on creation for the created_at field.
 	mspallocation.DefaultCreatedAt = mspallocationDescCreatedAt.Default.(func() time.Time)
+	marketplaceitemFields := schema.MarketplaceItem{}.Fields()
+	_ = marketplaceitemFields
+	// marketplaceitemDescRating is the schema descriptor for rating field.
+	marketplaceitemDescRating := marketplaceitemFields[9].Descriptor()
+	// marketplaceitem.DefaultRating holds the default value on creation for the rating field.
+	marketplaceitem.DefaultRating = marketplaceitemDescRating.Default.(float64)
+	// marketplaceitemDescInstallCount is the schema descriptor for install_count field.
+	marketplaceitemDescInstallCount := marketplaceitemFields[10].Descriptor()
+	// marketplaceitem.DefaultInstallCount holds the default value on creation for the install_count field.
+	marketplaceitem.DefaultInstallCount = marketplaceitemDescInstallCount.Default.(int)
+	// marketplaceitemDescIsOfficial is the schema descriptor for is_official field.
+	marketplaceitemDescIsOfficial := marketplaceitemFields[14].Descriptor()
+	// marketplaceitem.DefaultIsOfficial holds the default value on creation for the is_official field.
+	marketplaceitem.DefaultIsOfficial = marketplaceitemDescIsOfficial.Default.(bool)
+	// marketplaceitemDescIsFree is the schema descriptor for is_free field.
+	marketplaceitemDescIsFree := marketplaceitemFields[15].Descriptor()
+	// marketplaceitem.DefaultIsFree holds the default value on creation for the is_free field.
+	marketplaceitem.DefaultIsFree = marketplaceitemDescIsFree.Default.(bool)
+	// marketplaceitemDescPrice is the schema descriptor for price field.
+	marketplaceitemDescPrice := marketplaceitemFields[16].Descriptor()
+	// marketplaceitem.DefaultPrice holds the default value on creation for the price field.
+	marketplaceitem.DefaultPrice = marketplaceitemDescPrice.Default.(float64)
+	// marketplaceitemDescCreatedAt is the schema descriptor for created_at field.
+	marketplaceitemDescCreatedAt := marketplaceitemFields[26].Descriptor()
+	// marketplaceitem.DefaultCreatedAt holds the default value on creation for the created_at field.
+	marketplaceitem.DefaultCreatedAt = marketplaceitemDescCreatedAt.Default.(func() time.Time)
+	// marketplaceitemDescUpdatedAt is the schema descriptor for updated_at field.
+	marketplaceitemDescUpdatedAt := marketplaceitemFields[27].Descriptor()
+	// marketplaceitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	marketplaceitem.DefaultUpdatedAt = marketplaceitemDescUpdatedAt.Default.(func() time.Time)
+	// marketplaceitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	marketplaceitem.UpdateDefaultUpdatedAt = marketplaceitemDescUpdatedAt.UpdateDefault.(func() time.Time)
 	menuFields := schema.Menu{}.Fields()
 	_ = menuFields
 	// menuDescName is the schema descriptor for name field.
@@ -2876,6 +2931,26 @@ func init() {
 	tenant.DefaultUpdatedAt = tenantDescUpdatedAt.Default.(func() time.Time)
 	// tenant.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	tenant.UpdateDefaultUpdatedAt = tenantDescUpdatedAt.UpdateDefault.(func() time.Time)
+	tenantinstallationFields := schema.TenantInstallation{}.Fields()
+	_ = tenantinstallationFields
+	// tenantinstallationDescAutoUpgrade is the schema descriptor for auto_upgrade field.
+	tenantinstallationDescAutoUpgrade := tenantinstallationFields[5].Descriptor()
+	// tenantinstallation.DefaultAutoUpgrade holds the default value on creation for the auto_upgrade field.
+	tenantinstallation.DefaultAutoUpgrade = tenantinstallationDescAutoUpgrade.Default.(bool)
+	// tenantinstallationDescInstalledAt is the schema descriptor for installed_at field.
+	tenantinstallationDescInstalledAt := tenantinstallationFields[7].Descriptor()
+	// tenantinstallation.DefaultInstalledAt holds the default value on creation for the installed_at field.
+	tenantinstallation.DefaultInstalledAt = tenantinstallationDescInstalledAt.Default.(func() time.Time)
+	// tenantinstallationDescCreatedAt is the schema descriptor for created_at field.
+	tenantinstallationDescCreatedAt := tenantinstallationFields[11].Descriptor()
+	// tenantinstallation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tenantinstallation.DefaultCreatedAt = tenantinstallationDescCreatedAt.Default.(func() time.Time)
+	// tenantinstallationDescUpdatedAt is the schema descriptor for updated_at field.
+	tenantinstallationDescUpdatedAt := tenantinstallationFields[12].Descriptor()
+	// tenantinstallation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	tenantinstallation.DefaultUpdatedAt = tenantinstallationDescUpdatedAt.Default.(func() time.Time)
+	// tenantinstallation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	tenantinstallation.UpdateDefaultUpdatedAt = tenantinstallationDescUpdatedAt.UpdateDefault.(func() time.Time)
 	ticketFields := schema.Ticket{}.Fields()
 	_ = ticketFields
 	// ticketDescTitle is the schema descriptor for title field.

@@ -78,6 +78,8 @@ type Tx struct {
 	IncidentRule *IncidentRuleClient
 	// IncidentRuleExecution is the client for interacting with the IncidentRuleExecution builders.
 	IncidentRuleExecution *IncidentRuleExecutionClient
+	// ItemVersion is the client for interacting with the ItemVersion builders.
+	ItemVersion *ItemVersionClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
 	// KnowledgeArticleLike is the client for interacting with the KnowledgeArticleLike builders.
@@ -92,6 +94,8 @@ type Tx struct {
 	KnownError *KnownErrorClient
 	// MSPAllocation is the client for interacting with the MSPAllocation builders.
 	MSPAllocation *MSPAllocationClient
+	// MarketplaceItem is the client for interacting with the MarketplaceItem builders.
+	MarketplaceItem *MarketplaceItemClient
 	// Menu is the client for interacting with the Menu builders.
 	Menu *MenuClient
 	// Message is the client for interacting with the Message builders.
@@ -176,6 +180,8 @@ type Tx struct {
 	Team *TeamClient
 	// Tenant is the client for interacting with the Tenant builders.
 	Tenant *TenantClient
+	// TenantInstallation is the client for interacting with the TenantInstallation builders.
+	TenantInstallation *TenantInstallationClient
 	// Ticket is the client for interacting with the Ticket builders.
 	Ticket *TicketClient
 	// TicketApproval is the client for interacting with the TicketApproval builders.
@@ -380,6 +386,7 @@ func (tx *Tx) init() {
 	tx.IncidentMetric = NewIncidentMetricClient(tx.config)
 	tx.IncidentRule = NewIncidentRuleClient(tx.config)
 	tx.IncidentRuleExecution = NewIncidentRuleExecutionClient(tx.config)
+	tx.ItemVersion = NewItemVersionClient(tx.config)
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
 	tx.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(tx.config)
 	tx.KnowledgeArticleParticipant = NewKnowledgeArticleParticipantClient(tx.config)
@@ -387,6 +394,7 @@ func (tx *Tx) init() {
 	tx.KnowledgeArticleVersion = NewKnowledgeArticleVersionClient(tx.config)
 	tx.KnownError = NewKnownErrorClient(tx.config)
 	tx.MSPAllocation = NewMSPAllocationClient(tx.config)
+	tx.MarketplaceItem = NewMarketplaceItemClient(tx.config)
 	tx.Menu = NewMenuClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
 	tx.Microservice = NewMicroserviceClient(tx.config)
@@ -429,6 +437,7 @@ func (tx *Tx) init() {
 	tx.Tag = NewTagClient(tx.config)
 	tx.Team = NewTeamClient(tx.config)
 	tx.Tenant = NewTenantClient(tx.config)
+	tx.TenantInstallation = NewTenantInstallationClient(tx.config)
 	tx.Ticket = NewTicketClient(tx.config)
 	tx.TicketApproval = NewTicketApprovalClient(tx.config)
 	tx.TicketAssignmentRule = NewTicketAssignmentRuleClient(tx.config)

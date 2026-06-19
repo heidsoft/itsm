@@ -30,7 +30,7 @@ export const SystemInfo: React.FC = () => {
           <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Text type="secondary">{t('admin.systemVersion')}</Text>
-              <Text strong>ITSM Pro v2.5.0</Text>
+              <Text strong>AI-Native ITSM v1.0.0</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Text type="secondary">{t('admin.databaseVersion')}</Text>

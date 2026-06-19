@@ -102,16 +102,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   };
 
   // 转换动态菜单（当 API 返回空时使用静态配置作为 fallback）
-  // TODO: 后端修复菜单数据后，移除 FORCE_STATIC_MENU 标志
-  const FORCE_STATIC_MENU = false; // 临时强制使用静态菜单，避免后端数据重复key问题
-  const mainMenus =
+  const FORCE_STATIC_MENU = false;
+  const rawMainMenus =
     dynamicMenus && !FORCE_STATIC_MENU
       ? convertApiMenuToSidebar(dynamicMenus.main)
       : getMenuConfig().main;
-  const adminMenus =
+  const rawAdminMenus =
     dynamicMenus && !FORCE_STATIC_MENU
       ? convertApiMenuToSidebar(dynamicMenus.admin)
       : getMenuConfig().admin;
+
+  // 菜单 key 去重逻辑 — 避免后端返回重复 key 导致 React 警告
+  const deduplicateMenus = (menus: MenuItem[]): MenuItem[] => {
+    const seen = new Set<string>();
+    const result: MenuItem[] = [];
+    for (const menu of menus) {
+      if (!seen.has(menu.key)) {
+        seen.add(menu.key);
+        // 递归去重子菜单
+        const dedupedMenu =
+          menu.children
+            ? { ...menu, children: deduplicateMenus(menu.children) }
+            : menu;
+        result.push(dedupedMenu);
+      }
+    }
+    return result;
+  };
+
+  const mainMenus = deduplicateMenus(rawMainMenus);
+  const adminMenus = deduplicateMenus(rawAdminMenus);
 
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
@@ -132,11 +152,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
     >
       {/* Logo 区域 */}
       <div className={`${styles.logoArea} ${collapsed ? styles.logoAreaCollapsed : ''}`}>
-        <div className={styles.logoIcon}>IT</div>
+        <div className={styles.logoIcon}>AI</div>
         {!collapsed && (
           <div className={styles.logoTextContainer}>
-            <div className={styles.logoText}>ITSM</div>
-            <div className={styles.logoSubtext}>系统</div>
+            <div className={styles.logoText}>AI-Native</div>
+            <div className={styles.logoSubtext}>ITSM</div>
           </div>
         )}
       </div>

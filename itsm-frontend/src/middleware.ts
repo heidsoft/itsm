@@ -129,6 +129,10 @@ export function middleware(request: NextRequest) {
   if (isProtectedRoute && !isValid) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
+    // 如果 token 存在但无效（过期），标记 expired
+    if (token) {
+      loginUrl.searchParams.set('expired', 'true');
+    }
     return NextResponse.redirect(loginUrl);
   }
 
@@ -137,14 +141,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // 根路径重定向
-  if (pathname === '/') {
-    if (isValid) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    } else {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-  }
+  // 根路径不再重定向 — 介绍页对所有用户可见
+  // 已登录用户访问根路径时，由客户端组件显示"进入系统"按钮
 
   return NextResponse.next();
 }

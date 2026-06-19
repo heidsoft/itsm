@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: '登录 - ITSM Platform',
-  description: 'IT服务管理平台 - 用户登录',
+  title: '登录 - AI-Native ITSM',
+  description: 'AI-Native ITSM - AI驱动的IT服务管理系统',
 };
 
 /**

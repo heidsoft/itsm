@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { User, Lock, Shield, ArrowRight } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
@@ -19,24 +20,23 @@ import {
   Col,
   Flex,
   Tooltip,
-  message,
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
 import { AuthService } from '@/lib/services/auth-service';
 import { logger } from '@/lib/env';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
-import MSPService from '@/services/msp-service';
 
 const { Text, Title } = Typography;
 
 /**
- * 登录页面组件
- * 使用统一的设计系统和 Ant Design 组件，保持与系统内部一致的视觉风格
+ * 登录表单子组件
+ * 使用 useSearchParams 读取 expired 参数，需要被 Suspense 包裹
  */
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
-  const [form] = Form.useForm();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
+  const [form] = Form.useForm();
 
   // Hydrate auth store
   useAuthStoreHydration();
@@ -46,6 +46,10 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
+  // 检查会话过期标记
+  const isExpired = searchParams.get('expired') === 'true';
+  const redirectPath = searchParams.get('redirect') || '/dashboard';
+
   // 处理登录提交
   const handleLogin = async (values: { username: string; password: string }) => {
     logger.info('开始登录:', values);
@@ -53,13 +57,11 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const success = await AuthService.login(values.username, values.password);
+      const success = await AuthService.login(values.username, values.password, undefined, rememberMe);
 
       if (success) {
         logger.info('认证信息已存储，准备跳转');
-        // 清除MSP缓存，确保重新检查MSP权限
-        MSPService.refreshCache();
-        router.push('/dashboard');
+        router.push(redirectPath);
         logger.info('已执行跳转命令');
       } else {
         setError(t('auth.login.loginFailed'));
@@ -73,6 +75,148 @@ export default function LoginPage() {
   };
 
   return (
+    <Card
+      className="rounded-xl shadow-xl border-none"
+      styles={{ body: { padding: '40px' } }}
+    >
+      <div className="text-center mb-6">
+        <Title level={2} className="!mb-2 !text-gray-900 !text-2xl">
+          {t('auth.login.title')}
+        </Title>
+        <Text className="!text-gray-500 !text-sm">{t('auth.login.subtitle')}</Text>
+      </div>
+
+      {/* 会话过期提示 */}
+      {isExpired && (
+        <Alert
+          message="会话已过期"
+          description="您的会话已过期，请重新登录。"
+          type="warning"
+          className="mb-5"
+          showIcon
+          closable
+        />
+      )}
+
+      {error && (
+        <Alert
+          title={t('auth.login.loginFailed')}
+          description={error}
+          type="error"
+          className="mb-5"
+          showIcon
+        />
+      )}
+
+      <Form form={form} onFinish={handleLogin} layout="vertical" size="middle">
+        <Form.Item
+          name="username"
+          label={t('auth.login.usernameLabel')}
+          rules={[
+            { required: true, message: t('auth.login.usernameRequired') },
+            { min: 3, message: t('auth.login.usernameMinLength') },
+          ]}
+        >
+          <Input
+            prefix={<User size={14} className="text-gray-400" />}
+            placeholder={t('auth.login.usernamePlaceholder')}
+            disabled={loading}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="password"
+          label={t('auth.login.passwordLabel')}
+          rules={[
+            { required: true, message: t('auth.login.passwordRequired') },
+            { min: 6, message: t('auth.login.passwordMinLength') },
+          ]}
+        >
+          <Input.Password
+            prefix={<Lock size={14} className="text-gray-400" />}
+            placeholder={t('auth.login.passwordPlaceholder')}
+            disabled={loading}
+          />
+        </Form.Item>
+
+        <Form.Item className="mb-5">
+          <Flex justify="space-between" align="center">
+            <Checkbox
+              checked={rememberMe}
+              onChange={e => setRememberMe(e.target.checked)}
+              disabled={loading}
+            >
+              {t('auth.login.rememberMe')}
+            </Checkbox>
+            <Tooltip title={loading ? '登录中...' : ''}>
+              <Link href="/forgot-password">
+                <Button type="link" className="p-0 h-auto text-xs" disabled={loading}>
+                  {t('auth.login.forgotPassword')}
+                </Button>
+              </Link>
+            </Tooltip>
+          </Flex>
+        </Form.Item>
+
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loading}
+            size="large"
+            className="w-full h-10 rounded-md text-sm font-semibold"
+            icon={<ArrowRight size={14} />}
+          >
+            {loading ? t('auth.login.loggingIn') : t('auth.login.loginButton')}
+          </Button>
+        </Form.Item>
+      </Form>
+
+      {/* 默认凭据提示 */}
+      <Alert
+        message="默认管理员账户"
+        description="admin / admin123（请及时修改密码）"
+        type="info"
+        className="mb-5"
+        showIcon
+      />
+
+      <Divider className="my-5">
+        <Text className="text-gray-400 text-xs">{t('auth.login.or')}</Text>
+      </Divider>
+
+      {/* SSO 登录按钮已隐藏 — 开源版本暂不支持 SSO */}
+      {false && (
+        <Button
+          size="middle"
+          className="w-full h-10 rounded-md text-sm"
+          disabled={loading}
+          icon={<Shield size={14} />}
+        >
+          {t('auth.login.ssoLogin')}
+        </Button>
+      )}
+
+      <div className="text-center mt-5">
+        <Text className="text-gray-400 text-xs">
+          {t('auth.login.noAccount')}{' '}
+          <Link href="/register">
+            <Button type="link" className="p-0 h-auto text-xs">
+              {t('auth.login.registerNow')}
+            </Button>
+          </Link>
+        </Text>
+      </div>
+    </Card>
+  );
+}
+
+/**
+ * 登录页面组件
+ * 使用统一的设计系统和 Ant Design 组件，保持与系统内部一致的视觉风格
+ */
+export default function LoginPage() {
+  return (
     <ConfigProvider theme={antdTheme}>
       <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="w-full max-w-[1000px]">
@@ -84,9 +228,9 @@ export default function LoginPage() {
 
                 <div className="relative z-10">
                   <Title level={1} className="!text-white !mb-3 !text-3xl !font-bold">
-                    ITSM Pro
+                    AI-Native ITSM
                   </Title>
-                  <Text className="!text-white/90 !text-sm block !mb-8">智能 IT 服务管理平台</Text>
+                  <Text className="!text-white/90 !text-sm block !mb-8">AI 驱动的 IT 服务管理系统</Text>
 
                   <Space orientation="vertical" size="middle" className="w-full">
                     <Flex align="center" gap={10}>
@@ -117,113 +261,20 @@ export default function LoginPage() {
               </div>
             </Col>
 
-            {/* 右侧登录表单 */}
+            {/* 右侧登录表单 — 使用 Suspense 包裹 useSearchParams */}
             <Col xs={24} lg={14}>
-              <Card
-                className="rounded-xl shadow-xl border-none"
-                styles={{ body: { padding: '40px' } }}
+              <Suspense
+                fallback={
+                  <Card
+                    className="rounded-xl shadow-xl border-none"
+                    styles={{ body: { padding: '40px' } }}
+                  >
+                    <div className="text-center py-20 text-gray-400">加载中...</div>
+                  </Card>
+                }
               >
-                <div className="text-center mb-6">
-                  <Title level={2} className="!mb-2 !text-gray-900 !text-2xl">
-                    {t('auth.login.title')}
-                  </Title>
-                  <Text className="!text-gray-500 !text-sm">{t('auth.login.subtitle')}</Text>
-                </div>
-
-                {error && (
-                  <Alert
-                    title={t('auth.login.loginFailed')}
-                    description={error}
-                    type="error"
-                    className="mb-5"
-                    showIcon
-                  />
-                )}
-
-                <Form form={form} onFinish={handleLogin} layout="vertical" size="middle">
-                  <Form.Item
-                    name="username"
-                    label={t('auth.login.usernameLabel')}
-                    rules={[
-                      { required: true, message: t('auth.login.usernameRequired') },
-                      { min: 3, message: t('auth.login.usernameMinLength') },
-                    ]}
-                  >
-                    <Input
-                      prefix={<User size={14} className="text-gray-400" />}
-                      placeholder={t('auth.login.usernamePlaceholder')}
-                      disabled={loading}
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="password"
-                    label={t('auth.login.passwordLabel')}
-                    rules={[
-                      { required: true, message: t('auth.login.passwordRequired') },
-                      { min: 6, message: t('auth.login.passwordMinLength') },
-                    ]}
-                  >
-                    <Input.Password
-                      prefix={<Lock size={14} className="text-gray-400" />}
-                      placeholder={t('auth.login.passwordPlaceholder')}
-                      disabled={loading}
-                    />
-                  </Form.Item>
-
-                  <Form.Item className="mb-5">
-                    <Flex justify="space-between" align="center">
-                      <Checkbox
-                        checked={rememberMe}
-                        onChange={e => setRememberMe(e.target.checked)}
-                        disabled={loading}
-                      >
-                        {t('auth.login.rememberMe')}
-                      </Checkbox>
-                      <Tooltip title={loading ? '登录中...' : ''}>
-                        <Button type="link" className="p-0 h-auto text-xs" disabled={loading}>
-                          {t('auth.login.forgotPassword')}
-                        </Button>
-                      </Tooltip>
-                    </Flex>
-                  </Form.Item>
-
-                  <Form.Item>
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      loading={loading}
-                      size="large"
-                      className="w-full h-10 rounded-md text-sm font-semibold"
-                      icon={<ArrowRight size={14} />}
-                    >
-                      {loading ? t('auth.login.loggingIn') : t('auth.login.loginButton')}
-                    </Button>
-                  </Form.Item>
-                </Form>
-
-                <Divider className="my-5">
-                  <Text className="text-gray-400 text-xs">{t('auth.login.or')}</Text>
-                </Divider>
-
-                <Button
-                  size="middle"
-                  className="w-full h-10 rounded-md text-sm"
-                  disabled={loading}
-                  icon={<Shield size={14} />}
-                >
-                  {t('auth.login.ssoLogin')}
-                </Button>
-
-                <div className="text-center mt-5">
-                  <Text className="text-gray-400 text-xs">
-                    {t('auth.login.noAccount')}{' '}
-                    <Button type="link" className="p-0 h-auto text-xs">
-                      {t('auth.login.registerNow')}
-                    </Button>
-                  </Text>
-                </div>
-              </Card>
+                <LoginForm />
+              </Suspense>
             </Col>
           </Row>
         </div>

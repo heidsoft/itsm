@@ -1,0 +1,33 @@
+sequenceDiagram
+    participant U as 用户
+    participant LP as LoginPage
+    participant AS as AuthService
+    participant MW as Middleware
+    participant BE as 后端API
+    participant DB as Dashboard
+
+    U->>LP: 输入用户名/密码 + 勾选 Remember Me
+    LP->>LP: 表单验证
+    LP->>AS: login(username, password, undefined, rememberMe)
+    AS->>BE: POST /api/v1/auth/login {remember_me}
+    BE-->>AS: {access_token, refresh_token, user, tenant}
+    AS->>AS: useAuthStore.login(user, token, tenant)
+    AS-->>LP: true (登录成功)
+    LP->>LP: router.push('/dashboard')
+    
+    Note over MW: 中间件验证 token
+    
+    MW->>MW: isValidToken(token)?
+    alt Token 有效
+        MW-->>DB: NextResponse.next()
+        DB->>DB: 加载仪表盘数据
+        alt 数据为空
+            DB->>U: 显示空状态引导卡片
+        else 数据存在
+            DB->>U: 显示仪表盘内容
+        end
+    else Token 无效/过期
+        MW->>MW: redirect('/login?expired=true')
+        LP->>LP: 检测 ?expired=true
+        LP->>U: 显示"会话已过期，请重新登录"提示
+    end

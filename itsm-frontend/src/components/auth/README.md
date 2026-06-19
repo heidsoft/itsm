@@ -36,15 +36,15 @@ import { AuthLayout } from "@/components/auth";
 | 属性 | 类型 | 默认值 | 描述 |
 |------|------|--------|------|
 | children | ReactNode | - | 页面内容 |
-| title | string | "ITSM Pro" | 品牌标题 |
-| subtitle | string | "智能IT服务管理平台" | 品牌副标题 |
+| title | string | "AI-Native ITSM" | 品牌标题 |
+| subtitle | string | "AI驱动的IT服务管理系统" | 品牌副标题 |
 | showBranding | boolean | true | 是否显示品牌区域 |
 
 #### 使用示例
 
 ```tsx
 // 完整品牌区域
-<AuthLayout title="ITSM Pro" subtitle="智能IT服务管理平台">
+<AuthLayout title="AI-Native ITSM" subtitle="AI驱动的IT服务管理系统">
   <div>表单内容</div>
 </AuthLayout>
 

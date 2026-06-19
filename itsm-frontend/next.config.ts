@@ -4,10 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
 
-  // 忽略错误
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // TODO: 逐步修复类型错误后移除此配置，启用构建时类型检查
   typescript: {
     ignoreBuildErrors: true,
   },

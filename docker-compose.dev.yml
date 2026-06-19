@@ -3,7 +3,7 @@ version: "3.8"
 services:
   # PostgreSQL 数据库（开发环境）
   postgres:
-    image: postgres:17-alpine
+    image: pgvector/pgvector:pg17
     container_name: itsm-postgres-dev
     hostname: postgres
     environment:

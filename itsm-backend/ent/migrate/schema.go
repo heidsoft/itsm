@@ -1284,6 +1284,49 @@ var (
 			},
 		},
 	}
+	// ItemVersionsColumns holds the columns for the "item_versions" table.
+	ItemVersionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "version", Type: field.TypeString},
+		{Name: "changelog", Type: field.TypeString, Nullable: true},
+		{Name: "download_url", Type: field.TypeString, Nullable: true},
+		{Name: "manifest_path", Type: field.TypeString, Nullable: true},
+		{Name: "min_system_version", Type: field.TypeString, Nullable: true},
+		{Name: "dependencies", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "published", "deprecated", "withdrawn"}, Default: "draft"},
+		{Name: "download_count", Type: field.TypeInt, Default: 0},
+		{Name: "released_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime"}},
+		{Name: "config_schema", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime"}},
+		{Name: "item_id", Type: field.TypeInt},
+	}
+	// ItemVersionsTable holds the schema information for the "item_versions" table.
+	ItemVersionsTable = &schema.Table{
+		Name:       "item_versions",
+		Columns:    ItemVersionsColumns,
+		PrimaryKey: []*schema.Column{ItemVersionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "item_versions_marketplace_items_versions",
+				Columns:    []*schema.Column{ItemVersionsColumns[13]},
+				RefColumns: []*schema.Column{MarketplaceItemsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "itemversion_item_id_version",
+				Unique:  true,
+				Columns: []*schema.Column{ItemVersionsColumns[13], ItemVersionsColumns[1]},
+			},
+			{
+				Name:    "itemversion_status_released_at",
+				Unique:  false,
+				Columns: []*schema.Column{ItemVersionsColumns[7], ItemVersionsColumns[9]},
+			},
+		},
+	}
 	// KnowledgeArticlesColumns holds the columns for the "knowledge_articles" table.
 	KnowledgeArticlesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1498,6 +1541,61 @@ var (
 				Columns:    []*schema.Column{MspAllocationsColumns[6]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// MarketplaceItemsColumns holds the columns for the "marketplace_items" table.
+	MarketplaceItemsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"connector", "skill", "plugin"}},
+		{Name: "title", Type: field.TypeString},
+		{Name: "provider", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "long_description", Type: field.TypeString, Nullable: true},
+		{Name: "icon_url", Type: field.TypeString, Nullable: true},
+		{Name: "screenshots", Type: field.TypeJSON, Nullable: true},
+		{Name: "tags", Type: field.TypeJSON, Nullable: true},
+		{Name: "rating", Type: field.TypeFloat64, Default: 0},
+		{Name: "install_count", Type: field.TypeInt, Default: 0},
+		{Name: "latest_version", Type: field.TypeString},
+		{Name: "min_system_version", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "reviewing", "published", "rejected", "deprecated"}, Default: "draft"},
+		{Name: "is_official", Type: field.TypeBool, Default: false},
+		{Name: "is_free", Type: field.TypeBool, Default: true},
+		{Name: "price", Type: field.TypeFloat64, Default: 0},
+		{Name: "category", Type: field.TypeString, Nullable: true},
+		{Name: "capabilities", Type: field.TypeJSON, Nullable: true},
+		{Name: "required_permissions", Type: field.TypeJSON, Nullable: true},
+		{Name: "config_schema", Type: field.TypeJSON, Nullable: true},
+		{Name: "author_id", Type: field.TypeString, Nullable: true},
+		{Name: "author_name", Type: field.TypeString, Nullable: true},
+		{Name: "homepage", Type: field.TypeString, Nullable: true},
+		{Name: "repository", Type: field.TypeString, Nullable: true},
+		{Name: "license", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime"}},
+	}
+	// MarketplaceItemsTable holds the schema information for the "marketplace_items" table.
+	MarketplaceItemsTable = &schema.Table{
+		Name:       "marketplace_items",
+		Columns:    MarketplaceItemsColumns,
+		PrimaryKey: []*schema.Column{MarketplaceItemsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "marketplaceitem_type_category",
+				Unique:  false,
+				Columns: []*schema.Column{MarketplaceItemsColumns[2], MarketplaceItemsColumns[18]},
+			},
+			{
+				Name:    "marketplaceitem_status_is_official",
+				Unique:  false,
+				Columns: []*schema.Column{MarketplaceItemsColumns[14], MarketplaceItemsColumns[15]},
+			},
+			{
+				Name:    "marketplaceitem_rating_install_count",
+				Unique:  false,
+				Columns: []*schema.Column{MarketplaceItemsColumns[10], MarketplaceItemsColumns[11]},
 			},
 		},
 	}
@@ -3204,6 +3302,54 @@ var (
 		Columns:    TenantsColumns,
 		PrimaryKey: []*schema.Column{TenantsColumns[0]},
 	}
+	// TenantInstallationsColumns holds the columns for the "tenant_installations" table.
+	TenantInstallationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "installed_version", Type: field.TypeString},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"installing", "active", "disabled", "failed", "uninstalled"}, Default: "installing"},
+		{Name: "config", Type: field.TypeJSON, Nullable: true},
+		{Name: "auto_upgrade", Type: field.TypeBool, Default: true},
+		{Name: "installed_by", Type: field.TypeString, Nullable: true},
+		{Name: "installed_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime"}},
+		{Name: "last_updated_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"mysql": "datetime"}},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"mysql": "datetime"}},
+		{Name: "error_message", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime"}},
+		{Name: "item_id", Type: field.TypeInt},
+	}
+	// TenantInstallationsTable holds the schema information for the "tenant_installations" table.
+	TenantInstallationsTable = &schema.Table{
+		Name:       "tenant_installations",
+		Columns:    TenantInstallationsColumns,
+		PrimaryKey: []*schema.Column{TenantInstallationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tenant_installations_marketplace_items_installations",
+				Columns:    []*schema.Column{TenantInstallationsColumns[13]},
+				RefColumns: []*schema.Column{MarketplaceItemsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tenantinstallation_tenant_id_item_id",
+				Unique:  true,
+				Columns: []*schema.Column{TenantInstallationsColumns[1], TenantInstallationsColumns[13]},
+			},
+			{
+				Name:    "tenantinstallation_tenant_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{TenantInstallationsColumns[1], TenantInstallationsColumns[3]},
+			},
+			{
+				Name:    "tenantinstallation_status_installed_at",
+				Unique:  false,
+				Columns: []*schema.Column{TenantInstallationsColumns[3], TenantInstallationsColumns[7]},
+			},
+		},
+	}
 	// TicketsColumns holds the columns for the "tickets" table.
 	TicketsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -4355,6 +4501,7 @@ var (
 		IncidentMetricsTable,
 		IncidentRulesTable,
 		IncidentRuleExecutionsTable,
+		ItemVersionsTable,
 		KnowledgeArticlesTable,
 		KnowledgeArticleLikesTable,
 		KnowledgeArticleParticipantsTable,
@@ -4362,6 +4509,7 @@ var (
 		KnowledgeArticleVersionsTable,
 		KnownErrorsTable,
 		MspAllocationsTable,
+		MarketplaceItemsTable,
 		MenusTable,
 		MessagesTable,
 		MicroservicesTable,
@@ -4404,6 +4552,7 @@ var (
 		TagsTable,
 		TeamsTable,
 		TenantsTable,
+		TenantInstallationsTable,
 		TicketsTable,
 		TicketApprovalsTable,
 		TicketAssignmentRulesTable,
@@ -4466,6 +4615,7 @@ func init() {
 	IncidentEventsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentMetricsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentRuleExecutionsTable.ForeignKeys[0].RefTable = IncidentRulesTable
+	ItemVersionsTable.ForeignKeys[0].RefTable = MarketplaceItemsTable
 	KnowledgeArticlesTable.ForeignKeys[0].RefTable = KnowledgeArticleVersionsTable
 	KnowledgeArticlesTable.ForeignKeys[1].RefTable = KnowledgeArticleSessionsTable
 	KnowledgeArticlesTable.ForeignKeys[2].RefTable = KnownErrorsTable
@@ -4498,6 +4648,7 @@ func init() {
 	SLAViolationsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
 	SLAViolationsTable.ForeignKeys[1].RefTable = TicketsTable
 	SurveyResponsesTable.ForeignKeys[0].RefTable = SurveysTable
+	TenantInstallationsTable.ForeignKeys[0].RefTable = MarketplaceItemsTable
 	TicketsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	TicketsTable.ForeignKeys[1].RefTable = SLADefinitionsTable
 	TicketsTable.ForeignKeys[2].RefTable = SLAPoliciesTable

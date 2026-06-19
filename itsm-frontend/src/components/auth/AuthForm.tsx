@@ -219,9 +219,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             </svg>
           </div>
           <h1 className="text-2xl font-bold" style={{ color: token.colorText }}>
-            ITSM Pro
+            AI-Native ITSM
           </h1>
-          <p style={{ color: token.colorTextSecondary }}>智能IT服务管理平台</p>
+          <p style={{ color: token.colorTextSecondary }}>AI驱动的IT服务管理系统</p>
         </div>
       )}
 

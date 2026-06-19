@@ -28,6 +28,10 @@ func NewTicketWorkflowService(client *ent.Client, logger *zap.SugaredLogger) *Ti
 
 // AcceptTicket 接单（事务保护，保证工单状态更新与流转记录的原子性）
 func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.AcceptTicketRequest, userID, tenantID int) error {
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 	s.logger.Infow("Accepting ticket", "ticket_id", req.TicketID, "user_id", userID)
 
 	// 检查工单是否存在且状态允许接单（读操作，事务外执行）
@@ -85,6 +89,10 @@ func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.Accep
 
 // RejectTicket 驳回工单（事务保护，保证工单状态更新与流转记录的原子性）
 func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.RejectTicketRequest, userID, tenantID int) error {
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 	s.logger.Infow("Rejecting ticket", "ticket_id", req.TicketID, "user_id", userID)
 
 	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
@@ -142,6 +150,10 @@ func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.Rejec
 
 // WithdrawTicket 撤回工单
 func (s *TicketWorkflowService) WithdrawTicket(ctx context.Context, req *dto.WithdrawTicketRequest, userID, tenantID int) error {
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 	s.logger.Infow("Withdrawing ticket", "ticket_id", req.TicketID, "user_id", userID)
 
 	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
@@ -183,6 +195,10 @@ func (s *TicketWorkflowService) WithdrawTicket(ctx context.Context, req *dto.Wit
 
 // ForwardTicket 转发工单
 func (s *TicketWorkflowService) ForwardTicket(ctx context.Context, req *dto.ForwardTicketRequest, userID, tenantID int) error {
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 	s.logger.Infow("Forwarding ticket", "ticket_id", req.TicketID, "to_user_id", req.ToUserID, "user_id", userID)
 
 	_, err := s.getTicket(ctx, req.TicketID, tenantID)
@@ -219,6 +235,10 @@ func (s *TicketWorkflowService) ForwardTicket(ctx context.Context, req *dto.Forw
 
 // CCTicket 抄送工单
 func (s *TicketWorkflowService) CCTicket(ctx context.Context, req *dto.CCTicketRequest, userID, tenantID int) error {
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 	s.logger.Infow("CC ticket", "ticket_id", req.TicketID, "cc_users", req.CCUsers, "user_id", userID)
 
 	// 检查工单是否存在
@@ -276,6 +296,10 @@ func (s *TicketWorkflowService) CCTicket(ctx context.Context, req *dto.CCTicketR
 
 // ApproveTicket 审批工单（事务保护，保证审批记录更新、工单状态变更与流转记录的原子性）
 func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.ApproveTicketRequest, userID, tenantID int) error {
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 	s.logger.Infow("Approving ticket", "ticket_id", req.TicketID, "action", req.Action, "user_id", userID)
 
 	// 检查工单是否存在（读操作，事务外执行）
@@ -572,6 +596,10 @@ func (s *TicketWorkflowService) CloseTicket(ctx context.Context, req *dto.CloseT
 
 // ReopenTicket 重开工单（事务保护，保证工单状态更新与流转记录的原子性）
 func (s *TicketWorkflowService) ReopenTicket(ctx context.Context, req *dto.ReopenTicketRequest, userID, tenantID int) error {
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 	s.logger.Infow("Reopening ticket", "ticket_id", req.TicketID, "user_id", userID)
 
 	tk, err := s.getTicket(ctx, req.TicketID, tenantID)

@@ -43,6 +43,10 @@ func (tc *TicketWorkflowController) AcceptTicket(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 
 	userID := c.GetInt("user_id")
 	tenantID := c.GetInt("tenant_id")
@@ -71,6 +75,10 @@ func (tc *TicketWorkflowController) RejectTicket(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
+	}
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
 	}
 
 	userID := c.GetInt("user_id")
@@ -101,6 +109,10 @@ func (tc *TicketWorkflowController) WithdrawTicket(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 
 	userID := c.GetInt("user_id")
 	tenantID := c.GetInt("tenant_id")
@@ -129,6 +141,10 @@ func (tc *TicketWorkflowController) ForwardTicket(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
+	}
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
 	}
 
 	userID := c.GetInt("user_id")
@@ -159,6 +175,10 @@ func (tc *TicketWorkflowController) CCTicket(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 
 	userID := c.GetInt("user_id")
 	tenantID := c.GetInt("tenant_id")
@@ -187,6 +207,10 @@ func (tc *TicketWorkflowController) ApproveTicket(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
+	}
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
 	}
 
 	userID := c.GetInt("user_id")
@@ -286,6 +310,10 @@ func (tc *TicketWorkflowController) ReopenTicket(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
+	}
+	// 兼容 ticket_id 和 ticketId 两种字段名
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
 	}
 
 	userID := c.GetInt("user_id")
