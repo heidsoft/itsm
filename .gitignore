@@ -134,8 +134,17 @@ itsm-backend/memory/run_tests.sh
 itsm-backend/itsm
 itsm-backend/itsm-backend
 itsm-backend/server
-deploy/itsm-backend
-deploy/frontend/frontend/static/
+
+# All deploy artifacts (binaries, builds, distributions)
+deploy/
+dist/
+build-output/
+
+# Pre-built binaries (any platform)
+*.binary
+itsm-*-linux-*
+itsm-*-darwin-*
+itsm-*-windows-*
 
 # Python / Test
 tests/
