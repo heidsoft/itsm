@@ -299,8 +299,16 @@ func (s *Service) ConfigureWorkflow(ctx context.Context, changeID int, items []*
 }
 
 func (s *Service) GetApprovalSummary(ctx context.Context, changeID, tenantID int) (interface{}, error) {
-	chain, _ := s.repo.GetApprovalChain(ctx, changeID)
-	history, _ := s.repo.GetApprovalHistory(ctx, changeID, tenantID)
+	chain, err := s.repo.GetApprovalChain(ctx, changeID)
+	if err != nil {
+		s.logger.Warnw("GetApprovalSummary: failed to get approval chain", "error", err, "change_id", changeID)
+		return nil, fmt.Errorf("failed to get approval chain: %w", err)
+	}
+	history, err := s.repo.GetApprovalHistory(ctx, changeID, tenantID)
+	if err != nil {
+		s.logger.Warnw("GetApprovalSummary: failed to get approval history", "error", err, "change_id", changeID)
+		return nil, fmt.Errorf("failed to get approval history: %w", err)
+	}
 
 	return map[string]interface{}{
 		"chain":   chain,
@@ -358,10 +366,12 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			for _, h := range history {
 				if h.ApproverID == userID && h.Status == "pending" {
 					approvedStatus := "approved"
-					_, _ = s.repo.UpdateApprovalRecord(ctx, &ApprovalRecord{
+					if _, err := s.repo.UpdateApprovalRecord(ctx, &ApprovalRecord{
 						ID:     h.ID,
 						Status: approvedStatus,
-					})
+					}); err != nil {
+						s.logger.Warnw("TransitionStatus: failed to update approval record", "error", err, "record_id", h.ID)
+					}
 					break
 				}
 			}
@@ -388,7 +398,7 @@ func isValidChangeStatusTransition(currentStatus, newStatus string) bool {
 
 	allowed, ok := validTransitions[currentStatus]
 	if !ok {
-		return true
+		return false
 	}
 
 	for _, status := range allowed {

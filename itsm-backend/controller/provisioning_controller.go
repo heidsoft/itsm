@@ -48,7 +48,7 @@ func (pc *ProvisioningController) StartProvisioning(c *gin.Context) {
 
 	task, err := pc.provisioningService.CreateTaskFromServiceRequest(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, err.Error())
+		common.Fail(c, common.BadRequestCode, "创建交付任务失败")
 		return
 	}
 
@@ -91,7 +91,7 @@ func (pc *ProvisioningController) ListProvisioningTasks(c *gin.Context) {
 
 	tasks, err := pc.provisioningService.ListTasksByServiceRequest(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.Fail(c, common.InternalErrorCode, "获取交付任务列表失败")
 		return
 	}
 	out := make([]dto.ProvisioningTaskResponse, 0, len(tasks))
@@ -141,7 +141,7 @@ func (pc *ProvisioningController) ExecuteProvisioningTask(c *gin.Context) {
 
 	task, err := pc.provisioningService.ExecuteTask(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.Fail(c, common.InternalErrorCode, "执行交付任务失败")
 		return
 	}
 	common.Success(c, dto.ProvisioningTaskResponse{

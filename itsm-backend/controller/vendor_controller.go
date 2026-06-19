@@ -26,7 +26,7 @@ func (c *VendorController) CreateVendor(ctx *gin.Context) {
 	tenantID, _ := ctx.Get("tenant_id")
 	res, err := c.svc.CreateVendor(ctx.Request.Context(), &req, tenantID.(int))
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.Fail(ctx, common.InternalErrorCode, "创建供应商失败")
 		return
 	}
 	common.Success(ctx, res)
@@ -38,7 +38,7 @@ func (c *VendorController) ListVendors(ctx *gin.Context) {
 	tenantID, _ := ctx.Get("tenant_id")
 	list, total, err := c.svc.ListVendors(ctx.Request.Context(), tenantID.(int), page, size)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.Fail(ctx, common.InternalErrorCode, "获取供应商列表失败")
 		return
 	}
 	common.Success(ctx, gin.H{"list": list, "total": total, "page": page})
@@ -59,7 +59,7 @@ func (c *VendorController) DeleteVendor(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
 	tenantID, _ := ctx.Get("tenant_id")
 	if err := c.svc.DeleteVendor(ctx.Request.Context(), id, tenantID.(int)); err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.Fail(ctx, common.InternalErrorCode, "删除供应商失败")
 		return
 	}
 	common.Success(ctx, gin.H{"message": "deleted"})
