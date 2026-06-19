@@ -17,6 +17,7 @@
 #   ./scripts/deploy-prod.sh [command] [options]
 #
 # Commands:
+#   init        Create .env.prod with generated secrets
 #   deploy      Full deploy (validate → backup → build → deploy → verify)
 #   rollback    Rollback to previous deployment
 #   backup      Backup database only
@@ -70,10 +71,11 @@ SKIP_BACKUP=false
 SKIP_BUILD=false
 DRY_RUN=false
 VERBOSE=false
+LOG_SERVICE=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        deploy|rollback|backup|status|health|logs|down|help)
+        init|deploy|rollback|backup|status|health|logs|down|help)
             COMMAND="$1"; shift ;;
         --skip-backup) SKIP_BACKUP=true; shift ;;
         --skip-build)  SKIP_BUILD=true;  shift ;;
@@ -81,9 +83,14 @@ while [[ $# -gt 0 ]]; do
         --verbose)     VERBOSE=true;     shift ;;
         -h|--help)     COMMAND="help";   shift ;;
         *)
-            log_error "Unknown option: $1"
-            COMMAND="help"
-            shift
+            if [[ "$COMMAND" == "logs" && -z "$LOG_SERVICE" ]]; then
+                LOG_SERVICE="$1"
+                shift
+            else
+                log_error "Unknown option: $1"
+                COMMAND="help"
+                shift
+            fi
             ;;
     esac
 done
@@ -110,6 +117,92 @@ run() {
     else
         "$@"
     fi
+}
+
+generate_secret() {
+    local bytes="${1:-32}"
+    if command -v openssl &>/dev/null; then
+        openssl rand -base64 "$bytes" | tr -d '\n'
+    elif command -v python3 &>/dev/null; then
+        python3 - "$bytes" <<'PY'
+import secrets
+import string
+import sys
+
+size = int(sys.argv[1])
+alphabet = string.ascii_letters + string.digits + "_@%+=:,.~-"
+print("".join(secrets.choice(alphabet) for _ in range(size)), end="")
+PY
+    else
+        date "+%s%N"
+    fi
+}
+
+generate_hex() {
+    local bytes="${1:-16}"
+    if command -v openssl &>/dev/null; then
+        openssl rand -hex "$bytes"
+    elif command -v python3 &>/dev/null; then
+        python3 - "$bytes" <<'PY'
+import secrets
+import sys
+print(secrets.token_hex(int(sys.argv[1])), end="")
+PY
+    else
+        date "+%s%N"
+    fi
+}
+
+set_env_value() {
+    local file="$1" key="$2" value="$3"
+    local tmp
+    tmp="$(mktemp)"
+    awk -v key="$key" -v value="$value" '
+        BEGIN { replaced = 0 }
+        $0 ~ "^" key "=" {
+            print key "=" value
+            replaced = 1
+            next
+        }
+        { print }
+        END {
+            if (replaced == 0) {
+                print key "=" value
+            }
+        }
+    ' "$file" > "$tmp"
+    mv "$tmp" "$file"
+}
+
+init_prod_env() {
+    log_phase "Production Environment Initialization"
+
+    if [[ -f "$ENV_FILE" ]]; then
+        log_warn ".env.prod already exists: $ENV_FILE"
+        log_info "Edit it directly, or move it away before running init again."
+        return 0
+    fi
+
+    if [[ ! -f "$PROJECT_ROOT/.env.prod.example" ]]; then
+        log_error ".env.prod.example not found"
+        return 1
+    fi
+
+    cp "$PROJECT_ROOT/.env.prod.example" "$ENV_FILE"
+    set_env_value "$ENV_FILE" "DB_PASSWORD" "$(generate_secret 36)"
+    set_env_value "$ENV_FILE" "REDIS_PASSWORD" "$(generate_secret 36)"
+    set_env_value "$ENV_FILE" "JWT_SECRET" "$(generate_secret 48)"
+    set_env_value "$ENV_FILE" "ADMIN_PASSWORD" "$(generate_secret 24)"
+    set_env_value "$ENV_FILE" "MINIO_ACCESS_KEY" "itsm_$(generate_hex 12)"
+    set_env_value "$ENV_FILE" "MINIO_SECRET_KEY" "$(generate_secret 36)"
+    set_env_value "$ENV_FILE" "GRAFANA_PASSWORD" "$(generate_secret 24)"
+
+    chmod 600 "$ENV_FILE"
+    mkdir -p "$BACKUP_DIR" "$LOG_DIR" "$PROJECT_ROOT/uploads" "$PROJECT_ROOT/config"
+
+    log_success "Created .env.prod with generated secrets"
+    log_warn "Review CORS_ALLOWED_ORIGINS, domain/SSL settings, and LLM provider before deploy."
+    log_info "Next: ./scripts/deploy-prod.sh deploy"
 }
 
 # ============================================================
@@ -144,14 +237,14 @@ preflight_checks() {
 
     # .env.prod
     if [[ ! -f "$ENV_FILE" ]]; then
-        log_error ".env.prod not found. Create: cp .env.prod.example .env.prod"
+        log_error ".env.prod not found. Run: ./scripts/deploy-prod.sh init"
         errors=$((errors + 1))
     else
         log_success ".env.prod found"
         source_env_file "$ENV_FILE"
 
         # Required variables
-        local required=("DB_PASSWORD" "REDIS_PASSWORD" "JWT_SECRET" "MINIO_ACCESS_KEY" "MINIO_SECRET_KEY")
+        local required=("DB_PASSWORD" "REDIS_PASSWORD" "JWT_SECRET" "ADMIN_PASSWORD" "MINIO_ACCESS_KEY" "MINIO_SECRET_KEY")
         for var in "${required[@]}"; do
             if [[ -z "${!var:-}" ]]; then
                 log_error "$var not set in .env.prod"; errors=$((errors + 1))
@@ -163,6 +256,18 @@ preflight_checks() {
         # Security: no default/dev values
         if ! check_prod_secrets; then
             errors=$((errors + 1))
+        fi
+
+        if [[ "${#JWT_SECRET}" -lt 32 ]]; then
+            log_error "JWT_SECRET must be at least 32 characters"
+            errors=$((errors + 1))
+        fi
+
+        if ! docker compose --env-file "$ENV_FILE" -f "$COMPOSE_PROD" config >/dev/null; then
+            log_error "docker-compose.prod.yml validation failed"
+            errors=$((errors + 1))
+        else
+            log_success "docker-compose.prod.yml config is valid"
         fi
     fi
 
@@ -566,6 +671,7 @@ show_help() {
 Usage: $(basename "$0") [command] [options]
 
 ${BOLD}Commands:${NC}
+  init        Create .env.prod with generated secrets
   deploy      Full deploy (validate → backup → build → deploy → verify)
   rollback    Rollback to previous deployment
   backup      Backup database only
@@ -583,11 +689,12 @@ ${BOLD}Options:${NC}
   -h, --help       Show help
 
 ${BOLD}Prerequisites:${NC}
-  1. cp .env.prod.example .env.prod
-  2. Set all required secrets (DB_PASSWORD, REDIS_PASSWORD, JWT_SECRET, etc.)
+  1. ./scripts/deploy-prod.sh init
+  2. Review .env.prod and set domain/SSL/LLM values
   3. Ensure ports 3000 and 8090 are available
 
 ${BOLD}Examples:${NC}
+  $(basename "$0") init                      # Generate .env.prod secrets
   $(basename "$0") deploy                    # Full production deploy
   $(basename "$0") deploy --dry-run          # Preview without deploying
   $(basename "$0") deploy --skip-build       # Deploy with existing images
@@ -603,12 +710,13 @@ EOF
 # Entry point
 # ============================================================
 case "$COMMAND" in
+    init)     init_prod_env ;;
     deploy)   full_deploy ;;
     rollback) do_rollback ;;
     backup)   backup_database ;;
     status)   show_status ;;
     health)   show_health ;;
-    logs)     show_logs ;;
+    logs)     show_logs "$LOG_SERVICE" ;;
     down)     stop_production ;;
     help)     show_help ;;
     *)

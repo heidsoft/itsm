@@ -72,6 +72,7 @@ FORCE_MODE=""
 SKIP_DEPS=false
 NO_BUILD=false
 VERBOSE=false
+LOG_SERVICE=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -84,9 +85,14 @@ while [[ $# -gt 0 ]]; do
         --verbose)    VERBOSE=true;         shift ;;
         -h|--help)    COMMAND="help";       shift ;;
         *)
-            log_error "Unknown option: $1"
-            COMMAND="help"
-            shift
+            if [[ "$COMMAND" == "logs" && -z "$LOG_SERVICE" ]]; then
+                LOG_SERVICE="$1"
+                shift
+            else
+                log_error "Unknown option: $1"
+                COMMAND="help"
+                shift
+            fi
             ;;
     esac
 done
@@ -123,28 +129,44 @@ on_exit "cleanup"
 # ============================================================
 # Docker Compose mode
 # ============================================================
+ensure_dev_env() {
+    if [[ -f "$PROJECT_ROOT/.env" ]]; then
+        return 0
+    fi
+
+    if [[ -f "$PROJECT_ROOT/.env.dev.example" ]]; then
+        cp "$PROJECT_ROOT/.env.dev.example" "$PROJECT_ROOT/.env"
+        log_info "Created .env from .env.dev.example"
+    elif [[ -f "$PROJECT_ROOT/.env.example" ]]; then
+        cp "$PROJECT_ROOT/.env.example" "$PROJECT_ROOT/.env"
+        log_info "Created .env from .env.example"
+    fi
+}
+
 docker_up() {
     local build_flag=""
     $NO_BUILD || build_flag="--build"
 
     log_step "Starting development environment (Docker Compose)"
 
-    # Ensure .env exists
-    if [[ ! -f "$PROJECT_ROOT/.env" ]] && [[ -f "$PROJECT_ROOT/.env.example" ]]; then
-        cp "$PROJECT_ROOT/.env.example" "$PROJECT_ROOT/.env"
-        log_info "Created .env from .env.example"
-    fi
+    ensure_dev_env
 
     # Phase 1: Infrastructure
-    log_step "[1/3] Starting PostgreSQL + Redis"
+    log_step "[1/3] Starting PostgreSQL + Redis + MinIO"
     local start; start=$(timer_start)
-    dc -f "$COMPOSE_DEV" --profile dev up -d postgres redis
-    if wait_for_container_healthy "itsm-postgres-dev" 30; then
-        timer_end "$start" "Infrastructure"
-    else
-        log_error "PostgreSQL not healthy after 30s"
+    dc -f "$COMPOSE_DEV" --profile dev up -d postgres redis minio
+    local infra_ok=true
+    for svc in itsm-postgres-dev itsm-redis-dev itsm-minio-dev; do
+        if ! wait_for_container_healthy "$svc" 45; then
+            log_error "$svc not healthy after 45s"
+            infra_ok=false
+        fi
+    done
+    if ! $infra_ok; then
+        dc -f "$COMPOSE_DEV" --profile dev logs --tail=30 postgres redis minio
         return 1
     fi
+    timer_end "$start" "Infrastructure"
 
     # Phase 2: Backend
     log_step "[2/3] Building and starting backend"
@@ -177,7 +199,7 @@ docker_up() {
 
 docker_down() {
     log_step "Stopping development environment"
-    dc -f "$COMPOSE_DEV" --profile dev down
+    dc -f "$COMPOSE_DEV" --profile dev down --remove-orphans
     log_success "All services stopped"
 }
 
@@ -252,12 +274,16 @@ start_infrastructure() {
     else
         docker run -d --name itsm-postgres-dev \
             -e POSTGRES_DB=itsm \
-            -e POSTGRES_USER=itsm \
-            -e POSTGRES_PASSWORD=itsm_password_2026 \
+            -e POSTGRES_USER=itsm_user \
+            -e POSTGRES_PASSWORD=dev123 \
             -p 5432:5432 \
+            --health-cmd="pg_isready -U itsm_user -d itsm" \
+            --health-interval=5s \
+            --health-timeout=3s \
+            --health-retries=10 \
             --restart unless-stopped \
-            postgres:17-alpine
-        if wait_for_container_healthy "itsm-postgres-dev" 20; then
+            pgvector/pgvector:pg17
+        if wait_for_container_healthy "itsm-postgres-dev" 45; then
             log_success "PostgreSQL ready on port 5432"
         else
             log_error "PostgreSQL failed to start"
@@ -273,9 +299,13 @@ start_infrastructure() {
     else
         docker run -d --name itsm-redis-dev \
             -p 6379:6379 \
+            --health-cmd="redis-cli ping" \
+            --health-interval=5s \
+            --health-timeout=3s \
+            --health-retries=10 \
             --restart unless-stopped \
             redis:7-alpine
-        if wait_for_container_healthy "itsm-redis-dev" 10; then
+        if wait_for_container_healthy "itsm-redis-dev" 30; then
             log_success "Redis ready on port 6379"
         else
             log_error "Redis failed to start"
@@ -314,6 +344,10 @@ start_backend_local() {
     export LOG_LEVEL="${LOG_LEVEL:-debug}"
     export GIN_MODE="${GIN_MODE:-debug}"
     export SERVER_ENV="${SERVER_ENV:-development}"
+    export MINIO_ENDPOINT="${MINIO_ENDPOINT:-http://localhost:9000}"
+    export MINIO_ROOT_USER="${MINIO_ROOT_USER:-minioadmin}"
+    export MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD:-minioadmin123}"
+    export MINIO_BUCKET="${MINIO_BUCKET:-itsm-uploads}"
 
     local start; start=$(timer_start)
     log_info "Starting Go backend..."
@@ -362,7 +396,6 @@ start_frontend_local() {
     # Use direct node_modules path to bypass pnpm wrapper overhead on each reload
     nohup ./node_modules/.bin/next dev --port 3000 > "$LOG_DIR/frontend.log" 2>&1 &
     local pid=$!
-    local pid=$!
     echo "$pid" > "$PID_DIR/frontend.pid"
     log_info "Frontend PID: $pid"
 
@@ -398,6 +431,7 @@ local_down() {
         fi
         rm -f "$PID_DIR/frontend.pid"
     else
+        pkill -f "next dev --port 3000" 2>/dev/null && log_success "Frontend stopped" || true
         pkill -f "pnpm dev" 2>/dev/null && log_success "Frontend stopped" || true
     fi
 
@@ -435,7 +469,7 @@ run_health_checks() {
 
     # PostgreSQL
     if container_running "itsm-postgres-dev"; then
-        if docker exec itsm-postgres-dev pg_isready -U itsm -d itsm &>/dev/null; then
+        if docker exec itsm-postgres-dev pg_isready -U itsm_user -d itsm &>/dev/null; then
             log_success "PostgreSQL: healthy"
         else
             log_error "PostgreSQL: not ready"
@@ -478,12 +512,8 @@ cmd_init() {
     log_success "Docker: $(docker --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
 
     # 2. Create .env
-    if [[ ! -f "$PROJECT_ROOT/.env" ]] && [[ -f "$PROJECT_ROOT/.env.example" ]]; then
-        cp "$PROJECT_ROOT/.env.example" "$PROJECT_ROOT/.env"
-        log_success "Created .env from .env.example"
-    else
-        log_info ".env already exists"
-    fi
+    ensure_dev_env
+    [[ -f "$PROJECT_ROOT/.env" ]] && log_success ".env ready"
 
     # 3. Ensure log directory
     mkdir -p "$LOG_DIR"
@@ -727,7 +757,7 @@ main() {
             if [[ "$mode" == "docker" ]]; then docker_down && docker_up
             else local_down && sleep 2 && local_up; fi ;;
         status)  show_status ;;
-        logs)    show_logs ;;
+        logs)    show_logs "$LOG_SERVICE" ;;
         health)  run_health_checks ;;
         init)    cmd_init ;;
         doctor)  cmd_doctor ;;

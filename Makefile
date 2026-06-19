@@ -1,33 +1,47 @@
 # ITSM Makefile
 
+SHELL := /bin/bash
+
 # Development
-dev-start:          ## Start development environment (docker compose up)
-	docker compose -f docker-compose.dev.yml up -d
+dev-init:           ## First-time development setup
+	./scripts/deploy-dev.sh init
 
-dev-stop:           ## Stop development environment (docker compose down)
-	docker compose -f docker-compose.dev.yml down
+dev-start:          ## Start development environment
+	./scripts/deploy-dev.sh up
 
-dev-logs:           ## View development logs (docker compose logs)
-	docker compose -f docker-compose.dev.yml logs
+dev-stop:           ## Stop development environment
+	./scripts/deploy-dev.sh down
+
+dev-logs:           ## View development logs
+	./scripts/deploy-dev.sh logs
 
 dev-restart:        ## Restart development environment
-	docker compose -f docker-compose.dev.yml down && docker compose -f docker-compose.dev.yml up -d
+	./scripts/deploy-dev.sh restart
 
 dev-status:         ## Show service status
-	docker compose -f docker-compose.dev.yml ps
+	./scripts/deploy-dev.sh status
+
+dev-health:         ## Run development health checks
+	./scripts/deploy-dev.sh health
+
+dev-doctor:         ## Diagnose local development environment
+	./scripts/deploy-dev.sh doctor
 
 dev-clean:          ## Clean up dev environment (remove containers and volumes)
-	docker compose -f docker-compose.dev.yml down -v
+	./scripts/deploy-dev.sh reset
 
 # Production
+prod-init:          ## Create .env.prod with generated secrets
+	./scripts/deploy-prod.sh init
+
 prod-deploy:        ## Full production deploy (validate → backup → build → deploy → verify)
 	./scripts/deploy-prod.sh deploy
 
-prod-start:         ## Start production environment (infrastructure only)
-	docker compose -f docker-compose.prod.yml --env-file .env.prod up -d postgres redis minio
+prod-start:         ## Start production environment with existing images
+	./scripts/deploy-prod.sh deploy --skip-build --skip-backup
 
 prod-stop:          ## Stop production environment
-	docker compose -f docker-compose.prod.yml --env-file .env.prod down
+	./scripts/deploy-prod.sh down
 
 prod-restart:       ## Restart production environment
 	./scripts/deploy-prod.sh down && ./scripts/deploy-prod.sh deploy
@@ -68,16 +82,16 @@ db-seed:            ## Seed database with test data
 
 # Utility
 logs-backend:       ## View backend logs
-	docker compose -f docker-compose.dev.yml logs itsm-backend
+	./scripts/deploy-dev.sh logs itsm-backend
 
 logs-frontend:     ## View frontend logs
-	docker compose -f docker-compose.dev.yml logs itsm-frontend
+	./scripts/deploy-dev.sh logs itsm-frontend
 
 logs-postgres:      ## View postgres logs
-	docker compose -f docker-compose.dev.yml logs postgres
+	./scripts/deploy-dev.sh logs postgres
 
-.PHONY: dev-start dev-stop dev-logs dev-restart dev-status dev-clean \
-        prod-start prod-stop prod-deploy prod-status prod-health prod-logs \
+.PHONY: dev-init dev-start dev-stop dev-logs dev-restart dev-status dev-health dev-doctor dev-clean \
+        prod-init prod-start prod-stop prod-deploy prod-status prod-health prod-logs \
         prod-restart prod-rollback prod-backup prod-down \
         db-migrate db-seed \
         release \

@@ -188,7 +188,7 @@ docker compose -f docker-compose.dev.yml --profile dev exec itsm-backend sh -c "
 5. Commit with conventional format: `feat: add ticket priority field`
 6. Push and create PR
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for details.
 
 ## Troubleshooting
 

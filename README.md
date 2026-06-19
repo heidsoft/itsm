@@ -18,7 +18,7 @@
 
 **🚀 LLM-first 智能分诊 | Guidance-Harness-Skill 工程体系 | 开源免费**
 
-**[🌐 官网](https://cloudmesh.top/)** · **[📖 架构解析](./docs/articles/07-AI-Native-ITSM的架构进化论：Guidance-Harness-Skill三层体系设计.md)**
+**[🌐 官网](https://cloudmesh.top/)** · **[📖 架构解析](./docs/articles/07-ai-native-architecture-guidance-harness-skill.md)**
 
 </div>
 
@@ -274,7 +274,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
 默认初始化不预置虚构事件、问题、变更或真实资产业务数据；企业可通过 `ITSM_SEED_CONFIG` 或 `config/seed/default.json` 定制自己的初始化模板。
 
-更多验收项见 [v1.0 GA 收口验收指南](./docs/V1_GA_READINESS.md)。
+更多验收项见 [v1.0 GA 收口验收指南](./docs/v1-ga-readiness.md)。
 
 ---
 
@@ -480,15 +480,15 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
 ## 文档导航
 
-| [文档中心](./docs/README.md) | [开发指南](./docs/DEVELOPMENT.md) | [部署指南](./docs/DEPLOYMENT.md) |
+| [文档中心](./docs/README.md) | [开发指南](./docs/development.md) | [部署指南](./docs/deployment.md) |
 |:---:|:---:|:---:|
 | 按角色查找文档 | 开发环境搭建 | Docker/K8s 部署 |
 
-| [配置参考](./docs/CONFIGURATION.md) | [数据库](./docs/DATABASE.md) | [运维手册](./docs/OPERATIONS.md) |
+| [配置参考](./docs/configuration.md) | [数据库](./docs/database.md) | [运维手册](./docs/operations.md) |
 |:---:|:---:|:---:|
 | 环境变量详解 | 迁移与备份 | 日志与监控 |
 
-| [v1.0 验收](./docs/V1_GA_READINESS.md) | [AI架构解析](./docs/articles/07-AI-Native-ITSM的架构进化论：Guidance-Harness-Skill三层体系设计.md) | [贡献指南](./CONTRIBUTING.md) |
+| [v1.0 验收](./docs/v1-ga-readiness.md) | [AI架构解析](./docs/articles/07-ai-native-architecture-guidance-harness-skill.md) | [贡献指南](./CONTRIBUTING.md) |
 |:---:|:---:|:---:|
 | GA 能力检查 | Guidance-Harness-Skill 三层体系 | PR 流程 |
 

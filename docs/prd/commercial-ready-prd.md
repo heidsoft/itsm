@@ -383,7 +383,7 @@
 
 ## 附录 B: 参考文档
 
-- 架构评审报告: `docs/review/ITSM-Architecture-Review-2026-06-14.md`
+- 架构评审报告: `docs/review/architecture-review-2026-06-14.md`
 - 问题源码位置:
   - `service/cmdb_service.go` (SEC-001, SEC-004)
   - `service/bpmn_process_engine.go` (SEC-002, FUNC-001, FUNC-002, DATA-002)

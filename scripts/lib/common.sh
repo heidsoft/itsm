@@ -251,8 +251,11 @@ check_prod_secrets() {
     local errors=0
     local dev_secrets=(
         "JWT_SECRET=dev-secret-key-placeholder-change-in-production-min-32-chars"
+        "JWT_SECRET=dev-secret-key-change-in-production-minimum-32-characters-long"
         "DB_PASSWORD=itsm_password_2026"
         "DB_PASSWORD=dev123"
+        "ADMIN_PASSWORD=admin123"
+        "MINIO_SECRET_KEY=minioadmin123"
     )
     for pair in "${dev_secrets[@]}"; do
         local var="${pair%%=*}"

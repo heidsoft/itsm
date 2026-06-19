@@ -100,6 +100,7 @@ services:
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
       - LOG_LEVEL=error
       - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}
       - ITSM_BOOTSTRAP_ONLY=true
       - ITSM_AUTO_MIGRATE=true
       - ITSM_AUTO_SEED=true
@@ -145,6 +146,7 @@ services:
       # 服务配置
       - SERVER_ENV=production
       - SERVER_HOST=0.0.0.0
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}
 
       # JWT 配置（生产环境必须更改！）
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
@@ -176,18 +178,18 @@ services:
       # LLM 配置（生产环境）
       - LLM_PROVIDER=${LLM_PROVIDER:-openai}
       - LLM_MODEL=${LLM_MODEL:-gpt-4}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
 
       # 告警通知
-      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
-      - SMTP_USERNAME=${SMTP_USERNAME}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
       - SMTP_FROM=${SMTP_FROM:-noreply@yourdomain.com}
 
-      - DINGTALK_WEBHOOK=${DINGTALK_WEBHOOK}
-      - WECOM_WEBHOOK=${WECOM_WEBHOOK}
+      - DINGTALK_WEBHOOK=${DINGTALK_WEBHOOK:-}
+      - WECOM_WEBHOOK=${WECOM_WEBHOOK:-}
 
       # 其他配置
       - ENABLE_CORS=true
