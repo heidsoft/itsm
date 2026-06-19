@@ -33,6 +33,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 ARG ITSM_BACKEND_URL=http://itsm-backend:8090
+ARG NPM_REGISTRY
 ARG HTTP_PROXY=
 ARG HTTPS_PROXY=
 ARG http_proxy=
