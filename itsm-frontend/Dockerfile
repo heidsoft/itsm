@@ -19,12 +19,11 @@ RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
     npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org}
 
 # Copy package files first for caching
-COPY package.json pnpm-lock.yaml* package-lock.json* ./
+COPY package.json package-lock.json ./
 
-# Install pnpm and dependencies (without --ignore-scripts so postinstall hooks run)
+# Install dependencies (without --ignore-scripts so postinstall hooks run)
 RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    npm install -g pnpm@9.0.0 && \
-    pnpm install --frozen-lockfile || pnpm install
+    npm ci --prefer-offline || npm install
 
 # ============================================
 # Stage 2: Build Next.js application (production)
@@ -42,8 +41,7 @@ ARG NO_PROXY=localhost,127.0.0.1
 ARG no_proxy=localhost,127.0.0.1
 
 RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org} && \
-    npm install -g pnpm@9.0.0
+    npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org}
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
@@ -54,7 +52,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV ITSM_BACKEND_URL=${ITSM_BACKEND_URL}
 
 RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    pnpm run build
+    npm run build
 
 # ============================================
 # Stage 3a: Production runner
@@ -82,11 +80,6 @@ CMD ["node", "server.js"]
 FROM node:22-alpine AS runner
 
 WORKDIR /app
-
-# Install pnpm in runner stage (no network needed from host)
-RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
-    npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org} && \
-    npm install -g pnpm@9.0.0
 
 # Copy everything from deps (node_modules ready) + source
 COPY --from=deps /app/node_modules ./node_modules

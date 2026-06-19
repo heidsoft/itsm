@@ -30,8 +30,10 @@ func (s *ProcessBindingService) CreateBinding(ctx context.Context, binding *dto.
 		Where(
 			processdefinition.Key(binding.ProcessDefinitionKey),
 			processdefinition.TenantID(binding.TenantID),
+			processdefinition.IsActive(true),
+			processdefinition.IsLatest(true),
 		).
-		Only(ctx)
+		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, fmt.Errorf("流程定义 %s 不存在", binding.ProcessDefinitionKey)
@@ -341,6 +343,8 @@ func (s *ProcessBindingService) InitDefaultBindings(ctx context.Context, tenantI
 			Where(
 				processdefinition.Key(binding.ProcessDefinitionKey),
 				processdefinition.TenantID(tenantID),
+				processdefinition.IsActive(true),
+				processdefinition.IsLatest(true),
 			).
 			Exist(ctx)
 		if err != nil || !exists {

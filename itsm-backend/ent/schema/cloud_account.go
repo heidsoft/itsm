@@ -18,7 +18,7 @@ type CloudAccount struct {
 func (CloudAccount) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("provider").
-			Comment("云厂商标识（aliyun/huawei/tencent/azure/onprem）").
+			Comment("云厂商标识（aliyun/tencent/huawei/aws/azure/onprem）").
 			NotEmpty(),
 		field.String("account_id").
 			Comment("云账号ID").
@@ -59,7 +59,7 @@ func (CloudAccount) Edges() []ent.Edge {
 func (CloudAccount) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("tenant_id"),
-		index.Fields("provider", "account_id").
+		index.Fields("tenant_id", "provider", "account_id").
 			Unique(),
 	}
 }

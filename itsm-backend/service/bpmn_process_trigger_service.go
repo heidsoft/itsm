@@ -58,8 +58,10 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 		Where(
 			processdefinition.Key(processDefKey),
 			processdefinition.TenantID(req.TenantID),
+			processdefinition.IsActive(true),
+			processdefinition.IsLatest(true),
 		).
-		Only(ctx)
+		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, fmt.Errorf("流程定义 %s 不存在", processDefKey)
@@ -145,13 +147,21 @@ func (s *ProcessTriggerService) GetProcessStatus(ctx context.Context, processIns
 	}
 
 	definition, _ := s.client.ProcessDefinition.Query().
-		Where(processdefinition.Key(instance.ProcessDefinitionKey)).
-		Only(ctx)
+		Where(
+			processdefinition.Key(instance.ProcessDefinitionKey),
+			processdefinition.TenantID(tenantID),
+			processdefinition.IsLatest(true),
+		).
+		First(ctx)
+	processName := instance.ProcessDefinitionKey
+	if definition != nil {
+		processName = definition.Name
+	}
 
 	return &dto.ProcessTriggerResponse{
 		ProcessInstanceID:     instance.ID,
 		ProcessDefinitionKey:  instance.ProcessDefinitionKey,
-		ProcessDefinitionName: definition.Name,
+		ProcessDefinitionName: processName,
 		BusinessKey:           instance.BusinessKey,
 		Status:                s.mapInstanceStatus(instance.Status),
 		CurrentActivityID:     instance.CurrentActivityID,

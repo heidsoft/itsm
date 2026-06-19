@@ -19,7 +19,6 @@ func (ProcessDefinition) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("key").
 			Comment("流程定义Key，BPMN标准").
-			Unique().
 			NotEmpty(),
 		field.String("name").
 			Comment("流程定义名称").
@@ -86,7 +85,7 @@ func (ProcessDefinition) Edges() []ent.Edge {
 // Indexes of the ProcessDefinition.
 func (ProcessDefinition) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("key", "version").
+		index.Fields("tenant_id", "key", "version").
 			Unique(),
 		index.Fields("tenant_id", "key"),
 		index.Fields("deployment_id"),

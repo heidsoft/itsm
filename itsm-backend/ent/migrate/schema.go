@@ -588,9 +588,9 @@ var (
 				Columns: []*schema.Column{CloudAccountsColumns[7]},
 			},
 			{
-				Name:    "cloudaccount_provider_account_id",
+				Name:    "cloudaccount_tenant_id_provider_account_id",
 				Unique:  true,
-				Columns: []*schema.Column{CloudAccountsColumns[1], CloudAccountsColumns[2]},
+				Columns: []*schema.Column{CloudAccountsColumns[7], CloudAccountsColumns[1], CloudAccountsColumns[2]},
 			},
 		},
 	}
@@ -703,9 +703,9 @@ var (
 				Columns: []*schema.Column{CloudServicesColumns[2]},
 			},
 			{
-				Name:    "cloudservice_provider_service_code_resource_type_code",
+				Name:    "cloudservice_tenant_id_provider_service_code_resource_type_code",
 				Unique:  true,
-				Columns: []*schema.Column{CloudServicesColumns[1], CloudServicesColumns[3], CloudServicesColumns[5]},
+				Columns: []*schema.Column{CloudServicesColumns[11], CloudServicesColumns[1], CloudServicesColumns[3], CloudServicesColumns[5]},
 			},
 		},
 	}
@@ -1965,7 +1965,7 @@ var (
 	// ProcessDefinitionsColumns holds the columns for the "process_definitions" table.
 	ProcessDefinitionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "key", Type: field.TypeString, Unique: true},
+		{Name: "key", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "version", Type: field.TypeString, Default: "1.0.0"},
@@ -1996,9 +1996,9 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "processdefinition_key_version",
+				Name:    "processdefinition_tenant_id_key_version",
 				Unique:  true,
-				Columns: []*schema.Column{ProcessDefinitionsColumns[1], ProcessDefinitionsColumns[4]},
+				Columns: []*schema.Column{ProcessDefinitionsColumns[12], ProcessDefinitionsColumns[1], ProcessDefinitionsColumns[4]},
 			},
 			{
 				Name:    "processdefinition_tenant_id_key",

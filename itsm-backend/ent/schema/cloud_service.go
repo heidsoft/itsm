@@ -21,7 +21,7 @@ func (CloudService) Fields() []ent.Field {
 			Comment("父级服务ID").
 			Optional(),
 		field.String("provider").
-			Comment("云厂商标识（aliyun/huawei/tencent/azure/onprem）").
+			Comment("云厂商标识（aliyun/tencent/huawei/aws/azure/onprem）").
 			NotEmpty(),
 		field.String("category").
 			Comment("服务分类").
@@ -81,7 +81,7 @@ func (CloudService) Indexes() []ent.Index {
 		index.Fields("tenant_id"),
 		index.Fields("parent_id"),
 		index.Fields("category"),
-		index.Fields("provider", "service_code", "resource_type_code").
+		index.Fields("tenant_id", "provider", "service_code", "resource_type_code").
 			Unique(),
 	}
 }

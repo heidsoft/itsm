@@ -29,6 +29,24 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+typecheck-output*.txt
+
+# test artifacts
+test-results/
+playwright-report/
+.jest-cache/
+.pytest_cache/
+
+# compiler caches
+.swc/
+
+# IDE
+.trae/
+.claude/
+
+# backups
+*.backup
 
 # env files (can opt-in for committing if needed)
 .env*

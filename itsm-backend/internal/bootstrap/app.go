@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"itsm-backend/common"
@@ -35,6 +36,7 @@ import (
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/sla"
+	"itsm-backend/docs"
 	"itsm-backend/handlers/standard_change"
 	"itsm-backend/middleware"
 	"itsm-backend/pkg/seeder"
@@ -551,7 +553,13 @@ func NewApplication() *Application {
 	}
 	router.SetupRoutes(r, routerConfig)
 
-	// Swagger
+	// Swagger - configure and register swagger docs
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.Host = "localhost:" + strconv.Itoa(cfg.Server.Port)
+	docs.SwaggerInfo.BasePath = "/"
+	docs.SwaggerInfo.Schemes = []string{"http", "https"}
+	docs.SwaggerInfo.Title = "ITSM API"
+	docs.SwaggerInfo.Description = "IT Service Management System API Documentation"
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return &Application{
