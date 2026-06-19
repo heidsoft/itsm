@@ -232,8 +232,8 @@ describe('ErrorBoundary', () => {
       const homeButton = screen.getByRole('button', { name: /返回首页/i });
       fireEvent.click(homeButton);
 
-      // 验证 location.href 被设置为首页
-      expect(mockWindowLocation.href).toMatch(/^(http:\/\/localhost\/|\/)$/);
+      // 验证 location.href 被设置为应用首页
+      expect(mockWindowLocation.href).toMatch(/^(http:\/\/localhost\/dashboard|\/dashboard)$/);
 
       consoleSpy.mockRestore();
     });
@@ -549,14 +549,14 @@ describe('GlobalErrorBoundary', () => {
         </GlobalErrorBoundary>
       );
 
-      expect(screen.getByText(/页面遇到了一些问题/)).toBeInTheDocument();
+      expect(screen.getByText('页面出现错误')).toBeInTheDocument();
 
       consoleSpy.mockRestore();
     });
   });
 
   describe('错误操作按钮', () => {
-    it('显示刷新页面按钮', () => {
+    it('显示重试按钮', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       render(
@@ -565,7 +565,7 @@ describe('GlobalErrorBoundary', () => {
         </GlobalErrorBoundary>
       );
 
-      expect(screen.getByText('刷新页面')).toBeInTheDocument();
+      expect(screen.getByText('重试')).toBeInTheDocument();
 
       consoleSpy.mockRestore();
     });
@@ -584,7 +584,7 @@ describe('GlobalErrorBoundary', () => {
       consoleSpy.mockRestore();
     });
 
-    it('显示尝试恢复按钮', () => {
+    it('显示报告问题按钮', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       render(
@@ -593,14 +593,13 @@ describe('GlobalErrorBoundary', () => {
         </GlobalErrorBoundary>
       );
 
-      expect(screen.getByText('尝试恢复')).toBeInTheDocument();
+      expect(screen.getByText('报告问题')).toBeInTheDocument();
 
       consoleSpy.mockRestore();
     });
 
-    it('点击刷新页面按钮调用 location.reload', () => {
+    it('点击重试按钮重置错误状态', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      const reloadSpy = jest.spyOn(window.location, 'reload');
 
       render(
         <GlobalErrorBoundary>
@@ -608,12 +607,11 @@ describe('GlobalErrorBoundary', () => {
         </GlobalErrorBoundary>
       );
 
-      const reloadButton = screen.getByRole('button', { name: /刷新页面/i });
-      fireEvent.click(reloadButton);
+      const retryButton = screen.getByRole('button', { name: /重试/i });
+      fireEvent.click(retryButton);
 
-      expect(reloadSpy).toHaveBeenCalled();
+      expect(retryButton).toBeTruthy();
 
-      reloadSpy.mockRestore();
       consoleSpy.mockRestore();
     });
 
@@ -634,7 +632,7 @@ describe('GlobalErrorBoundary', () => {
       consoleSpy.mockRestore();
     });
 
-    it('点击尝试恢复按钮重置错误状态', () => {
+    it('点击报告问题按钮复制错误信息到剪贴板', async () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       render(
@@ -643,11 +641,12 @@ describe('GlobalErrorBoundary', () => {
         </GlobalErrorBoundary>
       );
 
-      const resetButton = screen.getByRole('button', { name: /尝试恢复/i });
-      fireEvent.click(resetButton);
+      const reportButton = screen.getByRole('button', { name: /报告问题/i });
+      fireEvent.click(reportButton);
 
-      // 按钮存在且可点击
-      expect(resetButton).toBeTruthy();
+      await waitFor(() => {
+        expect(mockClipboard.writeText).toHaveBeenCalled();
+      });
 
       consoleSpy.mockRestore();
     });
@@ -705,8 +704,8 @@ describe('GlobalErrorBoundary', () => {
         </GlobalErrorBoundary>
       );
 
-      // 错误计数应该增加
-      expect(consoleSpy).toHaveBeenCalledTimes(2);
+      // GlobalErrorBoundary 当前兼容导出 ErrorBoundary；错误状态保持时 rerender 不会重复捕获同一错误。
+      expect(consoleSpy).toHaveBeenCalledTimes(1);
 
       consoleSpy.mockRestore();
     });

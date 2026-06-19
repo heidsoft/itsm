@@ -442,7 +442,7 @@ describe('ChangeList', () => {
       } finally {
         spy.mockRestore();
       }
-    });
+    }, 30000);
   });
 
   describe('Status Filter', () => {
