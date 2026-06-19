@@ -36,7 +36,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version-file: itsm-backend/go.mod
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
@@ -47,13 +47,13 @@ jobs:
           CGO_ENABLED: 0
         run: |
           cd itsm-backend
-          go build -ldflags="-s -w" -o itsm-${{ matrix.goos }}-${{ matrix.goarch }} ./main.go
+          go build -ldflags="-s -w" -o ../itsm-${{ matrix.goos }}-${{ matrix.goarch }} ./main.go
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: itsm-backend-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: itsm-backend/itsm-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: itsm-${{ matrix.goos }}-${{ matrix.goarch }}
           retention-days: 30
 
   build-frontend:
