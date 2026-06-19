@@ -105,4 +105,3 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          extra_args: '--no-update'
