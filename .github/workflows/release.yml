@@ -37,14 +37,15 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: itsm-backend/go.mod
-          cache: true
-          cache-dependency-path: itsm-backend/go.sum
+          cache: false
 
       - name: Build
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 0
+          GOPROXY: "https://proxy.golang.org,direct"
+          GONOSUMDB: "*"
         run: |
           cd itsm-backend
           go build -mod=mod -ldflags="-s -w" -o ../itsm-${{ matrix.goos }}-${{ matrix.goarch }} ./main.go
