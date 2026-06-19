@@ -6,7 +6,11 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/marketplaceitem"
+	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/tenantinstallation"
+
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"go.uber.org/zap"
 )
 
@@ -25,9 +29,9 @@ func NewService(db *ent.Client, logger *zap.SugaredLogger) *Service {
 }
 
 // ListItems 查询市场商品列表
-func (s *Service) ListItems(ctx context.Context, itemType, category, search string, isOfficial *bool, page, pageSize int) (*ent.MarketplaceItemList, int, error) {
+func (s *Service) ListItems(ctx context.Context, itemType, category, search string, isOfficial *bool, page, pageSize int) ([]*ent.MarketplaceItem, int, error) {
 	query := s.db.MarketplaceItem.Query().
-		Where(marketplaceitem.StatusEQ("published"))
+		Where(marketplaceitem.StatusEQ(marketplaceitem.StatusPublished))
 
 	if itemType != "" {
 		query = query.Where(marketplaceitem.TypeEQ(marketplaceitem.Type(itemType)))
@@ -41,9 +45,13 @@ func (s *Service) ListItems(ctx context.Context, itemType, category, search stri
 	if search != "" {
 		query = query.Where(
 			marketplaceitem.Or(
+				marketplaceitem.NameContains(search),
 				marketplaceitem.TitleContains(search),
+				marketplaceitem.ProviderContains(search),
 				marketplaceitem.DescriptionContains(search),
-				marketplaceitem.TagsContains(search),
+				predicate.MarketplaceItem(func(selector *sql.Selector) {
+					selector.Where(sqljson.ValueContains(marketplaceitem.FieldTags, search))
+				}),
 			),
 		)
 	}
@@ -65,19 +73,14 @@ func (s *Service) ListItems(ctx context.Context, itemType, category, search stri
 		return nil, 0, fmt.Errorf("failed to list items: %w", err)
 	}
 
-	return &ent.MarketplaceItemList{
-		Items: items,
-		Total: total,
-		Page:  page,
-		Size:  pageSize,
-	}, total, nil
+	return items, total, nil
 }
 
 // GetItem 获取商品详情
 func (s *Service) GetItem(ctx context.Context, itemID int) (*ent.MarketplaceItem, error) {
 	item, err := s.db.MarketplaceItem.Query().
 		Where(marketplaceitem.ID(itemID)).
-		Where(marketplaceitem.StatusEQ("published")).
+		Where(marketplaceitem.StatusEQ(marketplaceitem.StatusPublished)).
 		WithVersions().
 		Only(ctx)
 	if err != nil {
@@ -102,7 +105,7 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 		Where(
 			tenantinstallation.TenantID(tenantID),
 			tenantinstallation.ItemID(itemID),
-			tenantinstallation.StatusNEQ("uninstalled"),
+			tenantinstallation.StatusNEQ(tenantinstallation.StatusUninstalled),
 		).
 		Exist(ctx)
 	if err != nil {
@@ -117,7 +120,7 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 		SetTenantID(tenantID).
 		SetItemID(itemID).
 		SetInstalledVersion(item.LatestVersion).
-		SetStatus("installing").
+		SetStatus(tenantinstallation.StatusInstalling).
 		SetInstalledBy(installedBy).
 		Save(ctx)
 	if err != nil {
@@ -136,7 +139,7 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 
 	// 更新安装状态为active
 	installation, err = s.db.TenantInstallation.UpdateOne(installation).
-		SetStatus("active").
+		SetStatus(tenantinstallation.StatusActive).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to activate installation: %w", err)
@@ -153,7 +156,7 @@ func (s *Service) UninstallItem(ctx context.Context, tenantID, itemID int) error
 		Where(
 			tenantinstallation.TenantID(tenantID),
 			tenantinstallation.ItemID(itemID),
-			tenantinstallation.StatusNEQ("uninstalled"),
+			tenantinstallation.StatusNEQ(tenantinstallation.StatusUninstalled),
 		).
 		Only(ctx)
 	if err != nil {
@@ -167,7 +170,7 @@ func (s *Service) UninstallItem(ctx context.Context, tenantID, itemID int) error
 
 	// 更新状态为uninstalled
 	_, err = s.db.TenantInstallation.UpdateOne(installation).
-		SetStatus("uninstalled").
+		SetStatus(tenantinstallation.StatusUninstalled).
 		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to uninstall item: %w", err)
@@ -191,7 +194,7 @@ func (s *Service) GetInstallation(ctx context.Context, tenantID, itemID int) (*e
 		Where(
 			tenantinstallation.TenantID(tenantID),
 			tenantinstallation.ItemID(itemID),
-			tenantinstallation.StatusNEQ("uninstalled"),
+			tenantinstallation.StatusNEQ(tenantinstallation.StatusUninstalled),
 		).
 		WithItem().
 		Only(ctx)
@@ -211,9 +214,9 @@ func (s *Service) ListInstallations(ctx context.Context, tenantID int, status st
 		WithItem()
 
 	if status != "" {
-		query = query.Where(tenantinstallation.StatusEQ(status))
+		query = query.Where(tenantinstallation.StatusEQ(tenantinstallation.Status(status)))
 	} else {
-		query = query.Where(tenantinstallation.StatusNEQ("uninstalled"))
+		query = query.Where(tenantinstallation.StatusNEQ(tenantinstallation.StatusUninstalled))
 	}
 
 	installations, err := query.All(ctx)

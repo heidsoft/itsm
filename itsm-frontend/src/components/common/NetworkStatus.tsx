@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Alert } from 'antd';
 import { WifiOutlined, CloudServerOutlined } from '@ant-design/icons';
+
+const RESTORED_DISMISS_MS = 3000;
 
 /**
  * 网络状态监听组件
@@ -13,22 +15,29 @@ import { WifiOutlined, CloudServerOutlined } from '@ant-design/icons';
 export const NetworkStatus: React.FC = () => {
   const [isOnline, setIsOnline] = useState(true);
   const [showRestored, setShowRestored] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 处理网络恢复
   const handleOnline = useCallback(() => {
     setIsOnline(true);
     setShowRestored(true);
-    // 3秒后自动消失
-    const timer = setTimeout(() => {
+    // 清除之前的定时器，避免重复
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    timerRef.current = setTimeout(() => {
       setShowRestored(false);
-    }, 3000);
-    return () => clearTimeout(timer);
+    }, RESTORED_DISMISS_MS);
   }, []);
 
   // 处理网络断开
   const handleOffline = useCallback(() => {
     setIsOnline(false);
     setShowRestored(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
   }, []);
 
   useEffect(() => {
@@ -43,6 +52,9 @@ export const NetworkStatus: React.FC = () => {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
     };
   }, [handleOnline, handleOffline]);
 

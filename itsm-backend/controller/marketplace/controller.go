@@ -7,6 +7,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/middleware"
 	"itsm-backend/service/marketplace"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,6 +23,24 @@ func NewController(service *marketplace.Service) *Controller {
 	}
 }
 
+func getTenantID(ctx *gin.Context) (int, bool) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.AuthFailedCode, err.Error())
+		return 0, false
+	}
+	return tenantID, true
+}
+
+func getUserID(ctx *gin.Context) (int, bool) {
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		common.Fail(ctx, common.AuthFailedCode, err.Error())
+		return 0, false
+	}
+	return userID, true
+}
+
 // RegisterRoutes 注册路由
 func (c *Controller) RegisterRoutes(r *gin.RouterGroup) {
 	marketplaceGroup := r.Group("/marketplace")
@@ -31,7 +50,6 @@ func (c *Controller) RegisterRoutes(r *gin.RouterGroup) {
 		marketplaceGroup.GET("/items/:id", c.GetItem)
 
 		// 需要登录的接口
-		marketplaceGroup.Use(middleware.JWTAuthMiddleware())
 		{
 			marketplaceGroup.POST("/items/:id/install", c.InstallItem)
 			marketplaceGroup.POST("/items/:id/uninstall", c.UninstallItem)
@@ -137,10 +155,16 @@ func (c *Controller) InstallItem(ctx *gin.Context) {
 		return
 	}
 
-	tenantID := middleware.GetTenantID(ctx)
-	userID := middleware.GetUserID(ctx)
+	tenantID, ok := getTenantID(ctx)
+	if !ok {
+		return
+	}
+	userID, ok := getUserID(ctx)
+	if !ok {
+		return
+	}
 
-	installation, err := c.service.InstallItem(ctx, tenantID, itemID, userID)
+	installation, err := c.service.InstallItem(ctx, tenantID, itemID, strconv.Itoa(userID))
 	if err != nil {
 		common.Fail(ctx, http.StatusInternalServerError, err.Error())
 		return
@@ -167,7 +191,10 @@ func (c *Controller) UninstallItem(ctx *gin.Context) {
 		return
 	}
 
-	tenantID := middleware.GetTenantID(ctx)
+	tenantID, ok := getTenantID(ctx)
+	if !ok {
+		return
+	}
 
 	err = c.service.UninstallItem(ctx, tenantID, itemID)
 	if err != nil {
@@ -190,7 +217,10 @@ func (c *Controller) UninstallItem(ctx *gin.Context) {
 // @Router /api/v1/marketplace/installations [get]
 func (c *Controller) ListInstallations(ctx *gin.Context) {
 	status := ctx.Query("status")
-	tenantID := middleware.GetTenantID(ctx)
+	tenantID, ok := getTenantID(ctx)
+	if !ok {
+		return
+	}
 
 	installations, err := c.service.ListInstallations(ctx, tenantID, status)
 	if err != nil {
@@ -219,7 +249,10 @@ func (c *Controller) GetInstallation(ctx *gin.Context) {
 		return
 	}
 
-	tenantID := middleware.GetTenantID(ctx)
+	tenantID, ok := getTenantID(ctx)
+	if !ok {
+		return
+	}
 
 	installation, err := c.service.GetInstallation(ctx, tenantID, itemID)
 	if err != nil {
@@ -255,7 +288,10 @@ func (c *Controller) UpdateInstallationConfig(ctx *gin.Context) {
 		return
 	}
 
-	tenantID := middleware.GetTenantID(ctx)
+	tenantID, ok := getTenantID(ctx)
+	if !ok {
+		return
+	}
 
 	installation, err := c.service.UpdateInstallationConfig(ctx, tenantID, itemID, config)
 	if err != nil {

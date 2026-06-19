@@ -28,6 +28,18 @@ func NewTicketWorkflowController(workflowService *service.TicketWorkflowService,
 	}
 }
 
+// getAuthContext extracts user_id and tenant_id from gin context with zero-value guards.
+// Returns (userID, tenantID, ok). If either is missing, responds with auth error and returns ok=false.
+func getAuthContext(c *gin.Context) (int, int, bool) {
+	userID := c.GetInt("user_id")
+	tenantID := c.GetInt("tenant_id")
+	if userID == 0 || tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return 0, 0, false
+	}
+	return userID, tenantID, true
+}
+
 // AcceptTicket 接单
 // @Summary 接单
 // @Description 接收并开始处理工单
@@ -48,8 +60,10 @@ func (tc *TicketWorkflowController) AcceptTicket(c *gin.Context) {
 		req.TicketID = req.TicketIDAlt
 	}
 
-	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
 
 	err := tc.workflowService.AcceptTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
@@ -81,8 +95,10 @@ func (tc *TicketWorkflowController) RejectTicket(c *gin.Context) {
 		req.TicketID = req.TicketIDAlt
 	}
 
-	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
 
 	err := tc.workflowService.RejectTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
@@ -114,8 +130,10 @@ func (tc *TicketWorkflowController) WithdrawTicket(c *gin.Context) {
 		req.TicketID = req.TicketIDAlt
 	}
 
-	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
 
 	err := tc.workflowService.WithdrawTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
@@ -147,8 +165,10 @@ func (tc *TicketWorkflowController) ForwardTicket(c *gin.Context) {
 		req.TicketID = req.TicketIDAlt
 	}
 
-	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
 
 	err := tc.workflowService.ForwardTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
@@ -180,8 +200,10 @@ func (tc *TicketWorkflowController) CCTicket(c *gin.Context) {
 		req.TicketID = req.TicketIDAlt
 	}
 
-	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
 
 	err := tc.workflowService.CCTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
@@ -213,8 +235,10 @@ func (tc *TicketWorkflowController) ApproveTicket(c *gin.Context) {
 		req.TicketID = req.TicketIDAlt
 	}
 
-	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
 
 	err := tc.workflowService.ApproveTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
@@ -253,9 +277,15 @@ func (tc *TicketWorkflowController) ResolveTicket(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	// 兼容 ticket_id 和 ticketId 两种字段名（ResolveTicketRequest 的 JSON tag 是反向的）
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 
-	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
 
 	err := tc.workflowService.ResolveTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
@@ -282,9 +312,15 @@ func (tc *TicketWorkflowController) CloseTicket(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	// 兼容 ticket_id 和 ticketId 两种字段名（CloseTicketRequest 的 JSON tag 是反向的）
+	if req.TicketID == 0 && req.TicketIDAlt != 0 {
+		req.TicketID = req.TicketIDAlt
+	}
 
-	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
 
 	err := tc.workflowService.CloseTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
@@ -316,8 +352,10 @@ func (tc *TicketWorkflowController) ReopenTicket(c *gin.Context) {
 		req.TicketID = req.TicketIDAlt
 	}
 
-	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
 
 	err := tc.workflowService.ReopenTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
@@ -345,8 +383,10 @@ func (tc *TicketWorkflowController) GetTicketWorkflowState(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	userID, tenantID, ok := getAuthContext(c)
+	if !ok {
+		return
+	}
 
 	state, err := tc.workflowService.GetTicketWorkflowState(c.Request.Context(), ticketID, userID, tenantID)
 	if err != nil {
@@ -374,6 +414,10 @@ func (tc *TicketWorkflowController) GetTicketWorkflowHistory(c *gin.Context) {
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		return
+	}
 
 	query := `
 		SELECT id, ticket_id, action, from_status, to_status,
@@ -414,9 +458,15 @@ func (tc *TicketWorkflowController) GetTicketWorkflowHistory(c *gin.Context) {
 			return
 		}
 		if len(metaJSON) > 0 {
-			_ = json.Unmarshal(metaJSON, &r.Metadata)
+			if err := json.Unmarshal(metaJSON, &r.Metadata); err != nil {
+				tc.logger.Warnw("Failed to unmarshal workflow metadata", "error", err, "ticket_id", ticketID)
+			}
 		}
 		records = append(records, r)
+	}
+	if err := rows.Err(); err != nil {
+		common.Fail(c, common.InternalErrorCode, "遍历流转记录失败: "+err.Error())
+		return
 	}
 	if records == nil {
 		records = []workflowRec{}

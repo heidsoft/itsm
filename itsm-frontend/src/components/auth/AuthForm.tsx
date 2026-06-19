@@ -17,7 +17,6 @@ import { cn } from '@/lib/utils';
 
 const { Password: PasswordInput } = AntInput; // 使用Ant Design的Password
 const CustomInput = AntInput; // 使用Ant Design的Input
-const { token } = theme.useToken();
 
 /**
  * 表单字段配置接口
@@ -133,6 +132,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
   error,
   success,
 }) => {
+  const { token } = theme.useToken();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [formValues, setFormValues] = useState(initialValues || {});
