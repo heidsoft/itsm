@@ -534,9 +534,10 @@ func (s *CloudDiscoveryService) getOrCreateCloudCIType(ctx context.Context, tena
 		name = fmt.Sprintf("%s %s", providerDisplayName(provider), strings.ToUpper(serviceType))
 	}
 
+	// Use First instead of Only to handle potential duplicate names gracefully
 	ciType, err := s.client.CIType.Query().
 		Where(citype.TenantID(tenantID), citype.Name(name)).
-		Only(ctx)
+		First(ctx)
 	if err == nil {
 		return ciType, nil
 	}

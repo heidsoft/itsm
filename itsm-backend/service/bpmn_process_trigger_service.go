@@ -53,13 +53,12 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 		processDefKey = binding.ProcessDefinitionKey
 	}
 
-	// 3. 获取流程定义
+	// 3. 获取流程定义（仅要求 IsActive，不过滤 IsLatest 以支持触发特定版本）
 	definition, err := s.client.ProcessDefinition.Query().
 		Where(
 			processdefinition.Key(processDefKey),
 			processdefinition.TenantID(req.TenantID),
 			processdefinition.IsActive(true),
-			processdefinition.IsLatest(true),
 		).
 		First(ctx)
 	if err != nil {

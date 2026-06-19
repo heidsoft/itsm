@@ -29,11 +29,17 @@ func NewBPMNWorkflowController(processEngine service.ProcessEngine, versionServi
 
 func getBPMNTenantContext(ctx *gin.Context) (context.Context, int, bool) {
 	tenantID := ctx.GetInt("tenant_id")
-	if tenantID <= 0 {
+	// 仅在明确需要租户上下文时拒绝 tenant_id=0，允许平台级操作通过
+	if tenantID < 0 {
 		common.AuthFailed(ctx, "未授权访问")
 		return nil, 0, false
 	}
-	return context.WithValue(ctx.Request.Context(), "bpmn_tenant_id", tenantID), tenantID, true
+	// tenantID=0 允许通过，但服务层会忽略该过滤条件
+	reqCtx := ctx.Request.Context()
+	if tenantID > 0 {
+		reqCtx = context.WithValue(reqCtx, "bpmn_tenant_id", tenantID)
+	}
+	return reqCtx, tenantID, true
 }
 
 // RegisterRoutes 注册路由

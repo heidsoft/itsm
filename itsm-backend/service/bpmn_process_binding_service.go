@@ -338,13 +338,12 @@ func (s *ProcessBindingService) InitDefaultBindings(ctx context.Context, tenantI
 		binding.TenantID = tenantID
 		binding.ProcessVersion = 1
 
-		// 检查流程定义是否存在
+		// 检查流程定义是否存在（仅检查 IsActive，不过滤 IsLatest 以兼容已有版本）
 		exists, err := s.client.ProcessDefinition.Query().
 			Where(
 				processdefinition.Key(binding.ProcessDefinitionKey),
 				processdefinition.TenantID(tenantID),
 				processdefinition.IsActive(true),
-				processdefinition.IsLatest(true),
 			).
 			Exist(ctx)
 		if err != nil || !exists {

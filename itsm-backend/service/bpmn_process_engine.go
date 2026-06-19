@@ -1500,9 +1500,16 @@ func (s *bpmnTaskService) GetTaskByID(ctx context.Context, id int) (*ent.Process
 // CompleteTaskByID 根据数据库自增ID完成任务
 func (s *bpmnTaskService) CompleteTaskByID(ctx context.Context, id int, variables map[string]interface{}) error {
 	engine := NewCustomProcessEngine(s.client, s.logger)
-	task, err := s.GetTaskByID(ctx, id)
+	// 直接使用 ent Client 获取任务，确保应用租户过滤
+	task, err := s.client.ProcessTask.Get(ctx, id)
 	if err != nil {
 		return fmt.Errorf("获取任务失败: %w", err)
+	}
+	// 如果上下文中有租户 ID，验证任务属于该租户
+	if tenantID := ctx.Value("bpmn_tenant_id"); tenantID != nil && tenantID.(int) > 0 {
+		if task.TenantID != tenantID.(int) {
+			return fmt.Errorf("任务不属于当前租户")
+		}
 	}
 	return engine.CompleteTask(ctx, task.TaskID, variables)
 }
