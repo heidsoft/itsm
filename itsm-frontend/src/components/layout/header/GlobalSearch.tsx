@@ -114,18 +114,18 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       width={560}
       centered
       destroyOnHidden
-      focusTriggerAfterClose={false}
+      focusable={{ focusTriggerAfterClose: false }}
     >
       <div style={{ padding: '0 20px' }}>
         <Input
           ref={searchInputRef}
           className={styles.globalSearchModalInput}
-          placeholder="搜索工单、事件..."
+          placeholder='搜索工单、事件...'
           prefix={<Search size={16} style={{ color: DESIGN.colors.textMuted }} />}
           value={searchValue}
           onChange={e => setSearchValue(e.target.value)}
           onPressEnter={() => handleSearch(searchValue)}
-          suffix={isSearching ? <Spin size="small" /> : null}
+          suffix={isSearching ? <Spin size='small' /> : null}
           style={{
             width: '100%',
             height: 40,
@@ -177,7 +177,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({ value, onChange, onSea
   return (
     <Input
       className={styles.headerSearchInput}
-      placeholder="搜索..."
+      placeholder='搜索...'
       prefix={<Search size={14} style={{ color: DESIGN.colors.textMuted }} />}
       suffix={
         <kbd
