@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"itsm-backend/common"
@@ -174,7 +175,11 @@ func NewApplication() *Application {
 	marketplaceCtrl := marketplaceController.NewController(marketplaceSvc)
 
 	// Guidance sidecar for constrained JSON generation
-	guidanceClient := service.NewGuidanceClient("http://localhost:8091", sugar)
+	guidanceURL := os.Getenv("GUIDANCE_URL")
+	if guidanceURL == "" {
+		guidanceURL = "http://localhost:8091"
+	}
+	guidanceClient := service.NewGuidanceClient(guidanceURL, sugar)
 	triageService := service.NewTriageServiceWithGuidanceAndSugaredLogger(llmGateway, guidanceClient, sugar)
 
 	rootCauseService := service.NewRootCauseService(client, sugar)
@@ -296,12 +301,11 @@ func NewApplication() *Application {
 	// 初始化模板并部署默认流程
 	go func() {
 		ctx := context.Background()
-		// 为默认租户(1)加载和部署模板
-		if _, err := bpmnTemplateService.LoadAndDeployTemplates(ctx, 1); err != nil {
+		const defaultTenantID = 1
+		if _, err := bpmnTemplateService.LoadAndDeployTemplates(ctx, defaultTenantID); err != nil {
 			sugar.Warnw("Failed to deploy BPMN templates", "error", err)
 		}
-		// 初始化默认流程绑定
-		if err := processBindingService.InitDefaultBindings(ctx, 1); err != nil {
+		if err := processBindingService.InitDefaultBindings(ctx, defaultTenantID); err != nil {
 			sugar.Warnw("Failed to init default process bindings", "error", err)
 		}
 	}()

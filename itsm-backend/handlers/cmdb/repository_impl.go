@@ -199,7 +199,7 @@ func (r *EntRepository) ListCIs(ctx context.Context, tenantID int, page, size in
 		return nil, 0, err
 	}
 
-	var results []*ConfigurationItem
+	results := make([]*ConfigurationItem, 0, len(es))
 	for _, e := range es {
 		results = append(results, toCIDomain(e))
 	}
@@ -460,7 +460,7 @@ func (r *EntRepository) GetRelationships(ctx context.Context, ciID int) ([]*CIRe
 
 func (r *EntRepository) DeleteRelationship(ctx context.Context, id int, tenantID int) error {
 	_, err := r.client.CIRelationship.Delete().
-		Where(cirelationship.ID(id)).
+		Where(cirelationship.ID(id), cirelationship.TenantID(tenantID)).
 		Exec(ctx)
 	return err
 }

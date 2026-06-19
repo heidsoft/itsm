@@ -32,7 +32,7 @@ func NewAnalyticsController(analyticsService *service.AnalyticsService) *Analyti
 func (c *AnalyticsController) GetDeepAnalytics(ctx *gin.Context) {
 	var req dto.DeepAnalyticsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误")
 		return
 	}
 
@@ -44,7 +44,7 @@ func (c *AnalyticsController) GetDeepAnalytics(ctx *gin.Context) {
 
 	response, err := c.analyticsService.GetDeepAnalytics(ctx.Request.Context(), &req, tenantID.(int))
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取分析数据失败: "+err.Error())
+		common.Fail(ctx, common.InternalErrorCode, "获取分析数据失败")
 		return
 	}
 
@@ -63,7 +63,7 @@ func (c *AnalyticsController) GetDeepAnalytics(ctx *gin.Context) {
 func (c *AnalyticsController) ExportAnalytics(ctx *gin.Context) {
 	var req dto.DeepAnalyticsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误")
 		return
 	}
 
@@ -81,7 +81,7 @@ func (c *AnalyticsController) ExportAnalytics(ctx *gin.Context) {
 
 	data, filename, err := c.analyticsService.ExportAnalytics(ctx.Request.Context(), &req, format, tenantID.(int))
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "导出分析数据失败: "+err.Error())
+		common.Fail(ctx, common.InternalErrorCode, "导出分析数据失败")
 		return
 	}
 
@@ -117,7 +117,7 @@ func (c *AnalyticsController) GetTicketAnalytics(ctx *gin.Context) {
 	}
 	stats, err := c.analyticsService.GetTicketStats(ctx.Request.Context(), tenantID.(int))
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取工单分析失败: "+err.Error())
+		common.Fail(ctx, common.InternalErrorCode, "获取工单分析失败")
 		return
 	}
 	common.Success(ctx, stats)

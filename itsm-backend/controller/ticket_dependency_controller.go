@@ -26,7 +26,7 @@ func (c *TicketDependencyController) AnalyzeDependencyImpact(ctx *gin.Context) {
 	ticketIDStr := ctx.Param("id")
 	ticketID, err := strconv.Atoi(ticketIDStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的工单ID: "+err.Error())
+		common.Fail(ctx, common.ParamErrorCode, "无效的工单ID")
 		return
 	}
 
@@ -35,7 +35,7 @@ func (c *TicketDependencyController) AnalyzeDependencyImpact(ctx *gin.Context) {
 		NewStatus *string `json:"new_status,omitempty" example:"closed"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误")
 		return
 	}
 
@@ -53,7 +53,7 @@ func (c *TicketDependencyController) AnalyzeDependencyImpact(ctx *gin.Context) {
 		tenantID.(int),
 	)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "分析依赖影响失败: "+err.Error())
+		common.Fail(ctx, common.InternalErrorCode, "分析依赖影响失败")
 		return
 	}
 

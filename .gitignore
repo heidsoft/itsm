@@ -24,7 +24,7 @@ Thumbs.db
 *.out
 .gocache/
 bin/
-pkg/
+/pkg/
 vendor/
 go.work
 go.work.sum
@@ -118,6 +118,8 @@ graphify-out/cache/
 # AI tool configs (developer-specific, do not track)
 .trae/
 .codex/
+.workbuddy/
+.playwright-cli/
 
 # Python / Test
 tests/

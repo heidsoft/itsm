@@ -36,7 +36,7 @@ func (dc *DashboardController) GetDashboardData(c *gin.Context) {
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get dashboard data", "error", err)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.Fail(c, common.InternalErrorCode, "获取仪表盘数据失败")
 		return
 	}
 
@@ -57,7 +57,7 @@ func (dc *DashboardController) GetKPIMetrics(c *gin.Context) {
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get KPI metrics", "error", err)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.Fail(c, common.InternalErrorCode, "获取仪表盘数据失败")
 		return
 	}
 
@@ -78,7 +78,7 @@ func (dc *DashboardController) GetResourceDistribution(c *gin.Context) {
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get resource distribution", "error", err)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.Fail(c, common.InternalErrorCode, "获取仪表盘数据失败")
 		return
 	}
 
@@ -99,7 +99,7 @@ func (dc *DashboardController) GetResourceHealth(c *gin.Context) {
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		dc.logger.Errorw("Failed to get resource health", "error", err)
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.Fail(c, common.InternalErrorCode, "获取仪表盘数据失败")
 		return
 	}
 
