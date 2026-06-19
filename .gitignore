@@ -174,3 +174,4 @@ itsm-backend/service.test
 itsm-backend/logs/
 itsm-frontend/.next/
 itsm-frontend/tests/e2e/venv/
+release/
