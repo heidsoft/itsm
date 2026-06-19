@@ -404,6 +404,18 @@ func (f IncidentRuleExecutionFunc) Mutate(ctx context.Context, m ent.Mutation) (
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.IncidentRuleExecutionMutation", m)
 }
 
+// The ItemVersionFunc type is an adapter to allow the use of ordinary
+// function as ItemVersion mutator.
+type ItemVersionFunc func(context.Context, *ent.ItemVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ItemVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ItemVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ItemVersionMutation", m)
+}
+
 // The KnowledgeArticleFunc type is an adapter to allow the use of ordinary
 // function as KnowledgeArticle mutator.
 type KnowledgeArticleFunc func(context.Context, *ent.KnowledgeArticleMutation) (ent.Value, error)
@@ -486,6 +498,18 @@ func (f MSPAllocationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Valu
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MSPAllocationMutation", m)
+}
+
+// The MarketplaceItemFunc type is an adapter to allow the use of ordinary
+// function as MarketplaceItem mutator.
+type MarketplaceItemFunc func(context.Context, *ent.MarketplaceItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MarketplaceItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MarketplaceItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MarketplaceItemMutation", m)
 }
 
 // The MenuFunc type is an adapter to allow the use of ordinary
@@ -990,6 +1014,18 @@ func (f TenantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TenantMutation", m)
+}
+
+// The TenantInstallationFunc type is an adapter to allow the use of ordinary
+// function as TenantInstallation mutator.
+type TenantInstallationFunc func(context.Context, *ent.TenantInstallationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TenantInstallationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TenantInstallationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TenantInstallationMutation", m)
 }
 
 // The TicketFunc type is an adapter to allow the use of ordinary

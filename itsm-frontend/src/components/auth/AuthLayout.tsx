@@ -17,8 +17,8 @@ export interface AuthLayoutProps {
 
 export const AuthLayout: React.FC<AuthLayoutProps> = ({
   children,
-  title = 'ITSM Pro',
-  subtitle = '智能IT服务管理平台',
+  title = 'AI-Native ITSM',
+  subtitle = 'AI驱动的IT服务管理系统',
   showBranding = true,
 }) => {
   return (
@@ -99,7 +99,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
             {/* 底部信息 */}
             <div className="flex items-center justify-between text-sm text-white/60">
               <div className="flex items-center space-x-4">
-                <span>© 2024 ITSM Pro</span>
+                <span>© {new Date().getFullYear()} AI-Native ITSM</span>
                 <span>•</span>
                 <span>企业级服务</span>
               </div>
@@ -243,9 +243,9 @@ export const AuthCard: React.FC<AuthCardProps> = ({
             <Server className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold" style={{ color: '#1e293b' }}>
-            ITSM Pro
+            AI-Native ITSM
           </h1>
-          <p style={{ color: '#64748b' }}>智能IT服务管理平台</p>
+          <p style={{ color: '#64748b' }}>AI驱动的IT服务管理系统</p>
         </div>
       )}
 

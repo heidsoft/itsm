@@ -1,0 +1,63 @@
+classDiagram
+    class AuthService {
+        -static getCookie(name: string): string | null
+        -static makeRequest~T~(endpoint: string, options: RequestInit): Promise~T~
+        +static login(username: string, password: string, tenantCode?: string, rememberMe?: boolean): Promise~boolean~
+        +static register(params: RegisterParams): Promise~boolean~
+        +static logout(): void
+        +static isAuthenticated(): boolean
+        +static refreshToken(): Promise~boolean~
+        +static forgotPassword(email: string): Promise~boolean~
+        +static resetPassword(params: ResetParams): Promise~boolean~
+    }
+
+    class NetworkStatus {
+        +isOnline: boolean
+        +showOfflineBanner: boolean
+        +checkOnline(): void
+        +handleOnline(): void
+        +handleOffline(): void
+    }
+
+    class ErrorBoundary {
+        -state: ErrorBoundaryState
+        -resetError(): void
+        -handleRetry(): void
+        -handleGoHome(): void
+        -handleReportBug(): void
+        +static getDerivedStateFromError(error: Error): Partial~ErrorBoundaryState~
+        +componentDidCatch(error: Error, errorInfo: ErrorInfo): void
+        +render(): ReactNode
+    }
+
+    class GlobalErrorBoundary {
+        <<deprecated>>
+        +re_export: ErrorBoundary
+    }
+
+    class AuthGuard {
+        +requireAuth: boolean
+        +requiredPermissions: string[]
+        +requiredRole: string
+        -initializeAuth(): Promise~void~
+        -checkPermissions(): boolean
+        -renderAccessDenied(): ReactNode
+    }
+
+    class DashboardPage {
+        -data: DashboardData | null
+        -loading: boolean
+        -error: string | null
+        -renderEmptyState(): ReactNode
+        -renderSkeletons(): ReactNode
+    }
+
+    class HealthCheckRoute {
+        +GET(): Response
+        -checkBackendHealth(): Promise~boolean~
+    }
+
+    ErrorBoundary <|-- GlobalErrorBoundary : 废弃后 re-export
+    AuthGuard --> ErrorBoundary : 通过 layout 间接使用
+    DashboardPage --> AuthService : 通过 hooks 间接依赖
+    HealthCheckRoute --> AuthService : 检查后端连通性

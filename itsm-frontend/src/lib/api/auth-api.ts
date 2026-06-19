@@ -57,7 +57,7 @@ const API_ENDPOINTS = {
   REFRESH: '/api/v1/auth/refresh',
   PROFILE: '/api/v1/auth/profile',
   VALIDATE: '/api/v1/auth/validate',
-  CSRF: '/api/v1/auth/csrf',
+  CSRF: '/api/v1/csrf-token',
   WEBAUTHN_CHALLENGE: '/api/v1/auth/webauthn/challenge',
   WEBAUTHN_VERIFY: '/api/v1/auth/webauthn/verify',
   SSO_INITIATE: '/api/v1/auth/sso/initiate',

@@ -39,12 +39,14 @@ import (
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/incidentruleexecution"
+	"itsm-backend/ent/itemversion"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/knowledgearticleparticipant"
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/knownerror"
+	"itsm-backend/ent/marketplaceitem"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
@@ -88,6 +90,7 @@ import (
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/tenantinstallation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketapproval"
 	"itsm-backend/ent/ticketassignmentrule"
@@ -207,6 +210,7 @@ func checkColumn(t, c string) error {
 			incidentmetric.Table:              incidentmetric.ValidColumn,
 			incidentrule.Table:                incidentrule.ValidColumn,
 			incidentruleexecution.Table:       incidentruleexecution.ValidColumn,
+			itemversion.Table:                 itemversion.ValidColumn,
 			knowledgearticle.Table:            knowledgearticle.ValidColumn,
 			knowledgearticlelike.Table:        knowledgearticlelike.ValidColumn,
 			knowledgearticleparticipant.Table: knowledgearticleparticipant.ValidColumn,
@@ -214,6 +218,7 @@ func checkColumn(t, c string) error {
 			knowledgearticleversion.Table:     knowledgearticleversion.ValidColumn,
 			knownerror.Table:                  knownerror.ValidColumn,
 			mspallocation.Table:               mspallocation.ValidColumn,
+			marketplaceitem.Table:             marketplaceitem.ValidColumn,
 			menu.Table:                        menu.ValidColumn,
 			message.Table:                     message.ValidColumn,
 			microservice.Table:                microservice.ValidColumn,
@@ -256,6 +261,7 @@ func checkColumn(t, c string) error {
 			tag.Table:                         tag.ValidColumn,
 			team.Table:                        team.ValidColumn,
 			tenant.Table:                      tenant.ValidColumn,
+			tenantinstallation.Table:          tenantinstallation.ValidColumn,
 			ticket.Table:                      ticket.ValidColumn,
 			ticketapproval.Table:              ticketapproval.ValidColumn,
 			ticketassignmentrule.Table:        ticketassignmentrule.ValidColumn,

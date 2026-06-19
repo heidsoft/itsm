@@ -105,13 +105,15 @@ type TicketWorkflowState struct {
 
 // AcceptTicketRequest 接单请求
 type AcceptTicketRequest struct {
-	TicketID int    `json:"ticket_id" binding:"required"`
-	Comment  string `json:"comment"`
+	TicketID    int    `json:"ticket_id"`
+	TicketIDAlt int    `json:"ticketId"` // camelCase 兼容
+	Comment     string `json:"comment"`
 }
 
 // RejectTicketRequest 驳回请求
 type RejectTicketRequest struct {
-	TicketID       int     `json:"ticket_id" binding:"required"`
+	TicketID       int     `json:"ticket_id"`
+	TicketIDAlt    int     `json:"ticketId"` // camelCase 兼容
 	Reason         string  `json:"reason" binding:"required"`
 	Comment        string  `json:"comment" binding:"required"`
 	ReturnToStatus *string `json:"return_to_status"`
@@ -119,13 +121,15 @@ type RejectTicketRequest struct {
 
 // WithdrawTicketRequest 撤回请求
 type WithdrawTicketRequest struct {
-	TicketID int    `json:"ticket_id" binding:"required"`
-	Reason   string `json:"reason" binding:"required"`
+	TicketID    int    `json:"ticket_id"`
+	TicketIDAlt int    `json:"ticketId"` // camelCase 兼容
+	Reason      string `json:"reason" binding:"required"`
 }
 
 // ForwardTicketRequest 转发请求
 type ForwardTicketRequest struct {
-	TicketID          int    `json:"ticket_id" binding:"required"`
+	TicketID          int    `json:"ticket_id"`
+	TicketIDAlt       int    `json:"ticketId"` // camelCase 兼容
 	ToUserID          int    `json:"to_user_id" binding:"required"`
 	Comment           string `json:"comment" binding:"required"`
 	TransferOwnership bool   `json:"transfer_ownership"`
@@ -133,14 +137,16 @@ type ForwardTicketRequest struct {
 
 // CCTicketRequest 抄送请求
 type CCTicketRequest struct {
-	TicketID int    `json:"ticket_id" binding:"required"`
-	CCUsers  []int  `json:"cc_users" binding:"required,min=1"`
-	Comment  string `json:"comment"`
+	TicketID    int    `json:"ticket_id"`
+	TicketIDAlt int    `json:"ticketId"` // camelCase 兼容
+	CCUsers     []int  `json:"cc_users" binding:"required,min=1"`
+	Comment     string `json:"comment"`
 }
 
 // ApproveTicketRequest 审批请求
 type ApproveTicketRequest struct {
-	TicketID         int    `json:"ticket_id" binding:"required"`
+	TicketID         int    `json:"ticket_id"`
+	TicketIDAlt      int    `json:"ticketId"` // camelCase 兼容
 	ApprovalID       int    `json:"approval_id" binding:"required"`
 	Action           string `json:"action" binding:"required,oneof=approve reject delegate"`
 	Comment          string `json:"comment"`
@@ -149,8 +155,9 @@ type ApproveTicketRequest struct {
 
 // ReopenTicketRequest 重开工单请求
 type ReopenTicketRequest struct {
-	TicketID int    `json:"ticket_id" binding:"required"`
-	Reason   string `json:"reason" binding:"required"`
+	TicketID    int    `json:"ticket_id"`
+	TicketIDAlt int    `json:"ticketId"` // camelCase 兼容
+	Reason      string `json:"reason" binding:"required"`
 }
 
 // TicketCC 抄送人

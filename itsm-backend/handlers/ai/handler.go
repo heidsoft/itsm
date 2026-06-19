@@ -168,7 +168,12 @@ func (h *Handler) SummarizeTicket(c *gin.Context) {
 
 	summary, err := h.svc.SummarizeTicket(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		h.svc.logger.Warnw("AI摘要失败，返回降级响应", "error", err, "ticketID", id)
+		common.Success(c, gin.H{
+			"degraded": true,
+			"message":  "AI 摘要服务暂时不可用，请稍后重试",
+			"summary":  "",
+		})
 		return
 	}
 	common.Success(c, summary)
@@ -320,10 +325,18 @@ func (h *Handler) KnowledgeSearch(c *gin.Context) {
 	// Use the service's RAG search capability
 	result, err := h.svc.SearchKnowledge(c.Request.Context(), tenantID, req.Query, req.Type, limit)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		h.svc.logger.Warnw("AI知识搜索失败，返回降级响应", "error", err, "tenantID", tenantID)
+		common.Success(c, gin.H{
+			"results":  []interface{}{},
+			"degraded": true,
+			"message":  "AI 搜索服务暂时不可用，请稍后重试",
+		})
 		return
 	}
-	common.Success(c, result)
+	common.Success(c, gin.H{
+		"results":  result,
+		"degraded": false,
+	})
 }
 
 // Triage handles POST /api/v1/ai/triage - Ticket classification and recommendation
@@ -347,7 +360,14 @@ func (h *Handler) Triage(c *gin.Context) {
 
 	result, err := h.svc.TriageTicket(c.Request.Context(), tenantID, req.Title, req.Description, req.Category, req.Priority)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		h.svc.logger.Warnw("AI分诊失败，返回降级响应", "error", err, "tenantID", tenantID)
+		common.Success(c, gin.H{
+			"title":       req.Title,
+			"description": req.Description,
+			"suggestions": map[string]interface{}{},
+			"degraded":    true,
+			"message":     "AI 分诊服务暂时不可用，请稍后重试",
+		})
 		return
 	}
 	common.Success(c, result)

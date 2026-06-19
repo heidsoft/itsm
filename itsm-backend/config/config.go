@@ -212,7 +212,9 @@ func LoadConfig() (*Config, error) {
 	config.Log.Level = getEnvWithDefault("LOG_LEVEL", config.Log.Level)
 	config.Log.Path = getEnvWithDefault("LOG_PATH", config.Log.Path)
 	config.Log.Development = os.Getenv("LOG_DEVELOPMENT") == "true"
+	// Support both LLM_API_KEY (preferred) and OPENAI_API_KEY (legacy fallback) env vars
 	config.LLM.APIKey = getEnvWithDefault("OPENAI_API_KEY", config.LLM.APIKey)
+	config.LLM.APIKey = getEnvWithDefault("LLM_API_KEY", config.LLM.APIKey)
 	config.Deployment.Mode = getEnvWithDefault("DEPLOYMENT_MODE", config.Deployment.Mode)
 	config.Deployment.AutoMigrate = getEnvBoolWithDefault("ITSM_AUTO_MIGRATE", config.Deployment.AutoMigrate)
 	config.Deployment.AutoSeed = getEnvBoolWithDefault("ITSM_AUTO_SEED", config.Deployment.AutoSeed)

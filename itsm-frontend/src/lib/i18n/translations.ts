@@ -18,7 +18,7 @@ export const translations = {
       slaWarning: 'SLA警告',
       slaWarningContent: '工单 {ticketId} 即将超时',
       threeHoursAgo: '3小时前',
-      itsmSystem: 'ITSM 系统',
+      itsmSystem: 'AI-Native ITSM',
       create: '新建',
       edit: '编辑',
       detail: '详情',
@@ -482,7 +482,7 @@ export const translations = {
     },
     admin: {
       title: '系统管理中心',
-      welcome: '欢迎使用ITSM Pro企业级系统管理中心',
+      welcome: '欢迎使用AI-Native ITSM企业级系统管理中心',
       description: '这里您可以配置和管理整个ITSM平台的各项功能',
       activeUsers: '活跃用户',
       runningWorkflows: '运行中工作流',
@@ -1524,7 +1524,7 @@ export const translations = {
     },
     admin: {
       title: 'System Management Center',
-      welcome: 'Welcome to ITSM Pro Enterprise System Management Center',
+      welcome: 'Welcome to AI-Native ITSM Enterprise System Management Center',
       description:
         'Here you can configure and manage various functions of the entire ITSM platform',
       activeUsers: 'Active Users',

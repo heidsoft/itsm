@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Input, Select, Button, Space, Card, Row, Col } from 'antd';
 import { Search, Filter, RefreshCw, Download } from 'lucide-react';
+import { debounce } from '../../lib/utils';
 
 const { Option } = Select;
 
@@ -37,8 +38,21 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
   loading = false,
   className = '',
 }) => {
+  // T5-3: 添加 debounce 防抖，避免快速输入时产生大量无效请求
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value: unknown) => {
+        onSearch?.(value as string);
+      }, 300),
+    [onSearch]
+  );
+
   const handleSearch = (value: string) => {
     onSearch?.(value);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    debouncedSearch(e.target.value);
   };
 
   const handleFilterChange = (key: string, value: string) => {
@@ -57,6 +71,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
           <Input.Search
             placeholder={searchPlaceholder}
             onSearch={handleSearch}
+            onChange={handleSearchChange}
             allowClear
             enterButton={<Search size={16} />}
             size="large"

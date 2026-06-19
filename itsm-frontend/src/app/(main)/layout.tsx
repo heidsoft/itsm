@@ -9,6 +9,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { httpClient } from '@/lib/api/http-client';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NetworkStatus } from '@/components/common/NetworkStatus';
 import { useLayoutStore } from '@/lib/store/layout-store';
 import { useAuthStore } from '@/lib/store/auth-store';
 
@@ -163,6 +164,7 @@ export default function MainLayout({
         >
           跳转到主要内容
         </a>
+        <NetworkStatus />
         <Layout
           className="min-h-screen bg-[#f5f7fb]"
           style={{
@@ -204,7 +206,7 @@ export default function MainLayout({
 
             {/* 页脚（可选） */}
             <footer className="text-center p-4 bg-transparent text-gray-400 text-xs">
-              ITSM Platform ©{new Date().getFullYear()} - IT服务管理平台
+              AI-Native ITSM ©{new Date().getFullYear()} - AI驱动的IT服务管理系统
             </footer>
           </Layout>
         </Layout>

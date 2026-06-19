@@ -92,11 +92,22 @@ func toTypeDomain(e *ent.CIType) *CIType {
 }
 
 func (r *EntRepository) CreateCI(ctx context.Context, ci *ConfigurationItem) (*ConfigurationItem, error) {
+	// 查询 CIType，优先按当前租户查，回退到 default 租户 (tenant_id=1)
 	ciType, err := r.client.CIType.Query().
 		Where(citype.ID(ci.CITypeID), citype.TenantID(ci.TenantID)).
 		Only(ctx)
 	if err != nil {
-		return nil, err
+		if ent.IsNotFound(err) {
+			// Fallback: try default tenant (tenant_id=1)
+			ciType, err = r.client.CIType.Query().
+				Where(citype.ID(ci.CITypeID), citype.TenantID(1)).
+				Only(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("CI类型不存在: ciTypeId=%d", ci.CITypeID)
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	create := r.client.ConfigurationItem.Create().

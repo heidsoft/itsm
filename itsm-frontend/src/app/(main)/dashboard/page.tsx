@@ -19,7 +19,7 @@ import {
   Select,
 } from 'antd';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, Settings, LayoutDashboard, Zap, LineChart, TrendingUp } from 'lucide-react';
+import { RefreshCw, Settings, LayoutDashboard, Zap, LineChart, TrendingUp, Ticket, BookOpen, Database, Compass } from 'lucide-react';
 import { KPICards } from './components/KPICards';
 import { ChartsSection } from './components/ChartsSection';
 import { QuickActions } from './components/QuickActions';
@@ -217,7 +217,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            ITSM 运营仪表盘
+            AI-Native ITSM 运营仪表盘
             {isConnected && <Badge status="success" text="在线" />}
           </h1>
           <p className="text-sm text-gray-600 mt-1">实时监控系统运行状态和关键业务指标</p>
@@ -265,13 +265,74 @@ export default function DashboardPage() {
               </h2>
               <p className="text-sm text-gray-600">常用功能快捷入口，提升工作效率</p>
             </div>
-            <QuickActions
-              actions={data?.quickActions || []}
-              loading={loading}
-              onActionClick={handleQuickActionClick}
-              showTitle={false}
-              compact={false}
-            />
+            {(!data?.quickActions || data.quickActions.length === 0) && !loading ? (
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card className="rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full">
+                    <div className="flex flex-col items-center text-center py-4">
+                      <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 mb-3">
+                        <Ticket className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">创建第一个工单</h3>
+                      <p className="text-sm text-gray-500 mb-4">提交 IT 服务请求或报告问题</p>
+                      <Button type="primary" onClick={() => router.push('/tickets/create')}>
+                        去创建
+                      </Button>
+                    </div>
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card className="rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full">
+                    <div className="flex flex-col items-center text-center py-4">
+                      <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-600 mb-3">
+                        <Compass className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">浏览服务目录</h3>
+                      <p className="text-sm text-gray-500 mb-4">查看可用的 IT 服务目录</p>
+                      <Button type="primary" onClick={() => router.push('/service-catalog')}>
+                        去浏览
+                      </Button>
+                    </div>
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card className="rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full">
+                    <div className="flex flex-col items-center text-center py-4">
+                      <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 mb-3">
+                        <Database className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">配置 CMDB</h3>
+                      <p className="text-sm text-gray-500 mb-4">管理配置项和资产关系拓扑</p>
+                      <Button type="primary" onClick={() => router.push('/cmdb')}>
+                        去配置
+                      </Button>
+                    </div>
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card className="rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full">
+                    <div className="flex flex-col items-center text-center py-4">
+                      <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 mb-3">
+                        <BookOpen className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">查阅知识库</h3>
+                      <p className="text-sm text-gray-500 mb-4">搜索解决方案和 IT 知识文档</p>
+                      <Button type="primary" onClick={() => router.push('/knowledge')}>
+                        去查阅
+                      </Button>
+                    </div>
+                  </Card>
+                </Col>
+              </Row>
+            ) : (
+              <QuickActions
+                actions={data?.quickActions || []}
+                loading={loading}
+                onActionClick={handleQuickActionClick}
+                showTitle={false}
+                compact={false}
+              />
+            )}
           </div>
 
           <Divider className="my-8" />

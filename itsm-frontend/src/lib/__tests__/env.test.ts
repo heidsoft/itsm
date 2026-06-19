@@ -49,7 +49,7 @@ describe('Environment Utilities', () => {
 
     it('should have app object', () => {
       expect(env.app).toBeDefined();
-      expect(env.app.name).toBe('ITSM Platform');
+      expect(env.app.name).toBe('AI-Native ITSM');
     });
   });
 

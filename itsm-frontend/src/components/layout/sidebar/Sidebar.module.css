@@ -50,18 +50,19 @@
 }
 
 .logoText {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: #1f2937;
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 .logoSubtext {
   font-size: 11px;
   color: #6b7280;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .mainMenu {

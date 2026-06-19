@@ -124,7 +124,12 @@ export class AuthService {
   }
 
   // 修改login方法
-  static async login(username: string, password: string, tenantCode?: string): Promise<boolean> {
+  static async login(
+    username: string,
+    password: string,
+    tenantCode?: string,
+    rememberMe?: boolean
+  ): Promise<boolean> {
     try {
       const data = await this.makeRequest<{
         access_token: string;
@@ -139,6 +144,24 @@ export class AuthService {
           tenant_code: tenantCode,
         }),
       });
+
+      // 根据 rememberMe 决定 token 存储位置
+      // rememberMe=true → localStorage（持久化）
+      // rememberMe=false → sessionStorage（关闭浏览器后清除）
+      if (typeof window !== 'undefined') {
+        const storage = rememberMe ? localStorage : sessionStorage;
+        if (data.access_token) {
+          storage.setItem('access_token', data.access_token);
+        }
+        if (data.refresh_token) {
+          storage.setItem('refresh_token', data.refresh_token);
+        }
+        // 同时设置 cookie 供 middleware 读取
+        const cookieMaxAge = rememberMe ? 7 * 24 * 60 * 60 : 0; // 7天或会话级
+        if (data.access_token) {
+          document.cookie = `auth-token=${data.access_token}; path=/; max-age=${cookieMaxAge}; SameSite=Lax`;
+        }
+      }
 
       // 使用store管理登录状态
       const { login } = useAuthStore.getState();
@@ -172,9 +195,6 @@ export class AuthService {
           updatedAt: new Date().toISOString(),
         } as Tenant
       );
-
-      // 验证状态是否正确设置
-      const { isAuthenticated } = useAuthStore.getState();
 
       return true;
     } catch (error) {

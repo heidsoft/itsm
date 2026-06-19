@@ -40,7 +40,7 @@ export const env = {
 
   // 应用配置
   app: {
-    name: 'ITSM Platform',
+    name: 'AI-Native ITSM',
     version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
     buildTime: process.env.NEXT_PUBLIC_BUILD_TIME || '',
   },

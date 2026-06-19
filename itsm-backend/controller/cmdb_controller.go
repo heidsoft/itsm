@@ -152,7 +152,7 @@ func (c *CMDBController) CreateCI(ctx *gin.Context) {
 		Attributes:         dtoReq.Attributes,
 	})
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "操作失败，请稍后重试")
+		common.Fail(ctx, common.InternalErrorCode, "创建CI失败: "+err.Error())
 		return
 	}
 

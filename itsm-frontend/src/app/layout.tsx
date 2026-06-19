@@ -18,12 +18,12 @@ const inter = { variable: '--font-inter' };
 const notoSansSC = { variable: '--font-noto-sans-sc' };
 
 export const metadata: Metadata = {
-  title: 'ITSM Platform - IT服务管理平台',
-  description: '专业的IT服务管理平台，提供工单管理、事件管理、问题管理、变更管理等核心功能',
-  keywords: 'ITSM, 工单管理, 事件管理, 问题管理, 变更管理, IT服务管理',
-  authors: [{ name: 'ITSM Team' }],
-  creator: 'ITSM Platform',
-  publisher: 'ITSM Platform',
+  title: 'AI-Native ITSM - AI驱动的IT服务管理系统',
+  description: 'AI-Native ITSM 是一款开源的AI驱动IT服务管理系统，提供工单管理、CMDB、知识库RAG、BPMN工作流、SLA监控、AI智能分诊等核心功能',
+  keywords: 'ITSM, AI, 工单管理, CMDB, 知识库, BPMN, SLA, IT服务管理, 开源',
+  authors: [{ name: 'AI-Native ITSM Team' }],
+  creator: 'AI-Native ITSM',
+  publisher: 'AI-Native ITSM',
   formatDetection: {
     email: false,
     address: false,
@@ -41,16 +41,16 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'ITSM Platform - IT服务管理平台',
-    description: '专业的IT服务管理平台，提供工单管理、事件管理、问题管理、变更管理等核心功能',
+    title: 'AI-Native ITSM - AI驱动的IT服务管理系统',
+    description: 'AI-Native ITSM 是一款开源的AI驱动IT服务管理系统，提供工单管理、CMDB、知识库RAG、BPMN工作流、SLA监控、AI智能分诊等核心功能',
     type: 'website',
     locale: 'zh_CN',
-    siteName: 'ITSM Platform',
+    siteName: 'AI-Native ITSM',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ITSM Platform - IT服务管理平台',
-    description: '专业的IT服务管理平台，提供工单管理、事件管理、问题管理、变更管理等核心功能',
+    title: 'AI-Native ITSM - AI驱动的IT服务管理系统',
+    description: 'AI-Native ITSM 是一款开源的AI驱动IT服务管理系统，提供工单管理、CMDB、知识库RAG、BPMN工作流、SLA监控、AI智能分诊等核心功能',
   },
   icons: {
     icon: '/file.svg',
@@ -75,10 +75,6 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
-        {/* 预加载关键资源 */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-
         {/* 安全相关头部 */}
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="theme-color" content="#1890ff" />
@@ -87,11 +83,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="ITSM Platform" />
-
-        {/* 性能优化 */}
-        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+        <meta name="apple-mobile-web-app-title" content="AI-Native ITSM" />
       </head>
       <body
         className={`${inter.variable} ${notoSansSC.variable} antialiased`}

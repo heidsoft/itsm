@@ -105,6 +105,9 @@ type IncidentRule func(*sql.Selector)
 // IncidentRuleExecution is the predicate function for incidentruleexecution builders.
 type IncidentRuleExecution func(*sql.Selector)
 
+// ItemVersion is the predicate function for itemversion builders.
+type ItemVersion func(*sql.Selector)
+
 // KnowledgeArticle is the predicate function for knowledgearticle builders.
 type KnowledgeArticle func(*sql.Selector)
 
@@ -125,6 +128,9 @@ type KnownError func(*sql.Selector)
 
 // MSPAllocation is the predicate function for mspallocation builders.
 type MSPAllocation func(*sql.Selector)
+
+// MarketplaceItem is the predicate function for marketplaceitem builders.
+type MarketplaceItem func(*sql.Selector)
 
 // Menu is the predicate function for menu builders.
 type Menu func(*sql.Selector)
@@ -251,6 +257,9 @@ type Team func(*sql.Selector)
 
 // Tenant is the predicate function for tenant builders.
 type Tenant func(*sql.Selector)
+
+// TenantInstallation is the predicate function for tenantinstallation builders.
+type TenantInstallation func(*sql.Selector)
 
 // Ticket is the predicate function for ticket builders.
 type Ticket func(*sql.Selector)
