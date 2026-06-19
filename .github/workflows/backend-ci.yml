@@ -46,8 +46,7 @@ jobs:
       - name: Run staticcheck
         run: |
           cd itsm-backend
-          go install honnef.co/go/tools/cmd/staticcheck@2023.1.1
-          staticcheck ./...
+          go run honnef.co/go/tools/cmd/staticcheck@latest ./...
 
       - name: Code quality checks
         run: |
