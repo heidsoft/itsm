@@ -175,3 +175,9 @@ itsm-backend/logs/
 itsm-frontend/.next/
 itsm-frontend/tests/e2e/venv/
 release/
+
+# 防止再次误提交大文件/二进制
+/itsm-agent/itsm-agent
+/itsm-agent/itsm-agent-*
+/ai-dev-agent/ai-dev-agent
+graphify-out/
