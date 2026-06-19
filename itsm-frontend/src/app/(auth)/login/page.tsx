@@ -57,7 +57,12 @@ function LoginForm() {
     setError('');
 
     try {
-      const success = await AuthService.login(values.username, values.password, undefined, rememberMe);
+      const success = await AuthService.login(
+        values.username,
+        values.password,
+        undefined,
+        rememberMe
+      );
 
       if (success) {
         logger.info('认证信息已存储，准备跳转');
@@ -75,24 +80,21 @@ function LoginForm() {
   };
 
   return (
-    <Card
-      className="rounded-xl shadow-xl border-none"
-      styles={{ body: { padding: '40px' } }}
-    >
-      <div className="text-center mb-6">
-        <Title level={2} className="!mb-2 !text-gray-900 !text-2xl">
+    <Card className='rounded-xl shadow-xl border-none' styles={{ body: { padding: '40px' } }}>
+      <div className='text-center mb-6'>
+        <Title level={2} className='!mb-2 !text-gray-900 !text-2xl'>
           {t('auth.login.title')}
         </Title>
-        <Text className="!text-gray-500 !text-sm">{t('auth.login.subtitle')}</Text>
+        <Text className='!text-gray-500 !text-sm'>{t('auth.login.subtitle')}</Text>
       </div>
 
       {/* 会话过期提示 */}
       {isExpired && (
         <Alert
-          message="会话已过期"
-          description="您的会话已过期，请重新登录。"
-          type="warning"
-          className="mb-5"
+          title='会话已过期'
+          description='您的会话已过期，请重新登录。'
+          type='warning'
+          className='mb-5'
           showIcon
           closable
         />
@@ -102,15 +104,15 @@ function LoginForm() {
         <Alert
           title={t('auth.login.loginFailed')}
           description={error}
-          type="error"
-          className="mb-5"
+          type='error'
+          className='mb-5'
           showIcon
         />
       )}
 
-      <Form form={form} onFinish={handleLogin} layout="vertical" size="middle">
+      <Form form={form} onFinish={handleLogin} layout='vertical' size='middle'>
         <Form.Item
-          name="username"
+          name='username'
           label={t('auth.login.usernameLabel')}
           rules={[
             { required: true, message: t('auth.login.usernameRequired') },
@@ -118,14 +120,14 @@ function LoginForm() {
           ]}
         >
           <Input
-            prefix={<User size={14} className="text-gray-400" />}
+            prefix={<User size={14} className='text-gray-400' />}
             placeholder={t('auth.login.usernamePlaceholder')}
             disabled={loading}
           />
         </Form.Item>
 
         <Form.Item
-          name="password"
+          name='password'
           label={t('auth.login.passwordLabel')}
           rules={[
             { required: true, message: t('auth.login.passwordRequired') },
@@ -133,14 +135,14 @@ function LoginForm() {
           ]}
         >
           <Input.Password
-            prefix={<Lock size={14} className="text-gray-400" />}
+            prefix={<Lock size={14} className='text-gray-400' />}
             placeholder={t('auth.login.passwordPlaceholder')}
             disabled={loading}
           />
         </Form.Item>
 
-        <Form.Item className="mb-5">
-          <Flex justify="space-between" align="center">
+        <Form.Item className='mb-5'>
+          <Flex justify='space-between' align='center'>
             <Checkbox
               checked={rememberMe}
               onChange={e => setRememberMe(e.target.checked)}
@@ -149,8 +151,8 @@ function LoginForm() {
               {t('auth.login.rememberMe')}
             </Checkbox>
             <Tooltip title={loading ? '登录中...' : ''}>
-              <Link href="/forgot-password">
-                <Button type="link" className="p-0 h-auto text-xs" disabled={loading}>
+              <Link href='/forgot-password'>
+                <Button type='link' className='p-0 h-auto text-xs' disabled={loading}>
                   {t('auth.login.forgotPassword')}
                 </Button>
               </Link>
@@ -160,11 +162,11 @@ function LoginForm() {
 
         <Form.Item>
           <Button
-            type="primary"
-            htmlType="submit"
+            type='primary'
+            htmlType='submit'
             loading={loading}
-            size="large"
-            className="w-full h-10 rounded-md text-sm font-semibold"
+            size='large'
+            className='w-full h-10 rounded-md text-sm font-semibold'
             icon={<ArrowRight size={14} />}
           >
             {loading ? t('auth.login.loggingIn') : t('auth.login.loginButton')}
@@ -174,22 +176,22 @@ function LoginForm() {
 
       {/* 默认凭据提示 */}
       <Alert
-        message="默认管理员账户"
-        description="admin / admin123（请及时修改密码）"
-        type="info"
-        className="mb-5"
+        title='默认管理员账户'
+        description='admin / admin123（请及时修改密码）'
+        type='info'
+        className='mb-5'
         showIcon
       />
 
-      <Divider className="my-5">
-        <Text className="text-gray-400 text-xs">{t('auth.login.or')}</Text>
+      <Divider className='my-5'>
+        <Text className='text-gray-400 text-xs'>{t('auth.login.or')}</Text>
       </Divider>
 
       {/* SSO 登录按钮已隐藏 — 开源版本暂不支持 SSO */}
       {false && (
         <Button
-          size="middle"
-          className="w-full h-10 rounded-md text-sm"
+          size='middle'
+          className='w-full h-10 rounded-md text-sm'
           disabled={loading}
           icon={<Shield size={14} />}
         >
@@ -197,11 +199,11 @@ function LoginForm() {
         </Button>
       )}
 
-      <div className="text-center mt-5">
-        <Text className="text-gray-400 text-xs">
+      <div className='text-center mt-5'>
+        <Text className='text-gray-400 text-xs'>
           {t('auth.login.noAccount')}{' '}
-          <Link href="/register">
-            <Button type="link" className="p-0 h-auto text-xs">
+          <Link href='/register'>
+            <Button type='link' className='p-0 h-auto text-xs'>
               {t('auth.login.registerNow')}
             </Button>
           </Link>
@@ -218,42 +220,44 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <ConfigProvider theme={antdTheme}>
-      <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50">
-        <div className="w-full max-w-[1000px]">
-          <Row gutter={[32, 0]} align="middle">
+      <div className='min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50'>
+        <div className='w-full max-w-[1000px]'>
+          <Row gutter={[32, 0]} align='middle'>
             {/* 左侧品牌区域 */}
             <Col xs={0} lg={10}>
-              <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-10 px-8 rounded-xl h-[480px] flex flex-col justify-center relative overflow-hidden">
-                <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-xl" />
+              <div className='bg-gradient-to-br from-blue-600 to-blue-700 p-10 px-8 rounded-xl h-[480px] flex flex-col justify-center relative overflow-hidden'>
+                <div className='absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-xl' />
 
-                <div className="relative z-10">
-                  <Title level={1} className="!text-white !mb-3 !text-3xl !font-bold">
+                <div className='relative z-10'>
+                  <Title level={1} className='!text-white !mb-3 !text-3xl !font-bold'>
                     AI-Native ITSM
                   </Title>
-                  <Text className="!text-white/90 !text-sm block !mb-8">AI 驱动的 IT 服务管理系统</Text>
+                  <Text className='!text-white/90 !text-sm block !mb-8'>
+                    AI 驱动的 IT 服务管理系统
+                  </Text>
 
-                  <Space orientation="vertical" size="middle" className="w-full">
-                    <Flex align="center" gap={10}>
-                      <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center">
-                        <Shield size={16} color="white" />
+                  <Space orientation='vertical' size='middle' className='w-full'>
+                    <Flex align='center' gap={10}>
+                      <div className='w-8 h-8 bg-white/20 rounded-md flex items-center justify-center'>
+                        <Shield size={16} color='white' />
                       </div>
                       <div>
-                        <Text className="!text-white !font-semibold !text-sm block">
+                        <Text className='!text-white !font-semibold !text-sm block'>
                           企业级安全
                         </Text>
-                        <Text className="!text-white/80 !text-xs">多层安全防护</Text>
+                        <Text className='!text-white/80 !text-xs'>多层安全防护</Text>
                       </div>
                     </Flex>
 
-                    <Flex align="center" gap={10}>
-                      <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center">
-                        <ArrowRight size={16} color="white" />
+                    <Flex align='center' gap={10}>
+                      <div className='w-8 h-8 bg-white/20 rounded-md flex items-center justify-center'>
+                        <ArrowRight size={16} color='white' />
                       </div>
                       <div>
-                        <Text className="!text-white !font-semibold !text-sm block">
+                        <Text className='!text-white !font-semibold !text-sm block'>
                           智能自动化
                         </Text>
-                        <Text className="!text-white/80 !text-xs">AI 驱动流程</Text>
+                        <Text className='!text-white/80 !text-xs'>AI 驱动流程</Text>
                       </div>
                     </Flex>
                   </Space>
@@ -266,10 +270,10 @@ export default function LoginPage() {
               <Suspense
                 fallback={
                   <Card
-                    className="rounded-xl shadow-xl border-none"
+                    className='rounded-xl shadow-xl border-none'
                     styles={{ body: { padding: '40px' } }}
                   >
-                    <div className="text-center py-20 text-gray-400">加载中...</div>
+                    <div className='text-center py-20 text-gray-400'>加载中...</div>
                   </Card>
                 }
               >
