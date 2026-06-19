@@ -1,5 +1,16 @@
 name: backend-ci
 
+# Purpose:
+#   Validate backend-only changes before they reach main.
+#   This workflow is intentionally scoped by paths so documentation,
+#   frontend-only changes, and release tags do not waste backend CI minutes.
+# Checks:
+#   - gofumpt formatting
+#   - staticcheck with the project Go version
+#   - backend build
+#   - backend tests with coverage
+#   - Go module verification
+
 on:
   push:
     branches: [main, develop]

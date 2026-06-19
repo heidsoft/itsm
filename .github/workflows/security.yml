@@ -1,5 +1,13 @@
 name: Security Scan
 
+# Purpose:
+#   Run security-focused scans that are separate from normal build/test CI.
+# Notes:
+#   - gosec and Trivy upload SARIF to the GitHub Security tab.
+#   - npm audit is limited to production dependencies and critical severity
+#     so historical dev/high advisories do not block every routine change.
+#   - TruffleHog scans for accidental secret exposure.
+
 on:
   push:
     branches: [main, develop]

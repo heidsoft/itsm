@@ -1,5 +1,14 @@
 name: frontend-ci
 
+# Purpose:
+#   Validate frontend-only changes before they reach main.
+#   This workflow is path-scoped to itsm-frontend and this workflow file.
+# Checks:
+#   - ESLint
+#   - TypeScript type check
+#   - Jest unit tests
+#   - Next.js production standalone build
+
 on:
   push:
     branches: [main, develop]

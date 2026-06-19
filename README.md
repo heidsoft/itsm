@@ -24,6 +24,46 @@
 
 ---
 
+## 项目说明
+
+ITSM 是一个面向国内企业数字化流程治理的开源 IT 服务管理平台，目标是对标 ServiceNow 的核心 ITSM 能力，同时保持更轻量、更易私有化部署、更适合本土企业集成环境。
+
+项目覆盖 ITIL v3 的核心流程：工单、事件、问题、变更、发布、服务请求、服务目录、知识库、SLA、CMDB 和流程编排。系统内置 BPMN 工作流引擎，支持按企业实际管理制度自定义流程，并预留飞书、企业微信、钉钉、Webhook、连接器市场、Skill 市场和插件市场扩展方向。
+
+AI 能力不是外挂式聊天框，而是嵌入到工单分诊、摘要、知识检索、流程建议、审计追踪和自动化工具调用中。当前定位是“AI Native ITSM 基座”：先把流程、权限、数据模型、审计、连接器和可部署性打牢，再逐步让 AI 参与更多可控的企业服务管理动作。
+
+### 适合谁使用
+
+- 企业 IT、运维、服务台团队：统一处理工单、事件、变更、问题和服务请求。
+- 数字化平台团队：把企业内部流程、审批、CMDB 和系统集成统一到一个可扩展平台。
+- MSP 服务商：通过多租户和 MSP 模式服务多个客户组织。
+- 开源贡献者和二次开发团队：基于 Go + Next.js + BPMN + AI 能力建设企业级流程产品。
+
+### 当前能力地图
+
+| 领域 | 已覆盖能力 |
+|:---|:---|
+| ITIL 流程 | 工单、事件、问题、变更、发布、服务请求、服务目录、SLA |
+| CMDB | CI 类型、配置项、关系、拓扑、影响分析、云资源发现基础能力 |
+| 工作流 | BPMN 流程定义、流程实例、用户任务、流程绑定、流程触发 |
+| AI | 智能分诊、摘要、RAG 检索、LLM 网关、AI 审计、工具调用框架 |
+| 知识库 | 文章、分类、搜索、推荐、RAG 接入 |
+| 企业集成 | 连接器市场雏形，预留飞书、企微、钉钉、Webhook 等通道 |
+| 权限与租户 | RBAC、多租户、MSP 模式、菜单权限、组织结构 |
+| 交付 | Docker Compose、GitHub Releases、GHCR 镜像、前后端 CI |
+
+### 发布物怎么选
+
+| 方式 | 适用场景 | 入口 |
+|:---|:---|:---|
+| 源码 Docker Compose | 本地体验、二次开发、查看完整配置 | `docker compose up -d --build` |
+| GitHub Packages 镜像 | 只想快速部署运行，不想本地构建 | `ghcr.io/heidsoft/itsm-backend` / `ghcr.io/heidsoft/itsm-frontend` |
+| Release zip | 离线分发、自定义部署脚本 | [GitHub Releases](https://github.com/heidsoft/itsm/releases) |
+
+更多文档入口见 [文档中心](./docs/README.md)。
+
+---
+
 ## ⭐ AI-Native 是什么
 
 > **AI-Native ≠ AI附加**
@@ -440,17 +480,17 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
 ## 文档导航
 
-| [开发指南](./docs/DEVELOPMENT.md) | [部署指南](./docs/DEPLOYMENT.md) | [配置参考](./docs/CONFIGURATION.md) |
+| [文档中心](./docs/README.md) | [开发指南](./docs/DEVELOPMENT.md) | [部署指南](./docs/DEPLOYMENT.md) |
 |:---:|:---:|:---:|
-| 开发环境搭建 | Docker/K8s 部署 | 环境变量详解 |
+| 按角色查找文档 | 开发环境搭建 | Docker/K8s 部署 |
 
-| [数据库](./docs/DATABASE.md) | [运维手册](./docs/OPERATIONS.md) | [AI架构解析](./docs/articles/07-AI-Native-ITSM的架构进化论：Guidance-Harness-Skill三层体系设计.md) |
+| [配置参考](./docs/CONFIGURATION.md) | [数据库](./docs/DATABASE.md) | [运维手册](./docs/OPERATIONS.md) |
 |:---:|:---:|:---:|
-| 迁移与备份 | 日志与监控 | Guidance-Harness-Skill 三层体系 |
+| 环境变量详解 | 迁移与备份 | 日志与监控 |
 
-| [测试框架](./tests/README.md) | [部署脚本](./scripts/deploy-dev.sh) | [贡献指南](./CONTRIBUTING.md) |
+| [v1.0 验收](./docs/V1_GA_READINESS.md) | [AI架构解析](./docs/articles/07-AI-Native-ITSM的架构进化论：Guidance-Harness-Skill三层体系设计.md) | [贡献指南](./CONTRIBUTING.md) |
 |:---:|:---:|:---:|
-| API/UI/数据库测试 | 一键启动 | PR 流程 |
+| GA 能力检查 | Guidance-Harness-Skill 三层体系 | PR 流程 |
 
 ---
 

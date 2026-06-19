@@ -1,5 +1,14 @@
 name: Build & Release
 
+# Purpose:
+#   Produce public release artifacts from version tags.
+# Trigger:
+#   Push a tag like v1.0.2. Manual dispatch is intentionally not enabled
+#   because releases must map to immutable git tags.
+# Outputs:
+#   - GitHub Release zip archives for backend binaries and frontend standalone
+#   - GHCR images ghcr.io/heidsoft/itsm-backend and ghcr.io/heidsoft/itsm-frontend
+
 on:
   push:
     tags:
