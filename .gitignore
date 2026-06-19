@@ -26,6 +26,10 @@ Thumbs.db
 bin/
 /pkg/
 vendor/
+!itsm-backend/ent/vendor/
+!itsm-backend/ent/vendor/**
+!itsm-backend/migrations/vendor/
+!itsm-backend/migrations/vendor/**
 go.work
 go.work.sum
 

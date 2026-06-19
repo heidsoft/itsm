@@ -30,8 +30,8 @@ export const Tabs = ({ defaultValue, value, onValueChange, children, className }
   // Extract TabsList triggers for tab items and TabsContent for panels
   const items: { key: string; label: React.ReactNode; children: React.ReactNode }[] = [];
 
-  let triggers: { value: string; label: React.ReactNode }[] = [];
-  let contents: { value: string; children: React.ReactNode }[] = [];
+  const triggers: { value: string; label: React.ReactNode }[] = [];
+  const contents: { value: string; children: React.ReactNode }[] = [];
 
   React.Children.forEach(children, (child) => {
     if (React.isValidElement<TabsListProps>(child)) {
