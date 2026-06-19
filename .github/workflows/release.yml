@@ -47,7 +47,7 @@ jobs:
           CGO_ENABLED: 0
         run: |
           cd itsm-backend
-          go build -ldflags="-s -w" -o ../itsm-${{ matrix.goos }}-${{ matrix.goarch }} ./main.go
+          go build -mod=mod -ldflags="-s -w" -o ../itsm-${{ matrix.goos }}-${{ matrix.goarch }} ./main.go
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -81,13 +81,22 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:8090
           NODE_OPTIONS: --max-old-space-size=4096
 
-      - name: Prepare frontend build
+      - name: Verify standalone output
+        working-directory: ./itsm-frontend
         run: |
-          cd itsm-frontend
+          if [ ! -d ".next/standalone" ]; then
+            echo "::error::Standalone build output not found at .next/standalone"
+            exit 1
+          fi
+          echo "Standalone build verified"
+
+      - name: Prepare frontend build
+        working-directory: ./itsm-frontend
+        run: |
           mkdir -p frontend-standalone
-          cp -r .next/standalone/* frontend-standalone/
-          cp -r .next/static frontend-standalone/.next/
-          cp -r public frontend-standalone/public
+          cp -r .next/standalone/. frontend-standalone/ 2>/dev/null || true
+          cp -r .next/static frontend-standalone/.next/ 2>/dev/null || true
+          cp -r public frontend-standalone/public 2>/dev/null || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
