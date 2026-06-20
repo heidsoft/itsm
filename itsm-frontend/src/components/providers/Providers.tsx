@@ -32,8 +32,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Failed to initialize auth:', error);
         // 清除可能损坏的认证状态
-        AuthService.logout();
-        logout();
+        AuthService.logout(); // already calls store.logout() internally
       } finally {
         setLoading(false);
       }

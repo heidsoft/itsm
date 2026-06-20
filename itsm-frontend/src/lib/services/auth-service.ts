@@ -119,6 +119,8 @@ export class AuthService {
         credentials: 'include',
       }).catch(() => {});
     } finally {
+      // 清除 auth-token cookie（middleware 路由守卫使用）
+      document.cookie = 'auth-token=; path=/; max-age=0; SameSite=Lax';
       logout();
     }
   }

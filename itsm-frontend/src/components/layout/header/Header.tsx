@@ -6,6 +6,7 @@ import { PanelLeftClose, PanelLeftOpen, Bell, Globe, Home, Moon, Sun } from 'luc
 import { useTheme } from '@/lib/design-system/theme';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
+import { AuthService } from '@/lib/services/auth-service';
 import { DESIGN } from '@/design-system/tokens';
 import { useI18n } from '@/lib/i18n';
 import { TicketNotificationApi, type TicketNotification } from '@/lib/api/ticket-notification-api';
@@ -60,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout, token } = useAuthStore();
+  const { user, token } = useAuthStore();
   const { isDark, toggleTheme } = useTheme();
   const { language, changeLanguage } = useI18n();
   useAuthStoreHydration();
@@ -141,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   // 登出处理
   const handleLogout = () => {
-    logout();
+    AuthService.logout(); // calls backend to clear httpOnly cookies + clears store
     router.push('/login');
   };
 
