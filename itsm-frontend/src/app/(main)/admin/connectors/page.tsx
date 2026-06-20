@@ -152,7 +152,7 @@ export default function ConnectorsAdminPage() {
     {
       title: '名称', dataIndex: 'title', key: 'title', width: 200,
       render: (t: string, r: ConnectorManifest) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong>{t}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>{r.name} · v{r.version}</Text>
         </Space>
@@ -365,7 +365,7 @@ export default function ConnectorsAdminPage() {
         width={520}
       >
         {detailTarget && (
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <Space orientation="vertical" style={{ width: '100%' }} size="middle">
             <div>
               <Text type="secondary">标识</Text>
               <div><Text code>{detailTarget.name}</Text> <Tag>v{detailTarget.version}</Tag></div>

@@ -121,7 +121,7 @@ const LicenseDetail: React.FC = () => {
     license.total_quantity > 0 ? (license.used_quantity / license.total_quantity) * 100 : 0;
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="large">
+    <Space orientation="vertical" style={{ width: '100%' }} size="large">
       <Card>
         <div style={{ marginBottom: 24 }}>
           <Button

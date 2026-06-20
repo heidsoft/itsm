@@ -52,6 +52,54 @@ func (ProcessBinding) Fields() []ent.Field {
 			Comment("是否激活").
 			Default(true),
 
+		// 部门ID（0表示全局）
+		field.Int("department_id").
+			Comment("部门ID (0表示全局)").
+			Optional().
+			Default(0),
+
+		// 团队ID（0表示全局）
+		field.Int("team_id").
+			Comment("团队ID (0表示全局)").
+			Optional().
+			Default(0),
+
+		// 场景标识（alert_handling/change_release/code_release等）
+		field.String("scenario").
+			Comment("场景标识: alert_handling, change_release, code_release, expense_approval").
+			Optional().
+			Default(""),
+
+		// 流程分类（operations/rd/finance/hr）
+		field.String("category").
+			Comment("流程分类: operations, rd, finance, hr").
+			Optional().
+			Default(""),
+
+		// 匹配条件JSON
+		field.JSON("conditions", map[string]interface{}{}).
+			Comment("匹配条件JSON").
+			Optional().
+			Default(map[string]interface{}{}),
+
+		// 审批链ID
+		field.String("approval_chain_id").
+			Comment("审批链ID").
+			Optional().
+			Default(""),
+
+		// SLA策略ID
+		field.String("sla_policy_id").
+			Comment("SLA策略ID").
+			Optional().
+			Default(""),
+
+		// 覆盖配置
+		field.JSON("overrides", map[string]interface{}{}).
+			Comment("覆盖配置").
+			Optional().
+			Default(map[string]interface{}{}),
+
 		// 租户ID
 		field.Int("tenant_id").
 			Comment("租户ID").
@@ -89,5 +137,7 @@ func (ProcessBinding) Indexes() []ent.Index {
 		index.Fields("process_definition_key"),
 		// 租户索引
 		index.Fields("tenant_id"),
+		// 流程路由复合索引
+		index.Fields("tenant_id", "business_type", "is_active", "department_id", "team_id", "scenario"),
 	}
 }

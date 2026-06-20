@@ -247,33 +247,52 @@ export default function RoleManagement() {
     try {
       const values = await form.validateFields();
 
-      // 构造权限列表
-      const permissions: string[] = [];
+      // 构建权限编码列表
+      const permissionCodes: string[] = [];
       Object.values(PERMISSION_MODULES).forEach(module => {
         Object.values(PERMISSION_ACTIONS).forEach(action => {
           const fieldName = `${module}_${action}`;
           if (values[fieldName]) {
-            permissions.push(`${module}:${action}`);
+            permissionCodes.push(`${module}:${action}`);
           }
         });
       });
 
+      // 更新角色基本信息（不含权限）
       const roleData = {
         name: values.name,
         code: values.code,
         description: values.description,
-        permissions,
         status: (values.status ? 'active' : 'inactive') as 'active' | 'inactive',
       };
 
+      let roleId: number;
       if (selectedRole) {
-        // 更新角色
-        await RoleAPI.updateRole(selectedRole.id, roleData);
+        const updated = await RoleAPI.updateRole(selectedRole.id, roleData);
+        roleId = updated.id;
         message.success('角色更新成功');
       } else {
-        // 创建角色
-        await RoleAPI.createRole(roleData);
+        const created = await RoleAPI.createRole({ ...roleData, permissions: permissionCodes });
+        roleId = created.id;
         message.success('角色创建成功');
+      }
+
+      // 分配权限（使用专用接口）
+      if (permissionCodes.length > 0) {
+        try {
+          const catalog = await RoleAPI.getPermissionCatalog();
+          const codeToId = new Map(catalog.map(p => [p.code, p.id]));
+          const permissionIds = permissionCodes
+            .map(code => codeToId.get(code))
+            .filter((id): id is number => id !== undefined && id !== 0);
+
+          if (permissionIds.length > 0) {
+            await RoleAPI.assignPermissions(roleId, permissionIds);
+          }
+        } catch (permError) {
+          console.error('Failed to assign permissions:', permError);
+          message.warning('角色基本信息已保存，但权限分配失败，请重试');
+        }
       }
 
       setShowModal(false);

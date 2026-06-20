@@ -1298,7 +1298,7 @@ const WorkflowManagementPage = () => {
         destroyOnHidden
       >
         {viewingWorkflow && (
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             <Descriptions bordered size="small" column={2}>
               <Descriptions.Item label={t('workflow.name')} span={2}>
                 {viewingWorkflow.name}

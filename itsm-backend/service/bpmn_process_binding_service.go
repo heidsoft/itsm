@@ -72,6 +72,14 @@ func (s *ProcessBindingService) CreateBinding(ctx context.Context, binding *dto.
 		SetIsDefault(binding.IsDefault).
 		SetPriority(binding.Priority).
 		SetIsActive(binding.IsActive).
+		SetDepartmentID(binding.DepartmentID).
+		SetTeamID(binding.TeamID).
+		SetScenario(binding.Scenario).
+		SetCategory(binding.Category).
+		SetConditions(binding.Conditions).
+		SetApprovalChainID(binding.ApprovalChainID).
+		SetSLAPolicyID(binding.SLAPolicyID).
+		SetOverrides(binding.Overrides).
 		SetTenantID(binding.TenantID).
 		Save(ctx)
 	if err != nil {
@@ -117,6 +125,18 @@ func (s *ProcessBindingService) UpdateBinding(ctx context.Context, id int, bindi
 	update.SetIsDefault(binding.IsDefault)
 	update.SetPriority(binding.Priority)
 	update.SetIsActive(binding.IsActive)
+	update.SetDepartmentID(binding.DepartmentID)
+	update.SetTeamID(binding.TeamID)
+	update.SetScenario(binding.Scenario)
+	update.SetCategory(binding.Category)
+	if binding.Conditions != nil {
+		update.SetConditions(binding.Conditions)
+	}
+	update.SetApprovalChainID(binding.ApprovalChainID)
+	update.SetSLAPolicyID(binding.SLAPolicyID)
+	if binding.Overrides != nil {
+		update.SetOverrides(binding.Overrides)
+	}
 
 	entity, err = update.Save(ctx)
 	if err != nil {
@@ -164,6 +184,18 @@ func (s *ProcessBindingService) QueryBindings(ctx context.Context, req *dto.Proc
 	}
 	if req.BusinessSubType != "" {
 		query = query.Where(processbinding.BusinessSubType(req.BusinessSubType))
+	}
+	if req.DepartmentID > 0 {
+		query = query.Where(processbinding.DepartmentID(req.DepartmentID))
+	}
+	if req.TeamID > 0 {
+		query = query.Where(processbinding.TeamID(req.TeamID))
+	}
+	if req.Scenario != "" {
+		query = query.Where(processbinding.Scenario(req.Scenario))
+	}
+	if req.Category != "" {
+		query = query.Where(processbinding.Category(req.Category))
 	}
 	if req.IsActive != nil {
 		query = query.Where(processbinding.IsActive(*req.IsActive))
@@ -252,6 +284,14 @@ func (s *ProcessBindingService) toBindingResponse(entity *ent.ProcessBinding) *d
 		IsDefault:            entity.IsDefault,
 		Priority:             entity.Priority,
 		IsActive:             entity.IsActive,
+		DepartmentID:         entity.DepartmentID,
+		TeamID:               entity.TeamID,
+		Scenario:             entity.Scenario,
+		Category:             entity.Category,
+		Conditions:           entity.Conditions,
+		ApprovalChainID:      entity.ApprovalChainID,
+		SLAPolicyID:          entity.SLAPolicyID,
+		Overrides:            entity.Overrides,
 		TenantID:             entity.TenantID,
 		CreatedAt:            entity.CreatedAt,
 		UpdatedAt:            entity.UpdatedAt,
@@ -383,4 +423,94 @@ func (s *ProcessBindingService) GetBindingsByBusinessType(ctx context.Context, b
 	}
 
 	return bindings, nil
+}
+
+// GetDepartmentBindings returns process bindings scoped to one department.
+func (s *ProcessBindingService) GetDepartmentBindings(ctx context.Context, tenantID, departmentID int) ([]*dto.ProcessBinding, error) {
+	req := &dto.ProcessBindingQueryRequest{
+		TenantID:     tenantID,
+		DepartmentID: departmentID,
+	}
+	return s.QueryBindings(ctx, req)
+}
+
+// InitDepartmentDefaultBindings initializes scenario-specific bindings for a department.
+func (s *ProcessBindingService) InitDepartmentDefaultBindings(ctx context.Context, tenantID, departmentID int, departmentType string) error {
+	bindings := getDepartmentDefaultBindings(departmentType)
+	if len(bindings) == 0 {
+		return fmt.Errorf("未知部门类型: %s", departmentType)
+	}
+
+	for _, binding := range bindings {
+		binding.TenantID = tenantID
+		binding.DepartmentID = departmentID
+		binding.IsActive = true
+
+		exists, err := s.client.ProcessBinding.Query().
+			Where(
+				processbinding.TenantID(tenantID),
+				processbinding.DepartmentID(departmentID),
+				processbinding.BusinessType(string(binding.BusinessType)),
+				processbinding.BusinessSubType(binding.BusinessSubType),
+				processbinding.Scenario(binding.Scenario),
+			).
+			Exist(ctx)
+		if err != nil {
+			return errors.Wrap(err, "检查部门流程绑定失败")
+		}
+		if exists {
+			continue
+		}
+
+		definitionExists, err := s.client.ProcessDefinition.Query().
+			Where(
+				processdefinition.Key(binding.ProcessDefinitionKey),
+				processdefinition.TenantID(tenantID),
+				processdefinition.IsActive(true),
+			).
+			Exist(ctx)
+		if err != nil {
+			return errors.Wrap(err, "检查流程定义失败")
+		}
+		if !definitionExists {
+			continue
+		}
+
+		_, err = s.CreateBinding(ctx, &binding)
+		if err != nil {
+			return errors.Wrap(err, "初始化部门流程绑定失败")
+		}
+	}
+	return nil
+}
+
+func getDepartmentDefaultBindings(departmentType string) []dto.ProcessBinding {
+	switch departmentType {
+	case "operations":
+		return []dto.ProcessBinding{
+			{BusinessType: dto.BusinessTypeIncident, BusinessSubType: "alert_p0", ProcessDefinitionKey: "incident_emergency_flow", ProcessVersion: 1, Scenario: "alert_handling", Category: "operations", Priority: 100, Conditions: map[string]interface{}{"severity": "p0"}},
+			{BusinessType: dto.BusinessTypeIncident, BusinessSubType: "alert_p1", ProcessDefinitionKey: "incident_emergency_flow", ProcessVersion: 1, Scenario: "alert_handling", Category: "operations", Priority: 90, Conditions: map[string]interface{}{"severity": "p1"}},
+			{BusinessType: dto.BusinessTypeChange, BusinessSubType: "normal", ProcessDefinitionKey: "change_normal_flow", ProcessVersion: 1, Scenario: "change_release", Category: "operations", Priority: 70},
+			{BusinessType: dto.BusinessTypeChange, BusinessSubType: "emergency", ProcessDefinitionKey: "change_emergency_flow", ProcessVersion: 1, Scenario: "emergency_change", Category: "operations", Priority: 90},
+		}
+	case "rd":
+		return []dto.ProcessBinding{
+			{BusinessType: dto.BusinessTypeRelease, BusinessSubType: "production", ProcessDefinitionKey: "release_approval_flow", ProcessVersion: 1, Scenario: "code_release_prod", Category: "rd", Priority: 90, Conditions: map[string]interface{}{"environment": "production"}},
+			{BusinessType: dto.BusinessTypeRelease, BusinessSubType: "testing", ProcessDefinitionKey: "release_test_flow", ProcessVersion: 1, Scenario: "code_release_test", Category: "rd", Priority: 70, Conditions: map[string]interface{}{"environment": "testing"}},
+			{BusinessType: dto.BusinessTypeChange, BusinessSubType: "requirement", ProcessDefinitionKey: "change_requirement_flow", ProcessVersion: 1, Scenario: "requirement_change", Category: "rd", Priority: 80},
+		}
+	case "finance":
+		return []dto.ProcessBinding{
+			{BusinessType: dto.BusinessTypeServiceRequest, BusinessSubType: "expense", ProcessDefinitionKey: "expense_approval_flow", ProcessVersion: 1, Scenario: "expense_approval", Category: "finance", Priority: 80},
+			{BusinessType: dto.BusinessTypeServiceRequest, BusinessSubType: "budget", ProcessDefinitionKey: "budget_approval_flow", ProcessVersion: 1, Scenario: "budget_approval", Category: "finance", Priority: 90},
+			{BusinessType: dto.BusinessTypeServiceRequest, BusinessSubType: "procurement", ProcessDefinitionKey: "procurement_flow", ProcessVersion: 1, Scenario: "procurement", Category: "finance", Priority: 85},
+		}
+	case "hr":
+		return []dto.ProcessBinding{
+			{BusinessType: dto.BusinessTypeServiceRequest, BusinessSubType: "leave", ProcessDefinitionKey: "leave_approval_flow", ProcessVersion: 1, Scenario: "leave_approval", Category: "hr", Priority: 70},
+			{BusinessType: dto.BusinessTypeServiceRequest, BusinessSubType: "recruitment", ProcessDefinitionKey: "recruitment_approval_flow", ProcessVersion: 1, Scenario: "recruitment_approval", Category: "hr", Priority: 80},
+		}
+	default:
+		return nil
+	}
 }

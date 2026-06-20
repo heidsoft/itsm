@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
@@ -12,6 +13,7 @@ import (
 	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/service/approver"
 
 	"go.uber.org/zap"
 )
@@ -44,6 +46,12 @@ func (s *ApprovalService) CreateWorkflow(ctx context.Context, req *dto.CreateApp
 			"allow_reject":   node.AllowReject,
 			"allow_delegate": node.AllowDelegate,
 			"reject_action":  node.RejectAction,
+		}
+		if node.AssigneeType != "" {
+			nodeMap["assignee_type"] = node.AssigneeType
+		}
+		if node.AssigneeValue != "" {
+			nodeMap["assignee_value"] = node.AssigneeValue
 		}
 		if node.MinimumApprovals != nil {
 			nodeMap["minimum_approvals"] = *node.MinimumApprovals
@@ -134,6 +142,12 @@ func (s *ApprovalService) UpdateWorkflow(ctx context.Context, id int, req *dto.U
 				"allow_reject":   node.AllowReject,
 				"allow_delegate": node.AllowDelegate,
 				"reject_action":  node.RejectAction,
+			}
+			if node.AssigneeType != "" {
+				nodeMap["assignee_type"] = node.AssigneeType
+			}
+			if node.AssigneeValue != "" {
+				nodeMap["assignee_value"] = node.AssigneeValue
 			}
 			if node.MinimumApprovals != nil {
 				nodeMap["minimum_approvals"] = *node.MinimumApprovals
@@ -574,6 +588,8 @@ func (s *ApprovalService) toWorkflowResponse(ctx context.Context, workflow *ent.
 				Level:         level,
 				Name:          getStringValue(nodeMap["name"]),
 				ApproverType:  getStringValue(nodeMap["approver_type"]),
+				AssigneeType:  getStringValue(nodeMap["assignee_type"]),
+				AssigneeValue: getStringValue(nodeMap["assignee_value"]),
 				ApprovalMode:  getStringValue(nodeMap["approval_mode"]),
 				AllowReject:   getBoolValue(nodeMap["allow_reject"]),
 				AllowDelegate: getBoolValue(nodeMap["allow_delegate"]),
@@ -698,6 +714,7 @@ type ApprovalTriggerRequest struct {
 	TicketType   string // incident, change, service_request, ticket
 	Priority     string
 	RequesterID  int
+	Amount       float64
 	TenantID     int
 }
 
@@ -759,7 +776,7 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 
 		approverIDs := node.ApproverIDs
 		if len(approverIDs) == 0 && node.AssigneeType != "" && node.AssigneeValue != "" {
-			approverID, _, err := s.resolveApprover(ctx, node.AssigneeType, node.AssigneeValue, req.TenantID)
+			approverID, _, err := s.resolveApprover(ctx, node.AssigneeType, node.AssigneeValue, req.TenantID, req.Amount)
 			if err != nil {
 				s.logger.Warnw("Failed to resolve approver", "error", err, "node", i)
 				continue
@@ -925,6 +942,14 @@ func (s *ApprovalService) parseWorkflowNodes(nodesJSON interface{}) ([]workflowN
 		if assigneeValue, ok := nodeMap["assignee_value"].(string); ok {
 			node.AssigneeValue = assigneeValue
 		}
+		if node.AssigneeType == "" {
+			if approverType, ok := nodeMap["approver_type"].(string); ok {
+				switch approverType {
+				case "dept_manager", "team_leader", "project_manager", "temp_team_leader", "amount_based":
+					node.AssigneeType = approverType
+				}
+			}
+		}
 
 		nodes = append(nodes, node)
 	}
@@ -933,7 +958,7 @@ func (s *ApprovalService) parseWorkflowNodes(nodesJSON interface{}) ([]workflowN
 }
 
 // resolveApprover 解析审批人
-func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, assigneeValue string, tenantID int) (int, string, error) {
+func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, assigneeValue string, tenantID int, amount float64) (int, string, error) {
 	switch assigneeType {
 	case "role":
 		// 根据角色查找用户
@@ -958,9 +983,96 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 			return 0, "", fmt.Errorf("未找到用户ID: %d", userID)
 		}
 		return user.ID, user.Name, nil
+	case "dept_manager", "team_leader", "project_manager", "temp_team_leader":
+		scopeID, err := strconv.Atoi(assigneeValue)
+		if err != nil {
+			return 0, "", fmt.Errorf("无效的审批人范围ID: %s", assigneeValue)
+		}
+
+		appCtx := &approver.ApproverContext{TenantID: tenantID}
+		switch assigneeType {
+		case "dept_manager":
+			appCtx.DepartmentID = scopeID
+		case "team_leader":
+			appCtx.TeamID = scopeID
+		case "project_manager":
+			appCtx.ProjectID = scopeID
+		case "temp_team_leader":
+			appCtx.TeamID = scopeID
+		}
+
+		registry := approver.NewResolverRegistry(s.logger)
+		registry.Register(approver.NewDeptManagerResolver())
+		registry.Register(approver.NewTeamLeaderResolver())
+		registry.Register(approver.NewProjectMgrResolver())
+		registry.Register(approver.NewTempTeamResolver())
+
+		approvers, err := registry.Resolve(ctx, s.client, assigneeType, appCtx)
+		if err != nil {
+			return 0, "", err
+		}
+		if len(approvers) == 0 {
+			return 0, "", fmt.Errorf("未解析到审批人: %s/%s", assigneeType, assigneeValue)
+		}
+		return approvers[0].UserID, approvers[0].UserName, nil
+	case "amount_based":
+		thresholds, err := parseAmountThresholds(assigneeValue)
+		if err != nil {
+			return 0, "", err
+		}
+		registry := approver.NewResolverRegistry(s.logger)
+		registry.Register(approver.NewAmountResolver(thresholds))
+		approvers, err := registry.Resolve(ctx, s.client, "amount_based", &approver.ApproverContext{
+			TenantID: tenantID,
+			Amount:   amount,
+		})
+		if err != nil {
+			return 0, "", fmt.Errorf("amount_based approver resolution failed: %w", err)
+		}
+		if len(approvers) == 0 {
+			return 0, "", fmt.Errorf("amount_based resolved no approvers")
+		}
+		return approvers[0].UserID, approvers[0].UserName, nil
 	default:
 		return 0, "", fmt.Errorf("不支持的审批人类型: %s", assigneeType)
 	}
+}
+
+func parseAmountThresholds(raw string) ([]approver.AmountThreshold, error) {
+	if raw == "" {
+		return nil, fmt.Errorf("amount_based requires assignee_value thresholds")
+	}
+
+	parts := strings.Split(raw, ",")
+	thresholds := make([]approver.AmountThreshold, 0, len(parts))
+	for _, part := range parts {
+		rangeAndRole := strings.Split(strings.TrimSpace(part), ":")
+		if len(rangeAndRole) != 2 {
+			return nil, fmt.Errorf("invalid amount threshold %q", part)
+		}
+		bounds := strings.Split(rangeAndRole[0], "-")
+		if len(bounds) != 2 {
+			return nil, fmt.Errorf("invalid amount range %q", rangeAndRole[0])
+		}
+		minAmount, err := strconv.ParseFloat(bounds[0], 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid min amount %q: %w", bounds[0], err)
+		}
+		maxAmount, err := strconv.ParseFloat(bounds[1], 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid max amount %q: %w", bounds[1], err)
+		}
+		role := strings.TrimSpace(rangeAndRole[1])
+		if role == "" {
+			return nil, fmt.Errorf("amount threshold role cannot be empty")
+		}
+		thresholds = append(thresholds, approver.AmountThreshold{
+			MinAmount: minAmount,
+			MaxAmount: maxAmount,
+			Role:      role,
+		})
+	}
+	return thresholds, nil
 }
 
 // 辅助函数：安全获取字符串值

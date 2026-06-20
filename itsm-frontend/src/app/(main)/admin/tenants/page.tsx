@@ -509,7 +509,7 @@ export default function TenantManagement() {
             : undefined
         }
       >
-        <Form form={form} layout="vertical" className="mt-4" disabled={viewOnly}>
+        <Form form={form} layout="vertical" className="mt-4" disabled={viewOnly} initialValues={{ type: 'standard', status: 'active' }}>
           <Form.Item
             label="租户名称"
             name="name"

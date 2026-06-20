@@ -158,7 +158,7 @@ const GroupManagement: React.FC = () => {
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: Group) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong>{text}</Text>
           <Text type="secondary">{record.description || '暂无描述'}</Text>
         </Space>

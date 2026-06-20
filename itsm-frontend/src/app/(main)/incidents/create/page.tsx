@@ -419,7 +419,7 @@ export default function CreateIncidentPage() {
         {/* 右侧信息 */}
         <Col xs={24} lg={8}>
           <Card title="创建提示" className="mb-4">
-            <Space direction="vertical" className="w-full">
+            <Space orientation="vertical" className="w-full">
               <div>
                 <Text strong>优先级说明</Text>
                 <ul className="mt-2 text-sm text-gray-600">
