@@ -100,7 +100,7 @@ export const useAuth = () => {
       isAuthenticated: false,
       isLoading: false,
     });
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   return {

@@ -46,6 +46,14 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
     user?.role === 'admin' ? '管理员' : user?.role === 'super_admin' ? '超级管理员' : '用户';
   const roleColor = user?.role === 'admin' || user?.role === 'super_admin' ? '#3b82f6' : '#64748b';
 
+  const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+    if (key === 'logout') {
+      onLogout();
+    } else if (key === 'profile' || key === 'settings') {
+      router.push('/profile');
+    }
+  };
+
   const menuItems: MenuProps['items'] = [
     {
       key: 'user-info',
@@ -66,7 +74,6 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
           <span>个人中心</span>
         </div>
       ),
-      onClick: () => router.push('/profile'),
     },
     {
       key: 'settings',
@@ -76,7 +83,6 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
           <span>设置</span>
         </div>
       ),
-      onClick: () => router.push('/profile'),
     },
     { type: 'divider' },
     {
@@ -89,13 +95,12 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
           <span>退出登录</span>
         </div>
       ),
-      onClick: onLogout,
     },
   ];
 
   return (
     <Dropdown
-      menu={{ items: menuItems }}
+      menu={{ items: menuItems, onClick: handleMenuClick }}
       placement="bottomRight"
       trigger={['click']}
       open={open}

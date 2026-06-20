@@ -143,7 +143,8 @@ export const Header: React.FC<HeaderProps> = ({
   // 登出处理
   const handleLogout = () => {
     AuthService.logout(); // calls backend to clear httpOnly cookies + clears store
-    router.push('/login');
+    // Use hard navigation to ensure middleware re-checks auth state
+    window.location.href = '/login';
   };
 
   // 搜索处理
