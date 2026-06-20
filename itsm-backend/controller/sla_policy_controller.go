@@ -98,8 +98,18 @@ func (c *SLAPolicyController) GetSLAPolicy(ctx *gin.Context) {
 		return
 	}
 
-	policy, err := c.service.GetSLAPolicyByID(ctx.Request.Context(), id)
+	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	policy, err := c.service.GetSLAPolicyByIDForTenant(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(ctx, common.NotFoundCode, "SLA策略不存在")
+			return
+		}
 		common.Fail(ctx, common.InternalErrorCode, err.Error())
 		return
 	}
@@ -131,8 +141,18 @@ func (c *SLAPolicyController) UpdateSLAPolicy(ctx *gin.Context) {
 		return
 	}
 
-	policy, err := c.service.UpdateSLAPolicy(ctx.Request.Context(), id, req)
+	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	policy, err := c.service.UpdateSLAPolicyForTenant(ctx.Request.Context(), id, tenantID, req)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(ctx, common.NotFoundCode, "SLA策略不存在")
+			return
+		}
 		common.Fail(ctx, common.InternalErrorCode, err.Error())
 		return
 	}
@@ -157,8 +177,18 @@ func (c *SLAPolicyController) DeleteSLAPolicy(ctx *gin.Context) {
 		return
 	}
 
-	err = c.service.DeleteSLAPolicy(ctx.Request.Context(), id)
+	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	err = c.service.DeleteSLAPolicyForTenant(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(ctx, common.NotFoundCode, "SLA策略不存在")
+			return
+		}
 		common.Fail(ctx, common.InternalErrorCode, err.Error())
 		return
 	}

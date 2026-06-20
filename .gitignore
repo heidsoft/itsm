@@ -186,3 +186,6 @@ release/
 /itsm-agent/itsm-agent-*
 /ai-dev-agent/ai-dev-agent
 graphify-out/
+
+# Go build cache
+itsm-backend/.cache/

@@ -21,6 +21,9 @@ func (t *TriageService) normalizeResult(result TriageResult) TriageResult {
 	// Validate and normalize category
 	if result.Category == "" || !isValidCategory(result.Category) {
 		result.Category = "general"
+		// Reset assignee when category is invalid — the original assignee
+		// is associated with an unrecognized category and is unreliable.
+		result.AssigneeID = 0
 	}
 	// Validate and normalize priority
 	if result.Priority == "" || !isValidPriority(result.Priority) {
@@ -33,7 +36,7 @@ func (t *TriageService) normalizeResult(result TriageResult) TriageResult {
 	if result.Confidence < 0 || result.Confidence > 1 {
 		result.Confidence = 0.6
 	}
-	// Set default assignee based on category
+	// Set default assignee based on category when not already assigned
 	if result.AssigneeID == 0 {
 		if assigneeID, ok := t.defaultAssignees[result.Category]; ok {
 			result.AssigneeID = assigneeID
@@ -143,6 +146,11 @@ func NewTriageServiceWithConfig(gateway *LLMGateway, logger *zap.Logger, fallbac
 
 // Suggest returns classification suggestions using LLM
 func (t *TriageService) Suggest(ctx context.Context, title, description string) TriageResult {
+	return t.SuggestForTenant(ctx, title, description, 1)
+}
+
+// SuggestForTenant returns classification suggestions scoped to a tenant.
+func (t *TriageService) SuggestForTenant(ctx context.Context, title, description string, tenantID int) TriageResult {
 	text := strings.ToLower(title + " " + description)
 
 	result := TriageResult{
@@ -155,7 +163,7 @@ func (t *TriageService) Suggest(ctx context.Context, title, description string) 
 
 	// Priority 1: Use Guidance sidecar for constrained generation
 	if t.guidanceClient != nil {
-		guidanceResult, err := t.guidanceClient.Triage(ctx, title, description, 1)
+		guidanceResult, err := t.guidanceClient.Triage(ctx, title, description, tenantID)
 		if err != nil {
 			t.logger.Warn("TriageService: Guidance sidecar failed, falling back", zap.Error(err))
 		} else {
@@ -268,6 +276,9 @@ IMPORTANT: Respond with ONLY valid JSON in this exact format, no other text:
 		}
 	}
 
+	// LLM assignee IDs are not trustworthy — always reset to category default
+	classification.AssigneeID = 0
+
 	// Normalize and validate enum values using shared helper
 	return t.normalizeResult(classification), nil
 }
@@ -305,46 +316,46 @@ func (t *TriageService) keywordBasedSuggest(text string) TriageResult {
 	}
 
 	// Category detection based on keywords
-	if containsAny(text, "database", "db", "mysql", "postgresql", "oracle", "sql", "mongodb", "redis") {
+	if containsAny(text, "database", "db", "mysql", "postgresql", "oracle", "sql", "mongodb", "redis", "数据库", "慢查询", "连接池") {
 		result.Category = "database"
 		result.AssigneeID = t.defaultAssignees["database"]
 		result.Confidence = 0.7
-	} else if containsAny(text, "network", "wifi", "switch", "router", "firewall") {
+	} else if containsAny(text, "network", "wifi", "switch", "router", "firewall", "网络", "无法上网", "交换机", "路由器", "防火墙", "丢包") {
 		result.Category = "network"
 		result.AssigneeID = t.defaultAssignees["network"]
 		result.Confidence = 0.68
-	} else if containsAny(text, "server", "cpu", "memory", "disk", "linux", "windows server") {
+	} else if containsAny(text, "storage", "disk space", "space", "backup", "snapshot", "存储", "磁盘空间", "空间不足", "备份", "快照", "容量") {
+		result.Category = "storage"
+		result.AssigneeID = t.defaultAssignees["storage"]
+		result.Confidence = 0.66
+	} else if containsAny(text, "server", "cpu", "memory", "disk", "linux", "windows server", "服务器", "主机", "内存", "磁盘", "操作系统") {
 		result.Category = "server"
 		result.AssigneeID = t.defaultAssignees["server"]
 		result.Confidence = 0.65
-	} else if containsAny(text, "application", "software", "app", "api", "deploy") {
+	} else if containsAny(text, "application", "software", "app", "api", "deploy", "应用", "软件", "接口", "部署", "发布", "报错", "服务异常") {
 		result.Category = "application"
 		result.AssigneeID = t.defaultAssignees["application"]
 		result.Confidence = 0.62
-	} else if containsAny(text, "security", "vulnerability", "attack", "permission", "authentication") {
+	} else if containsAny(text, "security", "vulnerability", "attack", "permission", "authentication", "安全", "漏洞", "攻击", "入侵", "恶意", "认证绕过") {
 		result.Category = "security"
 		result.AssigneeID = t.defaultAssignees["security"]
 		result.Confidence = 0.75
 		result.Priority = "critical"
-	} else if containsAny(text, "storage", "disk", "space", "backup", "snapshot") {
-		result.Category = "storage"
-		result.AssigneeID = t.defaultAssignees["storage"]
-		result.Confidence = 0.66
-	} else if containsAny(text, "user", "account", "login", "password", "access") {
+	} else if containsAny(text, "user", "account", "login", "password", "access", "用户", "账号", "账户", "登录", "密码", "权限", "访问") {
 		result.Category = "user_access"
 		result.AssigneeID = t.defaultAssignees["user_access"]
 		result.Confidence = 0.6
 	}
 
 	// Priority escalation
-	if containsAny(text, "down", "unavailable", "urgent", "critical", "outage") {
+	if containsAny(text, "down", "unavailable", "urgent", "critical", "outage", "宕机", "不可用", "紧急", "严重", "中断", "故障") {
 		if result.Priority != "critical" {
 			result.Priority = "high"
 		}
 		result.Confidence += 0.1
 	}
 
-	if containsAny(text, "impact", "affect", "users", "business") {
+	if containsAny(text, "impact", "affect", "users", "business", "影响", "多个用户", "大量用户", "所有用户", "全员", "业务") {
 		if result.Priority == "medium" {
 			result.Priority = "high"
 		}

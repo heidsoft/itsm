@@ -10,7 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// MockLLMGateway implements LLMProvider for testing
 type MockLLMGateway struct {
 	MockChat func(ctx context.Context, model string, messages []LLMMessage) (string, error)
 }
@@ -19,8 +18,23 @@ func (m *MockLLMGateway) Chat(ctx context.Context, model string, messages []LLMM
 	return m.MockChat(ctx, model, messages)
 }
 
+type fakeGuidanceClient struct {
+	result    *GuidanceTriageResponse
+	err       error
+	tenantID  int
+	callCount int
+}
+
+func (f *fakeGuidanceClient) Triage(ctx context.Context, title, description string, tenantID int) (*GuidanceTriageResponse, error) {
+	f.callCount++
+	f.tenantID = tenantID
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.result, nil
+}
+
 func TestTriage_Suggest_Keyword_Database(t *testing.T) {
-	// nil gateway forces keyword-based fallback
 	svc := NewTriageService(nil, zap.NewNop())
 	result := svc.Suggest(context.Background(), "MySQL connection failed", "database cannot be accessed")
 
@@ -39,7 +53,6 @@ func TestTriage_Suggest_Keyword_Network(t *testing.T) {
 
 func TestTriage_Suggest_Keyword_Security(t *testing.T) {
 	svc := NewTriageService(nil, zap.NewNop())
-	// Use text that only matches security keywords (not SQL which is also database)
 	result := svc.Suggest(context.Background(), "authentication attack detected", "")
 
 	assert.Equal(t, "security", result.Category)
@@ -47,9 +60,52 @@ func TestTriage_Suggest_Keyword_Security(t *testing.T) {
 	assert.Equal(t, 100, result.AssigneeID)
 }
 
+func TestTriage_Suggest_Keyword_ChineseDatabase(t *testing.T) {
+	svc := NewTriageService(nil, zap.NewNop())
+	result := svc.Suggest(context.Background(), "生产数据库连接池耗尽", "业务查询大量超时")
+
+	assert.Equal(t, "database", result.Category)
+	assert.Equal(t, "high", result.Priority)
+	assert.Equal(t, 101, result.AssigneeID)
+}
+
+func TestTriage_Suggest_Keyword_ChineseNetwork(t *testing.T) {
+	svc := NewTriageService(nil, zap.NewNop())
+	result := svc.Suggest(context.Background(), "办公区网络中断", "交换机丢包，多个用户无法上网")
+
+	assert.Equal(t, "network", result.Category)
+	assert.Equal(t, "high", result.Priority)
+	assert.Equal(t, 102, result.AssigneeID)
+}
+
+func TestTriage_Suggest_Keyword_ChineseUserAccess(t *testing.T) {
+	svc := NewTriageService(nil, zap.NewNop())
+	result := svc.Suggest(context.Background(), "账号登录失败", "用户密码重置后仍无法访问系统")
+
+	assert.Equal(t, "user_access", result.Category)
+	assert.Equal(t, "medium", result.Priority)
+	assert.Equal(t, 106, result.AssigneeID)
+}
+
+func TestTriage_Suggest_Keyword_ChineseUserImpactEscalation(t *testing.T) {
+	svc := NewTriageService(nil, zap.NewNop())
+	result := svc.Suggest(context.Background(), "账号登录失败", "多个用户密码重置后仍无法访问系统")
+
+	assert.Equal(t, "user_access", result.Category)
+	assert.Equal(t, "high", result.Priority)
+	assert.Equal(t, 106, result.AssigneeID)
+}
+
+func TestTriage_Suggest_Keyword_StorageBeforeServerDisk(t *testing.T) {
+	svc := NewTriageService(nil, zap.NewNop())
+	result := svc.Suggest(context.Background(), "disk space alert", "backup volume capacity is almost full")
+
+	assert.Equal(t, "storage", result.Category)
+	assert.Equal(t, 105, result.AssigneeID)
+}
+
 func TestTriage_Suggest_Keyword_PriorityEscalation(t *testing.T) {
 	svc := NewTriageService(nil, zap.NewNop())
-	// "server" matches category, "down" triggers priority escalation
 	result := svc.Suggest(context.Background(), "server down", "service unavailable")
 
 	assert.Equal(t, "server", result.Category)
@@ -60,7 +116,6 @@ func TestTriage_Suggest_Keyword_PriorityEscalation(t *testing.T) {
 func TestTriage_Suggest_LLM_Success(t *testing.T) {
 	mockLLM := &MockLLMGateway{
 		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
-			// Verify the prompt contains the ticket title
 			assert.True(t, strings.Contains(messages[1].Content, "发现恶意请求"))
 			return `{"category":"security","priority":"critical","confidence":0.9,"explanation":"sql injection"}`, nil
 		},
@@ -76,6 +131,39 @@ func TestTriage_Suggest_LLM_Success(t *testing.T) {
 	assert.Equal(t, 0.9, result.Confidence)
 }
 
+func TestTriage_Suggest_LLM_IgnoresModelAssigneeID(t *testing.T) {
+	mockLLM := &MockLLMGateway{
+		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+			return `{"category":"security","priority":"critical","confidence":0.9,"assignee_id":999,"explanation":"security incident"}`, nil
+		},
+	}
+	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
+
+	svc := NewTriageService(gateway, zap.NewNop())
+	result := svc.Suggest(context.Background(), "发现恶意请求", "")
+
+	assert.Equal(t, "security", result.Category)
+	assert.Equal(t, 100, result.AssigneeID)
+}
+
+func TestTriage_SuggestForTenant_PassesTenantToGuidance(t *testing.T) {
+	svc := NewTriageService(nil, zap.NewNop())
+	guidance := &fakeGuidanceClient{
+		result: &GuidanceTriageResponse{
+			Category:   "database",
+			Priority:   "high",
+			Confidence: 0.8,
+		},
+	}
+	svc.guidanceClient = guidance
+
+	result := svc.SuggestForTenant(context.Background(), "数据库故障", "", 42)
+
+	assert.Equal(t, 42, guidance.tenantID)
+	assert.Equal(t, "database", result.Category)
+	assert.Equal(t, 101, result.AssigneeID)
+}
+
 func TestTriage_Suggest_LLM_ParseError_Fallback(t *testing.T) {
 	mockLLM := &MockLLMGateway{
 		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
@@ -85,10 +173,8 @@ func TestTriage_Suggest_LLM_ParseError_Fallback(t *testing.T) {
 	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
 
 	svc := NewTriageService(gateway, zap.NewNop())
-	// Use text that matches keyword "server" for fallback verification
 	result := svc.Suggest(context.Background(), "server is down", "")
 
-	// Should fallback to keyword, matching "server"
 	assert.Equal(t, "server", result.Category)
 }
 
@@ -103,12 +189,11 @@ func TestTriage_Suggest_LLM_Error_Fallback(t *testing.T) {
 	svc := NewTriageService(gateway, zap.NewNop())
 	result := svc.Suggest(context.Background(), "应用部署失败", "deploy报错")
 
-	// Should fallback to keyword, matching "application"
 	assert.Equal(t, "application", result.Category)
 }
 
 func TestTriage_Suggest_NoGateway_KeywordOnly(t *testing.T) {
-	svc := NewTriageService(nil, zap.NewNop()) // gateway=nil
+	svc := NewTriageService(nil, zap.NewNop())
 	result := svc.Suggest(context.Background(), "应用部署失败", "deploy报错")
 
 	assert.Equal(t, "application", result.Category)
@@ -125,42 +210,33 @@ func TestTriage_Suggest_EmptyInput(t *testing.T) {
 }
 
 func TestTriage_containsAny(t *testing.T) {
-	// containsAny is case-sensitive
 	assert.True(t, containsAny("mysql connection failed", "mysql", "database"))
 	assert.False(t, containsAny("normal text", "mysql", "database"))
 	assert.True(t, containsAny("hello world", "hello"))
 	assert.False(t, containsAny("", "hello"))
-	// case-sensitive: "MySQL" does NOT contain "mysql"
 	assert.False(t, containsAny("MySQL is down", "mysql"))
 	assert.True(t, containsAny("mysql is down", "mysql"))
 }
 
 func TestTriage_Suggest_LLM_LowConfidence_FallbackToKeyword(t *testing.T) {
-	// LLM returns low confidence (< 0.5), keyword should be consulted
-	// and used since it has higher confidence for "mysql" keyword
 	mockLLM := &MockLLMGateway{
 		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
-			// LLM returns "general" with low confidence
 			return `{"category":"general","priority":"medium","confidence":0.35,"explanation":"unclear ticket"}`, nil
 		},
 	}
 	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
 	svc := NewTriageService(gateway, zap.NewNop())
 
-	// "mysql connection failed" should trigger keyword fallback to database category
 	result := svc.Suggest(context.Background(), "mysql connection failed", "cannot connect to database")
 
-	// Should fallback to keyword because keyword confidence (0.7 for database) > LLM confidence (0.35)
 	assert.Equal(t, "database", result.Category)
 	assert.Equal(t, 101, result.AssigneeID)
 	assert.Greater(t, result.Confidence, 0.5)
 }
 
 func TestTriage_Suggest_LLM_HighConfidence_NoKeywordFallback(t *testing.T) {
-	// LLM returns high confidence (>= 0.5), keyword should NOT be consulted
 	mockLLM := &MockLLMGateway{
 		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
-			// LLM returns specific category with high confidence
 			return `{"category":"network","priority":"high","confidence":0.85,"explanation":"wifi keywords detected"}`, nil
 		},
 	}
@@ -169,7 +245,6 @@ func TestTriage_Suggest_LLM_HighConfidence_NoKeywordFallback(t *testing.T) {
 
 	result := svc.Suggest(context.Background(), "WiFi connection issues", "")
 
-	// Should use LLM result directly
 	assert.Equal(t, "network", result.Category)
 	assert.Equal(t, 102, result.AssigneeID)
 	assert.Equal(t, 0.85, result.Confidence)
@@ -191,8 +266,45 @@ func TestTriage_Suggest_LLM_JSONWithMarkdown(t *testing.T) {
 	assert.Equal(t, 105, result.AssigneeID)
 }
 
+func TestTriage_Suggest_Guidance_NormalizesEmptyFields(t *testing.T) {
+	svc := NewTriageService(nil, zap.NewNop())
+	svc.guidanceClient = &fakeGuidanceClient{
+		result: &GuidanceTriageResponse{
+			Explanation: "sidecar returned partial result",
+		},
+	}
+
+	result := svc.Suggest(context.Background(), "无法判断", "")
+
+	assert.Equal(t, "general", result.Category)
+	assert.Equal(t, "medium", result.Priority)
+	assert.Equal(t, 0, result.AssigneeID)
+	assert.Equal(t, 0.6, result.Confidence)
+	assert.Equal(t, "sidecar returned partial result", result.Explanation)
+}
+
+func TestTriage_Suggest_Guidance_NormalizesInvalidEnumsAndConfidence(t *testing.T) {
+	svc := NewTriageService(nil, zap.NewNop())
+	svc.guidanceClient = &fakeGuidanceClient{
+		result: &GuidanceTriageResponse{
+			Category:    "billing",
+			Priority:    "p0",
+			Confidence:  1.7,
+			AssigneeID:  999,
+			Explanation: "invalid enum values",
+		},
+	}
+
+	result := svc.Suggest(context.Background(), "费用系统故障", "")
+
+	assert.Equal(t, "general", result.Category)
+	assert.Equal(t, "medium", result.Priority)
+	assert.Equal(t, 0, result.AssigneeID)
+	assert.Equal(t, 0.6, result.Confidence)
+}
+
 func TestTriage_BatchSuggest(t *testing.T) {
-	svc := NewTriageService(nil, zap.NewNop()) // use keyword-only for predictable results
+	svc := NewTriageService(nil, zap.NewNop())
 
 	tickets := []struct {
 		ID          int
@@ -211,26 +323,6 @@ func TestTriage_BatchSuggest(t *testing.T) {
 	assert.Equal(t, "network", results[0].Result.Category)
 	assert.Equal(t, 2, results[1].ID)
 	assert.Equal(t, "database", results[1].Result.Category)
-}
-
-// fakeGuidanceClient is an in-memory implementation of guidanceTriageClient for testing.
-// It allows tests to configure whether the call errors, returns empty/invalid fields,
-// or returns a successful response.
-type fakeGuidanceClient struct {
-	// err is returned by Triage. When set, result is ignored.
-	err error
-	// result is returned by Triage when err is nil.
-	result *GuidanceTriageResponse
-	// callCount tracks how many times Triage was invoked.
-	callCount int
-}
-
-func (f *fakeGuidanceClient) Triage(ctx context.Context, title, description string, tenantID int) (*GuidanceTriageResponse, error) {
-	f.callCount++
-	if f.err != nil {
-		return nil, f.err
-	}
-	return f.result, nil
 }
 
 // newTriageServiceWithGuidance creates a TriageService wired with a fake guidance client.
@@ -368,4 +460,45 @@ func TestTriage_NormalizeResult_RejectsNegativeConfidence(t *testing.T) {
 	assert.Equal(t, 0.6, got.Confidence)
 	assert.Equal(t, "storage", got.Category)
 	assert.Equal(t, 105, got.AssigneeID)
+}
+
+func TestTriage_Suggest_GuidanceError_FallsBackToLLM(t *testing.T) {
+	mockLLM := &MockLLMGateway{
+		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+			return `{"category":"security","priority":"critical","confidence":0.92,"explanation":"detected sql injection keywords"}`, nil
+		},
+	}
+	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
+
+	svc := NewTriageService(gateway, zap.NewNop())
+	svc.guidanceClient = &fakeGuidanceClient{
+		err: errors.New("Guidance sidecar network error"),
+	}
+
+	result := svc.Suggest(context.Background(), "SQL注入攻击检测", "")
+
+	assert.Equal(t, "security", result.Category)
+	assert.Equal(t, "critical", result.Priority)
+	assert.Equal(t, 100, result.AssigneeID)
+	assert.Equal(t, 0.92, result.Confidence)
+}
+
+func TestTriage_Suggest_GuidanceErrorAndLLMError_FallsBackToKeyword(t *testing.T) {
+	mockLLM := &MockLLMGateway{
+		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+			return "", errors.New("LLM provider unavailable")
+		},
+	}
+	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
+
+	svc := NewTriageService(gateway, zap.NewNop())
+	svc.guidanceClient = &fakeGuidanceClient{
+		err: errors.New("Guidance sidecar network error"),
+	}
+
+	result := svc.Suggest(context.Background(), "MySQL连接失败", "数据库无法访问")
+
+	assert.Equal(t, "database", result.Category)
+	assert.Equal(t, 101, result.AssigneeID)
+	assert.Greater(t, result.Confidence, 0.5)
 }

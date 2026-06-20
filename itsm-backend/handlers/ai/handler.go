@@ -34,7 +34,7 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 		Args map[string]interface{} `json:"args"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.Fail(c, common.ParamErrorCode, err.Error())
 		return
 	}
 
@@ -51,7 +51,7 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 		}
 	}
 	if !readOnly {
-		common.Fail(c, http.StatusForbidden, "tool requires approval; write tools are not enabled in agent v1")
+		common.Fail(c, common.ForbiddenCode, "tool requires approval; write tools are not enabled in agent v1")
 		return
 	}
 
@@ -61,7 +61,7 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 
 	res, _, err := h.svc.ExecuteTool(c.Request.Context(), tenantID, req.Name, req.Args)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 
@@ -82,7 +82,7 @@ func (h *Handler) Chat(c *gin.Context) {
 		ConversationID int    `json:"conversation_id"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.Fail(c, common.ParamErrorCode, err.Error())
 		return
 	}
 
@@ -112,13 +112,13 @@ func (h *Handler) Chat(c *gin.Context) {
 func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 	var req dto.DeepAnalyticsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.Fail(c, common.ParamErrorCode, err.Error())
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
 	res, err := h.svc.GetDeepAnalytics(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 	common.Success(c, res)
@@ -128,13 +128,13 @@ func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 func (h *Handler) GetTrendPrediction(c *gin.Context) {
 	var req dto.TrendPredictionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.Fail(c, common.ParamErrorCode, err.Error())
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
 	res, err := h.svc.GetTrendPrediction(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 	common.Success(c, res)
@@ -145,7 +145,7 @@ func (h *Handler) AnalyzeTicket(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
-		common.Fail(c, http.StatusBadRequest, "invalid ticket id")
+		common.Fail(c, common.ParamErrorCode, "invalid ticket id")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
@@ -156,7 +156,7 @@ func (h *Handler) AnalyzeTicket(c *gin.Context) {
 
 	res, err := h.svc.AnalyzeTicket(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 	common.Success(c, res)
@@ -168,7 +168,7 @@ func (h *Handler) SummarizeTicket(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
-		common.Fail(c, http.StatusBadRequest, "invalid ticket id")
+		common.Fail(c, common.ParamErrorCode, "invalid ticket id")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
@@ -202,7 +202,7 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 		Notes    *string `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.Fail(c, common.ParamErrorCode, err.Error())
 		return
 	}
 
@@ -220,7 +220,7 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 
 	err := h.svc.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Kind, req.Query, itemTypeVal, req.ItemID, req.Useful, req.Score, req.Notes)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 	common.Success(c, gin.H{"message": "Feedback saved"})
@@ -240,7 +240,7 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 		Notes         string                 `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.Fail(c, common.ParamErrorCode, err.Error())
 		return
 	}
 
@@ -274,7 +274,7 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 	}
 
 	if err := h.svc.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Scenario, req.InputRef, itemType, nil, req.Accepted, &score, &note); err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 
@@ -304,7 +304,7 @@ func (h *Handler) GetMetrics(c *gin.Context) {
 	}
 	metrics, err := h.svc.GetMetrics(c.Request.Context(), tenantID, lookbackDays)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, err.Error())
+		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 	common.Success(c, metrics)
@@ -318,7 +318,7 @@ func (h *Handler) KnowledgeSearch(c *gin.Context) {
 		Type  string `json:"type"` // kb|incident
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.Fail(c, common.ParamErrorCode, err.Error())
 		return
 	}
 
@@ -359,7 +359,7 @@ func (h *Handler) Triage(c *gin.Context) {
 		Priority    string `json:"priority"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, err.Error())
+		common.Fail(c, common.ParamErrorCode, err.Error())
 		return
 	}
 
@@ -392,7 +392,7 @@ func (h *Handler) CreateTicketByAI(c *gin.Context) {
 		TenantID    int    `json:"tenant_id"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, http.StatusBadRequest, "参数错误: "+err.Error())
+		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
 		return
 	}
 
@@ -408,7 +408,7 @@ func (h *Handler) CreateTicketByAI(c *gin.Context) {
 	// 调用 AI 分析描述，返回工单创建建议
 	result, err := h.svc.CreateTicketByAI(c.Request.Context(), req.Description, tenantID)
 	if err != nil {
-		common.Fail(c, http.StatusInternalServerError, "AI 工单创建失败: "+err.Error())
+		common.Fail(c, common.InternalErrorCode, "AI 工单创建失败: "+err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, result)
