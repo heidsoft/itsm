@@ -883,6 +883,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			{
 				authGrp.GET("/me", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe)
 				authGrp.GET("/tenants", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetUserTenants)
+				authGrp.POST("/logout", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.Logout)
 			}
 
 			// User Menu (no permission required, will be filtered by role)

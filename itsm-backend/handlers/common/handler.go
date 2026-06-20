@@ -97,6 +97,17 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 
 // Users
 
+// Logout clears httpOnly auth cookies and returns success.
+func (h *Handler) Logout(c *gin.Context) {
+	secure := shouldUseSecureCookies(c)
+	domain := cookieDomain(c)
+
+	c.SetCookie("access_token", "", -1, "/", domain, secure, true)
+	c.SetCookie("refresh_token", "", -1, "/", domain, secure, true)
+
+	common.Success(c, nil)
+}
+
 func (h *Handler) GetMe(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	u, err := h.svc.GetUser(c.Request.Context(), userID)
