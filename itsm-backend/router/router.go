@@ -624,6 +624,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				problems.GET("/:id", middleware.RequirePermission("problem", "read"), config.ProblemHandler.Get)
 				problems.PUT("/:id", middleware.RequirePermission("problem", "write"), config.ProblemHandler.Update)
 				problems.DELETE("/:id", middleware.RequirePermission("problem", "delete"), config.ProblemHandler.Delete)
+				// 关联管理
+				problems.GET("/:id/associations", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetAssociations)
+				problems.POST("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.AddAssociation)
+				problems.DELETE("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.RemoveAssociation)
 			}
 		}
 

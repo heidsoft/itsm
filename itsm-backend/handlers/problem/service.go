@@ -27,6 +27,18 @@ func (s *Service) Get(ctx context.Context, id int, tenantID int) (*Problem, erro
 	return s.repo.Get(ctx, id, tenantID)
 }
 
+func (s *Service) GetWithAssociations(ctx context.Context, id int, tenantID int) (*Problem, error) {
+	return s.repo.GetWithAssociations(ctx, id, tenantID)
+}
+
+func (s *Service) AddAssociations(ctx context.Context, problemID int, relatedType string, relatedIDs []int) error {
+	return s.repo.AddAssociations(ctx, problemID, relatedType, relatedIDs)
+}
+
+func (s *Service) RemoveAssociation(ctx context.Context, problemID int, relatedType string, relatedID int) error {
+	return s.repo.RemoveAssociation(ctx, problemID, relatedType, relatedID)
+}
+
 func (s *Service) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*Problem, int, error) {
 	return s.repo.List(ctx, tenantID, page, size, filters)
 }

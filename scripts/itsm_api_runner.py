@@ -124,6 +124,12 @@ def run_test_case(tc: Dict[str, Any]) -> Dict[str, Any]:
             if isinstance(data, dict):
                 data = _replace_in_dict(data, k.upper(), v)
 
+    # 兼容 expect_status 字段（简写）
+    if "expect_status" in tc and "http" not in expect:
+        expect = {**expect, "http": tc["expect_status"]}
+    if "expect_code" in tc and "code" not in expect:
+        expect = {**expect, "code": tc["expect_code"]}
+
     if method == "GET":
         r = api_get(path)
     elif method == "POST":
@@ -183,11 +189,14 @@ def run_test_case(tc: Dict[str, Any]) -> Dict[str, Any]:
             saved_id = data_field
 
     return {
+        "id": tc.get("id", ""),
         "name": name,
+        "module": tc.get("module", ""),
         "method": method,
         "path": path,
         "http": http_code,
         "code": body_code,
+        "status": "PASS" if passed else "FAIL",
         "msg": r.get("body", {}).get("message", "") if isinstance(r.get("body"), dict) else "",
         "passed": passed,
         "fail_reason": fail_reason,

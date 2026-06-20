@@ -41,7 +41,44 @@ func (h *Handler) toDTO(p *Problem) *dto.ProblemResponse {
 		resp.AssigneeID = p.AssigneeID
 	}
 
-	// B11: 拍平为 ProblemResponse，与 tickets/incidents 一致
+	// 映射关联数据
+	if p.Tickets != nil {
+		resp.AssociatedTickets = make([]*dto.AssociatedItemResponse, 0, len(p.Tickets))
+		for _, t := range p.Tickets {
+			resp.AssociatedTickets = append(resp.AssociatedTickets, &dto.AssociatedItemResponse{
+				ID:     t.ID,
+				Title:  t.Title,
+				Status: t.Status,
+				Number: t.Number,
+				Type:   t.Type,
+			})
+		}
+	}
+	if p.Incidents != nil {
+		resp.AssociatedIncidents = make([]*dto.AssociatedItemResponse, 0, len(p.Incidents))
+		for _, inc := range p.Incidents {
+			resp.AssociatedIncidents = append(resp.AssociatedIncidents, &dto.AssociatedItemResponse{
+				ID:     inc.ID,
+				Title:  inc.Title,
+				Status: inc.Status,
+				Number: inc.Number,
+				Type:   inc.Type,
+			})
+		}
+	}
+	if p.Changes != nil {
+		resp.AssociatedChanges = make([]*dto.AssociatedItemResponse, 0, len(p.Changes))
+		for _, ch := range p.Changes {
+			resp.AssociatedChanges = append(resp.AssociatedChanges, &dto.AssociatedItemResponse{
+				ID:     ch.ID,
+				Title:  ch.Title,
+				Status: ch.Status,
+				Number: ch.Number,
+				Type:   ch.Type,
+			})
+		}
+	}
+
 	return &resp
 }
 
@@ -86,7 +123,7 @@ func (h *Handler) Get(c *gin.Context) {
 	}
 
 	tenantID, _ := c.Get("tenant_id")
-	p, err := h.service.Get(c.Request.Context(), id, tenantID.(int))
+	p, err := h.service.GetWithAssociations(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
@@ -96,6 +133,116 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 	common.Success(c, h.toDTO(p))
+}
+
+// GetAssociations 获取问题的关联项
+func (h *Handler) GetAssociations(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "invalid id")
+		return
+	}
+
+	tenantID, _ := c.Get("tenant_id")
+	p, err := h.service.GetWithAssociations(c.Request.Context(), id, tenantID.(int))
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
+		} else {
+			common.Fail(c, common.InternalErrorCode, err.Error())
+		}
+		return
+	}
+
+	resp := &dto.ProblemAssociationResponse{
+		Tickets:   make([]*dto.AssociatedItemResponse, 0),
+		Incidents: make([]*dto.AssociatedItemResponse, 0),
+		Changes:   make([]*dto.AssociatedItemResponse, 0),
+	}
+	for _, t := range p.Tickets {
+		resp.Tickets = append(resp.Tickets, &dto.AssociatedItemResponse{
+			ID: t.ID, Title: t.Title, Status: t.Status, Number: t.Number, Type: t.Type,
+		})
+	}
+	for _, inc := range p.Incidents {
+		resp.Incidents = append(resp.Incidents, &dto.AssociatedItemResponse{
+			ID: inc.ID, Title: inc.Title, Status: inc.Status, Number: inc.Number, Type: inc.Type,
+		})
+	}
+	for _, ch := range p.Changes {
+		resp.Changes = append(resp.Changes, &dto.AssociatedItemResponse{
+			ID: ch.ID, Title: ch.Title, Status: ch.Status, Number: ch.Number, Type: ch.Type,
+		})
+	}
+	common.Success(c, resp)
+}
+
+// AddAssociation 添加关联
+func (h *Handler) AddAssociation(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "invalid id")
+		return
+	}
+
+	var req dto.ProblemAssociationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, err.Error())
+		return
+	}
+
+	tenantID, _ := c.Get("tenant_id")
+	// 验证问题存在
+	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
+		} else {
+			common.Fail(c, common.InternalErrorCode, err.Error())
+		}
+		return
+	}
+
+	if err := h.service.AddAssociations(c.Request.Context(), id, req.RelatedType, req.RelatedIDs); err != nil {
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, nil)
+}
+
+// RemoveAssociation 移除关联
+func (h *Handler) RemoveAssociation(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "invalid id")
+		return
+	}
+
+	var req dto.ProblemRemoveAssociationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, err.Error())
+		return
+	}
+
+	tenantID, _ := c.Get("tenant_id")
+	// 验证问题存在
+	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
+		} else {
+			common.Fail(c, common.InternalErrorCode, err.Error())
+		}
+		return
+	}
+
+	if err := h.service.RemoveAssociation(c.Request.Context(), id, req.RelatedType, req.RelatedID); err != nil {
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, nil)
 }
 
 func (h *Handler) List(c *gin.Context) {

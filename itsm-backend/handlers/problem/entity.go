@@ -19,6 +19,19 @@ type Problem struct {
 	TenantID    int
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	// 关联数据 (eager-loaded)
+	Tickets   []*AssociatedItem
+	Incidents []*AssociatedItem
+	Changes   []*AssociatedItem
+}
+
+// AssociatedItem 关联项
+type AssociatedItem struct {
+	ID     int
+	Title  string
+	Status string
+	Number string
+	Type   string
 }
 
 // ProblemStats domain entity

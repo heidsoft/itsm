@@ -1,0 +1,301 @@
+{
+  "stage": "stage4_marketplace_ai",
+  "created_at": "2026-06-20T21:05:00+08:00",
+  "description": "Marketplace + AI 功能测试用例",
+  "cases": [
+    {
+      "id": "TC-4.1.1",
+      "module": "M6-Marketplace",
+      "name": "ListItems 列表（5条种子）",
+      "method": "GET",
+      "path": "/marketplace/items",
+      "query": {
+        "page": 1,
+        "page_size": 20
+      },
+      "expect_status": 200,
+      "expect_in_body": [
+        "items",
+        "total"
+      ]
+    },
+    {
+      "id": "TC-4.1.2",
+      "module": "M6-Marketplace",
+      "name": "ListItems 按type过滤 (connector)",
+      "method": "GET",
+      "path": "/marketplace/items",
+      "query": {
+        "type": "connector"
+      },
+      "expect_status": 200,
+      "expect_in_body": [
+        "items"
+      ]
+    },
+    {
+      "id": "TC-4.1.3",
+      "module": "M6-Marketplace",
+      "name": "ListItems 按category过滤 (监控告警)",
+      "method": "GET",
+      "path": "/marketplace/items",
+      "query": {
+        "category": "监控告警"
+      },
+      "expect_status": 200,
+      "expect_in_body": [
+        "items"
+      ]
+    },
+    {
+      "id": "TC-4.1.4",
+      "module": "M6-Marketplace",
+      "name": "ListItems 搜索 (rag)",
+      "method": "GET",
+      "path": "/marketplace/items",
+      "query": {
+        "search": "rag"
+      },
+      "expect_status": 200,
+      "expect_in_body": [
+        "items"
+      ]
+    },
+    {
+      "id": "TC-4.1.5",
+      "module": "M6-Marketplace",
+      "name": "GetItem 详情 (id=1 feishu)",
+      "method": "GET",
+      "path": "/marketplace/items/__item_id__",
+      "expect_status": 200,
+      "expect_in_body": [
+        "name",
+        "title",
+        "versions"
+      ]
+    },
+    {
+      "id": "TC-4.1.6",
+      "module": "M6-Marketplace",
+      "name": "InstallItem 安装",
+      "method": "POST",
+      "path": "/marketplace/items/__item_id__/install",
+      "body": {
+        "config": {
+          "api_key": "test-key-123"
+        }
+      },
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.1.7",
+      "module": "M6-Marketplace",
+      "name": "ListInstallations 安装列表",
+      "method": "GET",
+      "path": "/marketplace/installations",
+      "expect_status": 200,
+      "expect_in_body": [
+        "items"
+      ]
+    },
+    {
+      "id": "TC-4.1.8",
+      "module": "M6-Marketplace",
+      "name": "GetInstallation 安装详情",
+      "method": "GET",
+      "path": "/marketplace/installations/__install_id__",
+      "expect_status": 200,
+      "expect_in_body": [
+        "id",
+        "item_id",
+        "status"
+      ]
+    },
+    {
+      "id": "TC-4.1.9",
+      "module": "M6-Marketplace",
+      "name": "UpdateInstallationConfig 更新配置",
+      "method": "PUT",
+      "path": "/marketplace/installations/__install_id__/config",
+      "body": {
+        "config": {
+          "api_key": "updated-key-456",
+          "region": "cn-east"
+        }
+      },
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.1.10",
+      "module": "M6-Marketplace",
+      "name": "UninstallItem 卸载",
+      "method": "POST",
+      "path": "/marketplace/items/__item_id__/uninstall",
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.2.1",
+      "module": "M7-AI",
+      "name": "AI Chat 简单问答",
+      "method": "POST",
+      "path": "/ai/chat",
+      "body": {
+        "query": "如何重置密码？",
+        "limit": 3
+      },
+      "expect_status": 200,
+      "expect_in_body": [
+        "answer",
+        "conversation_id"
+      ]
+    },
+    {
+      "id": "TC-4.2.2",
+      "module": "M7-AI",
+      "name": "AI Triage 工单分诊",
+      "method": "POST",
+      "path": "/ai/triage",
+      "body": {
+        "title": "数据库连接失败",
+        "description": "应用无法连接 PostgreSQL 数据库"
+      },
+      "expect_status": 200,
+      "expect_in_body": [
+        "category",
+        "priority",
+        "suggestion"
+      ]
+    },
+    {
+      "id": "TC-4.2.3",
+      "module": "M7-AI",
+      "name": "AI KnowledgeSearch RAG",
+      "method": "GET",
+      "path": "/ai/rag/search",
+      "query": {
+        "q": "工单",
+        "limit": 5
+      },
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.2.4",
+      "module": "M7-AI",
+      "name": "AI AnalyzeTicket 工单分析",
+      "method": "POST",
+      "path": "/ai/tickets/__ticket_id__/analyze",
+      "body": {},
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.2.5",
+      "module": "M7-AI",
+      "name": "AI SummarizeTicket 工单总结",
+      "method": "GET",
+      "path": "/ai/tickets/__ticket_id__/summary",
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.2.6",
+      "module": "M7-AI",
+      "name": "AI SaveFeedback 反馈",
+      "method": "POST",
+      "path": "/ai/feedback",
+      "body": {
+        "conversation_id": 1,
+        "rating": 5,
+        "comment": "回答准确"
+      },
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.2.7",
+      "module": "M7-AI",
+      "name": "AI RecordAudit 审计",
+      "method": "POST",
+      "path": "/ai/audit",
+      "body": {
+        "action": "test",
+        "resource": "ticket",
+        "resource_id": "1",
+        "status": "ok"
+      },
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.2.8",
+      "module": "M7-AI",
+      "name": "AI GetMetrics 指标",
+      "method": "GET",
+      "path": "/ai/metrics",
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.2.9",
+      "module": "M7-AI",
+      "name": "AI CreateTicketByAI AI 建单",
+      "method": "POST",
+      "path": "/ai/ticket/create",
+      "body": {
+        "description": "用户反馈登录页面无法打开，提示502错误"
+      },
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.2.10",
+      "module": "M7-AI",
+      "name": "AI SummarizeTicketPost POST 总结",
+      "method": "POST",
+      "path": "/ai/tickets/__ticket_id__/summarize",
+      "body": {},
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.3.1",
+      "module": "M7-AI",
+      "name": "Agent ListTools 工具列表",
+      "method": "GET",
+      "path": "/agent/tools",
+      "expect_status": 200,
+      "expect_in_body": [
+        "tools"
+      ]
+    },
+    {
+      "id": "TC-4.3.2",
+      "module": "M7-AI",
+      "name": "Agent ExecuteTool 工具执行",
+      "method": "POST",
+      "path": "/agent/tools/execute",
+      "body": {
+        "tool": "search_tickets",
+        "params": {
+          "limit": 3
+        }
+      },
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.4.1",
+      "module": "M7-AI",
+      "name": "DeepAnalytics 深度分析",
+      "method": "POST",
+      "path": "/ai/analytics",
+      "body": {
+        "time_range": "7d"
+      },
+      "expect_status": 200
+    },
+    {
+      "id": "TC-4.4.2",
+      "module": "M7-AI",
+      "name": "TrendPrediction 趋势预测",
+      "method": "POST",
+      "path": "/ai/predictions",
+      "body": {
+        "time_range": "30d"
+      },
+      "expect_status": 200
+    }
+  ]
+}

@@ -53,6 +53,38 @@ type ProblemResponse struct {
 	TenantID    int       `json:"tenantId"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
+	// 关联数据
+	AssociatedTickets   []*AssociatedItemResponse `json:"associatedTickets,omitempty"`
+	AssociatedIncidents []*AssociatedItemResponse `json:"associatedIncidents,omitempty"`
+	AssociatedChanges   []*AssociatedItemResponse `json:"associatedChanges,omitempty"`
+}
+
+// AssociatedItemResponse 关联项响应
+type AssociatedItemResponse struct {
+	ID     int    `json:"id"`
+	Title  string `json:"title"`
+	Status string `json:"status"`
+	Number string `json:"number,omitempty"`
+	Type   string `json:"type,omitempty"`
+}
+
+// ProblemAssociationRequest 关联管理请求
+type ProblemAssociationRequest struct {
+	RelatedType string `json:"relatedType" binding:"required,oneof=ticket incident change"`
+	RelatedIDs  []int  `json:"relatedIds" binding:"required,min=1"`
+}
+
+// ProblemRemoveAssociationRequest 移除关联请求
+type ProblemRemoveAssociationRequest struct {
+	RelatedType string `json:"relatedType" binding:"required,oneof=ticket incident change"`
+	RelatedID   int    `json:"relatedId" binding:"required"`
+}
+
+// ProblemAssociationResponse 关联管理响应
+type ProblemAssociationResponse struct {
+	Tickets   []*AssociatedItemResponse `json:"tickets"`
+	Incidents []*AssociatedItemResponse `json:"incidents"`
+	Changes   []*AssociatedItemResponse `json:"changes"`
 }
 
 // ListProblemsResponse 问题列表响应
