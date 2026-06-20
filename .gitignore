@@ -122,6 +122,7 @@ graphify-out/cache/
 # AI tool configs (developer-specific, do not track)
 .trae/
 .codex/
+.codex-loop/
 .workbuddy/
 .playwright-cli/
 

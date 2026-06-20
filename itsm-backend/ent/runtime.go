@@ -26,6 +26,7 @@ import (
 	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
+	"itsm-backend/ent/domainconfig"
 	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
 	"itsm-backend/ent/group"
@@ -847,6 +848,54 @@ func init() {
 	discoverysourceDescID := discoverysourceFields[0].Descriptor()
 	// discoverysource.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	discoverysource.IDValidator = discoverysourceDescID.Validators[0].(func(string) error)
+	domainconfigFields := schema.DomainConfig{}.Fields()
+	_ = domainconfigFields
+	// domainconfigDescConfigKey is the schema descriptor for config_key field.
+	domainconfigDescConfigKey := domainconfigFields[0].Descriptor()
+	// domainconfig.ConfigKeyValidator is a validator for the "config_key" field. It is called by the builders before save.
+	domainconfig.ConfigKeyValidator = domainconfigDescConfigKey.Validators[0].(func(string) error)
+	// domainconfigDescConfigType is the schema descriptor for config_type field.
+	domainconfigDescConfigType := domainconfigFields[1].Descriptor()
+	// domainconfig.ConfigTypeValidator is a validator for the "config_type" field. It is called by the builders before save.
+	domainconfig.ConfigTypeValidator = domainconfigDescConfigType.Validators[0].(func(string) error)
+	// domainconfigDescConfigValue is the schema descriptor for config_value field.
+	domainconfigDescConfigValue := domainconfigFields[2].Descriptor()
+	// domainconfig.DefaultConfigValue holds the default value on creation for the config_value field.
+	domainconfig.DefaultConfigValue = domainconfigDescConfigValue.Default.(map[string]interface{})
+	// domainconfigDescInheritMode is the schema descriptor for inherit_mode field.
+	domainconfigDescInheritMode := domainconfigFields[3].Descriptor()
+	// domainconfig.DefaultInheritMode holds the default value on creation for the inherit_mode field.
+	domainconfig.DefaultInheritMode = domainconfigDescInheritMode.Default.(string)
+	// domainconfigDescTenantID is the schema descriptor for tenant_id field.
+	domainconfigDescTenantID := domainconfigFields[4].Descriptor()
+	// domainconfig.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	domainconfig.TenantIDValidator = domainconfigDescTenantID.Validators[0].(func(int) error)
+	// domainconfigDescDepartmentID is the schema descriptor for department_id field.
+	domainconfigDescDepartmentID := domainconfigFields[5].Descriptor()
+	// domainconfig.DefaultDepartmentID holds the default value on creation for the department_id field.
+	domainconfig.DefaultDepartmentID = domainconfigDescDepartmentID.Default.(int)
+	// domainconfigDescTeamID is the schema descriptor for team_id field.
+	domainconfigDescTeamID := domainconfigFields[6].Descriptor()
+	// domainconfig.DefaultTeamID holds the default value on creation for the team_id field.
+	domainconfig.DefaultTeamID = domainconfigDescTeamID.Default.(int)
+	// domainconfigDescVersion is the schema descriptor for version field.
+	domainconfigDescVersion := domainconfigFields[8].Descriptor()
+	// domainconfig.DefaultVersion holds the default value on creation for the version field.
+	domainconfig.DefaultVersion = domainconfigDescVersion.Default.(int)
+	// domainconfigDescIsActive is the schema descriptor for is_active field.
+	domainconfigDescIsActive := domainconfigFields[9].Descriptor()
+	// domainconfig.DefaultIsActive holds the default value on creation for the is_active field.
+	domainconfig.DefaultIsActive = domainconfigDescIsActive.Default.(bool)
+	// domainconfigDescCreatedAt is the schema descriptor for created_at field.
+	domainconfigDescCreatedAt := domainconfigFields[11].Descriptor()
+	// domainconfig.DefaultCreatedAt holds the default value on creation for the created_at field.
+	domainconfig.DefaultCreatedAt = domainconfigDescCreatedAt.Default.(func() time.Time)
+	// domainconfigDescUpdatedAt is the schema descriptor for updated_at field.
+	domainconfigDescUpdatedAt := domainconfigFields[12].Descriptor()
+	// domainconfig.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	domainconfig.DefaultUpdatedAt = domainconfigDescUpdatedAt.Default.(func() time.Time)
+	// domainconfig.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	domainconfig.UpdateDefaultUpdatedAt = domainconfigDescUpdatedAt.UpdateDefault.(func() time.Time)
 	endpointaclFields := schema.EndpointACL{}.Fields()
 	_ = endpointaclFields
 	// endpointaclDescTenantID is the schema descriptor for tenant_id field.
@@ -1771,16 +1820,48 @@ func init() {
 	processbindingDescIsActive := processbindingFields[6].Descriptor()
 	// processbinding.DefaultIsActive holds the default value on creation for the is_active field.
 	processbinding.DefaultIsActive = processbindingDescIsActive.Default.(bool)
+	// processbindingDescDepartmentID is the schema descriptor for department_id field.
+	processbindingDescDepartmentID := processbindingFields[7].Descriptor()
+	// processbinding.DefaultDepartmentID holds the default value on creation for the department_id field.
+	processbinding.DefaultDepartmentID = processbindingDescDepartmentID.Default.(int)
+	// processbindingDescTeamID is the schema descriptor for team_id field.
+	processbindingDescTeamID := processbindingFields[8].Descriptor()
+	// processbinding.DefaultTeamID holds the default value on creation for the team_id field.
+	processbinding.DefaultTeamID = processbindingDescTeamID.Default.(int)
+	// processbindingDescScenario is the schema descriptor for scenario field.
+	processbindingDescScenario := processbindingFields[9].Descriptor()
+	// processbinding.DefaultScenario holds the default value on creation for the scenario field.
+	processbinding.DefaultScenario = processbindingDescScenario.Default.(string)
+	// processbindingDescCategory is the schema descriptor for category field.
+	processbindingDescCategory := processbindingFields[10].Descriptor()
+	// processbinding.DefaultCategory holds the default value on creation for the category field.
+	processbinding.DefaultCategory = processbindingDescCategory.Default.(string)
+	// processbindingDescConditions is the schema descriptor for conditions field.
+	processbindingDescConditions := processbindingFields[11].Descriptor()
+	// processbinding.DefaultConditions holds the default value on creation for the conditions field.
+	processbinding.DefaultConditions = processbindingDescConditions.Default.(map[string]interface{})
+	// processbindingDescApprovalChainID is the schema descriptor for approval_chain_id field.
+	processbindingDescApprovalChainID := processbindingFields[12].Descriptor()
+	// processbinding.DefaultApprovalChainID holds the default value on creation for the approval_chain_id field.
+	processbinding.DefaultApprovalChainID = processbindingDescApprovalChainID.Default.(string)
+	// processbindingDescSLAPolicyID is the schema descriptor for sla_policy_id field.
+	processbindingDescSLAPolicyID := processbindingFields[13].Descriptor()
+	// processbinding.DefaultSLAPolicyID holds the default value on creation for the sla_policy_id field.
+	processbinding.DefaultSLAPolicyID = processbindingDescSLAPolicyID.Default.(string)
+	// processbindingDescOverrides is the schema descriptor for overrides field.
+	processbindingDescOverrides := processbindingFields[14].Descriptor()
+	// processbinding.DefaultOverrides holds the default value on creation for the overrides field.
+	processbinding.DefaultOverrides = processbindingDescOverrides.Default.(map[string]interface{})
 	// processbindingDescTenantID is the schema descriptor for tenant_id field.
-	processbindingDescTenantID := processbindingFields[7].Descriptor()
+	processbindingDescTenantID := processbindingFields[15].Descriptor()
 	// processbinding.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	processbinding.TenantIDValidator = processbindingDescTenantID.Validators[0].(func(int) error)
 	// processbindingDescCreatedAt is the schema descriptor for created_at field.
-	processbindingDescCreatedAt := processbindingFields[8].Descriptor()
+	processbindingDescCreatedAt := processbindingFields[16].Descriptor()
 	// processbinding.DefaultCreatedAt holds the default value on creation for the created_at field.
 	processbinding.DefaultCreatedAt = processbindingDescCreatedAt.Default.(func() time.Time)
 	// processbindingDescUpdatedAt is the schema descriptor for updated_at field.
-	processbindingDescUpdatedAt := processbindingFields[9].Descriptor()
+	processbindingDescUpdatedAt := processbindingFields[17].Descriptor()
 	// processbinding.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	processbinding.DefaultUpdatedAt = processbindingDescUpdatedAt.Default.(func() time.Time)
 	// processbinding.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

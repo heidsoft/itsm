@@ -29,6 +29,7 @@ import (
 	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
+	"itsm-backend/ent/domainconfig"
 	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
 	"itsm-backend/ent/group"
@@ -200,6 +201,7 @@ func checkColumn(t, c string) error {
 			discoveryjob.Table:                discoveryjob.ValidColumn,
 			discoveryresult.Table:             discoveryresult.ValidColumn,
 			discoverysource.Table:             discoverysource.ValidColumn,
+			domainconfig.Table:                domainconfig.ValidColumn,
 			endpointacl.Table:                 endpointacl.ValidColumn,
 			engineerskill.Table:               engineerskill.ValidColumn,
 			group.Table:                       group.ValidColumn,

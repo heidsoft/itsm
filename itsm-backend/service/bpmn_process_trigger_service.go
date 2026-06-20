@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"itsm-backend/ent/processinstance"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 // ProcessTriggerService 流程触发服务实现
@@ -19,6 +21,7 @@ type ProcessTriggerService struct {
 	client            *ent.Client
 	processEngine     ProcessEngine
 	processBindingSvc *ProcessBindingService
+	processRoutingSvc *ProcessRoutingService
 }
 
 // NewProcessTriggerService 创建流程触发服务
@@ -30,6 +33,7 @@ func NewProcessTriggerService(client *ent.Client, engine ProcessEngine) *Process
 	// 延迟初始化 binding service，避免循环依赖
 	bindingSvc := NewProcessBindingService(client)
 	svc.processBindingSvc = bindingSvc
+	svc.processRoutingSvc = NewProcessRoutingService(client, zap.NewNop().Sugar())
 	return svc
 }
 
@@ -43,9 +47,18 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 	// 2. 如果没有指定流程定义，则根据业务类型查找
 	processDefKey := req.ProcessDefinitionKey
 	if processDefKey == "" {
-		binding, err := s.processBindingSvc.FindBestBinding(ctx, req.BusinessType, "", req.TenantID)
+		route, err := s.processRoutingSvc.FindBestRoute(ctx, s.buildRoutingContext(req))
 		if err != nil {
-			return nil, errors.Wrap(err, "查找流程绑定失败")
+			return nil, errors.Wrap(err, "查找流程路由失败")
+		}
+		if route != nil {
+			processDefKey = route.ProcessDefinitionKey
+		}
+	}
+	if processDefKey == "" {
+		binding, err := s.processBindingSvc.FindBestBinding(ctx, req.BusinessType, req.BusinessSubType, req.TenantID)
+		if err != nil {
+			return nil, errors.Wrap(err, "查找默认流程绑定失败")
 		}
 		if binding == nil {
 			return nil, fmt.Errorf("未找到业务类型 %s 对应的流程绑定", req.BusinessType)
@@ -93,6 +106,68 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 		StartTime:             instance.StartTime,
 		Message:               "流程启动成功",
 	}, nil
+}
+
+func (s *ProcessTriggerService) buildRoutingContext(req *dto.ProcessTriggerRequest) *RoutingContext {
+	return &RoutingContext{
+		BusinessType:    string(req.BusinessType),
+		BusinessSubType: firstNonEmpty(req.BusinessSubType, stringFromVariables(req.Variables, "business_sub_type")),
+		TenantID:        req.TenantID,
+		DepartmentID:    firstPositive(req.DepartmentID, intFromVariables(req.Variables, "department_id")),
+		TeamID:          firstPositive(req.TeamID, intFromVariables(req.Variables, "team_id")),
+		ProjectID:       firstPositive(req.ProjectID, intFromVariables(req.Variables, "project_id")),
+		Scenario:        firstNonEmpty(req.Scenario, stringFromVariables(req.Variables, "scenario")),
+		Category:        firstNonEmpty(req.Category, stringFromVariables(req.Variables, "category")),
+		Variables:       req.Variables,
+	}
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
+func firstPositive(values ...int) int {
+	for _, value := range values {
+		if value > 0 {
+			return value
+		}
+	}
+	return 0
+}
+
+func stringFromVariables(variables map[string]interface{}, key string) string {
+	if variables == nil {
+		return ""
+	}
+	if value, ok := variables[key].(string); ok {
+		return value
+	}
+	return ""
+}
+
+func intFromVariables(variables map[string]interface{}, key string) int {
+	if variables == nil {
+		return 0
+	}
+	switch value := variables[key].(type) {
+	case int:
+		return value
+	case int64:
+		return int(value)
+	case float64:
+		return int(value)
+	case string:
+		parsed, err := strconv.Atoi(value)
+		if err == nil {
+			return parsed
+		}
+	}
+	return 0
 }
 
 // TriggerByBusinessType 根据业务类型触发流程

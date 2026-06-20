@@ -1000,6 +1000,46 @@ var (
 			},
 		},
 	}
+	// DomainConfigsColumns holds the columns for the "domain_configs" table.
+	DomainConfigsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "config_key", Type: field.TypeString},
+		{Name: "config_type", Type: field.TypeString},
+		{Name: "config_value", Type: field.TypeJSON},
+		{Name: "inherit_mode", Type: field.TypeString, Default: "inherit"},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "department_id", Type: field.TypeInt, Default: 0},
+		{Name: "team_id", Type: field.TypeInt, Default: 0},
+		{Name: "parent_config_id", Type: field.TypeInt, Nullable: true},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// DomainConfigsTable holds the schema information for the "domain_configs" table.
+	DomainConfigsTable = &schema.Table{
+		Name:       "domain_configs",
+		Columns:    DomainConfigsColumns,
+		PrimaryKey: []*schema.Column{DomainConfigsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "domainconfig_tenant_id_config_type_config_key_department_id_team_id",
+				Unique:  true,
+				Columns: []*schema.Column{DomainConfigsColumns[5], DomainConfigsColumns[2], DomainConfigsColumns[1], DomainConfigsColumns[6], DomainConfigsColumns[7]},
+			},
+			{
+				Name:    "domainconfig_tenant_id_config_type_config_key",
+				Unique:  false,
+				Columns: []*schema.Column{DomainConfigsColumns[5], DomainConfigsColumns[2], DomainConfigsColumns[1]},
+			},
+			{
+				Name:    "domainconfig_tenant_id_department_id_team_id",
+				Unique:  false,
+				Columns: []*schema.Column{DomainConfigsColumns[5], DomainConfigsColumns[6], DomainConfigsColumns[7]},
+			},
+		},
+	}
 	// EndpointAcLsColumns holds the columns for the "endpoint_ac_ls" table.
 	EndpointAcLsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1926,6 +1966,14 @@ var (
 		{Name: "is_default", Type: field.TypeBool, Default: false},
 		{Name: "priority", Type: field.TypeInt, Default: 0},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "department_id", Type: field.TypeInt, Nullable: true, Default: 0},
+		{Name: "team_id", Type: field.TypeInt, Nullable: true, Default: 0},
+		{Name: "scenario", Type: field.TypeString, Nullable: true, Default: ""},
+		{Name: "category", Type: field.TypeString, Nullable: true, Default: ""},
+		{Name: "conditions", Type: field.TypeJSON, Nullable: true},
+		{Name: "approval_chain_id", Type: field.TypeString, Nullable: true, Default: ""},
+		{Name: "sla_policy_id", Type: field.TypeString, Nullable: true, Default: ""},
+		{Name: "overrides", Type: field.TypeJSON, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -1939,7 +1987,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "process_bindings_process_definitions_bindings",
-				Columns:    []*schema.Column{ProcessBindingsColumns[11]},
+				Columns:    []*schema.Column{ProcessBindingsColumns[19]},
 				RefColumns: []*schema.Column{ProcessDefinitionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -1958,7 +2006,12 @@ var (
 			{
 				Name:    "processbinding_tenant_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessBindingsColumns[8]},
+				Columns: []*schema.Column{ProcessBindingsColumns[16]},
+			},
+			{
+				Name:    "processbinding_tenant_id_business_type_is_active_department_id_team_id_scenario",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessBindingsColumns[16], ProcessBindingsColumns[1], ProcessBindingsColumns[7], ProcessBindingsColumns[8], ProcessBindingsColumns[9], ProcessBindingsColumns[10]},
 			},
 		},
 	}
@@ -4491,6 +4544,7 @@ var (
 		DiscoveryJobsTable,
 		DiscoveryResultsTable,
 		DiscoverySourcesTable,
+		DomainConfigsTable,
 		EndpointAcLsTable,
 		EngineerSkillsTable,
 		GroupsTable,

@@ -14,13 +14,15 @@ import (
 type BPMNProcessTriggerController struct {
 	triggerService *service.ProcessTriggerService
 	bindingService *service.ProcessBindingService
+	configService  *service.ConfigInheritanceService
 }
 
 // NewBPMNProcessTriggerController 创建流程触发控制器
-func NewBPMNProcessTriggerController(triggerService *service.ProcessTriggerService, bindingService *service.ProcessBindingService) *BPMNProcessTriggerController {
+func NewBPMNProcessTriggerController(triggerService *service.ProcessTriggerService, bindingService *service.ProcessBindingService, configService *service.ConfigInheritanceService) *BPMNProcessTriggerController {
 	return &BPMNProcessTriggerController{
 		triggerService: triggerService,
 		bindingService: bindingService,
+		configService:  configService,
 	}
 }
 
@@ -41,10 +43,24 @@ func (c *BPMNProcessTriggerController) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		bindings.POST("", c.CreateBinding)
 		bindings.GET("", c.QueryBindings)
+		bindings.GET("/by-type/:business_type", c.GetBindingsByBusinessType)
 		bindings.GET("/:id", c.GetBinding)
 		bindings.PUT("/:id", c.UpdateBinding)
 		bindings.DELETE("/:id", c.DeleteBinding)
-		bindings.GET("/by-type/:business_type", c.GetBindingsByBusinessType)
+	}
+
+	// 部门流程配置
+	departments := r.Group("/departments")
+	{
+		departments.GET("/:id/processes", c.GetDepartmentProcesses)
+		departments.POST("/:id/init-processes", c.InitDepartmentProcesses)
+	}
+
+	domainConfigs := r.Group("/domain-configs")
+	{
+		domainConfigs.GET("", c.ListDomainConfigs)
+		domainConfigs.POST("", c.SetDomainConfig)
+		domainConfigs.GET("/effective", c.GetEffectiveDomainConfig)
 	}
 }
 
@@ -280,4 +296,139 @@ func (c *BPMNProcessTriggerController) GetBindingsByBusinessType(ctx *gin.Contex
 	}
 
 	common.Success(ctx, result)
+}
+
+// GetDepartmentProcesses 获取部门专属流程绑定
+func (c *BPMNProcessTriggerController) GetDepartmentProcesses(ctx *gin.Context) {
+	departmentID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.Fail(ctx, 1001, "无效的部门ID")
+		return
+	}
+
+	tenantID, _ := ctx.Get("tenant_id")
+
+	result, err := c.bindingService.GetDepartmentBindings(ctx.Request.Context(), tenantID.(int), departmentID)
+	if err != nil {
+		common.Fail(ctx, 5001, err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// InitDepartmentProcesses 初始化部门默认流程模板
+func (c *BPMNProcessTriggerController) InitDepartmentProcesses(ctx *gin.Context) {
+	departmentID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.Fail(ctx, 1001, "无效的部门ID")
+		return
+	}
+
+	var req struct {
+		DepartmentType string `json:"department_type" binding:"required"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, 1001, err.Error())
+		return
+	}
+
+	tenantID, _ := ctx.Get("tenant_id")
+
+	if err := c.bindingService.InitDepartmentDefaultBindings(ctx.Request.Context(), tenantID.(int), departmentID, req.DepartmentType); err != nil {
+		common.Fail(ctx, 5001, err.Error())
+		return
+	}
+
+	common.SuccessWithMessage(ctx, "部门流程模板已初始化", nil)
+}
+
+// ListDomainConfigs 查询当前租户配置
+func (c *BPMNProcessTriggerController) ListDomainConfigs(ctx *gin.Context) {
+	tenantID, _ := ctx.Get("tenant_id")
+	configType := ctx.Query("config_type")
+
+	result, err := c.configService.ListConfigs(ctx.Request.Context(), tenantID.(int), configType)
+	if err != nil {
+		common.Fail(ctx, 5001, err.Error())
+		return
+	}
+
+	common.Success(ctx, dto.ToDomainConfigResponseList(result))
+}
+
+// SetDomainConfig 创建或更新层级配置
+func (c *BPMNProcessTriggerController) SetDomainConfig(ctx *gin.Context) {
+	var req struct {
+		ConfigType   string                 `json:"config_type" binding:"required"`
+		ConfigKey    string                 `json:"config_key" binding:"required"`
+		ConfigValue  map[string]interface{} `json:"config_value" binding:"required"`
+		InheritMode  string                 `json:"inherit_mode"`
+		DepartmentID int                    `json:"department_id"`
+		TeamID       int                    `json:"team_id"`
+		Description  string                 `json:"description"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, 1001, err.Error())
+		return
+	}
+	if req.InheritMode == "" {
+		req.InheritMode = "inherit"
+	}
+
+	tenantID, _ := ctx.Get("tenant_id")
+	err := c.configService.SetConfig(
+		ctx.Request.Context(),
+		tenantID.(int),
+		req.DepartmentID,
+		req.TeamID,
+		req.ConfigType,
+		req.ConfigKey,
+		req.ConfigValue,
+		req.InheritMode,
+		req.Description,
+	)
+	if err != nil {
+		common.Fail(ctx, 5001, err.Error())
+		return
+	}
+
+	common.SuccessWithMessage(ctx, "配置已保存", nil)
+}
+
+// GetEffectiveDomainConfig 获取继承解析后的有效配置
+func (c *BPMNProcessTriggerController) GetEffectiveDomainConfig(ctx *gin.Context) {
+	tenantID, _ := ctx.Get("tenant_id")
+	departmentID, err := parseOptionalIntQuery(ctx, "department_id")
+	if err != nil {
+		common.Fail(ctx, 1001, "无效的部门ID")
+		return
+	}
+	teamID, err := parseOptionalIntQuery(ctx, "team_id")
+	if err != nil {
+		common.Fail(ctx, 1001, "无效的团队ID")
+		return
+	}
+	configType := ctx.Query("config_type")
+	configKey := ctx.Query("config_key")
+	if configType == "" || configKey == "" {
+		common.Fail(ctx, 1001, "config_type 和 config_key 不能为空")
+		return
+	}
+
+	result, err := c.configService.GetEffectiveConfig(ctx.Request.Context(), tenantID.(int), departmentID, teamID, configType, configKey)
+	if err != nil {
+		common.Fail(ctx, 5001, err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+func parseOptionalIntQuery(ctx *gin.Context, key string) (int, error) {
+	value := ctx.Query(key)
+	if value == "" {
+		return 0, nil
+	}
+	return strconv.Atoi(value)
 }

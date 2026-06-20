@@ -103,6 +103,102 @@ func (_c *ProcessBindingCreate) SetNillableIsActive(v *bool) *ProcessBindingCrea
 	return _c
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (_c *ProcessBindingCreate) SetDepartmentID(v int) *ProcessBindingCreate {
+	_c.mutation.SetDepartmentID(v)
+	return _c
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (_c *ProcessBindingCreate) SetNillableDepartmentID(v *int) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetDepartmentID(*v)
+	}
+	return _c
+}
+
+// SetTeamID sets the "team_id" field.
+func (_c *ProcessBindingCreate) SetTeamID(v int) *ProcessBindingCreate {
+	_c.mutation.SetTeamID(v)
+	return _c
+}
+
+// SetNillableTeamID sets the "team_id" field if the given value is not nil.
+func (_c *ProcessBindingCreate) SetNillableTeamID(v *int) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetTeamID(*v)
+	}
+	return _c
+}
+
+// SetScenario sets the "scenario" field.
+func (_c *ProcessBindingCreate) SetScenario(v string) *ProcessBindingCreate {
+	_c.mutation.SetScenario(v)
+	return _c
+}
+
+// SetNillableScenario sets the "scenario" field if the given value is not nil.
+func (_c *ProcessBindingCreate) SetNillableScenario(v *string) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetScenario(*v)
+	}
+	return _c
+}
+
+// SetCategory sets the "category" field.
+func (_c *ProcessBindingCreate) SetCategory(v string) *ProcessBindingCreate {
+	_c.mutation.SetCategory(v)
+	return _c
+}
+
+// SetNillableCategory sets the "category" field if the given value is not nil.
+func (_c *ProcessBindingCreate) SetNillableCategory(v *string) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetCategory(*v)
+	}
+	return _c
+}
+
+// SetConditions sets the "conditions" field.
+func (_c *ProcessBindingCreate) SetConditions(v map[string]interface{}) *ProcessBindingCreate {
+	_c.mutation.SetConditions(v)
+	return _c
+}
+
+// SetApprovalChainID sets the "approval_chain_id" field.
+func (_c *ProcessBindingCreate) SetApprovalChainID(v string) *ProcessBindingCreate {
+	_c.mutation.SetApprovalChainID(v)
+	return _c
+}
+
+// SetNillableApprovalChainID sets the "approval_chain_id" field if the given value is not nil.
+func (_c *ProcessBindingCreate) SetNillableApprovalChainID(v *string) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetApprovalChainID(*v)
+	}
+	return _c
+}
+
+// SetSLAPolicyID sets the "sla_policy_id" field.
+func (_c *ProcessBindingCreate) SetSLAPolicyID(v string) *ProcessBindingCreate {
+	_c.mutation.SetSLAPolicyID(v)
+	return _c
+}
+
+// SetNillableSLAPolicyID sets the "sla_policy_id" field if the given value is not nil.
+func (_c *ProcessBindingCreate) SetNillableSLAPolicyID(v *string) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetSLAPolicyID(*v)
+	}
+	return _c
+}
+
+// SetOverrides sets the "overrides" field.
+func (_c *ProcessBindingCreate) SetOverrides(v map[string]interface{}) *ProcessBindingCreate {
+	_c.mutation.SetOverrides(v)
+	return _c
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_c *ProcessBindingCreate) SetTenantID(v int) *ProcessBindingCreate {
 	_c.mutation.SetTenantID(v)
@@ -206,6 +302,38 @@ func (_c *ProcessBindingCreate) defaults() {
 	if _, ok := _c.mutation.IsActive(); !ok {
 		v := processbinding.DefaultIsActive
 		_c.mutation.SetIsActive(v)
+	}
+	if _, ok := _c.mutation.DepartmentID(); !ok {
+		v := processbinding.DefaultDepartmentID
+		_c.mutation.SetDepartmentID(v)
+	}
+	if _, ok := _c.mutation.TeamID(); !ok {
+		v := processbinding.DefaultTeamID
+		_c.mutation.SetTeamID(v)
+	}
+	if _, ok := _c.mutation.Scenario(); !ok {
+		v := processbinding.DefaultScenario
+		_c.mutation.SetScenario(v)
+	}
+	if _, ok := _c.mutation.Category(); !ok {
+		v := processbinding.DefaultCategory
+		_c.mutation.SetCategory(v)
+	}
+	if _, ok := _c.mutation.Conditions(); !ok {
+		v := processbinding.DefaultConditions
+		_c.mutation.SetConditions(v)
+	}
+	if _, ok := _c.mutation.ApprovalChainID(); !ok {
+		v := processbinding.DefaultApprovalChainID
+		_c.mutation.SetApprovalChainID(v)
+	}
+	if _, ok := _c.mutation.SLAPolicyID(); !ok {
+		v := processbinding.DefaultSLAPolicyID
+		_c.mutation.SetSLAPolicyID(v)
+	}
+	if _, ok := _c.mutation.Overrides(); !ok {
+		v := processbinding.DefaultOverrides
+		_c.mutation.SetOverrides(v)
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := processbinding.DefaultCreatedAt()
@@ -314,6 +442,38 @@ func (_c *ProcessBindingCreate) createSpec() (*ProcessBinding, *sqlgraph.CreateS
 	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(processbinding.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
+	}
+	if value, ok := _c.mutation.DepartmentID(); ok {
+		_spec.SetField(processbinding.FieldDepartmentID, field.TypeInt, value)
+		_node.DepartmentID = value
+	}
+	if value, ok := _c.mutation.TeamID(); ok {
+		_spec.SetField(processbinding.FieldTeamID, field.TypeInt, value)
+		_node.TeamID = value
+	}
+	if value, ok := _c.mutation.Scenario(); ok {
+		_spec.SetField(processbinding.FieldScenario, field.TypeString, value)
+		_node.Scenario = value
+	}
+	if value, ok := _c.mutation.Category(); ok {
+		_spec.SetField(processbinding.FieldCategory, field.TypeString, value)
+		_node.Category = value
+	}
+	if value, ok := _c.mutation.Conditions(); ok {
+		_spec.SetField(processbinding.FieldConditions, field.TypeJSON, value)
+		_node.Conditions = value
+	}
+	if value, ok := _c.mutation.ApprovalChainID(); ok {
+		_spec.SetField(processbinding.FieldApprovalChainID, field.TypeString, value)
+		_node.ApprovalChainID = value
+	}
+	if value, ok := _c.mutation.SLAPolicyID(); ok {
+		_spec.SetField(processbinding.FieldSLAPolicyID, field.TypeString, value)
+		_node.SLAPolicyID = value
+	}
+	if value, ok := _c.mutation.Overrides(); ok {
+		_spec.SetField(processbinding.FieldOverrides, field.TypeJSON, value)
+		_node.Overrides = value
 	}
 	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(processbinding.FieldTenantID, field.TypeInt, value)

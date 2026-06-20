@@ -1,0 +1,63 @@
+===========================================
+Stage 0: 环境就绪与已知问题清点
+日期: 2026-06-20 20:42:00
+===========================================
+
+=== 1. 后端服务健康 (端口 8090) ===
+HTTP=200 time=0.001s
+  Response: {"status":"ok","timestamp":"2026-06-20T20:42:00"}
+
+=== 2. 前端 dev server (端口 3000) ===
+HTTP=200 (HTML返回,但静态资源404 -> 白屏)
+
+=== 2.1 前端静态资源 404 检测 ===
+  /_next/static/chunks/main-app.js                    -> 404 ❌
+  /_next/static/chunks/app-pages-internals.js         -> 404 ❌
+  /_next/static/chunks/app/(main)/layout.js           -> 404 ❌
+  /_next/static/chunks/app/(auth)/login/page.js       -> 404 ❌
+
+=== 3. PostgreSQL 数据库连接 ===
+PostgreSQL 17.4 on pgvector/pgvector:pg17
+psql (17.4)
+
+=== 4. marketplace_* 表存在性 ===
+  ❌ 未发现 marketplace_items / item_versions / tenant_installations 表
+
+=== 5. itsm-backend/migrations/ 中 marketplace 相关脚本 ===
+  ❌ 未发现 marketplace 相关 migration
+
+=== 6. 数据库表总数 ===
+124 张业务表
+
+=== 7. 已迁移脚本 (migration history) ===
+无 schema_migrations 表（项目未启用自动 migration 跟踪）
+
+=== 8. Redis 缓存连接 ===
+后端健康检查通过 (Redis 间接可达)
+
+=== 9. cookie 命名一致性 ===
+  后端 login 返回字段:
+    {"code":0,"message":"success","data":{"access_token":"eyJ...","refresh_token":"eyJ...","expires_in":900,"user":{...}}}
+  Set-Cookie 头: Set-Cookie: access_token=eyJ...; HttpOnly; SameSite=Lax
+  前端 token-storage.ts 引用:
+    11:  Cookie 名称（与后端中间件一致 - 后端 middleware/auth.go 实际使用 "access_token"）
+    26:        if (typeof document !== 'undefined') {
+    45:  从 cookie 读取 token（兼容 auth-token / access_token 两种命名）
+    [前端代码已修复为兼容两种命名, 但注释仍引用旧名称 "auth-token"]
+
+=== 10. next.config.ts 严格化配置 ===
+  itsm-frontend/next.config.ts:14:  typescript: { ignoreBuildErrors: true },
+  itsm-frontend/next.config.ts:16:  eslint: { ignoreDuringBuilds: true },
+
+=== 11. marketplace items 接口当前状态 ===
+HTTP=500
+Response: {"code":500,"message":"failed to count items: pq: relation \"marketplace_items\" does not exist at column 45 (42P01)"}
+
+===========================================
+Stage 0 关键发现:
+  P0-BUG-001: 前端 dev server 静态资源 404 (白屏)
+  P0-BUG-002: marketplace_items 表缺失 (导致 marketplace API 500)
+  P0-BUG-003: marketplace_* migration 脚本缺失
+  P0-BUG-004: next.config.ts 仍启用 ignoreBuildErrors + ignoreDuringBuilds
+  P1-BUG-005: 前端 token-storage.ts 注释与代码不一致 (历史回归)
+===========================================

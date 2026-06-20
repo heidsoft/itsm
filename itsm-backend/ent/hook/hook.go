@@ -284,6 +284,18 @@ func (f DiscoverySourceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Va
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DiscoverySourceMutation", m)
 }
 
+// The DomainConfigFunc type is an adapter to allow the use of ordinary
+// function as DomainConfig mutator.
+type DomainConfigFunc func(context.Context, *ent.DomainConfigMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DomainConfigFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DomainConfigMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DomainConfigMutation", m)
+}
+
 // The EndpointACLFunc type is an adapter to allow the use of ordinary
 // function as EndpointACL mutator.
 type EndpointACLFunc func(context.Context, *ent.EndpointACLMutation) (ent.Value, error)

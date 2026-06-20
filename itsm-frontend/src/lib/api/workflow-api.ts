@@ -394,14 +394,9 @@ export class WorkflowApi {
    */
   static async activateWorkflow(id: string, version?: string): Promise<void> {
     const ver = version || '1.0.0';
-    const response = await httpClient.put<{
-      code: number;
-      message: string;
-    }>(`/api/v1/bpmn/process-definitions/${id}/active?version=${ver}`, { active: true });
-
-    if (response?.code !== 0) {
-      throw new Error(response?.message || '激活工作流失败');
-    }
+    // httpClient.put 已经处理了错误情况（code !== 0 时会抛出异常）
+    // 所以这里不需要再检查 response.code
+    await httpClient.put<unknown>(`/api/v1/bpmn/process-definitions/${id}/active?version=${ver}`, { active: true });
   }
 
   /**

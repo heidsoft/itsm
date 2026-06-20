@@ -75,6 +75,9 @@ type DiscoveryResult func(*sql.Selector)
 // DiscoverySource is the predicate function for discoverysource builders.
 type DiscoverySource func(*sql.Selector)
 
+// DomainConfig is the predicate function for domainconfig builders.
+type DomainConfig func(*sql.Selector)
+
 // EndpointACL is the predicate function for endpointacl builders.
 type EndpointACL func(*sql.Selector)
 

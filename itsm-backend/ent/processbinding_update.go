@@ -147,6 +147,164 @@ func (_u *ProcessBindingUpdate) SetNillableIsActive(v *bool) *ProcessBindingUpda
 	return _u
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (_u *ProcessBindingUpdate) SetDepartmentID(v int) *ProcessBindingUpdate {
+	_u.mutation.ResetDepartmentID()
+	_u.mutation.SetDepartmentID(v)
+	return _u
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (_u *ProcessBindingUpdate) SetNillableDepartmentID(v *int) *ProcessBindingUpdate {
+	if v != nil {
+		_u.SetDepartmentID(*v)
+	}
+	return _u
+}
+
+// AddDepartmentID adds value to the "department_id" field.
+func (_u *ProcessBindingUpdate) AddDepartmentID(v int) *ProcessBindingUpdate {
+	_u.mutation.AddDepartmentID(v)
+	return _u
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (_u *ProcessBindingUpdate) ClearDepartmentID() *ProcessBindingUpdate {
+	_u.mutation.ClearDepartmentID()
+	return _u
+}
+
+// SetTeamID sets the "team_id" field.
+func (_u *ProcessBindingUpdate) SetTeamID(v int) *ProcessBindingUpdate {
+	_u.mutation.ResetTeamID()
+	_u.mutation.SetTeamID(v)
+	return _u
+}
+
+// SetNillableTeamID sets the "team_id" field if the given value is not nil.
+func (_u *ProcessBindingUpdate) SetNillableTeamID(v *int) *ProcessBindingUpdate {
+	if v != nil {
+		_u.SetTeamID(*v)
+	}
+	return _u
+}
+
+// AddTeamID adds value to the "team_id" field.
+func (_u *ProcessBindingUpdate) AddTeamID(v int) *ProcessBindingUpdate {
+	_u.mutation.AddTeamID(v)
+	return _u
+}
+
+// ClearTeamID clears the value of the "team_id" field.
+func (_u *ProcessBindingUpdate) ClearTeamID() *ProcessBindingUpdate {
+	_u.mutation.ClearTeamID()
+	return _u
+}
+
+// SetScenario sets the "scenario" field.
+func (_u *ProcessBindingUpdate) SetScenario(v string) *ProcessBindingUpdate {
+	_u.mutation.SetScenario(v)
+	return _u
+}
+
+// SetNillableScenario sets the "scenario" field if the given value is not nil.
+func (_u *ProcessBindingUpdate) SetNillableScenario(v *string) *ProcessBindingUpdate {
+	if v != nil {
+		_u.SetScenario(*v)
+	}
+	return _u
+}
+
+// ClearScenario clears the value of the "scenario" field.
+func (_u *ProcessBindingUpdate) ClearScenario() *ProcessBindingUpdate {
+	_u.mutation.ClearScenario()
+	return _u
+}
+
+// SetCategory sets the "category" field.
+func (_u *ProcessBindingUpdate) SetCategory(v string) *ProcessBindingUpdate {
+	_u.mutation.SetCategory(v)
+	return _u
+}
+
+// SetNillableCategory sets the "category" field if the given value is not nil.
+func (_u *ProcessBindingUpdate) SetNillableCategory(v *string) *ProcessBindingUpdate {
+	if v != nil {
+		_u.SetCategory(*v)
+	}
+	return _u
+}
+
+// ClearCategory clears the value of the "category" field.
+func (_u *ProcessBindingUpdate) ClearCategory() *ProcessBindingUpdate {
+	_u.mutation.ClearCategory()
+	return _u
+}
+
+// SetConditions sets the "conditions" field.
+func (_u *ProcessBindingUpdate) SetConditions(v map[string]interface{}) *ProcessBindingUpdate {
+	_u.mutation.SetConditions(v)
+	return _u
+}
+
+// ClearConditions clears the value of the "conditions" field.
+func (_u *ProcessBindingUpdate) ClearConditions() *ProcessBindingUpdate {
+	_u.mutation.ClearConditions()
+	return _u
+}
+
+// SetApprovalChainID sets the "approval_chain_id" field.
+func (_u *ProcessBindingUpdate) SetApprovalChainID(v string) *ProcessBindingUpdate {
+	_u.mutation.SetApprovalChainID(v)
+	return _u
+}
+
+// SetNillableApprovalChainID sets the "approval_chain_id" field if the given value is not nil.
+func (_u *ProcessBindingUpdate) SetNillableApprovalChainID(v *string) *ProcessBindingUpdate {
+	if v != nil {
+		_u.SetApprovalChainID(*v)
+	}
+	return _u
+}
+
+// ClearApprovalChainID clears the value of the "approval_chain_id" field.
+func (_u *ProcessBindingUpdate) ClearApprovalChainID() *ProcessBindingUpdate {
+	_u.mutation.ClearApprovalChainID()
+	return _u
+}
+
+// SetSLAPolicyID sets the "sla_policy_id" field.
+func (_u *ProcessBindingUpdate) SetSLAPolicyID(v string) *ProcessBindingUpdate {
+	_u.mutation.SetSLAPolicyID(v)
+	return _u
+}
+
+// SetNillableSLAPolicyID sets the "sla_policy_id" field if the given value is not nil.
+func (_u *ProcessBindingUpdate) SetNillableSLAPolicyID(v *string) *ProcessBindingUpdate {
+	if v != nil {
+		_u.SetSLAPolicyID(*v)
+	}
+	return _u
+}
+
+// ClearSLAPolicyID clears the value of the "sla_policy_id" field.
+func (_u *ProcessBindingUpdate) ClearSLAPolicyID() *ProcessBindingUpdate {
+	_u.mutation.ClearSLAPolicyID()
+	return _u
+}
+
+// SetOverrides sets the "overrides" field.
+func (_u *ProcessBindingUpdate) SetOverrides(v map[string]interface{}) *ProcessBindingUpdate {
+	_u.mutation.SetOverrides(v)
+	return _u
+}
+
+// ClearOverrides clears the value of the "overrides" field.
+func (_u *ProcessBindingUpdate) ClearOverrides() *ProcessBindingUpdate {
+	_u.mutation.ClearOverrides()
+	return _u
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_u *ProcessBindingUpdate) SetTenantID(v int) *ProcessBindingUpdate {
 	_u.mutation.ResetTenantID()
@@ -315,6 +473,60 @@ func (_u *ProcessBindingUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(processbinding.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.DepartmentID(); ok {
+		_spec.SetField(processbinding.FieldDepartmentID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedDepartmentID(); ok {
+		_spec.AddField(processbinding.FieldDepartmentID, field.TypeInt, value)
+	}
+	if _u.mutation.DepartmentIDCleared() {
+		_spec.ClearField(processbinding.FieldDepartmentID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.TeamID(); ok {
+		_spec.SetField(processbinding.FieldTeamID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTeamID(); ok {
+		_spec.AddField(processbinding.FieldTeamID, field.TypeInt, value)
+	}
+	if _u.mutation.TeamIDCleared() {
+		_spec.ClearField(processbinding.FieldTeamID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.Scenario(); ok {
+		_spec.SetField(processbinding.FieldScenario, field.TypeString, value)
+	}
+	if _u.mutation.ScenarioCleared() {
+		_spec.ClearField(processbinding.FieldScenario, field.TypeString)
+	}
+	if value, ok := _u.mutation.Category(); ok {
+		_spec.SetField(processbinding.FieldCategory, field.TypeString, value)
+	}
+	if _u.mutation.CategoryCleared() {
+		_spec.ClearField(processbinding.FieldCategory, field.TypeString)
+	}
+	if value, ok := _u.mutation.Conditions(); ok {
+		_spec.SetField(processbinding.FieldConditions, field.TypeJSON, value)
+	}
+	if _u.mutation.ConditionsCleared() {
+		_spec.ClearField(processbinding.FieldConditions, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.ApprovalChainID(); ok {
+		_spec.SetField(processbinding.FieldApprovalChainID, field.TypeString, value)
+	}
+	if _u.mutation.ApprovalChainIDCleared() {
+		_spec.ClearField(processbinding.FieldApprovalChainID, field.TypeString)
+	}
+	if value, ok := _u.mutation.SLAPolicyID(); ok {
+		_spec.SetField(processbinding.FieldSLAPolicyID, field.TypeString, value)
+	}
+	if _u.mutation.SLAPolicyIDCleared() {
+		_spec.ClearField(processbinding.FieldSLAPolicyID, field.TypeString)
+	}
+	if value, ok := _u.mutation.Overrides(); ok {
+		_spec.SetField(processbinding.FieldOverrides, field.TypeJSON, value)
+	}
+	if _u.mutation.OverridesCleared() {
+		_spec.ClearField(processbinding.FieldOverrides, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processbinding.FieldTenantID, field.TypeInt, value)
@@ -492,6 +704,164 @@ func (_u *ProcessBindingUpdateOne) SetNillableIsActive(v *bool) *ProcessBindingU
 	if v != nil {
 		_u.SetIsActive(*v)
 	}
+	return _u
+}
+
+// SetDepartmentID sets the "department_id" field.
+func (_u *ProcessBindingUpdateOne) SetDepartmentID(v int) *ProcessBindingUpdateOne {
+	_u.mutation.ResetDepartmentID()
+	_u.mutation.SetDepartmentID(v)
+	return _u
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (_u *ProcessBindingUpdateOne) SetNillableDepartmentID(v *int) *ProcessBindingUpdateOne {
+	if v != nil {
+		_u.SetDepartmentID(*v)
+	}
+	return _u
+}
+
+// AddDepartmentID adds value to the "department_id" field.
+func (_u *ProcessBindingUpdateOne) AddDepartmentID(v int) *ProcessBindingUpdateOne {
+	_u.mutation.AddDepartmentID(v)
+	return _u
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (_u *ProcessBindingUpdateOne) ClearDepartmentID() *ProcessBindingUpdateOne {
+	_u.mutation.ClearDepartmentID()
+	return _u
+}
+
+// SetTeamID sets the "team_id" field.
+func (_u *ProcessBindingUpdateOne) SetTeamID(v int) *ProcessBindingUpdateOne {
+	_u.mutation.ResetTeamID()
+	_u.mutation.SetTeamID(v)
+	return _u
+}
+
+// SetNillableTeamID sets the "team_id" field if the given value is not nil.
+func (_u *ProcessBindingUpdateOne) SetNillableTeamID(v *int) *ProcessBindingUpdateOne {
+	if v != nil {
+		_u.SetTeamID(*v)
+	}
+	return _u
+}
+
+// AddTeamID adds value to the "team_id" field.
+func (_u *ProcessBindingUpdateOne) AddTeamID(v int) *ProcessBindingUpdateOne {
+	_u.mutation.AddTeamID(v)
+	return _u
+}
+
+// ClearTeamID clears the value of the "team_id" field.
+func (_u *ProcessBindingUpdateOne) ClearTeamID() *ProcessBindingUpdateOne {
+	_u.mutation.ClearTeamID()
+	return _u
+}
+
+// SetScenario sets the "scenario" field.
+func (_u *ProcessBindingUpdateOne) SetScenario(v string) *ProcessBindingUpdateOne {
+	_u.mutation.SetScenario(v)
+	return _u
+}
+
+// SetNillableScenario sets the "scenario" field if the given value is not nil.
+func (_u *ProcessBindingUpdateOne) SetNillableScenario(v *string) *ProcessBindingUpdateOne {
+	if v != nil {
+		_u.SetScenario(*v)
+	}
+	return _u
+}
+
+// ClearScenario clears the value of the "scenario" field.
+func (_u *ProcessBindingUpdateOne) ClearScenario() *ProcessBindingUpdateOne {
+	_u.mutation.ClearScenario()
+	return _u
+}
+
+// SetCategory sets the "category" field.
+func (_u *ProcessBindingUpdateOne) SetCategory(v string) *ProcessBindingUpdateOne {
+	_u.mutation.SetCategory(v)
+	return _u
+}
+
+// SetNillableCategory sets the "category" field if the given value is not nil.
+func (_u *ProcessBindingUpdateOne) SetNillableCategory(v *string) *ProcessBindingUpdateOne {
+	if v != nil {
+		_u.SetCategory(*v)
+	}
+	return _u
+}
+
+// ClearCategory clears the value of the "category" field.
+func (_u *ProcessBindingUpdateOne) ClearCategory() *ProcessBindingUpdateOne {
+	_u.mutation.ClearCategory()
+	return _u
+}
+
+// SetConditions sets the "conditions" field.
+func (_u *ProcessBindingUpdateOne) SetConditions(v map[string]interface{}) *ProcessBindingUpdateOne {
+	_u.mutation.SetConditions(v)
+	return _u
+}
+
+// ClearConditions clears the value of the "conditions" field.
+func (_u *ProcessBindingUpdateOne) ClearConditions() *ProcessBindingUpdateOne {
+	_u.mutation.ClearConditions()
+	return _u
+}
+
+// SetApprovalChainID sets the "approval_chain_id" field.
+func (_u *ProcessBindingUpdateOne) SetApprovalChainID(v string) *ProcessBindingUpdateOne {
+	_u.mutation.SetApprovalChainID(v)
+	return _u
+}
+
+// SetNillableApprovalChainID sets the "approval_chain_id" field if the given value is not nil.
+func (_u *ProcessBindingUpdateOne) SetNillableApprovalChainID(v *string) *ProcessBindingUpdateOne {
+	if v != nil {
+		_u.SetApprovalChainID(*v)
+	}
+	return _u
+}
+
+// ClearApprovalChainID clears the value of the "approval_chain_id" field.
+func (_u *ProcessBindingUpdateOne) ClearApprovalChainID() *ProcessBindingUpdateOne {
+	_u.mutation.ClearApprovalChainID()
+	return _u
+}
+
+// SetSLAPolicyID sets the "sla_policy_id" field.
+func (_u *ProcessBindingUpdateOne) SetSLAPolicyID(v string) *ProcessBindingUpdateOne {
+	_u.mutation.SetSLAPolicyID(v)
+	return _u
+}
+
+// SetNillableSLAPolicyID sets the "sla_policy_id" field if the given value is not nil.
+func (_u *ProcessBindingUpdateOne) SetNillableSLAPolicyID(v *string) *ProcessBindingUpdateOne {
+	if v != nil {
+		_u.SetSLAPolicyID(*v)
+	}
+	return _u
+}
+
+// ClearSLAPolicyID clears the value of the "sla_policy_id" field.
+func (_u *ProcessBindingUpdateOne) ClearSLAPolicyID() *ProcessBindingUpdateOne {
+	_u.mutation.ClearSLAPolicyID()
+	return _u
+}
+
+// SetOverrides sets the "overrides" field.
+func (_u *ProcessBindingUpdateOne) SetOverrides(v map[string]interface{}) *ProcessBindingUpdateOne {
+	_u.mutation.SetOverrides(v)
+	return _u
+}
+
+// ClearOverrides clears the value of the "overrides" field.
+func (_u *ProcessBindingUpdateOne) ClearOverrides() *ProcessBindingUpdateOne {
+	_u.mutation.ClearOverrides()
 	return _u
 }
 
@@ -693,6 +1063,60 @@ func (_u *ProcessBindingUpdateOne) sqlSave(ctx context.Context) (_node *ProcessB
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(processbinding.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.DepartmentID(); ok {
+		_spec.SetField(processbinding.FieldDepartmentID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedDepartmentID(); ok {
+		_spec.AddField(processbinding.FieldDepartmentID, field.TypeInt, value)
+	}
+	if _u.mutation.DepartmentIDCleared() {
+		_spec.ClearField(processbinding.FieldDepartmentID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.TeamID(); ok {
+		_spec.SetField(processbinding.FieldTeamID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTeamID(); ok {
+		_spec.AddField(processbinding.FieldTeamID, field.TypeInt, value)
+	}
+	if _u.mutation.TeamIDCleared() {
+		_spec.ClearField(processbinding.FieldTeamID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.Scenario(); ok {
+		_spec.SetField(processbinding.FieldScenario, field.TypeString, value)
+	}
+	if _u.mutation.ScenarioCleared() {
+		_spec.ClearField(processbinding.FieldScenario, field.TypeString)
+	}
+	if value, ok := _u.mutation.Category(); ok {
+		_spec.SetField(processbinding.FieldCategory, field.TypeString, value)
+	}
+	if _u.mutation.CategoryCleared() {
+		_spec.ClearField(processbinding.FieldCategory, field.TypeString)
+	}
+	if value, ok := _u.mutation.Conditions(); ok {
+		_spec.SetField(processbinding.FieldConditions, field.TypeJSON, value)
+	}
+	if _u.mutation.ConditionsCleared() {
+		_spec.ClearField(processbinding.FieldConditions, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.ApprovalChainID(); ok {
+		_spec.SetField(processbinding.FieldApprovalChainID, field.TypeString, value)
+	}
+	if _u.mutation.ApprovalChainIDCleared() {
+		_spec.ClearField(processbinding.FieldApprovalChainID, field.TypeString)
+	}
+	if value, ok := _u.mutation.SLAPolicyID(); ok {
+		_spec.SetField(processbinding.FieldSLAPolicyID, field.TypeString, value)
+	}
+	if _u.mutation.SLAPolicyIDCleared() {
+		_spec.ClearField(processbinding.FieldSLAPolicyID, field.TypeString)
+	}
+	if value, ok := _u.mutation.Overrides(); ok {
+		_spec.SetField(processbinding.FieldOverrides, field.TypeJSON, value)
+	}
+	if _u.mutation.OverridesCleared() {
+		_spec.ClearField(processbinding.FieldOverrides, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processbinding.FieldTenantID, field.TypeInt, value)

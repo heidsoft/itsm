@@ -1,0 +1,229 @@
+{
+  "stage": "stage1",
+  "total": 18,
+  "passed": 16,
+  "failed": 2,
+  "pass_rate": 88.9,
+  "results": [
+    {
+      "name": "1.1 健康检查",
+      "method": "GET",
+      "path": "/health",
+      "http": "200",
+      "code": null,
+      "msg": "",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"status\":\"ok\",\"timestamp\":\"2026-06-20T20:43:09.280432+08:00\"}"
+    },
+    {
+      "name": "1.2 登录获取 token",
+      "method": "POST",
+      "path": "/auth/login",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6InN1cGVyX2FkbWluIiwidGVuYW50X2lkIjoxLCJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgxOTYwMjg5LCJpYXQiOjE3ODE5NTkzODl9.swJN__wMCTS3H-OM9Vtxrb6GnE3xyYjFL5b9VFw_9yM",
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6InN1cGVyX2FkbWluIiwidGVuYW50X2lkIjoxLCJ0b2tlbl90eXBlIjoiY"
+    },
+    {
+      "name": "1.3 当前用户 me",
+      "method": "GET",
+      "path": "/auth/me",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": 1,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"id\":1,\"username\":\"admin\",\"email\":\"admin@example.com\",\"name\":\"系统管理员\",\"role\":\"super_admin\",\"msp_role\":\"\",\"department\":\"IT部门\",\"department_id\":0,\"phone\":\"\",\"active\":"
+    },
+    {
+      "name": "1.4 CSRF token",
+      "method": "GET",
+      "path": "/csrf-token",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"data\":{\"csrf_token\":\"6p_85Y98Txm8bok3z0fQQw==\"},\"message\":\"success\"}"
+    },
+    {
+      "name": "1.5 菜单列表 (含去重回归)",
+      "method": "GET",
+      "path": "/menus",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"menus\":[{\"id\":1,\"name\":\"仪表盘\",\"path\":\"/dashboard\",\"icon\":\"LayoutDashboard\",\"sortOrder\":10,\"tenantId\":1,\"isVisible\":true,\"isEnabled\":true},{\"id\":2,\"name\":\"工单管理\",\"p"
+    },
+    {
+      "name": "1.6 租户列表",
+      "method": "GET",
+      "path": "/tenants",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"tenants\":[{\"id\":3,\"name\":\"测试租户\",\"code\":\"tenant_test\",\"type\":\"customer\",\"status\":\"active\",\"billingEnabled\":false,\"createdAt\":\"2026-06-13T15:31:01.336944+08:00\",\"u"
+    },
+    {
+      "name": "1.7 通知列表",
+      "method": "GET",
+      "path": "/notifications",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"notifications\":[{\"id\":7,\"title\":\"created\",\"message\":\"新工单已创建：API测试工单-浏览器测试 (#TKT-202606-650059)\",\"type\":\"created\",\"read\":false,\"action_url\":\"/tickets/5\",\"action_t"
+    },
+    {
+      "name": "1.8 通知未读数",
+      "method": "GET",
+      "path": "/notifications/unread-count",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"count\":2}}"
+    },
+    {
+      "name": "1.9 通知标记全部已读",
+      "method": "PUT",
+      "path": "/notifications/read-all",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"message\":\"标记全部已读成功\"}}"
+    },
+    {
+      "name": "1.10 WS ticket 获取 (一次性)",
+      "method": "POST",
+      "path": "/ws/ticket",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"ticket\":\"487e698c1a8b0b6f361fa7664c63e60866f26b8e6aa9af37c6927758d9cf7853\"}}"
+    },
+    {
+      "name": "1.11 版本信息",
+      "method": "GET",
+      "path": "/version",
+      "http": "200",
+      "code": null,
+      "msg": "",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"build\":\"dev\",\"version\":\"1.0.0\"}"
+    },
+    {
+      "name": "1.12 readiness/ga",
+      "method": "GET",
+      "path": "/readiness/ga",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"version\":\"1.0.0\",\"target\":\"open-source-v1.0-ga\",\"status\":\"ga_candidate\",\"generated_at\":\"2026-06-20T20:43:09.845972+08:00\",\"modules\":[{\"key\":\"tenant_model\",\"name\""
+    },
+    {
+      "name": "1.13 刷新 token",
+      "method": "POST",
+      "path": "/refresh-token",
+      "http": "200",
+      "code": 400,
+      "msg": "EOF",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":400,\"message\":\"EOF\"}"
+    },
+    {
+      "name": "1.14 连接器列表",
+      "method": "GET",
+      "path": "/connectors",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"items\":[{\"name\":\"console\",\"version\":\"1.0.0\",\"title\":\"控制台日志\",\"provider\":\"builtin\",\"type\":\"custom\",\"description\":\"把消息打印到标准输出，常用于本地开发与单元测试\",\"capabilities\":[\"send_me"
+    },
+    {
+      "name": "1.15 连接器健康",
+      "method": "GET",
+      "path": "/connectors/health",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{}}"
+    },
+    {
+      "name": "1.16 仪表盘概览",
+      "method": "GET",
+      "path": "/dashboard/overview",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"kpiMetrics\":[{\"id\":\"total-tickets\",\"title\":\"总工单数\",\"value\":5,\"unit\":\"个\",\"color\":\"#3b82f6\",\"trend\":\"up\",\"change\":0,\"changeType\":\"increase\",\"description\":\"本月累计工单\"},"
+    },
+    {
+      "name": "1.17 仪表盘指标",
+      "method": "GET",
+      "path": "/dashboard/metrics",
+      "http": "404",
+      "code": null,
+      "msg": "",
+      "passed": false,
+      "fail_reason": [
+        "http_code 404 not in [200]"
+      ],
+      "saved_id": null,
+      "raw_preview": "404 page not found"
+    },
+    {
+      "name": "1.18 系统配置",
+      "method": "GET",
+      "path": "/system/config",
+      "http": "404",
+      "code": null,
+      "msg": "",
+      "passed": false,
+      "fail_reason": [
+        "http_code 404 not in [200]"
+      ],
+      "saved_id": null,
+      "raw_preview": "404 page not found"
+    }
+  ]
+}

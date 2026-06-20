@@ -1,0 +1,364 @@
+{
+  "stage": "stage3",
+  "total": 28,
+  "passed": 19,
+  "failed": 9,
+  "pass_rate": 67.9,
+  "results": [
+    {
+      "name": "3.1 BPMN 工作流实例列表",
+      "method": "GET",
+      "path": "/workflow/instances?page=1&page_size=10",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"data\":[{\"id\":15,\"process_instance_id\":\"PI-incident_emergency_flow-1781959861381601000\",\"business_key\":\"incident:6\",\"process_definition_key\":\"incident_emergency_f"
+    },
+    {
+      "name": "3.2 BPMN 用户任务列表",
+      "method": "GET",
+      "path": "/workflow/tasks?page=1&page_size=10",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"data\":[{\"id\":15,\"task_id\":\"TASK-Activity_ManagerApproval-1781959861386896000\",\"process_instance_id\":15,\"process_definition_key\":\"incident_emergency_flow\",\"task_d"
+    },
+    {
+      "name": "3.3 审批工作流列表",
+      "method": "GET",
+      "path": "/approval-workflows?page=1&page_size=10",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"items\":[{\"id\":4,\"name\":\"权限申请审批\",\"description\":\"高权限申请需要直属负责人和安全管理员审批\",\"ticket_type\":\"service_request\",\"priority\":\"high\",\"nodes\":[{\"id\":\"node1\",\"level\":0,\"name\":\"直"
+    },
+    {
+      "name": "3.4 审批工作流创建 (Nodes 字段)",
+      "method": "POST",
+      "path": "/approval-workflows",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": 5,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"id\":5,\"name\":\"STG3审批流测试\",\"description\":\"审批工作流测试\",\"nodes\":[{\"id\":\"node1\",\"level\":0,\"name\":\"一级审批\",\"approver_type\":\"role\",\"approver_ids\":[1],\"approver_names\":[\"系统管理"
+    },
+    {
+      "name": "3.5 审批工作流详情",
+      "method": "GET",
+      "path": "/approval-workflows/5",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"id\":5,\"name\":\"STG3审批流测试\",\"description\":\"审批工作流测试\",\"nodes\":[{\"id\":\"node1\",\"level\":1,\"name\":\"一级审批\",\"approver_type\":\"role\",\"approver_ids\":[1],\"approver_names\":[\"系统管理"
+    },
+    {
+      "name": "3.6 流程触发",
+      "method": "POST",
+      "path": "/process-trigger",
+      "http": "500",
+      "code": 5001,
+      "msg": "流程定义 incident-resolution 不存在",
+      "passed": false,
+      "fail_reason": [
+        "http_code 500 not in [200]"
+      ],
+      "saved_id": null,
+      "raw_preview": "{\"code\":5001,\"message\":\"流程定义 incident-resolution 不存在\"}"
+    },
+    {
+      "name": "3.7 流程绑定列表",
+      "method": "GET",
+      "path": "/process-bindings?page=1&page_size=10",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":[{\"id\":79,\"business_type\":\"ticket\",\"business_sub_type\":\"assignment\",\"process_definition_key\":\"ticket_assignment_flow\",\"process_version\":1,\"is_default\":false,\"prior"
+    },
+    {
+      "name": "3.8 流程绑定创建 (business_type+process_definition_key)",
+      "method": "POST",
+      "path": "/process-bindings",
+      "http": "500",
+      "code": 5001,
+      "msg": "流程定义 ticket-flow 不存在",
+      "passed": false,
+      "fail_reason": [
+        "http_code 500 not in [200]",
+        "body.code 5001 not in [0]"
+      ],
+      "saved_id": null,
+      "raw_preview": "{\"code\":5001,\"message\":\"流程定义 ticket-flow 不存在\"}"
+    },
+    {
+      "name": "3.9 流程绑定详情",
+      "method": "GET",
+      "path": "/process-bindings/__BINDING_ID__",
+      "http": "400",
+      "code": 1001,
+      "msg": "无效的绑定ID",
+      "passed": false,
+      "fail_reason": [
+        "http_code 400 not in [200]"
+      ],
+      "saved_id": null,
+      "raw_preview": "{\"code\":1001,\"message\":\"无效的绑定ID\"}"
+    },
+    {
+      "name": "3.10 BPMN 仪表盘指标 (需要 tenant_id)",
+      "method": "GET",
+      "path": "/bpmn/dashboard/metrics?tenant_id=1",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"total_processes\":16,\"active_instances\":15,\"completed_today\":0,\"open_tasks\":15,\"sla_compliance_rate\":100,\"avg_completion_time_minutes\":0,\"process_health\":{\"health"
+    },
+    {
+      "name": "3.11 BPMN 审计日志 (需要 tenant_id)",
+      "method": "GET",
+      "path": "/bpmn/dashboard/audit-logs?tenant_id=1&page=1&page_size=10",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"list\":[{\"id\":15,\"process_instance_id\":15,\"process_instance_key\":\"PI-incident_emergency_flow-1781959861381601000\",\"process_definition_key\":\"incident_emergency_flo"
+    },
+    {
+      "name": "3.12 BPMN SLA 违规 (需要 tenant_id)",
+      "method": "GET",
+      "path": "/bpmn/dashboard/sla/violations?tenant_id=1",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":[{\"ResourceType\":\"process_instance\",\"ResourceID\":1,\"ResourceKey\":\"PI-ticket_general_flow-1781340574643481000\",\"SLAStatus\":\"breached\",\"StartTime\":\"2026-06-13T16:49:"
+    },
+    {
+      "name": "3.13 BPMN SLA 合规 (需要 process_key)",
+      "method": "GET",
+      "path": "/bpmn/dashboard/sla/compliance?process_key=ticket-flow&tenant_id=1",
+      "http": "400",
+      "code": 1001,
+      "msg": "流程定义Key不能为空",
+      "passed": false,
+      "fail_reason": [
+        "http_code 400 not in [200]"
+      ],
+      "saved_id": null,
+      "raw_preview": "{\"code\":1001,\"message\":\"流程定义Key不能为空\"}"
+    },
+    {
+      "name": "3.14 BPMN 租户统计",
+      "method": "GET",
+      "path": "/bpmn/dashboard/tenant/stats?tenant_id=1",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"total_definitions\":16,\"total_instances\":15,\"running_instances\":15,\"completed_instances\":0,\"total_tasks\":15,\"open_tasks\":15}}"
+    },
+    {
+      "name": "3.15 BPMN 瓶颈分析 (需要 process_key)",
+      "method": "GET",
+      "path": "/bpmn/dashboard/bottlenecks?process_key=ticket-flow&tenant_id=1",
+      "http": "400",
+      "code": 1001,
+      "msg": "流程定义Key不能为空",
+      "passed": false,
+      "fail_reason": [
+        "http_code 400 not in [200]"
+      ],
+      "saved_id": null,
+      "raw_preview": "{\"code\":1001,\"message\":\"流程定义Key不能为空\"}"
+    },
+    {
+      "name": "3.16 BPMN 流程指标 (需要 key)",
+      "method": "GET",
+      "path": "/bpmn/dashboard/process/ticket-flow/metrics?tenant_id=1",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"total_instances\":0,\"running_instances\":0,\"completed_instances\":0,\"terminated_instances\":0,\"completion_rate\":0,\"sla_compliance_rate\":100,\"avg_completion_time_minu"
+    },
+    {
+      "name": "3.17 BPMN 用户活动 (需要 tenant_id+userId)",
+      "method": "GET",
+      "path": "/bpmn/dashboard/audit-logs/user/1?tenant_id=1",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":[]}"
+    },
+    {
+      "name": "3.18 BPMN 时间线 (需要 instanceKey)",
+      "method": "GET",
+      "path": "/bpmn/dashboard/audit-logs/timeline?instanceKey=test&tenant_id=1",
+      "http": "400",
+      "code": 1001,
+      "msg": "流程实例Key不能为空",
+      "passed": false,
+      "fail_reason": [
+        "http_code 400 not in [200]"
+      ],
+      "saved_id": null,
+      "raw_preview": "{\"code\":1001,\"message\":\"流程实例Key不能为空\"}"
+    },
+    {
+      "name": "3.19 工单工作流 - 提交审批 (approval/submit 需 approval_id)",
+      "method": "POST",
+      "path": "/tickets/approval/submit",
+      "http": "500",
+      "code": 5001,
+      "msg": "提交审批失败: approval record not found or already processed: ent: approval_record not found",
+      "passed": false,
+      "fail_reason": [
+        "http_code 500 not in [200]"
+      ],
+      "saved_id": null,
+      "raw_preview": "{\"code\":5001,\"message\":\"提交审批失败: approval record not found or already processed: ent: approval_record not found\"}"
+    },
+    {
+      "name": "3.20 工单工作流 - 接单",
+      "method": "POST",
+      "path": "/tickets/workflow/accept",
+      "http": "500",
+      "code": 5001,
+      "msg": "工单当前状态不允许接单: cancelled",
+      "passed": false,
+      "fail_reason": [
+        "http_code 500 not in [200]"
+      ],
+      "saved_id": null,
+      "raw_preview": "{\"code\":5001,\"message\":\"工单当前状态不允许接单: cancelled\"}"
+    },
+    {
+      "name": "3.21 工单工作流 - 解决",
+      "method": "POST",
+      "path": "/tickets/workflow/resolve",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"message\":\"工单已解决\"}}"
+    },
+    {
+      "name": "3.22 工单工作流 - 关闭",
+      "method": "POST",
+      "path": "/tickets/workflow/close",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"message\":\"工单已关闭\"}}"
+    },
+    {
+      "name": "3.23 工单工作流 - 转发 (to_user_id)",
+      "method": "POST",
+      "path": "/tickets/workflow/forward",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"message\":\"转发成功\"}}"
+    },
+    {
+      "name": "3.24 工单工作流 - 驳回 (需 reason)",
+      "method": "POST",
+      "path": "/tickets/workflow/reject",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"message\":\"驳回成功\"}}"
+    },
+    {
+      "name": "3.25 工单工作流 - 撤回 (需 reason)",
+      "method": "POST",
+      "path": "/tickets/workflow/withdraw",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"message\":\"撤回成功\"}}"
+    },
+    {
+      "name": "3.26 工单工作流 - 重开 (需 reason)",
+      "method": "POST",
+      "path": "/tickets/workflow/reopen",
+      "http": "500",
+      "code": 5001,
+      "msg": "只有已关闭或已解决的工单才能重开",
+      "passed": false,
+      "fail_reason": [
+        "http_code 500 not in [200]"
+      ],
+      "saved_id": null,
+      "raw_preview": "{\"code\":5001,\"message\":\"只有已关闭或已解决的工单才能重开\"}"
+    },
+    {
+      "name": "3.27 审批记录列表 (query 参数)",
+      "method": "GET",
+      "path": "/tickets/approval/records?page=1&page_size=10",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":{\"items\":[],\"page\":1,\"page_size\":10,\"total\":0}}"
+    },
+    {
+      "name": "3.28 业务类型绑定查询",
+      "method": "GET",
+      "path": "/process-bindings/by-type/ticket",
+      "http": "200",
+      "code": 0,
+      "msg": "success",
+      "passed": true,
+      "fail_reason": [],
+      "saved_id": null,
+      "raw_preview": "{\"code\":0,\"message\":\"success\",\"data\":[{\"id\":79,\"business_type\":\"ticket\",\"business_sub_type\":\"assignment\",\"process_definition_key\":\"ticket_assignment_flow\",\"process_version\":1,\"is_default\":false,\"prior"
+    }
+  ]
+}

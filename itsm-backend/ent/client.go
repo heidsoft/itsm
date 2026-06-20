@@ -34,6 +34,7 @@ import (
 	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
+	"itsm-backend/ent/domainconfig"
 	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
 	"itsm-backend/ent/group"
@@ -174,6 +175,8 @@ type Client struct {
 	DiscoveryResult *DiscoveryResultClient
 	// DiscoverySource is the client for interacting with the DiscoverySource builders.
 	DiscoverySource *DiscoverySourceClient
+	// DomainConfig is the client for interacting with the DomainConfig builders.
+	DomainConfig *DomainConfigClient
 	// EndpointACL is the client for interacting with the EndpointACL builders.
 	EndpointACL *EndpointACLClient
 	// EngineerSkill is the client for interacting with the EngineerSkill builders.
@@ -372,6 +375,7 @@ func (c *Client) init() {
 	c.DiscoveryJob = NewDiscoveryJobClient(c.config)
 	c.DiscoveryResult = NewDiscoveryResultClient(c.config)
 	c.DiscoverySource = NewDiscoverySourceClient(c.config)
+	c.DomainConfig = NewDomainConfigClient(c.config)
 	c.EndpointACL = NewEndpointACLClient(c.config)
 	c.EngineerSkill = NewEngineerSkillClient(c.config)
 	c.Group = NewGroupClient(c.config)
@@ -569,6 +573,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		DiscoveryJob:                NewDiscoveryJobClient(cfg),
 		DiscoveryResult:             NewDiscoveryResultClient(cfg),
 		DiscoverySource:             NewDiscoverySourceClient(cfg),
+		DomainConfig:                NewDomainConfigClient(cfg),
 		EndpointACL:                 NewEndpointACLClient(cfg),
 		EngineerSkill:               NewEngineerSkillClient(cfg),
 		Group:                       NewGroupClient(cfg),
@@ -693,6 +698,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		DiscoveryJob:                NewDiscoveryJobClient(cfg),
 		DiscoveryResult:             NewDiscoveryResultClient(cfg),
 		DiscoverySource:             NewDiscoverySourceClient(cfg),
+		DomainConfig:                NewDomainConfigClient(cfg),
 		EndpointACL:                 NewEndpointACLClient(cfg),
 		EngineerSkill:               NewEngineerSkillClient(cfg),
 		Group:                       NewGroupClient(cfg),
@@ -809,10 +815,10 @@ func (c *Client) Use(hooks ...Hook) {
 		c.CIRelationship, c.CIType, c.Change, c.ChangePIR, c.CloudAccount,
 		c.CloudResource, c.CloudService, c.ConfigurationItem, c.Contract,
 		c.Conversation, c.Department, c.DiscoveryJob, c.DiscoveryResult,
-		c.DiscoverySource, c.EndpointACL, c.EngineerSkill, c.Group, c.Incident,
-		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
-		c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion, c.KnowledgeArticle,
-		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
+		c.DiscoverySource, c.DomainConfig, c.EndpointACL, c.EngineerSkill, c.Group,
+		c.Incident, c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent,
+		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion,
+		c.KnowledgeArticle, c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
 		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
@@ -843,10 +849,10 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.CIRelationship, c.CIType, c.Change, c.ChangePIR, c.CloudAccount,
 		c.CloudResource, c.CloudService, c.ConfigurationItem, c.Contract,
 		c.Conversation, c.Department, c.DiscoveryJob, c.DiscoveryResult,
-		c.DiscoverySource, c.EndpointACL, c.EngineerSkill, c.Group, c.Incident,
-		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
-		c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion, c.KnowledgeArticle,
-		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
+		c.DiscoverySource, c.DomainConfig, c.EndpointACL, c.EngineerSkill, c.Group,
+		c.Incident, c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent,
+		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion,
+		c.KnowledgeArticle, c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
 		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
@@ -917,6 +923,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.DiscoveryResult.mutate(ctx, m)
 	case *DiscoverySourceMutation:
 		return c.DiscoverySource.mutate(ctx, m)
+	case *DomainConfigMutation:
+		return c.DomainConfig.mutate(ctx, m)
 	case *EndpointACLMutation:
 		return c.EndpointACL.mutate(ctx, m)
 	case *EngineerSkillMutation:
@@ -4782,6 +4790,139 @@ func (c *DiscoverySourceClient) mutate(ctx context.Context, m *DiscoverySourceMu
 		return (&DiscoverySourceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown DiscoverySource mutation op: %q", m.Op())
+	}
+}
+
+// DomainConfigClient is a client for the DomainConfig schema.
+type DomainConfigClient struct {
+	config
+}
+
+// NewDomainConfigClient returns a client for the DomainConfig from the given config.
+func NewDomainConfigClient(c config) *DomainConfigClient {
+	return &DomainConfigClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `domainconfig.Hooks(f(g(h())))`.
+func (c *DomainConfigClient) Use(hooks ...Hook) {
+	c.hooks.DomainConfig = append(c.hooks.DomainConfig, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `domainconfig.Intercept(f(g(h())))`.
+func (c *DomainConfigClient) Intercept(interceptors ...Interceptor) {
+	c.inters.DomainConfig = append(c.inters.DomainConfig, interceptors...)
+}
+
+// Create returns a builder for creating a DomainConfig entity.
+func (c *DomainConfigClient) Create() *DomainConfigCreate {
+	mutation := newDomainConfigMutation(c.config, OpCreate)
+	return &DomainConfigCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of DomainConfig entities.
+func (c *DomainConfigClient) CreateBulk(builders ...*DomainConfigCreate) *DomainConfigCreateBulk {
+	return &DomainConfigCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *DomainConfigClient) MapCreateBulk(slice any, setFunc func(*DomainConfigCreate, int)) *DomainConfigCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &DomainConfigCreateBulk{err: fmt.Errorf("calling to DomainConfigClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*DomainConfigCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &DomainConfigCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for DomainConfig.
+func (c *DomainConfigClient) Update() *DomainConfigUpdate {
+	mutation := newDomainConfigMutation(c.config, OpUpdate)
+	return &DomainConfigUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *DomainConfigClient) UpdateOne(_m *DomainConfig) *DomainConfigUpdateOne {
+	mutation := newDomainConfigMutation(c.config, OpUpdateOne, withDomainConfig(_m))
+	return &DomainConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *DomainConfigClient) UpdateOneID(id int) *DomainConfigUpdateOne {
+	mutation := newDomainConfigMutation(c.config, OpUpdateOne, withDomainConfigID(id))
+	return &DomainConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for DomainConfig.
+func (c *DomainConfigClient) Delete() *DomainConfigDelete {
+	mutation := newDomainConfigMutation(c.config, OpDelete)
+	return &DomainConfigDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *DomainConfigClient) DeleteOne(_m *DomainConfig) *DomainConfigDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *DomainConfigClient) DeleteOneID(id int) *DomainConfigDeleteOne {
+	builder := c.Delete().Where(domainconfig.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &DomainConfigDeleteOne{builder}
+}
+
+// Query returns a query builder for DomainConfig.
+func (c *DomainConfigClient) Query() *DomainConfigQuery {
+	return &DomainConfigQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeDomainConfig},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a DomainConfig entity by its id.
+func (c *DomainConfigClient) Get(ctx context.Context, id int) (*DomainConfig, error) {
+	return c.Query().Where(domainconfig.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *DomainConfigClient) GetX(ctx context.Context, id int) *DomainConfig {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *DomainConfigClient) Hooks() []Hook {
+	return c.hooks.DomainConfig
+}
+
+// Interceptors returns the client interceptors.
+func (c *DomainConfigClient) Interceptors() []Interceptor {
+	return c.inters.DomainConfig
+}
+
+func (c *DomainConfigClient) mutate(ctx context.Context, m *DomainConfigMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&DomainConfigCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&DomainConfigUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&DomainConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&DomainConfigDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown DomainConfig mutation op: %q", m.Op())
 	}
 }
 
@@ -18082,47 +18223,49 @@ type (
 		AssetLicense, AuditLog, BPMNPermission, CIAttributeDefinition, CIRelationship,
 		CIType, Change, ChangePIR, CloudAccount, CloudResource, CloudService,
 		ConfigurationItem, Contract, Conversation, Department, DiscoveryJob,
-		DiscoveryResult, DiscoverySource, EndpointACL, EngineerSkill, Group, Incident,
-		IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
-		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
-		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
-		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
-		Message, Microservice, Notification, NotificationPreference,
-		PasswordResetToken, Permission, PermissionDefinition, Problem, ProcessAuditLog,
-		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
-		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
-		ServiceRequest, ServiceRequestApproval, StandardChange, Survey, SurveyResponse,
-		SystemConfig, Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
-		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
-		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
+		DiscoveryResult, DiscoverySource, DomainConfig, EndpointACL, EngineerSkill,
+		Group, Incident, IncidentAlert, IncidentEscalationRule, IncidentEvent,
+		IncidentMetric, IncidentRule, IncidentRuleExecution, ItemVersion,
+		KnowledgeArticle, KnowledgeArticleLike, KnowledgeArticleParticipant,
+		KnowledgeArticleSession, KnowledgeArticleVersion, KnownError, MSPAllocation,
+		MarketplaceItem, Menu, Message, Microservice, Notification,
+		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,
+		Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition, ProcessDeployment,
+		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
+		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
+		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
+		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
+		StandardChange, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
+		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCC, TicketCategory,
+		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketView,
+		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
+		WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
 		AssetLicense, AuditLog, BPMNPermission, CIAttributeDefinition, CIRelationship,
 		CIType, Change, ChangePIR, CloudAccount, CloudResource, CloudService,
 		ConfigurationItem, Contract, Conversation, Department, DiscoveryJob,
-		DiscoveryResult, DiscoverySource, EndpointACL, EngineerSkill, Group, Incident,
-		IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
-		IncidentRule, IncidentRuleExecution, ItemVersion, KnowledgeArticle,
-		KnowledgeArticleLike, KnowledgeArticleParticipant, KnowledgeArticleSession,
-		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
-		Message, Microservice, Notification, NotificationPreference,
-		PasswordResetToken, Permission, PermissionDefinition, Problem, ProcessAuditLog,
-		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
-		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
-		ServiceRequest, ServiceRequestApproval, StandardChange, Survey, SurveyResponse,
-		SystemConfig, Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
-		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
-		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
+		DiscoveryResult, DiscoverySource, DomainConfig, EndpointACL, EngineerSkill,
+		Group, Incident, IncidentAlert, IncidentEscalationRule, IncidentEvent,
+		IncidentMetric, IncidentRule, IncidentRuleExecution, ItemVersion,
+		KnowledgeArticle, KnowledgeArticleLike, KnowledgeArticleParticipant,
+		KnowledgeArticleSession, KnowledgeArticleVersion, KnownError, MSPAllocation,
+		MarketplaceItem, Menu, Message, Microservice, Notification,
+		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,
+		Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition, ProcessDeployment,
+		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
+		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
+		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
+		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
+		StandardChange, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
+		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCC, TicketCategory,
+		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketView,
+		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
+		WorkflowTask, WorkflowVersion []ent.Interceptor
 	}
 )

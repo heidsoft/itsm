@@ -28,8 +28,16 @@ const (
 // ProcessTriggerRequest 流程触发请求
 type ProcessTriggerRequest struct {
 	// 业务标识
-	BusinessType BusinessType `json:"business_type" binding:"required"`
-	BusinessID   int          `json:"business_id" binding:"required"`
+	BusinessType    BusinessType `json:"business_type" binding:"required"`
+	BusinessSubType string       `json:"business_sub_type,omitempty"`
+	BusinessID      int          `json:"business_id" binding:"required"`
+
+	// 多维流程路由上下文
+	DepartmentID int    `json:"department_id,omitempty"`
+	TeamID       int    `json:"team_id,omitempty"`
+	ProjectID    int    `json:"project_id,omitempty"`
+	Scenario     string `json:"scenario,omitempty"`
+	Category     string `json:"category,omitempty"`
 
 	// 流程定义（可选，如果不传则根据业务类型自动匹配）
 	ProcessDefinitionKey string `json:"process_definition_key,omitempty"`
@@ -67,24 +75,36 @@ type ProcessTriggerResponse struct {
 
 // ProcessBinding 流程绑定配置（用于配置表）
 type ProcessBinding struct {
-	ID                   int          `json:"id"`
-	BusinessType         BusinessType `json:"business_type" binding:"required"`
-	BusinessSubType      string       `json:"business_sub_type,omitempty"` // 子类型（如：ticket的incident/change/problem）
-	ProcessDefinitionKey string       `json:"process_definition_key" binding:"required"`
-	ProcessVersion       int          `json:"process_version,omitempty"`
-	IsDefault            bool         `json:"is_default"` // 是否默认流程
-	Priority             int          `json:"priority"`   // 优先级（多个匹配时使用）
-	IsActive             bool         `json:"is_active"`
-	TenantID             int          `json:"tenant_id"`
-	CreatedAt            time.Time    `json:"created_at"`
-	UpdatedAt            time.Time    `json:"updated_at"`
+	ID                   int                    `json:"id"`
+	BusinessType         BusinessType           `json:"business_type" binding:"required"`
+	BusinessSubType      string                 `json:"business_sub_type,omitempty"` // 子类型（如：ticket的incident/change/problem）
+	ProcessDefinitionKey string                 `json:"process_definition_key" binding:"required"`
+	ProcessVersion       int                    `json:"process_version,omitempty"`
+	IsDefault            bool                   `json:"is_default"` // 是否默认流程
+	Priority             int                    `json:"priority"`   // 优先级（多个匹配时使用）
+	IsActive             bool                   `json:"is_active"`
+	DepartmentID         int                    `json:"department_id"`
+	TeamID               int                    `json:"team_id"`
+	Scenario             string                 `json:"scenario,omitempty"`
+	Category             string                 `json:"category,omitempty"`
+	Conditions           map[string]interface{} `json:"conditions,omitempty"`
+	ApprovalChainID      string                 `json:"approval_chain_id,omitempty"`
+	SLAPolicyID          string                 `json:"sla_policy_id,omitempty"`
+	Overrides            map[string]interface{} `json:"overrides,omitempty"`
+	TenantID             int                    `json:"tenant_id"`
+	CreatedAt            time.Time              `json:"created_at"`
+	UpdatedAt            time.Time              `json:"updated_at"`
 }
 
 // ProcessBindingQueryRequest 查询流程绑定配置请求
 type ProcessBindingQueryRequest struct {
-	BusinessType    BusinessType `json:"business_type,omitempty"`
-	BusinessSubType string       `json:"business_sub_type,omitempty"`
-	IsActive        *bool        `json:"is_active,omitempty"`
+	BusinessType    BusinessType `form:"business_type" json:"business_type,omitempty"`
+	BusinessSubType string       `form:"business_sub_type" json:"business_sub_type,omitempty"`
+	DepartmentID    int          `form:"department_id" json:"department_id,omitempty"`
+	TeamID          int          `form:"team_id" json:"team_id,omitempty"`
+	Scenario        string       `form:"scenario" json:"scenario,omitempty"`
+	Category        string       `form:"category" json:"category,omitempty"`
+	IsActive        *bool        `form:"is_active" json:"is_active,omitempty"`
 	TenantID        int          `json:"-"` // 从上下文获取，不从请求参数绑定
 }
 

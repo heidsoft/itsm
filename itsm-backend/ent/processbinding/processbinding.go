@@ -28,6 +28,22 @@ const (
 	FieldPriority = "priority"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
+	// FieldDepartmentID holds the string denoting the department_id field in the database.
+	FieldDepartmentID = "department_id"
+	// FieldTeamID holds the string denoting the team_id field in the database.
+	FieldTeamID = "team_id"
+	// FieldScenario holds the string denoting the scenario field in the database.
+	FieldScenario = "scenario"
+	// FieldCategory holds the string denoting the category field in the database.
+	FieldCategory = "category"
+	// FieldConditions holds the string denoting the conditions field in the database.
+	FieldConditions = "conditions"
+	// FieldApprovalChainID holds the string denoting the approval_chain_id field in the database.
+	FieldApprovalChainID = "approval_chain_id"
+	// FieldSLAPolicyID holds the string denoting the sla_policy_id field in the database.
+	FieldSLAPolicyID = "sla_policy_id"
+	// FieldOverrides holds the string denoting the overrides field in the database.
+	FieldOverrides = "overrides"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -57,6 +73,14 @@ var Columns = []string{
 	FieldIsDefault,
 	FieldPriority,
 	FieldIsActive,
+	FieldDepartmentID,
+	FieldTeamID,
+	FieldScenario,
+	FieldCategory,
+	FieldConditions,
+	FieldApprovalChainID,
+	FieldSLAPolicyID,
+	FieldOverrides,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -96,6 +120,22 @@ var (
 	DefaultPriority int
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
 	DefaultIsActive bool
+	// DefaultDepartmentID holds the default value on creation for the "department_id" field.
+	DefaultDepartmentID int
+	// DefaultTeamID holds the default value on creation for the "team_id" field.
+	DefaultTeamID int
+	// DefaultScenario holds the default value on creation for the "scenario" field.
+	DefaultScenario string
+	// DefaultCategory holds the default value on creation for the "category" field.
+	DefaultCategory string
+	// DefaultConditions holds the default value on creation for the "conditions" field.
+	DefaultConditions map[string]interface{}
+	// DefaultApprovalChainID holds the default value on creation for the "approval_chain_id" field.
+	DefaultApprovalChainID string
+	// DefaultSLAPolicyID holds the default value on creation for the "sla_policy_id" field.
+	DefaultSLAPolicyID string
+	// DefaultOverrides holds the default value on creation for the "overrides" field.
+	DefaultOverrides map[string]interface{}
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -147,6 +187,36 @@ func ByPriority(opts ...sql.OrderTermOption) OrderOption {
 // ByIsActive orders the results by the is_active field.
 func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
+}
+
+// ByDepartmentID orders the results by the department_id field.
+func ByDepartmentID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDepartmentID, opts...).ToFunc()
+}
+
+// ByTeamID orders the results by the team_id field.
+func ByTeamID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTeamID, opts...).ToFunc()
+}
+
+// ByScenario orders the results by the scenario field.
+func ByScenario(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldScenario, opts...).ToFunc()
+}
+
+// ByCategory orders the results by the category field.
+func ByCategory(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCategory, opts...).ToFunc()
+}
+
+// ByApprovalChainID orders the results by the approval_chain_id field.
+func ByApprovalChainID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldApprovalChainID, opts...).ToFunc()
+}
+
+// BySLAPolicyID orders the results by the sla_policy_id field.
+func BySLAPolicyID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAPolicyID, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.

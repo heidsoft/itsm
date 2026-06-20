@@ -18,6 +18,7 @@ import {
   Row,
   Col,
   Statistic,
+  InputNumber,
 } from 'antd';
 import {
   Plus,
@@ -37,10 +38,36 @@ interface ApprovalWorkflow {
   name: string;
   description?: string;
   ticket_type?: string;
+  ticketType?: string;
   priority?: string;
   is_active: boolean;
+  isActive?: boolean;
+  nodes?: ApprovalNode[];
   created_at?: string;
   updated_at?: string;
+}
+
+interface ApprovalNode {
+  level: number;
+  name: string;
+  approver_type: string;
+  approver_ids?: number[];
+  assignee_type?: string;
+  assignee_value?: string;
+  approval_mode: string;
+  timeout_hours?: number;
+  allow_reject: boolean;
+  allowReject?: boolean;
+  allow_delegate: boolean;
+  allowDelegate?: boolean;
+  reject_action: string;
+  rejectAction?: string;
+  approverType?: string;
+  approverIds?: number[];
+  assigneeType?: string;
+  assigneeValue?: string;
+  approvalMode?: string;
+  timeoutHours?: number;
 }
 
 export default function ApprovalManagement() {
@@ -64,11 +91,12 @@ export default function ApprovalManagement() {
         '/api/v1/approval-workflows',
         { page: 1, page_size: 100 }
       );
-      setWorkflows(response.items || []);
+      const items = (response.items || []).map(normalizeWorkflow);
+      setWorkflows(items);
       setStats({
         total: response.total || 0,
-        active: (response.items || []).filter(w => w.is_active).length,
-        inactive: (response.items || []).filter(w => !w.is_active).length,
+        active: items.filter(w => w.is_active).length,
+        inactive: items.filter(w => !w.is_active).length,
       });
     } catch (error) {
       console.error('Failed to load workflows:', error);
@@ -92,6 +120,7 @@ export default function ApprovalManagement() {
       const data = {
         ...values,
         is_active: values.is_active ?? true,
+        nodes: normalizeNodes(values.nodes || []),
       };
 
       if (selectedWorkflow) {
@@ -134,9 +163,10 @@ export default function ApprovalManagement() {
     form.setFieldsValue({
       name: record.name,
       description: record.description,
-      ticket_type: record.ticket_type,
+      ticket_type: record.ticket_type || record.ticketType,
       priority: record.priority,
-      is_active: record.is_active,
+      is_active: record.is_active ?? record.isActive,
+      nodes: record.nodes?.length ? record.nodes : [defaultApprovalNode()],
     });
     setShowModal(true);
   };
@@ -276,7 +306,7 @@ export default function ApprovalManagement() {
             icon={<Plus size={16} />}
             onClick={() => {
               setSelectedWorkflow(null);
-              form.resetFields();
+              form.setFieldsValue({ is_active: true, nodes: [defaultApprovalNode()] });
               setShowModal(true);
             }}
           >
@@ -380,8 +410,168 @@ export default function ApprovalManagement() {
           >
             <Switch checkedChildren="启用" unCheckedChildren="禁用" defaultChecked />
           </Form.Item>
+          <Form.List name="nodes" rules={[{ validator: async (_, nodes) => {
+            if (!nodes || nodes.length < 1) {
+              return Promise.reject(new Error('至少需要一个审批节点'));
+            }
+          } }]}>
+            {(fields, { add, remove }, { errors }) => (
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <Text strong>审批节点</Text>
+                  <Button size="small" icon={<Plus size={14} />} onClick={() => add(defaultApprovalNode(fields.length + 1))}>
+                    添加节点
+                  </Button>
+                </div>
+                {fields.map((field, index) => (
+                  <Card key={field.key} size="small" className="mb-3">
+                    <Row gutter={12}>
+                      <Col span={6}>
+                        <Form.Item name={[field.name, 'level']} label="级别" initialValue={index + 1}>
+                          <InputNumber min={1} style={{ width: '100%' }} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={18}>
+                        <Form.Item name={[field.name, 'name']} label="节点名称" rules={[{ required: true }]}>
+                          <Input placeholder="直属主管审批" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Row gutter={12}>
+                      <Col span={8}>
+                        <Form.Item name={[field.name, 'approver_type']} label="审批人类型" rules={[{ required: true }]}>
+                          <Select options={approverTypeOptions} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item name={[field.name, 'assignee_type']} label="动态解析类型">
+                          <Select allowClear options={dynamicApproverOptions} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item name={[field.name, 'assignee_value']} label="解析值">
+                          <Input placeholder="部门/团队/项目ID，或金额阈值" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Row gutter={12}>
+                      <Col span={8}>
+                        <Form.Item name={[field.name, 'approver_ids']} label="固定审批人ID">
+                          <Select mode="tags" tokenSeparators={[',']} placeholder="输入用户ID" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item name={[field.name, 'approval_mode']} label="审批模式" initialValue="any">
+                          <Select options={[
+                            { value: 'any', label: '任一通过' },
+                            { value: 'all', label: '全部通过' },
+                            { value: 'sequential', label: '顺序审批' },
+                            { value: 'parallel', label: '并行审批' },
+                          ]} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item name={[field.name, 'timeout_hours']} label="超时小时">
+                          <InputNumber min={0} style={{ width: '100%' }} />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Row gutter={12}>
+                      <Col span={8}>
+                        <Form.Item name={[field.name, 'allow_reject']} label="允许拒绝" valuePropName="checked" initialValue>
+                          <Switch />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item name={[field.name, 'allow_delegate']} label="允许委派" valuePropName="checked">
+                          <Switch />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item name={[field.name, 'reject_action']} label="拒绝动作" initialValue="end">
+                          <Select options={[
+                            { value: 'end', label: '结束' },
+                            { value: 'return', label: '退回' },
+                            { value: 'custom', label: '自定义' },
+                          ]} />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    {fields.length > 1 && (
+                      <Button danger type="link" onClick={() => remove(field.name)}>
+                        删除节点
+                      </Button>
+                    )}
+                  </Card>
+                ))}
+                <Form.ErrorList errors={errors} />
+              </div>
+            )}
+          </Form.List>
         </Form>
       </Modal>
     </div>
   );
+}
+
+const approverTypeOptions = [
+  { value: 'user', label: '指定用户' },
+  { value: 'role', label: '指定角色' },
+  { value: 'dept_manager', label: '部门负责人' },
+  { value: 'team_leader', label: '团队负责人' },
+  { value: 'project_manager', label: '项目负责人' },
+  { value: 'temp_team_leader', label: '临时团队负责人' },
+  { value: 'amount_based', label: '按金额阈值' },
+];
+
+const dynamicApproverOptions = [
+  { value: 'dept_manager', label: '部门负责人' },
+  { value: 'team_leader', label: '团队负责人' },
+  { value: 'project_manager', label: '项目负责人' },
+  { value: 'temp_team_leader', label: '临时团队负责人' },
+  { value: 'amount_based', label: '按金额阈值' },
+];
+
+function defaultApprovalNode(level = 1): ApprovalNode {
+  return {
+    level,
+    name: `审批节点 ${level}`,
+    approver_type: 'role',
+    approver_ids: [],
+    approval_mode: 'any',
+    allow_reject: true,
+    allow_delegate: false,
+    reject_action: 'end',
+  };
+}
+
+function normalizeNodes(nodes: ApprovalNode[]): ApprovalNode[] {
+  return nodes.map((node, index) => {
+    const approverIds = node.approver_ids || node.approverIds || [];
+    return {
+      ...defaultApprovalNode(index + 1),
+      ...node,
+      approver_type: node.approver_type || node.approverType || 'role',
+      approver_ids: approverIds
+      .map(id => Number(id))
+      .filter(id => Number.isInteger(id) && id > 0),
+      assignee_type: node.assignee_type || node.assigneeType,
+      assignee_value: node.assignee_value || node.assigneeValue,
+      approval_mode: node.approval_mode || node.approvalMode || 'any',
+      timeout_hours: node.timeout_hours || node.timeoutHours,
+      allow_reject: node.allow_reject ?? node.allowReject ?? true,
+      allow_delegate: node.allow_delegate ?? node.allowDelegate ?? false,
+      reject_action: node.reject_action || node.rejectAction || 'end',
+      level: Number(node.level || index + 1),
+    };
+  });
+}
+
+function normalizeWorkflow(workflow: ApprovalWorkflow): ApprovalWorkflow {
+  return {
+    ...workflow,
+    ticket_type: workflow.ticket_type || workflow.ticketType,
+    is_active: workflow.is_active ?? workflow.isActive ?? false,
+    nodes: workflow.nodes ? normalizeNodes(workflow.nodes) : [],
+  };
 }

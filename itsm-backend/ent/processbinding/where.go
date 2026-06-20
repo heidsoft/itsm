@@ -90,6 +90,36 @@ func IsActive(v bool) predicate.ProcessBinding {
 	return predicate.ProcessBinding(sql.FieldEQ(FieldIsActive, v))
 }
 
+// DepartmentID applies equality check predicate on the "department_id" field. It's identical to DepartmentIDEQ.
+func DepartmentID(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldDepartmentID, v))
+}
+
+// TeamID applies equality check predicate on the "team_id" field. It's identical to TeamIDEQ.
+func TeamID(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldTeamID, v))
+}
+
+// Scenario applies equality check predicate on the "scenario" field. It's identical to ScenarioEQ.
+func Scenario(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldScenario, v))
+}
+
+// Category applies equality check predicate on the "category" field. It's identical to CategoryEQ.
+func Category(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldCategory, v))
+}
+
+// ApprovalChainID applies equality check predicate on the "approval_chain_id" field. It's identical to ApprovalChainIDEQ.
+func ApprovalChainID(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldApprovalChainID, v))
+}
+
+// SLAPolicyID applies equality check predicate on the "sla_policy_id" field. It's identical to SLAPolicyIDEQ.
+func SLAPolicyID(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldSLAPolicyID, v))
+}
+
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
 func TenantID(v int) predicate.ProcessBinding {
 	return predicate.ProcessBinding(sql.FieldEQ(FieldTenantID, v))
@@ -408,6 +438,426 @@ func IsActiveEQ(v bool) predicate.ProcessBinding {
 // IsActiveNEQ applies the NEQ predicate on the "is_active" field.
 func IsActiveNEQ(v bool) predicate.ProcessBinding {
 	return predicate.ProcessBinding(sql.FieldNEQ(FieldIsActive, v))
+}
+
+// DepartmentIDEQ applies the EQ predicate on the "department_id" field.
+func DepartmentIDEQ(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldDepartmentID, v))
+}
+
+// DepartmentIDNEQ applies the NEQ predicate on the "department_id" field.
+func DepartmentIDNEQ(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNEQ(FieldDepartmentID, v))
+}
+
+// DepartmentIDIn applies the In predicate on the "department_id" field.
+func DepartmentIDIn(vs ...int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIn(FieldDepartmentID, vs...))
+}
+
+// DepartmentIDNotIn applies the NotIn predicate on the "department_id" field.
+func DepartmentIDNotIn(vs ...int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotIn(FieldDepartmentID, vs...))
+}
+
+// DepartmentIDGT applies the GT predicate on the "department_id" field.
+func DepartmentIDGT(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGT(FieldDepartmentID, v))
+}
+
+// DepartmentIDGTE applies the GTE predicate on the "department_id" field.
+func DepartmentIDGTE(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGTE(FieldDepartmentID, v))
+}
+
+// DepartmentIDLT applies the LT predicate on the "department_id" field.
+func DepartmentIDLT(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLT(FieldDepartmentID, v))
+}
+
+// DepartmentIDLTE applies the LTE predicate on the "department_id" field.
+func DepartmentIDLTE(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLTE(FieldDepartmentID, v))
+}
+
+// DepartmentIDIsNil applies the IsNil predicate on the "department_id" field.
+func DepartmentIDIsNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIsNull(FieldDepartmentID))
+}
+
+// DepartmentIDNotNil applies the NotNil predicate on the "department_id" field.
+func DepartmentIDNotNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotNull(FieldDepartmentID))
+}
+
+// TeamIDEQ applies the EQ predicate on the "team_id" field.
+func TeamIDEQ(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldTeamID, v))
+}
+
+// TeamIDNEQ applies the NEQ predicate on the "team_id" field.
+func TeamIDNEQ(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNEQ(FieldTeamID, v))
+}
+
+// TeamIDIn applies the In predicate on the "team_id" field.
+func TeamIDIn(vs ...int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIn(FieldTeamID, vs...))
+}
+
+// TeamIDNotIn applies the NotIn predicate on the "team_id" field.
+func TeamIDNotIn(vs ...int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotIn(FieldTeamID, vs...))
+}
+
+// TeamIDGT applies the GT predicate on the "team_id" field.
+func TeamIDGT(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGT(FieldTeamID, v))
+}
+
+// TeamIDGTE applies the GTE predicate on the "team_id" field.
+func TeamIDGTE(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGTE(FieldTeamID, v))
+}
+
+// TeamIDLT applies the LT predicate on the "team_id" field.
+func TeamIDLT(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLT(FieldTeamID, v))
+}
+
+// TeamIDLTE applies the LTE predicate on the "team_id" field.
+func TeamIDLTE(v int) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLTE(FieldTeamID, v))
+}
+
+// TeamIDIsNil applies the IsNil predicate on the "team_id" field.
+func TeamIDIsNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIsNull(FieldTeamID))
+}
+
+// TeamIDNotNil applies the NotNil predicate on the "team_id" field.
+func TeamIDNotNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotNull(FieldTeamID))
+}
+
+// ScenarioEQ applies the EQ predicate on the "scenario" field.
+func ScenarioEQ(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldScenario, v))
+}
+
+// ScenarioNEQ applies the NEQ predicate on the "scenario" field.
+func ScenarioNEQ(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNEQ(FieldScenario, v))
+}
+
+// ScenarioIn applies the In predicate on the "scenario" field.
+func ScenarioIn(vs ...string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIn(FieldScenario, vs...))
+}
+
+// ScenarioNotIn applies the NotIn predicate on the "scenario" field.
+func ScenarioNotIn(vs ...string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotIn(FieldScenario, vs...))
+}
+
+// ScenarioGT applies the GT predicate on the "scenario" field.
+func ScenarioGT(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGT(FieldScenario, v))
+}
+
+// ScenarioGTE applies the GTE predicate on the "scenario" field.
+func ScenarioGTE(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGTE(FieldScenario, v))
+}
+
+// ScenarioLT applies the LT predicate on the "scenario" field.
+func ScenarioLT(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLT(FieldScenario, v))
+}
+
+// ScenarioLTE applies the LTE predicate on the "scenario" field.
+func ScenarioLTE(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLTE(FieldScenario, v))
+}
+
+// ScenarioContains applies the Contains predicate on the "scenario" field.
+func ScenarioContains(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldContains(FieldScenario, v))
+}
+
+// ScenarioHasPrefix applies the HasPrefix predicate on the "scenario" field.
+func ScenarioHasPrefix(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldHasPrefix(FieldScenario, v))
+}
+
+// ScenarioHasSuffix applies the HasSuffix predicate on the "scenario" field.
+func ScenarioHasSuffix(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldHasSuffix(FieldScenario, v))
+}
+
+// ScenarioIsNil applies the IsNil predicate on the "scenario" field.
+func ScenarioIsNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIsNull(FieldScenario))
+}
+
+// ScenarioNotNil applies the NotNil predicate on the "scenario" field.
+func ScenarioNotNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotNull(FieldScenario))
+}
+
+// ScenarioEqualFold applies the EqualFold predicate on the "scenario" field.
+func ScenarioEqualFold(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEqualFold(FieldScenario, v))
+}
+
+// ScenarioContainsFold applies the ContainsFold predicate on the "scenario" field.
+func ScenarioContainsFold(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldContainsFold(FieldScenario, v))
+}
+
+// CategoryEQ applies the EQ predicate on the "category" field.
+func CategoryEQ(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldCategory, v))
+}
+
+// CategoryNEQ applies the NEQ predicate on the "category" field.
+func CategoryNEQ(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNEQ(FieldCategory, v))
+}
+
+// CategoryIn applies the In predicate on the "category" field.
+func CategoryIn(vs ...string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIn(FieldCategory, vs...))
+}
+
+// CategoryNotIn applies the NotIn predicate on the "category" field.
+func CategoryNotIn(vs ...string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotIn(FieldCategory, vs...))
+}
+
+// CategoryGT applies the GT predicate on the "category" field.
+func CategoryGT(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGT(FieldCategory, v))
+}
+
+// CategoryGTE applies the GTE predicate on the "category" field.
+func CategoryGTE(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGTE(FieldCategory, v))
+}
+
+// CategoryLT applies the LT predicate on the "category" field.
+func CategoryLT(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLT(FieldCategory, v))
+}
+
+// CategoryLTE applies the LTE predicate on the "category" field.
+func CategoryLTE(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLTE(FieldCategory, v))
+}
+
+// CategoryContains applies the Contains predicate on the "category" field.
+func CategoryContains(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldContains(FieldCategory, v))
+}
+
+// CategoryHasPrefix applies the HasPrefix predicate on the "category" field.
+func CategoryHasPrefix(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldHasPrefix(FieldCategory, v))
+}
+
+// CategoryHasSuffix applies the HasSuffix predicate on the "category" field.
+func CategoryHasSuffix(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldHasSuffix(FieldCategory, v))
+}
+
+// CategoryIsNil applies the IsNil predicate on the "category" field.
+func CategoryIsNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIsNull(FieldCategory))
+}
+
+// CategoryNotNil applies the NotNil predicate on the "category" field.
+func CategoryNotNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotNull(FieldCategory))
+}
+
+// CategoryEqualFold applies the EqualFold predicate on the "category" field.
+func CategoryEqualFold(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEqualFold(FieldCategory, v))
+}
+
+// CategoryContainsFold applies the ContainsFold predicate on the "category" field.
+func CategoryContainsFold(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldContainsFold(FieldCategory, v))
+}
+
+// ConditionsIsNil applies the IsNil predicate on the "conditions" field.
+func ConditionsIsNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIsNull(FieldConditions))
+}
+
+// ConditionsNotNil applies the NotNil predicate on the "conditions" field.
+func ConditionsNotNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotNull(FieldConditions))
+}
+
+// ApprovalChainIDEQ applies the EQ predicate on the "approval_chain_id" field.
+func ApprovalChainIDEQ(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldApprovalChainID, v))
+}
+
+// ApprovalChainIDNEQ applies the NEQ predicate on the "approval_chain_id" field.
+func ApprovalChainIDNEQ(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNEQ(FieldApprovalChainID, v))
+}
+
+// ApprovalChainIDIn applies the In predicate on the "approval_chain_id" field.
+func ApprovalChainIDIn(vs ...string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIn(FieldApprovalChainID, vs...))
+}
+
+// ApprovalChainIDNotIn applies the NotIn predicate on the "approval_chain_id" field.
+func ApprovalChainIDNotIn(vs ...string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotIn(FieldApprovalChainID, vs...))
+}
+
+// ApprovalChainIDGT applies the GT predicate on the "approval_chain_id" field.
+func ApprovalChainIDGT(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGT(FieldApprovalChainID, v))
+}
+
+// ApprovalChainIDGTE applies the GTE predicate on the "approval_chain_id" field.
+func ApprovalChainIDGTE(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGTE(FieldApprovalChainID, v))
+}
+
+// ApprovalChainIDLT applies the LT predicate on the "approval_chain_id" field.
+func ApprovalChainIDLT(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLT(FieldApprovalChainID, v))
+}
+
+// ApprovalChainIDLTE applies the LTE predicate on the "approval_chain_id" field.
+func ApprovalChainIDLTE(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLTE(FieldApprovalChainID, v))
+}
+
+// ApprovalChainIDContains applies the Contains predicate on the "approval_chain_id" field.
+func ApprovalChainIDContains(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldContains(FieldApprovalChainID, v))
+}
+
+// ApprovalChainIDHasPrefix applies the HasPrefix predicate on the "approval_chain_id" field.
+func ApprovalChainIDHasPrefix(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldHasPrefix(FieldApprovalChainID, v))
+}
+
+// ApprovalChainIDHasSuffix applies the HasSuffix predicate on the "approval_chain_id" field.
+func ApprovalChainIDHasSuffix(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldHasSuffix(FieldApprovalChainID, v))
+}
+
+// ApprovalChainIDIsNil applies the IsNil predicate on the "approval_chain_id" field.
+func ApprovalChainIDIsNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIsNull(FieldApprovalChainID))
+}
+
+// ApprovalChainIDNotNil applies the NotNil predicate on the "approval_chain_id" field.
+func ApprovalChainIDNotNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotNull(FieldApprovalChainID))
+}
+
+// ApprovalChainIDEqualFold applies the EqualFold predicate on the "approval_chain_id" field.
+func ApprovalChainIDEqualFold(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEqualFold(FieldApprovalChainID, v))
+}
+
+// ApprovalChainIDContainsFold applies the ContainsFold predicate on the "approval_chain_id" field.
+func ApprovalChainIDContainsFold(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldContainsFold(FieldApprovalChainID, v))
+}
+
+// SLAPolicyIDEQ applies the EQ predicate on the "sla_policy_id" field.
+func SLAPolicyIDEQ(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEQ(FieldSLAPolicyID, v))
+}
+
+// SLAPolicyIDNEQ applies the NEQ predicate on the "sla_policy_id" field.
+func SLAPolicyIDNEQ(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNEQ(FieldSLAPolicyID, v))
+}
+
+// SLAPolicyIDIn applies the In predicate on the "sla_policy_id" field.
+func SLAPolicyIDIn(vs ...string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIn(FieldSLAPolicyID, vs...))
+}
+
+// SLAPolicyIDNotIn applies the NotIn predicate on the "sla_policy_id" field.
+func SLAPolicyIDNotIn(vs ...string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotIn(FieldSLAPolicyID, vs...))
+}
+
+// SLAPolicyIDGT applies the GT predicate on the "sla_policy_id" field.
+func SLAPolicyIDGT(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGT(FieldSLAPolicyID, v))
+}
+
+// SLAPolicyIDGTE applies the GTE predicate on the "sla_policy_id" field.
+func SLAPolicyIDGTE(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldGTE(FieldSLAPolicyID, v))
+}
+
+// SLAPolicyIDLT applies the LT predicate on the "sla_policy_id" field.
+func SLAPolicyIDLT(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLT(FieldSLAPolicyID, v))
+}
+
+// SLAPolicyIDLTE applies the LTE predicate on the "sla_policy_id" field.
+func SLAPolicyIDLTE(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldLTE(FieldSLAPolicyID, v))
+}
+
+// SLAPolicyIDContains applies the Contains predicate on the "sla_policy_id" field.
+func SLAPolicyIDContains(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldContains(FieldSLAPolicyID, v))
+}
+
+// SLAPolicyIDHasPrefix applies the HasPrefix predicate on the "sla_policy_id" field.
+func SLAPolicyIDHasPrefix(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldHasPrefix(FieldSLAPolicyID, v))
+}
+
+// SLAPolicyIDHasSuffix applies the HasSuffix predicate on the "sla_policy_id" field.
+func SLAPolicyIDHasSuffix(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldHasSuffix(FieldSLAPolicyID, v))
+}
+
+// SLAPolicyIDIsNil applies the IsNil predicate on the "sla_policy_id" field.
+func SLAPolicyIDIsNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIsNull(FieldSLAPolicyID))
+}
+
+// SLAPolicyIDNotNil applies the NotNil predicate on the "sla_policy_id" field.
+func SLAPolicyIDNotNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotNull(FieldSLAPolicyID))
+}
+
+// SLAPolicyIDEqualFold applies the EqualFold predicate on the "sla_policy_id" field.
+func SLAPolicyIDEqualFold(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldEqualFold(FieldSLAPolicyID, v))
+}
+
+// SLAPolicyIDContainsFold applies the ContainsFold predicate on the "sla_policy_id" field.
+func SLAPolicyIDContainsFold(v string) predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldContainsFold(FieldSLAPolicyID, v))
+}
+
+// OverridesIsNil applies the IsNil predicate on the "overrides" field.
+func OverridesIsNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldIsNull(FieldOverrides))
+}
+
+// OverridesNotNil applies the NotNil predicate on the "overrides" field.
+func OverridesNotNil() predicate.ProcessBinding {
+	return predicate.ProcessBinding(sql.FieldNotNull(FieldOverrides))
 }
 
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.

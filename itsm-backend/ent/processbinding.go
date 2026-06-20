@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
@@ -32,6 +33,22 @@ type ProcessBinding struct {
 	Priority int `json:"priority,omitempty"`
 	// 是否激活
 	IsActive bool `json:"is_active,omitempty"`
+	// 部门ID (0表示全局)
+	DepartmentID int `json:"department_id,omitempty"`
+	// 团队ID (0表示全局)
+	TeamID int `json:"team_id,omitempty"`
+	// 场景标识: alert_handling, change_release, code_release, expense_approval
+	Scenario string `json:"scenario,omitempty"`
+	// 流程分类: operations, rd, finance, hr
+	Category string `json:"category,omitempty"`
+	// 匹配条件JSON
+	Conditions map[string]interface{} `json:"conditions,omitempty"`
+	// 审批链ID
+	ApprovalChainID string `json:"approval_chain_id,omitempty"`
+	// SLA策略ID
+	SLAPolicyID string `json:"sla_policy_id,omitempty"`
+	// 覆盖配置
+	Overrides map[string]interface{} `json:"overrides,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
@@ -70,11 +87,13 @@ func (*ProcessBinding) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case processbinding.FieldConditions, processbinding.FieldOverrides:
+			values[i] = new([]byte)
 		case processbinding.FieldIsDefault, processbinding.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case processbinding.FieldID, processbinding.FieldProcessVersion, processbinding.FieldPriority, processbinding.FieldTenantID:
+		case processbinding.FieldID, processbinding.FieldProcessVersion, processbinding.FieldPriority, processbinding.FieldDepartmentID, processbinding.FieldTeamID, processbinding.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case processbinding.FieldBusinessType, processbinding.FieldBusinessSubType, processbinding.FieldProcessDefinitionKey:
+		case processbinding.FieldBusinessType, processbinding.FieldBusinessSubType, processbinding.FieldProcessDefinitionKey, processbinding.FieldScenario, processbinding.FieldCategory, processbinding.FieldApprovalChainID, processbinding.FieldSLAPolicyID:
 			values[i] = new(sql.NullString)
 		case processbinding.FieldCreatedAt, processbinding.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -142,6 +161,58 @@ func (_m *ProcessBinding) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
 				_m.IsActive = value.Bool
+			}
+		case processbinding.FieldDepartmentID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field department_id", values[i])
+			} else if value.Valid {
+				_m.DepartmentID = int(value.Int64)
+			}
+		case processbinding.FieldTeamID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field team_id", values[i])
+			} else if value.Valid {
+				_m.TeamID = int(value.Int64)
+			}
+		case processbinding.FieldScenario:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field scenario", values[i])
+			} else if value.Valid {
+				_m.Scenario = value.String
+			}
+		case processbinding.FieldCategory:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field category", values[i])
+			} else if value.Valid {
+				_m.Category = value.String
+			}
+		case processbinding.FieldConditions:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field conditions", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Conditions); err != nil {
+					return fmt.Errorf("unmarshal field conditions: %w", err)
+				}
+			}
+		case processbinding.FieldApprovalChainID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field approval_chain_id", values[i])
+			} else if value.Valid {
+				_m.ApprovalChainID = value.String
+			}
+		case processbinding.FieldSLAPolicyID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_policy_id", values[i])
+			} else if value.Valid {
+				_m.SLAPolicyID = value.String
+			}
+		case processbinding.FieldOverrides:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field overrides", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Overrides); err != nil {
+					return fmt.Errorf("unmarshal field overrides: %w", err)
+				}
 			}
 		case processbinding.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -229,6 +300,30 @@ func (_m *ProcessBinding) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
+	builder.WriteString(", ")
+	builder.WriteString("department_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DepartmentID))
+	builder.WriteString(", ")
+	builder.WriteString("team_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TeamID))
+	builder.WriteString(", ")
+	builder.WriteString("scenario=")
+	builder.WriteString(_m.Scenario)
+	builder.WriteString(", ")
+	builder.WriteString("category=")
+	builder.WriteString(_m.Category)
+	builder.WriteString(", ")
+	builder.WriteString("conditions=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Conditions))
+	builder.WriteString(", ")
+	builder.WriteString("approval_chain_id=")
+	builder.WriteString(_m.ApprovalChainID)
+	builder.WriteString(", ")
+	builder.WriteString("sla_policy_id=")
+	builder.WriteString(_m.SLAPolicyID)
+	builder.WriteString(", ")
+	builder.WriteString("overrides=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Overrides))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))

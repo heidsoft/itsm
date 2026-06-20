@@ -58,6 +58,8 @@ type Tx struct {
 	DiscoveryResult *DiscoveryResultClient
 	// DiscoverySource is the client for interacting with the DiscoverySource builders.
 	DiscoverySource *DiscoverySourceClient
+	// DomainConfig is the client for interacting with the DomainConfig builders.
+	DomainConfig *DomainConfigClient
 	// EndpointACL is the client for interacting with the EndpointACL builders.
 	EndpointACL *EndpointACLClient
 	// EngineerSkill is the client for interacting with the EngineerSkill builders.
@@ -376,6 +378,7 @@ func (tx *Tx) init() {
 	tx.DiscoveryJob = NewDiscoveryJobClient(tx.config)
 	tx.DiscoveryResult = NewDiscoveryResultClient(tx.config)
 	tx.DiscoverySource = NewDiscoverySourceClient(tx.config)
+	tx.DomainConfig = NewDomainConfigClient(tx.config)
 	tx.EndpointACL = NewEndpointACLClient(tx.config)
 	tx.EngineerSkill = NewEngineerSkillClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)

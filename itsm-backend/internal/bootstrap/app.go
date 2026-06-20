@@ -266,7 +266,8 @@ func NewApplication() *Application {
 	bpmnTemplateService := service.NewBPMNTemplateService(client)
 	processBindingService := service.NewProcessBindingService(client)
 	processTriggerService := service.NewProcessTriggerService(client, processEngine)
-	bpmnProcessTriggerController := controller.NewBPMNProcessTriggerController(processTriggerService, processBindingService)
+	configInheritanceService := service.NewConfigInheritanceService(client, sugar)
+	bpmnProcessTriggerController := controller.NewBPMNProcessTriggerController(processTriggerService, processBindingService, configInheritanceService)
 
 	// BPMN Dashboard Controller (监控仪表盘)
 	bpmnMetricsService := service.NewBPMNMetricsService(client, sugar)

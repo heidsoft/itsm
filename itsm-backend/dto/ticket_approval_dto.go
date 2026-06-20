@@ -24,8 +24,10 @@ type UpdateApprovalWorkflowRequest struct {
 type ApprovalNodeRequest struct {
 	Level            int                       `json:"level" binding:"required,min=1" example:"1"`
 	Name             string                    `json:"name" binding:"required" example:"直属主管审批"`
-	ApproverType     string                    `json:"approver_type" binding:"required,oneof=user role department dynamic" example:"role"`
-	ApproverIDs      []int                     `json:"approver_ids" binding:"required,min=1" example:"[1,2]"`
+	ApproverType     string                    `json:"approver_type" binding:"required,oneof=user role department dynamic dept_manager team_leader project_manager temp_team_leader amount_based" example:"role"`
+	ApproverIDs      []int                     `json:"approver_ids,omitempty" example:"[1,2]"`
+	AssigneeType     string                    `json:"assignee_type,omitempty" example:"dept_manager"`
+	AssigneeValue    string                    `json:"assignee_value,omitempty" example:"1"`
 	ApprovalMode     string                    `json:"approval_mode" binding:"required,oneof=sequential parallel any all" example:"any"`
 	MinimumApprovals *int                      `json:"minimum_approvals,omitempty"`
 	TimeoutHours     *int                      `json:"timeout_hours,omitempty" example:"24"`
@@ -62,6 +64,8 @@ type ApprovalNodeResponse struct {
 	Name             string                    `json:"name" example:"直属主管审批"`
 	ApproverType     string                    `json:"approver_type" example:"role"`
 	ApproverIDs      []int                     `json:"approver_ids" example:"[1,2]"`
+	AssigneeType     string                    `json:"assignee_type,omitempty" example:"dept_manager"`
+	AssigneeValue    string                    `json:"assignee_value,omitempty" example:"1"`
 	ApproverNames    []string                  `json:"approver_names" example:"[\"张三\",\"李四\"]"`
 	ApprovalMode     string                    `json:"approval_mode" example:"any"`
 	MinimumApprovals *int                      `json:"minimum_approvals,omitempty"`
