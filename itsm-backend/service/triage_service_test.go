@@ -319,3 +319,44 @@ func TestTriage_BatchSuggest(t *testing.T) {
 	assert.Equal(t, 2, results[1].ID)
 	assert.Equal(t, "database", results[1].Result.Category)
 }
+
+func TestTriage_Suggest_GuidanceError_FallsBackToLLM(t *testing.T) {
+	mockLLM := &MockLLMGateway{
+		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+			return `{"category":"security","priority":"critical","confidence":0.92,"explanation":"detected sql injection keywords"}`, nil
+		},
+	}
+	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
+
+	svc := NewTriageService(gateway, zap.NewNop())
+	svc.guidanceClient = &fakeGuidanceClient{
+		err: errors.New("Guidance sidecar network error"),
+	}
+
+	result := svc.Suggest(context.Background(), "SQL注入攻击检测", "")
+
+	assert.Equal(t, "security", result.Category)
+	assert.Equal(t, "critical", result.Priority)
+	assert.Equal(t, 100, result.AssigneeID)
+	assert.Equal(t, 0.92, result.Confidence)
+}
+
+func TestTriage_Suggest_GuidanceErrorAndLLMError_FallsBackToKeyword(t *testing.T) {
+	mockLLM := &MockLLMGateway{
+		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+			return "", errors.New("LLM provider unavailable")
+		},
+	}
+	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
+
+	svc := NewTriageService(gateway, zap.NewNop())
+	svc.guidanceClient = &fakeGuidanceClient{
+		err: errors.New("Guidance sidecar network error"),
+	}
+
+	result := svc.Suggest(context.Background(), "MySQL连接失败", "数据库无法访问")
+
+	assert.Equal(t, "database", result.Category)
+	assert.Equal(t, 101, result.AssigneeID)
+	assert.Greater(t, result.Confidence, 0.5)
+}
