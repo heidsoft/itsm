@@ -10,6 +10,38 @@ import (
 	"go.uber.org/zap"
 )
 
+// guidanceTriageClient defines the interface for Guidance sidecar calls
+// This enables dependency injection for testing
+type guidanceTriageClient interface {
+	Triage(ctx context.Context, title, description string, tenantID int) (*GuidanceTriageResponse, error)
+}
+
+// normalizeResult ensures triage result has valid category, priority, and confidence values
+func (t *TriageService) normalizeResult(result TriageResult) TriageResult {
+	// Validate and normalize category
+	if result.Category == "" || !isValidCategory(result.Category) {
+		result.Category = "general"
+	}
+	// Validate and normalize priority
+	if result.Priority == "" || !isValidPriority(result.Priority) {
+		result.Priority = "medium"
+	}
+	// Validate and normalize confidence
+	if result.Confidence == 0 {
+		result.Confidence = 0.6
+	}
+	if result.Confidence < 0 || result.Confidence > 1 {
+		result.Confidence = 0.6
+	}
+	// Set default assignee based on category
+	if result.AssigneeID == 0 {
+		if assigneeID, ok := t.defaultAssignees[result.Category]; ok {
+			result.AssigneeID = assigneeID
+		}
+	}
+	return result
+}
+
 // TriageResult holds classification suggestions for incidents/tickets
 type TriageResult struct {
 	Category     string  `json:"category"`
@@ -23,7 +55,7 @@ type TriageResult struct {
 // TriageService provides LLM-powered ticket triage and classification
 type TriageService struct {
 	gateway          *LLMGateway
-	guidanceClient   *GuidanceClient
+	guidanceClient   guidanceTriageClient
 	logger           *zap.Logger
 	keywordFallback  bool
 	defaultAssignees map[string]int
@@ -132,14 +164,14 @@ func (t *TriageService) Suggest(ctx context.Context, title, description string) 
 				zap.String("priority", guidanceResult.Priority),
 				zap.Float64("confidence", guidanceResult.Confidence),
 				zap.Float64("latency_ms", guidanceResult.LatencyMs))
-			return TriageResult{
+			return t.normalizeResult(TriageResult{
 				Category:     guidanceResult.Category,
 				Priority:     guidanceResult.Priority,
 				AssigneeID:   guidanceResult.AssigneeID,
 				Confidence:   guidanceResult.Confidence,
 				Explanation:  guidanceResult.Explanation,
 				SuggestedFix: guidanceResult.SuggestedFix,
-			}
+			})
 		}
 	}
 
@@ -236,26 +268,8 @@ IMPORTANT: Respond with ONLY valid JSON in this exact format, no other text:
 		}
 	}
 
-	// Validate and normalize enum values
-	if classification.Category == "" || !isValidCategory(classification.Category) {
-		classification.Category = "general"
-	}
-	if classification.Priority == "" || !isValidPriority(classification.Priority) {
-		classification.Priority = "medium"
-	}
-	if classification.Confidence == 0 {
-		classification.Confidence = 0.6
-	}
-	// Clamp confidence to valid range
-	if classification.Confidence < 0 || classification.Confidence > 1 {
-		classification.Confidence = 0.6
-	}
-
-	if assigneeID, ok := t.defaultAssignees[classification.Category]; ok {
-		classification.AssigneeID = assigneeID
-	}
-
-	return classification, nil
+	// Normalize and validate enum values using shared helper
+	return t.normalizeResult(classification), nil
 }
 
 // isValidCategory checks if category is a valid enum value

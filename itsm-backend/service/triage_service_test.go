@@ -212,3 +212,160 @@ func TestTriage_BatchSuggest(t *testing.T) {
 	assert.Equal(t, 2, results[1].ID)
 	assert.Equal(t, "database", results[1].Result.Category)
 }
+
+// fakeGuidanceClient is an in-memory implementation of guidanceTriageClient for testing.
+// It allows tests to configure whether the call errors, returns empty/invalid fields,
+// or returns a successful response.
+type fakeGuidanceClient struct {
+	// err is returned by Triage. When set, result is ignored.
+	err error
+	// result is returned by Triage when err is nil.
+	result *GuidanceTriageResponse
+	// callCount tracks how many times Triage was invoked.
+	callCount int
+}
+
+func (f *fakeGuidanceClient) Triage(ctx context.Context, title, description string, tenantID int) (*GuidanceTriageResponse, error) {
+	f.callCount++
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.result, nil
+}
+
+// newTriageServiceWithGuidance creates a TriageService wired with a fake guidance client.
+// Tests use this helper to exercise the guidance-failure / guidance-success paths
+// without binding to localhost:8091.
+func newTriageServiceWithGuidance(gateway *LLMGateway, guidance guidanceTriageClient) *TriageService {
+	svc := NewTriageServiceWithGuidance(gateway, nil, zap.NewNop())
+	svc.guidanceClient = guidance
+	return svc
+}
+
+func TestTriage_Suggest_Guidance_Error_FallsBackToLLM(t *testing.T) {
+	// Guidance sidecar errors out; service should log a warning and continue to LLM.
+	mockLLM := &MockLLMGateway{
+		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+			return `{"category":"security","priority":"critical","confidence":0.88,"explanation":"attack signature"}`, nil
+		},
+	}
+	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
+	guidance := &fakeGuidanceClient{err: errors.New("sidecar unreachable")}
+
+	svc := newTriageServiceWithGuidance(gateway, guidance)
+	result := svc.Suggest(context.Background(), "发现恶意请求", "sql injection attempt")
+
+	assert.Equal(t, 1, guidance.callCount, "guidance should be consulted exactly once")
+	assert.Equal(t, "security", result.Category)
+	assert.Equal(t, "critical", result.Priority)
+	assert.Equal(t, 0.88, result.Confidence)
+	assert.Equal(t, 100, result.AssigneeID)
+}
+
+func TestTriage_Suggest_Guidance_Error_FallsBackToKeyword(t *testing.T) {
+	// Both guidance and LLM fail; service should fall through to keyword fallback.
+	mockLLM := &MockLLMGateway{
+		MockChat: func(ctx context.Context, model string, messages []LLMMessage) (string, error) {
+			return "", errors.New("LLM provider timeout")
+		},
+	}
+	gateway := NewLLMGateway(mockLLM, nil, nil, "test")
+	guidance := &fakeGuidanceClient{err: errors.New("sidecar 500")}
+
+	svc := newTriageServiceWithGuidance(gateway, guidance)
+	// "mysql" should trigger the database keyword bucket even when both upstream paths fail.
+	result := svc.Suggest(context.Background(), "mysql connection failed", "database unreachable")
+
+	assert.Equal(t, 1, guidance.callCount)
+	assert.Equal(t, "database", result.Category)
+	assert.Equal(t, 101, result.AssigneeID)
+}
+
+func TestTriage_Suggest_Guidance_NormalizesEmptyCategory(t *testing.T) {
+	// Guidance sidecar returns a successful response but with empty category.
+	// The service must surface a normalized, non-empty category to the API contract.
+	guidance := &fakeGuidanceClient{
+		result: &GuidanceTriageResponse{
+			Category:   "",
+			Priority:   "high",
+			Confidence: 0.8,
+		},
+	}
+	gateway := NewLLMGateway(nil, nil, nil, "test")
+	svc := newTriageServiceWithGuidance(gateway, guidance)
+
+	result := svc.Suggest(context.Background(), "anything", "anything")
+
+	assert.Equal(t, "general", result.Category)
+	assert.Equal(t, "high", result.Priority)
+	assert.Equal(t, 0.8, result.Confidence)
+}
+
+func TestTriage_Suggest_Guidance_NormalizesInvalidCategory(t *testing.T) {
+	// Guidance returns an enum value outside the contract; service must downgrade to general.
+	guidance := &fakeGuidanceClient{
+		result: &GuidanceTriageResponse{
+			Category:   "unknown_category",
+			Priority:   "medium",
+			Confidence: 0.7,
+		},
+	}
+	gateway := NewLLMGateway(nil, nil, nil, "test")
+	svc := newTriageServiceWithGuidance(gateway, guidance)
+
+	result := svc.Suggest(context.Background(), "anything", "anything")
+
+	assert.Equal(t, "general", result.Category)
+}
+
+func TestTriage_Suggest_Guidance_NormalizesOutOfRangeConfidence(t *testing.T) {
+	// Confidence 1.5 is outside [0, 1]; service must clamp to the documented default.
+	guidance := &fakeGuidanceClient{
+		result: &GuidanceTriageResponse{
+			Category:   "network",
+			Priority:   "high",
+			Confidence: 1.5,
+		},
+	}
+	gateway := NewLLMGateway(nil, nil, nil, "test")
+	svc := newTriageServiceWithGuidance(gateway, guidance)
+
+	result := svc.Suggest(context.Background(), "anything", "anything")
+
+	assert.Equal(t, 0.6, result.Confidence)
+	assert.Equal(t, 102, result.AssigneeID)
+}
+
+func TestTriage_Suggest_Guidance_Success_PreservesAssignee(t *testing.T) {
+	// When guidance returns a valid response, the service must preserve its
+	// normalized category→assignee mapping without overriding it.
+	guidance := &fakeGuidanceClient{
+		result: &GuidanceTriageResponse{
+			Category:   "database",
+			Priority:   "high",
+			AssigneeID: 999, // non-default assignee; should be kept when non-zero
+			Confidence: 0.9,
+		},
+	}
+	gateway := NewLLMGateway(nil, nil, nil, "test")
+	svc := newTriageServiceWithGuidance(gateway, guidance)
+
+	result := svc.Suggest(context.Background(), "anything", "anything")
+
+	assert.Equal(t, "database", result.Category)
+	assert.Equal(t, 999, result.AssigneeID)
+	assert.Equal(t, 0.9, result.Confidence)
+}
+
+func TestTriage_NormalizeResult_RejectsNegativeConfidence(t *testing.T) {
+	// Guard against regression where negative confidence slipped through normalization.
+	svc := NewTriageService(nil, zap.NewNop())
+	got := svc.normalizeResult(TriageResult{
+		Category:   "storage",
+		Priority:   "medium",
+		Confidence: -0.3,
+	})
+	assert.Equal(t, 0.6, got.Confidence)
+	assert.Equal(t, "storage", got.Category)
+	assert.Equal(t, 105, got.AssigneeID)
+}
