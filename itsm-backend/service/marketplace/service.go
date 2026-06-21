@@ -92,15 +92,65 @@ func (s *Service) GetItem(ctx context.Context, itemID int) (*ent.MarketplaceItem
 	return item, nil
 }
 
+// reactivateUninstalledInstallation 复用并重置历史卸载记录
+// 用于处理 UNIQUE(tenant_id, item_id) 约束冲突场景：
+// 同一租户对同一商品在 uninstall 后再次 install 时，保留历史但重新激活。
+func (s *Service) reactivateUninstalledInstallation(
+	ctx context.Context,
+	tenantID, itemID int,
+	item *ent.MarketplaceItem,
+	installedBy string,
+) (*ent.TenantInstallation, error) {
+	history, err := s.db.TenantInstallation.Query().
+		Where(
+			tenantinstallation.TenantID(tenantID),
+			tenantinstallation.ItemID(itemID),
+			tenantinstallation.StatusEQ(tenantinstallation.StatusUninstalled),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			// 历史记录在并发场景下不存在，说明另一个并发请求已重新激活
+			return nil, fmt.Errorf("item already installed")
+		}
+		return nil, fmt.Errorf("failed to locate uninstalled history: %w", err)
+	}
+
+	reactivated, err := s.db.TenantInstallation.UpdateOneID(history.ID).
+		SetInstalledVersion(item.LatestVersion).
+		SetStatus(tenantinstallation.StatusInstalling).
+		SetInstalledBy(installedBy).
+		SetErrorMessage("").
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reactivate installation: %w", err)
+	}
+
+	s.logger.Infow("Reactivated uninstalled installation",
+		"tenant_id", tenantID,
+		"item_id", itemID,
+		"history_id", history.ID,
+	)
+	return reactivated, nil
+}
+
 // InstallItem 租户安装商品
 func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, installedBy string) (*ent.TenantInstallation, error) {
-	// 检查商品是否存在
+	// P2-04 修复：业务保护四道闸
+	// 1) 商品必须存在
 	item, err := s.db.MarketplaceItem.Get(ctx, itemID)
 	if err != nil {
 		return nil, fmt.Errorf("item not found: %w", err)
 	}
-
-	// 检查是否已经安装
+	// 2) 仅允许安装已发布的商品，禁止安装草稿/已下架
+	if item.Status != marketplaceitem.StatusPublished {
+		return nil, fmt.Errorf("item is not available for installation (status=%s)", item.Status)
+	}
+	// 3) 安装人记录不可为空
+	if installedBy == "" {
+		return nil, fmt.Errorf("installed_by is required")
+	}
+	// 4) 已存在有效安装则返回错误，避免重复安装
 	exists, err := s.db.TenantInstallation.Query().
 		Where(
 			tenantinstallation.TenantID(tenantID),
@@ -115,7 +165,7 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 		return nil, fmt.Errorf("item already installed")
 	}
 
-	// 创建安装记录
+	// 5) 尝试创建安装记录（处理 UNIQUE(tenant_id, item_id) 冲突场景：存在历史卸载记录）
 	installation, err := s.db.TenantInstallation.Create().
 		SetTenantID(tenantID).
 		SetItemID(itemID).
@@ -124,6 +174,11 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 		SetInstalledBy(installedBy).
 		Save(ctx)
 	if err != nil {
+		// 防御：UNIQUE(tenant_id, item_id) 约束冲突时，说明存在历史 uninstalled 记录
+		// 我们复用历史记录，将其重新激活（保留审计历史，避免数据丢失）
+		if ent.IsConstraintError(err) {
+			return s.reactivateUninstalledInstallation(ctx, tenantID, itemID, item, installedBy)
+		}
 		return nil, fmt.Errorf("failed to create installation: %w", err)
 	}
 

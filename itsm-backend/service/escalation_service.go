@@ -19,18 +19,32 @@ type EscalationService struct {
 	client          *ent.Client
 	logger          *zap.SugaredLogger
 	notificationSvc *TicketNotificationService
+	matrixSvc       *EscalationMatrixService
 }
 
 func NewEscalationService(client *ent.Client, logger *zap.SugaredLogger) *EscalationService {
 	return &EscalationService{
-		client: client,
-		logger: logger,
+		client:    client,
+		logger:    logger,
+		matrixSvc: NewEscalationMatrixService(logger),
 	}
 }
 
 // SetNotificationService 设置通知服务
 func (e *EscalationService) SetNotificationService(notificationSvc *TicketNotificationService) {
 	e.notificationSvc = notificationSvc
+}
+
+// SetMatrixService 设置升级矩阵服务（供注入自定义矩阵/测试）
+func (e *EscalationService) SetMatrixService(matrixSvc *EscalationMatrixService) {
+	if matrixSvc != nil {
+		e.matrixSvc = matrixSvc
+	}
+}
+
+// MatrixService 返回内部升级矩阵服务（用于测试与调用方访问）
+func (e *EscalationService) MatrixService() *EscalationMatrixService {
+	return e.matrixSvc
 }
 
 // ProcessEscalations 处理所有升级任务
@@ -57,6 +71,11 @@ func (e *EscalationService) ProcessEscalations(ctx context.Context, tenantID int
 }
 
 // processSLAEscalations 处理SLA预警规则中的升级
+//
+// 升级策略：
+//  1. 取工单的 Priority 字段
+//  2. 调用 EscalationMatrixService.FindNextEscalationLevel 获取下一个应触发的升级级别
+//  3. 若存在则升级（多级连续升级：若 elapsed 同时跨多级，每级都会记录一次）
 func (e *EscalationService) processSLAEscalations(ctx context.Context, tenantID int) error {
 	// 获取所有启用升级的预警规则
 	alertRules, err := e.client.SLAAlertRule.Query().
@@ -83,34 +102,139 @@ func (e *EscalationService) processSLAEscalations(ctx context.Context, tenantID 
 		}
 
 		for _, alert := range pendingAlerts {
-			// 检查是否达到升级阈值
-			escalationLevels := rule.EscalationLevels
-			if len(escalationLevels) == 0 {
-				continue
+			// 计算已过去的时间（分钟）
+			elapsedMinutes := int(time.Since(alert.CreatedAt).Minutes())
+
+			// 取工单优先级
+			priority := e.resolveTicketPriority(ctx, alert.TicketID)
+			if priority == "" {
+				priority = "medium" // 默认值
 			}
 
-			// 计算已过去的时间
-			timeSinceAlert := time.Since(alert.CreatedAt).Minutes()
-
-			// 检查每个升级级别
-			for _, level := range escalationLevels {
-				threshold, ok := level["threshold"].(float64)
-				if !ok {
-					continue
-				}
-
-				// 如果达到升级时间且尚未升级到该级别
-				if timeSinceAlert >= threshold && alert.EscalationLevel < int(threshold) {
-					if err := e.escalateToLevel(ctx, alert, rule, int(threshold), tenantID); err != nil {
-						e.logger.Errorw("Failed to escalate alert", "alert_id", alert.ID, "error", err)
-					}
+			// 使用升级矩阵查下一个升级级别
+			// 多级连续升级：while 循环，逐级推进
+			currentMax := alert.EscalationLevel
+			for {
+				nextLevel := e.matrixSvc.FindNextEscalationLevel(tenantID, priority, elapsedMinutes, currentMax)
+				if nextLevel == nil {
 					break
 				}
+				if err := e.escalateToLevelByMatrix(ctx, alert, rule, nextLevel, tenantID, priority); err != nil {
+					e.logger.Errorw("Failed to escalate alert",
+						"alert_id", alert.ID,
+						"level", nextLevel.Level,
+						"error", err)
+					break
+				}
+				currentMax = nextLevel.Level
+				e.logger.Infow("Alert escalated via matrix",
+					"alert_id", alert.ID,
+					"ticket_number", alert.TicketNumber,
+					"priority", priority,
+					"level", nextLevel.Level,
+					"elapsed_minutes", elapsedMinutes,
+					"notify_roles", nextLevel.NotifyRoles,
+				)
 			}
 		}
 	}
 
 	return nil
+}
+
+// resolveTicketPriority 从工单查询优先级
+func (e *EscalationService) resolveTicketPriority(ctx context.Context, ticketID int) string {
+	if ticketID <= 0 || e.client == nil {
+		return ""
+	}
+	t, err := e.client.Ticket.Get(ctx, ticketID)
+	if err != nil || t == nil {
+		return ""
+	}
+	return string(t.Priority)
+}
+
+// escalateToLevelByMatrix 按矩阵级别升级
+func (e *EscalationService) escalateToLevelByMatrix(
+	ctx context.Context,
+	alert *ent.SLAAlertHistory,
+	rule *ent.SLAAlertRule,
+	level *EscalationLevel,
+	tenantID int,
+	priority string,
+) error {
+	// 1. 更新告警的 escalation level
+	_, err := e.client.SLAAlertHistory.UpdateOneID(alert.ID).
+		SetEscalationLevel(level.Level).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to update escalation level: %w", err)
+	}
+
+	// 2. 解析 notify_user_ids（按角色名→具体用户）
+	notifyUsers := e.resolveNotifyUsers(ctx, level, tenantID)
+
+	// 3. 发送通知
+	if e.notificationSvc != nil && len(notifyUsers) > 0 {
+		content := fmt.Sprintf("【SLA矩阵升级】工单 #%s (%s) [优先级 %s] 已升级至 L%d：%s",
+			alert.TicketNumber, alert.TicketTitle, priority, level.Level, level.Description)
+		for _, userID := range notifyUsers {
+			err := e.notificationSvc.SendNotification(ctx, alert.TicketID, &dto.SendTicketNotificationRequest{
+				UserIDs: []int{userID},
+				Type:    "sla_escalated",
+				Channel: "in_app",
+				Content: content,
+			}, tenantID)
+			if err != nil {
+				e.logger.Errorw("Failed to send SLA escalation notification",
+					"user_id", userID, "error", err)
+			}
+		}
+	}
+
+	e.logger.Infow("Matrix-based escalation completed",
+		"alert_id", alert.ID,
+		"level", level.Level,
+		"notify_users_count", len(notifyUsers),
+	)
+	return nil
+}
+
+// resolveNotifyUsers 解析升级级别的通知用户
+//
+// 输入：
+//   - level: 矩阵级别配置（含 NotifyRoles 和 NotifyUserIDs）
+//   - tenantID: 租户 ID
+//
+// 输出：合并后的 userIDs（先去 NotifyUserIDs，再按 NotifyRoles 查询）
+func (e *EscalationService) resolveNotifyUsers(ctx context.Context, level *EscalationLevel, tenantID int) []int {
+	if level == nil {
+		return nil
+	}
+	seen := make(map[int]bool)
+	var out []int
+	for _, uid := range level.NotifyUserIDs {
+		if !seen[uid] {
+			out = append(out, uid)
+			seen[uid] = true
+		}
+	}
+	// 按角色名查 user（简化：以 role 字段精确匹配角色名）
+	if e.client != nil {
+		for _, role := range level.NotifyRoles {
+			ids, _ := e.client.User.Query().
+				Where(user.TenantIDEQ(tenantID)).
+				Where(user.RoleEQ(user.Role(role))).
+				IDs(ctx)
+			for _, uid := range ids {
+				if !seen[uid] {
+					out = append(out, uid)
+					seen[uid] = true
+				}
+			}
+		}
+	}
+	return out
 }
 
 // escalateToLevel 升级到指定级别

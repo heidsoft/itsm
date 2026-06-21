@@ -443,8 +443,8 @@ func (tc *TicketWorkflowController) GetTicketWorkflowHistory(c *gin.Context) {
 		OperatorID int64                  `json:"operatorId"`
 		FromUserID *int64                 `json:"fromUserId,omitempty"`
 		ToUserID   *int64                 `json:"toUserId,omitempty"`
-		Comment    string                 `json:"comment"`
-		Reason     string                 `json:"reason"`
+		Comment    *string                `json:"comment"`
+		Reason     *string                `json:"reason"`
 		Metadata   map[string]interface{} `json:"metadata"`
 		CreatedAt  time.Time              `json:"createdAt"`
 	}
@@ -452,10 +452,20 @@ func (tc *TicketWorkflowController) GetTicketWorkflowHistory(c *gin.Context) {
 	for rows.Next() {
 		var r workflowRec
 		var metaJSON []byte
+		// P1-08 修复：comment / reason 在表中可空，使用 sql.NullString 避免 Scan NULL 报错
+		var commentNS, reasonNS sql.NullString
 		if err := rows.Scan(&r.ID, &r.TicketID, &r.Action, &r.FromStatus, &r.ToStatus,
-			&r.OperatorID, &r.FromUserID, &r.ToUserID, &r.Comment, &r.Reason, &metaJSON, &r.CreatedAt); err != nil {
+			&r.OperatorID, &r.FromUserID, &r.ToUserID, &commentNS, &reasonNS, &metaJSON, &r.CreatedAt); err != nil {
 			common.Fail(c, common.InternalErrorCode, "扫描流转记录失败: "+err.Error())
 			return
+		}
+		if commentNS.Valid {
+			s := commentNS.String
+			r.Comment = &s
+		}
+		if reasonNS.Valid {
+			s := reasonNS.String
+			r.Reason = &s
 		}
 		if len(metaJSON) > 0 {
 			if err := json.Unmarshal(metaJSON, &r.Metadata); err != nil {

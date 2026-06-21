@@ -64,16 +64,19 @@ type SLAAlertRule struct {
 
 // SLAAlertHistory records triggered alerts
 type SLAAlertHistory struct {
-	ID                  int        `json:"id"`
-	AlertRuleID         int        `json:"alert_rule_id"`
-	TicketID            int        `json:"ticket_id"`
-	TicketNumber        string     `json:"ticket_number"`
-	TicketTitle         string     `json:"ticket_title"`
-	AlertLevel          string     `json:"alert_level"`
-	ThresholdPercentage int        `json:"threshold_percentage"`
-	ActualPercentage    float64    `json:"actual_percentage"`
-	NotificationSent    bool       `json:"notification_sent"`
-	CreatedAt           time.Time  `json:"created_at"` // trigger time
-	ResolvedAt          *time.Time `json:"resolved_at,omitempty"`
-	TenantID            int        `json:"tenant_id"`
+	ID                       int        `json:"id"`
+	AlertRuleID              int        `json:"alert_rule_id"`
+	TicketID                 int        `json:"ticket_id"`
+	TicketNumber             string     `json:"ticket_number"`
+	TicketTitle              string     `json:"ticket_title"`
+	AlertLevel               string     `json:"alert_level"`
+	ThresholdPercentage      int        `json:"threshold_percentage"`
+	ActualPercentage         float64    `json:"actual_percentage"`
+	NotificationSent         bool       `json:"notification_sent"`
+	CreatedAt                time.Time  `json:"created_at"` // trigger time
+	ResolvedAt               *time.Time `json:"resolved_at,omitempty"`
+	TenantID                 int        `json:"tenant_id"`
+	CooldownRemainingSeconds int        `json:"cooldown_remaining_seconds"`
+	CooldownMinutes          int        `json:"cooldown_minutes"`
+	SuppressedByCooldown     bool       `json:"suppressed_by_cooldown"`
 }

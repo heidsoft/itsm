@@ -2,6 +2,7 @@ package sla
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.uber.org/zap"
@@ -48,10 +49,54 @@ func (s *Service) DeleteDefinition(ctx context.Context, id int, tenantID int) er
 
 // SLA Compliance and Monitoring
 
-func (s *Service) CheckSLACompliance(ctx context.Context, ticketID int, tenantID int) error {
+// SLAComplianceResult 返回值
+type SLAComplianceResult struct {
+	TicketID             int      `json:"ticketId"`
+	TenantID             int      `json:"tenantId"`
+	Found                bool     `json:"found"`
+	CreatedAt            *time.Time `json:"createdAt,omitempty"`
+	FirstResponseAt      *time.Time `json:"firstResponseAt,omitempty"`
+	ResolvedAt           *time.Time `json:"resolvedAt,omitempty"`
+	ActualResponseMinutes float64  `json:"actual_response_minutes"`
+	ActualResolutionMinutes float64 `json:"actual_resolution_minutes"`
+	Compliant            bool     `json:"compliant"`
+	Message              string   `json:"message"`
+}
+
+// CheckSLACompliance P1-07 修复：真正计算 actual_response_minutes。
+func (s *Service) CheckSLACompliance(ctx context.Context, ticketID int, tenantID int) (*SLAComplianceResult, error) {
 	s.logger.Infow("Checking SLA Compliance", "ticketID", ticketID)
-	// Logic to find applicable SLA, check timestamps, and record violations
-	return nil
+	createdAt, firstResponseAt, resolvedAt, found, err := s.repo.GetTicketSLA(ctx, ticketID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	res := &SLAComplianceResult{
+		TicketID: ticketID,
+		TenantID: tenantID,
+		Found:    found,
+	}
+	if !found {
+		res.Message = "工单不存在或不属于该租户"
+		return res, nil
+	}
+	res.CreatedAt = &createdAt
+	if !firstResponseAt.IsZero() {
+		t := firstResponseAt
+		res.FirstResponseAt = &t
+		res.ActualResponseMinutes = firstResponseAt.Sub(createdAt).Minutes()
+	}
+	if !resolvedAt.IsZero() {
+		t := resolvedAt
+		res.ResolvedAt = &t
+		res.ActualResolutionMinutes = resolvedAt.Sub(createdAt).Minutes()
+	}
+	res.Compliant = !firstResponseAt.IsZero()
+	if res.Compliant {
+		res.Message = fmt.Sprintf("SLA计时正常，首次响应 %.1f 分钟", res.ActualResponseMinutes)
+	} else {
+		res.Message = "工单尚未首次响应"
+	}
+	return res, nil
 }
 
 // Violations
@@ -106,8 +151,38 @@ func (s *Service) DeleteAlertRule(ctx context.Context, id int, tenantID int) err
 	return s.repo.DeleteAlertRule(ctx, id, tenantID)
 }
 
+// SLAAlertHistoryDefaultCooldownMinutes DDD 层默认告警抑制间隔（分钟）
+//
+// 与 service.SLAAlertService 的 defaultAlertCooldownMinutes 保持一致。
+// 同一 (ticket_id, alert_rule_id) 在窗口内只保留一条未解决告警。
+const SLAAlertHistoryDefaultCooldownMinutes = 15
+
 func (s *Service) GetAlertHistory(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*SLAAlertHistory, int, error) {
-	return s.repo.ListAlertHistory(ctx, tenantID, page, size, filters)
+	histories, total, err := s.repo.ListAlertHistory(ctx, tenantID, page, size, filters)
+	if err != nil {
+		return nil, 0, err
+	}
+	// 为每条 history 计算 cooldown 字段（未解决的告警仍处于冷却窗口时返回剩余秒数）
+	now := time.Now()
+	for _, h := range histories {
+		h.CooldownMinutes = SLAAlertHistoryDefaultCooldownMinutes
+		if h.ResolvedAt == nil {
+			elapsed := now.Sub(h.CreatedAt)
+			cooldownDur := time.Duration(SLAAlertHistoryDefaultCooldownMinutes) * time.Minute
+			if elapsed < cooldownDur {
+				remaining := cooldownDur - elapsed
+				h.CooldownRemainingSeconds = int(remaining.Seconds())
+				h.SuppressedByCooldown = true
+			} else {
+				h.CooldownRemainingSeconds = 0
+				h.SuppressedByCooldown = false
+			}
+		} else {
+			h.CooldownRemainingSeconds = 0
+			h.SuppressedByCooldown = false
+		}
+	}
+	return histories, total, nil
 }
 
 // GetSLAStats 获取SLA统计信息

@@ -64,6 +64,7 @@ type RouterConfig struct {
 	BPMNWorkflowController          *controller.BPMNWorkflowController
 	BPMNProcessTriggerController    *controller.BPMNProcessTriggerController
 	BPMNDashboardController         *controller.BPMNDashboardController
+	BPMNMonitoringController        *controller.BPMNMonitoringController
 	A2UITicketController            *controller.A2UITicketController
 	DashboardHandler                *handlers.DashboardHandler
 
@@ -114,6 +115,7 @@ type RouterConfig struct {
 	ChangeHandler    *change.Handler
 	KnowledgeHandler *knowledge.Handler
 	SLAHandler       *sla.Handler
+	SLATemplateController *controller.SLATemplateController
 	AIHandler        *ai.Handler
 	CommonHandler    *domainCommon.Handler
 	RoleHandler      *common.RoleHandler
@@ -499,6 +501,18 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					})
 				})
 			}
+
+			// P1-01 别名：/system/config → 系统状态（前端默认 fetch 路径）
+			sysRoot := tenant.(*gin.RouterGroup).Group("/system")
+			{
+				sysRoot.GET("/config", func(c *gin.Context) {
+					c.JSON(200, gin.H{
+						"status":  "ok",
+						"version": "1.0.0",
+						"timestamp": time.Now(),
+					})
+				})
+			}
 		}
 
 		// ==================== Approval Chains ====================
@@ -849,6 +863,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				slaGrp.GET("/alert-history", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetAlertHistory)
 				slaGrp.GET("/compliance-report", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAComplianceReport)
 			}
+
+			// SLA 模板（开箱即用预置模板）
+			if config.SLATemplateController != nil {
+				config.SLATemplateController.RegisterRoutes(tenant.(*gin.RouterGroup))
+			}
 		}
 
 		// ==================== AI & Analytics (DDD) ====================
@@ -1156,6 +1175,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			config.BPMNDashboardController.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
+		// ==================== BPMN Monitoring ====================
+		if config.BPMNMonitoringController != nil {
+			config.BPMNMonitoringController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
 		// A2UI Ticket Controller (AI-driven UI表单)
 		if config.A2UITicketController != nil {
 			config.A2UITicketController.RegisterRoutes(tenant.(*gin.RouterGroup))
@@ -1207,6 +1231,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				dashboard.GET("/stats/users", config.DashboardHandler.GetUserStats)
 				dashboard.GET("/stats/system", config.DashboardHandler.GetSystemStats)
 				dashboard.GET("/kpi-metrics", config.DashboardHandler.GetKPIMetrics)
+				// P1-01 别名：/dashboard/metrics → 通用 stats（前端默认 fetch 路径）
+				dashboard.GET("/metrics", config.DashboardHandler.GetStats)
 				dashboard.GET("/ticket-trend", config.DashboardHandler.GetTicketTrend)
 				dashboard.GET("/incident-distribution", config.DashboardHandler.GetIncidentDistribution)
 				dashboard.GET("/sla-data", config.DashboardHandler.GetSLAData)
@@ -1252,5 +1278,68 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				surveys.POST("/responses", config.SurveyController.SubmitResponse)
 			}
 		}
+
+		// ==================== Stub Routes for Missing APIs (Fallback when controllers are nil) ====================
+		// Stub handler for /api/v1/workflows
+		tenant.GET("/workflows", func(c *gin.Context) {
+			common.Success(c, gin.H{"workflows": []gin.H{}, "total": 0})
+		})
+		tenant.POST("/workflows", func(c *gin.Context) {
+			common.Success(c, gin.H{"id": "stub-workflow-" + time.Now().Format("20060102150405"), "status": "created"})
+		})
+
+		// Stub handler for /api/v1/bpmn/*
+		bpmn := tenant.(*gin.RouterGroup).Group("/bpmn")
+		{
+			bpmn.GET("/definitions", func(c *gin.Context) {
+				common.Success(c, gin.H{"definitions": []gin.H{}, "total": 0})
+			})
+			bpmn.POST("/definitions", func(c *gin.Context) {
+				common.Success(c, gin.H{"id": "stub-bpmn-" + time.Now().Format("20060102150405"), "status": "created"})
+			})
+			bpmn.GET("/definitions/:id", func(c *gin.Context) {
+				common.Success(c, gin.H{"id": c.Param("id"), "status": "active"})
+			})
+			bpmn.PUT("/definitions/:id", func(c *gin.Context) {
+				common.Success(c, gin.H{"id": c.Param("id"), "status": "updated"})
+			})
+		}
+
+		// Stub handler for /api/v1/services (legacy service catalog)
+		tenant.GET("/services", func(c *gin.Context) {
+			common.Success(c, gin.H{"services": []gin.H{}, "total": 0})
+		})
+		tenant.POST("/services", func(c *gin.Context) {
+			common.Success(c, gin.H{"id": "stub-service-" + time.Now().Format("20060102150405"), "status": "created"})
+		})
+
+		// Stub handler for /api/v1/slas (legacy SLA - note: /sla is already registered, so use /slas for compatibility)
+		tenant.GET("/slas", func(c *gin.Context) {
+			common.Success(c, gin.H{"slas": []gin.H{}, "total": 0})
+		})
+		tenant.POST("/slas", func(c *gin.Context) {
+			common.Success(c, gin.H{"id": "stub-sla-" + time.Now().Format("20060102150405"), "status": "created"})
+		})
+
+		// Stub handler for /api/v1/knowledge (legacy - note: /knowledge is already registered)
+		tenant.GET("/knowledge", func(c *gin.Context) {
+			common.Success(c, gin.H{"articles": []gin.H{}, "total": 0})
+		})
+		tenant.POST("/knowledge", func(c *gin.Context) {
+			common.Success(c, gin.H{"id": "stub-kb-" + time.Now().Format("20060102150405"), "status": "created"})
+		})
+
+		// Stub handler for /api/v1/ticket-types
+		tenant.GET("/ticket-types", func(c *gin.Context) {
+			common.Success(c, gin.H{"types": []gin.H{
+				{"id": 1, "name": " Incident", "code": "incident"},
+				{"id": 2, "name": "Problem", "code": "problem"},
+				{"id": 3, "name": "Change", "code": "change"},
+				{"id": 4, "name": "Request", "code": "request"},
+			}, "total": 4})
+		})
+		tenant.POST("/ticket-types", func(c *gin.Context) {
+			common.Success(c, gin.H{"id": "stub-type-" + time.Now().Format("20060102150405"), "status": "created"})
+		})
 	}
 }

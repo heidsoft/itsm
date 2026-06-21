@@ -116,6 +116,12 @@ export default function SLAPage() {
               </Button>
               <Button onClick={() => router.push('/sla-monitor')}>SLA监控</Button>
               <Button onClick={() => router.push('/sla/definitions')}>SLA定义</Button>
+              <Button onClick={() => router.push('/admin/sla-templates')}>
+                预置SLA模板
+              </Button>
+              <Button onClick={() => router.push('/admin/escalation-matrices')}>
+                升级矩阵
+              </Button>
             </Space>
           </Card>
         </div>

@@ -59,9 +59,12 @@ func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.Accep
 	txClient := tx.Client()
 
 	// 更新工单状态和分配人
+	// P1-07 修复：接单同时设置 first_response_at，供 SLA 计时使用
+	now := time.Now()
 	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
 		SetAssigneeID(userID).
 		SetStatus("in_progress").
+		SetFirstResponseAt(now).
 		Save(ctx)
 	if err != nil {
 		txErr = fmt.Errorf("failed to accept ticket: %w", err)

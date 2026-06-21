@@ -387,17 +387,19 @@ func (h *Handler) GetSLAMonitoring(c *gin.Context) {
 }
 
 // CheckSLACompliance handles POST /api/v1/sla/check-compliance/:ticketId
+// P1-07 修复：直接把 Service 返回的 *SLAComplianceResult（含 actual_response_minutes）
+// 透传给前端，而不是仅返回占位 message。
 func (h *Handler) CheckSLACompliance(c *gin.Context) {
 	ticketIDStr := c.Param("ticketId")
 	ticketID, _ := strconv.Atoi(ticketIDStr)
 	tenantIDVal, _ := c.Get("tenant_id")
 
-	err := h.svc.CheckSLACompliance(c.Request.Context(), ticketID, tenantIDVal.(int))
+	res, err := h.svc.CheckSLACompliance(c.Request.Context(), ticketID, tenantIDVal.(int))
 	if err != nil {
 		common.Fail(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	common.Success(c, gin.H{"message": "SLA合规性检查完成"})
+	common.Success(c, res)
 }
 
 // GetAlertHistory handles GET /api/v1/sla/alert-history

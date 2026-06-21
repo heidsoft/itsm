@@ -276,6 +276,10 @@ func NewApplication() *Application {
 	bpmnSlaService := service.NewBPMNSLAService(client, sugar)
 	bpmnDashboardController := controller.NewBPMNDashboardController(bpmnMetricsService, bpmnAuditService, bpmnTenantService, bpmnSlaService)
 
+	// BPMN Monitoring Service & Controller（监控 + 完整执行轨迹时间线）
+	bpmnMonitoringService := service.NewBPMNMonitoringService(client, bpmnAuditService, sugar)
+	bpmnMonitoringController := controller.NewBPMNMonitoringController(bpmnMonitoringService)
+
 	// A2UI Ticket Controller (AI-driven UI表单)
 	a2uiTicketService := service.NewA2UITicketService(nil)
 	a2uiTicketController := controller.NewA2UITicketController(a2uiTicketService)
@@ -367,6 +371,10 @@ func NewApplication() *Application {
 	slaRepo := sla.NewEntRepository(client)
 	slaServiceDomain := sla.NewService(slaRepo, sugar)
 	slaHandler := sla.NewHandler(slaServiceDomain)
+
+	// SLA 模板服务（开箱即用）
+	slaTemplateService := service.NewSLATemplateService(client, sugar)
+	slaTemplateController := controller.NewSLATemplateController(slaTemplateService)
 
 	// AI Domain
 	aiRepo := ai.NewEntRepository(client)
@@ -488,6 +496,7 @@ func NewApplication() *Application {
 		BPMNWorkflowController:          bpmnWorkflowController,
 		BPMNProcessTriggerController:    bpmnProcessTriggerController,
 		BPMNDashboardController:         bpmnDashboardController,
+		BPMNMonitoringController:        bpmnMonitoringController,
 		A2UITicketController:            a2uiTicketController,
 		DashboardHandler:                dashboardHandler,
 		ProjectController:               projectController,
@@ -532,6 +541,7 @@ func NewApplication() *Application {
 		ChangeHandler:         changeHandler,
 		KnowledgeHandler:      knowledgeHandler,
 		SLAHandler:            slaHandler,
+		SLATemplateController: slaTemplateController,
 		AIHandler:             aiHandler, // Added AI domain handler
 		CommonHandler:         commonHandler,
 		RoleHandler:           roleHandler,

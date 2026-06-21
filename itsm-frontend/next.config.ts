@@ -5,13 +5,13 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingRoot: process.cwd(),
 
-  // TODO: 逐步修复类型错误后移除此配置，启用构建时类型检查
+  // P0 修复：强制 TypeScript 与 ESLint 在构建期暴露错误，避免缺 chunk 白屏雪崩。
+  // 若需临时跳过某些历史告警，请在受影响的文件顶部用 `// @ts-expect-error <reason>` 或 `// eslint-disable-next-line <rule>` 局部处理。
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
-  // TODO: 修复历史 ESLint 警告后移除此配置。Release 构建不应被已有 lint 债务阻塞。
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 };
 

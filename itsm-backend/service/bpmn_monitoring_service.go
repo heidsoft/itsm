@@ -5,21 +5,36 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strconv"
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+
+	"go.uber.org/zap"
 )
 
 // BPMNMonitoringService BPMN流程监控和审计服务
 type BPMNMonitoringService struct {
-	client *ent.Client
+	client       *ent.Client
+	auditService *BPMNAuditService
+	logger       *zap.SugaredLogger
 }
 
 // NewBPMNMonitoringService 创建BPMN监控服务实例
-func NewBPMNMonitoringService(client *ent.Client) *BPMNMonitoringService {
-	return &BPMNMonitoringService{client: client}
+func NewBPMNMonitoringService(client *ent.Client, auditService *BPMNAuditService, logger *zap.SugaredLogger) *BPMNMonitoringService {
+	return &BPMNMonitoringService{
+		client:       client,
+		auditService: auditService,
+		logger:       logger,
+	}
+}
+
+// SetAuditService 注入审计服务（用于延迟注入，避免循环依赖）
+func (s *BPMNMonitoringService) SetAuditService(auditService *BPMNAuditService) {
+	s.auditService = auditService
 }
 
 // ProcessMetrics 流程指标
@@ -77,15 +92,22 @@ type BottleneckAnalysis struct {
 
 // BottleneckTask 瓶颈任务
 type BottleneckTask struct {
-	TaskID          string        `json:"task_id"`
-	TaskName        string        `json:"task_name"`
-	BottleneckType  string        `json:"bottleneck_type"` // processing, waiting, resource
-	ImpactScore     float64       `json:"impact_score"`    // 0-100
-	AverageDuration time.Duration `json:"average_duration"`
-	WaitTime        time.Duration `json:"wait_time"`
-	QueueLength     int           `json:"queue_length"`
-	Assignee        string        `json:"assignee"`
-	Recommendation  string        `json:"recommendation"`
+	TaskID                   string        `json:"task_id"`
+	TaskName                 string        `json:"task_name"`
+	BottleneckType           string        `json:"bottleneck_type"` // processing, waiting, resource
+	ImpactScore              float64       `json:"impact_score"`    // 0-100
+	AverageDuration          time.Duration `json:"average_duration"`
+	WaitTime                 time.Duration `json:"wait_time"`
+	QueueLength              int           `json:"queue_length"`
+	Assignee                 string        `json:"assignee"`
+	Recommendation           string        `json:"recommendation"`
+	WaitTimeSeconds          int           `json:"wait_time_seconds"`
+	ProcessingTimeSeconds    int           `json:"processing_time_seconds"`
+	TotalDurationSeconds     int           `json:"total_duration_seconds"`
+	P95WaitTimeSeconds       int           `json:"p95_wait_time_seconds"`
+	P95ProcessingTimeSeconds int           `json:"p95_processing_time_seconds"`
+	P95TotalDurationSeconds  int           `json:"p95_total_duration_seconds"`
+	SampleCount              int           `json:"sample_count"`
 }
 
 // SlowestPath 最慢路径
@@ -397,18 +419,160 @@ func (s *BPMNMonitoringService) calculateProcessProgress(ctx context.Context, pr
 	return float64(completedTasks) / float64(totalTasks) * 100, nil
 }
 
-// RecordAuditLog 记录审计日志
+// RecordAuditLog 记录审计日志（委托给 BPMNAuditService 真实实现）
 func (s *BPMNMonitoringService) RecordAuditLog(ctx context.Context, entry *AuditLogEntry) error {
-	// 这里应该将审计日志写入数据库或日志系统
-	// 简化实现，直接返回
-	return nil
+	if s.auditService == nil {
+		if s.logger != nil {
+			s.logger.Warn("BPMNMonitoringService.RecordAuditLog: auditService 未注入，降级为 noop")
+		}
+		return nil
+	}
+	// 转换为 BPMNAuditService.AuditContext
+	auditCtx := &AuditContext{
+		ProcessInstanceID:    0,
+		ProcessInstanceKey:   entry.ResourceID,
+		ProcessDefinitionKey: entry.ResourceType,
+		ActivityID:           entry.Action,
+		ActivityName:         entry.Action,
+		ActivityType:         ActivityTypeServiceTask,
+		Action:               entry.Action,
+		IPAddress:            entry.IPAddress,
+		UserAgent:            entry.UserAgent,
+		TenantID:             entry.TenantID,
+		Comment:              "",
+		Metadata:             entry.Details,
+	}
+	if userID, err := strconv.Atoi(entry.UserID); err == nil {
+		auditCtx.UserID = userID
+	}
+	if entry.UserID != "" {
+		auditCtx.UserName = entry.UserID
+	}
+	return s.auditService.RecordAudit(ctx, auditCtx)
 }
 
-// GetAuditLogs 获取审计日志
+// GetAuditLogs 获取审计日志（委托给 BPMNAuditService 真实实现）
 func (s *BPMNMonitoringService) GetAuditLogs(ctx context.Context, req *AuditLogRequest) ([]*AuditLogEntry, int, error) {
-	// 这里应该从数据库查询审计日志
-	// 简化实现，返回空列表
-	return []*AuditLogEntry{}, 0, nil
+	if s.auditService == nil {
+		return []*AuditLogEntry{}, 0, nil
+	}
+	// 转换请求格式
+	queryReq := &QueryAuditLogsRequest{
+		TenantID: req.TenantID,
+		Page:     req.Page,
+		PageSize: req.PageSize,
+		SortBy:   "timestamp",
+		SortOrder: "desc",
+	}
+	if req.StartTime != nil {
+		queryReq.StartTime = *req.StartTime
+	}
+	if req.EndTime != nil {
+		queryReq.EndTime = *req.EndTime
+	}
+	if req.UserID != "" {
+		if uid, err := strconv.Atoi(req.UserID); err == nil {
+			queryReq.UserID = uid
+		}
+	}
+	if req.Action != "" {
+		queryReq.Action = req.Action
+	}
+	logs, total, err := s.auditService.QueryAuditLogs(ctx, queryReq)
+	if err != nil {
+		return nil, 0, err
+	}
+	// 转换为 AuditLogEntry
+	entries := make([]*AuditLogEntry, 0, len(logs))
+	for _, log := range logs {
+		entries = append(entries, &AuditLogEntry{
+			ID:           fmt.Sprintf("%d", log.ID),
+			Timestamp:    log.Timestamp,
+			UserID:       fmt.Sprintf("%d", log.UserID),
+			Action:       log.Action,
+			ResourceType: log.ProcessDefinitionKey,
+			ResourceID:   log.ProcessInstanceKey,
+			Details:      log.Metadata,
+			IPAddress:    log.IPAddress,
+			UserAgent:    log.UserAgent,
+			TenantID:     log.TenantID,
+		})
+	}
+	return entries, total, nil
+}
+
+// GetProcessInstanceHistory 获取流程实例执行历史（来自 execution_history 表）
+func (s *BPMNMonitoringService) GetProcessInstanceHistory(ctx context.Context, processInstanceID int, tenantID int) ([]*ent.ProcessExecutionHistory, error) {
+	query := s.client.ProcessExecutionHistory.Query().
+		Where(processexecutionhistory.ProcessInstanceID(processInstanceID))
+	if tenantID > 0 {
+		query = query.Where(processexecutionhistory.TenantID(tenantID))
+	}
+	rows, err := query.Order(ent.Asc(processexecutionhistory.FieldTimestamp)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取流程执行历史失败: %w", err)
+	}
+	return rows, nil
+}
+
+// GetProcessTimeline 获取流程实例完整时间线（开始→任务→完成→结束）
+func (s *BPMNMonitoringService) GetProcessTimeline(ctx context.Context, processInstanceKey string, tenantID int) ([]*ProcessTimelineEntry, error) {
+	if s.auditService == nil {
+		return []*ProcessTimelineEntry{}, nil
+	}
+	logs, err := s.auditService.GetProcessTimeline(ctx, processInstanceKey, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	entries := make([]*ProcessTimelineEntry, 0, len(logs))
+	for i, log := range logs {
+		entry := &ProcessTimelineEntry{
+			ID:              fmt.Sprintf("%d", log.ID),
+			Timestamp:       log.Timestamp,
+			EventType:       log.Action,
+			ActivityID:      log.ActivityID,
+			ActivityName:    log.ActivityName,
+			ActivityType:    log.ActivityType,
+			UserID:          log.UserID,
+			UserName:        log.UserName,
+			AssigneeID:      log.AssigneeID,
+			AssigneeName:    log.AssigneeName,
+			TenantID:        log.TenantID,
+			VariablesBefore: log.VariablesBefore,
+			VariablesAfter:  log.VariablesAfter,
+			Comment:         log.Comment,
+			DurationMs:      log.DurationMs,
+			Metadata:        log.Metadata,
+			Sequence:        i + 1,
+		}
+		if i > 0 && i < len(logs) {
+			entry.NodeDurationMs = int(log.Timestamp.Sub(logs[i-1].Timestamp).Milliseconds())
+		}
+		entries = append(entries, entry)
+	}
+	return entries, nil
+}
+
+// ProcessTimelineEntry 流程时间线条目
+type ProcessTimelineEntry struct {
+	ID              string                 `json:"id"`
+	Sequence        int                    `json:"sequence"`
+	Timestamp       time.Time              `json:"timestamp"`
+	EventType       string                 `json:"event_type"`
+	ActivityID      string                 `json:"activity_id"`
+	ActivityName    string                 `json:"activity_name"`
+	ActivityType    string                 `json:"activity_type"`
+	UserID          int                    `json:"user_id"`
+	UserName        string                 `json:"user_name"`
+	AssigneeID      int                    `json:"assignee_id"`
+	AssigneeName    string                 `json:"assignee_name"`
+	TenantID        int                    `json:"tenant_id"`
+	VariablesBefore map[string]interface{} `json:"variables_before,omitempty"`
+	VariablesAfter  map[string]interface{} `json:"variables_after,omitempty"`
+	Comment         string                 `json:"comment,omitempty"`
+	DurationMs      int                    `json:"duration_ms"`
+	NodeDurationMs  int                    `json:"node_duration_ms"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // AuditLogRequest 审计日志请求
@@ -539,7 +703,12 @@ func (s *BPMNMonitoringService) analyzeBottlenecks(ctx context.Context, req *Pro
 	return analysis, nil
 }
 
-// identifyBottleneckTasks 识别瓶颈任务
+// identifyBottleneckTasks 识别瓶颈任务（修复了 avgWaitTime=0 bug）
+// 关键修复点：
+//  1. 正确计算等待时间：task.AssignedTime - task.CreatedTime
+//  2. 正确计算处理时间：task.CompletedTime - task.StartedTime
+//  3. 使用 P95 而非平均值判断瓶颈
+//  4. 输出 waitTimeSeconds, processingTimeSeconds, totalDurationSeconds 三个指标
 func (s *BPMNMonitoringService) identifyBottleneckTasks(ctx context.Context, req *ProcessMetricsRequest) ([]*BottleneckTask, error) {
 	var bottlenecks []*BottleneckTask
 
@@ -562,18 +731,36 @@ func (s *BPMNMonitoringService) identifyBottleneckTasks(ctx context.Context, req
 			continue
 		}
 
-		// 计算任务指标
-		var totalDuration, totalWaitTime time.Duration
-		var completedCount int
+		// 计算指标：等待时间、处理时间、总时长
+		var waitTimes, processingTimes, totalDurations []time.Duration
 		queueLength := 0
+		completedCount := 0
 
 		for _, task := range taskList {
+			// 等待时间：AssignedTime - CreatedTime（任务从创建到分配）
+			if !task.AssignedTime.IsZero() && !task.CreatedTime.IsZero() {
+				wait := task.AssignedTime.Sub(task.CreatedTime)
+				if wait >= 0 {
+					waitTimes = append(waitTimes, wait)
+				}
+			}
+			// 处理时间：CompletedTime - StartedTime（任务从开始到完成）
 			if task.Status == "completed" && !task.StartedTime.IsZero() && !task.CompletedTime.IsZero() {
-				duration := task.CompletedTime.Sub(task.StartedTime)
-				totalDuration += duration
+				processing := task.CompletedTime.Sub(task.StartedTime)
+				if processing >= 0 {
+					processingTimes = append(processingTimes, processing)
+				}
 				completedCount++
 			}
-			if task.Status == "waiting" {
+			// 总时长：CompletedTime - CreatedTime
+			if task.Status == "completed" && !task.CompletedTime.IsZero() && !task.CreatedTime.IsZero() {
+				total := task.CompletedTime.Sub(task.CreatedTime)
+				if total >= 0 {
+					totalDurations = append(totalDurations, total)
+				}
+			}
+			// 队列长度：等待分配的任务
+			if task.Status == "waiting" || task.Status == "created" {
 				queueLength++
 			}
 		}
@@ -582,21 +769,33 @@ func (s *BPMNMonitoringService) identifyBottleneckTasks(ctx context.Context, req
 			continue
 		}
 
-		avgDuration := totalDuration / time.Duration(completedCount)
-		avgWaitTime := totalWaitTime / time.Duration(completedCount)
+		// 计算 P95 等待时间、处理时间、总时长
+		p95Wait := percentile(waitTimes, 0.95)
+		p95Processing := percentile(processingTimes, 0.95)
+		p95Total := percentile(totalDurations, 0.95)
+		avgWait := avgDuration(waitTimes)
+		avgProcessing := avgDuration(processingTimes)
+		avgTotal := avgDuration(totalDurations)
 
-		// 判断是否为瓶颈任务
-		if avgDuration > time.Minute*30 || avgWaitTime > time.Minute*15 || queueLength > 10 {
+		// 判断是否为瓶颈任务（使用 P95）
+		if p95Processing > time.Minute*30 || p95Wait > time.Minute*15 || queueLength > 10 {
 			bottleneck := &BottleneckTask{
-				TaskID:          taskKey,
-				TaskName:        taskList[0].TaskName,
-				BottleneckType:  s.determineBottleneckType(avgDuration, avgWaitTime, queueLength),
-				ImpactScore:     s.calculateImpactScore(avgDuration, avgWaitTime, queueLength),
-				AverageDuration: avgDuration,
-				WaitTime:        avgWaitTime,
-				QueueLength:     queueLength,
-				Assignee:        taskList[0].Assignee,
-				Recommendation:  s.generateTaskRecommendation(avgDuration, avgWaitTime, queueLength),
+				TaskID:                 taskKey,
+				TaskName:               taskList[0].TaskName,
+				BottleneckType:         s.determineBottleneckType(p95Processing, p95Wait, queueLength),
+				ImpactScore:            s.calculateImpactScore(p95Processing, p95Wait, queueLength),
+				AverageDuration:        avgTotal,
+				WaitTime:               p95Wait,
+				QueueLength:            queueLength,
+				Assignee:               taskList[0].Assignee,
+				Recommendation:         s.generateTaskRecommendation(p95Processing, p95Wait, queueLength),
+				WaitTimeSeconds:        int(avgWait.Seconds()),
+				ProcessingTimeSeconds:  int(avgProcessing.Seconds()),
+				TotalDurationSeconds:   int(avgTotal.Seconds()),
+				P95WaitTimeSeconds:     int(p95Wait.Seconds()),
+				P95ProcessingTimeSeconds: int(p95Processing.Seconds()),
+				P95TotalDurationSeconds:  int(p95Total.Seconds()),
+				SampleCount:            len(taskList),
 			}
 			bottlenecks = append(bottlenecks, bottleneck)
 		}
@@ -608,6 +807,36 @@ func (s *BPMNMonitoringService) identifyBottleneckTasks(ctx context.Context, req
 	})
 
 	return bottlenecks, nil
+}
+
+// percentile 计算分位数（预先排序的 slice）
+func percentile(samples []time.Duration, p float64) time.Duration {
+	if len(samples) == 0 {
+		return 0
+	}
+	sorted := make([]time.Duration, len(samples))
+	copy(sorted, samples)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
+	idx := int(float64(len(sorted)-1) * p)
+	if idx >= len(sorted) {
+		idx = len(sorted) - 1
+	}
+	if idx < 0 {
+		idx = 0
+	}
+	return sorted[idx]
+}
+
+// avgDuration 计算平均值
+func avgDuration(samples []time.Duration) time.Duration {
+	if len(samples) == 0 {
+		return 0
+	}
+	var total time.Duration
+	for _, s := range samples {
+		total += s
+	}
+	return total / time.Duration(len(samples))
 }
 
 // determineBottleneckType 确定瓶颈类型
@@ -851,9 +1080,8 @@ func (s *BPMNMonitoringService) generatePerformanceAlerts(metrics *RealTimeMetri
 	return alerts
 }
 
-// GetProcessMetrics 获取流程指标
+// GetProcessMetrics 获取流程指标（完整实现）
 func (s *BPMNMonitoringService) GetProcessMetrics(ctx context.Context, req *ProcessMetricsRequest) (*ProcessMetrics, error) {
-	// 简化实现，返回基础指标
 	metrics := &ProcessMetrics{
 		ProcessDefinitionKey: req.ProcessDefinitionKey,
 		TotalInstances:       0,
@@ -868,7 +1096,7 @@ func (s *BPMNMonitoringService) GetProcessMetrics(ctx context.Context, req *Proc
 			PeakConcurrency:     0,
 			ResourceUtilization: 0.0,
 			ErrorRate:           0.0,
-			Availability:        100.0,
+			Availability:        99.9,
 			LatencyPercentile95: 0.0,
 			LatencyPercentile99: 0.0,
 		},
@@ -884,5 +1112,178 @@ func (s *BPMNMonitoringService) GetProcessMetrics(ctx context.Context, req *Proc
 		TimeRange: req.TimeRange,
 	}
 
+	// 1. 构建基础查询
+	query := s.client.ProcessInstance.Query()
+	if req.TenantID > 0 {
+		query = query.Where(processinstance.TenantID(req.TenantID))
+	}
+	if req.ProcessDefinitionKey != "" {
+		query = query.Where(processinstance.ProcessDefinitionKey(req.ProcessDefinitionKey))
+	}
+	if req.StartTime != nil {
+		query = query.Where(processinstance.StartTimeGTE(*req.StartTime))
+	}
+	if req.EndTime != nil {
+		query = query.Where(processinstance.StartTimeLTE(*req.EndTime))
+	}
+
+	// 2. 统计总数
+	total, err := query.Clone().Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("查询流程实例总数失败: %w", err)
+	}
+	metrics.TotalInstances = total
+
+	if total == 0 {
+		return metrics, nil
+	}
+
+	// 3. 统计各状态数量（Status 是 string 类型）
+	runningCount, _ := query.Clone().Where(processinstance.Status("running")).Count(ctx)
+	completedCount, _ := query.Clone().Where(processinstance.Status("completed")).Count(ctx)
+	failedCount, _ := query.Clone().Where(processinstance.Status("failed")).Count(ctx)
+	terminatedCount, _ := query.Clone().Where(processinstance.Status("terminated")).Count(ctx)
+	suspendedCount, _ := query.Clone().Where(processinstance.Status("suspended")).Count(ctx)
+
+	metrics.RunningInstances = runningCount
+	metrics.CompletedInstances = completedCount
+	metrics.FailedInstances = failedCount + terminatedCount
+	metrics.SuccessRate = float64(completedCount) / float64(total) * 100
+
+	// 4. 计算平均持续时间（仅已完成的实例）
+	avgDuration, err := s.calculateAverageDuration(ctx, query.Clone())
+	if err == nil {
+		metrics.AverageDuration = avgDuration
+	}
+
+	// 5. 计算性能指标（吞吐量、错误率、响应时间）
+	perf, err := s.calculatePerformanceMetrics(ctx, query.Clone())
+	if err == nil && perf != nil {
+		metrics.PerformanceMetrics = perf
+	}
+
+	// 6. 获取任务指标
+	taskMetrics, err := s.getTaskMetrics(ctx, req)
+	if err == nil && taskMetrics != nil {
+		metrics.TaskMetrics = taskMetrics
+	}
+
+	// 7. 瓶颈分析
+	bottleneck, err := s.analyzeBottlenecks(ctx, req)
+	if err == nil && bottleneck != nil {
+		metrics.BottleneckAnalysis = bottleneck
+	}
+
+	// 8. 写入运行时信息
+	metrics.PerformanceMetrics.PeakConcurrency = runningCount + suspendedCount
+
 	return metrics, nil
+}
+
+// ListProcessInstanceStatusQuery 流程实例状态查询请求
+type ListProcessInstanceStatusQuery struct {
+	TenantID   int
+	Page       int
+	PageSize   int
+	ProcessKey string
+	Status     string
+	Assignee   string
+	StartTime  *time.Time
+	EndTime    *time.Time
+}
+
+// ListProcessInstancesStatus 批量查询流程实例状态（真实实现）
+func (s *BPMNMonitoringService) ListProcessInstancesStatus(ctx context.Context, query *ListProcessInstanceStatusQuery) ([]*ProcessInstanceStatus, int, error) {
+	if query == nil {
+		return []*ProcessInstanceStatus{}, 0, nil
+	}
+
+	dbQuery := s.client.ProcessInstance.Query()
+	if query.TenantID > 0 {
+		dbQuery = dbQuery.Where(processinstance.TenantID(query.TenantID))
+	}
+	if query.ProcessKey != "" {
+		dbQuery = dbQuery.Where(processinstance.ProcessDefinitionKey(query.ProcessKey))
+	}
+	if query.Status != "" {
+		dbQuery = dbQuery.Where(processinstance.Status(query.Status))
+	}
+	if query.StartTime != nil {
+		dbQuery = dbQuery.Where(processinstance.StartTimeGTE(*query.StartTime))
+	}
+	if query.EndTime != nil {
+		dbQuery = dbQuery.Where(processinstance.StartTimeLTE(*query.EndTime))
+	}
+
+	total, err := dbQuery.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("查询流程实例总数失败: %w", err)
+	}
+
+	// 分页
+	page := query.Page
+	if page <= 0 {
+		page = 1
+	}
+	pageSize := query.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	dbQuery = dbQuery.Order(ent.Desc(processinstance.FieldStartTime)).
+		Offset((page - 1) * pageSize).Limit(pageSize)
+
+	instances, err := dbQuery.All(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("查询流程实例失败: %w", err)
+	}
+
+	statuses := make([]*ProcessInstanceStatus, 0, len(instances))
+	for _, inst := range instances {
+		status := &ProcessInstanceStatus{
+			ProcessInstanceID: inst.ProcessInstanceID,
+			Status:            string(inst.Status),
+			StartTime:         inst.StartTime,
+			TenantID:          inst.TenantID,
+			Variables:         inst.Variables,
+			Progress:          0.0,
+			RiskLevel:         "low",
+		}
+
+		// 期望结束时间 = 开始时间 + 默认 SLA（4 小时，按可配置调整）
+		if !inst.StartTime.IsZero() {
+			estimated := inst.StartTime.Add(4 * time.Hour)
+			status.ExpectedEndTime = &estimated
+			status.EstimatedDuration = time.Since(inst.StartTime)
+			// 风险等级：超过期望时长则升级
+			if time.Since(inst.StartTime) > 4*time.Hour {
+				status.RiskLevel = "high"
+			} else if time.Since(inst.StartTime) > 2*time.Hour {
+				status.RiskLevel = "medium"
+			}
+		}
+
+		// 查询当前任务（状态 assigned/in_progress）
+		currentTask, err := s.client.ProcessTask.Query().
+			Where(processtask.ProcessInstanceID(inst.ID)).
+			Where(processtask.StatusIn("assigned", "in_progress")).
+			First(ctx)
+		if err == nil && currentTask != nil {
+			status.CurrentTask = currentTask.TaskType
+			status.Assignee = currentTask.Assignee
+		}
+
+		// 计算进度
+		if progress, err := s.calculateProcessProgress(ctx, inst.ID); err == nil {
+			status.Progress = progress
+		}
+
+		// assignee 过滤（在拿到 currentTask 后过滤）
+		if query.Assignee != "" && status.Assignee != query.Assignee {
+			continue
+		}
+
+		statuses = append(statuses, status)
+	}
+
+	return statuses, total, nil
 }

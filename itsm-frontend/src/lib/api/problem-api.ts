@@ -73,6 +73,10 @@ export interface Problem {
   createdAt?: string;
   updated_at: string;
   updatedAt?: string;
+  // P0 修复暴露的预先 TS 错误：ProblemSLACard 引用 problem.slaStatus
+  slaStatus?: 'ok' | 'warning' | 'breached';
+  responseDeadline?: string;
+  resolutionDeadline?: string;
 }
 
 export interface ProblemListResponse {
@@ -80,6 +84,35 @@ export interface ProblemListResponse {
   total: number;
   page: number;
   page_size: number;
+}
+
+// ==================== 问题关联 ====================
+
+export type RelatedType = 'ticket' | 'incident' | 'change';
+
+export interface AssociatedItem {
+  id: number;
+  type: RelatedType;
+  title: string;
+  status: string;
+  number?: string;
+  createdAt?: string;
+}
+
+export interface ProblemAssociations {
+  tickets: AssociatedItem[];
+  incidents: AssociatedItem[];
+  changes: AssociatedItem[];
+}
+
+export interface ProblemAssociationRequest {
+  relatedType: RelatedType;
+  relatedIds: number[];
+}
+
+export interface ProblemRemoveAssociationRequest {
+  relatedType: RelatedType;
+  relatedId: number;
 }
 
 export class ProblemApi {
@@ -168,6 +201,50 @@ export class ProblemApi {
    */
   static async getHotspots(params: ProblemTrendRequest): Promise<ProblemHotspotsData> {
     return httpClient.get<ProblemHotspotsData>('/api/v1/problems/hotspots', params);
+  }
+
+  // ==================== 关联管理（P0 修复暴露的 TS 错误） ====================
+
+  /**
+   * 获取问题关联（工单/事件/变更）
+   */
+  static async getAssociations(problemId: number): Promise<ProblemAssociations> {
+    return httpClient.get<ProblemAssociations>(`/api/v1/problems/${problemId}/associations`);
+  }
+
+  /**
+   * 添加问题关联
+   */
+  static async addAssociation(problemId: number, req: ProblemAssociationRequest): Promise<void> {
+    return httpClient.post(`/api/v1/problems/${problemId}/associations`, req);
+  }
+
+  /**
+   * 移除问题关联
+   */
+  static async removeAssociation(problemId: number, req: ProblemRemoveAssociationRequest): Promise<void> {
+    return httpClient.request({
+      method: 'DELETE',
+      url: `/api/v1/problems/${problemId}/associations`,
+      data: req,
+    });
+  }
+
+  // ==================== SLA（P0 修复暴露的 TS 错误） ====================
+
+  /**
+   * 获取问题 SLA 信息
+   */
+  static async getProblemSLA(problemId: number): Promise<{
+    responseDeadline?: string;
+    resolutionDeadline?: string;
+    responseTimeUsed: number;
+    resolutionTimeUsed: number;
+    responseBreached: boolean;
+    resolutionBreached: boolean;
+    slaStatus: string;
+  }> {
+    return httpClient.get(`/api/v1/problems/${problemId}/sla`);
   }
 }
 

@@ -110,7 +110,18 @@ function LoginForm() {
         />
       )}
 
-      <Form form={form} onFinish={handleLogin} layout='vertical' size='middle'>
+      <Form
+        form={form}
+        onFinish={handleLogin}
+        onFinishFailed={({ values, errorFields }) => {
+          logger.warn('表单验证失败:', errorFields);
+          if (errorFields.length > 0) {
+            setError(errorFields[0].errors[0] || t('auth.login.loginFailed'));
+          }
+        }}
+        layout='vertical'
+        size='middle'
+      >
         <Form.Item
           name='username'
           label={t('auth.login.usernameLabel')}

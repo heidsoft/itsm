@@ -15,6 +15,14 @@ import (
 	"go.uber.org/zap"
 )
 
+// defaultAlertCooldownMinutes 默认告警抑制间隔（分钟）
+//
+// 为避免高频扫描（默认 5 分钟一轮）在同一工单同一规则上重复触发告警，
+// 同一 (ticket_id, alert_rule_id) 在 cooldown 窗口内只保留一条未解决的
+// alert history。抑制间隔可通过 alert_rule.EscalationLevels JSON 中
+// 第一个元素的 cooldown_minutes 字段覆盖（0 或负数表示禁用）。
+const defaultAlertCooldownMinutes = 15
+
 type SLAAlertService struct {
 	client          *ent.Client
 	logger          *zap.SugaredLogger
@@ -441,6 +449,33 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 				continue // 已存在预警，跳过
 			}
 
+			// Cooldown 抑制：避免同一 (ticket, rule) 在窗口内重复告警
+			cooldownMin := resolveCooldownMinutes(rule)
+			if cooldownMin > 0 {
+				lastAlert, err := s.client.SLAAlertHistory.Query().
+					Where(
+						slaalerthistory.TicketIDEQ(ticketEntity.ID),
+						slaalerthistory.AlertRuleIDEQ(rule.ID),
+					).
+					Order(ent.Desc(slaalerthistory.FieldCreatedAt)).
+					First(ctx)
+				if err == nil && lastAlert != nil {
+					elapsed := time.Since(lastAlert.CreatedAt)
+					if elapsed < time.Duration(cooldownMin)*time.Minute {
+						remaining := time.Duration(cooldownMin)*time.Minute - elapsed
+						s.logger.Infow("SLA alert suppressed by cooldown",
+							"ticket_id", ticketEntity.ID,
+							"alert_rule_id", rule.ID,
+							"alert_level", rule.AlertLevel,
+							"alert_type", alertType,
+							"cooldown_minutes", cooldownMin,
+							"cooldown_remaining_seconds", int(remaining.Seconds()),
+						)
+						continue
+					}
+				}
+			}
+
 			// 创建预警历史记录
 			alertHistory, err := s.client.SLAAlertHistory.Create().
 				SetTicketID(ticketEntity.ID).
@@ -586,5 +621,59 @@ func (s *SLAAlertService) toAlertHistoryResponse(history *ent.SLAAlertHistory) *
 		response.ResolvedAt = &history.ResolvedAt
 	}
 
+	// Cooldown 信息：未解决的告警仍然处于冷却窗口时返回剩余秒数
+	// 默认 cooldown 为 defaultAlertCooldownMinutes
+	// （自定义场景需从 alert_rule.EscalationLevels JSON 读取，这里以默认值为准）
+	response.CooldownMinutes = defaultAlertCooldownMinutes
+	if history.ResolvedAt.IsZero() {
+		elapsed := time.Since(history.CreatedAt)
+		cooldownDur := time.Duration(defaultAlertCooldownMinutes) * time.Minute
+		if elapsed < cooldownDur {
+			remaining := cooldownDur - elapsed
+			response.CooldownRemainingSeconds = int(remaining.Seconds())
+			response.SuppressedByCooldown = true
+		} else {
+			response.CooldownRemainingSeconds = 0
+			response.SuppressedByCooldown = false
+		}
+	}
+
 	return response
+}
+
+// resolveCooldownMinutes 解析告警规则的 cooldown 配置
+//
+// 优先级（高到低）：
+//  1. rule.EscalationLevels JSON 第一个元素的 cooldown_minutes 字段
+//  2. 默认常量 defaultAlertCooldownMinutes
+//
+// 约定：cooldown_minutes <= 0 表示禁用抑制（生产环境慎用）。
+func resolveCooldownMinutes(rule *ent.SLAAlertRule) int {
+	if rule == nil {
+		return defaultAlertCooldownMinutes
+	}
+	if len(rule.EscalationLevels) == 0 {
+		return defaultAlertCooldownMinutes
+	}
+	first := rule.EscalationLevels[0]
+	if first == nil {
+		return defaultAlertCooldownMinutes
+	}
+	v, ok := first["cooldown_minutes"]
+	if !ok {
+		return defaultAlertCooldownMinutes
+	}
+	switch n := v.(type) {
+	case int:
+		return n
+	case int32:
+		return int(n)
+	case int64:
+		return int(n)
+	case float32:
+		return int(n)
+	case float64:
+		return int(n)
+	}
+	return defaultAlertCooldownMinutes
 }

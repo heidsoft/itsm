@@ -28,6 +28,7 @@ import {
   WarningOutlined,
   CloseCircleOutlined,
   CheckCircleOutlined,
+  ClockCircleOutlined,
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -86,6 +87,13 @@ interface AlertHistory {
   createdAt?: string;
   resolved_at?: string;
   resolvedAt?: string;
+  // 告警抑制（cooldown）字段 —— 对应后端 SLAAlertHistoryResponse
+  cooldown_minutes?: number;
+  cooldownMinutes?: number;
+  cooldown_remaining_seconds?: number;
+  cooldownRemainingSeconds?: number;
+  suppressed_by_cooldown?: boolean;
+  suppressedByCooldown?: boolean;
 }
 
 interface SLAAlertSystemProps {
@@ -393,6 +401,41 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       dataIndex: 'escalation_level',
       key: 'escalation_level',
       render: (level: number) => (level > 0 ? `L${level}` : '-'),
+    },
+    {
+      title: '冷却状态',
+      key: 'cooldown',
+      width: 200,
+      render: (_: unknown, record: AlertHistory) => {
+        const remainingSec = record.cooldownRemainingSeconds ?? record.cooldown_remaining_seconds ?? 0;
+        const minutes = record.cooldownMinutes ?? record.cooldown_minutes ?? 0;
+        const suppressed = record.suppressedByCooldown ?? record.suppressed_by_cooldown ?? false;
+        if (remainingSec > 0) {
+          const mins = Math.floor(remainingSec / 60);
+          const secs = remainingSec % 60;
+          return (
+            <Tooltip title={`冷却窗口 ${minutes} 分钟，剩余 ${remainingSec} 秒后释放`}>
+              <Tag color="orange" icon={<ClockCircleOutlined />}>
+                {`${mins}分${secs}秒后冷却`}
+              </Tag>
+            </Tooltip>
+          );
+        }
+        if (suppressed) {
+          return (
+            <Tag color="default" icon={<CloseCircleOutlined />}>
+              已抑制
+            </Tag>
+          );
+        }
+        return (
+          <Tooltip title={`冷却窗口 ${minutes} 分钟，当前空闲`}>
+            <Tag color="green" icon={<CheckCircleOutlined />}>
+              空闲
+            </Tag>
+          </Tooltip>
+        );
+      },
     },
     {
       title: '触发时间',

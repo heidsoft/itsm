@@ -1817,6 +1817,8 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		{"工单分类", "/admin/ticket-categories", "Tag", "ticket:write", 275},
 		{"CI类型管理", "/admin/cmdb-types", "Database", "cmdb:write", 290},
 		{"许可证管理", "/licenses", "Key", "license:read", 125},
+		{"SLA模板", "/admin/sla-templates", "Layers", "sla:write", 272},
+		{"BPMN节点分析", "/workflow/bottlenecks", "BarChart3", "workflow:read", 205},
 	}
 
 	for _, m := range missingMenus {

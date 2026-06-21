@@ -22,6 +22,11 @@ func NewBPMNMonitoringController(monitoringService *service.BPMNMonitoringServic
 	}
 }
 
+// SetMonitoringService 设置监控服务（用于延迟注入）
+func (c *BPMNMonitoringController) SetMonitoringService(s *service.BPMNMonitoringService) {
+	c.monitoringService = s
+}
+
 // RegisterRoutes 注册路由
 func (c *BPMNMonitoringController) RegisterRoutes(r *gin.RouterGroup) {
 	monitoring := r.Group("/bpmn/monitoring")
@@ -33,6 +38,8 @@ func (c *BPMNMonitoringController) RegisterRoutes(r *gin.RouterGroup) {
 		// 流程实例状态监控
 		monitoring.GET("/instances/:instanceId/status", c.GetProcessInstanceStatus)
 		monitoring.GET("/instances/status", c.ListProcessInstancesStatus)
+		// 新增：完整执行轨迹时间线
+		monitoring.GET("/instances/:instanceId/timeline", c.GetProcessTimeline)
 
 		// 性能监控
 		monitoring.GET("/performance", c.GetPerformanceMetrics)
@@ -176,7 +183,7 @@ func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) 
 	// 从JWT获取租户ID
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "未授权访问"})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
 		return
 	}
 
@@ -189,19 +196,7 @@ func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) 
 	status := ctx.Query("status")
 	assignee := ctx.Query("assignee")
 
-	// 构建查询条件 - 使用临时结构体
-	type ProcessInstanceStatusQuery struct {
-		TenantID   int
-		Page       int
-		PageSize   int
-		ProcessKey string
-		Status     string
-		Assignee   string
-		StartTime  *time.Time
-		EndTime    *time.Time
-	}
-
-	query := &ProcessInstanceStatusQuery{
+	query := &service.ListProcessInstanceStatusQuery{
 		TenantID:   tenantID.(int),
 		Page:       page,
 		PageSize:   pageSize,
@@ -216,18 +211,55 @@ func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) 
 			query.StartTime = &startTime
 		}
 	}
-
 	if endTimeStr := ctx.Query("end_time"); endTimeStr != "" {
 		if endTime, err := time.Parse(time.RFC3339, endTimeStr); err == nil {
 			query.EndTime = &endTime
 		}
 	}
 
-	// 注意：批量查询流程实例状态需要BPMNMonitoringService支持
-	// 当前返回空数组
+	statuses, total, err := c.monitoringService.ListProcessInstancesStatus(ctx, query)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取流程实例状态失败: " + err.Error()})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "功能开发中",
-		"data":    []interface{}{},
+		"message": "获取流程实例状态成功",
+		"data": gin.H{
+			"instances": statuses,
+			"total":     total,
+			"page":      page,
+			"page_size": pageSize,
+		},
+	})
+}
+
+// GetProcessTimeline 获取流程实例完整时间线
+func (c *BPMNMonitoringController) GetProcessTimeline(ctx *gin.Context) {
+	processInstanceKey := ctx.Param("instanceId")
+	if processInstanceKey == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "流程实例Key不能为空"})
+		return
+	}
+	tenantID, exists := ctx.Get("tenant_id")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		return
+	}
+
+	entries, err := c.monitoringService.GetProcessTimeline(ctx, processInstanceKey, tenantID.(int))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取流程时间线失败: " + err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "获取流程时间线成功",
+		"data": gin.H{
+			"process_instance_id": processInstanceKey,
+			"entries":             entries,
+			"total":               len(entries),
+		},
 	})
 }
 

@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,18 +20,19 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Search, 
-  Plug, 
-  Brain, 
-  Layers, 
-  Star, 
-  Download, 
-  User, 
+import {
+  Search,
+  Plug,
+  Brain,
+  Layers,
+  Star,
+  Download,
+  User,
   CheckCircle2,
   PlusCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import { httpClient } from '@/lib/api/http-client';
 
 // 组件类型定义
 interface MarketplaceItem {
@@ -57,149 +58,54 @@ const MarketplacePage = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [category, setCategory] = useState('all');
   const [isOfficial, setIsOfficial] = useState<string>('all');
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // 模拟获取数据
+  // P1-04 修复：调用真实后端 /api/v1/marketplace/items，去掉硬编码 mock。
   useEffect(() => {
+    let cancelled = false;
     const fetchItems = async () => {
+      setLoading(true);
+      setLoadError(null);
       try {
-        // 这里替换为真实的API调用
-        // const res = await fetch('/api/v1/marketplace/items');
-        // const data = await res.json();
-        // setItems(data.data.items);
-        
-        // 模拟数据
-        const mockItems: MarketplaceItem[] = [
-          {
-            id: 1,
-            name: 'feishu-connector',
-            title: '飞书连接器',
-            type: 'connector',
-            provider: '官方',
-            description: '集成飞书消息、审批、组织架构同步',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/5968/5968757.png',
-            rating: 4.8,
-            install_count: 1245,
-            category: '办公协同',
-            tags: ['飞书', '消息通知', '组织架构'],
-            is_official: true,
-            latest_version: '1.2.0'
-          },
-          {
-            id: 2,
-            name: 'dingtalk-connector',
-            title: '钉钉连接器',
-            type: 'connector',
-            provider: '官方',
-            description: '集成钉钉消息、审批、组织架构同步',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/5968/5968852.png',
-            rating: 4.7,
-            install_count: 987,
-            category: '办公协同',
-            tags: ['钉钉', '消息通知', '组织架构'],
-            is_official: true,
-            latest_version: '1.1.0'
-          },
-          {
-            id: 3,
-            name: 'wecom-connector',
-            title: '企业微信连接器',
-            type: 'connector',
-            provider: '官方',
-            description: '集成企业微信消息、审批、组织架构同步',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/5968/5968830.png',
-            rating: 4.6,
-            install_count: 856,
-            category: '办公协同',
-            tags: ['企业微信', '消息通知', '组织架构'],
-            is_official: true,
-            latest_version: '1.0.0'
-          },
-          {
-            id: 4,
-            name: 'ticket-classification-skill',
-            title: '工单智能分类',
-            type: 'skill',
-            provider: '官方',
-            description: '自动识别工单类型、优先级，智能分派到对应团队',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/4712/4712109.png',
-            rating: 4.9,
-            install_count: 1568,
-            category: 'AI能力',
-            tags: ['AI', '工单', '分类'],
-            is_official: true,
-            latest_version: '2.0.0'
-          },
-          {
-            id: 5,
-            name: 'ticket-summary-skill',
-            title: '工单摘要生成',
-            type: 'skill',
-            provider: '官方',
-            description: '自动生成工单摘要，提取关键信息，提高处理效率',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/1005/1005141.png',
-            rating: 4.7,
-            install_count: 1123,
-            category: 'AI能力',
-            tags: ['AI', '工单', '摘要'],
-            is_official: true,
-            latest_version: '1.1.0'
-          },
-          {
-            id: 6,
-            name: 'slack-connector',
-            title: 'Slack连接器',
-            type: 'connector',
-            provider: '社区',
-            description: '集成Slack消息通知',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/2111/2111615.png',
-            rating: 4.5,
-            install_count: 542,
-            category: '办公协同',
-            tags: ['Slack', '消息通知'],
-            is_official: false,
-            latest_version: '0.9.0'
-          },
-          {
-            id: 7,
-            name: 'prometheus-connector',
-            title: 'Prometheus连接器',
-            type: 'connector',
-            provider: '官方',
-            description: '集成Prometheus告警，自动生成事件工单',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/9336/9336119.png',
-            rating: 4.8,
-            install_count: 1325,
-            category: '监控告警',
-            tags: ['Prometheus', '监控', '告警'],
-            is_official: true,
-            latest_version: '1.0.0'
-          },
-          {
-            id: 8,
-            name: 'bulk-operation-plugin',
-            title: '批量操作插件',
-            type: 'plugin',
-            provider: '官方',
-            description: '支持工单、CMDB等批量操作，提高管理效率',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/3209/3209675.png',
-            rating: 4.6,
-            install_count: 987,
-            category: '效率工具',
-            tags: ['批量操作', '工单', 'CMDB'],
-            is_official: true,
-            latest_version: '1.0.0'
-          }
-        ];
-        
-        setItems(mockItems);
-      } catch (error) {
+        const res = await httpClient.get<{
+          items: MarketplaceItem[];
+          total: number;
+          page: number;
+          page_size: number;
+        }>('/api/v1/marketplace/items', { page: 1, page_size: 100 });
+        if (cancelled) return;
+        // 后端字段是 snake_case，httpClient 已自动转 camelCase。
+        // 仅保留对前端有用的字段并对缺失字段做兜底。
+        const normalized: MarketplaceItem[] = (res?.items || []).map((it: any) => ({
+          id: it.id,
+          name: it.name,
+          title: it.title || it.name,
+          type: (it.type || 'plugin') as MarketplaceItem['type'],
+          provider: it.provider || '',
+          description: it.description || '',
+          icon_url: it.iconUrl || it.icon_url || '',
+          rating: typeof it.rating === 'number' ? it.rating : 0,
+          install_count: it.installCount ?? it.install_count ?? 0,
+          category: it.category || '未分类',
+          tags: Array.isArray(it.tags) ? it.tags : [],
+          is_official: Boolean(it.isOfficial ?? it.is_official),
+          latest_version: it.latestVersion || it.latest_version || '1.0.0',
+        }));
+        setItems(normalized);
+      } catch (error: any) {
+        if (cancelled) return;
         console.error('Failed to fetch marketplace items:', error);
+        setLoadError(error?.message || '加载应用市场失败，请稍后重试');
+        setItems([]);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchItems();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // 过滤数据

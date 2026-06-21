@@ -589,3 +589,19 @@ func (r *EntRepository) GetTicketStats(ctx context.Context, tenantID int) (total
 
 	return total, metSLA, nil
 }
+
+// GetTicketSLA retrieves per-ticket SLA timing fields used by check-compliance.
+// P1-07 修复：返回创建的首次响应 / 解决时间点，让 Service 能计算 actual_response_minutes。
+func (r *EntRepository) GetTicketSLA(ctx context.Context, ticketID int, tenantID int) (createdAt, firstResponseAt, resolvedAt time.Time, found bool, err error) {
+	t, err := r.client.Ticket.Query().
+		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).
+		Select(ticket.FieldCreatedAt, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return time.Time{}, time.Time{}, time.Time{}, false, nil
+		}
+		return time.Time{}, time.Time{}, time.Time{}, false, err
+	}
+	return t.CreatedAt, t.FirstResponseAt, t.ResolvedAt, true, nil
+}

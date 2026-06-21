@@ -29,12 +29,15 @@ export class KnowledgeBaseApi {
 
   /**
    * 获取文章列表
+   * 后端路由结构：/api/v1/knowledge/articles（保持与 stats 等其它 API 一致）
+   * 说明：早期代码误用 /api/v1/knowledge-articles，与 stats 等接口前缀不一致，
+   * 修正后统一走 /api/v1/knowledge/articles 系列。
    */
   static async getArticles(query?: ArticleQuery): Promise<{
     articles: KnowledgeArticle[];
     total: number;
   }> {
-    return httpClient.get('/api/v1/knowledge-articles', query);
+    return httpClient.get('/api/v1/knowledge/articles', query);
   }
 
   /**

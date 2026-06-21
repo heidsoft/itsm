@@ -40,4 +40,7 @@ type Repository interface {
 
 	// Ticket Stats - 获取工单统计用于计算合规率
 	GetTicketStats(ctx context.Context, tenantID int) (total int, metSLA int, err error)
+
+	// GetTicketSLA - 获取单个工单的 SLA 计时信息（创建时间 / 首次响应时间 / 解决时间）
+	GetTicketSLA(ctx context.Context, ticketID int, tenantID int) (createdAt, firstResponseAt, resolvedAt time.Time, found bool, err error)
 }

@@ -181,7 +181,7 @@ func (s *Service) CreateTicketByAI(ctx context.Context, description string, tena
 
 	// 使用 Triage 服务分析描述，提取分类和优先级
 	if s.triageService != nil {
-		result := s.triageService.SuggestForTenant(ctx, description, description, tenantID)
+		result := s.triageService.Suggest(ctx, description, description)
 		return map[string]interface{}{
 			"suggested_title":    description,
 			"suggested_category": result.Category,
@@ -310,7 +310,7 @@ func (s *Service) TriageTicket(ctx context.Context, tenantID int, title, descrip
 
 	// Use LLM-powered TriageService if available
 	if s.triageService != nil {
-		result := s.triageService.SuggestForTenant(ctx, title, description, tenantID)
+		result := s.triageService.Suggest(ctx, title, description)
 		return map[string]interface{}{
 			"title":       title,
 			"description": description,

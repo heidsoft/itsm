@@ -177,9 +177,21 @@ export class BPMNDashboardApi {
 
   /**
    * 获取流程时间线
+   *
+   * 优先调用 BPMNMonitoringController 的新端点（任务 3），它会返回
+   * 完整的 process_instance_id + entries 结构，包含活动、网关、变量
+   * 等事件。旧 dashboard 端点已不再维护。
    */
   static async getProcessTimeline(processInstanceKey: string): Promise<ProcessAuditLog[]> {
-    return httpClient.get<ProcessAuditLog[]>(`${this.baseUrl}/audit-logs/timeline?process_instance_key=${processInstanceKey}`);
+    const res = await httpClient.get<
+      | { data?: { entries: ProcessAuditLog[] } }
+      | { entries: ProcessAuditLog[] }
+      | ProcessAuditLog[]
+    >(`/api/v1/bpmn/monitoring/instances/${encodeURIComponent(processInstanceKey)}/timeline`);
+    if (Array.isArray(res)) return res;
+    const entries = (res as { data?: { entries: ProcessAuditLog[] } }).data?.entries ??
+      (res as { entries?: ProcessAuditLog[] }).entries;
+    return entries ?? [];
   }
 
   /**

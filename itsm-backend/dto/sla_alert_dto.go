@@ -47,19 +47,22 @@ type SLAAlertRuleResponse struct {
 
 // SLA预警历史相关DTO
 type SLAAlertHistoryResponse struct {
-	ID                  int        `json:"id" example:"1"`
-	TicketID            int        `json:"ticket_id" example:"1001"`
-	TicketNumber        string     `json:"ticket_number" example:"T-2024-001"`
-	TicketTitle         string     `json:"ticket_title" example:"数据库连接超时"`
-	AlertRuleID         int        `json:"alert_rule_id" example:"1"`
-	AlertRuleName       string     `json:"alert_rule_name" example:"P1工单-严重预警"`
-	AlertLevel          string     `json:"alert_level" example:"severe"`
-	ThresholdPercentage int        `json:"threshold_percentage" example:"95"`
-	ActualPercentage    float64    `json:"actual_percentage" example:"96.5"`
-	NotificationSent    bool       `json:"notification_sent" example:"true"`
-	EscalationLevel     int        `json:"escalation_level" example:"1"`
-	CreatedAt           time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	ResolvedAt          *time.Time `json:"resolved_at,omitempty"`
+	ID                       int        `json:"id" example:"1"`
+	TicketID                 int        `json:"ticket_id" example:"1001"`
+	TicketNumber             string     `json:"ticket_number" example:"T-2024-001"`
+	TicketTitle              string     `json:"ticket_title" example:"数据库连接超时"`
+	AlertRuleID              int        `json:"alert_rule_id" example:"1"`
+	AlertRuleName            string     `json:"alert_rule_name" example:"P1工单-严重预警"`
+	AlertLevel               string     `json:"alert_level" example:"severe"`
+	ThresholdPercentage      int        `json:"threshold_percentage" example:"95"`
+	ActualPercentage         float64    `json:"actual_percentage" example:"96.5"`
+	NotificationSent         bool       `json:"notification_sent" example:"true"`
+	EscalationLevel          int        `json:"escalation_level" example:"1"`
+	CreatedAt                time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`
+	ResolvedAt               *time.Time `json:"resolved_at,omitempty"`
+	CooldownRemainingSeconds int  `json:"cooldown_remaining_seconds" example:"0"`
+	CooldownMinutes          int  `json:"cooldown_minutes" example:"15"`
+	SuppressedByCooldown     bool `json:"suppressed_by_cooldown" example:"false"`
 }
 
 type GetSLAAlertHistoryRequest struct {

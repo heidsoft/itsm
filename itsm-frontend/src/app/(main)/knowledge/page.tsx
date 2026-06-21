@@ -41,8 +41,10 @@ const { Title, Text } = Typography;
 export default function KnowledgePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('list');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // P1-05 修复：设置 12s 超时保护，避免某个 API 卡死时页面永远转圈
+  const [statsTimedOut, setStatsTimedOut] = useState(false);
 
   // AI 智能搜索
   const [aiSearchQuery, setAiSearchQuery] = useState('');
@@ -101,16 +103,18 @@ export default function KnowledgePage() {
       ]);
 
       // Map backend stats to frontend state
+      // 后端 /api/v1/knowledge/stats 实际返回字段：
+      //   { total, published, draft, views, rating, categories:[{name,count}] }
+      // P1-05 修复：与后端真实字段对齐，避免 UI 一直显示 0/空。
       setStats({
-        total: kbStats.totalArticles || 0,
-        published: kbStats.publishedArticles || 0,
-        draft: kbStats.draftArticles || 0,
-        views: kbStats.totalViews || 0,
-        rating: 0, // Rating not directly available in stats, could be calculated from topArticles
-        categories: Object.entries(kbStats.articlesByCategory || {}).map(([name, count]) => ({
-          name,
-          count,
-        })),
+        total: kbStats.total || 0,
+        published: kbStats.published || 0,
+        draft: kbStats.draft || 0,
+        views: kbStats.views || 0,
+        rating: typeof kbStats.rating === 'number' ? kbStats.rating : 0,
+        categories: Array.isArray(kbStats.categories)
+          ? kbStats.categories.map((c: any) => ({ name: c.name, count: c.count }))
+          : [],
       });
 
       // Map articles - backend fields: id (int), title, views (int), author (string), published_at, category (string)
