@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
-	"fmt"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 )
 
 // ProcessResolver 解析工单应该使用哪个 BPMN 流程
-// 优先级：1.请求指定 2.TicketType.default_process_key 3.ProcessBinding 4.兜底
+// 优先级：1.请求指定 2.ProcessBinding 3.兜底
 type ProcessResolver struct {
 	client         *ent.Client
 	bindingService ProcessBindingServiceInterface
@@ -29,24 +29,12 @@ func (r *ProcessResolver) Resolve(ctx context.Context, ticket *ent.Ticket, reqKe
 		return reqKey, nil
 	}
 
-	// 优先级 2：TicketType 的 default_process_key
-	if ticket.TicketTypeID != nil && *ticket.TicketTypeID > 0 {
-		tt, err := r.client.TicketType.Get(ctx, *ticket.TicketTypeID)
-		if err == nil && tt.DefaultProcessKey != nil && *tt.DefaultProcessKey != "" {
-			return *tt.DefaultProcessKey, nil
-		}
-		// NotFound 或字段为空，继续下一个优先级
-		if err != nil && !ent.IsNotFound(err) {
-			return "", fmt.Errorf("查询工单类型失败: %w", err)
-		}
-	}
-
-	// 优先级 3：ProcessBinding 表查询
+	// 优先级 2：ProcessBinding 表查询（按工单类型匹配）
 	if r.bindingService != nil {
 		binding, err := r.bindingService.FindBestBinding(
 			ctx,
-			"ticket",    // businessType
-			ticket.Type, // businessSubType
+			dto.BusinessTypeTicket, // businessType
+			ticket.Type,            // businessSubType (incident/problem/change/service_request)
 			ticket.TenantID,
 		)
 		if err == nil && binding != nil {
@@ -55,7 +43,7 @@ func (r *ProcessResolver) Resolve(ctx context.Context, ticket *ent.Ticket, reqKe
 		// 查询失败或未找到，继续兜底
 	}
 
-	// 优先级 4：兜底默认
+	// 优先级 3：兜底默认
 	return "ticket_general_flow", nil
 }
 
