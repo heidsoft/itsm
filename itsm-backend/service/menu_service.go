@@ -8,7 +8,9 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/menu"
+	"itsm-backend/ent/permission"
 	"itsm-backend/ent/role"
+	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/user"
 	"itsm-backend/middleware"
 
@@ -259,8 +261,11 @@ func (s *MenuService) getUserPermissions(ctx context.Context, userEntity *ent.Us
 		return permissions
 	}
 
-	// 从用户直接角色获取权限
+	roleCodes := make([]string, 0, 1+len(userEntity.Edges.Roles))
+
+	// 从用户直接角色获取权限，兼容旧的 users.role 字段
 	if userEntity.Role != "" {
+		roleCodes = append(roleCodes, string(userEntity.Role))
 		rolePerms := middleware.RolePermissions[string(userEntity.Role)]
 		for _, p := range rolePerms {
 			key := p.Resource + ":" + p.Action
@@ -272,8 +277,7 @@ func (s *MenuService) getUserPermissions(ctx context.Context, userEntity *ent.Us
 		}
 	}
 
-	// 从数据库获取角色的权限（多对多关系）
-	roleCodes := make([]string, 0)
+	// 从用户-角色多对多关系收集数据库角色代码
 	if userEntity.Edges.Roles != nil {
 		for _, r := range userEntity.Edges.Roles {
 			roleCodes = append(roleCodes, r.Code)
@@ -295,7 +299,88 @@ func (s *MenuService) getUserPermissions(ctx context.Context, userEntity *ent.Us
 		}
 	}
 
+	s.addDatabaseRolePermissions(ctx, permissions, tenantID, roleCodes)
+
 	return permissions
+}
+
+func (s *MenuService) addDatabaseRolePermissions(ctx context.Context, permissions map[string]bool, tenantID int, roleCodes []string) {
+	if len(roleCodes) == 0 {
+		return
+	}
+
+	uniqueRoleCodes := make([]string, 0, len(roleCodes))
+	seenRoleCodes := make(map[string]bool, len(roleCodes))
+	for _, code := range roleCodes {
+		code = strings.TrimSpace(code)
+		if code == "" || seenRoleCodes[code] {
+			continue
+		}
+		seenRoleCodes[code] = true
+		uniqueRoleCodes = append(uniqueRoleCodes, code)
+	}
+	if len(uniqueRoleCodes) == 0 {
+		return
+	}
+
+	roles, err := s.client.Role.Query().
+		Where(role.TenantIDEQ(tenantID), role.CodeIn(uniqueRoleCodes...)).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("Failed to query database roles for menu permissions", "error", err, "tenant_id", tenantID)
+		return
+	}
+	if len(roles) == 0 {
+		return
+	}
+
+	roleIDs := make([]int, 0, len(roles))
+	for _, r := range roles {
+		roleIDs = append(roleIDs, r.ID)
+	}
+
+	rolePerms, err := s.client.RolePermission.Query().
+		Where(rolepermission.RoleIDIn(roleIDs...)).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("Failed to query role permissions for menus", "error", err, "tenant_id", tenantID)
+		return
+	}
+	if len(rolePerms) == 0 {
+		return
+	}
+
+	permissionIDs := make([]int, 0, len(rolePerms))
+	seenPermissionIDs := make(map[int]bool, len(rolePerms))
+	for _, rp := range rolePerms {
+		if rp.PermissionID == 0 || seenPermissionIDs[rp.PermissionID] {
+			continue
+		}
+		seenPermissionIDs[rp.PermissionID] = true
+		permissionIDs = append(permissionIDs, rp.PermissionID)
+	}
+	if len(permissionIDs) == 0 {
+		return
+	}
+
+	dbPermissions, err := s.client.Permission.Query().
+		Where(permission.IDIn(permissionIDs...), permission.TenantIDEQ(tenantID)).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("Failed to query permissions for menus", "error", err, "tenant_id", tenantID)
+		return
+	}
+
+	for _, p := range dbPermissions {
+		if p.Resource == "" || p.Action == "" {
+			continue
+		}
+		key := p.Resource + ":" + p.Action
+		permissions[key] = true
+		if p.Action == "*" {
+			permissions[p.Resource+":*"] = true
+		}
+	}
 }
 
 // filterMenusByPermission 根据权限过滤菜单

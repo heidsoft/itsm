@@ -39,7 +39,7 @@ function convertApiMenuToSidebar(menus: MenuItemType[]): MenuItem[] {
       icon: icon || undefined,
       label: menu.name,
       path: menu.path,
-      permission: menu.permission_code,
+      permission: menu.permissionCode ?? undefined,
       description: menu.description,
       children: menu.children ? convertApiMenuToSidebar(menu.children) : undefined,
     };

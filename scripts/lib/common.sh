@@ -301,6 +301,7 @@ status_row() {
     local name="$1" status="$2" endpoint="$3"
     case "$status" in
         running)  echo -e "  ${GREEN}●${NC} ${name}: ${GREEN}running${NC}  ${CYAN}${endpoint}${NC}" ;;
+        external) echo -e "  ${YELLOW}●${NC} ${name}: ${YELLOW}external${NC} ${CYAN}${endpoint}${NC}" ;;
         starting) echo -e "  ${YELLOW}●${NC} ${name}: ${YELLOW}starting${NC}  ${CYAN}${endpoint}${NC}" ;;
         *)        echo -e "  ${RED}●${NC} ${name}: ${RED}stopped${NC}   ${CYAN}${endpoint}${NC}" ;;
     esac

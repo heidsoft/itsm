@@ -350,8 +350,12 @@ start_backend_local() {
     export MINIO_BUCKET="${MINIO_BUCKET:-itsm-uploads}"
 
     local start; start=$(timer_start)
+    local backend_bin="$PID_DIR/itsm-backend-dev"
+    log_info "Building Go backend..."
+    go build -o "$backend_bin" main.go
+
     log_info "Starting Go backend..."
-    nohup go run main.go > "$LOG_DIR/backend.log" 2>&1 &
+    nohup "$backend_bin" > "$LOG_DIR/backend.log" 2>&1 &
     local pid=$!
     echo "$pid" > "$PID_DIR/backend.pid"
     log_info "Backend PID: $pid"
@@ -653,6 +657,19 @@ print_summary() {
         "${CYAN}API Docs:${NC} ${BACKEND_URL}/swagger"
 }
 
+local_infra_status() {
+    local container="$1"
+    local port="$2"
+
+    if container_running "$container"; then
+        echo "running"
+    elif port_in_use "$port"; then
+        echo "external"
+    else
+        echo "stopped"
+    fi
+}
+
 show_status() {
     local mode; mode=$(detect_mode)
     echo ""
@@ -675,8 +692,8 @@ show_status() {
             status_row "Frontend" "stopped" "$FRONTEND_URL"
         fi
         # Infrastructure
-        container_running "itsm-postgres-dev" && status_row "PostgreSQL" "running" "localhost:5432" || status_row "PostgreSQL" "stopped" "localhost:5432"
-        container_running "itsm-redis-dev" && status_row "Redis" "running" "localhost:6379" || status_row "Redis" "stopped" "localhost:6379"
+        status_row "PostgreSQL" "$(local_infra_status "itsm-postgres-dev" 5432)" "localhost:5432"
+        status_row "Redis" "$(local_infra_status "itsm-redis-dev" 6379)" "localhost:6379"
     fi
     echo ""
 }

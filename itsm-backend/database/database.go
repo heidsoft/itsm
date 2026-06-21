@@ -89,6 +89,10 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
+	if err := normalizeMarketplaceItemDefaults(ctx, db); err != nil {
+		return nil, err
+	}
+
 	// Try enable pgvector (ignore permission error), then conditionally create vectors table/index if extension exists
 	if _, err := db.ExecContext(ctx, `CREATE EXTENSION IF NOT EXISTS vector`); err != nil {
 		log.Printf("pgvector extension enable failed (non-fatal): %v", err)
@@ -179,6 +183,45 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 	// ent.Driver(drv) 设置数据库驱动
 	rawDB = db
 	return ent.NewClient(ent.Driver(drv)), nil
+}
+
+func normalizeMarketplaceItemDefaults(ctx context.Context, db *sql.DB) error {
+	const query = `
+		SELECT column_name, column_default
+		FROM information_schema.columns
+		WHERE table_schema = 'public'
+		  AND table_name = 'marketplace_items'
+		  AND column_name IN ('rating', 'price')
+		  AND column_default = '0.0'
+		ORDER BY column_name;
+	`
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("check marketplace_items numeric defaults: %w", err)
+	}
+	defer rows.Close()
+
+	var columns []string
+	for rows.Next() {
+		var columnName, columnDefault string
+		if err := rows.Scan(&columnName, &columnDefault); err != nil {
+			return fmt.Errorf("scan marketplace_items numeric defaults: %w", err)
+		}
+		columns = append(columns, columnName)
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate marketplace_items numeric defaults: %w", err)
+	}
+
+	for _, column := range columns {
+		stmt := fmt.Sprintf(`ALTER TABLE marketplace_items ALTER COLUMN %s SET DEFAULT 0`, column)
+		if _, err := db.ExecContext(ctx, stmt); err != nil {
+			return fmt.Errorf("normalize marketplace_items.%s default from 0.0 to 0: %w. Run as the marketplace_items table owner: %s", column, err, stmt)
+		}
+		log.Printf("normalized marketplace_items.%s default from 0.0 to 0", column)
+	}
+
+	return nil
 }
 
 // 数据库连接池说明：

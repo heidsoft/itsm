@@ -234,7 +234,33 @@ make dev-logs
 make dev-status
 ```
 
-**要求**: Docker Desktop 已启动
+**要求**:
+
+- Docker Desktop 已启动。
+- macOS 本机开发推荐使用 Homebrew `postgresql@17`，并启用 `pgvector`。不要同时启动 `postgresql@16`，否则 5432 端口可能连接到旧版本，RAG 向量能力会降级或迁移失败。
+
+```bash
+# 确认只有 PostgreSQL 17 在运行
+brew services stop postgresql@16
+brew services start postgresql@17
+brew services list | grep postgresql
+
+# 推荐使用 PostgreSQL 17 客户端，避免 PATH 中旧版 psql/pg_dump 被优先使用
+/usr/local/opt/postgresql@17/bin/psql -h localhost -p 5432 -U heidsoft -d itsm -c "SELECT version();"
+
+# 确认 pgvector 已启用
+/usr/local/opt/postgresql@17/bin/psql -h localhost -p 5432 -U heidsoft -d itsm -c "CREATE EXTENSION IF NOT EXISTS vector; SELECT extname, extversion FROM pg_extension WHERE extname = 'vector';"
+```
+
+本地启动脚本默认连接:
+
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=itsm_user
+DB_PASSWORD=dev123
+DB_NAME=itsm
+```
 
 **访问地址**:
 - 前端: http://localhost:3000
@@ -244,6 +270,27 @@ make dev-status
 - Redis: localhost:6379
 
 **首次登录**: 用户名 `admin`，密码 `admin123`
+
+**前端无法访问排查**:
+
+```bash
+# 清理旧进程并重新启动
+./scripts/start-dev.sh restart
+
+# 验证前端和后端是否真的可访问
+./scripts/start-dev.sh status
+curl -I http://127.0.0.1:3000
+curl http://127.0.0.1:8090/api/v1/health
+
+# 查看监听端口和日志
+lsof -nP -iTCP:3000 -sTCP:LISTEN
+lsof -nP -iTCP:8090 -sTCP:LISTEN
+tail -f logs/frontend.log
+```
+
+在 local 模式下，如果使用本机 Homebrew PostgreSQL/Redis，`./scripts/start-dev.sh status` 会显示 `PostgreSQL: external` / `Redis: external`，表示脚本检测到外部服务正在监听端口，不会再启动 Docker 容器。
+
+如果 `curl` 返回 200 但浏览器打不开，优先检查浏览器代理配置，确保 `localhost` / `127.0.0.1` 不走 HTTP 代理。
 
 ### 初始化说明
 

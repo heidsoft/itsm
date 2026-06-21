@@ -341,6 +341,9 @@ func mergeSeedConfig(base *SeedConfig, override *SeedConfig) *SeedConfig {
 	if override.SLADefinitions != nil {
 		base.SLADefinitions = override.SLADefinitions
 	}
+	if override.SLAPolicies != nil {
+		base.SLAPolicies = override.SLAPolicies
+	}
 	if override.ServiceCatalog != nil {
 		base.ServiceCatalog = override.ServiceCatalog
 	}
@@ -1291,18 +1294,38 @@ func (s *Seeder) seedSLAPolicies(ctx context.Context) {
 		return
 	}
 
-	existing, err := s.client.SLAPolicy.Query().Where(slapolicy.TenantIDEQ(t.ID)).Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("check existing SLA policies failed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("SLA policies already seeded")
-		return
+	policies := s.config.SLAPolicies
+	if len(policies) == 0 {
+		policies = defaultSLAPolicySeeds()
+		s.sugar.Warnw("SLA policies not found in seed config; using built-in defaults")
 	}
 
-	for _, sla := range s.config.SLAPolicies {
-		_, err := s.client.SLAPolicy.Create().
+	created := 0
+	updated := 0
+	for _, sla := range policies {
+		existing, err := s.client.SLAPolicy.Query().
+			Where(slapolicy.TenantIDEQ(t.ID), slapolicy.NameEQ(sla.Name)).
+			First(ctx)
+		if err == nil {
+			_, err = existing.Update().
+				SetDescription(sla.Description).
+				SetPriority(sla.Priority).
+				SetResponseTimeMinutes(sla.ResponseTimeMinutes).
+				SetResolutionTimeMinutes(sla.ResolutionTimeMinutes).
+				SetExcludeWeekends(sla.ExcludeWeekends).
+				SetExcludeHolidays(sla.ExcludeHolidays).
+				SetIsActive(sla.IsActive).
+				SetPriorityScore(sla.PriorityScore).
+				Save(ctx)
+			if err != nil {
+				s.sugar.Warnw("update SLA policy failed", "error", err, "name", sla.Name)
+				continue
+			}
+			updated++
+			continue
+		}
+
+		_, err = s.client.SLAPolicy.Create().
 			SetName(sla.Name).
 			SetDescription(sla.Description).
 			SetPriority(sla.Priority).
@@ -1318,8 +1341,47 @@ func (s *Seeder) seedSLAPolicies(ctx context.Context) {
 			s.sugar.Warnw("seed SLA policy failed", "error", err, "name", sla.Name)
 			continue
 		}
+		created++
 	}
-	s.sugar.Infow("SLA policies seeded", "count", len(s.config.SLAPolicies))
+	s.sugar.Infow("SLA policies ensured", "total", len(policies), "created", created, "updated", updated)
+}
+
+func defaultSLAPolicySeeds() []SLAPolicySeed {
+	return []SLAPolicySeed{
+		{
+			Name:                  "默认P1事件SLA",
+			Description:           "高优先级事件响应与解决策略",
+			Priority:              "high",
+			ResponseTimeMinutes:   30,
+			ResolutionTimeMinutes: 240,
+			ExcludeWeekends:       false,
+			ExcludeHolidays:       false,
+			IsActive:              true,
+			PriorityScore:         90,
+		},
+		{
+			Name:                  "默认P2事件SLA",
+			Description:           "中优先级事件响应与解决策略",
+			Priority:              "medium",
+			ResponseTimeMinutes:   120,
+			ResolutionTimeMinutes: 1440,
+			ExcludeWeekends:       true,
+			ExcludeHolidays:       true,
+			IsActive:              true,
+			PriorityScore:         60,
+		},
+		{
+			Name:                  "默认服务请求SLA",
+			Description:           "标准服务请求履约策略",
+			Priority:              "low",
+			ResponseTimeMinutes:   240,
+			ResolutionTimeMinutes: 2880,
+			ExcludeWeekends:       true,
+			ExcludeHolidays:       true,
+			IsActive:              true,
+			PriorityScore:         30,
+		},
+	}
 }
 
 func (s *Seeder) seedSLAAlertRules(ctx context.Context) {
@@ -1542,17 +1604,6 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		return
 	}
 
-	// 检查是否已有权限
-	existing, err := s.client.Permission.Query().Where(permission.TenantIDEQ(t.ID)).Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("check existing permissions failed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("permissions already seeded")
-		return
-	}
-
 	// 定义所有权限
 	permissions := []struct {
 		Code        string
@@ -1564,7 +1615,28 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		// 工单权限
 		{"ticket:read", "查看工单", "ticket", "read", "查看工单列表和详情"},
 		{"ticket:write", "管理工单", "ticket", "write", "创建、编辑工单"},
+		{"ticket:create", "创建工单", "ticket", "create", "创建工单"},
+		{"ticket:update", "更新工单", "ticket", "update", "更新工单"},
+		{"ticket:assign", "分派工单", "ticket", "assign", "分派工单"},
+		{"ticket:escalate", "升级工单", "ticket", "escalate", "升级工单"},
+		{"ticket:resolve", "解决工单", "ticket", "resolve", "解决工单"},
+		{"ticket:close", "关闭工单", "ticket", "close", "关闭工单"},
+		{"ticket:export", "导出工单", "ticket", "export", "导出工单"},
+		{"ticket:import", "导入工单", "ticket", "import", "导入工单"},
+		{"ticket:admin", "工单管理配置", "ticket", "admin", "管理工单自动化和配置"},
 		{"ticket:delete", "删除工单", "ticket", "delete", "删除工单"},
+		{"ticket_category:read", "查看工单分类", "ticket_category", "read", "查看工单分类"},
+		{"ticket_category:create", "创建工单分类", "ticket_category", "create", "创建工单分类"},
+		{"ticket_category:update", "更新工单分类", "ticket_category", "update", "更新工单分类"},
+		{"ticket_category:delete", "删除工单分类", "ticket_category", "delete", "删除工单分类"},
+		{"ticket_tag:read", "查看工单标签", "ticket_tag", "read", "查看工单标签"},
+		{"ticket_tag:create", "创建工单标签", "ticket_tag", "create", "创建工单标签"},
+		{"ticket_tag:update", "更新工单标签", "ticket_tag", "update", "更新工单标签"},
+		{"ticket_tag:delete", "删除工单标签", "ticket_tag", "delete", "删除工单标签"},
+		{"ticket_template:read", "查看工单模板", "ticket_template", "read", "查看工单模板"},
+		{"ticket_template:create", "创建工单模板", "ticket_template", "create", "创建工单模板"},
+		{"ticket_template:update", "更新工单模板", "ticket_template", "update", "更新工单模板"},
+		{"ticket_template:delete", "删除工单模板", "ticket_template", "delete", "删除工单模板"},
 		// 事件权限
 		{"incident:read", "查看事件", "incident", "read", "查看事件列表和详情"},
 		{"incident:write", "管理事件", "incident", "write", "创建、编辑事件"},
@@ -1588,6 +1660,7 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		// CMDB 权限
 		{"cmdb:read", "查看CMDB", "cmdb", "read", "查看配置项"},
 		{"cmdb:write", "管理CMDB", "cmdb", "write", "管理配置项"},
+		{"cmdb:delete", "删除CMDB", "cmdb", "delete", "删除配置项和关系"},
 		// 报表权限
 		{"report:read", "查看报表", "report", "read", "查看报表"},
 		{"report:write", "管理报表", "report", "write", "创建、编辑报表"},
@@ -1598,9 +1671,16 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		// 服务目录权限
 		{"service:read", "查看服务", "service", "read", "查看服务目录"},
 		{"service:write", "管理服务", "service", "write", "管理服务目录"},
+		{"service_catalog:read", "查看服务目录", "service_catalog", "read", "查看服务目录"},
+		{"service_catalog:write", "管理服务目录", "service_catalog", "write", "创建、编辑服务目录"},
+		{"service_catalog:delete", "删除服务目录", "service_catalog", "delete", "删除服务目录"},
+		{"service_request:read", "查看服务请求", "service_request", "read", "查看服务请求"},
+		{"service_request:write", "处理服务请求", "service_request", "write", "创建、处理服务请求"},
+		{"service_request:delete", "删除服务请求", "service_request", "delete", "删除服务请求"},
 		// SLA权限
 		{"sla:read", "查看SLA", "sla", "read", "查看SLA定义"},
 		{"sla:write", "管理SLA", "sla", "write", "管理SLA定义"},
+		{"sla:delete", "删除SLA", "sla", "delete", "删除SLA定义"},
 		// 用户权限
 		{"user:read", "查看用户", "user", "read", "查看用户列表"},
 		{"user:write", "管理用户", "user", "write", "创建、编辑用户"},
@@ -1626,9 +1706,24 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		// 知识库权限
 		{"knowledge:read", "查看知识库", "knowledge", "read", "查看知识库文章"},
 		{"knowledge:write", "管理知识库", "knowledge", "write", "创建、编辑知识库"},
+		{"knowledge:delete", "删除知识库", "knowledge", "delete", "删除知识库文章"},
 		// 系统权限
 		{"system:read", "查看系统", "system", "read", "查看系统配置"},
 		{"system:write", "系统管理", "system", "write", "管理系统配置"},
+		{"org:read", "查看组织", "org", "read", "查看组织、部门和团队"},
+		{"org:write", "管理组织", "org", "write", "管理组织、部门和团队"},
+		{"project:read", "查看项目", "project", "read", "查看项目"},
+		{"project:write", "管理项目", "project", "write", "管理项目"},
+		{"application:read", "查看应用", "application", "read", "查看应用"},
+		{"application:write", "管理应用", "application", "write", "管理应用"},
+		{"audit:read", "查看审计", "audit", "read", "查看审计日志"},
+		{"ai:read", "查看AI能力", "ai", "read", "查看AI能力和审计"},
+		{"ai:write", "管理AI能力", "ai", "write", "调用和管理AI能力"},
+		{"connector:write", "管理连接器", "connector", "write", "管理连接器配置"},
+		{"vendor:read", "查看供应商", "vendor", "read", "查看供应商"},
+		{"vendor:write", "管理供应商", "vendor", "write", "创建、编辑供应商"},
+		{"vendor:delete", "删除供应商", "vendor", "delete", "删除供应商"},
+		{"survey:write", "管理调研", "survey", "write", "创建、编辑满意度调研"},
 		// MSP 权限
 		{"msp:read", "查看MSP", "msp", "read", "查看MSP状态和上下文"},
 		{"msp:write", "管理MSP", "msp", "write", "管理MSP配置"},
@@ -1642,7 +1737,26 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		{"msp_report:write", "管理报表", "msp_report", "write", "生成和管理MSP报表"},
 	}
 
+	created := 0
+	updated := 0
 	for _, p := range permissions {
+		existing, err := s.client.Permission.Query().
+			Where(permission.CodeEQ(p.Code), permission.TenantIDEQ(t.ID)).
+			First(ctx)
+		if err == nil {
+			_, err = existing.Update().
+				SetName(p.Name).
+				SetResource(p.Resource).
+				SetAction(p.Action).
+				SetDescription(p.Description).
+				Save(ctx)
+			if err != nil {
+				s.sugar.Warnw("update permission failed", "error", err, "code", p.Code)
+				continue
+			}
+			updated++
+			continue
+		}
 		if _, err := s.client.Permission.Create().
 			SetCode(p.Code).
 			SetName(p.Name).
@@ -1652,9 +1766,11 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 			SetTenantID(t.ID).
 			Save(ctx); err != nil {
 			s.sugar.Warnw("seed permission failed", "error", err, "code", p.Code)
+			continue
 		}
+		created++
 	}
-	s.sugar.Infow("permissions seeded", "count", len(permissions))
+	s.sugar.Infow("permissions ensured", "total", len(permissions), "created", created, "updated", updated)
 }
 
 // seedMenus 初始化系统菜单
@@ -1704,7 +1820,7 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		{Name: "工作流", Path: "/workflow", Icon: "Workflow", PermissionCode: "workflow:read", SortOrder: 200},
 		{Name: "用户管理", Path: "/admin/users", Icon: "Users", PermissionCode: "user:read", SortOrder: 210},
 		{Name: "角色管理", Path: "/admin/roles", Icon: "Shield", PermissionCode: "role:read", SortOrder: 220},
-		{Name: "组管理", Path: "/admin/groups", Icon: "Users", PermissionCode: "group:read", SortOrder: 230},
+		{Name: "组管理", Path: "/admin/groups", Icon: "Users", PermissionCode: "groups:read", SortOrder: 230},
 		{Name: "部门管理", Path: "/admin/departments", Icon: "Activity", PermissionCode: "department:read", SortOrder: 240},
 		{Name: "团队管理", Path: "/admin/teams", Icon: "Users", PermissionCode: "team:read", SortOrder: 250},
 		{Name: "审批管理", Path: "/admin/approvals", Icon: "ClipboardList", PermissionCode: "approval:read", SortOrder: 260},
@@ -1766,6 +1882,14 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		}
 	}
 
+	_, err = s.client.Menu.Update().
+		Where(menu.Path("/admin/groups"), menu.TenantIDEQ(t.ID)).
+		SetPermissionCode("groups:read").
+		Save(ctx)
+	if err != nil {
+		s.sugar.Warnw("fix group menu permission failed", "error", err)
+	}
+
 	// 2. 补充缺失的权限
 	missingPermissions := []struct {
 		Code        string
@@ -1820,6 +1944,7 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		{"SLA模板", "/admin/sla-templates", "Layers", "sla:write", 272},
 		{"升级矩阵", "/admin/escalation-matrices", "TrendingUp", "sla:read", 273},
 		{"BPMN节点分析", "/workflow/bottlenecks", "BarChart3", "workflow:read", 205},
+		{"菜单管理", "/admin/menus", "List", "system:write", 285},
 	}
 
 	for _, m := range missingMenus {
@@ -1918,6 +2043,30 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			"knowledge:read", "knowledge:write", "report:read",
 			"user:read", "team:read",
 		},
+		// 变更经理：负责变更生命周期、审批协同和发布联动
+		"change_manager": {
+			"ticket:read",
+			"change:read", "change:write", "change:delete",
+			"approval:read", "approval:write",
+			"release:read", "release:write",
+			"cmdb:read",
+			"workflow:read", "workflow:write",
+			"sla:read",
+			"report:read",
+			"knowledge:read", "knowledge:write",
+		},
+		// 服务目录管理员：负责服务目录、服务请求模板和工单模板配置
+		"service_catalog_admin": {
+			"service:read", "service:write",
+			"service_catalog:read", "service_catalog:write", "service_catalog:delete",
+			"service_request:read", "service_request:write", "service_request:delete",
+			"ticket_template:read", "ticket_template:create", "ticket_template:update", "ticket_template:delete",
+			"ticket_category:read", "ticket_category:create", "ticket_category:update",
+			"workflow:read",
+			"approval:read",
+			"sla:read",
+			"knowledge:read",
+		},
 		// 一线支持工程师
 		"l1_support": {
 			"ticket:read", "ticket:write", "incident:read", "incident:write",
@@ -2007,18 +2156,6 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 
 	assigned := 0
 	for _, r := range roles {
-		// 检查该角色是否已有权限分配（查询 role_permissions 联表）
-		existingCount, err := s.client.RolePermission.Query().
-			Where(rolepermission.RoleID(r.ID)).
-			Count(ctx)
-		if err != nil {
-			s.sugar.Warnw("check role permissions failed", "error", err, "role", r.Code)
-			continue
-		}
-		if existingCount > 0 {
-			continue // 跳过已有权限的角色
-		}
-
 		codes, ok := rolePermissionMap[r.Code]
 		if !ok {
 			continue // 未定义的角色跳过
@@ -2038,7 +2175,17 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		// 为角色添加权限（直接写入 role_permissions 联表）
 		created := 0
 		for _, pid := range permIDs {
-			_, err := s.client.RolePermission.Create().
+			exists, err := s.client.RolePermission.Query().
+				Where(rolepermission.RoleID(r.ID), rolepermission.PermissionID(pid)).
+				Exist(ctx)
+			if err != nil {
+				s.sugar.Warnw("check role-permission failed", "error", err, "role", r.Code, "permission_id", pid)
+				continue
+			}
+			if exists {
+				continue
+			}
+			_, err = s.client.RolePermission.Create().
 				SetRoleID(r.ID).
 				SetPermissionID(pid).
 				Save(ctx)
@@ -2049,7 +2196,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			}
 		}
 		if created > 0 {
-			s.sugar.Infow("role permissions assigned", "role", r.Code, "count", created)
+			s.sugar.Infow("role permissions ensured", "role", r.Code, "created", created)
 			assigned++
 		}
 	}
@@ -2059,17 +2206,24 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 // allPermissionCodes 返回所有权限代码
 func allPermissionCodes() []string {
 	return []string{
-		"ticket:read", "ticket:write", "ticket:delete",
+		"ticket:read", "ticket:write", "ticket:create", "ticket:update", "ticket:assign",
+		"ticket:escalate", "ticket:resolve", "ticket:close", "ticket:export", "ticket:import",
+		"ticket:admin", "ticket:delete",
+		"ticket_category:read", "ticket_category:create", "ticket_category:update", "ticket_category:delete",
+		"ticket_tag:read", "ticket_tag:create", "ticket_tag:update", "ticket_tag:delete",
+		"ticket_template:read", "ticket_template:create", "ticket_template:update", "ticket_template:delete",
 		"incident:read", "incident:write", "incident:delete",
 		"problem:read", "problem:write", "problem:delete",
 		"change:read", "change:write", "change:delete",
 		"release:read", "release:write", "release:delete",
 		"asset:read", "asset:write", "asset:delete",
-		"cmdb:read", "cmdb:write",
+		"cmdb:read", "cmdb:write", "cmdb:delete",
 		"report:read", "report:write",
 		"license:read", "license:write", "license:delete",
 		"service:read", "service:write",
-		"sla:read", "sla:write",
+		"service_catalog:read", "service_catalog:write", "service_catalog:delete",
+		"service_request:read", "service_request:write", "service_request:delete",
+		"sla:read", "sla:write", "sla:delete",
 		"user:read", "user:write", "user:delete",
 		"group:read", "group:write",
 		"role:read", "role:write",
@@ -2077,8 +2231,16 @@ func allPermissionCodes() []string {
 		"team:read", "team:write",
 		"approval:read", "approval:write",
 		"workflow:read", "workflow:write",
-		"knowledge:read", "knowledge:write",
+		"knowledge:read", "knowledge:write", "knowledge:delete",
 		"system:read", "system:write",
+		"org:read", "org:write",
+		"project:read", "project:write",
+		"application:read", "application:write",
+		"audit:read",
+		"ai:read", "ai:write",
+		"connector:write",
+		"vendor:read", "vendor:write", "vendor:delete",
+		"survey:write",
 		"msp:read", "msp:write",
 		"msp_customer:read", "msp_customer:write",
 		"msp_ticket:read", "msp_ticket:write",
