@@ -1818,6 +1818,7 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		{"CI类型管理", "/admin/cmdb-types", "Database", "cmdb:write", 290},
 		{"许可证管理", "/licenses", "Key", "license:read", 125},
 		{"SLA模板", "/admin/sla-templates", "Layers", "sla:write", 272},
+		{"升级矩阵", "/admin/escalation-matrices", "TrendingUp", "sla:read", 273},
 		{"BPMN节点分析", "/workflow/bottlenecks", "BarChart3", "workflow:read", 205},
 	}
 
