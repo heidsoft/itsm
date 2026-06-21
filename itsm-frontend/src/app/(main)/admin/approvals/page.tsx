@@ -19,6 +19,7 @@ import {
   Col,
   Statistic,
   InputNumber,
+  Alert,
 } from 'antd';
 import {
   Plus,
@@ -29,6 +30,7 @@ import {
 } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import { httpClient } from '@/lib/api/http-client';
+import { WorkflowDefinitionApi } from '@/lib/api/workflow-definition-api';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -42,6 +44,8 @@ interface ApprovalWorkflow {
   priority?: string;
   is_active: boolean;
   isActive?: boolean;
+  workflow_id?: string;
+  workflowId?: string;
   nodes?: ApprovalNode[];
   created_at?: string;
   updated_at?: string;
@@ -82,6 +86,7 @@ export default function ApprovalManagement() {
     active: 0,
     inactive: 0,
   });
+  const [bpmnWorkflows, setBpmnWorkflows] = useState<{ id: string; name: string }[]>([]);
 
   // 加载审批工作流数据
   const loadWorkflows = useCallback(async () => {
@@ -106,10 +111,26 @@ export default function ApprovalManagement() {
     }
   }, []);
 
+  // 加载 BPMN 工作流定义列表
+  const loadBpmnWorkflows = useCallback(async () => {
+    try {
+      const result = await WorkflowDefinitionApi.getWorkflows({ page: 1, pageSize: 100 });
+      const list = (result.workflows || []).map(w => ({
+        id: w.id,
+        name: w.name,
+      }));
+      setBpmnWorkflows(list);
+    } catch (error) {
+      console.error('Failed to load BPMN workflows:', error);
+      setBpmnWorkflows([]);
+    }
+  }, []);
+
   // 初始化加载
   useEffect(() => {
     loadWorkflows();
-  }, [loadWorkflows]);
+    loadBpmnWorkflows();
+  }, [loadWorkflows, loadBpmnWorkflows]);
 
   // 处理保存
   const handleSave = async () => {
@@ -166,6 +187,7 @@ export default function ApprovalManagement() {
       ticket_type: record.ticket_type || record.ticketType,
       priority: record.priority,
       is_active: record.is_active ?? record.isActive,
+      workflow_id: record.workflow_id || record.workflowId,
       nodes: record.nodes?.length ? record.nodes : [defaultApprovalNode()],
     });
     setShowModal(true);
@@ -227,6 +249,18 @@ export default function ApprovalManagement() {
       ellipsis: true,
     },
     {
+      title: 'BPMN工作流',
+      dataIndex: 'workflow_id',
+      key: 'workflow_id',
+      render: (workflowId: string) => (
+        workflowId ? (
+          <Tag color="blue">已关联</Tag>
+        ) : (
+          <Tag>未关联</Tag>
+        )
+      ),
+    },
+    {
       title: '操作',
       key: 'actions',
       width: 200,
@@ -259,6 +293,21 @@ export default function ApprovalManagement() {
 
   return (
     <div style={{ padding: 24 }}>
+      {/* 迁移提示 */}
+      <Alert
+        message="审批配置已迁移"
+        description="审批流程配置已迁移到「工作流管理」页面。本页面仅作历史数据查询，新流程请在工作流管理中创建。"
+        type="warning"
+        showIcon
+        closable
+        className="mb-6"
+        action={
+          <Button size="small" type="primary" href="/workflow">
+            前往工作流管理
+          </Button>
+        }
+      />
+
       <div className="mb-6">
         <Title level={2} className="!mb-2">
           <GitMerge className="mr-2" />
@@ -402,6 +451,22 @@ export default function ApprovalManagement() {
             name="description"
           >
             <TextArea rows={3} placeholder="请输入工作流描述" />
+          </Form.Item>
+          <Form.Item
+            label="关联BPMN工作流"
+            name="workflow_id"
+            tooltip="选择关联的BPMN工作流，用于自动化流程编排"
+          >
+            <Select
+              placeholder="选择BPMN工作流（可选）"
+              allowClear
+              showSearch
+              optionFilterProp="children"
+              options={bpmnWorkflows.map(w => ({
+                label: w.name,
+                value: w.id,
+              }))}
+            />
           </Form.Item>
           <Form.Item
             label="状态"
