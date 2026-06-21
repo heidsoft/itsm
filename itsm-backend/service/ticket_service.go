@@ -41,6 +41,8 @@ type TicketService struct {
 	automationRuleService *TicketAutomationRuleService
 	// 流程触发服务（用于工单创建时自动触发工作流）
 	processTriggerService ProcessTriggerServiceInterface
+	// 流程解析器（替代硬编码 switch）
+	processResolver *ProcessResolver
 	// 审批服务
 	approvalService *ApprovalService
 	// 子服务
@@ -89,6 +91,11 @@ func (s *TicketService) SetAutomationRuleService(automationRuleService *TicketAu
 // SetProcessTriggerService 设置流程触发服务（用于工单创建时自动触发工作流）
 func (s *TicketService) SetProcessTriggerService(triggerService ProcessTriggerServiceInterface) {
 	s.processTriggerService = triggerService
+}
+
+// SetProcessResolver 设置流程解析器（用于替代硬编码的流程匹配）
+func (s *TicketService) SetProcessResolver(resolver *ProcessResolver) {
+	s.processResolver = resolver
 }
 
 // SetMSPAccessValidator 设置MSP访问验证器（用于MSP客户数据隔离）
@@ -230,27 +237,17 @@ func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, ticketID i
 		"assignee_id":   ticket.AssigneeID,
 	}
 
-	// 确定使用的工作流：如果传入了workflowDefinitionKey则使用，否则按工单类型和优先级自动选择
+	// 确定使用的工作流：使用 ProcessResolver 解析
 	processKey := workflowDefinitionKey
 	if processKey == "" {
-		// TODO: 后续迁移到 ProcessResolver + TicketType.default_process_key
-		// 当前为过渡方案:硬编码按工单类型+优先级匹配
-		// 根据工单类型选择对应的工作流（类型优先于优先级）
-		switch ticket.Type {
-		case "incident":
-			processKey = "incident_emergency_flow"
-		case "problem":
-			processKey = "problem_management_flow"
-		case "change":
-			processKey = "change_normal_flow"
-		case "service_request":
-			processKey = "service_request_flow"
-		default:
-			// 通用工单根据优先级选择
-			processKey = "ticket_general_flow"
-			if ticket.Priority == "high" || ticket.Priority == "urgent" {
-				processKey = "ticket_urgent_flow"
+		if s.processResolver != nil {
+			processKey, err = s.processResolver.ResolveWithPriority(ctx, ticket, workflowDefinitionKey)
+			if err != nil {
+				return fmt.Errorf("failed to resolve process key: %w", err)
 			}
+		} else {
+			// ProcessResolver 未初始化，使用兜底默认
+			processKey = "ticket_general_flow"
 		}
 	}
 
