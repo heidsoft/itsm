@@ -94,26 +94,6 @@ func (s *TicketServiceV2) CreateTicket(ctx context.Context, req *dto.CreateTicke
 		}
 	}
 
-	// 异步触发审批（紧急和关键优先级）
-	if s.approvalSvc != nil && (req.Priority == "urgent" || req.Priority == "critical") {
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			_, err := s.approvalSvc.TriggerApproval(ctx2, &ApprovalTriggerRequest{
-				TicketID:     tkt.ID,
-				TicketNumber: tkt.TicketNumber,
-				TicketTitle:  tkt.Title,
-				TicketType:   string(tkt.Type),
-				Priority:     string(tkt.Priority),
-				RequesterID:  tkt.RequesterID,
-				TenantID:     tenantID,
-			})
-			if err != nil {
-				s.logger.Warnw("Approval trigger failed", "error", err)
-			}
-		}()
-	}
-
 	// 异步发送通知（如果分配了处理人）
 	if s.notificationSvc != nil && tkt.AssigneeID != nil {
 		go func() {

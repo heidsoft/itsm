@@ -110,31 +110,6 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		response.RelatedTickets = changeEntity.RelatedTickets
 	}
 
-	// 触发审批流程（对于紧急或高风险变更）
-	if s.approvalService != nil && (string(req.Priority) == "urgent" || string(req.RiskLevel) == "high" || string(req.RiskLevel) == "critical") {
-		go func() {
-			approvalCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			// 生成变更编号
-			changeNumber := fmt.Sprintf("CHG-%s-%06d", time.Now().Format("200602"), changeEntity.ID)
-			approvalReq := &ApprovalTriggerRequest{
-				TicketID:     changeEntity.ID,
-				TicketNumber: changeNumber,
-				TicketTitle:  changeEntity.Title,
-				TicketType:   "change",
-				Priority:     string(req.Priority),
-				RequesterID:  createdBy,
-				TenantID:     tenantID,
-			}
-			records, err := s.approvalService.TriggerApproval(approvalCtx, approvalReq)
-			if err != nil {
-				s.logger.Warnw("Failed to trigger approval for change", "error", err, "change_id", changeEntity.ID)
-			} else if len(records) > 0 {
-				s.logger.Infow("Approval triggered for change", "change_id", changeEntity.ID, "approval_records", len(records))
-			}
-		}()
-	}
-
 	// 触发BPMN工作流（异步执行，不阻塞变更创建）
 	if s.processTriggerService != nil {
 		go func() {

@@ -165,26 +165,6 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}
 	}
 
-	// 触发审批（仅紧急和关键）- 异步执行，不阻塞主流程
-	if s.approvalService != nil && (req.Priority == "urgent" || req.Priority == "critical") {
-		approvalReq := &ApprovalTriggerRequest{
-			TicketID:     ticket.ID,
-			TicketNumber: ticket.TicketNumber,
-			TicketTitle:  ticket.Title,
-			TicketType:   ticketType,
-			Priority:     req.Priority,
-			RequesterID:  req.RequesterID,
-			TenantID:     tenantID,
-		}
-		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			if _, err := s.approvalService.TriggerApproval(ctx2, approvalReq); err != nil {
-				s.logger.Warnw("Approval trigger failed", "error", err)
-			}
-		}()
-	}
-
 	// 通知 - 异步执行，不阻塞主流程
 	// 总是发送通知(无论是处理人/创建人/管理员)
 	if s.notificationService != nil {
@@ -253,6 +233,8 @@ func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, ticketID i
 	// 确定使用的工作流：如果传入了workflowDefinitionKey则使用，否则按工单类型和优先级自动选择
 	processKey := workflowDefinitionKey
 	if processKey == "" {
+		// TODO: 后续迁移到 ProcessResolver + TicketType.default_process_key
+		// 当前为过渡方案:硬编码按工单类型+优先级匹配
 		// 根据工单类型选择对应的工作流（类型优先于优先级）
 		switch ticket.Type {
 		case "incident":
