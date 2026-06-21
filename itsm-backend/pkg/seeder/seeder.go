@@ -3170,11 +3170,3 @@ func (s *Seeder) seedIncidentCategories(ctx context.Context) {
 	}
 	s.sugar.Infow("incident categories seeded", "count", len(categories))
 }
-
-// nilIfEmpty 返回空字符串的 nil 指针，非空则返回指针
-func nilIfEmpty(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
-}
