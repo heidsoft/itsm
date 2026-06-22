@@ -418,12 +418,22 @@ const WorkflowManagement = () => {
       dataIndex: 'lastModified',
       key: 'lastModified',
       align: 'center' as const,
-      render: (date: string) => (
-        <div className="text-center">
-          <div className="text-sm">{date.split(' ')[0]}</div>
-          <div className="text-xs text-gray-500">{date.split(' ')[1]}</div>
-        </div>
-      ),
+      render: (date: unknown) => {
+        if (!date) return <span className="text-gray-400">-</span>;
+        const dateStr = String(date);
+        const datePart = dateStr.includes('T')
+          ? dateStr.split('T')[0]
+          : dateStr.split(' ')[0] || dateStr;
+        const timePart = dateStr.includes('T')
+          ? (dateStr.split('T')[1] || '').split(/[+Z]/)[0]
+          : dateStr.split(' ')[1] || '';
+        return (
+          <div className="text-center">
+            <div className="text-sm">{datePart}</div>
+            <div className="text-xs text-gray-500">{timePart}</div>
+          </div>
+        );
+      },
     },
     {
       title: '操作',
@@ -616,7 +626,7 @@ const WorkflowManagement = () => {
       <Card className="enterprise-card">
         {filteredWorkflows.length === 0 && !loading ? (
           <Alert
-            message="暂无工作流"
+            title="暂无工作流"
             description="点击右上角按钮创建第一个工作流"
             type="info"
             showIcon
