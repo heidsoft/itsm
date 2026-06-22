@@ -110,6 +110,11 @@ func (r *EntRepository) CreateCI(ctx context.Context, ci *ConfigurationItem) (*C
 		}
 	}
 
+	normalizedAttributes, err := r.normalizeCIAttributes(ctx, ci, 0)
+	if err != nil {
+		return nil, err
+	}
+
 	create := r.client.ConfigurationItem.Create().
 		SetName(ci.Name).
 		SetCiTypeID(ci.CITypeID).
@@ -134,8 +139,8 @@ func (r *EntRepository) CreateCI(ctx context.Context, ci *ConfigurationItem) (*C
 		SetCloudResourceType(ci.CloudResourceType).
 		SetTenantID(ci.TenantID)
 
-	if ci.Attributes != nil {
-		create = create.SetAttributes(ci.Attributes)
+	if normalizedAttributes != nil {
+		create = create.SetAttributes(normalizedAttributes)
 	}
 	if ci.CloudMetadata != nil {
 		create = create.SetCloudMetadata(ci.CloudMetadata)
@@ -214,6 +219,11 @@ func (r *EntRepository) UpdateCI(ctx context.Context, ci *ConfigurationItem) (*C
 		return nil, err
 	}
 
+	normalizedAttributes, err := r.normalizeCIAttributes(ctx, ci, ci.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	update := r.client.ConfigurationItem.UpdateOneID(ci.ID).
 		SetName(ci.Name).
 		SetCiTypeID(ci.CITypeID).
@@ -237,8 +247,8 @@ func (r *EntRepository) UpdateCI(ctx context.Context, ci *ConfigurationItem) (*C
 		SetCloudResourceID(ci.CloudResourceID).
 		SetCloudResourceType(ci.CloudResourceType)
 
-	if ci.Attributes != nil {
-		update = update.SetAttributes(ci.Attributes)
+	if normalizedAttributes != nil {
+		update = update.SetAttributes(normalizedAttributes)
 	}
 	if ci.CloudMetadata != nil {
 		update = update.SetCloudMetadata(ci.CloudMetadata)

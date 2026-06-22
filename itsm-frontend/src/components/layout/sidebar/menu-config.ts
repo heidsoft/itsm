@@ -574,7 +574,7 @@ export function getMenuConfig(): MenuConfig {
             icon: getIconByName('Plug')!,
             label: '连接器/插件市场',
             path: '/admin/connectors',
-            permission: 'connector:manage',
+            permission: 'connector:write',
           },
           {
             key: '/admin/system-config',
