@@ -48,6 +48,7 @@ export default function WorkflowNewModal({
         require_approval: template.approval_config.require_approval,
         approval_type: template.approval_config.approval_type,
         approvers: template.approval_config.approvers,
+        approver_groups: [],
         auto_approve_roles: [],
         escalation_rules: [],
       },
@@ -74,7 +75,6 @@ export default function WorkflowNewModal({
       onCancel={onClose}
       footer={null}
       width={900}
-      destroyOnClose
     >
       <div className="mb-4">
         <Input.Search

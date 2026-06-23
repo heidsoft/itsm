@@ -277,7 +277,6 @@ export default function CloudResourcePage() {
         onCancel={() => setBinding(null)}
         onOk={handleBindExisting}
         confirmLoading={bindSubmitting}
-        destroyOnClose
       >
         <Form form={bindForm} layout="vertical">
           <Form.Item

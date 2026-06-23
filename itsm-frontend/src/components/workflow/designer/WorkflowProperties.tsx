@@ -16,16 +16,19 @@ import {
   Badge,
   Space,
   Typography,
+  Tag,
+  Empty,
 } from 'antd';
 
 const { Text } = Typography;
-import { Eye, GitBranch } from 'lucide-react';
+import { Eye, GitBranch, Users } from 'lucide-react';
 import type {
   WorkflowDefinition,
   WorkflowVersion,
   ApprovalConfig,
   UserInfo,
   RoleInfo,
+  GroupInfo,
   SLAConfig,
 } from './WorkflowTypes';
 
@@ -38,8 +41,10 @@ interface WorkflowPropertiesProps {
   workflowVersions: WorkflowVersion[];
   userList: UserInfo[];
   roleList: RoleInfo[];
+  groupList?: GroupInfo[];
   loadingUsers: boolean;
   loadingRoles: boolean;
+  loadingGroups?: boolean;
   activeTab?: string;
   onSwitchVersion?: (versionId: string) => void;
   onShowVersionModal?: () => void;
@@ -53,8 +58,10 @@ export default function WorkflowProperties({
   workflowVersions,
   userList,
   roleList,
+  groupList = [],
   loadingUsers,
   loadingRoles,
+  loadingGroups = false,
   onSwitchVersion,
   onShowVersionModal,
   onUpdateSLA,
@@ -72,6 +79,14 @@ export default function WorkflowProperties({
     setApprovalConfig({
       ...approvalConfig,
       approvers: value,
+    });
+  };
+
+  // 审批组变更
+  const handleApproverGroupsChange = (value: string[]) => {
+    setApprovalConfig({
+      ...approvalConfig,
+      approver_groups: value,
     });
   };
 
@@ -214,6 +229,7 @@ export default function WorkflowProperties({
                   onChange={handleApproversChange}
                   className="w-full"
                   loading={loadingUsers}
+                  maxTagCount="responsive"
                 >
                   {userList.map(user => (
                     <Option key={user.id} value={String(user.id)}>
@@ -221,6 +237,64 @@ export default function WorkflowProperties({
                     </Option>
                   ))}
                 </Select>
+              </div>
+
+              {/* 审批组 */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Text strong className="flex items-center">
+                    <Users className="w-4 h-4 mr-1" />
+                    审批组
+                  </Text>
+                  <Text type="secondary" className="text-xs">
+                    {groupList.length > 0
+                      ? `共 ${groupList.length} 个审批组`
+                      : '未配置审批组'}
+                  </Text>
+                </div>
+                <Select
+                  mode="multiple"
+                  placeholder={loadingGroups ? '加载审批组中...' : '选择审批组（任意成员审批即通过）'}
+                  value={approvalConfig.approver_groups || []}
+                  onChange={handleApproverGroupsChange}
+                  className="w-full"
+                  loading={loadingGroups}
+                  maxTagCount="responsive"
+                  notFoundContent={
+                    loadingGroups ? (
+                      <span className="text-gray-400">加载中...</span>
+                    ) : (
+                      <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                          <span className="text-xs">
+                            暂无审批组，请先到{' '}
+                            <a href="/admin/groups" target="_blank">
+                              组管理
+                            </a>{' '}
+                            创建
+                          </span>
+                        }
+                      />
+                    )
+                  }
+                >
+                  {groupList.map(group => (
+                    <Option key={group.id} value={String(group.id)}>
+                      <div className="flex items-center justify-between">
+                        <span>{group.name}</span>
+                        {group.memberCount !== undefined && (
+                          <Tag color="blue" className="ml-2">
+                            {group.memberCount} 人
+                          </Tag>
+                        )}
+                      </div>
+                    </Option>
+                  ))}
+                </Select>
+                <Text type="secondary" className="text-xs mt-1 block">
+                  提示：审批组中任意一个成员审批即视为该节点通过
+                </Text>
               </div>
 
               {/* 自动审批角色 */}

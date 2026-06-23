@@ -22,6 +22,7 @@ export interface ApprovalConfig {
   require_approval: boolean;
   approval_type: 'single' | 'parallel' | 'sequential' | 'conditional';
   approvers: string[];
+  approver_groups: string[];
   auto_approve_roles: string[];
   escalation_rules: EscalationRule[];
 }
@@ -71,6 +72,13 @@ export interface RoleInfo {
   code: string;
 }
 
+export interface GroupInfo {
+  id: number;
+  name: string;
+  description?: string;
+  memberCount?: number;
+}
+
 export interface WorkflowDesignerState {
   workflow: WorkflowDefinition | null;
   currentXML: string;
@@ -82,8 +90,10 @@ export interface WorkflowDesignerState {
   workflowVersions: WorkflowVersion[];
   userList: UserInfo[];
   roleList: RoleInfo[];
+  groupList: GroupInfo[];
   loadingUsers: boolean;
   loadingRoles: boolean;
+  loadingGroups: boolean;
 }
 
 export interface WorkflowDesignerActions {
@@ -97,8 +107,10 @@ export interface WorkflowDesignerActions {
   setWorkflowVersions: (versions: WorkflowVersion[]) => void;
   setUserList: (users: UserInfo[]) => void;
   setRoleList: (roles: RoleInfo[]) => void;
+  setGroupList: (groups: GroupInfo[]) => void;
   setLoadingUsers: (loading: boolean) => void;
   setLoadingRoles: (loading: boolean) => void;
+  setLoadingGroups: (loading: boolean) => void;
   updateWorkflow: (updates: Partial<WorkflowDefinition>) => void;
   updateSLAConfig: (config: Partial<SLAConfig>) => void;
   addWorkflowVersion: (version: WorkflowVersion) => void;

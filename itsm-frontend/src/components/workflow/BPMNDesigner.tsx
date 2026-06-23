@@ -40,64 +40,154 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   const { message } = App.useApp();
   const containerRef = useRef<HTMLDivElement>(null);
   const modelerRef = useRef<BpmnModeler | null>(null);
+  const initAttemptedRef = useRef(false);
   const [currentXML, setCurrentXML] = useState(xml);
   const [zoom, setZoom] = useState(1);
   const [history, setHistory] = useState<string[]>([xml]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  // 初始化 BPMN Modeler
-  useEffect(() => {
-    if (!containerRef.current || modelerRef.current) return;
-
-    const modeler = new BpmnModeler({
-      container: containerRef.current,
-    });
-
-    modelerRef.current = modeler;
-
-    // 加载初始 XML
-    if (xml) {
-      modeler.importXML(xml).catch((err: Error) => {
-        console.error('Failed to import XML:', err);
-        message.error('加载流程图失败');
-      });
-    } else {
-      modeler.createDiagram().catch((err: Error) => {
-        console.error('Failed to create blank diagram:', err);
-      });
+  // 等待容器具有有效尺寸后再初始化 BPMN Modeler
+  // bpmn-js 在容器尺寸为 0 时会抛出 "Cannot read properties of undefined (reading 'root-0')"
+  const initializeModeler = useCallback(() => {
+    if (!containerRef.current || modelerRef.current || initAttemptedRef.current) {
+      return;
     }
 
-    // 监听变化
-    modeler.on('commandStack.changed', () => {
-      modeler.saveXML({ format: true }).then(result => {
-        if (result.xml) {
-          setCurrentXML(result.xml);
-          onChange?.(result.xml);
+    const rect = containerRef.current.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) {
+      // 容器尚未布局完成，等待下一帧重试
+      return;
+    }
 
-          // 更新历史记录
-          setHistory(prev => {
-            const newHistory = prev.slice(0, historyIndex + 1);
-            newHistory.push(result.xml!);
-            return newHistory.slice(-20); // 最多保留20步
-          });
-        }
+    initAttemptedRef.current = true;
+
+    try {
+      const modeler = new BpmnModeler({
+        container: containerRef.current,
       });
-    });
+
+      modelerRef.current = modeler;
+
+      // 加载初始 XML
+      if (xml) {
+        modeler
+          .importXML(xml)
+          .then(() => {
+            const canvas = modeler.get('canvas') as
+              | { zoom: (level: string) => void }
+              | undefined;
+            canvas?.zoom('fit-viewport');
+          })
+          .catch((err: Error) => {
+            console.error('Failed to import XML:', err);
+            message.error('加载流程图失败');
+          });
+      } else {
+        modeler
+          .createDiagram()
+          .then(() => {
+            const canvas = modeler.get('canvas') as
+              | { zoom: (level: string) => void }
+              | undefined;
+            canvas?.zoom('fit-viewport');
+          })
+          .catch((err: Error) => {
+            console.error('Failed to create blank diagram:', err);
+          });
+      }
+
+      // 监听变化
+      modeler.on('commandStack.changed', () => {
+        modeler.saveXML({ format: true }).then(result => {
+          if (result.xml) {
+            setCurrentXML(result.xml);
+            onChange?.(result.xml);
+
+            // 更新历史记录
+            setHistory(prev => {
+              const newHistory = prev.slice(0, historyIndex + 1);
+              newHistory.push(result.xml!);
+              return newHistory.slice(-20); // 最多保留20步
+            });
+          }
+        });
+      });
+    } catch (err) {
+      console.error('Failed to initialize BPMN Modeler:', err);
+      initAttemptedRef.current = false;
+    }
+  }, [xml, historyIndex, message, onChange]);
+
+  // 初始化 BPMN Modeler - 等待容器布局完成
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // 使用 requestAnimationFrame 确保 DOM 已完成布局
+    let rafId: number | null = null;
+    let resizeObserver: ResizeObserver | null = null;
+
+    const tryInit = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        initializeModeler();
+      } else {
+        // 容器仍未布局，使用 ResizeObserver 等待
+        resizeObserver = new ResizeObserver(entries => {
+          for (const entry of entries) {
+            const { width, height } = entry.contentRect;
+            if (width > 0 && height > 0) {
+              initializeModeler();
+              resizeObserver?.disconnect();
+              break;
+            }
+          }
+        });
+        resizeObserver.observe(containerRef.current);
+      }
+    };
+
+    rafId = requestAnimationFrame(tryInit);
 
     return () => {
-      modeler.destroy();
-      modelerRef.current = null;
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      resizeObserver?.disconnect();
+      if (modelerRef.current) {
+        try {
+          modelerRef.current.destroy();
+        } catch (err) {
+          console.warn('BPMN Modeler destroy failed:', err);
+        }
+        modelerRef.current = null;
+      }
+      initAttemptedRef.current = false;
     };
-  }, []);
+  }, [initializeModeler]);
 
-  // 更新 XML
+  // 同步 xml prop 变化 - 仅在父组件传入新的 XML 时才更新
+  // 使用 ref 跟踪上次 prop 避免命令栈变化触发的回环
+  const lastPropXmlRef = useRef(xml);
   useEffect(() => {
-    if (xml !== currentXML && modelerRef.current) {
-      modelerRef.current.importXML(xml).catch((err: Error) => {
-        console.error('Failed to import XML:', err);
-      });
+    if (xml === lastPropXmlRef.current) return;
+    lastPropXmlRef.current = xml;
+
+    if (modelerRef.current && xml) {
+      modelerRef.current
+        .importXML(xml)
+        .then(() => {
+          const canvas = modelerRef.current!.get('canvas') as
+            | { zoom: (level: string) => void }
+            | undefined;
+          canvas?.zoom('fit-viewport');
+          setCurrentXML(xml);
+        })
+        .catch((err: Error) => {
+          console.error('Failed to import XML:', err);
+        });
     }
-  }, [xml, currentXML]);
+  }, [xml]);
 
   // 保存
   const handleSave = useCallback(() => {

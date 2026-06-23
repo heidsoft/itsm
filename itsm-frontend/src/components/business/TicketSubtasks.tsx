@@ -461,7 +461,6 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
           form.resetFields();
         }}
         width={600}
-        destroyOnClose
       >
         <Form form={form} layout="vertical">
           <Form.Item

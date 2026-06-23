@@ -220,7 +220,6 @@ export default function CloudServicePage() {
         open={createOpen}
         onCancel={() => setCreateOpen(false)}
         onOk={handleCreate}
-        destroyOnClose
       >
         <Form form={createForm} layout="vertical">
           <Form.Item

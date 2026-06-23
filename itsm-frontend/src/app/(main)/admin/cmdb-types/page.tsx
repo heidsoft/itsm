@@ -635,7 +635,6 @@ const CMDBTypesManagement = () => {
           </Space>
         }
         width={760}
-        destroyOnClose
       >
         <Form
           id={formId}

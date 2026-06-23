@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { UserApi } from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
+import { GroupAPI } from '@/lib/api/group-api';
 import { httpClient } from '@/lib/api/http-client';
 
 import { WorkflowDesignerProvider } from './WorkflowContext';
@@ -98,14 +99,17 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     require_approval: true,
     approval_type: 'sequential',
     approvers: [],
+    approver_groups: [],
     auto_approve_roles: [],
     escalation_rules: [],
   });
   const [workflowVersions, setWorkflowVersions] = useState<WorkflowVersion[]>([]);
   const [userList, setUserList] = useState<{ id: number; name: string; username: string }[]>([]);
   const [roleList, setRoleList] = useState<{ id: number; name: string; code: string }[]>([]);
+  const [groupList, setGroupList] = useState<{ id: number; name: string; description?: string; memberCount?: number }[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingRoles, setLoadingRoles] = useState(false);
+  const [loadingGroups, setLoadingGroups] = useState(false);
 
   // 弹窗状态
   const [showNewWorkflowModal, setShowNewWorkflowModal] = useState(false);
@@ -146,6 +150,26 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       console.error('加载角色列表失败:', error);
     } finally {
       setLoadingRoles(false);
+    }
+  };
+
+  // 加载审批组列表
+  const loadGroupList = async () => {
+    setLoadingGroups(true);
+    try {
+      const tenantId = httpClient.getTenantId() || 1;
+      const response = await GroupAPI.getGroups({ page: 1, page_size: 100, tenant_id: tenantId });
+      const groups = (response.groups || []).map((g: any) => ({
+        id: g.id,
+        name: g.name || '未命名组',
+        description: g.description,
+        memberCount: Array.isArray(g.members) ? g.members.length : undefined,
+      }));
+      setGroupList(groups);
+    } catch (error) {
+      console.error('加载审批组列表失败:', error);
+    } finally {
+      setLoadingGroups(false);
     }
   };
 
@@ -240,6 +264,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           require_approval: response.require_approval ?? true,
           approval_type: response.approval_type || 'sequential',
           approvers: response.approvers || [],
+          approver_groups: response.approver_groups || [],
           auto_approve_roles: response.auto_approve_roles || [],
           escalation_rules: response.escalation_rules || [],
         });
@@ -260,6 +285,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   useEffect(() => {
     loadUserList();
     loadRoleList();
+    loadGroupList();
   }, []);
 
   // 根据 ID 加载工作流
@@ -508,10 +534,14 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       setUserList,
       roleList,
       setRoleList,
+      groupList,
+      setGroupList,
       loadingUsers,
       setLoadingUsers,
       loadingRoles,
       setLoadingRoles,
+      loadingGroups,
+      setLoadingGroups,
       updateWorkflow,
       updateSLAConfig,
       // 弹窗状态
@@ -538,8 +568,10 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       workflowVersions,
       userList,
       roleList,
+      groupList,
       loadingUsers,
       loadingRoles,
+      loadingGroups,
       showNewWorkflowModal,
       showVersionModal,
       showSettingsModal,
@@ -591,8 +623,10 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                   workflowVersions={workflowVersions}
                   userList={userList}
                   roleList={roleList}
+                  groupList={groupList}
                   loadingUsers={loadingUsers}
                   loadingRoles={loadingRoles}
+                  loadingGroups={loadingGroups}
                   onSwitchVersion={handleSwitchVersion}
                   onShowVersionModal={() => setShowVersionModal(true)}
                 />
@@ -609,8 +643,10 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                   workflowVersions={workflowVersions}
                   userList={userList}
                   roleList={roleList}
+                  groupList={groupList}
                   loadingUsers={loadingUsers}
                   loadingRoles={loadingRoles}
+                  loadingGroups={loadingGroups}
                   onUpdateSLA={updateSLAConfig}
                 />
               ),
