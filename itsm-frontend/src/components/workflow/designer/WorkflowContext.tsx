@@ -17,7 +17,7 @@ const defaultApprovalConfig: ApprovalConfig = {
   require_approval: true,
   approval_type: 'sequential',
   approvers: [],
-  approver_groups: [],
+  // 审批组是节点级。详见 WorkflowNodeInspector 节点面板的「候选组」字段。
   auto_approve_roles: [],
   escalation_rules: [],
 };
