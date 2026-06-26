@@ -9,6 +9,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
+	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
@@ -93,6 +94,7 @@ type CustomProcessEngine struct {
 	exprEngine       *ExpressionEngine      // 表达式引擎
 	expressionVars   map[string]interface{} // 表达式变量
 	callbackRegistry *bpmn.CallbackRegistry // 服务任务回调注册中心
+	groupResolver    *bpmn.GroupResolver    // 审批组解析器：candidateGroups → 候选用户
 	// 内部服务
 	processDefinitionService *bpmnProcessDefinitionService
 	processInstanceService   *bpmnProcessInstanceService
@@ -110,10 +112,11 @@ func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) Proce
 		exprEngine:       NewExpressionEngine(),
 		expressionVars:   make(map[string]interface{}),
 		callbackRegistry: bpmn.NewCallbackRegistry(client, logger),
+		groupResolver:    bpmn.NewGroupResolver(client),
 	}
 	engine.processDefinitionService = &bpmnProcessDefinitionService{client: client, logger: logger}
 	engine.processInstanceService = &bpmnProcessInstanceService{client: client, logger: logger}
-	engine.taskService = &bpmnTaskService{client: client, logger: logger}
+	engine.taskService = &bpmnTaskService{client: client, logger: logger, groupResolver: engine.groupResolver}
 	engine.auditService = NewBPMNAuditService(client, logger)
 
 	// 注册流程相关的内置函数
@@ -187,7 +190,7 @@ func (e *CustomProcessEngine) ProcessInstanceService() ProcessInstanceService {
 
 // TaskService 返回任务服务
 func (e *CustomProcessEngine) TaskService() TaskService {
-	return &bpmnTaskService{client: e.client, logger: e.logger}
+	return &bpmnTaskService{client: e.client, logger: e.logger, groupResolver: e.groupResolver}
 }
 
 // StartProcess 启动流程实例
@@ -529,6 +532,28 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, instance *ent.
 		}
 	}
 
+	// 展开 candidateGroups 为具体用户，合并到 candidate_users。
+	// 这样「我的待办」接口才有可能查到分配给我的任务。
+	expandedCandidateUsers := task.CandidateUsers
+	if e.groupResolver != nil && strings.TrimSpace(task.CandidateGroups) != "" {
+		_, groupUsernames, err := e.groupResolver.ExpandGroupsToUsers(ctx, instance.TenantID, task.CandidateGroups)
+		if err != nil {
+			// 解析失败：记录警告但不阻塞流程，以免审批组配置漂移导致整个流程中断
+			e.logger.Warnw("审批组展开失败，继续仅使用 BPMN candidateUsers",
+				"taskID", task.ID,
+				"candidateGroups", task.CandidateGroups,
+				"error", err,
+			)
+		} else {
+			expandedCandidateUsers = e.groupResolver.MergeCandidateUsers(task.CandidateUsers, groupUsernames)
+			e.logger.Infow("审批组已展开",
+				"taskID", task.ID,
+				"candidateGroups", task.CandidateGroups,
+				"expandedUsers", groupUsernames,
+			)
+		}
+	}
+
 	// Use instance.ID (auto-generated integer) for the relationship
 	_, err := e.client.ProcessTask.Create().
 		SetTaskID(fmt.Sprintf("TASK-%s-%d", task.ID, time.Now().UnixNano())).
@@ -539,7 +564,7 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, instance *ent.
 		SetTaskType("user_task").
 		SetStatus("created").
 		SetAssignee(assignee).
-		SetCandidateUsers(task.CandidateUsers).
+		SetCandidateUsers(expandedCandidateUsers).
 		SetCandidateGroups(task.CandidateGroups).
 		SetTenantID(instance.TenantID).
 		SetCreatedTime(time.Now()).
@@ -994,6 +1019,9 @@ type ListUserTasksRequest struct {
 	Assignee             string `json:"assignee"`
 	CandidateUsers       string `json:"candidate_users"`
 	CandidateGroups      string `json:"candidate_groups"`
+	// UserID 为「我的待办」语义：查询“分配给我 OR 我在候选人 OR 我所在组作为候选组”的任务。
+	// 传入后：Assignee/CandidateUsers/CandidateGroups 会被忽略（可选透传）。
+	UserID               int    `json:"user_id"`
 	Status               string `json:"status"`
 	ProcessDefinitionKey string `json:"process_definition_key"`
 	ProcessInstanceID    int    `json:"process_instance_id"`
@@ -1463,8 +1491,9 @@ func (s *bpmnProcessInstanceService) GetInstanceStatistics(ctx context.Context, 
 }
 
 type bpmnTaskService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client        *ent.Client
+	logger        *zap.SugaredLogger
+	groupResolver *bpmn.GroupResolver
 }
 
 // GetTask 根据任务ID (BPMN标准task_id字符串)获取任务
@@ -1515,17 +1544,61 @@ func (s *bpmnTaskService) CompleteTaskByID(ctx context.Context, id int, variable
 }
 
 func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksRequest) ([]*ent.ProcessTask, int, error) {
-	s.logger.Debugw("ListUserTasks called", "assignee", req.Assignee, "tenantID", req.TenantID)
+	s.logger.Debugw("ListUserTasks called", "assignee", req.Assignee, "userID", req.UserID, "tenantID", req.TenantID)
 	query := s.client.ProcessTask.Query()
 
-	if req.Assignee != "" {
-		query = query.Where(processtask.Assignee(req.Assignee))
-	}
-	if req.CandidateUsers != "" {
-		query = query.Where(processtask.CandidateUsersContains(req.CandidateUsers))
-	}
-	if req.CandidateGroups != "" {
-		query = query.Where(processtask.CandidateGroupsContains(req.CandidateGroups))
+	// 「我的待办」语义：UserID 透传时，查出“分配给我 OR 我是候选人 OR 我所在组是候选组”的任务。
+	// 这样能同时覆盖 assignee / candidate_users / candidate_groups 三种途径。
+	if req.UserID > 0 {
+		tenantID := req.TenantID
+		if tenantID == 0 {
+			if v, ok := ctx.Value("bpmn_tenant_id").(int); ok {
+				tenantID = v
+			}
+		}
+		userIDStr := strconv.Itoa(req.UserID)
+
+		// 1. 取得该用户所在的组名（逗号分隔）
+		userGroupsCSV := ""
+		if s.groupResolver != nil {
+			groups, gErr := s.groupResolver.GetUserGroupNames(ctx, tenantID, req.UserID)
+			if gErr != nil {
+				s.logger.Warnw("查询用户所属组失败", "error", gErr, "userID", req.UserID)
+			} else {
+				userGroupsCSV = groups
+			}
+		}
+
+		// 2. OR 复合查询：assignee == me OR candidate_users 包含我 OR candidate_groups 包含我所在组
+		orPreds := []predicate.ProcessTask{
+			processtask.Assignee(userIDStr),
+			processtask.CandidateUsersContains(userIDStr),
+		}
+		// 同时以 username 形式匹配（process_task.candidate_users 中保存的是 username/email/ID 混合）
+		if u, err := s.client.User.Get(ctx, req.UserID); err == nil && u != nil {
+			username := strings.TrimSpace(u.Username)
+			if username != "" && username != userIDStr {
+				orPreds = append(orPreds, processtask.CandidateUsersContains(username))
+			}
+			email := strings.TrimSpace(u.Email)
+			if email != "" && email != userIDStr && email != username {
+				orPreds = append(orPreds, processtask.CandidateUsersContains(email))
+			}
+		}
+		if userGroupsCSV != "" {
+			orPreds = append(orPreds, processtask.CandidateGroupsContains(userGroupsCSV))
+		}
+		query = query.Where(processtask.Or(orPreds...))
+	} else {
+		if req.Assignee != "" {
+			query = query.Where(processtask.Assignee(req.Assignee))
+		}
+		if req.CandidateUsers != "" {
+			query = query.Where(processtask.CandidateUsersContains(req.CandidateUsers))
+		}
+		if req.CandidateGroups != "" {
+			query = query.Where(processtask.CandidateGroupsContains(req.CandidateGroups))
+		}
 	}
 	if req.Status != "" {
 		query = query.Where(processtask.Status(req.Status))
