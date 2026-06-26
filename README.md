@@ -539,6 +539,10 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 |:---:|:---:|:---:|
 | GA 能力检查 | Guidance-Harness-Skill 三层体系 | PR 流程 |
 
+| [审批节点语义](./docs/architecture/approval-node-semantics.md) | [CMDB × ITIL4 集成](./docs/cmdb/cmdb-workflow-itil4-integration.md) | [中文 README](./README.zh-CN.md) |
+|:---:|:---:|:---:|
+| 节点级 / 流程级审批边界 | 事件/问题/变更与 CMDB 联动 | 中文快速上手 |
+
 ---
 
 ## 常用命令
