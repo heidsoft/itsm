@@ -27,6 +27,31 @@ interface BPMNDesignerProps {
   onDeploy?: (xml: string) => void;
   readOnly?: boolean;
   height?: number | string;
+  onSelectionChange?: (selection: BpmnNodeSelection | null) => void;
+  /**
+   * 命令式 API 容器。父组件传入 ref-like 对象，
+   * 组件内部会把 { updateElementProperties, fitViewport } 写入 ref.current
+   */
+  apiRef?: { current: BpmnDesignerApi | null };
+}
+
+/**
+ * 暴露给父组件的命令式 API
+ */
+export interface BpmnDesignerApi {
+  updateElementProperties: (elementId: string, properties: Record<string, unknown>) => boolean;
+  fitViewport: () => void;
+}
+
+/**
+ * BPMN 节点当前选中信息。
+ * null 表示当前未选中任何元素。
+ */
+export interface BpmnNodeSelection {
+  id: string;
+  type: string; // bpmn:UserTask / bpmn:ServiceTask / bpmn:ExclusiveGateway 等
+  name?: string;
+  businessObject?: Record<string, unknown>;
 }
 
 const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
@@ -36,6 +61,8 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   onDeploy,
   readOnly = false,
   height = 600,
+  onSelectionChange,
+  apiRef,
 }) => {
   const { message } = App.useApp();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -112,11 +139,41 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           }
         });
       });
+
+      // 监听选中节点变化，向父组件传递当前节点
+      if (onSelectionChange) {
+        const selection = modeler.get('selection') as {
+          on: (event: string, handler: () => void) => void;
+          get: () => string[];
+        };
+        const elementRegistry = modeler.get('elementRegistry') as {
+          get: (id: string) => any;
+        };
+        const notifySelection = () => {
+          const ids = selection.get();
+          if (ids.length === 0) {
+            onSelectionChange(null);
+            return;
+          }
+          const el = elementRegistry.get(ids[0]);
+          if (!el) {
+            onSelectionChange(null);
+            return;
+          }
+          onSelectionChange({
+            id: el.id,
+            type: el.type || (el.businessObject && el.businessObject.$type) || 'unknown',
+            name: el.businessObject?.name,
+            businessObject: el.businessObject || {},
+          });
+        };
+        selection.on('selection.changed', notifySelection);
+      }
     } catch (err) {
       console.error('Failed to initialize BPMN Modeler:', err);
       initAttemptedRef.current = false;
     }
-  }, [xml, historyIndex, message, onChange]);
+  }, [xml, historyIndex, message, onChange, onSelectionChange]);
 
   // 初始化 BPMN Modeler - 等待容器布局完成
   useEffect(() => {
@@ -311,6 +368,57 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       modelingObj.removeElements(selection);
     }
   }, []);
+
+  /**
+   * 供父组件调用：修改当前 BPMN 元素的属性。
+   * 通过 modeling.updateProperties 走命令栈，会触发 commandStack.changed，
+   * 进而通过 saveXML 把最新的 XML 推回父组件。
+   */
+  const updateElementProperties = useCallback(
+    (elementId: string, properties: Record<string, unknown>) => {
+      if (!modelerRef.current) {
+        console.warn('Modeler not ready');
+        return false;
+      }
+      try {
+        const modeling = modelerRef.current.get('modeling') as
+          | { updateProperties: (el: any, props: Record<string, unknown>) => void }
+          | undefined;
+        const elementRegistry = modelerRef.current.get('elementRegistry') as {
+          get: (id: string) => any;
+        };
+        const element = elementRegistry.get(elementId);
+        if (!element || !modeling) {
+          console.warn('Element or modeling not found:', elementId);
+          return false;
+        }
+        modeling.updateProperties(element, properties);
+        return true;
+      } catch (err) {
+        console.error('Failed to update element properties:', err);
+        return false;
+      }
+    },
+    []
+  );
+
+  /**
+   * 供父组件调用：触发 fit-viewport（节点改变或初始加载后可用）
+   */
+  const fitViewport = useCallback(() => {
+    if (!modelerRef.current) return;
+    const canvas = modelerRef.current.get('canvas') as
+      | { zoom: (level: string) => void }
+      | undefined;
+    canvas?.zoom('fit-viewport');
+  }, []);
+
+  // 暴露命令式 API 给父组件
+  useEffect(() => {
+    if (apiRef) {
+      apiRef.current = { updateElementProperties, fitViewport };
+    }
+  }, [apiRef, updateElementProperties, fitViewport]);
 
   return (
     <div style={{ display: 'flex', height, border: '1px solid #d9d9d9', borderRadius: '6px' }}>

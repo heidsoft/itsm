@@ -21,8 +21,9 @@ export interface WorkflowDefinition {
 export interface ApprovalConfig {
   require_approval: boolean;
   approval_type: 'single' | 'parallel' | 'sequential' | 'conditional';
+  // 节点级“用户指派”兑底。可为空。
   approvers: string[];
-  approver_groups: string[];
+  // 审批组是节点级，存于 BPMN userTask candidateGroups，不在此字段。需在「节点属性」面板中设。
   auto_approve_roles: string[];
   escalation_rules: EscalationRule[];
 }
