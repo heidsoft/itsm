@@ -54,6 +54,29 @@ jobs:
     name: G1 · Backend Test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: itsm
+          POSTGRES_PASSWORD: itsm_password_2026
+          POSTGRES_DB: itsm_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U itsm -d itsm_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # PostgreSQL is reachable on localhost:5432 (service container
+      # maps host port to guest 5432). The healthcheck above ensures
+      # readiness before any step that connects to the database.
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: itsm
+      PGPASSWORD: itsm_password_2026
+      PGDATABASE: itsm_test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -65,14 +88,18 @@ jobs:
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
-      - name: Start PostgreSQL service
-        uses: actions/setup-postgres@v1
-        with:
-          host: localhost
-          username: itsm
-          password: itsm_password_2026
-          database: itsm_test
-          port: 5432
+      - name: Wait for PostgreSQL
+        run: |
+          for i in $(seq 1 30); do
+            if pg_isready -h localhost -p 5432 -U itsm; then
+              echo "PostgreSQL is ready"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL... attempt $i"
+            sleep 2
+          done
+          echo "::error::PostgreSQL did not become ready in 60s"
+          exit 1
 
       - name: Run migrations
         working-directory: ./itsm-backend
@@ -120,7 +147,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Type check
         working-directory: ./itsm-frontend
@@ -208,6 +235,13 @@ jobs:
           done
 
       - name: Run smoke test
+        env:
+          # The default in scripts/smoke-test.sh is MAX_RETRIES=30 with
+          # RETRY_INTERVAL=2s (≈60s total). On a cold G4 run the backend
+          # container may take longer than that to start and serve the
+          # /health endpoint, so we widen the wait budget to ~6 min.
+          MAX_RETRIES: 120
+          RETRY_INTERVAL: 3
         run: |
           chmod +x scripts/smoke-test.sh
           ./scripts/smoke-test.sh

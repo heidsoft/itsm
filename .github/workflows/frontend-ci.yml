@@ -44,7 +44,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run lint
         working-directory: ./itsm-frontend
@@ -67,7 +67,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run type check
         working-directory: ./itsm-frontend
@@ -90,7 +90,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run unit tests with coverage
         working-directory: ./itsm-frontend
@@ -120,7 +120,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build application
         working-directory: ./itsm-frontend
