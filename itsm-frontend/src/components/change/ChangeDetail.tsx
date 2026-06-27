@@ -38,6 +38,7 @@ import {
 } from '@/constants/change';
 import type { Change, ApprovalRecord } from '@/types/biz/change';
 import ChangeRiskAssessment from './ChangeRiskAssessment';
+import ChangeCMDBImpactPanel from './ChangeCMDBImpactPanel';
 import ChangeImpactAnalysis from './ChangeImpactAnalysis';
 import ChangeRollbackPlan from './ChangeRollbackPlan';
 import { SafeTextBlock } from '@/components/common/SafeContent';
@@ -397,6 +398,11 @@ const ChangeDetail: React.FC = () => {
                   />
                 </Spin>
               ),
+            },
+            {
+              key: '7',
+              label: 'CMDB 影响摘要',
+              children: <ChangeCMDBImpactPanel changeId={Number(id)} />,
             },
             {
               key: '6',
