@@ -14,6 +14,15 @@ ARG NO_PROXY=localhost,127.0.0.1
 ARG no_proxy=localhost,127.0.0.1
 
 ARG NPM_REGISTRY
+
+# eslint v10 (bumped by dependabot) declares peer ranges that
+# eslint-config-next@15.x does not yet satisfy; npm's strict
+# resolution rejects the install. Setting NPM_CONFIG_LEGACY_PEER_DEPS
+# is the documented escape hatch and applies to every npm ci / npm
+# install / npx invocation in this image. Once eslint-config-next
+# supports eslint v10, this can be removed.
+ENV NPM_CONFIG_LEGACY_PEER_DEPS=true
+
 # Use configurable npm registry (defaults to official registry, override with build arg for China: --build-arg NPM_REGISTRY=https://registry.npmmirror.com)
 RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
     npm config set registry ${NPM_REGISTRY:-https://registry.npmjs.org}
