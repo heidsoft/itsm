@@ -44,7 +44,19 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci --legacy-peer-deps
+        # eslint v10 was bumped by dependabot but eslint-config-next@15.x
+        # still passes the removed useEslintrc/extensions options into
+        # ESLint, causing `next lint` to fail with
+        #   ESLint: Invalid Options: useEslintrc, extensions, ...
+        # Patch package.json to pin eslint to ^9 for CI runs, then sync
+        # the lockfile. The change is in the runner's working tree only
+        # and is never committed back. Once eslint-config-next supports
+        # eslint v10, drop these two lines and let dependabot drive.
+        run: |
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.devDependencies.eslint='^9.0.0';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
+          npm install --package-lock-only --legacy-peer-deps --no-audit --ignore-scripts
+          npm ci --legacy-peer-deps
+          npm install --no-save --legacy-peer-deps react-is@^19
 
       - name: Run lint
         working-directory: ./itsm-frontend
@@ -67,7 +79,15 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci --legacy-peer-deps
+        # Patch eslint to ^9 (dependabot bumped to ^10 but eslint-config-next@15.x
+        # still passes removed options into ESLint, breaking `next lint`).
+        # Sync lockfile, install, and explicitly hoist react-is (recharts peer).
+        # Working tree only; never committed.
+        run: |
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.devDependencies.eslint='^9.0.0';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
+          npm install --package-lock-only --legacy-peer-deps --no-audit --ignore-scripts
+          npm ci --legacy-peer-deps
+          npm install --no-save --legacy-peer-deps react-is@^19
 
       - name: Run type check
         working-directory: ./itsm-frontend
@@ -90,7 +110,15 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci --legacy-peer-deps
+        # Patch eslint to ^9 (dependabot bumped to ^10 but eslint-config-next@15.x
+        # still passes removed options into ESLint, breaking `next lint`).
+        # Sync lockfile, install, and explicitly hoist react-is (recharts peer).
+        # Working tree only; never committed.
+        run: |
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.devDependencies.eslint='^9.0.0';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
+          npm install --package-lock-only --legacy-peer-deps --no-audit --ignore-scripts
+          npm ci --legacy-peer-deps
+          npm install --no-save --legacy-peer-deps react-is@^19
 
       - name: Run unit tests with coverage
         working-directory: ./itsm-frontend
@@ -120,7 +148,15 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci --legacy-peer-deps
+        # Patch eslint to ^9 (dependabot bumped to ^10 but eslint-config-next@15.x
+        # still passes removed options into ESLint, breaking `next lint`).
+        # Sync lockfile, install, and explicitly hoist react-is (recharts peer).
+        # Working tree only; never committed.
+        run: |
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.devDependencies.eslint='^9.0.0';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
+          npm install --package-lock-only --legacy-peer-deps --no-audit --ignore-scripts
+          npm ci --legacy-peer-deps
+          npm install --no-save --legacy-peer-deps react-is@^19
 
       - name: Build application
         working-directory: ./itsm-frontend

@@ -147,7 +147,13 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci --legacy-peer-deps
+        # Patch eslint to ^9 (dependabot bumped to ^10 but eslint-config-next@15.x
+        # still passes removed options into ESLint). Working tree only.
+        run: |
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.devDependencies.eslint='^9.0.0';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
+          npm install --package-lock-only --legacy-peer-deps --no-audit --ignore-scripts
+          npm ci --legacy-peer-deps
+          npm install --no-save --legacy-peer-deps react-is@^19
 
       - name: Type check
         working-directory: ./itsm-frontend
