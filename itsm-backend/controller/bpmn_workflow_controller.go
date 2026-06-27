@@ -520,19 +520,12 @@ func (c *BPMNWorkflowController) TerminateProcess(ctx *gin.Context) {
 	common.SuccessWithMessage(ctx, "流程实例终止成功", nil)
 }
 
-// ListUserTasks 获取用户任务列表
+// ListUserTasks 获取用户任务列表（默认「我的待办」语义）
 func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 	var req service.ListUserTasksRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
-	}
-
-	// 如果没有指定assignee，则查询当前用户有权限查看的任务
-	// 包括：分配给自己的任务 + 未分配的任务
-	if req.Assignee == "" {
-		// 不再强制设置assignee，让查询返回所有任务（按租户过滤）
-		// 后续可以在前端根据用户角色进行过滤
 	}
 
 	// 从JWT获取租户ID
@@ -542,6 +535,23 @@ func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 		return
 	}
 	req.TenantID = tenantID.(int)
+
+	// 如果调用方没有指定 user_id / assignee / candidate_users，则按「我的待办」语义
+	// 使用当前登录用户 ID 进行过滤（包含 assign、candidate、组员命中）。
+	if req.UserID <= 0 && req.Assignee == "" && req.CandidateUsers == "" {
+		if uid, ok := ctx.Get("user_id"); ok {
+			switch v := uid.(type) {
+			case int:
+				req.UserID = v
+			case int64:
+				req.UserID = int(v)
+			case string:
+				if id, err := strconv.Atoi(v); err == nil {
+					req.UserID = id
+				}
+			}
+		}
+	}
 
 	// 设置默认分页参数
 	if req.Page <= 0 {

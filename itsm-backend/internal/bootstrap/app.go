@@ -40,6 +40,7 @@ import (
 	"itsm-backend/handlers/standard_change"
 	"itsm-backend/middleware"
 	"itsm-backend/pkg/seeder"
+	repository_ticket "itsm-backend/repository/ticket"
 	"itsm-backend/router"
 	"itsm-backend/service"
 
@@ -115,8 +116,35 @@ func NewApplication() *Application {
 	eventbus.SetGlobalEventBus(eventBus)
 	sugar.Infow("Event bus initialized successfully")
 
-	ticketService := service.NewTicketServiceWithSequence(client, sugar, sequenceService)
-	ticketService.SetRawDB(database.GetRawDB())
+	// BPMN 子服务（必须在 TicketService 之前创建）
+	processBindingService := service.NewProcessBindingService(client)
+	processEngine := service.NewCustomProcessEngine(client, sugar)
+	processTriggerService := service.NewProcessTriggerService(client, processEngine)
+	processResolver := service.NewProcessResolver(client, processBindingService)
+	bpmnVersionService := service.NewBPMNVersionService(client, sugar)
+
+	// 工单仓储层（V2 Repository 模式）
+	ticketRepoImpl := repository_ticket.NewEntRepository(client, sugar)
+
+	// 通知 / 审批 / SLA / 自动化 / 序列服务（V2 子服务）
+	ticketNotificationService := service.NewTicketNotificationService(client, sugar)
+	ticketSLAService := service.NewTicketSLAService(client, sugar)
+	ticketAutomationRuleService := service.NewTicketAutomationRuleService(client, sugar)
+
+	// V2 工单服务（构造函数注入）
+	ticketService := service.NewTicketService(&service.TicketServiceConfig{
+		Repository:            ticketRepoImpl,
+		Client:                client,
+		Logger:                sugar,
+		NotificationService:   ticketNotificationService,
+		ApprovalService:       service.NewApprovalService(client, sugar),
+		AutomationRuleService: ticketAutomationRuleService,
+		SLAService:            ticketSLAService,
+		ProcessTriggerService: processTriggerService,
+		ProcessResolver:       processResolver,
+	})
+	_ = sequenceService // V2 内部通过 Repository.GenerateTicketNumber 使用 sequence；保留为运行时上下文依赖
+
 	// 为 IncidentService 注入序列服务
 	incidentService.SetSequenceService(sequenceService)
 
@@ -198,8 +226,8 @@ func NewApplication() *Application {
 	ticketCommentController := controller.NewTicketCommentController(ticketCommentService, sugar)
 	ticketAttachmentService := service.NewTicketAttachmentService(client, sugar)
 	ticketAttachmentController := controller.NewTicketAttachmentController(ticketAttachmentService, sugar)
-	ticketNotificationService := service.NewTicketNotificationService(client, sugar)
 	ticketNotificationController := controller.NewTicketNotificationController(ticketNotificationService, sugar)
+	// ticketNotificationService 已在 128 行创建并注入到 V2
 
 	// General Notification Service & Controller
 	notificationService := service.NewNotificationService(client)
@@ -226,8 +254,7 @@ func NewApplication() *Application {
 	ticketWorkflowService := service.NewTicketWorkflowService(client, sugar)
 	ticketWorkflowController := controller.NewTicketWorkflowController(ticketWorkflowService, database.GetRawDB(), sugar)
 
-	// Ticket Automation Rule Service & Controller
-	ticketAutomationRuleService := service.NewTicketAutomationRuleService(client, sugar)
+	// Ticket Automation Rule Controller (service 已于 131 行预创建并注入 V2)
 	ticketAutomationRuleController := controller.NewTicketAutomationRuleController(ticketAutomationRuleService, sugar)
 
 	// Set notification service dependencies
@@ -258,14 +285,10 @@ func NewApplication() *Application {
 	ticketTagService := service.NewTicketTagService(client)
 	ticketTagController := controller.NewTicketTagController(ticketTagService, sugar.Desugar())
 
-	processEngine := service.NewCustomProcessEngine(client, sugar)
-	bpmnVersionService := service.NewBPMNVersionService(client, sugar)
 	bpmnWorkflowController := controller.NewBPMNWorkflowController(processEngine, bpmnVersionService)
-
-	// BPMN Process Trigger Service & Controller (统一流程触发接口)
 	bpmnTemplateService := service.NewBPMNTemplateService(client)
-	processBindingService := service.NewProcessBindingService(client)
-	processTriggerService := service.NewProcessTriggerService(client, processEngine)
+
+	// BPMN Process Trigger Controller (processBindingService/processTriggerService 已于 119-122 行预创建并注入 V2)
 	configInheritanceService := service.NewConfigInheritanceService(client, sugar)
 	bpmnProcessTriggerController := controller.NewBPMNProcessTriggerController(processTriggerService, processBindingService, configInheritanceService)
 

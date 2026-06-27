@@ -2,6 +2,7 @@ package controller
 
 import (
 	"strconv"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -348,7 +349,7 @@ func (mc *MSPController) AssignMSPTechnician(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponse(ticket))
+	common.Success(c, ticketToResponse(ticket))
 }
 
 // ==================== MSP 报表 ====================
@@ -367,21 +368,10 @@ func (mc *MSPController) AssignMSPTechnician(c *gin.Context) {
 func (mc *MSPController) GetCustomerReports(c *gin.Context) {
 	startDate := c.Query("start_date")
 	endDate := c.Query("end_date")
-	customerTenantIDStr := c.Query("customer_tenant_id")
 
 	if startDate == "" || endDate == "" {
 		common.Fail(c, common.ParamErrorCode, "start_date和end_date为必填参数")
 		return
-	}
-
-	var customerTenantID *int
-	if customerTenantIDStr != "" {
-		id, err := strconv.Atoi(customerTenantIDStr)
-		if err != nil {
-			common.Fail(c, common.ParamErrorCode, "customer_tenant_id格式错误")
-			return
-		}
-		customerTenantID = &id
 	}
 
 	userID := c.GetInt("user_id")
@@ -391,12 +381,22 @@ func (mc *MSPController) GetCustomerReports(c *gin.Context) {
 	}
 	mspUserID := userID
 
+	dateFrom, err := parseDateOrZero(startDate)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "start_date格式错误(YYYY-MM-DD)")
+		return
+	}
+	dateTo, err := parseDateOrZero(endDate)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "end_date格式错误(YYYY-MM-DD)")
+		return
+	}
+
 	reports, err := mc.ticketService.GetMSPCustomerReports(
 		c.Request.Context(),
 		mspUserID,
-		startDate,
-		endDate,
-		customerTenantID,
+		dateFrom,
+		dateTo,
 	)
 	if err != nil {
 		mc.logger.Errorw("Failed to get customer reports", "error", err)
@@ -404,9 +404,9 @@ func (mc *MSPController) GetCustomerReports(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.MSPReportListResponse[dto.MSPCustomerReport]{
-		Reports: reports,
-		Total:   len(reports),
+	common.Success(c, gin.H{
+		"reports": reports,
+		"total":   len(reports),
 	})
 }
 
@@ -431,6 +431,17 @@ func (mc *MSPController) GetPerformanceReports(c *gin.Context) {
 		return
 	}
 
+	dateFrom, err := parseDateOrZero(startDate)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "start_date格式错误(YYYY-MM-DD)")
+		return
+	}
+	dateTo, err := parseDateOrZero(endDate)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "end_date格式错误(YYYY-MM-DD)")
+		return
+	}
+
 	var mspUserID int
 	if mspUserIDStr == "" {
 		mspCtx, _ := middleware.GetMSPContext(c)
@@ -450,9 +461,9 @@ func (mc *MSPController) GetPerformanceReports(c *gin.Context) {
 
 	reports, err := mc.ticketService.GetMSPPerformanceReports(
 		c.Request.Context(),
-		startDate,
-		endDate,
 		mspUserID,
+		dateFrom,
+		dateTo,
 	)
 	if err != nil {
 		mc.logger.Errorw("Failed to get performance reports", "error", err)
@@ -460,8 +471,16 @@ func (mc *MSPController) GetPerformanceReports(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.MSPReportListResponse[dto.MSPPerformanceReport]{
-		Reports: reports,
-		Total:   len(reports),
+	common.Success(c, gin.H{
+		"reports": reports,
+		"total":   len(reports),
 	})
+}
+
+// parseDateOrZero 解析 YYYY-MM-DD 格式日期，失败时返回零值
+func parseDateOrZero(s string) (time.Time, error) {
+	if s == "" {
+		return time.Time{}, nil
+	}
+	return time.Parse("2006-01-02", s)
 }

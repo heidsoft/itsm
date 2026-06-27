@@ -33,7 +33,7 @@ func setupTestTicketController(t *testing.T) (*gin.Engine, *ent.Client, *TicketC
 	logger := zaptest.NewLogger(t).Sugar()
 
 	// 创建服务
-	ticketService := service.NewTicketService(client, logger)
+	ticketService := service.NewTicketServiceForTest(client, logger)
 	var ticketDependencyService *service.TicketDependencyService
 
 	// 创建控制器
@@ -197,7 +197,7 @@ func TestTicketController_CreateTicket(t *testing.T) {
 			}
 
 			// 直接调用控制器
-			ticketService := service.NewTicketService(client, zaptest.NewLogger(t).Sugar())
+			ticketService := service.NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
 			controller := NewTicketController(ticketService, nil, nil, zaptest.NewLogger(t).Sugar())
 			controller.CreateTicket(c)
 
