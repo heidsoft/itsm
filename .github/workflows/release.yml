@@ -77,7 +77,10 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        # eslint v10 (from dependabot) is not yet supported by eslint-config-next@15.x;
+        # use --legacy-peer-deps to accept the peer range and let build continue.
+        # Track: https://github.com/vercel/next.js/issues/new
+        run: npm ci --legacy-peer-deps
 
       - name: Build
         working-directory: ./itsm-frontend
