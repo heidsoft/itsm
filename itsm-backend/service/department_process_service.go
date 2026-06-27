@@ -34,7 +34,8 @@ func (s *DepartmentProcessService) GetDepartmentProcess(
 	scenarioType scenario.ScenarioType,
 	variables map[string]interface{},
 ) (*RoutingResult, error) {
-	s.logger.Infow("Getting department process",
+	s.logger.Infow(
+		"Getting department process",
 		"tenant_id", tenantID,
 		"department_id", departmentID,
 		"scenario", scenarioType,
@@ -58,14 +59,16 @@ func (s *DepartmentProcessService) GetDepartmentProcess(
 	}
 
 	if result == nil {
-		s.logger.Warnw("No process found for department scenario",
+		s.logger.Warnw(
+			"No process found for department scenario",
 			"department_id", departmentID,
 			"scenario", scenarioType,
 		)
 		return nil, nil
 	}
 
-	s.logger.Infow("Found department process",
+	s.logger.Infow(
+		"Found department process",
 		"process_key", result.ProcessDefinitionKey,
 		"matched_rule_id", result.MatchedRuleID,
 	)
@@ -152,7 +155,8 @@ func (s *DepartmentProcessService) InitDepartmentDefaults(
 	tenantID, departmentID int,
 	departmentType string,
 ) error {
-	s.logger.Infow("Initializing department defaults",
+	s.logger.Infow(
+		"Initializing department defaults",
 		"tenant_id", tenantID,
 		"department_id", departmentID,
 		"department_type", departmentType,
@@ -176,7 +180,8 @@ func (s *DepartmentProcessService) InitDepartmentDefaults(
 		}
 
 		if len(existing) > 0 {
-			s.logger.Infow("Binding already exists, skipping",
+			s.logger.Infow(
+				"Binding already exists, skipping",
 				"scenario", tmpl.Scenario,
 			)
 			continue
@@ -198,7 +203,8 @@ func (s *DepartmentProcessService) InitDepartmentDefaults(
 
 		_, err = s.routingService.CreateBinding(ctx, binding)
 		if err != nil {
-			s.logger.Warnw("Failed to create binding",
+			s.logger.Warnw(
+				"Failed to create binding",
 				"scenario", tmpl.Scenario,
 				"error", err,
 			)
@@ -206,13 +212,15 @@ func (s *DepartmentProcessService) InitDepartmentDefaults(
 		}
 
 		created++
-		s.logger.Infow("Created department process binding",
+		s.logger.Infow(
+			"Created department process binding",
 			"scenario", tmpl.Scenario,
 			"process_key", tmpl.ProcessKey,
 		)
 	}
 
-	s.logger.Infow("Department defaults initialized",
+	s.logger.Infow(
+		"Department defaults initialized",
 		"department_id", departmentID,
 		"created", created,
 	)

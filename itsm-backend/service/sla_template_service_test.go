@@ -17,12 +17,12 @@ func TestSLATemplateService_ListTemplates(t *testing.T) {
 
 	// 验证已知模板 key 存在
 	expectedKeys := map[string]bool{
-		"incident_p1_critical":      false,
-		"incident_p2_high":          false,
-		"incident_p3_medium":        false,
-		"change_normal":             false,
-		"change_emergency":          false,
-		"service_request_standard":  false,
+		"incident_p1_critical":     false,
+		"incident_p2_high":         false,
+		"incident_p3_medium":       false,
+		"change_normal":            false,
+		"change_emergency":         false,
+		"service_request_standard": false,
 	}
 
 	for _, tmpl := range templates {
@@ -163,7 +163,7 @@ func TestSLATemplateService_EscalationRules(t *testing.T) {
 }
 
 // TestSLATemplateService_InstallTemplate_NilClient 验证 nil client 调用安全
-//（用于覆盖 service 不依赖 DB 的方法）
+// （用于覆盖 service 不依赖 DB 的方法）
 func TestSLATemplateService_InstallTemplate_NilClient(t *testing.T) {
 	s := NewSLATemplateService(nil, nil)
 

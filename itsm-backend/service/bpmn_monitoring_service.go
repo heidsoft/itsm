@@ -458,10 +458,10 @@ func (s *BPMNMonitoringService) GetAuditLogs(ctx context.Context, req *AuditLogR
 	}
 	// 转换请求格式
 	queryReq := &QueryAuditLogsRequest{
-		TenantID: req.TenantID,
-		Page:     req.Page,
-		PageSize: req.PageSize,
-		SortBy:   "timestamp",
+		TenantID:  req.TenantID,
+		Page:      req.Page,
+		PageSize:  req.PageSize,
+		SortBy:    "timestamp",
 		SortOrder: "desc",
 	}
 	if req.StartTime != nil {
@@ -780,22 +780,22 @@ func (s *BPMNMonitoringService) identifyBottleneckTasks(ctx context.Context, req
 		// 判断是否为瓶颈任务（使用 P95）
 		if p95Processing > time.Minute*30 || p95Wait > time.Minute*15 || queueLength > 10 {
 			bottleneck := &BottleneckTask{
-				TaskID:                 taskKey,
-				TaskName:               taskList[0].TaskName,
-				BottleneckType:         s.determineBottleneckType(p95Processing, p95Wait, queueLength),
-				ImpactScore:            s.calculateImpactScore(p95Processing, p95Wait, queueLength),
-				AverageDuration:        avgTotal,
-				WaitTime:               p95Wait,
-				QueueLength:            queueLength,
-				Assignee:               taskList[0].Assignee,
-				Recommendation:         s.generateTaskRecommendation(p95Processing, p95Wait, queueLength),
-				WaitTimeSeconds:        int(avgWait.Seconds()),
-				ProcessingTimeSeconds:  int(avgProcessing.Seconds()),
-				TotalDurationSeconds:   int(avgTotal.Seconds()),
-				P95WaitTimeSeconds:     int(p95Wait.Seconds()),
+				TaskID:                   taskKey,
+				TaskName:                 taskList[0].TaskName,
+				BottleneckType:           s.determineBottleneckType(p95Processing, p95Wait, queueLength),
+				ImpactScore:              s.calculateImpactScore(p95Processing, p95Wait, queueLength),
+				AverageDuration:          avgTotal,
+				WaitTime:                 p95Wait,
+				QueueLength:              queueLength,
+				Assignee:                 taskList[0].Assignee,
+				Recommendation:           s.generateTaskRecommendation(p95Processing, p95Wait, queueLength),
+				WaitTimeSeconds:          int(avgWait.Seconds()),
+				ProcessingTimeSeconds:    int(avgProcessing.Seconds()),
+				TotalDurationSeconds:     int(avgTotal.Seconds()),
+				P95WaitTimeSeconds:       int(p95Wait.Seconds()),
 				P95ProcessingTimeSeconds: int(p95Processing.Seconds()),
 				P95TotalDurationSeconds:  int(p95Total.Seconds()),
-				SampleCount:            len(taskList),
+				SampleCount:              len(taskList),
 			}
 			bottlenecks = append(bottlenecks, bottleneck)
 		}

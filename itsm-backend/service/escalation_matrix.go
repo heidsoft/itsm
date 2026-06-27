@@ -24,9 +24,10 @@ type EscalationLevel struct {
 // EscalationMatrix 优先级 → 升级级别链
 //
 // 例如：
-//   "critical" → [15min TeamLead, 30min Manager, 60min Director]
-//   "high"     → [60min TeamLead, 240min Manager]
-//   "medium"   → [240min TeamLead]
+//
+//	"critical" → [15min TeamLead, 30min Manager, 60min Director]
+//	"high"     → [60min TeamLead, 240min Manager]
+//	"medium"   → [240min TeamLead]
 type EscalationMatrix map[string][]EscalationLevel
 
 // DefaultEscalationMatrix 默认升级矩阵（与 SLA 模板保持一致）
@@ -57,8 +58,8 @@ var DefaultEscalationMatrix = EscalationMatrix{
 type EscalationMatrixService struct {
 	logger *zap.SugaredLogger
 
-	mu      sync.RWMutex
-	cache   map[int]EscalationMatrix
+	mu    sync.RWMutex
+	cache map[int]EscalationMatrix
 }
 
 // NewEscalationMatrixService 创建升级矩阵服务

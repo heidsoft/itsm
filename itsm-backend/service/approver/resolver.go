@@ -68,7 +68,8 @@ func (r *ResolverRegistry) Resolve(ctx context.Context, client *ent.Client, reso
 
 	approvers, err := resolver.Resolve(ctx, client, appCtx)
 	if err != nil {
-		r.logger.Warnw("Failed to resolve approvers",
+		r.logger.Warnw(
+			"Failed to resolve approvers",
 			"type", resolverType,
 			"error", err,
 			"department_id", appCtx.DepartmentID,
@@ -77,7 +78,8 @@ func (r *ResolverRegistry) Resolve(ctx context.Context, client *ent.Client, reso
 		return nil, err
 	}
 
-	r.logger.Infow("Resolved approvers",
+	r.logger.Infow(
+		"Resolved approvers",
 		"type", resolverType,
 		"count", len(approvers),
 	)

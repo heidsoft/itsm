@@ -23,7 +23,7 @@ type Generator struct {
 // New creates a new generator
 func New(cfg *config.ClaudeConfig, worktreeBase string) *Generator {
 	// Ensure worktree directory exists
-	if err := os.MkdirAll(worktreeBase, 0755); err != nil {
+	if err := os.MkdirAll(worktreeBase, 0o755); err != nil {
 		logger.Fatal("Failed to create worktree directory: %v", err)
 	}
 

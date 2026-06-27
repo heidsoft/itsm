@@ -463,7 +463,8 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 					elapsed := time.Since(lastAlert.CreatedAt)
 					if elapsed < time.Duration(cooldownMin)*time.Minute {
 						remaining := time.Duration(cooldownMin)*time.Minute - elapsed
-						s.logger.Infow("SLA alert suppressed by cooldown",
+						s.logger.Infow(
+							"SLA alert suppressed by cooldown",
 							"ticket_id", ticketEntity.ID,
 							"alert_rule_id", rule.ID,
 							"alert_level", rule.AlertLevel,

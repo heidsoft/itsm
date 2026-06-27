@@ -539,14 +539,16 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, instance *ent.
 		_, groupUsernames, err := e.groupResolver.ExpandGroupsToUsers(ctx, instance.TenantID, task.CandidateGroups)
 		if err != nil {
 			// 解析失败：记录警告但不阻塞流程，以免审批组配置漂移导致整个流程中断
-			e.logger.Warnw("审批组展开失败，继续仅使用 BPMN candidateUsers",
+			e.logger.Warnw(
+				"审批组展开失败，继续仅使用 BPMN candidateUsers",
 				"taskID", task.ID,
 				"candidateGroups", task.CandidateGroups,
 				"error", err,
 			)
 		} else {
 			expandedCandidateUsers = e.groupResolver.MergeCandidateUsers(task.CandidateUsers, groupUsernames)
-			e.logger.Infow("审批组已展开",
+			e.logger.Infow(
+				"审批组已展开",
 				"taskID", task.ID,
 				"candidateGroups", task.CandidateGroups,
 				"expandedUsers", groupUsernames,
@@ -1016,9 +1018,9 @@ type ListProcessInstancesRequest struct {
 }
 
 type ListUserTasksRequest struct {
-	Assignee             string `json:"assignee"`
-	CandidateUsers       string `json:"candidate_users"`
-	CandidateGroups      string `json:"candidate_groups"`
+	Assignee        string `json:"assignee"`
+	CandidateUsers  string `json:"candidate_users"`
+	CandidateGroups string `json:"candidate_groups"`
 	// UserID 为「我的待办」语义：查询“分配给我 OR 我在候选人 OR 我所在组作为候选组”的任务。
 	// 传入后：Assignee/CandidateUsers/CandidateGroups 会被忽略（可选透传）。
 	UserID               int    `json:"user_id"`

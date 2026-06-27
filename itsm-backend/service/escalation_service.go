@@ -127,7 +127,8 @@ func (e *EscalationService) processSLAEscalations(ctx context.Context, tenantID 
 					break
 				}
 				currentMax = nextLevel.Level
-				e.logger.Infow("Alert escalated via matrix",
+				e.logger.Infow(
+					"Alert escalated via matrix",
 					"alert_id", alert.ID,
 					"ticket_number", alert.TicketNumber,
 					"priority", priority,
@@ -192,7 +193,8 @@ func (e *EscalationService) escalateToLevelByMatrix(
 		}
 	}
 
-	e.logger.Infow("Matrix-based escalation completed",
+	e.logger.Infow(
+		"Matrix-based escalation completed",
 		"alert_id", alert.ID,
 		"level", level.Level,
 		"notify_users_count", len(notifyUsers),

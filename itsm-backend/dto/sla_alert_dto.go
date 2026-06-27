@@ -60,9 +60,9 @@ type SLAAlertHistoryResponse struct {
 	EscalationLevel          int        `json:"escalation_level" example:"1"`
 	CreatedAt                time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`
 	ResolvedAt               *time.Time `json:"resolved_at,omitempty"`
-	CooldownRemainingSeconds int  `json:"cooldown_remaining_seconds" example:"0"`
-	CooldownMinutes          int  `json:"cooldown_minutes" example:"15"`
-	SuppressedByCooldown     bool `json:"suppressed_by_cooldown" example:"false"`
+	CooldownRemainingSeconds int        `json:"cooldown_remaining_seconds" example:"0"`
+	CooldownMinutes          int        `json:"cooldown_minutes" example:"15"`
+	SuppressedByCooldown     bool       `json:"suppressed_by_cooldown" example:"false"`
 }
 
 type GetSLAAlertHistoryRequest struct {

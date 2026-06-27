@@ -126,7 +126,8 @@ func (s *Service) reactivateUninstalledInstallation(
 		return nil, fmt.Errorf("failed to reactivate installation: %w", err)
 	}
 
-	s.logger.Infow("Reactivated uninstalled installation",
+	s.logger.Infow(
+		"Reactivated uninstalled installation",
 		"tenant_id", tenantID,
 		"item_id", itemID,
 		"history_id", history.ID,

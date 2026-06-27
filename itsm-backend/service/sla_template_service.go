@@ -19,12 +19,12 @@ type SLATemplate struct {
 	Description     string                 `json:"description"`
 	ServiceType     string                 `json:"serviceType"`
 	Priority        string                 `json:"priority"`
-	ResponseTime    int                    `json:"responseTime"`    // 分钟
-	ResolutionTime  int                    `json:"resolutionTime"`  // 分钟
+	ResponseTime    int                    `json:"responseTime"`   // 分钟
+	ResolutionTime  int                    `json:"resolutionTime"` // 分钟
 	BusinessHours   map[string]interface{} `json:"businessHours"`
 	EscalationRules map[string]interface{} `json:"escalationRules"`
 	Conditions      map[string]interface{} `json:"conditions"`
-	Industry        string                 `json:"industry"`        // incident/change/service_request
+	Industry        string                 `json:"industry"` // incident/change/service_request
 	Recommended     bool                   `json:"recommended"`
 }
 
@@ -47,7 +47,7 @@ type SLATemplateService struct {
 	order   []string
 
 	// 安装状态缓存（key=tenantID:templateKey）
-	mu       sync.RWMutex
+	mu        sync.RWMutex
 	installed map[string]int // tenantID + ":" + templateKey -> SLADefinitionID
 }
 
@@ -75,11 +75,11 @@ func (s *SLATemplateService) initCatalog() {
 			ResponseTime:   15,
 			ResolutionTime: 240,
 			BusinessHours: map[string]interface{}{
-				"timezone":     "Asia/Shanghai",
-				"workdays":     []int{1, 2, 3, 4, 5},
+				"timezone":        "Asia/Shanghai",
+				"workdays":        []int{1, 2, 3, 4, 5},
 				"work_hour_start": 0,
 				"work_hour_end":   24,
-				"is_24_7":      true,
+				"is_24_7":         true,
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{
@@ -89,12 +89,12 @@ func (s *SLATemplateService) initCatalog() {
 				},
 			},
 			Conditions: map[string]interface{}{
-				"ticket_type":  []string{"incident"},
-				"priority":     []string{"critical"},
+				"ticket_type":   []string{"incident"},
+				"priority":      []string{"critical"},
 				"customer_tier": []string{"vip", "enterprise"},
 			},
-			Industry:     "incident",
-			Recommended:  true,
+			Industry:    "incident",
+			Recommended: true,
 		},
 		{
 			Key:            "incident_p2_high",
@@ -187,8 +187,8 @@ func (s *SLATemplateService) initCatalog() {
 			ResponseTime:   30,
 			ResolutionTime: 240,
 			BusinessHours: map[string]interface{}{
-				"timezone":     "Asia/Shanghai",
-				"is_24_7":      true,
+				"timezone": "Asia/Shanghai",
+				"is_24_7":  true,
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{
@@ -317,7 +317,8 @@ func (s *SLATemplateService) InstallTemplate(ctx context.Context, key string, te
 	s.installed[fmt.Sprintf("%d:%s", tenantID, key)] = created.ID
 	s.mu.Unlock()
 
-	s.logger.Infow("SLA template installed successfully",
+	s.logger.Infow(
+		"SLA template installed successfully",
 		"template", key,
 		"tenant_id", tenantID,
 		"sla_definition_id", created.ID,

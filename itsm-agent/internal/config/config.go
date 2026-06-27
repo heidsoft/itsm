@@ -19,11 +19,11 @@ type Config struct {
 }
 
 type AgentConfig struct {
-	PollInterval  string `yaml:"poll_interval"`
-	MaxRetries    int    `yaml:"max_retries"`
-	Timeout       string `yaml:"timeout"`
-	WorktreeBase  string `yaml:"worktree_base"`
-	LogLevel      string `yaml:"log_level"`
+	PollInterval string `yaml:"poll_interval"`
+	MaxRetries   int    `yaml:"max_retries"`
+	Timeout      string `yaml:"timeout"`
+	WorktreeBase string `yaml:"worktree_base"`
+	LogLevel     string `yaml:"log_level"`
 }
 
 func (c AgentConfig) GetPollInterval() time.Duration {
@@ -57,9 +57,9 @@ type ClaudeConfig struct {
 }
 
 type ValidationConfig struct {
-	Enabled  bool            `yaml:"enabled"`
+	Enabled  bool           `yaml:"enabled"`
 	Backend  BackendConfig  `yaml:"backend"`
-	Frontend FrontendConfig  `yaml:"frontend"`
+	Frontend FrontendConfig `yaml:"frontend"`
 }
 
 type BackendConfig struct {
@@ -82,17 +82,17 @@ type PRConfig struct {
 }
 
 type HumanConfig struct {
-	Enabled         bool   `yaml:"enabled"`
-	ReviewTimeout   int    `yaml:"review_timeout"`
-	SlackWebhook    string `yaml:"slack_webhook"`
-	DiscordWebhook  string `yaml:"discord_webhook"`
+	Enabled        bool   `yaml:"enabled"`
+	ReviewTimeout  int    `yaml:"review_timeout"`
+	SlackWebhook   string `yaml:"slack_webhook"`
+	DiscordWebhook string `yaml:"discord_webhook"`
 }
 
 type RedisConfig struct {
-	Address    string `yaml:"address"`
-	Password   string `yaml:"password"`
-	DB         int    `yaml:"db"`
-	KeyPrefix  string `yaml:"key_prefix"`
+	Address   string `yaml:"address"`
+	Password  string `yaml:"password"`
+	DB        int    `yaml:"db"`
+	KeyPrefix string `yaml:"key_prefix"`
 }
 
 func Load(path string) (*Config, error) {

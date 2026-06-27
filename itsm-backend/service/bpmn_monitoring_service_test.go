@@ -318,10 +318,10 @@ func TestProcessTimelineEntrySequence(t *testing.T) {
 	now := time.Now()
 	prev := &ProcessTimelineEntry{Sequence: 1, Timestamp: now}
 	curr := &ProcessTimelineEntry{
-		Sequence:        2,
-		Timestamp:       now.Add(5 * time.Second),
-		NodeDurationMs:  5000,
-		DurationMs:      100,
+		Sequence:       2,
+		Timestamp:      now.Add(5 * time.Second),
+		NodeDurationMs: 5000,
+		DurationMs:     100,
 	}
 	_ = prev
 	if curr.NodeDurationMs != 5000 {

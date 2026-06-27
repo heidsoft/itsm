@@ -82,9 +82,9 @@ func (r *Reviewer) CheckApproval(prNumber int) (approved bool, err error) {
 
 	// Parse JSON response
 	var prInfo struct {
-		State           string `json:"state"`
+		State            string `json:"state"`
 		MergeStateStatus string `json:"mergeStateStatus"`
-		Reviews         []struct {
+		Reviews          []struct {
 			State string `json:"state"`
 		} `json:"reviews"`
 	}

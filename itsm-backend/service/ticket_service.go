@@ -707,19 +707,19 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 
 // TicketSLAInfo 工单 SLA 信息（V2 内联定义，避免与 V1 重复）
 type TicketSLAInfo struct {
-	TicketID            int        `json:"ticketId"`
-	TicketNumber        string     `json:"ticketNumber"`
-	Priority            string     `json:"priority"`
-	SLADefinitionID     int        `json:"slaDefinitionId"`
-	SLADefinitionName   string     `json:"slaDefinitionName"`
-	ResponseDeadline    time.Time  `json:"responseDeadline"`
-	ResolutionDeadline  time.Time  `json:"resolutionDeadline"`
-	ResponseTimeLeft    int        `json:"responseTimeLeftMinutes"`
-	IsResponseBreached  bool       `json:"isResponseBreached"`
-	ResolutionTimeLeft  int        `json:"resolutionTimeLeftMinutes"`
-	IsResolutionBreached bool      `json:"isResolutionBreached"`
-	FirstResponseAt     *time.Time `json:"firstResponseAt,omitempty"`
-	ResolvedAt          *time.Time `json:"resolvedAt,omitempty"`
+	TicketID             int        `json:"ticketId"`
+	TicketNumber         string     `json:"ticketNumber"`
+	Priority             string     `json:"priority"`
+	SLADefinitionID      int        `json:"slaDefinitionId"`
+	SLADefinitionName    string     `json:"slaDefinitionName"`
+	ResponseDeadline     time.Time  `json:"responseDeadline"`
+	ResolutionDeadline   time.Time  `json:"resolutionDeadline"`
+	ResponseTimeLeft     int        `json:"responseTimeLeftMinutes"`
+	IsResponseBreached   bool       `json:"isResponseBreached"`
+	ResolutionTimeLeft   int        `json:"resolutionTimeLeftMinutes"`
+	IsResolutionBreached bool       `json:"isResolutionBreached"`
+	FirstResponseAt      *time.Time `json:"firstResponseAt,omitempty"`
+	ResolvedAt           *time.Time `json:"resolvedAt,omitempty"`
 }
 
 // GetTicketSLAInfo 获取工单 SLA 信息
@@ -1072,11 +1072,11 @@ func (s *TicketService) ExportTickets(ctx context.Context, tenantID int, filters
 	exportData := make([]map[string]interface{}, 0, len(tickets))
 	for _, t := range tickets {
 		exportData = append(exportData, map[string]interface{}{
-			"工单编号":   t.TicketNumber,
-			"标题":     t.Title,
-			"描述":     t.Description,
-			"状态":     t.Status,
-			"优先级":    t.Priority,
+			"工单编号": t.TicketNumber,
+			"标题":   t.Title,
+			"描述":   t.Description,
+			"状态":   t.Status,
+			"优先级":  t.Priority,
 			"创建时间": t.CreatedAt.Format("2006-01-02 15:04:05"),
 			"更新时间": t.UpdatedAt.Format("2006-01-02 15:04:05"),
 		})

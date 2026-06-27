@@ -52,7 +52,8 @@ type RoutingResult struct {
 
 // FindBestRoute finds the best matching process binding using priority-based scoring
 func (s *ProcessRoutingService) FindBestRoute(ctx context.Context, reqCtx *RoutingContext) (*RoutingResult, error) {
-	s.logger.Infow("Finding best route",
+	s.logger.Infow(
+		"Finding best route",
 		"business_type", reqCtx.BusinessType,
 		"department_id", reqCtx.DepartmentID,
 		"team_id", reqCtx.TeamID,
@@ -109,7 +110,8 @@ func (s *ProcessRoutingService) FindBestRoute(ctx context.Context, reqCtx *Routi
 	})
 
 	best := scored[0].binding
-	s.logger.Infow("Found best route",
+	s.logger.Infow(
+		"Found best route",
 		"binding_id", best.ID,
 		"process_key", best.ProcessDefinitionKey,
 		"score", scored[0].score,

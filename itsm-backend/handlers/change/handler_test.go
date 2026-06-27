@@ -661,13 +661,13 @@ func ptrChangePriority(p dto.ChangePriority) *dto.ChangePriority {
 
 func TestRecommendRiskLevel(t *testing.T) {
 	cases := []struct {
-		name             string
-		totalCIs         int
-		criticalCIs      int
-		highRiskDeps     int
-		openIncidents    int
-		changeType       string
-		want             string
+		name          string
+		totalCIs      int
+		criticalCIs   int
+		highRiskDeps  int
+		openIncidents int
+		changeType    string
+		want          string
 	}{
 		{"emergency overrides everything", 1, 0, 0, 0, "emergency", "high"},
 		{"critical CI wins", 1, 1, 0, 0, "normal", "high"},

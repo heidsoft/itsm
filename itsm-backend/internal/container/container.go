@@ -26,14 +26,14 @@ type Container struct {
 	ticketRepository ticketRepo.Repository
 
 	// Core Services
-	ticketService          *service.TicketService
-	incidentService        *service.IncidentService
-	notificationService    *service.NotificationService
-	approvalService        *service.ApprovalService
-	sequenceService        *service.SequenceService
-	processTriggerService  service.ProcessTriggerServiceInterface
-	processResolver        *service.ProcessResolver
-	processBindingService  service.ProcessBindingServiceInterface
+	ticketService         *service.TicketService
+	incidentService       *service.IncidentService
+	notificationService   *service.NotificationService
+	approvalService       *service.ApprovalService
+	sequenceService       *service.SequenceService
+	processTriggerService service.ProcessTriggerServiceInterface
+	processResolver       *service.ProcessResolver
+	processBindingService service.ProcessBindingServiceInterface
 
 	// Ticket-related Services
 	ticketNotificationService *service.TicketNotificationService

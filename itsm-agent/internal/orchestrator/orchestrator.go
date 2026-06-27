@@ -20,12 +20,12 @@ import (
 
 // Agent is the main orchestrator
 type Agent struct {
-	cfg        *config.Config
-	watcher    *watcher.Watcher
-	gen        *generator.Generator
-	val        *validator.Validator
-	prCreator  *pr.Creator
-	reviewer   *human.Reviewer
+	cfg       *config.Config
+	watcher   *watcher.Watcher
+	gen       *generator.Generator
+	val       *validator.Validator
+	prCreator *pr.Creator
+	reviewer  *human.Reviewer
 
 	ctx    context.Context
 	cancel context.CancelFunc

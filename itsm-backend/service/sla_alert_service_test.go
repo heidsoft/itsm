@@ -65,7 +65,7 @@ func TestDefaultAlertCooldownMinutes_Constant(t *testing.T) {
 }
 
 // TestSLAAlertHistoryResponse_HasCooldownFields 验证 DTO 字段存在
-//（编译期验证）
+// （编译期验证）
 func TestSLAAlertHistoryResponse_HasCooldownFields(t *testing.T) {
 	resp := struct{}{}
 	_ = resp
@@ -83,7 +83,7 @@ func TestCooldownLogic_Boundary(t *testing.T) {
 	const cooldownDur = cooldownMin * 60 // 秒
 
 	cases := []struct {
-		elapsedSec   int
+		elapsedSec     int
 		shouldSuppress bool
 	}{
 		{0, true},

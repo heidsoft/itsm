@@ -51,16 +51,16 @@ func (s *Service) DeleteDefinition(ctx context.Context, id int, tenantID int) er
 
 // SLAComplianceResult 返回值
 type SLAComplianceResult struct {
-	TicketID             int      `json:"ticketId"`
-	TenantID             int      `json:"tenantId"`
-	Found                bool     `json:"found"`
-	CreatedAt            *time.Time `json:"createdAt,omitempty"`
-	FirstResponseAt      *time.Time `json:"firstResponseAt,omitempty"`
-	ResolvedAt           *time.Time `json:"resolvedAt,omitempty"`
-	ActualResponseMinutes float64  `json:"actual_response_minutes"`
-	ActualResolutionMinutes float64 `json:"actual_resolution_minutes"`
-	Compliant            bool     `json:"compliant"`
-	Message              string   `json:"message"`
+	TicketID                int        `json:"ticketId"`
+	TenantID                int        `json:"tenantId"`
+	Found                   bool       `json:"found"`
+	CreatedAt               *time.Time `json:"createdAt,omitempty"`
+	FirstResponseAt         *time.Time `json:"firstResponseAt,omitempty"`
+	ResolvedAt              *time.Time `json:"resolvedAt,omitempty"`
+	ActualResponseMinutes   float64    `json:"actual_response_minutes"`
+	ActualResolutionMinutes float64    `json:"actual_resolution_minutes"`
+	Compliant               bool       `json:"compliant"`
+	Message                 string     `json:"message"`
 }
 
 // CheckSLACompliance P1-07 修复：真正计算 actual_response_minutes。

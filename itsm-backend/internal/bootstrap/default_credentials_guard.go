@@ -37,7 +37,7 @@ func GuardDefaultCredentials(environment string) []DefaultCredentialRisk {
 			risks = append(risks, DefaultCredentialRisk{
 				Severity: "fatal",
 				Code:     "DEFAULT_ADMIN_PASSWORD",
-				Message: "检测到生产环境使用 admin 默认密码。请在首次部署前修改 ADMIN_PASSWORD 环境变量，或通过 seeder 重新初始化。",
+				Message:  "检测到生产环境使用 admin 默认密码。请在首次部署前修改 ADMIN_PASSWORD 环境变量，或通过 seeder 重新初始化。",
 			})
 		}
 	}
@@ -48,7 +48,7 @@ func GuardDefaultCredentials(environment string) []DefaultCredentialRisk {
 			risks = append(risks, DefaultCredentialRisk{
 				Severity: "fatal",
 				Code:     "DEFAULT_JWT_SECRET",
-				Message: "检测到生产环境 JWT_SECRET 为默认值。请设置强随机字符串（至少 32 字符）。",
+				Message:  "检测到生产环境 JWT_SECRET 为默认值。请设置强随机字符串（至少 32 字符）。",
 			})
 		}
 	}
@@ -59,7 +59,7 @@ func GuardDefaultCredentials(environment string) []DefaultCredentialRisk {
 			risks = append(risks, DefaultCredentialRisk{
 				Severity: "warning",
 				Code:     "WEAK_DB_PASSWORD",
-				Message: "检测到生产环境 DB_PASSWORD 为常见弱密码。建议使用密码管理器生成 16+ 字符强密码。",
+				Message:  "检测到生产环境 DB_PASSWORD 为常见弱密码。建议使用密码管理器生成 16+ 字符强密码。",
 			})
 		}
 	}
@@ -80,12 +80,14 @@ func GuardDefaultCredentials(environment string) []DefaultCredentialRisk {
 func LogDefaultCredentialRisks(risks []DefaultCredentialRisk, logger *zap.SugaredLogger) {
 	for _, r := range risks {
 		if r.Severity == "fatal" {
-			logger.Fatalw("default credential risk detected",
+			logger.Fatalw(
+				"default credential risk detected",
 				"code", r.Code,
 				"message", r.Message,
 			)
 		} else {
-			logger.Warnw("default credential risk detected",
+			logger.Warnw(
+				"default credential risk detected",
 				"code", r.Code,
 				"message", r.Message,
 			)

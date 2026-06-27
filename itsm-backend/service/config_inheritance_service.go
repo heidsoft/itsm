@@ -49,7 +49,8 @@ func (s *ConfigInheritanceService) GetEffectiveConfig(
 	tenantID, departmentID, teamID int,
 	configType, configKey string,
 ) (*ResolvedConfig, error) {
-	s.logger.Infow("Resolving effective config",
+	s.logger.Infow(
+		"Resolving effective config",
 		"tenant_id", tenantID,
 		"department_id", departmentID,
 		"team_id", teamID,
@@ -77,7 +78,6 @@ func (s *ConfigInheritanceService) GetEffectiveConfig(
 				domainconfig.IsActiveEQ(true),
 			).
 			Only(ctx)
-
 		if err != nil {
 			if ent.IsNotFound(err) {
 				continue // No config at this level, inherit from parent
@@ -88,7 +88,8 @@ func (s *ConfigInheritanceService) GetEffectiveConfig(
 		switch config.InheritMode {
 		case "override":
 			// Complete replacement at this level, then allow more specific levels to override/extend it.
-			s.logger.Infow("Config override found",
+			s.logger.Infow(
+				"Config override found",
 				"source", level.Source,
 				"key", configKey,
 			)
