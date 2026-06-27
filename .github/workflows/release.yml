@@ -105,6 +105,16 @@ jobs:
         # Track: https://github.com/vercel/next.js/issues/new
         run: npm ci --legacy-peer-deps
 
+      - name: Ensure peer dependency hoisting for recharts
+        working-directory: ./itsm-frontend
+        # recharts@3.x declares `react-is` as a peerDependency. With
+        # `--legacy-peer-deps` npm does not always auto-hoist peer deps to the
+        # top-level node_modules, and Next.js's barrel-optimization path
+        # (./node_modules/recharts/es6/util/ReactUtils.js) then fails to
+        # resolve `react-is`. Install it explicitly as a release-only safety
+        # net; --no-save keeps package.json/package-lock.json untouched.
+        run: npm install --no-save --legacy-peer-deps --no-audit --ignore-scripts react-is@^19
+
       - name: Build
         working-directory: ./itsm-frontend
         # eslint is pinned to v9 by the "Patch eslint version for release build"
