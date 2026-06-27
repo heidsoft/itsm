@@ -161,6 +161,27 @@ func (h *Handler) GetRiskAssessment(c *gin.Context) {
 	})
 }
 
+// GetCMDBImpactSummary handles GET /api/v1/changes/:id/cmdb-impact
+func (h *Handler) GetCMDBImpactSummary(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+		return
+	}
+
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	summary, err := h.svc.GetCMDBImpactSummary(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, summary)
+}
+
 // ListChanges handles GET /api/v1/changes
 func (h *Handler) ListChanges(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
