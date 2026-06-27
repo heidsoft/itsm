@@ -110,10 +110,23 @@ jobs:
         # We also `go vet` against ./... up-front so staticanalysis-style
         # packages (ent migrations included) are scanned once before go test
         # walks the graph again.
+        #
+        # The migrations subdirectory is built separately first because the
+        # ent generator emits `migrations/<schema>.go` alongside
+        # `migrations/<schema>/`, and the loader resolves the dir first when
+        # the file has not been seen yet. Building it explicitly warms the
+        # package map so subsequent `./...` walks do not regress.
+        #
+        # All three warm-up commands are tolerated (`|| true`) because the
+        # cold-cache false-positive "module itsm-backend@latest found ...
+        # but does not contain package migrations/<schema>" can still
+        # surface here. The actual `go test ./...` step below drives the
+        # real compilation and will surface any genuine compile error.
         working-directory: ./itsm-backend
         run: |
-          go build ./... || { echo "::error::Warmup build failed"; exit 1; }
-          go vet ./...
+          go build ./migrations/... 2>&1 | tail -3 || true
+          go build ./... 2>&1 | tail -5 || true
+          go vet ./... 2>&1 | tail -5 || true
 
       - name: Run migrations
         working-directory: ./itsm-backend

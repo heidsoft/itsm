@@ -112,6 +112,10 @@ services:
       - ITSM_BOOTSTRAP_ONLY=true
       - ITSM_AUTO_MIGRATE=true
       - ITSM_AUTO_SEED=true
+      # Default password used by scripts/smoke-test.sh (ITSM_ADMIN_PASS=admin123).
+      # Override in production by exporting ADMIN_PASSWORD before
+      # `docker compose up`.
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
       - HTTP_PROXY=
       - HTTPS_PROXY=
       - http_proxy=
