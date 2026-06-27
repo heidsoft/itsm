@@ -107,8 +107,13 @@ jobs:
         #   but does not contain package migrations/passwordresettoken
         # even though `go build` succeeds locally. Running `go build`
         # first populates the cache and makes the test loader happy.
+        # We also `go vet` against ./... up-front so staticanalysis-style
+        # packages (ent migrations included) are scanned once before go test
+        # walks the graph again.
         working-directory: ./itsm-backend
-        run: go build ./... 2>&1 | tail -5
+        run: |
+          go build ./... || { echo "::error::Warmup build failed"; exit 1; }
+          go vet ./...
 
       - name: Run migrations
         working-directory: ./itsm-backend

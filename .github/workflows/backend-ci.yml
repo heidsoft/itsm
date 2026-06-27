@@ -56,24 +56,30 @@ jobs:
 
       - name: Warm up Go build cache
         # staticcheck uses `go/packages.Load` which resolves the import graph
-        # without first compiling the project. On cold caches the resulting
-        # loader sometimes complains about ent-generated packages whose name
-        # collides with a sibling file in the same directory
-        # (e.g. `migrations/passwordresettoken.go` next to
-        # `migrations/passwordresettoken/`). Pre-building populates the build
-        # cache so the loader can resolve every package from the cache.
+        # without first compiling the project. On cold caches the loader
+        # sometimes reports a false-positive "module ... but does not contain
+        # package migrations/passwordresettoken" against ent-generated code
+        # (migrations/passwordresettoken.go sibling of
+        # migrations/passwordresettoken/). The standard compiler handles this
+        # correctly, so we drive a real build first to populate the cache and
+        # then ask staticcheck to reuse it.
         run: |
           cd itsm-backend
-          go build ./... 2>&1 | tail -5
+          go build ./... || {
+            echo "::error::Warmup build failed"
+            exit 1
+          }
 
       - name: Run staticcheck
-        # Pin to v0.6.1. `staticcheck@latest` (v0.7.0) trips over
-        # ent-generated package layouts where a directory name collides
-        # with a sibling file (migrations/passwordresettoken + migrations/
-        # passwordresettoken.go). v0.5.x is too old to build on Go 1.25.
+        # Pin to v0.6.1. staticcheck@latest (v0.7.0) trips over ent-generated
+        # package layouts where a directory name collides with a sibling file
+        # (migrations/passwordresettoken + migrations/passwordresettoken.go).
+        # v0.5.x is too old to build on Go 1.25. Install once into GOBIN and
+        # invoke the binary directly to avoid re-downloading on every run.
         run: |
           cd itsm-backend
-          go run honnef.co/go/tools/cmd/staticcheck@v0.6.1 ./...
+          go install honnef.co/go/tools/cmd/staticcheck@v0.6.1
+          "$(go env GOBIN)/staticcheck" ./...
 
       - name: Code quality checks
         run: |
