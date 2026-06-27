@@ -155,7 +155,11 @@ login_response=$(curl -sf -X POST "$BACKEND_URL/api/v1/auth/login" \
     -d "{\"username\":\"$ADMIN_USER\",\"password\":\"$ADMIN_PASS\"}" 2>&1 || true)
 
 if echo "$login_response" | jq . > /dev/null 2>&1; then
-    token=$(echo "$login_response" | jq -r '.data.token // .token // empty' 2>/dev/null || true)
+    # Backend login response shape (see auth_controller.go Login):
+    #   { code: 0, message: "success", data: { access_token, refresh_token, user } }
+    # Older clients/tests used `.data.token`; both shapes are accepted so
+    # the smoke test stays compatible with whatever auth DTO ships.
+    token=$(echo "$login_response" | jq -r '.data.access_token // .data.token // .token // .access_token // empty' 2>/dev/null || true)
     if [ -n "$token" ] && [ "$token" != "null" ]; then
         echo -e "${GREEN}  ✓ 登录成功，获取到Token${NC}"
         PASSED=$((PASSED + 1))
