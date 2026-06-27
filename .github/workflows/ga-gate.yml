@@ -101,6 +101,15 @@ jobs:
           echo "::error::PostgreSQL did not become ready in 60s"
           exit 1
 
+      - name: Warm up Go build cache
+        # Without pre-building, `go test ./...` sometimes reports
+        #   migrations/client.go:59:2: module itsm-backend@latest found,
+        #   but does not contain package migrations/passwordresettoken
+        # even though `go build` succeeds locally. Running `go build`
+        # first populates the cache and makes the test loader happy.
+        working-directory: ./itsm-backend
+        run: go build ./... 2>&1 | tail -5
+
       - name: Run migrations
         working-directory: ./itsm-backend
         run: |

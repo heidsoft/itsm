@@ -54,6 +54,18 @@ jobs:
             exit 1
           }
 
+      - name: Warm up Go build cache
+        # staticcheck uses `go/packages.Load` which resolves the import graph
+        # without first compiling the project. On cold caches the resulting
+        # loader sometimes complains about ent-generated packages whose name
+        # collides with a sibling file in the same directory
+        # (e.g. `migrations/passwordresettoken.go` next to
+        # `migrations/passwordresettoken/`). Pre-building populates the build
+        # cache so the loader can resolve every package from the cache.
+        run: |
+          cd itsm-backend
+          go build ./... 2>&1 | tail -5
+
       - name: Run staticcheck
         run: |
           cd itsm-backend
