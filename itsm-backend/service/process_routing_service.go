@@ -182,7 +182,7 @@ func (s *ProcessRoutingService) calculateMatchScore(binding *ent.ProcessBinding,
 	}
 
 	// Conditions evaluation
-	if binding.Conditions != nil && len(binding.Conditions) > 0 {
+	if len(binding.Conditions) > 0 {
 		if s.evaluateConditions(binding.Conditions, reqCtx.Variables) {
 			score += 250
 		} else {

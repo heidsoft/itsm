@@ -2,9 +2,8 @@ package controller
 
 import (
 	"fmt"
-	"math/rand"
+	mathrand "math/rand"
 	"testing"
-	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
@@ -14,19 +13,15 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 // uniqueTestID 生成唯一的测试ID，用于避免测试间的唯一约束冲突
 func uniqueTestID() string {
-	return fmt.Sprintf("%d", rand.Int31())
+	return fmt.Sprintf("%d", mathrand.Int31())
 }
 
 // SetupTestDB 为每个测试创建一个独立的内存数据库，避免测试间冲突
 func SetupTestDB(t *testing.T) *ent.Client {
 	// 为每个测试使用唯一的数据库文件名
-	dbName := fmt.Sprintf("file:ent_%s_%d?mode=memory&cache=shared&_fk=1", t.Name(), rand.Int31())
+	dbName := fmt.Sprintf("file:ent_%s_%d?mode=memory&cache=shared&_fk=1", t.Name(), mathrand.Int31())
 	client := enttest.Open(t, "sqlite3", dbName)
 	return client
 }

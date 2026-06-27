@@ -9,6 +9,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/service"
+	"itsm-backend/service/bpmn"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,7 +38,7 @@ func getBPMNTenantContext(ctx *gin.Context) (context.Context, int, bool) {
 	// tenantID=0 允许通过，但服务层会忽略该过滤条件
 	reqCtx := ctx.Request.Context()
 	if tenantID > 0 {
-		reqCtx = context.WithValue(reqCtx, "bpmn_tenant_id", tenantID)
+		reqCtx = context.WithValue(reqCtx, bpmn.BPMNTenantIDContextKey, tenantID)
 	}
 	return reqCtx, tenantID, true
 }

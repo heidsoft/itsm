@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/bpmnpermission"
+	"itsm-backend/service/bpmn"
 
 	"go.uber.org/zap"
 )
@@ -95,7 +96,7 @@ func (s *BPMNPermissionService) GrantPermission(ctx context.Context, req *GrantP
 
 // RevokePermission 撤销权限
 func (s *BPMNPermissionService) RevokePermission(ctx context.Context, req *RevokePermissionRequest) error {
-	tenantID, ok := ctx.Value("bpmn_tenant_id").(int)
+	tenantID, ok := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
 	if !ok {
 		return fmt.Errorf("tenant_id not found in context")
 	}

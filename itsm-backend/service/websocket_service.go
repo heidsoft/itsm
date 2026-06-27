@@ -96,7 +96,6 @@ type WebSocketClient struct {
 	Conn     *websocket.Conn
 	Send     chan []byte
 	Hub      *WebSocketHub
-	mu       sync.Mutex
 	IsClosed bool
 }
 

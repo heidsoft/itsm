@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"go.uber.org/zap/zaptest"
@@ -126,7 +127,7 @@ func TestGatewayEngine_EvaluateExclusiveGatewayConditions_NoMatchReturnsError(t 
 		},
 	}
 
-	_, err := engine.evaluateExclusiveGatewayConditions(nil, req, gatewayInfo)
+	_, err := engine.evaluateExclusiveGatewayConditions(context.TODO(), req, gatewayInfo)
 	if err == nil {
 		t.Error("排他网关无条件匹配且无默认流时，应返回错误")
 	}
@@ -150,7 +151,7 @@ func TestGatewayEngine_EvaluateExclusiveGatewayConditions_DefaultFlow(t *testing
 		},
 	}
 
-	result, err := engine.evaluateExclusiveGatewayConditions(nil, req, gatewayInfo)
+	result, err := engine.evaluateExclusiveGatewayConditions(context.TODO(), req, gatewayInfo)
 	if err != nil {
 		t.Errorf("有默认流时不应返回错误: %v", err)
 	}

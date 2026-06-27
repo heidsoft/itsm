@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"strconv"
-
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
@@ -220,25 +218,4 @@ func (c *NotificationPreferenceController) InitializeDefaultPreferences(cxt *gin
 // ListEventTypes 获取所有通知事件类型
 func (c *NotificationPreferenceController) ListEventTypes(cxt *gin.Context) {
 	common.Success(cxt, dto.ListNotificationEventTypes())
-}
-
-// GetUserIDFromContext 从上下文获取用户ID（兼容处理）
-func getUserIDFromContext(c *gin.Context) (int, error) {
-	// 尝试从 JWT 声明中获取
-	userID, exists := c.Get("user_id")
-	if exists {
-		if id, ok := userID.(int); ok {
-			return id, nil
-		}
-		if idStr, ok := userID.(string); ok {
-			return strconv.Atoi(idStr)
-		}
-	}
-
-	// 尝试从查询参数获取（临时方案）
-	if idStr := c.Query("user_id"); idStr != "" {
-		return strconv.Atoi(idStr)
-	}
-
-	return 0, nil
 }

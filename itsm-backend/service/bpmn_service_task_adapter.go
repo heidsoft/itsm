@@ -57,24 +57,9 @@ func (s *ProcessCallbackService) ListHandlers() []ServiceTaskHandlerInterface {
 	return nil // 暂不提供此功能
 }
 
-// getHandler 获取处理器（内部使用）
-// 保留此方法以保持向后兼容
-func (s *ProcessCallbackService) getHandler(taskType string) ServiceTaskHandlerInterface {
-	return nil
-}
-
-// registerDefaultHandlers 注册默认处理器
-// 保留此方法以保持向后兼容，实际注册逻辑在 bpmn 包中完成
-func (s *ProcessCallbackService) registerDefaultHandlers(logger *zap.SugaredLogger) {
-	// 默认处理器已在 bpmn.CallbackRegistry 初始化时注册
-	// 此处可以添加额外的自定义处理器
-}
-
 // ServiceTaskHandlerBase 服务任务处理器基类
 // 保留用于向后兼容，新代码应使用 bpmn.HandlerBase
-type ServiceTaskHandlerBase struct {
-	client *ent.Client
-}
+type ServiceTaskHandlerBase struct{}
 
 // GetHandlerID 返回处理器标识
 func (h *ServiceTaskHandlerBase) GetHandlerID() string {
@@ -118,18 +103,3 @@ func NewServiceRequestServiceTaskHandler(client *ent.Client, logger *zap.Sugared
 }
 
 // 保留辅助函数用于向后兼容
-
-// getIntFromVars 从变量中提取整数
-func getIntFromVars(variables map[string]interface{}, key string) int {
-	return bpmn.GetIntFromVars(variables, key)
-}
-
-// getStringFromVars 从变量中提取字符串
-func getStringFromVars(variables map[string]interface{}, key string) string {
-	return bpmn.GetStringFromVars(variables, key)
-}
-
-// getTenantIDFromVars 从变量中提取租户ID
-func getTenantIDFromVars(variables map[string]interface{}) int {
-	return bpmn.GetTenantIDFromVars(variables)
-}

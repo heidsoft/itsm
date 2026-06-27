@@ -95,8 +95,6 @@ func (ng *NumberGenerator) GenerateChangeNumber() string {
 // Deprecated: 全局号码生成器仅用于单机模式，多实例部署会生成重复编号！
 // 请使用 SequenceService (service/sequence_service.go) 的 Redis INCR 原子操作。
 // Ticket/Incident/Problem/Change 编号生成已迁移到各自 Service 的 generateXxxNumber 方法。
-var _globalGeneratorUsed = false // Set to true if any code calls the deprecated functions
-
 var globalGenerator = NewNumberGenerator()
 
 // Deprecated: 多实例部署时会导致编号冲突！

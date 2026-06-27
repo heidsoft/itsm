@@ -3,7 +3,6 @@ package wecom
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"itsm-backend/connector"
@@ -12,7 +11,6 @@ import (
 type WeCom struct {
 	client    *Client
 	cfg       connector.Config
-	mu        sync.RWMutex
 	startedAt time.Time
 }
 
@@ -40,14 +38,13 @@ func (w *WeCom) Manifest() connector.Manifest {
 }
 
 func (w *WeCom) Init(_ context.Context, cfg connector.Config) error {
-	corpID, _ := cfg.Credentials["corp_id"]
-	corpSecret, _ := cfg.Credentials["corp_secret"]
-	agentID, _ := cfg.Credentials["agent_id"]
+	corpID := cfg.Credentials["corp_id"]
+	corpSecret := cfg.Credentials["corp_secret"]
 	if corpID == "" || corpSecret == "" {
 		return fmt.Errorf("wecom: credentials.corp_id and corp_secret are required")
 	}
 	baseURL, _ := cfg.Settings["base_url"].(string)
-	w.client = NewClient(corpID, corpSecret, agentID, baseURL)
+	w.client = NewClient(corpID, corpSecret, cfg.Credentials["agent_id"], baseURL)
 	w.cfg = cfg
 	w.startedAt = time.Now()
 	return nil

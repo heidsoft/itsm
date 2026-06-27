@@ -6,7 +6,6 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/mspallocation"
-	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/tenant"
 )
 
@@ -81,13 +80,4 @@ func (v *MSPAccessValidator) FilterByMSPAllocation(ctx context.Context, mspUserI
 		}
 	}
 	return filtered, nil
-}
-
-// validateAccessWithPredicate is a helper that builds the predicate for active MSP allocation
-func validateAccessWithPredicate(mspUserID int, customerTenantID int) predicate.MSPAllocation {
-	return mspallocation.And(
-		mspallocation.MspUserIDEQ(mspUserID),
-		mspallocation.DeassignedAtIsNil(),
-		mspallocation.HasCustomerTenantWith(tenant.IDEQ(customerTenantID)),
-	)
 }

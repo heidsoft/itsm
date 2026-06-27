@@ -219,7 +219,6 @@ func (s *ChangeApprovalService) GetChangeApprovalSummary(ctx context.Context, ch
 	}
 	defer chainRows.Close()
 
-	var approvalChains []dto.ChangeApprovalChainResponse
 	var currentLevel int
 	var totalLevels int
 	var pendingApprovals []dto.ChangeApprovalChainResponse
@@ -254,7 +253,6 @@ func (s *ChangeApprovalService) GetChangeApprovalSummary(ctx context.Context, ch
 			CreatedAt:    createdAt,
 		}
 
-		approvalChains = append(approvalChains, chainItem)
 		totalLevels = level
 
 		if status == "pending" {

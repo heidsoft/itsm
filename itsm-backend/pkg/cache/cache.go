@@ -114,7 +114,11 @@ func (c *CacheService) SetNX(ctx context.Context, key string, value interface{},
 		return false, err
 	}
 
-	return c.client.SetNX(ctx, key, data, ttl).Result()
+	res, err := c.client.SetArgs(ctx, key, data, redis.SetArgs{Mode: "NX", TTL: ttl}).Result()
+	if err != nil {
+		return false, err
+	}
+	return res == "OK", nil
 }
 
 // GetOrSet 获取缓存，如果不存在则设置

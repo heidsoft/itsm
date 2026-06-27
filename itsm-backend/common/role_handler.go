@@ -289,15 +289,3 @@ func (h *RoleHandler) ListPermissions(c *gin.Context) {
 		},
 	})
 }
-
-// Helper to convert string to int for ID
-func getIDParam(c *gin.Context, key string) int {
-	idStr := c.Param(key)
-	var id int
-	for _, r := range idStr {
-		if r >= '0' && r <= '9' {
-			id = id*10 + int(r-'0')
-		}
-	}
-	return id
-}

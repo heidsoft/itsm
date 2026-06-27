@@ -328,14 +328,6 @@ func (s *ChangePIRService) buildPIRResponse(ctx context.Context, pir *ent.Change
 	}, nil
 }
 
-// getChangeID 获取ChangeID（从edge获取）
-func (s *ChangePIRService) getChangeID(pir *ent.ChangePIR) int {
-	if pir.Edges.Change != nil {
-		return pir.Edges.Change.ID
-	}
-	return 0
-}
-
 // buildPIRResponseFull 构建完整的PIR响应（包含关联信息）
 func (s *ChangePIRService) buildPIRResponseFull(ctx context.Context, pir *ent.ChangePIR, changeTitle string, changeID int) (*dto.ChangePIRResponse, error) {
 	// 转换指针字段

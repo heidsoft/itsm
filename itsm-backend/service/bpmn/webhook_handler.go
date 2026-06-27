@@ -67,7 +67,7 @@ func (h *WebhookHandler) callWebhook(ctx context.Context, variables map[string]i
 	timeout := GetIntFromVars(variables, "timeout")
 
 	if webhookURL == "" {
-		return nil, fmt.Errorf("Webhook URL不能为空")
+		return nil, fmt.Errorf("webhook URL不能为空")
 	}
 
 	// 设置默认方法

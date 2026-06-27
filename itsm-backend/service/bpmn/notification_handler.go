@@ -141,7 +141,7 @@ func (h *NotificationHandler) sendWebhookNotification(ctx context.Context, varia
 	payload := GetStringFromVars(variables, "payload")
 
 	if webhookURL == "" {
-		return nil, fmt.Errorf("Webhook URL不能为空")
+		return nil, fmt.Errorf("webhook URL不能为空")
 	}
 
 	h.logger.Infow(

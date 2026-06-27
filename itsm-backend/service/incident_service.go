@@ -608,7 +608,7 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 	s.logger.Infow("Escalating incident", "incident_id", req.IncidentID, "level", req.EscalationLevel)
 
 	// 获取事件
-	incidentEntity, err := s.client.Incident.Query().
+	_, err := s.client.Incident.Query().
 		Where(
 			incident.IDEQ(req.IncidentID),
 			incident.TenantIDEQ(tenantID),
@@ -623,7 +623,7 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 
 	// 更新事件升级信息
 	now := time.Now()
-	incidentEntity, err = s.client.Incident.UpdateOneID(req.IncidentID).
+	incidentEntity, err := s.client.Incident.UpdateOneID(req.IncidentID).
 		SetEscalationLevel(req.EscalationLevel).
 		SetEscalatedAt(now).
 		SetUpdatedAt(now).

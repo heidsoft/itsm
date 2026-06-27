@@ -249,16 +249,6 @@ func XSSProtectionMiddleware() gin.HandlerFunc {
 	}
 }
 
-// containsSQLInjection 检查字符串是否包含SQL注入模式
-func containsSQLInjection(input string, patterns []*regexp.Regexp) bool {
-	for _, pattern := range patterns {
-		if pattern.MatchString(input) {
-			return true
-		}
-	}
-	return false
-}
-
 // containsXSS 检查字符串是否包含XSS模式
 func containsXSS(input string, patterns []*regexp.Regexp) bool {
 	for _, pattern := range patterns {

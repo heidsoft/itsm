@@ -161,7 +161,7 @@ func (p *AzureProvider) Chat(ctx context.Context, model string, messages []LLMMe
 		Temperature: 0.3,
 	})
 	if err != nil {
-		return "", fmt.Errorf("Azure OpenAI API error: %w", err)
+		return "", fmt.Errorf("azure OpenAI API error: %w", err)
 	}
 
 	if len(resp.Choices) == 0 {
@@ -175,7 +175,6 @@ func (p *AzureProvider) Chat(ctx context.Context, model string, messages []LLMMe
 type LocalProvider struct {
 	baseURL    string
 	client     *http.Client
-	timeout    time.Duration
 	stopTokens []string
 }
 
@@ -252,10 +251,7 @@ func (p *MiniMaxProvider) Chat(ctx context.Context, model string, messages []LLM
 		if m.Role == "system" {
 			systemPrompt = m.Content
 		} else {
-			anthropicMessages = append(anthropicMessages, MiniMaxAnthropicMessage{
-				Role:    m.Role,
-				Content: m.Content,
-			})
+			anthropicMessages = append(anthropicMessages, MiniMaxAnthropicMessage(m))
 		}
 	}
 

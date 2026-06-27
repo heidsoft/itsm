@@ -386,96 +386,90 @@ func (s *TicketCoreService) generateTicketNumberWithRedis(ctx context.Context, t
 // 策略：如果当月有记录则加锁读取最大号；如果无记录则使用 UUID 后缀确保唯一
 func (s *TicketCoreService) generateTicketNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
 	prefix := fmt.Sprintf("TKT-%04d%02d-", year, month)
-	const maxRetries = 5
+	var candidate string
 
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		var candidate string
-
-		// 开启事务，使用 SELECT FOR UPDATE 锁定最大编号行
-		if s.rawDB != nil {
-			tx, err := s.rawDB.BeginTx(ctx, nil)
-			if err != nil {
-				s.logger.Warnw("BeginTx failed, falling back to non-transactional", "error", err)
-			} else {
-				// 使用原生 SQL 查询最大编号（使用 FOR UPDATE SKIP LOCKED 避免阻塞）
-				query := `SELECT ticket_number FROM tickets WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE SKIP LOCKED`
-				var maxTicketNum string
-				err := tx.QueryRowContext(ctx, query, tenantID, prefix+"%").Scan(&maxTicketNum)
-				s.logger.Infow("SELECT FOR UPDATE SKIP LOCKED result", "tenant", tenantID, "maxTicketNum", maxTicketNum, "error", err, "isNoRows", (err == sql.ErrNoRows))
-
-				// 计算下一个序列号
-				var seq int = 0
-				// sql.ErrNoRows 意味着当月没有工单，此时 seq 保持 0
-				if err == nil && maxTicketNum != "" {
-					if idx := strings.LastIndex(maxTicketNum, "-"); idx >= 0 {
-						fmt.Sscanf(maxTicketNum[idx+1:], "%d", &seq)
-					}
-				} else if err == sql.ErrNoRows {
-					s.logger.Infow("No existing tickets this month, using seed sequence", "tenant", tenantID, "year", year, "month", month)
-				}
-
-				// 有历史记录则使用递增号；无记录则用随机后缀确保唯一
-				if seq > 0 {
-					candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq+1)
-				} else {
-					candidate = fmt.Sprintf("TKT-%04d%02d-%s", year, month, uniqueFallbackSuffix())
-				}
-				s.logger.Infow("DB transaction generated ticket number",
-					"number", candidate, "attempt", attempt, "tenant", tenantID)
-
-				// 提交事务（编号唯一性由外层 CreateTicket 唯一约束保证）
-				tx.Commit()
-				return candidate, nil
-			}
-		}
-
-		// Fallback: 非事务方式（仅用于没有 rawDB 的场景）
-		tickets, err := s.client.Ticket.Query().
-			Where(
-				ticket.TenantID(tenantID),
-				ticket.TicketNumberContains(prefix[:len(prefix)-1]),
-			).
-			Order(ent.Desc(ticket.FieldTicketNumber)).
-			Limit(1).
-			All(ctx)
-
-		var maxSeq int
-		parseErr := false
+	// 开启事务，使用 SELECT FOR UPDATE 锁定最大编号行
+	if s.rawDB != nil {
+		tx, err := s.rawDB.BeginTx(ctx, nil)
 		if err != nil {
-			s.logger.Warnw("Query max ticket number failed, using 0", "error", err)
-			maxSeq = 0
-		} else if len(tickets) > 0 {
-			ticketNum := tickets[0].TicketNumber
-			if ticketNum == "" {
-				parseErr = true
-			} else {
-				parsed := false
-				for i := len(ticketNum) - 1; i >= 0; i-- {
-					if ticketNum[i] == '-' {
-						if _, err := fmt.Sscanf(ticketNum[i+1:], "%d", &maxSeq); err == nil {
-							parsed = true
-						}
-						break
-					}
-				}
-				if !parsed {
-					parseErr = true
-				}
-			}
-		}
-
-		if parseErr || (err == nil && len(tickets) == 0) {
-			// 无当月记录时，使用随机后缀确保唯一性
-			candidate = fmt.Sprintf("TKT-%04d%02d-%s", year, month, uniqueFallbackSuffix())
+			s.logger.Warnw("BeginTx failed, falling back to non-transactional", "error", err)
 		} else {
-			candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, maxSeq+1)
+			// 使用原生 SQL 查询最大编号（使用 FOR UPDATE SKIP LOCKED 避免阻塞）
+			query := `SELECT ticket_number FROM tickets WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE SKIP LOCKED`
+			var maxTicketNum string
+			err := tx.QueryRowContext(ctx, query, tenantID, prefix+"%").Scan(&maxTicketNum)
+			s.logger.Infow("SELECT FOR UPDATE SKIP LOCKED result", "tenant", tenantID, "maxTicketNum", maxTicketNum, "error", err, "isNoRows", (err == sql.ErrNoRows))
+
+			// 计算下一个序列号
+			var seq int = 0
+			// sql.ErrNoRows 意味着当月没有工单，此时 seq 保持 0
+			if err == nil && maxTicketNum != "" {
+				if idx := strings.LastIndex(maxTicketNum, "-"); idx >= 0 {
+					fmt.Sscanf(maxTicketNum[idx+1:], "%d", &seq)
+				}
+			} else if err == sql.ErrNoRows {
+				s.logger.Infow("No existing tickets this month, using seed sequence", "tenant", tenantID, "year", year, "month", month)
+			}
+
+			// 有历史记录则使用递增号；无记录则用随机后缀确保唯一
+			if seq > 0 {
+				candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq+1)
+			} else {
+				candidate = fmt.Sprintf("TKT-%04d%02d-%s", year, month, uniqueFallbackSuffix())
+			}
+			s.logger.Infow("DB transaction generated ticket number",
+				"number", candidate, "tenant", tenantID)
+
+			// 提交事务（编号唯一性由外层 CreateTicket 唯一约束保证）
+			tx.Commit()
+			return candidate, nil
 		}
-		s.logger.Infow("DB fallback generated ticket number",
-			"number", candidate, "attempt", attempt, "tenant", tenantID)
-		return candidate, nil
 	}
 
-	return "", fmt.Errorf("failed to generate unique ticket number after %d attempts", maxRetries)
+	// Fallback: 非事务方式（仅用于没有 rawDB 的场景）
+	tickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantID(tenantID),
+			ticket.TicketNumberContains(prefix[:len(prefix)-1]),
+		).
+		Order(ent.Desc(ticket.FieldTicketNumber)).
+		Limit(1).
+		All(ctx)
+
+	var maxSeq int
+	parseErr := false
+	if err != nil {
+		s.logger.Warnw("Query max ticket number failed, using 0", "error", err)
+		maxSeq = 0
+	} else if len(tickets) > 0 {
+		ticketNum := tickets[0].TicketNumber
+		if ticketNum == "" {
+			parseErr = true
+		} else {
+			parsed := false
+			for i := len(ticketNum) - 1; i >= 0; i-- {
+				if ticketNum[i] == '-' {
+					if _, err := fmt.Sscanf(ticketNum[i+1:], "%d", &maxSeq); err == nil {
+						parsed = true
+					}
+					break
+				}
+			}
+			if !parsed {
+				parseErr = true
+			}
+		}
+	}
+
+	if parseErr || (err == nil && len(tickets) == 0) {
+		// 无当月记录时，使用随机后缀确保唯一性
+		candidate = fmt.Sprintf("TKT-%04d%02d-%s", year, month, uniqueFallbackSuffix())
+	} else {
+		candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, maxSeq+1)
+	}
+	s.logger.Infow("DB fallback generated ticket number",
+		"number", candidate, "tenant", tenantID)
+	return candidate, nil
 }
 
 func (s *TicketCoreService) validateRequester(ctx context.Context, userID, tenantID int) error {
@@ -518,16 +512,6 @@ func (s *TicketCoreService) findCategoryID(ctx context.Context, name string, ten
 		return 0, fmt.Errorf("未找到: %w", err)
 	}
 	return cat.ID, nil
-}
-
-func (s *TicketCoreService) findDefaultCategory(ctx context.Context, tenantID int) (*ent.TicketCategory, error) {
-	cat, err := s.client.TicketCategory.Query().
-		Where(ticketcategory.IsActive(true), ticketcategory.TenantID(tenantID)).
-		First(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("未找到: %w", err)
-	}
-	return cat, nil
 }
 
 func (s *TicketCoreService) addTagsToTicket(ctx context.Context, t *ent.Ticket, tagIDs []int) error {

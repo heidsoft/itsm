@@ -557,7 +557,7 @@ func (s *PermissionService) toPermissionResponse(permEntity *ent.Permission) *dt
 // generateCodeFromName 从名称生成代码
 func generateCodeFromName(name string) string {
 	code := strings.ToLower(name)
-	code = regexp.MustCompile(`[^a-z0-9\u4e00-\u9fa5]`).ReplaceAllString(code, "_")
+	code = regexp.MustCompile(`[^a-z0-9\x{4e00}-\x{9fa5}]`).ReplaceAllString(code, "_")
 	code = regexp.MustCompile(`_+`).ReplaceAllString(code, "_")
 	code = strings.Trim(code, "_")
 	if len(code) > 20 {

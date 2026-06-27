@@ -6,6 +6,7 @@ import (
 
 	"itsm-backend/ent/bpmnpermission"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/service/bpmn"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
@@ -57,7 +58,7 @@ func TestBPMNPermissionService_RevokePermission_TenantIsolation(t *testing.T) {
 	assert.Equal(t, tenant1.ID, found.TenantID)
 
 	// Tenant 2 tries to revoke Tenant 1's permission using tenant context
-	tenant2Ctx := context.WithValue(ctx, "bpmn_tenant_id", tenant2.ID)
+	tenant2Ctx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenant2.ID)
 	err = svc.RevokePermission(tenant2Ctx, &RevokePermissionRequest{
 		ResourceType:   "process_definition",
 		ResourceID:     100,
@@ -109,7 +110,7 @@ func TestBPMNPermissionService_RevokePermission_SameTenant(t *testing.T) {
 	assert.NotZero(t, perm.ID)
 
 	// Tenant 1 revokes their own permission
-	tenant1Ctx := context.WithValue(ctx, "bpmn_tenant_id", tenant1.ID)
+	tenant1Ctx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenant1.ID)
 	err = svc.RevokePermission(tenant1Ctx, &RevokePermissionRequest{
 		ResourceType:   "process_definition",
 		ResourceID:     100,

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
 	"itsm-backend/connector"
@@ -16,9 +15,6 @@ type Feishu struct {
 	client    *Client
 	cfg       connector.Config
 	startedAt time.Time
-
-	mu             sync.RWMutex
-	actionHandlers map[string]ActionHandler // card.action.trigger -> handler
 }
 
 // ActionHandler 卡片按钮/回调事件
@@ -36,10 +32,10 @@ type CardActionEvent struct {
 }
 
 func init() {
-	connector.MustRegister(func() connector.Connector { return &Feishu{actionHandlers: map[string]ActionHandler{}} })
+	connector.MustRegister(func() connector.Connector { return &Feishu{} })
 }
 
-func New() *Feishu { return &Feishu{actionHandlers: map[string]ActionHandler{}} }
+func New() *Feishu { return &Feishu{} }
 
 func (f *Feishu) Manifest() connector.Manifest {
 	return connector.Manifest{
@@ -62,13 +58,11 @@ func (f *Feishu) Manifest() connector.Manifest {
 }
 
 func (f *Feishu) Init(_ context.Context, cfg connector.Config) error {
-	appID, _ := cfg.Credentials["app_id"]
-	appSecret, _ := cfg.Credentials["app_secret"]
+	appID := cfg.Credentials["app_id"]
+	appSecret := cfg.Credentials["app_secret"]
 	if appID == "" || appSecret == "" {
 		return fmt.Errorf("feishu: credentials.app_id and app_secret are required")
 	}
-	verifyTok, _ := cfg.Credentials["verification_token"]
-	encryptKey, _ := cfg.Credentials["encrypt_key"]
 	baseURL, _ := cfg.Settings["base_url"].(string)
 	if baseURL == "" {
 		// 海外版判定
@@ -76,7 +70,7 @@ func (f *Feishu) Init(_ context.Context, cfg connector.Config) error {
 			baseURL = BaseURLIntl
 		}
 	}
-	f.client = NewClient(baseURL, appID, appSecret, verifyTok, encryptKey)
+	f.client = NewClient(baseURL, appID, appSecret, cfg.Credentials["verification_token"], cfg.Credentials["encrypt_key"])
 	f.cfg = cfg
 	f.startedAt = time.Now()
 	return nil
@@ -106,23 +100,6 @@ func (f *Feishu) HealthCheck(ctx context.Context) connector.HealthStatus {
 }
 
 func (f *Feishu) Close() error { return nil }
-
-// RegisterActionHandler 注册卡片回调处理器
-func (f *Feishu) RegisterActionHandler(actionTag string, h ActionHandler) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	f.actionHandlers[actionTag] = h
-}
-
-func (f *Feishu) dispatchAction(ctx context.Context, ev *CardActionEvent) (map[string]interface{}, error) {
-	f.mu.RLock()
-	handler, ok := f.actionHandlers[ev.Action["tag"].(string)]
-	f.mu.RUnlock()
-	if !ok {
-		return map[string]interface{}{"toast": map[string]string{"type": "info", "content": "未注册的动作"}}, nil
-	}
-	return handler(ctx, ev)
-}
 
 // VerifySignature 满足 connector.Receiver 接口
 func (f *Feishu) VerifySignature(headers map[string]string, body []byte) error {

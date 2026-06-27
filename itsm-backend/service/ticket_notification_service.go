@@ -523,8 +523,8 @@ func (s *TicketNotificationService) ListTicketNotifications(
 			if err != nil {
 				s.logger.Warnw("failed to get user for notification response", "error", err, "user_id", notification.UserID)
 			}
-			responses = append(responses, dto.ToTicketNotificationResponse(notification, userEntity))
 		}
+		responses = append(responses, dto.ToTicketNotificationResponse(notification, userEntity))
 	}
 
 	return responses, nil
@@ -579,8 +579,8 @@ func (s *TicketNotificationService) ListUserNotifications(
 			if err != nil {
 				s.logger.Warnw("failed to get user for notification response", "error", err, "user_id", notification.UserID)
 			}
-			responses = append(responses, dto.ToTicketNotificationResponse(notification, userEntity))
 		}
+		responses = append(responses, dto.ToTicketNotificationResponse(notification, userEntity))
 	}
 
 	return responses, total, nil

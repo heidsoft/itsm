@@ -295,8 +295,11 @@ func ValidateCustomerTenantHeader() gin.HandlerFunc {
 	}
 }
 
+// mspCustomerTenantIDKey is the typed context key used to store the MSP customer tenant ID.
+type mspCustomerTenantIDKey struct{}
+
 // MSPCustomerTenantIDKey 用于在context中传递客户租户ID的key
-const MSPCustomerTenantIDKey = "msp_customer_tenant_id"
+var MSPCustomerTenantIDKey = mspCustomerTenantIDKey{}
 
 // SetMSPCustomerTenantID 设置客户租户ID到context
 func SetMSPCustomerTenantID(ctx context.Context, tenantID int) context.Context {

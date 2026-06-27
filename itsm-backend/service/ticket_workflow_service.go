@@ -279,9 +279,7 @@ func (s *TicketWorkflowService) CCTicket(ctx context.Context, req *dto.CCTicketR
 
 	// 记录流转记录
 	ccUserIDs := make([]int, len(req.CCUsers))
-	for i, id := range req.CCUsers {
-		ccUserIDs[i] = id
-	}
+	copy(ccUserIDs, req.CCUsers)
 
 	err = s.createWorkflowRecord(ctx, &dto.TicketWorkflowRecord{
 		TicketID:  req.TicketID,
@@ -774,11 +772,6 @@ func currentLevelVal(state *dto.TicketWorkflowState) int {
 		return 0
 	}
 	return *state.CurrentApprovalLevel
-}
-
-func ptrToApprovalStatus(s string) *dto.ApprovalStatus {
-	status := dto.ApprovalStatus(s)
-	return &status
 }
 
 // 辅助函数

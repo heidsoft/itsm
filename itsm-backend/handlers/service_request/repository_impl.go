@@ -53,13 +53,6 @@ func itemOrNil(t time.Time) *time.Time {
 	return &t
 }
 
-func itemIntOrNil(i int) *int {
-	if i == 0 {
-		return nil
-	}
-	return &i
-}
-
 // toDomainApproval converts Ent approval model to Domain entity
 func (r *EntRepository) toDomainApproval(app *ent.ServiceRequestApproval) *ServiceRequestApproval {
 	if app == nil {

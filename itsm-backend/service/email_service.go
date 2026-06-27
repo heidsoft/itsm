@@ -75,7 +75,7 @@ func (s *EmailService) Send(ctx context.Context, msg *EmailMessage) error {
 		emailBody.WriteString(fmt.Sprintf("Cc: %s\r\n", strings.Join(msg.CC, ",")))
 	}
 	emailBody.WriteString(fmt.Sprintf("Subject: %s\r\n", msg.Subject))
-	emailBody.WriteString(fmt.Sprintf("MIME-Version: 1.0\r\n"))
+	emailBody.WriteString("MIME-Version: 1.0\r\n")
 	emailBody.WriteString(fmt.Sprintf("Content-Type: multipart/alternative; boundary=\"%s\"\r\n", boundary))
 	emailBody.WriteString("\r\n")
 

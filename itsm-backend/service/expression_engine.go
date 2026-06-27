@@ -320,10 +320,7 @@ func Now() time.Time {
 	return time.Now()
 }
 
-// Default time.Now function
-var timeNow = time.Now
-
 // SetTimeNowFunction 设置时间函数（用于测试）
 var SetTimeNowFunction = func(fn func() time.Time) {
-	timeNow = fn
+	_ = fn
 }

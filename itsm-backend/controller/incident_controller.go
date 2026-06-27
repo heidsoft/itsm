@@ -776,7 +776,7 @@ func (c *IncidentController) ResolveAlert(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
+	tenantID, _ := middleware.GetTenantID(ctx)
 	err = c.alertingService.ResolveAlert(ctx.Request.Context(), id, userID, tenantID)
 	if err != nil {
 		if err.Error() == "alert not found" {

@@ -4,15 +4,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"itsm-backend/common"
-	"itsm-backend/service"
 )
 
-type WebhookController struct {
-	ticketService *service.TicketService
-	logger        *zap.SugaredLogger
-}
+// WebhookController webhook controller (stubs are reserved for future use)
+type WebhookController struct{}
 
 // 接收外部监控告警
 // @Summary 接收监控告警

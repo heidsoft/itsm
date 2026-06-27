@@ -240,7 +240,7 @@ func (s *SLAPolicyService) getDefaultPolicy(policies []*ent.SLAPolicy) (*ent.SLA
 // CalculateSLAExpireTime 计算SLA到期时间
 // 考虑业务时间配置
 func (s *SLAPolicyService) CalculateSLAExpireTime(ctx context.Context, policy *ent.SLAPolicy, startTime time.Time) time.Time {
-	if policy.BusinessHours == nil || len(policy.BusinessHours) == 0 {
+	if len(policy.BusinessHours) == 0 {
 		// 无业务时间配置，使用24小时制
 		return startTime.Add(time.Duration(policy.ResolutionTimeMinutes) * time.Minute)
 	}

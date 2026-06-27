@@ -777,6 +777,10 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 		return
 	}
 	existing, err := s.client.User.Query().Where(user.UsernameEQ("admin"), user.TenantIDEQ(t.ID)).First(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		s.sugar.Warnw("query admin user failed", "error", err)
+		return
+	}
 
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
 	if adminPassword == "" {
@@ -1999,10 +2003,8 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 	}
 
 	permByCode := make(map[string]int, len(perms))
-	allPermIDs := make([]int, 0, len(perms))
 	for _, p := range perms {
 		permByCode[p.Code] = p.ID
-		allPermIDs = append(allPermIDs, p.ID)
 	}
 
 	// 定义角色权限映射
@@ -2265,11 +2267,6 @@ func allExcept(exclude []string) []string {
 		}
 	}
 	return result
-}
-
-// strPtr 字符串指针辅助函数
-func strPtr(s string) *string {
-	return &s
 }
 
 func (s *Seeder) seedServiceCatalog(ctx context.Context) {
@@ -3036,15 +3033,15 @@ func (s *Seeder) seedKnowledgeArticles(ctx context.Context) {
 
 	// 如果没有分类，创建默认分类
 	if len(categoryIDs) == 0 {
-		defaultCat, err := s.client.TicketCategory.Create().
+		_, defaultErr := s.client.TicketCategory.Create().
 			SetName("默认分类").
 			SetDescription("默认知识库分类").
 			SetTenantID(t.ID).
 			SetCreatedAt(time.Now()).
 			SetUpdatedAt(time.Now()).
 			Save(ctx)
-		if err == nil {
-			categoryIDs = append(categoryIDs, defaultCat.ID)
+		if defaultErr != nil {
+			s.sugar.Warnw("seed default knowledge category failed", "error", defaultErr)
 		}
 	}
 

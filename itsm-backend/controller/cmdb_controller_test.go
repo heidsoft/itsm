@@ -2,7 +2,6 @@ package controller
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -57,22 +56,6 @@ func setupTestCMDBController(t *testing.T) (*gin.Engine, *CMDBController, *ent.C
 	r.DELETE("/api/v1/cis/:id", cmdbController.DeleteCI)
 
 	return r, cmdbController, client
-}
-
-func createTestTenantForCMDB(t *testing.T, client *ent.Client) *ent.Tenant {
-	ctx := context.Background()
-	uniqueID := uniqueTestID()
-
-	// 创建测试租户
-	tenant, err := client.Tenant.Create().
-		SetName("Test Tenant CMDB").
-		SetCode("CMDB" + uniqueID).
-		SetDomain("cmdb-test.com").
-		SetStatus("active").
-		Save(ctx)
-	require.NoError(t, err)
-
-	return tenant
 }
 
 func TestCMDBController_CreateCI(t *testing.T) {

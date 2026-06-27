@@ -196,7 +196,7 @@ func (e *CustomProcessEngine) TaskService() TaskService {
 // StartProcess 启动流程实例
 func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitionKey string, businessKey string, variables map[string]interface{}) (*ent.ProcessInstance, error) {
 	// 1. 获取租户ID
-	tenantID, _ := ctx.Value("bpmn_tenant_id").(int)
+	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
 
 	// 2. 获取流程定义
 	query := e.client.ProcessDefinition.Query().
@@ -270,7 +270,7 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	// 1. 获取任务
 	taskQuery := e.client.ProcessTask.Query().
 		Where(processtask.TaskID(taskID))
-	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
 		taskQuery = taskQuery.Where(processtask.TenantID(tenantID))
 	}
 	task, err := taskQuery.First(ctx)
@@ -828,7 +828,7 @@ func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanc
 	// 1. 获取流程实例
 	query := e.client.ProcessInstance.Query().
 		Where(processinstance.ProcessInstanceID(processInstanceID))
-	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
 		query = query.Where(processinstance.TenantID(tenantID))
 	}
 	instance, err := query.First(ctx)
@@ -877,7 +877,7 @@ func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstance
 	// 1. 获取流程实例
 	query := e.client.ProcessInstance.Query().
 		Where(processinstance.ProcessInstanceID(processInstanceID))
-	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
 		query = query.Where(processinstance.TenantID(tenantID))
 	}
 	instance, err := query.First(ctx)
@@ -923,7 +923,7 @@ func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInsta
 	// 1. 获取流程实例
 	query := e.client.ProcessInstance.Query().
 		Where(processinstance.ProcessInstanceID(processInstanceID))
-	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
 		query = query.Where(processinstance.TenantID(tenantID))
 	}
 	instance, err := query.First(ctx)
@@ -1215,7 +1215,7 @@ func (s *bpmnProcessDefinitionService) getNextVersion(ctx context.Context, key s
 }
 
 func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context, key string, version string) (*ent.ProcessDefinition, error) {
-	tenantID, _ := ctx.Value("bpmn_tenant_id").(int)
+	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
 	query := s.client.ProcessDefinition.Query().
 		Where(processdefinition.Key(key)).
 		Where(processdefinition.Version(version))
@@ -1234,7 +1234,7 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context,
 func (s *bpmnProcessDefinitionService) GetProcessDefinitionByID(ctx context.Context, id int) (*ent.ProcessDefinition, error) {
 	query := s.client.ProcessDefinition.Query().
 		Where(processdefinition.ID(id))
-	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
 		query = query.Where(processdefinition.TenantID(tenantID))
 	}
 	definition, err := query.First(ctx)
@@ -1246,7 +1246,7 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinitionByID(ctx context.Cont
 }
 
 func (s *bpmnProcessDefinitionService) GetLatestProcessDefinition(ctx context.Context, key string) (*ent.ProcessDefinition, error) {
-	tenantID, _ := ctx.Value("bpmn_tenant_id").(int)
+	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
 	query := s.client.ProcessDefinition.Query().
 		Where(processdefinition.Key(key)).
 		Where(processdefinition.IsLatest(true))
@@ -1360,7 +1360,7 @@ type bpmnProcessInstanceService struct {
 func (s *bpmnProcessInstanceService) GetProcessInstance(ctx context.Context, processInstanceID string) (*ent.ProcessInstance, error) {
 	query := s.client.ProcessInstance.Query().
 		Where(processinstance.ProcessInstanceID(processInstanceID))
-	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
 		query = query.Where(processinstance.TenantID(tenantID))
 	}
 	instance, err := query.First(ctx)
@@ -1502,7 +1502,7 @@ type bpmnTaskService struct {
 func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error) {
 	query := s.client.ProcessTask.Query().
 		Where(processtask.TaskID(taskID))
-	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
 		query = query.Where(processtask.TenantID(tenantID))
 	}
 	task, err := query.First(ctx)
@@ -1517,7 +1517,7 @@ func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.Proc
 func (s *bpmnTaskService) GetTaskByID(ctx context.Context, id int) (*ent.ProcessTask, error) {
 	query := s.client.ProcessTask.Query().
 		Where(processtask.ID(id))
-	if tenantID, _ := ctx.Value("bpmn_tenant_id").(int); tenantID > 0 {
+	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
 		query = query.Where(processtask.TenantID(tenantID))
 	}
 	task, err := query.First(ctx)
@@ -1537,7 +1537,7 @@ func (s *bpmnTaskService) CompleteTaskByID(ctx context.Context, id int, variable
 		return fmt.Errorf("获取任务失败: %w", err)
 	}
 	// 如果上下文中有租户 ID，验证任务属于该租户
-	if tenantID := ctx.Value("bpmn_tenant_id"); tenantID != nil && tenantID.(int) > 0 {
+	if tenantID := ctx.Value(bpmn.BPMNTenantIDContextKey); tenantID != nil && tenantID.(int) > 0 {
 		if task.TenantID != tenantID.(int) {
 			return fmt.Errorf("任务不属于当前租户")
 		}
@@ -1554,7 +1554,7 @@ func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksR
 	if req.UserID > 0 {
 		tenantID := req.TenantID
 		if tenantID == 0 {
-			if v, ok := ctx.Value("bpmn_tenant_id").(int); ok {
+			if v, ok := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); ok {
 				tenantID = v
 			}
 		}
@@ -2068,7 +2068,7 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 	}
 
 	// 并行会签：一人拒绝则全部拒绝
-	if approvalType == "parallel" && req.Approved == false {
+	if approvalType == "parallel" && !req.Approved {
 		// 取消其他未完成的会签任务
 		subTasks, _ := s.client.ProcessTask.Query().
 			Where(processtask.ParentTaskID(parentTaskID)).

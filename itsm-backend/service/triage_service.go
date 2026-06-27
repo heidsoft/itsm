@@ -64,18 +64,6 @@ type TriageService struct {
 	defaultAssignees map[string]int
 }
 
-// Category priority mapping
-var defaultPriorities = map[string]string{
-	"database":    "high",
-	"network":     "high",
-	"server":      "medium",
-	"application": "medium",
-	"security":    "critical",
-	"storage":     "high",
-	"user_access": "medium",
-	"general":     "low",
-}
-
 // Default assignee IDs by category
 var defaultAssignees = map[string]int{
 	"database":    101,

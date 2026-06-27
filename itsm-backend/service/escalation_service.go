@@ -239,50 +239,12 @@ func (e *EscalationService) resolveNotifyUsers(ctx context.Context, level *Escal
 	return out
 }
 
-// escalateToLevel 升级到指定级别
-func (e *EscalationService) escalateToLevel(ctx context.Context, alert *ent.SLAAlertHistory, rule *ent.SLAAlertRule, level int, tenantID int) error {
-	// 更新升级级别
-	_, err := e.client.SLAAlertHistory.UpdateOneID(alert.ID).
-		SetEscalationLevel(level).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to update escalation level: %w", err)
-	}
-
-	// 获取通知用户列表
-	notifyUsers := e.getEscalationNotifyUsers(ctx, level, rule)
-	if len(notifyUsers) == 0 {
-		return nil
-	}
-
-	// 发送升级通知
-	if e.notificationSvc != nil {
-		content := fmt.Sprintf("【SLA升级告警】工单 #%s (%s) 已升级至级别 %d，请关注处理！",
-			alert.TicketNumber, alert.TicketTitle, level)
-
-		for _, userID := range notifyUsers {
-			err := e.notificationSvc.SendNotification(ctx, alert.TicketID, &dto.SendTicketNotificationRequest{
-				UserIDs: []int{userID},
-				Type:    "sla_escalated",
-				Channel: "in_app",
-				Content: content,
-			}, tenantID)
-			if err != nil {
-				e.logger.Errorw("Failed to send SLA escalation notification", "user_id", userID, "error", err)
-			}
-		}
-	}
-
-	e.logger.Infow("Alert escalated", "alert_id", alert.ID, "ticket_number", alert.TicketNumber, "escalation_level", level)
-	return nil
-}
-
 // getEscalationNotifyUsers 获取指定升级级别的通知用户
 func (e *EscalationService) getEscalationNotifyUsers(ctx context.Context, level int, rule *ent.SLAAlertRule) []int {
 	var userIDs []int
 
 	// 从预警规则获取通知用户
-	if rule.EscalationLevels != nil && len(rule.EscalationLevels) > 0 {
+	if len(rule.EscalationLevels) > 0 {
 		for _, levelConfig := range rule.EscalationLevels {
 			if lvl, ok := levelConfig["level"].(float64); ok && int(lvl) == level {
 				if users, ok := levelConfig["notify_users"].([]interface{}); ok {

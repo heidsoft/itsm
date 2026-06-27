@@ -77,14 +77,14 @@ func (c *GuidanceClient) Triage(ctx context.Context, title, description string, 
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Guidance sidecar call failed: %w", err)
+		return nil, fmt.Errorf("guidance sidecar call failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp map[string]interface{}
 		json.NewDecoder(resp.Body).Decode(&errResp)
-		return nil, fmt.Errorf("Guidance sidecar error: %v", errResp)
+		return nil, fmt.Errorf("guidance sidecar error: %v", errResp)
 	}
 
 	var result GuidanceTriageResponse
@@ -107,12 +107,12 @@ func (c *GuidanceClient) HealthCheck(ctx context.Context) error {
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Guidance sidecar unavailable: %w", err)
+		return fmt.Errorf("guidance sidecar unavailable: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Guidance sidecar unhealthy: status %d", resp.StatusCode)
+		return fmt.Errorf("guidance sidecar unhealthy: status %d", resp.StatusCode)
 	}
 
 	return nil

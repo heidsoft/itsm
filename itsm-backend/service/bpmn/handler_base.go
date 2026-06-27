@@ -7,6 +7,14 @@ import (
 	"itsm-backend/ent"
 )
 
+// bpmnTenantIDKey is the unexported context key used to store the BPMN tenant ID.
+type bpmnTenantIDKey struct{}
+
+// BPMNTenantIDContextKey is the exported context key for the BPMN tenant ID.
+// Using a typed key (instead of a plain string) prevents collisions with other
+// packages that store values under the same context.
+var BPMNTenantIDContextKey = bpmnTenantIDKey{}
+
 // ServiceTaskHandlerInterface 服务任务处理器接口
 // 定义所有服务任务处理器需要实现的方法
 type ServiceTaskHandlerInterface interface {

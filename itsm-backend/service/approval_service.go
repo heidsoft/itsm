@@ -59,7 +59,7 @@ func (s *ApprovalService) CreateWorkflow(ctx context.Context, req *dto.CreateApp
 		if node.TimeoutHours != nil {
 			nodeMap["timeout_hours"] = *node.TimeoutHours
 		}
-		if node.Conditions != nil && len(node.Conditions) > 0 {
+		if len(node.Conditions) > 0 {
 			conditionsMap := make([]map[string]interface{}, len(node.Conditions))
 			for j, cond := range node.Conditions {
 				conditionsMap[j] = map[string]interface{}{
@@ -155,7 +155,7 @@ func (s *ApprovalService) UpdateWorkflow(ctx context.Context, id int, req *dto.U
 			if node.TimeoutHours != nil {
 				nodeMap["timeout_hours"] = *node.TimeoutHours
 			}
-			if node.Conditions != nil && len(node.Conditions) > 0 {
+			if len(node.Conditions) > 0 {
 				conditionsMap := make([]map[string]interface{}, len(node.Conditions))
 				for j, cond := range node.Conditions {
 					conditionsMap[j] = map[string]interface{}{
@@ -507,7 +507,7 @@ func (s *ApprovalService) handleApprovalRejected(ctx context.Context, record *en
 
 // canPerformAction 检查在指定审批级别是否允许执行该操作
 func (s *ApprovalService) canPerformAction(workflow *ent.ApprovalWorkflow, level int, action string) bool {
-	if workflow.Nodes == nil || len(workflow.Nodes) == 0 {
+	if len(workflow.Nodes) == 0 {
 		// 如果没有节点配置，默认允许所有操作
 		return true
 	}

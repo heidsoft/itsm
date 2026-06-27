@@ -3,7 +3,6 @@ package dingtalk
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"itsm-backend/connector"
@@ -12,7 +11,6 @@ import (
 type DingTalk struct {
 	client    *Client
 	cfg       connector.Config
-	mu        sync.RWMutex
 	startedAt time.Time
 }
 
@@ -41,14 +39,13 @@ func (d *DingTalk) Manifest() connector.Manifest {
 }
 
 func (d *DingTalk) Init(_ context.Context, cfg connector.Config) error {
-	appKey, _ := cfg.Credentials["app_key"]
-	appSecret, _ := cfg.Credentials["app_secret"]
-	agentID, _ := cfg.Credentials["agent_id"]
+	appKey := cfg.Credentials["app_key"]
+	appSecret := cfg.Credentials["app_secret"]
 	if appKey == "" || appSecret == "" {
 		return fmt.Errorf("dingtalk: credentials.app_key and app_secret are required")
 	}
 	baseURL, _ := cfg.Settings["base_url"].(string)
-	d.client = NewClient(appKey, appSecret, agentID, baseURL)
+	d.client = NewClient(appKey, appSecret, cfg.Credentials["agent_id"], baseURL)
 	d.cfg = cfg
 	d.startedAt = time.Now()
 	return nil

@@ -8,6 +8,7 @@ import (
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/service/bpmn"
 
 	"go.uber.org/zap"
 )
@@ -28,12 +29,12 @@ func NewBPMNTenantService(client *ent.Client, logger *zap.SugaredLogger) *BPMNTe
 
 // FilterByTenantID 根据租户ID过滤查询
 func (s *BPMNTenantService) FilterByTenantID(ctx context.Context, tenantID int) context.Context {
-	return context.WithValue(ctx, "bpmn_tenant_id", tenantID)
+	return context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
 }
 
 // GetTenantIDFromContext 从上下文获取租户ID
 func (s *BPMNTenantService) GetTenantIDFromContext(ctx context.Context) (int, bool) {
-	tenantID, ok := ctx.Value("bpmn_tenant_id").(int)
+	tenantID, ok := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
 	return tenantID, ok
 }
 

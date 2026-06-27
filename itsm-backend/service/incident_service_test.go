@@ -288,14 +288,14 @@ func TestIncidentService_ListIncidents_Filters(t *testing.T) {
 	assert.Len(t, responses, 3)
 
 	// 测试优先级过滤
-	responses, total, err = service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
+	_, total, err = service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
 		"priority": "high",
 	})
 	require.NoError(t, err)
 	assert.Equal(t, 3, total) // 3 个状态 × 1 个优先级
 
 	// 测试组合过滤
-	responses, total, err = service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
+	_, total, err = service.ListIncidents(ctx, testTenant.ID, 1, 10, map[string]interface{}{
 		"status":   "in_progress",
 		"priority": "high",
 	})

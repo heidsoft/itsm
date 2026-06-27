@@ -144,7 +144,7 @@ func (s *TicketSLAService) GetTicketSLAInfo(ctx context.Context, ticketID int, t
 
 	// 检查警告状态（默认30分钟警告）
 	if !responseBreached && !resolutionBreached && responseDeadline != nil {
-		timeLeft := responseDeadline.Sub(time.Now())
+		timeLeft := time.Until(*responseDeadline)
 		if timeLeft.Minutes() < 30 {
 			slaStatus = "warning"
 		}

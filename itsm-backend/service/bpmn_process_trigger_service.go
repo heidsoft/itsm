@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/service/bpmn"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -88,7 +89,7 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 	variables := s.buildProcessVariables(req, definition)
 
 	// 6. 设置租户上下文并启动流程
-	triggerCtx := context.WithValue(ctx, "bpmn_tenant_id", req.TenantID)
+	triggerCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, req.TenantID)
 	instance, err := s.processEngine.StartProcess(triggerCtx, processDefKey, businessKey, variables)
 	if err != nil {
 		return nil, errors.Wrap(err, "启动流程失败")

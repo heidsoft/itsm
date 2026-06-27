@@ -62,7 +62,7 @@ func (h *TicketServiceTaskHandler) GetHandlerID() string {
 }
 
 func (h *TicketServiceTaskHandler) getTenantID(ctx context.Context, variables map[string]interface{}) int {
-	if tenantID, ok := ctx.Value("bpmn_tenant_id").(int); ok && tenantID > 0 {
+	if tenantID, ok := ctx.Value(BPMNTenantIDContextKey).(int); ok && tenantID > 0 {
 		return tenantID
 	}
 	if variables == nil {

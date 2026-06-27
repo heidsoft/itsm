@@ -14,7 +14,6 @@ import (
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/rolepermission"
-	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 
 	"github.com/gin-gonic/gin"
@@ -1077,108 +1076,6 @@ func getPermissionFromPath(method, path string) *Permission {
 	}
 
 	return nil
-}
-
-// checkResourceLevelPermission 检查资源级别的权限
-func checkResourceLevelPermission(role, resource, action string, userID int, c *gin.Context) bool {
-	// 对于某些资源，需要检查用户是否只能访问自己的数据
-	switch resource {
-	case "ticket":
-		return checkTicketPermission(role, action, userID, c)
-	case "user":
-		return checkUserPermission(role, action, userID, c)
-	default:
-		return true
-	}
-}
-
-// checkTicketPermission 检查工单权限
-func checkTicketPermission(role, action string, userID int, c *gin.Context) bool {
-	// 具备全局工单访问权限的角色
-	if role == "admin" || role == "agent" || role == "manager" || role == "technician" {
-		return true
-	}
-
-	// 最终用户（end_user）只能访问自己创建的工单
-	if role == "end_user" {
-		// 创建自己的工单：允许 POST /api/v1/tickets
-		if c.Request.Method == "POST" && strings.HasPrefix(c.Request.URL.Path, "/api/v1/tickets") {
-			return true
-		}
-		// 获取当前访问路径
-		path := c.Request.URL.Path
-		// 检查是否是获取自己工单的列表（GET /tickets）
-		if c.Request.Method == "GET" && (path == "/api/v1/tickets" || strings.HasPrefix(path, "/api/v1/tickets?")) {
-			// end_user 可以查看自己的工单列表（通过查询过滤）
-			return true
-		}
-		// 其他操作需要检查工单的请求人是否为当前用户
-		ticketIDStr := c.Param("id")
-		if ticketIDStr != "" {
-			ticketID, err := strconv.Atoi(ticketIDStr)
-			if err != nil {
-				return false
-			}
-			return checkTicketOwnership(ticketID, userID, c)
-		}
-		// 当未提供具体工单ID时，默认拒绝（例如尝试访问他人列表）
-		return false
-	}
-
-	// 其他角色默认允许（已通过资源操作权限检查）
-	return true
-}
-
-// checkUserPermission 检查用户权限
-func checkUserPermission(role, action string, userID int, c *gin.Context) bool {
-	// 管理员可以访问所有用户
-	if role == "admin" {
-		return true
-	}
-	// 经理可读取所有用户基本信息（仅限 read 操作）
-	if role == "manager" && action == "read" {
-		return true
-	}
-
-	// 对 /auth/me 端点，允许任何已登录用户查看自己的信息
-	path := c.Request.URL.Path
-	if path == "/api/v1/auth/me" {
-		return true
-	}
-
-	// 其他角色只能访问自己的用户信息
-	targetUserIDStr := c.Param("id")
-	if targetUserIDStr != "" {
-		targetUserID, err := strconv.Atoi(targetUserIDStr)
-		if err != nil {
-			return false
-		}
-		return targetUserID == userID
-	}
-
-	// 对 /api/v1/users 列表等未指定ID的访问，非管理员/经理默认拒绝
-	return false
-}
-
-// checkTicketOwnership 检查工单所有权
-func checkTicketOwnership(ticketID, userID int, c *gin.Context) bool {
-	// 从上下文中获取Ent客户端
-	clientAny, exists := c.Get("client")
-	if !exists {
-		return false
-	}
-	client, ok := clientAny.(*ent.Client)
-	if !ok || client == nil {
-		return false
-	}
-	// 查询工单并校验请求人
-	t, err := client.Ticket.Query().
-		Where(ticket.ID(ticketID)).
-		Only(context.Background())
-	if err != nil {
-		return false
-	}
-	return t.RequesterID == userID
 }
 
 // matchPath 匹配路径（支持通配符）

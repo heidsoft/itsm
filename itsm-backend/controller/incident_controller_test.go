@@ -1,19 +1,17 @@
 package controller
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/require"
 
-	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
 
@@ -40,36 +38,6 @@ func setupTestIncidentController(t *testing.T) (*gin.Engine, *IncidentController
 	r.GET("/api/v1/incidents", incidentController.ListIncidents)
 
 	return r, incidentController
-}
-
-func createTestTenantAndUserForIncident(t *testing.T, client *ent.Client) (*ent.Tenant, *ent.User) {
-	ctx := context.Background()
-	uniqueID := uniqueTestID()
-
-	// 创建测试租户
-	tenant, err := client.Tenant.Create().
-		SetName("Test Tenant").
-		SetCode("TEST" + uniqueID).
-		SetDomain("test.com").
-		SetStatus("active").
-		Save(ctx)
-	require.NoError(t, err)
-
-	// 创建测试用户
-	user, err := client.User.Create().
-		SetUsername("testuser" + uniqueID).
-		SetEmail("test" + uniqueID + "@example.com").
-		SetPasswordHash("hashedpassword").
-		SetName("Test User").
-		SetDepartment("IT").
-		SetPhone("1234567890").
-		SetActive(true).
-		SetRole("agent").
-		SetTenantID(tenant.ID).
-		Save(ctx)
-	require.NoError(t, err)
-
-	return tenant, user
 }
 
 func TestIncidentController_ListIncidents(t *testing.T) {
