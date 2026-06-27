@@ -75,6 +75,20 @@ jobs:
           cache: 'npm'
           cache-dependency-path: itsm-frontend/package-lock.json
 
+      - name: Patch eslint version for release build
+        working-directory: ./itsm-frontend
+        # eslint v10 was bumped by dependabot but eslint-config-next@15.x has
+        # not caught up yet: it still passes the removed `useEslintrc` /
+        # `extensions` options into ESLint, causing build to fail with
+        #   `ESLint: Invalid Options: - Unknown options: useEslintrc, extensions
+        #    - 'extensions' has been removed.`
+        # Patch package.json in-place to pin eslint to ^9 for this release
+        # build ONLY; the change is in the runner's working tree and is never
+        # committed back. Once eslint-config-next supports eslint v10, drop
+        # this step and let dependabot drive the upgrade.
+        run: |
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.devDependencies.eslint='^9.0.0';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
+
       - name: Install dependencies
         working-directory: ./itsm-frontend
         # eslint v10 (from dependabot) is not yet supported by eslint-config-next@15.x;
@@ -84,17 +98,16 @@ jobs:
 
       - name: Build
         working-directory: ./itsm-frontend
-        # NEXT_DISABLE_ESLINT=1 is a release-only escape hatch: eslint v10.5.0 (from
-        # dependabot) is incompatible with eslint-config-next@15.x which still calls
-        # removed `useEslintrc`/`extensions` options. We do not touch
-        # next.config.ts (`eslint.ignoreDuringBuilds: false` is the project's
-        # P0 policy) so local dev/build still surfaces lint errors. Once
-        # eslint-config-next supports eslint v10, drop this env var.
+        # eslint is pinned to v9 by the "Patch eslint version for release build"
+        # step above, so the project's `eslint.ignoreDuringBuilds: false` P0
+        # policy in next.config.ts stays in effect and the build surfaces
+        # lint errors normally (we do NOT set NEXT_DISABLE_ESLINT here, since
+        # Next.js 15 ignores it). Once eslint-config-next supports eslint v10,
+        # drop the patch step.
         run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8090
           NODE_OPTIONS: --max-old-space-size=4096
-          NEXT_DISABLE_ESLINT: '1'
 
       - name: Verify standalone output
         working-directory: ./itsm-frontend
