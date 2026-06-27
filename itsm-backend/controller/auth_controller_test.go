@@ -18,7 +18,6 @@ import (
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/mattn/go-sqlite3" // 导入 sqlite3 驱动
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"

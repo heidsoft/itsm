@@ -67,9 +67,13 @@ jobs:
           go build ./... 2>&1 | tail -5
 
       - name: Run staticcheck
+        # Pin to v0.6.1. `staticcheck@latest` (v0.7.0) trips over
+        # ent-generated package layouts where a directory name collides
+        # with a sibling file (migrations/passwordresettoken + migrations/
+        # passwordresettoken.go). v0.5.x is too old to build on Go 1.25.
         run: |
           cd itsm-backend
-          go run honnef.co/go/tools/cmd/staticcheck@latest ./...
+          go run honnef.co/go/tools/cmd/staticcheck@v0.6.1 ./...
 
       - name: Code quality checks
         run: |
