@@ -70,6 +70,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # Next.js
+.next/
 itsm-frontend/.next/
 itsm-frontend/out/
 itsm-frontend/build/
