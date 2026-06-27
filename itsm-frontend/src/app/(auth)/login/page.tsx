@@ -88,6 +88,24 @@ function LoginForm() {
         <Text className='!text-gray-500 !text-sm'>{t('auth.login.subtitle')}</Text>
       </div>
 
+      {/* 默认账号提示：开发环境使用 admin/admin123，生产环境必须修改 */}
+      {process.env.NODE_ENV !== 'production' && (
+        <Alert
+          title='开发环境默认账号'
+          description={
+            <span>
+              用户名：<strong>admin</strong>　密码：<strong>admin123</strong>
+              <br />
+              生产环境部署前必须修改默认密码、JWT_SECRET、数据库密码。
+            </span>
+          }
+          type='info'
+          className='mb-5'
+          showIcon
+          closable
+        />
+      )}
+
       {/* 会话过期提示 */}
       {isExpired && (
         <Alert
