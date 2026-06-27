@@ -163,6 +163,12 @@ func NewApplication() *Application {
 	releaseService := service.NewReleaseService(client, sugar)
 	assetService := service.NewAssetService(client, sugar)
 	assetLicenseService := service.NewAssetLicenseService(client, sugar)
+	// CMDB Services
+	ciTypeService := service.NewCITypeService(client, sugar)
+	ciAttributeDefinitionService := service.NewCIAttributeDefinitionService(client, sugar)
+	configurationItemService := service.NewConfigurationItemService(client, sugar)
+	ciRelationshipService := service.NewCIRelationshipService(client, sugar)
+
 
 	// LLM/Embedding/VectorStore
 	var embedder service.Embedder
@@ -271,6 +277,9 @@ func NewApplication() *Application {
 	provisioningController := controller.NewProvisioningController(provisioningService)
 
 	// ProblemController and ChangeController removed - using Handlers instead
+	// CMDB Controller
+	cmdbController := controller.NewCMDBController(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService)
+
 
 	// Release & Asset Management Controllers
 	releaseController := controller.NewReleaseController(sugar, releaseService)
@@ -521,6 +530,8 @@ func NewApplication() *Application {
 		BPMNDashboardController:         bpmnDashboardController,
 		BPMNMonitoringController:        bpmnMonitoringController,
 		A2UITicketController:            a2uiTicketController,
+		CMDBController:                  cmdbController,
+
 		DashboardHandler:                dashboardHandler,
 		ProjectController:               projectController,
 		ApplicationController:           applicationController,

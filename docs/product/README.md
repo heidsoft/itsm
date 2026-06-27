@@ -5,6 +5,7 @@
 ## 当前入口
 
 - [开源发布能力说明](./open-source-release-capability.md)
+- [分阶段完善总控计划](./phased-improvement-plan.md)
 - [工作流控制台诊断与设计](./workflow-console-diagnosis-and-design.md)
 
 ## 维护规则

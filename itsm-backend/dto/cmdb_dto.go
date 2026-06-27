@@ -56,6 +56,8 @@ type ConfigurationItemResponse struct {
 	TenantID        int                         `json:"tenantId"`
 	CreatedAt       time.Time                   `json:"createdAt"`
 	UpdatedAt       time.Time                   `json:"updatedAt"`
+	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
+	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 	RelatedItems    []ConfigurationItemResponse `json:"relatedItems,omitempty"`
 	ParentItems     []ConfigurationItemResponse `json:"parentItems,omitempty"`
 }
@@ -166,6 +168,8 @@ type CIResponse struct {
 	TenantID           int                    `json:"tenantId"`
 	CreatedAt          time.Time              `json:"createdAt"`
 	UpdatedAt          time.Time              `json:"updatedAt"`
+	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
+	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // ListCIsRequest 获取配置项列表请求
@@ -264,6 +268,8 @@ type CloudServiceResponse struct {
 	TenantID         int                    `json:"tenantId"`
 	CreatedAt        time.Time              `json:"createdAt"`
 	UpdatedAt        time.Time              `json:"updatedAt"`
+	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
+	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // CloudAccount DTOs
@@ -287,6 +293,8 @@ type CloudAccountResponse struct {
 	TenantID        int       `json:"tenantId"`
 	CreatedAt       time.Time `json:"createdAt"`
 	UpdatedAt       time.Time `json:"updatedAt"`
+	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
+	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // CloudResource DTOs
@@ -307,6 +315,8 @@ type CloudResourceResponse struct {
 	TenantID       int                    `json:"tenantId"`
 	CreatedAt      time.Time              `json:"createdAt"`
 	UpdatedAt      time.Time              `json:"updatedAt"`
+	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
+	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // RelationshipType DTOs
@@ -319,6 +329,8 @@ type RelationshipTypeResponse struct {
 	TenantID    int       `json:"tenantId"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
+	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
+	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // Discovery DTOs
@@ -340,6 +352,8 @@ type DiscoverySourceResponse struct {
 	TenantID    int       `json:"tenantId"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
+	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
+	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 type DiscoveryJobRequest struct {
@@ -356,6 +370,8 @@ type DiscoveryJobResponse struct {
 	TenantID   int                    `json:"tenantId"`
 	CreatedAt  time.Time              `json:"createdAt"`
 	UpdatedAt  time.Time              `json:"updatedAt"`
+	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
+	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 type DiscoveryResultResponse struct {
@@ -370,6 +386,8 @@ type DiscoveryResultResponse struct {
 	TenantID     int                    `json:"tenantId"`
 	CreatedAt    time.Time              `json:"createdAt"`
 	UpdatedAt    time.Time              `json:"updatedAt"`
+	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
+	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // Reconciliation DTOs

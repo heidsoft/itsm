@@ -5,6 +5,7 @@ import { Form, Input, Select, Button, Card, Space, Spin, message } from 'antd';
 import { Send, Bot, CheckCircle } from 'lucide-react';
 import type { A2UIComponent, ValueDef, OptionItem } from '@/types/a2ui';
 import { getValueByPath, setValueByPath } from '@/types/a2ui';
+import { clearAuthStorage, isAuthenticated } from '@/lib/auth/token-storage';
 
 // 本地类型定义（避免循环引用）
 interface A2UIDataModel {
@@ -296,19 +297,16 @@ export function A2UIFormRenderer() {
     });
   }, []);
 
-  // 获取认证token
+  // 认证由后端 httpOnly cookie 管理；前端不读取 token 值。
   const getAuthHeaders = (): HeadersInit => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     return {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
   };
 
   // 检查是否已登录
   const checkAuth = (): boolean => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-    if (!token) {
+    if (!isAuthenticated()) {
       message.error('请先登录后再使用此功能');
       return false;
     }
@@ -329,14 +327,14 @@ export function A2UIFormRenderer() {
       const res = await fetch('/api/v1/a2ui/ticket/form', {
         method: 'POST',
         headers: getAuthHeaders(),
+        credentials: 'include',
         body: JSON.stringify({ intent: userIntent, surfaceId }),
       });
 
       // 检查HTTP状态码
       if (res.status === 401) {
         message.error('登录已过期，请重新登录');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        clearAuthStorage();
         return;
       }
       if (res.status === 403) {
@@ -420,14 +418,14 @@ export function A2UIFormRenderer() {
         const res = await fetch('/api/v1/a2ui/ticket/action', {
           method: 'POST',
           headers: getAuthHeaders(),
+          credentials: 'include',
           body: JSON.stringify({ action: actionName, surfaceId, context }),
         });
 
         // 检查HTTP状态码
         if (res.status === 401) {
           message.error('登录已过期，请重新登录');
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
+          clearAuthStorage();
           return;
         }
         if (res.status === 403) {

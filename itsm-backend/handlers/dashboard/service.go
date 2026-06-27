@@ -1,7 +1,7 @@
 package dashboard
 
 import (
-	"time"
+	"errors"
 )
 
 // Service handles SLA dashboard business logic
@@ -110,82 +110,7 @@ type FullDashboardResponse struct {
 
 // GetSLADashboard returns all SLA dashboard data
 func (s *Service) GetSLADashboard() (*FullDashboardResponse, error) {
-	// This is a simplified implementation with realistic mock data
-	// In production, this would query the database and compute actual metrics
-
-	now := time.Now()
-
-	response := &FullDashboardResponse{
-		Data: SLAData{
-			TotalTickets:      152,
-			OpenTickets:       12,
-			InProgressTickets: 8,
-			ResolvedTickets:   132,
-			AvgResponseTime:   2.5,
-			AvgResolutionTime: 4.8,
-			SLAComplianceRate: 92.5,
-			BreachedTickets:   3,
-			LastUpdated:       now.Format("15:04:05"),
-		},
-		Charts: ChartData{
-			TrendData: []TrendPoint{
-				{Date: "2025-10-25", Open: 15, InProgress: 10, Resolved: 25, Closed: 30},
-				{Date: "2025-10-26", Open: 12, InProgress: 8, Resolved: 28, Closed: 32},
-				{Date: "2025-10-27", Open: 10, InProgress: 6, Resolved: 22, Closed: 28},
-				{Date: "2025-10-28", Open: 8, InProgress: 5, Resolved: 20, Closed: 25},
-				{Date: "2025-10-29", Open: 6, InProgress: 4, Resolved: 18, Closed: 22},
-				{Date: "2025-10-30", Open: 5, InProgress: 3, Resolved: 15, Closed: 20},
-				{Date: "2025-10-31", Open: 4, InProgress: 2, Resolved: 12, Closed: 18},
-			},
-			IncidentDistribution: Distribution{
-				Categories: []Category{
-					{Name: "incident", Value: 85, Percent: 55.9},
-					{Name: "problem", Value: 35, Percent: 23.0},
-					{Name: "change", Value: 15, Percent: 9.9},
-					{Name: "service_request", Value: 17, Percent: 11.2},
-				},
-			},
-			ResponseTimeBuckets: []Bucket{
-				{Range: "0-1h", TicketCount: 45, Percentage: 29.6},
-				{Range: "1-2h", TicketCount: 38, Percentage: 25.0},
-				{Range: "2-4h", TicketCount: 35, Percentage: 23.0},
-				{Range: "4-8h", TicketCount: 20, Percentage: 13.2},
-				{Range: "8h+", TicketCount: 14, Percentage: 9.2},
-			},
-			TeamWorkload: []TeamMember{
-				{Name: "张三", AssignedTickets: 12, CompletionRate: 88.5},
-				{Name: "李四", AssignedTickets: 10, CompletionRate: 92.0},
-				{Name: "王五", AssignedTickets: 15, CompletionRate: 85.2},
-				{Name: "赵六", AssignedTickets: 8, CompletionRate: 95.1},
-			},
-			SLATargets: []SLATarget{
-				{Name: "SLA-P0-紧急", CurrentPct: 100.0, TargetPct: 99.0, Status: "good"},
-				{Name: "SLA-P1-高", CurrentPct: 100.0, TargetPct: 99.0, Status: "good"},
-				{Name: "SLA-P2-中", CurrentPct: 100.0, TargetPct: 99.0, Status: "good"},
-				{Name: "SLA-P3-低", CurrentPct: 100.0, TargetPct: 99.0, Status: "good"},
-				{Name: "SLA-服务请求", CurrentPct: 100.0, TargetPct: 99.0, Status: "good"},
-				{Name: "SLA-变更", CurrentPct: 100.0, TargetPct: 99.0, Status: "good"},
-			},
-			PeakHours: []PeakHour{
-				{Hour: 9, TicketCount: 18},
-				{Hour: 10, TicketCount: 22},
-				{Hour: 11, TicketCount: 25},
-				{Hour: 14, TicketCount: 20},
-				{Hour: 15, TicketCount: 23},
-				{Hour: 16, TicketCount: 19},
-			},
-			SatisfactionTrend: []SatisfactionPoint{
-				{Month: "2025-05", AverageRating: 4.2, FeedbackCount: 28, MaxRating: 5, MinRating: 2},
-				{Month: "2025-06", AverageRating: 4.3, FeedbackCount: 32, MaxRating: 5, MinRating: 3},
-				{Month: "2025-07", AverageRating: 4.4, FeedbackCount: 35, MaxRating: 5, MinRating: 3},
-				{Month: "2025-08", AverageRating: 4.5, FeedbackCount: 40, MaxRating: 5, MinRating: 4},
-				{Month: "2025-09", AverageRating: 4.6, FeedbackCount: 45, MaxRating: 5, MinRating: 4},
-				{Month: "2025-10", AverageRating: 4.7, FeedbackCount: 50, MaxRating: 5, MinRating: 4},
-			},
-		},
-	}
-
-	return response, nil
+	return nil, errors.New("legacy SLA dashboard handler is not wired to real data; use /api/v1/dashboard/overview or /api/v1/sla/*")
 }
 
 // GetBasicDashboard returns simplified data (without charts)

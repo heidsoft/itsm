@@ -24,7 +24,7 @@ export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // 检查用户是否已登录（检查 localStorage 和 cookie 中的 token）
+    // Token 由后端 cookie 管理；不要从 localStorage/sessionStorage 读取 token。
     const checkAuth = () => {
       try {
         const cookieToken =
@@ -32,11 +32,7 @@ export default function HomePage() {
             .split('; ')
             .find(row => row.startsWith('auth-token=') || row.startsWith('access_token='))
             ?.split('=')[1] ?? null;
-        const localToken =
-          localStorage.getItem('access_token') || localStorage.getItem('auth-token');
-        const sessionToken =
-          sessionStorage.getItem('access_token') || sessionStorage.getItem('auth-token');
-        setIsLoggedIn(!!(cookieToken || localToken || sessionToken));
+        setIsLoggedIn(!!cookieToken);
       } catch {
         setIsLoggedIn(false);
       }

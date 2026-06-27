@@ -712,6 +712,66 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				assets.DELETE("/:id", middleware.RequirePermission("asset", "delete"), config.AssetController.DeleteAsset)
 			}
 		}
+		// ==================== CMDB ====================
+		if config.CMDBController != nil {
+			cmdb := tenant.(*gin.RouterGroup).Group("/cmdb")
+			{
+				// CI 类型管理
+				ciTypes := cmdb.Group("/ci-types")
+				ciTypes.Use(middleware.RequirePermission("cmdb_ci_type", "read"))
+				{
+					ciTypes.GET("", config.CMDBController.ListCITypes)
+					ciTypes.GET("/:id", config.CMDBController.GetCIType)
+					ciTypes.POST("", middleware.RequirePermission("cmdb_ci_type", "write"), config.CMDBController.CreateCIType)
+					ciTypes.PUT("/:id", middleware.RequirePermission("cmdb_ci_type", "write"), config.CMDBController.UpdateCIType)
+					ciTypes.DELETE("/:id", middleware.RequirePermission("cmdb_ci_type", "delete"), config.CMDBController.DeleteCIType)
+
+					// CI 类型属性定义
+					ciTypes.GET("/:ciTypeId/attributes", config.CMDBController.ListCIAttributeDefinitions)
+				}
+
+				// CI 属性定义管理
+				attributes := cmdb.Group("/attributes")
+				attributes.Use(middleware.RequirePermission("cmdb_ci_attribute", "read"))
+				{
+					attributes.GET("/:id", config.CMDBController.GetCIAttributeDefinition)
+					attributes.POST("", middleware.RequirePermission("cmdb_ci_attribute", "write"), config.CMDBController.CreateCIAttributeDefinition)
+					attributes.PUT("/:id", middleware.RequirePermission("cmdb_ci_attribute", "write"), config.CMDBController.UpdateCIAttributeDefinition)
+					attributes.DELETE("/:id", middleware.RequirePermission("cmdb_ci_attribute", "delete"), config.CMDBController.DeleteCIAttributeDefinition)
+				}
+
+				// 配置项管理
+				cis := cmdb.Group("/cis")
+				cis.Use(middleware.RequirePermission("cmdb_ci", "read"))
+				{
+					// 统计接口必须放在 /:id 之前
+					cis.GET("/stats", config.CMDBController.GetCIStats)
+					cis.GET("", config.CMDBController.ListCIs)
+					cis.GET("/:id", config.CMDBController.GetCI)
+					cis.POST("", middleware.RequirePermission("cmdb_ci", "write"), config.CMDBController.CreateCI)
+					cis.PUT("/:id", middleware.RequirePermission("cmdb_ci", "write"), config.CMDBController.UpdateCI)
+					cis.DELETE("/:id", middleware.RequirePermission("cmdb_ci", "delete"), config.CMDBController.DeleteCI)
+
+					// 配置项关系
+					cis.GET("/:ciId/relationships", config.CMDBController.ListCIRelationshipsByCIID)
+
+					// 影响分析
+					cis.GET("/:ciId/impact-analysis", config.CMDBController.GetCIImpactAnalysis)
+				}
+
+				// CI 关系管理
+				relationships := cmdb.Group("/relationships")
+				relationships.Use(middleware.RequirePermission("cmdb_relationship", "read"))
+				{
+					relationships.GET("", config.CMDBController.ListCIRelationships)
+					relationships.GET("/:id", config.CMDBController.GetCIRelationship)
+					relationships.POST("", middleware.RequirePermission("cmdb_relationship", "write"), config.CMDBController.CreateCIRelationship)
+					relationships.PUT("/:id", middleware.RequirePermission("cmdb_relationship", "write"), config.CMDBController.UpdateCIRelationship)
+					relationships.DELETE("/:id", middleware.RequirePermission("cmdb_relationship", "delete"), config.CMDBController.DeleteCIRelationship)
+				}
+			}
+		}
+
 
 		// ==================== Asset Licenses ====================
 		if config.AssetLicenseController != nil {
@@ -1280,57 +1340,61 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 		}
 
-		// ==================== Stub Routes for Missing APIs (Fallback when controllers are nil) ====================
-		// Stub handler for /api/v1/workflows
+		// ==================== Legacy Compatibility Routes ====================
+		// These old paths are kept only to return explicit guidance. They must
+		// not pretend that writes succeeded before a real backend is wired.
 		tenant.GET("/workflows", func(c *gin.Context) {
-			common.Success(c, gin.H{"workflows": []gin.H{}, "total": 0})
+			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/bpmn/process-definitions")
 		})
 		tenant.POST("/workflows", func(c *gin.Context) {
-			common.Success(c, gin.H{"id": "stub-workflow-" + time.Now().Format("20060102150405"), "status": "created"})
+			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/bpmn/process-definitions")
 		})
 
-		// Stub handler for /api/v1/bpmn/*
+		// Legacy /api/v1/bpmn/definitions path; canonical BPMN APIs are
+		// registered by BPMNWorkflowController under /api/v1/bpmn/process-*.
 		bpmn := tenant.(*gin.RouterGroup).Group("/bpmn")
 		{
 			bpmn.GET("/definitions", func(c *gin.Context) {
-				common.Success(c, gin.H{"definitions": []gin.H{}, "total": 0})
+				common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/bpmn/process-definitions")
 			})
 			bpmn.POST("/definitions", func(c *gin.Context) {
-				common.Success(c, gin.H{"id": "stub-bpmn-" + time.Now().Format("20060102150405"), "status": "created"})
+				common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/bpmn/process-definitions")
 			})
 			bpmn.GET("/definitions/:id", func(c *gin.Context) {
-				common.Success(c, gin.H{"id": c.Param("id"), "status": "active"})
+				common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/bpmn/process-definitions/"+c.Param("id"))
 			})
 			bpmn.PUT("/definitions/:id", func(c *gin.Context) {
-				common.Success(c, gin.H{"id": c.Param("id"), "status": "updated"})
+				common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/bpmn/process-definitions/"+c.Param("id"))
 			})
 		}
 
-		// Stub handler for /api/v1/services (legacy service catalog)
+		// Legacy service catalog path. Canonical APIs are /service-catalogs and
+		// /service-catalog-services.
 		tenant.GET("/services", func(c *gin.Context) {
-			common.Success(c, gin.H{"services": []gin.H{}, "total": 0})
+			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/service-catalogs")
 		})
 		tenant.POST("/services", func(c *gin.Context) {
-			common.Success(c, gin.H{"id": "stub-service-" + time.Now().Format("20060102150405"), "status": "created"})
+			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/service-catalogs")
 		})
 
-		// Stub handler for /api/v1/slas (legacy SLA - note: /sla is already registered, so use /slas for compatibility)
+		// Legacy SLA path. Canonical SLA APIs are registered under /sla.
 		tenant.GET("/slas", func(c *gin.Context) {
-			common.Success(c, gin.H{"slas": []gin.H{}, "total": 0})
+			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/sla/definitions")
 		})
 		tenant.POST("/slas", func(c *gin.Context) {
-			common.Success(c, gin.H{"id": "stub-sla-" + time.Now().Format("20060102150405"), "status": "created"})
+			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/sla/definitions")
 		})
 
-		// Stub handler for /api/v1/knowledge (legacy - note: /knowledge is already registered)
+		// Legacy knowledge path. Canonical knowledge APIs are registered under
+		// /knowledge/articles and /knowledge-articles.
 		tenant.GET("/knowledge", func(c *gin.Context) {
-			common.Success(c, gin.H{"articles": []gin.H{}, "total": 0})
+			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/knowledge/articles")
 		})
 		tenant.POST("/knowledge", func(c *gin.Context) {
-			common.Success(c, gin.H{"id": "stub-kb-" + time.Now().Format("20060102150405"), "status": "created"})
+			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/knowledge/articles")
 		})
 
-		// Stub handler for /api/v1/ticket-types
+		// Static ticket type lookup kept for old clients.
 		tenant.GET("/ticket-types", func(c *gin.Context) {
 			common.Success(c, gin.H{"types": []gin.H{
 				{"id": 1, "name": " Incident", "code": "incident"},
@@ -1340,7 +1404,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}, "total": 4})
 		})
 		tenant.POST("/ticket-types", func(c *gin.Context) {
-			common.Success(c, gin.H{"id": "stub-type-" + time.Now().Format("20060102150405"), "status": "created"})
+			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，工单类型由系统配置和分类接口维护")
 		})
 	}
 }

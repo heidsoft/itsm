@@ -1008,3 +1008,241 @@ func pqIntArray(ids []int) string {
 	b = append(b, '}')
 	return string(b)
 }
+
+// ToCITypeResponse 转换 CI 类型实体为响应
+func ToCITypeResponse(ciType *ent.CIType) *CITypeResponse {
+	if ciType == nil {
+		return nil
+	}
+	return &CITypeResponse{
+		ID:              ciType.ID,
+		Name:            ciType.Name,
+		Description:     ciType.Description,
+		Icon:            ciType.Icon,
+		Color:           ciType.Color,
+		AttributeSchema: ciType.AttributeSchema,
+		IsActive:        ciType.IsActive,
+		TenantID:        ciType.TenantID,
+		CreatedAt:       ciType.CreatedAt,
+		UpdatedAt:       ciType.UpdatedAt,
+	}
+}
+
+// ToCITypeResponseList 转换 CI 类型实体列表为响应列表
+func ToCITypeResponseList(ciTypes []*ent.CIType) []*CITypeResponse {
+	if ciTypes == nil {
+		return nil
+	}
+	res := make([]*CITypeResponse, len(ciTypes))
+	for i, ct := range ciTypes {
+		res[i] = ToCITypeResponse(ct)
+	}
+	return res
+}
+
+// ToCIAttributeDefinitionResponse 转换 CI 属性定义实体为响应
+func ToCIAttributeDefinitionResponse(attr *ent.CIAttributeDefinition) *CIAttributeDefinitionResponse {
+	if attr == nil {
+		return nil
+	}
+	return &CIAttributeDefinitionResponse{
+		ID:              attr.ID,
+// ToCIAttributeDefinitionResponse 转换 CI 属性定义实体为响应
+func ToCIAttributeDefinitionResponse(attr *ent.CIAttributeDefinition) *CIAttributeDefinitionResponse {
+	if attr == nil {
+		return nil
+	}
+	// 解析验证规则JSON字符串
+	var validationRules map[string]interface{}
+	if attr.ValidationRules != "" {
+		_ = json.Unmarshal([]byte(attr.ValidationRules), &validationRules)
+	}
+	return &CIAttributeDefinitionResponse{
+		ID:              attr.ID,
+		Name:            attr.Name,
+		DisplayName:     attr.DisplayName,
+		DataType:        attr.Type,
+		IsRequired:      attr.Required,
+		IsUnique:        attr.Unique,
+		DefaultValue:    attr.DefaultValue,
+		ValidationRules: validationRules,
+		CITypeID:        attr.CiTypeID,
+		IsActive:        attr.IsActive,
+		TenantID:        attr.TenantID,
+		CreatedAt:       attr.CreatedAt,
+		UpdatedAt:       attr.UpdatedAt,
+	}
+}
+
+		UpdatedAt:       attr.UpdatedAt,
+	}
+}
+// ToCIResponse 转换配置项实体为响应
+func ToCIResponse(ci *ent.ConfigurationItem) *CIResponse {
+	if ci == nil {
+		return nil
+	}
+	return &CIResponse{
+		ID:                 ci.ID,
+		Name:               ci.Name,
+		CITypeID:           ci.CiTypeID,
+		CIType:             ci.CiType,
+		Status:             ci.Status,
+		Environment:        ci.Environment,
+		Criticality:        ci.Criticality,
+		AssetTag:           ci.AssetTag,
+		SerialNumber:       ci.SerialNumber,
+		Model:              ci.Model,
+		Vendor:             ci.Vendor,
+		Location:           ci.Location,
+		AssignedTo:         ci.AssignedTo,
+		OwnedBy:            ci.OwnedBy,
+		DiscoverySource:    ci.DiscoverySource,
+		LastDiscovered:     ci.LastDiscovered,
+		Source:             ci.Source,
+		Attributes:         ci.Attributes,
+		CloudProvider:      ci.CloudProvider,
+		CloudAccountID:     ci.CloudAccountID,
+		CloudRegion:        ci.CloudRegion,
+		CloudZone:          ci.CloudZone,
+		CloudResourceID:    ci.CloudResourceID,
+		CloudResourceType:  ci.CloudResourceType,
+		CloudMetadata:      ci.CloudMetadata,
+		CloudTags:          ci.CloudTags,
+		CloudMetrics:       ci.CloudMetrics,
+		CloudSyncTime:      ci.CloudSyncTime,
+		CloudSyncStatus:    ci.CloudSyncStatus,
+		CloudResourceRefID: ci.CloudResourceRefID,
+		TenantID:           ci.TenantID,
+		CreatedAt:          ci.CreatedAt,
+		UpdatedAt:          ci.UpdatedAt,
+	}
+}
+
+}
+
+// ToCIResponse 转换配置项实体为响应
+func ToCIResponse(ci *ent.ConfigurationItem) *CIResponse {
+	if ci == nil {
+		return nil
+	}
+	return &CIResponse{
+		ID:                 ci.ID,
+		Name:               ci.Name,
+		CiTypeID:           ci.CiTypeID,
+		CiType:             ci.CiType,
+		Status:             ci.Status,
+		Environment:        ci.Environment,
+		Criticality:        ci.Criticality,
+		AssetTag:           ci.AssetTag,
+		SerialNumber:       ci.SerialNumber,
+		Model:              ci.Model,
+		Vendor:             ci.Vendor,
+		Location:           ci.Location,
+		AssignedTo:         ci.AssignedTo,
+		OwnedBy:            ci.OwnedBy,
+		DiscoverySource:    ci.DiscoverySource,
+		LastDiscovered:     ci.LastDiscovered,
+		Source:             ci.Source,
+		Attributes:         ci.Attributes,
+		CloudProvider:      ci.CloudProvider,
+		CloudAccountID:     ci.CloudAccountID,
+		CloudRegion:        ci.CloudRegion,
+		CloudZone:          ci.CloudZone,
+		CloudResourceID:    ci.CloudResourceID,
+		CloudResourceType:  ci.CloudResourceType,
+		CloudMetadata:      ci.CloudMetadata,
+		CloudTags:          ci.CloudTags,
+		CloudMetrics:       ci.CloudMetrics,
+		CloudSyncTime:      ci.CloudSyncTime,
+		CloudSyncStatus:    ci.CloudSyncStatus,
+		CloudResourceRefID: ci.CloudResourceRefID,
+		TenantID:           ci.TenantID,
+		CreatedAt:          ci.CreatedAt,
+		UpdatedAt:          ci.UpdatedAt,
+	}
+}
+
+// ToCIResponseWithRelations 转换配置项实体为带关系的响应
+func ToCIResponseWithRelations(ci *ent.ConfigurationItem) *CIResponse {
+	if ci == nil {
+		return nil
+	}
+	res := ToCIResponse(ci)
+	
+	// 转换出边关系
+	if len(ci.Edges.OutgoingRelations) > 0 {
+		res.OutgoingRelations = make([]*CIRelationshipResponse, len(ci.Edges.OutgoingRelations))
+		for i, rel := range ci.Edges.OutgoingRelations {
+			res.OutgoingRelations[i] = ToCIRelationshipResponse(rel)
+		}
+	}
+	
+	// 转换入边关系
+	if len(ci.Edges.IncomingRelations) > 0 {
+		res.IncomingRelations = make([]*CIRelationshipResponse, len(ci.Edges.IncomingRelations))
+		for i, rel := range ci.Edges.IncomingRelations {
+			res.IncomingRelations[i] = ToCIRelationshipResponse(rel)
+		}
+	}
+	
+	return res
+}
+
+// ToCIResponseList 转换配置项实体列表为响应列表
+func ToCIResponseList(cis []*ent.ConfigurationItem) []*CIResponse {
+	if cis == nil {
+		return nil
+	}
+	res := make([]*CIResponse, len(cis))
+	for i, ci := range cis {
+		res[i] = ToCIResponse(ci)
+	}
+	return res
+}
+
+// ToCIRelationshipResponse 转换 CI 关系实体为响应
+func ToCIRelationshipResponse(rel *ent.CIRelationship) *CIRelationshipResponse {
+	if rel == nil {
+		return nil
+	}
+	res := &CIRelationshipResponse{
+		ID:               rel.ID,
+		RelationshipType: rel.RelationshipType,
+		SourceCIID:       rel.SourceCIID,
+		TargetCIID:       rel.TargetCIID,
+		Strength:         rel.Strength,
+		ImpactLevel:      rel.ImpactLevel,
+		IsActive:         rel.IsActive,
+		IsDiscovered:     rel.IsDiscovered,
+		Description:      rel.Description,
+		Metadata:         rel.Metadata,
+		TenantID:         rel.TenantID,
+		CreatedAt:        rel.CreatedAt,
+		UpdatedAt:        rel.UpdatedAt,
+	}
+	
+	// 关联源CI信息
+	if rel.Edges.SourceCI != nil {
+		res.SourceCI = ToCIResponse(rel.Edges.SourceCI)
+	}
+	
+	// 关联目标CI信息
+	if rel.Edges.TargetCI != nil {
+		res.TargetCI = ToCIResponse(rel.Edges.TargetCI)
+	}
+	
+	return res
+}
+
+// ToCIRelationshipResponseList 转换 CI 关系实体列表为响应列表
+func ToCIRelationshipResponseList(rels []*ent.CIRelationship) []*CIRelationshipResponse {
+	if rels == nil {
+		return nil
+	}
+	res := make([]*CIRelationshipResponse, len(rels))
+	for i, rel := range rels {
+		res[i] = ToCIRelationshipResponse(rel)
+	}
+	return res
+}
