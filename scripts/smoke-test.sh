@@ -136,7 +136,10 @@ test_json_endpoint() {
 echo -e "${YELLOW}[阶段 1/5] 服务健康检查${NC}"
 echo "----------------------------------------"
 
-wait_for_service "$BACKEND_URL/health" "后端健康检查"
+# The backend only mounts the health endpoint under /api/v1 (see
+# itsm-backend/internal/api/routes.go). Hitting the bare /health URL
+# always returns 404 and the smoke test would time out forever.
+wait_for_service "$BACKEND_URL/api/v1/health" "后端健康检查"
 wait_for_service "$FRONTEND_URL" "前端首页"
 
 echo ""

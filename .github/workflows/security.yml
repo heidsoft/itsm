@@ -84,7 +84,7 @@ jobs:
         run: |
           cd itsm-frontend
           npm config set registry https://registry.npmjs.org
-          npm ci
+          npm ci --legacy-peer-deps
 
       - name: Audit
         run: |
