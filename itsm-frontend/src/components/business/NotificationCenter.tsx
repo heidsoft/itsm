@@ -953,7 +953,6 @@ const NotificationCenter: React.FC<{
         width={600}
         okText="保存"
         cancelText="取消"
-        destroyOnClose
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -1039,7 +1038,6 @@ const NotificationCenter: React.FC<{
         width={600}
         okText="保存"
         cancelText="取消"
-        destroyOnClose
       >
         <Form form={channelForm} layout="vertical">
           <Form.Item

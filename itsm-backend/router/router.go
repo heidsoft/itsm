@@ -111,14 +111,14 @@ type RouterConfig struct {
 	ServiceCatalogHandler *service_catalog.Handler
 	ServiceRequestHandler *service_request.Handler
 
-	ProblemHandler   *problem.Handler
-	ChangeHandler    *change.Handler
-	KnowledgeHandler *knowledge.Handler
-	SLAHandler       *sla.Handler
+	ProblemHandler        *problem.Handler
+	ChangeHandler         *change.Handler
+	KnowledgeHandler      *knowledge.Handler
+	SLAHandler            *sla.Handler
 	SLATemplateController *controller.SLATemplateController
-	AIHandler        *ai.Handler
-	CommonHandler    *domainCommon.Handler
-	RoleHandler      *common.RoleHandler
+	AIHandler             *ai.Handler
+	CommonHandler         *domainCommon.Handler
+	RoleHandler           *common.RoleHandler
 
 	// WebSocket Service
 	WebSocketService *service.WebSocketService
@@ -507,8 +507,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			{
 				sysRoot.GET("/config", func(c *gin.Context) {
 					c.JSON(200, gin.H{
-						"status":  "ok",
-						"version": "1.0.0",
+						"status":    "ok",
+						"version":   "1.0.0",
 						"timestamp": time.Now(),
 					})
 				})
@@ -671,6 +671,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				// 风险评估（同时支持 /risk 和 /risk-assessment 两个路径）
 				changes.GET("/:id/risk-assessment", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
 				changes.GET("/:id/risk", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
+				changes.GET("/:id/cmdb-impact", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetCMDBImpactSummary)
 				// 日历视图
 				changes.GET("/calendar", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetCalendar)
 				// PIR (Post-Implementation Review)

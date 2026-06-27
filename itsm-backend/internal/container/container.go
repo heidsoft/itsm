@@ -26,11 +26,14 @@ type Container struct {
 	ticketRepository ticketRepo.Repository
 
 	// Core Services
-	ticketService       *service.TicketServiceV2
-	incidentService     *service.IncidentService
-	notificationService *service.NotificationService
-	approvalService     *service.ApprovalService
-	sequenceService     *service.SequenceService
+	ticketService          *service.TicketService
+	incidentService        *service.IncidentService
+	notificationService    *service.NotificationService
+	approvalService        *service.ApprovalService
+	sequenceService        *service.SequenceService
+	processTriggerService  service.ProcessTriggerServiceInterface
+	processResolver        *service.ProcessResolver
+	processBindingService  service.ProcessBindingServiceInterface
 
 	// Ticket-related Services
 	ticketNotificationService *service.TicketNotificationService
@@ -106,18 +109,28 @@ func (c *Container) initCoreServices() {
 
 	// Ticket Automation Service
 	c.ticketAutomationService = service.NewTicketAutomationRuleService(c.client, c.logger)
+
+	// BPMN 子服务：Binding / Trigger / Resolver
+	// 注意顺序：Binding -> Resolver（依赖 Binding）-> Trigger（依赖 Engine 与 Binding）
+	c.processBindingService = service.NewProcessBindingService(c.client)
+	c.processResolver = service.NewProcessResolver(c.client, c.processBindingService)
+	processEngine := service.NewCustomProcessEngine(c.client, c.logger)
+	c.processTriggerService = service.NewProcessTriggerService(c.client, processEngine)
 }
 
 // initBusinessServices 初始化业务服务
 func (c *Container) initBusinessServices() {
 	// Ticket Service V2（使用构造函数注入）
-	c.ticketService = service.NewTicketServiceV2(&service.TicketServiceV2Config{
+	c.ticketService = service.NewTicketService(&service.TicketServiceConfig{
 		Repository:            c.ticketRepository,
+		Client:                c.client,
 		Logger:                c.logger,
 		NotificationService:   c.ticketNotificationService,
 		ApprovalService:       c.approvalService,
 		AutomationRuleService: c.ticketAutomationService,
 		SLAService:            c.ticketSLAService,
+		ProcessTriggerService: c.processTriggerService,
+		ProcessResolver:       c.processResolver,
 	})
 }
 
@@ -129,7 +142,7 @@ func (c *Container) GetTicketRepository() ticketRepo.Repository {
 }
 
 // GetTicketService 获取工单服务
-func (c *Container) GetTicketService() *service.TicketServiceV2 {
+func (c *Container) GetTicketService() *service.TicketService {
 	return c.ticketService
 }
 
@@ -181,8 +194,8 @@ func (c *Container) NewTicketServiceWithDeps(
 	approvalSvc *service.ApprovalService,
 	automationSvc *service.TicketAutomationRuleService,
 	slaSvc *service.TicketSLAService,
-) *service.TicketServiceV2 {
-	return service.NewTicketServiceV2(&service.TicketServiceV2Config{
+) *service.TicketService {
+	return service.NewTicketService(&service.TicketServiceConfig{
 		Repository:            c.ticketRepository,
 		Logger:                c.logger,
 		NotificationService:   notificationSvc,

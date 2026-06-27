@@ -135,6 +135,21 @@ export interface ImpactAnalysisData {
   impactScore?: number;
 }
 
+export interface ChangeCMDBImpactSummary {
+  changeId: number;
+  totalAffectedCIs: number;
+  criticalCICount: number;
+  highRiskDependencyCount: number;
+  openIncidentCount: number;
+  recommendedRiskLevel: string;
+  recommendedImpactScope: string;
+  requiresCAB: boolean;
+  requiresBackoutPlan: boolean;
+  workflowHints: string[];
+  itilPractices: string[];
+  affectedCIs: number[];
+}
+
 // ==================== PIR (Post-Implementation Review) 类型定义 ====================
 // PIR总体结果
 export type PIROverallResult = 'successful' | 'partially_successful' | 'failed';
@@ -330,6 +345,11 @@ export class ChangeApi {
   // 获取变更风险评估
   static async getRiskAssessment(id: number): Promise<RiskAssessmentData> {
     return httpClient.get(`/api/v1/changes/${id}/risk`);
+  }
+
+  // 获取基于 CMDB 的变更影响摘要
+  static async getCMDBImpactSummary(id: number): Promise<ChangeCMDBImpactSummary> {
+    return httpClient.get(`/api/v1/changes/${id}/cmdb-impact`);
   }
 
   // 更新风险评估

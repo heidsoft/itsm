@@ -9,6 +9,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
+	"itsm-backend/repository/ticket"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -29,6 +30,45 @@ func NewTicketController(ticketService *service.TicketService, ticketDependencyS
 		db:                      db,
 		logger:                  logger,
 	}
+}
+
+// ticketToResponse 将 V2 领域模型 ticket.Ticket 转换为 DTO TicketResponse
+// V2 负责业务编排，DTO 负责接口呈现；中间需要一层 adapter
+func ticketToResponse(t *ticket.Ticket) *dto.TicketResponse {
+	if t == nil {
+		return nil
+	}
+	resp := &dto.TicketResponse{
+		ID:           t.ID,
+		TicketNumber: t.TicketNumber,
+		Title:        t.Title,
+		Description:  t.Description,
+		Status:       string(t.Status),
+		Priority:     string(t.Priority),
+		Type:         string(t.Type),
+		RequesterID:  t.RequesterID,
+		TenantID:     t.TenantID,
+		Version:      t.Version,
+		CreatedAt:    t.CreatedAt,
+		UpdatedAt:    t.UpdatedAt,
+	}
+	if t.AssigneeID != nil {
+		resp.AssigneeID = *t.AssigneeID
+	}
+	if t.CategoryID != nil {
+		resp.CategoryID = *t.CategoryID
+	}
+	return resp
+}
+
+func ticketListToResponse(ts []*ticket.Ticket) []*dto.TicketResponse {
+	result := make([]*dto.TicketResponse, 0, len(ts))
+	for _, t := range ts {
+		if r := ticketToResponse(t); r != nil {
+			result = append(result, r)
+		}
+	}
+	return result
 }
 
 // CreateTicket 创建工单
@@ -82,7 +122,7 @@ func (tc *TicketController) CreateTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponse(ticket))
+	common.Success(c, ticketToResponse(ticket))
 }
 
 // UpdateTicket 更新工单
@@ -120,7 +160,7 @@ func (tc *TicketController) UpdateTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponse(ticket))
+	common.Success(c, ticketToResponse(ticket))
 }
 
 // GetTicket 获取工单详情
@@ -139,7 +179,7 @@ func (tc *TicketController) GetTicket(c *gin.Context) {
 		common.Fail(c, common.NotFoundCode, "工单不存在")
 		return
 	}
-	resp := dto.ToTicketResponse(ticket)
+	resp := ticketToResponse(ticket)
 	dto.EnrichTicketResponse(c.Request.Context(), tc.db, resp, tenantID)
 	common.Success(c, resp)
 }
@@ -230,7 +270,7 @@ func (tc *TicketController) UpdateTicketStatus(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponse(ticket))
+	common.Success(c, ticketToResponse(ticket))
 }
 
 // BatchDeleteTickets 批量删除工单
@@ -296,14 +336,15 @@ func (tc *TicketController) AssignTicket(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	assignedBy := c.GetInt("user_id")
 
-	ticket, err := tc.ticketService.AssignTicket(c.Request.Context(), ticketID, assigneeID, tenantID, assignedBy)
+	ticket, err := tc.ticketService.AssignTicket(c.Request.Context(), ticketID, assigneeID, tenantID)
+	_ = assignedBy // V2 简化：审计参数由 repository / notification 服务处理
 	if err != nil {
 		tc.logger.Errorw("Failed to assign ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponse(ticket))
+	common.Success(c, ticketToResponse(ticket))
 }
 
 // EscalateTicket 升级工单
@@ -330,7 +371,7 @@ func (tc *TicketController) EscalateTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponse(ticket))
+	common.Success(c, ticketToResponse(ticket))
 }
 
 // ResolveTicket 解决工单
@@ -356,14 +397,15 @@ func (tc *TicketController) ResolveTicket(c *gin.Context) {
 		resolution = req.Solution
 	}
 
-	ticket, err := tc.ticketService.ResolveTicket(c.Request.Context(), ticketID, resolution, tenantID, resolvedBy)
+	ticket, err := tc.ticketService.ResolveTicket(c.Request.Context(), ticketID, resolution, tenantID)
+	_ = resolvedBy // V2 简化
 	if err != nil {
 		tc.logger.Errorw("Failed to resolve ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponse(ticket))
+	common.Success(c, ticketToResponse(ticket))
 }
 
 // CloseTicket 关闭工单
@@ -383,14 +425,15 @@ func (tc *TicketController) CloseTicket(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	closedBy := c.GetInt("user_id")
 
-	ticket, err := tc.ticketService.CloseTicket(c.Request.Context(), ticketID, req.Feedback, tenantID, closedBy)
+	ticket, err := tc.ticketService.CloseTicket(c.Request.Context(), ticketID, tenantID, req.Feedback)
+	_ = closedBy // V2 简化
 	if err != nil {
 		tc.logger.Errorw("Failed to close ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponse(ticket))
+	common.Success(c, ticketToResponse(ticket))
 }
 
 // SearchTickets 搜索工单
@@ -410,7 +453,7 @@ func (tc *TicketController) SearchTickets(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponseList(tickets))
+	common.Success(c, ticketListToResponse(tickets))
 }
 
 // GetOverdueTickets 获取逾期工单
@@ -424,7 +467,7 @@ func (tc *TicketController) GetOverdueTickets(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponseList(tickets))
+	common.Success(c, ticketListToResponse(tickets))
 }
 
 // GetTicketsByAssignee 获取指定处理人的工单
@@ -444,7 +487,7 @@ func (tc *TicketController) GetTicketsByAssignee(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponseList(tickets))
+	common.Success(c, ticketListToResponse(tickets))
 }
 
 // GetTicketActivity 获取工单活动日志
@@ -744,7 +787,7 @@ func (tc *TicketController) CreateSubtask(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponse(ticket))
+	common.Success(c, ticketToResponse(ticket))
 }
 
 // UpdateSubtask 更新子任务
@@ -778,8 +821,8 @@ func (tc *TicketController) UpdateSubtask(c *gin.Context) {
 		return
 	}
 
-	// 检查parent_ticket_id是否匹配
-	if ticket.ParentTicketID == 0 || ticket.ParentTicketID != parentID {
+	// 检查parent_ticket_id是否匹配（V2 是 *int）
+	if ticket.ParentTicketID == nil || *ticket.ParentTicketID != parentID {
 		common.Fail(c, common.ParamErrorCode, "子任务不属于指定的父工单")
 		return
 	}
@@ -791,7 +834,7 @@ func (tc *TicketController) UpdateSubtask(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ToTicketResponse(updatedTicket))
+	common.Success(c, ticketToResponse(updatedTicket))
 }
 
 // DeleteSubtask 删除子任务
@@ -818,8 +861,8 @@ func (tc *TicketController) DeleteSubtask(c *gin.Context) {
 		return
 	}
 
-	// 检查parent_ticket_id是否匹配
-	if ticket.ParentTicketID == 0 || ticket.ParentTicketID != parentID {
+	// 检查parent_ticket_id是否匹配（V2 是 *int）
+	if ticket.ParentTicketID == nil || *ticket.ParentTicketID != parentID {
 		common.Fail(c, common.ParamErrorCode, "子任务不属于指定的父工单")
 		return
 	}

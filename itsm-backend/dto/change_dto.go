@@ -327,6 +327,22 @@ type ChangeRiskAssessmentResponse struct {
 	UpdatedAt          time.Time  `json:"updatedAt"`          // 更新时间
 }
 
+// ChangeCMDBImpactSummary 供变更流程、审批流和 ITIL 4 实践直接消费的 CMDB 摘要
+type ChangeCMDBImpactSummary struct {
+	ChangeID                int      `json:"changeId"`
+	TotalAffectedCIs        int      `json:"totalAffectedCIs"`
+	CriticalCICount         int      `json:"criticalCICount"`
+	HighRiskDependencyCount int      `json:"highRiskDependencyCount"`
+	OpenIncidentCount       int      `json:"openIncidentCount"`
+	RecommendedRiskLevel    string   `json:"recommendedRiskLevel"`
+	RecommendedImpactScope  string   `json:"recommendedImpactScope"`
+	RequiresCAB             bool     `json:"requiresCAB"`
+	RequiresBackoutPlan     bool     `json:"requiresBackoutPlan"`
+	WorkflowHints           []string `json:"workflowHints"`
+	ITILPractices           []string `json:"itilPractices"`
+	AffectedCIs             []int    `json:"affectedCIs"`
+}
+
 // ChangeImplementationPlanResponse 变更实施计划响应
 type ChangeImplementationPlanResponse struct {
 	ID              int        `json:"id"`              // 实施计划ID

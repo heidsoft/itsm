@@ -132,6 +132,7 @@ type ApprovalWorkflowSeed struct {
 
 type ProcessBindingSeed struct {
 	BusinessType         string `json:"business_type"`
+	BusinessSubType      string `json:"business_sub_type"`
 	ProcessDefinitionKey string `json:"process_definition_key"`
 	IsDefault            bool   `json:"is_default"`
 }
@@ -488,11 +489,12 @@ func getEmbeddedConfig() *SeedConfig {
 			{Name: "服务请求审批", Desc: "高价值服务请求需要审批", TicketType: "service_request", Priority: "high", Nodes: []map[string]interface{}{{"type": "approval", "name": "服务审批", "approver_type": "manager", "timeout": 120}}},
 		},
 		ProcessBindings: []ProcessBindingSeed{
-			{BusinessType: "incident", ProcessDefinitionKey: "incident_emergency_flow", IsDefault: true},
-			{BusinessType: "problem", ProcessDefinitionKey: "problem_management_flow", IsDefault: true},
-			{BusinessType: "change", ProcessDefinitionKey: "change_normal_flow", IsDefault: true},
-			{BusinessType: "service_request", ProcessDefinitionKey: "service_request_flow", IsDefault: true},
-			{BusinessType: "improvement", ProcessDefinitionKey: "ticket_general_flow", IsDefault: true},
+			{BusinessType: "ticket", BusinessSubType: "incident", ProcessDefinitionKey: "incident_emergency_flow", IsDefault: true},
+			{BusinessType: "ticket", BusinessSubType: "problem", ProcessDefinitionKey: "problem_management_flow", IsDefault: true},
+			{BusinessType: "ticket", BusinessSubType: "change", ProcessDefinitionKey: "change_normal_flow", IsDefault: true},
+			{BusinessType: "ticket", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", IsDefault: true},
+			{BusinessType: "ticket", BusinessSubType: "improvement", ProcessDefinitionKey: "ticket_general_flow", IsDefault: true},
+			{BusinessType: "ticket", ProcessDefinitionKey: "ticket_general_flow", IsDefault: true},
 		},
 		TicketViews: []TicketViewSeed{
 			{Name: "我的待办工单", Desc: "分配给我的未关闭工单", IsShared: false, Columns: []string{"id", "title", "priority", "status", "assignee", "created_at"}},
@@ -1507,6 +1509,7 @@ func (s *Seeder) seedProcessBindings(ctx context.Context) {
 	for _, b := range s.config.ProcessBindings {
 		_, err := s.client.ProcessBinding.Create().
 			SetBusinessType(b.BusinessType).
+			SetNillableBusinessSubType(nilIfEmpty(b.BusinessSubType)).
 			SetProcessDefinitionKey(b.ProcessDefinitionKey).
 			SetIsDefault(b.IsDefault).
 			SetIsActive(true).

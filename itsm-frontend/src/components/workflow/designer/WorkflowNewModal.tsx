@@ -74,7 +74,6 @@ export default function WorkflowNewModal({
       onCancel={onClose}
       footer={null}
       width={900}
-      destroyOnClose
     >
       <div className="mb-4">
         <Input.Search

@@ -3,12 +3,13 @@
 
 'use client';
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Spin } from 'antd';
+import type { BpmnNodeSelection } from '../BPMNDesigner';
 
 // 动态导入 BPMN 设计器 - bpmn-js 库较大，按需加载
-const BPMNDesigner = dynamic(() => import('@/components/workflow/BPMNDesigner'), {
+const BPMNDesigner = dynamic(() => import('../BPMNDesigner'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full">
@@ -17,26 +18,46 @@ const BPMNDesigner = dynamic(() => import('@/components/workflow/BPMNDesigner'),
   ),
 });
 
+export interface BpmnDesignerApi {
+  updateElementProperties: (elementId: string, properties: Record<string, unknown>) => boolean;
+  fitViewport: () => void;
+}
+
 interface WorkflowCanvasProps {
   currentXML: string;
   onSave: (xml: string) => void;
   onChange: (xml: string) => void;
+  onSelectionChange?: (selection: BpmnNodeSelection | null) => void;
 }
 
-export default function WorkflowCanvas({ currentXML, onSave, onChange }: WorkflowCanvasProps) {
-  // XML 变更处理
-  const handleChange = (xml: string) => {
-    onChange(xml);
-  };
+/**
+ * 用模块级 ref 桥接 dynamic 组件与 BPMNDesigner 的命令式 API。
+ * 因为 dynamic 组件无法直接转发 ref，使用 module-scope ref 通信。
+ */
+const _apiRef: { current: BpmnDesignerApi | null } = { current: null };
 
-  // 保存处理
-  const handleSave = (xml: string) => {
-    onSave(xml);
-  };
-
+const WorkflowCanvas = forwardRef<BpmnDesignerApi, WorkflowCanvasProps>(function WorkflowCanvas(
+  { currentXML, onSave, onChange, onSelectionChange },
+  _ref
+) {
   return (
     <div className="h-[calc(100vh-200px)] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <BPMNDesigner xml={currentXML} onSave={handleSave} onChange={handleChange} />
+      <BPMNDesigner
+        xml={currentXML}
+        onSave={onSave}
+        onChange={onChange}
+        onSelectionChange={onSelectionChange}
+        apiRef={_apiRef}
+      />
     </div>
   );
+});
+
+/**
+ * 父组件调用此函数获取 BPMNDesigner 的命令式 API 句柄
+ */
+export function getBpmnDesignerApi(): BpmnDesignerApi | null {
+  return _apiRef.current;
 }
+
+export default WorkflowCanvas;

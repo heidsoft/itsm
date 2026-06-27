@@ -310,6 +310,58 @@ export class WorkflowApi {
     return WorkflowApi.suspendInstance(instanceId);
   }
 
+  /**
+   * 获取「我的待办」BPMN 任务列表（基于当前登录用户 ID 过滤）
+   *
+   * 后端控制器会根据 JWT 中的 user_id 自动过滤包含：
+   * - assignee = 当前用户
+   * - candidate_users 包含当前用户 ID / username / email
+   * - candidate_groups 包含当前用户所在的组
+   *
+   * @param params 可覆盖分页/状态过滤。
+   */
+  static async listMyTasks(
+    params?: { status?: string; page?: number; pageSize?: number }
+  ): Promise<{ items: WorkflowTask[]; total: number; page: number; size: number }> {
+    const query: Record<string, unknown> = {
+      page: params?.page ?? 1,
+      page_size: params?.pageSize ?? 20,
+    };
+    if (params?.status) {
+      query.status = params.status;
+    }
+    const res = (await httpClient.get('/api/v1/bpmn/tasks', query)) as any;
+    // 兼容多种返回结构：后端 ListResponse / items / list / data
+    const raw = Array.isArray(res)
+      ? res
+      : (res?.items || res?.list || res?.data || []);
+    const items: WorkflowTask[] = (raw as any[]).map((task: any) => ({
+      id: task.id || task.task_id || task.ID,
+      instanceId: task.process_instance_id || task.instanceId || '',
+      nodeId: task.task_id || task.task_definition_key || '',
+      nodeName: task.task_name || task.taskName || '',
+      nodeType: task.task_type || task.taskType || 'user_task',
+      status: task.status || 'pending',
+      assignee: task.assignee || '',
+      assigneeId: task.assignee ? parseInt(task.assignee, 10) : undefined,
+      createdAt: task.created_time || task.createdAt || new Date().toISOString(),
+      dueDate: task.due_date || task.dueDate || null,
+      variables: task.task_variables || task.variables || {},
+      retryCount: task.retry_count || 0,
+    }));
+    const total = Number(res?.total ?? items.length);
+    const page = Number(res?.page ?? params?.page ?? 1);
+    const size = Number(res?.size ?? params?.pageSize ?? items.length);
+    return { items, total, page, size };
+  }
+
+  /**
+   * 领取任务（claim）。
+   */
+  static async claimMyTask(taskId: string | number): Promise<void> {
+    await httpClient.put(`/api/v1/bpmn/tasks/${taskId}/claim`);
+  }
+
   static async resumeWorkflow(instanceId: string): Promise<void> {
     return WorkflowApi.resumeInstance(instanceId);
   }

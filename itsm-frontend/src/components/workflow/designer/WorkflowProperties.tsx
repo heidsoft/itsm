@@ -16,16 +16,21 @@ import {
   Badge,
   Space,
   Typography,
+  Tag,
+  Empty,
+  Tooltip,
 } from 'antd';
 
 const { Text } = Typography;
-import { Eye, GitBranch } from 'lucide-react';
+import { InfoCircleOutlined } from '@ant-design/icons';
+import { Eye, GitBranch, Users } from 'lucide-react';
 import type {
   WorkflowDefinition,
   WorkflowVersion,
   ApprovalConfig,
   UserInfo,
   RoleInfo,
+  GroupInfo,
   SLAConfig,
 } from './WorkflowTypes';
 
@@ -38,8 +43,10 @@ interface WorkflowPropertiesProps {
   workflowVersions: WorkflowVersion[];
   userList: UserInfo[];
   roleList: RoleInfo[];
+  groupList?: GroupInfo[];
   loadingUsers: boolean;
   loadingRoles: boolean;
+  loadingGroups?: boolean;
   activeTab?: string;
   onSwitchVersion?: (versionId: string) => void;
   onShowVersionModal?: () => void;
@@ -53,8 +60,10 @@ export default function WorkflowProperties({
   workflowVersions,
   userList,
   roleList,
+  groupList = [],
   loadingUsers,
   loadingRoles,
+  loadingGroups = false,
   onSwitchVersion,
   onShowVersionModal,
   onUpdateSLA,
@@ -67,7 +76,7 @@ export default function WorkflowProperties({
     });
   };
 
-  // 审批人变更
+  // 审批人变更（流程级兌底，不覆盖节点级）
   const handleApproversChange = (value: string[]) => {
     setApprovalConfig({
       ...approvalConfig,
@@ -188,7 +197,21 @@ export default function WorkflowProperties({
               {/* 审批类型 */}
               <div>
                 <Text strong className="block mb-2">
-                  审批类型
+                  <Space size={4}>
+                    审批类型
+                    <Tooltip
+                      title={
+                        <div>
+                          <div><b>单人（single）</b>：任一审批人通过即结束。</div>
+                          <div><b>串行（sequential）</b>：按顺序逐个审批。</div>
+                          <div><b>并行（parallel）</b>：所有人需同时通过。</div>
+                          <div><b>条件（conditional）</b>：按表达式动态决定。</div>
+                        </div>
+                      }
+                    >
+                      <InfoCircleOutlined className="text-gray-400 cursor-help" />
+                    </Tooltip>
+                  </Space>
                 </Text>
                 <Select
                   value={approvalConfig.approval_type}
@@ -214,6 +237,7 @@ export default function WorkflowProperties({
                   onChange={handleApproversChange}
                   className="w-full"
                   loading={loadingUsers}
+                  maxTagCount="responsive"
                 >
                   {userList.map(user => (
                     <Option key={user.id} value={String(user.id)}>
@@ -221,6 +245,23 @@ export default function WorkflowProperties({
                     </Option>
                   ))}
                 </Select>
+              </div>
+
+              {/* 审批组说明（节点级） */}
+              <div className="p-3 border border-dashed border-gray-300 rounded-md bg-gray-50">
+                <div className="flex items-center mb-1">
+                  <Users className="w-4 h-4 mr-1 text-gray-500" />
+                  <Text strong>审批组</Text>
+                  <Text type="secondary" className="ml-auto text-xs">
+                    节点级配置
+                  </Text>
+                </div>
+                <Text type="secondary" className="text-xs block">
+                  审批组是节点级的，需在画布上选中某个
+                  <b>审批节点</b>后，在右侧「节点属性」面板的 <b>「候选组」</b> 字段中选择。
+                  选中的组会写入 BPMN XML 的 <code className="text-xs">candidateGroups</code> 属性，
+                  后端引擎会在任务创建时按组成员自动展开为具体审批人。
+                </Text>
               </div>
 
               {/* 自动审批角色 */}

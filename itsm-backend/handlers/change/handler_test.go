@@ -49,6 +49,7 @@ func setupTestHandler(t *testing.T) (*gin.Engine, *Handler, *mockRepository) {
 	r.POST("/api/v1/changes/:id/assign", handler.AssignChange)
 	r.GET("/api/v1/changes/:id/approval-summary", handler.GetApprovalSummary)
 	r.GET("/api/v1/changes/:id/risk-assessment", handler.GetRiskAssessment)
+	r.GET("/api/v1/changes/:id/cmdb-impact", handler.GetCMDBImpactSummary)
 
 	return r, handler, repo
 }
@@ -284,6 +285,17 @@ func TestChangeController_ListChanges(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestChangeService_GetCMDBImpactSummary_WithoutEntClient(t *testing.T) {
+	logger := zaptest.NewLogger(t).Sugar()
+	repo := newMockRepository()
+	createTestChange(repo, 1, 1)
+
+	svc := NewService(repo, nil, logger)
+	_, err := svc.GetCMDBImpactSummary(context.Background(), 1, 1)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "CMDB impact summary unavailable")
 }
 
 // TestChangeController_CreateChange tests POST /api/v1/changes
@@ -643,4 +655,140 @@ func strPtr(s string) *string {
 
 func ptrChangePriority(p dto.ChangePriority) *dto.ChangePriority {
 	return &p
+}
+
+// ===================== CMDB Impact Summary Helper Tests =====================
+
+func TestRecommendRiskLevel(t *testing.T) {
+	cases := []struct {
+		name             string
+		totalCIs         int
+		criticalCIs      int
+		highRiskDeps     int
+		openIncidents    int
+		changeType       string
+		want             string
+	}{
+		{"emergency overrides everything", 1, 0, 0, 0, "emergency", "high"},
+		{"critical CI wins", 1, 1, 0, 0, "normal", "high"},
+		{"high risk deps >= 4", 3, 0, 4, 0, "normal", "high"},
+		{"open incidents >= 2", 3, 0, 0, 2, "normal", "high"},
+		{"medium: 5+ CIs", 5, 0, 0, 0, "normal", "medium"},
+		{"medium: 1 high risk dep", 2, 0, 1, 0, "normal", "medium"},
+		{"medium: 1 open incident", 2, 0, 0, 1, "normal", "medium"},
+		{"low: nothing matches", 2, 0, 0, 0, "normal", "low"},
+		{"low: 0 CI", 0, 0, 0, 0, "normal", "low"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := recommendRiskLevel(tc.totalCIs, tc.criticalCIs, tc.highRiskDeps, tc.openIncidents, tc.changeType)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestRecommendImpactScope(t *testing.T) {
+	cases := []struct {
+		name         string
+		totalCIs     int
+		criticalCIs  int
+		highRiskDeps int
+		want         string
+	}{
+		{"critical CI triggers high", 1, 1, 0, "high"},
+		{"5+ CIs triggers high", 5, 0, 0, "high"},
+		{"3+ high risk deps triggers high", 2, 0, 3, "high"},
+		{"2 CIs triggers medium", 2, 0, 0, "medium"},
+		{"1 high risk dep triggers medium", 1, 0, 1, "medium"},
+		{"nothing triggers low", 1, 0, 0, "low"},
+		{"empty triggers low", 0, 0, 0, "low"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := recommendImpactScope(tc.totalCIs, tc.criticalCIs, tc.highRiskDeps)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestBuildWorkflowHints(t *testing.T) {
+	t.Run("no CIs, not emergency", func(t *testing.T) {
+		summary := &dto.ChangeCMDBImpactSummary{TotalAffectedCIs: 0}
+		hints := buildWorkflowHints(summary, "normal")
+		assert.Contains(t, hints, "补充受影响 CI 后再发起审批，以便自动执行风险分流。")
+		assert.NotContains(t, hints, "紧急变更建议启用快速审批路径，并在实施后自动创建 PIR 任务。")
+	})
+
+	t.Run("critical CI triggers CAB hint", func(t *testing.T) {
+		summary := &dto.ChangeCMDBImpactSummary{TotalAffectedCIs: 1, CriticalCICount: 1}
+		hints := buildWorkflowHints(summary, "normal")
+		assert.Contains(t, hints, "命中关键 CI，建议走 CAB 审批并校验变更窗口。")
+	})
+
+	t.Run("open incidents trigger conflict check hint", func(t *testing.T) {
+		summary := &dto.ChangeCMDBImpactSummary{TotalAffectedCIs: 1, OpenIncidentCount: 1}
+		hints := buildWorkflowHints(summary, "normal")
+		assert.Contains(t, hints, "受影响 CI 当前存在未关闭事件，建议先做冲突检查和实施前健康确认。")
+	})
+
+	t.Run("high risk deps trigger rollback drill hint", func(t *testing.T) {
+		summary := &dto.ChangeCMDBImpactSummary{TotalAffectedCIs: 1, HighRiskDependencyCount: 1}
+		hints := buildWorkflowHints(summary, "normal")
+		assert.Contains(t, hints, "存在高风险依赖，建议在工作流中增加影响确认和回滚演练节点。")
+	})
+
+	t.Run("emergency triggers fast track hint", func(t *testing.T) {
+		summary := &dto.ChangeCMDBImpactSummary{TotalAffectedCIs: 1}
+		hints := buildWorkflowHints(summary, "emergency")
+		assert.Contains(t, hints, "紧急变更建议启用快速审批路径，并在实施后自动创建 PIR 任务。")
+	})
+
+	t.Run("requires backout plan triggers integrity hint", func(t *testing.T) {
+		summary := &dto.ChangeCMDBImpactSummary{TotalAffectedCIs: 1, RequiresBackoutPlan: true}
+		hints := buildWorkflowHints(summary, "normal")
+		assert.Contains(t, hints, "建议在提交流程前强制校验回滚计划与实施计划完整性。")
+	})
+
+	t.Run("combined all triggers all hints", func(t *testing.T) {
+		summary := &dto.ChangeCMDBImpactSummary{
+			TotalAffectedCIs:        2,
+			CriticalCICount:         1,
+			HighRiskDependencyCount: 2,
+			OpenIncidentCount:       1,
+			RequiresBackoutPlan:     true,
+		}
+		hints := buildWorkflowHints(summary, "emergency")
+		// 5 个触发条件（除 TotalAffectedCIs==0 分支）：critical + open incident + high risk dep + emergency + backout plan
+		assert.Len(t, hints, 5)
+	})
+}
+
+func TestInferITILPractices(t *testing.T) {
+	t.Run("all triggers all 4 practices", func(t *testing.T) {
+		summary := &dto.ChangeCMDBImpactSummary{
+			CriticalCICount:         1,
+			HighRiskDependencyCount: 1,
+			OpenIncidentCount:       1,
+			RequiresCAB:             true,
+		}
+		got := inferITILPractices(summary)
+		assert.ElementsMatch(t, []string{
+			"incident_management",
+			"risk_management",
+			"change_enablement",
+			"monitoring_and_event_management",
+		}, got)
+	})
+
+	t.Run("only incident triggers 1 practice", func(t *testing.T) {
+		summary := &dto.ChangeCMDBImpactSummary{OpenIncidentCount: 1}
+		got := inferITILPractices(summary)
+		assert.Equal(t, []string{"incident_management"}, got)
+	})
+
+	t.Run("nothing triggers empty", func(t *testing.T) {
+		summary := &dto.ChangeCMDBImpactSummary{}
+		got := inferITILPractices(summary)
+		assert.Empty(t, got)
+	})
 }

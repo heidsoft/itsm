@@ -3,23 +3,26 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Layout, Tabs, Form, message } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { UserApi } from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
+import { GroupAPI } from '@/lib/api/group-api';
 import { httpClient } from '@/lib/api/http-client';
 
 import { WorkflowDesignerProvider } from './WorkflowContext';
 import WorkflowToolbar from './WorkflowToolbar';
-import WorkflowCanvas from './WorkflowCanvas';
+import WorkflowCanvas, { getBpmnDesignerApi } from './WorkflowCanvas';
+import WorkflowNodeInspector from './WorkflowNodeInspector';
 import WorkflowProperties from './WorkflowProperties';
 import WorkflowNewModal from './WorkflowNewModal';
 import WorkflowVersionModal from './WorkflowVersionModal';
 import WorkflowSettingsModal from './WorkflowSettingsModal';
 import WorkflowMetadataModal from './WorkflowMetadataModal';
 
+import type { BpmnNodeSelection } from '../BPMNDesigner';
 import type { WorkflowDefinition, WorkflowVersion, ApprovalConfig } from './WorkflowTypes';
 
 const { Content } = Layout;
@@ -98,14 +101,62 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     require_approval: true,
     approval_type: 'sequential',
     approvers: [],
+    // 审批组是节点级。详见 WorkflowNodeInspector 节点面板的「候选组」字段。
     auto_approve_roles: [],
     escalation_rules: [],
   });
   const [workflowVersions, setWorkflowVersions] = useState<WorkflowVersion[]>([]);
   const [userList, setUserList] = useState<{ id: number; name: string; username: string }[]>([]);
   const [roleList, setRoleList] = useState<{ id: number; name: string; code: string }[]>([]);
+  const [groupList, setGroupList] = useState<{ id: number; name: string; description?: string; memberCount?: number }[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingRoles, setLoadingRoles] = useState(false);
+  const [loadingGroups, setLoadingGroups] = useState(false);
+
+  // 画布选中状态 - 驱动 WorkflowNodeInspector
+  const [selectedNode, setSelectedNode] = useState<BpmnNodeSelection | null>(null);
+  // 保留 ref 以便在 onChange/命令栈中读取最新值
+  const selectedNodeRef = useRef<BpmnNodeSelection | null>(null);
+  useEffect(() => {
+    selectedNodeRef.current = selectedNode;
+  }, [selectedNode]);
+
+  const handleSelectionChange = useCallback((selection: BpmnNodeSelection | null) => {
+    setSelectedNode(selection);
+  }, []);
+
+  // 通过模块级 _apiRef 拿到 BPMNDesigner 的命令式 API，修改节点属性
+  const handleUpdateNodeProperties = useCallback(
+    (elementId: string, properties: Record<string, unknown>): boolean => {
+      const api = getBpmnDesignerApi();
+      if (!api) {
+        message.warning('流程设计器未就绪，请稍后重试');
+        return false;
+      }
+      const ok = api.updateElementProperties(elementId, properties);
+      if (ok) {
+        // 同步本地选中节点的快照，避免面板一直显示旧值
+        setSelectedNode(prev =>
+          prev && prev.id === elementId
+            ? { ...prev, businessObject: { ...(prev.businessObject || {}), ...properties } }
+            : prev
+        );
+      }
+      return ok;
+    },
+    []
+  );
+
+  const handleRefreshSelection = useCallback(() => {
+    // 重读：从当前画布 XML 重新解析选中节点的 businessObject
+    // 这里简单地清空再触发 onChange 重新通知 BPMNDesigner 重新触发选择事件
+    const cur = selectedNodeRef.current;
+    if (cur) {
+      setSelectedNode(null);
+      // 下一帧恢复，触发面板重新拉取 businessObject
+      requestAnimationFrame(() => setSelectedNode(cur));
+    }
+  }, []);
 
   // 弹窗状态
   const [showNewWorkflowModal, setShowNewWorkflowModal] = useState(false);
@@ -146,6 +197,26 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       console.error('加载角色列表失败:', error);
     } finally {
       setLoadingRoles(false);
+    }
+  };
+
+  // 加载审批组列表
+  const loadGroupList = async () => {
+    setLoadingGroups(true);
+    try {
+      const tenantId = httpClient.getTenantId() || 1;
+      const response = await GroupAPI.getGroups({ page: 1, page_size: 100, tenant_id: tenantId });
+      const groups = (response.groups || []).map((g: any) => ({
+        id: g.id,
+        name: g.name || '未命名组',
+        description: g.description,
+        memberCount: Array.isArray(g.members) ? g.members.length : undefined,
+      }));
+      setGroupList(groups);
+    } catch (error) {
+      console.error('加载审批组列表失败:', error);
+    } finally {
+      setLoadingGroups(false);
     }
   };
 
@@ -260,6 +331,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   useEffect(() => {
     loadUserList();
     loadRoleList();
+    loadGroupList();
   }, []);
 
   // 根据 ID 加载工作流
@@ -313,6 +385,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           description: workflow.description,
           category: workflow.category,
           bpmn_xml: xml,
+          approval_config: approvalConfig,
+          sla_config: workflow.sla_config,
           tenant_id: tenantId,
         })) as any;
 
@@ -386,6 +460,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           description: workflow.description || '',
           category: workflow.category || 'general',
           bpmn_xml: xml,
+          approval_config: approvalConfig,
+          sla_config: workflow.sla_config,
           tenant_id: httpClient.getTenantId() || 1,
         };
 
@@ -418,6 +494,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           description: workflow.description || '',
           category: workflow.category || 'general',
           bpmn_xml: xml,
+          approval_config: approvalConfig,
+          sla_config: workflow.sla_config,
         };
 
         await WorkflowAPI.updateProcessDefinition(workflow.id, updateData, currentVersion);
@@ -508,10 +586,14 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       setUserList,
       roleList,
       setRoleList,
+      groupList,
+      setGroupList,
       loadingUsers,
       setLoadingUsers,
       loadingRoles,
       setLoadingRoles,
+      loadingGroups,
+      setLoadingGroups,
       updateWorkflow,
       updateSLAConfig,
       // 弹窗状态
@@ -538,8 +620,10 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       workflowVersions,
       userList,
       roleList,
+      groupList,
       loadingUsers,
       loadingRoles,
+      loadingGroups,
       showNewWorkflowModal,
       showVersionModal,
       showSettingsModal,
@@ -570,14 +654,26 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
               key: 'designer',
               label: '流程设计',
               children: (
-                <WorkflowCanvas
-                  currentXML={currentXML}
-                  onSave={handleSave}
-                  onChange={xml => {
-                    setCurrentXML(xml);
-                    setHasChanges(true);
-                  }}
-                />
+                <div className="flex gap-4 h-[calc(100vh-200px)]">
+                  <div className="flex-1 min-w-0">
+                    <WorkflowCanvas
+                      currentXML={currentXML}
+                      onSave={handleSave}
+                      onChange={xml => {
+                        setCurrentXML(xml);
+                        setHasChanges(true);
+                      }}
+                      onSelectionChange={handleSelectionChange}
+                    />
+                  </div>
+                  <div className="w-80 shrink-0 overflow-y-auto">
+                    <WorkflowNodeInspector
+                      selection={selectedNode}
+                      onUpdateProperties={handleUpdateNodeProperties}
+                      onRefresh={handleRefreshSelection}
+                    />
+                  </div>
+                </div>
               ),
             },
             {
@@ -591,8 +687,10 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                   workflowVersions={workflowVersions}
                   userList={userList}
                   roleList={roleList}
+                  groupList={groupList}
                   loadingUsers={loadingUsers}
                   loadingRoles={loadingRoles}
+                  loadingGroups={loadingGroups}
                   onSwitchVersion={handleSwitchVersion}
                   onShowVersionModal={() => setShowVersionModal(true)}
                 />
@@ -609,8 +707,10 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                   workflowVersions={workflowVersions}
                   userList={userList}
                   roleList={roleList}
+                  groupList={groupList}
                   loadingUsers={loadingUsers}
                   loadingRoles={loadingRoles}
+                  loadingGroups={loadingGroups}
                   onUpdateSLA={updateSLAConfig}
                 />
               ),

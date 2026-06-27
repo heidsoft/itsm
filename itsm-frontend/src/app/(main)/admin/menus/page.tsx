@@ -486,7 +486,6 @@ export default function MenuManagementPage() {
         okText="保存"
         cancelText="取消"
         width={680}
-        destroyOnClose
       >
         <Form form={form} layout="vertical" className="mt-4" preserve={false}>
           <Row gutter={16}>
