@@ -1,0 +1,28 @@
+name: Lint Docs
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: 🔍 Lint markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install markdown lint
+        run: pip install pymarkdownlnt==0.9.26
+
+      - name: Lint
+        run: pymarkdownlnt scan docs/ --config .markdownlint.json --exclude docs/node_modules
+        continue-on-error: false

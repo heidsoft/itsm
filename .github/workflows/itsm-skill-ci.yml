@@ -1,0 +1,87 @@
+name: itsm-skill-ci
+
+# Purpose:
+#   Validate changes to `itsm-skill/` (OpenClaw skill manifest package)
+#   before they reach main.
+#
+# Checks:
+#   - JSON validity (package.json + openclaw manifest)
+#   - Required fields present (name, version, openclaw.skills[*])
+#   - index.js syntax check (`node --check`)
+#
+# Note:
+#   - itsm-skill has no dependencies and no tests, so this workflow is
+#     intentionally light. When tests land, add a `test` job that runs
+#     `npm test` here.
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'itsm-skill/**'
+      - '.github/workflows/itsm-skill-ci.yml'
+  pull_request:
+    paths:
+      - 'itsm-skill/**'
+      - '.github/workflows/itsm-skill-ci.yml'
+  workflow_dispatch:
+
+env:
+  CI: true
+
+jobs:
+  validate:
+    name: Validate skill package
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Validate package.json
+        working-directory: ./itsm-skill
+        run: |
+          node -e "
+            const fs = require('fs');
+            const p = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            const required = ['name', 'version', 'openclaw'];
+            for (const f of required) {
+              if (!p[f]) { console.error('package.json missing field:', f); process.exit(1); }
+            }
+            if (!Array.isArray(p.openclaw.skills) || p.openclaw.skills.length === 0) {
+              console.error('openclaw.skills must be a non-empty array');
+              process.exit(1);
+            }
+            for (const s of p.openclaw.skills) {
+              if (!s.name || !s.description) {
+                console.error('Each skill must have name and description:', JSON.stringify(s));
+                process.exit(1);
+              }
+            }
+            console.log('package.json OK:', p.name, p.version);
+          "
+
+      - name: Syntax check index.js
+        working-directory: ./itsm-skill
+        run: |
+          if [ ! -f "index.js" ]; then
+            echo "::error::index.js is missing"
+            exit 1
+          fi
+          node --check index.js
+          echo "index.js syntax OK"
+
+      - name: License check
+        working-directory: ./itsm-skill
+        run: |
+          LICENSE_FIELD=$(node -e "console.log(require('./package.json').license)")
+          if [ -z "$LICENSE_FIELD" ]; then
+            echo "::error::package.json has no license field"
+            exit 1
+          fi
+          echo "License: $LICENSE_FIELD"

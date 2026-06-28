@@ -1,31 +1,128 @@
 version: 2
 
+# Dependabot configuration
+#
+# Layout:
+#   1. gomod     — Go module updates for itsm-backend and itsm-agent
+#   2. npm       — npm updates for itsm-frontend, itsm-cli, itsm-skill
+#   3. docker    — base-image updates in Dockerfiles at the repo root
+#   4. github-actions — action version bumps
+#
+# New (v1.0.x hotfix):
+#   - groups:        collect patch/minor updates into one PR per ecosystem
+#                    so reviewers see one PR instead of 30.
+#   - auto-merge:    handled by `.github/workflows/dependabot-auto-merge.yml`
+#                    which only auto-merges when:
+#                      * update is patch-level,
+#                      * PR title carries the `dependencies` label,
+#                      * all required CI checks are green,
+#                      * PR has no `do-not-merge` / `breaking-change` labels.
+
 updates:
   - package-ecosystem: gomod
     directory: /itsm-backend
     schedule:
       interval: weekly
       day: monday
+      time: "03:00"
+      timezone: "UTC"
     open-pull-requests-limit: 5
     labels:
       - dependencies
       - backend
+    groups:
+      go-patch:
+        applies-to: version-updates
+        update-types:
+          - patch
+      go-minor:
+        applies-to: version-updates
+        update-types:
+          - minor
+      go-major:
+        applies-to: version-updates
+        update-types:
+          - major
+      go-actions:
+        applies-to: github-actions
+
+  - package-ecosystem: gomod
+    directory: /itsm-agent
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - agent
+    groups:
+      agent-patch:
+        applies-to: version-updates
+        update-types:
+          - patch
+      agent-minor:
+        applies-to: version-updates
+        update-types:
+          - minor
 
   - package-ecosystem: npm
     directory: /itsm-frontend
     schedule:
       interval: weekly
       day: monday
+      time: "03:00"
+      timezone: "UTC"
     open-pull-requests-limit: 5
     labels:
       - dependencies
       - frontend
+    groups:
+      npm-patch:
+        applies-to: version-updates
+        update-types:
+          - patch
+      npm-minor:
+        applies-to: version-updates
+        update-types:
+          - minor
+      npm-major:
+        applies-to: version-updates
+        update-types:
+          - major
+
+  - package-ecosystem: npm
+    directory: /itsm-cli
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - cli
+
+  - package-ecosystem: npm
+    directory: /itsm-skill
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 2
+    labels:
+      - dependencies
+      - skill
 
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
       day: monday
+      time: "03:00"
+      timezone: "UTC"
     open-pull-requests-limit: 3
     labels:
       - dependencies
@@ -36,6 +133,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
+      time: "03:00"
+      timezone: "UTC"
     open-pull-requests-limit: 3
     labels:
       - dependencies

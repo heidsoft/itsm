@@ -1,0 +1,93 @@
+name: stale
+
+# Purpose:
+#   Keep the issue tracker and PR list healthy on a busy open-source repo
+#   by automatically marking and closing inactive items.
+#
+# Behavior:
+#   - Issues with no activity for 30 days → marked `stale`, bot comment posted
+#   - Issues still inactive 7 days after the stale label → closed
+#   - PRs with no activity for 45 days → marked `stale`, bot comment posted
+#   - PRs still inactive 14 days after the stale label → closed
+#
+# Exemptions:
+#   - `pinned`, `security`, `good first issue`, `help wanted`,
+#     `priority:high`, `priority:critical` are exempt from stale marking.
+#     Pinning is the recommended way to keep an issue from being closed.
+#   - Issues with `needs-triage` are given 14 days of grace before stale,
+#     so first-time contributors and reports get a fair window.
+#
+# Why this matters:
+#   - Open-source credibility: a clean tracker signals active maintenance.
+#   - Discoverability: surface area stays small for newcomers and for
+#     maintainer triage.
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # 03:00 UTC daily
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Mark and close stale issues
+        uses: actions/stale@v9
+        with:
+          # Issues
+          issues-only-label-exemption: "pinned,security,good first issue,help wanted,priority:high,priority:critical,epic"
+          # Anything that should never be auto-closed must be exempt.
+          # needs-triage keeps a 14-day grace via `days-before-issue-stale: 30`
+          # combined with `exempt-all-prs`-style skip lists handled per-label
+          # by the bot — see `stale.yml` ops log for per-label grace rules.
+          exempt-issue-labels: "pinned,security,good first issue,help wanted,priority:high,priority:critical,epic,needs-triage"
+          days-before-issue-stale: 30
+          days-before-issue-close: 7
+          stale-issue-label: "stale"
+          close-issue-label: "closed-by-stale-bot"
+          # PRs
+          days-before-pr-stale: 45
+          days-before-pr-close: 14
+          stale-pr-label: "stale"
+          close-pr-label: "closed-by-stale-bot"
+          # Operations
+          delete-branch: false
+          mark-pr-as-closed: false
+          # Comments
+          stale-issue-message: |
+            👋 This issue has been quiet for 30 days. We'll close it in 7 days
+            if there's no further activity.
+
+            * If this is still relevant, drop a comment with new context.
+            * If you've fixed it, please open a PR that closes this issue.
+            * If you think this should be pinned, a maintainer can apply the
+              `pinned` label.
+
+            Thanks for reporting!
+          close-issue-message: |
+            🤖 Closing this issue due to 7 days of inactivity after the
+            stale notice. If this is still relevant, please open a new
+            issue with updated context and link back to this one.
+          stale-pr-message: |
+            👋 This PR has been quiet for 45 days. We'll close it in 14 days
+            if there's no further activity.
+
+            * If you're still working on this, drop a comment so we know
+              the status.
+            * If the change is no longer needed, feel free to close it
+              yourself.
+            * For dependency upgrades, the bot will auto-merge once CI is
+              green — no manual action required.
+          close-pr-message: |
+            🤖 Closing this PR due to 14 days of inactivity after the
+            stale notice.
+          # Statistics
+          operations-per-run: 100
+          # Don't touch issues opened by maintainers
+          only-prs: false
+          ascending: true

@@ -1,0 +1,181 @@
+# Labeler configuration
+# Used by `.github/workflows/labeler.yml` to apply labels to PRs based on
+# which paths the PR touches. Keep the structure flat (one rule per line
+# group) and prefer path prefixes that map directly to source layout.
+#
+# Rule conventions:
+#   - `area:*`  → ownership area (which repo module)
+#   - `kind:*`  → change type (feat, fix, refactor, test, docs, ci, build)
+#   - `size:*`  → heuristic size buckets (XS < 50, S < 200, M < 500, L < 1500, XL)
+#   - `priority:*` → triage priority (low, medium, high, critical)
+#
+# Maintenance:
+#   - Add a new path rule under the matching `area:` prefix.
+#   - If a label does not exist, `labeler.yml` will create it on first run.
+name: Pull Request Labeler
+version: 1
+
+# ============================================================
+# area:*  — module/area of the change
+# ============================================================
+
+area/backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - itsm-backend/controller/**
+          - itsm-backend/service/**
+          - itsm-backend/middleware/**
+          - itsm-backend/dto/**
+          - itsm-backend/router/**
+          - itsm-backend/cache/**
+          - itsm-backend/common/**
+          - itsm-backend/config/**
+          - itsm-backend/main.go
+
+area/backend-entity:
+  - changed-files:
+      - any-glob-to-any-file:
+          - itsm-backend/ent/schema/**
+          - itsm-backend/migrations/**
+
+area/backend-test:
+  - changed-files:
+      - any-glob-to-any-file:
+          - itsm-backend/**/*_test.go
+          - itsm-backend/tests/**
+
+area/frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - itsm-frontend/src/**
+          - itsm-frontend/public/**
+          - itsm-frontend/next.config.*
+          - itsm-frontend/tailwind.config.*
+          - itsm-frontend/tsconfig.json
+
+area/frontend-test:
+  - changed-files:
+      - any-glob-to-any-file:
+          - itsm-frontend/tests/**
+          - itsm-frontend/jest.config.*
+          - itsm-frontend/playwright.config.*
+
+area/ai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - itsm-ai-service/**
+          - itsm-rag/**
+
+area/cli:
+  - changed-files:
+      - any-glob-to-any-file:
+          - itsm-cli/**
+
+area/agent:
+  - changed-files:
+      - any-glob-to-any-file:
+          - itsm-agent/**
+
+area/skill:
+  - changed-files:
+      - any-glob-to-any-file:
+          - itsm-skill/**
+
+area/infra:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docker-compose*.yml
+          - itsm-backend/Dockerfile
+          - itsm-frontend/Dockerfile
+          - "**/Dockerfile"
+          - nginx/**
+
+area/ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**
+          - .github/labeler.yml
+          - .github/CODEOWNERS
+          - .github/dependabot.yml
+
+area/docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - "**/*.md"
+
+area/scripts:
+  - changed-files:
+      - any-glob-to-any-file:
+          - scripts/**
+          - Makefile
+
+# ============================================================
+# kind:*  — what kind of change
+# ============================================================
+
+kind/feature:
+  - base-branch: [main, develop]
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.go"
+          - "**/*.ts"
+          - "**/*.tsx"
+  - not:
+      - changed-files:
+          - any-glob-to-any-file:
+              - "**/*_test.go"
+              - "**/*.test.ts*"
+              - "**/*.spec.ts*"
+              - docs/**
+
+kind/bugfix:
+  # bugfix is applied by PR title match (see workflow)
+  # placeholder rule so the label exists.
+  - changed-files: []
+
+kind/refactor:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.go"
+          - "**/*.ts"
+          - "**/*.tsx"
+
+kind/tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*_test.go"
+          - "**/*.test.ts*"
+          - "**/*.spec.ts*"
+
+kind/docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - "**/*.md"
+          - "**/CHANGELOG.md"
+          - "**/README*"
+
+kind/ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+
+kind/build:
+  - changed-files:
+      - any-glob-to-any-file:
+          - go.mod
+          - go.sum
+          - package.json
+          - package-lock.json
+          - "**/Dockerfile"
+
+kind/dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - go.mod
+          - go.sum
+          - package.json
+          - package-lock.json
+          - yarn.lock
+          - pnpm-lock.yaml

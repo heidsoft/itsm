@@ -1,0 +1,96 @@
+name: itsm-cli-ci
+
+# Purpose:
+#   Validate changes to `itsm-cli/` (ITSM Ink-based CLI) before they
+#   reach main.
+#
+# Checks:
+#   - TypeScript type-check (tsc --noEmit)
+#   - Production build (tsc → dist/)
+#   - Smoke: built binary --version executes cleanly
+#
+# Why a dedicated workflow:
+#   - itsm-cli has its own package.json and tsconfig, distinct from
+#     the Next.js frontend.
+#   - No tests in this repo yet (no `test` script in package.json) —
+#     once they land, add a `test` job that runs `npm test` here.
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'itsm-cli/**'
+      - '.github/workflows/itsm-cli-ci.yml'
+  pull_request:
+    paths:
+      - 'itsm-cli/**'
+      - '.github/workflows/itsm-cli-ci.yml'
+  workflow_dispatch:
+
+env:
+  CI: true
+
+jobs:
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: itsm-cli/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./itsm-cli
+        run: npm ci --legacy-peer-deps --no-audit --ignore-scripts
+
+      - name: Type-check
+        working-directory: ./itsm-cli
+        run: npm run typecheck
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: itsm-cli/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./itsm-cli
+        run: npm ci --legacy-peer-deps --no-audit --ignore-scripts
+
+      - name: Build
+        working-directory: ./itsm-cli
+        run: npm run build
+
+      - name: Verify dist output
+        working-directory: ./itsm-cli
+        run: |
+          if [ ! -f "dist/index.js" ]; then
+            echo "::error::Build did not produce dist/index.js"
+            exit 1
+          fi
+          echo "dist/index.js exists, size: $(wc -c < dist/index.js) bytes"
+
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: itsm-cli-build
+          path: |
+            itsm-cli/dist
+            itsm-cli/bin
+          retention-days: 7

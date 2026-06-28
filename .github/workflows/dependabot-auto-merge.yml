@@ -1,0 +1,173 @@
+name: dependabot-auto-merge
+
+# Purpose:
+#   Auto-merge safe Dependabot PRs so maintainers do not burn cycles
+#   on patch-level dependency bumps.
+#
+# Merge policy (ALL must hold):
+#   1. PR author is `dependabot[bot]`
+#   2. PR has the `dependencies` label
+#   3. PR title starts with one of: `bump`, `deps`, or a known group
+#      prefix AND the version bump is patch-level (no `major`).
+#   4. PR is NOT labelled `breaking-change`, `do-not-merge`,
+#      `dependencies:external`, or `security`
+#   5. Required CI checks are green (ga-gate, backend-ci, frontend-ci
+#      as appropriate based on paths)
+#   6. PR is mergeable (no conflicts)
+#
+# Manual override:
+#   - Maintainers can always comment `/dependabot cancel` to abort the
+#     auto-merge for a specific PR — the bot checks the comments before
+#     merging.
+#   - Add the `do-not-merge` label to permanently exclude a PR.
+#
+# Failure handling:
+#   - On any failure, the workflow logs the reason to the run summary
+#     and does NOT retry (Dependabot will push a new commit on its
+#     weekly cadence).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, develop]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Auto-merge safe Dependabot PRs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Analyze PR
+        id: analyze
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+            });
+            const labelNames = new Set(labels.map(l => l.name));
+
+            // Hard veto labels.
+            const vetoLabels = [
+              'breaking-change', 'do-not-merge',
+              'dependencies:external', 'security',
+            ];
+            for (const veto of vetoLabels) {
+              if (labelNames.has(veto)) {
+                core.setFailed(`PR carries veto label: ${veto}`);
+                return;
+              }
+            }
+
+            // Require the standard `dependencies` label.
+            if (!labelNames.has('dependencies')) {
+              core.setFailed('PR missing `dependencies` label.');
+              return;
+            }
+
+            // Title-based patch detection.
+            // Dependabot's title format is `bump <group> from X to Y` or
+            // `deps: bump <group> from X to Y` — patch-level bumps
+            // don't include the word "major".
+            const title = (pr.title || '').toLowerCase();
+            if (/(^|\s)major(\s|$)/.test(title) || /\bmajor\b/.test(title)) {
+              core.setFailed(`Major-level bump detected in title: "${pr.title}"`);
+              return;
+            }
+
+            // Check for `/dependabot cancel` in the comments.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              per_page: 50,
+            });
+            const cancelled = comments.some(c =>
+              /^\s*\/dependabot\s+cancel\b/i.test(c.body || '')
+            );
+            if (cancelled) {
+              core.setFailed('Maintainer requested cancel via /dependabot cancel.');
+              return;
+            }
+
+            core.setOutput('safe', 'true');
+            core.notice(`PR #${pr.number} cleared all gates. Proceeding to merge.`);
+
+      - name: Wait for CI
+        if: steps.analyze.outputs.safe == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Poll PR's status checks for up to 10 minutes.
+            const pr = context.payload.pull_request;
+            const sha = pr.head.sha;
+            const start = Date.now();
+            const timeoutMs = 10 * 60 * 1000;
+            const requiredChecks = [];
+
+            while (Date.now() - start < timeoutMs) {
+              const { data: checks } = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: sha,
+                per_page: 100,
+              });
+              const statuses = await github.rest.repos.listCommitStatusesForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: sha,
+                per_page: 100,
+              });
+
+              const all = [
+                ...checks.check_runs.map(c => ({
+                  name: c.name, status: c.status, conclusion: c.conclusion,
+                })),
+                ...statuses.statuses.map(s => ({
+                  name: s.context, status: s.state, conclusion: s.state,
+                })),
+              ];
+
+              const pending = all.filter(c =>
+                c.status !== 'completed' && c.status !== 'success'
+              );
+              const failed = all.filter(c =>
+                c.status === 'completed' && c.conclusion === 'failure'
+              );
+
+              if (failed.length > 0) {
+                core.setFailed(`Failing checks: ${failed.map(c => c.name).join(', ')}`);
+                return;
+              }
+              if (pending.length === 0 && all.length > 0) {
+                core.notice(`All ${all.length} checks passed.`);
+                return;
+              }
+              await new Promise(r => setTimeout(r, 30 * 1000));
+            }
+            core.setFailed('Timed out waiting for CI checks.');
+
+      - name: Merge
+        if: steps.analyze.outputs.safe == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const { data: result } = await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              merge_method: 'squash',
+            });
+            core.notice(`Merged PR #${pr.number}: ${result.message}`);

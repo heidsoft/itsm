@@ -1,0 +1,171 @@
+name: coverage-diff
+
+# Purpose:
+#   Track **incremental** coverage on every PR so the headline number
+#   in `ga-gate.yml` (overall coverage, currently 1% floor) does not
+#   have to be the only signal we act on.
+#
+# What this workflow does:
+#   1. Runs `go test` on the base SHA (the merge-base of `main` and
+#      the PR head) to capture the baseline coverage profile.
+#   2. Runs `go test` on the PR head to capture the new profile.
+#   3. Diffs the two profiles via `go-test-coverage` (Go-native, no
+#      third-party API required).
+#   4. Fails the check if **new or modified lines** drop below the
+#      incremental threshold (default 60%) — even if the overall
+#      repo coverage looks fine.
+#
+# Why this matters:
+#   - Lets us raise the bar on *new* code without forcing a backfill
+#     sweep on the 1990-file codebase in one PR.
+#   - Tracks real PR impact, not lagging aggregate indicators.
+#
+# Threshold policy:
+#   - incremental: 60% (P0 new-code floor; matches the policy in
+#     AGENTS.md and the v1.5 plan in `ROADMAP.md`)
+#   - overall floor is still 1% in `ga-gate.yml` until v1.1 backfills
+#     land.
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'itsm-backend/**/*.go'
+      - 'itsm-backend/go.mod'
+      - 'itsm-backend/go.sum'
+      - '.github/workflows/coverage-diff.yml'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  GOPROXY: "https://proxy.golang.org,direct"
+
+jobs:
+  diff:
+    name: Incremental coverage diff
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: itsm
+          POSTGRES_PASSWORD: itsm_password_2026
+          POSTGRES_DB: itsm_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U itsm -d itsm_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: itsm
+      PGPASSWORD: itsm_password_2026
+      PGDATABASE: itsm_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: itsm-backend/go.mod
+          cache: true
+          cache-dependency-path: itsm-backend/go.sum
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in $(seq 1 30); do
+            if pg_isready -h localhost -p 5432 -U itsm; then
+              echo "PostgreSQL is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::PostgreSQL did not become ready in 60s"
+          exit 1
+
+      - name: Compute base SHA
+        id: base
+        run: |
+          # Merge-base of HEAD against the target branch. Falls back to
+          # HEAD~1 when the PR has only one commit so we still get a
+          # meaningful diff on solo-commit PRs.
+          BASE=$(git merge-base origin/${{ github.base_ref }} HEAD 2>/dev/null || echo HEAD~1)
+          echo "sha=$BASE" >> "$GITHUB_OUTPUT"
+          echo "Base SHA for coverage diff: $BASE"
+
+      - name: Run migrations on base
+        working-directory: ./itsm-backend
+        run: |
+          PGPASSWORD=itsm_password_2026 psql -h localhost -U itsm -d itsm_test \
+            -f migrations/20260501_enable_rbac_from_db.sql || true
+
+      - name: Coverage on base
+        working-directory: ./itsm-backend
+        run: |
+          git checkout -q ${{ steps.base.outputs.sha }} -- go.mod go.sum
+          go build ./migrations/... 2>&1 | tail -3 || true
+          TESTABLE_PKGS=$(go list ./... 2>/dev/null \
+            | grep -vE '^itsm-backend/migrations$|^itsm-backend/migrations/hook$|^itsm-backend/migrations/enttest$|^itsm-backend/migrations/predicate$')
+          go test $TESTABLE_PKGS -coverprofile=base.out -covermode=set || true
+          # Restore the working tree to the PR head files.
+          git checkout -q HEAD -- go.mod go.sum
+
+      - name: Coverage on head
+        working-directory: ./itsm-backend
+        run: |
+          go build ./migrations/... 2>&1 | tail -3 || true
+          TESTABLE_PKGS=$(go list ./... 2>/dev/null \
+            | grep -vE '^itsm-backend/migrations$|^itsm-backend/migrations/hook$|^itsm-backend/migrations/enttest$|^itsm-backend/migrations/predicate$')
+          go test $TESTABLE_PKGS -coverprofile=head.out -covermode=set
+
+      - name: Diff coverage
+        working-directory: ./itsm-backend
+        env:
+          INCREMENTAL_THRESHOLD: "60"
+        run: |
+          go install github.com/matt-FFFFFF/go-test-coverage@latest 2>&1 | tail -3
+          COVERAGE_BIN="$(go env GOBIN)/go-test-coverage"
+          [ -z "$COVERAGE_BIN" ] && COVERAGE_BIN="$(go env GOPATH)/bin/go-test-coverage"
+
+          if [ ! -f base.out ]; then
+            echo "::notice::No base coverage profile (first PR on the branch). Skipping diff."
+            echo "Head-only overall coverage:"
+            go tool cover -func=head.out | tail -1
+            exit 0
+          fi
+
+          # go-test-coverage supports --diff against a base profile and
+          # writes a markdown report we can surface as a PR comment.
+          "$COVERAGE_BIN" \
+            --coverprofile=head.out \
+            --diff --diff.coverprofile=base.out \
+            --threshold=$INCREMENTAL_THRESHOLD \
+            --output=markdown > coverage-diff.md || DIFF_EXIT=$?
+
+          echo "## Incremental coverage report" >> "$GITHUB_STEP_SUMMARY"
+          cat coverage-diff.md >> "$GITHUB_STEP_SUMMARY" || true
+
+          if [ "${DIFF_EXIT:-0}" -ne 0 ]; then
+            echo "::error::Incremental coverage below ${INCREMENTAL_THRESHOLD}% on new/modified lines."
+            exit 1
+          fi
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-diff
+          path: |
+            itsm-backend/head.out
+            itsm-backend/base.out
+            itsm-backend/coverage-diff.md
+          retention-days: 7
