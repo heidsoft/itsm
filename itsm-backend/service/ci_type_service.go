@@ -7,6 +7,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/citype"
+	"itsm-backend/ent/configurationitem"
 
 	"go.uber.org/zap"
 )
@@ -97,20 +98,20 @@ func (s *CITypeService) UpdateCIType(ctx context.Context, id, tenantID int, req 
 	update := s.client.CIType.UpdateOneID(id).
 		Where(citype.TenantIDEQ(tenantID))
 
-	if req.Name != nil {
-		update.SetName(*req.Name)
+	if req.Name != "" {
+		update.SetName(req.Name)
 	}
-	if req.Description != nil {
-		update.SetDescription(*req.Description)
+	if req.Description != "" {
+		update.SetDescription(req.Description)
 	}
-	if req.Icon != nil {
-		update.SetIcon(*req.Icon)
+	if req.Icon != "" {
+		update.SetIcon(req.Icon)
 	}
-	if req.Color != nil {
-		update.SetColor(*req.Color)
+	if req.Color != "" {
+		update.SetColor(req.Color)
 	}
-	if req.AttributeSchema != nil {
-		update.SetAttributeSchema(*req.AttributeSchema)
+	if req.AttributeSchema != "" {
+		update.SetAttributeSchema(req.AttributeSchema)
 	}
 	if req.IsActive != nil {
 		update.SetIsActive(*req.IsActive)
@@ -130,7 +131,7 @@ func (s *CITypeService) UpdateCIType(ctx context.Context, id, tenantID int, req 
 func (s *CITypeService) DeleteCIType(ctx context.Context, id, tenantID int) error {
 	// 检查是否有关联的CI
 	count, err := s.client.ConfigurationItem.Query().
-		Where(ent.Configurationitem.CiTypeIDEQ(id), ent.Configurationitem.TenantIDEQ(tenantID)).
+		Where(configurationitem.CiTypeIDEQ(id), configurationitem.TenantIDEQ(tenantID)).
 		Count(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to check CI type usage", "error", err, "ci_type_id", id)

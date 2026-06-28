@@ -11,6 +11,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -29,12 +30,13 @@ func setupTestCMDBController(t *testing.T) (*gin.Engine, *CMDBController, *ent.C
 	logger := zaptest.NewLogger(t).Sugar()
 
 	// 创建服务
-	cmdbService := service.NewCMDBService(client)
-	ciRelationshipService := service.NewCIRelationshipService(client)
-	auditLogService := service.NewAuditLogService(client, logger)
+	ciTypeService := service.NewCITypeService(client, logger)
+	ciAttributeDefinitionService := service.NewCIAttributeDefinitionService(client, logger)
+	configurationItemService := service.NewConfigurationItemService(client, logger)
+	ciRelationshipService := service.NewCIRelationshipService(client, logger)
 
 	// 创建控制器
-	cmdbController := NewCMDBController(cmdbService, ciRelationshipService, auditLogService, nil)
+	cmdbController := NewCMDBController(logger, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService)
 
 	// 创建路由
 	r := gin.New()
@@ -44,6 +46,7 @@ func setupTestCMDBController(t *testing.T) (*gin.Engine, *CMDBController, *ent.C
 	r.Use(func(c *gin.Context) {
 		// 测试时使用默认租户ID
 		c.Set("tenant_id", 1)
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
 		c.Set("user_id", 1)
 		c.Next()
 	})

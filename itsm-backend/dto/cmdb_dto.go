@@ -56,8 +56,6 @@ type ConfigurationItemResponse struct {
 	TenantID        int                         `json:"tenantId"`
 	CreatedAt       time.Time                   `json:"createdAt"`
 	UpdatedAt       time.Time                   `json:"updatedAt"`
-	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
-	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 	RelatedItems    []ConfigurationItemResponse `json:"relatedItems,omitempty"`
 	ParentItems     []ConfigurationItemResponse `json:"parentItems,omitempty"`
 }
@@ -135,41 +133,42 @@ type CreateCIRequest struct {
 
 // CIResponse 配置项响应
 type CIResponse struct {
-	ID                 int                    `json:"id"`
-	Name               string                 `json:"name"`
-	Type               string                 `json:"type"`
-	CITypeID           int                    `json:"ciTypeId"`
-	Description        string                 `json:"description"`
-	Status             string                 `json:"status"`
-	Environment        string                 `json:"environment,omitempty"`
-	Criticality        string                 `json:"criticality,omitempty"`
-	AssetTag           string                 `json:"assetTag,omitempty"`
-	Attributes         map[string]interface{} `json:"attributes,omitempty"`
-	SerialNumber       string                 `json:"serialNumber,omitempty"`
-	Model              string                 `json:"model,omitempty"`
-	Vendor             string                 `json:"vendor,omitempty"`
-	Location           string                 `json:"location,omitempty"`
-	AssignedTo         string                 `json:"assignedTo,omitempty"`
-	OwnedBy            string                 `json:"ownedBy,omitempty"`
-	DiscoverySource    string                 `json:"discoverySource,omitempty"`
-	Source             string                 `json:"source,omitempty"`
-	CloudProvider      string                 `json:"cloudProvider,omitempty"`
-	CloudAccountID     string                 `json:"cloudAccountId,omitempty"`
-	CloudRegion        string                 `json:"cloudRegion,omitempty"`
-	CloudZone          string                 `json:"cloudZone,omitempty"`
-	CloudResourceID    string                 `json:"cloudResourceId,omitempty"`
-	CloudResourceType  string                 `json:"cloudResourceType,omitempty"`
-	CloudMetadata      map[string]interface{} `json:"cloudMetadata,omitempty"`
-	CloudTags          map[string]interface{} `json:"cloudTags,omitempty"`
-	CloudMetrics       map[string]interface{} `json:"cloudMetrics,omitempty"`
-	CloudSyncTime      *time.Time             `json:"cloudSyncTime,omitempty"`
-	CloudSyncStatus    string                 `json:"cloudSyncStatus,omitempty"`
-	CloudResourceRefID int                    `json:"cloudResourceRefId,omitempty"`
-	TenantID           int                    `json:"tenantId"`
-	CreatedAt          time.Time              `json:"createdAt"`
-	UpdatedAt          time.Time              `json:"updatedAt"`
-	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
-	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
+	ID                 int                       `json:"id"`
+	Name               string                    `json:"name"`
+	Type               string                    `json:"type"`
+	CITypeID           int                       `json:"ciTypeId"`
+	Description        string                    `json:"description"`
+	Status             string                    `json:"status"`
+	Environment        string                    `json:"environment,omitempty"`
+	Criticality        string                    `json:"criticality,omitempty"`
+	AssetTag           string                    `json:"assetTag,omitempty"`
+	Attributes         map[string]interface{}    `json:"attributes,omitempty"`
+	SerialNumber       string                    `json:"serialNumber,omitempty"`
+	Model              string                    `json:"model,omitempty"`
+	Vendor             string                    `json:"vendor,omitempty"`
+	Location           string                    `json:"location,omitempty"`
+	AssignedTo         string                    `json:"assignedTo,omitempty"`
+	OwnedBy            string                    `json:"ownedBy,omitempty"`
+	DiscoverySource    string                    `json:"discoverySource,omitempty"`
+	LastDiscovered     time.Time                 `json:"lastDiscovered,omitempty"`
+	Source             string                    `json:"source,omitempty"`
+	CloudProvider      string                    `json:"cloudProvider,omitempty"`
+	CloudAccountID     string                    `json:"cloudAccountId,omitempty"`
+	CloudRegion        string                    `json:"cloudRegion,omitempty"`
+	CloudZone          string                    `json:"cloudZone,omitempty"`
+	CloudResourceID    string                    `json:"cloudResourceId,omitempty"`
+	CloudResourceType  string                    `json:"cloudResourceType,omitempty"`
+	CloudMetadata      map[string]interface{}    `json:"cloudMetadata,omitempty"`
+	CloudTags          map[string]interface{}    `json:"cloudTags,omitempty"`
+	CloudMetrics       map[string]interface{}    `json:"cloudMetrics,omitempty"`
+	CloudSyncTime      *time.Time                `json:"cloudSyncTime,omitempty"`
+	CloudSyncStatus    string                    `json:"cloudSyncStatus,omitempty"`
+	CloudResourceRefID int                       `json:"cloudResourceRefId,omitempty"`
+	TenantID           int                       `json:"tenantId"`
+	CreatedAt          time.Time                 `json:"createdAt"`
+	UpdatedAt          time.Time                 `json:"updatedAt"`
+	OutgoingRelations  []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
+	IncomingRelations  []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // ListCIsRequest 获取配置项列表请求
@@ -268,8 +267,6 @@ type CloudServiceResponse struct {
 	TenantID         int                    `json:"tenantId"`
 	CreatedAt        time.Time              `json:"createdAt"`
 	UpdatedAt        time.Time              `json:"updatedAt"`
-	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
-	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // CloudAccount DTOs
@@ -293,8 +290,6 @@ type CloudAccountResponse struct {
 	TenantID        int       `json:"tenantId"`
 	CreatedAt       time.Time `json:"createdAt"`
 	UpdatedAt       time.Time `json:"updatedAt"`
-	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
-	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // CloudResource DTOs
@@ -315,8 +310,6 @@ type CloudResourceResponse struct {
 	TenantID       int                    `json:"tenantId"`
 	CreatedAt      time.Time              `json:"createdAt"`
 	UpdatedAt      time.Time              `json:"updatedAt"`
-	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
-	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // RelationshipType DTOs
@@ -329,8 +322,6 @@ type RelationshipTypeResponse struct {
 	TenantID    int       `json:"tenantId"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
-	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
-	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // Discovery DTOs
@@ -352,8 +343,6 @@ type DiscoverySourceResponse struct {
 	TenantID    int       `json:"tenantId"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
-	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
-	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 type DiscoveryJobRequest struct {
@@ -370,8 +359,6 @@ type DiscoveryJobResponse struct {
 	TenantID   int                    `json:"tenantId"`
 	CreatedAt  time.Time              `json:"createdAt"`
 	UpdatedAt  time.Time              `json:"updatedAt"`
-	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
-	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 type DiscoveryResultResponse struct {
@@ -386,8 +373,6 @@ type DiscoveryResultResponse struct {
 	TenantID     int                    `json:"tenantId"`
 	CreatedAt    time.Time              `json:"createdAt"`
 	UpdatedAt    time.Time              `json:"updatedAt"`
-	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
-	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
 }
 
 // Reconciliation DTOs

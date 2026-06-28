@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/citype"
 	"itsm-backend/handlers/cmdb"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -39,8 +40,10 @@ func main() {
 	}
 
 	// 初始化服务
-	cmdbService := service.NewCMDBService(client)
-	ciRelationshipService := service.NewCIRelationshipService(client)
+	ciTypeService := service.NewCITypeService(client, sugar)
+	ciAttributeDefinitionService := service.NewCIAttributeDefinitionService(client, sugar)
+	configurationItemService := service.NewConfigurationItemService(client, sugar)
+	ciRelationshipService := service.NewCIRelationshipService(client, sugar)
 
 	// 初始化 DDD CMDB 服务
 	sugar.Infow("Initializing DDD CMDB service")
@@ -48,7 +51,8 @@ func main() {
 	cmdbDDDService := cmdb.NewService(cmdbRepo, sugar)
 
 	// 初始化控制器
-	cmdbController := controller.NewCMDBController(cmdbService, ciRelationshipService, nil, cmdbDDDService)
+	cmdbController := controller.NewCMDBController(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService)
+	_ = cmdbDDDService
 
 	// 初始化路由
 	r := gin.Default()
@@ -82,10 +86,14 @@ func main() {
 	}
 	r.Use(func(c *gin.Context) {
 		if apiKey == "" {
+			c.Set("tenant_id", 1)
+			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
 			c.Next()
 			return
 		}
 		if c.GetHeader("X-API-Key") == apiKey {
+			c.Set("tenant_id", 1)
+			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
 			c.Next()
 			return
 		}
@@ -99,9 +107,16 @@ func main() {
 		{
 			cmdb.GET("", cmdbController.ListCIs)
 			cmdb.POST("", cmdbController.CreateCI)
+			cmdb.GET("/stats", cmdbController.GetCIStats)
+			cmdb.GET("/relationship-types", cmdbController.ListRelationshipTypes)
+			cmdb.GET("/relationships", cmdbController.ListCIRelationships)
+			cmdb.POST("/relationships", cmdbController.CreateCIRelationship)
+			cmdb.GET("/relationships/:id", cmdbController.GetCIRelationship)
+			cmdb.PUT("/relationships/:id", cmdbController.UpdateCIRelationship)
+			cmdb.DELETE("/relationships/:id", cmdbController.DeleteCIRelationship)
 			cmdb.GET("/:id", cmdbController.GetCI)
-			cmdb.GET("/:id/topology", cmdbController.GetCITopology)
-			cmdb.POST("/relationships", cmdbController.CreateRelationship)
+			cmdb.GET("/:ciId/relationships", cmdbController.ListCIRelationshipsByCIID)
+			cmdb.GET("/:ciId/impact-analysis", cmdbController.GetCIImpactAnalysis)
 		}
 	}
 

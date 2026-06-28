@@ -169,7 +169,6 @@ func NewApplication() *Application {
 	configurationItemService := service.NewConfigurationItemService(client, sugar)
 	ciRelationshipService := service.NewCIRelationshipService(client, sugar)
 
-
 	// LLM/Embedding/VectorStore
 	var embedder service.Embedder
 	if cfg.LLM.Provider == "openai" || cfg.LLM.Provider == "" {
@@ -280,7 +279,6 @@ func NewApplication() *Application {
 	// CMDB Controller
 	cmdbController := controller.NewCMDBController(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService)
 
-
 	// Release & Asset Management Controllers
 	releaseController := controller.NewReleaseController(sugar, releaseService)
 	assetController := controller.NewAssetController(sugar, assetService)
@@ -381,14 +379,6 @@ func NewApplication() *Application {
 	changeRepo := change.NewEntRepository(client, database.GetRawDB())
 	changeServiceDomain := change.NewService(changeRepo, client, sugar)
 	changeHandler := change.NewHandler(changeServiceDomain)
-
-	// CMDB Controller (新增)
-	// Note: cmdbService already declared at line 83
-	ciRelationshipService := service.NewCIRelationshipService(client)
-	auditLogService := service.NewAuditLogService(client, sugar)
-	cloudDiscoveryService := service.NewCloudDiscoveryService(client, sugar)
-	cmdbController := controller.NewCMDBController(cmdbService, ciRelationshipService, auditLogService, cmdbServiceDomain)
-	cmdbController.SetCloudDiscoveryService(cloudDiscoveryService)
 
 	// Analytics & Prediction Controllers
 	analyticsController := controller.NewAnalyticsController(analyticsService)
@@ -532,13 +522,13 @@ func NewApplication() *Application {
 		A2UITicketController:            a2uiTicketController,
 		CMDBController:                  cmdbController,
 
-		DashboardHandler:                dashboardHandler,
-		ProjectController:               projectController,
-		ApplicationController:           applicationController,
-		TicketCategoryController:        ticketCategoryController,
-		TicketTagController:             ticketTagController,
-		UserController:                  userController,
-		GroupController:                 groupController,
+		DashboardHandler:         dashboardHandler,
+		ProjectController:        projectController,
+		ApplicationController:    applicationController,
+		TicketCategoryController: ticketCategoryController,
+		TicketTagController:      ticketTagController,
+		UserController:           userController,
+		GroupController:          groupController,
 
 		// Role & Permission Controllers
 		RoleController:          roleController,
@@ -548,9 +538,6 @@ func NewApplication() *Application {
 		MSPController:           mspController,
 		SystemConfigController:  systemConfigController,
 		ApprovalChainController: approvalChainController,
-
-		// CMDB Controller (新增)
-		CMDBController: cmdbController,
 
 		// Notification Preference Controller
 		NotificationPreferenceController: notificationPreferenceController,

@@ -772,7 +772,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 		}
 
-
 		// ==================== Asset Licenses ====================
 		if config.AssetLicenseController != nil {
 			licenses := tenant.(*gin.RouterGroup).Group("/licenses")
@@ -802,43 +801,30 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		if config.CMDBController != nil {
 			cmdb := tenant.(*gin.RouterGroup).Group("/configuration-items")
 			{
-				// CI CRUD
+				// Legacy compatibility path for core CI CRUD.
 				cmdb.GET("", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCIs)
 				cmdb.POST("", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCI)
-				cmdb.GET("/stats", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetStats)
-				cmdb.GET("/relationships", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListRelationships)
-				cmdb.POST("/relationships", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateRelationship)
-				cmdb.PATCH("/relationships/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateRelationship)
-				cmdb.DELETE("/relationships/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteRelationship)
+				cmdb.GET("/stats", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCIStats)
+				cmdb.GET("/relationships", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCIRelationships)
+				cmdb.POST("/relationships", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCIRelationship)
+				cmdb.PUT("/relationships/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateCIRelationship)
+				cmdb.PATCH("/relationships/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateCIRelationship)
+				cmdb.DELETE("/relationships/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteCIRelationship)
 				cmdb.GET("/relationship-types", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListRelationshipTypes)
-				// Types
-				cmdb.GET("/types", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListTypes)
-				cmdb.POST("/types", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateType)
-				cmdb.PUT("/types/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateType)
-				cmdb.DELETE("/types/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteType)
-				// Reconciliation
-				cmdb.GET("/reconciliation", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetReconciliation)
-				cmdb.POST("/reconciliation/run", middleware.RequirePermission("cmdb", "write"), config.CMDBController.RunReconciliation)
-				// Cloud
-				cmdb.GET("/cloud-services", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCloudServices)
-				cmdb.POST("/cloud-services", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCloudService)
-				cmdb.GET("/cloud-accounts", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCloudAccounts)
-				cmdb.POST("/cloud-accounts", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCloudAccount)
-				cmdb.GET("/cloud-resources", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCloudResources)
-				// Discovery
-				cmdb.GET("/discovery-sources", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListDiscoverySources)
-				cmdb.POST("/discovery-sources", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateDiscoverySource)
-				cmdb.POST("/discovery/jobs", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateDiscoveryJob)
-				cmdb.GET("/discovery/results", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListDiscoveryResults)
-				cmdb.GET("/discovery/status", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetDiscoveryStatus)
-				cmdb.POST("/discovery/run", middleware.RequirePermission("cmdb", "write"), config.CMDBController.RunDiscovery)
+
+				// Legacy type aliases.
+				cmdb.GET("/types", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCITypes)
+				cmdb.POST("/types", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCIType)
+				cmdb.GET("/types/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCIType)
+				cmdb.PUT("/types/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateCIType)
+				cmdb.DELETE("/types/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteCIType)
+
 				// Per-CI routes (must come after static routes)
 				cmdb.GET("/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCI)
 				cmdb.PUT("/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateCI)
 				cmdb.DELETE("/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteCI)
-				cmdb.GET("/:id/topology", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCITopology)
 				cmdb.GET("/:id/impact-analysis", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCIImpactAnalysis)
-				cmdb.GET("/:id/change-history", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCIChangeHistory)
+				cmdb.GET("/:ciId/relationships", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCIRelationshipsByCIID)
 			}
 		}
 

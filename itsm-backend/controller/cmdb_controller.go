@@ -14,11 +14,11 @@ import (
 
 // CMDBController CMDB控制器
 type CMDBController struct {
-	logger                      *zap.SugaredLogger
-	ciTypeService               *service.CITypeService
+	logger                       *zap.SugaredLogger
+	ciTypeService                *service.CITypeService
 	ciAttributeDefinitionService *service.CIAttributeDefinitionService
-	ciService                   *service.ConfigurationItemService
-	ciRelationshipService       *service.CIRelationshipService
+	ciService                    *service.ConfigurationItemService
+	ciRelationshipService        *service.CIRelationshipService
 }
 
 // NewCMDBController 创建CMDB控制器
@@ -30,11 +30,11 @@ func NewCMDBController(
 	ciRelationshipService *service.CIRelationshipService,
 ) *CMDBController {
 	return &CMDBController{
-		logger:                      logger,
-		ciTypeService:               ciTypeService,
+		logger:                       logger,
+		ciTypeService:                ciTypeService,
 		ciAttributeDefinitionService: ciAttributeDefinitionService,
-		ciService:                   ciService,
-		ciRelationshipService:       ciRelationshipService,
+		ciService:                    ciService,
+		ciRelationshipService:        ciRelationshipService,
 	}
 }
 
@@ -501,6 +501,14 @@ func (c *CMDBController) CreateCI(ctx *gin.Context) {
 		return
 	}
 
+	if req.CITypeID == 0 {
+		req.CITypeID = req.CITypeIDSnake
+	}
+	if req.CITypeID == 0 {
+		common.Fail(ctx, common.ParamErrorCode, "CI类型ID不能为空")
+		return
+	}
+
 	// 自动设置租户ID
 	req.TenantID = tenantID
 
@@ -823,6 +831,31 @@ func (c *CMDBController) DeleteCIRelationship(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, nil)
+}
+
+// ListRelationshipTypes 获取内置CI关系类型
+// @Summary 获取内置CI关系类型
+// @Description 获取CMDB支持的内置关系类型枚举
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Success 200 {object} common.Response{data=dto.GetRelationshipTypesResponse}
+// @Router /api/v1/cmdb/relationship-types [get]
+func (c *CMDBController) ListRelationshipTypes(ctx *gin.Context) {
+	common.Success(ctx, dto.GetRelationshipTypesResponse{
+		Types: []dto.RelationshipTypeInfo{
+			{Type: dto.DependsOn, Name: "依赖", Description: "源CI依赖目标CI", Direction: "uni-directional", Icon: "link"},
+			{Type: dto.Hosts, Name: "托管", Description: "源CI托管目标CI", Direction: "uni-directional", Icon: "server"},
+			{Type: dto.HostedOn, Name: "承载于", Description: "源CI运行或部署在目标CI上", Direction: "uni-directional", Icon: "hard-drive"},
+			{Type: dto.ConnectsTo, Name: "连接到", Description: "源CI连接目标CI", Direction: "bi-directional", Icon: "network"},
+			{Type: dto.RunsOn, Name: "运行于", Description: "源CI运行在目标CI上", Direction: "uni-directional", Icon: "play"},
+			{Type: dto.Contains, Name: "包含", Description: "源CI包含目标CI", Direction: "uni-directional", Icon: "box"},
+			{Type: dto.PartOf, Name: "组成部分", Description: "源CI是目标CI的一部分", Direction: "uni-directional", Icon: "component"},
+			{Type: dto.Impacts, Name: "影响", Description: "源CI故障会影响目标CI", Direction: "uni-directional", Icon: "activity"},
+			{Type: dto.Owns, Name: "拥有", Description: "源CI拥有目标CI", Direction: "uni-directional", Icon: "key"},
+			{Type: dto.Uses, Name: "使用", Description: "源CI使用目标CI能力", Direction: "uni-directional", Icon: "plug"},
+		},
+	})
 }
 
 // GetCIImpactAnalysis 获取CI影响分析

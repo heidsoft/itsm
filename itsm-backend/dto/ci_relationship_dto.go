@@ -63,6 +63,7 @@ type CreateCIRelationshipRequest struct {
 	ImpactLevel      ImpactLevel            `json:"impactLevel"`
 	Description      string                 `json:"description"`
 	Metadata         map[string]interface{} `json:"metadata"`
+	IsDiscovered     *bool                  `json:"isDiscovered,omitempty"`
 }
 
 // UpdateCIRelationshipRequest 更新CI关系请求
