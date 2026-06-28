@@ -190,3 +190,6 @@ graphify-out/
 
 # Go build cache
 itsm-backend/.cache/
+
+# Mkdocs build output
+site/

@@ -1,0 +1,136 @@
+site_name: ITSM
+site_description: AI-Native IT Service Management — Tickets, Incidents, Problems, Changes, CMDB, Knowledge, BPMN, SLA, AI Triage
+site_author: ITSM Contributors
+repo_url: https://github.com/itsm/itsm
+repo_name: itsm/itsm
+edit_uri: edit/main/docs/
+copyright: Copyright © 2024-present ITSM Contributors. Licensed under Apache 2.0.
+
+docs_dir: docs
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: 切换到浅色
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换到深色
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换到系统主题
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/itsm/itsm
+      name: GitHub
+  generator: false
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.arithmatex:
+      generic: true
+
+plugins:
+  - search
+
+nav:
+  - 首页: index.md
+  - 快速开始:
+      - 安装: getting-started/install.md
+  - 架构:
+      - 系统总览: architecture/overview.md
+      - 部署: deployment.md
+      - 数据库: database.md
+      - 配置: configuration.md
+      - 开发: development.md
+      - 运维: operations.md
+      - v1.0 GA 验收: v1-ga-readiness.md
+  - 治理:
+      - 贡献指南: contributing.md
+      - 标签体系: label-schema.md
+      - Roadmap: roadmap.md
+      - 架构清理记录: ARCHITECTURE_CLEANUP.md
+      - 覆盖审计: testing/coverage-audit.md
+      - 文档规范: documentation-style-guide.md
+
+extra_css:
+  - stylesheets/extra.css
+
+exclude_docs: |
+  node_modules/
+  tests/
+  scripts/
+  prd/
+  backups/
+  testing/test-cases/
+  archive/
+  articles/
+  ci/
+  cmdb/
+  delivery/
+  images/
+  migrations/
+  product/
+  rbac/
+  review/
+  superpowers/
+  tools/
+  v1-ga/
