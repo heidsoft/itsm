@@ -415,15 +415,26 @@ func (s *AuthService) GetUserInfo(ctx context.Context, userID int) (*dto.UserInf
 }
 
 // Logout 用户登出
+// panic-safe：即使底层 Redis 不可用导致 tokenBlacklist.RevokeUserTokens
+// panic，登出流程也应正常完成。避免一个子系统异常拖垮 HTTP 请求。
 func (s *AuthService) Logout(ctx context.Context, userID int) error {
 	s.logger.Infow("User logged out", "user_id", userID)
 
 	// 如果启用了黑名单服务，撤销用户的所有token
 	if s.tokenBlacklist != nil {
-		if err := s.tokenBlacklist.RevokeUserTokens(ctx, userID); err != nil {
-			s.logger.Warnw("Failed to revoke user tokens", "user_id", userID, "error", err)
-			// 不影响登出流程
-		}
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					s.logger.Errorw("Panic during token revocation, swallowed",
+						"user_id", userID, "panic", r)
+				}
+			}()
+			if err := s.tokenBlacklist.RevokeUserTokens(ctx, userID); err != nil {
+				s.logger.Warnw("Failed to revoke user tokens",
+					"user_id", userID, "error", err)
+				// 不影响登出流程
+			}
+		}()
 	}
 
 	return nil
@@ -527,7 +538,13 @@ func (s *AuthService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 }
 
 // ForgotPassword 发送密码重置邮件
+// 安全考虑：为了避免泄露邮箱/租户的存在性，无论"租户不存在"、"用户不存在"
+// 还是"用户存在"，都返回相同的通用成功消息。只有 token 生成/邮件发送错误才返回 error。
 func (s *AuthService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordRequest) (*dto.ForgotPasswordResponse, error) {
+	genericOK := &dto.ForgotPasswordResponse{
+		Message: "如果该邮箱已注册，我们将发送密码重置链接",
+	}
+
 	// 查找用户
 	userQuery := s.client.User.Query().Where(user.EmailEQ(req.Email))
 
@@ -537,8 +554,10 @@ func (s *AuthService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 			Where(tenant.CodeEQ(req.TenantCode)).
 			First(ctx)
 		if err != nil {
-			s.logger.Warnw("Tenant not found", "tenant_code", req.TenantCode, "error", err)
-			return nil, fmt.Errorf("用户不存在")
+			// 安全：不区分"租户不存在"，返回通用成功避免泄露存在性
+			s.logger.Warnw("Tenant not found during password reset",
+				"tenant_code", req.TenantCode, "error", err)
+			return genericOK, nil
 		}
 		userQuery = userQuery.Where(user.TenantIDEQ(tenantEntity.ID))
 	}
@@ -547,9 +566,7 @@ func (s *AuthService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 	if err != nil {
 		s.logger.Warnw("User not found for password reset", "email", req.Email, "error", err)
 		// 为了安全，不提示用户不存在
-		return &dto.ForgotPasswordResponse{
-			Message: "如果该邮箱已注册，我们将发送密码重置链接",
-		}, nil
+		return genericOK, nil
 	}
 
 	// 生成重置令牌
