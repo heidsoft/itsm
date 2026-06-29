@@ -40,6 +40,10 @@ func (User) Fields() []ent.Field {
 		field.String("phone").
 			Comment("电话").
 			Optional(),
+		field.String("feishu_open_id").
+			Comment("飞书用户OpenID").
+			Optional().
+			Unique(),
 		field.String("password_hash").
 			Comment("密码哈希").
 			NotEmpty(),
@@ -78,6 +82,10 @@ func (User) Edges() []ent.Edge {
 			Field("tenant_id").
 			Required().
 			Unique(),
+		edge.To("tickets", Ticket.Type).
+			Comment("用户提交的工单"),
+		edge.To("assigned_tickets", Ticket.Type).
+			Comment("分配给用户的工单"),
 		edge.To("ticket_comments", TicketComment.Type).
 			Comment("工单评论"),
 		edge.To("ticket_attachments", TicketAttachment.Type).

@@ -85,6 +85,16 @@ func Severity(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldSeverity, v))
 }
 
+// Impact applies equality check predicate on the "impact" field. It's identical to ImpactEQ.
+func Impact(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldImpact, v))
+}
+
+// Urgency applies equality check predicate on the "urgency" field. It's identical to UrgencyEQ.
+func Urgency(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldUrgency, v))
+}
+
 // IncidentNumber applies equality check predicate on the "incident_number" field. It's identical to IncidentNumberEQ.
 func IncidentNumber(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldIncidentNumber, v))
@@ -573,6 +583,136 @@ func SeverityEqualFold(v string) predicate.Incident {
 // SeverityContainsFold applies the ContainsFold predicate on the "severity" field.
 func SeverityContainsFold(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldContainsFold(FieldSeverity, v))
+}
+
+// ImpactEQ applies the EQ predicate on the "impact" field.
+func ImpactEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldImpact, v))
+}
+
+// ImpactNEQ applies the NEQ predicate on the "impact" field.
+func ImpactNEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldImpact, v))
+}
+
+// ImpactIn applies the In predicate on the "impact" field.
+func ImpactIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldImpact, vs...))
+}
+
+// ImpactNotIn applies the NotIn predicate on the "impact" field.
+func ImpactNotIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldImpact, vs...))
+}
+
+// ImpactGT applies the GT predicate on the "impact" field.
+func ImpactGT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldImpact, v))
+}
+
+// ImpactGTE applies the GTE predicate on the "impact" field.
+func ImpactGTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldImpact, v))
+}
+
+// ImpactLT applies the LT predicate on the "impact" field.
+func ImpactLT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldImpact, v))
+}
+
+// ImpactLTE applies the LTE predicate on the "impact" field.
+func ImpactLTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldImpact, v))
+}
+
+// ImpactContains applies the Contains predicate on the "impact" field.
+func ImpactContains(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContains(FieldImpact, v))
+}
+
+// ImpactHasPrefix applies the HasPrefix predicate on the "impact" field.
+func ImpactHasPrefix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasPrefix(FieldImpact, v))
+}
+
+// ImpactHasSuffix applies the HasSuffix predicate on the "impact" field.
+func ImpactHasSuffix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasSuffix(FieldImpact, v))
+}
+
+// ImpactEqualFold applies the EqualFold predicate on the "impact" field.
+func ImpactEqualFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEqualFold(FieldImpact, v))
+}
+
+// ImpactContainsFold applies the ContainsFold predicate on the "impact" field.
+func ImpactContainsFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContainsFold(FieldImpact, v))
+}
+
+// UrgencyEQ applies the EQ predicate on the "urgency" field.
+func UrgencyEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldUrgency, v))
+}
+
+// UrgencyNEQ applies the NEQ predicate on the "urgency" field.
+func UrgencyNEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldUrgency, v))
+}
+
+// UrgencyIn applies the In predicate on the "urgency" field.
+func UrgencyIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldUrgency, vs...))
+}
+
+// UrgencyNotIn applies the NotIn predicate on the "urgency" field.
+func UrgencyNotIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldUrgency, vs...))
+}
+
+// UrgencyGT applies the GT predicate on the "urgency" field.
+func UrgencyGT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldUrgency, v))
+}
+
+// UrgencyGTE applies the GTE predicate on the "urgency" field.
+func UrgencyGTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldUrgency, v))
+}
+
+// UrgencyLT applies the LT predicate on the "urgency" field.
+func UrgencyLT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldUrgency, v))
+}
+
+// UrgencyLTE applies the LTE predicate on the "urgency" field.
+func UrgencyLTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldUrgency, v))
+}
+
+// UrgencyContains applies the Contains predicate on the "urgency" field.
+func UrgencyContains(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContains(FieldUrgency, v))
+}
+
+// UrgencyHasPrefix applies the HasPrefix predicate on the "urgency" field.
+func UrgencyHasPrefix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasPrefix(FieldUrgency, v))
+}
+
+// UrgencyHasSuffix applies the HasSuffix predicate on the "urgency" field.
+func UrgencyHasSuffix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasSuffix(FieldUrgency, v))
+}
+
+// UrgencyEqualFold applies the EqualFold predicate on the "urgency" field.
+func UrgencyEqualFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEqualFold(FieldUrgency, v))
+}
+
+// UrgencyContainsFold applies the ContainsFold predicate on the "urgency" field.
+func UrgencyContainsFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContainsFold(FieldUrgency, v))
 }
 
 // IncidentNumberEQ applies the EQ predicate on the "incident_number" field.

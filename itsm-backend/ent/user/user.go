@@ -29,6 +29,8 @@ const (
 	FieldDepartmentID = "department_id"
 	// FieldPhone holds the string denoting the phone field in the database.
 	FieldPhone = "phone"
+	// FieldFeishuOpenID holds the string denoting the feishu_open_id field in the database.
+	FieldFeishuOpenID = "feishu_open_id"
 	// FieldPasswordHash holds the string denoting the password_hash field in the database.
 	FieldPasswordHash = "password_hash"
 	// FieldActive holds the string denoting the active field in the database.
@@ -47,6 +49,10 @@ const (
 	EdgeDepartmentRef = "department_ref"
 	// EdgeTenant holds the string denoting the tenant edge name in mutations.
 	EdgeTenant = "tenant"
+	// EdgeTickets holds the string denoting the tickets edge name in mutations.
+	EdgeTickets = "tickets"
+	// EdgeAssignedTickets holds the string denoting the assigned_tickets edge name in mutations.
+	EdgeAssignedTickets = "assigned_tickets"
 	// EdgeTicketComments holds the string denoting the ticket_comments edge name in mutations.
 	EdgeTicketComments = "ticket_comments"
 	// EdgeTicketAttachments holds the string denoting the ticket_attachments edge name in mutations.
@@ -85,6 +91,20 @@ const (
 	TenantInverseTable = "tenants"
 	// TenantColumn is the table column denoting the tenant relation/edge.
 	TenantColumn = "tenant_id"
+	// TicketsTable is the table that holds the tickets relation/edge.
+	TicketsTable = "tickets"
+	// TicketsInverseTable is the table name for the Ticket entity.
+	// It exists in this package in order to avoid circular dependency with the "ticket" package.
+	TicketsInverseTable = "tickets"
+	// TicketsColumn is the table column denoting the tickets relation/edge.
+	TicketsColumn = "requester_id"
+	// AssignedTicketsTable is the table that holds the assigned_tickets relation/edge.
+	AssignedTicketsTable = "tickets"
+	// AssignedTicketsInverseTable is the table name for the Ticket entity.
+	// It exists in this package in order to avoid circular dependency with the "ticket" package.
+	AssignedTicketsInverseTable = "tickets"
+	// AssignedTicketsColumn is the table column denoting the assigned_tickets relation/edge.
+	AssignedTicketsColumn = "assignee_id"
 	// TicketCommentsTable is the table that holds the ticket_comments relation/edge.
 	TicketCommentsTable = "ticket_comments"
 	// TicketCommentsInverseTable is the table name for the TicketComment entity.
@@ -168,6 +188,7 @@ var Columns = []string{
 	FieldDepartment,
 	FieldDepartmentID,
 	FieldPhone,
+	FieldFeishuOpenID,
 	FieldPasswordHash,
 	FieldActive,
 	FieldTenantID,
@@ -330,6 +351,11 @@ func ByPhone(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPhone, opts...).ToFunc()
 }
 
+// ByFeishuOpenID orders the results by the feishu_open_id field.
+func ByFeishuOpenID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFeishuOpenID, opts...).ToFunc()
+}
+
 // ByPasswordHash orders the results by the password_hash field.
 func ByPasswordHash(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPasswordHash, opts...).ToFunc()
@@ -376,6 +402,34 @@ func ByDepartmentRefField(field string, opts ...sql.OrderTermOption) OrderOption
 func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByTicketsCount orders the results by tickets count.
+func ByTicketsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTicketsStep(), opts...)
+	}
+}
+
+// ByTickets orders the results by tickets terms.
+func ByTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAssignedTicketsCount orders the results by assigned_tickets count.
+func ByAssignedTicketsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAssignedTicketsStep(), opts...)
+	}
+}
+
+// ByAssignedTickets orders the results by assigned_tickets terms.
+func ByAssignedTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAssignedTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -544,6 +598,20 @@ func newTenantStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TenantInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
+	)
+}
+func newTicketsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TicketsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
+	)
+}
+func newAssignedTicketsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AssignedTicketsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AssignedTicketsTable, AssignedTicketsColumn),
 	)
 }
 func newTicketCommentsStep() *sqlgraph.Step {

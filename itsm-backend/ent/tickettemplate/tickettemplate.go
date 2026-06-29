@@ -44,7 +44,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "ticket" package.
 	TicketsInverseTable = "tickets"
 	// TicketsColumn is the table column denoting the tickets relation/edge.
-	TicketsColumn = "template_id"
+	TicketsColumn = "ticket_template_tickets"
 )
 
 // Columns holds all SQL columns for tickettemplate fields.

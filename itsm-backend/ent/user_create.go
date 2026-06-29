@@ -16,6 +16,7 @@ import (
 	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
@@ -103,6 +104,20 @@ func (_c *UserCreate) SetPhone(v string) *UserCreate {
 func (_c *UserCreate) SetNillablePhone(v *string) *UserCreate {
 	if v != nil {
 		_c.SetPhone(*v)
+	}
+	return _c
+}
+
+// SetFeishuOpenID sets the "feishu_open_id" field.
+func (_c *UserCreate) SetFeishuOpenID(v string) *UserCreate {
+	_c.mutation.SetFeishuOpenID(v)
+	return _c
+}
+
+// SetNillableFeishuOpenID sets the "feishu_open_id" field if the given value is not nil.
+func (_c *UserCreate) SetNillableFeishuOpenID(v *string) *UserCreate {
+	if v != nil {
+		_c.SetFeishuOpenID(*v)
 	}
 	return _c
 }
@@ -211,6 +226,36 @@ func (_c *UserCreate) SetDepartmentRef(v *Department) *UserCreate {
 // SetTenant sets the "tenant" edge to the Tenant entity.
 func (_c *UserCreate) SetTenant(v *Tenant) *UserCreate {
 	return _c.SetTenantID(v.ID)
+}
+
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
+func (_c *UserCreate) AddTicketIDs(ids ...int) *UserCreate {
+	_c.mutation.AddTicketIDs(ids...)
+	return _c
+}
+
+// AddTickets adds the "tickets" edges to the Ticket entity.
+func (_c *UserCreate) AddTickets(v ...*Ticket) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddTicketIDs(ids...)
+}
+
+// AddAssignedTicketIDs adds the "assigned_tickets" edge to the Ticket entity by IDs.
+func (_c *UserCreate) AddAssignedTicketIDs(ids ...int) *UserCreate {
+	_c.mutation.AddAssignedTicketIDs(ids...)
+	return _c
+}
+
+// AddAssignedTickets adds the "assigned_tickets" edges to the Ticket entity.
+func (_c *UserCreate) AddAssignedTickets(v ...*Ticket) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAssignedTicketIDs(ids...)
 }
 
 // AddTicketCommentIDs adds the "ticket_comments" edge to the TicketComment entity by IDs.
@@ -548,6 +593,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldPhone, field.TypeString, value)
 		_node.Phone = value
 	}
+	if value, ok := _c.mutation.FeishuOpenID(); ok {
+		_spec.SetField(user.FieldFeishuOpenID, field.TypeString, value)
+		_node.FeishuOpenID = value
+	}
 	if value, ok := _c.mutation.PasswordHash(); ok {
 		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
 		_node.PasswordHash = value
@@ -604,6 +653,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.TenantID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TicketsTable,
+			Columns: []string{user.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AssignedTicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedTicketsTable,
+			Columns: []string{user.AssignedTicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.TicketCommentsIDs(); len(nodes) > 0 {

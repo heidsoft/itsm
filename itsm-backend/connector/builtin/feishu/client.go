@@ -12,6 +12,7 @@
 package feishu
 
 import (
+	"net/url"
 	"bytes"
 	"context"
 	"crypto/hmac"
@@ -145,4 +146,213 @@ func (c *Client) VerifyEventSignature(ts, nonce, signature string, body []byte) 
 // VerifyURLToken 校验首次 URL Verification 时的 token
 func (c *Client) VerifyURLToken(token string) bool {
 	return c.verifyTok != "" && c.verifyTok == token
+}
+
+// FeishuTask represents a Feishu task
+type FeishuTask struct {
+	GUID        string    `json:"guid,omitempty"`
+	Name        string    `json:"name"`
+	Description string    `json:"description,omitempty"`
+	StartTime   int64     `json:"start_time,omitempty"` // Unix timestamp in seconds
+	DueTime     int64     `json:"due_time,omitempty"`   // Unix timestamp in seconds
+	Completed   bool      `json:"completed,omitempty"`
+	CompletedAt int64     `json:"completed_at,omitempty"`
+	CreatorID   string    `json:"creator_id,omitempty"`
+	Assignees   []string  `json:"assignees,omitempty"` // User open IDs
+	Status      string    `json:"status,omitempty"`    // not_started / in_progress / completed / canceled
+	Priority    string    `json:"priority,omitempty"`  // low / medium / high / urgent
+	CreatedAt   int64     `json:"created_at,omitempty"`
+	UpdatedAt   int64     `json:"updated_at,omitempty"`
+	Extra       map[string]interface{} `json:"extra,omitempty"`
+}
+
+// CreateTask creates a new Feishu task
+func (c *Client) CreateTask(ctx context.Context, task *FeishuTask) (*FeishuTask, error) {
+	var resp struct {
+		Code int `json:"code"`
+		Msg  string `json:"msg"`
+		Data struct {
+			Task *FeishuTask `json:"task"`
+		} `json:"data"`
+	}
+	err := c.doJSON(ctx, http.MethodPost, "/open-apis/task/v2/tasks", task, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Code != 0 {
+		return nil, fmt.Errorf("feishu: create task failed code=%d msg=%s", resp.Code, resp.Msg)
+	}
+	return resp.Data.Task, nil
+}
+
+// UpdateTask updates an existing Feishu task
+func (c *Client) UpdateTask(ctx context.Context, taskGUID string, task *FeishuTask) (*FeishuTask, error) {
+	var resp struct {
+		Code int `json:"code"`
+		Msg  string `json:"msg"`
+		Data struct {
+			Task *FeishuTask `json:"task"`
+		} `json:"data"`
+	}
+	err := c.doJSON(ctx, http.MethodPatch, fmt.Sprintf("/open-apis/task/v2/tasks/%s", taskGUID), task, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Code != 0 {
+		return nil, fmt.Errorf("feishu: update task failed code=%d msg=%s", resp.Code, resp.Msg)
+	}
+	return resp.Data.Task, nil
+}
+
+// GetTask gets a Feishu task by GUID
+func (c *Client) GetTask(ctx context.Context, taskGUID string) (*FeishuTask, error) {
+	var resp struct {
+		Code int `json:"code"`
+		Msg  string `json:"msg"`
+		Data struct {
+			Task *FeishuTask `json:"task"`
+		} `json:"data"`
+	}
+	err := c.doJSON(ctx, http.MethodGet, fmt.Sprintf("/open-apis/task/v2/tasks/%s", taskGUID), nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Code != 0 {
+		return nil, fmt.Errorf("feishu: get task failed code=%d msg=%s", resp.Code, resp.Msg)
+	}
+	return resp.Data.Task, nil
+}
+
+// DeleteTask deletes a Feishu task by GUID
+func (c *Client) DeleteTask(ctx context.Context, taskGUID string) error {
+	var resp struct {
+		Code int `json:"code"`
+		Msg  string `json:"msg"`
+	}
+	err := c.doJSON(ctx, http.MethodDelete, fmt.Sprintf("/open-apis/task/v2/tasks/%s", taskGUID), nil, &resp)
+	if err != nil {
+		return err
+	}
+	if resp.Code != 0 {
+		return fmt.Errorf("feishu: delete task failed code=%d msg=%s", resp.Code, resp.Msg)
+	}
+	return nil
+}
+
+// ListTasks lists Feishu tasks with optional filters
+func (c *Client) ListTasks(ctx context.Context, pageToken string, pageSize int) ([]*FeishuTask, string, error) {
+	path := fmt.Sprintf("/open-apis/task/v2/tasks?page_size=%d", pageSize)
+	if pageToken != "" {
+		path += fmt.Sprintf("&page_token=%s", pageToken)
+	}
+	var resp struct {
+		Code int `json:"code"`
+		Msg  string `json:"msg"`
+		Data struct {
+			Tasks     []*FeishuTask `json:"tasks"`
+			PageToken string        `json:"page_token"`
+			HasMore   bool          `json:"has_more"`
+		} `json:"data"`
+	}
+	err := c.doJSON(ctx, http.MethodGet, path, nil, &resp)
+	if err != nil {
+		return nil, "", err
+	}
+	if resp.Code != 0 {
+		return nil, "", fmt.Errorf("feishu: list tasks failed code=%d msg=%s", resp.Code, resp.Msg)
+	}
+	return resp.Data.Tasks, resp.Data.PageToken, nil
+}
+
+// OAuthTokenResponse represents the response from Feishu OAuth token endpoint
+type OAuthTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	TokenType    string `json:"token_type"`
+	Scope        string `json:"scope"`
+	UserID       string `json:"user_id,omitempty"`
+	OpenID       string `json:"open_id,omitempty"`
+	UnionID      string `json:"union_id,omitempty"`
+}
+
+// GetOAuthAuthURL returns the OAuth authorization URL for Feishu
+func (c *Client) GetOAuthAuthURL(redirectURI, state string) string {
+	return fmt.Sprintf("%s/open-apis/authen/v1/authorize?app_id=%s&redirect_uri=%s&state=%s&response_type=code&scope=task:task:readonly,im:message:send,contact:user.base:readonly",
+		c.baseURL, c.appID, url.QueryEscape(redirectURI), state)
+}
+
+// ExchangeOAuthCode exchanges an authorization code for an access token
+func (c *Client) ExchangeOAuthCode(ctx context.Context, code string) (*OAuthTokenResponse, error) {
+	body, _ := json.Marshal(map[string]string{
+		"grant_type": "authorization_code",
+		"code":       code,
+	})
+	req, _ := http.NewRequestWithContext(ctx, http.MethodPost,
+		c.baseURL+"/open-apis/authen/v1/access_token", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	// For OAuth code exchange, we need to use app access token
+	appToken, err := c.getAppAccessToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+appToken)
+	resp, err := c.hc.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	var out struct {
+		Code int `json:"code"`
+		Msg  string `json:"msg"`
+		Data *OAuthTokenResponse `json:"data"`
+	}
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, fmt.Errorf("feishu: decode oauth token resp: %w", err)
+	}
+	if out.Code != 0 {
+		return nil, fmt.Errorf("feishu: oauth token api error code=%d msg=%s", out.Code, out.Msg)
+	}
+	return out.Data, nil
+}
+
+// RefreshOAuthToken refreshes an access token using a refresh token
+func (c *Client) RefreshOAuthToken(ctx context.Context, refreshToken string) (*OAuthTokenResponse, error) {
+	body, _ := json.Marshal(map[string]string{
+		"grant_type":    "refresh_token",
+		"refresh_token": refreshToken,
+	})
+	req, _ := http.NewRequestWithContext(ctx, http.MethodPost,
+		c.baseURL+"/open-apis/authen/v1/refresh_access_token", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	appToken, err := c.getAppAccessToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+appToken)
+	resp, err := c.hc.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	var out struct {
+		Code int `json:"code"`
+		Msg  string `json:"msg"`
+		Data *OAuthTokenResponse `json:"data"`
+	}
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, fmt.Errorf("feishu: decode refresh token resp: %w", err)
+	}
+	if out.Code != 0 {
+		return nil, fmt.Errorf("feishu: refresh token api error code=%d msg=%s", out.Code, out.Msg)
+	}
+	return out.Data, nil
+}
+
+// getAppAccessToken gets the app access token (used for OAuth operations)
+func (c *Client) getAppAccessToken(ctx context.Context) (string, error) {
+	// We can reuse the tenant access token for now, but if we need app-specific, we can implement it
+	return c.Token(ctx)
 }

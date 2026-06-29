@@ -502,7 +502,6 @@ func (_q *WorkflowQuery) loadWorkflowInstances(ctx context.Context, query *Workf
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(workflowinstance.FieldWorkflowID)
 	}

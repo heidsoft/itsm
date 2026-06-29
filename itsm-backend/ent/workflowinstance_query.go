@@ -27,7 +27,6 @@ type WorkflowInstanceQuery struct {
 	predicates        []predicate.WorkflowInstance
 	withWorkflow      *WorkflowQuery
 	withWorkflowTasks *WorkflowTaskQuery
-	withFKs           bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -407,16 +406,12 @@ func (_q *WorkflowInstanceQuery) prepareQuery(ctx context.Context) error {
 func (_q *WorkflowInstanceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*WorkflowInstance, error) {
 	var (
 		nodes       = []*WorkflowInstance{}
-		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
 			_q.withWorkflow != nil,
 			_q.withWorkflowTasks != nil,
 		}
 	)
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, workflowinstance.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*WorkflowInstance).scanValues(nil, columns)
 	}

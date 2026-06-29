@@ -26,6 +26,10 @@ const (
 	FieldPriority = "priority"
 	// FieldSeverity holds the string denoting the severity field in the database.
 	FieldSeverity = "severity"
+	// FieldImpact holds the string denoting the impact field in the database.
+	FieldImpact = "impact"
+	// FieldUrgency holds the string denoting the urgency field in the database.
+	FieldUrgency = "urgency"
 	// FieldIncidentNumber holds the string denoting the incident_number field in the database.
 	FieldIncidentNumber = "incident_number"
 	// FieldReporterID holds the string denoting the reporter_id field in the database.
@@ -132,6 +136,8 @@ var Columns = []string{
 	FieldType,
 	FieldPriority,
 	FieldSeverity,
+	FieldImpact,
+	FieldUrgency,
 	FieldIncidentNumber,
 	FieldReporterID,
 	FieldAssigneeID,
@@ -190,8 +196,18 @@ var (
 	DefaultType string
 	// DefaultPriority holds the default value on creation for the "priority" field.
 	DefaultPriority string
+	// PriorityValidator is a validator for the "priority" field. It is called by the builders before save.
+	PriorityValidator func(string) error
 	// DefaultSeverity holds the default value on creation for the "severity" field.
 	DefaultSeverity string
+	// DefaultImpact holds the default value on creation for the "impact" field.
+	DefaultImpact string
+	// ImpactValidator is a validator for the "impact" field. It is called by the builders before save.
+	ImpactValidator func(string) error
+	// DefaultUrgency holds the default value on creation for the "urgency" field.
+	DefaultUrgency string
+	// UrgencyValidator is a validator for the "urgency" field. It is called by the builders before save.
+	UrgencyValidator func(string) error
 	// IncidentNumberValidator is a validator for the "incident_number" field. It is called by the builders before save.
 	IncidentNumberValidator func(string) error
 	// ReporterIDValidator is a validator for the "reporter_id" field. It is called by the builders before save.
@@ -256,6 +272,16 @@ func ByPriority(opts ...sql.OrderTermOption) OrderOption {
 // BySeverity orders the results by the severity field.
 func BySeverity(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSeverity, opts...).ToFunc()
+}
+
+// ByImpact orders the results by the impact field.
+func ByImpact(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldImpact, opts...).ToFunc()
+}
+
+// ByUrgency orders the results by the urgency field.
+func ByUrgency(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUrgency, opts...).ToFunc()
 }
 
 // ByIncidentNumber orders the results by the incident_number field.

@@ -43,17 +43,21 @@ type ListConfigurationItemsRequest struct {
 
 // ConfigurationItemResponse 配置项响应
 type ConfigurationItemResponse struct {
-	ID              int                         `json:"id"`
-	Name            string                      `json:"name"`
-	Type            string                      `json:"type"`
-	Status          string                      `json:"status"`
-	BusinessService *string                     `json:"businessService,omitempty"`
-	Owner           *string                     `json:"owner,omitempty"`
-	Environment     *string                     `json:"environment,omitempty"`
-	Location        *string                     `json:"location,omitempty"`
-	Attributes      map[string]interface{}      `json:"attributes,omitempty"`
-	MonitoringData  map[string]interface{}      `json:"monitoringData,omitempty"`
-	TenantID        int                         `json:"tenantId"`
+	ID              int                    `json:"id"`
+	Name            string                 `json:"name"`
+	Type            string                 `json:"type"`
+	Status          string                 `json:"status"`
+	BusinessService *string                `json:"businessService,omitempty"`
+	Owner           *string                `json:"owner,omitempty"`
+	Environment     *string                `json:"environment,omitempty"`
+	Location        *string                `json:"location,omitempty"`
+	Attributes      map[string]interface{} `json:"attributes,omitempty"`
+	MonitoringData  map[string]interface{} `json:"monitoringData,omitempty"`
+	TenantID        int                    `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string                      `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time                  `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time                  `json:"expire_at,omitempty"`
 	CreatedAt       time.Time                   `json:"createdAt"`
 	UpdatedAt       time.Time                   `json:"updatedAt"`
 	RelatedItems    []ConfigurationItemResponse `json:"relatedItems,omitempty"`
@@ -126,54 +130,70 @@ type CreateCIRequest struct {
 	CloudSyncStatusSnake    string                 `json:"cloud_sync_status,omitempty"`
 	CloudResourceRefID      int                    `json:"cloudResourceRefId,omitempty"`
 	CloudResourceRefIDSnake int                    `json:"cloud_resource_ref_id,omitempty"`
-	TenantID                int                    `json:"tenantId,omitempty"`
+	TenantID                int                    `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
 	// Type is optional; will be set from CIType if not provided
 	Type string `json:"type,omitempty"`
 }
 
 // CIResponse 配置项响应
 type CIResponse struct {
-	ID                 int                       `json:"id"`
-	Name               string                    `json:"name"`
-	Type               string                    `json:"type"`
-	CITypeID           int                       `json:"ciTypeId"`
-	Description        string                    `json:"description"`
-	Status             string                    `json:"status"`
-	Environment        string                    `json:"environment,omitempty"`
-	Criticality        string                    `json:"criticality,omitempty"`
-	AssetTag           string                    `json:"assetTag,omitempty"`
-	Attributes         map[string]interface{}    `json:"attributes,omitempty"`
-	SerialNumber       string                    `json:"serialNumber,omitempty"`
-	Model              string                    `json:"model,omitempty"`
-	Vendor             string                    `json:"vendor,omitempty"`
-	Location           string                    `json:"location,omitempty"`
-	AssignedTo         string                    `json:"assignedTo,omitempty"`
-	OwnedBy            string                    `json:"ownedBy,omitempty"`
-	DiscoverySource    string                    `json:"discoverySource,omitempty"`
-	LastDiscovered     time.Time                 `json:"lastDiscovered,omitempty"`
-	Source             string                    `json:"source,omitempty"`
-	CloudProvider      string                    `json:"cloudProvider,omitempty"`
-	CloudAccountID     string                    `json:"cloudAccountId,omitempty"`
-	CloudRegion        string                    `json:"cloudRegion,omitempty"`
-	CloudZone          string                    `json:"cloudZone,omitempty"`
-	CloudResourceID    string                    `json:"cloudResourceId,omitempty"`
-	CloudResourceType  string                    `json:"cloudResourceType,omitempty"`
-	CloudMetadata      map[string]interface{}    `json:"cloudMetadata,omitempty"`
-	CloudTags          map[string]interface{}    `json:"cloudTags,omitempty"`
-	CloudMetrics       map[string]interface{}    `json:"cloudMetrics,omitempty"`
-	CloudSyncTime      *time.Time                `json:"cloudSyncTime,omitempty"`
-	CloudSyncStatus    string                    `json:"cloudSyncStatus,omitempty"`
-	CloudResourceRefID int                       `json:"cloudResourceRefId,omitempty"`
-	TenantID           int                       `json:"tenantId"`
-	CreatedAt          time.Time                 `json:"createdAt"`
-	UpdatedAt          time.Time                 `json:"updatedAt"`
-	OutgoingRelations  []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
-	IncomingRelations  []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
+	ID                 int                    `json:"id"`
+	Name               string                 `json:"name"`
+	Type               string                 `json:"type"`
+	CITypeID           int                    `json:"ciTypeId"`
+	Description        string                 `json:"description"`
+	Status             string                 `json:"status"`
+	Environment        string                 `json:"environment,omitempty"`
+	Criticality        string                 `json:"criticality,omitempty"`
+	AssetTag           string                 `json:"assetTag,omitempty"`
+	Attributes         map[string]interface{} `json:"attributes,omitempty"`
+	SerialNumber       string                 `json:"serialNumber,omitempty"`
+	Model              string                 `json:"model,omitempty"`
+	Vendor             string                 `json:"vendor,omitempty"`
+	Location           string                 `json:"location,omitempty"`
+	AssignedTo         string                 `json:"assignedTo,omitempty"`
+	OwnedBy            string                 `json:"ownedBy,omitempty"`
+	DiscoverySource    string                 `json:"discoverySource,omitempty"`
+	LastDiscovered     time.Time              `json:"lastDiscovered,omitempty"`
+	Source             string                 `json:"source,omitempty"`
+	CloudProvider      string                 `json:"cloudProvider,omitempty"`
+	CloudAccountID     string                 `json:"cloudAccountId,omitempty"`
+	CloudRegion        string                 `json:"cloudRegion,omitempty"`
+	CloudZone          string                 `json:"cloudZone,omitempty"`
+	CloudResourceID    string                 `json:"cloudResourceId,omitempty"`
+	CloudResourceType  string                 `json:"cloudResourceType,omitempty"`
+	CloudMetadata      map[string]interface{} `json:"cloudMetadata,omitempty"`
+	CloudTags          map[string]interface{} `json:"cloudTags,omitempty"`
+	CloudMetrics       map[string]interface{} `json:"cloudMetrics,omitempty"`
+	CloudSyncTime      *time.Time             `json:"cloudSyncTime,omitempty"`
+	CloudSyncStatus    string                 `json:"cloudSyncStatus,omitempty"`
+	CloudResourceRefID int                    `json:"cloudResourceRefId,omitempty"`
+	TenantID           int                    `json:"tenantId"`
+	// 生命周期管理
+	LifecycleStatus   string                    `json:"lifecycleStatus,omitempty"`
+	EffectiveAt       *time.Time                `json:"effectiveAt,omitempty"`
+	ExpireAt          *time.Time                `json:"expireAt,omitempty"`
+	CreatedAt         time.Time                 `json:"createdAt"`
+	UpdatedAt         time.Time                 `json:"updatedAt"`
+	OutgoingRelations []*CIRelationshipResponse `json:"outgoingRelations,omitempty"`
+	IncomingRelations []*CIRelationshipResponse `json:"incomingRelations,omitempty"`
+	Tags              []string                  `json:"tags,omitempty"`
+	TagDetails        []*CITagResponse          `json:"tagDetails,omitempty"`
 }
 
 // ListCIsRequest 获取配置项列表请求
 type ListCIsRequest struct {
-	TenantID int    `json:"tenantId" binding:"required"`
+	TenantID int `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type     string `json:"type,omitempty"`
 	CITypeID int    `json:"ciTypeId,omitempty"`
 	Status   string `json:"status,omitempty"`
 	Limit    int    `json:"limit,omitempty"`
@@ -264,9 +284,15 @@ type CloudServiceResponse struct {
 	AttributeSchema  map[string]interface{} `json:"attributeSchema,omitempty"`
 	IsSystem         bool                   `json:"isSystem"`
 	IsActive         bool                   `json:"isActive"`
-	TenantID         int                    `json:"tenantId"`
-	CreatedAt        time.Time              `json:"createdAt"`
-	UpdatedAt        time.Time              `json:"updatedAt"`
+	TenantID         int                    `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type      string    `json:"type,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // CloudAccount DTOs
@@ -280,16 +306,22 @@ type CloudAccountRequest struct {
 }
 
 type CloudAccountResponse struct {
-	ID              int       `json:"id"`
-	Provider        string    `json:"provider"`
-	AccountID       string    `json:"accountId"`
-	AccountName     string    `json:"accountName"`
-	CredentialRef   string    `json:"credentialRef,omitempty"`
-	RegionWhitelist []string  `json:"regionWhitelist,omitempty"`
-	IsActive        bool      `json:"isActive"`
-	TenantID        int       `json:"tenantId"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	ID              int      `json:"id"`
+	Provider        string   `json:"provider"`
+	AccountID       string   `json:"accountId"`
+	AccountName     string   `json:"accountName"`
+	CredentialRef   string   `json:"credentialRef,omitempty"`
+	RegionWhitelist []string `json:"regionWhitelist,omitempty"`
+	IsActive        bool     `json:"isActive"`
+	TenantID        int      `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type      string    `json:"type,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // CloudResource DTOs
@@ -307,21 +339,33 @@ type CloudResourceResponse struct {
 	FirstSeenAt    *time.Time             `json:"firstSeenAt,omitempty"`
 	LastSeenAt     *time.Time             `json:"lastSeenAt,omitempty"`
 	LifecycleState string                 `json:"lifecycleState,omitempty"`
-	TenantID       int                    `json:"tenantId"`
-	CreatedAt      time.Time              `json:"createdAt"`
-	UpdatedAt      time.Time              `json:"updatedAt"`
+	TenantID       int                    `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type      string    `json:"type,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // RelationshipType DTOs
 type RelationshipTypeResponse struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	Directional bool      `json:"directional"`
-	ReverseName string    `json:"reverseName,omitempty"`
-	Description string    `json:"description,omitempty"`
-	TenantID    int       `json:"tenantId"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Directional bool   `json:"directional"`
+	ReverseName string `json:"reverseName,omitempty"`
+	Description string `json:"description,omitempty"`
+	TenantID    int    `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type      string    `json:"type,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // Discovery DTOs
@@ -334,15 +378,21 @@ type DiscoverySourceRequest struct {
 }
 
 type DiscoverySourceResponse struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	SourceType  string    `json:"sourceType"`
-	Provider    string    `json:"provider,omitempty"`
-	IsActive    bool      `json:"isActive"`
-	Description string    `json:"description,omitempty"`
-	TenantID    int       `json:"tenantId"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	SourceType  string `json:"sourceType"`
+	Provider    string `json:"provider,omitempty"`
+	IsActive    bool   `json:"isActive"`
+	Description string `json:"description,omitempty"`
+	TenantID    int    `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type      string    `json:"type,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type DiscoveryJobRequest struct {
@@ -356,9 +406,15 @@ type DiscoveryJobResponse struct {
 	StartedAt  *time.Time             `json:"startedAt,omitempty"`
 	FinishedAt *time.Time             `json:"finishedAt,omitempty"`
 	Summary    map[string]interface{} `json:"summary,omitempty"`
-	TenantID   int                    `json:"tenantId"`
-	CreatedAt  time.Time              `json:"createdAt"`
-	UpdatedAt  time.Time              `json:"updatedAt"`
+	TenantID   int                    `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type      string    `json:"type,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type DiscoveryResultResponse struct {
@@ -370,9 +426,15 @@ type DiscoveryResultResponse struct {
 	ResourceID   string                 `json:"resourceId,omitempty"`
 	Diff         map[string]interface{} `json:"diff,omitempty"`
 	Status       string                 `json:"status"`
-	TenantID     int                    `json:"tenantId"`
-	CreatedAt    time.Time              `json:"createdAt"`
-	UpdatedAt    time.Time              `json:"updatedAt"`
+	TenantID     int                    `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type      string    `json:"type,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // Reconciliation DTOs
@@ -396,13 +458,19 @@ type ReconciliationResponse struct {
 
 // CMDBCreateCIRequest service 层创建配置项请求（内部使用）
 type CMDBCreateCIRequest struct {
-	Name            string                  `json:"name"`
-	CiType          string                  `json:"ci_type"`
-	CiTypeID        int                     `json:"ci_type_id"`
-	Status          string                  `json:"status"`
-	Environment     string                  `json:"environment"`
-	Criticality     string                  `json:"criticality"`
-	TenantID        int                     `json:"tenant_id"`
+	Name        string `json:"name"`
+	CiType      string `json:"ci_type"`
+	CiTypeID    int    `json:"ci_type_id"`
+	Status      string `json:"status"`
+	Environment string `json:"environment"`
+	Criticality string `json:"criticality"`
+	TenantID    int    `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type            string                  `json:"type,omitempty"`
 	AssetTag        *string                 `json:"asset_tag,omitempty"`
 	SerialNumber    *string                 `json:"serial_number,omitempty"`
 	Location        *string                 `json:"location,omitempty"`
@@ -414,7 +482,13 @@ type CMDBCreateCIRequest struct {
 
 // CMDBListCIsRequest service 层查询配置项列表请求（内部使用）
 type CMDBListCIsRequest struct {
-	TenantID    int    `json:"tenant_id,omitempty"`
+	TenantID int `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type        string `json:"type,omitempty"`
 	CiType      string `json:"ci_type,omitempty"`
 	Status      string `json:"status,omitempty"`
 	Environment string `json:"environment,omitempty"`
@@ -428,11 +502,47 @@ type CMDBCreateRelationshipRequest struct {
 	TargetCIID  int     `json:"target_ci_id"`
 	Type        string  `json:"type"`
 	Description *string `json:"description,omitempty"`
-	TenantID    int     `json:"tenant_id"`
+	TenantID    int     `json:"tenant_id,omitempty"`
 }
 
 // CMDBUpdateRelationshipRequest service 层更新 CI 关系请求（内部使用）
 type CMDBUpdateRelationshipRequest struct {
 	Type        string  `json:"type,omitempty"`
 	Description *string `json:"description,omitempty"`
+}
+
+// CIHistoryResponse CI历史记录响应
+type CIHistoryResponse struct {
+	ID            int                    `json:"id"`
+	CIID          int                    `json:"ciId"`
+	Version       int                    `json:"version"`
+	Operation     string                 `json:"operation"`
+	Before        map[string]interface{} `json:"before,omitempty"`
+	After         map[string]interface{} `json:"after,omitempty"`
+	ChangedFields []string               `json:"changedFields,omitempty"`
+	OperatorID    int                    `json:"operatorId"`
+	OperatorName  string                 `json:"operatorName,omitempty"`
+	Remark        string                 `json:"remark,omitempty"`
+	TenantID      int                    `json:"tenant_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus string     `json:"lifecycle_status,omitempty" binding:"omitempty,oneof=draft online maintenance offline scrapped"`
+	EffectiveAt     *time.Time `json:"effective_at,omitempty"`
+	ExpireAt        *time.Time `json:"expire_at,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type      string    `json:"type,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+// CIHistoryListResponse CI历史列表响应
+type CIHistoryListResponse struct {
+	Items []*CIHistoryResponse `json:"items"`
+	Total int                  `json:"total"`
+	Page  int                  `json:"page"`
+	Size  int                  `json:"size"`
+}
+
+// RevertCIVersionRequest 回滚CI版本请求
+type RevertCIVersionRequest struct {
+	Version int    `json:"version" binding:"required,min=1"`
+	Remark  string `json:"remark,omitempty"`
 }

@@ -101,6 +101,34 @@ func (_c *IncidentCreate) SetNillableSeverity(v *string) *IncidentCreate {
 	return _c
 }
 
+// SetImpact sets the "impact" field.
+func (_c *IncidentCreate) SetImpact(v string) *IncidentCreate {
+	_c.mutation.SetImpact(v)
+	return _c
+}
+
+// SetNillableImpact sets the "impact" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableImpact(v *string) *IncidentCreate {
+	if v != nil {
+		_c.SetImpact(*v)
+	}
+	return _c
+}
+
+// SetUrgency sets the "urgency" field.
+func (_c *IncidentCreate) SetUrgency(v string) *IncidentCreate {
+	_c.mutation.SetUrgency(v)
+	return _c
+}
+
+// SetNillableUrgency sets the "urgency" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableUrgency(v *string) *IncidentCreate {
+	if v != nil {
+		_c.SetUrgency(*v)
+	}
+	return _c
+}
+
 // SetIncidentNumber sets the "incident_number" field.
 func (_c *IncidentCreate) SetIncidentNumber(v string) *IncidentCreate {
 	_c.mutation.SetIncidentNumber(v)
@@ -509,6 +537,14 @@ func (_c *IncidentCreate) defaults() {
 		v := incident.DefaultSeverity
 		_c.mutation.SetSeverity(v)
 	}
+	if _, ok := _c.mutation.Impact(); !ok {
+		v := incident.DefaultImpact
+		_c.mutation.SetImpact(v)
+	}
+	if _, ok := _c.mutation.Urgency(); !ok {
+		v := incident.DefaultUrgency
+		_c.mutation.SetUrgency(v)
+	}
 	if _, ok := _c.mutation.DetectedAt(); !ok {
 		v := incident.DefaultDetectedAt()
 		_c.mutation.SetDetectedAt(v)
@@ -562,8 +598,29 @@ func (_c *IncidentCreate) check() error {
 	if _, ok := _c.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "Incident.priority"`)}
 	}
+	if v, ok := _c.mutation.Priority(); ok {
+		if err := incident.PriorityValidator(v); err != nil {
+			return &ValidationError{Name: "priority", err: fmt.Errorf(`ent: validator failed for field "Incident.priority": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.Severity(); !ok {
 		return &ValidationError{Name: "severity", err: errors.New(`ent: missing required field "Incident.severity"`)}
+	}
+	if _, ok := _c.mutation.Impact(); !ok {
+		return &ValidationError{Name: "impact", err: errors.New(`ent: missing required field "Incident.impact"`)}
+	}
+	if v, ok := _c.mutation.Impact(); ok {
+		if err := incident.ImpactValidator(v); err != nil {
+			return &ValidationError{Name: "impact", err: fmt.Errorf(`ent: validator failed for field "Incident.impact": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Urgency(); !ok {
+		return &ValidationError{Name: "urgency", err: errors.New(`ent: missing required field "Incident.urgency"`)}
+	}
+	if v, ok := _c.mutation.Urgency(); ok {
+		if err := incident.UrgencyValidator(v); err != nil {
+			return &ValidationError{Name: "urgency", err: fmt.Errorf(`ent: validator failed for field "Incident.urgency": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.IncidentNumber(); !ok {
 		return &ValidationError{Name: "incident_number", err: errors.New(`ent: missing required field "Incident.incident_number"`)}
@@ -667,6 +724,14 @@ func (_c *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Severity(); ok {
 		_spec.SetField(incident.FieldSeverity, field.TypeString, value)
 		_node.Severity = value
+	}
+	if value, ok := _c.mutation.Impact(); ok {
+		_spec.SetField(incident.FieldImpact, field.TypeString, value)
+		_node.Impact = value
+	}
+	if value, ok := _c.mutation.Urgency(); ok {
+		_spec.SetField(incident.FieldUrgency, field.TypeString, value)
+		_node.Urgency = value
 	}
 	if value, ok := _c.mutation.IncidentNumber(); ok {
 		_spec.SetField(incident.FieldIncidentNumber, field.TypeString, value)

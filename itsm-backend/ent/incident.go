@@ -30,6 +30,10 @@ type Incident struct {
 	Priority string `json:"priority,omitempty"`
 	// 严重程度
 	Severity string `json:"severity,omitempty"`
+	// 影响范围：low/medium/high/critical
+	Impact string `json:"impact,omitempty"`
+	// 紧急程度：low/medium/high/critical
+	Urgency string `json:"urgency,omitempty"`
 	// 事件编号
 	IncidentNumber string `json:"incident_number,omitempty"`
 	// 报告人ID
@@ -175,7 +179,7 @@ func (*Incident) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldConfigurationItemID, incident.FieldEscalationLevel, incident.FieldTenantID, incident.FieldVersion:
 			values[i] = new(sql.NullInt64)
-		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldType, incident.FieldPriority, incident.FieldSeverity, incident.FieldIncidentNumber, incident.FieldCategory, incident.FieldSubcategory, incident.FieldSource:
+		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldType, incident.FieldPriority, incident.FieldSeverity, incident.FieldImpact, incident.FieldUrgency, incident.FieldIncidentNumber, incident.FieldCategory, incident.FieldSubcategory, incident.FieldSource:
 			values[i] = new(sql.NullString)
 		case incident.FieldDetectedAt, incident.FieldResolvedAt, incident.FieldClosedAt, incident.FieldEscalatedAt, incident.FieldCreatedAt, incident.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -235,6 +239,18 @@ func (_m *Incident) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field severity", values[i])
 			} else if value.Valid {
 				_m.Severity = value.String
+			}
+		case incident.FieldImpact:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field impact", values[i])
+			} else if value.Valid {
+				_m.Impact = value.String
+			}
+		case incident.FieldUrgency:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field urgency", values[i])
+			} else if value.Valid {
+				_m.Urgency = value.String
 			}
 		case incident.FieldIncidentNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -464,6 +480,12 @@ func (_m *Incident) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("severity=")
 	builder.WriteString(_m.Severity)
+	builder.WriteString(", ")
+	builder.WriteString("impact=")
+	builder.WriteString(_m.Impact)
+	builder.WriteString(", ")
+	builder.WriteString("urgency=")
+	builder.WriteString(_m.Urgency)
 	builder.WriteString(", ")
 	builder.WriteString("incident_number=")
 	builder.WriteString(_m.IncidentNumber)

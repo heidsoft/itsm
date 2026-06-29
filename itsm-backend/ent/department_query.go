@@ -809,9 +809,6 @@ func (_q *DepartmentQuery) loadTickets(ctx context.Context, query *TicketQuery, 
 		}
 	}
 	query.withFKs = true
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(ticket.FieldDepartmentID)
-	}
 	query.Where(predicate.Ticket(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(department.TicketsColumn), fks...))
 	}))
@@ -820,10 +817,13 @@ func (_q *DepartmentQuery) loadTickets(ctx context.Context, query *TicketQuery, 
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.DepartmentID
-		node, ok := nodeids[fk]
+		fk := n.department_tickets
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "department_tickets" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "department_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "department_tickets" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

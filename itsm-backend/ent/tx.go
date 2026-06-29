@@ -28,12 +28,22 @@ type Tx struct {
 	AuditLog *AuditLogClient
 	// BPMNPermission is the client for interacting with the BPMNPermission builders.
 	BPMNPermission *BPMNPermissionClient
+	// CABMember is the client for interacting with the CABMember builders.
+	CABMember *CABMemberClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
 	CIAttributeDefinition *CIAttributeDefinitionClient
 	// CIRelationship is the client for interacting with the CIRelationship builders.
 	CIRelationship *CIRelationshipClient
+	// CITag is the client for interacting with the CITag builders.
+	CITag *CITagClient
 	// CIType is the client for interacting with the CIType builders.
 	CIType *CITypeClient
+	// CMDBExportTask is the client for interacting with the CMDBExportTask builders.
+	CMDBExportTask *CMDBExportTaskClient
+	// CMDBImportTask is the client for interacting with the CMDBImportTask builders.
+	CMDBImportTask *CMDBImportTaskClient
+	// CMDBSavedView is the client for interacting with the CMDBSavedView builders.
+	CMDBSavedView *CMDBSavedViewClient
 	// Change is the client for interacting with the Change builders.
 	Change *ChangeClient
 	// ChangePIR is the client for interacting with the ChangePIR builders.
@@ -46,6 +56,8 @@ type Tx struct {
 	CloudService *CloudServiceClient
 	// ConfigurationItem is the client for interacting with the ConfigurationItem builders.
 	ConfigurationItem *ConfigurationItemClient
+	// ConfigurationItemHistory is the client for interacting with the ConfigurationItemHistory builders.
+	ConfigurationItemHistory *ConfigurationItemHistoryClient
 	// Contract is the client for interacting with the Contract builders.
 	Contract *ContractClient
 	// Conversation is the client for interacting with the Conversation builders.
@@ -64,6 +76,8 @@ type Tx struct {
 	EndpointACL *EndpointACLClient
 	// EngineerSkill is the client for interacting with the EngineerSkill builders.
 	EngineerSkill *EngineerSkillClient
+	// FeishuTicketSync is the client for interacting with the FeishuTicketSync builders.
+	FeishuTicketSync *FeishuTicketSyncClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
 	// Incident is the client for interacting with the Incident builders.
@@ -164,6 +178,8 @@ type Tx struct {
 	SLAViolation *SLAViolationClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
 	ServiceCatalog *ServiceCatalogClient
+	// ServiceCatalogItem is the client for interacting with the ServiceCatalogItem builders.
+	ServiceCatalogItem *ServiceCatalogItemClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
 	ServiceRequest *ServiceRequestClient
 	// ServiceRequestApproval is the client for interacting with the ServiceRequestApproval builders.
@@ -363,15 +379,21 @@ func (tx *Tx) init() {
 	tx.AssetLicense = NewAssetLicenseClient(tx.config)
 	tx.AuditLog = NewAuditLogClient(tx.config)
 	tx.BPMNPermission = NewBPMNPermissionClient(tx.config)
+	tx.CABMember = NewCABMemberClient(tx.config)
 	tx.CIAttributeDefinition = NewCIAttributeDefinitionClient(tx.config)
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)
+	tx.CITag = NewCITagClient(tx.config)
 	tx.CIType = NewCITypeClient(tx.config)
+	tx.CMDBExportTask = NewCMDBExportTaskClient(tx.config)
+	tx.CMDBImportTask = NewCMDBImportTaskClient(tx.config)
+	tx.CMDBSavedView = NewCMDBSavedViewClient(tx.config)
 	tx.Change = NewChangeClient(tx.config)
 	tx.ChangePIR = NewChangePIRClient(tx.config)
 	tx.CloudAccount = NewCloudAccountClient(tx.config)
 	tx.CloudResource = NewCloudResourceClient(tx.config)
 	tx.CloudService = NewCloudServiceClient(tx.config)
 	tx.ConfigurationItem = NewConfigurationItemClient(tx.config)
+	tx.ConfigurationItemHistory = NewConfigurationItemHistoryClient(tx.config)
 	tx.Contract = NewContractClient(tx.config)
 	tx.Conversation = NewConversationClient(tx.config)
 	tx.Department = NewDepartmentClient(tx.config)
@@ -381,6 +403,7 @@ func (tx *Tx) init() {
 	tx.DomainConfig = NewDomainConfigClient(tx.config)
 	tx.EndpointACL = NewEndpointACLClient(tx.config)
 	tx.EngineerSkill = NewEngineerSkillClient(tx.config)
+	tx.FeishuTicketSync = NewFeishuTicketSyncClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
 	tx.Incident = NewIncidentClient(tx.config)
 	tx.IncidentAlert = NewIncidentAlertClient(tx.config)
@@ -431,6 +454,7 @@ func (tx *Tx) init() {
 	tx.SLAPolicy = NewSLAPolicyClient(tx.config)
 	tx.SLAViolation = NewSLAViolationClient(tx.config)
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
+	tx.ServiceCatalogItem = NewServiceCatalogItemClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)
 	tx.ServiceRequestApproval = NewServiceRequestApprovalClient(tx.config)
 	tx.StandardChange = NewStandardChangeClient(tx.config)

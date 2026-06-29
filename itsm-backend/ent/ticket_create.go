@@ -7,12 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/approvalrecord"
-	"itsm-backend/ent/configurationitem"
-	"itsm-backend/ent/department"
-	"itsm-backend/ent/problem"
+	"itsm-backend/ent/feishuticketsync"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/slaalerthistory"
-	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketapproval"
@@ -22,9 +19,8 @@ import (
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
-	"itsm-backend/ent/tickettemplate"
 	"itsm-backend/ent/ticketworkflowrecord"
-	"itsm-backend/ent/workflowinstance"
+	"itsm-backend/ent/user"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -468,91 +464,6 @@ func (_c *TicketCreate) SetNillableDeletedAt(v *time.Time) *TicketCreate {
 	return _c
 }
 
-// SetTemplate sets the "template" edge to the TicketTemplate entity.
-func (_c *TicketCreate) SetTemplate(v *TicketTemplate) *TicketCreate {
-	return _c.SetTemplateID(v.ID)
-}
-
-// SetCategory sets the "category" edge to the TicketCategory entity.
-func (_c *TicketCreate) SetCategory(v *TicketCategory) *TicketCreate {
-	return _c.SetCategoryID(v.ID)
-}
-
-// SetDepartment sets the "department" edge to the Department entity.
-func (_c *TicketCreate) SetDepartment(v *Department) *TicketCreate {
-	return _c.SetDepartmentID(v.ID)
-}
-
-// AddTagIDs adds the "tags" edge to the TicketTag entity by IDs.
-func (_c *TicketCreate) AddTagIDs(ids ...int) *TicketCreate {
-	_c.mutation.AddTagIDs(ids...)
-	return _c
-}
-
-// AddTags adds the "tags" edges to the TicketTag entity.
-func (_c *TicketCreate) AddTags(v ...*TicketTag) *TicketCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddTagIDs(ids...)
-}
-
-// AddRelatedTicketIDs adds the "related_tickets" edge to the Ticket entity by IDs.
-func (_c *TicketCreate) AddRelatedTicketIDs(ids ...int) *TicketCreate {
-	_c.mutation.AddRelatedTicketIDs(ids...)
-	return _c
-}
-
-// AddRelatedTickets adds the "related_tickets" edges to the Ticket entity.
-func (_c *TicketCreate) AddRelatedTickets(v ...*Ticket) *TicketCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddRelatedTicketIDs(ids...)
-}
-
-// SetParentTicket sets the "parent_ticket" edge to the Ticket entity.
-func (_c *TicketCreate) SetParentTicket(v *Ticket) *TicketCreate {
-	return _c.SetParentTicketID(v.ID)
-}
-
-// AddWorkflowInstanceIDs adds the "workflow_instances" edge to the WorkflowInstance entity by IDs.
-func (_c *TicketCreate) AddWorkflowInstanceIDs(ids ...int) *TicketCreate {
-	_c.mutation.AddWorkflowInstanceIDs(ids...)
-	return _c
-}
-
-// AddWorkflowInstances adds the "workflow_instances" edges to the WorkflowInstance entity.
-func (_c *TicketCreate) AddWorkflowInstances(v ...*WorkflowInstance) *TicketCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddWorkflowInstanceIDs(ids...)
-}
-
-// SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
-func (_c *TicketCreate) SetSLADefinition(v *SLADefinition) *TicketCreate {
-	return _c.SetSLADefinitionID(v.ID)
-}
-
-// AddSLAViolationIDs adds the "sla_violations" edge to the SLAViolation entity by IDs.
-func (_c *TicketCreate) AddSLAViolationIDs(ids ...int) *TicketCreate {
-	_c.mutation.AddSLAViolationIDs(ids...)
-	return _c
-}
-
-// AddSLAViolations adds the "sla_violations" edges to the SLAViolation entity.
-func (_c *TicketCreate) AddSLAViolations(v ...*SLAViolation) *TicketCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddSLAViolationIDs(ids...)
-}
-
 // AddCommentIDs adds the "comments" edge to the TicketComment entity by IDs.
 func (_c *TicketCreate) AddCommentIDs(ids ...int) *TicketCreate {
 	_c.mutation.AddCommentIDs(ids...)
@@ -583,34 +494,19 @@ func (_c *TicketCreate) AddAttachments(v ...*TicketAttachment) *TicketCreate {
 	return _c.AddAttachmentIDs(ids...)
 }
 
-// AddNotificationIDs adds the "notifications" edge to the TicketNotification entity by IDs.
-func (_c *TicketCreate) AddNotificationIDs(ids ...int) *TicketCreate {
-	_c.mutation.AddNotificationIDs(ids...)
+// AddTagIDs adds the "tags" edge to the TicketTag entity by IDs.
+func (_c *TicketCreate) AddTagIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddTagIDs(ids...)
 	return _c
 }
 
-// AddNotifications adds the "notifications" edges to the TicketNotification entity.
-func (_c *TicketCreate) AddNotifications(v ...*TicketNotification) *TicketCreate {
+// AddTags adds the "tags" edges to the TicketTag entity.
+func (_c *TicketCreate) AddTags(v ...*TicketTag) *TicketCreate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _c.AddNotificationIDs(ids...)
-}
-
-// AddSLAAlertHistoryIDs adds the "sla_alert_history" edge to the SLAAlertHistory entity by IDs.
-func (_c *TicketCreate) AddSLAAlertHistoryIDs(ids ...int) *TicketCreate {
-	_c.mutation.AddSLAAlertHistoryIDs(ids...)
-	return _c
-}
-
-// AddSLAAlertHistory adds the "sla_alert_history" edges to the SLAAlertHistory entity.
-func (_c *TicketCreate) AddSLAAlertHistory(v ...*SLAAlertHistory) *TicketCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddSLAAlertHistoryIDs(ids...)
+	return _c.AddTagIDs(ids...)
 }
 
 // AddApprovalRecordIDs adds the "approval_records" edge to the ApprovalRecord entity by IDs.
@@ -626,51 +522,6 @@ func (_c *TicketCreate) AddApprovalRecords(v ...*ApprovalRecord) *TicketCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddApprovalRecordIDs(ids...)
-}
-
-// AddRootCauseAnalysisIDs adds the "root_cause_analyses" edge to the RootCauseAnalysis entity by IDs.
-func (_c *TicketCreate) AddRootCauseAnalysisIDs(ids ...int) *TicketCreate {
-	_c.mutation.AddRootCauseAnalysisIDs(ids...)
-	return _c
-}
-
-// AddRootCauseAnalyses adds the "root_cause_analyses" edges to the RootCauseAnalysis entity.
-func (_c *TicketCreate) AddRootCauseAnalyses(v ...*RootCauseAnalysis) *TicketCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddRootCauseAnalysisIDs(ids...)
-}
-
-// AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
-func (_c *TicketCreate) AddConfigurationItemIDs(ids ...int) *TicketCreate {
-	_c.mutation.AddConfigurationItemIDs(ids...)
-	return _c
-}
-
-// AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
-func (_c *TicketCreate) AddConfigurationItems(v ...*ConfigurationItem) *TicketCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddConfigurationItemIDs(ids...)
-}
-
-// AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
-func (_c *TicketCreate) AddProblemIDs(ids ...int) *TicketCreate {
-	_c.mutation.AddProblemIDs(ids...)
-	return _c
-}
-
-// AddProblems adds the "problems" edges to the Problem entity.
-func (_c *TicketCreate) AddProblems(v ...*Problem) *TicketCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddProblemIDs(ids...)
 }
 
 // AddApprovalIDs adds the "approvals" edge to the TicketApproval entity by IDs.
@@ -703,6 +554,21 @@ func (_c *TicketCreate) AddWorkflowRecords(v ...*TicketWorkflowRecord) *TicketCr
 	return _c.AddWorkflowRecordIDs(ids...)
 }
 
+// AddNotificationIDs adds the "notifications" edge to the TicketNotification entity by IDs.
+func (_c *TicketCreate) AddNotificationIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddNotificationIDs(ids...)
+	return _c
+}
+
+// AddNotifications adds the "notifications" edges to the TicketNotification entity.
+func (_c *TicketCreate) AddNotifications(v ...*TicketNotification) *TicketCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddNotificationIDs(ids...)
+}
+
 // AddCcUserIDs adds the "cc_users" edge to the TicketCC entity by IDs.
 func (_c *TicketCreate) AddCcUserIDs(ids ...int) *TicketCreate {
 	_c.mutation.AddCcUserIDs(ids...)
@@ -716,6 +582,91 @@ func (_c *TicketCreate) AddCcUsers(v ...*TicketCC) *TicketCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddCcUserIDs(ids...)
+}
+
+// AddSLAViolationIDs adds the "sla_violations" edge to the SLAViolation entity by IDs.
+func (_c *TicketCreate) AddSLAViolationIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddSLAViolationIDs(ids...)
+	return _c
+}
+
+// AddSLAViolations adds the "sla_violations" edges to the SLAViolation entity.
+func (_c *TicketCreate) AddSLAViolations(v ...*SLAViolation) *TicketCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddSLAViolationIDs(ids...)
+}
+
+// AddSLAAlertHistoryIDs adds the "sla_alert_history" edge to the SLAAlertHistory entity by IDs.
+func (_c *TicketCreate) AddSLAAlertHistoryIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddSLAAlertHistoryIDs(ids...)
+	return _c
+}
+
+// AddSLAAlertHistory adds the "sla_alert_history" edges to the SLAAlertHistory entity.
+func (_c *TicketCreate) AddSLAAlertHistory(v ...*SLAAlertHistory) *TicketCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddSLAAlertHistoryIDs(ids...)
+}
+
+// AddRootCauseAnalysisIDs adds the "root_cause_analyses" edge to the RootCauseAnalysis entity by IDs.
+func (_c *TicketCreate) AddRootCauseAnalysisIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddRootCauseAnalysisIDs(ids...)
+	return _c
+}
+
+// AddRootCauseAnalyses adds the "root_cause_analyses" edges to the RootCauseAnalysis entity.
+func (_c *TicketCreate) AddRootCauseAnalyses(v ...*RootCauseAnalysis) *TicketCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRootCauseAnalysisIDs(ids...)
+}
+
+// AddFeishuSyncIDs adds the "feishu_syncs" edge to the FeishuTicketSync entity by IDs.
+func (_c *TicketCreate) AddFeishuSyncIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddFeishuSyncIDs(ids...)
+	return _c
+}
+
+// AddFeishuSyncs adds the "feishu_syncs" edges to the FeishuTicketSync entity.
+func (_c *TicketCreate) AddFeishuSyncs(v ...*FeishuTicketSync) *TicketCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddFeishuSyncIDs(ids...)
+}
+
+// SetRequester sets the "requester" edge to the User entity.
+func (_c *TicketCreate) SetRequester(v *User) *TicketCreate {
+	return _c.SetRequesterID(v.ID)
+}
+
+// SetAssignee sets the "assignee" edge to the User entity.
+func (_c *TicketCreate) SetAssignee(v *User) *TicketCreate {
+	return _c.SetAssigneeID(v.ID)
+}
+
+// AddCategoryIDs adds the "category" edge to the TicketCategory entity by IDs.
+func (_c *TicketCreate) AddCategoryIDs(ids ...int) *TicketCreate {
+	_c.mutation.AddCategoryIDs(ids...)
+	return _c
+}
+
+// AddCategory adds the "category" edges to the TicketCategory entity.
+func (_c *TicketCreate) AddCategory(v ...*TicketCategory) *TicketCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCategoryIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -848,6 +799,9 @@ func (_c *TicketCreate) check() error {
 	if _, ok := _c.mutation.IsManagedByMsp(); !ok {
 		return &ValidationError{Name: "is_managed_by_msp", err: errors.New(`ent: missing required field "Ticket.is_managed_by_msp"`)}
 	}
+	if len(_c.mutation.RequesterIDs()) == 0 {
+		return &ValidationError{Name: "requester", err: errors.New(`ent: missing required edge "Ticket.requester"`)}
+	}
 	return nil
 }
 
@@ -898,17 +852,29 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 		_spec.SetField(ticket.FieldTicketNumber, field.TypeString, value)
 		_node.TicketNumber = value
 	}
-	if value, ok := _c.mutation.RequesterID(); ok {
-		_spec.SetField(ticket.FieldRequesterID, field.TypeInt, value)
-		_node.RequesterID = value
-	}
-	if value, ok := _c.mutation.AssigneeID(); ok {
-		_spec.SetField(ticket.FieldAssigneeID, field.TypeInt, value)
-		_node.AssigneeID = value
-	}
 	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(ticket.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
+	}
+	if value, ok := _c.mutation.TemplateID(); ok {
+		_spec.SetField(ticket.FieldTemplateID, field.TypeInt, value)
+		_node.TemplateID = value
+	}
+	if value, ok := _c.mutation.CategoryID(); ok {
+		_spec.SetField(ticket.FieldCategoryID, field.TypeInt, value)
+		_node.CategoryID = value
+	}
+	if value, ok := _c.mutation.DepartmentID(); ok {
+		_spec.SetField(ticket.FieldDepartmentID, field.TypeInt, value)
+		_node.DepartmentID = value
+	}
+	if value, ok := _c.mutation.ParentTicketID(); ok {
+		_spec.SetField(ticket.FieldParentTicketID, field.TypeInt, value)
+		_node.ParentTicketID = value
+	}
+	if value, ok := _c.mutation.SLADefinitionID(); ok {
+		_spec.SetField(ticket.FieldSLADefinitionID, field.TypeInt, value)
+		_node.SLADefinitionID = value
 	}
 	if value, ok := _c.mutation.SLAResponseDeadline(); ok {
 		_spec.SetField(ticket.FieldSLAResponseDeadline, field.TypeTime, value)
@@ -986,155 +952,6 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 		_spec.SetField(ticket.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = &value
 	}
-	if nodes := _c.mutation.TemplateIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   ticket.TemplateTable,
-			Columns: []string{ticket.TemplateColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tickettemplate.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TemplateID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.CategoryIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   ticket.CategoryTable,
-			Columns: []string{ticket.CategoryColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticketcategory.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.CategoryID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.DepartmentIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   ticket.DepartmentTable,
-			Columns: []string{ticket.DepartmentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.DepartmentID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.TagsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ticket.TagsTable,
-			Columns: []string{ticket.TagsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tickettag.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.RelatedTicketsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ticket.RelatedTicketsTable,
-			Columns: []string{ticket.RelatedTicketsColumn},
-			Bidi:    true,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.ParentTicketIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   ticket.ParentTicketTable,
-			Columns: []string{ticket.ParentTicketColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.ParentTicketID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.WorkflowInstancesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ticket.WorkflowInstancesTable,
-			Columns: []string{ticket.WorkflowInstancesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflowinstance.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.SLADefinitionIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   ticket.SLADefinitionTable,
-			Columns: []string{ticket.SLADefinitionColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.SLADefinitionID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.SLAViolationsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ticket.SLAViolationsTable,
-			Columns: []string{ticket.SLAViolationsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
 	if nodes := _c.mutation.CommentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1167,31 +984,15 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := _c.mutation.NotificationsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TagsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   ticket.NotificationsTable,
-			Columns: []string{ticket.NotificationsColumn},
+			Table:   ticket.TagsTable,
+			Columns: []string{ticket.TagsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.SLAAlertHistoryIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ticket.SLAAlertHistoryTable,
-			Columns: []string{ticket.SLAAlertHistoryColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(tickettag.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1208,54 +1009,6 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.RootCauseAnalysesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ticket.RootCauseAnalysesTable,
-			Columns: []string{ticket.RootCauseAnalysesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   ticket.ConfigurationItemsTable,
-			Columns: ticket.ConfigurationItemsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.ProblemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   ticket.ProblemsTable,
-			Columns: ticket.ProblemsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1295,6 +1048,22 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := _c.mutation.NotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.NotificationsTable,
+			Columns: []string{ticket.NotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	if nodes := _c.mutation.CcUsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1304,6 +1073,120 @@ func (_c *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticketcc.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SLAViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAViolationsTable,
+			Columns: []string{ticket.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SLAAlertHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAAlertHistoryTable,
+			Columns: []string{ticket.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.RootCauseAnalysesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.RootCauseAnalysesTable,
+			Columns: []string{ticket.RootCauseAnalysesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.FeishuSyncsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.FeishuSyncsTable,
+			Columns: []string{ticket.FeishuSyncsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(feishuticketsync.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.RequesterIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.RequesterTable,
+			Columns: []string{ticket.RequesterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.RequesterID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AssigneeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.AssigneeTable,
+			Columns: []string{ticket.AssigneeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.AssigneeID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CategoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.CategoryTable,
+			Columns: ticket.CategoryPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcategory.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

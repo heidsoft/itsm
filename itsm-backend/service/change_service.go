@@ -72,6 +72,36 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		}
 	}
 
+	// 根据ITIL变更类型自动处理初始状态
+	switch req.Type {
+	case string(dto.ChangeTypeStandard):
+		// 标准变更：如果满足预授权条件（低风险、有完整的实施和回滚计划），自动批准
+		if req.RiskLevel == string(dto.ChangeRiskLow) && req.ImplementationPlan != "" && req.RollbackPlan != "" {
+			_, err = changeEntity.Update().
+				SetStatus(string(dto.ChangeStatusApproved)).
+				Save(ctx)
+			if err != nil {
+				s.logger.Warnw("Failed to auto-approve standard change", "error", err, "change_id", changeEntity.ID)
+			} else {
+				s.logger.Infow("Standard change auto-approved per ITIL standard", "change_id", changeEntity.ID, "tenant_id", tenantID)
+				// 更新响应中的状态
+				response.Status = dto.ChangeStatusApproved
+			}
+		}
+	case string(dto.ChangeTypeEmergency):
+		// 紧急变更：记录特殊标记，后续走ECAB快速审批流程
+		s.logger.Infow("Emergency change created per ITIL standard - requires ECAB approval", "change_id", changeEntity.ID, "tenant_id", tenantID)
+		// 紧急变更可以自动进入待审批状态，不需要提交步骤
+		_, err = changeEntity.Update().
+			SetStatus(string(dto.ChangeStatusSubmitted)).
+			Save(ctx)
+		if err != nil {
+			s.logger.Warnw("Failed to auto-submit emergency change", "error", err, "change_id", changeEntity.ID)
+		} else {
+			response.Status = dto.ChangeStatusSubmitted
+		}
+	}
+
 	// 获取创建人信息
 	creator, err := s.client.User.Get(ctx, createdBy)
 	if err != nil {
@@ -495,7 +525,7 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 	}
 
 	// 验证状态转换
-	if !isValidChangeStatusTransition(changeEntity.Status, string(status)) {
+	if !isValidChangeStatusTransition(changeEntity.Status, string(status), changeEntity.Type) {
 		return fmt.Errorf("invalid status transition from '%s' to '%s'", changeEntity.Status, status)
 	}
 
@@ -531,17 +561,56 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 // completed -> (不允许转换到其他状态)
 // failed -> scheduled, cancelled
 // cancelled -> (不允许转换到其他状态)
-func isValidChangeStatusTransition(currentStatus, newStatus string) bool {
-	validTransitions := map[string][]string{
-		common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusCancelled},
-		common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
-		common.ChangeStatusApproved:   {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+// isValidChangeStatusTransition 检查变更状态转换是否合法
+// 根据ITIL标准，不同类型的变更有不同的状态转换规则
+func isValidChangeStatusTransition(currentStatus, newStatus, changeType string) bool {
+	// 基础转换规则（适用于所有变更类型）
+	baseTransitions := map[string][]string{
 		common.ChangeStatusRejected:   {}, // 被拒绝后不允许转换
-		common.ChangeStatusScheduled:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-		common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, common.ChangeStatusCancelled},
 		common.ChangeStatusCompleted:  {}, // 已完成不允许转换
-		common.ChangeStatusFailed:     {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
 		common.ChangeStatusCancelled:  {}, // 已取消不允许转换
+	}
+
+	// 不同变更类型的特殊转换规则
+	var typeSpecificTransitions map[string][]string
+	switch changeType {
+	case string(dto.ChangeTypeStandard):
+		// 标准变更：预授权，可以跳过审批步骤
+		typeSpecificTransitions = map[string][]string{
+			common.ChangeStatusDraft:     {common.ChangeStatusSubmitted, common.ChangeStatusApproved, common.ChangeStatusScheduled, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+			common.ChangeStatusSubmitted: {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
+			common.ChangeStatusApproved:  {common.ChangeStatusScheduled, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+			common.ChangeStatusScheduled: {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, common.ChangeStatusCancelled},
+			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+		}
+	case string(dto.ChangeTypeEmergency):
+		// 紧急变更：可以跳过多个步骤，快速实施
+		typeSpecificTransitions = map[string][]string{
+			common.ChangeStatusDraft:     {common.ChangeStatusSubmitted, common.ChangeStatusApproved, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+			common.ChangeStatusSubmitted: {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
+			common.ChangeStatusApproved:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, common.ChangeStatusCancelled},
+			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+		}
+	default: // 普通变更：严格的ITIL流程
+		typeSpecificTransitions = map[string][]string{
+			common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusCancelled},
+			common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
+			common.ChangeStatusApproved:   {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+			common.ChangeStatusScheduled:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, common.ChangeStatusCancelled},
+			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+		}
+	}
+
+	// 合并基础规则和类型特定规则
+	validTransitions := make(map[string][]string)
+	for k, v := range baseTransitions {
+		validTransitions[k] = v
+	}
+	for k, v := range typeSpecificTransitions {
+		validTransitions[k] = v
 	}
 
 	allowed, ok := validTransitions[currentStatus]

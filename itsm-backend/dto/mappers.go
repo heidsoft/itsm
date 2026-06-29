@@ -1050,6 +1050,7 @@ func ToCIResponse(ci *ent.ConfigurationItem) *CIResponse {
 		Name:               ci.Name,
 		Type:               ci.CiType,
 		CITypeID:           ci.CiTypeID,
+		Description:        ci.Description,
 		Status:             ci.Status,
 		Environment:        ci.Environment,
 		Criticality:        ci.Criticality,
@@ -1078,6 +1079,16 @@ func ToCIResponse(ci *ent.ConfigurationItem) *CIResponse {
 		TenantID:           ci.TenantID,
 		CreatedAt:          ci.CreatedAt,
 		UpdatedAt:          ci.UpdatedAt,
+	}
+	if len(ci.Edges.Tags) > 0 {
+		res.Tags = make([]string, len(ci.Edges.Tags))
+		for i, tag := range ci.Edges.Tags {
+			if tag.Value != "" {
+				res.Tags[i] = tag.Key + ":" + tag.Value
+			} else {
+				res.Tags[i] = tag.Key
+			}
+		}
 	}
 	if !ci.CloudSyncTime.IsZero() {
 		res.CloudSyncTime = &ci.CloudSyncTime
@@ -1148,6 +1159,14 @@ func ToCIResponseWithRelations(ci *ent.ConfigurationItem) *CIResponse {
 		}
 	}
 
+	// 转换标签详情
+	if len(ci.Edges.Tags) > 0 {
+		res.TagDetails = make([]*CITagResponse, len(ci.Edges.Tags))
+		for i, tag := range ci.Edges.Tags {
+			res.TagDetails[i] = ToCITagResponse(tag)
+		}
+	}
+
 	return res
 }
 
@@ -1206,6 +1225,68 @@ func ToCIRelationshipResponseList(rels []*ent.CIRelationship) []*CIRelationshipR
 	res := make([]*CIRelationshipResponse, len(rels))
 	for i, rel := range rels {
 		res[i] = ToCIRelationshipResponse(rel)
+	}
+	return res
+}
+
+// ToCIHistoryResponse 转换CI历史实体为响应
+func ToCIHistoryResponse(history *ent.ConfigurationItemHistory) *CIHistoryResponse {
+	if history == nil {
+		return nil
+	}
+	return &CIHistoryResponse{
+		ID:            history.ID,
+		CIID:          history.CiID,
+		Version:       history.Version,
+		Operation:     history.Operation,
+		Before:        history.Before,
+		After:         history.After,
+		ChangedFields: history.ChangedFields,
+		OperatorID:    history.OperatorID,
+		OperatorName:  history.OperatorName,
+		Remark:        history.Remark,
+		TenantID:      history.TenantID,
+		CreatedAt:     history.CreatedAt,
+	}
+}
+
+// ToCIHistoryResponseList 转换CI历史实体列表为响应列表
+func ToCIHistoryResponseList(histories []*ent.ConfigurationItemHistory) []*CIHistoryResponse {
+	if histories == nil {
+		return nil
+	}
+	res := make([]*CIHistoryResponse, len(histories))
+	for i, h := range histories {
+		res[i] = ToCIHistoryResponse(h)
+	}
+	return res
+}
+
+// ToCITagResponse 转换CI标签实体为响应
+func ToCITagResponse(tag *ent.CITag) *CITagResponse {
+	if tag == nil {
+		return nil
+	}
+	return &CITagResponse{
+		ID:          tag.ID,
+		Key:         tag.Key,
+		Value:       tag.Value,
+		Color:       tag.Color,
+		Description: tag.Description,
+		TenantID:    tag.TenantID,
+		CreatedAt:   tag.CreatedAt,
+		UpdatedAt:   tag.UpdatedAt,
+	}
+}
+
+// ToCITagResponseList 转换CI标签实体列表为响应列表
+func ToCITagResponseList(tags []*ent.CITag) []*CITagResponse {
+	if tags == nil {
+		return nil
+	}
+	res := make([]*CITagResponse, len(tags))
+	for i, tag := range tags {
+		res[i] = ToCITagResponse(tag)
 	}
 	return res
 }

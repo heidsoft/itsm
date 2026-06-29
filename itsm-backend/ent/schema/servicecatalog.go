@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -53,7 +54,11 @@ func (ServiceCatalog) Fields() []ent.Field {
 		field.Time("updated_at").Comment("更新时间").Default(time.Now).UpdateDefault(time.Now),
 	}
 }
-func (ServiceCatalog) Edges() []ent.Edge { return nil }
+func (ServiceCatalog) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.To("items", ServiceCatalogItem.Type),
+	}
+}
 
 func (ServiceCatalog) Indexes() []ent.Index {
 	return []ent.Index{

@@ -110,3 +110,18 @@ type ProblemStatsResponse struct {
 type ProblemDetailResponse struct {
 	Problem ProblemResponse `json:"problem"`
 }
+
+// CreateKnownErrorFromProblemRequest 从问题创建已知错误请求
+type CreateKnownErrorFromProblemRequest struct {
+	Title            *string  `json:"title"`
+	Description      *string  `json:"description"`
+	Symptoms         *string  `json:"symptoms"`
+	RootCause        *string  `json:"root_cause"`
+	Workaround       *string  `json:"workaround"`
+	Resolution       *string  `json:"resolution"`
+	Category         *string  `json:"category"`
+	Severity         *string  `json:"severity" binding:"omitempty,oneof=critical high medium low"`
+	AffectedProducts []string `json:"affected_products"`
+	AffectedCIs      []string `json:"affected_cis"`
+	Keywords         []string `json:"keywords"`
+}

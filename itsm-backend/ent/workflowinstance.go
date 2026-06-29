@@ -43,9 +43,8 @@ type WorkflowInstance struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the WorkflowInstanceQuery when eager-loading is set.
-	Edges                     WorkflowInstanceEdges `json:"edges"`
-	ticket_workflow_instances *int
-	selectValues              sql.SelectValues
+	Edges        WorkflowInstanceEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // WorkflowInstanceEdges holds the relations/edges for other nodes in the graph.
@@ -92,8 +91,6 @@ func (*WorkflowInstance) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case workflowinstance.FieldStartedAt, workflowinstance.FieldCompletedAt, workflowinstance.FieldCreatedAt, workflowinstance.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case workflowinstance.ForeignKeys[0]: // ticket_workflow_instances
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -182,13 +179,6 @@ func (_m *WorkflowInstance) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
-			}
-		case workflowinstance.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field ticket_workflow_instances", value)
-			} else if value.Valid {
-				_m.ticket_workflow_instances = new(int)
-				*_m.ticket_workflow_instances = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

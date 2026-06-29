@@ -19,15 +19,21 @@ import (
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/bpmnpermission"
+	"itsm-backend/ent/cabmember"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
+	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/cloudaccount"
 	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/cloudservice"
+	"itsm-backend/ent/cmdbexporttask"
+	"itsm-backend/ent/cmdbimporttask"
+	"itsm-backend/ent/cmdbsavedview"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/configurationitemhistory"
 	"itsm-backend/ent/contract"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/department"
@@ -37,6 +43,7 @@ import (
 	"itsm-backend/ent/domainconfig"
 	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
+	"itsm-backend/ent/feishuticketsync"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
@@ -81,6 +88,7 @@ import (
 	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
+	"itsm-backend/ent/servicecatalogitem"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/slaalerthistory"
@@ -145,12 +153,22 @@ type Client struct {
 	AuditLog *AuditLogClient
 	// BPMNPermission is the client for interacting with the BPMNPermission builders.
 	BPMNPermission *BPMNPermissionClient
+	// CABMember is the client for interacting with the CABMember builders.
+	CABMember *CABMemberClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
 	CIAttributeDefinition *CIAttributeDefinitionClient
 	// CIRelationship is the client for interacting with the CIRelationship builders.
 	CIRelationship *CIRelationshipClient
+	// CITag is the client for interacting with the CITag builders.
+	CITag *CITagClient
 	// CIType is the client for interacting with the CIType builders.
 	CIType *CITypeClient
+	// CMDBExportTask is the client for interacting with the CMDBExportTask builders.
+	CMDBExportTask *CMDBExportTaskClient
+	// CMDBImportTask is the client for interacting with the CMDBImportTask builders.
+	CMDBImportTask *CMDBImportTaskClient
+	// CMDBSavedView is the client for interacting with the CMDBSavedView builders.
+	CMDBSavedView *CMDBSavedViewClient
 	// Change is the client for interacting with the Change builders.
 	Change *ChangeClient
 	// ChangePIR is the client for interacting with the ChangePIR builders.
@@ -163,6 +181,8 @@ type Client struct {
 	CloudService *CloudServiceClient
 	// ConfigurationItem is the client for interacting with the ConfigurationItem builders.
 	ConfigurationItem *ConfigurationItemClient
+	// ConfigurationItemHistory is the client for interacting with the ConfigurationItemHistory builders.
+	ConfigurationItemHistory *ConfigurationItemHistoryClient
 	// Contract is the client for interacting with the Contract builders.
 	Contract *ContractClient
 	// Conversation is the client for interacting with the Conversation builders.
@@ -181,6 +201,8 @@ type Client struct {
 	EndpointACL *EndpointACLClient
 	// EngineerSkill is the client for interacting with the EngineerSkill builders.
 	EngineerSkill *EngineerSkillClient
+	// FeishuTicketSync is the client for interacting with the FeishuTicketSync builders.
+	FeishuTicketSync *FeishuTicketSyncClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
 	// Incident is the client for interacting with the Incident builders.
@@ -281,6 +303,8 @@ type Client struct {
 	SLAViolation *SLAViolationClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
 	ServiceCatalog *ServiceCatalogClient
+	// ServiceCatalogItem is the client for interacting with the ServiceCatalogItem builders.
+	ServiceCatalogItem *ServiceCatalogItemClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
 	ServiceRequest *ServiceRequestClient
 	// ServiceRequestApproval is the client for interacting with the ServiceRequestApproval builders.
@@ -360,15 +384,21 @@ func (c *Client) init() {
 	c.AssetLicense = NewAssetLicenseClient(c.config)
 	c.AuditLog = NewAuditLogClient(c.config)
 	c.BPMNPermission = NewBPMNPermissionClient(c.config)
+	c.CABMember = NewCABMemberClient(c.config)
 	c.CIAttributeDefinition = NewCIAttributeDefinitionClient(c.config)
 	c.CIRelationship = NewCIRelationshipClient(c.config)
+	c.CITag = NewCITagClient(c.config)
 	c.CIType = NewCITypeClient(c.config)
+	c.CMDBExportTask = NewCMDBExportTaskClient(c.config)
+	c.CMDBImportTask = NewCMDBImportTaskClient(c.config)
+	c.CMDBSavedView = NewCMDBSavedViewClient(c.config)
 	c.Change = NewChangeClient(c.config)
 	c.ChangePIR = NewChangePIRClient(c.config)
 	c.CloudAccount = NewCloudAccountClient(c.config)
 	c.CloudResource = NewCloudResourceClient(c.config)
 	c.CloudService = NewCloudServiceClient(c.config)
 	c.ConfigurationItem = NewConfigurationItemClient(c.config)
+	c.ConfigurationItemHistory = NewConfigurationItemHistoryClient(c.config)
 	c.Contract = NewContractClient(c.config)
 	c.Conversation = NewConversationClient(c.config)
 	c.Department = NewDepartmentClient(c.config)
@@ -378,6 +408,7 @@ func (c *Client) init() {
 	c.DomainConfig = NewDomainConfigClient(c.config)
 	c.EndpointACL = NewEndpointACLClient(c.config)
 	c.EngineerSkill = NewEngineerSkillClient(c.config)
+	c.FeishuTicketSync = NewFeishuTicketSyncClient(c.config)
 	c.Group = NewGroupClient(c.config)
 	c.Incident = NewIncidentClient(c.config)
 	c.IncidentAlert = NewIncidentAlertClient(c.config)
@@ -428,6 +459,7 @@ func (c *Client) init() {
 	c.SLAPolicy = NewSLAPolicyClient(c.config)
 	c.SLAViolation = NewSLAViolationClient(c.config)
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
+	c.ServiceCatalogItem = NewServiceCatalogItemClient(c.config)
 	c.ServiceRequest = NewServiceRequestClient(c.config)
 	c.ServiceRequestApproval = NewServiceRequestApprovalClient(c.config)
 	c.StandardChange = NewStandardChangeClient(c.config)
@@ -558,15 +590,21 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AssetLicense:                NewAssetLicenseClient(cfg),
 		AuditLog:                    NewAuditLogClient(cfg),
 		BPMNPermission:              NewBPMNPermissionClient(cfg),
+		CABMember:                   NewCABMemberClient(cfg),
 		CIAttributeDefinition:       NewCIAttributeDefinitionClient(cfg),
 		CIRelationship:              NewCIRelationshipClient(cfg),
+		CITag:                       NewCITagClient(cfg),
 		CIType:                      NewCITypeClient(cfg),
+		CMDBExportTask:              NewCMDBExportTaskClient(cfg),
+		CMDBImportTask:              NewCMDBImportTaskClient(cfg),
+		CMDBSavedView:               NewCMDBSavedViewClient(cfg),
 		Change:                      NewChangeClient(cfg),
 		ChangePIR:                   NewChangePIRClient(cfg),
 		CloudAccount:                NewCloudAccountClient(cfg),
 		CloudResource:               NewCloudResourceClient(cfg),
 		CloudService:                NewCloudServiceClient(cfg),
 		ConfigurationItem:           NewConfigurationItemClient(cfg),
+		ConfigurationItemHistory:    NewConfigurationItemHistoryClient(cfg),
 		Contract:                    NewContractClient(cfg),
 		Conversation:                NewConversationClient(cfg),
 		Department:                  NewDepartmentClient(cfg),
@@ -576,6 +614,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		DomainConfig:                NewDomainConfigClient(cfg),
 		EndpointACL:                 NewEndpointACLClient(cfg),
 		EngineerSkill:               NewEngineerSkillClient(cfg),
+		FeishuTicketSync:            NewFeishuTicketSyncClient(cfg),
 		Group:                       NewGroupClient(cfg),
 		Incident:                    NewIncidentClient(cfg),
 		IncidentAlert:               NewIncidentAlertClient(cfg),
@@ -626,6 +665,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		SLAPolicy:                   NewSLAPolicyClient(cfg),
 		SLAViolation:                NewSLAViolationClient(cfg),
 		ServiceCatalog:              NewServiceCatalogClient(cfg),
+		ServiceCatalogItem:          NewServiceCatalogItemClient(cfg),
 		ServiceRequest:              NewServiceRequestClient(cfg),
 		ServiceRequestApproval:      NewServiceRequestApprovalClient(cfg),
 		StandardChange:              NewStandardChangeClient(cfg),
@@ -683,15 +723,21 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AssetLicense:                NewAssetLicenseClient(cfg),
 		AuditLog:                    NewAuditLogClient(cfg),
 		BPMNPermission:              NewBPMNPermissionClient(cfg),
+		CABMember:                   NewCABMemberClient(cfg),
 		CIAttributeDefinition:       NewCIAttributeDefinitionClient(cfg),
 		CIRelationship:              NewCIRelationshipClient(cfg),
+		CITag:                       NewCITagClient(cfg),
 		CIType:                      NewCITypeClient(cfg),
+		CMDBExportTask:              NewCMDBExportTaskClient(cfg),
+		CMDBImportTask:              NewCMDBImportTaskClient(cfg),
+		CMDBSavedView:               NewCMDBSavedViewClient(cfg),
 		Change:                      NewChangeClient(cfg),
 		ChangePIR:                   NewChangePIRClient(cfg),
 		CloudAccount:                NewCloudAccountClient(cfg),
 		CloudResource:               NewCloudResourceClient(cfg),
 		CloudService:                NewCloudServiceClient(cfg),
 		ConfigurationItem:           NewConfigurationItemClient(cfg),
+		ConfigurationItemHistory:    NewConfigurationItemHistoryClient(cfg),
 		Contract:                    NewContractClient(cfg),
 		Conversation:                NewConversationClient(cfg),
 		Department:                  NewDepartmentClient(cfg),
@@ -701,6 +747,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		DomainConfig:                NewDomainConfigClient(cfg),
 		EndpointACL:                 NewEndpointACLClient(cfg),
 		EngineerSkill:               NewEngineerSkillClient(cfg),
+		FeishuTicketSync:            NewFeishuTicketSyncClient(cfg),
 		Group:                       NewGroupClient(cfg),
 		Incident:                    NewIncidentClient(cfg),
 		IncidentAlert:               NewIncidentAlertClient(cfg),
@@ -751,6 +798,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		SLAPolicy:                   NewSLAPolicyClient(cfg),
 		SLAViolation:                NewSLAViolationClient(cfg),
 		ServiceCatalog:              NewServiceCatalogClient(cfg),
+		ServiceCatalogItem:          NewServiceCatalogItemClient(cfg),
 		ServiceRequest:              NewServiceRequestClient(cfg),
 		ServiceRequestApproval:      NewServiceRequestApprovalClient(cfg),
 		StandardChange:              NewStandardChangeClient(cfg),
@@ -811,14 +859,16 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset,
-		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CIAttributeDefinition,
-		c.CIRelationship, c.CIType, c.Change, c.ChangePIR, c.CloudAccount,
-		c.CloudResource, c.CloudService, c.ConfigurationItem, c.Contract,
-		c.Conversation, c.Department, c.DiscoveryJob, c.DiscoveryResult,
-		c.DiscoverySource, c.DomainConfig, c.EndpointACL, c.EngineerSkill, c.Group,
-		c.Incident, c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent,
-		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion,
-		c.KnowledgeArticle, c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
+		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CABMember,
+		c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType, c.CMDBExportTask,
+		c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR, c.CloudAccount,
+		c.CloudResource, c.CloudService, c.ConfigurationItem,
+		c.ConfigurationItemHistory, c.Contract, c.Conversation, c.Department,
+		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.DomainConfig,
+		c.EndpointACL, c.EngineerSkill, c.FeishuTicketSync, c.Group, c.Incident,
+		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
+		c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion, c.KnowledgeArticle,
+		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
 		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
@@ -828,13 +878,14 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
 		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
 		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange,
-		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant,
-		c.TenantInstallation, c.Ticket, c.TicketApproval, c.TicketAssignmentRule,
-		c.TicketAttachment, c.TicketAutomationRule, c.TicketCC, c.TicketCategory,
-		c.TicketComment, c.TicketNotification, c.TicketTag, c.TicketTemplate,
-		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
-		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
+		c.ServiceRequestApproval, c.StandardChange, c.Survey, c.SurveyResponse,
+		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
+		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
+		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
+		c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -845,14 +896,16 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Application, c.ApprovalChain, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset,
-		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CIAttributeDefinition,
-		c.CIRelationship, c.CIType, c.Change, c.ChangePIR, c.CloudAccount,
-		c.CloudResource, c.CloudService, c.ConfigurationItem, c.Contract,
-		c.Conversation, c.Department, c.DiscoveryJob, c.DiscoveryResult,
-		c.DiscoverySource, c.DomainConfig, c.EndpointACL, c.EngineerSkill, c.Group,
-		c.Incident, c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent,
-		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion,
-		c.KnowledgeArticle, c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
+		c.AssetLicense, c.AuditLog, c.BPMNPermission, c.CABMember,
+		c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType, c.CMDBExportTask,
+		c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR, c.CloudAccount,
+		c.CloudResource, c.CloudService, c.ConfigurationItem,
+		c.ConfigurationItemHistory, c.Contract, c.Conversation, c.Department,
+		c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.DomainConfig,
+		c.EndpointACL, c.EngineerSkill, c.FeishuTicketSync, c.Group, c.Incident,
+		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
+		c.IncidentRule, c.IncidentRuleExecution, c.ItemVersion, c.KnowledgeArticle,
+		c.KnowledgeArticleLike, c.KnowledgeArticleParticipant,
 		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
 		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
@@ -862,13 +915,14 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
 		c.Role, c.RolePermission, c.RootCauseAnalysis, c.SLAAlertHistory,
 		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.StandardChange,
-		c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team, c.Tenant,
-		c.TenantInstallation, c.Ticket, c.TicketApproval, c.TicketAssignmentRule,
-		c.TicketAttachment, c.TicketAutomationRule, c.TicketCC, c.TicketCategory,
-		c.TicketComment, c.TicketNotification, c.TicketTag, c.TicketTemplate,
-		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
-		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceRequest,
+		c.ServiceRequestApproval, c.StandardChange, c.Survey, c.SurveyResponse,
+		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
+		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
+		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
+		c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor, c.Workflow,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -893,12 +947,22 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.AuditLog.mutate(ctx, m)
 	case *BPMNPermissionMutation:
 		return c.BPMNPermission.mutate(ctx, m)
+	case *CABMemberMutation:
+		return c.CABMember.mutate(ctx, m)
 	case *CIAttributeDefinitionMutation:
 		return c.CIAttributeDefinition.mutate(ctx, m)
 	case *CIRelationshipMutation:
 		return c.CIRelationship.mutate(ctx, m)
+	case *CITagMutation:
+		return c.CITag.mutate(ctx, m)
 	case *CITypeMutation:
 		return c.CIType.mutate(ctx, m)
+	case *CMDBExportTaskMutation:
+		return c.CMDBExportTask.mutate(ctx, m)
+	case *CMDBImportTaskMutation:
+		return c.CMDBImportTask.mutate(ctx, m)
+	case *CMDBSavedViewMutation:
+		return c.CMDBSavedView.mutate(ctx, m)
 	case *ChangeMutation:
 		return c.Change.mutate(ctx, m)
 	case *ChangePIRMutation:
@@ -911,6 +975,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.CloudService.mutate(ctx, m)
 	case *ConfigurationItemMutation:
 		return c.ConfigurationItem.mutate(ctx, m)
+	case *ConfigurationItemHistoryMutation:
+		return c.ConfigurationItemHistory.mutate(ctx, m)
 	case *ContractMutation:
 		return c.Contract.mutate(ctx, m)
 	case *ConversationMutation:
@@ -929,6 +995,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.EndpointACL.mutate(ctx, m)
 	case *EngineerSkillMutation:
 		return c.EngineerSkill.mutate(ctx, m)
+	case *FeishuTicketSyncMutation:
+		return c.FeishuTicketSync.mutate(ctx, m)
 	case *GroupMutation:
 		return c.Group.mutate(ctx, m)
 	case *IncidentMutation:
@@ -1029,6 +1097,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.SLAViolation.mutate(ctx, m)
 	case *ServiceCatalogMutation:
 		return c.ServiceCatalog.mutate(ctx, m)
+	case *ServiceCatalogItemMutation:
+		return c.ServiceCatalogItem.mutate(ctx, m)
 	case *ServiceRequestMutation:
 		return c.ServiceRequest.mutate(ctx, m)
 	case *ServiceRequestApprovalMutation:
@@ -2254,6 +2324,139 @@ func (c *BPMNPermissionClient) mutate(ctx context.Context, m *BPMNPermissionMuta
 	}
 }
 
+// CABMemberClient is a client for the CABMember schema.
+type CABMemberClient struct {
+	config
+}
+
+// NewCABMemberClient returns a client for the CABMember from the given config.
+func NewCABMemberClient(c config) *CABMemberClient {
+	return &CABMemberClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `cabmember.Hooks(f(g(h())))`.
+func (c *CABMemberClient) Use(hooks ...Hook) {
+	c.hooks.CABMember = append(c.hooks.CABMember, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `cabmember.Intercept(f(g(h())))`.
+func (c *CABMemberClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CABMember = append(c.inters.CABMember, interceptors...)
+}
+
+// Create returns a builder for creating a CABMember entity.
+func (c *CABMemberClient) Create() *CABMemberCreate {
+	mutation := newCABMemberMutation(c.config, OpCreate)
+	return &CABMemberCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CABMember entities.
+func (c *CABMemberClient) CreateBulk(builders ...*CABMemberCreate) *CABMemberCreateBulk {
+	return &CABMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CABMemberClient) MapCreateBulk(slice any, setFunc func(*CABMemberCreate, int)) *CABMemberCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CABMemberCreateBulk{err: fmt.Errorf("calling to CABMemberClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CABMemberCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CABMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CABMember.
+func (c *CABMemberClient) Update() *CABMemberUpdate {
+	mutation := newCABMemberMutation(c.config, OpUpdate)
+	return &CABMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CABMemberClient) UpdateOne(_m *CABMember) *CABMemberUpdateOne {
+	mutation := newCABMemberMutation(c.config, OpUpdateOne, withCABMember(_m))
+	return &CABMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CABMemberClient) UpdateOneID(id int) *CABMemberUpdateOne {
+	mutation := newCABMemberMutation(c.config, OpUpdateOne, withCABMemberID(id))
+	return &CABMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CABMember.
+func (c *CABMemberClient) Delete() *CABMemberDelete {
+	mutation := newCABMemberMutation(c.config, OpDelete)
+	return &CABMemberDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CABMemberClient) DeleteOne(_m *CABMember) *CABMemberDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CABMemberClient) DeleteOneID(id int) *CABMemberDeleteOne {
+	builder := c.Delete().Where(cabmember.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CABMemberDeleteOne{builder}
+}
+
+// Query returns a query builder for CABMember.
+func (c *CABMemberClient) Query() *CABMemberQuery {
+	return &CABMemberQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCABMember},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CABMember entity by its id.
+func (c *CABMemberClient) Get(ctx context.Context, id int) (*CABMember, error) {
+	return c.Query().Where(cabmember.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CABMemberClient) GetX(ctx context.Context, id int) *CABMember {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CABMemberClient) Hooks() []Hook {
+	return c.hooks.CABMember
+}
+
+// Interceptors returns the client interceptors.
+func (c *CABMemberClient) Interceptors() []Interceptor {
+	return c.inters.CABMember
+}
+
+func (c *CABMemberClient) mutate(ctx context.Context, m *CABMemberMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CABMemberCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CABMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CABMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CABMemberDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CABMember mutation op: %q", m.Op())
+	}
+}
+
 // CIAttributeDefinitionClient is a client for the CIAttributeDefinition schema.
 type CIAttributeDefinitionClient struct {
 	config
@@ -2552,6 +2755,155 @@ func (c *CIRelationshipClient) mutate(ctx context.Context, m *CIRelationshipMuta
 	}
 }
 
+// CITagClient is a client for the CITag schema.
+type CITagClient struct {
+	config
+}
+
+// NewCITagClient returns a client for the CITag from the given config.
+func NewCITagClient(c config) *CITagClient {
+	return &CITagClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `citag.Hooks(f(g(h())))`.
+func (c *CITagClient) Use(hooks ...Hook) {
+	c.hooks.CITag = append(c.hooks.CITag, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `citag.Intercept(f(g(h())))`.
+func (c *CITagClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CITag = append(c.inters.CITag, interceptors...)
+}
+
+// Create returns a builder for creating a CITag entity.
+func (c *CITagClient) Create() *CITagCreate {
+	mutation := newCITagMutation(c.config, OpCreate)
+	return &CITagCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CITag entities.
+func (c *CITagClient) CreateBulk(builders ...*CITagCreate) *CITagCreateBulk {
+	return &CITagCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CITagClient) MapCreateBulk(slice any, setFunc func(*CITagCreate, int)) *CITagCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CITagCreateBulk{err: fmt.Errorf("calling to CITagClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CITagCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CITagCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CITag.
+func (c *CITagClient) Update() *CITagUpdate {
+	mutation := newCITagMutation(c.config, OpUpdate)
+	return &CITagUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CITagClient) UpdateOne(_m *CITag) *CITagUpdateOne {
+	mutation := newCITagMutation(c.config, OpUpdateOne, withCITag(_m))
+	return &CITagUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CITagClient) UpdateOneID(id int) *CITagUpdateOne {
+	mutation := newCITagMutation(c.config, OpUpdateOne, withCITagID(id))
+	return &CITagUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CITag.
+func (c *CITagClient) Delete() *CITagDelete {
+	mutation := newCITagMutation(c.config, OpDelete)
+	return &CITagDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CITagClient) DeleteOne(_m *CITag) *CITagDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CITagClient) DeleteOneID(id int) *CITagDeleteOne {
+	builder := c.Delete().Where(citag.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CITagDeleteOne{builder}
+}
+
+// Query returns a query builder for CITag.
+func (c *CITagClient) Query() *CITagQuery {
+	return &CITagQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCITag},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CITag entity by its id.
+func (c *CITagClient) Get(ctx context.Context, id int) (*CITag, error) {
+	return c.Query().Where(citag.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CITagClient) GetX(ctx context.Context, id int) *CITag {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCis queries the cis edge of a CITag.
+func (c *CITagClient) QueryCis(_m *CITag) *ConfigurationItemQuery {
+	query := (&ConfigurationItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(citag.Table, citag.FieldID, id),
+			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, citag.CisTable, citag.CisPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CITagClient) Hooks() []Hook {
+	return c.hooks.CITag
+}
+
+// Interceptors returns the client interceptors.
+func (c *CITagClient) Interceptors() []Interceptor {
+	return c.inters.CITag
+}
+
+func (c *CITagClient) mutate(ctx context.Context, m *CITagMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CITagCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CITagUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CITagUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CITagDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CITag mutation op: %q", m.Op())
+	}
+}
+
 // CITypeClient is a client for the CIType schema.
 type CITypeClient struct {
 	config
@@ -2698,6 +3050,405 @@ func (c *CITypeClient) mutate(ctx context.Context, m *CITypeMutation) (Value, er
 		return (&CITypeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown CIType mutation op: %q", m.Op())
+	}
+}
+
+// CMDBExportTaskClient is a client for the CMDBExportTask schema.
+type CMDBExportTaskClient struct {
+	config
+}
+
+// NewCMDBExportTaskClient returns a client for the CMDBExportTask from the given config.
+func NewCMDBExportTaskClient(c config) *CMDBExportTaskClient {
+	return &CMDBExportTaskClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `cmdbexporttask.Hooks(f(g(h())))`.
+func (c *CMDBExportTaskClient) Use(hooks ...Hook) {
+	c.hooks.CMDBExportTask = append(c.hooks.CMDBExportTask, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `cmdbexporttask.Intercept(f(g(h())))`.
+func (c *CMDBExportTaskClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CMDBExportTask = append(c.inters.CMDBExportTask, interceptors...)
+}
+
+// Create returns a builder for creating a CMDBExportTask entity.
+func (c *CMDBExportTaskClient) Create() *CMDBExportTaskCreate {
+	mutation := newCMDBExportTaskMutation(c.config, OpCreate)
+	return &CMDBExportTaskCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CMDBExportTask entities.
+func (c *CMDBExportTaskClient) CreateBulk(builders ...*CMDBExportTaskCreate) *CMDBExportTaskCreateBulk {
+	return &CMDBExportTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CMDBExportTaskClient) MapCreateBulk(slice any, setFunc func(*CMDBExportTaskCreate, int)) *CMDBExportTaskCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CMDBExportTaskCreateBulk{err: fmt.Errorf("calling to CMDBExportTaskClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CMDBExportTaskCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CMDBExportTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CMDBExportTask.
+func (c *CMDBExportTaskClient) Update() *CMDBExportTaskUpdate {
+	mutation := newCMDBExportTaskMutation(c.config, OpUpdate)
+	return &CMDBExportTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CMDBExportTaskClient) UpdateOne(_m *CMDBExportTask) *CMDBExportTaskUpdateOne {
+	mutation := newCMDBExportTaskMutation(c.config, OpUpdateOne, withCMDBExportTask(_m))
+	return &CMDBExportTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CMDBExportTaskClient) UpdateOneID(id int) *CMDBExportTaskUpdateOne {
+	mutation := newCMDBExportTaskMutation(c.config, OpUpdateOne, withCMDBExportTaskID(id))
+	return &CMDBExportTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CMDBExportTask.
+func (c *CMDBExportTaskClient) Delete() *CMDBExportTaskDelete {
+	mutation := newCMDBExportTaskMutation(c.config, OpDelete)
+	return &CMDBExportTaskDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CMDBExportTaskClient) DeleteOne(_m *CMDBExportTask) *CMDBExportTaskDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CMDBExportTaskClient) DeleteOneID(id int) *CMDBExportTaskDeleteOne {
+	builder := c.Delete().Where(cmdbexporttask.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CMDBExportTaskDeleteOne{builder}
+}
+
+// Query returns a query builder for CMDBExportTask.
+func (c *CMDBExportTaskClient) Query() *CMDBExportTaskQuery {
+	return &CMDBExportTaskQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCMDBExportTask},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CMDBExportTask entity by its id.
+func (c *CMDBExportTaskClient) Get(ctx context.Context, id int) (*CMDBExportTask, error) {
+	return c.Query().Where(cmdbexporttask.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CMDBExportTaskClient) GetX(ctx context.Context, id int) *CMDBExportTask {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CMDBExportTaskClient) Hooks() []Hook {
+	return c.hooks.CMDBExportTask
+}
+
+// Interceptors returns the client interceptors.
+func (c *CMDBExportTaskClient) Interceptors() []Interceptor {
+	return c.inters.CMDBExportTask
+}
+
+func (c *CMDBExportTaskClient) mutate(ctx context.Context, m *CMDBExportTaskMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CMDBExportTaskCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CMDBExportTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CMDBExportTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CMDBExportTaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CMDBExportTask mutation op: %q", m.Op())
+	}
+}
+
+// CMDBImportTaskClient is a client for the CMDBImportTask schema.
+type CMDBImportTaskClient struct {
+	config
+}
+
+// NewCMDBImportTaskClient returns a client for the CMDBImportTask from the given config.
+func NewCMDBImportTaskClient(c config) *CMDBImportTaskClient {
+	return &CMDBImportTaskClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `cmdbimporttask.Hooks(f(g(h())))`.
+func (c *CMDBImportTaskClient) Use(hooks ...Hook) {
+	c.hooks.CMDBImportTask = append(c.hooks.CMDBImportTask, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `cmdbimporttask.Intercept(f(g(h())))`.
+func (c *CMDBImportTaskClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CMDBImportTask = append(c.inters.CMDBImportTask, interceptors...)
+}
+
+// Create returns a builder for creating a CMDBImportTask entity.
+func (c *CMDBImportTaskClient) Create() *CMDBImportTaskCreate {
+	mutation := newCMDBImportTaskMutation(c.config, OpCreate)
+	return &CMDBImportTaskCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CMDBImportTask entities.
+func (c *CMDBImportTaskClient) CreateBulk(builders ...*CMDBImportTaskCreate) *CMDBImportTaskCreateBulk {
+	return &CMDBImportTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CMDBImportTaskClient) MapCreateBulk(slice any, setFunc func(*CMDBImportTaskCreate, int)) *CMDBImportTaskCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CMDBImportTaskCreateBulk{err: fmt.Errorf("calling to CMDBImportTaskClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CMDBImportTaskCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CMDBImportTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CMDBImportTask.
+func (c *CMDBImportTaskClient) Update() *CMDBImportTaskUpdate {
+	mutation := newCMDBImportTaskMutation(c.config, OpUpdate)
+	return &CMDBImportTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CMDBImportTaskClient) UpdateOne(_m *CMDBImportTask) *CMDBImportTaskUpdateOne {
+	mutation := newCMDBImportTaskMutation(c.config, OpUpdateOne, withCMDBImportTask(_m))
+	return &CMDBImportTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CMDBImportTaskClient) UpdateOneID(id int) *CMDBImportTaskUpdateOne {
+	mutation := newCMDBImportTaskMutation(c.config, OpUpdateOne, withCMDBImportTaskID(id))
+	return &CMDBImportTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CMDBImportTask.
+func (c *CMDBImportTaskClient) Delete() *CMDBImportTaskDelete {
+	mutation := newCMDBImportTaskMutation(c.config, OpDelete)
+	return &CMDBImportTaskDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CMDBImportTaskClient) DeleteOne(_m *CMDBImportTask) *CMDBImportTaskDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CMDBImportTaskClient) DeleteOneID(id int) *CMDBImportTaskDeleteOne {
+	builder := c.Delete().Where(cmdbimporttask.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CMDBImportTaskDeleteOne{builder}
+}
+
+// Query returns a query builder for CMDBImportTask.
+func (c *CMDBImportTaskClient) Query() *CMDBImportTaskQuery {
+	return &CMDBImportTaskQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCMDBImportTask},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CMDBImportTask entity by its id.
+func (c *CMDBImportTaskClient) Get(ctx context.Context, id int) (*CMDBImportTask, error) {
+	return c.Query().Where(cmdbimporttask.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CMDBImportTaskClient) GetX(ctx context.Context, id int) *CMDBImportTask {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CMDBImportTaskClient) Hooks() []Hook {
+	return c.hooks.CMDBImportTask
+}
+
+// Interceptors returns the client interceptors.
+func (c *CMDBImportTaskClient) Interceptors() []Interceptor {
+	return c.inters.CMDBImportTask
+}
+
+func (c *CMDBImportTaskClient) mutate(ctx context.Context, m *CMDBImportTaskMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CMDBImportTaskCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CMDBImportTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CMDBImportTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CMDBImportTaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CMDBImportTask mutation op: %q", m.Op())
+	}
+}
+
+// CMDBSavedViewClient is a client for the CMDBSavedView schema.
+type CMDBSavedViewClient struct {
+	config
+}
+
+// NewCMDBSavedViewClient returns a client for the CMDBSavedView from the given config.
+func NewCMDBSavedViewClient(c config) *CMDBSavedViewClient {
+	return &CMDBSavedViewClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `cmdbsavedview.Hooks(f(g(h())))`.
+func (c *CMDBSavedViewClient) Use(hooks ...Hook) {
+	c.hooks.CMDBSavedView = append(c.hooks.CMDBSavedView, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `cmdbsavedview.Intercept(f(g(h())))`.
+func (c *CMDBSavedViewClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CMDBSavedView = append(c.inters.CMDBSavedView, interceptors...)
+}
+
+// Create returns a builder for creating a CMDBSavedView entity.
+func (c *CMDBSavedViewClient) Create() *CMDBSavedViewCreate {
+	mutation := newCMDBSavedViewMutation(c.config, OpCreate)
+	return &CMDBSavedViewCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CMDBSavedView entities.
+func (c *CMDBSavedViewClient) CreateBulk(builders ...*CMDBSavedViewCreate) *CMDBSavedViewCreateBulk {
+	return &CMDBSavedViewCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CMDBSavedViewClient) MapCreateBulk(slice any, setFunc func(*CMDBSavedViewCreate, int)) *CMDBSavedViewCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CMDBSavedViewCreateBulk{err: fmt.Errorf("calling to CMDBSavedViewClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CMDBSavedViewCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CMDBSavedViewCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CMDBSavedView.
+func (c *CMDBSavedViewClient) Update() *CMDBSavedViewUpdate {
+	mutation := newCMDBSavedViewMutation(c.config, OpUpdate)
+	return &CMDBSavedViewUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CMDBSavedViewClient) UpdateOne(_m *CMDBSavedView) *CMDBSavedViewUpdateOne {
+	mutation := newCMDBSavedViewMutation(c.config, OpUpdateOne, withCMDBSavedView(_m))
+	return &CMDBSavedViewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CMDBSavedViewClient) UpdateOneID(id int) *CMDBSavedViewUpdateOne {
+	mutation := newCMDBSavedViewMutation(c.config, OpUpdateOne, withCMDBSavedViewID(id))
+	return &CMDBSavedViewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CMDBSavedView.
+func (c *CMDBSavedViewClient) Delete() *CMDBSavedViewDelete {
+	mutation := newCMDBSavedViewMutation(c.config, OpDelete)
+	return &CMDBSavedViewDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CMDBSavedViewClient) DeleteOne(_m *CMDBSavedView) *CMDBSavedViewDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CMDBSavedViewClient) DeleteOneID(id int) *CMDBSavedViewDeleteOne {
+	builder := c.Delete().Where(cmdbsavedview.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CMDBSavedViewDeleteOne{builder}
+}
+
+// Query returns a query builder for CMDBSavedView.
+func (c *CMDBSavedViewClient) Query() *CMDBSavedViewQuery {
+	return &CMDBSavedViewQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCMDBSavedView},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CMDBSavedView entity by its id.
+func (c *CMDBSavedViewClient) Get(ctx context.Context, id int) (*CMDBSavedView, error) {
+	return c.Query().Where(cmdbsavedview.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CMDBSavedViewClient) GetX(ctx context.Context, id int) *CMDBSavedView {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CMDBSavedViewClient) Hooks() []Hook {
+	return c.hooks.CMDBSavedView
+}
+
+// Interceptors returns the client interceptors.
+func (c *CMDBSavedViewClient) Interceptors() []Interceptor {
+	return c.inters.CMDBSavedView
+}
+
+func (c *CMDBSavedViewClient) mutate(ctx context.Context, m *CMDBSavedViewMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CMDBSavedViewCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CMDBSavedViewUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CMDBSavedViewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CMDBSavedViewDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CMDBSavedView mutation op: %q", m.Op())
 	}
 }
 
@@ -3674,7 +4425,7 @@ func (c *ConfigurationItemClient) QueryTickets(_m *ConfigurationItem) *TicketQue
 		step := sqlgraph.NewStep(
 			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
 			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, configurationitem.TicketsTable, configurationitem.TicketsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.TicketsTable, configurationitem.TicketsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -3707,6 +4458,38 @@ func (c *ConfigurationItemClient) QueryOutgoingRelations(_m *ConfigurationItem) 
 			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
 			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.OutgoingRelationsTable, configurationitem.OutgoingRelationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryHistory queries the history edge of a ConfigurationItem.
+func (c *ConfigurationItemClient) QueryHistory(_m *ConfigurationItem) *ConfigurationItemHistoryQuery {
+	query := (&ConfigurationItemHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
+			sqlgraph.To(configurationitemhistory.Table, configurationitemhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.HistoryTable, configurationitem.HistoryColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTags queries the tags edge of a ConfigurationItem.
+func (c *ConfigurationItemClient) QueryTags(_m *ConfigurationItem) *CITagQuery {
+	query := (&CITagClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
+			sqlgraph.To(citag.Table, citag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, configurationitem.TagsTable, configurationitem.TagsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -3752,6 +4535,155 @@ func (c *ConfigurationItemClient) mutate(ctx context.Context, m *ConfigurationIt
 		return (&ConfigurationItemDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ConfigurationItem mutation op: %q", m.Op())
+	}
+}
+
+// ConfigurationItemHistoryClient is a client for the ConfigurationItemHistory schema.
+type ConfigurationItemHistoryClient struct {
+	config
+}
+
+// NewConfigurationItemHistoryClient returns a client for the ConfigurationItemHistory from the given config.
+func NewConfigurationItemHistoryClient(c config) *ConfigurationItemHistoryClient {
+	return &ConfigurationItemHistoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `configurationitemhistory.Hooks(f(g(h())))`.
+func (c *ConfigurationItemHistoryClient) Use(hooks ...Hook) {
+	c.hooks.ConfigurationItemHistory = append(c.hooks.ConfigurationItemHistory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `configurationitemhistory.Intercept(f(g(h())))`.
+func (c *ConfigurationItemHistoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ConfigurationItemHistory = append(c.inters.ConfigurationItemHistory, interceptors...)
+}
+
+// Create returns a builder for creating a ConfigurationItemHistory entity.
+func (c *ConfigurationItemHistoryClient) Create() *ConfigurationItemHistoryCreate {
+	mutation := newConfigurationItemHistoryMutation(c.config, OpCreate)
+	return &ConfigurationItemHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ConfigurationItemHistory entities.
+func (c *ConfigurationItemHistoryClient) CreateBulk(builders ...*ConfigurationItemHistoryCreate) *ConfigurationItemHistoryCreateBulk {
+	return &ConfigurationItemHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ConfigurationItemHistoryClient) MapCreateBulk(slice any, setFunc func(*ConfigurationItemHistoryCreate, int)) *ConfigurationItemHistoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ConfigurationItemHistoryCreateBulk{err: fmt.Errorf("calling to ConfigurationItemHistoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ConfigurationItemHistoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ConfigurationItemHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ConfigurationItemHistory.
+func (c *ConfigurationItemHistoryClient) Update() *ConfigurationItemHistoryUpdate {
+	mutation := newConfigurationItemHistoryMutation(c.config, OpUpdate)
+	return &ConfigurationItemHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ConfigurationItemHistoryClient) UpdateOne(_m *ConfigurationItemHistory) *ConfigurationItemHistoryUpdateOne {
+	mutation := newConfigurationItemHistoryMutation(c.config, OpUpdateOne, withConfigurationItemHistory(_m))
+	return &ConfigurationItemHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ConfigurationItemHistoryClient) UpdateOneID(id int) *ConfigurationItemHistoryUpdateOne {
+	mutation := newConfigurationItemHistoryMutation(c.config, OpUpdateOne, withConfigurationItemHistoryID(id))
+	return &ConfigurationItemHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ConfigurationItemHistory.
+func (c *ConfigurationItemHistoryClient) Delete() *ConfigurationItemHistoryDelete {
+	mutation := newConfigurationItemHistoryMutation(c.config, OpDelete)
+	return &ConfigurationItemHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ConfigurationItemHistoryClient) DeleteOne(_m *ConfigurationItemHistory) *ConfigurationItemHistoryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ConfigurationItemHistoryClient) DeleteOneID(id int) *ConfigurationItemHistoryDeleteOne {
+	builder := c.Delete().Where(configurationitemhistory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ConfigurationItemHistoryDeleteOne{builder}
+}
+
+// Query returns a query builder for ConfigurationItemHistory.
+func (c *ConfigurationItemHistoryClient) Query() *ConfigurationItemHistoryQuery {
+	return &ConfigurationItemHistoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeConfigurationItemHistory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ConfigurationItemHistory entity by its id.
+func (c *ConfigurationItemHistoryClient) Get(ctx context.Context, id int) (*ConfigurationItemHistory, error) {
+	return c.Query().Where(configurationitemhistory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ConfigurationItemHistoryClient) GetX(ctx context.Context, id int) *ConfigurationItemHistory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCi queries the ci edge of a ConfigurationItemHistory.
+func (c *ConfigurationItemHistoryClient) QueryCi(_m *ConfigurationItemHistory) *ConfigurationItemQuery {
+	query := (&ConfigurationItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(configurationitemhistory.Table, configurationitemhistory.FieldID, id),
+			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, configurationitemhistory.CiTable, configurationitemhistory.CiColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ConfigurationItemHistoryClient) Hooks() []Hook {
+	return c.hooks.ConfigurationItemHistory
+}
+
+// Interceptors returns the client interceptors.
+func (c *ConfigurationItemHistoryClient) Interceptors() []Interceptor {
+	return c.inters.ConfigurationItemHistory
+}
+
+func (c *ConfigurationItemHistoryClient) mutate(ctx context.Context, m *ConfigurationItemHistoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ConfigurationItemHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ConfigurationItemHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ConfigurationItemHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ConfigurationItemHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ConfigurationItemHistory mutation op: %q", m.Op())
 	}
 }
 
@@ -5189,6 +6121,155 @@ func (c *EngineerSkillClient) mutate(ctx context.Context, m *EngineerSkillMutati
 		return (&EngineerSkillDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown EngineerSkill mutation op: %q", m.Op())
+	}
+}
+
+// FeishuTicketSyncClient is a client for the FeishuTicketSync schema.
+type FeishuTicketSyncClient struct {
+	config
+}
+
+// NewFeishuTicketSyncClient returns a client for the FeishuTicketSync from the given config.
+func NewFeishuTicketSyncClient(c config) *FeishuTicketSyncClient {
+	return &FeishuTicketSyncClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `feishuticketsync.Hooks(f(g(h())))`.
+func (c *FeishuTicketSyncClient) Use(hooks ...Hook) {
+	c.hooks.FeishuTicketSync = append(c.hooks.FeishuTicketSync, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `feishuticketsync.Intercept(f(g(h())))`.
+func (c *FeishuTicketSyncClient) Intercept(interceptors ...Interceptor) {
+	c.inters.FeishuTicketSync = append(c.inters.FeishuTicketSync, interceptors...)
+}
+
+// Create returns a builder for creating a FeishuTicketSync entity.
+func (c *FeishuTicketSyncClient) Create() *FeishuTicketSyncCreate {
+	mutation := newFeishuTicketSyncMutation(c.config, OpCreate)
+	return &FeishuTicketSyncCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of FeishuTicketSync entities.
+func (c *FeishuTicketSyncClient) CreateBulk(builders ...*FeishuTicketSyncCreate) *FeishuTicketSyncCreateBulk {
+	return &FeishuTicketSyncCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *FeishuTicketSyncClient) MapCreateBulk(slice any, setFunc func(*FeishuTicketSyncCreate, int)) *FeishuTicketSyncCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &FeishuTicketSyncCreateBulk{err: fmt.Errorf("calling to FeishuTicketSyncClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*FeishuTicketSyncCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &FeishuTicketSyncCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for FeishuTicketSync.
+func (c *FeishuTicketSyncClient) Update() *FeishuTicketSyncUpdate {
+	mutation := newFeishuTicketSyncMutation(c.config, OpUpdate)
+	return &FeishuTicketSyncUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *FeishuTicketSyncClient) UpdateOne(_m *FeishuTicketSync) *FeishuTicketSyncUpdateOne {
+	mutation := newFeishuTicketSyncMutation(c.config, OpUpdateOne, withFeishuTicketSync(_m))
+	return &FeishuTicketSyncUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *FeishuTicketSyncClient) UpdateOneID(id int) *FeishuTicketSyncUpdateOne {
+	mutation := newFeishuTicketSyncMutation(c.config, OpUpdateOne, withFeishuTicketSyncID(id))
+	return &FeishuTicketSyncUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for FeishuTicketSync.
+func (c *FeishuTicketSyncClient) Delete() *FeishuTicketSyncDelete {
+	mutation := newFeishuTicketSyncMutation(c.config, OpDelete)
+	return &FeishuTicketSyncDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *FeishuTicketSyncClient) DeleteOne(_m *FeishuTicketSync) *FeishuTicketSyncDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *FeishuTicketSyncClient) DeleteOneID(id int) *FeishuTicketSyncDeleteOne {
+	builder := c.Delete().Where(feishuticketsync.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &FeishuTicketSyncDeleteOne{builder}
+}
+
+// Query returns a query builder for FeishuTicketSync.
+func (c *FeishuTicketSyncClient) Query() *FeishuTicketSyncQuery {
+	return &FeishuTicketSyncQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeFeishuTicketSync},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a FeishuTicketSync entity by its id.
+func (c *FeishuTicketSyncClient) Get(ctx context.Context, id int) (*FeishuTicketSync, error) {
+	return c.Query().Where(feishuticketsync.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *FeishuTicketSyncClient) GetX(ctx context.Context, id int) *FeishuTicketSync {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTicket queries the ticket edge of a FeishuTicketSync.
+func (c *FeishuTicketSyncClient) QueryTicket(_m *FeishuTicketSync) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(feishuticketsync.Table, feishuticketsync.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, feishuticketsync.TicketTable, feishuticketsync.TicketColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *FeishuTicketSyncClient) Hooks() []Hook {
+	return c.hooks.FeishuTicketSync
+}
+
+// Interceptors returns the client interceptors.
+func (c *FeishuTicketSyncClient) Interceptors() []Interceptor {
+	return c.inters.FeishuTicketSync
+}
+
+func (c *FeishuTicketSyncClient) mutate(ctx context.Context, m *FeishuTicketSyncMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&FeishuTicketSyncCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&FeishuTicketSyncUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&FeishuTicketSyncUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&FeishuTicketSyncDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown FeishuTicketSync mutation op: %q", m.Op())
 	}
 }
 
@@ -9241,7 +10322,7 @@ func (c *ProblemClient) QueryTickets(_m *Problem) *TicketQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(problem.Table, problem.FieldID, id),
 			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, problem.TicketsTable, problem.TicketsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, problem.TicketsTable, problem.TicketsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -13017,6 +14098,22 @@ func (c *ServiceCatalogClient) GetX(ctx context.Context, id int) *ServiceCatalog
 	return obj
 }
 
+// QueryItems queries the items edge of a ServiceCatalog.
+func (c *ServiceCatalogClient) QueryItems(_m *ServiceCatalog) *ServiceCatalogItemQuery {
+	query := (&ServiceCatalogItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicecatalog.Table, servicecatalog.FieldID, id),
+			sqlgraph.To(servicecatalogitem.Table, servicecatalogitem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, servicecatalog.ItemsTable, servicecatalog.ItemsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ServiceCatalogClient) Hooks() []Hook {
 	return c.hooks.ServiceCatalog
@@ -13039,6 +14136,155 @@ func (c *ServiceCatalogClient) mutate(ctx context.Context, m *ServiceCatalogMuta
 		return (&ServiceCatalogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ServiceCatalog mutation op: %q", m.Op())
+	}
+}
+
+// ServiceCatalogItemClient is a client for the ServiceCatalogItem schema.
+type ServiceCatalogItemClient struct {
+	config
+}
+
+// NewServiceCatalogItemClient returns a client for the ServiceCatalogItem from the given config.
+func NewServiceCatalogItemClient(c config) *ServiceCatalogItemClient {
+	return &ServiceCatalogItemClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `servicecatalogitem.Hooks(f(g(h())))`.
+func (c *ServiceCatalogItemClient) Use(hooks ...Hook) {
+	c.hooks.ServiceCatalogItem = append(c.hooks.ServiceCatalogItem, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `servicecatalogitem.Intercept(f(g(h())))`.
+func (c *ServiceCatalogItemClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ServiceCatalogItem = append(c.inters.ServiceCatalogItem, interceptors...)
+}
+
+// Create returns a builder for creating a ServiceCatalogItem entity.
+func (c *ServiceCatalogItemClient) Create() *ServiceCatalogItemCreate {
+	mutation := newServiceCatalogItemMutation(c.config, OpCreate)
+	return &ServiceCatalogItemCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ServiceCatalogItem entities.
+func (c *ServiceCatalogItemClient) CreateBulk(builders ...*ServiceCatalogItemCreate) *ServiceCatalogItemCreateBulk {
+	return &ServiceCatalogItemCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ServiceCatalogItemClient) MapCreateBulk(slice any, setFunc func(*ServiceCatalogItemCreate, int)) *ServiceCatalogItemCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ServiceCatalogItemCreateBulk{err: fmt.Errorf("calling to ServiceCatalogItemClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ServiceCatalogItemCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ServiceCatalogItemCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ServiceCatalogItem.
+func (c *ServiceCatalogItemClient) Update() *ServiceCatalogItemUpdate {
+	mutation := newServiceCatalogItemMutation(c.config, OpUpdate)
+	return &ServiceCatalogItemUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ServiceCatalogItemClient) UpdateOne(_m *ServiceCatalogItem) *ServiceCatalogItemUpdateOne {
+	mutation := newServiceCatalogItemMutation(c.config, OpUpdateOne, withServiceCatalogItem(_m))
+	return &ServiceCatalogItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ServiceCatalogItemClient) UpdateOneID(id int) *ServiceCatalogItemUpdateOne {
+	mutation := newServiceCatalogItemMutation(c.config, OpUpdateOne, withServiceCatalogItemID(id))
+	return &ServiceCatalogItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ServiceCatalogItem.
+func (c *ServiceCatalogItemClient) Delete() *ServiceCatalogItemDelete {
+	mutation := newServiceCatalogItemMutation(c.config, OpDelete)
+	return &ServiceCatalogItemDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ServiceCatalogItemClient) DeleteOne(_m *ServiceCatalogItem) *ServiceCatalogItemDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ServiceCatalogItemClient) DeleteOneID(id int) *ServiceCatalogItemDeleteOne {
+	builder := c.Delete().Where(servicecatalogitem.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ServiceCatalogItemDeleteOne{builder}
+}
+
+// Query returns a query builder for ServiceCatalogItem.
+func (c *ServiceCatalogItemClient) Query() *ServiceCatalogItemQuery {
+	return &ServiceCatalogItemQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeServiceCatalogItem},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ServiceCatalogItem entity by its id.
+func (c *ServiceCatalogItemClient) Get(ctx context.Context, id int) (*ServiceCatalogItem, error) {
+	return c.Query().Where(servicecatalogitem.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ServiceCatalogItemClient) GetX(ctx context.Context, id int) *ServiceCatalogItem {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCatalog queries the catalog edge of a ServiceCatalogItem.
+func (c *ServiceCatalogItemClient) QueryCatalog(_m *ServiceCatalogItem) *ServiceCatalogQuery {
+	query := (&ServiceCatalogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicecatalogitem.Table, servicecatalogitem.FieldID, id),
+			sqlgraph.To(servicecatalog.Table, servicecatalog.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, servicecatalogitem.CatalogTable, servicecatalogitem.CatalogColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ServiceCatalogItemClient) Hooks() []Hook {
+	return c.hooks.ServiceCatalogItem
+}
+
+// Interceptors returns the client interceptors.
+func (c *ServiceCatalogItemClient) Interceptors() []Interceptor {
+	return c.inters.ServiceCatalogItem
+}
+
+func (c *ServiceCatalogItemClient) mutate(ctx context.Context, m *ServiceCatalogItemMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ServiceCatalogItemCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ServiceCatalogItemUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ServiceCatalogItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ServiceCatalogItemDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ServiceCatalogItem mutation op: %q", m.Op())
 	}
 }
 
@@ -14688,150 +15934,6 @@ func (c *TicketClient) GetX(ctx context.Context, id int) *Ticket {
 	return obj
 }
 
-// QueryTemplate queries the template edge of a Ticket.
-func (c *TicketClient) QueryTemplate(_m *Ticket) *TicketTemplateQuery {
-	query := (&TicketTemplateClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(tickettemplate.Table, tickettemplate.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.TemplateTable, ticket.TemplateColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCategory queries the category edge of a Ticket.
-func (c *TicketClient) QueryCategory(_m *Ticket) *TicketCategoryQuery {
-	query := (&TicketCategoryClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(ticketcategory.Table, ticketcategory.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.CategoryTable, ticket.CategoryColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryDepartment queries the department edge of a Ticket.
-func (c *TicketClient) QueryDepartment(_m *Ticket) *DepartmentQuery {
-	query := (&DepartmentClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(department.Table, department.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.DepartmentTable, ticket.DepartmentColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryTags queries the tags edge of a Ticket.
-func (c *TicketClient) QueryTags(_m *Ticket) *TicketTagQuery {
-	query := (&TicketTagClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(tickettag.Table, tickettag.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.TagsTable, ticket.TagsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRelatedTickets queries the related_tickets edge of a Ticket.
-func (c *TicketClient) QueryRelatedTickets(_m *Ticket) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.RelatedTicketsTable, ticket.RelatedTicketsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryParentTicket queries the parent_ticket edge of a Ticket.
-func (c *TicketClient) QueryParentTicket(_m *Ticket) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.ParentTicketTable, ticket.ParentTicketColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryWorkflowInstances queries the workflow_instances edge of a Ticket.
-func (c *TicketClient) QueryWorkflowInstances(_m *Ticket) *WorkflowInstanceQuery {
-	query := (&WorkflowInstanceClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(workflowinstance.Table, workflowinstance.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.WorkflowInstancesTable, ticket.WorkflowInstancesColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QuerySLADefinition queries the sla_definition edge of a Ticket.
-func (c *TicketClient) QuerySLADefinition(_m *Ticket) *SLADefinitionQuery {
-	query := (&SLADefinitionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.SLADefinitionTable, ticket.SLADefinitionColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QuerySLAViolations queries the sla_violations edge of a Ticket.
-func (c *TicketClient) QuerySLAViolations(_m *Ticket) *SLAViolationQuery {
-	query := (&SLAViolationClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(slaviolation.Table, slaviolation.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAViolationsTable, ticket.SLAViolationsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryComments queries the comments edge of a Ticket.
 func (c *TicketClient) QueryComments(_m *Ticket) *TicketCommentQuery {
 	query := (&TicketCommentClient{config: c.config}).Query()
@@ -14864,31 +15966,15 @@ func (c *TicketClient) QueryAttachments(_m *Ticket) *TicketAttachmentQuery {
 	return query
 }
 
-// QueryNotifications queries the notifications edge of a Ticket.
-func (c *TicketClient) QueryNotifications(_m *Ticket) *TicketNotificationQuery {
-	query := (&TicketNotificationClient{config: c.config}).Query()
+// QueryTags queries the tags edge of a Ticket.
+func (c *TicketClient) QueryTags(_m *Ticket) *TicketTagQuery {
+	query := (&TicketTagClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(ticketnotification.Table, ticketnotification.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.NotificationsTable, ticket.NotificationsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QuerySLAAlertHistory queries the sla_alert_history edge of a Ticket.
-func (c *TicketClient) QuerySLAAlertHistory(_m *Ticket) *SLAAlertHistoryQuery {
-	query := (&SLAAlertHistoryClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(slaalerthistory.Table, slaalerthistory.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAAlertHistoryTable, ticket.SLAAlertHistoryColumn),
+			sqlgraph.To(tickettag.Table, tickettag.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.TagsTable, ticket.TagsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -14905,54 +15991,6 @@ func (c *TicketClient) QueryApprovalRecords(_m *Ticket) *ApprovalRecordQuery {
 			sqlgraph.From(ticket.Table, ticket.FieldID, id),
 			sqlgraph.To(approvalrecord.Table, approvalrecord.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ticket.ApprovalRecordsTable, ticket.ApprovalRecordsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRootCauseAnalyses queries the root_cause_analyses edge of a Ticket.
-func (c *TicketClient) QueryRootCauseAnalyses(_m *Ticket) *RootCauseAnalysisQuery {
-	query := (&RootCauseAnalysisClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(rootcauseanalysis.Table, rootcauseanalysis.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.RootCauseAnalysesTable, ticket.RootCauseAnalysesColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryConfigurationItems queries the configuration_items edge of a Ticket.
-func (c *TicketClient) QueryConfigurationItems(_m *Ticket) *ConfigurationItemQuery {
-	query := (&ConfigurationItemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ticket.ConfigurationItemsTable, ticket.ConfigurationItemsPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryProblems queries the problems edge of a Ticket.
-func (c *TicketClient) QueryProblems(_m *Ticket) *ProblemQuery {
-	query := (&ProblemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(problem.Table, problem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ticket.ProblemsTable, ticket.ProblemsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -14992,6 +16030,22 @@ func (c *TicketClient) QueryWorkflowRecords(_m *Ticket) *TicketWorkflowRecordQue
 	return query
 }
 
+// QueryNotifications queries the notifications edge of a Ticket.
+func (c *TicketClient) QueryNotifications(_m *Ticket) *TicketNotificationQuery {
+	query := (&TicketNotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(ticketnotification.Table, ticketnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.NotificationsTable, ticket.NotificationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryCcUsers queries the cc_users edge of a Ticket.
 func (c *TicketClient) QueryCcUsers(_m *Ticket) *TicketCCQuery {
 	query := (&TicketCCClient{config: c.config}).Query()
@@ -15001,6 +16055,118 @@ func (c *TicketClient) QueryCcUsers(_m *Ticket) *TicketCCQuery {
 			sqlgraph.From(ticket.Table, ticket.FieldID, id),
 			sqlgraph.To(ticketcc.Table, ticketcc.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ticket.CcUsersTable, ticket.CcUsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySLAViolations queries the sla_violations edge of a Ticket.
+func (c *TicketClient) QuerySLAViolations(_m *Ticket) *SLAViolationQuery {
+	query := (&SLAViolationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(slaviolation.Table, slaviolation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAViolationsTable, ticket.SLAViolationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySLAAlertHistory queries the sla_alert_history edge of a Ticket.
+func (c *TicketClient) QuerySLAAlertHistory(_m *Ticket) *SLAAlertHistoryQuery {
+	query := (&SLAAlertHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(slaalerthistory.Table, slaalerthistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAAlertHistoryTable, ticket.SLAAlertHistoryColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRootCauseAnalyses queries the root_cause_analyses edge of a Ticket.
+func (c *TicketClient) QueryRootCauseAnalyses(_m *Ticket) *RootCauseAnalysisQuery {
+	query := (&RootCauseAnalysisClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(rootcauseanalysis.Table, rootcauseanalysis.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.RootCauseAnalysesTable, ticket.RootCauseAnalysesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryFeishuSyncs queries the feishu_syncs edge of a Ticket.
+func (c *TicketClient) QueryFeishuSyncs(_m *Ticket) *FeishuTicketSyncQuery {
+	query := (&FeishuTicketSyncClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(feishuticketsync.Table, feishuticketsync.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.FeishuSyncsTable, ticket.FeishuSyncsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRequester queries the requester edge of a Ticket.
+func (c *TicketClient) QueryRequester(_m *Ticket) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.RequesterTable, ticket.RequesterColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAssignee queries the assignee edge of a Ticket.
+func (c *TicketClient) QueryAssignee(_m *Ticket) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.AssigneeTable, ticket.AssigneeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCategory queries the category edge of a Ticket.
+func (c *TicketClient) QueryCategory(_m *Ticket) *TicketCategoryQuery {
+	query := (&TicketCategoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(ticketcategory.Table, ticketcategory.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ticket.CategoryTable, ticket.CategoryPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -15894,7 +17060,7 @@ func (c *TicketCategoryClient) QueryTickets(_m *TicketCategory) *TicketQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(ticketcategory.Table, ticketcategory.FieldID, id),
 			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticketcategory.TicketsTable, ticketcategory.TicketsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, ticketcategory.TicketsTable, ticketcategory.TicketsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -17206,6 +18372,38 @@ func (c *UserClient) QueryTenant(_m *User) *TenantQuery {
 	return query
 }
 
+// QueryTickets queries the tickets edge of a User.
+func (c *UserClient) QueryTickets(_m *User) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TicketsTable, user.TicketsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAssignedTickets queries the assigned_tickets edge of a User.
+func (c *UserClient) QueryAssignedTickets(_m *User) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AssignedTicketsTable, user.AssignedTicketsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryTicketComments queries the ticket_comments edge of a User.
 func (c *UserClient) QueryTicketComments(_m *User) *TicketCommentQuery {
 	query := (&TicketCommentClient{config: c.config}).Query()
@@ -18220,52 +19418,54 @@ func (c *WorkflowVersionClient) mutate(ctx context.Context, m *WorkflowVersionMu
 type (
 	hooks struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
-		AssetLicense, AuditLog, BPMNPermission, CIAttributeDefinition, CIRelationship,
-		CIType, Change, ChangePIR, CloudAccount, CloudResource, CloudService,
-		ConfigurationItem, Contract, Conversation, Department, DiscoveryJob,
-		DiscoveryResult, DiscoverySource, DomainConfig, EndpointACL, EngineerSkill,
-		Group, Incident, IncidentAlert, IncidentEscalationRule, IncidentEvent,
-		IncidentMetric, IncidentRule, IncidentRuleExecution, ItemVersion,
-		KnowledgeArticle, KnowledgeArticleLike, KnowledgeArticleParticipant,
-		KnowledgeArticleSession, KnowledgeArticleVersion, KnownError, MSPAllocation,
-		MarketplaceItem, Menu, Message, Microservice, Notification,
-		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,
-		Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition, ProcessDeployment,
-		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
-		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
-		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		StandardChange, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
-		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCC, TicketCategory,
-		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketView,
-		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
-		WorkflowTask, WorkflowVersion []ent.Hook
+		AssetLicense, AuditLog, BPMNPermission, CABMember, CIAttributeDefinition,
+		CIRelationship, CITag, CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView,
+		Change, ChangePIR, CloudAccount, CloudResource, CloudService,
+		ConfigurationItem, ConfigurationItemHistory, Contract, Conversation,
+		Department, DiscoveryJob, DiscoveryResult, DiscoverySource, DomainConfig,
+		EndpointACL, EngineerSkill, FeishuTicketSync, Group, Incident, IncidentAlert,
+		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
+		IncidentRuleExecution, ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
+		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
+		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
+		Notification, NotificationPreference, PasswordResetToken, Permission,
+		PermissionDefinition, Problem, ProcessAuditLog, ProcessBinding,
+		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
+		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
+		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
+		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceRequest,
+		ServiceRequestApproval, StandardChange, Survey, SurveyResponse, SystemConfig,
+		Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
+		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
-		AssetLicense, AuditLog, BPMNPermission, CIAttributeDefinition, CIRelationship,
-		CIType, Change, ChangePIR, CloudAccount, CloudResource, CloudService,
-		ConfigurationItem, Contract, Conversation, Department, DiscoveryJob,
-		DiscoveryResult, DiscoverySource, DomainConfig, EndpointACL, EngineerSkill,
-		Group, Incident, IncidentAlert, IncidentEscalationRule, IncidentEvent,
-		IncidentMetric, IncidentRule, IncidentRuleExecution, ItemVersion,
-		KnowledgeArticle, KnowledgeArticleLike, KnowledgeArticleParticipant,
-		KnowledgeArticleSession, KnowledgeArticleVersion, KnownError, MSPAllocation,
-		MarketplaceItem, Menu, Message, Microservice, Notification,
-		NotificationPreference, PasswordResetToken, Permission, PermissionDefinition,
-		Problem, ProcessAuditLog, ProcessBinding, ProcessDefinition, ProcessDeployment,
-		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
-		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
-		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		StandardChange, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
-		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCC, TicketCategory,
-		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketView,
-		TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow, WorkflowInstance,
-		WorkflowTask, WorkflowVersion []ent.Interceptor
+		AssetLicense, AuditLog, BPMNPermission, CABMember, CIAttributeDefinition,
+		CIRelationship, CITag, CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView,
+		Change, ChangePIR, CloudAccount, CloudResource, CloudService,
+		ConfigurationItem, ConfigurationItemHistory, Contract, Conversation,
+		Department, DiscoveryJob, DiscoveryResult, DiscoverySource, DomainConfig,
+		EndpointACL, EngineerSkill, FeishuTicketSync, Group, Incident, IncidentAlert,
+		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
+		IncidentRuleExecution, ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
+		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
+		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
+		Notification, NotificationPreference, PasswordResetToken, Permission,
+		PermissionDefinition, Problem, ProcessAuditLog, ProcessBinding,
+		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
+		ProcessTask, ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		ProvisioningTask, RelationshipType, Release, Role, RolePermission,
+		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
+		SLAPolicy, SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceRequest,
+		ServiceRequestApproval, StandardChange, Survey, SurveyResponse, SystemConfig,
+		Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
+		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
 	}
 )

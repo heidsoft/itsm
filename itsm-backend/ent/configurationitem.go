@@ -22,6 +22,8 @@ type ConfigurationItem struct {
 	ID int `json:"id,omitempty"`
 	// CI名称
 	Name string `json:"name,omitempty"`
+	// CI描述
+	Description string `json:"description,omitempty"`
 	// CI类型ID
 	CiTypeID int `json:"ci_type_id,omitempty"`
 	// CI类型
@@ -102,11 +104,15 @@ type ConfigurationItemEdges struct {
 	Incidents []*Incident `json:"incidents,omitempty"`
 	// OutgoingRelations holds the value of the outgoing_relations edge.
 	OutgoingRelations []*CIRelationship `json:"outgoing_relations,omitempty"`
+	// CI变更历史
+	History []*ConfigurationItemHistory `json:"history,omitempty"`
+	// CI标签
+	Tags []*CITag `json:"tags,omitempty"`
 	// IncomingRelations holds the value of the incoming_relations edge.
 	IncomingRelations []*CIRelationship `json:"incoming_relations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [8]bool
 }
 
 // CiTypeRefOrErr returns the CiTypeRef value or an error if the edge
@@ -158,10 +164,28 @@ func (e ConfigurationItemEdges) OutgoingRelationsOrErr() ([]*CIRelationship, err
 	return nil, &NotLoadedError{edge: "outgoing_relations"}
 }
 
+// HistoryOrErr returns the History value or an error if the edge
+// was not loaded in eager-loading.
+func (e ConfigurationItemEdges) HistoryOrErr() ([]*ConfigurationItemHistory, error) {
+	if e.loadedTypes[5] {
+		return e.History, nil
+	}
+	return nil, &NotLoadedError{edge: "history"}
+}
+
+// TagsOrErr returns the Tags value or an error if the edge
+// was not loaded in eager-loading.
+func (e ConfigurationItemEdges) TagsOrErr() ([]*CITag, error) {
+	if e.loadedTypes[6] {
+		return e.Tags, nil
+	}
+	return nil, &NotLoadedError{edge: "tags"}
+}
+
 // IncomingRelationsOrErr returns the IncomingRelations value or an error if the edge
 // was not loaded in eager-loading.
 func (e ConfigurationItemEdges) IncomingRelationsOrErr() ([]*CIRelationship, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[7] {
 		return e.IncomingRelations, nil
 	}
 	return nil, &NotLoadedError{edge: "incoming_relations"}
@@ -176,7 +200,7 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldCloudResourceRefID, configurationitem.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case configurationitem.FieldName, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus:
+		case configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus:
 			values[i] = new(sql.NullString)
 		case configurationitem.FieldLastDiscovered, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -206,6 +230,12 @@ func (_m *ConfigurationItem) assignValues(columns []string, values []any) error 
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				_m.Name = value.String
+			}
+		case configurationitem.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				_m.Description = value.String
 			}
 		case configurationitem.FieldCiTypeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -439,6 +469,16 @@ func (_m *ConfigurationItem) QueryOutgoingRelations() *CIRelationshipQuery {
 	return NewConfigurationItemClient(_m.config).QueryOutgoingRelations(_m)
 }
 
+// QueryHistory queries the "history" edge of the ConfigurationItem entity.
+func (_m *ConfigurationItem) QueryHistory() *ConfigurationItemHistoryQuery {
+	return NewConfigurationItemClient(_m.config).QueryHistory(_m)
+}
+
+// QueryTags queries the "tags" edge of the ConfigurationItem entity.
+func (_m *ConfigurationItem) QueryTags() *CITagQuery {
+	return NewConfigurationItemClient(_m.config).QueryTags(_m)
+}
+
 // QueryIncomingRelations queries the "incoming_relations" edge of the ConfigurationItem entity.
 func (_m *ConfigurationItem) QueryIncomingRelations() *CIRelationshipQuery {
 	return NewConfigurationItemClient(_m.config).QueryIncomingRelations(_m)
@@ -469,6 +509,9 @@ func (_m *ConfigurationItem) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
+	builder.WriteString(", ")
+	builder.WriteString("description=")
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("ci_type_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.CiTypeID))

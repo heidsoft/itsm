@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent"
@@ -30,9 +31,36 @@ func (Incident) Fields() []ent.Field {
 			Default("incident"),
 		field.String("priority").
 			Comment("优先级").
+			Validate(func(s string) error {
+				valid := map[string]bool{"low": true, "medium": true, "high": true, "critical": true}
+				if !valid[s] {
+					return fmt.Errorf("invalid priority value: %s", s)
+				}
+				return nil
+			}).
 			Default("medium"),
 		field.String("severity").
 			Comment("严重程度").
+			Default("medium"),
+		field.String("impact").
+			Comment("影响范围：low/medium/high/critical").
+			Validate(func(s string) error {
+				valid := map[string]bool{"low": true, "medium": true, "high": true, "critical": true}
+				if !valid[s] {
+					return fmt.Errorf("invalid impact value: %s", s)
+				}
+				return nil
+			}).
+			Default("medium"),
+		field.String("urgency").
+			Comment("紧急程度：low/medium/high/critical").
+			Validate(func(s string) error {
+				valid := map[string]bool{"low": true, "medium": true, "high": true, "critical": true}
+				if !valid[s] {
+					return fmt.Errorf("invalid urgency value: %s", s)
+				}
+				return nil
+			}).
 			Default("medium"),
 		field.String("incident_number").
 			Comment("事件编号").

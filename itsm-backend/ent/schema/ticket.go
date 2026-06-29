@@ -128,63 +128,29 @@ func (Ticket) Fields() []ent.Field {
 // Edges of the Ticket.
 func (Ticket) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("template", TicketTemplate.Type).
+		edge.To("comments", TicketComment.Type),
+		edge.To("attachments", TicketAttachment.Type),
+		edge.To("tags", TicketTag.Type),
+		edge.To("approval_records", ApprovalRecord.Type),
+		edge.To("approvals", TicketApproval.Type),
+		edge.To("workflow_records", TicketWorkflowRecord.Type),
+		edge.To("notifications", TicketNotification.Type),
+		edge.To("cc_users", TicketCC.Type),
+		edge.To("sla_violations", SLAViolation.Type),
+		edge.To("sla_alert_history", SLAAlertHistory.Type),
+		edge.To("root_cause_analyses", RootCauseAnalysis.Type),
+		edge.To("feishu_syncs", FeishuTicketSync.Type),
+		edge.From("requester", User.Type).
 			Ref("tickets").
-			Field("template_id").
-			Unique().
-			Comment("工单模板"),
+			Field("requester_id").
+			Required().
+			Unique(),
+		edge.From("assignee", User.Type).
+			Ref("assigned_tickets").
+			Field("assignee_id").
+			Unique(),
 		edge.From("category", TicketCategory.Type).
-			Ref("tickets").
-			Field("category_id").
-			Unique().
-			Comment("工单分类"),
-		edge.From("department", Department.Type).
-			Ref("tickets").
-			Field("department_id").
-			Unique().
-			Comment("所属部门"),
-		edge.To("tags", TicketTag.Type).
-			Comment("工单标签"),
-		edge.To("related_tickets", Ticket.Type).
-			Comment("关联工单"),
-		edge.From("parent_ticket", Ticket.Type).
-			Ref("related_tickets").
-			Field("parent_ticket_id").
-			Unique().
-			Comment("父工单"),
-		edge.To("workflow_instances", WorkflowInstance.Type).
-			Comment("工作流实例"),
-		edge.From("sla_definition", SLADefinition.Type).
-			Ref("tickets").
-			Field("sla_definition_id").
-			Unique().
-			Comment("SLA定义"),
-		edge.To("sla_violations", SLAViolation.Type).
-			Comment("SLA违规记录"),
-		edge.To("comments", TicketComment.Type).
-			Comment("工单评论"),
-		edge.To("attachments", TicketAttachment.Type).
-			Comment("工单附件"),
-		edge.To("notifications", TicketNotification.Type).
-			Comment("工单通知"),
-		edge.To("sla_alert_history", SLAAlertHistory.Type).
-			Comment("SLA预警历史"),
-		edge.To("approval_records", ApprovalRecord.Type).
-			Comment("审批记录"),
-		edge.To("root_cause_analyses", RootCauseAnalysis.Type).
-			Comment("根因分析"),
-		edge.From("configuration_items", ConfigurationItem.Type).
-			Ref("tickets").
-			Comment("关联的配置项"),
-		edge.From("problems", Problem.Type).
-			Ref("tickets").
-			Comment("关联的问题"),
-		edge.To("approvals", TicketApproval.Type).
-			Comment("审批记录"),
-		edge.To("workflow_records", TicketWorkflowRecord.Type).
-			Comment("流转记录"),
-		edge.To("cc_users", TicketCC.Type).
-			Comment("抄送人"),
+			Ref("tickets"),
 	}
 }
 

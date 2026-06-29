@@ -104,6 +104,18 @@ func (f BPMNPermissionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BPMNPermissionMutation", m)
 }
 
+// The CABMemberFunc type is an adapter to allow the use of ordinary
+// function as CABMember mutator.
+type CABMemberFunc func(context.Context, *ent.CABMemberMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CABMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CABMemberMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CABMemberMutation", m)
+}
+
 // The CIAttributeDefinitionFunc type is an adapter to allow the use of ordinary
 // function as CIAttributeDefinition mutator.
 type CIAttributeDefinitionFunc func(context.Context, *ent.CIAttributeDefinitionMutation) (ent.Value, error)
@@ -128,6 +140,18 @@ func (f CIRelationshipFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CIRelationshipMutation", m)
 }
 
+// The CITagFunc type is an adapter to allow the use of ordinary
+// function as CITag mutator.
+type CITagFunc func(context.Context, *ent.CITagMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CITagFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CITagMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CITagMutation", m)
+}
+
 // The CITypeFunc type is an adapter to allow the use of ordinary
 // function as CIType mutator.
 type CITypeFunc func(context.Context, *ent.CITypeMutation) (ent.Value, error)
@@ -138,6 +162,42 @@ func (f CITypeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CITypeMutation", m)
+}
+
+// The CMDBExportTaskFunc type is an adapter to allow the use of ordinary
+// function as CMDBExportTask mutator.
+type CMDBExportTaskFunc func(context.Context, *ent.CMDBExportTaskMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CMDBExportTaskFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CMDBExportTaskMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CMDBExportTaskMutation", m)
+}
+
+// The CMDBImportTaskFunc type is an adapter to allow the use of ordinary
+// function as CMDBImportTask mutator.
+type CMDBImportTaskFunc func(context.Context, *ent.CMDBImportTaskMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CMDBImportTaskFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CMDBImportTaskMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CMDBImportTaskMutation", m)
+}
+
+// The CMDBSavedViewFunc type is an adapter to allow the use of ordinary
+// function as CMDBSavedView mutator.
+type CMDBSavedViewFunc func(context.Context, *ent.CMDBSavedViewMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CMDBSavedViewFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CMDBSavedViewMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CMDBSavedViewMutation", m)
 }
 
 // The ChangeFunc type is an adapter to allow the use of ordinary
@@ -210,6 +270,18 @@ func (f ConfigurationItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ConfigurationItemMutation", m)
+}
+
+// The ConfigurationItemHistoryFunc type is an adapter to allow the use of ordinary
+// function as ConfigurationItemHistory mutator.
+type ConfigurationItemHistoryFunc func(context.Context, *ent.ConfigurationItemHistoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ConfigurationItemHistoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ConfigurationItemHistoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ConfigurationItemHistoryMutation", m)
 }
 
 // The ContractFunc type is an adapter to allow the use of ordinary
@@ -318,6 +390,18 @@ func (f EngineerSkillFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Valu
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EngineerSkillMutation", m)
+}
+
+// The FeishuTicketSyncFunc type is an adapter to allow the use of ordinary
+// function as FeishuTicketSync mutator.
+type FeishuTicketSyncFunc func(context.Context, *ent.FeishuTicketSyncMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f FeishuTicketSyncFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.FeishuTicketSyncMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FeishuTicketSyncMutation", m)
 }
 
 // The GroupFunc type is an adapter to allow the use of ordinary
@@ -918,6 +1002,18 @@ func (f ServiceCatalogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServiceCatalogMutation", m)
+}
+
+// The ServiceCatalogItemFunc type is an adapter to allow the use of ordinary
+// function as ServiceCatalogItem mutator.
+type ServiceCatalogItemFunc func(context.Context, *ent.ServiceCatalogItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ServiceCatalogItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ServiceCatalogItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServiceCatalogItemMutation", m)
 }
 
 // The ServiceRequestFunc type is an adapter to allow the use of ordinary

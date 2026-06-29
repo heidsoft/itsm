@@ -70,7 +70,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "ticket" package.
 	TicketsInverseTable = "tickets"
 	// TicketsColumn is the table column denoting the tickets relation/edge.
-	TicketsColumn = "sla_definition_id"
+	TicketsColumn = "sla_definition_tickets"
 	// AlertRulesTable is the table that holds the alert_rules relation/edge.
 	AlertRulesTable = "sla_alert_rules"
 	// AlertRulesInverseTable is the table name for the SLAAlertRule entity.

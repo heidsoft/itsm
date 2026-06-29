@@ -625,7 +625,7 @@ func HasTickets() predicate.TicketCategory {
 	return predicate.TicketCategory(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, TicketsTable, TicketsPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

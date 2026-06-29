@@ -15,6 +15,7 @@ import (
 
 // ProblemService 问题管理服务
 type ProblemService struct {
+	knownErrorService     *KnownErrorService
 	client                *ent.Client
 	logger                *zap.SugaredLogger
 	processTriggerService ProcessTriggerServiceInterface
@@ -29,6 +30,10 @@ func NewProblemService(client *ent.Client, logger *zap.SugaredLogger) *ProblemSe
 }
 
 // SetProcessTriggerService 设置流程触发服务
+func (s *ProblemService) SetKnownErrorService(kes *KnownErrorService) {
+	s.knownErrorService = kes
+}
+
 func (s *ProblemService) SetProcessTriggerService(triggerService ProcessTriggerServiceInterface) {
 	s.processTriggerService = triggerService
 }
@@ -410,4 +415,146 @@ func isValidProblemStatusTransition(currentStatus, newStatus string) bool {
 		}
 	}
 	return false
+}
+// CreateKnownErrorFromProblem 从问题创建已知错误
+func (s *ProblemService) CreateKnownErrorFromProblem(ctx context.Context, problemID int, createdBy int, req *dto.KEDBCreateRequest) (*dto.KEDBResponse, error) {
+	s.logger.Infow("Creating known error from problem", "problemID", problemID, "createdBy", createdBy)
+	
+	// 获取问题
+	problem, err := s.client.Problem.Query().
+		Where(problem.IDEQ(problemID)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("problem not found")
+		}
+		return nil, fmt.Errorf("failed to get problem: %w", err)
+	}
+	
+	// 构建创建已知错误的请求
+	createReq := dto.KEDBCreateRequest{
+		Title:            problem.Title,
+		Description:      problem.Description,
+		RootCause:        problem.RootCause,
+		Category:         problem.Category,
+		Severity:         mapPriorityToSeverity(problem.Priority),
+		AffectedProducts: []string{},
+		AffectedCIs:      []string{},
+		Keywords:         []string{problem.Title},
+		ProblemID:        &problemID,
+	}
+	
+	// 如果用户传入了自定义请求，覆盖默认值
+	if req != nil {
+		if req.Title != "" {
+			createReq.Title = req.Title
+		}
+		if req.Description != "" {
+			createReq.Description = req.Description
+		}
+		if req.Symptoms != "" {
+			createReq.Symptoms = req.Symptoms
+		}
+		if req.RootCause != "" {
+			createReq.RootCause = req.RootCause
+		}
+		if req.Workaround != "" {
+			createReq.Workaround = req.Workaround
+		}
+		if req.Resolution != "" {
+			createReq.Resolution = req.Resolution
+		}
+		if req.Category != "" {
+			createReq.Category = req.Category
+		}
+		if req.Severity != "" {
+			createReq.Severity = req.Severity
+		}
+		if len(req.AffectedProducts) > 0 {
+			createReq.AffectedProducts = req.AffectedProducts
+		}
+		if len(req.AffectedCIs) > 0 {
+			createReq.AffectedCIs = req.AffectedCIs
+		}
+		if len(req.Keywords) > 0 {
+			createReq.Keywords = req.Keywords
+		}
+	}
+	
+	// 验证必填字段
+	if createReq.Title == "" {
+		return nil, fmt.Errorf("title is required")
+	}
+	
+	// 创建已知错误 - 需要先转换为CreateKnownErrorRequest
+	// 注意：这里KnownErrorService需要的是CreateKnownErrorRequest，我先手动映射
+	knownError, err := s.knownErrorService.CreateKnownError(ctx, dto.CreateKnownErrorRequest{
+		Title:            createReq.Title,
+		Description:      createReq.Description,
+		Symptoms:         createReq.Symptoms,
+		RootCause:        createReq.RootCause,
+		Workaround:       createReq.Workaround,
+		Resolution:       createReq.Resolution,
+		Status:           dto.KnownErrorStatusDraft, // 默认是草稿状态，需要审批
+		Category:         createReq.Category,
+		Severity:         createReq.Severity,
+		AffectedProducts: createReq.AffectedProducts,
+		AffectedCIs:      createReq.AffectedCIs,
+		Keywords:         createReq.Keywords,
+		CreatedBy:        createdBy,
+		TenantID:         problem.TenantID,
+	})
+	if err != nil {
+		s.logger.Errorw("Failed to create known error from problem", "error", err)
+		return nil, fmt.Errorf("failed to create known error: %w", err)
+	}
+	
+	// 关联已知错误到问题
+	err = s.knownErrorService.LinkKnownErrorToProblem(ctx, knownError.ID, problemID)
+	if err != nil {
+		s.logger.Warnw("Failed to link known error to problem", "knownErrorID", knownError.ID, "problemID", problemID, "error", err)
+	}
+	
+	// 转换为响应
+	return toKEDBResponse(knownError), nil
+}
+
+// mapPriorityToSeverity 将问题优先级映射为已知错误严重程度
+func mapPriorityToSeverity(priority string) string {
+	switch priority {
+	case "critical":
+		return dto.KnownErrorSeverityCritical
+	case "high":
+		return dto.KnownErrorSeverityHigh
+	case "medium":
+		return dto.KnownErrorSeverityMedium
+	case "low":
+		return dto.KnownErrorSeverityLow
+	default:
+		return dto.KnownErrorSeverityMedium
+	}
+}
+
+// toKEDBResponse 将ent.KnownError转换为dto.KEDBResponse
+func toKEDBResponse(ke *ent.KnownError) *dto.KEDBResponse {
+	return &dto.KEDBResponse{
+		ID:               ke.ID,
+		Title:            ke.Title,
+		Description:      ke.Description,
+		Symptoms:         ke.Symptoms,
+		RootCause:        ke.RootCause,
+		Workaround:       ke.Workaround,
+		Resolution:       ke.Resolution,
+		Status:           ke.Status,
+		Category:         ke.Category,
+		Severity:         ke.Severity,
+		AffectedProducts: ke.AffectedProducts,
+		AffectedCIs:      ke.AffectedCis,
+		Keywords:         ke.Keywords,
+		OccurrenceCount:  ke.OccurrenceCount,
+		CreatedBy:        ke.CreatedBy,
+		TenantID:         ke.TenantID,
+		CreatedAt:        ke.CreatedAt,
+		UpdatedAt:        ke.UpdatedAt,
+	}
 }

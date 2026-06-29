@@ -136,7 +136,7 @@ type ChangeStatsResponse struct {
 
 // ChangeApprovalRequest 变更审批请求
 type ChangeApprovalRequest struct {
-	Status  ChangeStatus `json:"status" binding:"required"` // 审批状态
+	Status  ChangeApprovalStatus `json:"status" binding:"required"` // 审批状态
 	Comment *string      `json:"comment"`                   // 审批意见
 }
 
@@ -245,7 +245,7 @@ type CreateChangeApprovalRequest struct {
 
 // UpdateChangeApprovalRequest 更新变更审批请求
 type UpdateChangeApprovalRequest struct {
-	Status  ChangeStatus `json:"status" binding:"required"` // 审批状态
+	Status  ChangeApprovalStatus `json:"status" binding:"required"` // 审批状态
 	Comment *string      `json:"comment"`                   // 审批意见
 }
 
@@ -449,3 +449,41 @@ type ChangeCalendarResponse struct {
 	Items []ChangeCalendarItem `json:"items"`
 	Total int                  `json:"total"`
 }
+
+// CABMemberResponse CAB成员响应
+type CABMemberResponse struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	UserName  string    `json:"user_name"`
+	Email     string    `json:"email"`
+	Type      string    `json:"type"` // CAB 或 ECAB
+	Role      string    `json:"role"` // member, chair, secretary
+	IsActive  bool      `json:"is_active"`
+	TenantID  int       `json:"tenant_id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// AddCABMemberRequest 添加CAB成员请求
+type AddCABMemberRequest struct {
+	UserID int    `json:"user_id" binding:"required"`
+	Type   string `json:"type" binding:"required,oneof=CAB ECAB"`
+	Role   string `json:"role" binding:"omitempty,oneof=member chair secretary"`
+}
+
+// CABApprovalRequest CAB审批请求
+type CABApprovalRequest struct {
+	ChangeID   int                  `json:"change_id" binding:"required"`
+	ApprovalID int                  `json:"approval_id" binding:"required"`
+	ApproverID int                  `json:"approver_id" binding:"required"`
+	Status     ChangeApprovalStatus `json:"status" binding:"required,oneof=approved rejected"`
+	Comment    string               `json:"comment"`
+}
+
+// ChangeApprovalStatus 变更审批状态
+type ChangeApprovalStatus string
+
+const (
+	ChangeApprovalStatusPending  ChangeApprovalStatus = "pending"
+	ChangeApprovalStatusApproved ChangeApprovalStatus = "approved"
+	ChangeApprovalStatusRejected ChangeApprovalStatus = "rejected"
+)

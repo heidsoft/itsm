@@ -26,14 +26,15 @@ func SetupCMDBRoutes(
 			ciTypes.POST("", middleware.RequirePermission("cmdb_ci_type", "write"), cmdbController.CreateCIType)
 			ciTypes.PUT("/:id", middleware.RequirePermission("cmdb_ci_type", "write"), cmdbController.UpdateCIType)
 			ciTypes.DELETE("/:id", middleware.RequirePermission("cmdb_ci_type", "delete"), cmdbController.DeleteCIType)
+
+			// 属性定义
+			ciTypes.GET("/:ci_type_id/attributes", cmdbController.ListCIAttributeDefinitions)
 		}
 
 		// ------------------------------ CI属性定义相关路由 ------------------------------
 		attributes := cmdb.Group("/attributes")
 		attributes.Use(middleware.RequirePermission("cmdb_ci_attribute", "read"))
 		{
-			// 按CI类型获取属性定义
-			ciTypes.GET("/:ciTypeId/attributes", cmdbController.ListCIAttributeDefinitions)
 			attributes.GET("/:id", cmdbController.GetCIAttributeDefinition)
 			
 			// 写入权限
@@ -42,10 +43,69 @@ func SetupCMDBRoutes(
 			attributes.DELETE("/:id", middleware.RequirePermission("cmdb_ci_attribute", "delete"), cmdbController.DeleteCIAttributeDefinition)
 		}
 
+		// ------------------------------ CI标签相关路由 ------------------------------
+		tags := cmdb.Group("/tags")
+		tags.Use(middleware.RequirePermission("cmdb_tag", "read"))
+		{
+			tags.GET("", cmdbController.ListCITags)
+			tags.GET("/:id", cmdbController.GetCITag)
+			
+			// 写入权限
+			tags.POST("", middleware.RequirePermission("cmdb_tag", "write"), cmdbController.CreateCITag)
+			tags.PUT("/:id", middleware.RequirePermission("cmdb_tag", "write"), cmdbController.UpdateCITag)
+			tags.DELETE("/:id", middleware.RequirePermission("cmdb_tag", "delete"), cmdbController.DeleteCITag)
+		}
+
+		// ------------------------------ 保存视图相关路由 ------------------------------
+		views := cmdb.Group("/views")
+		views.Use(middleware.RequirePermission("cmdb_view", "read"))
+		{
+			views.GET("", cmdbController.ListSavedViews)
+			views.GET("/:id", cmdbController.GetSavedView)
+			
+			// 写入权限
+			views.POST("", middleware.RequirePermission("cmdb_view", "write"), cmdbController.CreateSavedView)
+			views.PUT("/:id", middleware.RequirePermission("cmdb_view", "write"), cmdbController.UpdateSavedView)
+			views.DELETE("/:id", middleware.RequirePermission("cmdb_view", "delete"), cmdbController.DeleteSavedView)
+		}
+
+		// ------------------------------ 导入导出相关路由 ------------------------------
+		importRoute := cmdb.Group("/import")
+		importRoute.Use(middleware.RequirePermission("cmdb_import_export", "read"))
+		{
+			importRoute.GET("", cmdbController.ListImportTasks)
+			importRoute.GET("/:task_id", cmdbController.GetImportTaskStatus)
+			
+			// 写入权限
+			importRoute.POST("", middleware.RequirePermission("cmdb_import_export", "write"), cmdbController.CreateImportTask)
+		}
+
+		exportRoute := cmdb.Group("/export")
+		exportRoute.Use(middleware.RequirePermission("cmdb_import_export", "read"))
+		{
+			exportRoute.GET("", cmdbController.ListExportTasks)
+			exportRoute.GET("/:task_id", cmdbController.GetExportTaskStatus)
+			
+			// 写入权限
+			exportRoute.POST("", middleware.RequirePermission("cmdb_import_export", "write"), cmdbController.CreateExportTask)
+		}
+
 		// ------------------------------ 配置项相关路由 ------------------------------
 		cis := cmdb.Group("/cis")
 		cis.Use(middleware.RequirePermission("cmdb_ci", "read"))
 		{
+			// 高级搜索
+			cis.POST("/search", cmdbController.SearchCI)
+
+			// 批量操作
+			batch := cis.Group("/batch")
+			{
+				batch.POST("", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.BatchCreateCI)
+				batch.PUT("", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.BatchUpdateCI)
+				batch.DELETE("", middleware.RequirePermission("cmdb_ci", "delete"), cmdbController.BatchDeleteCI)
+				batch.PUT("/lifecycle", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.BatchUpdateLifecycleStatus)
+			}
+
 			// 统计接口必须放在 /:id 之前
 			cis.GET("/stats", cmdbController.GetCIStats)
 			
@@ -59,10 +119,24 @@ func SetupCMDBRoutes(
 			cis.DELETE("/:id", middleware.RequirePermission("cmdb_ci", "delete"), cmdbController.DeleteCI)
 			
 			// 关系查询
-			cis.GET("/:ciId/relationships", cmdbController.ListCIRelationshipsByCIID)
+			cis.GET("/:ci_id/relationships", cmdbController.ListCIRelationshipsByCIID)
 			
 			// 影响分析
-			cis.GET("/:ciId/impact-analysis", cmdbController.GetCIImpactAnalysis)
+			cis.GET("/:ci_id/impact-analysis", cmdbController.GetCIImpactAnalysis)
+
+			// 变更历史
+			cis.GET("/:id/history", cmdbController.GetCIHistory)
+			
+			// 版本回滚
+			cis.POST("/:id/revert", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.RevertCIVersion)
+			
+			// 生命周期管理
+			cis.GET("/:id/lifecycle/history", cmdbController.GetLifecycleHistory)
+			cis.PUT("/:id/lifecycle", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.UpdateLifecycleStatus)
+			
+			// 标签管理
+			cis.POST("/:id/tags", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.AddTagsToCI)
+			cis.DELETE("/:id/tags", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.RemoveTagsFromCI)
 		}
 
 		// ------------------------------ CI关系相关路由 ------------------------------

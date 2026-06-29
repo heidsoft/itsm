@@ -455,10 +455,10 @@ func (_u *TicketCategoryUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   ticketcategory.TicketsTable,
-			Columns: []string{ticketcategory.TicketsColumn},
+			Columns: ticketcategory.TicketsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
@@ -468,10 +468,10 @@ func (_u *TicketCategoryUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   ticketcategory.TicketsTable,
-			Columns: []string{ticketcategory.TicketsColumn},
+			Columns: ticketcategory.TicketsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
@@ -484,10 +484,10 @@ func (_u *TicketCategoryUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   ticketcategory.TicketsTable,
-			Columns: []string{ticketcategory.TicketsColumn},
+			Columns: ticketcategory.TicketsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
@@ -1104,10 +1104,10 @@ func (_u *TicketCategoryUpdateOne) sqlSave(ctx context.Context) (_node *TicketCa
 	}
 	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   ticketcategory.TicketsTable,
-			Columns: []string{ticketcategory.TicketsColumn},
+			Columns: ticketcategory.TicketsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
@@ -1117,10 +1117,10 @@ func (_u *TicketCategoryUpdateOne) sqlSave(ctx context.Context) (_node *TicketCa
 	}
 	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   ticketcategory.TicketsTable,
-			Columns: []string{ticketcategory.TicketsColumn},
+			Columns: ticketcategory.TicketsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
@@ -1133,10 +1133,10 @@ func (_u *TicketCategoryUpdateOne) sqlSave(ctx context.Context) (_node *TicketCa
 	}
 	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   ticketcategory.TicketsTable,
-			Columns: []string{ticketcategory.TicketsColumn},
+			Columns: ticketcategory.TicketsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),

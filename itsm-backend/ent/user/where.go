@@ -85,6 +85,11 @@ func Phone(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldPhone, v))
 }
 
+// FeishuOpenID applies equality check predicate on the "feishu_open_id" field. It's identical to FeishuOpenIDEQ.
+func FeishuOpenID(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldFeishuOpenID, v))
+}
+
 // PasswordHash applies equality check predicate on the "password_hash" field. It's identical to PasswordHashEQ.
 func PasswordHash(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldPasswordHash, v))
@@ -510,6 +515,81 @@ func PhoneContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldPhone, v))
 }
 
+// FeishuOpenIDEQ applies the EQ predicate on the "feishu_open_id" field.
+func FeishuOpenIDEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldFeishuOpenID, v))
+}
+
+// FeishuOpenIDNEQ applies the NEQ predicate on the "feishu_open_id" field.
+func FeishuOpenIDNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldFeishuOpenID, v))
+}
+
+// FeishuOpenIDIn applies the In predicate on the "feishu_open_id" field.
+func FeishuOpenIDIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldFeishuOpenID, vs...))
+}
+
+// FeishuOpenIDNotIn applies the NotIn predicate on the "feishu_open_id" field.
+func FeishuOpenIDNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldFeishuOpenID, vs...))
+}
+
+// FeishuOpenIDGT applies the GT predicate on the "feishu_open_id" field.
+func FeishuOpenIDGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldFeishuOpenID, v))
+}
+
+// FeishuOpenIDGTE applies the GTE predicate on the "feishu_open_id" field.
+func FeishuOpenIDGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldFeishuOpenID, v))
+}
+
+// FeishuOpenIDLT applies the LT predicate on the "feishu_open_id" field.
+func FeishuOpenIDLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldFeishuOpenID, v))
+}
+
+// FeishuOpenIDLTE applies the LTE predicate on the "feishu_open_id" field.
+func FeishuOpenIDLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldFeishuOpenID, v))
+}
+
+// FeishuOpenIDContains applies the Contains predicate on the "feishu_open_id" field.
+func FeishuOpenIDContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldFeishuOpenID, v))
+}
+
+// FeishuOpenIDHasPrefix applies the HasPrefix predicate on the "feishu_open_id" field.
+func FeishuOpenIDHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldFeishuOpenID, v))
+}
+
+// FeishuOpenIDHasSuffix applies the HasSuffix predicate on the "feishu_open_id" field.
+func FeishuOpenIDHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldFeishuOpenID, v))
+}
+
+// FeishuOpenIDIsNil applies the IsNil predicate on the "feishu_open_id" field.
+func FeishuOpenIDIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldFeishuOpenID))
+}
+
+// FeishuOpenIDNotNil applies the NotNil predicate on the "feishu_open_id" field.
+func FeishuOpenIDNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldFeishuOpenID))
+}
+
+// FeishuOpenIDEqualFold applies the EqualFold predicate on the "feishu_open_id" field.
+func FeishuOpenIDEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldFeishuOpenID, v))
+}
+
+// FeishuOpenIDContainsFold applies the ContainsFold predicate on the "feishu_open_id" field.
+func FeishuOpenIDContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldFeishuOpenID, v))
+}
+
 // PasswordHashEQ applies the EQ predicate on the "password_hash" field.
 func PasswordHashEQ(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldPasswordHash, v))
@@ -803,6 +883,52 @@ func HasTenant() predicate.User {
 func HasTenantWith(preds ...predicate.Tenant) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newTenantStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTickets applies the HasEdge predicate on the "tickets" edge.
+func HasTickets() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTicketsWith applies the HasEdge predicate on the "tickets" edge with a given conditions (other predicates).
+func HasTicketsWith(preds ...predicate.Ticket) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newTicketsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAssignedTickets applies the HasEdge predicate on the "assigned_tickets" edge.
+func HasAssignedTickets() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AssignedTicketsTable, AssignedTicketsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAssignedTicketsWith applies the HasEdge predicate on the "assigned_tickets" edge with a given conditions (other predicates).
+func HasAssignedTicketsWith(preds ...predicate.Ticket) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAssignedTicketsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -355,6 +355,9 @@ SELECT '通知配置', '/admin/notifications', 'Bell', id, 'system:config', 315,
 INSERT INTO menus (name, path, icon, parent_id, permission_code, sort_order, tenant_id, is_visible, is_enabled)
 SELECT '操作日志', '/admin/audit-logs', 'ClipboardList', id, 'system:audit', 316, 1, true, true FROM menus WHERE path = '/admin';
 
+INSERT INTO menus (name, path, icon, parent_id, permission_code, sort_order, tenant_id, is_visible, is_enabled)
+SELECT '连接器市场', '/admin/connectors', 'Plug', id, 'connector:read', 317, 1, true, true FROM menus WHERE path = '/admin';
+
 -- ============================================
 -- 20. 独立功能页（无父菜单）
 -- ============================================

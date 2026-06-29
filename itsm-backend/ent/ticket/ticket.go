@@ -80,105 +80,38 @@ const (
 	FieldMspTicketID = "msp_ticket_id"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
-	// EdgeTemplate holds the string denoting the template edge name in mutations.
-	EdgeTemplate = "template"
-	// EdgeCategory holds the string denoting the category edge name in mutations.
-	EdgeCategory = "category"
-	// EdgeDepartment holds the string denoting the department edge name in mutations.
-	EdgeDepartment = "department"
-	// EdgeTags holds the string denoting the tags edge name in mutations.
-	EdgeTags = "tags"
-	// EdgeRelatedTickets holds the string denoting the related_tickets edge name in mutations.
-	EdgeRelatedTickets = "related_tickets"
-	// EdgeParentTicket holds the string denoting the parent_ticket edge name in mutations.
-	EdgeParentTicket = "parent_ticket"
-	// EdgeWorkflowInstances holds the string denoting the workflow_instances edge name in mutations.
-	EdgeWorkflowInstances = "workflow_instances"
-	// EdgeSLADefinition holds the string denoting the sla_definition edge name in mutations.
-	EdgeSLADefinition = "sla_definition"
-	// EdgeSLAViolations holds the string denoting the sla_violations edge name in mutations.
-	EdgeSLAViolations = "sla_violations"
 	// EdgeComments holds the string denoting the comments edge name in mutations.
 	EdgeComments = "comments"
 	// EdgeAttachments holds the string denoting the attachments edge name in mutations.
 	EdgeAttachments = "attachments"
-	// EdgeNotifications holds the string denoting the notifications edge name in mutations.
-	EdgeNotifications = "notifications"
-	// EdgeSLAAlertHistory holds the string denoting the sla_alert_history edge name in mutations.
-	EdgeSLAAlertHistory = "sla_alert_history"
+	// EdgeTags holds the string denoting the tags edge name in mutations.
+	EdgeTags = "tags"
 	// EdgeApprovalRecords holds the string denoting the approval_records edge name in mutations.
 	EdgeApprovalRecords = "approval_records"
-	// EdgeRootCauseAnalyses holds the string denoting the root_cause_analyses edge name in mutations.
-	EdgeRootCauseAnalyses = "root_cause_analyses"
-	// EdgeConfigurationItems holds the string denoting the configuration_items edge name in mutations.
-	EdgeConfigurationItems = "configuration_items"
-	// EdgeProblems holds the string denoting the problems edge name in mutations.
-	EdgeProblems = "problems"
 	// EdgeApprovals holds the string denoting the approvals edge name in mutations.
 	EdgeApprovals = "approvals"
 	// EdgeWorkflowRecords holds the string denoting the workflow_records edge name in mutations.
 	EdgeWorkflowRecords = "workflow_records"
+	// EdgeNotifications holds the string denoting the notifications edge name in mutations.
+	EdgeNotifications = "notifications"
 	// EdgeCcUsers holds the string denoting the cc_users edge name in mutations.
 	EdgeCcUsers = "cc_users"
+	// EdgeSLAViolations holds the string denoting the sla_violations edge name in mutations.
+	EdgeSLAViolations = "sla_violations"
+	// EdgeSLAAlertHistory holds the string denoting the sla_alert_history edge name in mutations.
+	EdgeSLAAlertHistory = "sla_alert_history"
+	// EdgeRootCauseAnalyses holds the string denoting the root_cause_analyses edge name in mutations.
+	EdgeRootCauseAnalyses = "root_cause_analyses"
+	// EdgeFeishuSyncs holds the string denoting the feishu_syncs edge name in mutations.
+	EdgeFeishuSyncs = "feishu_syncs"
+	// EdgeRequester holds the string denoting the requester edge name in mutations.
+	EdgeRequester = "requester"
+	// EdgeAssignee holds the string denoting the assignee edge name in mutations.
+	EdgeAssignee = "assignee"
+	// EdgeCategory holds the string denoting the category edge name in mutations.
+	EdgeCategory = "category"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
-	// TemplateTable is the table that holds the template relation/edge.
-	TemplateTable = "tickets"
-	// TemplateInverseTable is the table name for the TicketTemplate entity.
-	// It exists in this package in order to avoid circular dependency with the "tickettemplate" package.
-	TemplateInverseTable = "ticket_templates"
-	// TemplateColumn is the table column denoting the template relation/edge.
-	TemplateColumn = "template_id"
-	// CategoryTable is the table that holds the category relation/edge.
-	CategoryTable = "tickets"
-	// CategoryInverseTable is the table name for the TicketCategory entity.
-	// It exists in this package in order to avoid circular dependency with the "ticketcategory" package.
-	CategoryInverseTable = "ticket_categories"
-	// CategoryColumn is the table column denoting the category relation/edge.
-	CategoryColumn = "category_id"
-	// DepartmentTable is the table that holds the department relation/edge.
-	DepartmentTable = "tickets"
-	// DepartmentInverseTable is the table name for the Department entity.
-	// It exists in this package in order to avoid circular dependency with the "department" package.
-	DepartmentInverseTable = "departments"
-	// DepartmentColumn is the table column denoting the department relation/edge.
-	DepartmentColumn = "department_id"
-	// TagsTable is the table that holds the tags relation/edge.
-	TagsTable = "ticket_tags"
-	// TagsInverseTable is the table name for the TicketTag entity.
-	// It exists in this package in order to avoid circular dependency with the "tickettag" package.
-	TagsInverseTable = "ticket_tags"
-	// TagsColumn is the table column denoting the tags relation/edge.
-	TagsColumn = "ticket_tags"
-	// RelatedTicketsTable is the table that holds the related_tickets relation/edge.
-	RelatedTicketsTable = "tickets"
-	// RelatedTicketsColumn is the table column denoting the related_tickets relation/edge.
-	RelatedTicketsColumn = "parent_ticket_id"
-	// ParentTicketTable is the table that holds the parent_ticket relation/edge.
-	ParentTicketTable = "tickets"
-	// ParentTicketColumn is the table column denoting the parent_ticket relation/edge.
-	ParentTicketColumn = "parent_ticket_id"
-	// WorkflowInstancesTable is the table that holds the workflow_instances relation/edge.
-	WorkflowInstancesTable = "workflow_instances"
-	// WorkflowInstancesInverseTable is the table name for the WorkflowInstance entity.
-	// It exists in this package in order to avoid circular dependency with the "workflowinstance" package.
-	WorkflowInstancesInverseTable = "workflow_instances"
-	// WorkflowInstancesColumn is the table column denoting the workflow_instances relation/edge.
-	WorkflowInstancesColumn = "ticket_workflow_instances"
-	// SLADefinitionTable is the table that holds the sla_definition relation/edge.
-	SLADefinitionTable = "tickets"
-	// SLADefinitionInverseTable is the table name for the SLADefinition entity.
-	// It exists in this package in order to avoid circular dependency with the "sladefinition" package.
-	SLADefinitionInverseTable = "sla_definitions"
-	// SLADefinitionColumn is the table column denoting the sla_definition relation/edge.
-	SLADefinitionColumn = "sla_definition_id"
-	// SLAViolationsTable is the table that holds the sla_violations relation/edge.
-	SLAViolationsTable = "sla_violations"
-	// SLAViolationsInverseTable is the table name for the SLAViolation entity.
-	// It exists in this package in order to avoid circular dependency with the "slaviolation" package.
-	SLAViolationsInverseTable = "sla_violations"
-	// SLAViolationsColumn is the table column denoting the sla_violations relation/edge.
-	SLAViolationsColumn = "ticket_id"
 	// CommentsTable is the table that holds the comments relation/edge.
 	CommentsTable = "ticket_comments"
 	// CommentsInverseTable is the table name for the TicketComment entity.
@@ -193,20 +126,13 @@ const (
 	AttachmentsInverseTable = "ticket_attachments"
 	// AttachmentsColumn is the table column denoting the attachments relation/edge.
 	AttachmentsColumn = "ticket_id"
-	// NotificationsTable is the table that holds the notifications relation/edge.
-	NotificationsTable = "ticket_notifications"
-	// NotificationsInverseTable is the table name for the TicketNotification entity.
-	// It exists in this package in order to avoid circular dependency with the "ticketnotification" package.
-	NotificationsInverseTable = "ticket_notifications"
-	// NotificationsColumn is the table column denoting the notifications relation/edge.
-	NotificationsColumn = "ticket_id"
-	// SLAAlertHistoryTable is the table that holds the sla_alert_history relation/edge.
-	SLAAlertHistoryTable = "sla_alert_histories"
-	// SLAAlertHistoryInverseTable is the table name for the SLAAlertHistory entity.
-	// It exists in this package in order to avoid circular dependency with the "slaalerthistory" package.
-	SLAAlertHistoryInverseTable = "sla_alert_histories"
-	// SLAAlertHistoryColumn is the table column denoting the sla_alert_history relation/edge.
-	SLAAlertHistoryColumn = "ticket_id"
+	// TagsTable is the table that holds the tags relation/edge.
+	TagsTable = "ticket_tags"
+	// TagsInverseTable is the table name for the TicketTag entity.
+	// It exists in this package in order to avoid circular dependency with the "tickettag" package.
+	TagsInverseTable = "ticket_tags"
+	// TagsColumn is the table column denoting the tags relation/edge.
+	TagsColumn = "ticket_tags"
 	// ApprovalRecordsTable is the table that holds the approval_records relation/edge.
 	ApprovalRecordsTable = "approval_records"
 	// ApprovalRecordsInverseTable is the table name for the ApprovalRecord entity.
@@ -214,23 +140,6 @@ const (
 	ApprovalRecordsInverseTable = "approval_records"
 	// ApprovalRecordsColumn is the table column denoting the approval_records relation/edge.
 	ApprovalRecordsColumn = "ticket_id"
-	// RootCauseAnalysesTable is the table that holds the root_cause_analyses relation/edge.
-	RootCauseAnalysesTable = "root_cause_analyses"
-	// RootCauseAnalysesInverseTable is the table name for the RootCauseAnalysis entity.
-	// It exists in this package in order to avoid circular dependency with the "rootcauseanalysis" package.
-	RootCauseAnalysesInverseTable = "root_cause_analyses"
-	// RootCauseAnalysesColumn is the table column denoting the root_cause_analyses relation/edge.
-	RootCauseAnalysesColumn = "ticket_id"
-	// ConfigurationItemsTable is the table that holds the configuration_items relation/edge. The primary key declared below.
-	ConfigurationItemsTable = "configuration_item_tickets"
-	// ConfigurationItemsInverseTable is the table name for the ConfigurationItem entity.
-	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
-	ConfigurationItemsInverseTable = "configuration_items"
-	// ProblemsTable is the table that holds the problems relation/edge. The primary key declared below.
-	ProblemsTable = "problem_tickets"
-	// ProblemsInverseTable is the table name for the Problem entity.
-	// It exists in this package in order to avoid circular dependency with the "problem" package.
-	ProblemsInverseTable = "problems"
 	// ApprovalsTable is the table that holds the approvals relation/edge.
 	ApprovalsTable = "ticket_approvals"
 	// ApprovalsInverseTable is the table name for the TicketApproval entity.
@@ -245,6 +154,13 @@ const (
 	WorkflowRecordsInverseTable = "ticket_workflow_records"
 	// WorkflowRecordsColumn is the table column denoting the workflow_records relation/edge.
 	WorkflowRecordsColumn = "ticket_id"
+	// NotificationsTable is the table that holds the notifications relation/edge.
+	NotificationsTable = "ticket_notifications"
+	// NotificationsInverseTable is the table name for the TicketNotification entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketnotification" package.
+	NotificationsInverseTable = "ticket_notifications"
+	// NotificationsColumn is the table column denoting the notifications relation/edge.
+	NotificationsColumn = "ticket_id"
 	// CcUsersTable is the table that holds the cc_users relation/edge.
 	CcUsersTable = "ticket_ccs"
 	// CcUsersInverseTable is the table name for the TicketCC entity.
@@ -252,6 +168,53 @@ const (
 	CcUsersInverseTable = "ticket_ccs"
 	// CcUsersColumn is the table column denoting the cc_users relation/edge.
 	CcUsersColumn = "ticket_id"
+	// SLAViolationsTable is the table that holds the sla_violations relation/edge.
+	SLAViolationsTable = "sla_violations"
+	// SLAViolationsInverseTable is the table name for the SLAViolation entity.
+	// It exists in this package in order to avoid circular dependency with the "slaviolation" package.
+	SLAViolationsInverseTable = "sla_violations"
+	// SLAViolationsColumn is the table column denoting the sla_violations relation/edge.
+	SLAViolationsColumn = "ticket_id"
+	// SLAAlertHistoryTable is the table that holds the sla_alert_history relation/edge.
+	SLAAlertHistoryTable = "sla_alert_histories"
+	// SLAAlertHistoryInverseTable is the table name for the SLAAlertHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "slaalerthistory" package.
+	SLAAlertHistoryInverseTable = "sla_alert_histories"
+	// SLAAlertHistoryColumn is the table column denoting the sla_alert_history relation/edge.
+	SLAAlertHistoryColumn = "ticket_id"
+	// RootCauseAnalysesTable is the table that holds the root_cause_analyses relation/edge.
+	RootCauseAnalysesTable = "root_cause_analyses"
+	// RootCauseAnalysesInverseTable is the table name for the RootCauseAnalysis entity.
+	// It exists in this package in order to avoid circular dependency with the "rootcauseanalysis" package.
+	RootCauseAnalysesInverseTable = "root_cause_analyses"
+	// RootCauseAnalysesColumn is the table column denoting the root_cause_analyses relation/edge.
+	RootCauseAnalysesColumn = "ticket_id"
+	// FeishuSyncsTable is the table that holds the feishu_syncs relation/edge.
+	FeishuSyncsTable = "feishu_ticket_syncs"
+	// FeishuSyncsInverseTable is the table name for the FeishuTicketSync entity.
+	// It exists in this package in order to avoid circular dependency with the "feishuticketsync" package.
+	FeishuSyncsInverseTable = "feishu_ticket_syncs"
+	// FeishuSyncsColumn is the table column denoting the feishu_syncs relation/edge.
+	FeishuSyncsColumn = "ticket_id"
+	// RequesterTable is the table that holds the requester relation/edge.
+	RequesterTable = "tickets"
+	// RequesterInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	RequesterInverseTable = "users"
+	// RequesterColumn is the table column denoting the requester relation/edge.
+	RequesterColumn = "requester_id"
+	// AssigneeTable is the table that holds the assignee relation/edge.
+	AssigneeTable = "tickets"
+	// AssigneeInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	AssigneeInverseTable = "users"
+	// AssigneeColumn is the table column denoting the assignee relation/edge.
+	AssigneeColumn = "assignee_id"
+	// CategoryTable is the table that holds the category relation/edge. The primary key declared below.
+	CategoryTable = "ticket_category_tickets"
+	// CategoryInverseTable is the table name for the TicketCategory entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketcategory" package.
+	CategoryInverseTable = "ticket_categories"
 )
 
 // Columns holds all SQL columns for ticket fields.
@@ -295,17 +258,19 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "tickets"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
+	"configuration_item_tickets",
+	"department_tickets",
+	"problem_tickets",
+	"sla_definition_tickets",
 	"sla_policy_tickets",
 	"ticket_tag_tickets",
+	"ticket_template_tickets",
 }
 
 var (
-	// ConfigurationItemsPrimaryKey and ConfigurationItemsColumn2 are the table columns denoting the
-	// primary key for the configuration_items relation (M2M).
-	ConfigurationItemsPrimaryKey = []string{"configuration_item_id", "ticket_id"}
-	// ProblemsPrimaryKey and ProblemsColumn2 are the table columns denoting the
-	// primary key for the problems relation (M2M).
-	ProblemsPrimaryKey = []string{"problem_id", "ticket_id"}
+	// CategoryPrimaryKey and CategoryColumn2 are the table columns denoting the
+	// primary key for the category relation (M2M).
+	CategoryPrimaryKey = []string{"ticket_category_id", "ticket_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -527,97 +492,6 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
-// ByTemplateField orders the results by template field.
-func ByTemplateField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTemplateStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByCategoryField orders the results by category field.
-func ByCategoryField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newCategoryStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByDepartmentField orders the results by department field.
-func ByDepartmentField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newDepartmentStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByTagsCount orders the results by tags count.
-func ByTagsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newTagsStep(), opts...)
-	}
-}
-
-// ByTags orders the results by tags terms.
-func ByTags(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTagsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByRelatedTicketsCount orders the results by related_tickets count.
-func ByRelatedTicketsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newRelatedTicketsStep(), opts...)
-	}
-}
-
-// ByRelatedTickets orders the results by related_tickets terms.
-func ByRelatedTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRelatedTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByParentTicketField orders the results by parent_ticket field.
-func ByParentTicketField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newParentTicketStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByWorkflowInstancesCount orders the results by workflow_instances count.
-func ByWorkflowInstancesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newWorkflowInstancesStep(), opts...)
-	}
-}
-
-// ByWorkflowInstances orders the results by workflow_instances terms.
-func ByWorkflowInstances(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newWorkflowInstancesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// BySLADefinitionField orders the results by sla_definition field.
-func BySLADefinitionField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSLADefinitionStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// BySLAViolationsCount orders the results by sla_violations count.
-func BySLAViolationsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSLAViolationsStep(), opts...)
-	}
-}
-
-// BySLAViolations orders the results by sla_violations terms.
-func BySLAViolations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSLAViolationsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByCommentsCount orders the results by comments count.
 func ByCommentsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -646,31 +520,17 @@ func ByAttachments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByNotificationsCount orders the results by notifications count.
-func ByNotificationsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByTagsCount orders the results by tags count.
+func ByTagsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newNotificationsStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newTagsStep(), opts...)
 	}
 }
 
-// ByNotifications orders the results by notifications terms.
-func ByNotifications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByTags orders the results by tags terms.
+func ByTags(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newNotificationsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// BySLAAlertHistoryCount orders the results by sla_alert_history count.
-func BySLAAlertHistoryCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSLAAlertHistoryStep(), opts...)
-	}
-}
-
-// BySLAAlertHistory orders the results by sla_alert_history terms.
-func BySLAAlertHistory(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSLAAlertHistoryStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newTagsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -685,48 +545,6 @@ func ByApprovalRecordsCount(opts ...sql.OrderTermOption) OrderOption {
 func ByApprovalRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newApprovalRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByRootCauseAnalysesCount orders the results by root_cause_analyses count.
-func ByRootCauseAnalysesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newRootCauseAnalysesStep(), opts...)
-	}
-}
-
-// ByRootCauseAnalyses orders the results by root_cause_analyses terms.
-func ByRootCauseAnalyses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRootCauseAnalysesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByConfigurationItemsCount orders the results by configuration_items count.
-func ByConfigurationItemsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newConfigurationItemsStep(), opts...)
-	}
-}
-
-// ByConfigurationItems orders the results by configuration_items terms.
-func ByConfigurationItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newConfigurationItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByProblemsCount orders the results by problems count.
-func ByProblemsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newProblemsStep(), opts...)
-	}
-}
-
-// ByProblems orders the results by problems terms.
-func ByProblems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newProblemsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -758,6 +576,20 @@ func ByWorkflowRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByNotificationsCount orders the results by notifications count.
+func ByNotificationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newNotificationsStep(), opts...)
+	}
+}
+
+// ByNotifications orders the results by notifications terms.
+func ByNotifications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newNotificationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByCcUsersCount orders the results by cc_users count.
 func ByCcUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -771,68 +603,89 @@ func ByCcUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCcUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newTemplateStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TemplateInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TemplateTable, TemplateColumn),
-	)
+
+// BySLAViolationsCount orders the results by sla_violations count.
+func BySLAViolationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSLAViolationsStep(), opts...)
+	}
 }
-func newCategoryStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(CategoryInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, CategoryTable, CategoryColumn),
-	)
+
+// BySLAViolations orders the results by sla_violations terms.
+func BySLAViolations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSLAViolationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
 }
-func newDepartmentStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(DepartmentInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
-	)
+
+// BySLAAlertHistoryCount orders the results by sla_alert_history count.
+func BySLAAlertHistoryCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSLAAlertHistoryStep(), opts...)
+	}
 }
-func newTagsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TagsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, TagsTable, TagsColumn),
-	)
+
+// BySLAAlertHistory orders the results by sla_alert_history terms.
+func BySLAAlertHistory(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSLAAlertHistoryStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
 }
-func newRelatedTicketsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(Table, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, RelatedTicketsTable, RelatedTicketsColumn),
-	)
+
+// ByRootCauseAnalysesCount orders the results by root_cause_analyses count.
+func ByRootCauseAnalysesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRootCauseAnalysesStep(), opts...)
+	}
 }
-func newParentTicketStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(Table, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, ParentTicketTable, ParentTicketColumn),
-	)
+
+// ByRootCauseAnalyses orders the results by root_cause_analyses terms.
+func ByRootCauseAnalyses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRootCauseAnalysesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
 }
-func newWorkflowInstancesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(WorkflowInstancesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowInstancesTable, WorkflowInstancesColumn),
-	)
+
+// ByFeishuSyncsCount orders the results by feishu_syncs count.
+func ByFeishuSyncsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newFeishuSyncsStep(), opts...)
+	}
 }
-func newSLADefinitionStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SLADefinitionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, SLADefinitionTable, SLADefinitionColumn),
-	)
+
+// ByFeishuSyncs orders the results by feishu_syncs terms.
+func ByFeishuSyncs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newFeishuSyncsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
 }
-func newSLAViolationsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SLAViolationsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SLAViolationsTable, SLAViolationsColumn),
-	)
+
+// ByRequesterField orders the results by requester field.
+func ByRequesterField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRequesterStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByAssigneeField orders the results by assignee field.
+func ByAssigneeField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAssigneeStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByCategoryCount orders the results by category count.
+func ByCategoryCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCategoryStep(), opts...)
+	}
+}
+
+// ByCategory orders the results by category terms.
+func ByCategory(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCategoryStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
 }
 func newCommentsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
@@ -848,18 +701,11 @@ func newAttachmentsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, AttachmentsTable, AttachmentsColumn),
 	)
 }
-func newNotificationsStep() *sqlgraph.Step {
+func newTagsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(NotificationsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, NotificationsTable, NotificationsColumn),
-	)
-}
-func newSLAAlertHistoryStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SLAAlertHistoryInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SLAAlertHistoryTable, SLAAlertHistoryColumn),
+		sqlgraph.To(TagsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TagsTable, TagsColumn),
 	)
 }
 func newApprovalRecordsStep() *sqlgraph.Step {
@@ -867,27 +713,6 @@ func newApprovalRecordsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ApprovalRecordsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ApprovalRecordsTable, ApprovalRecordsColumn),
-	)
-}
-func newRootCauseAnalysesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RootCauseAnalysesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, RootCauseAnalysesTable, RootCauseAnalysesColumn),
-	)
-}
-func newConfigurationItemsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ConfigurationItemsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, ConfigurationItemsTable, ConfigurationItemsPrimaryKey...),
-	)
-}
-func newProblemsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ProblemsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, ProblemsTable, ProblemsPrimaryKey...),
 	)
 }
 func newApprovalsStep() *sqlgraph.Step {
@@ -904,10 +729,66 @@ func newWorkflowRecordsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowRecordsTable, WorkflowRecordsColumn),
 	)
 }
+func newNotificationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(NotificationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, NotificationsTable, NotificationsColumn),
+	)
+}
 func newCcUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CcUsersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CcUsersTable, CcUsersColumn),
+	)
+}
+func newSLAViolationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SLAViolationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SLAViolationsTable, SLAViolationsColumn),
+	)
+}
+func newSLAAlertHistoryStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SLAAlertHistoryInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SLAAlertHistoryTable, SLAAlertHistoryColumn),
+	)
+}
+func newRootCauseAnalysesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RootCauseAnalysesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RootCauseAnalysesTable, RootCauseAnalysesColumn),
+	)
+}
+func newFeishuSyncsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(FeishuSyncsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, FeishuSyncsTable, FeishuSyncsColumn),
+	)
+}
+func newRequesterStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RequesterInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, RequesterTable, RequesterColumn),
+	)
+}
+func newAssigneeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AssigneeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, AssigneeTable, AssigneeColumn),
+	)
+}
+func newCategoryStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CategoryInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, CategoryTable, CategoryPrimaryKey...),
 	)
 }

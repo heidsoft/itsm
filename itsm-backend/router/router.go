@@ -65,6 +65,8 @@ type RouterConfig struct {
 	BPMNProcessTriggerController    *controller.BPMNProcessTriggerController
 	BPMNDashboardController         *controller.BPMNDashboardController
 	BPMNMonitoringController        *controller.BPMNMonitoringController
+	BPMNAIGeneratorController         *controller.BPMNAIGeneratorController
+
 	A2UITicketController            *controller.A2UITicketController
 	DashboardHandler                *handlers.DashboardHandler
 
@@ -134,6 +136,7 @@ type RouterConfig struct {
 
 	// Connector Controller (连接器/插件/技能市场)
 	ConnectorController   *controller.ConnectorController
+	FeishuController *controller.FeishuController
 	MarketplaceController *marketplaceController.Controller
 }
 
@@ -1223,6 +1226,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		// ==================== BPMN Monitoring ====================
+		// BPMN AI Generator (AI驱动的流程生成)
+		if config.BPMNAIGeneratorController != nil {
+			config.BPMNAIGeneratorController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
 		if config.BPMNMonitoringController != nil {
 			config.BPMNMonitoringController.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
@@ -1392,5 +1400,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		tenant.POST("/ticket-types", func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，工单类型由系统配置和分类接口维护")
 		})
+	// 飞书相关路由
+	if config.FeishuController != nil {
+		SetupFeishuRoutes(auth, public, config.FeishuController)
+	}
+
 	}
 }

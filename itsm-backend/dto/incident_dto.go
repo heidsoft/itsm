@@ -50,6 +50,8 @@ type CreateIncidentRequest struct {
 	Type                string                 `json:"type" binding:"omitempty,oneof=incident service_request security_event alert" example:"incident"` // 事件类型
 	Priority            string                 `json:"priority" binding:"omitempty,oneof=low medium high critical" example:"high"`
 	Severity            string                 `json:"severity" binding:"omitempty,oneof=low medium high critical" example:"high"`
+	Impact              string                 `json:"impact" binding:"omitempty,oneof=low medium high critical" example:"medium"`
+	Urgency             string                 `json:"urgency" binding:"omitempty,oneof=low medium high critical" example:"medium"`
 	Category            string                 `json:"category" example:"performance"`
 	Subcategory         string                 `json:"subcategory" example:"cpu"`
 	ConfigurationItemID *int                   `json:"configurationItemId" example:"1"`
@@ -66,6 +68,8 @@ type UpdateIncidentRequest struct {
 	Status          *string                `json:"status,omitempty" binding:"omitempty,oneof=new assigned in_progress on_hold resolved closed cancelled"`
 	Priority        *string                `json:"priority,omitempty" binding:"omitempty,oneof=low medium high critical"`
 	Severity        *string                `json:"severity,omitempty" binding:"omitempty,oneof=low medium high critical"`
+	Impact          *string                `json:"impact,omitempty" binding:"omitempty,oneof=low medium high critical"`
+	Urgency         *string                `json:"urgency,omitempty" binding:"omitempty,oneof=low medium high critical"`
 	Category        *string                `json:"category,omitempty"`
 	Subcategory     *string                `json:"subcategory,omitempty"`
 	AssigneeID      *int                   `json:"assigneeId,omitempty"`
@@ -84,6 +88,8 @@ type IncidentResponse struct {
 	Status              string                 `json:"status" example:"new"`
 	Priority            string                 `json:"priority" example:"high"`
 	Severity            string                 `json:"severity" example:"high"`
+	Impact              string                 `json:"impact" example:"medium"`
+	Urgency             string                 `json:"urgency" example:"medium"`
 	IncidentNumber      string                 `json:"incidentNumber" example:"INC-000001"`
 	ReporterID          int                    `json:"reporterId" example:"1"`
 	AssigneeID          *int                   `json:"assigneeId" example:"2"`

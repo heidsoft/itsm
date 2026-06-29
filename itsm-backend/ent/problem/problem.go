@@ -52,11 +52,13 @@ const (
 	EdgeChanges = "changes"
 	// Table holds the table name of the problem in the database.
 	Table = "problems"
-	// TicketsTable is the table that holds the tickets relation/edge. The primary key declared below.
-	TicketsTable = "problem_tickets"
+	// TicketsTable is the table that holds the tickets relation/edge.
+	TicketsTable = "tickets"
 	// TicketsInverseTable is the table name for the Ticket entity.
 	// It exists in this package in order to avoid circular dependency with the "ticket" package.
 	TicketsInverseTable = "tickets"
+	// TicketsColumn is the table column denoting the tickets relation/edge.
+	TicketsColumn = "problem_tickets"
 	// IncidentsTable is the table that holds the incidents relation/edge. The primary key declared below.
 	IncidentsTable = "problem_incidents"
 	// IncidentsInverseTable is the table name for the Incident entity.
@@ -96,9 +98,6 @@ var ForeignKeys = []string{
 }
 
 var (
-	// TicketsPrimaryKey and TicketsColumn2 are the table columns denoting the
-	// primary key for the tickets relation (M2M).
-	TicketsPrimaryKey = []string{"problem_id", "ticket_id"}
 	// IncidentsPrimaryKey and IncidentsColumn2 are the table columns denoting the
 	// primary key for the incidents relation (M2M).
 	IncidentsPrimaryKey = []string{"problem_id", "incident_id"}
@@ -269,7 +268,7 @@ func newTicketsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TicketsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, TicketsTable, TicketsPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
 	)
 }
 func newIncidentsStep() *sqlgraph.Step {

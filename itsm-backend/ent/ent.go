@@ -14,15 +14,21 @@ import (
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/bpmnpermission"
+	"itsm-backend/ent/cabmember"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
+	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/cloudaccount"
 	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/cloudservice"
+	"itsm-backend/ent/cmdbexporttask"
+	"itsm-backend/ent/cmdbimporttask"
+	"itsm-backend/ent/cmdbsavedview"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/configurationitemhistory"
 	"itsm-backend/ent/contract"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/department"
@@ -32,6 +38,7 @@ import (
 	"itsm-backend/ent/domainconfig"
 	"itsm-backend/ent/endpointacl"
 	"itsm-backend/ent/engineerskill"
+	"itsm-backend/ent/feishuticketsync"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
@@ -76,6 +83,7 @@ import (
 	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
+	"itsm-backend/ent/servicecatalogitem"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/slaalerthistory"
@@ -186,15 +194,21 @@ func checkColumn(t, c string) error {
 			assetlicense.Table:                assetlicense.ValidColumn,
 			auditlog.Table:                    auditlog.ValidColumn,
 			bpmnpermission.Table:              bpmnpermission.ValidColumn,
+			cabmember.Table:                   cabmember.ValidColumn,
 			ciattributedefinition.Table:       ciattributedefinition.ValidColumn,
 			cirelationship.Table:              cirelationship.ValidColumn,
+			citag.Table:                       citag.ValidColumn,
 			citype.Table:                      citype.ValidColumn,
+			cmdbexporttask.Table:              cmdbexporttask.ValidColumn,
+			cmdbimporttask.Table:              cmdbimporttask.ValidColumn,
+			cmdbsavedview.Table:               cmdbsavedview.ValidColumn,
 			change.Table:                      change.ValidColumn,
 			changepir.Table:                   changepir.ValidColumn,
 			cloudaccount.Table:                cloudaccount.ValidColumn,
 			cloudresource.Table:               cloudresource.ValidColumn,
 			cloudservice.Table:                cloudservice.ValidColumn,
 			configurationitem.Table:           configurationitem.ValidColumn,
+			configurationitemhistory.Table:    configurationitemhistory.ValidColumn,
 			contract.Table:                    contract.ValidColumn,
 			conversation.Table:                conversation.ValidColumn,
 			department.Table:                  department.ValidColumn,
@@ -204,6 +218,7 @@ func checkColumn(t, c string) error {
 			domainconfig.Table:                domainconfig.ValidColumn,
 			endpointacl.Table:                 endpointacl.ValidColumn,
 			engineerskill.Table:               engineerskill.ValidColumn,
+			feishuticketsync.Table:            feishuticketsync.ValidColumn,
 			group.Table:                       group.ValidColumn,
 			incident.Table:                    incident.ValidColumn,
 			incidentalert.Table:               incidentalert.ValidColumn,
@@ -254,6 +269,7 @@ func checkColumn(t, c string) error {
 			slapolicy.Table:                   slapolicy.ValidColumn,
 			slaviolation.Table:                slaviolation.ValidColumn,
 			servicecatalog.Table:              servicecatalog.ValidColumn,
+			servicecatalogitem.Table:          servicecatalogitem.ValidColumn,
 			servicerequest.Table:              servicerequest.ValidColumn,
 			servicerequestapproval.Table:      servicerequestapproval.ValidColumn,
 			standardchange.Table:              standardchange.ValidColumn,

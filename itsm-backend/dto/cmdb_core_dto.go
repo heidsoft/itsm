@@ -1,5 +1,7 @@
 package dto
 
+import "time"
+
 // CreateCIAttributeDefinitionRequest 创建CI属性定义请求。
 type CreateCIAttributeDefinitionRequest struct {
 	Name            string `json:"name" binding:"required,max=100"`
@@ -84,4 +86,50 @@ type CIRelationshipListResponse struct {
 	Total int                       `json:"total"`
 	Page  int                       `json:"page"`
 	Size  int                       `json:"size"`
+}
+
+// CreateCITagRequest 创建CI标签请求
+type CreateCITagRequest struct {
+	Key         string `json:"key" binding:"required,max=50"`
+	Value       string `json:"value,omitempty" max:"100"`
+	Color       string `json:"color,omitempty" max:"7"`
+	Description string `json:"description,omitempty" max:"200"`
+}
+
+// UpdateCITagRequest 更新CI标签请求
+type UpdateCITagRequest struct {
+	Key         *string `json:"key,omitempty" binding:"omitempty,max=50"`
+	Value       *string `json:"value,omitempty" binding:"omitempty,max=100"`
+	Color       *string `json:"color,omitempty" binding:"omitempty,max=7"`
+	Description *string `json:"description,omitempty" binding:"omitempty,max=200"`
+}
+
+// CITagResponse CI标签响应
+type CITagResponse struct {
+	ID          int       `json:"id"`
+	Key         string    `json:"key"`
+	Value       string    `json:"value,omitempty"`
+	Color       string    `json:"color,omitempty"`
+	Description string    `json:"description,omitempty"`
+	TenantID    int       `json:"tenantId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+// CITagListResponse CI标签列表响应
+type CITagListResponse struct {
+	Items []*CITagResponse `json:"items"`
+	Total int              `json:"total"`
+	Page  int              `json:"page"`
+	Size  int              `json:"size"`
+}
+
+// AddCITagsRequest 给CI添加标签请求
+type AddCITagsRequest struct {
+	TagIDs []int `json:"tagIds" binding:"required,min=1"`
+}
+
+// RemoveCITagsRequest 给CI移除标签请求
+type RemoveCITagsRequest struct {
+	TagIDs []int `json:"tagIds" binding:"required,min=1"`
 }

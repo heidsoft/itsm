@@ -86,11 +86,11 @@ type CIRelationshipResponse struct {
 	TargetCIName         string                 `json:"targetCiName"`
 	TargetCIType         string                 `json:"targetCiType"`
 	RelationshipType     CIRelationshipType     `json:"relationshipType"`
-	RelationshipTypeName string                 `json:"relationship_type_name"`
+	RelationshipTypeName string                 `json:"relationshipTypeName"`
 	Strength             RelationshipStrength   `json:"strength"`
 	ImpactLevel          ImpactLevel            `json:"impactLevel"`
 	IsActive             bool                   `json:"isActive"`
-	IsDiscovered         bool                   `json:"is_discovered"`
+	IsDiscovered         bool                   `json:"isDiscovered"`
 	Description          string                 `json:"description"`
 	Metadata             map[string]interface{} `json:"metadata"`
 	CreatedAt            time.Time              `json:"createdAt"`

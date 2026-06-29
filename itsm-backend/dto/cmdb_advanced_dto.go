@@ -10,9 +10,9 @@ type CreateCITypeRequest struct {
 	Description     string `json:"description"`
 	Icon            string `json:"icon"`
 	Color           string `json:"color"`
-	AttributeSchema string `json:"attribute_schema"`
-	IsActive        *bool  `json:"is_active"`
-	TenantID        int    `json:"tenant_id"`
+	AttributeSchema string `json:"attributeSchema"`
+	IsActive        *bool  `json:"isActive"`
+	TenantID        int    `json:"tenantId"`
 }
 
 type UpdateCITypeRequest struct {
@@ -20,8 +20,8 @@ type UpdateCITypeRequest struct {
 	Description     string `json:"description"`
 	Icon            string `json:"icon"`
 	Color           string `json:"color"`
-	AttributeSchema string `json:"attribute_schema"`
-	IsActive        *bool  `json:"is_active"`
+	AttributeSchema string `json:"attributeSchema"`
+	IsActive        *bool  `json:"isActive"`
 }
 
 type CITypeResponse struct {
@@ -30,11 +30,11 @@ type CITypeResponse struct {
 	Description     string    `json:"description"`
 	Icon            string    `json:"icon"`
 	Color           string    `json:"color"`
-	AttributeSchema string    `json:"attribute_schema"`
-	IsActive        bool      `json:"is_active"`
-	TenantID        int       `json:"tenant_id"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	AttributeSchema string    `json:"attributeSchema"`
+	IsActive        bool      `json:"isActive"`
+	TenantID        int       `json:"tenantId"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
 }
 
 // 生命周期管理DTO
@@ -44,7 +44,7 @@ type UpdateCILifecycleStateRequest struct {
 	Reason    string    `json:"reason"`
 	ChangedBy string    `json:"changed_by" binding:"required"`
 	ChangedAt time.Time `json:"changed_at"`
-	TenantID  int       `json:"tenant_id"`
+	TenantID  int       `json:"tenantId"`
 }
 
 // 批量导入DTO
@@ -57,7 +57,7 @@ type BatchImportCIData struct {
 
 type BatchImportCIsRequest struct {
 	CIs      []*BatchImportCIData `json:"cis" binding:"required"`
-	TenantID int                  `json:"tenant_id"`
+	TenantID int                  `json:"tenantId"`
 }
 
 type BatchImportCIsResponse struct {
@@ -73,51 +73,51 @@ type CIAttributeDefinitionRequest struct {
 	DisplayName     string                 `json:"display_name" binding:"required"`
 	Description     string                 `json:"description"`
 	DataType        string                 `json:"data_type" binding:"required,oneof=string integer float boolean date datetime json enum reference"`
-	IsRequired      bool                   `json:"is_required"`
-	IsUnique        bool                   `json:"is_unique"`
-	DefaultValue    string                 `json:"default_value"`
-	ValidationRules map[string]interface{} `json:"validation_rules"`
-	EnumValues      []string               `json:"enum_values"`
-	ReferenceType   string                 `json:"reference_type"`
-	DisplayOrder    int                    `json:"display_order"`
-	IsSearchable    bool                   `json:"is_searchable"`
+	IsRequired      bool                   `json:"isRequired"`
+	IsUnique        bool                   `json:"isUnique"`
+	DefaultValue    string                 `json:"defaultValue"`
+	ValidationRules map[string]interface{} `json:"validationRules"`
+	EnumValues      []string               `json:"enumValues"`
+	ReferenceType   string                 `json:"referenceType"`
+	DisplayOrder    int                    `json:"displayOrder"`
+	IsSearchable    bool                   `json:"isSearchable"`
 	CITypeID        int                    `json:"ci_type_id" binding:"required"`
 }
 
 type CIAttributeDefinitionResponse struct {
 	ID              int                    `json:"id"`
 	Name            string                 `json:"name"`
-	DisplayName     string                 `json:"display_name"`
+	DisplayName     string                 `json:"displayName"`
 	Description     string                 `json:"description"`
-	DataType        string                 `json:"data_type"`
-	IsRequired      bool                   `json:"is_required"`
-	IsUnique        bool                   `json:"is_unique"`
-	DefaultValue    string                 `json:"default_value"`
-	ValidationRules map[string]interface{} `json:"validation_rules"`
-	EnumValues      []string               `json:"enum_values"`
-	ReferenceType   string                 `json:"reference_type"`
-	DisplayOrder    int                    `json:"display_order"`
-	IsSearchable    bool                   `json:"is_searchable"`
-	IsSystem        bool                   `json:"is_system"`
-	IsActive        bool                   `json:"is_active"`
+	DataType        string                 `json:"dataType"`
+	IsRequired      bool                   `json:"isRequired"`
+	IsUnique        bool                   `json:"isUnique"`
+	DefaultValue    string                 `json:"defaultValue"`
+	ValidationRules map[string]interface{} `json:"validationRules"`
+	EnumValues      []string               `json:"enumValues"`
+	ReferenceType   string                 `json:"referenceType"`
+	DisplayOrder    int                    `json:"displayOrder"`
+	IsSearchable    bool                   `json:"isSearchable"`
+	IsSystem        bool                   `json:"isSystem"`
+	IsActive        bool                   `json:"isActive"`
 	CITypeID        int                    `json:"ci_type_id"`
-	TenantID        int                    `json:"tenant_id"`
-	CreatedAt       time.Time              `json:"created_at"`
-	UpdatedAt       time.Time              `json:"updated_at"`
+	TenantID        int                    `json:"tenantId"`
+	CreatedAt       time.Time              `json:"createdAt"`
+	UpdatedAt       time.Time              `json:"updatedAt"`
 }
 
 type CITypeWithAttributesResponse struct {
 	ID                   int                             `json:"id"`
 	Name                 string                          `json:"name"`
-	DisplayName          string                          `json:"display_name"`
+	DisplayName          string                          `json:"displayName"`
 	Description          string                          `json:"description"`
 	Category             string                          `json:"category"`
 	Icon                 string                          `json:"icon"`
-	IsSystem             bool                            `json:"is_system"`
-	IsActive             bool                            `json:"is_active"`
+	IsSystem             bool                            `json:"isSystem"`
+	IsActive             bool                            `json:"isActive"`
 	AttributeDefinitions []CIAttributeDefinitionResponse `json:"attribute_definitions"`
-	CreatedAt            time.Time                       `json:"created_at"`
-	UpdatedAt            time.Time                       `json:"updated_at"`
+	CreatedAt            time.Time                       `json:"createdAt"`
+	UpdatedAt            time.Time                       `json:"updatedAt"`
 }
 
 type ValidateCIAttributesRequest struct {
@@ -137,4 +137,43 @@ type CIAttributeSearchRequest struct {
 	Attributes map[string]interface{} `json:"attributes" binding:"required"`
 	Limit      int                    `json:"limit,omitempty"`
 	Offset     int                    `json:"offset,omitempty"`
+}
+
+// BatchCreateCIRequest 批量创建CI请求
+type BatchCreateCIRequest struct {
+	Items []CreateCIRequest `json:"items" binding:"required,dive,min=1,max=100"`
+}
+
+// BatchUpdateCIRequest 批量更新CI请求
+type BatchUpdateCIRequest struct {
+	IDs     []int                 `json:"ids" binding:"required,min=1"`
+	Updates *UpdateCIRequest      `json:"updates" binding:"required"`
+}
+
+// BatchDeleteCIRequest 批量删除CI请求
+type BatchDeleteCIRequest struct {
+	IDs []int `json:"ids" binding:"required,min=1"`
+}
+
+// BatchOperationResponse 批量操作响应
+type BatchOperationResponse struct {
+	SuccessCount int      `json:"successCount"`
+	FailedCount  int      `json:"failedCount"`
+	FailedIDs    []int    `json:"failedIds,omitempty"`
+	Errors       []string `json:"errors,omitempty"`
+}
+
+// BatchUpdateLifecycleRequest 批量更新CI生命周期状态请求
+type BatchUpdateLifecycleRequest struct {
+	IDs     []int  `json:"ids" binding:"required,min=1"`
+	Status  string `json:"status" binding:"required,oneof=draft online maintenance offline scrapped"`
+	Remark  string `json:"remark,omitempty" max:"500"`
+}
+
+// ListResponse 通用列表响应
+type ListResponse[T any] struct {
+	Items []T   `json:"items"`
+	Total int   `json:"total"`
+	Page  int   `json:"page"`
+	Size  int   `json:"size"`
 }

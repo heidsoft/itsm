@@ -19,6 +19,7 @@ import (
 )
 
 type IncidentService struct {
+	priorityMatrixService *PriorityMatrixService
 	client                *ent.Client
 	logger                *zap.SugaredLogger
 	sequenceService       *SequenceService
@@ -38,6 +39,10 @@ func (s *IncidentService) SetProcessTriggerService(triggerService ProcessTrigger
 }
 
 // SetSequenceService 设置序列服务（用于 incident_number 生成）
+func (s *IncidentService) SetPriorityMatrixService(pms *PriorityMatrixService) {
+	s.priorityMatrixService = pms
+}
+
 func (s *IncidentService) SetSequenceService(seq *SequenceService) {
 	s.sequenceService = seq
 }
@@ -58,12 +63,40 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 		detectedAt = *req.DetectedAt
 	}
 
+	// 计算优先级
+	priority := req.Priority
+	if priority == "" && s.priorityMatrixService != nil {
+		impact := req.Impact
+		if impact == "" {
+			impact = "medium"
+		}
+		urgency := req.Urgency
+		if urgency == "" {
+			urgency = "medium"
+		}
+		
+		calculatedPriority, err := s.priorityMatrixService.CalculatePriority(tenantID, impact, urgency)
+		if err != nil {
+			s.logger.Warnw("Failed to calculate priority, using default medium", "error", err)
+			priority = "medium"
+		} else {
+			priority = calculatedPriority
+		}
+	}
+	
+	// 如果最终priority还是空，使用默认值
+	if priority == "" {
+		priority = "medium"
+	}
+
 	incidentEntity, err := s.client.Incident.Create().
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetStatus("new").
-		SetPriority(req.Priority).
+		SetPriority(priority).
 		SetSeverity(req.Severity).
+		SetImpact(req.Impact).
+		SetUrgency(req.Urgency).
 		SetIncidentNumber(incidentNumber).
 		SetReporterID(userID).
 		SetCategory(req.Category).
@@ -77,6 +110,10 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to create incident", "error", err)
+		return nil, fmt.Errorf("failed to create incident: %w", err)
+	}
 	if err != nil {
 		s.logger.Errorw("Failed to create incident", "error", err)
 		return nil, fmt.Errorf("failed to create incident: %w", err)
@@ -246,6 +283,29 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 		}
 	}
 
+	// 计算优先级：如果用户没有显式传入Priority，但修改了Impact或Urgency，则自动重新计算
+	priority := req.Priority
+	if priority == nil && s.priorityMatrixService != nil && (req.Impact != nil || req.Urgency != nil) {
+		// 使用新的Impact或现有Impact
+		impact := currentIncident.Impact
+		if req.Impact != nil {
+			impact = *req.Impact
+		}
+		
+		// 使用新的Urgency或现有Urgency
+		urgency := currentIncident.Urgency
+		if req.Urgency != nil {
+			urgency = *req.Urgency
+		}
+		
+		calculatedPriority, err := s.priorityMatrixService.CalculatePriority(tenantID, impact, urgency)
+		if err != nil {
+			s.logger.Warnw("Failed to calculate priority during update, keeping current value", "error", err)
+		} else {
+			priority = &calculatedPriority
+		}
+	}
+
 	updateQuery := s.client.Incident.UpdateOneID(id).
 		Where(incident.TenantIDEQ(tenantID)).
 		SetUpdatedAt(time.Now())
@@ -269,17 +329,17 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 			updateQuery.SetClosedAt(now)
 		}
 	}
-	if req.Priority != nil {
-		updateQuery.SetPriority(*req.Priority)
+	if priority != nil {
+		updateQuery.SetPriority(*priority)
 	}
 	if req.Severity != nil {
 		updateQuery.SetSeverity(*req.Severity)
 	}
-	if req.Category != nil {
-		updateQuery.SetCategory(*req.Category)
+	if req.Impact != nil {
+		updateQuery.SetImpact(*req.Impact)
 	}
-	if req.Subcategory != nil {
-		updateQuery.SetSubcategory(*req.Subcategory)
+	if req.Urgency != nil {
+		updateQuery.SetUrgency(*req.Urgency)
 	}
 	if req.AssigneeID != nil {
 		updateQuery.SetAssigneeID(*req.AssigneeID)
@@ -971,6 +1031,8 @@ func (s *IncidentService) toIncidentResponse(incident *ent.Incident) *dto.Incide
 		Status:              incident.Status,
 		Priority:            incident.Priority,
 		Severity:            incident.Severity,
+		Impact:              incident.Impact,
+		Urgency:             incident.Urgency,
 		IncidentNumber:      incident.IncidentNumber,
 		ReporterID:          incident.ReporterID,
 		AssigneeID:          &incident.AssigneeID,
@@ -987,6 +1049,7 @@ func (s *IncidentService) toIncidentResponse(incident *ent.Incident) *dto.Incide
 		EscalatedAt:         &incident.EscalatedAt,
 		EscalationLevel:     incident.EscalationLevel,
 		IsAutomated:         incident.IsAutomated,
+		IsMajorIncident:     incident.IsMajorIncident,
 		Source:              incident.Source,
 		Metadata:            incident.Metadata,
 		TenantID:            incident.TenantID,

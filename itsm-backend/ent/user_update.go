@@ -17,6 +17,7 @@ import (
 	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
@@ -157,6 +158,26 @@ func (_u *UserUpdate) ClearPhone() *UserUpdate {
 	return _u
 }
 
+// SetFeishuOpenID sets the "feishu_open_id" field.
+func (_u *UserUpdate) SetFeishuOpenID(v string) *UserUpdate {
+	_u.mutation.SetFeishuOpenID(v)
+	return _u
+}
+
+// SetNillableFeishuOpenID sets the "feishu_open_id" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableFeishuOpenID(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetFeishuOpenID(*v)
+	}
+	return _u
+}
+
+// ClearFeishuOpenID clears the value of the "feishu_open_id" field.
+func (_u *UserUpdate) ClearFeishuOpenID() *UserUpdate {
+	_u.mutation.ClearFeishuOpenID()
+	return _u
+}
+
 // SetPasswordHash sets the "password_hash" field.
 func (_u *UserUpdate) SetPasswordHash(v string) *UserUpdate {
 	_u.mutation.SetPasswordHash(v)
@@ -288,6 +309,36 @@ func (_u *UserUpdate) SetDepartmentRef(v *Department) *UserUpdate {
 // SetTenant sets the "tenant" edge to the Tenant entity.
 func (_u *UserUpdate) SetTenant(v *Tenant) *UserUpdate {
 	return _u.SetTenantID(v.ID)
+}
+
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
+func (_u *UserUpdate) AddTicketIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
+}
+
+// AddTickets adds the "tickets" edges to the Ticket entity.
+func (_u *UserUpdate) AddTickets(v ...*Ticket) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTicketIDs(ids...)
+}
+
+// AddAssignedTicketIDs adds the "assigned_tickets" edge to the Ticket entity by IDs.
+func (_u *UserUpdate) AddAssignedTicketIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddAssignedTicketIDs(ids...)
+	return _u
+}
+
+// AddAssignedTickets adds the "assigned_tickets" edges to the Ticket entity.
+func (_u *UserUpdate) AddAssignedTickets(v ...*Ticket) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAssignedTicketIDs(ids...)
 }
 
 // AddTicketCommentIDs adds the "ticket_comments" edge to the TicketComment entity by IDs.
@@ -470,6 +521,48 @@ func (_u *UserUpdate) ClearDepartmentRef() *UserUpdate {
 func (_u *UserUpdate) ClearTenant() *UserUpdate {
 	_u.mutation.ClearTenant()
 	return _u
+}
+
+// ClearTickets clears all "tickets" edges to the Ticket entity.
+func (_u *UserUpdate) ClearTickets() *UserUpdate {
+	_u.mutation.ClearTickets()
+	return _u
+}
+
+// RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
+func (_u *UserUpdate) RemoveTicketIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
+}
+
+// RemoveTickets removes "tickets" edges to Ticket entities.
+func (_u *UserUpdate) RemoveTickets(v ...*Ticket) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTicketIDs(ids...)
+}
+
+// ClearAssignedTickets clears all "assigned_tickets" edges to the Ticket entity.
+func (_u *UserUpdate) ClearAssignedTickets() *UserUpdate {
+	_u.mutation.ClearAssignedTickets()
+	return _u
+}
+
+// RemoveAssignedTicketIDs removes the "assigned_tickets" edge to Ticket entities by IDs.
+func (_u *UserUpdate) RemoveAssignedTicketIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveAssignedTicketIDs(ids...)
+	return _u
+}
+
+// RemoveAssignedTickets removes "assigned_tickets" edges to Ticket entities.
+func (_u *UserUpdate) RemoveAssignedTickets(v ...*Ticket) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAssignedTicketIDs(ids...)
 }
 
 // ClearTicketComments clears all "ticket_comments" edges to the TicketComment entity.
@@ -818,6 +911,12 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.PhoneCleared() {
 		_spec.ClearField(user.FieldPhone, field.TypeString)
 	}
+	if value, ok := _u.mutation.FeishuOpenID(); ok {
+		_spec.SetField(user.FieldFeishuOpenID, field.TypeString, value)
+	}
+	if _u.mutation.FeishuOpenIDCleared() {
+		_spec.ClearField(user.FieldFeishuOpenID, field.TypeString)
+	}
 	if value, ok := _u.mutation.PasswordHash(); ok {
 		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
 	}
@@ -896,6 +995,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TicketsTable,
+			Columns: []string{user.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TicketsTable,
+			Columns: []string{user.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TicketsTable,
+			Columns: []string{user.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AssignedTicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedTicketsTable,
+			Columns: []string{user.AssignedTicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAssignedTicketsIDs(); len(nodes) > 0 && !_u.mutation.AssignedTicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedTicketsTable,
+			Columns: []string{user.AssignedTicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AssignedTicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedTicketsTable,
+			Columns: []string{user.AssignedTicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1534,6 +1723,26 @@ func (_u *UserUpdateOne) ClearPhone() *UserUpdateOne {
 	return _u
 }
 
+// SetFeishuOpenID sets the "feishu_open_id" field.
+func (_u *UserUpdateOne) SetFeishuOpenID(v string) *UserUpdateOne {
+	_u.mutation.SetFeishuOpenID(v)
+	return _u
+}
+
+// SetNillableFeishuOpenID sets the "feishu_open_id" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableFeishuOpenID(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetFeishuOpenID(*v)
+	}
+	return _u
+}
+
+// ClearFeishuOpenID clears the value of the "feishu_open_id" field.
+func (_u *UserUpdateOne) ClearFeishuOpenID() *UserUpdateOne {
+	_u.mutation.ClearFeishuOpenID()
+	return _u
+}
+
 // SetPasswordHash sets the "password_hash" field.
 func (_u *UserUpdateOne) SetPasswordHash(v string) *UserUpdateOne {
 	_u.mutation.SetPasswordHash(v)
@@ -1665,6 +1874,36 @@ func (_u *UserUpdateOne) SetDepartmentRef(v *Department) *UserUpdateOne {
 // SetTenant sets the "tenant" edge to the Tenant entity.
 func (_u *UserUpdateOne) SetTenant(v *Tenant) *UserUpdateOne {
 	return _u.SetTenantID(v.ID)
+}
+
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
+func (_u *UserUpdateOne) AddTicketIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
+}
+
+// AddTickets adds the "tickets" edges to the Ticket entity.
+func (_u *UserUpdateOne) AddTickets(v ...*Ticket) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTicketIDs(ids...)
+}
+
+// AddAssignedTicketIDs adds the "assigned_tickets" edge to the Ticket entity by IDs.
+func (_u *UserUpdateOne) AddAssignedTicketIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddAssignedTicketIDs(ids...)
+	return _u
+}
+
+// AddAssignedTickets adds the "assigned_tickets" edges to the Ticket entity.
+func (_u *UserUpdateOne) AddAssignedTickets(v ...*Ticket) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAssignedTicketIDs(ids...)
 }
 
 // AddTicketCommentIDs adds the "ticket_comments" edge to the TicketComment entity by IDs.
@@ -1847,6 +2086,48 @@ func (_u *UserUpdateOne) ClearDepartmentRef() *UserUpdateOne {
 func (_u *UserUpdateOne) ClearTenant() *UserUpdateOne {
 	_u.mutation.ClearTenant()
 	return _u
+}
+
+// ClearTickets clears all "tickets" edges to the Ticket entity.
+func (_u *UserUpdateOne) ClearTickets() *UserUpdateOne {
+	_u.mutation.ClearTickets()
+	return _u
+}
+
+// RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
+func (_u *UserUpdateOne) RemoveTicketIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
+}
+
+// RemoveTickets removes "tickets" edges to Ticket entities.
+func (_u *UserUpdateOne) RemoveTickets(v ...*Ticket) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTicketIDs(ids...)
+}
+
+// ClearAssignedTickets clears all "assigned_tickets" edges to the Ticket entity.
+func (_u *UserUpdateOne) ClearAssignedTickets() *UserUpdateOne {
+	_u.mutation.ClearAssignedTickets()
+	return _u
+}
+
+// RemoveAssignedTicketIDs removes the "assigned_tickets" edge to Ticket entities by IDs.
+func (_u *UserUpdateOne) RemoveAssignedTicketIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveAssignedTicketIDs(ids...)
+	return _u
+}
+
+// RemoveAssignedTickets removes "assigned_tickets" edges to Ticket entities.
+func (_u *UserUpdateOne) RemoveAssignedTickets(v ...*Ticket) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAssignedTicketIDs(ids...)
 }
 
 // ClearTicketComments clears all "ticket_comments" edges to the TicketComment entity.
@@ -2225,6 +2506,12 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if _u.mutation.PhoneCleared() {
 		_spec.ClearField(user.FieldPhone, field.TypeString)
 	}
+	if value, ok := _u.mutation.FeishuOpenID(); ok {
+		_spec.SetField(user.FieldFeishuOpenID, field.TypeString, value)
+	}
+	if _u.mutation.FeishuOpenIDCleared() {
+		_spec.ClearField(user.FieldFeishuOpenID, field.TypeString)
+	}
 	if value, ok := _u.mutation.PasswordHash(); ok {
 		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
 	}
@@ -2303,6 +2590,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TicketsTable,
+			Columns: []string{user.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TicketsTable,
+			Columns: []string{user.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TicketsTable,
+			Columns: []string{user.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AssignedTicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedTicketsTable,
+			Columns: []string{user.AssignedTicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAssignedTicketsIDs(); len(nodes) > 0 && !_u.mutation.AssignedTicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedTicketsTable,
+			Columns: []string{user.AssignedTicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AssignedTicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedTicketsTable,
+			Columns: []string{user.AssignedTicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

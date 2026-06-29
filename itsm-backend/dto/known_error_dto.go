@@ -10,6 +10,24 @@ const (
 	KnownErrorStatusDeprecated = "deprecated"
 )
 
+// CreateKnownErrorRequest 创建已知错误请求
+type CreateKnownErrorRequest struct {
+	Title            string   `json:"title" binding:"required"`
+	Description      string   `json:"description"`
+	Symptoms         string   `json:"symptoms"`
+	RootCause        string   `json:"root_cause"`
+	Workaround       string   `json:"workaround"`
+	Resolution       string   `json:"resolution"`
+	Status           string   `json:"status" binding:"omitempty,oneof=draft active resolved deprecated"`
+	Category         string   `json:"category"`
+	Severity         string   `json:"severity" binding:"omitempty,oneof=critical high medium low"`
+	AffectedProducts []string `json:"affected_products"`
+	AffectedCIs      []string `json:"affected_cis"`
+	Keywords         []string `json:"keywords"`
+	CreatedBy        int      `json:"created_by" binding:"required"`
+	TenantID         int      `json:"tenant_id" binding:"required"`
+}
+
 // Known Error severities
 const (
 	KnownErrorSeverityCritical = "critical"

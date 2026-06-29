@@ -116,7 +116,7 @@ func (s *ChangeApprovalService) UpdateChangeApproval(ctx context.Context, approv
 	}
 
 	// 如果审批通过，更新变更状态
-	if req.Status == dto.ChangeStatusApproved {
+	if req.Status == dto.ChangeApprovalStatusApproved {
 		// 检查是否所有必需审批都已完成
 		if err := s.checkAndUpdateChangeStatus(ctx, changeID, tenantID); err != nil {
 			s.logger.Warnw("Failed to update change status", "error", err, "change_id", changeID)

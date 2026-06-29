@@ -16,6 +16,8 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
 	// FieldCiTypeID holds the string denoting the ci_type_id field in the database.
 	FieldCiTypeID = "ci_type_id"
 	// FieldCiType holds the string denoting the ci_type field in the database.
@@ -88,6 +90,10 @@ const (
 	EdgeIncidents = "incidents"
 	// EdgeOutgoingRelations holds the string denoting the outgoing_relations edge name in mutations.
 	EdgeOutgoingRelations = "outgoing_relations"
+	// EdgeHistory holds the string denoting the history edge name in mutations.
+	EdgeHistory = "history"
+	// EdgeTags holds the string denoting the tags edge name in mutations.
+	EdgeTags = "tags"
 	// EdgeIncomingRelations holds the string denoting the incoming_relations edge name in mutations.
 	EdgeIncomingRelations = "incoming_relations"
 	// Table holds the table name of the configurationitem in the database.
@@ -106,11 +112,13 @@ const (
 	CloudResourceRefInverseTable = "cloud_resources"
 	// CloudResourceRefColumn is the table column denoting the cloud_resource_ref relation/edge.
 	CloudResourceRefColumn = "cloud_resource_ref_id"
-	// TicketsTable is the table that holds the tickets relation/edge. The primary key declared below.
-	TicketsTable = "configuration_item_tickets"
+	// TicketsTable is the table that holds the tickets relation/edge.
+	TicketsTable = "tickets"
 	// TicketsInverseTable is the table name for the Ticket entity.
 	// It exists in this package in order to avoid circular dependency with the "ticket" package.
 	TicketsInverseTable = "tickets"
+	// TicketsColumn is the table column denoting the tickets relation/edge.
+	TicketsColumn = "configuration_item_tickets"
 	// IncidentsTable is the table that holds the incidents relation/edge. The primary key declared below.
 	IncidentsTable = "configuration_item_incidents"
 	// IncidentsInverseTable is the table name for the Incident entity.
@@ -123,6 +131,18 @@ const (
 	OutgoingRelationsInverseTable = "ci_relationships"
 	// OutgoingRelationsColumn is the table column denoting the outgoing_relations relation/edge.
 	OutgoingRelationsColumn = "source_ci_id"
+	// HistoryTable is the table that holds the history relation/edge.
+	HistoryTable = "configuration_item_histories"
+	// HistoryInverseTable is the table name for the ConfigurationItemHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "configurationitemhistory" package.
+	HistoryInverseTable = "configuration_item_histories"
+	// HistoryColumn is the table column denoting the history relation/edge.
+	HistoryColumn = "ci_id"
+	// TagsTable is the table that holds the tags relation/edge. The primary key declared below.
+	TagsTable = "configuration_item_tags"
+	// TagsInverseTable is the table name for the CITag entity.
+	// It exists in this package in order to avoid circular dependency with the "citag" package.
+	TagsInverseTable = "ci_tags"
 	// IncomingRelationsTable is the table that holds the incoming_relations relation/edge.
 	IncomingRelationsTable = "ci_relationships"
 	// IncomingRelationsInverseTable is the table name for the CIRelationship entity.
@@ -136,6 +156,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldName,
+	FieldDescription,
 	FieldCiTypeID,
 	FieldCiType,
 	FieldStatus,
@@ -170,12 +191,12 @@ var Columns = []string{
 }
 
 var (
-	// TicketsPrimaryKey and TicketsColumn2 are the table columns denoting the
-	// primary key for the tickets relation (M2M).
-	TicketsPrimaryKey = []string{"configuration_item_id", "ticket_id"}
 	// IncidentsPrimaryKey and IncidentsColumn2 are the table columns denoting the
 	// primary key for the incidents relation (M2M).
 	IncidentsPrimaryKey = []string{"configuration_item_id", "incident_id"}
+	// TagsPrimaryKey and TagsColumn2 are the table columns denoting the
+	// primary key for the tags relation (M2M).
+	TagsPrimaryKey = []string{"configuration_item_id", "ci_tag_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -222,6 +243,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
 // ByCiTypeID orders the results by the ci_type_id field.
@@ -415,6 +441,34 @@ func ByOutgoingRelations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption
 	}
 }
 
+// ByHistoryCount orders the results by history count.
+func ByHistoryCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newHistoryStep(), opts...)
+	}
+}
+
+// ByHistory orders the results by history terms.
+func ByHistory(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newHistoryStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByTagsCount orders the results by tags count.
+func ByTagsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTagsStep(), opts...)
+	}
+}
+
+// ByTags orders the results by tags terms.
+func ByTags(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTagsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByIncomingRelationsCount orders the results by incoming_relations count.
 func ByIncomingRelationsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -446,7 +500,7 @@ func newTicketsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TicketsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, TicketsTable, TicketsPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
 	)
 }
 func newIncidentsStep() *sqlgraph.Step {
@@ -461,6 +515,20 @@ func newOutgoingRelationsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OutgoingRelationsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, OutgoingRelationsTable, OutgoingRelationsColumn),
+	)
+}
+func newHistoryStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(HistoryInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, HistoryTable, HistoryColumn),
+	)
+}
+func newTagsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TagsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, TagsTable, TagsPrimaryKey...),
 	)
 }
 func newIncomingRelationsStep() *sqlgraph.Step {

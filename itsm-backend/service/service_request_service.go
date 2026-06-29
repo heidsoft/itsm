@@ -61,6 +61,21 @@ const (
 
 // CreateServiceRequest 创建服务请求
 func (s *ServiceRequestService) CreateServiceRequest(ctx context.Context, req *dto.CreateServiceRequestRequest, requesterID, tenantID int) (*dto.ServiceRequestResponse, error) {
+	// 验证服务目录项是否存在且激活
+	serviceItem, err := s.client.ServiceCatalogItem.Query().
+		Where(
+			servicecatalogitem.ID(req.CatalogID),
+			servicecatalogitem.TenantID(tenantID),
+			servicecatalogitem.IsActive(true),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewBadRequestError("服务目录项不存在或已停用", nil)
+		}
+		return nil, fmt.Errorf("验证服务目录项失败: %w", err)
+	}
+
 	// 合规确认（V0：必须确认）
 	if !req.ComplianceAck {
 		return nil, common.NewBadRequestError("必须确认合规条款", nil) // Using common.NewBadRequestError
@@ -81,47 +96,28 @@ func (s *ServiceRequestService) CreateServiceRequest(ctx context.Context, req *d
 	}
 	defer tx.Rollback()
 
+	// 根据服务项配置设置审批级别和是否需要审批
+	totalLevels := 3
+	status := SRStatusSubmitted
+	if !serviceItem.RequiresApproval {
+		// 不需要审批，直接进入资源开通阶段
+		status = "provisioning"
+		totalLevels = 0
+	} else if serviceItem.ApprovalChainID > 0 {
+		// TODO: 根据审批链ID获取审批级别配置
+		// 暂时使用默认配置
+	}
+
 	create := tx.ServiceRequest.Create().
 		SetTenantID(tenantID).
 		SetCatalogID(req.CatalogID).
 		SetRequesterID(requesterID).
-		SetStatus(SRStatusSubmitted).
+		SetStatus(status).
 		SetCurrentLevel(1).
-		SetTotalLevels(3).
+		SetTotalLevels(totalLevels).
 		SetComplianceAck(req.ComplianceAck).
 		SetNeedsPublicIP(req.NeedsPublicIP).
 		SetDataClassification(req.DataClassification)
-
-	if req.Title != "" {
-		create = create.SetTitle(req.Title)
-	}
-	if req.Reason != "" {
-		create = create.SetReason(req.Reason)
-	}
-	if req.FormData != nil {
-		create = create.SetFormData(req.FormData)
-	}
-	if req.CostCenter != "" {
-		create = create.SetCostCenter(req.CostCenter)
-	}
-	if req.SourceIPWhitelist != nil {
-		create = create.SetSourceIPWhitelist(req.SourceIPWhitelist)
-	}
-	if req.ExpireAt != nil {
-		create = create.SetExpireAt(*req.ExpireAt)
-	}
-
-	request, err := create.Save(ctx)
-	if err != nil {
-		s.logger.Errorf("创建服务请求失败: %v", err)
-		return nil, fmt.Errorf("创建服务请求失败: %w", err) // Keep fmt.Errorf for internal errors for now
-	}
-
-	// 创建默认三段审批记录（主管→IT→安全），先全部 pending
-	steps := []struct {
-		level        int
-		step         string
-		timeoutHours int
 	}{
 		{1, ApprovalStepManager, ApprovalTimeoutManager},
 		{2, ApprovalStepIT, ApprovalTimeoutIT},
@@ -334,7 +330,28 @@ func (s *ServiceRequestService) GetServiceRequestDetail(ctx context.Context, id,
 	for _, a := range approvals {
 		resp.Approvals = append(resp.Approvals, dto.ToServiceRequestApprovalResponse(a))
 	}
+
+	// 查询服务目录信息
+	catalogItem, err := s.client.ServiceCatalogItem.Query().
+		Where(
+			servicecatalogitem.ID(request.CatalogID),
+			servicecatalogitem.TenantID(tenantID),
+		).
+		Only(ctx)
+	if err == nil && catalogItem != nil {
+		// 转换为ServiceCatalogResponse
+		// TODO: 完善转换逻辑，包含SLA信息
+		resp.Catalog = &dto.ServiceCatalogResponse{
+			ID:           catalogItem.ID,
+			Name:         catalogItem.Name,
+			Description:  catalogItem.Description,
+			Category:     catalogItem.Category,
+			DeliveryTime: fmt.Sprintf("%d天", catalogItem.EstimatedDays),
+		}
+	}
+
 	return resp, nil
+}
 }
 
 // ListServiceRequests 获取服务请求列表

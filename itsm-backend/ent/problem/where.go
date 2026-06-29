@@ -990,7 +990,7 @@ func HasTickets() predicate.Problem {
 	return predicate.Problem(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, TicketsTable, TicketsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

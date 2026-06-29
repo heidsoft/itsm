@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"context"
+	"strconv"
 	"strconv"
 
 	"itsm-backend/common"
@@ -19,8 +21,14 @@ type CMDBController struct {
 	ciAttributeDefinitionService *service.CIAttributeDefinitionService
 	ciService                    *service.ConfigurationItemService
 	ciRelationshipService        *service.CIRelationshipService
+	ciHistoryService             *service.CIHistoryService
+	ciTagService                 *service.CITagService
+	importExportService          *service.CMDBImportExportService
+	savedViewService             *service.CMDBSavedViewService
 }
-
+}
+// NewCMDBController 创建CMDB控制器
+// NewCMDBController 创建CMDB控制器
 // NewCMDBController 创建CMDB控制器
 func NewCMDBController(
 	logger *zap.SugaredLogger,
@@ -28,6 +36,10 @@ func NewCMDBController(
 	ciAttributeDefinitionService *service.CIAttributeDefinitionService,
 	ciService *service.ConfigurationItemService,
 	ciRelationshipService *service.CIRelationshipService,
+	ciHistoryService *service.CIHistoryService,
+	ciTagService *service.CITagService,
+	importExportService *service.CMDBImportExportService,
+	savedViewService *service.CMDBSavedViewService,
 ) *CMDBController {
 	return &CMDBController{
 		logger:                       logger,
@@ -35,7 +47,15 @@ func NewCMDBController(
 		ciAttributeDefinitionService: ciAttributeDefinitionService,
 		ciService:                    ciService,
 		ciRelationshipService:        ciRelationshipService,
+		ciHistoryService:             ciHistoryService,
+		ciTagService:                 ciTagService,
+		importExportService:          importExportService,
+		savedViewService:             savedViewService,
 	}
+}
+		ciTagService:                 ciTagService,
+	}
+}
 }
 
 // ------------------------------ CI类型相关接口 ------------------------------
@@ -891,6 +911,1083 @@ func (c *CMDBController) GetCIImpactAnalysis(ctx *gin.Context) {
 	if err != nil {
 		c.logger.Errorw("Get CI impact analysis failed", "error", err, "ci_id", ciID, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "获取CI影响分析失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// ------------------------------ CI Tag 相关接口 ------------------------------
+
+// ListCITags 获取CI标签列表
+// @Summary 获取CI标签列表
+// @Description 获取所有CI标签的列表，支持分页和搜索
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param size query int false "每页数量"
+// @Param search query string false "搜索关键词（标签名/值）"
+// @Success 200 {object} common.Response{data=dto.CITagListResponse}
+// @Router /api/v1/cmdb/tags [get]
+func (c *CMDBController) ListCITags(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+	search := ctx.Query("search")
+
+	result, err := c.ciTagService.ListCITags(ctx.Request.Context(), tenantID, page, pageSize, search)
+	if err != nil {
+		c.logger.Errorw("List CI tags failed", "error", err, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取标签列表失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// GetCITag 获取CI标签详情
+// @Summary 获取CI标签详情
+// @Description 根据ID获取CI标签的详细信息
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "标签ID"
+// @Success 200 {object} common.Response{data=dto.CITagResponse}
+// @Router /api/v1/cmdb/tags/{id} [get]
+func (c *CMDBController) GetCITag(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的ID参数")
+		return
+	}
+
+	result, err := c.ciTagService.GetCITagByID(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		c.logger.Errorw("Get CI tag failed", "error", err, "tag_id", id, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取标签失败: "+err.Error())
+		return
+	}
+
+	if result == nil {
+		common.Fail(ctx, common.NotFoundCode, "标签不存在")
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// CreateCITag 创建CI标签
+// @Summary 创建CI标签
+// @Description 创建新的CI标签
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateCITagRequest true "创建标签请求"
+// @Success 200 {object} common.Response{data=dto.CITagResponse}
+// @Router /api/v1/cmdb/tags [post]
+func (c *CMDBController) CreateCITag(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req dto.CreateCITagRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	result, err := c.ciTagService.CreateCITag(ctx.Request.Context(), &req, tenantID)
+	if err != nil {
+		c.logger.Errorw("Create CI tag failed", "error", err, "tenant_id", tenantID, "key", req.Key)
+		common.Fail(ctx, common.InternalErrorCode, "创建标签失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// UpdateCITag 更新CI标签
+// @Summary 更新CI标签
+// @Description 根据ID更新CI标签的信息
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "标签ID"
+// @Param request body dto.UpdateCITagRequest true "更新标签请求"
+// @Success 200 {object} common.Response{data=dto.CITagResponse}
+// @Router /api/v1/cmdb/tags/{id} [put]
+func (c *CMDBController) UpdateCITag(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的ID参数")
+		return
+	}
+
+	var req dto.UpdateCITagRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	result, err := c.ciTagService.UpdateCITag(ctx.Request.Context(), id, tenantID, &req)
+	if err != nil {
+		c.logger.Errorw("Update CI tag failed", "error", err, "tag_id", id, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "更新标签失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// DeleteCITag 删除CI标签
+// @Summary 删除CI标签
+// @Description 根据ID删除CI标签
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "标签ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/cmdb/tags/{id} [delete]
+func (c *CMDBController) DeleteCITag(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的ID参数")
+		return
+	}
+
+	err = c.ciTagService.DeleteCITag(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		c.logger.Errorw("Delete CI tag failed", "error", err, "tag_id", id, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "删除标签失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, nil)
+}
+
+// AddTagsToCI 给CI添加标签
+// @Summary 给CI添加标签
+// @Description 给指定的CI添加多个标签
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "CI ID"
+// @Param request body dto.AddCITagsRequest true "添加标签请求"
+// @Success 200 {object} common.Response{data=dto.CIResponse}
+// @Router /api/v1/cmdb/cis/{id}/tags [post]
+func (c *CMDBController) AddTagsToCI(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		return
+	}
+
+	var req dto.AddCITagsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	result, err := c.ciService.AddTagsToCI(ctx.Request.Context(), id, tenantID, req.TagIDs)
+	if err != nil {
+		c.logger.Errorw("Add tags to CI failed", "error", err, "ci_id", id, "tag_ids", req.TagIDs, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "添加标签失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// RemoveTagsFromCI 从CI移除标签
+// @Summary 从CI移除标签
+// @Description 从指定的CI移除多个标签
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "CI ID"
+// @Param request body dto.RemoveCITagsRequest true "移除标签请求"
+// @Success 200 {object} common.Response{data=dto.CIResponse}
+// @Router /api/v1/cmdb/cis/{id}/tags [delete]
+func (c *CMDBController) RemoveTagsFromCI(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		return
+	}
+
+	var req dto.RemoveCITagsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	result, err := c.ciService.RemoveTagsFromCI(ctx.Request.Context(), id, tenantID, req.TagIDs)
+	if err != nil {
+		c.logger.Errorw("Remove tags from CI failed", "error", err, "ci_id", id, "tag_ids", req.TagIDs, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "移除标签失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// ------------------------------ CI History 相关接口 ------------------------------
+
+// GetCIHistory 获取CI历史记录
+// @Summary 获取CI历史记录
+// @Description 获取指定CI的所有变更历史记录
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "CI ID"
+// @Param page query int false "页码"
+// @Param size query int false "每页数量"
+// @Success 200 {object} common.Response{data=dto.CIHistoryListResponse}
+// @Router /api/v1/cmdb/cis/{id}/history [get]
+func (c *CMDBController) GetCIHistory(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		return
+	}
+
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+
+	result, err := c.ciHistoryService.GetCIHistory(ctx.Request.Context(), id, tenantID, page, pageSize)
+	if err != nil {
+		c.logger.Errorw("Get CI history failed", "error", err, "ci_id", id, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取历史记录失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// RevertCIVersion 回滚CI到指定版本
+// @Summary 回滚CI到指定版本
+// @Description 将CI回滚到历史中的某个版本
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "CI ID"
+// @Param request body dto.RevertCIVersionRequest true "回滚版本请求"
+// @Success 200 {object} common.Response{data=dto.CIResponse}
+// @Router /api/v1/cmdb/cis/{id}/revert [post]
+func (c *CMDBController) RevertCIVersion(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		return
+	}
+
+	var req dto.RevertCIVersionRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	// 获取操作人信息
+	userID, _ := ctx.Get("user_id")
+	userName, _ := ctx.Get("user_name")
+	ctxWithUser := context.WithValue(ctx.Request.Context(), "user_id", userID)
+	ctxWithUser = context.WithValue(ctxWithUser, "user_name", userName)
+
+	result, err := c.ciHistoryService.RevertCIVersion(ctxWithUser, id, tenantID, userID.(int), userName.(string), &req)
+	if err != nil {
+		c.logger.Errorw("Revert CI version failed", "error", err, "ci_id", id, "version", req.Version, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "回滚版本失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// ------------------------------ Batch Operation 相关接口 ------------------------------
+
+// BatchCreateCI 批量创建CI
+// @Summary 批量创建CI
+// @Description 批量创建多个CI，最多支持100个
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param request body dto.BatchCreateCIRequest true "批量创建请求"
+// @Success 200 {object} common.Response{data=dto.BatchOperationResponse}
+// @Router /api/v1/cmdb/cis/batch [post]
+func (c *CMDBController) BatchCreateCI(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req dto.BatchCreateCIRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	// 获取操作人信息
+	userID, _ := ctx.Get("user_id")
+	userName, _ := ctx.Get("user_name")
+	ctxWithUser := context.WithValue(ctx.Request.Context(), "user_id", userID)
+	ctxWithUser = context.WithValue(ctxWithUser, "user_name", userName)
+
+	result, err := c.ciService.BatchCreateCI(ctxWithUser, &req, tenantID)
+	if err != nil {
+		c.logger.Errorw("Batch create CI failed", "error", err, "count", len(req.Items), "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "批量创建失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// BatchUpdateCI 批量更新CI
+// @Summary 批量更新CI
+// @Description 批量更新多个CI的相同属性，最多支持100个
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param request body dto.BatchUpdateCIRequest true "批量更新请求"
+// @Success 200 {object} common.Response{data=dto.BatchOperationResponse}
+// @Router /api/v1/cmdb/cis/batch [put]
+func (c *CMDBController) BatchUpdateCI(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req dto.BatchUpdateCIRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	// 获取操作人信息
+	userID, _ := ctx.Get("user_id")
+	userName, _ := ctx.Get("user_name")
+	ctxWithUser := context.WithValue(ctx.Request.Context(), "user_id", userID)
+	ctxWithUser = context.WithValue(ctxWithUser, "user_name", userName)
+
+	result, err := c.ciService.BatchUpdateCI(ctxWithUser, &req, tenantID)
+	if err != nil {
+		c.logger.Errorw("Batch update CI failed", "error", err, "count", len(req.IDs), "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "批量更新失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// BatchDeleteCI 批量删除CI
+// @Summary 批量删除CI
+// @Description 批量删除多个CI，最多支持100个
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param request body dto.BatchDeleteCIRequest true "批量删除请求"
+// @Success 200 {object} common.Response{data=dto.BatchOperationResponse}
+// @Router /api/v1/cmdb/cis/batch [delete]
+func (c *CMDBController) BatchDeleteCI(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req dto.BatchDeleteCIRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	// 获取操作人信息
+	userID, _ := ctx.Get("user_id")
+	userName, _ := ctx.Get("user_name")
+	ctxWithUser := context.WithValue(ctx.Request.Context(), "user_id", userID)
+	ctxWithUser = context.WithValue(ctxWithUser, "user_name", userName)
+
+	result, err := c.ciService.BatchDeleteCI(ctxWithUser, &req, tenantID)
+	if err != nil {
+		c.logger.Errorw("Batch delete CI failed", "error", err, "count", len(req.IDs), "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "批量删除失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// ------------------------------ 高级搜索接口 ------------------------------
+
+// SearchCI 高级搜索CI
+// @Summary 高级搜索CI
+// @Description 多条件组合搜索CI，支持全文搜索、属性过滤、分页、排序
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param request body dto.CISearchRequest true "搜索请求"
+// @Success 200 {object} common.Response{data=dto.ListResponse[dto.CIResponse]}
+// @Router /api/v1/cmdb/cis/search [post]
+func (c *CMDBController) SearchCI(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req dto.CISearchRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	// 分页参数默认值
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.PageSize <= 0 || req.PageSize > 1000 {
+		req.PageSize = 20
+	}
+
+	result, err := c.ciService.SearchCI(ctx.Request.Context(), tenantID, &req)
+	if err != nil {
+		c.logger.Errorw("Search CI failed", "error", err, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "搜索失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// ------------------------------ 保存视图接口 ------------------------------
+
+// CreateSavedView 创建保存的搜索视图
+// @Summary 创建保存的搜索视图
+// @Description 保存搜索条件为视图，方便后续快速查询
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateCISavedViewRequest true "创建视图请求"
+// @Success 200 {object} common.Response{data=dto.CISavedView}
+// @Router /api/v1/cmdb/views [post]
+func (c *CMDBController) CreateSavedView(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	userID, _ := ctx.Get("user_id")
+	userName, _ := ctx.Get("user_name")
+
+	var req dto.CreateCISavedViewRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	result, err := c.savedViewService.CreateSavedView(ctx.Request.Context(), &req, tenantID, userID.(int), userName.(string))
+	if err != nil {
+		c.logger.Errorw("Create saved view failed", "error", err, "tenant_id", tenantID, "name", req.Name)
+		common.Fail(ctx, common.InternalErrorCode, "创建视图失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// ListSavedViews 获取保存的视图列表
+// @Summary 获取保存的视图列表
+// @Description 获取当前用户创建的和公开的搜索视图
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param size query int false "每页数量"
+// @Param include_public query bool false "是否包含公开视图，默认true"
+// @Success 200 {object} common.Response{data=dto.ListResponse[dto.CISavedView]}
+// @Router /api/v1/cmdb/views [get]
+func (c *CMDBController) ListSavedViews(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	userID, _ := ctx.Get("user_id")
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+	includePublic, _ := strconv.ParseBool(ctx.DefaultQuery("include_public", "true"))
+
+	result, err := c.savedViewService.ListSavedViews(ctx.Request.Context(), tenantID, userID.(int), includePublic, page, pageSize)
+	if err != nil {
+		c.logger.Errorw("List saved views failed", "error", err, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取视图列表失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// GetSavedView 获取视图详情
+// @Summary 获取视图详情
+// @Description 根据ID获取保存的搜索视图
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "视图ID"
+// @Success 200 {object} common.Response{data=dto.CISavedView}
+// @Router /api/v1/cmdb/views/{id} [get]
+func (c *CMDBController) GetSavedView(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的ID参数")
+		return
+	}
+
+	result, err := c.savedViewService.GetSavedView(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		c.logger.Errorw("Get saved view failed", "error", err, "view_id", id, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取视图失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// UpdateSavedView 更新视图
+// @Summary 更新视图
+// @Description 更新保存的搜索视图
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "视图ID"
+// @Param request body dto.UpdateCISavedViewRequest true "更新视图请求"
+// @Success 200 {object} common.Response{data=dto.CISavedView}
+// @Router /api/v1/cmdb/views/{id} [put]
+func (c *CMDBController) UpdateSavedView(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的ID参数")
+		return
+	}
+
+	userID, _ := ctx.Get("user_id")
+	var req dto.UpdateCISavedViewRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	result, err := c.savedViewService.UpdateSavedView(ctx.Request.Context(), id, tenantID, userID.(int), &req)
+	if err != nil {
+		c.logger.Errorw("Update saved view failed", "error", err, "view_id", id, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "更新视图失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// DeleteSavedView 删除视图
+// @Summary 删除视图
+// @Description 删除保存的搜索视图
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "视图ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/cmdb/views/{id} [delete]
+func (c *CMDBController) DeleteSavedView(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的ID参数")
+		return
+	}
+
+	userID, _ := ctx.Get("user_id")
+	err = c.savedViewService.DeleteSavedView(ctx.Request.Context(), id, tenantID, userID.(int))
+	if err != nil {
+		c.logger.Errorw("Delete saved view failed", "error", err, "view_id", id, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "删除视图失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, nil)
+}
+
+// ------------------------------ 导入导出接口 ------------------------------
+
+// CreateImportTask 创建CI导入任务
+// @Summary 创建CI导入任务
+// @Description 批量导入CI数据，支持Excel和CSV格式，异步执行
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param request body dto.ImportCIRequest true "导入请求"
+// @Success 200 {object} common.Response{data=dto.ImportCIResult}
+// @Router /api/v1/cmdb/import [post]
+func (c *CMDBController) CreateImportTask(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	userID, _ := ctx.Get("user_id")
+	userName, _ := ctx.Get("user_name")
+
+	var req dto.ImportCIRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	result, err := c.importExportService.CreateImportTask(ctx.Request.Context(), &req, tenantID, userID.(int), userName.(string))
+	if err != nil {
+		c.logger.Errorw("Create import task failed", "error", err, "tenant_id", tenantID, "file_url", req.FileURL)
+		common.Fail(ctx, common.InternalErrorCode, "创建导入任务失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// GetImportTaskStatus 获取导入任务状态
+// @Summary 获取导入任务状态
+// @Description 查询导入任务的执行状态和结果
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param task_id path string true "任务ID"
+// @Success 200 {object} common.Response{data=dto.ImportCIResult}
+// @Router /api/v1/cmdb/import/{task_id} [get]
+func (c *CMDBController) GetImportTaskStatus(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	taskID := ctx.Param("task_id")
+	if taskID == "" {
+		common.Fail(ctx, common.ParamErrorCode, "任务ID不能为空")
+		return
+	}
+
+	result, err := c.importExportService.GetImportTaskStatus(ctx.Request.Context(), taskID, tenantID)
+	if err != nil {
+		c.logger.Errorw("Get import task status failed", "error", err, "task_id", taskID, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取任务状态失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// ListImportTasks 获取导入任务列表
+// @Summary 获取导入任务列表
+// @Description 查询历史导入任务列表
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param size query int false "每页数量"
+// @Success 200 {object} common.Response{data=dto.ListResponse[dto.ImportCIResult]}
+// @Router /api/v1/cmdb/import [get]
+func (c *CMDBController) ListImportTasks(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+
+	result, err := c.importExportService.ListImportTasks(ctx.Request.Context(), tenantID, page, pageSize)
+	if err != nil {
+		c.logger.Errorw("List import tasks failed", "error", err, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取导入任务列表失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// CreateExportTask 创建CI导出任务
+// @Summary 创建CI导出任务
+// @Description 批量导出CI数据，支持Excel和CSV格式，异步执行
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param request body dto.ExportCIRequest true "导出请求"
+// @Success 200 {object} common.Response{data=dto.ExportCIResult}
+// @Router /api/v1/cmdb/export [post]
+func (c *CMDBController) CreateExportTask(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	userID, _ := ctx.Get("user_id")
+	userName, _ := ctx.Get("user_name")
+
+	var req dto.ExportCIRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	result, err := c.importExportService.CreateExportTask(ctx.Request.Context(), &req, tenantID, userID.(int), userName.(string))
+	if err != nil {
+		c.logger.Errorw("Create export task failed", "error", err, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "创建导出任务失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// GetExportTaskStatus 获取导出任务状态
+// @Summary 获取导出任务状态
+// @Description 查询导出任务的执行状态和结果
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param task_id path string true "任务ID"
+// @Success 200 {object} common.Response{data=dto.ExportCIResult}
+// @Router /api/v1/cmdb/export/{task_id} [get]
+func (c *CMDBController) GetExportTaskStatus(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	taskID := ctx.Param("task_id")
+	if taskID == "" {
+		common.Fail(ctx, common.ParamErrorCode, "任务ID不能为空")
+		return
+	}
+
+	result, err := c.importExportService.GetExportTaskStatus(ctx.Request.Context(), taskID, tenantID)
+	if err != nil {
+		c.logger.Errorw("Get export task status failed", "error", err, "task_id", taskID, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取任务状态失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// ListExportTasks 获取导出任务列表
+// @Summary 获取导出任务列表
+// @Description 查询历史导出任务列表
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param size query int false "每页数量"
+// @Success 200 {object} common.Response{data=dto.ListResponse[dto.ExportCIResult]}
+// @Router /api/v1/cmdb/export [get]
+func (c *CMDBController) ListExportTasks(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+
+	result, err := c.importExportService.ListExportTasks(ctx.Request.Context(), tenantID, page, pageSize)
+	if err != nil {
+		c.logger.Errorw("List export tasks failed", "error", err, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取导出任务列表失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// ------------------------------ 生命周期管理接口 ------------------------------
+
+// UpdateLifecycleStatus 更新CI生命周期状态
+// @Summary 更新CI生命周期状态
+// @Description 变更CI的生命周期状态，记录变更历史
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "CI ID"
+// @Param status query string true "目标状态: draft/online/maintenance/offline/scrapped"
+// @Param remark query string false "变更备注"
+// @Success 200 {object} common.Response{data=dto.CIResponse}
+// @Router /api/v1/cmdb/cis/{id}/lifecycle [put]
+func (c *CMDBController) UpdateLifecycleStatus(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		return
+	}
+
+	status := ctx.Query("status")
+	if status == "" {
+		common.Fail(ctx, common.ParamErrorCode, "状态参数不能为空")
+		return
+	}
+
+	remark := ctx.Query("remark")
+	userID, _ := ctx.Get("user_id")
+	userName, _ := ctx.Get("user_name")
+
+	result, err := c.ciService.UpdateLifecycleStatus(ctx.Request.Context(), id, tenantID, status, remark, userID.(int), userName.(string))
+	if err != nil {
+		c.logger.Errorw("Update CI lifecycle status failed", "error", err, "ci_id", id, "status", status, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "更新生命周期状态失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// BatchUpdateLifecycleStatus 批量更新CI生命周期状态
+// @Summary 批量更新CI生命周期状态
+// @Description 批量变更多个CI的生命周期状态
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param request body dto.BatchUpdateLifecycleRequest true "批量更新请求"
+// @Success 200 {object} common.Response{data=dto.BatchOperationResponse}
+// @Router /api/v1/cmdb/cis/batch/lifecycle [put]
+func (c *CMDBController) BatchUpdateLifecycleStatus(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req struct {
+		IDs     []int  `json:"ids" binding:"required,min=1"`
+		Status  string `json:"status" binding:"required"`
+		Remark  string `json:"remark,omitempty"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	userID, _ := ctx.Get("user_id")
+	userName, _ := ctx.Get("user_name")
+
+	result, err := c.ciService.BatchUpdateLifecycleStatus(ctx.Request.Context(), req.IDs, tenantID, req.Status, req.Remark, userID.(int), userName.(string))
+	if err != nil {
+		c.logger.Errorw("Batch update CI lifecycle status failed", "error", err, "count", len(req.IDs), "status", req.Status, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "批量更新失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// GetLifecycleHistory 获取CI生命周期变更历史
+// @Summary 获取CI生命周期变更历史
+// @Description 查询CI的所有生命周期状态变更记录
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "CI ID"
+// @Success 200 {object} common.Response{data=[]map[string]interface{}}
+// @Router /api/v1/cmdb/cis/{id}/lifecycle/history [get]
+func (c *CMDBController) GetLifecycleHistory(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		return
+	}
+
+	result, err := c.ciService.GetLifecycleHistory(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		c.logger.Errorw("Get CI lifecycle history failed", "error", err, "ci_id", id, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取生命周期历史失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// ------------------------------ CI历史记录接口 ------------------------------
+
+// GetCIHistory 获取CI变更历史
+// @Summary 获取CI变更历史
+// @Description 查询CI的所有变更历史记录
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "CI ID"
+// @Param page query int false "页码"
+// @Param size query int false "每页数量"
+// @Success 200 {object} common.Response{data=dto.CIHistoryListResponse}
+// @Router /api/v1/cmdb/cis/{id}/history [get]
+func (c *CMDBController) GetCIHistory(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		return
+	}
+
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+
+	result, err := c.ciHistoryService.GetCIHistory(ctx.Request.Context(), id, tenantID, page, pageSize)
+	if err != nil {
+		c.logger.Errorw("Get CI history failed", "error", err, "ci_id", id, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取变更历史失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, result)
+}
+
+// RevertCIVersion 回滚CI到指定版本
+// @Summary 回滚CI到指定版本
+// @Description 将CI回滚到历史某个版本的状态
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "CI ID"
+// @Param request body dto.RevertCIVersionRequest true "回滚请求"
+// @Success 200 {object} common.Response{data=dto.CIResponse}
+// @Router /api/v1/cmdb/cis/{id}/revert [post]
+func (c *CMDBController) RevertCIVersion(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID == 0 {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		return
+	}
+
+	var req dto.RevertCIVersionRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	userID, _ := ctx.Get("user_id")
+	userName, _ := ctx.Get("user_name")
+
+	result, err := c.ciHistoryService.RevertCIVersion(ctx.Request.Context(), id, tenantID, userID.(int), userName.(string), &req)
+	if err != nil {
+		c.logger.Errorw("Revert CI version failed", "error", err, "ci_id", id, "version", req.Version, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "回滚版本失败: "+err.Error())
 		return
 	}
 

@@ -164,26 +164,6 @@ type IncidentEscalationRuleResponse struct {
 	UpdatedAt          time.Time              `json:"updated_at"`
 }
 
-// KnownErrorDTO 已知错误DTO
-type CreateKnownErrorRequest struct {
-	Title            string     `json:"title" binding:"required"`
-	Description      string     `json:"description"`
-	Symptoms         string     `json:"symptoms"`
-	RootCause        string     `json:"root_cause"`
-	Workaround       string     `json:"workaround"`
-	Resolution       string     `json:"resolution"`
-	Status           string     `json:"status"` // draft/active/resolved/deprecated
-	Category         string     `json:"category"`
-	Severity         string     `json:"severity"` // critical/high/medium/low
-	AffectedProducts []string   `json:"affected_products"`
-	AffectedCIs      []string   `json:"affected_cis"`
-	Keywords         []string   `json:"keywords"`
-	CreatedBy        int        `json:"created_by"`
-	ApprovedBy       *int       `json:"approved_by"`
-	ApprovedAt       *time.Time `json:"approved_at"`
-	TenantID         int        `json:"tenant_id"`
-}
-
 type UpdateKnownErrorRequest struct {
 	Title            *string    `json:"title,omitempty"`
 	Description      *string    `json:"description,omitempty"`

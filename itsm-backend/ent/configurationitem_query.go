@@ -7,9 +7,11 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/cirelationship"
+	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/configurationitemhistory"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/ticket"
@@ -33,6 +35,8 @@ type ConfigurationItemQuery struct {
 	withTickets           *TicketQuery
 	withIncidents         *IncidentQuery
 	withOutgoingRelations *CIRelationshipQuery
+	withHistory           *ConfigurationItemHistoryQuery
+	withTags              *CITagQuery
 	withIncomingRelations *CIRelationshipQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -128,7 +132,7 @@ func (_q *ConfigurationItemQuery) QueryTickets() *TicketQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
 			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, configurationitem.TicketsTable, configurationitem.TicketsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.TicketsTable, configurationitem.TicketsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -173,6 +177,50 @@ func (_q *ConfigurationItemQuery) QueryOutgoingRelations() *CIRelationshipQuery 
 			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
 			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.OutgoingRelationsTable, configurationitem.OutgoingRelationsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryHistory chains the current query on the "history" edge.
+func (_q *ConfigurationItemQuery) QueryHistory() *ConfigurationItemHistoryQuery {
+	query := (&ConfigurationItemHistoryClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
+			sqlgraph.To(configurationitemhistory.Table, configurationitemhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.HistoryTable, configurationitem.HistoryColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTags chains the current query on the "tags" edge.
+func (_q *ConfigurationItemQuery) QueryTags() *CITagQuery {
+	query := (&CITagClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
+			sqlgraph.To(citag.Table, citag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, configurationitem.TagsTable, configurationitem.TagsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -399,6 +447,8 @@ func (_q *ConfigurationItemQuery) Clone() *ConfigurationItemQuery {
 		withTickets:           _q.withTickets.Clone(),
 		withIncidents:         _q.withIncidents.Clone(),
 		withOutgoingRelations: _q.withOutgoingRelations.Clone(),
+		withHistory:           _q.withHistory.Clone(),
+		withTags:              _q.withTags.Clone(),
 		withIncomingRelations: _q.withIncomingRelations.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
@@ -458,6 +508,28 @@ func (_q *ConfigurationItemQuery) WithOutgoingRelations(opts ...func(*CIRelation
 		opt(query)
 	}
 	_q.withOutgoingRelations = query
+	return _q
+}
+
+// WithHistory tells the query-builder to eager-load the nodes that are connected to
+// the "history" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ConfigurationItemQuery) WithHistory(opts ...func(*ConfigurationItemHistoryQuery)) *ConfigurationItemQuery {
+	query := (&ConfigurationItemHistoryClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withHistory = query
+	return _q
+}
+
+// WithTags tells the query-builder to eager-load the nodes that are connected to
+// the "tags" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ConfigurationItemQuery) WithTags(opts ...func(*CITagQuery)) *ConfigurationItemQuery {
+	query := (&CITagClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withTags = query
 	return _q
 }
 
@@ -550,12 +622,14 @@ func (_q *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	var (
 		nodes       = []*ConfigurationItem{}
 		_spec       = _q.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [8]bool{
 			_q.withCiTypeRef != nil,
 			_q.withCloudResourceRef != nil,
 			_q.withTickets != nil,
 			_q.withIncidents != nil,
 			_q.withOutgoingRelations != nil,
+			_q.withHistory != nil,
+			_q.withTags != nil,
 			_q.withIncomingRelations != nil,
 		}
 	)
@@ -609,6 +683,20 @@ func (_q *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHook
 			func(n *ConfigurationItem, e *CIRelationship) {
 				n.Edges.OutgoingRelations = append(n.Edges.OutgoingRelations, e)
 			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withHistory; query != nil {
+		if err := _q.loadHistory(ctx, query, nodes,
+			func(n *ConfigurationItem) { n.Edges.History = []*ConfigurationItemHistory{} },
+			func(n *ConfigurationItem, e *ConfigurationItemHistory) { n.Edges.History = append(n.Edges.History, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withTags; query != nil {
+		if err := _q.loadTags(ctx, query, nodes,
+			func(n *ConfigurationItem) { n.Edges.Tags = []*CITag{} },
+			func(n *ConfigurationItem, e *CITag) { n.Edges.Tags = append(n.Edges.Tags, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -683,63 +771,33 @@ func (_q *ConfigurationItemQuery) loadCloudResourceRef(ctx context.Context, quer
 	return nil
 }
 func (_q *ConfigurationItemQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *Ticket)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*ConfigurationItem)
-	nids := make(map[int]map[*ConfigurationItem]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*ConfigurationItem)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
 		if init != nil {
-			init(node)
+			init(nodes[i])
 		}
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(configurationitem.TicketsTable)
-		s.Join(joinT).On(s.C(ticket.FieldID), joinT.C(configurationitem.TicketsPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(configurationitem.TicketsPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(configurationitem.TicketsPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*ConfigurationItem]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Ticket](ctx, query, qr, query.inters)
+	query.withFKs = true
+	query.Where(predicate.Ticket(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(configurationitem.TicketsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		fk := n.configuration_item_tickets
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "configuration_item_tickets" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected "tickets" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "configuration_item_tickets" returned %v for node %v`, *fk, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -831,6 +889,97 @@ func (_q *ConfigurationItemQuery) loadOutgoingRelations(ctx context.Context, que
 			return fmt.Errorf(`unexpected referenced foreign-key "source_ci_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (_q *ConfigurationItemQuery) loadHistory(ctx context.Context, query *ConfigurationItemHistoryQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *ConfigurationItemHistory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*ConfigurationItem)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(configurationitemhistory.FieldCiID)
+	}
+	query.Where(predicate.ConfigurationItemHistory(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(configurationitem.HistoryColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.CiID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ci_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *ConfigurationItemQuery) loadTags(ctx context.Context, query *CITagQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CITag)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*ConfigurationItem)
+	nids := make(map[int]map[*ConfigurationItem]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(configurationitem.TagsTable)
+		s.Join(joinT).On(s.C(citag.FieldID), joinT.C(configurationitem.TagsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(configurationitem.TagsPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(configurationitem.TagsPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*ConfigurationItem]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*CITag](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "tags" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

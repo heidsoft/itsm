@@ -20,6 +20,9 @@ func (ConfigurationItem) Fields() []ent.Field {
 		field.String("name").
 			Comment("CI名称").
 			NotEmpty(),
+		field.String("description").
+			Comment("CI描述").
+			Optional(),
 		field.Int("ci_type_id").
 			Comment("CI类型ID").
 			Positive(),
@@ -145,6 +148,10 @@ func (ConfigurationItem) Edges() []ent.Edge {
 		// CI之间的关系 - 出边 (作为源)
 		edge.To("outgoing_relations", CIRelationship.Type),
 		// CI之间的关系 - 入边 (作为目标)
+		edge.To("history", ConfigurationItemHistory.Type).
+			Comment("CI变更历史"),
+		edge.To("tags", CITag.Type).
+			Comment("CI标签"),
 		edge.To("incoming_relations", CIRelationship.Type),
 	}
 }

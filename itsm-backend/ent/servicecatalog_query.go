@@ -4,9 +4,11 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/servicecatalog"
+	"itsm-backend/ent/servicecatalogitem"
 	"math"
 
 	"entgo.io/ent"
@@ -22,6 +24,7 @@ type ServiceCatalogQuery struct {
 	order      []servicecatalog.OrderOption
 	inters     []Interceptor
 	predicates []predicate.ServiceCatalog
+	withItems  *ServiceCatalogItemQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +59,28 @@ func (_q *ServiceCatalogQuery) Unique(unique bool) *ServiceCatalogQuery {
 func (_q *ServiceCatalogQuery) Order(o ...servicecatalog.OrderOption) *ServiceCatalogQuery {
 	_q.order = append(_q.order, o...)
 	return _q
+}
+
+// QueryItems chains the current query on the "items" edge.
+func (_q *ServiceCatalogQuery) QueryItems() *ServiceCatalogItemQuery {
+	query := (&ServiceCatalogItemClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicecatalog.Table, servicecatalog.FieldID, selector),
+			sqlgraph.To(servicecatalogitem.Table, servicecatalogitem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, servicecatalog.ItemsTable, servicecatalog.ItemsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first ServiceCatalog entity from the query.
@@ -250,10 +275,22 @@ func (_q *ServiceCatalogQuery) Clone() *ServiceCatalogQuery {
 		order:      append([]servicecatalog.OrderOption{}, _q.order...),
 		inters:     append([]Interceptor{}, _q.inters...),
 		predicates: append([]predicate.ServiceCatalog{}, _q.predicates...),
+		withItems:  _q.withItems.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
+}
+
+// WithItems tells the query-builder to eager-load the nodes that are connected to
+// the "items" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ServiceCatalogQuery) WithItems(opts ...func(*ServiceCatalogItemQuery)) *ServiceCatalogQuery {
+	query := (&ServiceCatalogItemClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withItems = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +369,11 @@ func (_q *ServiceCatalogQuery) prepareQuery(ctx context.Context) error {
 
 func (_q *ServiceCatalogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ServiceCatalog, error) {
 	var (
-		nodes = []*ServiceCatalog{}
-		_spec = _q.querySpec()
+		nodes       = []*ServiceCatalog{}
+		_spec       = _q.querySpec()
+		loadedTypes = [1]bool{
+			_q.withItems != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ServiceCatalog).scanValues(nil, columns)
@@ -341,6 +381,7 @@ func (_q *ServiceCatalogQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &ServiceCatalog{config: _q.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +393,45 @@ func (_q *ServiceCatalogQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := _q.withItems; query != nil {
+		if err := _q.loadItems(ctx, query, nodes,
+			func(n *ServiceCatalog) { n.Edges.Items = []*ServiceCatalogItem{} },
+			func(n *ServiceCatalog, e *ServiceCatalogItem) { n.Edges.Items = append(n.Edges.Items, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (_q *ServiceCatalogQuery) loadItems(ctx context.Context, query *ServiceCatalogItemQuery, nodes []*ServiceCatalog, init func(*ServiceCatalog), assign func(*ServiceCatalog, *ServiceCatalogItem)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*ServiceCatalog)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(servicecatalogitem.FieldCatalogID)
+	}
+	query.Where(predicate.ServiceCatalogItem(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(servicecatalog.ItemsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.CatalogID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "catalog_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (_q *ServiceCatalogQuery) sqlCount(ctx context.Context) (int, error) {

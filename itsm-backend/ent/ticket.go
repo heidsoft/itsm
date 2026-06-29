@@ -4,11 +4,8 @@ package ent
 
 import (
 	"fmt"
-	"itsm-backend/ent/department"
-	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/ticket"
-	"itsm-backend/ent/ticketcategory"
-	"itsm-backend/ent/tickettemplate"
+	"itsm-backend/ent/user"
 	"strings"
 	"time"
 
@@ -89,139 +86,124 @@ type Ticket struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TicketQuery when eager-loading is set.
-	Edges              TicketEdges `json:"edges"`
-	sla_policy_tickets *int
-	ticket_tag_tickets *int
-	selectValues       sql.SelectValues
+	Edges                      TicketEdges `json:"edges"`
+	configuration_item_tickets *int
+	department_tickets         *int
+	problem_tickets            *int
+	sla_definition_tickets     *int
+	sla_policy_tickets         *int
+	ticket_tag_tickets         *int
+	ticket_template_tickets    *int
+	selectValues               sql.SelectValues
 }
 
 // TicketEdges holds the relations/edges for other nodes in the graph.
 type TicketEdges struct {
-	// 工单模板
-	Template *TicketTemplate `json:"template,omitempty"`
-	// 工单分类
-	Category *TicketCategory `json:"category,omitempty"`
-	// 所属部门
-	Department *Department `json:"department,omitempty"`
-	// 工单标签
-	Tags []*TicketTag `json:"tags,omitempty"`
-	// 关联工单
-	RelatedTickets []*Ticket `json:"related_tickets,omitempty"`
-	// 父工单
-	ParentTicket *Ticket `json:"parent_ticket,omitempty"`
-	// 工作流实例
-	WorkflowInstances []*WorkflowInstance `json:"workflow_instances,omitempty"`
-	// SLA定义
-	SLADefinition *SLADefinition `json:"sla_definition,omitempty"`
-	// SLA违规记录
-	SLAViolations []*SLAViolation `json:"sla_violations,omitempty"`
-	// 工单评论
+	// Comments holds the value of the comments edge.
 	Comments []*TicketComment `json:"comments,omitempty"`
-	// 工单附件
+	// Attachments holds the value of the attachments edge.
 	Attachments []*TicketAttachment `json:"attachments,omitempty"`
-	// 工单通知
-	Notifications []*TicketNotification `json:"notifications,omitempty"`
-	// SLA预警历史
-	SLAAlertHistory []*SLAAlertHistory `json:"sla_alert_history,omitempty"`
-	// 审批记录
+	// Tags holds the value of the tags edge.
+	Tags []*TicketTag `json:"tags,omitempty"`
+	// ApprovalRecords holds the value of the approval_records edge.
 	ApprovalRecords []*ApprovalRecord `json:"approval_records,omitempty"`
-	// 根因分析
-	RootCauseAnalyses []*RootCauseAnalysis `json:"root_cause_analyses,omitempty"`
-	// 关联的配置项
-	ConfigurationItems []*ConfigurationItem `json:"configuration_items,omitempty"`
-	// 关联的问题
-	Problems []*Problem `json:"problems,omitempty"`
-	// 审批记录
+	// Approvals holds the value of the approvals edge.
 	Approvals []*TicketApproval `json:"approvals,omitempty"`
-	// 流转记录
+	// WorkflowRecords holds the value of the workflow_records edge.
 	WorkflowRecords []*TicketWorkflowRecord `json:"workflow_records,omitempty"`
-	// 抄送人
+	// Notifications holds the value of the notifications edge.
+	Notifications []*TicketNotification `json:"notifications,omitempty"`
+	// CcUsers holds the value of the cc_users edge.
 	CcUsers []*TicketCC `json:"cc_users,omitempty"`
+	// SLAViolations holds the value of the sla_violations edge.
+	SLAViolations []*SLAViolation `json:"sla_violations,omitempty"`
+	// SLAAlertHistory holds the value of the sla_alert_history edge.
+	SLAAlertHistory []*SLAAlertHistory `json:"sla_alert_history,omitempty"`
+	// RootCauseAnalyses holds the value of the root_cause_analyses edge.
+	RootCauseAnalyses []*RootCauseAnalysis `json:"root_cause_analyses,omitempty"`
+	// FeishuSyncs holds the value of the feishu_syncs edge.
+	FeishuSyncs []*FeishuTicketSync `json:"feishu_syncs,omitempty"`
+	// Requester holds the value of the requester edge.
+	Requester *User `json:"requester,omitempty"`
+	// Assignee holds the value of the assignee edge.
+	Assignee *User `json:"assignee,omitempty"`
+	// Category holds the value of the category edge.
+	Category []*TicketCategory `json:"category,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [20]bool
+	loadedTypes [15]bool
 }
 
-// TemplateOrErr returns the Template value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TicketEdges) TemplateOrErr() (*TicketTemplate, error) {
-	if e.Template != nil {
-		return e.Template, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: tickettemplate.Label}
+// CommentsOrErr returns the Comments value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) CommentsOrErr() ([]*TicketComment, error) {
+	if e.loadedTypes[0] {
+		return e.Comments, nil
 	}
-	return nil, &NotLoadedError{edge: "template"}
+	return nil, &NotLoadedError{edge: "comments"}
 }
 
-// CategoryOrErr returns the Category value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TicketEdges) CategoryOrErr() (*TicketCategory, error) {
-	if e.Category != nil {
-		return e.Category, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: ticketcategory.Label}
+// AttachmentsOrErr returns the Attachments value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) AttachmentsOrErr() ([]*TicketAttachment, error) {
+	if e.loadedTypes[1] {
+		return e.Attachments, nil
 	}
-	return nil, &NotLoadedError{edge: "category"}
-}
-
-// DepartmentOrErr returns the Department value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TicketEdges) DepartmentOrErr() (*Department, error) {
-	if e.Department != nil {
-		return e.Department, nil
-	} else if e.loadedTypes[2] {
-		return nil, &NotFoundError{label: department.Label}
-	}
-	return nil, &NotLoadedError{edge: "department"}
+	return nil, &NotLoadedError{edge: "attachments"}
 }
 
 // TagsOrErr returns the Tags value or an error if the edge
 // was not loaded in eager-loading.
 func (e TicketEdges) TagsOrErr() ([]*TicketTag, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.Tags, nil
 	}
 	return nil, &NotLoadedError{edge: "tags"}
 }
 
-// RelatedTicketsOrErr returns the RelatedTickets value or an error if the edge
+// ApprovalRecordsOrErr returns the ApprovalRecords value or an error if the edge
 // was not loaded in eager-loading.
-func (e TicketEdges) RelatedTicketsOrErr() ([]*Ticket, error) {
+func (e TicketEdges) ApprovalRecordsOrErr() ([]*ApprovalRecord, error) {
+	if e.loadedTypes[3] {
+		return e.ApprovalRecords, nil
+	}
+	return nil, &NotLoadedError{edge: "approval_records"}
+}
+
+// ApprovalsOrErr returns the Approvals value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) ApprovalsOrErr() ([]*TicketApproval, error) {
 	if e.loadedTypes[4] {
-		return e.RelatedTickets, nil
+		return e.Approvals, nil
 	}
-	return nil, &NotLoadedError{edge: "related_tickets"}
+	return nil, &NotLoadedError{edge: "approvals"}
 }
 
-// ParentTicketOrErr returns the ParentTicket value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TicketEdges) ParentTicketOrErr() (*Ticket, error) {
-	if e.ParentTicket != nil {
-		return e.ParentTicket, nil
-	} else if e.loadedTypes[5] {
-		return nil, &NotFoundError{label: ticket.Label}
-	}
-	return nil, &NotLoadedError{edge: "parent_ticket"}
-}
-
-// WorkflowInstancesOrErr returns the WorkflowInstances value or an error if the edge
+// WorkflowRecordsOrErr returns the WorkflowRecords value or an error if the edge
 // was not loaded in eager-loading.
-func (e TicketEdges) WorkflowInstancesOrErr() ([]*WorkflowInstance, error) {
-	if e.loadedTypes[6] {
-		return e.WorkflowInstances, nil
+func (e TicketEdges) WorkflowRecordsOrErr() ([]*TicketWorkflowRecord, error) {
+	if e.loadedTypes[5] {
+		return e.WorkflowRecords, nil
 	}
-	return nil, &NotLoadedError{edge: "workflow_instances"}
+	return nil, &NotLoadedError{edge: "workflow_records"}
 }
 
-// SLADefinitionOrErr returns the SLADefinition value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TicketEdges) SLADefinitionOrErr() (*SLADefinition, error) {
-	if e.SLADefinition != nil {
-		return e.SLADefinition, nil
-	} else if e.loadedTypes[7] {
-		return nil, &NotFoundError{label: sladefinition.Label}
+// NotificationsOrErr returns the Notifications value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) NotificationsOrErr() ([]*TicketNotification, error) {
+	if e.loadedTypes[6] {
+		return e.Notifications, nil
 	}
-	return nil, &NotLoadedError{edge: "sla_definition"}
+	return nil, &NotLoadedError{edge: "notifications"}
+}
+
+// CcUsersOrErr returns the CcUsers value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) CcUsersOrErr() ([]*TicketCC, error) {
+	if e.loadedTypes[7] {
+		return e.CcUsers, nil
+	}
+	return nil, &NotLoadedError{edge: "cc_users"}
 }
 
 // SLAViolationsOrErr returns the SLAViolations value or an error if the edge
@@ -233,103 +215,62 @@ func (e TicketEdges) SLAViolationsOrErr() ([]*SLAViolation, error) {
 	return nil, &NotLoadedError{edge: "sla_violations"}
 }
 
-// CommentsOrErr returns the Comments value or an error if the edge
-// was not loaded in eager-loading.
-func (e TicketEdges) CommentsOrErr() ([]*TicketComment, error) {
-	if e.loadedTypes[9] {
-		return e.Comments, nil
-	}
-	return nil, &NotLoadedError{edge: "comments"}
-}
-
-// AttachmentsOrErr returns the Attachments value or an error if the edge
-// was not loaded in eager-loading.
-func (e TicketEdges) AttachmentsOrErr() ([]*TicketAttachment, error) {
-	if e.loadedTypes[10] {
-		return e.Attachments, nil
-	}
-	return nil, &NotLoadedError{edge: "attachments"}
-}
-
-// NotificationsOrErr returns the Notifications value or an error if the edge
-// was not loaded in eager-loading.
-func (e TicketEdges) NotificationsOrErr() ([]*TicketNotification, error) {
-	if e.loadedTypes[11] {
-		return e.Notifications, nil
-	}
-	return nil, &NotLoadedError{edge: "notifications"}
-}
-
 // SLAAlertHistoryOrErr returns the SLAAlertHistory value or an error if the edge
 // was not loaded in eager-loading.
 func (e TicketEdges) SLAAlertHistoryOrErr() ([]*SLAAlertHistory, error) {
-	if e.loadedTypes[12] {
+	if e.loadedTypes[9] {
 		return e.SLAAlertHistory, nil
 	}
 	return nil, &NotLoadedError{edge: "sla_alert_history"}
 }
 
-// ApprovalRecordsOrErr returns the ApprovalRecords value or an error if the edge
-// was not loaded in eager-loading.
-func (e TicketEdges) ApprovalRecordsOrErr() ([]*ApprovalRecord, error) {
-	if e.loadedTypes[13] {
-		return e.ApprovalRecords, nil
-	}
-	return nil, &NotLoadedError{edge: "approval_records"}
-}
-
 // RootCauseAnalysesOrErr returns the RootCauseAnalyses value or an error if the edge
 // was not loaded in eager-loading.
 func (e TicketEdges) RootCauseAnalysesOrErr() ([]*RootCauseAnalysis, error) {
-	if e.loadedTypes[14] {
+	if e.loadedTypes[10] {
 		return e.RootCauseAnalyses, nil
 	}
 	return nil, &NotLoadedError{edge: "root_cause_analyses"}
 }
 
-// ConfigurationItemsOrErr returns the ConfigurationItems value or an error if the edge
+// FeishuSyncsOrErr returns the FeishuSyncs value or an error if the edge
 // was not loaded in eager-loading.
-func (e TicketEdges) ConfigurationItemsOrErr() ([]*ConfigurationItem, error) {
-	if e.loadedTypes[15] {
-		return e.ConfigurationItems, nil
+func (e TicketEdges) FeishuSyncsOrErr() ([]*FeishuTicketSync, error) {
+	if e.loadedTypes[11] {
+		return e.FeishuSyncs, nil
 	}
-	return nil, &NotLoadedError{edge: "configuration_items"}
+	return nil, &NotLoadedError{edge: "feishu_syncs"}
 }
 
-// ProblemsOrErr returns the Problems value or an error if the edge
-// was not loaded in eager-loading.
-func (e TicketEdges) ProblemsOrErr() ([]*Problem, error) {
-	if e.loadedTypes[16] {
-		return e.Problems, nil
+// RequesterOrErr returns the Requester value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketEdges) RequesterOrErr() (*User, error) {
+	if e.Requester != nil {
+		return e.Requester, nil
+	} else if e.loadedTypes[12] {
+		return nil, &NotFoundError{label: user.Label}
 	}
-	return nil, &NotLoadedError{edge: "problems"}
+	return nil, &NotLoadedError{edge: "requester"}
 }
 
-// ApprovalsOrErr returns the Approvals value or an error if the edge
-// was not loaded in eager-loading.
-func (e TicketEdges) ApprovalsOrErr() ([]*TicketApproval, error) {
-	if e.loadedTypes[17] {
-		return e.Approvals, nil
+// AssigneeOrErr returns the Assignee value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketEdges) AssigneeOrErr() (*User, error) {
+	if e.Assignee != nil {
+		return e.Assignee, nil
+	} else if e.loadedTypes[13] {
+		return nil, &NotFoundError{label: user.Label}
 	}
-	return nil, &NotLoadedError{edge: "approvals"}
+	return nil, &NotLoadedError{edge: "assignee"}
 }
 
-// WorkflowRecordsOrErr returns the WorkflowRecords value or an error if the edge
+// CategoryOrErr returns the Category value or an error if the edge
 // was not loaded in eager-loading.
-func (e TicketEdges) WorkflowRecordsOrErr() ([]*TicketWorkflowRecord, error) {
-	if e.loadedTypes[18] {
-		return e.WorkflowRecords, nil
+func (e TicketEdges) CategoryOrErr() ([]*TicketCategory, error) {
+	if e.loadedTypes[14] {
+		return e.Category, nil
 	}
-	return nil, &NotLoadedError{edge: "workflow_records"}
-}
-
-// CcUsersOrErr returns the CcUsers value or an error if the edge
-// was not loaded in eager-loading.
-func (e TicketEdges) CcUsersOrErr() ([]*TicketCC, error) {
-	if e.loadedTypes[19] {
-		return e.CcUsers, nil
-	}
-	return nil, &NotLoadedError{edge: "cc_users"}
+	return nil, &NotLoadedError{edge: "category"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -345,9 +286,19 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldClosedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt, ticket.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
-		case ticket.ForeignKeys[0]: // sla_policy_tickets
+		case ticket.ForeignKeys[0]: // configuration_item_tickets
 			values[i] = new(sql.NullInt64)
-		case ticket.ForeignKeys[1]: // ticket_tag_tickets
+		case ticket.ForeignKeys[1]: // department_tickets
+			values[i] = new(sql.NullInt64)
+		case ticket.ForeignKeys[2]: // problem_tickets
+			values[i] = new(sql.NullInt64)
+		case ticket.ForeignKeys[3]: // sla_definition_tickets
+			values[i] = new(sql.NullInt64)
+		case ticket.ForeignKeys[4]: // sla_policy_tickets
+			values[i] = new(sql.NullInt64)
+		case ticket.ForeignKeys[5]: // ticket_tag_tickets
+			values[i] = new(sql.NullInt64)
+		case ticket.ForeignKeys[6]: // ticket_template_tickets
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -572,17 +523,52 @@ func (_m *Ticket) assignValues(columns []string, values []any) error {
 			}
 		case ticket.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field configuration_item_tickets", value)
+			} else if value.Valid {
+				_m.configuration_item_tickets = new(int)
+				*_m.configuration_item_tickets = int(value.Int64)
+			}
+		case ticket.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field department_tickets", value)
+			} else if value.Valid {
+				_m.department_tickets = new(int)
+				*_m.department_tickets = int(value.Int64)
+			}
+		case ticket.ForeignKeys[2]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field problem_tickets", value)
+			} else if value.Valid {
+				_m.problem_tickets = new(int)
+				*_m.problem_tickets = int(value.Int64)
+			}
+		case ticket.ForeignKeys[3]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field sla_definition_tickets", value)
+			} else if value.Valid {
+				_m.sla_definition_tickets = new(int)
+				*_m.sla_definition_tickets = int(value.Int64)
+			}
+		case ticket.ForeignKeys[4]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field sla_policy_tickets", value)
 			} else if value.Valid {
 				_m.sla_policy_tickets = new(int)
 				*_m.sla_policy_tickets = int(value.Int64)
 			}
-		case ticket.ForeignKeys[1]:
+		case ticket.ForeignKeys[5]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field ticket_tag_tickets", value)
 			} else if value.Valid {
 				_m.ticket_tag_tickets = new(int)
 				*_m.ticket_tag_tickets = int(value.Int64)
+			}
+		case ticket.ForeignKeys[6]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field ticket_template_tickets", value)
+			} else if value.Valid {
+				_m.ticket_template_tickets = new(int)
+				*_m.ticket_template_tickets = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -597,51 +583,6 @@ func (_m *Ticket) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryTemplate queries the "template" edge of the Ticket entity.
-func (_m *Ticket) QueryTemplate() *TicketTemplateQuery {
-	return NewTicketClient(_m.config).QueryTemplate(_m)
-}
-
-// QueryCategory queries the "category" edge of the Ticket entity.
-func (_m *Ticket) QueryCategory() *TicketCategoryQuery {
-	return NewTicketClient(_m.config).QueryCategory(_m)
-}
-
-// QueryDepartment queries the "department" edge of the Ticket entity.
-func (_m *Ticket) QueryDepartment() *DepartmentQuery {
-	return NewTicketClient(_m.config).QueryDepartment(_m)
-}
-
-// QueryTags queries the "tags" edge of the Ticket entity.
-func (_m *Ticket) QueryTags() *TicketTagQuery {
-	return NewTicketClient(_m.config).QueryTags(_m)
-}
-
-// QueryRelatedTickets queries the "related_tickets" edge of the Ticket entity.
-func (_m *Ticket) QueryRelatedTickets() *TicketQuery {
-	return NewTicketClient(_m.config).QueryRelatedTickets(_m)
-}
-
-// QueryParentTicket queries the "parent_ticket" edge of the Ticket entity.
-func (_m *Ticket) QueryParentTicket() *TicketQuery {
-	return NewTicketClient(_m.config).QueryParentTicket(_m)
-}
-
-// QueryWorkflowInstances queries the "workflow_instances" edge of the Ticket entity.
-func (_m *Ticket) QueryWorkflowInstances() *WorkflowInstanceQuery {
-	return NewTicketClient(_m.config).QueryWorkflowInstances(_m)
-}
-
-// QuerySLADefinition queries the "sla_definition" edge of the Ticket entity.
-func (_m *Ticket) QuerySLADefinition() *SLADefinitionQuery {
-	return NewTicketClient(_m.config).QuerySLADefinition(_m)
-}
-
-// QuerySLAViolations queries the "sla_violations" edge of the Ticket entity.
-func (_m *Ticket) QuerySLAViolations() *SLAViolationQuery {
-	return NewTicketClient(_m.config).QuerySLAViolations(_m)
-}
-
 // QueryComments queries the "comments" edge of the Ticket entity.
 func (_m *Ticket) QueryComments() *TicketCommentQuery {
 	return NewTicketClient(_m.config).QueryComments(_m)
@@ -652,34 +593,14 @@ func (_m *Ticket) QueryAttachments() *TicketAttachmentQuery {
 	return NewTicketClient(_m.config).QueryAttachments(_m)
 }
 
-// QueryNotifications queries the "notifications" edge of the Ticket entity.
-func (_m *Ticket) QueryNotifications() *TicketNotificationQuery {
-	return NewTicketClient(_m.config).QueryNotifications(_m)
-}
-
-// QuerySLAAlertHistory queries the "sla_alert_history" edge of the Ticket entity.
-func (_m *Ticket) QuerySLAAlertHistory() *SLAAlertHistoryQuery {
-	return NewTicketClient(_m.config).QuerySLAAlertHistory(_m)
+// QueryTags queries the "tags" edge of the Ticket entity.
+func (_m *Ticket) QueryTags() *TicketTagQuery {
+	return NewTicketClient(_m.config).QueryTags(_m)
 }
 
 // QueryApprovalRecords queries the "approval_records" edge of the Ticket entity.
 func (_m *Ticket) QueryApprovalRecords() *ApprovalRecordQuery {
 	return NewTicketClient(_m.config).QueryApprovalRecords(_m)
-}
-
-// QueryRootCauseAnalyses queries the "root_cause_analyses" edge of the Ticket entity.
-func (_m *Ticket) QueryRootCauseAnalyses() *RootCauseAnalysisQuery {
-	return NewTicketClient(_m.config).QueryRootCauseAnalyses(_m)
-}
-
-// QueryConfigurationItems queries the "configuration_items" edge of the Ticket entity.
-func (_m *Ticket) QueryConfigurationItems() *ConfigurationItemQuery {
-	return NewTicketClient(_m.config).QueryConfigurationItems(_m)
-}
-
-// QueryProblems queries the "problems" edge of the Ticket entity.
-func (_m *Ticket) QueryProblems() *ProblemQuery {
-	return NewTicketClient(_m.config).QueryProblems(_m)
 }
 
 // QueryApprovals queries the "approvals" edge of the Ticket entity.
@@ -692,9 +613,49 @@ func (_m *Ticket) QueryWorkflowRecords() *TicketWorkflowRecordQuery {
 	return NewTicketClient(_m.config).QueryWorkflowRecords(_m)
 }
 
+// QueryNotifications queries the "notifications" edge of the Ticket entity.
+func (_m *Ticket) QueryNotifications() *TicketNotificationQuery {
+	return NewTicketClient(_m.config).QueryNotifications(_m)
+}
+
 // QueryCcUsers queries the "cc_users" edge of the Ticket entity.
 func (_m *Ticket) QueryCcUsers() *TicketCCQuery {
 	return NewTicketClient(_m.config).QueryCcUsers(_m)
+}
+
+// QuerySLAViolations queries the "sla_violations" edge of the Ticket entity.
+func (_m *Ticket) QuerySLAViolations() *SLAViolationQuery {
+	return NewTicketClient(_m.config).QuerySLAViolations(_m)
+}
+
+// QuerySLAAlertHistory queries the "sla_alert_history" edge of the Ticket entity.
+func (_m *Ticket) QuerySLAAlertHistory() *SLAAlertHistoryQuery {
+	return NewTicketClient(_m.config).QuerySLAAlertHistory(_m)
+}
+
+// QueryRootCauseAnalyses queries the "root_cause_analyses" edge of the Ticket entity.
+func (_m *Ticket) QueryRootCauseAnalyses() *RootCauseAnalysisQuery {
+	return NewTicketClient(_m.config).QueryRootCauseAnalyses(_m)
+}
+
+// QueryFeishuSyncs queries the "feishu_syncs" edge of the Ticket entity.
+func (_m *Ticket) QueryFeishuSyncs() *FeishuTicketSyncQuery {
+	return NewTicketClient(_m.config).QueryFeishuSyncs(_m)
+}
+
+// QueryRequester queries the "requester" edge of the Ticket entity.
+func (_m *Ticket) QueryRequester() *UserQuery {
+	return NewTicketClient(_m.config).QueryRequester(_m)
+}
+
+// QueryAssignee queries the "assignee" edge of the Ticket entity.
+func (_m *Ticket) QueryAssignee() *UserQuery {
+	return NewTicketClient(_m.config).QueryAssignee(_m)
+}
+
+// QueryCategory queries the "category" edge of the Ticket entity.
+func (_m *Ticket) QueryCategory() *TicketCategoryQuery {
+	return NewTicketClient(_m.config).QueryCategory(_m)
 }
 
 // Update returns a builder for updating this Ticket.

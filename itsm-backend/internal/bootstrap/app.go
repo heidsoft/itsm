@@ -126,6 +126,12 @@ func NewApplication() *Application {
 	// 工单仓储层（V2 Repository 模式）
 	ticketRepoImpl := repository_ticket.NewEntRepository(client, sugar)
 
+	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
+	connectorManager := connector.NewManager(connector.Default(), sugar)
+	connectorMarket := marketplace.New()
+	connectorController := controller.NewConnectorController(connectorManager, connector.Default(), connectorMarket, sugar)
+
+
 	// 通知 / 审批 / SLA / 自动化 / 序列服务（V2 子服务）
 	ticketNotificationService := service.NewTicketNotificationService(client, sugar)
 	ticketSLAService := service.NewTicketSLAService(client, sugar)
@@ -142,6 +148,8 @@ func NewApplication() *Application {
 		SLAService:            ticketSLAService,
 		ProcessTriggerService: processTriggerService,
 		ProcessResolver:       processResolver,
+		ConnectorManager:      connectorManager,
+
 	})
 	_ = sequenceService // V2 内部通过 Repository.GenerateTicketNumber 使用 sequence；保留为运行时上下文依赖
 
@@ -166,9 +174,12 @@ func NewApplication() *Application {
 	// CMDB Services
 	ciTypeService := service.NewCITypeService(client, sugar)
 	ciAttributeDefinitionService := service.NewCIAttributeDefinitionService(client, sugar)
-	configurationItemService := service.NewConfigurationItemService(client, sugar)
+	ciHistoryService := service.NewCIHistoryService(client, sugar)
+	ciTagService := service.NewCITagService(client, sugar)
+	configurationItemService := service.NewConfigurationItemService(client, sugar, ciHistoryService, ciTagService)
 	ciRelationshipService := service.NewCIRelationshipService(client, sugar)
-
+	importExportService := service.NewCMDBImportExportService(client, sugar, configurationItemService, ciTagService)
+	savedViewService := service.NewCMDBSavedViewService(client, sugar)
 	// LLM/Embedding/VectorStore
 	var embedder service.Embedder
 	if cfg.LLM.Provider == "openai" || cfg.LLM.Provider == "" {
@@ -277,7 +288,7 @@ func NewApplication() *Application {
 
 	// ProblemController and ChangeController removed - using Handlers instead
 	// CMDB Controller
-	cmdbController := controller.NewCMDBController(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService)
+	cmdbController := controller.NewCMDBController(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService, ciHistoryService, ciTagService)
 
 	// Release & Asset Management Controllers
 	releaseController := controller.NewReleaseController(sugar, releaseService)
@@ -309,6 +320,10 @@ func NewApplication() *Application {
 	// BPMN Monitoring Service & Controller（监控 + 完整执行轨迹时间线）
 	bpmnMonitoringService := service.NewBPMNMonitoringService(client, bpmnAuditService, sugar)
 	bpmnMonitoringController := controller.NewBPMNMonitoringController(bpmnMonitoringService)
+	// BPMN AI Generator Service & Controller (AI驱动的流程生成)
+	bpmnDeploymentService := service.NewBPMNDeploymentService(client)
+	bpmnAIGeneratorService := service.NewBPMNAIGeneratorService(llmGateway, bpmnDeploymentService)
+	bpmnAIGeneratorController := controller.NewBPMNAIGeneratorController(bpmnAIGeneratorService)
 
 	// A2UI Ticket Controller (AI-driven UI表单)
 	a2uiTicketService := service.NewA2UITicketService(nil)
@@ -324,9 +339,9 @@ func NewApplication() *Application {
 	knownErrorHandler := known_error.NewHandler(client, sugar)
 
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
-	connectorManager := connector.NewManager(connector.Default(), sugar)
-	connectorMarket := marketplace.New()
-	connectorController := controller.NewConnectorController(connectorManager, connector.Default(), connectorMarket, sugar)
+	// Feishu 连接器控制器
+	feishuController := controller.NewFeishuController(connectorManager, ticketService, sugar)
+
 
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)
@@ -519,6 +534,7 @@ func NewApplication() *Application {
 		BPMNProcessTriggerController:    bpmnProcessTriggerController,
 		BPMNDashboardController:         bpmnDashboardController,
 		BPMNMonitoringController:        bpmnMonitoringController,
+		BPMNAIGeneratorController:         bpmnAIGeneratorController,
 		A2UITicketController:            a2uiTicketController,
 		CMDBController:                  cmdbController,
 
@@ -578,6 +594,8 @@ func NewApplication() *Application {
 
 		// Connector Controller
 		ConnectorController:   connectorController,
+		FeishuController:   feishuController,
+
 		MarketplaceController: marketplaceCtrl,
 
 		// WebSocket Service

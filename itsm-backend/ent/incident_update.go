@@ -124,6 +124,34 @@ func (_u *IncidentUpdate) SetNillableSeverity(v *string) *IncidentUpdate {
 	return _u
 }
 
+// SetImpact sets the "impact" field.
+func (_u *IncidentUpdate) SetImpact(v string) *IncidentUpdate {
+	_u.mutation.SetImpact(v)
+	return _u
+}
+
+// SetNillableImpact sets the "impact" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableImpact(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetImpact(*v)
+	}
+	return _u
+}
+
+// SetUrgency sets the "urgency" field.
+func (_u *IncidentUpdate) SetUrgency(v string) *IncidentUpdate {
+	_u.mutation.SetUrgency(v)
+	return _u
+}
+
+// SetNillableUrgency sets the "urgency" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableUrgency(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetUrgency(*v)
+	}
+	return _u
+}
+
 // SetIncidentNumber sets the "incident_number" field.
 func (_u *IncidentUpdate) SetIncidentNumber(v string) *IncidentUpdate {
 	_u.mutation.SetIncidentNumber(v)
@@ -806,6 +834,21 @@ func (_u *IncidentUpdate) check() error {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Incident.title": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Priority(); ok {
+		if err := incident.PriorityValidator(v); err != nil {
+			return &ValidationError{Name: "priority", err: fmt.Errorf(`ent: validator failed for field "Incident.priority": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Impact(); ok {
+		if err := incident.ImpactValidator(v); err != nil {
+			return &ValidationError{Name: "impact", err: fmt.Errorf(`ent: validator failed for field "Incident.impact": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Urgency(); ok {
+		if err := incident.UrgencyValidator(v); err != nil {
+			return &ValidationError{Name: "urgency", err: fmt.Errorf(`ent: validator failed for field "Incident.urgency": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.IncidentNumber(); ok {
 		if err := incident.IncidentNumberValidator(v); err != nil {
 			return &ValidationError{Name: "incident_number", err: fmt.Errorf(`ent: validator failed for field "Incident.incident_number": %w`, err)}
@@ -861,6 +904,12 @@ func (_u *IncidentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(incident.FieldSeverity, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Impact(); ok {
+		_spec.SetField(incident.FieldImpact, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Urgency(); ok {
+		_spec.SetField(incident.FieldUrgency, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.IncidentNumber(); ok {
 		_spec.SetField(incident.FieldIncidentNumber, field.TypeString, value)
@@ -1405,6 +1454,34 @@ func (_u *IncidentUpdateOne) SetSeverity(v string) *IncidentUpdateOne {
 func (_u *IncidentUpdateOne) SetNillableSeverity(v *string) *IncidentUpdateOne {
 	if v != nil {
 		_u.SetSeverity(*v)
+	}
+	return _u
+}
+
+// SetImpact sets the "impact" field.
+func (_u *IncidentUpdateOne) SetImpact(v string) *IncidentUpdateOne {
+	_u.mutation.SetImpact(v)
+	return _u
+}
+
+// SetNillableImpact sets the "impact" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableImpact(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetImpact(*v)
+	}
+	return _u
+}
+
+// SetUrgency sets the "urgency" field.
+func (_u *IncidentUpdateOne) SetUrgency(v string) *IncidentUpdateOne {
+	_u.mutation.SetUrgency(v)
+	return _u
+}
+
+// SetNillableUrgency sets the "urgency" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableUrgency(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetUrgency(*v)
 	}
 	return _u
 }
@@ -2104,6 +2181,21 @@ func (_u *IncidentUpdateOne) check() error {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Incident.title": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Priority(); ok {
+		if err := incident.PriorityValidator(v); err != nil {
+			return &ValidationError{Name: "priority", err: fmt.Errorf(`ent: validator failed for field "Incident.priority": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Impact(); ok {
+		if err := incident.ImpactValidator(v); err != nil {
+			return &ValidationError{Name: "impact", err: fmt.Errorf(`ent: validator failed for field "Incident.impact": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Urgency(); ok {
+		if err := incident.UrgencyValidator(v); err != nil {
+			return &ValidationError{Name: "urgency", err: fmt.Errorf(`ent: validator failed for field "Incident.urgency": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.IncidentNumber(); ok {
 		if err := incident.IncidentNumberValidator(v); err != nil {
 			return &ValidationError{Name: "incident_number", err: fmt.Errorf(`ent: validator failed for field "Incident.incident_number": %w`, err)}
@@ -2176,6 +2268,12 @@ func (_u *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err 
 	}
 	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(incident.FieldSeverity, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Impact(); ok {
+		_spec.SetField(incident.FieldImpact, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Urgency(); ok {
+		_spec.SetField(incident.FieldUrgency, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.IncidentNumber(); ok {
 		_spec.SetField(incident.FieldIncidentNumber, field.TypeString, value)

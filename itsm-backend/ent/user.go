@@ -33,6 +33,8 @@ type User struct {
 	DepartmentID int `json:"department_id,omitempty"`
 	// 电话
 	Phone string `json:"phone,omitempty"`
+	// 飞书用户OpenID
+	FeishuOpenID string `json:"feishu_open_id,omitempty"`
 	// 密码哈希
 	PasswordHash string `json:"password_hash,omitempty"`
 	// 是否激活
@@ -61,6 +63,10 @@ type UserEdges struct {
 	DepartmentRef *Department `json:"department_ref,omitempty"`
 	// Tenant holds the value of the tenant edge.
 	Tenant *Tenant `json:"tenant,omitempty"`
+	// 用户提交的工单
+	Tickets []*Ticket `json:"tickets,omitempty"`
+	// 分配给用户的工单
+	AssignedTickets []*Ticket `json:"assigned_tickets,omitempty"`
 	// 工单评论
 	TicketComments []*TicketComment `json:"ticket_comments,omitempty"`
 	// 工单附件
@@ -85,7 +91,7 @@ type UserEdges struct {
 	PirReviews []*ChangePIR `json:"pir_reviews,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [13]bool
+	loadedTypes [15]bool
 }
 
 // DepartmentRefOrErr returns the DepartmentRef value or an error if the edge
@@ -110,10 +116,28 @@ func (e UserEdges) TenantOrErr() (*Tenant, error) {
 	return nil, &NotLoadedError{edge: "tenant"}
 }
 
+// TicketsOrErr returns the Tickets value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) TicketsOrErr() ([]*Ticket, error) {
+	if e.loadedTypes[2] {
+		return e.Tickets, nil
+	}
+	return nil, &NotLoadedError{edge: "tickets"}
+}
+
+// AssignedTicketsOrErr returns the AssignedTickets value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AssignedTicketsOrErr() ([]*Ticket, error) {
+	if e.loadedTypes[3] {
+		return e.AssignedTickets, nil
+	}
+	return nil, &NotLoadedError{edge: "assigned_tickets"}
+}
+
 // TicketCommentsOrErr returns the TicketComments value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) TicketCommentsOrErr() ([]*TicketComment, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[4] {
 		return e.TicketComments, nil
 	}
 	return nil, &NotLoadedError{edge: "ticket_comments"}
@@ -122,7 +146,7 @@ func (e UserEdges) TicketCommentsOrErr() ([]*TicketComment, error) {
 // TicketAttachmentsOrErr returns the TicketAttachments value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) TicketAttachmentsOrErr() ([]*TicketAttachment, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[5] {
 		return e.TicketAttachments, nil
 	}
 	return nil, &NotLoadedError{edge: "ticket_attachments"}
@@ -131,7 +155,7 @@ func (e UserEdges) TicketAttachmentsOrErr() ([]*TicketAttachment, error) {
 // TicketNotificationsOrErr returns the TicketNotifications value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) TicketNotificationsOrErr() ([]*TicketNotification, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[6] {
 		return e.TicketNotifications, nil
 	}
 	return nil, &NotLoadedError{edge: "ticket_notifications"}
@@ -140,7 +164,7 @@ func (e UserEdges) TicketNotificationsOrErr() ([]*TicketNotification, error) {
 // NotificationPreferencesOrErr returns the NotificationPreferences value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) NotificationPreferencesOrErr() ([]*NotificationPreference, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[7] {
 		return e.NotificationPreferences, nil
 	}
 	return nil, &NotLoadedError{edge: "notification_preferences"}
@@ -149,7 +173,7 @@ func (e UserEdges) NotificationPreferencesOrErr() ([]*NotificationPreference, er
 // RolesOrErr returns the Roles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[8] {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
@@ -158,7 +182,7 @@ func (e UserEdges) RolesOrErr() ([]*Role, error) {
 // VersionChangelogsOrErr returns the VersionChangelogs value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) VersionChangelogsOrErr() ([]*ProcessVersionChangelog, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[9] {
 		return e.VersionChangelogs, nil
 	}
 	return nil, &NotLoadedError{edge: "version_changelogs"}
@@ -167,7 +191,7 @@ func (e UserEdges) VersionChangelogsOrErr() ([]*ProcessVersionChangelog, error) 
 // GroupsOrErr returns the Groups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) GroupsOrErr() ([]*Group, error) {
-	if e.loadedTypes[8] {
+	if e.loadedTypes[10] {
 		return e.Groups, nil
 	}
 	return nil, &NotLoadedError{edge: "groups"}
@@ -176,7 +200,7 @@ func (e UserEdges) GroupsOrErr() ([]*Group, error) {
 // MspAllocationsOrErr returns the MspAllocations value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) MspAllocationsOrErr() ([]*MSPAllocation, error) {
-	if e.loadedTypes[9] {
+	if e.loadedTypes[11] {
 		return e.MspAllocations, nil
 	}
 	return nil, &NotLoadedError{edge: "msp_allocations"}
@@ -185,7 +209,7 @@ func (e UserEdges) MspAllocationsOrErr() ([]*MSPAllocation, error) {
 // ArticleSessionsOrErr returns the ArticleSessions value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ArticleSessionsOrErr() ([]*KnowledgeArticleSession, error) {
-	if e.loadedTypes[10] {
+	if e.loadedTypes[12] {
 		return e.ArticleSessions, nil
 	}
 	return nil, &NotLoadedError{edge: "article_sessions"}
@@ -194,7 +218,7 @@ func (e UserEdges) ArticleSessionsOrErr() ([]*KnowledgeArticleSession, error) {
 // ArticleParticipationsOrErr returns the ArticleParticipations value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ArticleParticipationsOrErr() ([]*KnowledgeArticleParticipant, error) {
-	if e.loadedTypes[11] {
+	if e.loadedTypes[13] {
 		return e.ArticleParticipations, nil
 	}
 	return nil, &NotLoadedError{edge: "article_participations"}
@@ -203,7 +227,7 @@ func (e UserEdges) ArticleParticipationsOrErr() ([]*KnowledgeArticleParticipant,
 // PirReviewsOrErr returns the PirReviews value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) PirReviewsOrErr() ([]*ChangePIR, error) {
-	if e.loadedTypes[12] {
+	if e.loadedTypes[14] {
 		return e.PirReviews, nil
 	}
 	return nil, &NotLoadedError{edge: "pir_reviews"}
@@ -218,7 +242,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case user.FieldID, user.FieldDepartmentID, user.FieldTenantID, user.FieldAssignedByMspID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldUsername, user.FieldEmail, user.FieldName, user.FieldRole, user.FieldDepartment, user.FieldPhone, user.FieldPasswordHash, user.FieldMspRole:
+		case user.FieldUsername, user.FieldEmail, user.FieldName, user.FieldRole, user.FieldDepartment, user.FieldPhone, user.FieldFeishuOpenID, user.FieldPasswordHash, user.FieldMspRole:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -288,6 +312,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field phone", values[i])
 			} else if value.Valid {
 				_m.Phone = value.String
+			}
+		case user.FieldFeishuOpenID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field feishu_open_id", values[i])
+			} else if value.Valid {
+				_m.FeishuOpenID = value.String
 			}
 		case user.FieldPasswordHash:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -366,6 +396,16 @@ func (_m *User) QueryDepartmentRef() *DepartmentQuery {
 // QueryTenant queries the "tenant" edge of the User entity.
 func (_m *User) QueryTenant() *TenantQuery {
 	return NewUserClient(_m.config).QueryTenant(_m)
+}
+
+// QueryTickets queries the "tickets" edge of the User entity.
+func (_m *User) QueryTickets() *TicketQuery {
+	return NewUserClient(_m.config).QueryTickets(_m)
+}
+
+// QueryAssignedTickets queries the "assigned_tickets" edge of the User entity.
+func (_m *User) QueryAssignedTickets() *TicketQuery {
+	return NewUserClient(_m.config).QueryAssignedTickets(_m)
 }
 
 // QueryTicketComments queries the "ticket_comments" edge of the User entity.
@@ -466,6 +506,9 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("phone=")
 	builder.WriteString(_m.Phone)
+	builder.WriteString(", ")
+	builder.WriteString("feishu_open_id=")
+	builder.WriteString(_m.FeishuOpenID)
 	builder.WriteString(", ")
 	builder.WriteString("password_hash=")
 	builder.WriteString(_m.PasswordHash)

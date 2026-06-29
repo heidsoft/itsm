@@ -4,9 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/connector"
+	"itsm-backend/dto"
+	"itsm-backend/ent"
+	"itsm-backend/ent/feishuticketsync"
+	"itsm-backend/ent/user"
+	"itsm-backend/ent/ticket"
 )
 
 // Feishu 飞书连接器实现
@@ -51,6 +58,8 @@ func (f *Feishu) Manifest() connector.Manifest {
 			connector.CapSendCard,
 			connector.CapReplyMessage,
 			connector.CapCreateTicket,
+			connector.CapUpdateTicket,
+			connector.CapSyncAssets,
 		},
 		Tags:     []string{"im", "feishu", "lark", "china"},
 		Homepage: "https://open.feishu.cn",
@@ -190,10 +199,339 @@ func (f *Feishu) ParseInbound(body []byte) (*connector.InboundMessage, error) {
 			}
 		}
 		// 应用机器人被加入/移除
+		// Task events
+		if evType == "task.created" || evType == "task.updated" || evType == "task.deleted" {
+			msg.Type = "task_event"
+			msg.Content = evType
+			msg.Extras["task_data"] = base.Event
+		}
 		if evType == "im.chat.member.bot.added_v1" || evType == "im.chat.member.bot.deleted_v1" {
 			msg.Type = evType
 		}
 		return msg, nil
 	}
 	return nil, fmt.Errorf("feishu: unknown event type=%s", base.Type)
+}
+
+// SyncTicketToFeishu syncs an ITSM ticket to Feishu as a task (creates or updates)
+func (f *Feishu) SyncTicketToFeishu(ctx context.Context, tx *ent.Tx, ticket *ent.Ticket) (*FeishuTask, error) {
+	if f.client == nil {
+		return nil, fmt.Errorf("feishu: connector not initialized")
+	}
+
+	// Check if there's an existing sync mapping
+	syncRecord, err := tx.FeishuTicketSync.Query().
+		Where(feishuticketsync.TenantID(ticket.TenantID), feishuticketsync.TicketID(ticket.ID)).
+		Only(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		return nil, fmt.Errorf("feishu: failed to query sync record: %w", err)
+	}
+
+	// Map ticket fields to Feishu task
+	feishuTask := &FeishuTask{
+		Name:        ticket.Title,
+		Description: ticket.Description,
+		StartTime:   ticket.CreatedAt.Unix(),
+		// Map priority: ITSM low/medium/high/critical -> Feishu low/medium/high/urgent
+		Priority: mapPriorityToFeishu(ticket.Priority),
+		// Map status: ITSM open/in_progress/resolved/closed -> Feishu not_started/in_progress/completed/completed
+		Status: mapStatusToFeishu(ticket.Status),
+	}
+
+	var task *FeishuTask
+	if syncRecord != nil {
+		// Update existing task
+		task, err = f.client.UpdateTask(ctx, syncRecord.FeishuTaskGUID, feishuTask)
+		if err != nil {
+			// Update sync record with error
+			_, _ = syncRecord.Update().
+				SetSyncStatus("failed").
+				SetErrorMessage(err.Error()).
+				Save(ctx)
+			return nil, fmt.Errorf("feishu: failed to update task: %w", err)
+		}
+		// Update sync record
+		_, err = syncRecord.Update().
+			SetSyncStatus("synced").
+			SetLastSyncDirection("itsm_to_feishu").
+			SetLastSyncedAt(time.Now()).
+			ClearErrorMessage().
+			Save(ctx)
+	} else {
+		// Create new task
+		task, err = f.client.CreateTask(ctx, feishuTask)
+		if err != nil {
+			return nil, fmt.Errorf("feishu: failed to create task: %w", err)
+		}
+		// Create sync record
+		_, err = tx.FeishuTicketSync.Create().
+			SetTenantID(ticket.TenantID).
+			SetTicketID(ticket.ID).
+			SetFeishuTaskID(task.GUID). // Wait, is GUID the same as ID? Let's check Feishu API: yes, task GUID is the unique ID
+			SetFeishuTaskGUID(task.GUID).
+			SetSyncStatus("synced").
+			SetLastSyncDirection("itsm_to_feishu").
+			SetLastSyncedAt(time.Now()).
+			Save(ctx)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("feishu: failed to save sync record: %w", err)
+	}
+
+	return task, nil
+}
+
+// SyncFeishuTaskToTicket syncs a Feishu task to ITSM as a ticket (creates or updates)
+func (f *Feishu) SyncFeishuTaskToTicket(ctx context.Context, tx *ent.Tx, feishuTask *FeishuTask) (*ent.Ticket, error) {
+	if f.client == nil {
+		return nil, fmt.Errorf("feishu: connector not initialized")
+	}
+
+	// Check if there's an existing sync mapping
+	syncRecord, err := tx.FeishuTicketSync.Query().
+		Where(feishuticketsync.TenantID(f.cfg.TenantID), feishuticketsync.FeishuTaskID(feishuTask.GUID)).
+		Only(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		return nil, fmt.Errorf("feishu: failed to query sync record: %w", err)
+	}
+
+	// Map Feishu task fields to ITSM ticket
+	ticketUpdate := dto.UpdateTicketRequest{
+		Title:       feishuTask.Name,
+		Description: feishuTask.Description,
+		Priority:    mapPriorityFromFeishu(feishuTask.Priority),
+		Status:      mapStatusFromFeishu(feishuTask.Status),
+		// Set requester: need to map Feishu creator ID to ITSM user ID
+		// RequesterID: userID,
+	}
+
+	var ticket *ent.Ticket
+	if syncRecord != nil {
+		// Update existing ticket
+		ticket, err = tx.Ticket.Get(ctx, syncRecord.TicketID)
+		if err != nil {
+			return nil, fmt.Errorf("feishu: failed to get ticket: %w", err)
+		}
+
+		update := ticket.Update()
+		if ticketUpdate.Title != "" {
+			update.SetTitle(ticketUpdate.Title)
+		}
+		if ticketUpdate.Description != "" {
+			update.SetDescription(ticketUpdate.Description)
+		}
+		if ticketUpdate.Priority != "" {
+			update.SetPriority(ticketUpdate.Priority)
+		}
+		if ticketUpdate.Status != "" {
+			update.SetStatus(ticketUpdate.Status)
+		}
+
+		ticket, err = update.Save(ctx)
+		if err != nil {
+			// Update sync record with error
+			_, _ = syncRecord.Update().
+				SetSyncStatus("failed").
+				SetErrorMessage(err.Error()).
+				Save(ctx)
+			return nil, fmt.Errorf("feishu: failed to update ticket: %w", err)
+		}
+
+		// Update sync record
+		_, err = syncRecord.Update().
+			SetSyncStatus("synced").
+			SetLastSyncDirection("feishu_to_itsm").
+			SetLastSyncedAt(time.Now()).
+			ClearErrorMessage().
+			Save(ctx)
+	} else {
+		// Create new ticket
+		createReq := dto.CreateTicketRequest{
+			Title:       feishuTask.Name,
+			Description: feishuTask.Description,
+			Priority:    mapPriorityFromFeishu(feishuTask.Priority),
+			Type:        "ticket",
+			// Set requester: need to map Feishu creator ID to ITSM user ID
+			// RequesterID: userID,
+		}
+
+		// Create ticket using the same logic as ticket service
+		// TODO: Inject ticket service or reuse create logic
+		// For now, we'll create it directly
+		create := tx.Ticket.Create().
+			SetTitle(createReq.Title).
+			SetDescription(createReq.Description).
+			SetPriority(createReq.Priority).
+			SetType(createReq.Type).
+			SetStatus(mapStatusFromFeishu(feishuTask.Status)).
+			SetTenantID(f.cfg.TenantID).
+	// 映射飞书创建人到ITSM用户
+	requesterID := 1 // 默认管理员
+	if feishuTask.CreatorID != "" {
+		user, err := tx.User.Query().
+			Where(user.FeishuOpenID(feishuTask.CreatorID)).
+			Where(user.TenantID(f.cfg.TenantID)).
+			Only(ctx)
+		if err == nil {
+			requesterID = user.ID
+		}
+	}
+	create := tx.Ticket.Create().
+		SetTitle(createReq.Title).
+		SetDescription(createReq.Description).
+		SetPriority(createReq.Priority).
+		SetType(createReq.Type).
+		SetStatus(mapStatusFromFeishu(feishuTask.Status)).
+		SetTenantID(f.cfg.TenantID).
+		SetRequesterID(requesterID)
+
+		if createReq.AssigneeID > 0 {
+			create.SetAssigneeID(createReq.AssigneeID)
+		}
+		// Generate ticket number (same logic as ticket service)
+		ticketNumber := fmt.Sprintf("TK-%d-%s", f.cfg.TenantID, time.Now().Format("20060102150405"))
+		create.SetTicketNumber(ticketNumber)
+
+		ticket, err = create.Save(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("feishu: failed to create ticket: %w", err)
+		}
+
+		// Create sync record
+		_, err = tx.FeishuTicketSync.Create().
+			SetTenantID(f.cfg.TenantID).
+			SetTicketID(ticket.ID).
+			SetFeishuTaskID(feishuTask.GUID).
+			SetFeishuTaskGUID(feishuTask.GUID).
+			SetSyncStatus("synced").
+			SetLastSyncDirection("feishu_to_itsm").
+			SetLastSyncedAt(time.Now()).
+			Save(ctx)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("feishu: failed to save sync record: %w", err)
+	}
+
+	return ticket, nil
+}
+
+// HandleTaskEvent handles Feishu task webhook events
+func (f *Feishu) HandleTaskEvent(ctx context.Context, eventType string, eventData map[string]interface{}) error {
+	if f.client == nil {
+		return fmt.Errorf("feishu: connector not initialized")
+	}
+
+	// Extract task GUID from event
+	taskGUID, ok := eventData["task_guid"].(string)
+	if !ok {
+		return fmt.Errorf("feishu: missing task_guid in event")
+	}
+
+	// Get the latest task data from Feishu
+	task, err := f.client.GetTask(ctx, taskGUID)
+	if err != nil {
+		return fmt.Errorf("feishu: failed to get task for event: %w", err)
+	}
+
+	// Start transaction
+	tx, err := ent.FromContext(ctx).Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("feishu: failed to start transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	switch eventType {
+	case "task.created":
+		// Sync new task to ITSM
+		_, err = f.SyncFeishuTaskToTicket(ctx, tx, task)
+	case "task.updated":
+		// Sync updated task to ITSM
+		_, err = f.SyncFeishuTaskToTicket(ctx, tx, task)
+	case "task.deleted":
+		// Handle task deletion: mark ticket as closed or delete sync record?
+		// For now, we'll just delete the sync record
+		syncRecord, err := tx.FeishuTicketSync.Query().
+			Where(feishuticketsync.TenantID(f.cfg.TenantID), feishuticketsync.FeishuTaskID(taskGUID)).
+			Only(ctx)
+		if err == nil {
+			err = tx.FeishuTicketSync.DeleteOne(syncRecord).Exec(ctx)
+		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("feishu: failed to handle task event: %w", err)
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("feishu: failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+// mapPriorityToFeishu maps ITSM ticket priority to Feishu task priority
+func mapPriorityToFeishu(itsmPriority string) string {
+	switch strings.ToLower(itsmPriority) {
+	case "low":
+		return "low"
+	case "medium":
+		return "medium"
+	case "high":
+		return "high"
+	case "critical":
+		return "urgent"
+	default:
+		return "medium"
+	}
+}
+
+// mapPriorityFromFeishu maps Feishu task priority to ITSM ticket priority
+func mapPriorityFromFeishu(feishuPriority string) string {
+	switch strings.ToLower(feishuPriority) {
+	case "low":
+		return "low"
+	case "medium":
+		return "medium"
+	case "high":
+		return "high"
+	case "urgent":
+		return "critical"
+	default:
+		return "medium"
+	}
+}
+
+// mapStatusToFeishu maps ITSM ticket status to Feishu task status
+func mapStatusToFeishu(itsmStatus string) string {
+	switch strings.ToLower(itsmStatus) {
+	case "open":
+		return "not_started"
+	case "in_progress":
+		return "in_progress"
+	case "resolved", "closed":
+		return "completed"
+	case "canceled":
+		return "canceled"
+	default:
+		return "not_started"
+	}
+}
+
+// mapStatusFromFeishu maps Feishu task status to ITSM ticket status
+func mapStatusFromFeishu(feishuStatus string) string {
+	switch strings.ToLower(feishuStatus) {
+	case "not_started":
+		return "open"
+	case "in_progress":
+		return "in_progress"
+	case "completed":
+		return "resolved"
+	case "canceled":
+		return "closed"
+	default:
+		return "open"
+	}
 }

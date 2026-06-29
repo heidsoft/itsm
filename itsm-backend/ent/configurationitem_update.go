@@ -7,9 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/cirelationship"
+	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/configurationitemhistory"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/ticket"
@@ -44,6 +46,26 @@ func (_u *ConfigurationItemUpdate) SetNillableName(v *string) *ConfigurationItem
 	if v != nil {
 		_u.SetName(*v)
 	}
+	return _u
+}
+
+// SetDescription sets the "description" field.
+func (_u *ConfigurationItemUpdate) SetDescription(v string) *ConfigurationItemUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableDescription(v *string) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (_u *ConfigurationItemUpdate) ClearDescription() *ConfigurationItemUpdate {
+	_u.mutation.ClearDescription()
 	return _u
 }
 
@@ -647,6 +669,36 @@ func (_u *ConfigurationItemUpdate) AddOutgoingRelations(v ...*CIRelationship) *C
 	return _u.AddOutgoingRelationIDs(ids...)
 }
 
+// AddHistoryIDs adds the "history" edge to the ConfigurationItemHistory entity by IDs.
+func (_u *ConfigurationItemUpdate) AddHistoryIDs(ids ...int) *ConfigurationItemUpdate {
+	_u.mutation.AddHistoryIDs(ids...)
+	return _u
+}
+
+// AddHistory adds the "history" edges to the ConfigurationItemHistory entity.
+func (_u *ConfigurationItemUpdate) AddHistory(v ...*ConfigurationItemHistory) *ConfigurationItemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddHistoryIDs(ids...)
+}
+
+// AddTagIDs adds the "tags" edge to the CITag entity by IDs.
+func (_u *ConfigurationItemUpdate) AddTagIDs(ids ...int) *ConfigurationItemUpdate {
+	_u.mutation.AddTagIDs(ids...)
+	return _u
+}
+
+// AddTags adds the "tags" edges to the CITag entity.
+func (_u *ConfigurationItemUpdate) AddTags(v ...*CITag) *ConfigurationItemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTagIDs(ids...)
+}
+
 // AddIncomingRelationIDs adds the "incoming_relations" edge to the CIRelationship entity by IDs.
 func (_u *ConfigurationItemUpdate) AddIncomingRelationIDs(ids ...int) *ConfigurationItemUpdate {
 	_u.mutation.AddIncomingRelationIDs(ids...)
@@ -740,6 +792,48 @@ func (_u *ConfigurationItemUpdate) RemoveOutgoingRelations(v ...*CIRelationship)
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveOutgoingRelationIDs(ids...)
+}
+
+// ClearHistory clears all "history" edges to the ConfigurationItemHistory entity.
+func (_u *ConfigurationItemUpdate) ClearHistory() *ConfigurationItemUpdate {
+	_u.mutation.ClearHistory()
+	return _u
+}
+
+// RemoveHistoryIDs removes the "history" edge to ConfigurationItemHistory entities by IDs.
+func (_u *ConfigurationItemUpdate) RemoveHistoryIDs(ids ...int) *ConfigurationItemUpdate {
+	_u.mutation.RemoveHistoryIDs(ids...)
+	return _u
+}
+
+// RemoveHistory removes "history" edges to ConfigurationItemHistory entities.
+func (_u *ConfigurationItemUpdate) RemoveHistory(v ...*ConfigurationItemHistory) *ConfigurationItemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveHistoryIDs(ids...)
+}
+
+// ClearTags clears all "tags" edges to the CITag entity.
+func (_u *ConfigurationItemUpdate) ClearTags() *ConfigurationItemUpdate {
+	_u.mutation.ClearTags()
+	return _u
+}
+
+// RemoveTagIDs removes the "tags" edge to CITag entities by IDs.
+func (_u *ConfigurationItemUpdate) RemoveTagIDs(ids ...int) *ConfigurationItemUpdate {
+	_u.mutation.RemoveTagIDs(ids...)
+	return _u
+}
+
+// RemoveTags removes "tags" edges to CITag entities.
+func (_u *ConfigurationItemUpdate) RemoveTags(v ...*CITag) *ConfigurationItemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTagIDs(ids...)
 }
 
 // ClearIncomingRelations clears all "incoming_relations" edges to the CIRelationship entity.
@@ -836,6 +930,12 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(configurationitem.FieldName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(configurationitem.FieldDescription, field.TypeString, value)
+	}
+	if _u.mutation.DescriptionCleared() {
+		_spec.ClearField(configurationitem.FieldDescription, field.TypeString)
 	}
 	if value, ok := _u.mutation.CiType(); ok {
 		_spec.SetField(configurationitem.FieldCiType, field.TypeString, value)
@@ -1053,10 +1153,10 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   configurationitem.TicketsTable,
-			Columns: configurationitem.TicketsPrimaryKey,
+			Columns: []string{configurationitem.TicketsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
@@ -1066,10 +1166,10 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   configurationitem.TicketsTable,
-			Columns: configurationitem.TicketsPrimaryKey,
+			Columns: []string{configurationitem.TicketsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
@@ -1082,10 +1182,10 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   configurationitem.TicketsTable,
-			Columns: configurationitem.TicketsPrimaryKey,
+			Columns: []string{configurationitem.TicketsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
@@ -1186,6 +1286,96 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.HistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   configurationitem.HistoryTable,
+			Columns: []string{configurationitem.HistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitemhistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedHistoryIDs(); len(nodes) > 0 && !_u.mutation.HistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   configurationitem.HistoryTable,
+			Columns: []string{configurationitem.HistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitemhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.HistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   configurationitem.HistoryTable,
+			Columns: []string{configurationitem.HistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitemhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   configurationitem.TagsTable,
+			Columns: configurationitem.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citag.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTagsIDs(); len(nodes) > 0 && !_u.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   configurationitem.TagsTable,
+			Columns: configurationitem.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citag.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   configurationitem.TagsTable,
+			Columns: configurationitem.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citag.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.IncomingRelationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1262,6 +1452,26 @@ func (_u *ConfigurationItemUpdateOne) SetNillableName(v *string) *ConfigurationI
 	if v != nil {
 		_u.SetName(*v)
 	}
+	return _u
+}
+
+// SetDescription sets the "description" field.
+func (_u *ConfigurationItemUpdateOne) SetDescription(v string) *ConfigurationItemUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableDescription(v *string) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (_u *ConfigurationItemUpdateOne) ClearDescription() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearDescription()
 	return _u
 }
 
@@ -1865,6 +2075,36 @@ func (_u *ConfigurationItemUpdateOne) AddOutgoingRelations(v ...*CIRelationship)
 	return _u.AddOutgoingRelationIDs(ids...)
 }
 
+// AddHistoryIDs adds the "history" edge to the ConfigurationItemHistory entity by IDs.
+func (_u *ConfigurationItemUpdateOne) AddHistoryIDs(ids ...int) *ConfigurationItemUpdateOne {
+	_u.mutation.AddHistoryIDs(ids...)
+	return _u
+}
+
+// AddHistory adds the "history" edges to the ConfigurationItemHistory entity.
+func (_u *ConfigurationItemUpdateOne) AddHistory(v ...*ConfigurationItemHistory) *ConfigurationItemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddHistoryIDs(ids...)
+}
+
+// AddTagIDs adds the "tags" edge to the CITag entity by IDs.
+func (_u *ConfigurationItemUpdateOne) AddTagIDs(ids ...int) *ConfigurationItemUpdateOne {
+	_u.mutation.AddTagIDs(ids...)
+	return _u
+}
+
+// AddTags adds the "tags" edges to the CITag entity.
+func (_u *ConfigurationItemUpdateOne) AddTags(v ...*CITag) *ConfigurationItemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTagIDs(ids...)
+}
+
 // AddIncomingRelationIDs adds the "incoming_relations" edge to the CIRelationship entity by IDs.
 func (_u *ConfigurationItemUpdateOne) AddIncomingRelationIDs(ids ...int) *ConfigurationItemUpdateOne {
 	_u.mutation.AddIncomingRelationIDs(ids...)
@@ -1958,6 +2198,48 @@ func (_u *ConfigurationItemUpdateOne) RemoveOutgoingRelations(v ...*CIRelationsh
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveOutgoingRelationIDs(ids...)
+}
+
+// ClearHistory clears all "history" edges to the ConfigurationItemHistory entity.
+func (_u *ConfigurationItemUpdateOne) ClearHistory() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearHistory()
+	return _u
+}
+
+// RemoveHistoryIDs removes the "history" edge to ConfigurationItemHistory entities by IDs.
+func (_u *ConfigurationItemUpdateOne) RemoveHistoryIDs(ids ...int) *ConfigurationItemUpdateOne {
+	_u.mutation.RemoveHistoryIDs(ids...)
+	return _u
+}
+
+// RemoveHistory removes "history" edges to ConfigurationItemHistory entities.
+func (_u *ConfigurationItemUpdateOne) RemoveHistory(v ...*ConfigurationItemHistory) *ConfigurationItemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveHistoryIDs(ids...)
+}
+
+// ClearTags clears all "tags" edges to the CITag entity.
+func (_u *ConfigurationItemUpdateOne) ClearTags() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearTags()
+	return _u
+}
+
+// RemoveTagIDs removes the "tags" edge to CITag entities by IDs.
+func (_u *ConfigurationItemUpdateOne) RemoveTagIDs(ids ...int) *ConfigurationItemUpdateOne {
+	_u.mutation.RemoveTagIDs(ids...)
+	return _u
+}
+
+// RemoveTags removes "tags" edges to CITag entities.
+func (_u *ConfigurationItemUpdateOne) RemoveTags(v ...*CITag) *ConfigurationItemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTagIDs(ids...)
 }
 
 // ClearIncomingRelations clears all "incoming_relations" edges to the CIRelationship entity.
@@ -2084,6 +2366,12 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(configurationitem.FieldName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(configurationitem.FieldDescription, field.TypeString, value)
+	}
+	if _u.mutation.DescriptionCleared() {
+		_spec.ClearField(configurationitem.FieldDescription, field.TypeString)
 	}
 	if value, ok := _u.mutation.CiType(); ok {
 		_spec.SetField(configurationitem.FieldCiType, field.TypeString, value)
@@ -2301,10 +2589,10 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 	}
 	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   configurationitem.TicketsTable,
-			Columns: configurationitem.TicketsPrimaryKey,
+			Columns: []string{configurationitem.TicketsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
@@ -2314,10 +2602,10 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 	}
 	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   configurationitem.TicketsTable,
-			Columns: configurationitem.TicketsPrimaryKey,
+			Columns: []string{configurationitem.TicketsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
@@ -2330,10 +2618,10 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 	}
 	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   configurationitem.TicketsTable,
-			Columns: configurationitem.TicketsPrimaryKey,
+			Columns: []string{configurationitem.TicketsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
@@ -2427,6 +2715,96 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.HistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   configurationitem.HistoryTable,
+			Columns: []string{configurationitem.HistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitemhistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedHistoryIDs(); len(nodes) > 0 && !_u.mutation.HistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   configurationitem.HistoryTable,
+			Columns: []string{configurationitem.HistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitemhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.HistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   configurationitem.HistoryTable,
+			Columns: []string{configurationitem.HistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitemhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   configurationitem.TagsTable,
+			Columns: configurationitem.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citag.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTagsIDs(); len(nodes) > 0 && !_u.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   configurationitem.TagsTable,
+			Columns: configurationitem.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citag.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   configurationitem.TagsTable,
+			Columns: configurationitem.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citag.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

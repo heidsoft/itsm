@@ -640,26 +640,6 @@ func RequesterIDNotIn(vs ...int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldRequesterID, vs...))
 }
 
-// RequesterIDGT applies the GT predicate on the "requester_id" field.
-func RequesterIDGT(v int) predicate.Ticket {
-	return predicate.Ticket(sql.FieldGT(FieldRequesterID, v))
-}
-
-// RequesterIDGTE applies the GTE predicate on the "requester_id" field.
-func RequesterIDGTE(v int) predicate.Ticket {
-	return predicate.Ticket(sql.FieldGTE(FieldRequesterID, v))
-}
-
-// RequesterIDLT applies the LT predicate on the "requester_id" field.
-func RequesterIDLT(v int) predicate.Ticket {
-	return predicate.Ticket(sql.FieldLT(FieldRequesterID, v))
-}
-
-// RequesterIDLTE applies the LTE predicate on the "requester_id" field.
-func RequesterIDLTE(v int) predicate.Ticket {
-	return predicate.Ticket(sql.FieldLTE(FieldRequesterID, v))
-}
-
 // AssigneeIDEQ applies the EQ predicate on the "assignee_id" field.
 func AssigneeIDEQ(v int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldAssigneeID, v))
@@ -678,26 +658,6 @@ func AssigneeIDIn(vs ...int) predicate.Ticket {
 // AssigneeIDNotIn applies the NotIn predicate on the "assignee_id" field.
 func AssigneeIDNotIn(vs ...int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldAssigneeID, vs...))
-}
-
-// AssigneeIDGT applies the GT predicate on the "assignee_id" field.
-func AssigneeIDGT(v int) predicate.Ticket {
-	return predicate.Ticket(sql.FieldGT(FieldAssigneeID, v))
-}
-
-// AssigneeIDGTE applies the GTE predicate on the "assignee_id" field.
-func AssigneeIDGTE(v int) predicate.Ticket {
-	return predicate.Ticket(sql.FieldGTE(FieldAssigneeID, v))
-}
-
-// AssigneeIDLT applies the LT predicate on the "assignee_id" field.
-func AssigneeIDLT(v int) predicate.Ticket {
-	return predicate.Ticket(sql.FieldLT(FieldAssigneeID, v))
-}
-
-// AssigneeIDLTE applies the LTE predicate on the "assignee_id" field.
-func AssigneeIDLTE(v int) predicate.Ticket {
-	return predicate.Ticket(sql.FieldLTE(FieldAssigneeID, v))
 }
 
 // AssigneeIDIsNil applies the IsNil predicate on the "assignee_id" field.
@@ -770,6 +730,26 @@ func TemplateIDNotIn(vs ...int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldTemplateID, vs...))
 }
 
+// TemplateIDGT applies the GT predicate on the "template_id" field.
+func TemplateIDGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldTemplateID, v))
+}
+
+// TemplateIDGTE applies the GTE predicate on the "template_id" field.
+func TemplateIDGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldTemplateID, v))
+}
+
+// TemplateIDLT applies the LT predicate on the "template_id" field.
+func TemplateIDLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldTemplateID, v))
+}
+
+// TemplateIDLTE applies the LTE predicate on the "template_id" field.
+func TemplateIDLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldTemplateID, v))
+}
+
 // TemplateIDIsNil applies the IsNil predicate on the "template_id" field.
 func TemplateIDIsNil() predicate.Ticket {
 	return predicate.Ticket(sql.FieldIsNull(FieldTemplateID))
@@ -798,6 +778,26 @@ func CategoryIDIn(vs ...int) predicate.Ticket {
 // CategoryIDNotIn applies the NotIn predicate on the "category_id" field.
 func CategoryIDNotIn(vs ...int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldCategoryID, vs...))
+}
+
+// CategoryIDGT applies the GT predicate on the "category_id" field.
+func CategoryIDGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldCategoryID, v))
+}
+
+// CategoryIDGTE applies the GTE predicate on the "category_id" field.
+func CategoryIDGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldCategoryID, v))
+}
+
+// CategoryIDLT applies the LT predicate on the "category_id" field.
+func CategoryIDLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldCategoryID, v))
+}
+
+// CategoryIDLTE applies the LTE predicate on the "category_id" field.
+func CategoryIDLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldCategoryID, v))
 }
 
 // CategoryIDIsNil applies the IsNil predicate on the "category_id" field.
@@ -830,6 +830,26 @@ func DepartmentIDNotIn(vs ...int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldDepartmentID, vs...))
 }
 
+// DepartmentIDGT applies the GT predicate on the "department_id" field.
+func DepartmentIDGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldDepartmentID, v))
+}
+
+// DepartmentIDGTE applies the GTE predicate on the "department_id" field.
+func DepartmentIDGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldDepartmentID, v))
+}
+
+// DepartmentIDLT applies the LT predicate on the "department_id" field.
+func DepartmentIDLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldDepartmentID, v))
+}
+
+// DepartmentIDLTE applies the LTE predicate on the "department_id" field.
+func DepartmentIDLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldDepartmentID, v))
+}
+
 // DepartmentIDIsNil applies the IsNil predicate on the "department_id" field.
 func DepartmentIDIsNil() predicate.Ticket {
 	return predicate.Ticket(sql.FieldIsNull(FieldDepartmentID))
@@ -860,6 +880,26 @@ func ParentTicketIDNotIn(vs ...int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldParentTicketID, vs...))
 }
 
+// ParentTicketIDGT applies the GT predicate on the "parent_ticket_id" field.
+func ParentTicketIDGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldParentTicketID, v))
+}
+
+// ParentTicketIDGTE applies the GTE predicate on the "parent_ticket_id" field.
+func ParentTicketIDGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldParentTicketID, v))
+}
+
+// ParentTicketIDLT applies the LT predicate on the "parent_ticket_id" field.
+func ParentTicketIDLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldParentTicketID, v))
+}
+
+// ParentTicketIDLTE applies the LTE predicate on the "parent_ticket_id" field.
+func ParentTicketIDLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldParentTicketID, v))
+}
+
 // ParentTicketIDIsNil applies the IsNil predicate on the "parent_ticket_id" field.
 func ParentTicketIDIsNil() predicate.Ticket {
 	return predicate.Ticket(sql.FieldIsNull(FieldParentTicketID))
@@ -888,6 +928,26 @@ func SLADefinitionIDIn(vs ...int) predicate.Ticket {
 // SLADefinitionIDNotIn applies the NotIn predicate on the "sla_definition_id" field.
 func SLADefinitionIDNotIn(vs ...int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldSLADefinitionID, vs...))
+}
+
+// SLADefinitionIDGT applies the GT predicate on the "sla_definition_id" field.
+func SLADefinitionIDGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldSLADefinitionID, v))
+}
+
+// SLADefinitionIDGTE applies the GTE predicate on the "sla_definition_id" field.
+func SLADefinitionIDGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldSLADefinitionID, v))
+}
+
+// SLADefinitionIDLT applies the LT predicate on the "sla_definition_id" field.
+func SLADefinitionIDLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldSLADefinitionID, v))
+}
+
+// SLADefinitionIDLTE applies the LTE predicate on the "sla_definition_id" field.
+func SLADefinitionIDLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldSLADefinitionID, v))
 }
 
 // SLADefinitionIDIsNil applies the IsNil predicate on the "sla_definition_id" field.
@@ -1880,213 +1940,6 @@ func DeletedAtNotNil() predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotNull(FieldDeletedAt))
 }
 
-// HasTemplate applies the HasEdge predicate on the "template" edge.
-func HasTemplate() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TemplateTable, TemplateColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTemplateWith applies the HasEdge predicate on the "template" edge with a given conditions (other predicates).
-func HasTemplateWith(preds ...predicate.TicketTemplate) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newTemplateStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasCategory applies the HasEdge predicate on the "category" edge.
-func HasCategory() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, CategoryTable, CategoryColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasCategoryWith applies the HasEdge predicate on the "category" edge with a given conditions (other predicates).
-func HasCategoryWith(preds ...predicate.TicketCategory) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newCategoryStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasDepartment applies the HasEdge predicate on the "department" edge.
-func HasDepartment() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasDepartmentWith applies the HasEdge predicate on the "department" edge with a given conditions (other predicates).
-func HasDepartmentWith(preds ...predicate.Department) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newDepartmentStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasTags applies the HasEdge predicate on the "tags" edge.
-func HasTags() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TagsTable, TagsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTagsWith applies the HasEdge predicate on the "tags" edge with a given conditions (other predicates).
-func HasTagsWith(preds ...predicate.TicketTag) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newTagsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasRelatedTickets applies the HasEdge predicate on the "related_tickets" edge.
-func HasRelatedTickets() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, RelatedTicketsTable, RelatedTicketsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasRelatedTicketsWith applies the HasEdge predicate on the "related_tickets" edge with a given conditions (other predicates).
-func HasRelatedTicketsWith(preds ...predicate.Ticket) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newRelatedTicketsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasParentTicket applies the HasEdge predicate on the "parent_ticket" edge.
-func HasParentTicket() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ParentTicketTable, ParentTicketColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasParentTicketWith applies the HasEdge predicate on the "parent_ticket" edge with a given conditions (other predicates).
-func HasParentTicketWith(preds ...predicate.Ticket) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newParentTicketStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasWorkflowInstances applies the HasEdge predicate on the "workflow_instances" edge.
-func HasWorkflowInstances() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, WorkflowInstancesTable, WorkflowInstancesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasWorkflowInstancesWith applies the HasEdge predicate on the "workflow_instances" edge with a given conditions (other predicates).
-func HasWorkflowInstancesWith(preds ...predicate.WorkflowInstance) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newWorkflowInstancesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasSLADefinition applies the HasEdge predicate on the "sla_definition" edge.
-func HasSLADefinition() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, SLADefinitionTable, SLADefinitionColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasSLADefinitionWith applies the HasEdge predicate on the "sla_definition" edge with a given conditions (other predicates).
-func HasSLADefinitionWith(preds ...predicate.SLADefinition) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newSLADefinitionStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasSLAViolations applies the HasEdge predicate on the "sla_violations" edge.
-func HasSLAViolations() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SLAViolationsTable, SLAViolationsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasSLAViolationsWith applies the HasEdge predicate on the "sla_violations" edge with a given conditions (other predicates).
-func HasSLAViolationsWith(preds ...predicate.SLAViolation) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newSLAViolationsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasComments applies the HasEdge predicate on the "comments" edge.
 func HasComments() predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
@@ -2133,44 +1986,21 @@ func HasAttachmentsWith(preds ...predicate.TicketAttachment) predicate.Ticket {
 	})
 }
 
-// HasNotifications applies the HasEdge predicate on the "notifications" edge.
-func HasNotifications() predicate.Ticket {
+// HasTags applies the HasEdge predicate on the "tags" edge.
+func HasTags() predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, NotificationsTable, NotificationsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, TagsTable, TagsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasNotificationsWith applies the HasEdge predicate on the "notifications" edge with a given conditions (other predicates).
-func HasNotificationsWith(preds ...predicate.TicketNotification) predicate.Ticket {
+// HasTagsWith applies the HasEdge predicate on the "tags" edge with a given conditions (other predicates).
+func HasTagsWith(preds ...predicate.TicketTag) predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
-		step := newNotificationsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasSLAAlertHistory applies the HasEdge predicate on the "sla_alert_history" edge.
-func HasSLAAlertHistory() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SLAAlertHistoryTable, SLAAlertHistoryColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasSLAAlertHistoryWith applies the HasEdge predicate on the "sla_alert_history" edge with a given conditions (other predicates).
-func HasSLAAlertHistoryWith(preds ...predicate.SLAAlertHistory) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newSLAAlertHistoryStep()
+		step := newTagsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -2194,75 +2024,6 @@ func HasApprovalRecords() predicate.Ticket {
 func HasApprovalRecordsWith(preds ...predicate.ApprovalRecord) predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
 		step := newApprovalRecordsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasRootCauseAnalyses applies the HasEdge predicate on the "root_cause_analyses" edge.
-func HasRootCauseAnalyses() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, RootCauseAnalysesTable, RootCauseAnalysesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasRootCauseAnalysesWith applies the HasEdge predicate on the "root_cause_analyses" edge with a given conditions (other predicates).
-func HasRootCauseAnalysesWith(preds ...predicate.RootCauseAnalysis) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newRootCauseAnalysesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasConfigurationItems applies the HasEdge predicate on the "configuration_items" edge.
-func HasConfigurationItems() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ConfigurationItemsTable, ConfigurationItemsPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasConfigurationItemsWith applies the HasEdge predicate on the "configuration_items" edge with a given conditions (other predicates).
-func HasConfigurationItemsWith(preds ...predicate.ConfigurationItem) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newConfigurationItemsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasProblems applies the HasEdge predicate on the "problems" edge.
-func HasProblems() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ProblemsTable, ProblemsPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasProblemsWith applies the HasEdge predicate on the "problems" edge with a given conditions (other predicates).
-func HasProblemsWith(preds ...predicate.Problem) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newProblemsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -2317,6 +2078,29 @@ func HasWorkflowRecordsWith(preds ...predicate.TicketWorkflowRecord) predicate.T
 	})
 }
 
+// HasNotifications applies the HasEdge predicate on the "notifications" edge.
+func HasNotifications() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, NotificationsTable, NotificationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasNotificationsWith applies the HasEdge predicate on the "notifications" edge with a given conditions (other predicates).
+func HasNotificationsWith(preds ...predicate.TicketNotification) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newNotificationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasCcUsers applies the HasEdge predicate on the "cc_users" edge.
 func HasCcUsers() predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
@@ -2332,6 +2116,167 @@ func HasCcUsers() predicate.Ticket {
 func HasCcUsersWith(preds ...predicate.TicketCC) predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
 		step := newCcUsersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSLAViolations applies the HasEdge predicate on the "sla_violations" edge.
+func HasSLAViolations() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SLAViolationsTable, SLAViolationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSLAViolationsWith applies the HasEdge predicate on the "sla_violations" edge with a given conditions (other predicates).
+func HasSLAViolationsWith(preds ...predicate.SLAViolation) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newSLAViolationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSLAAlertHistory applies the HasEdge predicate on the "sla_alert_history" edge.
+func HasSLAAlertHistory() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SLAAlertHistoryTable, SLAAlertHistoryColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSLAAlertHistoryWith applies the HasEdge predicate on the "sla_alert_history" edge with a given conditions (other predicates).
+func HasSLAAlertHistoryWith(preds ...predicate.SLAAlertHistory) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newSLAAlertHistoryStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRootCauseAnalyses applies the HasEdge predicate on the "root_cause_analyses" edge.
+func HasRootCauseAnalyses() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RootCauseAnalysesTable, RootCauseAnalysesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRootCauseAnalysesWith applies the HasEdge predicate on the "root_cause_analyses" edge with a given conditions (other predicates).
+func HasRootCauseAnalysesWith(preds ...predicate.RootCauseAnalysis) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newRootCauseAnalysesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasFeishuSyncs applies the HasEdge predicate on the "feishu_syncs" edge.
+func HasFeishuSyncs() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, FeishuSyncsTable, FeishuSyncsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasFeishuSyncsWith applies the HasEdge predicate on the "feishu_syncs" edge with a given conditions (other predicates).
+func HasFeishuSyncsWith(preds ...predicate.FeishuTicketSync) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newFeishuSyncsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRequester applies the HasEdge predicate on the "requester" edge.
+func HasRequester() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, RequesterTable, RequesterColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRequesterWith applies the HasEdge predicate on the "requester" edge with a given conditions (other predicates).
+func HasRequesterWith(preds ...predicate.User) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newRequesterStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAssignee applies the HasEdge predicate on the "assignee" edge.
+func HasAssignee() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AssigneeTable, AssigneeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAssigneeWith applies the HasEdge predicate on the "assignee" edge with a given conditions (other predicates).
+func HasAssigneeWith(preds ...predicate.User) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newAssigneeStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCategory applies the HasEdge predicate on the "category" edge.
+func HasCategory() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, CategoryTable, CategoryPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCategoryWith applies the HasEdge predicate on the "category" edge with a given conditions (other predicates).
+func HasCategoryWith(preds ...predicate.TicketCategory) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newCategoryStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

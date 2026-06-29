@@ -7,13 +7,10 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/approvalrecord"
-	"itsm-backend/ent/configurationitem"
-	"itsm-backend/ent/department"
+	"itsm-backend/ent/feishuticketsync"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/problem"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/slaalerthistory"
-	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketapproval"
@@ -23,9 +20,8 @@ import (
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
-	"itsm-backend/ent/tickettemplate"
 	"itsm-backend/ent/ticketworkflowrecord"
-	"itsm-backend/ent/workflowinstance"
+	"itsm-backend/ent/user"
 	"math"
 
 	"entgo.io/ent"
@@ -37,31 +33,26 @@ import (
 // TicketQuery is the builder for querying Ticket entities.
 type TicketQuery struct {
 	config
-	ctx                    *QueryContext
-	order                  []ticket.OrderOption
-	inters                 []Interceptor
-	predicates             []predicate.Ticket
-	withTemplate           *TicketTemplateQuery
-	withCategory           *TicketCategoryQuery
-	withDepartment         *DepartmentQuery
-	withTags               *TicketTagQuery
-	withRelatedTickets     *TicketQuery
-	withParentTicket       *TicketQuery
-	withWorkflowInstances  *WorkflowInstanceQuery
-	withSLADefinition      *SLADefinitionQuery
-	withSLAViolations      *SLAViolationQuery
-	withComments           *TicketCommentQuery
-	withAttachments        *TicketAttachmentQuery
-	withNotifications      *TicketNotificationQuery
-	withSLAAlertHistory    *SLAAlertHistoryQuery
-	withApprovalRecords    *ApprovalRecordQuery
-	withRootCauseAnalyses  *RootCauseAnalysisQuery
-	withConfigurationItems *ConfigurationItemQuery
-	withProblems           *ProblemQuery
-	withApprovals          *TicketApprovalQuery
-	withWorkflowRecords    *TicketWorkflowRecordQuery
-	withCcUsers            *TicketCCQuery
-	withFKs                bool
+	ctx                   *QueryContext
+	order                 []ticket.OrderOption
+	inters                []Interceptor
+	predicates            []predicate.Ticket
+	withComments          *TicketCommentQuery
+	withAttachments       *TicketAttachmentQuery
+	withTags              *TicketTagQuery
+	withApprovalRecords   *ApprovalRecordQuery
+	withApprovals         *TicketApprovalQuery
+	withWorkflowRecords   *TicketWorkflowRecordQuery
+	withNotifications     *TicketNotificationQuery
+	withCcUsers           *TicketCCQuery
+	withSLAViolations     *SLAViolationQuery
+	withSLAAlertHistory   *SLAAlertHistoryQuery
+	withRootCauseAnalyses *RootCauseAnalysisQuery
+	withFeishuSyncs       *FeishuTicketSyncQuery
+	withRequester         *UserQuery
+	withAssignee          *UserQuery
+	withCategory          *TicketCategoryQuery
+	withFKs               bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -96,204 +87,6 @@ func (_q *TicketQuery) Unique(unique bool) *TicketQuery {
 func (_q *TicketQuery) Order(o ...ticket.OrderOption) *TicketQuery {
 	_q.order = append(_q.order, o...)
 	return _q
-}
-
-// QueryTemplate chains the current query on the "template" edge.
-func (_q *TicketQuery) QueryTemplate() *TicketTemplateQuery {
-	query := (&TicketTemplateClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(tickettemplate.Table, tickettemplate.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.TemplateTable, ticket.TemplateColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryCategory chains the current query on the "category" edge.
-func (_q *TicketQuery) QueryCategory() *TicketCategoryQuery {
-	query := (&TicketCategoryClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(ticketcategory.Table, ticketcategory.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.CategoryTable, ticket.CategoryColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryDepartment chains the current query on the "department" edge.
-func (_q *TicketQuery) QueryDepartment() *DepartmentQuery {
-	query := (&DepartmentClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(department.Table, department.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.DepartmentTable, ticket.DepartmentColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryTags chains the current query on the "tags" edge.
-func (_q *TicketQuery) QueryTags() *TicketTagQuery {
-	query := (&TicketTagClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(tickettag.Table, tickettag.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.TagsTable, ticket.TagsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryRelatedTickets chains the current query on the "related_tickets" edge.
-func (_q *TicketQuery) QueryRelatedTickets() *TicketQuery {
-	query := (&TicketClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.RelatedTicketsTable, ticket.RelatedTicketsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryParentTicket chains the current query on the "parent_ticket" edge.
-func (_q *TicketQuery) QueryParentTicket() *TicketQuery {
-	query := (&TicketClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.ParentTicketTable, ticket.ParentTicketColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryWorkflowInstances chains the current query on the "workflow_instances" edge.
-func (_q *TicketQuery) QueryWorkflowInstances() *WorkflowInstanceQuery {
-	query := (&WorkflowInstanceClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(workflowinstance.Table, workflowinstance.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.WorkflowInstancesTable, ticket.WorkflowInstancesColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QuerySLADefinition chains the current query on the "sla_definition" edge.
-func (_q *TicketQuery) QuerySLADefinition() *SLADefinitionQuery {
-	query := (&SLADefinitionClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.SLADefinitionTable, ticket.SLADefinitionColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QuerySLAViolations chains the current query on the "sla_violations" edge.
-func (_q *TicketQuery) QuerySLAViolations() *SLAViolationQuery {
-	query := (&SLAViolationClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(slaviolation.Table, slaviolation.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAViolationsTable, ticket.SLAViolationsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
 }
 
 // QueryComments chains the current query on the "comments" edge.
@@ -340,9 +133,9 @@ func (_q *TicketQuery) QueryAttachments() *TicketAttachmentQuery {
 	return query
 }
 
-// QueryNotifications chains the current query on the "notifications" edge.
-func (_q *TicketQuery) QueryNotifications() *TicketNotificationQuery {
-	query := (&TicketNotificationClient{config: _q.config}).Query()
+// QueryTags chains the current query on the "tags" edge.
+func (_q *TicketQuery) QueryTags() *TicketTagQuery {
+	query := (&TicketTagClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -353,30 +146,8 @@ func (_q *TicketQuery) QueryNotifications() *TicketNotificationQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(ticketnotification.Table, ticketnotification.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.NotificationsTable, ticket.NotificationsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QuerySLAAlertHistory chains the current query on the "sla_alert_history" edge.
-func (_q *TicketQuery) QuerySLAAlertHistory() *SLAAlertHistoryQuery {
-	query := (&SLAAlertHistoryClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(slaalerthistory.Table, slaalerthistory.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAAlertHistoryTable, ticket.SLAAlertHistoryColumn),
+			sqlgraph.To(tickettag.Table, tickettag.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.TagsTable, ticket.TagsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -399,72 +170,6 @@ func (_q *TicketQuery) QueryApprovalRecords() *ApprovalRecordQuery {
 			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
 			sqlgraph.To(approvalrecord.Table, approvalrecord.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ticket.ApprovalRecordsTable, ticket.ApprovalRecordsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryRootCauseAnalyses chains the current query on the "root_cause_analyses" edge.
-func (_q *TicketQuery) QueryRootCauseAnalyses() *RootCauseAnalysisQuery {
-	query := (&RootCauseAnalysisClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(rootcauseanalysis.Table, rootcauseanalysis.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.RootCauseAnalysesTable, ticket.RootCauseAnalysesColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryConfigurationItems chains the current query on the "configuration_items" edge.
-func (_q *TicketQuery) QueryConfigurationItems() *ConfigurationItemQuery {
-	query := (&ConfigurationItemClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ticket.ConfigurationItemsTable, ticket.ConfigurationItemsPrimaryKey...),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryProblems chains the current query on the "problems" edge.
-func (_q *TicketQuery) QueryProblems() *ProblemQuery {
-	query := (&ProblemClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(problem.Table, problem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ticket.ProblemsTable, ticket.ProblemsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -516,6 +221,28 @@ func (_q *TicketQuery) QueryWorkflowRecords() *TicketWorkflowRecordQuery {
 	return query
 }
 
+// QueryNotifications chains the current query on the "notifications" edge.
+func (_q *TicketQuery) QueryNotifications() *TicketNotificationQuery {
+	query := (&TicketNotificationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(ticketnotification.Table, ticketnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.NotificationsTable, ticket.NotificationsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryCcUsers chains the current query on the "cc_users" edge.
 func (_q *TicketQuery) QueryCcUsers() *TicketCCQuery {
 	query := (&TicketCCClient{config: _q.config}).Query()
@@ -531,6 +258,160 @@ func (_q *TicketQuery) QueryCcUsers() *TicketCCQuery {
 			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
 			sqlgraph.To(ticketcc.Table, ticketcc.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ticket.CcUsersTable, ticket.CcUsersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySLAViolations chains the current query on the "sla_violations" edge.
+func (_q *TicketQuery) QuerySLAViolations() *SLAViolationQuery {
+	query := (&SLAViolationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(slaviolation.Table, slaviolation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAViolationsTable, ticket.SLAViolationsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySLAAlertHistory chains the current query on the "sla_alert_history" edge.
+func (_q *TicketQuery) QuerySLAAlertHistory() *SLAAlertHistoryQuery {
+	query := (&SLAAlertHistoryClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(slaalerthistory.Table, slaalerthistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAAlertHistoryTable, ticket.SLAAlertHistoryColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRootCauseAnalyses chains the current query on the "root_cause_analyses" edge.
+func (_q *TicketQuery) QueryRootCauseAnalyses() *RootCauseAnalysisQuery {
+	query := (&RootCauseAnalysisClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(rootcauseanalysis.Table, rootcauseanalysis.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.RootCauseAnalysesTable, ticket.RootCauseAnalysesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryFeishuSyncs chains the current query on the "feishu_syncs" edge.
+func (_q *TicketQuery) QueryFeishuSyncs() *FeishuTicketSyncQuery {
+	query := (&FeishuTicketSyncClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(feishuticketsync.Table, feishuticketsync.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.FeishuSyncsTable, ticket.FeishuSyncsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRequester chains the current query on the "requester" edge.
+func (_q *TicketQuery) QueryRequester() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.RequesterTable, ticket.RequesterColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAssignee chains the current query on the "assignee" edge.
+func (_q *TicketQuery) QueryAssignee() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.AssigneeTable, ticket.AssigneeColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCategory chains the current query on the "category" edge.
+func (_q *TicketQuery) QueryCategory() *TicketCategoryQuery {
+	query := (&TicketCategoryClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(ticketcategory.Table, ticketcategory.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ticket.CategoryTable, ticket.CategoryPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -725,134 +606,30 @@ func (_q *TicketQuery) Clone() *TicketQuery {
 		return nil
 	}
 	return &TicketQuery{
-		config:                 _q.config,
-		ctx:                    _q.ctx.Clone(),
-		order:                  append([]ticket.OrderOption{}, _q.order...),
-		inters:                 append([]Interceptor{}, _q.inters...),
-		predicates:             append([]predicate.Ticket{}, _q.predicates...),
-		withTemplate:           _q.withTemplate.Clone(),
-		withCategory:           _q.withCategory.Clone(),
-		withDepartment:         _q.withDepartment.Clone(),
-		withTags:               _q.withTags.Clone(),
-		withRelatedTickets:     _q.withRelatedTickets.Clone(),
-		withParentTicket:       _q.withParentTicket.Clone(),
-		withWorkflowInstances:  _q.withWorkflowInstances.Clone(),
-		withSLADefinition:      _q.withSLADefinition.Clone(),
-		withSLAViolations:      _q.withSLAViolations.Clone(),
-		withComments:           _q.withComments.Clone(),
-		withAttachments:        _q.withAttachments.Clone(),
-		withNotifications:      _q.withNotifications.Clone(),
-		withSLAAlertHistory:    _q.withSLAAlertHistory.Clone(),
-		withApprovalRecords:    _q.withApprovalRecords.Clone(),
-		withRootCauseAnalyses:  _q.withRootCauseAnalyses.Clone(),
-		withConfigurationItems: _q.withConfigurationItems.Clone(),
-		withProblems:           _q.withProblems.Clone(),
-		withApprovals:          _q.withApprovals.Clone(),
-		withWorkflowRecords:    _q.withWorkflowRecords.Clone(),
-		withCcUsers:            _q.withCcUsers.Clone(),
+		config:                _q.config,
+		ctx:                   _q.ctx.Clone(),
+		order:                 append([]ticket.OrderOption{}, _q.order...),
+		inters:                append([]Interceptor{}, _q.inters...),
+		predicates:            append([]predicate.Ticket{}, _q.predicates...),
+		withComments:          _q.withComments.Clone(),
+		withAttachments:       _q.withAttachments.Clone(),
+		withTags:              _q.withTags.Clone(),
+		withApprovalRecords:   _q.withApprovalRecords.Clone(),
+		withApprovals:         _q.withApprovals.Clone(),
+		withWorkflowRecords:   _q.withWorkflowRecords.Clone(),
+		withNotifications:     _q.withNotifications.Clone(),
+		withCcUsers:           _q.withCcUsers.Clone(),
+		withSLAViolations:     _q.withSLAViolations.Clone(),
+		withSLAAlertHistory:   _q.withSLAAlertHistory.Clone(),
+		withRootCauseAnalyses: _q.withRootCauseAnalyses.Clone(),
+		withFeishuSyncs:       _q.withFeishuSyncs.Clone(),
+		withRequester:         _q.withRequester.Clone(),
+		withAssignee:          _q.withAssignee.Clone(),
+		withCategory:          _q.withCategory.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
-}
-
-// WithTemplate tells the query-builder to eager-load the nodes that are connected to
-// the "template" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithTemplate(opts ...func(*TicketTemplateQuery)) *TicketQuery {
-	query := (&TicketTemplateClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withTemplate = query
-	return _q
-}
-
-// WithCategory tells the query-builder to eager-load the nodes that are connected to
-// the "category" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithCategory(opts ...func(*TicketCategoryQuery)) *TicketQuery {
-	query := (&TicketCategoryClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withCategory = query
-	return _q
-}
-
-// WithDepartment tells the query-builder to eager-load the nodes that are connected to
-// the "department" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithDepartment(opts ...func(*DepartmentQuery)) *TicketQuery {
-	query := (&DepartmentClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withDepartment = query
-	return _q
-}
-
-// WithTags tells the query-builder to eager-load the nodes that are connected to
-// the "tags" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithTags(opts ...func(*TicketTagQuery)) *TicketQuery {
-	query := (&TicketTagClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withTags = query
-	return _q
-}
-
-// WithRelatedTickets tells the query-builder to eager-load the nodes that are connected to
-// the "related_tickets" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithRelatedTickets(opts ...func(*TicketQuery)) *TicketQuery {
-	query := (&TicketClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withRelatedTickets = query
-	return _q
-}
-
-// WithParentTicket tells the query-builder to eager-load the nodes that are connected to
-// the "parent_ticket" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithParentTicket(opts ...func(*TicketQuery)) *TicketQuery {
-	query := (&TicketClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withParentTicket = query
-	return _q
-}
-
-// WithWorkflowInstances tells the query-builder to eager-load the nodes that are connected to
-// the "workflow_instances" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithWorkflowInstances(opts ...func(*WorkflowInstanceQuery)) *TicketQuery {
-	query := (&WorkflowInstanceClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withWorkflowInstances = query
-	return _q
-}
-
-// WithSLADefinition tells the query-builder to eager-load the nodes that are connected to
-// the "sla_definition" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) *TicketQuery {
-	query := (&SLADefinitionClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withSLADefinition = query
-	return _q
-}
-
-// WithSLAViolations tells the query-builder to eager-load the nodes that are connected to
-// the "sla_violations" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithSLAViolations(opts ...func(*SLAViolationQuery)) *TicketQuery {
-	query := (&SLAViolationClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withSLAViolations = query
-	return _q
 }
 
 // WithComments tells the query-builder to eager-load the nodes that are connected to
@@ -877,25 +654,14 @@ func (_q *TicketQuery) WithAttachments(opts ...func(*TicketAttachmentQuery)) *Ti
 	return _q
 }
 
-// WithNotifications tells the query-builder to eager-load the nodes that are connected to
-// the "notifications" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithNotifications(opts ...func(*TicketNotificationQuery)) *TicketQuery {
-	query := (&TicketNotificationClient{config: _q.config}).Query()
+// WithTags tells the query-builder to eager-load the nodes that are connected to
+// the "tags" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TicketQuery) WithTags(opts ...func(*TicketTagQuery)) *TicketQuery {
+	query := (&TicketTagClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withNotifications = query
-	return _q
-}
-
-// WithSLAAlertHistory tells the query-builder to eager-load the nodes that are connected to
-// the "sla_alert_history" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithSLAAlertHistory(opts ...func(*SLAAlertHistoryQuery)) *TicketQuery {
-	query := (&SLAAlertHistoryClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withSLAAlertHistory = query
+	_q.withTags = query
 	return _q
 }
 
@@ -907,39 +673,6 @@ func (_q *TicketQuery) WithApprovalRecords(opts ...func(*ApprovalRecordQuery)) *
 		opt(query)
 	}
 	_q.withApprovalRecords = query
-	return _q
-}
-
-// WithRootCauseAnalyses tells the query-builder to eager-load the nodes that are connected to
-// the "root_cause_analyses" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithRootCauseAnalyses(opts ...func(*RootCauseAnalysisQuery)) *TicketQuery {
-	query := (&RootCauseAnalysisClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withRootCauseAnalyses = query
-	return _q
-}
-
-// WithConfigurationItems tells the query-builder to eager-load the nodes that are connected to
-// the "configuration_items" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithConfigurationItems(opts ...func(*ConfigurationItemQuery)) *TicketQuery {
-	query := (&ConfigurationItemClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withConfigurationItems = query
-	return _q
-}
-
-// WithProblems tells the query-builder to eager-load the nodes that are connected to
-// the "problems" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketQuery) WithProblems(opts ...func(*ProblemQuery)) *TicketQuery {
-	query := (&ProblemClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withProblems = query
 	return _q
 }
 
@@ -965,6 +698,17 @@ func (_q *TicketQuery) WithWorkflowRecords(opts ...func(*TicketWorkflowRecordQue
 	return _q
 }
 
+// WithNotifications tells the query-builder to eager-load the nodes that are connected to
+// the "notifications" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TicketQuery) WithNotifications(opts ...func(*TicketNotificationQuery)) *TicketQuery {
+	query := (&TicketNotificationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withNotifications = query
+	return _q
+}
+
 // WithCcUsers tells the query-builder to eager-load the nodes that are connected to
 // the "cc_users" edge. The optional arguments are used to configure the query builder of the edge.
 func (_q *TicketQuery) WithCcUsers(opts ...func(*TicketCCQuery)) *TicketQuery {
@@ -973,6 +717,83 @@ func (_q *TicketQuery) WithCcUsers(opts ...func(*TicketCCQuery)) *TicketQuery {
 		opt(query)
 	}
 	_q.withCcUsers = query
+	return _q
+}
+
+// WithSLAViolations tells the query-builder to eager-load the nodes that are connected to
+// the "sla_violations" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TicketQuery) WithSLAViolations(opts ...func(*SLAViolationQuery)) *TicketQuery {
+	query := (&SLAViolationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withSLAViolations = query
+	return _q
+}
+
+// WithSLAAlertHistory tells the query-builder to eager-load the nodes that are connected to
+// the "sla_alert_history" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TicketQuery) WithSLAAlertHistory(opts ...func(*SLAAlertHistoryQuery)) *TicketQuery {
+	query := (&SLAAlertHistoryClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withSLAAlertHistory = query
+	return _q
+}
+
+// WithRootCauseAnalyses tells the query-builder to eager-load the nodes that are connected to
+// the "root_cause_analyses" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TicketQuery) WithRootCauseAnalyses(opts ...func(*RootCauseAnalysisQuery)) *TicketQuery {
+	query := (&RootCauseAnalysisClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withRootCauseAnalyses = query
+	return _q
+}
+
+// WithFeishuSyncs tells the query-builder to eager-load the nodes that are connected to
+// the "feishu_syncs" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TicketQuery) WithFeishuSyncs(opts ...func(*FeishuTicketSyncQuery)) *TicketQuery {
+	query := (&FeishuTicketSyncClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withFeishuSyncs = query
+	return _q
+}
+
+// WithRequester tells the query-builder to eager-load the nodes that are connected to
+// the "requester" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TicketQuery) WithRequester(opts ...func(*UserQuery)) *TicketQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withRequester = query
+	return _q
+}
+
+// WithAssignee tells the query-builder to eager-load the nodes that are connected to
+// the "assignee" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TicketQuery) WithAssignee(opts ...func(*UserQuery)) *TicketQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAssignee = query
+	return _q
+}
+
+// WithCategory tells the query-builder to eager-load the nodes that are connected to
+// the "category" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TicketQuery) WithCategory(opts ...func(*TicketCategoryQuery)) *TicketQuery {
+	query := (&TicketCategoryClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withCategory = query
 	return _q
 }
 
@@ -1055,27 +876,22 @@ func (_q *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		nodes       = []*Ticket{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [20]bool{
-			_q.withTemplate != nil,
-			_q.withCategory != nil,
-			_q.withDepartment != nil,
-			_q.withTags != nil,
-			_q.withRelatedTickets != nil,
-			_q.withParentTicket != nil,
-			_q.withWorkflowInstances != nil,
-			_q.withSLADefinition != nil,
-			_q.withSLAViolations != nil,
+		loadedTypes = [15]bool{
 			_q.withComments != nil,
 			_q.withAttachments != nil,
-			_q.withNotifications != nil,
-			_q.withSLAAlertHistory != nil,
+			_q.withTags != nil,
 			_q.withApprovalRecords != nil,
-			_q.withRootCauseAnalyses != nil,
-			_q.withConfigurationItems != nil,
-			_q.withProblems != nil,
 			_q.withApprovals != nil,
 			_q.withWorkflowRecords != nil,
+			_q.withNotifications != nil,
 			_q.withCcUsers != nil,
+			_q.withSLAViolations != nil,
+			_q.withSLAAlertHistory != nil,
+			_q.withRootCauseAnalyses != nil,
+			_q.withFeishuSyncs != nil,
+			_q.withRequester != nil,
+			_q.withAssignee != nil,
+			_q.withCategory != nil,
 		}
 	)
 	if withFKs {
@@ -1099,64 +915,6 @@ func (_q *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withTemplate; query != nil {
-		if err := _q.loadTemplate(ctx, query, nodes, nil,
-			func(n *Ticket, e *TicketTemplate) { n.Edges.Template = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withCategory; query != nil {
-		if err := _q.loadCategory(ctx, query, nodes, nil,
-			func(n *Ticket, e *TicketCategory) { n.Edges.Category = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withDepartment; query != nil {
-		if err := _q.loadDepartment(ctx, query, nodes, nil,
-			func(n *Ticket, e *Department) { n.Edges.Department = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withTags; query != nil {
-		if err := _q.loadTags(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.Tags = []*TicketTag{} },
-			func(n *Ticket, e *TicketTag) { n.Edges.Tags = append(n.Edges.Tags, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withRelatedTickets; query != nil {
-		if err := _q.loadRelatedTickets(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.RelatedTickets = []*Ticket{} },
-			func(n *Ticket, e *Ticket) { n.Edges.RelatedTickets = append(n.Edges.RelatedTickets, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withParentTicket; query != nil {
-		if err := _q.loadParentTicket(ctx, query, nodes, nil,
-			func(n *Ticket, e *Ticket) { n.Edges.ParentTicket = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withWorkflowInstances; query != nil {
-		if err := _q.loadWorkflowInstances(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.WorkflowInstances = []*WorkflowInstance{} },
-			func(n *Ticket, e *WorkflowInstance) { n.Edges.WorkflowInstances = append(n.Edges.WorkflowInstances, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withSLADefinition; query != nil {
-		if err := _q.loadSLADefinition(ctx, query, nodes, nil,
-			func(n *Ticket, e *SLADefinition) { n.Edges.SLADefinition = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withSLAViolations; query != nil {
-		if err := _q.loadSLAViolations(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.SLAViolations = []*SLAViolation{} },
-			func(n *Ticket, e *SLAViolation) { n.Edges.SLAViolations = append(n.Edges.SLAViolations, e) }); err != nil {
-			return nil, err
-		}
-	}
 	if query := _q.withComments; query != nil {
 		if err := _q.loadComments(ctx, query, nodes,
 			func(n *Ticket) { n.Edges.Comments = []*TicketComment{} },
@@ -1171,17 +929,10 @@ func (_q *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 			return nil, err
 		}
 	}
-	if query := _q.withNotifications; query != nil {
-		if err := _q.loadNotifications(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.Notifications = []*TicketNotification{} },
-			func(n *Ticket, e *TicketNotification) { n.Edges.Notifications = append(n.Edges.Notifications, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withSLAAlertHistory; query != nil {
-		if err := _q.loadSLAAlertHistory(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.SLAAlertHistory = []*SLAAlertHistory{} },
-			func(n *Ticket, e *SLAAlertHistory) { n.Edges.SLAAlertHistory = append(n.Edges.SLAAlertHistory, e) }); err != nil {
+	if query := _q.withTags; query != nil {
+		if err := _q.loadTags(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.Tags = []*TicketTag{} },
+			func(n *Ticket, e *TicketTag) { n.Edges.Tags = append(n.Edges.Tags, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1189,31 +940,6 @@ func (_q *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		if err := _q.loadApprovalRecords(ctx, query, nodes,
 			func(n *Ticket) { n.Edges.ApprovalRecords = []*ApprovalRecord{} },
 			func(n *Ticket, e *ApprovalRecord) { n.Edges.ApprovalRecords = append(n.Edges.ApprovalRecords, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withRootCauseAnalyses; query != nil {
-		if err := _q.loadRootCauseAnalyses(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.RootCauseAnalyses = []*RootCauseAnalysis{} },
-			func(n *Ticket, e *RootCauseAnalysis) {
-				n.Edges.RootCauseAnalyses = append(n.Edges.RootCauseAnalyses, e)
-			}); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withConfigurationItems; query != nil {
-		if err := _q.loadConfigurationItems(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.ConfigurationItems = []*ConfigurationItem{} },
-			func(n *Ticket, e *ConfigurationItem) {
-				n.Edges.ConfigurationItems = append(n.Edges.ConfigurationItems, e)
-			}); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withProblems; query != nil {
-		if err := _q.loadProblems(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.Problems = []*Problem{} },
-			func(n *Ticket, e *Problem) { n.Edges.Problems = append(n.Edges.Problems, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1231,6 +957,13 @@ func (_q *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 			return nil, err
 		}
 	}
+	if query := _q.withNotifications; query != nil {
+		if err := _q.loadNotifications(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.Notifications = []*TicketNotification{} },
+			func(n *Ticket, e *TicketNotification) { n.Edges.Notifications = append(n.Edges.Notifications, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withCcUsers; query != nil {
 		if err := _q.loadCcUsers(ctx, query, nodes,
 			func(n *Ticket) { n.Edges.CcUsers = []*TicketCC{} },
@@ -1238,277 +971,58 @@ func (_q *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 			return nil, err
 		}
 	}
+	if query := _q.withSLAViolations; query != nil {
+		if err := _q.loadSLAViolations(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.SLAViolations = []*SLAViolation{} },
+			func(n *Ticket, e *SLAViolation) { n.Edges.SLAViolations = append(n.Edges.SLAViolations, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withSLAAlertHistory; query != nil {
+		if err := _q.loadSLAAlertHistory(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.SLAAlertHistory = []*SLAAlertHistory{} },
+			func(n *Ticket, e *SLAAlertHistory) { n.Edges.SLAAlertHistory = append(n.Edges.SLAAlertHistory, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withRootCauseAnalyses; query != nil {
+		if err := _q.loadRootCauseAnalyses(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.RootCauseAnalyses = []*RootCauseAnalysis{} },
+			func(n *Ticket, e *RootCauseAnalysis) {
+				n.Edges.RootCauseAnalyses = append(n.Edges.RootCauseAnalyses, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withFeishuSyncs; query != nil {
+		if err := _q.loadFeishuSyncs(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.FeishuSyncs = []*FeishuTicketSync{} },
+			func(n *Ticket, e *FeishuTicketSync) { n.Edges.FeishuSyncs = append(n.Edges.FeishuSyncs, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withRequester; query != nil {
+		if err := _q.loadRequester(ctx, query, nodes, nil,
+			func(n *Ticket, e *User) { n.Edges.Requester = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAssignee; query != nil {
+		if err := _q.loadAssignee(ctx, query, nodes, nil,
+			func(n *Ticket, e *User) { n.Edges.Assignee = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withCategory; query != nil {
+		if err := _q.loadCategory(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.Category = []*TicketCategory{} },
+			func(n *Ticket, e *TicketCategory) { n.Edges.Category = append(n.Edges.Category, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
-func (_q *TicketQuery) loadTemplate(ctx context.Context, query *TicketTemplateQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketTemplate)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*Ticket)
-	for i := range nodes {
-		fk := nodes[i].TemplateID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(tickettemplate.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "template_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *TicketQuery) loadCategory(ctx context.Context, query *TicketCategoryQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketCategory)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*Ticket)
-	for i := range nodes {
-		fk := nodes[i].CategoryID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(ticketcategory.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "category_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *TicketQuery) loadDepartment(ctx context.Context, query *DepartmentQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Department)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*Ticket)
-	for i := range nodes {
-		fk := nodes[i].DepartmentID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(department.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "department_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *TicketQuery) loadTags(ctx context.Context, query *TicketTagQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketTag)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Ticket)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.TicketTag(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(ticket.TagsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.ticket_tags
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "ticket_tags" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ticket_tags" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (_q *TicketQuery) loadRelatedTickets(ctx context.Context, query *TicketQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Ticket)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Ticket)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(ticket.FieldParentTicketID)
-	}
-	query.Where(predicate.Ticket(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(ticket.RelatedTicketsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.ParentTicketID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "parent_ticket_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (_q *TicketQuery) loadParentTicket(ctx context.Context, query *TicketQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Ticket)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*Ticket)
-	for i := range nodes {
-		fk := nodes[i].ParentTicketID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(ticket.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "parent_ticket_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *TicketQuery) loadWorkflowInstances(ctx context.Context, query *WorkflowInstanceQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *WorkflowInstance)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Ticket)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.WorkflowInstance(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(ticket.WorkflowInstancesColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.ticket_workflow_instances
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "ticket_workflow_instances" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ticket_workflow_instances" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (_q *TicketQuery) loadSLADefinition(ctx context.Context, query *SLADefinitionQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *SLADefinition)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*Ticket)
-	for i := range nodes {
-		fk := nodes[i].SLADefinitionID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(sladefinition.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "sla_definition_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *TicketQuery) loadSLAViolations(ctx context.Context, query *SLAViolationQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *SLAViolation)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Ticket)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(slaviolation.FieldTicketID)
-	}
-	query.Where(predicate.SLAViolation(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(ticket.SLAViolationsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.TicketID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
 func (_q *TicketQuery) loadComments(ctx context.Context, query *TicketCommentQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketComment)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Ticket)
@@ -1569,7 +1083,7 @@ func (_q *TicketQuery) loadAttachments(ctx context.Context, query *TicketAttachm
 	}
 	return nil
 }
-func (_q *TicketQuery) loadNotifications(ctx context.Context, query *TicketNotificationQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketNotification)) error {
+func (_q *TicketQuery) loadTags(ctx context.Context, query *TicketTagQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketTag)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Ticket)
 	for i := range nodes {
@@ -1579,51 +1093,22 @@ func (_q *TicketQuery) loadNotifications(ctx context.Context, query *TicketNotif
 			init(nodes[i])
 		}
 	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(ticketnotification.FieldTicketID)
-	}
-	query.Where(predicate.TicketNotification(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(ticket.NotificationsColumn), fks...))
+	query.withFKs = true
+	query.Where(predicate.TicketTag(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.TagsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.TicketID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		fk := n.ticket_tags
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "ticket_tags" is nil for node %v`, n.ID)
 		}
-		assign(node, n)
-	}
-	return nil
-}
-func (_q *TicketQuery) loadSLAAlertHistory(ctx context.Context, query *SLAAlertHistoryQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *SLAAlertHistory)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Ticket)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(slaalerthistory.FieldTicketID)
-	}
-	query.Where(predicate.SLAAlertHistory(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(ticket.SLAAlertHistoryColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.TicketID
-		node, ok := nodeids[fk]
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_tags" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -1656,158 +1141,6 @@ func (_q *TicketQuery) loadApprovalRecords(ctx context.Context, query *ApprovalR
 			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
-	}
-	return nil
-}
-func (_q *TicketQuery) loadRootCauseAnalyses(ctx context.Context, query *RootCauseAnalysisQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *RootCauseAnalysis)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Ticket)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(rootcauseanalysis.FieldTicketID)
-	}
-	query.Where(predicate.RootCauseAnalysis(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(ticket.RootCauseAnalysesColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.TicketID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (_q *TicketQuery) loadConfigurationItems(ctx context.Context, query *ConfigurationItemQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *ConfigurationItem)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Ticket)
-	nids := make(map[int]map[*Ticket]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(ticket.ConfigurationItemsTable)
-		s.Join(joinT).On(s.C(configurationitem.FieldID), joinT.C(ticket.ConfigurationItemsPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(ticket.ConfigurationItemsPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(ticket.ConfigurationItemsPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Ticket]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*ConfigurationItem](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "configuration_items" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
-	}
-	return nil
-}
-func (_q *TicketQuery) loadProblems(ctx context.Context, query *ProblemQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Problem)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Ticket)
-	nids := make(map[int]map[*Ticket]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(ticket.ProblemsTable)
-		s.Join(joinT).On(s.C(problem.FieldID), joinT.C(ticket.ProblemsPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(ticket.ProblemsPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(ticket.ProblemsPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Ticket]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Problem](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "problems" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
 	}
 	return nil
 }
@@ -1871,6 +1204,36 @@ func (_q *TicketQuery) loadWorkflowRecords(ctx context.Context, query *TicketWor
 	}
 	return nil
 }
+func (_q *TicketQuery) loadNotifications(ctx context.Context, query *TicketNotificationQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketNotification)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(ticketnotification.FieldTicketID)
+	}
+	query.Where(predicate.TicketNotification(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.NotificationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (_q *TicketQuery) loadCcUsers(ctx context.Context, query *TicketCCQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketCC)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Ticket)
@@ -1901,6 +1264,245 @@ func (_q *TicketQuery) loadCcUsers(ctx context.Context, query *TicketCCQuery, no
 	}
 	return nil
 }
+func (_q *TicketQuery) loadSLAViolations(ctx context.Context, query *SLAViolationQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *SLAViolation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(slaviolation.FieldTicketID)
+	}
+	query.Where(predicate.SLAViolation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.SLAViolationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *TicketQuery) loadSLAAlertHistory(ctx context.Context, query *SLAAlertHistoryQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *SLAAlertHistory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(slaalerthistory.FieldTicketID)
+	}
+	query.Where(predicate.SLAAlertHistory(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.SLAAlertHistoryColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *TicketQuery) loadRootCauseAnalyses(ctx context.Context, query *RootCauseAnalysisQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *RootCauseAnalysis)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(rootcauseanalysis.FieldTicketID)
+	}
+	query.Where(predicate.RootCauseAnalysis(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.RootCauseAnalysesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *TicketQuery) loadFeishuSyncs(ctx context.Context, query *FeishuTicketSyncQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *FeishuTicketSync)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(feishuticketsync.FieldTicketID)
+	}
+	query.Where(predicate.FeishuTicketSync(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.FeishuSyncsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *TicketQuery) loadRequester(ctx context.Context, query *UserQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *User)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Ticket)
+	for i := range nodes {
+		fk := nodes[i].RequesterID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "requester_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *TicketQuery) loadAssignee(ctx context.Context, query *UserQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *User)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Ticket)
+	for i := range nodes {
+		fk := nodes[i].AssigneeID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "assignee_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *TicketQuery) loadCategory(ctx context.Context, query *TicketCategoryQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketCategory)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Ticket)
+	nids := make(map[int]map[*Ticket]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(ticket.CategoryTable)
+		s.Join(joinT).On(s.C(ticketcategory.FieldID), joinT.C(ticket.CategoryPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(ticket.CategoryPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(ticket.CategoryPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Ticket]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*TicketCategory](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "category" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
 
 func (_q *TicketQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -1927,20 +1529,11 @@ func (_q *TicketQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if _q.withTemplate != nil {
-			_spec.Node.AddColumnOnce(ticket.FieldTemplateID)
+		if _q.withRequester != nil {
+			_spec.Node.AddColumnOnce(ticket.FieldRequesterID)
 		}
-		if _q.withCategory != nil {
-			_spec.Node.AddColumnOnce(ticket.FieldCategoryID)
-		}
-		if _q.withDepartment != nil {
-			_spec.Node.AddColumnOnce(ticket.FieldDepartmentID)
-		}
-		if _q.withParentTicket != nil {
-			_spec.Node.AddColumnOnce(ticket.FieldParentTicketID)
-		}
-		if _q.withSLADefinition != nil {
-			_spec.Node.AddColumnOnce(ticket.FieldSLADefinitionID)
+		if _q.withAssignee != nil {
+			_spec.Node.AddColumnOnce(ticket.FieldAssigneeID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

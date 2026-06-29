@@ -69,7 +69,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "ticket" package.
 	TicketsInverseTable = "tickets"
 	// TicketsColumn is the table column denoting the tickets relation/edge.
-	TicketsColumn = "department_id"
+	TicketsColumn = "department_tickets"
 	// WorkflowsTable is the table that holds the workflows relation/edge.
 	WorkflowsTable = "workflows"
 	// WorkflowsInverseTable is the table name for the Workflow entity.

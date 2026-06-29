@@ -611,9 +611,6 @@ func (_q *SLADefinitionQuery) loadTickets(ctx context.Context, query *TicketQuer
 		}
 	}
 	query.withFKs = true
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(ticket.FieldSLADefinitionID)
-	}
 	query.Where(predicate.Ticket(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(sladefinition.TicketsColumn), fks...))
 	}))
@@ -622,10 +619,13 @@ func (_q *SLADefinitionQuery) loadTickets(ctx context.Context, query *TicketQuer
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.SLADefinitionID
-		node, ok := nodeids[fk]
+		fk := n.sla_definition_tickets
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "sla_definition_tickets" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "sla_definition_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "sla_definition_tickets" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
