@@ -130,6 +130,7 @@ on_exit "cleanup"
 # Docker Compose mode
 # ============================================================
 ensure_dev_env() {
+
     # Create required directories with correct permissions
     mkdir -p "$PROJECT_ROOT/logs" "$PROJECT_ROOT/uploads"
     chmod -R 777 "$PROJECT_ROOT/logs" "$PROJECT_ROOT/uploads"
@@ -154,6 +155,11 @@ docker_up() {
     log_step "Starting development environment (Docker Compose)"
 
     ensure_dev_env
+    log_info "Cleaning up stale ITSM containers..."
+    docker rm -f $(docker ps -a | grep -E "itsm-(backend|frontend|postgres|redis|minio|init)-dev" | awk '{print $1}') 2>/dev/null || true
+    
+
+
 
     # Phase 1: Infrastructure
     log_step "[1/3] Starting PostgreSQL + Redis + MinIO"
@@ -213,6 +219,10 @@ docker_reset() {
     read -rp "Continue? [y/N] " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
         dc -f "$COMPOSE_DEV" --profile dev down -v --remove-orphans
+        # Force clean up all remaining ITSM containers and volumes
+                docker rm -f $(docker ps -a | grep -E "itsm-" | awk '{print $1}') 2>/dev/null || true
+                docker volume rm $(docker volume ls | grep -E "itsm-" | awk '{print $2}') 2>/dev/null || true
+
         log_success "Environment reset complete"
     else
         log_info "Reset cancelled"
@@ -521,6 +531,7 @@ cmd_init() {
 
     # 2. Create .env
     ensure_dev_env
+
     [[ -f "$PROJECT_ROOT/.env" ]] && log_success ".env ready"
 
     # 3. Ensure log directory

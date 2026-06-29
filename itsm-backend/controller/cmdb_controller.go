@@ -243,9 +243,9 @@ func (c *CMDBController) DeleteCIType(ctx *gin.Context) {
 // @Tags CMDB
 // @Accept json
 // @Produce json
-// @Param ciTypeId path int true "CI类型ID"
+// @Param id path int true "CI类型ID"
 // @Success 200 {object} common.Response{data=[]dto.CIAttributeDefinitionResponse}
-// @Router /api/v1/cmdb/ci-types/{ciTypeId}/attributes [get]
+// @Router /api/v1/cmdb/ci-types/{id}/attributes [get]
 func (c *CMDBController) ListCIAttributeDefinitions(ctx *gin.Context) {
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil || tenantID == 0 {
@@ -253,7 +253,7 @@ func (c *CMDBController) ListCIAttributeDefinitions(ctx *gin.Context) {
 		return
 	}
 
-	ciTypeIDStr := ctx.Param("ciTypeId")
+	ciTypeIDStr := ctx.Param("id")
 	ciTypeID, err := strconv.Atoi(ciTypeIDStr)
 	if err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "无效的CI类型ID参数")
@@ -718,10 +718,10 @@ func (c *CMDBController) GetCIRelationship(ctx *gin.Context) {
 // @Tags CMDB
 // @Accept json
 // @Produce json
-// @Param ciId path int true "配置项ID"
+// @Param id path int true "配置项ID"
 // @Param direction query string false "关系方向（outgoing/incoming/不传为所有）"
 // @Success 200 {object} common.Response{data=[]dto.CIRelationshipResponse}
-// @Router /api/v1/cmdb/cis/{ciId}/relationships [get]
+// @Router /api/v1/cmdb/cis/{id}/relationships [get]
 func (c *CMDBController) ListCIRelationshipsByCIID(ctx *gin.Context) {
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil || tenantID == 0 {
@@ -729,7 +729,7 @@ func (c *CMDBController) ListCIRelationshipsByCIID(ctx *gin.Context) {
 		return
 	}
 
-	ciIDStr := ctx.Param("ciId")
+	ciIDStr := ctx.Param("id")
 	ciID, err := strconv.Atoi(ciIDStr)
 	if err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
@@ -884,10 +884,10 @@ func (c *CMDBController) ListRelationshipTypes(ctx *gin.Context) {
 // @Tags CMDB
 // @Accept json
 // @Produce json
-// @Param ciId path int true "配置项ID"
+// @Param id path int true "配置项ID"
 // @Param maxDepth query int false "最大分析深度，默认3"
 // @Success 200 {object} common.Response{data=dto.CIImpactAnalysisResponse}
-// @Router /api/v1/cmdb/cis/{ciId}/impact-analysis [get]
+// @Router /api/v1/cmdb/cis/{id}/impact-analysis [get]
 func (c *CMDBController) GetCIImpactAnalysis(ctx *gin.Context) {
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil || tenantID == 0 {
@@ -895,7 +895,7 @@ func (c *CMDBController) GetCIImpactAnalysis(ctx *gin.Context) {
 		return
 	}
 
-	ciIDStr := ctx.Param("ciId")
+	ciIDStr := ctx.Param("id")
 	ciID, err := strconv.Atoi(ciIDStr)
 	if err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")

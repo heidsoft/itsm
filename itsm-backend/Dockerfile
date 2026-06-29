@@ -18,7 +18,7 @@ RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy && \
 # Go module proxy - configurable via build arg for international users
 # Default: goproxy.cn for China region, use GOPROXY=https://proxy.golang.org,direct for other regions
 ARG GOPROXY
-ENV GOPROXY=${GOPROXY:-https://proxy.golang.org,direct}
+ENV GOPROXY=${GOPROXY:-https://goproxy.cn,direct}
 
 # Enable module checksum verification (security)
 ARG GOSUMDB=sum.golang.org

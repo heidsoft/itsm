@@ -137,14 +137,21 @@ port_in_use() {
     lsof -iTCP:"$port" -sTCP:LISTEN &>/dev/null
 }
 
-# Run docker compose with BuildKit progress suppression.
+# Run "$DOCKER_COMPOSE_CMD" with BuildKit progress suppression.
 # Quiet by default; set VERBOSE=true to see full output.
 # Usage: dc <compose_args...>
 dc() {
-    if [[ "${VERBOSE:-false}" == "true" ]]; then
-        docker compose "$@"
+    # Auto-detect docker compose command (supports v1 and v2)
+    if command -v docker-compose &>/dev/null; then
+        DOCKER_COMPOSE_CMD="docker-compose"
     else
-        docker compose "$@" 2>&1 | {
+        DOCKER_COMPOSE_CMD="docker compose"
+    fi
+
+    if [[ "${VERBOSE:-false}" == "true" ]]; then
+        "$DOCKER_COMPOSE_CMD" "$@"
+    else
+        "$DOCKER_COMPOSE_CMD" "$@" 2>&1 | {
             # Filter to show only named steps and errors
             local last_line=""
             while IFS= read -r line; do
