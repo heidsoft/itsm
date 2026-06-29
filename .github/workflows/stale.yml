@@ -37,7 +37,7 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Mark and close stale issues
-        uses: actions/stale@v9
+        uses: actions/stale@v10
         with:
           # Issues
           issues-only-label-exemption: "pinned,security,good first issue,help wanted,priority:high,priority:critical,epic"
