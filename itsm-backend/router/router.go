@@ -717,63 +717,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 		// ==================== CMDB ====================
 		if config.CMDBController != nil {
-			cmdb := tenant.(*gin.RouterGroup).Group("/cmdb")
-			{
-				// CI 类型管理
-				ciTypes := cmdb.Group("/ci-types")
-				ciTypes.Use(middleware.RequirePermission("cmdb_ci_type", "read"))
-				{
-					ciTypes.GET("", config.CMDBController.ListCITypes)
-					ciTypes.GET("/:id", config.CMDBController.GetCIType)
-					ciTypes.POST("", middleware.RequirePermission("cmdb_ci_type", "write"), config.CMDBController.CreateCIType)
-					ciTypes.PUT("/:id", middleware.RequirePermission("cmdb_ci_type", "write"), config.CMDBController.UpdateCIType)
-					ciTypes.DELETE("/:id", middleware.RequirePermission("cmdb_ci_type", "delete"), config.CMDBController.DeleteCIType)
-
-					// CI 类型属性定义
-					ciTypes.GET("/:ciTypeId/attributes", config.CMDBController.ListCIAttributeDefinitions)
-				}
-
-				// CI 属性定义管理
-				attributes := cmdb.Group("/attributes")
-				attributes.Use(middleware.RequirePermission("cmdb_ci_attribute", "read"))
-				{
-					attributes.GET("/:id", config.CMDBController.GetCIAttributeDefinition)
-					attributes.POST("", middleware.RequirePermission("cmdb_ci_attribute", "write"), config.CMDBController.CreateCIAttributeDefinition)
-					attributes.PUT("/:id", middleware.RequirePermission("cmdb_ci_attribute", "write"), config.CMDBController.UpdateCIAttributeDefinition)
-					attributes.DELETE("/:id", middleware.RequirePermission("cmdb_ci_attribute", "delete"), config.CMDBController.DeleteCIAttributeDefinition)
-				}
-
-				// 配置项管理
-				cis := cmdb.Group("/cis")
-				cis.Use(middleware.RequirePermission("cmdb_ci", "read"))
-				{
-					// 统计接口必须放在 /:id 之前
-					cis.GET("/stats", config.CMDBController.GetCIStats)
-					cis.GET("", config.CMDBController.ListCIs)
-					cis.GET("/:id", config.CMDBController.GetCI)
-					cis.POST("", middleware.RequirePermission("cmdb_ci", "write"), config.CMDBController.CreateCI)
-					cis.PUT("/:id", middleware.RequirePermission("cmdb_ci", "write"), config.CMDBController.UpdateCI)
-					cis.DELETE("/:id", middleware.RequirePermission("cmdb_ci", "delete"), config.CMDBController.DeleteCI)
-
-					// 配置项关系
-					cis.GET("/:ciId/relationships", config.CMDBController.ListCIRelationshipsByCIID)
-
-					// 影响分析
-					cis.GET("/:ciId/impact-analysis", config.CMDBController.GetCIImpactAnalysis)
-				}
-
-				// CI 关系管理
-				relationships := cmdb.Group("/relationships")
-				relationships.Use(middleware.RequirePermission("cmdb_relationship", "read"))
-				{
-					relationships.GET("", config.CMDBController.ListCIRelationships)
-					relationships.GET("/:id", config.CMDBController.GetCIRelationship)
-					relationships.POST("", middleware.RequirePermission("cmdb_relationship", "write"), config.CMDBController.CreateCIRelationship)
-					relationships.PUT("/:id", middleware.RequirePermission("cmdb_relationship", "write"), config.CMDBController.UpdateCIRelationship)
-					relationships.DELETE("/:id", middleware.RequirePermission("cmdb_relationship", "delete"), config.CMDBController.DeleteCIRelationship)
-				}
-			}
+			SetupCMDBRoutes(tenant.(*gin.RouterGroup), config.CMDBController)
 		}
+
 
 		// ==================== Asset Licenses ====================
 		if config.AssetLicenseController != nil {

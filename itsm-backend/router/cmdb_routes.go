@@ -28,7 +28,7 @@ func SetupCMDBRoutes(
 			ciTypes.DELETE("/:id", middleware.RequirePermission("cmdb_ci_type", "delete"), cmdbController.DeleteCIType)
 
 			// 属性定义
-			ciTypes.GET("/:ci_type_id/attributes", cmdbController.ListCIAttributeDefinitions)
+			ciTypes.GET("/:ciTypeId/attributes", cmdbController.ListCIAttributeDefinitions)
 		}
 
 		// ------------------------------ CI属性定义相关路由 ------------------------------
@@ -119,10 +119,10 @@ func SetupCMDBRoutes(
 			cis.DELETE("/:id", middleware.RequirePermission("cmdb_ci", "delete"), cmdbController.DeleteCI)
 			
 			// 关系查询
-			cis.GET("/:ci_id/relationships", cmdbController.ListCIRelationshipsByCIID)
+			cis.GET("/:ciId/relationships", cmdbController.ListCIRelationshipsByCIID)
 			
 			// 影响分析
-			cis.GET("/:ci_id/impact-analysis", cmdbController.GetCIImpactAnalysis)
+			cis.GET("/:ciId/impact-analysis", cmdbController.GetCIImpactAnalysis)
 
 			// 变更历史
 			cis.GET("/:id/history", cmdbController.GetCIHistory)

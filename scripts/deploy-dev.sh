@@ -130,6 +130,10 @@ on_exit "cleanup"
 # Docker Compose mode
 # ============================================================
 ensure_dev_env() {
+    # Create required directories with correct permissions
+    mkdir -p "$PROJECT_ROOT/logs" "$PROJECT_ROOT/uploads"
+    chmod -R 777 "$PROJECT_ROOT/logs" "$PROJECT_ROOT/uploads"
+
     if [[ -f "$PROJECT_ROOT/.env" ]]; then
         return 0
     fi
