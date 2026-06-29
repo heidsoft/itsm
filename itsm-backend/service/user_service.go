@@ -74,13 +74,6 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		if role == "user" {
 			role = "end_user"
 		}
-		update = update.SetRole(user.Role(role))
-
-		role := strings.ToLower(strings.TrimSpace(req.Role))
-		// 兼容前端传的"user"角色，自动转换为"end_user"
-		if role == "user" {
-			role = "end_user"
-		}
 		uc = uc.SetRole(user.Role(role))
 
 	}

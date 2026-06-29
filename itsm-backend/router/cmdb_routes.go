@@ -123,6 +123,10 @@ func SetupCMDBRoutes(
 			
 			// 影响分析
 			cis.GET("/:id/impact-analysis", cmdbController.GetCIImpactAnalysis)
+			// 兼容旧路径：/cmdb/cis/relationships → /cmdb/relationships
+			cis.POST("/relationships", middleware.RequirePermission("cmdb_relationship", "write"), cmdbController.CreateCIRelationship)
+			cis.GET("/relationships", middleware.RequirePermission("cmdb_relationship", "read"), cmdbController.ListCIRelationships)
+
 
 			// 变更历史
 			cis.GET("/:id/history", cmdbController.GetCIHistory)
