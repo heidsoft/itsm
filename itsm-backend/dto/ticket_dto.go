@@ -16,8 +16,8 @@ type UserBasicInfo struct {
 // CreateTicketRequest 创建工单请求
 type CreateTicketRequest struct {
 	Title                 string                 `json:"title" binding:"required,min=2,max=200"`
-	Description           string                 `json:"description" binding:"required,min=10,max=5000"`
-	Priority              string                 `json:"priority" binding:"required"`
+	Description           string                 `json:"description" binding:"required,min=0,max=5000"`
+	Priority              string                 `json:"priority" binding:"required,oneof=low medium high critical urgent"`
 	Type                  string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"` // 工单类型
 	Category              string                 `json:"category"`                                                                      // 分类名称（可选，前端传入）
 	CategoryID            *int                   `json:"categoryId,omitempty"`                                                          // 分类ID（优先使用）

@@ -69,7 +69,20 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		SetTenantID(tenantID)
 	// 如果请求中提供了角色，则设置角色；否则使用Schema默认值（end_user）
 	if strings.TrimSpace(req.Role) != "" {
-		uc = uc.SetRole(user.Role(strings.ToLower(strings.TrimSpace(req.Role))))
+		role := strings.ToLower(strings.TrimSpace(req.Role))
+		// 兼容前端传的"user"角色，自动转换为"end_user"
+		if role == "user" {
+			role = "end_user"
+		}
+		update = update.SetRole(user.Role(role))
+
+		role := strings.ToLower(strings.TrimSpace(req.Role))
+		// 兼容前端传的"user"角色，自动转换为"end_user"
+		if role == "user" {
+			role = "end_user"
+		}
+		uc = uc.SetRole(user.Role(role))
+
 	}
 	// 如果请求中提供了MSP角色，则设置MSP角色
 	if strings.TrimSpace(req.MSPRole) != "" {
@@ -249,7 +262,13 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 	}
 	// 角色更新（仅在提供时设置），管理员权限由RBAC控制
 	if strings.TrimSpace(req.Role) != "" {
-		update = update.SetRole(user.Role(strings.ToLower(strings.TrimSpace(req.Role))))
+		role := strings.ToLower(strings.TrimSpace(req.Role))
+		// 兼容前端传的"user"角色，自动转换为"end_user"
+		if role == "user" {
+			role = "end_user"
+		}
+		update = update.SetRole(user.Role(role))
+
 	}
 
 	userEntity, err := update.Save(ctx)

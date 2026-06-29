@@ -395,6 +395,17 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					approvalWorkflows.PATCH("/:id", config.ApprovalController.PatchWorkflow)
 					approvalWorkflows.DELETE("/:id", config.ApprovalController.DeleteWorkflow)
 				}
+				// 兼容旧路径 /approvals
+				approvals := tenant.(*gin.RouterGroup).Group("/approvals")
+				{
+					approvals.GET("", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.ListWorkflows)
+					approvals.POST("", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalController.CreateWorkflow)
+					approvals.GET("/:id", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetWorkflow)
+					approvals.PUT("/:id", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalController.UpdateWorkflow)
+					approvals.PATCH("/:id", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalController.PatchWorkflow)
+					approvals.DELETE("/:id", middleware.RequirePermission("approval_workflow", "delete"), config.ApprovalController.DeleteWorkflow)
+				}
+
 			}
 
 			// 工单流转工作流
@@ -508,6 +519,34 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			// P1-01 别名：/system/config → 系统状态（前端默认 fetch 路径）
 			sysRoot := tenant.(*gin.RouterGroup).Group("/system")
 			{
+			// 兼容旧路径：/configs → /system-configs
+			configs := tenant.(*gin.RouterGroup).Group("/configs")
+			{
+				configs.GET("", config.SystemConfigController.ListConfigs)
+				configs.GET("/init", config.SystemConfigController.InitDefaultConfigs)
+				configs.GET("/:id", config.SystemConfigController.GetConfig)
+				configs.GET("/key/:key", config.SystemConfigController.GetConfigByKey)
+				configs.PUT("/:id", config.SystemConfigController.UpdateConfig)
+				configs.PUT("/batch", config.SystemConfigController.BatchUpdateConfigs)
+				configs.GET("/status", func(c *gin.Context) {
+					var m runtime.MemStats
+					runtime.ReadMemStats(&m)
+					c.JSON(200, gin.H{
+						"cpu": gin.H{
+							"usage": 0,
+							"cores": runtime.NumCPU(),
+						},
+						"memory": gin.H{
+							"used":  m.Alloc / 1024 / 1024,
+							"total": m.Sys / 1024 / 1024,
+							"usage": float64(m.Alloc) / float64(m.Sys) * 100,
+						},
+						"goroutines": runtime.NumGoroutine(),
+						"timestamp":  time.Now(),
+					})
+				})
+			}
+
 				sysRoot.GET("/config", func(c *gin.Context) {
 					c.JSON(200, gin.H{
 						"status":    "ok",
@@ -824,6 +863,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		// ==================== SLA (DDD) ====================
+				// 兼容旧路径：/sla/policies → /sla/definitions
+				slaGrp.GET("/policies", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListSLADefinitions)
+				slaGrp.POST("/policies", middleware.RequirePermission("sla", "write"), config.SLAHandler.CreateSLADefinition)
+				slaGrp.GET("/policies/:id", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLADefinition)
+				slaGrp.PUT("/policies/:id", middleware.RequirePermission("sla", "write"), config.SLAHandler.UpdateSLADefinition)
+				slaGrp.DELETE("/policies/:id", middleware.RequirePermission("sla", "delete"), config.SLAHandler.DeleteSLADefinition)
+
+				// 兼容旧路径：/sla/monitor → /sla/monitoring
+				slaGrp.POST("/monitor", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAMonitoring)
+
 		if config.SLAHandler != nil {
 			slaGrp := tenant.(*gin.RouterGroup).Group("/sla")
 			{

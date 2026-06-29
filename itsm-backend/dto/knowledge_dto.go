@@ -5,8 +5,8 @@ import "time"
 // 创建知识库文章请求
 type CreateKnowledgeArticleRequest struct {
 	Title    string   `json:"title" binding:"required"`
-	Content  string   `json:"content"`
-	Category string   `json:"category" binding:"required"`
+	Content  string   `json:"content" binding:"required,min=1,max=10000"`
+	Category string   `json:"category" binding:"required,oneof=faq troubleshooting documentation announcement guide other"`
 	Tags     []string `json:"tags"`
 }
 

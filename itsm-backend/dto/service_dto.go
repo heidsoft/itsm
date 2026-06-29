@@ -18,17 +18,17 @@ type UserResponse struct {
 
 // CreateServiceRequestRequest 创建服务请求请求
 type CreateServiceRequestRequest struct {
-	CatalogID int            `json:"catalog_id" binding:"required,min=1"`
+	CatalogID int            `json:"catalogId" binding:"required,min=1"`
 	Title     string         `json:"title" binding:"omitempty,max=255"`
 	Reason    string         `json:"reason" binding:"omitempty,max=500"`
 	FormData  map[string]any `json:"form_data" binding:"omitempty"`
 
-	CostCenter         string     `json:"cost_center" binding:"omitempty,max=100"`
-	DataClassification string     `json:"data_classification" binding:"omitempty,oneof=public internal confidential"`
-	NeedsPublicIP      bool       `json:"needs_public_ip"`
-	SourceIPWhitelist  []string   `json:"source_ip_whitelist" binding:"omitempty"`
-	ExpireAt           *time.Time `json:"expire_at" binding:"omitempty"`
-	ComplianceAck      bool       `json:"compliance_ack"`
+	CostCenter         string     `json:"costCenter" binding:"omitempty,max=100"`
+	DataClassification string     `json:"dataClassification" binding:"omitempty,oneof=public internal confidential"`
+	NeedsPublicIP      bool       `json:"needsPublicIP"`
+	SourceIPWhitelist  []string   `json:"sourceIPWhitelist" binding:"omitempty"`
+	ExpireAt           *time.Time `json:"expireAt" binding:"omitempty"`
+	ComplianceAck      bool       `json:"complianceAck"`
 }
 
 // UpdateServiceRequestStatusRequest 更新服务请求状态请求
@@ -42,12 +42,12 @@ type UpdateServiceRequestRequest struct {
 	Reason   string         `json:"reason" binding:"omitempty,max=500"`
 	FormData map[string]any `json:"form_data" binding:"omitempty"`
 
-	CostCenter         string     `json:"cost_center" binding:"omitempty,max=100"`
-	DataClassification string     `json:"data_classification" binding:"omitempty,oneof=public internal confidential"`
-	NeedsPublicIP      bool       `json:"needs_public_ip"`
-	SourceIPWhitelist  []string   `json:"source_ip_whitelist" binding:"omitempty"`
+	CostCenter         string     `json:"costCenter" binding:"omitempty,max=100"`
+	DataClassification string     `json:"dataClassification" binding:"omitempty,oneof=public internal confidential"`
+	NeedsPublicIP      bool       `json:"needsPublicIP"`
+	SourceIPWhitelist  []string   `json:"sourceIPWhitelist" binding:"omitempty"`
 	ExpireAt           *time.Time `json:"expire_at" binding:"omitempty"`
-	ComplianceAck      bool       `json:"compliance_ack"`
+	ComplianceAck      bool       `json:"complianceAck"`
 }
 
 // GetServiceCatalogsRequest 获取服务目录请求
@@ -225,9 +225,9 @@ type CreateServiceCatalogRequest struct {
 	Name           string `json:"name" binding:"required,max=255"`
 	Category       string `json:"category" binding:"required,max=100"`
 	Description    string `json:"description" binding:"omitempty,max=1000"`
-	DeliveryTime   string `json:"delivery_time" binding:"required,max=50"`
-	CITypeID       int    `json:"ci_type_id,omitempty"`
-	CloudServiceID int    `json:"cloud_service_id,omitempty"`
+	DeliveryTime   string `json:"deliveryTime" binding:"required,max=50"`
+	CITypeID       int    `json:"ciTypeId,omitempty"`
+	CloudServiceID int    `json:"cloudServiceId,omitempty"`
 	Status         string `json:"status" binding:"omitempty,oneof=enabled disabled"`
 }
 
@@ -236,8 +236,8 @@ type UpdateServiceCatalogRequest struct {
 	Name           string `json:"name" binding:"omitempty,max=255"`
 	Category       string `json:"category" binding:"omitempty,max=100"`
 	Description    string `json:"description" binding:"omitempty,max=1000"`
-	DeliveryTime   string `json:"delivery_time" binding:"omitempty,max=50"`
-	CITypeID       int    `json:"ci_type_id,omitempty"`
-	CloudServiceID int    `json:"cloud_service_id,omitempty"`
+	DeliveryTime   string `json:"deliveryTime" binding:"omitempty,max=50"`
+	CITypeID       int    `json:"ciTypeId,omitempty"`
+	CloudServiceID int    `json:"cloudServiceId,omitempty"`
 	Status         string `json:"status" binding:"omitempty,oneof=enabled disabled"`
 }

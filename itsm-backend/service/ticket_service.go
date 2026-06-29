@@ -169,7 +169,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 异步发送通知（如果分配了处理人）
 	if s.notificationSvc != nil && tkt.AssigneeID != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取 ent.Ticket 用于通知（临时方案）
 			// 理想情况下应该传递领域模型
@@ -183,7 +183,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 异步执行自动化规则
 	if s.automationRuleSvc != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 30*time.Second)
 			defer cancel()
 			if err := s.automationRuleSvc.ExecuteRulesForTicket(ctx2, tkt.ID, tenantID); err != nil {
 				s.logger.Warnw("Automation rules failed", "error", err)
@@ -195,7 +195,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 这是 V1 缺失的 Phase 1 #1 缺陷修复：V2 必须让工单进入 BPMN 引擎
 	if s.processTriggerSvc != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 30*time.Second)
 			defer cancel()
 			if err := s.triggerWorkflowForTicket(ctx2, tkt, tenantID, req.WorkflowDefinitionKey); err != nil {
 				s.logger.Warnw("Workflow trigger failed", "error", err, "ticket_id", tkt.ID)
@@ -208,7 +208,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
@@ -423,7 +423,7 @@ func (s *TicketService) GetTicket(ctx context.Context, id int, tenantID int) (*t
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
@@ -523,7 +523,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
@@ -633,7 +633,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 	// 发送通知
 	if s.notificationSvc != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			if err := s.notificationSvc.NotifyTicketAssigned(ctx2, ticketID, assigneeID, tenantID); err != nil {
 				s.logger.Warnw("Assignment notification failed", "error", err)
@@ -645,7 +645,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
@@ -710,7 +710,7 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolut
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
@@ -786,7 +786,7 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, tenantID 
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
@@ -945,7 +945,7 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
@@ -1103,7 +1103,7 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 
 	if s.notificationSvc != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			_ = s.notificationSvc.NotifyTicketAssigned(ctx2, ticketID, newAssignee, tenantID)
 		}()
@@ -1114,7 +1114,7 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
@@ -1744,7 +1744,7 @@ func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, custo
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
-			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
 			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")

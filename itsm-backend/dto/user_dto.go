@@ -14,7 +14,7 @@ type CreateUserRequest struct {
 	Password   string `json:"password" binding:"required,min=6"`
 	TenantID   int    `json:"tenant_id" binding:"required,min=1"`
 	// 角色，可选；不提供时使用后端默认值（end_user）
-	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician security end_user"`
+	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician security end_user user"`
 	// MSP角色，仅当用户属于MSP租户时使用
 	MSPRole string `json:"msp_role,omitempty" binding:"omitempty,oneof=provider_admin provider_agent customer_user"`
 }
@@ -27,7 +27,7 @@ type UpdateUserRequest struct {
 	Department string `json:"department,omitempty"`
 	Phone      string `json:"phone,omitempty"`
 	// 角色更新，仅管理员有权限更新
-	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician security end_user"`
+	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician security end_user user"`
 }
 
 // ListUsersRequest 获取用户列表请求

@@ -46,7 +46,7 @@ type ResolutionStep struct {
 // 事件管理相关DTO
 type CreateIncidentRequest struct {
 	Title               string                 `json:"title" binding:"required" example:"服务器CPU使用率过高"`
-	Description         string                 `json:"description" example:"生产环境Web服务器CPU使用率持续超过90%"`
+	Description         string                 `json:"description" binding:"omitempty,max=5000" example:"生产环境Web服务器CPU使用率持续超过90%"`
 	Type                string                 `json:"type" binding:"omitempty,oneof=incident service_request security_event alert" example:"incident"` // 事件类型
 	Priority            string                 `json:"priority" binding:"omitempty,oneof=low medium high critical" example:"high"`
 	Severity            string                 `json:"severity" binding:"omitempty,oneof=low medium high critical" example:"high"`
@@ -84,7 +84,7 @@ type UpdateIncidentRequest struct {
 type IncidentResponse struct {
 	ID                  int                    `json:"id" example:"1"`
 	Title               string                 `json:"title" example:"服务器CPU使用率过高"`
-	Description         string                 `json:"description" example:"生产环境Web服务器CPU使用率持续超过90%"`
+	Description         string                 `json:"description" binding:"omitempty,max=5000" example:"生产环境Web服务器CPU使用率持续超过90%"`
 	Status              string                 `json:"status" example:"new"`
 	Priority            string                 `json:"priority" example:"high"`
 	Severity            string                 `json:"severity" example:"high"`
