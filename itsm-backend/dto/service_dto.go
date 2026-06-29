@@ -21,7 +21,7 @@ type CreateServiceRequestRequest struct {
 	CatalogID int            `json:"catalogId" binding:"required,min=1"`
 	Title     string         `json:"title" binding:"omitempty,max=255"`
 	Reason    string         `json:"reason" binding:"omitempty,max=500"`
-	FormData  map[string]any `json:"form_data" binding:"omitempty"`
+	FormData  map[string]any `json:"formData" binding:"omitempty"`
 
 	CostCenter         string     `json:"costCenter" binding:"omitempty,max=100"`
 	DataClassification string     `json:"dataClassification" binding:"omitempty,oneof=public internal confidential"`
@@ -40,7 +40,7 @@ type UpdateServiceRequestStatusRequest struct {
 type UpdateServiceRequestRequest struct {
 	Title    string         `json:"title" binding:"omitempty,max=255"`
 	Reason   string         `json:"reason" binding:"omitempty,max=500"`
-	FormData map[string]any `json:"form_data" binding:"omitempty"`
+	FormData map[string]any `json:"formData" binding:"omitempty"`
 
 	CostCenter         string     `json:"costCenter" binding:"omitempty,max=100"`
 	DataClassification string     `json:"dataClassification" binding:"omitempty,oneof=public internal confidential"`

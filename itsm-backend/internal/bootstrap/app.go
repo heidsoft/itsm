@@ -460,10 +460,14 @@ func NewApplication() *Application {
 	approvalChainService := service.NewApprovalChainService(client, sugar)
 	approvalChainController := controller.NewApprovalChainController(approvalChainService, sugar)
 
+	escalationMatrixController := controller.NewEscalationMatrixController(sugar, escalationMatrixService)
+
 	// SLA Monitor & Alert Services (legacy, for background tasks)
 	slaMonitorService := service.NewSLAMonitorService(client, sugar)
 	slaAlertService := service.NewSLAAlertService(client, sugar)
 	escalationService := service.NewEscalationService(client, sugar)
+	escalationMatrixService := service.NewEscalationMatrixService(sugar)
+
 	// Wire up notification service
 	slaMonitorService.SetNotificationService(ticketNotificationService)
 	slaAlertService.SetNotificationService(ticketNotificationService)
@@ -551,6 +555,8 @@ func NewApplication() *Application {
 		PermissionController:    permissionController,
 		MenuController:          menuController,
 		TenantController:        tenantController,
+		EscalationMatrixController: escalationMatrixController,
+
 		MSPController:           mspController,
 		SystemConfigController:  systemConfigController,
 		ApprovalChainController: approvalChainController,

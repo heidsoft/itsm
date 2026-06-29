@@ -95,6 +95,7 @@ type RouterConfig struct {
 	MSPController                    *controller.MSPController
 	SystemConfigController           *controller.SystemConfigController
 	ApprovalChainController          *controller.ApprovalChainController
+	EscalationMatrixController       *controller.EscalationMatrixController
 	NotificationPreferenceController *controller.NotificationPreferenceController
 	NotificationController           *controller.NotificationController
 
@@ -575,6 +576,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				approvalChains.PUT("/:id", config.ApprovalChainController.UpdateChain)
 				approvalChains.DELETE("/:id", config.ApprovalChainController.DeleteChain)
 			}
+		// ==================== Escalation Matrix ====================
+		if config.EscalationMatrixController != nil {
+			config.EscalationMatrixController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
 		}
 
 		// ==================== Incidents ====================
