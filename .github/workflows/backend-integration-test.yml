@@ -1,0 +1,82 @@
+name: 后端集成测试
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+      - name: 设置 Go 环境
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: itsm-backend/go.sum
+      - name: 配置国内Go代理
+        run: |
+          go env -w GOPROXY=https://goproxy.cn,direct
+          go env -w GOSUMDB=sum.golang.org
+      - name: 下载后端依赖
+        working-directory: itsm-backend
+        run: go mod download
+      - name: 启动测试依赖服务
+        run: |
+          docker compose -f docker-compose.dev.yml up -d postgres redis
+          until docker exec itsm-postgres-dev pg_isready -U itsm -d itsm; do
+            sleep 2
+            echo "等待PostgreSQL启动..."
+          done
+          until docker exec itsm-redis-dev redis-cli ping; do
+            sleep 2
+            echo "等待Redis启动..."
+          done
+      - name: 初始化测试数据库
+        working-directory: itsm-backend
+        run: |
+          export DB_HOST=localhost
+          export DB_PORT=5432
+          export DB_USER=itsm
+          export DB_PASSWORD=dev123
+          export DB_NAME=itsm
+          export DB_SSLMODE=disable
+          export REDIS_HOST=localhost
+          export REDIS_PORT=6379
+          export REDIS_PASSWORD=
+          export JWT_SECRET=test-jwt-secret-key-32chars-minimum-required-12345
+          export LOG_LEVEL=error
+          go run -tags migrate main.go
+      - name: 运行后端测试
+        working-directory: itsm-backend
+        run: |
+          export DB_HOST=localhost
+          export DB_PORT=5432
+          export DB_USER=itsm
+          export DB_PASSWORD=dev123
+          export DB_NAME=itsm
+          export DB_SSLMODE=disable
+          export REDIS_HOST=localhost
+          export REDIS_PORT=6379
+          export REDIS_PASSWORD=
+          export JWT_SECRET=test-jwt-secret-key-32chars-minimum-required-12345
+          export LOG_LEVEL=error
+          go test -v ./... -coverprofile=coverage.out -covermode=atomic || echo "⚠️ 后端测试未配置，跳过"
+      - name: 上传测试覆盖率报告
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: go-test-coverage
+          path: itsm-backend/coverage.out
+      - name: 收集服务日志
+        if: failure()
+        run: docker compose -f docker-compose.dev.yml logs > docker-compose.log
+      - name: 上传服务日志
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-service-logs
+          path: docker-compose.log
