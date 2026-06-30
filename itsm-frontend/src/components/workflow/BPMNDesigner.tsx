@@ -18,15 +18,15 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignTop,
-  AlignMiddle,
-  AlignBottom,
-  DistributeHorizontal,
-  DistributeVertical,
+  PanelTop,
+  Rows2,
+  PanelBottom,
+  AlignHorizontalDistributeCenter,
+  AlignVerticalDistributeCenter,
   Grid,
   Copy,
-  Paste,
-  SelectAll,
+  ClipboardPaste,
+  ListChecks,
   Settings,
   Bug
 } from 'lucide-react';
@@ -81,6 +81,20 @@ interface HistoryItem {
   description?: string;
 }
 
+const readCanvasZoom = (canvas: unknown): number => {
+  const typedCanvas = canvas as
+    | { getZoom?: () => number; zoom?: (level?: string | number) => number }
+    | undefined;
+  if (typeof typedCanvas?.getZoom === 'function') {
+    return typedCanvas.getZoom();
+  }
+  if (typeof typedCanvas?.zoom === 'function') {
+    const zoom = typedCanvas.zoom();
+    return typeof zoom === 'number' ? zoom : 1;
+  }
+  return 1;
+};
+
 const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   xml = '',
   onSave,
@@ -121,10 +135,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     initAttemptedRef.current = true;
 
     try {
-      const additionalModules = [
-        gridModule,
-        alignToOriginModule
-      ];
+      const additionalModules = [gridModule];
 
       const modeler = new BpmnModeler({
         container: containerRef.current,
@@ -132,12 +143,6 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         grid: {
           size: 10,
           visible: showGrid
-        },
-        alignToOrigin: {
-          enabled: true
-        },
-        keyboard: {
-          bindTo: document
         }
       });
 
@@ -149,10 +154,10 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           .importXML(xml)
           .then(() => {
             const canvas = modeler.get('canvas') as
-              | { zoom: (level: string | number) => void; getZoom: () => number }
+              | { zoom: (level?: string | number) => number }
               | undefined;
             canvas?.zoom('fit-viewport');
-            setZoom(canvas?.getZoom() || 1);
+            setZoom(readCanvasZoom(canvas));
           })
           .catch((err: Error) => {
             console.error('Failed to import XML:', err);
@@ -163,10 +168,10 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           .createDiagram()
           .then(() => {
             const canvas = modeler.get('canvas') as
-              | { zoom: (level: string) => void; getZoom: () => number }
+              | { zoom: (level?: string) => number }
               | undefined;
             canvas?.zoom('fit-viewport');
-            setZoom(canvas?.getZoom() || 1);
+            setZoom(readCanvasZoom(canvas));
           })
           .catch((err: Error) => {
             console.error('Failed to create blank diagram:', err);
@@ -176,9 +181,10 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       // 监听变化
       modeler.on('commandStack.changed', () => {
         modeler.saveXML({ format: true }).then(result => {
-          if (result.xml) {
-            setCurrentXML(result.xml);
-            onChange?.(result.xml);
+          const savedXml = result.xml;
+          if (savedXml) {
+            setCurrentXML(savedXml);
+            onChange?.(savedXml);
 
             // 更新历史记录，避免连续重复添加
             setHistory(prev => {
@@ -187,13 +193,13 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
               
               // 避免完全相同的内容重复添加
               const lastItem = newHistory[newHistory.length - 1];
-              if (lastItem && lastItem.xml === result.xml) {
+              if (lastItem && lastItem.xml === savedXml) {
                 return prev;
               }
 
               // 添加新的历史项，最多保留50步
               newHistory.push({ 
-                xml: result.xml, 
+                xml: savedXml, 
                 timestamp: Date.now(),
                 description: '修改流程'
               });
@@ -207,7 +213,6 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       // 监听选中节点变化，向父组件传递当前节点
       if (onSelectionChange) {
         const selection = modeler.get('selection') as {
-          on: (event: string, handler: (event: any) => void) => void;
           get: () => any[];
           select: (elements: any[]) => void;
         };
@@ -231,15 +236,18 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
             onSelectionChange(null);
             return;
           }
-          onSelectionChange({
+          const nodeSelection: BpmnNodeSelection = {
             id: el.id,
             type: el.type || (el.businessObject && el.businessObject.$type) || 'unknown',
-            name: el.businessObject?.name,
             businessObject: el.businessObject || {},
-          });
+          };
+          if (el.businessObject?.name) {
+            nodeSelection.name = el.businessObject.name;
+          }
+          onSelectionChange(nodeSelection);
         };
 
-        selection.on('selection.changed', notifySelection);
+        modeler.on('selection.changed', notifySelection);
       }
 
       // 监听拖拽事件
@@ -320,10 +328,10 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         .importXML(xml)
         .then(() => {
           const canvas = modelerRef.current!.get('canvas') as
-            | { zoom: (level: string) => void; getZoom: () => number }
+            | { zoom: (level?: string) => number }
             | undefined;
           canvas?.zoom('fit-viewport');
-          setZoom(canvas?.getZoom() || 1);
+          setZoom(readCanvasZoom(canvas));
           setCurrentXML(xml);
           // 重置历史记录
           setHistory([{ xml, timestamp: Date.now(), description: '加载流程' }]);
@@ -909,21 +917,21 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     },
     {
       key: 'top',
-      icon: <AlignTop size={14} />,
+      icon: <PanelTop size={14} />,
       label: '顶部对齐',
       onClick: () => handleAlign('top'),
       disabled: selectedElements.length < 2 || readOnly
     },
     {
       key: 'middle',
-      icon: <AlignMiddle size={14} />,
+      icon: <Rows2 size={14} />,
       label: '垂直居中',
       onClick: () => handleAlign('middle'),
       disabled: selectedElements.length < 2 || readOnly
     },
     {
       key: 'bottom',
-      icon: <AlignBottom size={14} />,
+      icon: <PanelBottom size={14} />,
       label: '底部对齐',
       onClick: () => handleAlign('bottom'),
       disabled: selectedElements.length < 2 || readOnly
@@ -934,14 +942,14 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   const distributeMenuItems: MenuProps['items'] = [
     {
       key: 'horizontal',
-      icon: <DistributeHorizontal size={14} />,
+      icon: <AlignHorizontalDistributeCenter size={14} />,
       label: '水平分布',
       onClick: () => handleDistribute('horizontal'),
       disabled: selectedElements.length < 3 || readOnly
     },
     {
       key: 'vertical',
-      icon: <DistributeVertical size={14} />,
+      icon: <AlignVerticalDistributeCenter size={14} />,
       label: '垂直分布',
       onClick: () => handleDistribute('vertical'),
       disabled: selectedElements.length < 3 || readOnly
@@ -1029,7 +1037,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         <Tooltip title="粘贴 (Ctrl+V)" placement="right">
           <Button
             type="text"
-            icon={<Paste size={18} />}
+            icon={<ClipboardPaste size={18} />}
             onClick={handlePaste}
             disabled={readOnly}
           />
@@ -1037,7 +1045,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         <Tooltip title="全选 (Ctrl+A)" placement="right">
           <Button
             type="text"
-            icon={<SelectAll size={18} />}
+            icon={<ListChecks size={18} />}
             onClick={handleSelectAll}
             disabled={readOnly}
           />
@@ -1054,21 +1062,21 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
 
         <div style={{ height: 1, width: '80%', background: '#e8e8e8', margin: '8px 0' }} />
 
-        <Dropdown menu={{ items: alignMenuItems }} placement="right" trigger={['click']}>
+        <Dropdown menu={{ items: alignMenuItems }} placement="bottomRight" trigger={['click']}>
           <Tooltip title="对齐" placement="right">
             <Button type="text" icon={<AlignLeft size={18} />} disabled={selectedElements.length < 2 || readOnly} />
           </Tooltip>
         </Dropdown>
 
-        <Dropdown menu={{ items: distributeMenuItems }} placement="right" trigger={['click']}>
+        <Dropdown menu={{ items: distributeMenuItems }} placement="bottomRight" trigger={['click']}>
           <Tooltip title="分布" placement="right">
-            <Button type="text" icon={<DistributeHorizontal size={18} />} disabled={selectedElements.length < 3 || readOnly} />
+          <Button type="text" icon={<AlignHorizontalDistributeCenter size={18} />} disabled={selectedElements.length < 3 || readOnly} />
           </Tooltip>
         </Dropdown>
 
         <div style={{ flex: 1 }} />
 
-        <Dropdown menu={{ items: settingsMenuItems }} placement="right" trigger={['click']}>
+        <Dropdown menu={{ items: settingsMenuItems }} placement="bottomRight" trigger={['click']}>
           <Tooltip title="设置" placement="right">
             <Button type="text" icon={<Settings size={18} />} />
           </Tooltip>

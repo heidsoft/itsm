@@ -338,7 +338,8 @@ func NewApplication() *Application {
 
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
 	// Feishu 连接器控制器
-	feishuController := controller.NewFeishuController(connectorManager, ticketService, sugar)
+	feishuSyncService := service.NewFeishuSyncService(client, sugar)
+	feishuController := controller.NewFeishuController(connectorManager, feishuSyncService, sugar)
 
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)

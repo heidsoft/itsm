@@ -99,7 +99,7 @@ export default function WorkflowToolbar({
         <Space>
           校验流程
           {validationIssues.length > 0 && (
-            <Tag color={validationIssues.some(i => i.type === 'error') ? 'error' : 'warning'} size="small">
+            <Tag color={validationIssues.some(i => i.type === 'error') ? 'error' : 'warning'}>
               {validationIssues.length}
             </Tag>
           )}
@@ -134,14 +134,16 @@ export default function WorkflowToolbar({
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center">
       <div className="flex items-center gap-4">
-        <Breadcrumb>
-          <Breadcrumb.Item>
-            <Link href="/workflow">工作流管理</Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>
-            {workflow?.name || '新工作流设计'}
-          </Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb
+          items={[
+            {
+              title: <Link href="/workflow">工作流管理</Link>,
+            },
+            {
+              title: workflow?.name || '新工作流设计',
+            },
+          ]}
+        />
 
         {workflow?.version && (
           <Tag color="blue">v{workflow.version}</Tag>

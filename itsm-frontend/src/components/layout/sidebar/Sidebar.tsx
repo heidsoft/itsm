@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Layout, theme, message } from 'antd';
+import { App, Layout, theme } from 'antd';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
@@ -52,6 +52,7 @@ function convertApiMenuToSidebar(menus: MenuItemType[]): MenuItem[] {
  */
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   const { token } = theme.useToken();
+  const { message } = App.useApp();
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuthStore();

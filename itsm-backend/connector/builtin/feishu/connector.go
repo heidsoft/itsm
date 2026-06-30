@@ -124,6 +124,32 @@ func (f *Feishu) ExchangeOAuthCode(ctx context.Context, code string) (*OAuthToke
 	return f.client.ExchangeOAuthCode(ctx, code)
 }
 
+// VerifyURLToken validates the token sent by Feishu URL verification events.
+func (f *Feishu) VerifyURLToken(token string) bool {
+	return f.client != nil && f.client.VerifyURLToken(token)
+}
+
+func (f *Feishu) CreateTask(ctx context.Context, task *FeishuTask) (*FeishuTask, error) {
+	if f.client == nil {
+		return nil, fmt.Errorf("feishu: connector not initialized")
+	}
+	return f.client.CreateTask(ctx, task)
+}
+
+func (f *Feishu) UpdateTask(ctx context.Context, taskGUID string, task *FeishuTask) (*FeishuTask, error) {
+	if f.client == nil {
+		return nil, fmt.Errorf("feishu: connector not initialized")
+	}
+	return f.client.UpdateTask(ctx, taskGUID, task)
+}
+
+func (f *Feishu) GetTask(ctx context.Context, taskGUID string) (*FeishuTask, error) {
+	if f.client == nil {
+		return nil, fmt.Errorf("feishu: connector not initialized")
+	}
+	return f.client.GetTask(ctx, taskGUID)
+}
+
 // VerifySignature 满足 connector.Receiver 接口
 func (f *Feishu) VerifySignature(headers map[string]string, body []byte) error {
 	if f.client == nil {
@@ -429,54 +455,7 @@ func (f *Feishu) HandleTaskEvent(ctx context.Context, eventType string, eventDat
 	if f.client == nil {
 		return fmt.Errorf("feishu: connector not initialized")
 	}
-
-	// Extract task GUID from event
-	taskGUID, ok := eventData["task_guid"].(string)
-	if !ok {
-		return fmt.Errorf("feishu: missing task_guid in event")
-	}
-
-	// Get the latest task data from Feishu
-	task, err := f.client.GetTask(ctx, taskGUID)
-	if err != nil {
-		return fmt.Errorf("feishu: failed to get task for event: %w", err)
-	}
-
-	// Start transaction
-	tx, err := ent.FromContext(ctx).Tx(ctx)
-	if err != nil {
-		return fmt.Errorf("feishu: failed to start transaction: %w", err)
-	}
-	defer tx.Rollback()
-
-	switch eventType {
-	case "task.created":
-		// Sync new task to ITSM
-		_, err = f.SyncFeishuTaskToTicket(ctx, tx, task)
-	case "task.updated":
-		// Sync updated task to ITSM
-		_, err = f.SyncFeishuTaskToTicket(ctx, tx, task)
-	case "task.deleted":
-		// Handle task deletion: mark ticket as closed or delete sync record?
-		// For now, we'll just delete the sync record
-		syncRecord, err := tx.FeishuTicketSync.Query().
-			Where(feishuticketsync.TenantID(f.cfg.TenantID), feishuticketsync.FeishuTaskID(taskGUID)).
-			Only(ctx)
-		if err == nil {
-			err = tx.FeishuTicketSync.DeleteOne(syncRecord).Exec(ctx)
-		}
-	}
-
-	if err != nil {
-		return fmt.Errorf("feishu: failed to handle task event: %w", err)
-	}
-
-	// Commit transaction
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("feishu: failed to commit transaction: %w", err)
-	}
-
-	return nil
+	return fmt.Errorf("feishu: task event handling requires service.FeishuSyncService")
 }
 
 // mapPriorityToFeishu maps ITSM ticket priority to Feishu task priority

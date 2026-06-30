@@ -27,6 +27,8 @@ jest.mock('bpmn-js/lib/Modeler', () => {
   }));
 });
 
+jest.mock('diagram-js/lib/features/grid-snapping', () => ({}));
+
 // Mock message
 jest.mock('antd', () => {
   return {

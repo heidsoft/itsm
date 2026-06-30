@@ -6,7 +6,7 @@
 import React, { forwardRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Spin } from 'antd';
-import type { BpmnNodeSelection } from '../BPMNDesigner';
+import type { BpmnDesignerApi, BpmnNodeSelection } from '../BPMNDesigner';
 
 // 动态导入 BPMN 设计器 - bpmn-js 库较大，按需加载
 const BPMNDesigner = dynamic(() => import('../BPMNDesigner'), {
@@ -17,11 +17,6 @@ const BPMNDesigner = dynamic(() => import('../BPMNDesigner'), {
     </div>
   ),
 });
-
-export interface BpmnDesignerApi {
-  updateElementProperties: (elementId: string, properties: Record<string, unknown>) => boolean;
-  fitViewport: () => void;
-}
 
 interface WorkflowCanvasProps {
   currentXML: string;

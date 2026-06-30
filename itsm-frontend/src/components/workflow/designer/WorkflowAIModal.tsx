@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Modal, Tabs, Form, Input, Button, Space, Typography, List, Card, Tag, message } from 'antd';
+import { Modal, Tabs, Form, Input, Button, Space, Typography, Card, Tag, App } from 'antd';
 import { 
   RocketOutlined, 
   RobotOutlined, 
@@ -18,13 +18,13 @@ import TextArea from 'antd/es/input/TextArea';
 import { getBpmnDesignerApi } from './WorkflowCanvas';
 
 const { Text, Title, Paragraph } = Typography;
-const { TabPane } = Tabs;
 
 interface WorkflowAIModalProps {
   visible: boolean;
   onClose: () => void;
   currentXML: string;
   workflowName?: string;
+  onApplyGeneratedProcess?: (xml: string) => void;
 }
 
 // 优化建议类型
@@ -51,8 +51,10 @@ export default function WorkflowAIModal({
   visible,
   onClose,
   currentXML,
-  workflowName
+  workflowName,
+  onApplyGeneratedProcess,
 }: WorkflowAIModalProps) {
+  const { message } = App.useApp();
   const [activeTab, setActiveTab] = useState('generate');
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -75,6 +77,8 @@ export default function WorkflowAIModal({
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   id="Definitions_1"
                   targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_1" isExecutable="true" name="${values.processName || 'AI生成的流程'}">
@@ -112,12 +116,67 @@ export default function WorkflowAIModal({
     <bpmn:sequenceFlow id="Flow_4" sourceRef="UserTask_3" targetRef="Gateway_1" />
     <bpmn:sequenceFlow id="Flow_5" name="金额>10000" sourceRef="Gateway_1" targetRef="UserTask_4">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
-        <![CDATA[${amount > 10000}]]>
+        <![CDATA[\${amount > 10000}]]>
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_6" name="金额<=10000" sourceRef="Gateway_1" targetRef="EndEvent_1" />
     <bpmn:sequenceFlow id="Flow_7" sourceRef="UserTask_4" targetRef="EndEvent_1" />
   </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="120" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1_di" bpmnElement="UserTask_1">
+        <dc:Bounds x="210" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_2_di" bpmnElement="UserTask_2">
+        <dc:Bounds x="370" y="120" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_3_di" bpmnElement="UserTask_3">
+        <dc:Bounds x="550" y="120" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1_di" bpmnElement="Gateway_1" isMarkerVisible="true">
+        <dc:Bounds x="720" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_4_di" bpmnElement="UserTask_4">
+        <dc:Bounds x="830" y="40" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
+        <dc:Bounds x="1010" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="156" y="160" />
+        <di:waypoint x="210" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="310" y="160" />
+        <di:waypoint x="370" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="490" y="160" />
+        <di:waypoint x="550" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="660" y="160" />
+        <di:waypoint x="720" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="745" y="135" />
+        <di:waypoint x="745" y="80" />
+        <di:waypoint x="830" y="80" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="770" y="160" />
+        <di:waypoint x="1010" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="950" y="80" />
+        <di:waypoint x="1028" y="80" />
+        <di:waypoint x="1028" y="142" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
 </bpmn:definitions>`;
       
       setGeneratedProcess(generatedXML);
@@ -138,7 +197,7 @@ export default function WorkflowAIModal({
       return;
     }
 
-    // TODO: 替换当前画布的XML
+    onApplyGeneratedProcess?.(generatedProcess);
     message.success('已应用生成的流程');
     onClose();
   };
@@ -264,15 +323,21 @@ export default function WorkflowAIModal({
       onCancel={onClose}
       width={900}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
     >
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab={
-          <Space>
-            <RocketOutlined />
-            生成流程
-          </Space>
-        } key="generate">
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={[
+          {
+            key: 'generate',
+            label: (
+              <Space>
+                <RocketOutlined />
+                生成流程
+              </Space>
+            ),
+            children: (
           <div className="py-4">
             <Paragraph>
               描述您需要的工作流场景，AI将自动为您生成符合BPMN 2.0规范的流程定义。
@@ -327,14 +392,17 @@ export default function WorkflowAIModal({
               </div>
             )}
           </div>
-        </TabPane>
-
-        <TabPane tab={
-          <Space>
-            <RobotOutlined />
-            优化建议
-          </Space>
-        } key="optimize">
+            ),
+          },
+          {
+            key: 'optimize',
+            label: (
+              <Space>
+                <RobotOutlined />
+                优化建议
+              </Space>
+            ),
+            children: (
           <div className="py-4">
             <Paragraph>
               AI将分析您当前的流程设计，提供优化建议和潜在问题检测。
@@ -347,15 +415,16 @@ export default function WorkflowAIModal({
             </div>
 
             {suggestions.length > 0 && (
-              <List
-                dataSource={suggestions}
-                renderItem={item => (
-                  <List.Item
+              <div className="divide-y divide-gray-100">
+                {suggestions.map(item => (
+                  <div
+                    key={item.id}
                     className="cursor-pointer hover:bg-gray-50"
                     onClick={() => item.elementId && jumpToElement(item.elementId)}
                   >
-                    <List.Item.Meta
-                      avatar={
+                    <div className="flex gap-3 px-4 py-3">
+                      <div className="pt-1">
+                        {
                         item.type === 'error' ? (
                           <CloseCircleOutlined className="text-red-500 text-xl" />
                         ) : item.type === 'warning' ? (
@@ -363,39 +432,43 @@ export default function WorkflowAIModal({
                         ) : (
                           <CheckCircleOutlined className="text-green-500 text-xl" />
                         )
-                      }
-                      title={
-                        <Space>
+                        }
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <Space wrap>
                           <span>{item.title}</span>
                           <Tag color={
                             item.severity === 'high' ? 'error' :
                             item.severity === 'medium' ? 'warning' : 'success'
-                          } size="small">
+                          }>
                             {item.severity === 'high' ? '高优先级' :
                              item.severity === 'medium' ? '中优先级' : '低优先级'}
                           </Tag>
                           {item.elementId && (
-                            <Tag color="blue" size="small">
+                            <Tag color="blue">
                               元素: {item.elementId}
                             </Tag>
                           )}
                         </Space>
-                      }
-                      description={item.description}
-                    />
-                  </List.Item>
-                )}
-              />
+                        <div className="mt-1 text-sm text-gray-500">{item.description}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
-        </TabPane>
-
-        <TabPane tab={
-          <Space>
-            <BugOutlined />
-            合规检查
-          </Space>
-        } key="compliance">
+            ),
+          },
+          {
+            key: 'compliance',
+            label: (
+              <Space>
+                <BugOutlined />
+                合规检查
+              </Space>
+            ),
+            children: (
           <div className="py-4">
             <Paragraph>
               基于企业流程规范和最佳实践，检查当前流程是否符合合规要求。
@@ -408,15 +481,16 @@ export default function WorkflowAIModal({
             </div>
 
             {complianceIssues.length > 0 && (
-              <List
-                dataSource={complianceIssues}
-                renderItem={item => (
-                  <List.Item
+              <div className="divide-y divide-gray-100">
+                {complianceIssues.map(item => (
+                  <div
+                    key={item.id}
                     className="cursor-pointer hover:bg-gray-50"
                     onClick={() => item.elementId && jumpToElement(item.elementId)}
                   >
-                    <List.Item.Meta
-                      avatar={
+                    <div className="flex gap-3 px-4 py-3">
+                      <div className="pt-1">
+                        {
                         item.type === 'violation' ? (
                           <CloseCircleOutlined className="text-red-500 text-xl" />
                         ) : item.type === 'warning' ? (
@@ -424,33 +498,36 @@ export default function WorkflowAIModal({
                         ) : (
                           <CheckCircleOutlined className="text-green-500 text-xl" />
                         )
-                      }
-                      title={
-                        <Space>
+                        }
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <Space wrap>
                           <span>{item.rule}</span>
                           <Tag color={
                             item.severity === 'high' ? 'error' :
                             item.severity === 'medium' ? 'warning' : 'success'
-                          } size="small">
+                          }>
                             {item.severity === 'high' ? '高风险' :
                              item.severity === 'medium' ? '中风险' : '建议'}
                           </Tag>
                           {item.elementId && (
-                            <Tag color="blue" size="small">
+                            <Tag color="blue">
                               元素: {item.elementId}
                             </Tag>
                           )}
                         </Space>
-                      }
-                      description={item.description}
-                    />
-                  </List.Item>
-                )}
-              />
+                        <div className="mt-1 text-sm text-gray-500">{item.description}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
-        </TabPane>
-      </Tabs>
+            ),
+          },
+        ]}
+      />
     </Modal>
   );
 }

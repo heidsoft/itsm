@@ -133,7 +133,7 @@ export default function WorkflowInstancesPage() {
     try {
       setDetailLoading(true);
       const [tasksRes, timelineRes] = await Promise.all([
-        WorkflowApi.getInstanceTasks(instanceId),
+        WorkflowApi.getNodeInstances(instanceId),
         BPMNDashboardApi.getProcessTimeline(instanceId).catch(() => []),
       ]);
       
@@ -300,7 +300,7 @@ export default function WorkflowInstancesPage() {
         dataIndex: 'assigneeName',
         key: 'assigneeName',
         width: 120,
-        render: (value: string, record: WorkflowTask) => value || record.assignee || '-',
+        render: (value: string, record: NodeInstance) => value || record.assignee || '-',
       },
       {
         title: '创建时间',
@@ -398,7 +398,7 @@ export default function WorkflowInstancesPage() {
                             {log.action.replace('_', ' ')}
                           </span>
                           {log.activity_name && (
-                            <Tag size="small">{log.activity_name}</Tag>
+                            <Tag>{log.activity_name}</Tag>
                           )}
                         </Space>
                         <span className="text-xs text-gray-500">

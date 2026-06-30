@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Card, Empty, Select, Input, Tag, Typography, Space, Divider, Alert, Button, Switch, TextArea, InputNumber } from 'antd';
+import { Card, Empty, Select, Input, Tag, Typography, Space, Divider, Alert, Button, Switch, InputNumber } from 'antd';
 import { 
   User, Users, UserCheck, Hash, Tag as TagIcon, RefreshCw, 
   Code, Server, GitBranch, PlayCircle, Clock, FileText, 
@@ -19,6 +19,7 @@ import type { BpmnNodeSelection } from '../BPMNDesigner';
 
 const { Text } = Typography;
 const { Option } = Select;
+const { TextArea } = Input;
 
 export interface WorkflowNodeInspectorProps {
   selection: BpmnNodeSelection | null;

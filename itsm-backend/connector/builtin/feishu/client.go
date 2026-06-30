@@ -12,7 +12,6 @@
 package feishu
 
 import (
-	"net/url"
 	"bytes"
 	"context"
 	"crypto/hmac"
@@ -22,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -104,12 +104,16 @@ func (c *Client) Token(ctx context.Context) (string, error) {
 }
 
 func (c *Client) doJSON(ctx context.Context, method, path string, in, out interface{}) error {
-	body, _ := json.Marshal(in)
+	var body io.Reader
+	if in != nil {
+		raw, _ := json.Marshal(in)
+		body = bytes.NewReader(raw)
+	}
 	tok, err := c.Token(ctx)
 	if err != nil {
 		return err
 	}
-	req, _ := http.NewRequestWithContext(ctx, method, c.baseURL+path, bytes.NewReader(body))
+	req, _ := http.NewRequestWithContext(ctx, method, c.baseURL+path, body)
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	req.Header.Set("Authorization", "Bearer "+tok)
 	resp, err := c.hc.Do(req)
@@ -150,26 +154,26 @@ func (c *Client) VerifyURLToken(token string) bool {
 
 // FeishuTask represents a Feishu task
 type FeishuTask struct {
-	GUID        string    `json:"guid,omitempty"`
-	Name        string    `json:"name"`
-	Description string    `json:"description,omitempty"`
-	StartTime   int64     `json:"start_time,omitempty"` // Unix timestamp in seconds
-	DueTime     int64     `json:"due_time,omitempty"`   // Unix timestamp in seconds
-	Completed   bool      `json:"completed,omitempty"`
-	CompletedAt int64     `json:"completed_at,omitempty"`
-	CreatorID   string    `json:"creator_id,omitempty"`
-	Assignees   []string  `json:"assignees,omitempty"` // User open IDs
-	Status      string    `json:"status,omitempty"`    // not_started / in_progress / completed / canceled
-	Priority    string    `json:"priority,omitempty"`  // low / medium / high / urgent
-	CreatedAt   int64     `json:"created_at,omitempty"`
-	UpdatedAt   int64     `json:"updated_at,omitempty"`
+	GUID        string                 `json:"guid,omitempty"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description,omitempty"`
+	StartTime   int64                  `json:"start_time,omitempty"` // Unix timestamp in seconds
+	DueTime     int64                  `json:"due_time,omitempty"`   // Unix timestamp in seconds
+	Completed   bool                   `json:"completed,omitempty"`
+	CompletedAt int64                  `json:"completed_at,omitempty"`
+	CreatorID   string                 `json:"creator_id,omitempty"`
+	Assignees   []string               `json:"assignees,omitempty"` // User open IDs
+	Status      string                 `json:"status,omitempty"`    // not_started / in_progress / completed / canceled
+	Priority    string                 `json:"priority,omitempty"`  // low / medium / high / urgent
+	CreatedAt   int64                  `json:"created_at,omitempty"`
+	UpdatedAt   int64                  `json:"updated_at,omitempty"`
 	Extra       map[string]interface{} `json:"extra,omitempty"`
 }
 
 // CreateTask creates a new Feishu task
 func (c *Client) CreateTask(ctx context.Context, task *FeishuTask) (*FeishuTask, error) {
 	var resp struct {
-		Code int `json:"code"`
+		Code int    `json:"code"`
 		Msg  string `json:"msg"`
 		Data struct {
 			Task *FeishuTask `json:"task"`
@@ -188,7 +192,7 @@ func (c *Client) CreateTask(ctx context.Context, task *FeishuTask) (*FeishuTask,
 // UpdateTask updates an existing Feishu task
 func (c *Client) UpdateTask(ctx context.Context, taskGUID string, task *FeishuTask) (*FeishuTask, error) {
 	var resp struct {
-		Code int `json:"code"`
+		Code int    `json:"code"`
 		Msg  string `json:"msg"`
 		Data struct {
 			Task *FeishuTask `json:"task"`
@@ -207,7 +211,7 @@ func (c *Client) UpdateTask(ctx context.Context, taskGUID string, task *FeishuTa
 // GetTask gets a Feishu task by GUID
 func (c *Client) GetTask(ctx context.Context, taskGUID string) (*FeishuTask, error) {
 	var resp struct {
-		Code int `json:"code"`
+		Code int    `json:"code"`
 		Msg  string `json:"msg"`
 		Data struct {
 			Task *FeishuTask `json:"task"`
@@ -226,7 +230,7 @@ func (c *Client) GetTask(ctx context.Context, taskGUID string) (*FeishuTask, err
 // DeleteTask deletes a Feishu task by GUID
 func (c *Client) DeleteTask(ctx context.Context, taskGUID string) error {
 	var resp struct {
-		Code int `json:"code"`
+		Code int    `json:"code"`
 		Msg  string `json:"msg"`
 	}
 	err := c.doJSON(ctx, http.MethodDelete, fmt.Sprintf("/open-apis/task/v2/tasks/%s", taskGUID), nil, &resp)
@@ -246,7 +250,7 @@ func (c *Client) ListTasks(ctx context.Context, pageToken string, pageSize int) 
 		path += fmt.Sprintf("&page_token=%s", pageToken)
 	}
 	var resp struct {
-		Code int `json:"code"`
+		Code int    `json:"code"`
 		Msg  string `json:"msg"`
 		Data struct {
 			Tasks     []*FeishuTask `json:"tasks"`
@@ -304,8 +308,8 @@ func (c *Client) ExchangeOAuthCode(ctx context.Context, code string) (*OAuthToke
 	defer resp.Body.Close()
 	raw, _ := io.ReadAll(resp.Body)
 	var out struct {
-		Code int `json:"code"`
-		Msg  string `json:"msg"`
+		Code int                 `json:"code"`
+		Msg  string              `json:"msg"`
 		Data *OAuthTokenResponse `json:"data"`
 	}
 	if err := json.Unmarshal(raw, &out); err != nil {
@@ -338,8 +342,8 @@ func (c *Client) RefreshOAuthToken(ctx context.Context, refreshToken string) (*O
 	defer resp.Body.Close()
 	raw, _ := io.ReadAll(resp.Body)
 	var out struct {
-		Code int `json:"code"`
-		Msg  string `json:"msg"`
+		Code int                 `json:"code"`
+		Msg  string              `json:"msg"`
 		Data *OAuthTokenResponse `json:"data"`
 	}
 	if err := json.Unmarshal(raw, &out); err != nil {
