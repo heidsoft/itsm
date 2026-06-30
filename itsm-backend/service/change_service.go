@@ -72,6 +72,27 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		}
 	}
 
+	// 构建响应（先填充实体数据，状态后续可能更新）
+	response := &dto.ChangeResponse{
+		ID:                 changeEntity.ID,
+		Title:              changeEntity.Title,
+		Description:        changeEntity.Description,
+		Justification:      changeEntity.Justification,
+		Type:               dto.ChangeType(changeEntity.Type),
+		Status:             dto.ChangeStatus(changeEntity.Status),
+		Priority:           dto.ChangePriority(changeEntity.Priority),
+		ImpactScope:        dto.ChangeImpact(changeEntity.ImpactScope),
+		RiskLevel:          dto.ChangeRisk(changeEntity.RiskLevel),
+		CreatedBy:          changeEntity.CreatedBy,
+		TenantID:           changeEntity.TenantID,
+		PlannedStartDate:   &changeEntity.PlannedStartDate,
+		PlannedEndDate:     &changeEntity.PlannedEndDate,
+		ImplementationPlan: changeEntity.ImplementationPlan,
+		RollbackPlan:       changeEntity.RollbackPlan,
+		CreatedAt:          changeEntity.CreatedAt,
+		UpdatedAt:          changeEntity.UpdatedAt,
+	}
+
 	// 根据ITIL变更类型自动处理初始状态
 	switch req.Type {
 	case string(dto.ChangeTypeStandard):
@@ -84,22 +105,12 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 				s.logger.Warnw("Failed to auto-approve standard change", "error", err, "change_id", changeEntity.ID)
 			} else {
 				s.logger.Infow("Standard change auto-approved per ITIL standard", "change_id", changeEntity.ID, "tenant_id", tenantID)
-				// 更新响应中的状态
 				response.Status = dto.ChangeStatusApproved
 			}
 		}
 	case string(dto.ChangeTypeEmergency):
 		// 紧急变更：记录特殊标记，后续走ECAB快速审批流程
 		s.logger.Infow("Emergency change created per ITIL standard - requires ECAB approval", "change_id", changeEntity.ID, "tenant_id", tenantID)
-		// 紧急变更可以自动进入待审批状态，不需要提交步骤
-		_, err = changeEntity.Update().
-			SetStatus(string(dto.ChangeStatusSubmitted)).
-			Save(ctx)
-		if err != nil {
-			s.logger.Warnw("Failed to auto-submit emergency change", "error", err, "change_id", changeEntity.ID)
-		} else {
-			response.Status = dto.ChangeStatusSubmitted
-		}
 	}
 
 	// 获取创建人信息
@@ -108,26 +119,8 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		s.logger.Warnw("Failed to get creator info", "error", err, "user_id", createdBy)
 	}
 
-	// 构建响应
-	response := &dto.ChangeResponse{
-		ID:                 changeEntity.ID,
-		Title:              changeEntity.Title,
-		Description:        changeEntity.Description,
-		Justification:      changeEntity.Justification,
-		Type:               dto.ChangeType(changeEntity.Type),
-		Status:             dto.ChangeStatus(changeEntity.Status),
-		Priority:           dto.ChangePriority(changeEntity.Priority),
-		ImpactScope:        dto.ChangeImpact(changeEntity.ImpactScope),
-		RiskLevel:          dto.ChangeRisk(changeEntity.RiskLevel),
-		CreatedBy:          changeEntity.CreatedBy,
-		CreatedByName:      creator.Name,
-		TenantID:           changeEntity.TenantID,
-		PlannedStartDate:   &changeEntity.PlannedStartDate,
-		PlannedEndDate:     &changeEntity.PlannedEndDate,
-		ImplementationPlan: changeEntity.ImplementationPlan,
-		RollbackPlan:       changeEntity.RollbackPlan,
-		CreatedAt:          changeEntity.CreatedAt,
-		UpdatedAt:          changeEntity.UpdatedAt,
+	if creator != nil {
+		response.CreatedByName = creator.Name
 	}
 
 	// 设置受影响的配置项

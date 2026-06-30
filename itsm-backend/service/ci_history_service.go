@@ -42,14 +42,15 @@ func (s *CIHistoryService) RecordCIHistory(
 			configurationitemhistory.CiIDEQ(ciID),
 			configurationitemhistory.TenantIDEQ(tenantID),
 		).
-		Max(ctx, configurationitemhistory.FieldVersion)
+		Aggregate(ent.Max(configurationitemhistory.FieldVersion)).
+		Int(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get max CI version", "error", err, "ci_id", ciID)
 		return fmt.Errorf("failed to get max version: %w", err)
 	}
 	version := 1
-	if maxVersion != nil {
-		version = *maxVersion + 1
+	if maxVersion > 0 {
+		version = maxVersion + 1
 	}
 
 	// 转换before和after为map
@@ -242,9 +243,7 @@ func (s *CIHistoryService) RevertCIVersion(ctx context.Context, ciID, tenantID, 
 	if cloudResourceRefID, ok := after["cloud_resource_ref_id"].(int); ok {
 		update.SetCloudResourceRefID(cloudResourceRefID)
 	}
-	if tags, ok := after["tags"].([]string); ok {
-		update.SetTags(tags)
-	}
+	// tags字段在ConfigurationItem entity中不存在，跳过
 
 	// 保存更新
 	updatedCI, err := update.Save(ctx)
