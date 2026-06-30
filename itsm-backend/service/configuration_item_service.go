@@ -21,11 +21,7 @@ type ConfigurationItemService struct {
 	historyService  *CIHistoryService
 	tagService      *CITagService
 }
-	client *ent.Client
-	logger *zap.SugaredLogger
-}
 
-// NewConfigurationItemService 创建配置项服务
 // NewConfigurationItemService 创建配置项服务
 func NewConfigurationItemService(client *ent.Client, logger *zap.SugaredLogger, historyService *CIHistoryService, tagService *CITagService) *ConfigurationItemService {
 	return &ConfigurationItemService{
@@ -144,7 +140,7 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 		// 记录创建历史
 		operatorID, _ := ctx.Value(user_id).(int)
 		operatorName, _ := ctx.Value(user_name).(string)
-		_ = s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, create, , nil, ci)
+		_ = s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, create, nil, ci)
 	}
 	if err != nil {
 		s.logger.Errorw("Failed to create configuration item", "error", err, "tenant_id", tenantID, "name", req.Name)

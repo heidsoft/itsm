@@ -117,7 +117,13 @@ func (s *ServiceRequestService) CreateServiceRequest(ctx context.Context, req *d
 		SetTotalLevels(totalLevels).
 		SetComplianceAck(req.ComplianceAck).
 		SetNeedsPublicIP(req.NeedsPublicIP).
-		SetDataClassification(req.DataClassification)
+		SetDataClassification(req.DataClassification).
+		SetApprovalChainID(serviceItem.ApprovalChainID)
+
+	steps := []struct {
+		level       int
+		step        string
+		timeoutHours int
 	}{
 		{1, ApprovalStepManager, ApprovalTimeoutManager},
 		{2, ApprovalStepIT, ApprovalTimeoutIT},
@@ -136,12 +142,17 @@ func (s *ServiceRequestService) CreateServiceRequest(ctx context.Context, req *d
 			SetDueAt(dueAt).
 			Save(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("创建审批记录失败: %w", err) // Keep fmt.Errorf for internal errors for now
+			return nil, fmt.Errorf("创建审批记录失败: %w", err)
 		}
 	}
 
+	request, err = create.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("提交事务失败: %w", err)
+	}
+
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交事务失败: %w", err) // Keep fmt.Errorf for internal errors for now
+		return nil, fmt.Errorf("提交事务失败: %w", err)
 	}
 
 	// 发送新申请通知给审批人
@@ -351,7 +362,6 @@ func (s *ServiceRequestService) GetServiceRequestDetail(ctx context.Context, id,
 	}
 
 	return resp, nil
-}
 }
 
 // ListServiceRequests 获取服务请求列表

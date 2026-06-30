@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -13,7 +12,6 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/feishuticketsync"
 	"itsm-backend/ent/user"
-	"itsm-backend/ent/ticket"
 )
 
 // Feishu 飞书连接器实现
@@ -359,6 +357,20 @@ func (f *Feishu) SyncFeishuTaskToTicket(ctx context.Context, tx *ent.Tx, feishuT
 		// Create ticket using the same logic as ticket service
 		// TODO: Inject ticket service or reuse create logic
 		// For now, we'll create it directly
+
+		// 映射飞书创建人到ITSM用户
+		requesterID := 1 // 默认管理员
+		if feishuTask.CreatorID != "" {
+			user, err := tx.User.Query().
+				Where(user.FeishuOpenID(feishuTask.CreatorID)).
+				Where(user.TenantID(f.cfg.TenantID)).
+				Only(ctx)
+			if err == nil {
+				requesterID = user.ID
+			}
+		}
+
+		ticketNumber := fmt.Sprintf("TK-%d-%s", f.cfg.TenantID, time.Now().Format("20060102150405"))
 		create := tx.Ticket.Create().
 			SetTitle(createReq.Title).
 			SetDescription(createReq.Description).
@@ -366,33 +378,12 @@ func (f *Feishu) SyncFeishuTaskToTicket(ctx context.Context, tx *ent.Tx, feishuT
 			SetType(createReq.Type).
 			SetStatus(mapStatusFromFeishu(feishuTask.Status)).
 			SetTenantID(f.cfg.TenantID).
-	// 映射飞书创建人到ITSM用户
-	requesterID := 1 // 默认管理员
-	if feishuTask.CreatorID != "" {
-		user, err := tx.User.Query().
-			Where(user.FeishuOpenID(feishuTask.CreatorID)).
-			Where(user.TenantID(f.cfg.TenantID)).
-			Only(ctx)
-		if err == nil {
-			requesterID = user.ID
-		}
-	}
-	create := tx.Ticket.Create().
-		SetTitle(createReq.Title).
-		SetDescription(createReq.Description).
-		SetPriority(createReq.Priority).
-		SetType(createReq.Type).
-		SetStatus(mapStatusFromFeishu(feishuTask.Status)).
-		SetTenantID(f.cfg.TenantID).
-		SetRequesterID(requesterID)
+			SetRequesterID(requesterID).
+			SetTicketNumber(ticketNumber)
 
 		if createReq.AssigneeID > 0 {
 			create.SetAssigneeID(createReq.AssigneeID)
 		}
-		// Generate ticket number (same logic as ticket service)
-		ticketNumber := fmt.Sprintf("TK-%d-%s", f.cfg.TenantID, time.Now().Format("20060102150405"))
-		create.SetTicketNumber(ticketNumber)
-
 		ticket, err = create.Save(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("feishu: failed to create ticket: %w", err)

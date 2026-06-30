@@ -11,10 +11,8 @@ import (
 
 	"go.uber.org/zap"
 )
-	"go.uber.org/zap"
-)
 
-// CMDBSavedViewService CMDB保存视图服务
+// CMDBSavedViewService
 type CMDBSavedViewService struct {
 	client *ent.Client
 	logger *zap.SugaredLogger

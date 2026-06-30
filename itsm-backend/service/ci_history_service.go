@@ -14,7 +14,6 @@ import (
 
 	"go.uber.org/zap"
 )
-)
 
 // CIHistoryService CI历史服务
 type CIHistoryService struct {
