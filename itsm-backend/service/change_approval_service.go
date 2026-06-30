@@ -129,7 +129,7 @@ func (s *ChangeApprovalService) UpdateChangeApproval(ctx context.Context, approv
 		ChangeID:     changeID,
 		ApproverID:   approverID,
 		ApproverName: approver.Name,
-		Status:       req.Status,
+		Status:       dto.ChangeStatus(req.Status),
 		Comment:      req.Comment,
 		ApprovedAt:   approvedAt,
 		CreatedAt:    createdAt,

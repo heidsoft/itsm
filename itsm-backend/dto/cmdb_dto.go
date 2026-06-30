@@ -254,6 +254,13 @@ type UpdateCIRequest struct {
 	CloudSyncStatusSnake    string                 `json:"cloud_sync_status,omitempty"`
 	CloudResourceRefID      int                    `json:"cloudResourceRefId,omitempty"`
 	CloudResourceRefIDSnake int                    `json:"cloud_resource_ref_id,omitempty"`
+	// 生命周期管理
+	LifecycleStatus         string                 `json:"lifecycleStatus,omitempty"`
+	LifecycleStatusSnake     string                 `json:"lifecycle_status,omitempty"`
+	EffectiveAt              *time.Time             `json:"effectiveAt,omitempty"`
+	EffectiveAtSnake         *time.Time             `json:"effective_at,omitempty"`
+	ExpireAt                 *time.Time             `json:"expireAt,omitempty"`
+	ExpireAtSnake            *time.Time             `json:"expire_at,omitempty"`
 }
 
 // CloudService DTOs

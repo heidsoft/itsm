@@ -1,0 +1,14 @@
+@@ -256,12 +256,11 @@
+ 			continue
+ 		}
+ 
+-		var ci *dto.CIResponse
++		var err error
+ 
+ 		if existingCI != nil {
+ 			switch req.UpdateMode {
+ 			case "skip":
+ 				continue
+ 			case "overwrite":
+ 				updateReq := s.convertCreateToUpdateReq(createReq)
+-				ci, err = s.ciService.UpdateCI(ctx, existingCI.ID, tenantID, updateReq)

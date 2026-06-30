@@ -65,10 +65,10 @@ type RouterConfig struct {
 	BPMNProcessTriggerController    *controller.BPMNProcessTriggerController
 	BPMNDashboardController         *controller.BPMNDashboardController
 	BPMNMonitoringController        *controller.BPMNMonitoringController
-	BPMNAIGeneratorController         *controller.BPMNAIGeneratorController
+	BPMNAIGeneratorController       *controller.BPMNAIGeneratorController
 
-	A2UITicketController            *controller.A2UITicketController
-	DashboardHandler                *handlers.DashboardHandler
+	A2UITicketController *controller.A2UITicketController
+	DashboardHandler     *handlers.DashboardHandler
 
 	// Organization & Project
 	ProjectController     *controller.ProjectController
@@ -137,7 +137,7 @@ type RouterConfig struct {
 
 	// Connector Controller (连接器/插件/技能市场)
 	ConnectorController   *controller.ConnectorController
-	FeishuController *controller.FeishuController
+	FeishuController      *controller.FeishuController
 	MarketplaceController *marketplaceController.Controller
 }
 
@@ -220,7 +220,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	}
 
 	// 认证路由（需要JWT）
-	auth := r.Group("/api/v1").Use(middleware.AuthMiddleware(config.JWTSecret))
+	auth := r.Group("/api/v1")
+	auth.Use(middleware.AuthMiddleware(config.JWTSecret))
 	// RBAC 权限控制中间件：保护所有已认证路由
 	auth.Use(middleware.RBACMiddleware(config.Client))
 	// CSRF 保护中间件（仅对状态变更请求生效）
@@ -407,10 +408,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					approvals.DELETE("/:id", middleware.RequirePermission("approval_workflow", "delete"), config.ApprovalController.DeleteWorkflow)
 					approvals.GET("/records", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetApprovalRecords)
 					approvals.POST("/submit", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalController.SubmitApproval)
-			// 兼容旧路径：/approval-records 和 /my-approvals
-			tenant.GET("/approval-records", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetApprovalRecords)
-			tenant.GET("/my-approvals", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetApprovalRecords)
-
+					// 兼容旧路径：/approval-records 和 /my-approvals
+					tenant.GET("/approval-records", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetApprovalRecords)
+					tenant.GET("/my-approvals", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalController.GetApprovalRecords)
 
 				}
 
@@ -527,33 +527,33 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			// P1-01 别名：/system/config → 系统状态（前端默认 fetch 路径）
 			sysRoot := tenant.(*gin.RouterGroup).Group("/system")
 			{
-			// 兼容旧路径：/configs → /system-configs
-			configs := tenant.(*gin.RouterGroup).Group("/configs")
-			{
-				configs.GET("", config.SystemConfigController.ListConfigs)
-				configs.GET("/init", config.SystemConfigController.InitDefaultConfigs)
-				configs.GET("/:id", config.SystemConfigController.GetConfig)
-				configs.GET("/key/:key", config.SystemConfigController.GetConfigByKey)
-				configs.PUT("/:id", config.SystemConfigController.UpdateConfig)
-				configs.PUT("/batch", config.SystemConfigController.BatchUpdateConfigs)
-				configs.GET("/status", func(c *gin.Context) {
-					var m runtime.MemStats
-					runtime.ReadMemStats(&m)
-					c.JSON(200, gin.H{
-						"cpu": gin.H{
-							"usage": 0,
-							"cores": runtime.NumCPU(),
-						},
-						"memory": gin.H{
-							"used":  m.Alloc / 1024 / 1024,
-							"total": m.Sys / 1024 / 1024,
-							"usage": float64(m.Alloc) / float64(m.Sys) * 100,
-						},
-						"goroutines": runtime.NumGoroutine(),
-						"timestamp":  time.Now(),
+				// 兼容旧路径：/configs → /system-configs
+				configs := tenant.(*gin.RouterGroup).Group("/configs")
+				{
+					configs.GET("", config.SystemConfigController.ListConfigs)
+					configs.GET("/init", config.SystemConfigController.InitDefaultConfigs)
+					configs.GET("/:id", config.SystemConfigController.GetConfig)
+					configs.GET("/key/:key", config.SystemConfigController.GetConfigByKey)
+					configs.PUT("/:id", config.SystemConfigController.UpdateConfig)
+					configs.PUT("/batch", config.SystemConfigController.BatchUpdateConfigs)
+					configs.GET("/status", func(c *gin.Context) {
+						var m runtime.MemStats
+						runtime.ReadMemStats(&m)
+						c.JSON(200, gin.H{
+							"cpu": gin.H{
+								"usage": 0,
+								"cores": runtime.NumCPU(),
+							},
+							"memory": gin.H{
+								"used":  m.Alloc / 1024 / 1024,
+								"total": m.Sys / 1024 / 1024,
+								"usage": float64(m.Alloc) / float64(m.Sys) * 100,
+							},
+							"goroutines": runtime.NumGoroutine(),
+							"timestamp":  time.Now(),
+						})
 					})
-				})
-			}
+				}
 
 				sysRoot.GET("/config", func(c *gin.Context) {
 					c.JSON(200, gin.H{
@@ -576,10 +576,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				approvalChains.PUT("/:id", config.ApprovalChainController.UpdateChain)
 				approvalChains.DELETE("/:id", config.ApprovalChainController.DeleteChain)
 			}
-		// ==================== Escalation Matrix ====================
-		if config.EscalationMatrixController != nil {
-			config.EscalationMatrixController.RegisterRoutes(tenant.(*gin.RouterGroup))
-		}
+			// ==================== Escalation Matrix ====================
+			if config.EscalationMatrixController != nil {
+				config.EscalationMatrixController.RegisterRoutes(tenant.(*gin.RouterGroup))
+			}
 
 		}
 
@@ -772,7 +772,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			SetupCMDBRoutes(tenant.(*gin.RouterGroup), config.CMDBController)
 		}
 
-
 		// ==================== Asset Licenses ====================
 		if config.AssetLicenseController != nil {
 			licenses := tenant.(*gin.RouterGroup).Group("/licenses")
@@ -870,12 +869,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				// 静态路由必须在动态路由 /:id 之前注册，否则 Gin 会将 "categories" 当作 :id 参数
 				kbGrp.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetCategories)
 				kbGrp.GET("/:id", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticle)
-				slaGrp.GET("/policies/:id", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLADefinition)
-				slaGrp.PUT("/policies/:id", middleware.RequirePermission("sla", "write"), config.SLAHandler.UpdateSLADefinition)
-				slaGrp.DELETE("/policies/:id", middleware.RequirePermission("sla", "delete"), config.SLAHandler.DeleteSLADefinition)
-
-				// 兼容旧路径：/sla/monitor → /sla/monitoring
-				slaGrp.POST("/monitor", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAMonitoring)
+			}
+		}
 
 		if config.SLAHandler != nil {
 			slaGrp := tenant.(*gin.RouterGroup).Group("/sla")
@@ -1409,10 +1404,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		tenant.POST("/ticket-types", func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，工单类型由系统配置和分类接口维护")
 		})
+	}
+
 	// 飞书相关路由
 	if config.FeishuController != nil {
 		SetupFeishuRoutes(auth, public, config.FeishuController)
-	}
-
 	}
 }

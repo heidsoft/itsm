@@ -1,0 +1,121 @@
+@@ -1385,120 +1380,3 @@
+ 	// 默认按ID排序
+ 	return configurationitem.FieldID
+ }
+-
+-// UpdateLifecycleStatus 更新CI生命周期状态
+-func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id int, tenantID int, status string, remark string, operatorID int, operatorName string) (*dto.CIResponse, error) {
+-	// 校验状态是否合法
+-	validStatuses := map[string]bool{
+-		"draft":        true,
+-		"online":       true,
+-		"maintenance":  true,
+-		"offline":      true,
+-		"scrapped":     true,
+-	}
+-	if !validStatuses[status] {
+-		return nil, fmt.Errorf("无效的生命周期状态: %s", status)
+-	}
+-
+-	// 获取当前CI
+-	ci, err := s.client.ConfigurationItem.Query().
+-		Where(
+-			configurationitem.ID(id),
+-			configurationitem.TenantID(tenantID),
+-		).
+-		First(ctx)
+-	if err != nil {
+-		if ent.IsNotFound(err) {
+-			return nil, fmt.Errorf("CI不存在")
+-		}
+-		s.logger.Errorw("Failed to get CI for lifecycle update", "error", err, "ci_id", id)
+-		return nil, fmt.Errorf("获取CI失败: %w", err)
+-	}
+-
+-	// 如果状态没有变化，直接返回
+-	if ci.LifecycleStatus == status {
+-		return dto.ToCIResponse(ci), nil
+-	}
+-
+-	// 更新状态
+-	updatedCI, err := s.client.ConfigurationItem.UpdateOne(ci).
+-		SetLifecycleStatus(status).
+-		Save(ctx)
+-	if err != nil {
+-		s.logger.Errorw("Failed to update CI lifecycle status", "error", err, "ci_id", id, "status", status)
+-		return nil, fmt.Errorf("更新生命周期状态失败: %w", err)
+-	}
+-
+-	// 记录变更历史
+-	historyEntry := map[string]interface{}{
+-		"operator_id":   operatorID,
+-		"operator_name": operatorName,
+-		"old_status":    ci.LifecycleStatus,
+-		"new_status":    status,
+-		"remark":        remark,
+-		"change_time":   time.Now(),
+-	}
+-
+-	// 添加到生命周期历史
+-	newHistory := append(ci.LifecycleHistory, historyEntry)
+-	_, err = s.client.ConfigurationItem.UpdateOne(ci).
+-		SetLifecycleHistory(newHistory).
+-		Save(ctx)
+-	if err != nil {
+-		s.logger.Warnw("Failed to record lifecycle change history", "error", err, "ci_id", id)
+-	}
+-
+-	// 记录到CI变更历史
+-	_ = s.historyService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "update", remark, ci, updatedCI)
+-
+-	s.logger.Infow("CI lifecycle status updated", "ci_id", id, "old_status", ci.LifecycleStatus, "new_status", status, "tenant_id", tenantID)
+-
+-	// 重新加载CI完整信息
+-	fullCI, err := s.client.ConfigurationItem.Query().
+-		Where(configurationitem.ID(id)).
+-		WithOutgoingRelations().
+-		WithIncomingRelations().
+-		WithTags().
+-		First(ctx)
+-	if err != nil {
+-		return dto.ToCIResponse(updatedCI), nil
+-	}
+-
+-	return dto.ToCIResponseWithRelations(fullCI), nil
+-}
+-
+-// BatchUpdateLifecycleStatus 批量更新CI生命周期状态
+-func (s *ConfigurationItemService) BatchUpdateLifecycleStatus(ctx context.Context, ids []int, tenantID int, status string, remark string, operatorID int, operatorName string) (*dto.BatchOperationResponse, error) {
+-	successCount := 0
+-	failedCount := 0
+-	failedIDs := make([]int, 0)
+-	errors := make([]string, 0)
+-
+-	for _, id := range ids {
+-		_, err := s.UpdateLifecycleStatus(ctx, id, tenantID, status, remark, operatorID, operatorName)
+-		if err != nil {
+-			failedCount++
+-			failedIDs = append(failedIDs, id)
+-			errors = append(errors, fmt.Sprintf("CI %d: %v", id, err))
+-		} else {
+-			successCount++
+-		}
+-	}
+-
+-	return &dto.BatchOperationResponse{
+-		SuccessCount: successCount,
+-		FailedCount:  failedCount,
+-		FailedIDs:    failedIDs,
+-		Errors:       errors,
+-	}, nil
+-}
+-
+-// GetLifecycleHistory 获取CI生命周期变更历史
+-func (s *ConfigurationItemService) GetLifecycleHistory(ctx context.Context, id int, tenantID int) ([]map[string]interface{}, error) {
+-	ci, err := s.client.ConfigurationItem.Query().
+-		Where(
+-			configurationitem.ID(id),
+-			configurationitem.TenantID(tenantID),
+-		).
+-		Select(configurationitem.FieldLifecycleHistory).
+-		First(ctx)

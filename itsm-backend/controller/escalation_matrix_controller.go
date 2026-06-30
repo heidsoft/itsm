@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"net/http"
 	"itsm-backend/common"
 	"itsm-backend/service"
 	"github.com/gin-gonic/gin"

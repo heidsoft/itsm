@@ -10,6 +10,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/servicecatalog"
+	"itsm-backend/ent/servicecatalogitem"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/user"
@@ -117,12 +118,17 @@ func (s *ServiceRequestService) CreateServiceRequest(ctx context.Context, req *d
 		SetTotalLevels(totalLevels).
 		SetComplianceAck(req.ComplianceAck).
 		SetNeedsPublicIP(req.NeedsPublicIP).
-		SetDataClassification(req.DataClassification).
-		SetApprovalChainID(serviceItem.ApprovalChainID)
+		SetDataClassification(req.DataClassification)
+
+	// 先保存服务请求，获取 ID 后再创建审批记录
+	request, err := create.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("创建服务请求失败: %w", err)
+	}
 
 	steps := []struct {
-		level       int
-		step        string
+		level        int
+		step         string
 		timeoutHours int
 	}{
 		{1, ApprovalStepManager, ApprovalTimeoutManager},
@@ -144,11 +150,6 @@ func (s *ServiceRequestService) CreateServiceRequest(ctx context.Context, req *d
 		if err != nil {
 			return nil, fmt.Errorf("创建审批记录失败: %w", err)
 		}
-	}
-
-	request, err = create.Save(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("提交事务失败: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {

@@ -211,8 +211,8 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
-			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
-			if err != nil {
+			conn, ok := s.connectorManager.Get(tenantID, "feishu")
+			if !ok {
 				// 飞书连接器未配置，忽略
 				return
 			}
@@ -415,7 +415,7 @@ func mapProcessStatusToDTO(status string) dto.ProcessStatus {
 
 // GetTicket 获取工单
 func (s *TicketService) GetTicket(ctx context.Context, id int, tenantID int) (*ticket.Ticket, error) {
-	updated, err := s.repo.GetByID(ctx, ticketID, tenantID)
+	updated, err := s.repo.GetByID(ctx, id, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -426,8 +426,8 @@ func (s *TicketService) GetTicket(ctx context.Context, id int, tenantID int) (*t
 			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
-			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
-			if err != nil {
+			conn, ok := s.connectorManager.Get(tenantID, "feishu")
+			if !ok {
 				// 飞书连接器未配置，忽略
 				return
 			}
@@ -526,8 +526,8 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
-			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
-			if err != nil {
+			conn, ok := s.connectorManager.Get(tenantID, "feishu")
+			if !ok {
 				// 飞书连接器未配置，忽略
 				return
 			}
@@ -648,8 +648,8 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
-			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
-			if err != nil {
+			conn, ok := s.connectorManager.Get(tenantID, "feishu")
+			if !ok {
 				// 飞书连接器未配置，忽略
 				return
 			}
@@ -713,8 +713,8 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolut
 			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
-			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
-			if err != nil {
+			conn, ok := s.connectorManager.Get(tenantID, "feishu")
+			if !ok {
 				// 飞书连接器未配置，忽略
 				return
 			}
@@ -789,8 +789,8 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, tenantID 
 			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
-			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
-			if err != nil {
+			conn, ok := s.connectorManager.Get(tenantID, "feishu")
+			if !ok {
 				// 飞书连接器未配置，忽略
 				return
 			}
@@ -937,7 +937,7 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 	}
 
 	s.logger.Infow("Ticket status updated", "ticket_id", ticketID, "new_status", status)
-	updated, err := s.repo.GetByID(ctx, ticketID, tenantID)
+	updated, err = s.repo.GetByID(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -948,8 +948,8 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
-			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
-			if err != nil {
+			conn, ok := s.connectorManager.Get(tenantID, "feishu")
+			if !ok {
 				// 飞书连接器未配置，忽略
 				return
 			}
@@ -1117,8 +1117,8 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
-			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
-			if err != nil {
+			conn, ok := s.connectorManager.Get(tenantID, "feishu")
+			if !ok {
 				// 飞书连接器未配置，忽略
 				return
 			}
@@ -1736,7 +1736,7 @@ func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, custo
 	if _, err := s.repo.AssignTicket(ctx, ticketID, assignerID, customerTenantID); err != nil {
 		return nil, fmt.Errorf("failed to assign MSP technician: %w", err)
 	}
-	updated, err := s.repo.GetByID(ctx, ticketID, tenantID)
+	updated, err := s.repo.GetByID(ctx, ticketID, customerTenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -1747,8 +1747,8 @@ func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, custo
 			ctx2, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			// 获取Feishu连接器
-			conn, err := s.connectorManager.GetConnector(ctx2, tenantID, "feishu")
-			if err != nil {
+			conn, ok := s.connectorManager.Get(customerTenantID, "feishu")
+			if !ok {
 				// 飞书连接器未配置，忽略
 				return
 			}

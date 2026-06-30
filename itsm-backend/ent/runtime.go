@@ -876,6 +876,10 @@ func init() {
 	configurationitem.DefaultUpdatedAt = configurationitemDescUpdatedAt.Default.(func() time.Time)
 	// configurationitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	configurationitem.UpdateDefaultUpdatedAt = configurationitemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// configurationitemDescLifecycleStatus is the schema descriptor for lifecycle_status field.
+	configurationitemDescLifecycleStatus := configurationitemFields[33].Descriptor()
+	// configurationitem.DefaultLifecycleStatus holds the default value on creation for the lifecycle_status field.
+	configurationitem.DefaultLifecycleStatus = configurationitemDescLifecycleStatus.Default.(string)
 	configurationitemhistoryFields := schema.ConfigurationItemHistory{}.Fields()
 	_ = configurationitemhistoryFields
 	// configurationitemhistoryDescCiID is the schema descriptor for ci_id field.

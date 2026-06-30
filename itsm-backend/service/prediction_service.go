@@ -123,8 +123,8 @@ func (s *PredictionService) predictByType(tickets []*ent.Ticket, startTime, endT
 	for _, t := range tickets {
 		// 使用分类或默认类型
 		typeKey := "general"
-		if t.Edges.Category != nil {
-			typeKey = t.Edges.Category.Name
+		if len(t.Edges.Category) > 0 {
+			typeKey = t.Edges.Category[0].Name
 		}
 		typeCounts[typeKey]++
 	}

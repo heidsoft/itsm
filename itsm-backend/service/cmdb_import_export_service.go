@@ -263,6 +263,7 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 			switch req.UpdateMode {
 			case "skip":
 				// 跳过
+				_ = ci
 				continue
 			case "overwrite":
 				// 覆盖更新
@@ -297,6 +298,7 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impo
 		errJSON, _ := json.Marshal(errors)
 		errMsg = string(errJSON)
 	}
+	_ = errMsg // errMsg may be used in future error reporting
 
 	errorList := make([]map[string]interface{}, len(errors))
 	for i, e := range errors {
@@ -460,10 +462,15 @@ func (s *CMDBImportExportService) processExportTask(taskID string, req *dto.Expo
 	var fileSize int64
 
 	// 生成导出文件
+	// Convert []dto.CIResponse to []*dto.CIResponse for export functions
+	ciPtrs := make([]*dto.CIResponse, len(searchResult.Items))
+	for i := range searchResult.Items {
+		ciPtrs[i] = &searchResult.Items[i]
+	}
 	if req.ExportType == "csv" {
-		fileURL, fileSize, err = s.generateCSVExport(searchResult.Items, exportFields)
+		fileURL, fileSize, err = s.generateCSVExport(ciPtrs, exportFields)
 	} else {
-		fileURL, fileSize, err = s.generateExcelExport(searchResult.Items, exportFields)
+		fileURL, fileSize, err = s.generateExcelExport(ciPtrs, exportFields)
 	}
 
 	if err != nil {
@@ -1124,7 +1131,7 @@ func (s *CMDBImportExportService) convertToImportDTO(task *ent.CMDBImportTask) *
 		SuccessCount: task.SuccessCount,
 		FailedCount:  task.FailedCount,
 		CreatedAt:    task.CreatedAt,
-		CompletedAt:  task.CompletedAt,
+		CompletedAt:  &task.CompletedAt,
 	}
 
 	// 转换错误信息
@@ -1152,7 +1159,7 @@ func (s *CMDBImportExportService) convertToExportDTO(task *ent.CMDBExportTask) *
 		TotalCount:  task.TotalCount,
 		FileSize:    task.FileSize,
 		CreatedAt:   task.CreatedAt,
-		CompletedAt: task.CompletedAt,
+		CompletedAt: &task.CompletedAt,
 		ExpiresAt:   task.ExpiresAt,
 	}
 }

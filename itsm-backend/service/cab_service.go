@@ -3,11 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/cabmember"
+	"itsm-backend/ent/change"
 
 	"go.uber.org/zap"
 )
@@ -189,9 +189,9 @@ func (s *CABService) CreateCABApprovalWorkflow(ctx context.Context, changeID int
 	}
 
 	// 构建审批链
-	var approvalChain []*dto.ChangeApprovalChainItem
+	var approvalChain []dto.ChangeApprovalChainItem
 	for i, member := range members {
-		approvalChain = append(approvalChain, &dto.ChangeApprovalChainItem{
+		approvalChain = append(approvalChain, dto.ChangeApprovalChainItem{
 			Level:      i + 1,
 			ApproverID: member.UserID,
 			Role:       member.Role,
@@ -254,6 +254,6 @@ func (s *CABService) ApproveCABChange(ctx context.Context, req *dto.CABApprovalR
 	// 更新审批状态
 	return s.changeApprovalServ.UpdateChangeApproval(ctx, req.ApprovalID, &dto.UpdateChangeApprovalRequest{
 		Status:  req.Status,
-		Comment: req.Comment,
+		Comment: &req.Comment,
 	}, tenantID)
 }

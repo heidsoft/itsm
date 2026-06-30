@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import gridModule from 'diagram-js/lib/features/grid-snapping';
-import alignToOriginModule from 'diagram-js/lib/features/align-to-origin';
+
 
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';

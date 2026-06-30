@@ -433,6 +433,48 @@ func (_c *ConfigurationItemCreate) SetNillableUpdatedAt(v *time.Time) *Configura
 	return _c
 }
 
+// SetLifecycleStatus sets the "lifecycle_status" field.
+func (_c *ConfigurationItemCreate) SetLifecycleStatus(v string) *ConfigurationItemCreate {
+	_c.mutation.SetLifecycleStatus(v)
+	return _c
+}
+
+// SetNillableLifecycleStatus sets the "lifecycle_status" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableLifecycleStatus(v *string) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetLifecycleStatus(*v)
+	}
+	return _c
+}
+
+// SetEffectiveAt sets the "effective_at" field.
+func (_c *ConfigurationItemCreate) SetEffectiveAt(v time.Time) *ConfigurationItemCreate {
+	_c.mutation.SetEffectiveAt(v)
+	return _c
+}
+
+// SetNillableEffectiveAt sets the "effective_at" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableEffectiveAt(v *time.Time) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetEffectiveAt(*v)
+	}
+	return _c
+}
+
+// SetExpireAt sets the "expire_at" field.
+func (_c *ConfigurationItemCreate) SetExpireAt(v time.Time) *ConfigurationItemCreate {
+	_c.mutation.SetExpireAt(v)
+	return _c
+}
+
+// SetNillableExpireAt sets the "expire_at" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableExpireAt(v *time.Time) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetExpireAt(*v)
+	}
+	return _c
+}
+
 // SetCiTypeRefID sets the "ci_type_ref" edge to the CIType entity by ID.
 func (_c *ConfigurationItemCreate) SetCiTypeRefID(id int) *ConfigurationItemCreate {
 	_c.mutation.SetCiTypeRefID(id)
@@ -598,6 +640,10 @@ func (_c *ConfigurationItemCreate) defaults() {
 		v := configurationitem.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.LifecycleStatus(); !ok {
+		v := configurationitem.DefaultLifecycleStatus
+		_c.mutation.SetLifecycleStatus(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -643,6 +689,9 @@ func (_c *ConfigurationItemCreate) check() error {
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ConfigurationItem.updated_at"`)}
+	}
+	if _, ok := _c.mutation.LifecycleStatus(); !ok {
+		return &ValidationError{Name: "lifecycle_status", err: errors.New(`ent: missing required field "ConfigurationItem.lifecycle_status"`)}
 	}
 	if len(_c.mutation.CiTypeRefIDs()) == 0 {
 		return &ValidationError{Name: "ci_type_ref", err: errors.New(`ent: missing required edge "ConfigurationItem.ci_type_ref"`)}
@@ -796,6 +845,18 @@ func (_c *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.C
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(configurationitem.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := _c.mutation.LifecycleStatus(); ok {
+		_spec.SetField(configurationitem.FieldLifecycleStatus, field.TypeString, value)
+		_node.LifecycleStatus = value
+	}
+	if value, ok := _c.mutation.EffectiveAt(); ok {
+		_spec.SetField(configurationitem.FieldEffectiveAt, field.TypeTime, value)
+		_node.EffectiveAt = value
+	}
+	if value, ok := _c.mutation.ExpireAt(); ok {
+		_spec.SetField(configurationitem.FieldExpireAt, field.TypeTime, value)
+		_node.ExpireAt = value
 	}
 	if nodes := _c.mutation.CiTypeRefIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

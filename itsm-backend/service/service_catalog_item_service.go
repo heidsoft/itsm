@@ -41,7 +41,7 @@ func (s *ServiceCatalogItemService) CreateServiceCatalogItem(ctx context.Context
 		SetCategory(req.Category).
 		SetIcon(req.Icon).
 		SetFormSchema(req.FormSchema).
-		SetNillableSlaID(&req.SlaID).
+		SetNillableSLAID(&req.SlaID).
 		SetNillableApprovalChainID(&req.ApprovalChainID).
 		SetRequiresApproval(req.RequiresApproval).
 		SetEstimatedDays(req.EstimatedDays).
@@ -105,7 +105,7 @@ func (s *ServiceCatalogItemService) ListServiceCatalogItems(ctx context.Context,
 // UpdateServiceCatalogItem 更新服务目录项
 func (s *ServiceCatalogItemService) UpdateServiceCatalogItem(ctx context.Context, id int, req *dto.UpdateServiceCatalogItemRequest, tenantID int) (*dto.ServiceCatalogItemResponse, error) {
 	// 验证服务项是否存在
-	item, err := s.client.ServiceCatalogItem.Query().
+	_, err := s.client.ServiceCatalogItem.Query().
 		Where(
 			servicecatalogitem.ID(id),
 			servicecatalogitem.TenantID(tenantID),
@@ -139,7 +139,7 @@ func (s *ServiceCatalogItemService) UpdateServiceCatalogItem(ctx context.Context
 		update.SetFormSchema(*req.FormSchema)
 	}
 	if req.SlaID != nil {
-		update.SetSlaID(*req.SlaID)
+		update.SetSLAID(*req.SlaID)
 	}
 	if req.ApprovalChainID != nil {
 		update.SetApprovalChainID(*req.ApprovalChainID)
@@ -204,7 +204,7 @@ func (s *ServiceCatalogItemService) toItemResponse(item *ent.ServiceCatalogItem)
 		Category:         item.Category,
 		Icon:             item.Icon,
 		FormSchema:       item.FormSchema,
-		SlaID:            item.SlaID,
+		SlaID:            item.SLAID,
 		ApprovalChainID:  item.ApprovalChainID,
 		IsActive:         item.IsActive,
 		RequiresApproval: item.RequiresApproval,

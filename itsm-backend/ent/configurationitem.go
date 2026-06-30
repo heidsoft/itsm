@@ -86,6 +86,12 @@ type ConfigurationItem struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// 生命周期状态
+	LifecycleStatus string `json:"lifecycle_status,omitempty"`
+	// 生效时间
+	EffectiveAt time.Time `json:"effective_at,omitempty"`
+	// 失效时间
+	ExpireAt time.Time `json:"expire_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ConfigurationItemQuery when eager-loading is set.
 	Edges        ConfigurationItemEdges `json:"edges"`
@@ -200,9 +206,9 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldCloudResourceRefID, configurationitem.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus:
+		case configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus, configurationitem.FieldLifecycleStatus:
 			values[i] = new(sql.NullString)
-		case configurationitem.FieldLastDiscovered, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt:
+		case configurationitem.FieldLastDiscovered, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt, configurationitem.FieldEffectiveAt, configurationitem.FieldExpireAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -431,6 +437,24 @@ func (_m *ConfigurationItem) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
+		case configurationitem.FieldLifecycleStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field lifecycle_status", values[i])
+			} else if value.Valid {
+				_m.LifecycleStatus = value.String
+			}
+		case configurationitem.FieldEffectiveAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field effective_at", values[i])
+			} else if value.Valid {
+				_m.EffectiveAt = value.Time
+			}
+		case configurationitem.FieldExpireAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field expire_at", values[i])
+			} else if value.Valid {
+				_m.ExpireAt = value.Time
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -605,6 +629,15 @@ func (_m *ConfigurationItem) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("lifecycle_status=")
+	builder.WriteString(_m.LifecycleStatus)
+	builder.WriteString(", ")
+	builder.WriteString("effective_at=")
+	builder.WriteString(_m.EffectiveAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("expire_at=")
+	builder.WriteString(_m.ExpireAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

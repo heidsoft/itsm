@@ -131,7 +131,6 @@ func NewApplication() *Application {
 	connectorMarket := marketplace.New()
 	connectorController := controller.NewConnectorController(connectorManager, connector.Default(), connectorMarket, sugar)
 
-
 	// 通知 / 审批 / SLA / 自动化 / 序列服务（V2 子服务）
 	ticketNotificationService := service.NewTicketNotificationService(client, sugar)
 	ticketSLAService := service.NewTicketSLAService(client, sugar)
@@ -149,7 +148,6 @@ func NewApplication() *Application {
 		ProcessTriggerService: processTriggerService,
 		ProcessResolver:       processResolver,
 		ConnectorManager:      connectorManager,
-
 	})
 	_ = sequenceService // V2 内部通过 Repository.GenerateTicketNumber 使用 sequence；保留为运行时上下文依赖
 
@@ -288,7 +286,7 @@ func NewApplication() *Application {
 
 	// ProblemController and ChangeController removed - using Handlers instead
 	// CMDB Controller
-	cmdbController := controller.NewCMDBController(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService, ciHistoryService, ciTagService)
+	cmdbController := controller.NewCMDBController(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService, ciHistoryService, ciTagService, importExportService, savedViewService)
 
 	// Release & Asset Management Controllers
 	releaseController := controller.NewReleaseController(sugar, releaseService)
@@ -341,7 +339,6 @@ func NewApplication() *Application {
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
 	// Feishu 连接器控制器
 	feishuController := controller.NewFeishuController(connectorManager, ticketService, sugar)
-
 
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)
@@ -460,13 +457,12 @@ func NewApplication() *Application {
 	approvalChainService := service.NewApprovalChainService(client, sugar)
 	approvalChainController := controller.NewApprovalChainController(approvalChainService, sugar)
 
-	escalationMatrixController := controller.NewEscalationMatrixController(sugar, escalationMatrixService)
-
 	// SLA Monitor & Alert Services (legacy, for background tasks)
 	slaMonitorService := service.NewSLAMonitorService(client, sugar)
 	slaAlertService := service.NewSLAAlertService(client, sugar)
 	escalationService := service.NewEscalationService(client, sugar)
 	escalationMatrixService := service.NewEscalationMatrixService(sugar)
+	escalationMatrixController := controller.NewEscalationMatrixController(sugar, escalationMatrixService)
 
 	// Wire up notification service
 	slaMonitorService.SetNotificationService(ticketNotificationService)
@@ -538,7 +534,7 @@ func NewApplication() *Application {
 		BPMNProcessTriggerController:    bpmnProcessTriggerController,
 		BPMNDashboardController:         bpmnDashboardController,
 		BPMNMonitoringController:        bpmnMonitoringController,
-		BPMNAIGeneratorController:         bpmnAIGeneratorController,
+		BPMNAIGeneratorController:       bpmnAIGeneratorController,
 		A2UITicketController:            a2uiTicketController,
 		CMDBController:                  cmdbController,
 
@@ -551,10 +547,10 @@ func NewApplication() *Application {
 		GroupController:          groupController,
 
 		// Role & Permission Controllers
-		RoleController:          roleController,
-		PermissionController:    permissionController,
-		MenuController:          menuController,
-		TenantController:        tenantController,
+		RoleController:             roleController,
+		PermissionController:       permissionController,
+		MenuController:             menuController,
+		TenantController:           tenantController,
 		EscalationMatrixController: escalationMatrixController,
 
 		MSPController:           mspController,
@@ -599,8 +595,8 @@ func NewApplication() *Application {
 		KnownErrorHandler: knownErrorHandler,
 
 		// Connector Controller
-		ConnectorController:   connectorController,
-		FeishuController:   feishuController,
+		ConnectorController: connectorController,
+		FeishuController:    feishuController,
 
 		MarketplaceController: marketplaceCtrl,
 

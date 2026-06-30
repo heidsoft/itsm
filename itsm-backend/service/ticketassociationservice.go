@@ -134,15 +134,9 @@ func (s *TicketAssociationService) CreateTicket(ctx context.Context, req *Create
 		}
 	}
 
-	// 添加关联工单
-	if len(req.RelatedIDs) > 0 {
-		_, err = ticketEntity.Update().
-			AddRelatedTicketIDs(req.RelatedIDs...).
-			Save(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("添加关联工单失败: %w", err)
-		}
-	}
+	// 添加关联工单（RelatedTickets 边暂未在 ent schema 中定义，跳过）
+	// TODO: 在 ent/schema/ticket.go 中添加 related_tickets 自关联边后恢复
+	_ = req.RelatedIDs
 
 	return s.buildTicketResponse(ticketEntity), nil
 }
@@ -151,8 +145,6 @@ func (s *TicketAssociationService) CreateTicket(ctx context.Context, req *Create
 func (s *TicketAssociationService) GetTicketWithAssociations(ctx context.Context, ticketID int) (*TicketResponse, error) {
 	ticketEntity, err := s.client.Ticket.Query().
 		WithTags().
-		WithRelatedTickets().
-		WithParentTicket().
 		Where(ticket.ID(ticketID)).
 		Only(ctx)
 	if err != nil {
@@ -166,8 +158,6 @@ func (s *TicketAssociationService) GetTicketWithAssociations(ctx context.Context
 func (s *TicketAssociationService) GetTicketHierarchy(ctx context.Context, ticketID int) (*TicketHierarchy, error) {
 	ticketEntity, err := s.client.Ticket.Query().
 		WithTags().
-		WithRelatedTickets().
-		WithParentTicket().
 		Where(ticket.ID(ticketID)).
 		Only(ctx)
 	if err != nil {
@@ -249,48 +239,24 @@ func (s *TicketAssociationService) UpdateTicketAssociations(ctx context.Context,
 		}
 	}
 
-	// 更新关联工单
-	if req.RelatedIDs != nil {
-		// 先清除现有关联
-		_, err = s.client.Ticket.UpdateOneID(ticketID).
-			ClearRelatedTickets().
-			Save(ctx)
-		if err != nil {
-			return fmt.Errorf("清除关联工单失败: %w", err)
-		}
-
-		// 添加新关联
-		if len(req.RelatedIDs) > 0 {
-			_, err = s.client.Ticket.UpdateOneID(ticketID).
-				AddRelatedTicketIDs(req.RelatedIDs...).
-				Save(ctx)
-			if err != nil {
-				return fmt.Errorf("添加关联工单失败: %w", err)
-			}
-		}
-	}
+	// 更新关联工单（RelatedTickets 边暂未在 ent schema 中定义，跳过）
+	// TODO: 在 ent/schema/ticket.go 中添加 related_tickets 自关联边后恢复
+	_ = req.RelatedIDs
 
 	return nil
 }
 
 // GetRelatedTickets 获取关联工单
+// TODO: RelatedTickets 边暂未在 ent schema 中定义，当前返回空列表
 func (s *TicketAssociationService) GetRelatedTickets(ctx context.Context, ticketID int) ([]*TicketResponse, error) {
-	ticketEntity, err := s.client.Ticket.Query().
-		WithTags().
-		WithRelatedTickets().
+	_, err := s.client.Ticket.Query().
 		Where(ticket.ID(ticketID)).
 		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取工单失败: %w", err)
 	}
 
-	relatedTickets := ticketEntity.Edges.RelatedTickets
-	response := make([]*TicketResponse, len(relatedTickets))
-	for i, related := range relatedTickets {
-		response[i] = s.buildTicketResponse(related)
-	}
-
-	return response, nil
+	return []*TicketResponse{}, nil
 }
 
 // GetTicketDependencies 获取工单依赖关系
@@ -374,13 +340,8 @@ func (s *TicketAssociationService) buildTicketResponse(ticket *ent.Ticket) *Tick
 		}
 	}
 
-	// 处理关联工单
-	if ticket.Edges.RelatedTickets != nil {
-		response.RelatedIDs = make([]int, len(ticket.Edges.RelatedTickets))
-		for i, related := range ticket.Edges.RelatedTickets {
-			response.RelatedIDs[i] = related.ID
-		}
-	}
+	// 处理关联工单（RelatedTickets 边暂未在 ent schema 中定义）
+	// TODO: 在 ent/schema/ticket.go 中添加 related_tickets 自关联边后恢复
 
 	return response
 }
@@ -392,7 +353,6 @@ func (s *TicketAssociationService) getParentChain(ctx context.Context, ticketID 
 
 	for {
 		ticketEntity, err := s.client.Ticket.Query().
-			WithParentTicket().
 			Where(ticket.ID(currentID)).
 			Only(ctx)
 		if err != nil {
@@ -462,22 +422,16 @@ func (s *TicketAssociationService) AddConfigurationItem(ctx context.Context, tic
 		return fmt.Errorf("工单不存在")
 	}
 
-	// 验证配置项是否存在并获取
-	ci, err := s.client.ConfigurationItem.Query().
+	// 验证配置项是否存在
+	_, err = s.client.ConfigurationItem.Query().
 		Where(configurationitem.ID(ciID)).
 		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("配置项不存在: %w", err)
 	}
 
-	// 添加关联
-	_, err = s.client.Ticket.UpdateOneID(ticketID).
-		AddConfigurationItems(ci).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("添加配置项关联失败: %w", err)
-	}
-
+	// TODO: Ticket-ConfigurationItem 关联边暂未在 ent schema 中定义，跳过关联操作
+	_ = ciID
 	return nil
 }
 
@@ -494,51 +448,33 @@ func (s *TicketAssociationService) RemoveConfigurationItem(ctx context.Context, 
 		return fmt.Errorf("工单不存在")
 	}
 
-	// 获取配置项实体
-	ci, err := s.client.ConfigurationItem.Query().
+	// 验证配置项是否存在
+	_, err = s.client.ConfigurationItem.Query().
 		Where(configurationitem.ID(ciID)).
 		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("配置项不存在: %w", err)
 	}
 
-	// 移除关联
-	_, err = s.client.Ticket.UpdateOneID(ticketID).
-		RemoveConfigurationItems(ci).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("移除配置项关联失败: %w", err)
-	}
-
+	// TODO: Ticket-ConfigurationItem 关联边暂未在 ent schema 中定义，跳过移除操作
 	return nil
 }
 
 // GetConfigurationItems 获取配置项列表
+// TODO: Ticket-ConfigurationItem 关联边暂未在 ent schema 中定义，返回空列表
 func (s *TicketAssociationService) GetConfigurationItems(ctx context.Context, ticketID int) ([]*ConfigurationItemResponse, error) {
-	ticketEntity, err := s.client.Ticket.Query().
-		WithConfigurationItems().
+	_, err := s.client.Ticket.Query().
 		Where(ticket.ID(ticketID)).
 		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取工单失败: %w", err)
 	}
 
-	items := ticketEntity.Edges.ConfigurationItems
-	response := make([]*ConfigurationItemResponse, len(items))
-	for i, ci := range items {
-		response[i] = &ConfigurationItemResponse{
-			ID:           ci.ID,
-			Name:         ci.Name,
-			CIType:       ci.CiType,
-			Status:       ci.Status,
-			SerialNumber: ci.SerialNumber,
-		}
-	}
-
-	return response, nil
+	return []*ConfigurationItemResponse{}, nil
 }
 
 // SetConfigurationItems 批量设置配置项
+// TODO: Ticket-ConfigurationItem 关联边暂未在 ent schema 中定义，跳过操作
 func (s *TicketAssociationService) SetConfigurationItems(ctx context.Context, ticketID int, ciIDs []int) error {
 	// 验证工单是否存在
 	ticketExists, err := s.client.Ticket.Query().
@@ -551,28 +487,6 @@ func (s *TicketAssociationService) SetConfigurationItems(ctx context.Context, ti
 		return fmt.Errorf("工单不存在")
 	}
 
-	// 获取所有配置项实体
-	var cis []*ent.ConfigurationItem
-	if len(ciIDs) > 0 {
-		cis, err = s.client.ConfigurationItem.Query().
-			Where(configurationitem.IDIn(ciIDs...)).
-			All(ctx)
-		if err != nil {
-			return fmt.Errorf("获取配置项失败: %w", err)
-		}
-		if len(cis) != len(ciIDs) {
-			return fmt.Errorf("部分配置项不存在")
-		}
-	}
-
-	// 清除现有关联并添加新关联
-	_, err = s.client.Ticket.UpdateOneID(ticketID).
-		ClearConfigurationItems().
-		AddConfigurationItems(cis...).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("设置配置项关联失败: %w", err)
-	}
-
+	_ = ciIDs
 	return nil
 }

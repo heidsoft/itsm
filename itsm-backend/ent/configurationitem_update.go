@@ -608,6 +608,60 @@ func (_u *ConfigurationItemUpdate) SetUpdatedAt(v time.Time) *ConfigurationItemU
 	return _u
 }
 
+// SetLifecycleStatus sets the "lifecycle_status" field.
+func (_u *ConfigurationItemUpdate) SetLifecycleStatus(v string) *ConfigurationItemUpdate {
+	_u.mutation.SetLifecycleStatus(v)
+	return _u
+}
+
+// SetNillableLifecycleStatus sets the "lifecycle_status" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableLifecycleStatus(v *string) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetLifecycleStatus(*v)
+	}
+	return _u
+}
+
+// SetEffectiveAt sets the "effective_at" field.
+func (_u *ConfigurationItemUpdate) SetEffectiveAt(v time.Time) *ConfigurationItemUpdate {
+	_u.mutation.SetEffectiveAt(v)
+	return _u
+}
+
+// SetNillableEffectiveAt sets the "effective_at" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableEffectiveAt(v *time.Time) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetEffectiveAt(*v)
+	}
+	return _u
+}
+
+// ClearEffectiveAt clears the value of the "effective_at" field.
+func (_u *ConfigurationItemUpdate) ClearEffectiveAt() *ConfigurationItemUpdate {
+	_u.mutation.ClearEffectiveAt()
+	return _u
+}
+
+// SetExpireAt sets the "expire_at" field.
+func (_u *ConfigurationItemUpdate) SetExpireAt(v time.Time) *ConfigurationItemUpdate {
+	_u.mutation.SetExpireAt(v)
+	return _u
+}
+
+// SetNillableExpireAt sets the "expire_at" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableExpireAt(v *time.Time) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetExpireAt(*v)
+	}
+	return _u
+}
+
+// ClearExpireAt clears the value of the "expire_at" field.
+func (_u *ConfigurationItemUpdate) ClearExpireAt() *ConfigurationItemUpdate {
+	_u.mutation.ClearExpireAt()
+	return _u
+}
+
 // SetCiTypeRefID sets the "ci_type_ref" edge to the CIType entity by ID.
 func (_u *ConfigurationItemUpdate) SetCiTypeRefID(id int) *ConfigurationItemUpdate {
 	_u.mutation.SetCiTypeRefID(id)
@@ -1092,6 +1146,21 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(configurationitem.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.LifecycleStatus(); ok {
+		_spec.SetField(configurationitem.FieldLifecycleStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.EffectiveAt(); ok {
+		_spec.SetField(configurationitem.FieldEffectiveAt, field.TypeTime, value)
+	}
+	if _u.mutation.EffectiveAtCleared() {
+		_spec.ClearField(configurationitem.FieldEffectiveAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ExpireAt(); ok {
+		_spec.SetField(configurationitem.FieldExpireAt, field.TypeTime, value)
+	}
+	if _u.mutation.ExpireAtCleared() {
+		_spec.ClearField(configurationitem.FieldExpireAt, field.TypeTime)
 	}
 	if _u.mutation.CiTypeRefCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -2014,6 +2083,60 @@ func (_u *ConfigurationItemUpdateOne) SetUpdatedAt(v time.Time) *ConfigurationIt
 	return _u
 }
 
+// SetLifecycleStatus sets the "lifecycle_status" field.
+func (_u *ConfigurationItemUpdateOne) SetLifecycleStatus(v string) *ConfigurationItemUpdateOne {
+	_u.mutation.SetLifecycleStatus(v)
+	return _u
+}
+
+// SetNillableLifecycleStatus sets the "lifecycle_status" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableLifecycleStatus(v *string) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetLifecycleStatus(*v)
+	}
+	return _u
+}
+
+// SetEffectiveAt sets the "effective_at" field.
+func (_u *ConfigurationItemUpdateOne) SetEffectiveAt(v time.Time) *ConfigurationItemUpdateOne {
+	_u.mutation.SetEffectiveAt(v)
+	return _u
+}
+
+// SetNillableEffectiveAt sets the "effective_at" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableEffectiveAt(v *time.Time) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetEffectiveAt(*v)
+	}
+	return _u
+}
+
+// ClearEffectiveAt clears the value of the "effective_at" field.
+func (_u *ConfigurationItemUpdateOne) ClearEffectiveAt() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearEffectiveAt()
+	return _u
+}
+
+// SetExpireAt sets the "expire_at" field.
+func (_u *ConfigurationItemUpdateOne) SetExpireAt(v time.Time) *ConfigurationItemUpdateOne {
+	_u.mutation.SetExpireAt(v)
+	return _u
+}
+
+// SetNillableExpireAt sets the "expire_at" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableExpireAt(v *time.Time) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetExpireAt(*v)
+	}
+	return _u
+}
+
+// ClearExpireAt clears the value of the "expire_at" field.
+func (_u *ConfigurationItemUpdateOne) ClearExpireAt() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearExpireAt()
+	return _u
+}
+
 // SetCiTypeRefID sets the "ci_type_ref" edge to the CIType entity by ID.
 func (_u *ConfigurationItemUpdateOne) SetCiTypeRefID(id int) *ConfigurationItemUpdateOne {
 	_u.mutation.SetCiTypeRefID(id)
@@ -2528,6 +2651,21 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(configurationitem.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.LifecycleStatus(); ok {
+		_spec.SetField(configurationitem.FieldLifecycleStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.EffectiveAt(); ok {
+		_spec.SetField(configurationitem.FieldEffectiveAt, field.TypeTime, value)
+	}
+	if _u.mutation.EffectiveAtCleared() {
+		_spec.ClearField(configurationitem.FieldEffectiveAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ExpireAt(); ok {
+		_spec.SetField(configurationitem.FieldExpireAt, field.TypeTime, value)
+	}
+	if _u.mutation.ExpireAtCleared() {
+		_spec.ClearField(configurationitem.FieldExpireAt, field.TypeTime)
 	}
 	if _u.mutation.CiTypeRefCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -122,10 +122,21 @@ func (ConfigurationItem) Fields() []ent.Field {
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),
-		field.Time("updated_at").
-			Comment("更新时间").
-			Default(time.Now).
-			UpdateDefault(time.Now),
+	field.Time("updated_at").
+		Comment("更新时间").
+		Default(time.Now).
+		UpdateDefault(time.Now),
+
+		// 生命周期管理
+		field.String("lifecycle_status").
+			Comment("生命周期状态").
+			Default("online"),
+		field.Time("effective_at").
+			Comment("生效时间").
+			Optional(),
+		field.Time("expire_at").
+			Comment("失效时间").
+			Optional(),
 	}
 }
 

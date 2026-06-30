@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"strconv"
-	"strconv"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -26,9 +25,7 @@ type CMDBController struct {
 	importExportService          *service.CMDBImportExportService
 	savedViewService             *service.CMDBSavedViewService
 }
-}
-// NewCMDBController 创建CMDB控制器
-// NewCMDBController 创建CMDB控制器
+
 // NewCMDBController 创建CMDB控制器
 func NewCMDBController(
 	logger *zap.SugaredLogger,
@@ -52,10 +49,6 @@ func NewCMDBController(
 		importExportService:          importExportService,
 		savedViewService:             savedViewService,
 	}
-}
-		ciTagService:                 ciTagService,
-	}
-}
 }
 
 // ------------------------------ CI类型相关接口 ------------------------------
@@ -1905,89 +1898,6 @@ func (c *CMDBController) GetLifecycleHistory(ctx *gin.Context) {
 	if err != nil {
 		c.logger.Errorw("Get CI lifecycle history failed", "error", err, "ci_id", id, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "获取生命周期历史失败: "+err.Error())
-		return
-	}
-
-	common.Success(ctx, result)
-}
-
-// ------------------------------ CI历史记录接口 ------------------------------
-
-// GetCIHistory 获取CI变更历史
-// @Summary 获取CI变更历史
-// @Description 查询CI的所有变更历史记录
-// @Tags CMDB
-// @Accept json
-// @Produce json
-// @Param id path int true "CI ID"
-// @Param page query int false "页码"
-// @Param size query int false "每页数量"
-// @Success 200 {object} common.Response{data=dto.CIHistoryListResponse}
-// @Router /api/v1/cmdb/cis/{id}/history [get]
-func (c *CMDBController) GetCIHistory(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
-		return
-	}
-
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
-		return
-	}
-
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
-
-	result, err := c.ciHistoryService.GetCIHistory(ctx.Request.Context(), id, tenantID, page, pageSize)
-	if err != nil {
-		c.logger.Errorw("Get CI history failed", "error", err, "ci_id", id, "tenant_id", tenantID)
-		common.Fail(ctx, common.InternalErrorCode, "获取变更历史失败: "+err.Error())
-		return
-	}
-
-	common.Success(ctx, result)
-}
-
-// RevertCIVersion 回滚CI到指定版本
-// @Summary 回滚CI到指定版本
-// @Description 将CI回滚到历史某个版本的状态
-// @Tags CMDB
-// @Accept json
-// @Produce json
-// @Param id path int true "CI ID"
-// @Param request body dto.RevertCIVersionRequest true "回滚请求"
-// @Success 200 {object} common.Response{data=dto.CIResponse}
-// @Router /api/v1/cmdb/cis/{id}/revert [post]
-func (c *CMDBController) RevertCIVersion(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问")
-		return
-	}
-
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
-		return
-	}
-
-	var req dto.RevertCIVersionRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
-		return
-	}
-
-	userID, _ := ctx.Get("user_id")
-	userName, _ := ctx.Get("user_name")
-
-	result, err := c.ciHistoryService.RevertCIVersion(ctx.Request.Context(), id, tenantID, userID.(int), userName.(string), &req)
-	if err != nil {
-		c.logger.Errorw("Revert CI version failed", "error", err, "ci_id", id, "version", req.Version, "tenant_id", tenantID)
-		common.Fail(ctx, common.InternalErrorCode, "回滚版本失败: "+err.Error())
 		return
 	}
 

@@ -97,13 +97,11 @@ func (s *CMDBSavedViewService) ListSavedViews(ctx context.Context, tenantID int,
 		Where(cmdbsavedview.TenantID(tenantID))
 
 	// 权限过滤：只能看自己创建的和公开的
-	conditions := []cmdbsavedview.Predicate{
-		cmdbsavedview.CreatorID(userID),
-	}
 	if includePublic {
-		conditions = append(conditions, cmdbsavedview.IsPublic(true))
+		query = query.Where(cmdbsavedview.Or(cmdbsavedview.CreatorIDEQ(userID), cmdbsavedview.IsPublic(true)))
+	} else {
+		query = query.Where(cmdbsavedview.CreatorIDEQ(userID))
 	}
-	query = query.Where(cmdbsavedview.Or(conditions...))
 
 	// 统计总数
 	total, err := query.Count(ctx)

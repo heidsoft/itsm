@@ -200,6 +200,21 @@ func UpdatedAt(v time.Time) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// LifecycleStatus applies equality check predicate on the "lifecycle_status" field. It's identical to LifecycleStatusEQ.
+func LifecycleStatus(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldLifecycleStatus, v))
+}
+
+// EffectiveAt applies equality check predicate on the "effective_at" field. It's identical to EffectiveAtEQ.
+func EffectiveAt(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldEffectiveAt, v))
+}
+
+// ExpireAt applies equality check predicate on the "expire_at" field. It's identical to ExpireAtEQ.
+func ExpireAt(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldExpireAt, v))
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldName, v))
@@ -2108,6 +2123,171 @@ func UpdatedAtLT(v time.Time) predicate.ConfigurationItem {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// LifecycleStatusEQ applies the EQ predicate on the "lifecycle_status" field.
+func LifecycleStatusEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldLifecycleStatus, v))
+}
+
+// LifecycleStatusNEQ applies the NEQ predicate on the "lifecycle_status" field.
+func LifecycleStatusNEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldLifecycleStatus, v))
+}
+
+// LifecycleStatusIn applies the In predicate on the "lifecycle_status" field.
+func LifecycleStatusIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldLifecycleStatus, vs...))
+}
+
+// LifecycleStatusNotIn applies the NotIn predicate on the "lifecycle_status" field.
+func LifecycleStatusNotIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldLifecycleStatus, vs...))
+}
+
+// LifecycleStatusGT applies the GT predicate on the "lifecycle_status" field.
+func LifecycleStatusGT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldLifecycleStatus, v))
+}
+
+// LifecycleStatusGTE applies the GTE predicate on the "lifecycle_status" field.
+func LifecycleStatusGTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldLifecycleStatus, v))
+}
+
+// LifecycleStatusLT applies the LT predicate on the "lifecycle_status" field.
+func LifecycleStatusLT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldLifecycleStatus, v))
+}
+
+// LifecycleStatusLTE applies the LTE predicate on the "lifecycle_status" field.
+func LifecycleStatusLTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldLifecycleStatus, v))
+}
+
+// LifecycleStatusContains applies the Contains predicate on the "lifecycle_status" field.
+func LifecycleStatusContains(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContains(FieldLifecycleStatus, v))
+}
+
+// LifecycleStatusHasPrefix applies the HasPrefix predicate on the "lifecycle_status" field.
+func LifecycleStatusHasPrefix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldLifecycleStatus, v))
+}
+
+// LifecycleStatusHasSuffix applies the HasSuffix predicate on the "lifecycle_status" field.
+func LifecycleStatusHasSuffix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldLifecycleStatus, v))
+}
+
+// LifecycleStatusEqualFold applies the EqualFold predicate on the "lifecycle_status" field.
+func LifecycleStatusEqualFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldLifecycleStatus, v))
+}
+
+// LifecycleStatusContainsFold applies the ContainsFold predicate on the "lifecycle_status" field.
+func LifecycleStatusContainsFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldLifecycleStatus, v))
+}
+
+// EffectiveAtEQ applies the EQ predicate on the "effective_at" field.
+func EffectiveAtEQ(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldEffectiveAt, v))
+}
+
+// EffectiveAtNEQ applies the NEQ predicate on the "effective_at" field.
+func EffectiveAtNEQ(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldEffectiveAt, v))
+}
+
+// EffectiveAtIn applies the In predicate on the "effective_at" field.
+func EffectiveAtIn(vs ...time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldEffectiveAt, vs...))
+}
+
+// EffectiveAtNotIn applies the NotIn predicate on the "effective_at" field.
+func EffectiveAtNotIn(vs ...time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldEffectiveAt, vs...))
+}
+
+// EffectiveAtGT applies the GT predicate on the "effective_at" field.
+func EffectiveAtGT(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldEffectiveAt, v))
+}
+
+// EffectiveAtGTE applies the GTE predicate on the "effective_at" field.
+func EffectiveAtGTE(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldEffectiveAt, v))
+}
+
+// EffectiveAtLT applies the LT predicate on the "effective_at" field.
+func EffectiveAtLT(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldEffectiveAt, v))
+}
+
+// EffectiveAtLTE applies the LTE predicate on the "effective_at" field.
+func EffectiveAtLTE(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldEffectiveAt, v))
+}
+
+// EffectiveAtIsNil applies the IsNil predicate on the "effective_at" field.
+func EffectiveAtIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldEffectiveAt))
+}
+
+// EffectiveAtNotNil applies the NotNil predicate on the "effective_at" field.
+func EffectiveAtNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldEffectiveAt))
+}
+
+// ExpireAtEQ applies the EQ predicate on the "expire_at" field.
+func ExpireAtEQ(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldExpireAt, v))
+}
+
+// ExpireAtNEQ applies the NEQ predicate on the "expire_at" field.
+func ExpireAtNEQ(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldExpireAt, v))
+}
+
+// ExpireAtIn applies the In predicate on the "expire_at" field.
+func ExpireAtIn(vs ...time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldExpireAt, vs...))
+}
+
+// ExpireAtNotIn applies the NotIn predicate on the "expire_at" field.
+func ExpireAtNotIn(vs ...time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldExpireAt, vs...))
+}
+
+// ExpireAtGT applies the GT predicate on the "expire_at" field.
+func ExpireAtGT(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldExpireAt, v))
+}
+
+// ExpireAtGTE applies the GTE predicate on the "expire_at" field.
+func ExpireAtGTE(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldExpireAt, v))
+}
+
+// ExpireAtLT applies the LT predicate on the "expire_at" field.
+func ExpireAtLT(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldExpireAt, v))
+}
+
+// ExpireAtLTE applies the LTE predicate on the "expire_at" field.
+func ExpireAtLTE(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldExpireAt, v))
+}
+
+// ExpireAtIsNil applies the IsNil predicate on the "expire_at" field.
+func ExpireAtIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldExpireAt))
+}
+
+// ExpireAtNotNil applies the NotNil predicate on the "expire_at" field.
+func ExpireAtNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldExpireAt))
 }
 
 // HasCiTypeRef applies the HasEdge predicate on the "ci_type_ref" edge.

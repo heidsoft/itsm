@@ -108,6 +108,22 @@ func (f *Feishu) HealthCheck(ctx context.Context) connector.HealthStatus {
 
 func (f *Feishu) Close() error { return nil }
 
+// GetOAuthAuthURL returns the Feishu OAuth authorization URL
+func (f *Feishu) GetOAuthAuthURL(redirectURI, state string) string {
+	if f.client == nil {
+		return ""
+	}
+	return f.client.GetOAuthAuthURL(redirectURI, state)
+}
+
+// ExchangeOAuthCode exchanges an authorization code for an access token
+func (f *Feishu) ExchangeOAuthCode(ctx context.Context, code string) (*OAuthTokenResponse, error) {
+	if f.client == nil {
+		return nil, fmt.Errorf("feishu: connector not initialized")
+	}
+	return f.client.ExchangeOAuthCode(ctx, code)
+}
+
 // VerifySignature 满足 connector.Receiver 接口
 func (f *Feishu) VerifySignature(headers map[string]string, body []byte) error {
 	if f.client == nil {

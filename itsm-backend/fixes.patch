@@ -1,0 +1,92 @@
+diff --git a/service/cmdb_import_export_service.go b/service/cmdb_import_export_service.go
+index 3b9c8d7..a1e2d3f 100644
+--- a/service/cmdb_import_export_service.go
++++ b/service/cmdb_import_export_service.go
+@@ -256,12 +256,11 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impor
+ 			continue
+ 		}
+ 
+-		var ci *dto.CIResponse
++		var err error
+ 
+ 		if existingCI != nil {
+ 			switch req.UpdateMode {
+ 			case "skip":
+ 				continue
+ 			case "overwrite":
+ 				updateReq := s.convertCreateToUpdateReq(createReq)
+-				ci, err = s.ciService.UpdateCI(ctx, existingCI.ID, tenantID, updateReq)
++				_, err = s.ciService.UpdateCI(ctx, existingCI.ID, tenantID, updateReq)
+ 			case "merge":
+ 				updateReq := s.convertCreateToUpdateReqMerge(createReq, existingCI)
+-				ci, err = s.ciService.UpdateCI(ctx, existingCI.ID, tenantID, updateReq)
++				_, err = s.ciService.UpdateCI(ctx, existingCI.ID, tenantID, updateReq)
+ 			}
+ 		} else {
+-			ci, err = s.ciService.CreateCI(ctx, createReq, tenantID)
++			_, err = s.ciService.CreateCI(ctx, createReq, tenantID)
+ 		}
+ 
+ 		if err != nil {
+@@ -292,11 +291,6 @@ func (s *CMDBImportExportService) processImportTask(taskID string, req *dto.Impor
+ 		successCount++
+ 	}
+ 
+-	errMsg := ""
+-	if len(errors) > 0 {
+-		errJSON, _ := json.Marshal(errors)
+-		errMsg = string(errJSON)
+-	}
+ 
+ 	errorList := make([]map[string]interface{}, len(errors))
+ 	for i, e := range errors {
+@@ -448,6 +442,12 @@ func (s *CMDBImportExportService) processExportTask(taskID string, req *dto.Expo
+ 		return
+ 	}
+ 
++	// Convert []dto.CIResponse to []*dto.CIResponse for export functions
++	ciItems := make([]*dto.CIResponse, len(searchResult.Items))
++	for i := range searchResult.Items {
++		ciItems[i] = &searchResult.Items[i]
++	}
++
+ 	// 确定导出字段
+ 	exportFields := req.ExportFields
+ 	if len(exportFields) == 0 {
+@@ -458,9 +458,9 @@ func (s *CMDBImportExportService) processExportTask(taskID string, req *dto.Expo
+ 	var fileSize int64
+ 
+ 	if req.ExportType == "csv" {
+-		fileURL, fileSize, err = s.generateCSVExport(searchResult.Items, exportFields)
++		fileURL, fileSize, err = s.generateCSVExport(ciItems, exportFields)
+ 	} else {
+-		fileURL, fileSize, err = s.generateExcelExport(searchResult.Items, exportFields)
++		fileURL, fileSize, err = s.generateExcelExport(ciItems, exportFields)
+ 	}
+ 
+ 	if err != nil {
+@@ -800,9 +800,6 @@ func (s *CMDBImportExportService) convertCreateToUpdateReq(createReq *dto.Create
+ 		CloudSyncStatus:    createReq.CloudSyncStatus,
+ 		CloudResourceRefID: createReq.CloudResourceRefID,
+ 		LifecycleStatus:    createReq.LifecycleStatus,
+-		EffectiveAt:        createReq.EffectiveAt,
+-		ExpireAt:           createReq.ExpireAt,
+ 	}
+ }
+ 
+@@ -900,12 +897,5 @@ func (s *CMDBImportExportService) convertCreateToUpdateReqMerge(createReq *dto.C
+ 	if createReq.CloudResourceRefID != 0 {
+ 		updateReq.CloudResourceRefID = createReq.CloudResourceRefID
+ 	}
+-	if createReq.LifecycleStatus != "" {
+-		updateReq.LifecycleStatus = createReq.LifecycleStatus
+-	}
+-	if createReq.EffectiveAt != nil {
+-		updateReq.EffectiveAt = createReq.EffectiveAt
+-	}
+-	if createReq.ExpireAt != nil {
+-		updateReq.ExpireAt = createReq.ExpireAt
+-	}
++
+ 	return updateReq
+ }

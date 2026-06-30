@@ -1,0 +1,9 @@
+@@ -1217,7 +1217,7 @@
+ 	query := s.client.ConfigurationItem.Query().
+ 		Where(configurationitem.TenantID(tenantID))
+ 
+-	// 应用过滤条件
++	// Apply filter conditions
+ 	query = s.applySearchFilters(ctx, &req.Filters)
+ 
+ 	// 统计总数

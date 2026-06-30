@@ -80,6 +80,12 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldLifecycleStatus holds the string denoting the lifecycle_status field in the database.
+	FieldLifecycleStatus = "lifecycle_status"
+	// FieldEffectiveAt holds the string denoting the effective_at field in the database.
+	FieldEffectiveAt = "effective_at"
+	// FieldExpireAt holds the string denoting the expire_at field in the database.
+	FieldExpireAt = "expire_at"
 	// EdgeCiTypeRef holds the string denoting the ci_type_ref edge name in mutations.
 	EdgeCiTypeRef = "ci_type_ref"
 	// EdgeCloudResourceRef holds the string denoting the cloud_resource_ref edge name in mutations.
@@ -188,6 +194,9 @@ var Columns = []string{
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldLifecycleStatus,
+	FieldEffectiveAt,
+	FieldExpireAt,
 }
 
 var (
@@ -230,6 +239,8 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultLifecycleStatus holds the default value on creation for the "lifecycle_status" field.
+	DefaultLifecycleStatus string
 )
 
 // OrderOption defines the ordering options for the ConfigurationItem queries.
@@ -383,6 +394,21 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByLifecycleStatus orders the results by the lifecycle_status field.
+func ByLifecycleStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLifecycleStatus, opts...).ToFunc()
+}
+
+// ByEffectiveAt orders the results by the effective_at field.
+func ByEffectiveAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEffectiveAt, opts...).ToFunc()
+}
+
+// ByExpireAt orders the results by the expire_at field.
+func ByExpireAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpireAt, opts...).ToFunc()
 }
 
 // ByCiTypeRefField orders the results by ci_type_ref field.
