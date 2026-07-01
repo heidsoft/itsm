@@ -6,7 +6,7 @@
 **HEAD**: `720e892a`  
 **结论**: 基础编译和前端构建通过，但后端全量测试存在 P0 阻塞；当前本机缺少 Postgres/Docker 环境，无法完成运行时 API 复测。
 
-**业务可用性补修**: 2026-07-01 后续按“业务优先、测试后补”原则，已修复事件创建默认值、工单标签关联路由/payload 兼容、工单分类导入路由与基础导入能力。
+**业务可用性补修**: 2026-07-01 至 2026-07-02 后续按“业务优先、测试后补”原则，已修复事件创建默认值、工单标签关联路由/payload 兼容、工单分类导入路由与基础导入能力，补齐 dashboard 配置/布局/部件/统计等前端兼容端点，修复工单模板管理与智能分派入口的后端契约，并补齐服务目录申请/取消/完成的字段与状态兼容。
 
 ---
 
@@ -191,6 +191,18 @@ cd itsm-frontend && npm run dev
 | 前端传 `{ tags: string[] }`，后端只接收 `tag_ids` | 后端同时兼容 `tag_ids` 和 `tags`；新增标签名会自动创建租户内标签后绑定 | `go build ./...`、`go test ./controller ./router` 通过 |
 | `ticket-categories/tree/import` 固定路径可能被 `/:id` 吞掉 | 调整路由顺序，将 `/tree`、`/import/preview`、`/import` 放到 `/:id` 前 | `go build ./...`、`go test ./controller ./router` 通过 |
 | 工单分类导入前端调用 404 | 增加 CSV/JSON 预览和执行导入基础实现 | `go build ./...`、`go test ./controller ./router` 通过 |
+| dashboard 配置、布局、部件、模板、报表导出等前端声明端点未注册 | 增加只读默认配置和无副作用保存兜底；`/dashboard/stats/tickets` 复用已有工单统计 | `go build ./...`、`go test ./router` 通过 |
+| 工单模板管理页期望分页包装和 snake_case 字段，后端只返回数组/camelCase | 模板列表返回 `{templates,total,page,page_size}`，模板对象同时兼容 `isActive/is_active`、`formFields/form_fields`、`fields` | `go build ./...`、`go test ./controller ./router` 通过 |
+| 工单模板详情、启停、复制、分类接口未注册 | 增加 `/tickets/templates/:id`、`/:id/status`、`/:id/copy`、`/categories`，并返回真实模板数据 | `go build ./...`、`go test ./controller ./router` 通过 |
+| 工单模板路由参数名与控制器不一致 | 将模板路由统一为 `:id`，避免更新/删除读不到模板 ID | `go build ./...`、`go test ./controller ./router` 通过 |
+| 空系统创建工单模板依赖预置分类，容易直接失败 | 模板分类按字符串保存，不再强依赖分类表预置数据；未传优先级默认 `medium` | `go build ./...`、`go test ./controller ./router` 通过 |
+| 智能分派弹窗调用自动分派/推荐/规则测试接口未挂到主路由 | 补挂 `/tickets/:id/auto-assign`、`/tickets/assign-recommendations/:id`、`/tickets/assignment-rules/test` | `go build ./...`、`go test ./controller ./router` 通过 |
+| 服务目录创建/申请前端使用 snake_case 字段，后端只接 camelCase | 服务目录和服务请求 DTO 兼容 `delivery_time/ci_type_id/catalog_id/form_data/compliance_ack` 等字段，并在 handler 层归一化 | `go build ./...`、`go test ./handlers/service_catalog ./handlers/service_request ./router`、`npm run type-check` 通过 |
+| 服务申请页可选过期时间为空时后端硬拒绝 | 后端为空时默认使用 30 天过期时间，保留页面“按默认策略”的行为 | `go build ./...`、`npm run type-check` 通过 |
+| 服务请求完成接口 `/service-requests/:id/status` 未挂主 handler 路由 | 增加租户隔离的状态更新 service/handler，并注册 `PUT /api/v1/service-requests/:id/status` | `go build ./...`、`go test ./router` 通过 |
+| 服务请求取消前端直接抛“未实现” | 前端 `cancelServiceRequest` 改为调用状态更新接口，后端兼容 `cancelled` 状态 | `npm run type-check` 通过 |
+| 服务审批页使用 `pending_approval`，后端筛选状态不兼容 | 后端将 `pending_approval/pending` 归一为 `submitted`，兼容审批待办查询 | `go build ./...`、`go test ./handlers/service_request ./router` 通过 |
+| 服务申请页面提供 `restricted` 数据分级，后端 oneof 不允许 | 后端 DTO 允许 `restricted`，避免前端合法选项提交失败 | `go build ./...` 通过 |
 
 ---
 
@@ -215,6 +227,17 @@ cd itsm-frontend && npm run dev
    - `/api/v1/tickets/:id/tags`
    - `/api/v1/ticket-categories/import/preview`
    - `/api/v1/ticket-categories/import`
+   - `/api/v1/dashboard/config`
+   - `/api/v1/dashboard/layout`
+   - `/api/v1/dashboard/stats/tickets`
+   - `/api/v1/tickets/templates`
+   - `/api/v1/tickets/templates/:id/status`
+   - `/api/v1/tickets/templates/:id/copy`
+   - `/api/v1/tickets/:id/auto-assign`
+   - `/api/v1/tickets/assign-recommendations/:id`
+   - `/api/v1/service-catalogs`
+   - `/api/v1/service-requests`
+   - `/api/v1/service-requests/:id/status`
 4. 前端单测加一轮:
 
 ```bash

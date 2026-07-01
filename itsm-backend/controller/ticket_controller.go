@@ -633,7 +633,42 @@ func (tc *TicketController) GetTicketTemplates(c *gin.Context) {
 	}
 
 	tc.logger.Infow("Get ticket templates successful", "tenant_id", tenantID, "count", len(templates))
-	common.Success(c, templates)
+	page := 1
+	pageSize := len(templates)
+	if pageSize == 0 {
+		pageSize = 100
+	}
+	common.Success(c, gin.H{
+		"templates": normalizeTicketTemplateList(templates),
+		"total":     len(templates),
+		"page":      page,
+		"page_size": pageSize,
+		"pageSize":  pageSize,
+	})
+}
+
+// GetTicketTemplate 获取单个工单模板
+func (tc *TicketController) GetTicketTemplate(c *gin.Context) {
+	templateID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的模板ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	template, err := tc.ticketService.GetTicketTemplate(c.Request.Context(), tenantID, templateID)
+	if err != nil {
+		tc.logger.Errorw("Get ticket template failed", "error", err, "template_id", templateID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "获取模板失败: "+err.Error())
+		return
+	}
+
+	common.Success(c, normalizeTicketTemplate(template))
 }
 
 // CreateTicketTemplate 创建工单模板
@@ -651,7 +686,7 @@ func (tc *TicketController) CreateTicketTemplate(c *gin.Context) {
 	}
 
 	// 实现创建工单模板功能
-	_, err := tc.ticketService.CreateTicketTemplate(c.Request.Context(), tenantID, template)
+	created, err := tc.ticketService.CreateTicketTemplate(c.Request.Context(), tenantID, &template)
 	if err != nil {
 		tc.logger.Errorw("Create ticket template failed", "error", err, "name", template.Name, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, "创建模板失败: "+err.Error())
@@ -659,10 +694,7 @@ func (tc *TicketController) CreateTicketTemplate(c *gin.Context) {
 	}
 
 	tc.logger.Infow("Create ticket template successful", "name", template.Name, "tenant_id", tenantID)
-	common.Success(c, gin.H{
-		"message":       "工单模板创建成功",
-		"template_name": template.Name,
-	})
+	common.Success(c, normalizeTicketTemplate(created))
 }
 
 // UpdateTicketTemplate 更新工单模板
@@ -687,7 +719,7 @@ func (tc *TicketController) UpdateTicketTemplate(c *gin.Context) {
 	}
 
 	// 实现更新工单模板功能
-	_, err = tc.ticketService.UpdateTicketTemplate(c.Request.Context(), tenantID, templateID, template)
+	updated, err := tc.ticketService.UpdateTicketTemplate(c.Request.Context(), tenantID, templateID, &template)
 	if err != nil {
 		tc.logger.Errorw("Update ticket template failed", "error", err, "template_id", templateID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, "更新模板失败: "+err.Error())
@@ -695,10 +727,7 @@ func (tc *TicketController) UpdateTicketTemplate(c *gin.Context) {
 	}
 
 	tc.logger.Infow("Update ticket template successful", "template_id", templateID, "tenant_id", tenantID)
-	common.Success(c, gin.H{
-		"message":     "工单模板更新成功",
-		"template_id": templateID,
-	})
+	common.Success(c, normalizeTicketTemplate(updated))
 }
 
 // DeleteTicketTemplate 删除工单模板
@@ -734,6 +763,137 @@ func (tc *TicketController) DeleteTicketTemplate(c *gin.Context) {
 		"message":     "工单模板删除成功",
 		"template_id": id,
 	})
+}
+
+// UpdateTicketTemplateStatus 启用或停用工单模板
+func (tc *TicketController) UpdateTicketTemplateStatus(c *gin.Context) {
+	templateID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的模板ID")
+		return
+	}
+
+	var req struct {
+		IsActive    *bool `json:"isActive"`
+		IsActiveAlt *bool `json:"is_active"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+	isActive := req.IsActive
+	if isActive == nil {
+		isActive = req.IsActiveAlt
+	}
+	if isActive == nil {
+		common.Fail(c, common.ParamErrorCode, "is_active is required")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	template, err := tc.ticketService.UpdateTicketTemplateStatus(c.Request.Context(), tenantID, templateID, *isActive)
+	if err != nil {
+		tc.logger.Errorw("Update ticket template status failed", "error", err, "template_id", templateID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "更新模板状态失败: "+err.Error())
+		return
+	}
+
+	common.Success(c, normalizeTicketTemplate(template))
+}
+
+// CopyTicketTemplate 复制工单模板
+func (tc *TicketController) CopyTicketTemplate(c *gin.Context) {
+	templateID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的模板ID")
+		return
+	}
+
+	var req struct {
+		Name string `json:"name"`
+	}
+	_ = c.ShouldBindJSON(&req)
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	template, err := tc.ticketService.CopyTicketTemplate(c.Request.Context(), tenantID, templateID, req.Name)
+	if err != nil {
+		tc.logger.Errorw("Copy ticket template failed", "error", err, "template_id", templateID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "复制模板失败: "+err.Error())
+		return
+	}
+
+	common.Success(c, normalizeTicketTemplate(template))
+}
+
+// GetTicketTemplateCategories 获取工单模板分类
+func (tc *TicketController) GetTicketTemplateCategories(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	categories, err := tc.ticketService.GetTicketTemplateCategories(c.Request.Context(), tenantID)
+	if err != nil {
+		tc.logger.Errorw("Get ticket template categories failed", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "获取模板分类失败: "+err.Error())
+		return
+	}
+
+	common.Success(c, categories)
+}
+
+func normalizeTicketTemplateList(templates []interface{}) []gin.H {
+	result := make([]gin.H, 0, len(templates))
+	for _, template := range templates {
+		result = append(result, normalizeTicketTemplate(template))
+	}
+	return result
+}
+
+func normalizeTicketTemplate(template interface{}) gin.H {
+	tmpl, ok := template.(*dto.TicketTemplate)
+	if !ok || tmpl == nil {
+		return gin.H{}
+	}
+	formFields := tmpl.FormFields
+	if formFields == nil {
+		formFields = tmpl.FormFieldsAlt
+	}
+	if formFields == nil {
+		formFields = gin.H{}
+	}
+	isActive := tmpl.IsActive
+	if tmpl.IsActiveAlt != nil {
+		isActive = *tmpl.IsActiveAlt
+	}
+	return gin.H{
+		"id":             tmpl.ID,
+		"name":           tmpl.Name,
+		"description":    tmpl.Description,
+		"category":       tmpl.Category,
+		"priority":       tmpl.Priority,
+		"fields":         tmpl.Fields,
+		"formFields":     formFields,
+		"form_fields":    formFields,
+		"workflow_steps": tmpl.WorkflowSteps,
+		"isActive":       isActive,
+		"is_active":      isActive,
+		"createdAt":      tmpl.CreatedAt,
+		"created_at":     tmpl.CreatedAt,
+		"updatedAt":      tmpl.UpdatedAt,
+		"updated_at":     tmpl.UpdatedAt,
+	}
 }
 
 // GetSubtasks 获取子任务列表

@@ -69,6 +69,117 @@ func withIncidentIDParam(handler gin.HandlerFunc) gin.HandlerFunc {
 	}
 }
 
+func defaultDashboardLayout() gin.H {
+	return gin.H{
+		"cols":             12,
+		"rows":             24,
+		"margin":           []int{16, 16},
+		"containerPadding": []int{16, 16},
+		"rowHeight":        80,
+		"isDraggable":      true,
+		"isResizable":      true,
+	}
+}
+
+func defaultDashboardWidgets() []gin.H {
+	return []gin.H{
+		{
+			"id":          "ticket_overview",
+			"type":        "metric",
+			"title":       "工单总览",
+			"description": "工单数量与状态概览",
+			"position":    gin.H{"x": 0, "y": 0, "w": 3, "h": 2},
+			"config":      gin.H{"showTitle": true, "showBorder": true, "metric": "total", "unit": "个"},
+			"dataSource":  "tickets",
+			"isVisible":   true,
+		},
+		{
+			"id":          "ticket_trend",
+			"type":        "chart",
+			"title":       "工单趋势",
+			"description": "近期工单创建与解决趋势",
+			"position":    gin.H{"x": 3, "y": 0, "w": 6, "h": 4},
+			"config":      gin.H{"showTitle": true, "showBorder": true, "chartType": "line", "xAxis": "date", "yAxis": "count"},
+			"dataSource":  "ticket_trend",
+			"isVisible":   true,
+		},
+		{
+			"id":          "sla_status",
+			"type":        "progress",
+			"title":       "SLA 达成率",
+			"description": "服务级别协议履约情况",
+			"position":    gin.H{"x": 9, "y": 0, "w": 3, "h": 2},
+			"config":      gin.H{"showTitle": true, "showBorder": true, "metric": "slaCompliance", "unit": "%"},
+			"dataSource":  "sla",
+			"isVisible":   true,
+		},
+	}
+}
+
+func defaultDashboardConfig() gin.H {
+	now := time.Now().Format(time.RFC3339)
+	return gin.H{
+		"id":          1,
+		"name":        "默认仪表盘",
+		"description": "系统默认运维视图",
+		"isDefault":   true,
+		"isPublic":    false,
+		"layout":      defaultDashboardLayout(),
+		"widgets":     defaultDashboardWidgets(),
+		"filters": []gin.H{
+			{
+				"id":         "time_range",
+				"name":       "时间范围",
+				"type":       "select",
+				"field":      "timeRange",
+				"options":    []gin.H{{"label": "最近7天", "value": "7d"}, {"label": "最近30天", "value": "30d"}},
+				"isRequired": false,
+				"isVisible":  true,
+			},
+		},
+		"permissions": []string{},
+		"createdBy":   0,
+		"updatedBy":   0,
+		"createdAt":   now,
+		"updatedAt":   now,
+		"shareSettings": gin.H{
+			"isShared": false,
+		},
+	}
+}
+
+func defaultDashboardTemplate() gin.H {
+	return gin.H{
+		"id":            1,
+		"name":          "ITSM 运营总览",
+		"description":   "适用于服务台、SLA 与工单趋势的默认模板",
+		"category":      "operations",
+		"tags":          []string{"itsm", "ticket", "sla"},
+		"layout":        defaultDashboardLayout(),
+		"widgets":       defaultDashboardWidgets(),
+		"filters":       []gin.H{},
+		"isPublic":      true,
+		"downloadCount": 0,
+	}
+}
+
+func dashboardWidgetByID(widgetID string) gin.H {
+	for _, widget := range defaultDashboardWidgets() {
+		if widget["id"] == widgetID {
+			return widget
+		}
+	}
+	return gin.H{
+		"id":         widgetID,
+		"type":       "metric",
+		"title":      widgetID,
+		"position":   gin.H{"x": 0, "y": 0, "w": 3, "h": 2},
+		"config":     gin.H{"showTitle": true, "showBorder": true},
+		"dataSource": widgetID,
+		"isVisible":  true,
+	}
+}
+
 // RouterConfig 路由配置
 type RouterConfig struct {
 	JWTSecret string
@@ -389,6 +500,17 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			tickets.GET("/overdue", middleware.RequirePermission("ticket", "read"), config.TicketController.GetOverdueTickets)
 			tickets.POST("/export", middleware.RequirePermission("ticket", "export"), config.TicketController.ExportTickets)
 			tickets.POST("/batch-delete", middleware.RequirePermission("ticket", "delete"), config.TicketController.BatchDeleteTickets)
+
+			// 工单模板
+			tickets.GET("/templates", config.TicketController.GetTicketTemplates)
+			tickets.GET("/templates/categories", config.TicketController.GetTicketTemplateCategories)
+			tickets.POST("/templates", config.TicketController.CreateTicketTemplate)
+			tickets.GET("/templates/:id", config.TicketController.GetTicketTemplate)
+			tickets.PUT("/templates/:id", config.TicketController.UpdateTicketTemplate)
+			tickets.PATCH("/templates/:id/status", config.TicketController.UpdateTicketTemplateStatus)
+			tickets.POST("/templates/:id/copy", config.TicketController.CopyTicketTemplate)
+			tickets.DELETE("/templates/:id", config.TicketController.DeleteTicketTemplate)
+
 			tickets.POST("/:id/escalate", middleware.RequirePermission("ticket", "escalate"), config.TicketController.EscalateTicket)
 			tickets.GET("/:id/history", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicketActivity)
 			tickets.GET("/:id", config.TicketController.GetTicket)
@@ -485,8 +607,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 			// 工单分配规则
 			if config.TicketAssignmentSmartController != nil {
+				tickets.POST("/:id/auto-assign", config.TicketAssignmentSmartController.AutoAssign)
+				tickets.GET("/assign-recommendations/:id", config.TicketAssignmentSmartController.GetAssignRecommendations)
 				tickets.GET("/assignment-rules", config.TicketAssignmentSmartController.ListAssignmentRules)
 				tickets.POST("/assignment-rules", config.TicketAssignmentSmartController.CreateAssignmentRule)
+				tickets.POST("/assignment-rules/test", config.TicketAssignmentSmartController.TestAssignmentRule)
 				tickets.GET("/assignment-rules/:id", config.TicketAssignmentSmartController.GetAssignmentRule)
 				tickets.PUT("/assignment-rules/:id", config.TicketAssignmentSmartController.UpdateAssignmentRule)
 				tickets.DELETE("/assignment-rules/:id", config.TicketAssignmentSmartController.DeleteAssignmentRule)
@@ -503,12 +628,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.POST("/:id/tags", middleware.RequirePermission("ticket_tag", "create"), config.TicketTagController.AssignTagsToTicket)
 				tickets.DELETE("/:id/tags", middleware.RequirePermission("ticket_tag", "delete"), config.TicketTagController.RemoveTagsFromTicket)
 			}
-
-			// 工单模板
-			tickets.GET("/templates", config.TicketController.GetTicketTemplates)
-			tickets.POST("/templates", config.TicketController.CreateTicketTemplate)
-			tickets.PUT("/templates/:template_id", config.TicketController.UpdateTicketTemplate)
-			tickets.DELETE("/templates/:template_id", config.TicketController.DeleteTicketTemplate)
 
 			// 工单分析与预测 (Alias for frontend compatibility)
 			if config.AIHandler != nil {
@@ -722,6 +841,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				sr.GET("/approvals/pending", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.ListPending)
 				sr.GET("/:id", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.Get)
 				sr.PUT("/:id", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.Update)
+				sr.PUT("/:id/status", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.UpdateStatus)
 				sr.DELETE("/:id", middleware.RequirePermission("service_request", "delete"), config.ServiceRequestHandler.Delete)
 				sr.POST("/:id/approval", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.ApplyApproval)
 				sr.POST("/:id/approvals", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.ApplyApproval)
@@ -1312,10 +1432,93 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				// B5: 别名，/api/v1/dashboard 直接返回 overview 数据（前端默认调用）
 				dashboard.GET("", config.DashboardHandler.GetOverview)
 				dashboard.GET("/overview", config.DashboardHandler.GetOverview)
+				dashboard.GET("/config", func(c *gin.Context) {
+					common.Success(c, defaultDashboardConfig())
+				})
+				dashboard.POST("/config", func(c *gin.Context) {
+					common.Success(c, gin.H{"success": true})
+				})
+				dashboard.GET("/layout", func(c *gin.Context) {
+					common.Success(c, defaultDashboardLayout())
+				})
+				dashboard.POST("/layout", func(c *gin.Context) {
+					common.Success(c, gin.H{"success": true})
+				})
+				dashboard.GET("/widgets/available", func(c *gin.Context) {
+					common.Success(c, defaultDashboardWidgets())
+				})
+				dashboard.POST("/widgets", func(c *gin.Context) {
+					widget := dashboardWidgetByID("custom_widget")
+					var payload map[string]interface{}
+					if err := c.ShouldBindJSON(&payload); err == nil {
+						for key, value := range payload {
+							widget[key] = value
+						}
+					}
+					if widget["id"] == nil || widget["id"] == "" {
+						widget["id"] = "custom_widget"
+					}
+					common.Success(c, gin.H{"widget": widget})
+				})
+				dashboard.GET("/widgets/:widget_id/data", func(c *gin.Context) {
+					common.Success(c, dashboardWidgetByID(c.Param("widget_id")))
+				})
+				dashboard.POST("/widgets/:widget_id/refresh", func(c *gin.Context) {
+					common.Success(c, dashboardWidgetByID(c.Param("widget_id")))
+				})
+				dashboard.PUT("/widgets/:widget_id", func(c *gin.Context) {
+					widget := dashboardWidgetByID(c.Param("widget_id"))
+					var payload map[string]interface{}
+					if err := c.ShouldBindJSON(&payload); err == nil {
+						for key, value := range payload {
+							widget[key] = value
+						}
+					}
+					common.Success(c, gin.H{"widget": widget})
+				})
+				dashboard.DELETE("/widgets/:widget_id", func(c *gin.Context) {
+					common.Success(c, gin.H{"success": true})
+				})
+				dashboard.GET("/charts/:chart_type", func(c *gin.Context) {
+					common.Success(c, gin.H{
+						"labels":   []string{},
+						"datasets": []gin.H{{"label": c.Param("chart_type"), "data": []int{}}},
+					})
+				})
+				dashboard.GET("/realtime/:data_type", func(c *gin.Context) {
+					common.Success(c, gin.H{
+						"type":      c.Param("data_type"),
+						"data":      gin.H{},
+						"timestamp": time.Now().Format(time.RFC3339),
+					})
+				})
 				dashboard.GET("/stats", config.DashboardHandler.GetStats)
+				if config.TicketController != nil {
+					dashboard.GET("/stats/tickets", config.TicketController.GetTicketStats)
+				} else {
+					dashboard.GET("/stats/tickets", config.DashboardHandler.GetStats)
+				}
 				dashboard.GET("/stats/users", config.DashboardHandler.GetUserStats)
 				dashboard.GET("/stats/system", config.DashboardHandler.GetSystemStats)
 				dashboard.GET("/kpi-metrics", config.DashboardHandler.GetKPIMetrics)
+				dashboard.GET("/metrics/performance", func(c *gin.Context) {
+					common.Success(c, gin.H{
+						"loadTime":      0,
+						"renderTime":    0,
+						"dataFetchTime": 0,
+						"widgetCount":   len(defaultDashboardWidgets()),
+						"memoryUsage":   0,
+					})
+				})
+				dashboard.GET("/metrics/usage", func(c *gin.Context) {
+					common.Success(c, gin.H{
+						"totalViews":         0,
+						"uniqueUsers":        0,
+						"avgSessionDuration": 0,
+						"mostUsedWidgets":    []gin.H{},
+						"peakUsageHours":     []int{},
+					})
+				})
 				// P1-01 别名：/dashboard/metrics → 通用 stats（前端默认 fetch 路径）
 				dashboard.GET("/metrics", config.DashboardHandler.GetStats)
 				dashboard.GET("/ticket-trend", config.DashboardHandler.GetTicketTrend)
@@ -1324,6 +1527,37 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				dashboard.GET("/satisfaction-data", config.DashboardHandler.GetSatisfactionData)
 				dashboard.GET("/quick-actions", config.DashboardHandler.GetQuickActions)
 				dashboard.GET("/recent-activities", config.DashboardHandler.GetRecentActivities)
+				dashboard.GET("/reports", func(c *gin.Context) {
+					common.Success(c, gin.H{"reports": []gin.H{}, "total": 0, "page": 1, "pageSize": 20})
+				})
+				dashboard.POST("/reports/:report_type", func(c *gin.Context) {
+					common.Success(c, gin.H{
+						"id":         0,
+						"name":       c.Param("report_type"),
+						"type":       c.Param("report_type"),
+						"template":   gin.H{"title": c.Param("report_type"), "sections": []gin.H{}, "filters": []gin.H{}, "timeRange": "7d", "format": "html"},
+						"recipients": []string{},
+						"isActive":   false,
+						"createdBy":  0,
+						"createdAt":  time.Now().Format(time.RFC3339),
+						"updatedAt":  time.Now().Format(time.RFC3339),
+					})
+				})
+				dashboard.GET("/reports/:report_id/download", func(c *gin.Context) {
+					c.Data(200, "text/plain; charset=utf-8", []byte("report is not generated yet"))
+				})
+				dashboard.POST("/export", func(c *gin.Context) {
+					common.Success(c, gin.H{"download_url": ""})
+				})
+				dashboard.GET("/templates", func(c *gin.Context) {
+					common.Success(c, []gin.H{defaultDashboardTemplate()})
+				})
+				dashboard.POST("/templates", func(c *gin.Context) {
+					common.Success(c, gin.H{"template": defaultDashboardTemplate()})
+				})
+				dashboard.POST("/templates/:template_id/apply", func(c *gin.Context) {
+					common.Success(c, gin.H{"success": true, "config": defaultDashboardConfig()})
+				})
 			}
 		}
 

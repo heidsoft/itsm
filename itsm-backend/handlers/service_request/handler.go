@@ -3,6 +3,7 @@ package service_request
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -81,6 +82,11 @@ func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateServiceRequestRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, 1001, "Invalid parameters: "+err.Error())
+		return
+	}
+	normalizeCreateServiceRequest(&req)
+	if req.CatalogID == 0 {
+		common.Fail(c, 1001, "catalogId is required")
 		return
 	}
 
@@ -172,7 +178,7 @@ func (h *Handler) List(c *gin.Context) {
 	}
 
 	filters := ListFilters{
-		Status: req.Status,
+		Status: normalizeServiceRequestStatus(req.Status),
 		UserID: userID,
 		Page:   req.Page,
 		Size:   req.Size,
@@ -297,6 +303,7 @@ func (h *Handler) Update(c *gin.Context) {
 		common.Fail(c, 1001, "Invalid parameters: "+err.Error())
 		return
 	}
+	normalizeUpdateServiceRequest(&req)
 
 	domainReq := &ServiceRequest{
 		Title:              req.Title,
@@ -325,6 +332,50 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	fullReq, approvals, _ := h.service.Get(c.Request.Context(), updated.ID, tenantID.(int))
+	common.Success(c, h.toDTO(fullReq, approvals))
+}
+
+func (h *Handler) UpdateStatus(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, 1001, "Invalid ID")
+		return
+	}
+
+	var req dto.UpdateServiceRequestStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, 1001, "Invalid parameters: "+err.Error())
+		return
+	}
+	status := normalizeServiceRequestStatus(req.Status)
+	if status == "" {
+		common.Fail(c, 1001, "status is required")
+		return
+	}
+
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "Tenant ID missing")
+		return
+	}
+
+	if err := h.service.UpdateStatus(c.Request.Context(), id, tenantID.(int), status); err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, 404, "Service request not found")
+		} else if appErr, ok := common.AsAppError(err); ok && appErr.Code == common.ErrCodeNotFound {
+			common.Fail(c, 404, "Service request not found")
+		} else {
+			common.Fail(c, 5001, err.Error())
+		}
+		return
+	}
+
+	fullReq, approvals, err := h.service.Get(c.Request.Context(), id, tenantID.(int))
+	if err != nil {
+		common.Success(c, gin.H{"id": id, "status": status})
+		return
+	}
 	common.Success(c, h.toDTO(fullReq, approvals))
 }
 
@@ -357,4 +408,115 @@ func (h *Handler) Delete(c *gin.Context) {
 	}
 
 	common.Success(c, nil)
+}
+
+func normalizeCreateServiceRequest(req *dto.CreateServiceRequestRequest) {
+	if req.CatalogID == 0 {
+		req.CatalogID = req.CatalogIDAlt
+	}
+	if req.FormData == nil {
+		req.FormData = req.FormDataAlt
+	}
+	if req.FormData == nil {
+		req.FormData = map[string]any{}
+	}
+	if req.Title == "" {
+		if title, ok := req.FormData["title"].(string); ok {
+			req.Title = title
+		}
+	}
+	if req.Reason == "" {
+		if reason, ok := req.FormData["reason"].(string); ok {
+			req.Reason = reason
+		}
+	}
+	if req.CostCenter == "" {
+		req.CostCenter = req.CostCenterAlt
+	}
+	if req.CostCenter == "" {
+		if costCenter, ok := req.FormData["cost_center"].(string); ok {
+			req.CostCenter = costCenter
+		}
+	}
+	if req.DataClassification == "" {
+		req.DataClassification = req.DataClassificationAlt
+	}
+	if req.DataClassification == "" {
+		if classification, ok := req.FormData["data_classification"].(string); ok {
+			req.DataClassification = classification
+		}
+	}
+	if req.DataClassification == "" {
+		req.DataClassification = "internal"
+	}
+	if !req.NeedsPublicIP {
+		req.NeedsPublicIP = req.NeedsPublicIPAlt
+	}
+	if len(req.SourceIPWhitelist) == 0 {
+		req.SourceIPWhitelist = req.SourceIPWhitelistAlt
+	}
+	if len(req.SourceIPWhitelist) == 0 {
+		if whitelist, ok := req.FormData["source_ip_whitelist"].([]string); ok {
+			req.SourceIPWhitelist = whitelist
+		}
+	}
+	if req.ExpireAt == nil {
+		req.ExpireAt = req.ExpireAtAlt
+	}
+	if req.ExpireAt == nil {
+		if expireAt, ok := req.FormData["expire_at"].(string); ok {
+			if parsed, err := time.Parse(time.RFC3339, expireAt); err == nil {
+				req.ExpireAt = &parsed
+			}
+		}
+	}
+	if req.ExpireAt == nil {
+		defaultExpireAt := time.Now().Add(30 * 24 * time.Hour)
+		req.ExpireAt = &defaultExpireAt
+	}
+	if req.ComplianceAckAlt != nil {
+		req.ComplianceAck = *req.ComplianceAckAlt
+	}
+	if ack, ok := req.FormData["compliance_ack"].(bool); ok {
+		req.ComplianceAck = ack
+	}
+}
+
+func normalizeUpdateServiceRequest(req *dto.UpdateServiceRequestRequest) {
+	if req.FormData == nil {
+		req.FormData = req.FormDataAlt
+	}
+	if req.CostCenter == "" {
+		req.CostCenter = req.CostCenterAlt
+	}
+	if req.DataClassification == "" {
+		req.DataClassification = req.DataClassificationAlt
+	}
+	if !req.NeedsPublicIP {
+		req.NeedsPublicIP = req.NeedsPublicIPAlt
+	}
+	if len(req.SourceIPWhitelist) == 0 {
+		req.SourceIPWhitelist = req.SourceIPWhitelistAlt
+	}
+	if req.ExpireAt == nil {
+		req.ExpireAt = req.ExpireAtAlt
+	}
+	if req.ComplianceAckAlt != nil {
+		req.ComplianceAck = *req.ComplianceAckAlt
+	}
+}
+
+func normalizeServiceRequestStatus(status string) string {
+	switch strings.TrimSpace(status) {
+	case "pending_approval", "pending":
+		return "submitted"
+	case "approved":
+		return "security_approved"
+	case "in_progress":
+		return "provisioning"
+	case "completed":
+		return "delivered"
+	default:
+		return strings.TrimSpace(status)
+	}
 }

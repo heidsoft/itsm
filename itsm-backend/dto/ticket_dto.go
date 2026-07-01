@@ -170,15 +170,19 @@ type TicketImportRequest struct {
 
 // TicketTemplate 工单模板
 type TicketTemplate struct {
-	ID          int                    `json:"id"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Category    string                 `json:"category"`
-	Priority    string                 `json:"priority"`
-	FormFields  map[string]interface{} `json:"formFields"`
-	IsActive    bool                   `json:"isActive"`
-	CreatedAt   time.Time              `json:"createdAt"`
-	UpdatedAt   time.Time              `json:"updatedAt"`
+	ID            int                      `json:"id"`
+	Name          string                   `json:"name"`
+	Description   string                   `json:"description"`
+	Category      string                   `json:"category"`
+	Priority      string                   `json:"priority"`
+	Fields        []map[string]interface{} `json:"fields,omitempty"`
+	FormFields    map[string]interface{}   `json:"formFields"`
+	FormFieldsAlt map[string]interface{}   `json:"form_fields,omitempty"`
+	WorkflowSteps []map[string]interface{} `json:"workflow_steps,omitempty"`
+	IsActive      bool                     `json:"isActive"`
+	IsActiveAlt   *bool                    `json:"is_active,omitempty"`
+	CreatedAt     time.Time                `json:"createdAt"`
+	UpdatedAt     time.Time                `json:"updatedAt"`
 }
 
 // TicketWorkflowRequest 工单工作流请求

@@ -264,10 +264,10 @@ export class ServiceCatalogApi {
    * 取消服务请求
    */
   static async cancelServiceRequest(id: number, reason?: string): Promise<void> {
-    // 后端未提供 cancelled 状态（V0）；避免静默错误，直接提示上层处理
-    throw new Error(
-      `后端暂不支持取消服务请求（id=${id}），请先实现 cancelled 状态或取消接口。原因: ${reason || ''}`
-    );
+    await httpClient.put(`/api/v1/service-requests/${id}/status`, {
+      status: 'cancelled',
+      comment: reason,
+    } as any);
   }
 
   /**

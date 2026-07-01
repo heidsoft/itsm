@@ -89,6 +89,7 @@ func (h *Handler) Create(c *gin.Context) {
 		common.Fail(c, 1001, "参数错误: "+err.Error())
 		return
 	}
+	normalizeServiceCatalogRequest(&req)
 	if req.CloudServiceID > 0 && req.CITypeID == 0 {
 		common.Fail(c, 1001, "关联云服务时必须选择CI类型")
 		return
@@ -139,6 +140,7 @@ func (h *Handler) Update(c *gin.Context) {
 		common.Fail(c, 1001, "参数错误: "+err.Error())
 		return
 	}
+	normalizeUpdateServiceCatalogRequest(&req)
 	if req.CloudServiceID > 0 && req.CITypeID == 0 {
 		common.Fail(c, 1001, "关联云服务时必须选择CI类型")
 		return
@@ -182,6 +184,36 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	common.Success(c, h.toDTO(updated))
+}
+
+func normalizeServiceCatalogRequest(req *dto.CreateServiceCatalogRequest) {
+	if req.DeliveryTime == "" {
+		req.DeliveryTime = req.DeliveryTimeAlt
+	}
+	if req.DeliveryTime == "" {
+		req.DeliveryTime = "1"
+	}
+	if req.CITypeID == 0 {
+		req.CITypeID = req.CITypeIDAlt
+	}
+	if req.CloudServiceID == 0 {
+		req.CloudServiceID = req.CloudServiceIDAlt
+	}
+	if req.Status == "" {
+		req.Status = "enabled"
+	}
+}
+
+func normalizeUpdateServiceCatalogRequest(req *dto.UpdateServiceCatalogRequest) {
+	if req.DeliveryTime == "" {
+		req.DeliveryTime = req.DeliveryTimeAlt
+	}
+	if req.CITypeID == 0 {
+		req.CITypeID = req.CITypeIDAlt
+	}
+	if req.CloudServiceID == 0 {
+		req.CloudServiceID = req.CloudServiceIDAlt
+	}
 }
 
 // Delete handles DeleteServiceCatalog

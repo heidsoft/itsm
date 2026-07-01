@@ -8,7 +8,6 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
-	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/tickettemplate"
 )
 
@@ -24,19 +23,6 @@ func NewTicketTemplateService(client *ent.Client) *TicketTemplateService {
 
 // CreateTemplate 创建工单模板
 func (s *TicketTemplateService) CreateTemplate(ctx context.Context, req *CreateTemplateRequest) (*ent.TicketTemplate, error) {
-	// 验证分类是否存在
-	if req.Category != "" {
-		_, err := s.client.TicketCategory.Query().
-			Where(
-				ticketcategory.NameEQ(req.Category),
-				ticketcategory.TenantIDEQ(req.TenantID),
-			).
-			First(ctx)
-		if err != nil {
-			return nil, errors.New("指定的分类不存在")
-		}
-	}
-
 	// 序列化表单字段
 	formFieldsBytes, err := json.Marshal(req.FormFields)
 	if err != nil {

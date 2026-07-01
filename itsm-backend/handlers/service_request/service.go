@@ -432,6 +432,25 @@ func (s *Service) Update(ctx context.Context, id, tenantID int, reqData *Service
 	return req, nil
 }
 
+// UpdateStatus updates a service request status with tenant isolation.
+func (s *Service) UpdateStatus(ctx context.Context, id, tenantID int, status string) error {
+	req, _, err := s.repo.GetWithApprovals(ctx, id)
+	if err != nil {
+		return common.NewNotFoundError("Service Request not found")
+	}
+	if req.TenantID != tenantID {
+		return common.NewNotFoundError("Service Request not found")
+	}
+	if strings.TrimSpace(status) == "" {
+		return common.NewBadRequestError("Status is required", nil)
+	}
+	if err := s.repo.UpdateStatus(ctx, id, status); err != nil {
+		s.logger.Errorw("Failed to update service request status", "error", err, "id", id, "status", status)
+		return common.NewInternalError("Failed to update service request status", err)
+	}
+	return nil
+}
+
 // Delete deletes a service request
 func (s *Service) Delete(ctx context.Context, id, tenantID int) error {
 	// 1. Get existing request
