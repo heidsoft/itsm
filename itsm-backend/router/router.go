@@ -802,37 +802,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 		}
 
-		// ==================== CMDB ====================
-		if config.CMDBController != nil {
-			cmdb := tenant.(*gin.RouterGroup).Group("/configuration-items")
-			{
-				// Legacy compatibility path for core CI CRUD.
-				cmdb.GET("", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCIs)
-				cmdb.POST("", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCI)
-				cmdb.GET("/stats", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCIStats)
-				cmdb.GET("/relationships", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCIRelationships)
-				cmdb.POST("/relationships", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCIRelationship)
-				cmdb.PUT("/relationships/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateCIRelationship)
-				cmdb.PATCH("/relationships/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateCIRelationship)
-				cmdb.DELETE("/relationships/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteCIRelationship)
-				cmdb.GET("/relationship-types", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListRelationshipTypes)
-
-				// Legacy type aliases.
-				cmdb.GET("/types", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCITypes)
-				cmdb.POST("/types", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCIType)
-				cmdb.GET("/types/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCIType)
-				cmdb.PUT("/types/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateCIType)
-				cmdb.DELETE("/types/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteCIType)
-
-				// Per-CI routes (must come after static routes)
-				cmdb.GET("/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCI)
-				cmdb.PUT("/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateCI)
-				cmdb.DELETE("/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteCI)
-				cmdb.GET("/:id/impact-analysis", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCIImpactAnalysis)
-				cmdb.GET("/:ciId/relationships", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCIRelationshipsByCIID)
-			}
-		}
-
 		// ==================== Knowledge Base (DDD) ====================
 		if config.KnowledgeHandler != nil {
 			// New route structure: /api/v1/knowledge/articles
