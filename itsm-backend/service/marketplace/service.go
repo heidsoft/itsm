@@ -3,6 +3,7 @@ package marketplace
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/marketplaceitem"
@@ -301,5 +302,55 @@ func (s *Service) UpdateInstallationConfig(ctx context.Context, tenantID, itemID
 
 	// TODO: 通知组件配置更新
 
+	return updated, nil
+}
+
+// GetConnectorInstallation returns the active marketplace installation for a built-in connector.
+// Built-in connector runtime names are short (for example "feishu") while marketplace item names
+// may use a display slug (for example "feishu-connector"), so both are accepted.
+func (s *Service) GetConnectorInstallation(ctx context.Context, tenantID int, connectorName string) (*ent.TenantInstallation, error) {
+	installation, err := s.db.TenantInstallation.Query().
+		Where(
+			tenantinstallation.TenantID(tenantID),
+			tenantinstallation.StatusNEQ(tenantinstallation.StatusUninstalled),
+			tenantinstallation.HasItemWith(
+				marketplaceitem.TypeEQ(marketplaceitem.TypeConnector),
+				marketplaceitem.Or(
+					marketplaceitem.NameEQ(connectorName),
+					marketplaceitem.NameEQ(connectorName+"-connector"),
+				),
+			),
+		).
+		WithItem().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("connector installation not found")
+		}
+		return nil, fmt.Errorf("failed to get connector installation: %w", err)
+	}
+	return installation, nil
+}
+
+// MergeConnectorInstallationConfig merges a partial connector config into the tenant installation.
+func (s *Service) MergeConnectorInstallationConfig(ctx context.Context, tenantID int, connectorName string, patch map[string]interface{}) (*ent.TenantInstallation, error) {
+	installation, err := s.GetConnectorInstallation(ctx, tenantID, connectorName)
+	if err != nil {
+		return nil, err
+	}
+	config := make(map[string]interface{}, len(installation.Config)+len(patch))
+	for k, v := range installation.Config {
+		config[k] = v
+	}
+	for k, v := range patch {
+		config[k] = v
+	}
+	updated, err := s.db.TenantInstallation.UpdateOne(installation).
+		SetConfig(config).
+		SetLastUpdatedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to merge connector installation config: %w", err)
+	}
 	return updated, nil
 }

@@ -35,6 +35,10 @@ export interface ConnectorConfig {
   provider: string;
   type: string;
   enabled: boolean;
+  healthy?: boolean;
+  lifecycle?: string;
+  lastCheckedAt?: string;
+  lastError?: string;
   credentials?: Record<string, string>;
   settings?: Record<string, unknown>;
   labels?: Record<string, string>;

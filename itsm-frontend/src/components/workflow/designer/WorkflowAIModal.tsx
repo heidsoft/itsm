@@ -4,7 +4,22 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Modal, Tabs, Form, Input, Button, Space, Typography, Card, Tag, App } from 'antd';
+import {
+  Alert,
+  App,
+  Button,
+  Card,
+  Checkbox,
+  Form,
+  Input,
+  List,
+  Modal,
+  Select,
+  Space,
+  Tabs,
+  Tag,
+  Typography,
+} from 'antd';
 import { 
   RocketOutlined, 
   RobotOutlined, 
@@ -14,10 +29,28 @@ import {
   WarningOutlined,
   CloseCircleOutlined
 } from '@ant-design/icons';
-import TextArea from 'antd/es/input/TextArea';
 import { getBpmnDesignerApi } from './WorkflowCanvas';
+import {
+  BPMNAIApi,
+  type BPMNEnterpriseType,
+  type BPMNProcessType,
+  type BPMNTemplateSuggestion,
+  type GenerateBPMNResponse,
+  type PreviewBPMNResponse,
+} from '@/lib/api/bpmn-ai-api';
 
 const { Text, Title, Paragraph } = Typography;
+const { TextArea } = Input;
+
+interface GenerateFormValues {
+  processName: string;
+  processDescription: string;
+  processType: BPMNProcessType;
+  enterpriseType: BPMNEnterpriseType;
+  includeSla: boolean;
+  includeNotifications: boolean;
+  includeApprovals: boolean;
+}
 
 interface WorkflowAIModalProps {
   visible: boolean;
@@ -58,142 +91,96 @@ export default function WorkflowAIModal({
   const [activeTab, setActiveTab] = useState('generate');
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [templateLoading, setTemplateLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<OptimizationSuggestion[]>([]);
   const [complianceIssues, setComplianceIssues] = useState<ComplianceIssue[]>([]);
   const [generatedProcess, setGeneratedProcess] = useState<string>('');
+  const [generationResult, setGenerationResult] = useState<GenerateBPMNResponse | null>(null);
+  const [previewResult, setPreviewResult] = useState<PreviewBPMNResponse | null>(null);
+  const [templateSuggestions, setTemplateSuggestions] = useState<BPMNTemplateSuggestion[]>([]);
+  const [generationError, setGenerationError] = useState<string>('');
+
+  const getErrorMessage = (error: unknown) =>
+    error instanceof Error ? error.message : '请求失败，请稍后重试';
 
   // 生成流程
-  const handleGenerateProcess = async (values: any) => {
+  const handleGenerateProcess = async (values: GenerateFormValues) => {
     setLoading(true);
+    setGenerationError('');
     try {
-      // TODO: 调用AI生成流程API
       message.info('AI正在生成流程，请稍候...');
-      
-      // 模拟生成延迟
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // 模拟生成结果
-      const generatedXML = `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                  id="Definitions_1"
-                  targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_1" isExecutable="true" name="${values.processName || 'AI生成的流程'}">
-    <bpmn:startEvent id="StartEvent_1" name="开始">
-      <bpmn:outgoing>Flow_1</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:userTask id="UserTask_1" name="提交申请">
-      <bpmn:incoming>Flow_1</bpmn:incoming>
-      <bpmn:outgoing>Flow_2</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="UserTask_2" name="部门经理审批">
-      <bpmn:incoming>Flow_2</bpmn:incoming>
-      <bpmn:outgoing>Flow_3</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="UserTask_3" name="财务审批">
-      <bpmn:incoming>Flow_3</bpmn:incoming>
-      <bpmn:outgoing>Flow_4</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:exclusiveGateway id="Gateway_1" name="金额是否大于10000">
-      <bpmn:incoming>Flow_4</bpmn:incoming>
-      <bpmn:outgoing>Flow_5</bpmn:outgoing>
-      <bpmn:outgoing>Flow_6</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:userTask id="UserTask_4" name="总经理审批">
-      <bpmn:incoming>Flow_5</bpmn:incoming>
-      <bpmn:outgoing>Flow_7</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:endEvent id="EndEvent_1" name="审批通过">
-      <bpmn:incoming>Flow_7</bpmn:incoming>
-      <bpmn:incoming>Flow_6</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="UserTask_1" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="UserTask_1" targetRef="UserTask_2" />
-    <bpmn:sequenceFlow id="Flow_3" sourceRef="UserTask_2" targetRef="UserTask_3" />
-    <bpmn:sequenceFlow id="Flow_4" sourceRef="UserTask_3" targetRef="Gateway_1" />
-    <bpmn:sequenceFlow id="Flow_5" name="金额>10000" sourceRef="Gateway_1" targetRef="UserTask_4">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
-        <![CDATA[\${amount > 10000}]]>
-      </bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_6" name="金额<=10000" sourceRef="Gateway_1" targetRef="EndEvent_1" />
-    <bpmn:sequenceFlow id="Flow_7" sourceRef="UserTask_4" targetRef="EndEvent_1" />
-  </bpmn:process>
-  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
-      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
-        <dc:Bounds x="120" y="142" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_1_di" bpmnElement="UserTask_1">
-        <dc:Bounds x="210" y="120" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_2_di" bpmnElement="UserTask_2">
-        <dc:Bounds x="370" y="120" width="120" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_3_di" bpmnElement="UserTask_3">
-        <dc:Bounds x="550" y="120" width="110" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_1_di" bpmnElement="Gateway_1" isMarkerVisible="true">
-        <dc:Bounds x="720" y="135" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_4_di" bpmnElement="UserTask_4">
-        <dc:Bounds x="830" y="40" width="120" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
-        <dc:Bounds x="1010" y="142" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
-        <di:waypoint x="156" y="160" />
-        <di:waypoint x="210" y="160" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
-        <di:waypoint x="310" y="160" />
-        <di:waypoint x="370" y="160" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
-        <di:waypoint x="490" y="160" />
-        <di:waypoint x="550" y="160" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
-        <di:waypoint x="660" y="160" />
-        <di:waypoint x="720" y="160" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
-        <di:waypoint x="745" y="135" />
-        <di:waypoint x="745" y="80" />
-        <di:waypoint x="830" y="80" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
-        <di:waypoint x="770" y="160" />
-        <di:waypoint x="1010" y="160" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
-        <di:waypoint x="950" y="80" />
-        <di:waypoint x="1028" y="80" />
-        <di:waypoint x="1028" y="142" />
-      </bpmndi:BPMNEdge>
-    </bpmndi:BPMNPlane>
-  </bpmndi:BPMNDiagram>
-</bpmn:definitions>`;
-      
-      setGeneratedProcess(generatedXML);
-      message.success('流程生成完成');
+
+      const requirement = `${values.processName}\n\n${values.processDescription}`.trim();
+      const result = await BPMNAIApi.generateBPMN({
+        requirement,
+        processType: values.processType,
+        enterpriseType: values.enterpriseType,
+        includeSla: values.includeSla,
+        includeNotifications: values.includeNotifications,
+        includeApprovals: values.includeApprovals,
+      });
+
+      setGenerationResult(result);
+      setGeneratedProcess(result.bpmnXml);
+      message.success(`流程生成完成：${result.processName || values.processName}`);
     } catch (error) {
       console.error('生成流程失败:', error);
-      message.error('生成流程失败，请重试');
+      const errorMessage = getErrorMessage(error);
+      setGenerationError(errorMessage);
+      message.error(`生成流程失败：${errorMessage}`);
     } finally {
       setLoading(false);
     }
   };
 
+  const handlePreviewProcess = async () => {
+    const values = await form.validateFields(['processName', 'processDescription', 'processType', 'enterpriseType']);
+    setPreviewLoading(true);
+    setGenerationError('');
+    try {
+      const requirement = `${values.processName}\n\n${values.processDescription}`.trim();
+      const result = await BPMNAIApi.previewBPMN({
+        requirement,
+        processType: values.processType,
+        enterpriseType: values.enterpriseType,
+      });
+      setPreviewResult(result);
+      message.success('流程结构预览已生成');
+    } catch (error) {
+      console.error('预览流程失败:', error);
+      const errorMessage = getErrorMessage(error);
+      setGenerationError(errorMessage);
+      message.error(`预览流程失败：${errorMessage}`);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleLoadTemplateSuggestions = async () => {
+    const values = await form.validateFields(['processDescription', 'processType']);
+    setTemplateLoading(true);
+    try {
+      const result = await BPMNAIApi.getTemplateSuggestions({
+        keyword: values.processDescription,
+        processType: values.processType,
+      });
+      setTemplateSuggestions(result);
+      if (result.length === 0) {
+        message.info('暂无匹配的模板建议');
+      }
+    } catch (error) {
+      console.error('获取模板建议失败:', error);
+      message.error(`获取模板建议失败：${getErrorMessage(error)}`);
+    } finally {
+      setTemplateLoading(false);
+    }
+  };
+
   // 应用生成的流程
   const handleApplyGeneratedProcess = () => {
-    const api = getBpmnDesignerApi();
-    if (!api || !generatedProcess) {
-      message.error('应用失败，设计器未就绪');
+    if (!generatedProcess) {
+      message.error('应用失败，未找到生成的流程XML');
       return;
     }
 
@@ -349,7 +336,12 @@ export default function WorkflowAIModal({
               onFinish={handleGenerateProcess}
               initialValues={{
                 processName: workflowName || '',
-                processDescription: ''
+                processDescription: '',
+                processType: 'custom',
+                enterpriseType: 'cn_enterprise',
+                includeSla: true,
+                includeNotifications: true,
+                includeApprovals: true,
               }}
             >
               <Form.Item
@@ -371,21 +363,168 @@ export default function WorkflowAIModal({
                 />
               </Form.Item>
 
+              <div className="grid grid-cols-2 gap-4">
+                <Form.Item
+                  name="processType"
+                  label="流程类型"
+                  rules={[{ required: true, message: '请选择流程类型' }]}
+                >
+                  <Select
+                    options={[
+                      { label: '事件管理', value: 'incident' },
+                      { label: '变更管理', value: 'change' },
+                      { label: '问题管理', value: 'problem' },
+                      { label: '服务请求', value: 'service_request' },
+                      { label: '自定义流程', value: 'custom' },
+                    ]}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="enterpriseType"
+                  label="企业类型"
+                  rules={[{ required: true, message: '请选择企业类型' }]}
+                >
+                  <Select
+                    options={[
+                      { label: '国内企业', value: 'cn_enterprise' },
+                      { label: '国际企业', value: 'international' },
+                      { label: '创业公司', value: 'startup' },
+                      { label: '政府/事业单位', value: 'government' },
+                    ]}
+                  />
+                </Form.Item>
+              </div>
+
+              <Form.Item label="生成配置">
+                <Space wrap>
+                  <Form.Item name="includeSla" valuePropName="checked" noStyle>
+                    <Checkbox>包含SLA配置</Checkbox>
+                  </Form.Item>
+                  <Form.Item name="includeNotifications" valuePropName="checked" noStyle>
+                    <Checkbox>包含通知配置</Checkbox>
+                  </Form.Item>
+                  <Form.Item name="includeApprovals" valuePropName="checked" noStyle>
+                    <Checkbox>包含审批节点</Checkbox>
+                  </Form.Item>
+                </Space>
+              </Form.Item>
+
+              {generationError && (
+                <Alert
+                  className="mb-4"
+                  type="error"
+                  showIcon
+                  title="AI流程生成请求失败"
+                  description={generationError}
+                />
+              )}
+
               <Form.Item>
-                <Button type="primary" htmlType="submit" loading={loading} icon={<SendOutlined />}>
-                  生成流程
-                </Button>
+                <Space wrap>
+                  <Button
+                    type="default"
+                    onClick={handlePreviewProcess}
+                    loading={previewLoading}
+                    icon={<RobotOutlined />}
+                  >
+                    预览结构
+                  </Button>
+                  <Button
+                    onClick={handleLoadTemplateSuggestions}
+                    loading={templateLoading}
+                    icon={<RocketOutlined />}
+                  >
+                    推荐模板
+                  </Button>
+                  <Button type="primary" htmlType="submit" loading={loading} icon={<SendOutlined />}>
+                    生成流程
+                  </Button>
+                </Space>
               </Form.Item>
             </Form>
+
+            {templateSuggestions.length > 0 && (
+              <Card className="mb-4" size="small" title="模板建议">
+                <Space wrap>
+                  {templateSuggestions.map((item, index) => (
+                    <Tag key={item.id || `${item.name}-${index}`} color="blue">
+                      {item.name || item.description || item.id || `建议 ${index + 1}`}
+                    </Tag>
+                  ))}
+                </Space>
+              </Card>
+            )}
+
+            {previewResult && (
+              <Card className="mb-4" size="small" title="结构预览">
+                <Space wrap className="mb-3">
+                  <Tag color="blue">复杂度: {previewResult.complexity}</Tag>
+                  <Tag color="purple">预计节点: {previewResult.estimatedNodeCount}</Tag>
+                </Space>
+                <Paragraph className="mb-3">{previewResult.structureDescription}</Paragraph>
+                {previewResult.suggestions?.length > 0 && (
+                  <Alert
+                    className="mb-3"
+                    type="info"
+                    showIcon
+                    title="优化建议"
+                    description={previewResult.suggestions.join('；')}
+                  />
+                )}
+                <List
+                  size="small"
+                  bordered
+                  dataSource={previewResult.nodes || []}
+                  renderItem={node => (
+                    <List.Item>
+                      <div className="space-y-1">
+                        <Space wrap>
+                          <Text strong>{node.name}</Text>
+                          <Tag>{node.type}</Tag>
+                          {node.assigneeRole && <Tag color="green">{node.assigneeRole}</Tag>}
+                          {node.slaMinutes ? <Tag color="orange">SLA {node.slaMinutes}分钟</Tag> : null}
+                        </Space>
+                        <Text type="secondary">{node.description}</Text>
+                      </div>
+                    </List.Item>
+                  )}
+                />
+              </Card>
+            )}
 
             {generatedProcess && (
               <div className="mt-6">
                 <div className="mb-3 flex justify-between items-center">
-                  <Title level={5}>生成结果预览</Title>
-                  <Button type="primary" size="small" onClick={handleApplyGeneratedProcess}>
+                  <div className="space-y-1">
+                    <Title level={5}>生成结果预览</Title>
+                    {generationResult && (
+                      <Space wrap>
+                        <Tag color="blue">{generationResult.processName}</Tag>
+                        <Tag color="purple">版本 {generationResult.version}</Tag>
+                        <Tag color="green">节点 {generationResult.nodeCount}</Tag>
+                        <Tag color="orange">复杂度 {generationResult.complexity}</Tag>
+                      </Space>
+                    )}
+                  </div>
+                  <Button
+                    type="primary"
+                    size="small"
+                    disabled={!generatedProcess || loading}
+                    onClick={handleApplyGeneratedProcess}
+                  >
                     应用到画布
                   </Button>
                 </div>
+                {generationResult?.explanation && (
+                  <Alert
+                    className="mb-3"
+                    type="success"
+                    showIcon
+                    title="生成说明"
+                    description={generationResult.explanation}
+                  />
+                )}
                 <Card className="bg-gray-50 font-mono text-xs overflow-auto max-h-[400px] whitespace-pre-wrap">
                   {generatedProcess}
                 </Card>

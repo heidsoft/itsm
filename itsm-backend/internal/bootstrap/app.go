@@ -216,7 +216,7 @@ func NewApplication() *Application {
 	slaForecastSkill := service.NewSLAForecastSkill(client, llmGateway, sugar)
 	// 市场服务
 	marketplaceSvc := marketplaceService.NewService(client, sugar)
-	marketplaceCtrl := marketplaceController.NewController(marketplaceSvc)
+	marketplaceCtrl := marketplaceController.NewController(marketplaceSvc, connectorManager)
 
 	// Guidance sidecar for constrained JSON generation
 	guidanceURL := os.Getenv("GUIDANCE_URL")
@@ -339,7 +339,7 @@ func NewApplication() *Application {
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
 	// Feishu 连接器控制器
 	feishuSyncService := service.NewFeishuSyncService(client, sugar)
-	feishuController := controller.NewFeishuController(connectorManager, feishuSyncService, sugar)
+	feishuController := controller.NewFeishuController(connectorManager, feishuSyncService, marketplaceSvc, sugar)
 
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)

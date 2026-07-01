@@ -283,7 +283,7 @@ type OAuthTokenResponse struct {
 // GetOAuthAuthURL returns the OAuth authorization URL for Feishu
 func (c *Client) GetOAuthAuthURL(redirectURI, state string) string {
 	return fmt.Sprintf("%s/open-apis/authen/v1/authorize?app_id=%s&redirect_uri=%s&state=%s&response_type=code&scope=task:task:readonly,im:message:send,contact:user.base:readonly",
-		c.baseURL, c.appID, url.QueryEscape(redirectURI), state)
+		c.baseURL, c.appID, url.QueryEscape(redirectURI), url.QueryEscape(state))
 }
 
 // ExchangeOAuthCode exchanges an authorization code for an access token

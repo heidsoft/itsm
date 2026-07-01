@@ -1,27 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Settings, 
-  Trash2, 
-  AlertCircle, 
-  CheckCircle2, 
-  Clock, 
-  XCircle,
-  PlusCircle,
-  Search
-} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  PlusCircle,
+  Save,
+  Search,
+  Settings,
+  Trash2,
+  XCircle,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -30,189 +25,202 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { httpClient } from '@/lib/api/http-client';
+import connectorService, { ConnectorConfig } from '@/lib/services/connector-service';
+import marketplaceService, { TenantInstallation } from '@/lib/services/marketplace-service';
 
-// 已安装应用类型
-interface Installation {
-  id: number;
-  item_id: number;
-  name: string;
-  title: string;
-  type: 'connector' | 'skill' | 'plugin';
-  icon_url: string;
-  description: string;
-  installed_version: string;
-  status: 'active' | 'disabled' | 'failed' | 'installing';
-  installed_at: string;
-  updated_at: string;
-  last_used_at?: string;
-  error_message?: string;
-  config: any;
-}
+type InstallForm = {
+  appId: string;
+  appSecret: string;
+  verificationToken: string;
+  encryptKey: string;
+  debugChannel: string;
+  region: string;
+};
+
+const statusConfig = {
+  active: {
+    label: '运行中',
+    color: 'bg-green-100 text-green-800',
+    icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+  },
+  disabled: {
+    label: '已禁用',
+    color: 'bg-gray-100 text-gray-800',
+    icon: <XCircle className="h-4 w-4 text-gray-500" />,
+  },
+  failed: {
+    label: '运行失败',
+    color: 'bg-red-100 text-red-800',
+    icon: <AlertCircle className="h-4 w-4 text-red-500" />,
+  },
+  installing: {
+    label: '安装中',
+    color: 'bg-blue-100 text-blue-800',
+    icon: <Clock className="h-4 w-4 text-blue-500" />,
+  },
+  uninstalled: {
+    label: '已卸载',
+    color: 'bg-gray-100 text-gray-800',
+    icon: <XCircle className="h-4 w-4 text-gray-500" />,
+  },
+};
+
+const typeNames = {
+  connector: '连接器',
+  skill: '技能',
+  plugin: '插件',
+};
+
+const connectorRuntimeName = (installation: TenantInstallation) =>
+  installation.edges?.item?.name?.replace(/-connector$/, '') || '';
+
+const maskSensitive = (key: string, value: unknown) => {
+  if (value === undefined || value === null || value === '') return '未配置';
+  if (/secret|token|key|access|refresh/i.test(key)) return '******';
+  return String(value);
+};
+
+const makeForm = (installation: TenantInstallation): InstallForm => {
+  const config = installation.config || {};
+  const credentials = (config.credentials || {}) as Record<string, unknown>;
+  const settings = (config.settings || {}) as Record<string, unknown>;
+  return {
+    appId: String(credentials.app_id || ''),
+    appSecret: String(credentials.app_secret || ''),
+    verificationToken: String(credentials.verification_token || ''),
+    encryptKey: String(credentials.encrypt_key || ''),
+    debugChannel: String(settings.debug_channel || ''),
+    region: String(settings.region || 'cn'),
+  };
+};
 
 const InstallationsPage = () => {
-  const [installations, setInstallations] = useState<Installation[]>([]);
+  const [installations, setInstallations] = useState<TenantInstallation[]>([]);
+  const [connectorConfigs, setConnectorConfigs] = useState<ConnectorConfig[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [forms, setForms] = useState<Record<number, InstallForm>>({});
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // 模拟获取已安装应用
+  const loadInstallations = async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [installationRes, configRes] = await Promise.all([
+        marketplaceService.listInstallations(),
+        connectorService.configs().catch(() => []),
+      ]);
+      setInstallations(installationRes);
+      setConnectorConfigs(configRes);
+      setForms(Object.fromEntries(installationRes.map(item => [item.id, makeForm(item)])));
+    } catch (error: any) {
+      console.error('Failed to fetch installations:', error);
+      setLoadError(error?.message || '加载已安装应用失败');
+      setInstallations([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchInstallations = async () => {
-      try {
-        // 替换为真实API调用
-        // const res = await fetch('/api/v1/marketplace/installations');
-        // const data = await res.json();
-        // setInstallations(data.data);
-
-        // 模拟数据
-        const mockInstallations: Installation[] = [
-          {
-            id: 1,
-            item_id: 1,
-            name: 'feishu-connector',
-            title: '飞书连接器',
-            type: 'connector',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/5968/5968757.png',
-            description: '集成飞书消息、审批、组织架构同步',
-            installed_version: '1.2.0',
-            status: 'active',
-            installed_at: '2024-03-15T10:30:00Z',
-            updated_at: '2024-05-20T14:20:00Z',
-            last_used_at: '2024-06-18T09:15:00Z',
-            config: {
-              app_id: 'cli_xxxxxx',
-              app_secret: '******',
-              verification_token: '******'
-            }
-          },
-          {
-            id: 2,
-            item_id: 4,
-            name: 'ticket-classification-skill',
-            title: '工单智能分类',
-            type: 'skill',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/4712/4712109.png',
-            description: '自动识别工单类型、优先级，智能分派到对应团队',
-            installed_version: '2.0.0',
-            status: 'active',
-            installed_at: '2024-02-20T09:15:00Z',
-            updated_at: '2024-04-10T16:40:00Z',
-            last_used_at: '2024-06-18T10:30:00Z',
-            config: {
-              confidence_threshold: 0.7,
-              auto_assign: true
-            }
-          },
-          {
-            id: 3,
-            item_id: 7,
-            name: 'prometheus-connector',
-            title: 'Prometheus连接器',
-            type: 'connector',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/9336/9336119.png',
-            description: '集成Prometheus告警，自动生成事件工单',
-            installed_version: '1.0.0',
-            status: 'failed',
-            installed_at: '2024-04-05T14:20:00Z',
-            updated_at: '2024-04-05T14:20:00Z',
-            error_message: '连接Prometheus服务器超时，请检查地址和认证信息',
-            config: {
-              api_url: 'http://prometheus:9090',
-              auth_token: '******'
-            }
-          },
-          {
-            id: 4,
-            item_id: 5,
-            name: 'ticket-summary-skill',
-            title: '工单摘要生成',
-            type: 'skill',
-            icon_url: 'https://cdn-icons-png.flaticon.com/512/1005/1005141.png',
-            description: '自动生成工单摘要，提取关键信息，提高处理效率',
-            installed_version: '1.1.0',
-            status: 'disabled',
-            installed_at: '2024-01-10T11:45:00Z',
-            updated_at: '2024-03-01T09:30:00Z',
-            config: {}
-          }
-        ];
-
-        setInstallations(mockInstallations);
-      } catch (error) {
-        console.error('Failed to fetch installations:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInstallations();
+    loadInstallations();
   }, []);
 
-  // 过滤已安装应用
+  const connectorConfigByName = useMemo(() => {
+    const map = new Map<string, ConnectorConfig>();
+    connectorConfigs.forEach(cfg => map.set(cfg.name, cfg));
+    return map;
+  }, [connectorConfigs]);
+
   const filteredInstallations = installations.filter(installation => {
-    const matchesSearch = !search || 
-      installation.title.toLowerCase().includes(search.toLowerCase()) ||
-      installation.description.toLowerCase().includes(search.toLowerCase());
-
+    const item = installation.edges?.item;
+    const title = item?.title || item?.name || '';
+    const description = item?.description || '';
+    const matchesSearch =
+      !search ||
+      title.toLowerCase().includes(search.toLowerCase()) ||
+      description.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || installation.status === statusFilter;
-
-    const matchesType = typeFilter === 'all' || installation.type === typeFilter;
-
+    const matchesType = typeFilter === 'all' || item?.type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  // 卸载应用
-  const handleUninstall = async (id: number, title: string) => {
-    if (confirm(`确定要卸载「${title}」吗？卸载后相关功能将无法使用。`)) {
-      try {
-        // 替换为真实的卸载API调用
-        // await fetch(`/api/v1/marketplace/items/${id}/uninstall`, {
-        //   method: 'POST'
-        // });
-        
-        setInstallations(installations.filter(item => item.id !== id));
-      } catch (error) {
-        console.error('Failed to uninstall item:', error);
+  const handleUninstall = async (installation: TenantInstallation) => {
+    const title = installation.edges?.item?.title || installation.edges?.item?.name || '应用';
+    if (!confirm(`确定要卸载「${title}」吗？卸载后相关功能将无法使用。`)) return;
+    try {
+      await marketplaceService.uninstallItem(installation.itemId);
+      setInstallations(items => items.filter(item => item.id !== installation.id));
+    } catch (error) {
+      console.error('Failed to uninstall item:', error);
+      alert(error instanceof Error ? error.message : '卸载失败');
+    }
+  };
+
+  const updateForm = (id: number, patch: Partial<InstallForm>) => {
+    setForms(prev => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        ...patch,
+      },
+    }));
+  };
+
+  const handleSaveConfig = async (installation: TenantInstallation) => {
+    const form = forms[installation.id] || makeForm(installation);
+    const currentConfig = installation.config || {};
+    const nextConfig = {
+      ...currentConfig,
+      credentials: {
+        app_id: form.appId.trim(),
+        app_secret: form.appSecret.trim(),
+        verification_token: form.verificationToken.trim(),
+        encrypt_key: form.encryptKey.trim(),
+      },
+      settings: {
+        ...((currentConfig.settings || {}) as Record<string, unknown>),
+        debug_channel: form.debugChannel.trim(),
+        region: form.region,
+      },
+    };
+    setSavingId(installation.id);
+    try {
+      const updated = await marketplaceService.updateInstallationConfig(installation.itemId, nextConfig);
+      setInstallations(items => items.map(item => (item.id === installation.id ? updated : item)));
+      setForms(prev => ({ ...prev, [updated.id]: makeForm(updated) }));
+      setEditingId(null);
+      const configRes = await connectorService.configs().catch(() => []);
+      setConnectorConfigs(configRes);
+    } catch (error) {
+      console.error('Failed to save installation config:', error);
+      alert(error instanceof Error ? error.message : '保存配置失败');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleFeishuOAuth = async () => {
+    try {
+      const response = await httpClient.get<{ authUrl: string }>('/api/v1/feishu/oauth/auth-url');
+      if (response.authUrl) {
+        window.location.href = response.authUrl;
       }
+    } catch (error) {
+      console.error('Failed to start Feishu OAuth:', error);
+      alert(error instanceof Error ? error.message : '无法获取飞书授权链接，请先保存 App ID 和 App Secret');
     }
-  };
-
-  // 状态配置
-  const statusConfig = {
-    active: {
-      label: '运行中',
-      color: 'bg-green-100 text-green-800',
-      icon: <CheckCircle2 className="h-4 w-4 text-green-500" />
-    },
-    disabled: {
-      label: '已禁用',
-      color: 'bg-gray-100 text-gray-800',
-      icon: <XCircle className="h-4 w-4 text-gray-500" />
-    },
-    failed: {
-      label: '运行失败',
-      color: 'bg-red-100 text-red-800',
-      icon: <AlertCircle className="h-4 w-4 text-red-500" />
-    },
-    installing: {
-      label: '安装中',
-      color: 'bg-blue-100 text-blue-800',
-      icon: <Clock className="h-4 w-4 text-blue-500" />
-    }
-  };
-
-  // 类型名称映射
-  const typeNames = {
-    connector: '连接器',
-    skill: '技能',
-    plugin: '插件'
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     );
   }
@@ -225,14 +233,13 @@ const InstallationsPage = () => {
           <p className="text-gray-500 mt-1">管理已安装的连接器、AI技能和扩展插件</p>
         </div>
         <Link href="/marketplace">
-          <Button variant="default">
+          <Button>
             <PlusCircle className="h-4 w-4 mr-2" />
             安装应用
           </Button>
         </Link>
       </div>
 
-      {/* 搜索和过滤区 */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
@@ -241,7 +248,7 @@ const InstallationsPage = () => {
               <Input
                 placeholder="搜索应用名称或描述..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={event => setSearch(event.target.value)}
                 className="pl-10"
               />
             </div>
@@ -276,86 +283,133 @@ const InstallationsPage = () => {
         </div>
       </div>
 
-      {/* 应用列表 */}
+      {loadError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <span>{loadError}</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4">
         {filteredInstallations.map(installation => {
-          const status = statusConfig[installation.status];
+          const item = installation.edges?.item;
+          const status = statusConfig[installation.status] || statusConfig.installing;
+          const runtimeName = connectorRuntimeName(installation);
+          const runtimeConfig = connectorConfigByName.get(runtimeName);
+          const isFeishu = runtimeName === 'feishu';
+          const isEditing = editingId === installation.id;
+          const form = forms[installation.id] || makeForm(installation);
           return (
             <Card key={installation.id} className="hover:shadow-sm transition-shadow">
               <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
-                      {installation.icon_url ? (
-                        <img src={installation.icon_url} alt={installation.title} className="w-full h-full object-cover" />
+                      {item?.iconUrl ? (
+                        <img src={item.iconUrl} alt={item.title} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="text-lg">{typeNames[installation.type]}</div>
+                        <span className="text-sm">{item?.type ? typeNames[item.type] : '应用'}</span>
                       )}
                     </div>
                     <div>
-                      <div className="flex items-center gap-3">
-                        <CardTitle className="text-xl">{installation.title}</CardTitle>
-                        <Badge variant="secondary">{typeNames[installation.type]}</Badge>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <CardTitle className="text-xl">{item?.title || item?.name || `应用 #${installation.itemId}`}</CardTitle>
+                        {item?.type && <Badge variant="secondary">{typeNames[item.type]}</Badge>}
                         <Badge className={status.color}>
                           {status.icon}
                           <span className="ml-1">{status.label}</span>
                         </Badge>
+                        {runtimeConfig && (
+                          <Badge className={runtimeConfig.healthy ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                            {runtimeConfig.lifecycle || (runtimeConfig.healthy ? 'healthy' : 'configured')}
+                          </Badge>
+                        )}
                       </div>
-                      <CardDescription className="mt-1">
-                        {installation.description}
-                      </CardDescription>
+                      <CardDescription className="mt-1">{item?.description || '暂无描述'}</CardDescription>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button 
-                      variant="secondary" 
-                      size="sm"
-                      // onClick={() => handleConfigure(installation)}
-                    >
-                      <Settings className="h-4 w-4 mr-1" />
-                      配置
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => handleUninstall(installation.id, installation.title)}
-                    >
+                    {item?.type === 'connector' && (
+                      <Button variant="secondary" size="sm" onClick={() => setEditingId(isEditing ? null : installation.id)}>
+                        <Settings className="h-4 w-4 mr-1" />
+                        配置
+                      </Button>
+                    )}
+                    <Button variant="destructive" size="sm" onClick={() => handleUninstall(installation)}>
                       <Trash2 className="h-4 w-4 mr-1" />
                       卸载
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pb-2">
-                {installation.status === 'failed' && installation.error_message && (
-                  <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700 flex items-start gap-2">
+              <CardContent className="space-y-4">
+                {(installation.status === 'failed' || runtimeConfig?.lastError) && (
+                  <div className="p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700 flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <span>{installation.error_message}</span>
+                    <span>{installation.errorMessage || runtimeConfig?.lastError}</span>
                   </div>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <div className="text-gray-500 mb-1">已安装版本</div>
-                    <div>v{installation.installed_version}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500 mb-1">安装时间</div>
-                    <div>{new Date(installation.installed_at).toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500 mb-1">上次更新</div>
-                    <div>{new Date(installation.updated_at).toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500 mb-1">最近使用</div>
-                    <div>
-                      {installation.last_used_at 
-                        ? new Date(installation.last_used_at).toLocaleString() 
-                        : '从未使用'}
+                  <Info label="已安装版本" value={`v${installation.installedVersion}`} />
+                  <Info label="安装时间" value={new Date(installation.installedAt).toLocaleString()} />
+                  <Info label="上次更新" value={new Date(installation.updatedAt || installation.lastUpdatedAt || installation.installedAt).toLocaleString()} />
+                  <Info label="最近使用" value={installation.lastUsedAt ? new Date(installation.lastUsedAt).toLocaleString() : '从未使用'} />
+                </div>
+
+                {item?.type === 'connector' && (
+                  <div className="rounded-md border bg-gray-50 p-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                      <Info label="运行时名称" value={runtimeName || '未识别'} />
+                      <Info label="启用状态" value={runtimeConfig?.enabled ? '已启用' : '未启用'} />
+                      <Info label="健康状态" value={runtimeConfig ? (runtimeConfig.healthy ? '健康' : '待检查') : '未初始化'} />
+                    </div>
+                    <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                      {Object.entries((installation.config?.credentials || {}) as Record<string, unknown>).map(([key, value]) => (
+                        <Info key={key} label={`凭据 ${key}`} value={maskSensitive(key, value)} />
+                      ))}
+                      {Object.entries((installation.config?.oauth || {}) as Record<string, unknown>).map(([key, value]) => (
+                        <Info key={key} label={`OAuth ${key}`} value={maskSensitive(key, value)} />
+                      ))}
                     </div>
                   </div>
-                </div>
+                )}
+
+                {isEditing && (
+                  <div className="rounded-md border p-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Field label="App ID" value={form.appId} onChange={value => updateForm(installation.id, { appId: value })} />
+                      <Field label="App Secret" type="password" value={form.appSecret} onChange={value => updateForm(installation.id, { appSecret: value })} />
+                      <Field label="Verification Token" type="password" value={form.verificationToken} onChange={value => updateForm(installation.id, { verificationToken: value })} />
+                      <Field label="Encrypt Key" type="password" value={form.encryptKey} onChange={value => updateForm(installation.id, { encryptKey: value })} />
+                      <Field label="Debug Channel" value={form.debugChannel} onChange={value => updateForm(installation.id, { debugChannel: value })} />
+                      <div>
+                        <div className="text-sm font-medium mb-1">区域</div>
+                        <Select value={form.region} onValueChange={value => updateForm(installation.id, { region: value })}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cn">中国大陆</SelectItem>
+                            <SelectItem value="intl">海外 Lark</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button onClick={() => handleSaveConfig(installation)} disabled={savingId === installation.id}>
+                        <Save className="h-4 w-4 mr-2" />
+                        {savingId === installation.id ? '保存中...' : '保存配置'}
+                      </Button>
+                      {isFeishu && (
+                        <Button variant="secondary" onClick={handleFeishuOAuth}>
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          飞书 OAuth 授权
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
@@ -377,5 +431,29 @@ const InstallationsPage = () => {
     </div>
   );
 };
+
+const Info = ({ label, value }: { label: string; value: string }) => (
+  <div>
+    <div className="text-gray-500 mb-1">{label}</div>
+    <div className="break-all">{value}</div>
+  </div>
+);
+
+const Field = ({
+  label,
+  value,
+  onChange,
+  type = 'text',
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+}) => (
+  <div>
+    <div className="text-sm font-medium mb-1">{label}</div>
+    <Input type={type} value={value} onChange={event => onChange(event.target.value)} />
+  </div>
+);
 
 export default InstallationsPage;

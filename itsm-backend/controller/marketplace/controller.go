@@ -3,8 +3,12 @@ package marketplace
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"itsm-backend/common"
+	"itsm-backend/connector"
+	"itsm-backend/ent"
+	"itsm-backend/ent/marketplaceitem"
 	"itsm-backend/middleware"
 	"itsm-backend/service/marketplace"
 
@@ -13,13 +17,19 @@ import (
 
 // Controller 市场控制器
 type Controller struct {
-	service *marketplace.Service
+	service          *marketplace.Service
+	connectorManager *connector.Manager
 }
 
 // NewController 创建市场控制器
-func NewController(service *marketplace.Service) *Controller {
+func NewController(service *marketplace.Service, managers ...*connector.Manager) *Controller {
+	var connectorManager *connector.Manager
+	if len(managers) > 0 {
+		connectorManager = managers[0]
+	}
 	return &Controller{
-		service: service,
+		service:          service,
+		connectorManager: connectorManager,
 	}
 }
 
@@ -299,5 +309,79 @@ func (c *Controller) UpdateInstallationConfig(ctx *gin.Context) {
 		return
 	}
 
+	installation, err = c.service.GetInstallation(ctx, tenantID, itemID)
+	if err != nil {
+		common.Fail(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if err := c.provisionConnectorInstallation(ctx, installation); err != nil {
+		common.Fail(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	common.Success(ctx, installation)
+}
+
+func (c *Controller) provisionConnectorInstallation(ctx *gin.Context, installation *ent.TenantInstallation) error {
+	if c.connectorManager == nil || installation == nil || installation.Edges.Item == nil {
+		return nil
+	}
+	item := installation.Edges.Item
+	if item.Type != marketplaceitem.TypeConnector {
+		return nil
+	}
+	connectorName := strings.TrimSuffix(item.Name, "-connector")
+	cfg := connector.Config{
+		TenantID:    installation.TenantID,
+		Name:        connectorName,
+		Provider:    connectorName,
+		Enabled:     installation.Status == "active",
+		Credentials: stringMapFromConfig(installation.Config["credentials"]),
+		Settings:    interfaceMapFromConfig(installation.Config["settings"]),
+		Labels: map[string]string{
+			"marketplace_item_id": strconv.Itoa(item.ID),
+			"marketplace_name":    item.Name,
+			"marketplace_title":   item.Title,
+		},
+		CreatedAt: installation.InstalledAt,
+		UpdatedAt: installation.UpdatedAt,
+	}
+	if cfg.Provider == "" {
+		cfg.Provider = item.Name
+	}
+	return c.connectorManager.Provision(ctx.Request.Context(), cfg)
+}
+
+func stringMapFromConfig(value interface{}) map[string]string {
+	out := map[string]string{}
+	if typed, ok := value.(map[string]string); ok {
+		for k, v := range typed {
+			out[k] = v
+		}
+		return out
+	}
+	if typed, ok := value.(map[string]interface{}); ok {
+		for k, v := range typed {
+			if s, ok := v.(string); ok {
+				out[k] = s
+			}
+		}
+	}
+	return out
+}
+
+func interfaceMapFromConfig(value interface{}) map[string]interface{} {
+	out := map[string]interface{}{}
+	if typed, ok := value.(map[string]interface{}); ok {
+		for k, v := range typed {
+			out[k] = v
+		}
+		return out
+	}
+	if typed, ok := value.(map[string]string); ok {
+		for k, v := range typed {
+			out[k] = v
+		}
+	}
+	return out
 }

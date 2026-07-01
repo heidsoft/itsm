@@ -86,6 +86,17 @@ export { SLAApi } from './sla-api';
 // ==================== 工作流API ====================
 
 export { WorkflowApi } from './workflow-api';
+export { BPMNAIApi } from './bpmn-ai-api';
+export type {
+  BPMNEnterpriseType,
+  BPMNNodePreview,
+  BPMNProcessType,
+  BPMNTemplateSuggestion,
+  GenerateBPMNRequest,
+  GenerateBPMNResponse,
+  PreviewBPMNRequest,
+  PreviewBPMNResponse,
+} from './bpmn-ai-api';
 
 // ==================== 仪表盘和报表API ====================
 

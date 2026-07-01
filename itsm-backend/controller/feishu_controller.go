@@ -11,6 +11,7 @@ import (
 	feishuConn "itsm-backend/connector/builtin/feishu"
 	"itsm-backend/dto"
 	"itsm-backend/service"
+	marketplaceService "itsm-backend/service/marketplace"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -19,13 +20,15 @@ import (
 type FeishuController struct {
 	connectorManager *connector.Manager
 	syncService      *service.FeishuSyncService
+	marketplace      *marketplaceService.Service
 	logger           *zap.SugaredLogger
 }
 
-func NewFeishuController(connectorManager *connector.Manager, syncService *service.FeishuSyncService, logger *zap.SugaredLogger) *FeishuController {
+func NewFeishuController(connectorManager *connector.Manager, syncService *service.FeishuSyncService, marketplace *marketplaceService.Service, logger *zap.SugaredLogger) *FeishuController {
 	return &FeishuController{
 		connectorManager: connectorManager,
 		syncService:      syncService,
+		marketplace:      marketplace,
 		logger:           logger,
 	}
 }
@@ -73,7 +76,7 @@ func (c *FeishuController) OAuthCallback(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "code is required")
 		return
 	}
-	fc, _, ok := c.getFeishuConnector(ctx)
+	fc, tenantID, ok := c.getFeishuConnector(ctx)
 	if !ok {
 		common.Fail(ctx, common.InternalErrorCode, "Feishu connector not configured")
 		return
@@ -83,6 +86,25 @@ func (c *FeishuController) OAuthCallback(ctx *gin.Context) {
 		c.logger.Errorw("Failed to exchange Feishu OAuth code", "err", err)
 		common.Fail(ctx, common.InternalErrorCode, "Failed to exchange Feishu OAuth code")
 		return
+	}
+	if c.marketplace != nil {
+		_, err = c.marketplace.MergeConnectorInstallationConfig(ctx.Request.Context(), tenantID, "feishu", map[string]interface{}{
+			"oauth": map[string]interface{}{
+				"access_token":  token.AccessToken,
+				"refresh_token": token.RefreshToken,
+				"expires_in":    token.ExpiresIn,
+				"token_type":    token.TokenType,
+				"scope":         token.Scope,
+				"user_id":       token.UserID,
+				"open_id":       token.OpenID,
+				"union_id":      token.UnionID,
+			},
+		})
+		if err != nil {
+			c.logger.Errorw("Failed to persist Feishu OAuth callback", "tenant_id", tenantID, "err", err)
+			common.Fail(ctx, common.InternalErrorCode, "Failed to persist Feishu OAuth callback")
+			return
+		}
 	}
 	common.Success(ctx, &dto.FeishuOAuthCallbackResponse{
 		AccessToken:  token.AccessToken,
