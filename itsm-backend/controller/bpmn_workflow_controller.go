@@ -327,10 +327,14 @@ func (c *BPMNWorkflowController) SetProcessDefinitionActive(ctx *gin.Context) {
 	}
 
 	var req struct {
-		Active bool `json:"active" binding:"required"`
+		Active *bool `json:"active" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.Fail(ctx, common.ParamErrorCode, "Key: 'Active' Error:Field validation for 'Active'")
+		return
+	}
+	if req.Active == nil {
+		common.Fail(ctx, common.BadRequestCode, "active 字段不能为空")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -338,14 +342,14 @@ func (c *BPMNWorkflowController) SetProcessDefinitionActive(ctx *gin.Context) {
 		return
 	}
 
-	err := c.processEngine.ProcessDefinitionService().SetProcessDefinitionActive(workflowCtx, key, version, req.Active)
+	err := c.processEngine.ProcessDefinitionService().SetProcessDefinitionActive(workflowCtx, key, version, *req.Active)
 	if err != nil {
 		common.InternalError(ctx, "设置流程定义状态失败: "+err.Error())
 		return
 	}
 
 	status := "激活"
-	if !req.Active {
+	if !*req.Active {
 		status = "停用"
 	}
 
