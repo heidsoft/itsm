@@ -906,7 +906,7 @@ var (
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "ci_type", Type: field.TypeString, Default: "server"},
-		{Name: "status", Type: field.TypeString, Default: "operational"},
+		{Name: "status", Type: field.TypeString, Default: "active"},
 		{Name: "environment", Type: field.TypeString, Default: "production"},
 		{Name: "criticality", Type: field.TypeString, Default: "medium"},
 		{Name: "asset_tag", Type: field.TypeString, Nullable: true},

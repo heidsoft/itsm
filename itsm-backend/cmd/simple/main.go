@@ -125,7 +125,7 @@ func main() {
 				ci, err := client.ConfigurationItem.Create().
 					SetName(name).
 					SetCiType(ciType).
-					SetStatus("operational").
+					SetStatus("active").
 					SetEnvironment("production").
 					SetCriticality("medium").
 					SetTenantID(1).

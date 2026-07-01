@@ -19,7 +19,7 @@ type CreateConfigurationItemRequest struct {
 type UpdateConfigurationItemRequest struct {
 	Name            *string                `json:"name,omitempty" binding:"omitempty,max=255"`
 	Type            *string                `json:"type,omitempty" binding:"omitempty,oneof=server database application network storage"`
-	Status          *string                `json:"status,omitempty" binding:"omitempty,oneof=active inactive maintenance"`
+	Status          *string                `json:"status,omitempty" binding:"omitempty,oneof=active inactive maintenance retired"`
 	BusinessService *string                `json:"businessService,omitempty" binding:"omitempty,max=255"`
 	Owner           *string                `json:"owner,omitempty" binding:"omitempty,max=100"`
 	Environment     *string                `json:"environment,omitempty" binding:"omitempty,oneof=production staging development"`
@@ -34,7 +34,7 @@ type ListConfigurationItemsRequest struct {
 	Page            int    `form:"page,default=1" binding:"min=1"`
 	Size            int    `form:"size,default=10" binding:"min=1,max=100"`
 	Type            string `form:"type" binding:"omitempty,oneof=server database application network storage"`
-	Status          string `form:"status" binding:"omitempty,oneof=active inactive maintenance"`
+	Status          string `form:"status" binding:"omitempty,oneof=active inactive maintenance retired"`
 	BusinessService string `form:"businessService"`
 	Owner           string `form:"owner"`
 	Environment     string `form:"environment" binding:"omitempty,oneof=production staging development"`

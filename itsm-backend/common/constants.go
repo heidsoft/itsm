@@ -164,12 +164,23 @@ const (
 
 // ===================================
 // CMDB CI Status Constants
+//
+// CIStatus* is the unified status set for ConfigurationItem.status.
+// Lifecycle states are stored separately in ConfigurationItem.lifecycle_status.
 // ===================================
 const (
 	CIStatusActive      = "active"
 	CIStatusInactive    = "inactive"
-	CIStatusRetired     = "retired"
 	CIStatusMaintenance = "maintenance"
+	CIStatusRetired     = "retired"
+)
+
+const (
+	CILifecycleStatusDraft       = "draft"
+	CILifecycleStatusOnline      = "online"
+	CILifecycleStatusMaintenance = "maintenance"
+	CILifecycleStatusOffline     = "offline"
+	CILifecycleStatusScrapped    = "scrapped"
 )
 
 // ===================================

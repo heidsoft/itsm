@@ -516,13 +516,13 @@ func normalizeResourceLifecycle(status string) string {
 func normalizeCIStatus(status string) string {
 	switch normalizeResourceLifecycle(status) {
 	case "active":
-		return "operational"
+		return "active"
 	case "inactive":
 		return "inactive"
 	case "retired":
 		return "retired"
 	default:
-		return "operational"
+		return "active"
 	}
 }
 

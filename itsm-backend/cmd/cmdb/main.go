@@ -42,8 +42,12 @@ func main() {
 	// 初始化服务
 	ciTypeService := service.NewCITypeService(client, sugar)
 	ciAttributeDefinitionService := service.NewCIAttributeDefinitionService(client, sugar)
-	configurationItemService := service.NewConfigurationItemService(client, sugar)
+	ciHistoryService := service.NewCIHistoryService(client, sugar)
+	ciTagService := service.NewCITagService(client, sugar)
+	configurationItemService := service.NewConfigurationItemService(client, sugar, ciHistoryService, ciTagService)
 	ciRelationshipService := service.NewCIRelationshipService(client, sugar)
+	cmdbImportExportService := service.NewCMDBImportExportService(client, sugar, configurationItemService, ciTagService)
+	cmdbSavedViewService := service.NewCMDBSavedViewService(client, sugar)
 
 	// 初始化 DDD CMDB 服务
 	sugar.Infow("Initializing DDD CMDB service")
@@ -51,7 +55,17 @@ func main() {
 	cmdbDDDService := cmdb.NewService(cmdbRepo, sugar)
 
 	// 初始化控制器
-	cmdbController := controller.NewCMDBController(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService)
+	cmdbController := controller.NewCMDBController(
+		sugar,
+		ciTypeService,
+		ciAttributeDefinitionService,
+		configurationItemService,
+		ciRelationshipService,
+		ciHistoryService,
+		ciTagService,
+		cmdbImportExportService,
+		cmdbSavedViewService,
+	)
 	_ = cmdbDDDService
 
 	// 初始化路由

@@ -718,7 +718,7 @@ func (s *CMDBImportExportService) parseCIRow(row map[string]string, fieldMap map
 		})
 	}
 	if req.Status == "" {
-		req.Status = "operational" // 默认状态
+		req.Status = "active" // 默认状态
 	}
 
 	return req, errors

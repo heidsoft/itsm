@@ -31,7 +31,7 @@ func (ConfigurationItem) Fields() []ent.Field {
 			Default("server"),
 		field.String("status").
 			Comment("运行状态").
-			Default("operational"),
+			Default("active"),
 		field.String("environment").
 			Comment("环境").
 			Default("production"),
@@ -122,10 +122,10 @@ func (ConfigurationItem) Fields() []ent.Field {
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),
-	field.Time("updated_at").
-		Comment("更新时间").
-		Default(time.Now).
-		UpdateDefault(time.Now),
+		field.Time("updated_at").
+			Comment("更新时间").
+			Default(time.Now).
+			UpdateDefault(time.Now),
 
 		// 生命周期管理
 		field.String("lifecycle_status").
