@@ -7,10 +7,15 @@ export class TicketApi {
   static async getTickets(
     params?: GetTicketsParams & { [key: string]: unknown }
   ): Promise<TicketListResponse> {
-    return handleApiRequest(httpClient.get<TicketListResponse>('/api/v1/tickets', params), {
+    const response = await handleApiRequest(httpClient.get<TicketListResponse>('/api/v1/tickets', params), {
       errorMessage: 'Failed to fetch tickets',
       silent: true,
     });
+
+    return {
+      ...response,
+      size: response.size ?? response.pageSize ?? params?.pageSize ?? params?.size ?? 20,
+    };
   }
 
   // Create ticket

@@ -60,10 +60,10 @@ export const useTicketsQuery = (
       try {
         const response = await ticketService.listTickets({
           page: pagination.current,
-          page_size: pagination.pageSize,
+          pageSize: pagination.pageSize,
           ...filters,
         });
-        const pageSize = response?.size || pagination.pageSize;
+        const pageSize = response?.size ?? response?.pageSize ?? pagination.pageSize;
         const total = response?.total || 0;
         const totalPages = pageSize ? Math.ceil(total / pageSize) : 0;
         // 确保返回的数据结构完整

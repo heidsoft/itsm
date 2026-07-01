@@ -196,7 +196,9 @@ export interface TicketListResponse {
   tickets: Ticket[];
   total: number;
   page: number;
+  pageSize?: number;
   size: number;
+  totalPages?: number;
 }
 
 export interface CreateTicketRequest {
@@ -216,6 +218,7 @@ export interface UpdateStatusRequest {
 
 export interface GetTicketsParams {
   page?: number;
+  pageSize?: number;
   size?: number;
   status?: string;
   priority?: string;

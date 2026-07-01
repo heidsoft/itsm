@@ -66,7 +66,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
       // 构建符合GetTicketsParams的参数
       const params = {
         page: currentPage,
-        size: pageSize,
+        pageSize: pageSize,
         keyword: searchText || undefined,
         status: filters.status as any,
         priority: filters.priority as any,

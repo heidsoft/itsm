@@ -100,12 +100,12 @@ export const useTickets = (): UseTicketsReturn => {
 
     try {
       const currentFilters = customFilters ?? filtersRef.current;
-      const { current: page, pageSize: page_size } = paginationRef.current;
+      const { current: page, pageSize } = paginationRef.current;
       const dateRange = currentFilters.dateRange;
 
       const response = await ticketService.listTickets({
         page,
-        page_size,
+        pageSize,
         status: currentFilters.status,
         priority: currentFilters.priority,
         type: currentFilters.type,

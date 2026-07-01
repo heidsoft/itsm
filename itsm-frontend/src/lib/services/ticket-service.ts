@@ -33,6 +33,7 @@ export { type Ticket };
 // 工单筛选参数（兼容旧版）
 export interface TicketFilterParams {
   page?: number;
+  pageSize?: number;
   size?: number;
   status?: string;
   priority?: string;
@@ -88,7 +89,7 @@ export interface UpdateTicketRequest {
 // 工单列表查询参数
 export interface ListTicketsParams {
   page?: number;
-  page_size?: number;
+  pageSize?: number;
   status?: TicketStatus;
   priority?: TicketPriority;
   type?: TicketType;
