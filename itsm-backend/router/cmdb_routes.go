@@ -12,6 +12,30 @@ func SetupCMDBRoutes(
 	auth *gin.RouterGroup,
 	cmdbController *controller.CMDBController,
 ) {
+	configurationItems := auth.Group("/configuration-items")
+	configurationItems.Use(middleware.RequirePermission("cmdb_ci", "read"))
+	{
+		configurationItems.POST("/search", cmdbController.SearchCI)
+		configurationItems.GET("/stats", cmdbController.GetCIStats)
+		configurationItems.GET("/types", middleware.RequirePermission("cmdb_ci_type", "read"), cmdbController.ListCITypes)
+		configurationItems.POST("/types", middleware.RequirePermission("cmdb_ci_type", "write"), cmdbController.CreateCIType)
+		configurationItems.GET("/types/:id", middleware.RequirePermission("cmdb_ci_type", "read"), cmdbController.GetCIType)
+		configurationItems.PUT("/types/:id", middleware.RequirePermission("cmdb_ci_type", "write"), cmdbController.UpdateCIType)
+		configurationItems.DELETE("/types/:id", middleware.RequirePermission("cmdb_ci_type", "delete"), cmdbController.DeleteCIType)
+		configurationItems.GET("/relationships", middleware.RequirePermission("cmdb_relationship", "read"), cmdbController.ListCIRelationships)
+		configurationItems.POST("/relationships", middleware.RequirePermission("cmdb_relationship", "write"), cmdbController.CreateCIRelationship)
+		configurationItems.GET("/relationship-types", middleware.RequirePermission("cmdb_relationship", "read"), cmdbController.ListRelationshipTypes)
+		configurationItems.GET("", cmdbController.ListCIs)
+		configurationItems.POST("", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.CreateCI)
+		configurationItems.GET("/:id", cmdbController.GetCI)
+		configurationItems.PUT("/:id", middleware.RequirePermission("cmdb_ci", "write"), cmdbController.UpdateCI)
+		configurationItems.DELETE("/:id", middleware.RequirePermission("cmdb_ci", "delete"), cmdbController.DeleteCI)
+		configurationItems.GET("/:id/relationships", cmdbController.ListCIRelationshipsByCIID)
+		configurationItems.GET("/:id/impact-analysis", cmdbController.GetCIImpactAnalysis)
+		configurationItems.GET("/:id/change-history", cmdbController.GetCIHistory)
+		configurationItems.GET("/:id/history", cmdbController.GetCIHistory)
+	}
+
 	// CMDB管理路由
 	cmdb := auth.Group("/cmdb")
 	{

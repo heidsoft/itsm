@@ -548,25 +548,6 @@ export class IncidentAPI {
     }
   }
 
-  // AI辅助分析
-  static async analyzeIncidentWithAI(incidentId: number): Promise<{
-    suggestedClassification: Partial<IncidentClassification>;
-    suggestedRootCauses: string[];
-    similarIncidents: Incident[];
-  }> {
-    try {
-      const response = await httpClient.post<{
-        suggestedClassification: Partial<IncidentClassification>;
-        suggestedRootCauses: string[];
-        similarIncidents: Incident[];
-      }>(`/api/v1/incidents/${incidentId}/ai-analysis`);
-      return response;
-    } catch (error) {
-      console.error('IncidentAPI.analyzeIncidentWithAI error:', error);
-      throw error;
-    }
-  }
-
   // 获取可关联的配置项列表
   static async getConfigurationItems(
     search?: string,

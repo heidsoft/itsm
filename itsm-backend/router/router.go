@@ -1,7 +1,10 @@
 package router
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"io"
 	"os"
 	"runtime"
 	"strconv"
@@ -33,6 +36,37 @@ import (
 // RateLimiterInterface 限流器接口（支持 Redis 和内存实现）
 type RateLimiterInterface interface {
 	Allow(ctx context.Context, clientIP string) (bool, error)
+}
+
+func withIncidentIDParam(handler gin.HandlerFunc) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		body, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			common.Fail(c, common.ParamErrorCode, "invalid request body")
+			return
+		}
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+
+		var req struct {
+			IncidentID    int `json:"incidentId"`
+			IncidentIDAlt int `json:"incident_id"`
+		}
+		if err := json.Unmarshal(body, &req); err != nil {
+			common.Fail(c, common.ParamErrorCode, "invalid request body")
+			return
+		}
+		incidentID := req.IncidentID
+		if incidentID == 0 {
+			incidentID = req.IncidentIDAlt
+		}
+		if incidentID == 0 {
+			common.Fail(c, common.ParamErrorCode, "incidentId is required")
+			return
+		}
+
+		c.Params = append(c.Params, gin.Param{Key: "id", Value: strconv.Itoa(incidentID)})
+		handler(c)
+	}
 }
 
 // RouterConfig 路由配置
@@ -604,9 +638,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				inc.POST("/:id/escalate", middleware.RequirePermission("incident", "write"), config.IncidentController.EscalateIncident)
 				inc.POST("/:id/acknowledge", middleware.RequirePermission("incident", "write"), config.IncidentController.AcknowledgeIncident)
 				inc.POST("/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentController.ResolveIncident)
-			inc.POST("/:id/close", middleware.RequirePermission("incident", "write"), config.IncidentController.CloseIncident)
-			inc.POST("/:id/assign", middleware.RequirePermission("incident", "assign"), config.IncidentController.AssignIncident)
-			inc.POST("/:id/convert-to-problem", middleware.RequirePermission("incident", "write"), config.IncidentController.ConvertToProblem)
+				inc.POST("/:id/close", middleware.RequirePermission("incident", "write"), config.IncidentController.CloseIncident)
+				inc.POST("/:id/assign", middleware.RequirePermission("incident", "assign"), config.IncidentController.AssignIncident)
+				inc.POST("/:id/convert-to-problem", middleware.RequirePermission("incident", "write"), config.IncidentController.ConvertToProblem)
 				inc.GET("/:id/impact", middleware.RequirePermission("incident", "read"), config.IncidentController.AnalyzeIncidentImpact)
 
 				// 关联数据
@@ -616,16 +650,21 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				inc.GET("/:id/metrics", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentMetrics)
 
 				// 根因分析
+				inc.POST("/root-cause", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentController.UpdateRootCause))
 				inc.GET("/:id/root-cause", middleware.RequirePermission("incident", "read"), config.IncidentController.GetRootCause)
+				inc.POST("/:id/root-cause", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateRootCause)
 				inc.PUT("/:id/root-cause", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateRootCause)
 
 				// 影响评估
+				inc.POST("/impact-assessment", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentController.UpdateImpactAssessment))
 				inc.GET("/:id/impact-assessment", middleware.RequirePermission("incident", "read"), config.IncidentController.GetImpactAssessment)
 				inc.PUT("/:id/impact-assessment", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateImpactAssessment)
 
 				// 事件分类
+				inc.POST("/classification", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentController.UpdateClassification))
 				inc.GET("/:id/classification", middleware.RequirePermission("incident", "read"), config.IncidentController.GetClassification)
 				inc.PUT("/:id/classification", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateClassification)
+				inc.PUT("/:id/status", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateIncident)
 
 				// 评论
 				inc.GET("/:id/comments", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentComments)
@@ -641,6 +680,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				inc.POST("/alerts/:id/acknowledge", middleware.RequirePermission("incident", "write"), config.IncidentController.AcknowledgeAlert)
 				inc.POST("/alerts/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentController.ResolveAlert)
 			}
+		}
+		if config.IncidentController != nil && config.CMDBController != nil {
+			tenant.(*gin.RouterGroup).GET("/incidents/configuration-items", middleware.RequirePermission("cmdb_ci", "read"), config.CMDBController.ListCIs)
 		}
 
 		// ==================== Service Catalog & Requests (DDD) ====================
@@ -674,6 +716,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				sr.PUT("/:id", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.Update)
 				sr.DELETE("/:id", middleware.RequirePermission("service_request", "delete"), config.ServiceRequestHandler.Delete)
 				sr.POST("/:id/approval", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.ApplyApproval)
+				sr.POST("/:id/approvals", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.ApplyApproval)
 			}
 
 			// Provisioning routes
