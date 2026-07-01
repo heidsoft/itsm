@@ -167,6 +167,16 @@ func (s *CIRelationshipService) ListCIRelationshipsByCIID(ctx context.Context, c
 
 // ListAllCIRelationships 获取所有CI关系列表
 func (s *CIRelationshipService) ListAllCIRelationships(ctx context.Context, tenantID int, page, pageSize int, relationType string) (*dto.CIRelationshipListResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
 	query := s.client.CIRelationship.Query().
 		Where(cirelationship.TenantIDEQ(tenantID), cirelationship.IsActiveEQ(true))
 
@@ -192,11 +202,17 @@ func (s *CIRelationshipService) ListAllCIRelationships(ctx context.Context, tena
 		return nil, fmt.Errorf("failed to list CI relationships: %w", err)
 	}
 
+	totalPages := 0
+	if pageSize > 0 {
+		totalPages = (total + pageSize - 1) / pageSize
+	}
+
 	return &dto.CIRelationshipListResponse{
-		Items: dto.ToCIRelationshipResponseList(relations),
-		Total: total,
-		Page:  page,
-		Size:  pageSize,
+		Items:      dto.ToCIRelationshipResponseList(relations),
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
 	}, nil
 }
 

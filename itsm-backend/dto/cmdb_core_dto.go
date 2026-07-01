@@ -82,10 +82,11 @@ type CIImpactAnalysisResponse struct {
 
 // CIRelationshipListResponse CI关系列表响应。
 type CIRelationshipListResponse struct {
-	Items []*CIRelationshipResponse `json:"items"`
-	Total int                       `json:"total"`
-	Page  int                       `json:"page"`
-	Size  int                       `json:"size"`
+	Items      []*CIRelationshipResponse `json:"items"`
+	Total      int                       `json:"total"`
+	Page       int                       `json:"page"`
+	PageSize   int                       `json:"pageSize"`
+	TotalPages int                       `json:"totalPages"`
 }
 
 // CreateCITagRequest 创建CI标签请求

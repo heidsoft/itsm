@@ -642,7 +642,7 @@ func (c *CMDBController) GetCIStats(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param page query int false "页码"
-// @Param size query int false "每页数量"
+// @Param page_size query int false "每页数量"
 // @Param relationshipType query string false "关系类型"
 // @Success 200 {object} common.Response{data=dto.CIRelationshipListResponse}
 // @Router /api/v1/cmdb/relationships [get]
@@ -654,7 +654,14 @@ func (c *CMDBController) ListCIRelationships(ctx *gin.Context) {
 	}
 
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+	pageSizeQuery := ctx.Query("page_size")
+	if pageSizeQuery == "" {
+		pageSizeQuery = ctx.Query("pageSize")
+	}
+	if pageSizeQuery == "" {
+		pageSizeQuery = ctx.DefaultQuery("size", "20")
+	}
+	pageSize, _ := strconv.Atoi(pageSizeQuery)
 	relationshipType := ctx.Query("relationshipType")
 
 	result, err := c.ciRelationshipService.ListAllCIRelationships(ctx.Request.Context(), tenantID, page, pageSize, relationshipType)

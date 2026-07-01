@@ -32,11 +32,25 @@ func setupTestCMDBController(t *testing.T) (*gin.Engine, *CMDBController, *ent.C
 	// 创建服务
 	ciTypeService := service.NewCITypeService(client, logger)
 	ciAttributeDefinitionService := service.NewCIAttributeDefinitionService(client, logger)
-	configurationItemService := service.NewConfigurationItemService(client, logger)
+	ciHistoryService := service.NewCIHistoryService(client, logger)
+	ciTagService := service.NewCITagService(client, logger)
+	configurationItemService := service.NewConfigurationItemService(client, logger, ciHistoryService, ciTagService)
 	ciRelationshipService := service.NewCIRelationshipService(client, logger)
+	cmdbImportExportService := service.NewCMDBImportExportService(client, logger, configurationItemService, ciTagService)
+	cmdbSavedViewService := service.NewCMDBSavedViewService(client, logger)
 
 	// 创建控制器
-	cmdbController := NewCMDBController(logger, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService)
+	cmdbController := NewCMDBController(
+		logger,
+		ciTypeService,
+		ciAttributeDefinitionService,
+		configurationItemService,
+		ciRelationshipService,
+		ciHistoryService,
+		ciTagService,
+		cmdbImportExportService,
+		cmdbSavedViewService,
+	)
 
 	// 创建路由
 	r := gin.New()

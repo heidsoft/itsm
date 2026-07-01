@@ -129,7 +129,7 @@ export class SLAApi {
     is_compliant: boolean;
     violations: SLAViolation[];
   }> {
-    return httpClient.post(`/api/v1/sla/compliance/${ticketId}`);
+    return httpClient.post(`/api/v1/sla/check-compliance/${ticketId}`);
   }
 
   // 获取SLA违规列表
@@ -198,7 +198,7 @@ export class SLAApi {
 
   // 检查工单SLA违规
   static async checkTicketSLAViolation(ticketId: number): Promise<void> {
-    return httpClient.post(`/api/v1/sla/v2/check-compliance/${ticketId}`);
+    return httpClient.post(`/api/v1/sla/check-compliance/${ticketId}`);
   }
 
   // 获取SLA统计信息
