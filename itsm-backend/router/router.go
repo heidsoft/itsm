@@ -350,6 +350,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 			tickets.GET("/search", config.TicketController.SearchTickets)
 			tickets.GET("/stats", config.TicketController.GetTicketStats)
+			tickets.GET("/overdue", middleware.RequirePermission("ticket", "read"), config.TicketController.GetOverdueTickets)
+			tickets.POST("/export", middleware.RequirePermission("ticket", "export"), config.TicketController.ExportTickets)
+			tickets.POST("/batch-delete", middleware.RequirePermission("ticket", "delete"), config.TicketController.BatchDeleteTickets)
+			tickets.POST("/:id/escalate", middleware.RequirePermission("ticket", "escalate"), config.TicketController.EscalateTicket)
+			tickets.GET("/:id/history", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicketActivity)
 			tickets.GET("/:id", config.TicketController.GetTicket)
 			tickets.PUT("/:id", config.TicketController.UpdateTicket)
 			tickets.PUT("/:id/status", config.TicketController.UpdateTicketStatus)
