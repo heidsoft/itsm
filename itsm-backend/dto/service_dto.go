@@ -146,10 +146,10 @@ type ServiceCatalogListResponse struct {
 
 // ServiceRequestListResponse 服务请求列表响应
 type ServiceRequestListResponse struct {
-	Requests []ServiceRequestResponse `json:"requests"`
-	Total    int                      `json:"total"`
-	Page     int                      `json:"page"`
-	Size     int                      `json:"size"`
+	Items []ServiceRequestResponse `json:"items"`
+	Total int                      `json:"total"`
+	Page  int                      `json:"page"`
+	Size  int                      `json:"size"`
 }
 
 // ToServiceCatalogResponse 转换为服务目录响应

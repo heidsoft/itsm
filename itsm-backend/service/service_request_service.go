@@ -247,7 +247,7 @@ func (s *ServiceRequestService) ListPendingApprovals(ctx context.Context, tenant
 	case "admin", "super_admin": // admin and super_admin can view all pending requests
 		targetLevel = 0
 	default:
-		return &dto.ServiceRequestListResponse{Requests: []dto.ServiceRequestResponse{}, Total: 0, Page: page, Size: size}, nil
+		return &dto.ServiceRequestListResponse{Items: []dto.ServiceRequestResponse{}, Total: 0, Page: page, Size: size}, nil
 	}
 
 	base := s.client.ServiceRequest.Query().Where(servicerequest.TenantID(tenantID))
@@ -302,7 +302,7 @@ func (s *ServiceRequestService) ListPendingApprovals(ctx context.Context, tenant
 	for _, r := range requests {
 		resp = append(resp, *dto.ToServiceRequestResponse(r))
 	}
-	return &dto.ServiceRequestListResponse{Requests: resp, Total: total, Page: page, Size: size}, nil
+	return &dto.ServiceRequestListResponse{Items: resp, Total: total, Page: page, Size: size}, nil
 }
 
 // GetServiceRequest 获取服务请求详情
@@ -402,10 +402,10 @@ func (s *ServiceRequestService) ListServiceRequests(ctx context.Context, req *dt
 	}
 
 	return &dto.ServiceRequestListResponse{
-		Requests: requestResponses,
-		Total:    total,
-		Page:     req.Page,
-		Size:     req.Size,
+		Items: requestResponses,
+		Total: total,
+		Page:  req.Page,
+		Size:  req.Size,
 	}, nil
 }
 
