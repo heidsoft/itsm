@@ -81,6 +81,12 @@ type UpdateIncidentRequest struct {
 	Force           bool                   `json:"force"`   // 是否强制更新（忽略版本检查）
 }
 
+// AssignIncidentRequest 分配事件请求
+type AssignIncidentRequest struct {
+	AssigneeID    int    `json:"assigneeId" binding:"required"`
+	AssigneeIDAlt int    `json:"assignee_id"` // 兼容 snake_case
+}
+
 type IncidentResponse struct {
 	ID                  int                    `json:"id" example:"1"`
 	Title               string                 `json:"title" example:"服务器CPU使用率过高"`

@@ -38,6 +38,7 @@ import {
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
+  UserAddOutlined,
   ExclamationCircleOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
@@ -50,12 +51,12 @@ import {
   LinkOutlined,
   UserOutlined,
   CalendarOutlined,
-  EnvironmentOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/zh-cn';
 import { httpClient } from '@/lib/api/http-client';
+import { UserSelect } from '@/components/common/UserSelect';
 
 dayjs.extend(relativeTime);
 dayjs.locale('zh-cn');
@@ -121,6 +122,7 @@ export const IncidentManagement: React.FC = () => {
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [createVisible, setCreateVisible] = useState(false);
+  const [assignVisible, setAssignVisible] = useState(false);
   const [monitoringVisible, setMonitoringVisible] = useState(false);
 
   // 获取事件列表
@@ -297,7 +299,7 @@ export const IncidentManagement: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 160,
       render: (_: unknown, record: Incident) => (
         <Space>
           <Tooltip title="查看详情">
@@ -317,6 +319,16 @@ export const IncidentManagement: React.FC = () => {
               onClick={() => {
                 setSelectedIncident(record);
                 setCreateVisible(true);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="分配">
+            <Button
+              type="text"
+              icon={<UserAddOutlined />}
+              onClick={() => {
+                setSelectedIncident(record);
+                setAssignVisible(true);
               }}
             />
           </Tooltip>
@@ -503,6 +515,13 @@ export const IncidentManagement: React.FC = () => {
       <IncidentMonitoringPanel
         visible={monitoringVisible}
         onClose={() => setMonitoringVisible(false)}
+      />
+
+      <AssignIncidentModal
+        incident={selectedIncident}
+        visible={assignVisible}
+        onClose={() => setAssignVisible(false)}
+        onAssigned={fetchIncidents}
       />
     </div>
   );
@@ -1304,6 +1323,56 @@ const IncidentMonitoringPanel: React.FC<{
         <Empty description="暂无监控数据" />
       )}
     </Drawer>
+  );
+};
+
+// 分配事件 Modal
+const AssignIncidentModal: React.FC<{
+  incident: Incident | null;
+  visible: boolean;
+  onClose: () => void;
+  onAssigned: () => void;
+}> = ({ incident, visible, onClose, onAssigned }) => {
+  const [assigning, setAssigning] = useState(false);
+  const [assignUserIds, setAssignUserIds] = useState<number[]>([]);
+
+  const handleAssign = async () => {
+    const assignUserId = assignUserIds[0];
+    if (!assignUserId || !incident) return;
+    setAssigning(true);
+    try {
+      await IncidentAPI.assignIncident(incident.id, assignUserId);
+      message.success('分配成功');
+      setAssignUserIds([]);
+      onAssigned();
+      onClose();
+    } catch {
+      message.error('分配失败');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  return (
+    <Modal
+      title={`分配事件 ${incident?.incidentNumber || ''}`}
+      open={visible}
+      onCancel={() => { onClose(); setAssignUserIds([]); }}
+      onOk={handleAssign}
+      confirmLoading={assigning}
+      okText="确认分配"
+      cancelText="取消"
+    >
+      <Form layout="vertical">
+        <Form.Item label="选择处理人" required>
+          <UserSelect
+            value={assignUserIds}
+            onChange={value => setAssignUserIds(value.slice(-1))}
+            placeholder="请选择处理人"
+          />
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 };
 

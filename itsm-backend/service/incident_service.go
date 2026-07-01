@@ -387,6 +387,48 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 	return s.toIncidentResponse(incidentEntity), nil
 }
 
+// AssignIncident 分配事件
+func (s *IncidentService) AssignIncident(ctx context.Context, id int, assigneeID int, tenantID int) (*dto.IncidentResponse, error) {
+	s.logger.Infow("Assigning incident", "id", id, "assignee_id", assigneeID, "tenant_id", tenantID)
+
+	// 获取当前事件
+	incidentEntity, err := s.client.Incident.Query().
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("incident not found")
+		}
+		return nil, fmt.Errorf("failed to get incident: %w", err)
+	}
+
+	// 更新分配人
+	_, err = s.client.Incident.UpdateOneID(id).
+		Where(incident.TenantIDEQ(tenantID)).
+		SetAssigneeID(assigneeID).
+		SetUpdatedAt(time.Now()).
+		AddVersion(1).
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to assign incident", "error", err, "id", id)
+		return nil, fmt.Errorf("failed to assign incident: %w", err)
+	}
+
+	// 记录分配活动
+	s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+		IncidentID:  id,
+		EventType:   "assignment",
+		EventName:   "事件分配",
+		Description: fmt.Sprintf("事件已分配给用户 %d", assigneeID),
+		Status:      "active",
+		Severity:    "info",
+		Source:      "user",
+	}, tenantID)
+
+	s.logger.Infow("Incident assigned successfully", "id", id, "assignee_id", assigneeID)
+	return s.toIncidentResponse(incidentEntity), nil
+}
+
 // DeleteIncident deletes an incident with cascade cleanup of related data.
 // Tenant validation is performed before any deletion to prevent cross-tenant access.
 func (s *IncidentService) DeleteIncident(ctx context.Context, id int, tenantID int) error {

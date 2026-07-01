@@ -703,6 +703,49 @@ func (c *IncidentController) CloseIncident(ctx *gin.Context) {
 	common.Success(ctx, gin.H{"message": "事件已关闭"})
 }
 
+// AssignIncident 分配事件
+// @Summary 分配事件
+// @Description 将事件分配给指定处理人
+// @Tags 事件管理
+// @Produce json
+// @Param id path int true "事件ID"
+// @Param request body dto.AssignIncidentRequest true "分配请求"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/assign [post]
+func (c *IncidentController) AssignIncident(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		return
+	}
+
+	var req dto.AssignIncidentRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+	assigneeID := req.AssigneeID
+	if assigneeID == 0 && req.AssigneeIDAlt != 0 {
+		assigneeID = req.AssigneeIDAlt
+	}
+	if assigneeID <= 0 {
+		common.Fail(ctx, common.ParamErrorCode, "assigneeId 必填")
+		return
+	}
+
+	tenantID := ctx.GetInt("tenant_id")
+	incident, err := c.incidentService.AssignIncident(ctx.Request.Context(), id, assigneeID, tenantID)
+	if err != nil {
+		c.logger.Errorw("Failed to assign incident", "error", err, "id", id)
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(ctx, incident)
+}
+
 // AcknowledgeAlert 确认告警
 // @Summary 确认告警
 // @Description 确认指定告警

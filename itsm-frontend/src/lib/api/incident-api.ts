@@ -398,6 +398,12 @@ export class IncidentAPI {
     return response;
   }
 
+  // 分配事件
+  static async assignIncident(id: number, assigneeId: number): Promise<Incident> {
+    const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/assign`, { assigneeId });
+    return response;
+  }
+
   // 添加评论（注意：后端期望 content 字段）
   static async addComment(id: number, data: { content: string }): Promise<Incident> {
     const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/comments`, data);
