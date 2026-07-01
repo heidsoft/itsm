@@ -1215,7 +1215,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			workflow.PUT("/instances/:id/resume", config.BPMNWorkflowController.ResumeProcess)
 			// 任务
 			workflow.GET("/tasks", config.BPMNWorkflowController.ListUserTasks)
-			workflow.POST("/tasks/:id/complete", config.BPMNWorkflowController.CompleteTask)
+			workflow.PUT("/tasks/:id/complete", config.BPMNWorkflowController.CompleteTask)
 			workflow.POST("/tasks/:id/claim", config.BPMNWorkflowController.ClaimTask)
 		}
 
