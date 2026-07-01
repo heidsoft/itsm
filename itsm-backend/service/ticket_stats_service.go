@@ -54,6 +54,14 @@ func (s *TicketStatsService) GetTicketStats(ctx context.Context, tenantID int) (
 		return nil, fmt.Errorf("failed to count in_progress tickets: %w", err)
 	}
 
+	pending, err := s.client.Ticket.Query().
+		Where(ticket.TenantID(tenantID), ticket.StatusIn("new", "pending")).
+		Count(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to count pending tickets", "error", err)
+		return nil, fmt.Errorf("failed to count pending tickets: %w", err)
+	}
+
 	resolved, err := s.client.Ticket.Query().
 		Where(ticket.TenantID(tenantID), ticket.StatusEQ("resolved")).
 		Count(ctx)
@@ -88,6 +96,7 @@ func (s *TicketStatsService) GetTicketStats(ctx context.Context, tenantID int) (
 		Total:        total,
 		Open:         open,
 		InProgress:   inProgress,
+		Pending:      pending,
 		Resolved:     resolved,
 		HighPriority: highPriority,
 		Overdue:      overdue,

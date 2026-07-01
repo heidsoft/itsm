@@ -1,13 +1,13 @@
 package service
 
 import (
-	"itsm-backend/connector"
-	feishuConnector "itsm-backend/connector/builtin/feishu"
 	"bytes"
 	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"itsm-backend/connector"
+	feishuConnector "itsm-backend/connector/builtin/feishu"
 	"strings"
 	"time"
 
@@ -76,7 +76,6 @@ func NewTicketService(cfg *TicketServiceConfig) *TicketService {
 		processTriggerSvc: cfg.ProcessTriggerService,
 		processResolver:   cfg.ProcessResolver,
 		connectorManager:  cfg.ConnectorManager,
-
 	}
 }
 
@@ -114,20 +113,34 @@ func (s *TicketService) SetProcessResolver(r *ProcessResolver) {
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ticket.Ticket, error) {
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
 
+	ticketType := normalizeCreateTicketType(req.Type, req.FormFields, req.FormFieldsAlt)
+	assigneeID := req.AssigneeID
+	if assigneeID == 0 && req.AssigneeIDAlt != 0 {
+		assigneeID = req.AssigneeIDAlt
+	}
+	categoryID := req.CategoryID
+	if categoryID == nil {
+		categoryID = req.CategoryIDAlt
+	}
+	workflowDefinitionKey := req.WorkflowDefinitionKey
+	if workflowDefinitionKey == "" {
+		workflowDefinitionKey = req.WorkflowDefinitionKeyAlt
+	}
+
 	// 转换 DTO 到领域参数
 	params := &ticket.CreateParams{
 		Title:       req.Title,
 		Description: req.Description,
-		Type:        ticket.Type(req.Type),
+		Type:        ticketType,
 		Priority:    ticket.Priority(req.Priority),
 		RequesterID: req.RequesterID,
 	}
 
-	if req.AssigneeID != 0 {
-		params.AssigneeID = &req.AssigneeID
+	if assigneeID != 0 {
+		params.AssigneeID = &assigneeID
 	}
-	if req.CategoryID != nil {
-		params.CategoryID = req.CategoryID
+	if categoryID != nil {
+		params.CategoryID = categoryID
 	}
 
 	// 通过 Repository 创建工单
@@ -197,7 +210,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		go func() {
 			ctx2, cancel := context.WithTimeout(ctx, 30*time.Second)
 			defer cancel()
-			if err := s.triggerWorkflowForTicket(ctx2, tkt, tenantID, req.WorkflowDefinitionKey); err != nil {
+			if err := s.triggerWorkflowForTicket(ctx2, tkt, tenantID, workflowDefinitionKey); err != nil {
 				s.logger.Warnw("Workflow trigger failed", "error", err, "ticket_id", tkt.ID)
 			}
 		}()
@@ -242,6 +255,32 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	}
 
 	return tkt, nil
+}
+
+func normalizeCreateTicketType(reqType string, formFields ...map[string]interface{}) ticket.Type {
+	if isSupportedTicketType(reqType) {
+		return ticket.Type(reqType)
+	}
+
+	for _, fields := range formFields {
+		if fields == nil {
+			continue
+		}
+		if value, ok := fields["type"].(string); ok && isSupportedTicketType(value) {
+			return ticket.Type(value)
+		}
+	}
+
+	return ticket.TypeIncident
+}
+
+func isSupportedTicketType(value string) bool {
+	switch ticket.Type(value) {
+	case ticket.TypeIncident, ticket.TypeProblem, ticket.TypeChange, ticket.TypeServiceRequest:
+		return true
+	default:
+		return false
+	}
 }
 
 // triggerWorkflowForTicket 异步触发工单关联的 BPMN 流程
@@ -641,7 +680,6 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 		}()
 	}
 
-
 	// 异步同步工单到飞书
 	if s.connectorManager != nil {
 		go func() {
@@ -844,7 +882,7 @@ func (s *TicketService) GetTicketStats(ctx context.Context, tenantID int) (*dto.
 		Open:         statusCounts[ticket.StatusNew] + statusCounts[ticket.StatusOpen],
 		InProgress:   statusCounts[ticket.StatusInProgress],
 		Resolved:     statusCounts[ticket.StatusResolved],
-		Pending:      statusCounts[ticket.StatusPending],
+		Pending:      statusCounts[ticket.StatusNew] + statusCounts[ticket.StatusPending],
 		HighPriority: 0, // 需要单独查询
 		Overdue:      len(overdue),
 	}, nil

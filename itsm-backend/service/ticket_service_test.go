@@ -148,6 +148,100 @@ func TestTicketService_CreateTicket(t *testing.T) {
 	}
 }
 
+func TestTicketService_CreateTicketTypeMapping(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ent_ticket_type?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	ticketService := NewTicketServiceForTest(client, logger)
+	ctx := context.Background()
+
+	testTenant, err := client.Tenant.Create().
+		SetName("Test Tenant").
+		SetCode("test-ticket-type").
+		SetDomain("ticket-type.test").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	testUser, err := client.User.Create().
+		SetUsername("typeuser").
+		SetEmail("type@example.com").
+		SetName("Type User").
+		SetPasswordHash("hashedpassword").
+		SetRole("end_user").
+		SetActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	serviceRequest, err := ticketService.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title:       "服务请求工单",
+		Description: "申请开通服务请求类型",
+		Priority:    "medium",
+		Type:        "service_request",
+		RequesterID: testUser.ID,
+	}, testTenant.ID)
+	require.NoError(t, err)
+	require.NotNil(t, serviceRequest)
+	assert.Equal(t, "service_request", string(serviceRequest.Type))
+
+	defaulted, err := ticketService.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title:       "默认类型工单",
+		Description: "未传类型时不应写入空字符串",
+		Priority:    "medium",
+		RequesterID: testUser.ID,
+	}, testTenant.ID)
+	require.NoError(t, err)
+	require.NotNil(t, defaulted)
+	assert.Equal(t, "incident", string(defaulted.Type))
+}
+
+func TestTicketService_GetTicketStatsCountsNewAsPending(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ent_ticket_stats?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	ticketService := NewTicketServiceForTest(client, logger)
+	ctx := context.Background()
+
+	testTenant, err := client.Tenant.Create().
+		SetName("Stats Tenant").
+		SetCode("test-ticket-stats").
+		SetDomain("ticket-stats.test").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	testUser, err := client.User.Create().
+		SetUsername("statsuser").
+		SetEmail("stats@example.com").
+		SetName("Stats User").
+		SetPasswordHash("hashedpassword").
+		SetRole("end_user").
+		SetActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	for i := 0; i < 3; i++ {
+		_, err := ticketService.CreateTicket(ctx, &dto.CreateTicketRequest{
+			Title:       fmt.Sprintf("新工单 %d", i),
+			Description: "新建状态应计入待处理统计",
+			Priority:    "medium",
+			Type:        "incident",
+			RequesterID: testUser.ID,
+		}, testTenant.ID)
+		require.NoError(t, err)
+	}
+
+	stats, err := ticketService.GetTicketStats(ctx, testTenant.ID)
+	require.NoError(t, err)
+	require.NotNil(t, stats)
+	assert.Equal(t, 3, stats.Pending)
+	assert.Equal(t, 3, stats.Open)
+}
+
 func TestTicketService_GetTickets(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	defer client.Close()

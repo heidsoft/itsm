@@ -92,7 +92,7 @@ func (s *TicketSearchService) GetOverdueTickets(ctx context.Context, tenantID in
 // GetTicketStats 获取工单统计信息
 func (s *TicketSearchService) GetTicketStats(ctx context.Context, tenantID int) (*dto.TicketStatsResponse, error) {
 	// 使用并发查询优化性能（避免串行的 N+1 查询）
-	errCh := make(chan error, 5)
+	errCh := make(chan error, 6)
 	resultCh := make(chan *dto.TicketStatsResponse, 1)
 	overdueCh := make(chan []*ent.Ticket, 1)
 
@@ -157,6 +157,22 @@ func (s *TicketSearchService) GetTicketStats(ctx context.Context, tenantID int) 
 			}
 			mu.Lock()
 			response.InProgress = count
+			mu.Unlock()
+		}()
+
+		// pending 数量：待受理 new + 挂起 pending
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			count, err := s.client.Ticket.Query().
+				Where(ticket.TenantID(tenantID), ticket.StatusIn("new", "pending")).
+				Count(ctx)
+			if err != nil {
+				errCh <- fmt.Errorf("统计pending工单失败: %w", err)
+				return
+			}
+			mu.Lock()
+			response.Pending = count
 			mu.Unlock()
 		}()
 

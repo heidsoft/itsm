@@ -15,21 +15,29 @@ type UserBasicInfo struct {
 
 // CreateTicketRequest 创建工单请求
 type CreateTicketRequest struct {
-	Title                 string                 `json:"title" binding:"required,min=2,max=200"`
-	Description           string                 `json:"description" binding:"required,min=0,max=5000"`
-	Priority              string                 `json:"priority" binding:"required,oneof=low medium high critical urgent"`
-	Type                  string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"` // 工单类型
-	Category              string                 `json:"category"`                                                                      // 分类名称（可选，前端传入）
-	CategoryID            *int                   `json:"categoryId,omitempty"`                                                          // 分类ID（优先使用）
-	TemplateID            *int                   `json:"templateId,omitempty"`                                                          // 模板ID
-	RequesterID           int                    `json:"requesterId" binding:"omitempty"`                                               // 从认证上下文中获取，前端可不传
-	AssigneeID            int                    `json:"assigneeId"`
-	ParentTicketID        *int                   `json:"parentTicketId,omitempty"`
-	TagIDs                []int                  `json:"tagIds,omitempty"` // 标签ID列表
-	Tags                  []string               `json:"tags"`             // 标签名称列表（兼容旧格式）
-	FormFields            map[string]interface{} `json:"formFields"`
-	Attachments           []string               `json:"attachments"`
-	WorkflowDefinitionKey string                 `json:"workflowDefinitionKey"` // 工作流定义Key（可选，优先级高于自动选择）
+	Title                    string                 `json:"title" binding:"required,min=2,max=200"`
+	Description              string                 `json:"description" binding:"required,min=0,max=5000"`
+	Priority                 string                 `json:"priority" binding:"required,oneof=low medium high critical urgent"`
+	Type                     string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"` // 工单类型
+	TypeID                   string                 `json:"type_id,omitempty"`                                                             // 兼容旧前端预设类型ID
+	Category                 string                 `json:"category"`                                                                      // 分类名称（可选，前端传入）
+	CategoryID               *int                   `json:"categoryId,omitempty"`                                                          // 分类ID（优先使用）
+	CategoryIDAlt            *int                   `json:"category_id,omitempty"`                                                         // 兼容 snake_case
+	TemplateID               *int                   `json:"templateId,omitempty"`                                                          // 模板ID
+	TemplateIDAlt            *int                   `json:"template_id,omitempty"`                                                         // 兼容 snake_case
+	RequesterID              int                    `json:"requesterId" binding:"omitempty"`                                               // 从认证上下文中获取，前端可不传
+	AssigneeID               int                    `json:"assigneeId"`
+	AssigneeIDAlt            int                    `json:"assignee_id,omitempty"` // 兼容 snake_case
+	ParentTicketID           *int                   `json:"parentTicketId,omitempty"`
+	ParentTicketIDAlt        *int                   `json:"parent_ticket_id,omitempty"` // 兼容 snake_case
+	TagIDs                   []int                  `json:"tagIds,omitempty"`           // 标签ID列表
+	TagIDsAlt                []int                  `json:"tag_ids,omitempty"`          // 兼容 snake_case
+	Tags                     []string               `json:"tags"`                       // 标签名称列表（兼容旧格式）
+	FormFields               map[string]interface{} `json:"formFields"`
+	FormFieldsAlt            map[string]interface{} `json:"form_fields,omitempty"` // 兼容 snake_case
+	Attachments              []string               `json:"attachments"`
+	WorkflowDefinitionKey    string                 `json:"workflowDefinitionKey"`             // 工作流定义Key（可选，优先级高于自动选择）
+	WorkflowDefinitionKeyAlt string                 `json:"workflow_definition_key,omitempty"` // 兼容 snake_case
 }
 
 // UpdateTicketRequest 更新工单请求

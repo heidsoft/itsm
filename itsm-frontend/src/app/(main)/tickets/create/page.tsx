@@ -50,6 +50,7 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 type Priority = 'low' | 'medium' | 'high' | 'urgent';
+type TicketCreateType = 'incident' | 'service_request' | 'change' | 'problem';
 
 // 图标映射
 const iconMap: Record<string, React.ReactNode> = {
@@ -65,6 +66,21 @@ const iconMap: Record<string, React.ReactNode> = {
   Project: <Folder className="w-5 h-5" />,
   Key: <Key className="w-5 h-5" />,
   FileText: <FileText className="w-5 h-5" />,
+};
+
+const inferTicketType = (selectedType: TicketTypePreset | null): TicketCreateType => {
+  if (!selectedType) {
+    return 'incident';
+  }
+
+  const value = `${selectedType.id} ${selectedType.code} ${selectedType.name} ${selectedType.workflowTemplateId || ''}`;
+  if (/change|变更|ddl|firewall|domain/i.test(value)) {
+    return 'change';
+  }
+  if (/problem|问题/i.test(value)) {
+    return 'problem';
+  }
+  return 'service_request';
 };
 
 export default function CreateTicketPage() {
@@ -145,8 +161,9 @@ export default function CreateTicketPage() {
         title: title,
         description: description,
         priority: priority,
+        type: inferTicketType(selectedType),
         category: values.category || (selectedType ? selectedType.category : undefined),
-        formFields: selectedType ? { type: selectedType.id } : undefined,
+        formFields: selectedType ? { presetTypeId: selectedType.id } : undefined,
         workflow_definition_key: selectedType?.workflowTemplateId,
       });
 

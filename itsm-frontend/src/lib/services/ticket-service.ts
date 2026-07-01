@@ -56,6 +56,7 @@ export interface TicketFilterParams {
 export interface CreateTicketRequest {
   title: string;
   description: string;
+  type?: TicketType | string;
   priority: TicketPriority | string; // 支持字符串格式
   category: string;
   category_id?: number; // 分类ID（优先使用）

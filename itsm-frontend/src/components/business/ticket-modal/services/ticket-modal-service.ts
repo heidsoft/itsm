@@ -12,10 +12,9 @@ import { TemplateApi } from '@/lib/api/template-api';
  * 提交工单
  */
 export const submitTicket = async (values: TicketFormValues): Promise<any> => {
-  // 这里可以添加数据转换逻辑
   const payload = {
     ...values,
-    // 如果有 estimated_time，转换为 appropriate format
+    type: values.type,
     estimated_time: values.estimated_time || undefined,
   };
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage, useSessionStorage } from './usePerformance';
 import { DashboardAPI } from '@/lib/api/dashboard-api';
+import { ticketService } from '@/lib/services/ticket-service';
 
 // 类型定义 - 与后端DashboardOverview对应
 export interface SystemAlert {
@@ -114,9 +115,11 @@ const convertBackendData = (backendData: {
 
     switch (metric.id) {
       case 'total_tickets':
+      case 'total-tickets':
         kpiData.totalTickets = { value: numValue, change: changeValue, trend };
         break;
       case 'pending_incidents':
+      case 'pending-tickets':
         kpiData.pendingEvents = { value: numValue, change: changeValue, trend };
         break;
       case 'active_users':
@@ -160,9 +163,25 @@ const convertBackendData = (backendData: {
 // 带重试的API调用
 const fetchWithRetry = async (retryCount = 0): Promise<DashboardData> => {
   try {
-    // 调用真实API获取仪表盘概览数据
-    const backendData = await DashboardAPI.getOverview();
-    return convertBackendData(backendData);
+    // 调用真实API获取仪表盘概览数据，并用工单 stats 的 pending 覆盖 KPI。
+    const [overviewResult, statsResult] = await Promise.allSettled([
+      DashboardAPI.getOverview(),
+      ticketService.getTicketStats(),
+    ]);
+
+    if (overviewResult.status === 'rejected') {
+      throw overviewResult.reason;
+    }
+
+    const dashboardData = convertBackendData(overviewResult.value);
+    if (statsResult.status === 'fulfilled') {
+      const stats = statsResult.value;
+      dashboardData.kpiData.totalTickets.value =
+        stats.total ?? dashboardData.kpiData.totalTickets.value;
+      dashboardData.kpiData.pendingEvents.value =
+        stats.pending ?? dashboardData.kpiData.pendingEvents.value;
+    }
+    return dashboardData;
   } catch (error) {
     if (retryCount < MAX_RETRY_ATTEMPTS - 1) {
       console.warn(`API调用失败，正在重试... (${retryCount + 1}/${MAX_RETRY_ATTEMPTS})`);
