@@ -37,7 +37,7 @@ type UpdateTicketRequest struct {
 	Title       string                 `json:"title" binding:"omitempty,min=2,max=200"`
 	Description string                 `json:"description" binding:"omitempty,min=10,max=5000"`
 	Priority    string                 `json:"priority" binding:"omitempty,oneof=low medium high critical"`
-	Status      string                 `json:"status" binding:"omitempty,oneof=open in_progress resolved closed"`
+	Status      string                 `json:"status" binding:"omitempty,oneof=new open assigned in_progress pending resolved closed cancelled approved rejected"`
 	Type        string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"`
 	Category    string                 `json:"category" binding:"omitempty"`
 	AssigneeID  int                    `json:"assigneeId"`

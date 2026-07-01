@@ -79,8 +79,10 @@ const (
 	IncidentStatusInProgress   = "in_progress"
 	IncidentStatusTriaged      = "triaged"   // 已分类
 	IncidentStatusEscalated    = "escalated" // 已升级
+	IncidentStatusOnHold       = "on_hold"   // 暂停（待处理）
 	IncidentStatusResolved     = "resolved"
 	IncidentStatusClosed       = "closed"
+	IncidentStatusCancelled    = "cancelled" // 已取消
 )
 
 // ===================================

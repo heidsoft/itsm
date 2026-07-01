@@ -973,22 +973,26 @@ func (s *IncidentService) executeAssignmentAction(ctx context.Context, action ma
 // isValidIncidentStatusTransition 检查事件状态转换是否合法
 // Incident状态转换规则:
 // new -> acknowledged, assigned, in_progress
-// acknowledged -> in_progress, closed
-// assigned -> in_progress, escalated, closed
-// in_progress -> resolved, escalated, pending, closed
+// acknowledged -> in_progress, closed, on_hold
+// assigned -> in_progress, escalated, closed, on_hold
+// in_progress -> resolved, escalated, pending, closed, on_hold
+// on_hold -> in_progress, closed
 // escalated -> in_progress, closed
 // resolved -> closed, in_progress (reopen)
 // closed -> (不允许转换到其他状态)
+// cancelled -> (不允许转换到其他状态)
 func isValidIncidentStatusTransition(currentStatus, newStatus string) bool {
 	validTransitions := map[string][]string{
-		common.IncidentStatusNew:          {common.IncidentStatusAcknowledged, common.IncidentStatusAssigned, common.IncidentStatusInProgress},
-		common.IncidentStatusAcknowledged: {common.IncidentStatusInProgress, common.IncidentStatusClosed},
-		common.IncidentStatusAssigned:     {common.IncidentStatusInProgress, common.IncidentStatusEscalated, common.IncidentStatusClosed},
-		common.IncidentStatusInProgress:   {common.IncidentStatusResolved, common.IncidentStatusEscalated, common.IncidentStatusClosed},
-		common.IncidentStatusTriaged:      {common.IncidentStatusInProgress, common.IncidentStatusEscalated, common.IncidentStatusClosed},
-		common.IncidentStatusEscalated:    {common.IncidentStatusInProgress, common.IncidentStatusClosed},
-		common.IncidentStatusResolved:     {common.IncidentStatusClosed, common.IncidentStatusInProgress}, // 重新打开
-		common.IncidentStatusClosed:       {},                                                             // 已关闭不允许转换
+		common.IncidentStatusNew:          {common.IncidentStatusAcknowledged, common.IncidentStatusAssigned, common.IncidentStatusInProgress, common.IncidentStatusCancelled},
+		common.IncidentStatusAcknowledged: {common.IncidentStatusInProgress, common.IncidentStatusClosed, common.IncidentStatusOnHold, common.IncidentStatusCancelled},
+		common.IncidentStatusAssigned:     {common.IncidentStatusInProgress, common.IncidentStatusEscalated, common.IncidentStatusClosed, common.IncidentStatusOnHold, common.IncidentStatusCancelled},
+		common.IncidentStatusInProgress:   {common.IncidentStatusResolved, common.IncidentStatusEscalated, common.IncidentStatusClosed, common.IncidentStatusOnHold, common.IncidentStatusCancelled},
+		common.IncidentStatusTriaged:      {common.IncidentStatusInProgress, common.IncidentStatusEscalated, common.IncidentStatusClosed, common.IncidentStatusOnHold, common.IncidentStatusCancelled},
+		common.IncidentStatusEscalated:    {common.IncidentStatusInProgress, common.IncidentStatusClosed, common.IncidentStatusOnHold, common.IncidentStatusCancelled},
+		common.IncidentStatusOnHold:       {common.IncidentStatusInProgress, common.IncidentStatusClosed, common.IncidentStatusCancelled},
+		common.IncidentStatusResolved:     {common.IncidentStatusClosed, common.IncidentStatusInProgress, common.IncidentStatusCancelled}, // 重新打开
+		common.IncidentStatusClosed:       {}, // 已关闭不允许转换
+		common.IncidentStatusCancelled:    {}, // 已取消不允许转换
 	}
 
 	allowed, ok := validTransitions[currentStatus]
@@ -1121,6 +1125,19 @@ func (s *IncidentService) toIncidentMetricResponse(metric *ent.IncidentMetric) *
 
 // AcknowledgeIncident 流转事件状态到 acknowledged
 func (s *IncidentService) AcknowledgeIncident(ctx context.Context, id, userID, tenantID int) error {
+	// 获取当前事件状态进行验证
+	incident, err := s.client.Incident.Query().
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+	
+	// 验证状态转换是否合法
+	if !isValidIncidentStatusTransition(incident.Status, common.IncidentStatusAcknowledged) {
+		return fmt.Errorf("invalid status transition from '%s' to '%s'", incident.Status, common.IncidentStatusAcknowledged)
+	}
+	
 	now := time.Now()
 	return s.client.Incident.UpdateOneID(id).
 		SetStatus(common.IncidentStatusAcknowledged).
@@ -1130,6 +1147,19 @@ func (s *IncidentService) AcknowledgeIncident(ctx context.Context, id, userID, t
 
 // ResolveIncident 流转事件状态到 resolved
 func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenantID int, resolution, rootCause string) error {
+	// 获取当前事件状态进行验证
+	incident, err := s.client.Incident.Query().
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+	
+	// 验证状态转换是否合法
+	if !isValidIncidentStatusTransition(incident.Status, common.IncidentStatusResolved) {
+		return fmt.Errorf("invalid status transition from '%s' to '%s'", incident.Status, common.IncidentStatusResolved)
+	}
+	
 	now := time.Now()
 	return s.client.Incident.UpdateOneID(id).
 		SetStatus(common.IncidentStatusResolved).
@@ -1139,6 +1169,19 @@ func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenan
 
 // CloseIncident 流转事件状态到 closed
 func (s *IncidentService) CloseIncident(ctx context.Context, id, userID, tenantID int, closeNotes string) error {
+	// 获取当前事件状态进行验证
+	incident, err := s.client.Incident.Query().
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+	
+	// 验证状态转换是否合法
+	if !isValidIncidentStatusTransition(incident.Status, common.IncidentStatusClosed) {
+		return fmt.Errorf("invalid status transition from '%s' to '%s'", incident.Status, common.IncidentStatusClosed)
+	}
+	
 	now := time.Now()
 	return s.client.Incident.UpdateOneID(id).
 		SetStatus(common.IncidentStatusClosed).

@@ -65,7 +65,7 @@ type CreateIncidentRequest struct {
 type UpdateIncidentRequest struct {
 	Title           *string                `json:"title,omitempty"`
 	Description     *string                `json:"description,omitempty"`
-	Status          *string                `json:"status,omitempty" binding:"omitempty,oneof=new assigned in_progress on_hold resolved closed cancelled"`
+	Status          *string                `json:"status,omitempty" binding:"omitempty,oneof=new assigned in_progress on_hold resolved closed cancelled acknowledged triaged escalated"`
 	Priority        *string                `json:"priority,omitempty" binding:"omitempty,oneof=low medium high critical"`
 	Severity        *string                `json:"severity,omitempty" binding:"omitempty,oneof=low medium high critical"`
 	Impact          *string                `json:"impact,omitempty" binding:"omitempty,oneof=low medium high critical"`
