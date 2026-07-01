@@ -1302,6 +1302,18 @@ func (s *bpmnProcessDefinitionService) DeleteProcessDefinition(ctx context.Conte
 		return err
 	}
 
+	// 检查是否有运行中的实例
+	runningCount, err := s.client.ProcessInstance.
+		Query().
+		Where(processinstance.ProcessDefinitionID(definition.ID)).
+		Count(ctx)
+	if err != nil {
+		return fmt.Errorf("检查流程实例失败: %w", err)
+	}
+	if runningCount > 0 {
+		return fmt.Errorf("该流程定义有 %d 个运行中的实例，请先关闭后再删除", runningCount)
+	}
+
 	return s.client.ProcessDefinition.DeleteOne(definition).Exec(ctx)
 }
 
