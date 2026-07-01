@@ -844,6 +844,7 @@ func (s *TicketService) GetTicketStats(ctx context.Context, tenantID int) (*dto.
 		Open:         statusCounts[ticket.StatusNew] + statusCounts[ticket.StatusOpen],
 		InProgress:   statusCounts[ticket.StatusInProgress],
 		Resolved:     statusCounts[ticket.StatusResolved],
+		Pending:      statusCounts[ticket.StatusPending],
 		HighPriority: 0, // 需要单独查询
 		Overdue:      len(overdue),
 	}, nil

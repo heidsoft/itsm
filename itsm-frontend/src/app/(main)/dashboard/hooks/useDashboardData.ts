@@ -41,9 +41,7 @@ export function useDashboardData() {
             case 'total-tickets':
               return { ...metric, value: stats.total, description: '实时工单总数' };
             case 'pending-tickets':
-              // 使用 open + inProgress 作为待处理工单数（后端 stats 无 pending 字段）
-              const pendingCount = (stats.open || 0) + (stats.inProgress || 0);
-              return { ...metric, value: pendingCount, description: '实时待处理' };
+              return { ...metric, value: stats.pending || 0, description: '实时待处理' };
             case 'in-progress-tickets':
               return { ...metric, value: stats.inProgress || 0, description: '实时处理中' };
             case 'completed-tickets':

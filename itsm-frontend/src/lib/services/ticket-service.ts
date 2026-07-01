@@ -111,6 +111,7 @@ export interface TicketStatsResponse {
   open: number;
   inProgress: number;
   resolved: number;
+  pending: number;
   highPriority: number;
   overdue: number;
 }
@@ -208,6 +209,7 @@ class TicketService {
       in_progress?: number;
       inProgress?: number;
       resolved?: number;
+      pending?: number;
       high_priority?: number;
       highPriority?: number;
       overdue?: number;
@@ -218,6 +220,7 @@ class TicketService {
       open: response.open ?? 0,
       inProgress: response.inProgress ?? response.in_progress ?? 0,
       resolved: response.resolved ?? 0,
+      pending: response.pending ?? 0,
       highPriority: response.highPriority ?? response.high_priority ?? 0,
       overdue: response.overdue ?? 0,
     };

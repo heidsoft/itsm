@@ -113,6 +113,7 @@ type TicketStatsResponse struct {
 	Open         int `json:"open"`
 	InProgress   int `json:"inProgress"`
 	Resolved     int `json:"resolved"`
+	Pending      int `json:"pending"`
 	HighPriority int `json:"highPriority"`
 	Overdue      int `json:"overdue"`
 }
