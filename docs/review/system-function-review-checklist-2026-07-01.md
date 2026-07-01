@@ -4,15 +4,16 @@
 **范围**: 后端、前端、API 契约、角色闭环、测试与工程治理  
 **目标**: 将当前“功能面已铺开”的系统，收敛为可验收、可回归、可发布的企业级 ITSM 版本。  
 **状态说明**: `[ ]` 待处理，`[~]` 进行中，`[x]` 已完成，`[!]` 阻塞或需决策。
+**最近执行**: 2026-07-01 21:48 CST，结果见 `docs/review/system-function-review-result-2026-07-01.md`。
 
 ---
 
 ## 0. 执行原则
 
-- [ ] 每个 review 项必须留下证据：代码路径、测试命令、测试报告、截图或 API 响应样例。
-- [ ] 只把“真实跑通”的能力标为完成，不能仅凭存在页面、路由或 schema 判定完成。
-- [ ] 前后端契约以实际后端路由和 DTO 为准，前端 API client 必须显式对齐。
-- [ ] 涉及已有未提交变更时，先确认变更归属，不覆盖用户工作区修改。
+- [x] 每个 review 项必须留下证据：代码路径、测试命令、测试报告、截图或 API 响应样例。
+- [x] 只把“真实跑通”的能力标为完成，不能仅凭存在页面、路由或 schema 判定完成。
+- [x] 前后端契约以实际后端路由和 DTO 为准，前端 API client 必须显式对齐。
+- [x] 涉及已有未提交变更时，先确认变更归属，不覆盖用户工作区修改。
 - [ ] 所有新增或修改的业务逻辑必须配套最小回归测试。
 - [ ] P0/P1 修复完成后，必须更新本 checklist 和对应测试报告。
 
@@ -22,61 +23,67 @@
 
 ### P0-1 工作区与基线确认
 
-- [ ] 记录当前分支、commit、未提交文件。
+- [x] 记录当前分支、commit、未提交文件。
   - 命令: `git status --short && git rev-parse --abbrev-ref HEAD && git rev-parse --short HEAD`
   - 当前已知未提交文件:
     - `itsm-backend/router/cmdb_routes.go`
     - `itsm-backend/router/router.go`
     - `itsm-frontend/src/lib/api/incident-api.ts`
-- [ ] 确认上述未提交变更是否属于本轮 review 范围。
-- [ ] 生成本轮 review 工作记录文档或 issue 列表。
+- [!] 确认上述未提交变更是否属于本轮 review 范围。
+  - 备注: 已记录，尚未由 owner 确认归属。
+- [x] 生成本轮 review 工作记录文档或 issue 列表。
+  - 结果: `docs/review/system-function-review-result-2026-07-01.md`
 
 ### P0-2 后端基础验证
 
-- [ ] 后端编译通过。
+- [x] 后端编译通过。
   - 命令: `cd itsm-backend && go build ./...`
   - 验收: 0 编译错误。
-- [ ] 后端测试通过。
+- [!] 后端测试通过。
   - 命令: `cd itsm-backend && go test ./...`
   - 验收: 0 failed package；如因本地缓存或外部依赖失败，记录失败包与原因。
-- [ ] 后端格式和静态检查通过。
+- [!] 后端格式和静态检查通过。
   - 命令: `cd itsm-backend && go vet ./...`
   - 可选: `gofumpt -l .`
-- [ ] 生成后端覆盖率基线。
+  - 备注: `go vet ./...` 通过；本机未安装 `gofumpt`。
+- [!] 生成后端覆盖率基线。
   - 命令: `cd itsm-backend && go test ./... -coverprofile=coverage.out`
   - 验收: 记录 total coverage，并标注低覆盖包。
+  - 备注: `go test ./...` 已失败，覆盖率基线暂缓生成。
 
 ### P0-3 前端基础验证
 
-- [ ] 前端依赖安装状态确认。
+- [x] 前端依赖安装状态确认。
   - 命令: `cd itsm-frontend && npm ci`
-- [ ] TypeScript 类型检查通过。
+- [x] TypeScript 类型检查通过。
   - 命令: `cd itsm-frontend && npm run type-check`
-- [ ] 前端生产构建通过。
+- [x] 前端生产构建通过。
   - 命令: `cd itsm-frontend && npm run build`
-- [ ] 前端单测通过。
+- [!] 前端单测通过。
   - 命令: `cd itsm-frontend && npm test -- --runInBand`
   - 如项目脚本不同，以 `package.json` 为准记录实际命令。
+  - 备注: 36 suites / 544 tests 通过，但 Jest 未退出，手动中断。
 
 ### P0-4 历史问题复测
 
 历史报告: `output/itsm-system-test-report.md`
 
-- [ ] 复测登录成功后前端是否正确保存 token 并跳转主界面。
+- [!] 复测登录成功后前端是否正确保存 token 并跳转主界面。
   - 页面: `/login`
   - 账号: `admin / admin123` 或 seed 中有效管理员账号。
-- [ ] 复测 CMDB API 是否仍有 404。
+- [!] 复测 CMDB API 是否仍有 404。
   - 重点路径: `/api/v1/cmdb/*`、`/api/v1/configuration-items`、前端 CMDB API client 使用路径。
-- [ ] 复测服务目录 API 是否仍有 404。
+- [!] 复测服务目录 API 是否仍有 404。
   - 重点路径: `/api/v1/service-catalog`、`/api/v1/service-catalog/services`、`/api/v1/service-requests`。
-- [ ] 复测 SLA API 是否仍有 404。
+- [!] 复测 SLA API 是否仍有 404。
   - 重点路径: `/api/v1/sla/*`、`/api/v1/sla-templates/*`。
-- [ ] 复测 BPMN API 是否仍有 404。
+- [!] 复测 BPMN API 是否仍有 404。
   - 重点路径: `/api/v1/bpmn/*`、流程定义、流程实例、任务完成接口。
-- [ ] 复测工单 workflow 操作路径。
+- [!] 复测工单 workflow 操作路径。
   - 重点路径: `/api/v1/tickets/workflow/*` 与 `/api/v1/tickets/:id/workflow/*` 是否存在历史兼容问题。
-- [ ] 产出复测结果表。
+- [x] 产出复测结果表。
   - 输出建议: `docs/review/system-function-review-result-2026-07-01.md`
+  - 备注: 当前缺少 Postgres/Docker 环境，运行时复测阻塞，已在结果表记录。
 
 ---
 
@@ -84,11 +91,12 @@
 
 ### P1-1 契约清单建设
 
-- [ ] 从后端路由生成核心 API 清单。
+- [~] 从后端路由生成核心 API 清单。
   - 来源: `itsm-backend/router/router.go`、`itsm-backend/router/cmdb_routes.go`、controller 内注册函数。
-- [ ] 从前端 API client 生成调用清单。
+- [~] 从前端 API client 生成调用清单。
   - 来源: `itsm-frontend/src/lib/api/*.ts`
-- [ ] 对比后端路由、前端 client、页面实际调用是否一致。
+- [~] 对比后端路由、前端 client、页面实际调用是否一致。
+  - 备注: 已完成静态初筛，仍需运行时确认。
 - [ ] 建立 API 契约矩阵。
   - 字段: 模块、前端页面、前端 client 方法、HTTP method、后端路由、DTO、权限、测试覆盖、状态。
 

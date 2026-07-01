@@ -349,11 +349,13 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			{
 				categories.GET("", config.TicketCategoryController.ListCategories)
 				categories.POST("", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryController.CreateCategory)
+				categories.GET("/tree", config.TicketCategoryController.GetCategoryTree)
+				categories.POST("/import/preview", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryController.PreviewImport)
+				categories.POST("/import", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryController.ExecuteImport)
 				categories.GET("/:id", config.TicketCategoryController.GetCategory)
 				categories.PUT("/:id", middleware.RequirePermission("ticket_category", "update"), config.TicketCategoryController.UpdateCategory)
 				categories.PUT("/:id/move", middleware.RequirePermission("ticket_category", "update"), config.TicketCategoryController.MoveCategory)
 				categories.DELETE("/:id", middleware.RequirePermission("ticket_category", "delete"), config.TicketCategoryController.DeleteCategory)
-				categories.GET("/tree", config.TicketCategoryController.GetCategoryTree)
 			}
 		}
 
@@ -461,6 +463,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.POST("/workflow/reject", config.TicketWorkflowController.RejectTicket)
 				tickets.POST("/workflow/withdraw", config.TicketWorkflowController.WithdrawTicket)
 				tickets.POST("/workflow/forward", config.TicketWorkflowController.ForwardTicket)
+				tickets.POST("/workflow/cc", config.TicketWorkflowController.CCTicket)
 				tickets.POST("/workflow/approve", config.TicketWorkflowController.ApproveTicket)
 				tickets.POST("/workflow/resolve", config.TicketWorkflowController.ResolveTicket)
 				tickets.POST("/workflow/close", config.TicketWorkflowController.CloseTicket)
@@ -494,6 +497,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.POST("/:id/rating", config.TicketRatingController.SubmitRating)
 				tickets.GET("/:id/rating", config.TicketRatingController.GetRating)
 				tickets.GET("/rating-stats", config.TicketRatingController.GetRatingStats)
+			}
+
+			if config.TicketTagController != nil {
+				tickets.POST("/:id/tags", middleware.RequirePermission("ticket_tag", "create"), config.TicketTagController.AssignTagsToTicket)
+				tickets.DELETE("/:id/tags", middleware.RequirePermission("ticket_tag", "delete"), config.TicketTagController.RemoveTagsFromTicket)
 			}
 
 			// 工单模板

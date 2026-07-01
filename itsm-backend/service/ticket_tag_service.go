@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
@@ -18,6 +19,70 @@ type TicketTagService struct {
 // NewTicketTagService 创建工单标签服务实例
 func NewTicketTagService(client *ent.Client) *TicketTagService {
 	return &TicketTagService{client: client}
+}
+
+// ResolveTagIDsByNames resolves tenant-scoped tag names to IDs. When createMissing
+// is true, missing names are created as active tags so existing frontend flows that
+// submit tag labels can work without a separate tag dictionary setup step.
+func (s *TicketTagService) ResolveTagIDsByNames(ctx context.Context, names []string, tenantID int, createMissing bool) ([]int, error) {
+	uniqueNames := make([]string, 0, len(names))
+	seenNames := make(map[string]struct{}, len(names))
+	for _, name := range names {
+		normalized := strings.TrimSpace(name)
+		if normalized == "" {
+			continue
+		}
+		if _, ok := seenNames[normalized]; ok {
+			continue
+		}
+		seenNames[normalized] = struct{}{}
+		uniqueNames = append(uniqueNames, normalized)
+	}
+	if len(uniqueNames) == 0 {
+		return nil, errors.New("标签不能为空")
+	}
+
+	existingTags, err := s.client.TicketTag.Query().
+		Where(
+			tickettag.NameIn(uniqueNames...),
+			tickettag.TenantID(tenantID),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]int, 0, len(uniqueNames))
+	found := make(map[string]int, len(existingTags))
+	for _, tag := range existingTags {
+		found[tag.Name] = tag.ID
+		ids = append(ids, tag.ID)
+	}
+
+	missing := make([]string, 0)
+	for _, name := range uniqueNames {
+		if _, ok := found[name]; !ok {
+			missing = append(missing, name)
+		}
+	}
+	if len(missing) > 0 && !createMissing {
+		return nil, errors.New("部分标签不存在")
+	}
+
+	for _, name := range missing {
+		tag, err := s.client.TicketTag.Create().
+			SetName(name).
+			SetColor("#1890ff").
+			SetIsActive(true).
+			SetTenantID(tenantID).
+			Save(ctx)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, tag.ID)
+	}
+
+	return ids, nil
 }
 
 // CreateTag 创建工单标签

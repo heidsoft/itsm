@@ -53,6 +53,10 @@ func SetupTicketRoutes(
 		tickets.POST("/:id/resolve", middleware.RequirePermission("ticket", "resolve"), ticketController.ResolveTicket)
 		tickets.POST("/:id/close", middleware.RequirePermission("ticket", "close"), ticketController.CloseTicket)
 
+		// 工单标签关联
+		tickets.POST("/:id/tags", middleware.RequirePermission("ticket_tag", "create"), ticketTagController.AssignTagsToTicket)
+		tickets.DELETE("/:id/tags", middleware.RequirePermission("ticket_tag", "delete"), ticketTagController.RemoveTagsFromTicket)
+
 		// 查询和搜索
 		tickets.GET("/search", middleware.RequirePermission("ticket", "read"), ticketController.SearchTickets)
 		tickets.GET("/overdue", middleware.RequirePermission("ticket", "read"), ticketController.GetOverdueTickets)
@@ -109,6 +113,9 @@ func SetupTicketRoutes(
 	{
 		categories.GET("", ticketCategoryController.ListCategories)
 		categories.POST("", middleware.RequirePermission("ticket_category", "create"), ticketCategoryController.CreateCategory)
+		categories.GET("/tree", ticketCategoryController.GetCategoryTree)
+		categories.POST("/import/preview", middleware.RequirePermission("ticket_category", "create"), ticketCategoryController.PreviewImport)
+		categories.POST("/import", middleware.RequirePermission("ticket_category", "create"), ticketCategoryController.ExecuteImport)
 		categories.GET("/:id", ticketCategoryController.GetCategory)
 		categories.PUT("/:id", middleware.RequirePermission("ticket_category", "update"), ticketCategoryController.UpdateCategory)
 		categories.PUT("/:id/move", middleware.RequirePermission("ticket_category", "update"), ticketCategoryController.MoveCategory)

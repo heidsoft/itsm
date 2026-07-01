@@ -167,14 +167,15 @@ func (ttc *TicketTagController) ListTags(c *gin.Context) {
 
 // AssignTagsToTicket 为工单分配标签
 func (ttc *TicketTagController) AssignTagsToTicket(c *gin.Context) {
-	ticketID, err := strconv.Atoi(c.Param("ticketId"))
+	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
 		return
 	}
 
 	var req struct {
-		TagIDs []int `json:"tag_ids" binding:"required"`
+		TagIDs []int    `json:"tag_ids"`
+		Tags   []string `json:"tags"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -187,7 +188,20 @@ func (ttc *TicketTagController) AssignTagsToTicket(c *gin.Context) {
 		return
 	}
 
-	err = ttc.tagService.AssignTagsToTicket(c.Request.Context(), ticketID, req.TagIDs, tenantID)
+	tagIDs := req.TagIDs
+	if len(tagIDs) == 0 && len(req.Tags) > 0 {
+		tagIDs, err = ttc.tagService.ResolveTagIDsByNames(c.Request.Context(), req.Tags, tenantID, true)
+		if err != nil {
+			common.Fail(c, common.ParamErrorCode, err.Error())
+			return
+		}
+	}
+	if len(tagIDs) == 0 {
+		common.Fail(c, common.ParamErrorCode, "tag_ids 或 tags 必填")
+		return
+	}
+
+	err = ttc.tagService.AssignTagsToTicket(c.Request.Context(), ticketID, tagIDs, tenantID)
 	if err != nil {
 		ttc.logger.Error("Failed to assign tags to ticket", zap.Error(err), zap.Int("ticket_id", ticketID))
 		common.Fail(c, common.InternalErrorCode, err.Error())
@@ -199,14 +213,15 @@ func (ttc *TicketTagController) AssignTagsToTicket(c *gin.Context) {
 
 // RemoveTagsFromTicket 从工单移除标签
 func (ttc *TicketTagController) RemoveTagsFromTicket(c *gin.Context) {
-	ticketID, err := strconv.Atoi(c.Param("ticketId"))
+	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
 		return
 	}
 
 	var req struct {
-		TagIDs []int `json:"tag_ids" binding:"required"`
+		TagIDs []int    `json:"tag_ids"`
+		Tags   []string `json:"tags"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -219,7 +234,20 @@ func (ttc *TicketTagController) RemoveTagsFromTicket(c *gin.Context) {
 		return
 	}
 
-	err = ttc.tagService.RemoveTagsFromTicket(c.Request.Context(), ticketID, req.TagIDs, tenantID)
+	tagIDs := req.TagIDs
+	if len(tagIDs) == 0 && len(req.Tags) > 0 {
+		tagIDs, err = ttc.tagService.ResolveTagIDsByNames(c.Request.Context(), req.Tags, tenantID, false)
+		if err != nil {
+			common.Fail(c, common.ParamErrorCode, err.Error())
+			return
+		}
+	}
+	if len(tagIDs) == 0 {
+		common.Fail(c, common.ParamErrorCode, "tag_ids 或 tags 必填")
+		return
+	}
+
+	err = ttc.tagService.RemoveTagsFromTicket(c.Request.Context(), ticketID, tagIDs, tenantID)
 	if err != nil {
 		ttc.logger.Error("Failed to remove tags from ticket", zap.Error(err), zap.Int("ticket_id", ticketID))
 		common.Fail(c, common.InternalErrorCode, err.Error())

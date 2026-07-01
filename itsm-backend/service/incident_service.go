@@ -63,18 +63,26 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 		detectedAt = *req.DetectedAt
 	}
 
+	impact := req.Impact
+	if impact == "" {
+		impact = "medium"
+	}
+	urgency := req.Urgency
+	if urgency == "" {
+		urgency = "medium"
+	}
+	severity := req.Severity
+	if severity == "" {
+		severity = "medium"
+	}
+	source := req.Source
+	if source == "" {
+		source = "manual"
+	}
+
 	// 计算优先级
 	priority := req.Priority
 	if priority == "" && s.priorityMatrixService != nil {
-		impact := req.Impact
-		if impact == "" {
-			impact = "medium"
-		}
-		urgency := req.Urgency
-		if urgency == "" {
-			urgency = "medium"
-		}
-		
 		calculatedPriority, err := s.priorityMatrixService.CalculatePriority(tenantID, impact, urgency)
 		if err != nil {
 			s.logger.Warnw("Failed to calculate priority, using default medium", "error", err)
@@ -83,7 +91,7 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 			priority = calculatedPriority
 		}
 	}
-	
+
 	// 如果最终priority还是空，使用默认值
 	if priority == "" {
 		priority = "medium"
@@ -94,15 +102,15 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 		SetDescription(req.Description).
 		SetStatus("new").
 		SetPriority(priority).
-		SetSeverity(req.Severity).
-		SetImpact(req.Impact).
-		SetUrgency(req.Urgency).
+		SetSeverity(severity).
+		SetImpact(impact).
+		SetUrgency(urgency).
 		SetIncidentNumber(incidentNumber).
 		SetReporterID(userID).
 		SetCategory(req.Category).
 		SetSubcategory(req.Subcategory).
 		SetImpactAnalysis(dto.StructToMap(req.ImpactAnalysis)).
-		SetSource(req.Source).
+		SetSource(source).
 		SetMetadata(req.Metadata).
 		SetDetectedAt(detectedAt).
 		SetIsAutomated(false).
@@ -291,13 +299,13 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 		if req.Impact != nil {
 			impact = *req.Impact
 		}
-		
+
 		// 使用新的Urgency或现有Urgency
 		urgency := currentIncident.Urgency
 		if req.Urgency != nil {
 			urgency = *req.Urgency
 		}
-		
+
 		calculatedPriority, err := s.priorityMatrixService.CalculatePriority(tenantID, impact, urgency)
 		if err != nil {
 			s.logger.Warnw("Failed to calculate priority during update, keeping current value", "error", err)
@@ -1033,8 +1041,8 @@ func isValidIncidentStatusTransition(currentStatus, newStatus string) bool {
 		common.IncidentStatusEscalated:    {common.IncidentStatusInProgress, common.IncidentStatusClosed, common.IncidentStatusOnHold, common.IncidentStatusCancelled},
 		common.IncidentStatusOnHold:       {common.IncidentStatusInProgress, common.IncidentStatusClosed, common.IncidentStatusCancelled},
 		common.IncidentStatusResolved:     {common.IncidentStatusClosed, common.IncidentStatusInProgress, common.IncidentStatusCancelled}, // 重新打开
-		common.IncidentStatusClosed:       {}, // 已关闭不允许转换
-		common.IncidentStatusCancelled:    {}, // 已取消不允许转换
+		common.IncidentStatusClosed:       {},                                                                                             // 已关闭不允许转换
+		common.IncidentStatusCancelled:    {},                                                                                             // 已取消不允许转换
 	}
 
 	allowed, ok := validTransitions[currentStatus]
@@ -1174,12 +1182,12 @@ func (s *IncidentService) AcknowledgeIncident(ctx context.Context, id, userID, t
 	if err != nil {
 		return err
 	}
-	
+
 	// 验证状态转换是否合法
 	if !isValidIncidentStatusTransition(incident.Status, common.IncidentStatusAcknowledged) {
 		return fmt.Errorf("invalid status transition from '%s' to '%s'", incident.Status, common.IncidentStatusAcknowledged)
 	}
-	
+
 	now := time.Now()
 	return s.client.Incident.UpdateOneID(id).
 		SetStatus(common.IncidentStatusAcknowledged).
@@ -1196,12 +1204,12 @@ func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenan
 	if err != nil {
 		return err
 	}
-	
+
 	// 验证状态转换是否合法
 	if !isValidIncidentStatusTransition(incident.Status, common.IncidentStatusResolved) {
 		return fmt.Errorf("invalid status transition from '%s' to '%s'", incident.Status, common.IncidentStatusResolved)
 	}
-	
+
 	now := time.Now()
 	return s.client.Incident.UpdateOneID(id).
 		SetStatus(common.IncidentStatusResolved).
@@ -1218,12 +1226,12 @@ func (s *IncidentService) CloseIncident(ctx context.Context, id, userID, tenantI
 	if err != nil {
 		return err
 	}
-	
+
 	// 验证状态转换是否合法
 	if !isValidIncidentStatusTransition(incident.Status, common.IncidentStatusClosed) {
 		return fmt.Errorf("invalid status transition from '%s' to '%s'", incident.Status, common.IncidentStatusClosed)
 	}
-	
+
 	now := time.Now()
 	return s.client.Incident.UpdateOneID(id).
 		SetStatus(common.IncidentStatusClosed).
