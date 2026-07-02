@@ -4,7 +4,7 @@
 **范围**: 后端、前端、API 契约、角色闭环、测试与工程治理  
 **目标**: 将当前“功能面已铺开”的系统，收敛为可验收、可回归、可发布的企业级 ITSM 版本。  
 **状态说明**: `[ ]` 待处理，`[~]` 进行中，`[x]` 已完成，`[!]` 阻塞或需决策。
-**最近执行**: 2026-07-01 21:48 CST，结果见 `docs/review/system-function-review-result-2026-07-01.md`。
+**最近执行**: 2026-07-02，后端 P0 基线与运行时 API smoke 补修完成，结果见 `docs/review/system-function-review-result-2026-07-01.md`。
 
 ---
 
@@ -14,8 +14,10 @@
 - [x] 只把“真实跑通”的能力标为完成，不能仅凭存在页面、路由或 schema 判定完成。
 - [x] 前后端契约以实际后端路由和 DTO 为准，前端 API client 必须显式对齐。
 - [x] 涉及已有未提交变更时，先确认变更归属，不覆盖用户工作区修改。
-- [ ] 所有新增或修改的业务逻辑必须配套最小回归测试。
-- [ ] P0/P1 修复完成后，必须更新本 checklist 和对应测试报告。
+- [x] 所有新增或修改的业务逻辑必须配套最小回归测试。
+  - 备注: 2026-07-02 本轮改动已通过对应 controller/service 定向测试和后端全量测试。
+- [x] P0/P1 修复完成后，必须更新本 checklist 和对应测试报告。
+  - 备注: 2026-07-02 已更新本 checklist 和 `docs/review/system-function-review-result-2026-07-01.md`。
 
 ---
 
@@ -39,17 +41,17 @@
 - [x] 后端编译通过。
   - 命令: `cd itsm-backend && go build ./...`
   - 验收: 0 编译错误。
-- [!] 后端测试通过。
+- [x] 后端测试通过。
   - 命令: `cd itsm-backend && go test ./...`
   - 验收: 0 failed package；如因本地缓存或外部依赖失败，记录失败包与原因。
-- [!] 后端格式和静态检查通过。
+- [x] 后端格式和静态检查通过。
   - 命令: `cd itsm-backend && go vet ./...`
   - 可选: `gofumpt -l .`
-  - 备注: `go vet ./...` 通过；本机未安装 `gofumpt`。
-- [!] 生成后端覆盖率基线。
+  - 备注: `go vet ./...` 通过；涉及文件已执行 `gofmt`；本机未安装 `gofumpt`。
+- [x] 生成后端覆盖率基线。
   - 命令: `cd itsm-backend && go test ./... -coverprofile=coverage.out`
   - 验收: 记录 total coverage，并标注低覆盖包。
-  - 备注: `go test ./...` 已失败，覆盖率基线暂缓生成。
+  - 备注: 2026-07-02 已生成；`go tool cover -func=coverage.out` total 1.3%。低覆盖重点仍是 controller/service/workflow/generated 周边包，需进入覆盖率补齐 sprint。
 
 ### P0-3 前端基础验证
 
@@ -68,22 +70,28 @@
 
 历史报告: `output/itsm-system-test-report.md`
 
-- [!] 复测登录成功后前端是否正确保存 token 并跳转主界面。
+- [~] 复测登录成功后前端是否正确保存 token 并跳转主界面。
   - 页面: `/login`
   - 账号: `admin / admin123` 或 seed 中有效管理员账号。
-- [!] 复测 CMDB API 是否仍有 404。
+- 备注: 后端 `POST /api/v1/auth/login` 已通过并返回 access token；前端浏览器跳转待测。
+- [x] 复测 CMDB API 是否仍有 404。
   - 重点路径: `/api/v1/cmdb/*`、`/api/v1/configuration-items`、前端 CMDB API client 使用路径。
-- [!] 复测服务目录 API 是否仍有 404。
+- 备注: `/api/v1/cmdb/cis`、`/api/v1/cmdb/ci-types`、`/api/v1/cmdb/relationships`、`/api/v1/configuration-items` 均 HTTP 200。
+- [x] 复测服务目录 API 是否仍有 404。
   - 重点路径: `/api/v1/service-catalog`、`/api/v1/service-catalog/services`、`/api/v1/service-requests`。
-- [!] 复测 SLA API 是否仍有 404。
+- 备注: `/api/v1/service-catalogs`、`/api/v1/service-catalog`、`/api/v1/service-requests`、`/api/v1/service-requests/me`、`/api/v1/service-requests/approvals/pending` 均 HTTP 200。
+- [x] 复测 SLA API 是否仍有 404。
   - 重点路径: `/api/v1/sla/*`、`/api/v1/sla-templates/*`。
-- [!] 复测 BPMN API 是否仍有 404。
+- 备注: `/api/v1/sla/definitions`、`/api/v1/sla/templates`、`/api/v1/sla/policies`、`/api/v1/sla` 均 HTTP 200。
+- [x] 复测 BPMN API 是否仍有 404。
   - 重点路径: `/api/v1/bpmn/*`、流程定义、流程实例、任务完成接口。
-- [!] 复测工单 workflow 操作路径。
+- 备注: `/api/v1/bpmn/process-definitions`、`/api/v1/bpmn/process-instances`、`/api/v1/bpmn/tasks` 均 HTTP 200。
+- [x] 复测工单 workflow 操作路径。
   - 重点路径: `/api/v1/tickets/workflow/*` 与 `/api/v1/tickets/:id/workflow/*` 是否存在历史兼容问题。
+  - 备注: 新建真实工单后，`POST /api/v1/tickets/workflow/cc` 和 `GET /api/v1/tickets/:id/workflow/state` 均 HTTP 200。
 - [x] 产出复测结果表。
   - 输出建议: `docs/review/system-function-review-result-2026-07-01.md`
-  - 备注: 当前缺少 Postgres/Docker 环境，运行时复测阻塞，已在结果表记录。
+  - 备注: 2026-07-02 已恢复 Docker dev 环境，17 项 `docs/scripts/smoke-api.sh` 全部通过，并补充历史 404 风险路径复测结果。
 
 ---
 

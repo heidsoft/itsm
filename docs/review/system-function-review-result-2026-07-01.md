@@ -4,7 +4,9 @@
 **执行范围**: P0 基线验收、P0 历史问题复测准备、P1 API 契约静态初筛  
 **分支**: `main`  
 **HEAD**: `720e892a`  
-**结论**: 基础编译和前端构建通过，但后端全量测试存在 P0 阻塞；当前本机缺少 Postgres/Docker 环境，无法完成运行时 API 复测。
+**结论**: 基础编译、后端全量测试、静态检查、前端构建和后端运行时 API smoke 均通过；前端浏览器层登录跳转仍待单独复测。
+
+**P0 后端基线补修**: 2026-07-02 已修复后端全量测试阻塞。修复内容包括：用户创建接口恢复密码必填校验；analytics 维度值测试使用真实 assignee 用户满足外键约束；ticket lifecycle 取消工作流测试使用真实 requester 用户满足外键约束。验证命令：`cd itsm-backend && go test ./...`、`cd itsm-backend && go vet ./...`、`cd itsm-backend && go test ./... -coverprofile=coverage.out`，均通过；`go tool cover -func=coverage.out` 统计总覆盖率为 1.3%。
 
 **业务可用性补修**: 2026-07-01 至 2026-07-02 后续按“业务优先、测试后补”原则，已修复事件创建默认值、工单标签关联路由/payload 兼容、工单分类导入路由与基础导入能力，补齐 dashboard 配置/布局/部件/统计等前端兼容端点，修复工单模板管理与智能分派入口的后端契约，并补齐服务目录申请/取消/完成的字段与状态兼容。
 
@@ -43,10 +45,12 @@ git status --short
 | 后端编译 | `cd itsm-backend && go build ./...` | 通过 | 退出码 0 |
 | 静态检查 | `cd itsm-backend && go vet ./...` | 通过 | 退出码 0 |
 | 格式检查工具 | `gofumpt -l .` | 未执行 | 本机未安装 `gofumpt` |
-| 后端全量测试 | `cd itsm-backend && go test ./...` | 失败 | `itsm-backend/service` 包失败 |
-| 覆盖率基线 | `go test ./... -coverprofile=coverage.out` | 未执行 | 全量测试已失败，覆盖率结果不可信 |
+| 后端全量测试 | `cd itsm-backend && go test ./...` | 通过 | 2026-07-02 复测通过，退出码 0 |
+| 覆盖率基线 | `go test ./... -coverprofile=coverage.out` | 通过 | `go tool cover -func=coverage.out` total 1.3% |
 
 ### 2.1 后端测试失败明细
+
+2026-07-02 复测结论：以下失败项已修复，`go test ./...` 全量通过。
 
 失败包:
 
@@ -63,7 +67,7 @@ itsm-backend/service
 | `TestIncidentService_CreateIncident_WithOptionalFields` | `Incident.impact` 字段校验失败，值为空 |
 | `TestTicketLifecycleService_CancelWorkflow` | `ent: constraint failed: FOREIGN KEY constraint failed` |
 
-判断:
+原判断:
 
 - 这是当前 P0 阻塞。后端能编译，但不能作为 GA 基线测试通过。
 - `Incident.impact` 失败更像测试 fixture 或默认值与 schema validator 不一致。
@@ -74,6 +78,15 @@ itsm-backend/service
 - 优先修 `service/incident_service_test.go` 中 incident 创建 fixture，补合法 `impact` 默认值。
 - 检查 `service/analytics_service_test.go` 和 `service/ticket_lifecycle_service_test.go` 的测试数据外键依赖。
 - 修复后重跑 `cd itsm-backend && go test ./...`，再生成覆盖率基线。
+
+修复结果:
+
+| 用例 | 处理 |
+|------|------|
+| `TestUserController_CreateUser/密码为空` | `dto.CreateUserRequest.Password` 改为 `required,min=6`，空密码返回参数错误 |
+| `TestAnalyticsService_GetDimensionValue` | 测试 fixture 创建真实 assignee 用户，不再使用不存在的 `assignee_id` |
+| `TestTicketLifecycleService_CancelWorkflow` | 测试 fixture 创建真实 requester 用户，不再使用不存在的 `requester_id` |
+| `TestIncidentService_CreateIncident_*` | 当前代码已在服务层补默认 `impact/urgency/severity`，2026-07-02 全量测试未再失败 |
 
 ---
 
@@ -129,34 +142,43 @@ Jest did not exit one second after the test run has completed.
 
 | 服务 | 探测 | 结果 |
 |------|------|------|
-| 后端 8090 | `curl http://localhost:8090/api/v1/health` | 未运行 |
+| 后端 8090 | `curl http://localhost:8090/api/v1/health` | 通过，HTTP 200 |
 | 前端 3000 | `curl http://localhost:3000/login` | 未运行 |
-| Docker | `docker ps` | Docker daemon 未运行 |
-| Postgres 5432 | `nc -z localhost 5432` | 端口关闭 |
+| Docker | `docker ps` | 通过，`itsm-backend-dev` / `itsm-postgres-dev` / `itsm-redis-dev` 均 healthy |
+| Postgres 5432 | `nc -z localhost 5432` | 端口开启 |
 | Redis 6379 | `nc -z localhost 6379` | 端口开启 |
 
 结论:
 
-- 当前本机不能完成登录、CMDB、服务目录、SLA、BPMN、workflow API 的运行时复测。
-- 阻塞原因不是已确认功能失败，而是缺少可用 Postgres/Docker 全栈环境。
+- 2026-07-02 已恢复 Docker dev 后端环境，并用当前 worktree 重建 `itsm-backend-dev`。
+- `docs/scripts/smoke-api.sh` 17 项核心 API smoke 全部通过。
+- `/api/v1/readiness/ga` 返回 `ga_candidate`，12/12 modules ready。
+- 后端 API 登录、CMDB、服务目录、服务请求、SLA、BPMN、workflow、audit smoke 已完成运行时复测。
+- 前端 3000 未启动，浏览器层登录跳转仍待单独复测。
 
 待复测项:
 
 - 登录成功后前端 token/cookie 状态与跳转。
-- CMDB API 是否仍有 404。
-- 服务目录 API 是否仍有 404。
-- SLA API 是否仍有 404。
-- BPMN API 是否仍有 404。
-- 工单 workflow 操作路径是否与前端一致。
 
-建议环境恢复:
+运行时 API 复测结果:
 
-```bash
-docker compose -f docker-compose.dev.yml up -d postgres redis
-cd itsm-backend && go run -tags migrate main.go
-cd itsm-backend && go run main.go
-cd itsm-frontend && npm run dev
-```
+| 模块 | 路径 | 结果 |
+|------|------|------|
+| 登录 | `POST /api/v1/auth/login` | 通过，返回 access token |
+| Health | `GET /api/v1/health` | 通过，HTTP 200 |
+| GA readiness | `GET /api/v1/readiness/ga` | 通过，`ga_candidate` |
+| CMDB | `GET /api/v1/cmdb/cis`、`/cmdb/ci-types`、`/cmdb/relationships`、`/configuration-items` | 通过，HTTP 200 |
+| 服务目录 | `GET /api/v1/service-catalogs`、`/service-catalog` | 通过，HTTP 200 |
+| 服务请求 | `GET /api/v1/service-requests`、`/service-requests/me`、`/service-requests/approvals/pending` | 通过，HTTP 200 |
+| SLA | `GET /api/v1/sla/definitions`、`/sla/templates`、`/sla/policies`、`/sla` | 通过，HTTP 200 |
+| BPMN | `GET /api/v1/bpmn/process-definitions`、`/process-instances`、`/tasks` | 通过，HTTP 200 |
+| Workflow | `GET /api/v1/workflow/instances`、`/workflow/tasks` | 通过，HTTP 200 |
+| 工单 workflow | 新建真实工单后 `POST /api/v1/tickets/workflow/cc`、`GET /api/v1/tickets/:id/workflow/state` | 通过，HTTP 200 |
+
+本轮兼容修复:
+
+- `GET /api/v1/service-catalog` 增加只读兼容别名，复用 `/service-catalogs` 列表处理。
+- `GET /api/v1/sla` 增加只读兼容别名，复用 `/sla/definitions` 列表处理。
 
 ---
 

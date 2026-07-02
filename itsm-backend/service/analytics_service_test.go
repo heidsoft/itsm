@@ -285,6 +285,9 @@ func TestAnalyticsService_GetDimensionValue(t *testing.T) {
 	testUser, err := createAnalyticsTestUser(ctx, client, testTenant.ID, "dim")
 	require.NoError(t, err)
 
+	testAssignee, err := createAnalyticsTestUser(ctx, client, testTenant.ID, "dimassignee")
+	require.NoError(t, err)
+
 	// 创建工单
 	ticket, err := client.Ticket.Create().
 		SetTitle("Test Ticket").
@@ -295,7 +298,7 @@ func TestAnalyticsService_GetDimensionValue(t *testing.T) {
 		SetTicketNumber("TKT-DIM-001").
 		SetTenantID(testTenant.ID).
 		SetRequesterID(testUser.ID).
-		SetAssigneeID(123).
+		SetAssigneeID(testAssignee.ID).
 		Save(ctx)
 	require.NoError(t, err)
 
@@ -305,7 +308,7 @@ func TestAnalyticsService_GetDimensionValue(t *testing.T) {
 	}{
 		{"status", "open"},
 		{"priority", "high"},
-		{"assignee", "用户123"},
+		{"assignee", fmt.Sprintf("用户%d", testAssignee.ID)},
 		{"unknown", "未知"},
 	}
 

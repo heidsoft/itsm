@@ -11,8 +11,8 @@ type CreateUserRequest struct {
 	Name       string `json:"name" binding:"required,min=1,max=100"`
 	Department string `json:"department"`
 	Phone      string `json:"phone"`
-	Password string `json:"password" binding:"omitempty,min=6"`
-	TenantID int    `json:"tenant_id"`
+	Password   string `json:"password" binding:"required,min=6"`
+	TenantID   int    `json:"tenant_id"`
 	// 角色，可选；不提供时使用后端默认值（end_user）
 	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician security end_user user"`
 	// MSP角色，仅当用户属于MSP租户时使用

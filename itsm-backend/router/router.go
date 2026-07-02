@@ -814,6 +814,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Service Catalog & Requests (DDD) ====================
 		if config.ServiceCatalogHandler != nil {
+			tenant.(*gin.RouterGroup).GET("/service-catalog", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.List)
+
 			sc := tenant.(*gin.RouterGroup).Group("/service-catalogs")
 			{
 				sc.GET("", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.List)
@@ -1021,6 +1023,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		if config.SLAHandler != nil {
 			slaGrp := tenant.(*gin.RouterGroup).Group("/sla")
 			{
+				slaGrp.GET("", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListSLADefinitions)
 				// SLA Definitions
 				slaGrp.GET("/stats", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAStats)
 				slaGrp.GET("/definitions", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListSLADefinitions)

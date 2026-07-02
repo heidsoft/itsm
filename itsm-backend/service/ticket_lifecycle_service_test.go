@@ -522,6 +522,17 @@ func TestTicketLifecycleService_CancelWorkflow(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
+	testUser, err := client.User.Create().
+		SetUsername("lifecycleuser").
+		SetEmail("lifecycle@example.com").
+		SetName("Lifecycle User").
+		SetPasswordHash("hashedpassword").
+		SetRole("end_user").
+		SetActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
 	// 创建测试工单
 	testTicket, err := client.Ticket.Create().
 		SetTitle("测试工单").
@@ -530,7 +541,7 @@ func TestTicketLifecycleService_CancelWorkflow(t *testing.T) {
 		SetStatus("open").
 		SetTicketNumber("TICKET-001").
 		SetTenantID(testTenant.ID).
-		SetRequesterID(1).
+		SetRequesterID(testUser.ID).
 		Save(ctx)
 	require.NoError(t, err)
 
