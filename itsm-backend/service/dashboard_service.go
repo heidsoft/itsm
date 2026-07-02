@@ -66,7 +66,7 @@ func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID in
 		return nil, fmt.Errorf("failed to count tickets: %w", err)
 	}
 
-	// SLA违规数（未解决的）
+	// 有未解决SLA违规的工单数（distinct ticket_id，避免一个工单多个违规导致重复计算）
 	breachedTickets, err := s.client.SLAViolation.Query().
 		Where(
 			slaviolation.TenantID(tenantID),
@@ -91,9 +91,39 @@ func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID in
 		atRiskTickets = 0
 	}
 
+	var breachedTicketCount int
+
+	// 修正：SLAViolation 是独立表，一个工单可能有多条违规记录
+	// 查出有未解决违规的工单并去重
+	violations, err := s.client.SLAViolation.Query().
+		Where(
+			slaviolation.TenantID(tenantID),
+			slaviolation.ResolvedAtIsNil(),
+		).
+		All(ctx)
+	if err != nil {
+		// 查询失败时用 SLAViolation count 作为上限（确保不会负数）
+		breachedTicketCount = breachedTickets
+		if breachedTicketCount > totalTickets {
+			breachedTicketCount = totalTickets
+		}
+	} else {
+		// 用 map 对 ticket_id 去重
+		uniqueTickets := make(map[int]struct{})
+		for _, v := range violations {
+			uniqueTickets[v.TicketID] = struct{}{}
+		}
+		breachedTicketCount = len(uniqueTickets)
+	}
+
 	var complianceRate, responseCompliance, resolutionCompliance float64
 	if totalTickets > 0 {
-		complianceRate = float64(totalTickets-breachedTickets) / float64(totalTickets) * 100
+		// 合规率 = (总工单 - 有违规的工单) / 总工单
+		compliant := totalTickets - breachedTicketCount
+		if compliant < 0 {
+			compliant = 0
+		}
+		complianceRate = float64(compliant) / float64(totalTickets) * 100
 		responseCompliance = complianceRate
 		resolutionCompliance = complianceRate
 	} else {
@@ -107,7 +137,7 @@ func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID in
 		ResponseTimeCompliance:   math.Round(responseCompliance*10) / 10,
 		ResolutionTimeCompliance: math.Round(resolutionCompliance*10) / 10,
 		AtRiskTickets:            atRiskTickets,
-		BreachedTickets:          breachedTickets,
+		BreachedTickets:          breachedTicketCount,
 	}, nil
 }
 
