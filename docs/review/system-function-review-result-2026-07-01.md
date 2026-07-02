@@ -203,6 +203,22 @@ cd itsm-frontend && npm run dev
 | 服务请求取消前端直接抛“未实现” | 前端 `cancelServiceRequest` 改为调用状态更新接口，后端兼容 `cancelled` 状态 | `npm run type-check` 通过 |
 | 服务审批页使用 `pending_approval`，后端筛选状态不兼容 | 后端将 `pending_approval/pending` 归一为 `submitted`，兼容审批待办查询 | `go build ./...`、`go test ./handlers/service_request ./router` 通过 |
 | 服务申请页面提供 `restricted` 数据分级，后端 oneof 不允许 | 后端 DTO 允许 `restricted`，避免前端合法选项提交失败 | `go build ./...` 通过 |
+| 服务审批待办页复用“我的请求”接口导致语义错误 | 前端 `getServiceRequests(pending_approval)` 改为调用 `/service-requests/approvals/pending`，普通请求仍走 `/me` | `npm run type-check` 通过 |
+| 服务请求详情页读取 snake_case，后端返回 camelCase，字段显示为空 | 前端 API 适配层统一补齐 `current_level/currentLevel`、`catalog_id/catalogId`、`created_at/createdAt` 等双命名字段 | `npm run type-check` 通过 |
+| `service-request-api` 兼容详情方法错误地从列表取第一条 | `getServiceRequest(id)` 改为真实调用 `/service-requests/:id`，并统一归一化列表/详情/创建/审批响应 | `npm run type-check` 通过 |
+| 全局待办页拒绝服务请求不传原因，后端必然拒绝 | 拒绝动作补默认审批意见，保证 Popconfirm 快捷拒绝可用 | `npm run type-check` 通过 |
+| 工单分配规则管理页仍是占位降级页面 | 恢复为可用的规则列表、新增、编辑、启停、删除和测试页面，并接入 `TicketAssignmentApi` | `npm run type-check` 通过 |
+| 智能分配/分配规则前后端命名不一致 | 前端 API 适配 `assignedTo/assigned_to`、`isActive/is_active`、`executionCount/execution_count`，规则测试按后端 camelCase 入参提交 | `npm run type-check` 通过 |
+| 流程路由/部门流程页面用浏览器 `fetch('/api/v1/...')` 绕过统一 API 客户端 | 新增 `ProcessBindingApi`，页面改用统一 `httpClient`、部门/团队/流程定义服务，避免请求打到 Next 前端导致 404 或缺认证 | `npm run type-check` 通过 |
+| 流程绑定编辑缺少租户校验且不能更新业务类型 | 更新接口写入上下文租户，Service 层校验租户并支持更新 `business_type` | `go build ./...`、`go test ./controller ./router ./service -run 'TestBPMNProcessTrigger\|TestProcessBinding\|TestRouter\|TestRoute\|TestDepartment'` 通过 |
+| 配置继承页用浏览器 `fetch('/api/v1/domain-configs')` 绕过统一 API 客户端 | 新增 `DomainConfigApi`，配置列表、保存和有效配置预览统一走后端 baseURL/认证链路 | `npm run type-check` 通过 |
+| 工作流 SLA 页面用浏览器 `fetch('/api/v1/bpmn/process-definitions')` 加载流程 | 改为复用 `WorkflowApi.getWorkflows`，避免流程选择器在前端路由下请求 404 | `npm run type-check` 通过 |
+| A2UI 表单生成/提交动作直连 `/api/v1/a2ui/...` | 新增 `A2UIApi` 使用后端 baseURL 调用非标准响应接口，组件不再手写相对路径 fetch | `npm run type-check` 通过；`rg \"fetch\\('/api/v1\"` 无命中 |
+| 服务目录管理页“导出”按钮无实际动作，API `exportCatalog` 直接抛未实现 | 页面支持导出当前筛选结果为 CSV，API 兜底返回可打开的 CSV Blob | `npm run type-check` 通过 |
+| 服务目录单行启用/禁用误调用批量逻辑，未选中行时看似成功但不更新当前记录 | 单行菜单改为更新当前服务目录状态；批量状态更新同步写入目标状态 | `npm run type-check` 通过 |
+| 服务目录“复制”菜单项无动作 | 复制当前服务目录为草稿副本，并刷新列表 | `npm run type-check` 通过 |
+| 模板中心“导出”按钮无实际动作 | 支持将当前筛选模板列表导出为 CSV，包含名称、分类、状态、字段数量等配置清单 | `npm run type-check` 通过 |
+| `WorkflowApi.exportReport` / `WorkflowStatsApi.exportReport` 直接抛“报告导出未实现” | 基于工作流详情、实例统计和任务统计生成 CSV Blob 兜底；同步兼容 `httpClient` 已拆包/未拆包统计响应 | `npm run type-check` 通过；`rg "报告导出功能暂未实现"` 无命中 |
 
 ---
 
@@ -238,6 +254,23 @@ cd itsm-frontend && npm run dev
    - `/api/v1/service-catalogs`
    - `/api/v1/service-requests`
    - `/api/v1/service-requests/:id/status`
+   - `/api/v1/service-requests/approvals/pending`
+   - `/api/v1/tickets/:id/auto-assign`
+   - `/api/v1/tickets/assign-recommendations/:id`
+   - `/api/v1/tickets/assignment-rules`
+   - `/api/v1/tickets/assignment-rules/test`
+   - `/api/v1/process-bindings`
+   - `/api/v1/departments/:id/processes`
+   - `/api/v1/departments/:id/init-processes`
+   - `/api/v1/domain-configs`
+   - `/api/v1/domain-configs/effective`
+   - `/api/v1/bpmn/process-definitions`
+   - `/api/v1/a2ui/ticket/form`
+   - `/api/v1/a2ui/ticket/action`
+   - `/api/v1/service-catalogs`（服务目录导出/状态/复制链路）
+   - `/api/v1/tickets/templates`（模板导出链路）
+   - `/api/v1/bpmn/stats/instances`
+   - `/api/v1/bpmn/stats/tasks`
 4. 前端单测加一轮:
 
 ```bash

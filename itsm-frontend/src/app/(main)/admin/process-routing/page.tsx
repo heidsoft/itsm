@@ -23,38 +23,21 @@ import {
   Statistic,
 } from 'antd';
 import { Plus, Edit, Delete, Copy, Search, Settings } from 'lucide-react';
+import {
+  ProcessBinding,
+  ProcessBindingApi,
+  ProcessBindingPayload,
+} from '@/lib/api/process-binding-api';
+import { WorkflowApi } from '@/lib/api/workflow-api';
+import { departmentService, Department } from '@/lib/services/department-service';
+import { teamService, Team } from '@/lib/services/team-service';
 
 const { Option } = Select;
 
-interface ProcessRoutingRule {
-  id: number;
-  business_type: string;
-  business_sub_type?: string;
-  department_id?: number;
+type ProcessRoutingRule = ProcessBinding & {
   department_name?: string;
-  team_id?: number;
   team_name?: string;
-  scenario?: string;
-  category?: string;
-  process_definition_key: string;
-  priority: number;
-  is_active: boolean;
-  conditions?: Record<string, any>;
-  approval_chain_id?: string;
-  sla_policy_id?: string;
-}
-
-interface Department {
-  id: number;
-  name: string;
-  code: string;
-}
-
-interface Team {
-  id: number;
-  name: string;
-  code: string;
-}
+};
 
 export default function ProcessRoutingPage() {
   const [rules, setRules] = useState<ProcessRoutingRule[]>([]);
@@ -63,7 +46,7 @@ export default function ProcessRoutingPage() {
   const [selectedRule, setSelectedRule] = useState<ProcessRoutingRule | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [processDefinitions, setProcessDefinitions] = useState<any[]>([]);
+  const [processDefinitions, setProcessDefinitions] = useState<Array<{ key: string; name: string }>>([]);
   const [form] = Form.useForm();
 
   // Load data
@@ -77,14 +60,11 @@ export default function ProcessRoutingPage() {
   const loadRules = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/v1/process-bindings');
-      if (response.ok) {
-        const data = await response.json();
-        setRules(data.data || []);
-      }
+      const data = await ProcessBindingApi.list();
+      setRules(data);
     } catch (error) {
       console.error('Failed to load routing rules:', error);
+      message.error('加载流程路由规则失败');
     } finally {
       setLoading(false);
     }
@@ -92,11 +72,8 @@ export default function ProcessRoutingPage() {
 
   const loadDepartments = async () => {
     try {
-      const response = await fetch('/api/v1/departments');
-      if (response.ok) {
-        const data = await response.json();
-        setDepartments(data.data || []);
-      }
+      const data = await departmentService.getDepartmentTree();
+      setDepartments(flattenDepartments(data));
     } catch (error) {
       console.error('Failed to load departments:', error);
     }
@@ -104,11 +81,8 @@ export default function ProcessRoutingPage() {
 
   const loadTeams = async () => {
     try {
-      const response = await fetch('/api/v1/teams');
-      if (response.ok) {
-        const data = await response.json();
-        setTeams(data.data || []);
-      }
+      const data = await teamService.listTeams();
+      setTeams(data);
     } catch (error) {
       console.error('Failed to load teams:', error);
     }
@@ -116,11 +90,11 @@ export default function ProcessRoutingPage() {
 
   const loadProcessDefinitions = async () => {
     try {
-      const response = await fetch('/api/v1/bpmn/process-definitions');
-      if (response.ok) {
-        const data = await response.json();
-        setProcessDefinitions(data.data?.data || []);
-      }
+      const response = await WorkflowApi.getWorkflows({ page: 1, pageSize: 100 });
+      setProcessDefinitions(response.workflows.map(workflow => ({
+        key: workflow.code,
+        name: workflow.name,
+      })));
     } catch (error) {
       console.error('Failed to load process definitions:', error);
     }
@@ -129,20 +103,16 @@ export default function ProcessRoutingPage() {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      const payload = {
+      const payload: ProcessBindingPayload = {
         ...values,
         conditions: parseJSONField(values.conditions, 'Conditions'),
+        priority: values.priority ?? 0,
+        is_active: values.is_active ?? true,
       };
-      const response = await fetch(
-        selectedRule ? `/api/v1/process-bindings/${selectedRule.id}` : '/api/v1/process-bindings',
-        {
-          method: selectedRule ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }
-      );
-      if (!response.ok) {
-        throw new Error('Failed to save routing rule');
+      if (selectedRule) {
+        await ProcessBindingApi.update(selectedRule.id, payload);
+      } else {
+        await ProcessBindingApi.create(payload);
       }
       message.success('Routing rule saved successfully');
       setShowModal(false);
@@ -164,8 +134,9 @@ export default function ProcessRoutingPage() {
   };
 
   const handleDelete = async (id: number) => {
-    const response = await fetch(`/api/v1/process-bindings/${id}`, { method: 'DELETE' });
-    if (!response.ok) {
+    try {
+      await ProcessBindingApi.delete(id);
+    } catch {
       message.error('Failed to delete routing rule');
       return;
     }
@@ -174,13 +145,17 @@ export default function ProcessRoutingPage() {
   };
 
   const handleDuplicate = (record: ProcessRoutingRule) => {
-    const { id, ...rest } = record;
+    const { id: _id, tenant_id: _tenantId, created_at: _createdAt, updated_at: _updatedAt, ...rest } = record;
     form.setFieldsValue({
       ...rest,
       conditions: record.conditions ? JSON.stringify(record.conditions, null, 2) : '',
       priority: record.priority + 1,
     });
     setShowModal(true);
+  };
+
+  const flattenDepartments = (items: Department[]): Department[] => {
+    return items.flatMap(item => [item, ...flattenDepartments(item.children || [])]);
   };
 
   const parseJSONField = (value: unknown, label: string) => {

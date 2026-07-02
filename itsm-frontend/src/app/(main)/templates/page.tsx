@@ -223,6 +223,51 @@ const TicketTemplatePage: React.FC = () => {
     }
   };
 
+  const escapeCSV = (value: unknown) => {
+    const text =
+      value === undefined || value === null
+        ? ''
+        : value instanceof Date
+          ? value.toISOString()
+          : String(value);
+    return `"${text.replace(/"/g, '""')}"`;
+  };
+
+  const handleExportTemplates = () => {
+    const header = ['ID', '模板名称', '分类', '状态', '优先级', '字段数量', '描述', '创建时间', '更新时间'];
+    const rows = filteredTemplates.map(template => {
+      const fieldCount = Array.isArray(template.fields)
+        ? template.fields.length
+        : Array.isArray(template.form_fields)
+          ? template.form_fields.length
+          : template.form_fields
+            ? Object.keys(template.form_fields).length
+            : 0;
+      return [
+        template.id,
+        template.name,
+        template.category,
+        template.is_active ? '启用' : '禁用',
+        template.priority || '',
+        fieldCount,
+        template.description,
+        template.created_at,
+        template.updated_at,
+      ];
+    });
+    const csv = [header, ...rows].map(row => row.map(escapeCSV).join(',')).join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ticket-templates-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    message.success(`已导出 ${rows.length} 个模板`);
+  };
+
   // 处理表单提交
   const handleFormSubmit = async (values: any) => {
     try {
@@ -576,7 +621,9 @@ const TicketTemplatePage: React.FC = () => {
               <Button icon={<RefreshCw className="w-4 h-4" />} onClick={loadTemplates}>
                 刷新
               </Button>
-              <Button icon={<Download className="w-4 h-4" />}>导出</Button>
+              <Button icon={<Download className="w-4 h-4" />} onClick={handleExportTemplates}>
+                导出
+              </Button>
               <Button icon={<Upload className="w-4 h-4" />}>导入</Button>
             </Space>
           </Col>

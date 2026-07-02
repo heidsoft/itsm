@@ -5,6 +5,7 @@
  */
 
 import { httpClient } from './http-client';
+import { WorkflowApi } from './workflow-api';
 import type { WorkflowStats, NodeExecutionStats } from '@/types/workflow';
 
 export class WorkflowStatsApi {
@@ -52,27 +53,35 @@ export class WorkflowStatsApi {
     if (params?.start_date) query.start_date = params.start_date;
     if (params?.end_date) query.end_date = params.end_date;
 
-    const res = await httpClient.get<{
-      code: number;
-      message: string;
-      data: {
-        total: number;
-        running: number;
-        completed: number;
-        suspended: number;
-        terminated: number;
-      };
-    }>('/api/v1/bpmn/stats/instances', query);
+    const res = await httpClient.get<
+      | {
+          total: number;
+          running: number;
+          completed: number;
+          suspended: number;
+          terminated: number;
+        }
+      | {
+          code: number;
+          message: string;
+          data: {
+            total: number;
+            running: number;
+            completed: number;
+            suspended: number;
+            terminated: number;
+          };
+        }
+    >('/api/v1/bpmn/stats/instances', query);
 
-    return (
-      res?.data || {
-        total: 0,
-        running: 0,
-        completed: 0,
-        suspended: 0,
-        terminated: 0,
-      }
-    );
+    const data = (res as any)?.data || res;
+    return data || {
+      total: 0,
+      running: 0,
+      completed: 0,
+      suspended: 0,
+      terminated: 0,
+    };
   }
 
   /**
@@ -99,27 +108,35 @@ export class WorkflowStatsApi {
     if (params?.start_date) query.start_date = params.start_date;
     if (params?.end_date) query.end_date = params.end_date;
 
-    const res = await httpClient.get<{
-      code: number;
-      message: string;
-      data: {
-        total_tasks: number;
-        completed_tasks: number;
-        pending_tasks: number;
-        overdue_tasks: number;
-        average_completion: number;
-      };
-    }>('/api/v1/bpmn/stats/tasks', query);
+    const res = await httpClient.get<
+      | {
+          total_tasks: number;
+          completed_tasks: number;
+          pending_tasks: number;
+          overdue_tasks: number;
+          average_completion: number;
+        }
+      | {
+          code: number;
+          message: string;
+          data: {
+            total_tasks: number;
+            completed_tasks: number;
+            pending_tasks: number;
+            overdue_tasks: number;
+            average_completion: number;
+          };
+        }
+    >('/api/v1/bpmn/stats/tasks', query);
 
-    return (
-      res?.data || {
-        total_tasks: 0,
-        completed_tasks: 0,
-        pending_tasks: 0,
-        overdue_tasks: 0,
-        average_completion: 0,
-      }
-    );
+    const data = (res as any)?.data || res;
+    return data || {
+      total_tasks: 0,
+      completed_tasks: 0,
+      pending_tasks: 0,
+      overdue_tasks: 0,
+      average_completion: 0,
+    };
   }
 
   /**
@@ -159,7 +176,7 @@ export class WorkflowStatsApi {
     startDate: string;
     endDate: string;
   }): Promise<Blob> {
-    throw new Error('报告导出功能暂未实现，请稍后重试');
+    return WorkflowApi.exportReport(params);
   }
 }
 

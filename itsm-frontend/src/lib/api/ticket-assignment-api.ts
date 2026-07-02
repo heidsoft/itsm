@@ -20,10 +20,24 @@ export interface AssignRecommendation {
   };
 }
 
+type RawAssignRecommendation = Partial<AssignRecommendation> & {
+  userId?: number;
+  username?: string;
+  name?: string;
+  userName?: string;
+  userEmail?: string;
+  userAvatar?: string;
+  workload?: number;
+  skills?: string[];
+};
+
 export interface AutoAssignResponse {
   ticket_id: number;
+  ticketId?: number;
   assigned_to?: number;
+  assignedTo?: number;
   assignment_type: 'rule' | 'smart' | 'manual';
+  assignmentType?: 'rule' | 'smart' | 'manual';
   reason: string;
   score?: number;
 }
@@ -45,8 +59,9 @@ export interface ConditionConfig {
 
 // 动作配置类型
 export interface ActionConfig {
-  type: 'assign' | 'set_priority' | 'set_status' | 'notify' | 'escalate';
-  params: {
+  type: 'user' | 'round_robin' | 'load_balance' | 'assign' | 'set_priority' | 'set_status' | 'notify' | 'escalate';
+  value?: number | number[] | string | boolean;
+  params?: {
     assignee_id?: number;
     priority?: string;
     status?: string;
@@ -61,12 +76,17 @@ export interface AssignmentRule {
   description?: string;
   priority: number;
   conditions: ConditionConfig[];
-  actions: ActionConfig[];
+  actions: ActionConfig;
   is_active: boolean;
+  isActive?: boolean;
   execution_count: number;
+  executionCount?: number;
   last_executed_at?: string;
+  lastExecutedAt?: string;
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 export interface CreateAssignmentRuleRequest {
@@ -74,8 +94,9 @@ export interface CreateAssignmentRuleRequest {
   description?: string;
   priority: number;
   conditions: ConditionConfig[];
-  actions: ActionConfig[];
-  is_active: boolean;
+  actions: ActionConfig;
+  is_active?: boolean;
+  isActive?: boolean;
 }
 
 export interface UpdateAssignmentRuleRequest {
@@ -83,18 +104,22 @@ export interface UpdateAssignmentRuleRequest {
   description?: string;
   priority?: number;
   conditions?: ConditionConfig[];
-  actions?: ActionConfig[];
+  actions?: ActionConfig;
   is_active?: boolean;
+  isActive?: boolean;
 }
 
 export interface TestAssignmentRuleRequest {
   rule_id: number;
+  ruleId?: number;
   ticket_id: number;
+  ticketId?: number;
 }
 
 export interface TestAssignmentRuleResponse {
   matched: boolean;
   assigned_to?: number;
+  assignedTo?: number;
   reason?: string;
   score?: number;
 }
@@ -109,42 +134,125 @@ export interface ListAssignmentRulesResponse {
   total: number;
 }
 
+function normalizeRecommendation(item: RawAssignRecommendation): AssignRecommendation {
+  return {
+    user_id: item.user_id ?? item.userId ?? 0,
+    user_name: item.user_name ?? item.userName ?? item.name ?? item.username ?? `用户 ${item.userId ?? item.user_id ?? ''}`.trim(),
+    user_email: item.user_email ?? item.userEmail,
+    user_avatar: item.user_avatar ?? item.userAvatar,
+    score: item.score ?? 0,
+    reason: item.reason ?? '',
+    factors: item.factors ?? {
+      workload: item.workload,
+      skill_match: item.skills?.length ? 100 : undefined,
+    },
+  };
+}
+
+function normalizeAutoAssign(response: AutoAssignResponse): AutoAssignResponse {
+  const assignedTo = response.assigned_to ?? response.assignedTo;
+  const ticketId = response.ticket_id ?? response.ticketId ?? 0;
+  const assignmentType = response.assignment_type ?? response.assignmentType ?? 'smart';
+
+  return {
+    ...response,
+    ticket_id: ticketId,
+    ticketId,
+    assigned_to: assignedTo,
+    assignedTo,
+    assignment_type: assignmentType,
+    assignmentType,
+  };
+}
+
+function normalizeRule(rule: AssignmentRule): AssignmentRule {
+  const rawRule = rule as AssignmentRule & {
+    isActive?: boolean;
+    executionCount?: number;
+    lastExecutedAt?: string;
+    createdAt?: string;
+    updatedAt?: string;
+  };
+
+  return {
+    ...rawRule,
+    actions: rawRule.actions || { type: 'user', value: 0 },
+    conditions: rawRule.conditions || [],
+    is_active: rawRule.is_active ?? rawRule.isActive ?? false,
+    isActive: rawRule.isActive ?? rawRule.is_active ?? false,
+    execution_count: rawRule.execution_count ?? rawRule.executionCount ?? 0,
+    executionCount: rawRule.executionCount ?? rawRule.execution_count ?? 0,
+    last_executed_at: rawRule.last_executed_at ?? rawRule.lastExecutedAt,
+    lastExecutedAt: rawRule.lastExecutedAt ?? rawRule.last_executed_at,
+    created_at: rawRule.created_at ?? rawRule.createdAt ?? '',
+    createdAt: rawRule.createdAt ?? rawRule.created_at ?? '',
+    updated_at: rawRule.updated_at ?? rawRule.updatedAt ?? '',
+    updatedAt: rawRule.updatedAt ?? rawRule.updated_at ?? '',
+  };
+}
+
+function toBackendRulePayload<T extends CreateAssignmentRuleRequest | UpdateAssignmentRuleRequest>(
+  data: T
+): T {
+  const payload = { ...data } as T;
+  if ('is_active' in payload && payload.is_active !== undefined) {
+    payload.isActive = payload.is_active;
+  }
+  return payload;
+}
+
 export class TicketAssignmentApi {
   /**
    * 自动分配工单
    */
   static async autoAssign(ticketId: number): Promise<AutoAssignResponse> {
-    return httpClient.post<AutoAssignResponse>(`/api/v1/tickets/${ticketId}/auto-assign`);
+    const response = await httpClient.post<AutoAssignResponse>(`/api/v1/tickets/${ticketId}/auto-assign`);
+    return normalizeAutoAssign(response);
   }
 
   /**
    * 获取分配推荐
    */
   static async getRecommendations(ticketId: number): Promise<GetAssignRecommendationsResponse> {
-    return httpClient.get<GetAssignRecommendationsResponse>(
+    const response = await httpClient.get<GetAssignRecommendationsResponse>(
       `/api/v1/tickets/assign-recommendations/${ticketId}`
     );
+    return {
+      ...response,
+      recommendations: (response.recommendations || []).map(normalizeRecommendation),
+      total: response.total ?? response.recommendations?.length ?? 0,
+    };
   }
 
   /**
    * 获取分配规则列表
    */
   static async listRules(): Promise<ListAssignmentRulesResponse> {
-    return httpClient.get<ListAssignmentRulesResponse>('/api/v1/tickets/assignment-rules');
+    const response = await httpClient.get<ListAssignmentRulesResponse>('/api/v1/tickets/assignment-rules');
+    return {
+      ...response,
+      rules: (response.rules || []).map(normalizeRule),
+      total: response.total ?? response.rules?.length ?? 0,
+    };
   }
 
   /**
    * 获取分配规则详情
    */
   static async getRule(ruleId: number): Promise<AssignmentRule> {
-    return httpClient.get<AssignmentRule>(`/api/v1/tickets/assignment-rules/${ruleId}`);
+    const response = await httpClient.get<AssignmentRule>(`/api/v1/tickets/assignment-rules/${ruleId}`);
+    return normalizeRule(response);
   }
 
   /**
    * 创建分配规则
    */
   static async createRule(data: CreateAssignmentRuleRequest): Promise<AssignmentRule> {
-    return httpClient.post<AssignmentRule>('/api/v1/tickets/assignment-rules', data);
+    const response = await httpClient.post<AssignmentRule>(
+      '/api/v1/tickets/assignment-rules',
+      toBackendRulePayload(data)
+    );
+    return normalizeRule(response);
   }
 
   /**
@@ -154,7 +262,11 @@ export class TicketAssignmentApi {
     ruleId: number,
     data: UpdateAssignmentRuleRequest
   ): Promise<AssignmentRule> {
-    return httpClient.put<AssignmentRule>(`/api/v1/tickets/assignment-rules/${ruleId}`, data);
+    const response = await httpClient.put<AssignmentRule>(
+      `/api/v1/tickets/assignment-rules/${ruleId}`,
+      toBackendRulePayload(data)
+    );
+    return normalizeRule(response);
   }
 
   /**
@@ -168,9 +280,17 @@ export class TicketAssignmentApi {
    * 测试分配规则
    */
   static async testRule(data: TestAssignmentRuleRequest): Promise<TestAssignmentRuleResponse> {
-    return httpClient.post<TestAssignmentRuleResponse>(
+    const response = await httpClient.post<TestAssignmentRuleResponse>(
       '/api/v1/tickets/assignment-rules/test',
-      data
+      {
+        ruleId: data.rule_id ?? data.ruleId,
+        ticketId: data.ticket_id ?? data.ticketId,
+      }
     );
+    return {
+      ...response,
+      assigned_to: response.assigned_to ?? response.assignedTo,
+      assignedTo: response.assignedTo ?? response.assigned_to,
+    };
   }
 }

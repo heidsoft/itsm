@@ -255,6 +255,9 @@ func (c *BPMNProcessTriggerController) UpdateBinding(ctx *gin.Context) {
 		return
 	}
 
+	tenantID, _ := ctx.Get("tenant_id")
+	binding.TenantID = tenantID.(int)
+
 	result, err := c.bindingService.UpdateBinding(ctx.Request.Context(), id, &binding)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())

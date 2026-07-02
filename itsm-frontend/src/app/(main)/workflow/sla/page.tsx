@@ -12,16 +12,14 @@ import {
   Row,
   Col,
   Statistic,
-  Progress,
-  Spin,
   Alert,
 } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
-import { AlertTriangle, CheckCircle, Clock, RefreshCw, BarChart3 } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
 
 import BPMNDashboardApi, { SLAViolation, ProcessMetrics } from '@/lib/api/bpmn-dashboard-api';
 import { useI18n } from '@/lib/i18n';
-import { WorkflowAPI } from '@/lib/api/workflow-api';
+import { WorkflowApi } from '@/lib/api/workflow-api';
 
 const { RangePicker } = DatePicker;
 
@@ -38,19 +36,13 @@ export default function SLAMonitoringPage() {
 
   const fetchProcesses = async () => {
     try {
-      // 获取BPMN流程定义列表
-      const response = await fetch('/api/v1/bpmn/process-definitions?page=1&page_size=100', {
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await response.json();
-      if (data.code === 0 && data.data?.list) {
-        setProcesses(
-          data.data.list.map((p: any) => ({
-            key: p.key,
-            name: p.name || p.key,
-          }))
-        );
-      }
+      const data = await WorkflowApi.getWorkflows({ page: 1, pageSize: 100 });
+      setProcesses(
+        data.workflows.map(workflow => ({
+          key: workflow.code,
+          name: workflow.name || workflow.code,
+        }))
+      );
     } catch (error) {
       console.error('Failed to fetch processes:', error);
     }

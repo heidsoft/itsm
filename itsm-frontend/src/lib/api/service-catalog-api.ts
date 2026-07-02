@@ -39,6 +39,26 @@ export class ServiceCatalogApi {
     return (s === 'enabled' ? 'published' : 'retired') as any;
   }
 
+  private static escapeCSV(value: unknown): string {
+    const text =
+      value instanceof Date
+        ? value.toISOString()
+        : value === undefined || value === null
+          ? ''
+          : String(value);
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  private static toBackendRequestStatus(status?: unknown): string | undefined {
+    if (!status) return undefined;
+    const s = String(status);
+    if (s === 'pending_approval' || s === 'pending') return 'submitted';
+    if (s === 'approved') return 'security_approved';
+    if (s === 'in_progress') return 'provisioning';
+    if (s === 'completed') return 'delivered';
+    return s;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static toServiceItem(raw: any): ServiceItem {
     // 后端 dto.ServiceCatalogResponse: {id,name,category,description,deliveryTime,status,ciTypeId,cloudServiceId,createdAt,updatedAt}
@@ -63,6 +83,65 @@ export class ServiceCatalogApi {
         // 后端 deliveryTime 为 string（天/小时口径未统一）；V0先用于展示，不做严格含义
         responseTime: raw?.deliveryTime ? Number(raw.deliveryTime) : undefined,
       },
+    };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static toServiceRequest(raw: any): any {
+    const catalogId = raw?.catalogId ?? raw?.catalog_id ?? raw?.serviceId;
+    const requesterId = raw?.requesterId ?? raw?.requester_id ?? raw?.requestedBy;
+    const createdAt = raw?.createdAt ?? raw?.created_at;
+    const updatedAt = raw?.updatedAt ?? raw?.updated_at;
+    const catalog = raw?.catalog || {
+      id: catalogId,
+      name: raw?.serviceName || raw?.title || (catalogId ? `服务 #${catalogId}` : '未知服务'),
+      category: raw?.category || '',
+      description: raw?.reason || '',
+    };
+    const requester = raw?.requester || {
+      id: requesterId,
+      name: raw?.requesterName || raw?.requestedByName || (requesterId ? `用户 #${requesterId}` : '-'),
+      email: raw?.requestedByEmail || '',
+    };
+
+    return {
+      ...raw,
+      requestNumber: raw?.requestNumber || `REQ-${String(raw?.id || 0).padStart(5, '0')}`,
+      serviceId: String(catalogId || ''),
+      serviceName: raw?.serviceName || catalog?.name || '-',
+      requesterName: raw?.requesterName || requester?.name || '-',
+      requestedBy: requesterId,
+      requestedByName: raw?.requestedByName || requester?.name || '-',
+      catalog,
+      requester,
+      catalogId,
+      catalog_id: catalogId,
+      requesterId,
+      requester_id: requesterId,
+      ciId: raw?.ciId ?? raw?.ci_id,
+      ci_id: raw?.ci_id ?? raw?.ciId,
+      formData: raw?.formData ?? raw?.form_data ?? {},
+      form_data: raw?.form_data ?? raw?.formData ?? {},
+      costCenter: raw?.costCenter ?? raw?.cost_center,
+      cost_center: raw?.cost_center ?? raw?.costCenter,
+      dataClassification: raw?.dataClassification ?? raw?.data_classification,
+      data_classification: raw?.data_classification ?? raw?.dataClassification,
+      needsPublicIP: raw?.needsPublicIP ?? raw?.needs_public_ip,
+      needs_public_ip: raw?.needs_public_ip ?? raw?.needsPublicIP,
+      sourceIPWhitelist: raw?.sourceIPWhitelist ?? raw?.source_ip_whitelist,
+      source_ip_whitelist: raw?.source_ip_whitelist ?? raw?.sourceIPWhitelist,
+      complianceAck: raw?.complianceAck ?? raw?.compliance_ack,
+      compliance_ack: raw?.compliance_ack ?? raw?.complianceAck,
+      currentLevel: raw?.currentLevel ?? raw?.current_level,
+      current_level: raw?.current_level ?? raw?.currentLevel,
+      totalLevels: raw?.totalLevels ?? raw?.total_levels,
+      total_levels: raw?.total_levels ?? raw?.totalLevels,
+      expireAt: raw?.expireAt ?? raw?.expire_at,
+      expire_at: raw?.expire_at ?? raw?.expireAt,
+      createdAt,
+      created_at: createdAt,
+      updatedAt,
+      updated_at: updatedAt,
     };
   }
 
@@ -207,23 +286,36 @@ export class ServiceCatalogApi {
     requests: unknown[];
     total: number;
   }> {
-    // V0：后端仅提供“我的请求”列表；先对齐可用接口
     const page = query?.page ?? 1;
     const size = query?.pageSize ?? 10;
-    const status = query?.status ? String(query.status) : undefined;
-    const resp = await httpClient.get<any>('/api/v1/service-requests/me', {
+    const requestedStatus = query?.status ? String(query.status) : undefined;
+    const isPendingApproval =
+      requestedStatus === 'pending_approval' || requestedStatus === 'pending';
+    const endpoint = isPendingApproval
+      ? '/api/v1/service-requests/approvals/pending'
+      : '/api/v1/service-requests/me';
+    const status = isPendingApproval
+      ? undefined
+      : ServiceCatalogApi.toBackendRequestStatus(requestedStatus);
+
+    const resp = await httpClient.get<any>(endpoint, {
       page,
       size,
       ...(status ? { status } : {}),
     });
-    return { requests: resp.requests || [], total: resp.total || 0 };
+    const rawRequests = resp.requests || resp.items || [];
+    return {
+      requests: rawRequests.map(ServiceCatalogApi.toServiceRequest),
+      total: resp.total || 0,
+    };
   }
 
   /**
    * 获取单个服务请求
    */
   static async getServiceRequest(id: number): Promise<any> {
-    return httpClient.get(`/api/v1/service-requests/${id}`);
+    const resp = await httpClient.get<any>(`/api/v1/service-requests/${id}`);
+    return ServiceCatalogApi.toServiceRequest(resp);
   }
 
   /**
@@ -494,8 +586,32 @@ export class ServiceCatalogApi {
    * 导出服务目录
    */
   static async exportCatalog(format: 'excel' | 'pdf'): Promise<Blob> {
-    // 后端暂未实现导出功能
-    throw new Error(`服务目录导出功能暂未实现（format=${format}），请待后端支持后重试`);
+    const response = await ServiceCatalogApi.getServices({ page: 1, pageSize: 1000 });
+    const header = [
+      'ID',
+      '服务名称',
+      '分类',
+      '状态',
+      '描述',
+      '交付时间',
+      '创建时间',
+      '更新时间',
+    ];
+    const rows = response.services.map(service => [
+      service.id,
+      service.name,
+      service.category,
+      service.status,
+      service.shortDescription,
+      service.availability?.responseTime || '',
+      service.createdAt,
+      service.updatedAt,
+    ]);
+    const csv = [header, ...rows]
+      .map(row => row.map(ServiceCatalogApi.escapeCSV).join(','))
+      .join('\n');
+    const type = format === 'pdf' ? 'text/csv;charset=utf-8' : 'text/csv;charset=utf-8';
+    return new Blob([`\uFEFF${csv}`], { type });
   }
 }
 

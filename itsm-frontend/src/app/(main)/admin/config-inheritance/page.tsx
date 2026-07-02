@@ -21,30 +21,9 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { GitBranch, Plus, RefreshCw, Search } from 'lucide-react';
+import { DomainConfig, DomainConfigApi, EffectiveConfig } from '@/lib/api/domain-config-api';
 
 const { Title, Text } = Typography;
-
-type DomainConfig = {
-  id: number;
-  config_key: string;
-  config_type: string;
-  config_value: Record<string, unknown>;
-  inherit_mode: 'inherit' | 'override' | 'extend';
-  tenant_id: number;
-  department_id: number;
-  team_id: number;
-  version: number;
-  is_active: boolean;
-  description?: string;
-};
-
-type EffectiveConfig = {
-  key: string;
-  value: Record<string, unknown>;
-  source: string;
-  inherit_mode: string;
-  version: number;
-};
 
 export default function ConfigInheritancePage() {
   const [configs, setConfigs] = useState<DomainConfig[]>([]);
@@ -58,12 +37,8 @@ export default function ConfigInheritancePage() {
   const loadConfigs = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/v1/domain-configs');
-      if (!response.ok) {
-        throw new Error('Failed to load configs');
-      }
-      const payload = await response.json();
-      setConfigs(payload.data || []);
+      const data = await DomainConfigApi.list();
+      setConfigs(data);
     } catch (error) {
       console.error(error);
       message.error('加载配置失败');
@@ -79,17 +54,10 @@ export default function ConfigInheritancePage() {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      const response = await fetch('/api/v1/domain-configs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...values,
-          config_value: parseJSONObject(values.config_value),
-        }),
+      await DomainConfigApi.save({
+        ...values,
+        config_value: parseJSONObject(values.config_value),
       });
-      if (!response.ok) {
-        throw new Error('Failed to save config');
-      }
       message.success('配置已保存');
       setModalOpen(false);
       form.resetFields();
@@ -103,19 +71,14 @@ export default function ConfigInheritancePage() {
   const handlePreview = async () => {
     try {
       const values = await previewForm.validateFields();
-      const params = new URLSearchParams();
-      params.set('config_type', values.config_type);
-      params.set('config_key', values.config_key);
-      if (values.department_id) params.set('department_id', String(values.department_id));
-      if (values.team_id) params.set('team_id', String(values.team_id));
-
       setPreviewLoading(true);
-      const response = await fetch(`/api/v1/domain-configs/effective?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error('Failed to resolve effective config');
-      }
-      const payload = await response.json();
-      setEffectiveConfig(payload.data || null);
+      const data = await DomainConfigApi.getEffective({
+        config_type: values.config_type,
+        config_key: values.config_key,
+        department_id: values.department_id,
+        team_id: values.team_id,
+      });
+      setEffectiveConfig(data);
     } catch (error) {
       console.error(error);
       message.error(error instanceof Error ? error.message : '解析有效配置失败');

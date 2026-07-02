@@ -28,28 +28,10 @@ import {
   CheckCircle,
   AlertTriangle,
 } from 'lucide-react';
+import { ProcessBinding, ProcessBindingApi } from '@/lib/api/process-binding-api';
+import { departmentService, Department } from '@/lib/services/department-service';
 
 const { Option } = Select;
-
-interface Department {
-  id: number;
-  name: string;
-  code: string;
-  parent_id: number;
-  manager_id: number;
-  description?: string;
-}
-
-interface ProcessBinding {
-  id: number;
-  business_type: string;
-  business_sub_type?: string;
-  scenario?: string;
-  process_definition_key: string;
-  priority: number;
-  is_active: boolean;
-  conditions?: Record<string, any>;
-}
 
 interface DepartmentTreeNode {
   title: string;
@@ -83,26 +65,22 @@ export default function DepartmentProcessPage() {
 
   const loadDepartments = async () => {
     try {
-      const response = await fetch('/api/v1/departments');
-      if (response.ok) {
-        const data = await response.json();
-        setDepartments(data.data || []);
-      }
+      const data = await departmentService.getDepartmentTree();
+      setDepartments(flattenDepartments(data));
     } catch (error) {
       console.error('Failed to load departments:', error);
+      message.error('加载部门失败');
     }
   };
 
   const loadDeptProcesses = async (deptId: number) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/v1/departments/${deptId}/processes`);
-      if (response.ok) {
-        const data = await response.json();
-        setDeptProcesses(data.data || []);
-      }
+      const data = await ProcessBindingApi.listDepartmentProcesses(deptId);
+      setDeptProcesses(data);
     } catch (error) {
       console.error('Failed to load department processes:', error);
+      message.error('加载部门流程失败');
     } finally {
       setLoading(false);
     }
@@ -112,22 +90,18 @@ export default function DepartmentProcessPage() {
     if (!selectedDeptId) return;
 
     try {
-      const response = await fetch(`/api/v1/departments/${selectedDeptId}/init-processes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ department_type: departmentType }),
-      });
-
-      if (response.ok) {
-        message.success('Department processes initialized successfully');
-        loadDeptProcesses(selectedDeptId);
-        setShowInitModal(false);
-      } else {
-        message.error('Failed to initialize department processes');
-      }
+      await ProcessBindingApi.initDepartmentProcesses(selectedDeptId, departmentType);
+      message.success('Department processes initialized successfully');
+      loadDeptProcesses(selectedDeptId);
+      setShowInitModal(false);
     } catch (error) {
+      console.error('Failed to initialize department processes:', error);
       message.error('Failed to initialize department processes');
     }
+  };
+
+  const flattenDepartments = (items: Department[]): Department[] => {
+    return items.flatMap(item => [item, ...flattenDepartments(item.children || [])]);
   };
 
   // Build department tree

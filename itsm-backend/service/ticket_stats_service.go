@@ -28,18 +28,18 @@ func NewTicketStatsService(client *ent.Client, logger *zap.SugaredLogger) *Ticke
 func (s *TicketStatsService) GetTicketStats(ctx context.Context, tenantID int) (*dto.TicketStatsResponse, error) {
 	s.logger.Infow("Getting ticket stats", "tenant_id", tenantID)
 
-	// 获取总数
+	// 获取总数（排除软删除）
 	total, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID)).
+		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Count(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to count total tickets", "error", err)
 		return nil, fmt.Errorf("failed to count total tickets: %w", err)
 	}
 
-	// 获取各状态工单数量
+	// 获取各状态工单数量（排除软删除）
 	open, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.StatusEQ("open")).
+		Where(ticket.TenantID(tenantID), ticket.StatusEQ("open"), ticket.DeletedAtIsNil()).
 		Count(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to count open tickets", "error", err)
@@ -47,7 +47,7 @@ func (s *TicketStatsService) GetTicketStats(ctx context.Context, tenantID int) (
 	}
 
 	inProgress, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.StatusEQ("in_progress")).
+		Where(ticket.TenantID(tenantID), ticket.StatusEQ("in_progress"), ticket.DeletedAtIsNil()).
 		Count(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to count in_progress tickets", "error", err)
@@ -55,7 +55,7 @@ func (s *TicketStatsService) GetTicketStats(ctx context.Context, tenantID int) (
 	}
 
 	pending, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.StatusIn("new", "pending")).
+		Where(ticket.TenantID(tenantID), ticket.StatusIn("new", "pending"), ticket.DeletedAtIsNil()).
 		Count(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to count pending tickets", "error", err)
@@ -63,28 +63,29 @@ func (s *TicketStatsService) GetTicketStats(ctx context.Context, tenantID int) (
 	}
 
 	resolved, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.StatusEQ("resolved")).
+		Where(ticket.TenantID(tenantID), ticket.StatusEQ("resolved"), ticket.DeletedAtIsNil()).
 		Count(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to count resolved tickets", "error", err)
 		return nil, fmt.Errorf("failed to count resolved tickets: %w", err)
 	}
 
-	// 获取高优先级工单数量
+	// 获取高优先级工单数量（排除软删除）
 	highPriority, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.PriorityIn("high", "critical")).
+		Where(ticket.TenantID(tenantID), ticket.PriorityIn("high", "critical"), ticket.DeletedAtIsNil()).
 		Count(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to count high priority tickets", "error", err)
 		return nil, fmt.Errorf("failed to count high priority tickets: %w", err)
 	}
 
-	// 获取逾期工单数量（这里简化处理，实际应该根据SLA计算）
+	// 获取逾期工单数量（排除软删除）
 	overdue, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
 			ticket.StatusIn("open", "in_progress"),
-			ticket.CreatedAtLT(time.Now().Add(-24*time.Hour)), // 简化：超过24小时未解决
+			ticket.CreatedAtLT(time.Now().Add(-24*time.Hour)),
+			ticket.DeletedAtIsNil(),
 		).
 		Count(ctx)
 	if err != nil {

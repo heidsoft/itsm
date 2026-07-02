@@ -82,7 +82,10 @@ export default function PendingApprovalsPage() {
   const handleReject = async (id: number) => {
     try {
       setProcessingIds(prev => new Set(prev).add(id));
-      await serviceRequestAPI.applyApprovalAction(id, { action: 'reject' });
+      await serviceRequestAPI.applyApprovalAction(id, {
+        action: 'reject',
+        comment: '审批人拒绝该服务请求',
+      });
       message.success('已拒绝');
       load();
     } catch (e) {

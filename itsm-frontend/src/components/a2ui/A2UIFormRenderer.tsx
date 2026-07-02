@@ -5,7 +5,8 @@ import { Form, Input, Select, Button, Card, Space, Spin, message } from 'antd';
 import { Send, Bot, CheckCircle } from 'lucide-react';
 import type { A2UIComponent, ValueDef, OptionItem } from '@/types/a2ui';
 import { getValueByPath, setValueByPath } from '@/types/a2ui';
-import { clearAuthStorage, isAuthenticated } from '@/lib/auth/token-storage';
+import { isAuthenticated } from '@/lib/auth/token-storage';
+import { A2UIApi } from '@/lib/api/a2ui-api';
 
 // 本地类型定义（避免循环引用）
 interface A2UIDataModel {
@@ -297,13 +298,6 @@ export function A2UIFormRenderer() {
     });
   }, []);
 
-  // 认证由后端 httpOnly cookie 管理；前端不读取 token 值。
-  const getAuthHeaders = (): HeadersInit => {
-    return {
-      'Content-Type': 'application/json',
-    };
-  };
-
   // 检查是否已登录
   const checkAuth = (): boolean => {
     if (!isAuthenticated()) {
@@ -324,30 +318,7 @@ export function A2UIFormRenderer() {
     }
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/a2ui/ticket/form', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-        body: JSON.stringify({ intent: userIntent, surfaceId }),
-      });
-
-      // 检查HTTP状态码
-      if (res.status === 401) {
-        message.error('登录已过期，请重新登录');
-        clearAuthStorage();
-        return;
-      }
-      if (res.status === 403) {
-        message.error('权限不足，请联系管理员');
-        return;
-      }
-
-      const data = await res.json();
-
-      if (data.code !== 0) {
-        message.error(data.message || '生成表单失败');
-        return;
-      }
+      const data = await A2UIApi.generateTicketForm(userIntent, surfaceId);
 
       // 解析消息
       (data.messages || []).forEach((msg: string) => {
@@ -415,30 +386,7 @@ export function A2UIFormRenderer() {
       }
       setLoading(true);
       try {
-        const res = await fetch('/api/v1/a2ui/ticket/action', {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          credentials: 'include',
-          body: JSON.stringify({ action: actionName, surfaceId, context }),
-        });
-
-        // 检查HTTP状态码
-        if (res.status === 401) {
-          message.error('登录已过期，请重新登录');
-          clearAuthStorage();
-          return;
-        }
-        if (res.status === 403) {
-          message.error('权限不足，请联系管理员');
-          return;
-        }
-
-        const data = await res.json();
-
-        if (data.code !== 0) {
-          message.error(data.message || '提交失败');
-          return;
-        }
+        const data = await A2UIApi.handleTicketAction(actionName, surfaceId, context);
 
         // 处理响应消息
         (data.messages || []).forEach((msg: string) => {

@@ -210,7 +210,7 @@ const ServiceCatalogManagement = () => {
           const catalog = catalogs.find(c => c.id === id.toString());
           if (catalog) {
             return ServiceCatalogApi.updateService(id.toString(), {
-              ...catalog,
+              status,
             } as UpdateServiceItemRequest);
           }
           return Promise.resolve();
@@ -224,6 +224,87 @@ const ServiceCatalogManagement = () => {
     } catch (error) {
       message.error('批量操作失败');
     }
+  };
+
+  const handleStatusChange = async (catalog: ServiceItem, status: 'published' | 'retired') => {
+    try {
+      await ServiceCatalogApi.updateService(catalog.id, { status } as UpdateServiceItemRequest);
+      message.success(status === 'published' ? '服务目录已启用' : '服务目录已停用');
+      fetchCatalogs();
+    } catch (error) {
+      message.error('状态更新失败');
+    }
+  };
+
+  const handleDuplicate = async (catalog: ServiceItem) => {
+    try {
+      await ServiceCatalogApi.createService({
+        name: `${catalog.name} 副本`,
+        category: catalog.category,
+        shortDescription: catalog.shortDescription,
+        fullDescription: catalog.fullDescription || catalog.shortDescription,
+        availability: catalog.availability,
+        ciTypeId: catalog.ciTypeId,
+        cloudServiceId: catalog.cloudServiceId,
+        status: 'draft',
+      } as CreateServiceItemRequest);
+      message.success('服务目录已复制为草稿');
+      fetchCatalogs();
+    } catch (error) {
+      message.error('复制服务目录失败');
+    }
+  };
+
+  const escapeCSV = (value: unknown) => {
+    const text =
+      value instanceof Date
+        ? value.toISOString()
+        : value === undefined || value === null
+          ? ''
+          : String(value);
+    return `"${text.replace(/"/g, '""')}"`;
+  };
+
+  const handleExport = () => {
+    const rows = filteredCatalogs.map(catalog => {
+      const ciType = ciTypes.find(item => item.id === catalog.ciTypeId);
+      const cloudService = cloudServices.find(item => item.id === catalog.cloudServiceId);
+      return [
+        catalog.id,
+        catalog.name,
+        catalog.category,
+        catalog.status,
+        catalog.shortDescription,
+        ciType?.name || '',
+        cloudService ? `${cloudService.service_name} (${cloudService.resource_type_name})` : '',
+        catalog.availability?.responseTime || '',
+        catalog.createdAt,
+        catalog.updatedAt,
+      ];
+    });
+    const header = [
+      'ID',
+      '服务名称',
+      '分类',
+      '状态',
+      '描述',
+      '关联CI类型',
+      '关联云服务',
+      '交付时间(小时)',
+      '创建时间',
+      '更新时间',
+    ];
+    const csv = [header, ...rows].map(row => row.map(escapeCSV).join(',')).join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `service-catalogs-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    message.success(`已导出 ${rows.length} 条服务目录`);
   };
 
   // 过滤服务目录
@@ -364,14 +445,14 @@ const ServiceCatalogManagement = () => {
                   label: '启用',
                   icon: <CheckCircle className="w-4 h-4" />,
                   disabled: record.status === 'published',
-                  onClick: () => handleBatchStatusChange('published'),
+                  onClick: () => handleStatusChange(record, 'published'),
                 },
                 {
                   key: 'disable',
                   label: '禁用',
                   icon: <AlertCircle className="w-4 h-4" />,
                   disabled: record.status === 'retired',
-                  onClick: () => handleBatchStatusChange('retired'),
+                  onClick: () => handleStatusChange(record, 'retired'),
                 },
                 {
                   type: 'divider' as const,
@@ -380,6 +461,7 @@ const ServiceCatalogManagement = () => {
                   key: 'duplicate',
                   label: '复制',
                   icon: <Plus className="w-4 h-4" />,
+                  onClick: () => handleDuplicate(record),
                 },
               ],
             }}
@@ -536,7 +618,9 @@ const ServiceCatalogManagement = () => {
                 新建服务目录
               </Button>
               <Button icon={<Upload className="w-4 h-4" />}>导入</Button>
-              <Button icon={<Download className="w-4 h-4" />}>导出</Button>
+              <Button icon={<Download className="w-4 h-4" />} onClick={handleExport}>
+                导出
+              </Button>
               <Button icon={<RefreshCw className="w-4 h-4" />} onClick={fetchCatalogs}>
                 刷新
               </Button>

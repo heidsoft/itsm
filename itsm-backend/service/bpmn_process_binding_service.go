@@ -95,6 +95,9 @@ func (s *ProcessBindingService) UpdateBinding(ctx context.Context, id int, bindi
 	if err != nil {
 		return nil, errors.Wrap(err, "查询流程绑定失败")
 	}
+	if binding.TenantID > 0 && entity.TenantID != binding.TenantID {
+		return nil, fmt.Errorf("无权操作此流程绑定")
+	}
 
 	// 如果设置为默认，需要取消同类型其他默认绑定
 	if binding.IsDefault && !entity.IsDefault {
@@ -113,6 +116,9 @@ func (s *ProcessBindingService) UpdateBinding(ctx context.Context, id int, bindi
 	}
 
 	update := entity.Update()
+	if binding.BusinessType != "" {
+		update.SetBusinessType(string(binding.BusinessType))
+	}
 	if binding.ProcessDefinitionKey != "" {
 		update.SetProcessDefinitionKey(binding.ProcessDefinitionKey)
 	}
