@@ -131,6 +131,7 @@ type PeakHourData struct {
 
 // DashboardOverview Dashboard概览数据
 type DashboardOverview struct {
+	Overview                DashboardOverviewData          `json:"overview"`
 	KPIMetrics               []KPIMetric                    `json:"kpiMetrics"`
 	TicketTrend              []TicketTrendData              `json:"ticketTrend"`
 	IncidentDistribution     []IncidentDistributionData     `json:"incidentDistribution"`
@@ -141,6 +142,16 @@ type DashboardOverview struct {
 	ResponseTimeDistribution []ResponseTimeDistributionData `json:"responseTimeDistribution,omitempty"`
 	TeamWorkload             []TeamWorkloadData             `json:"teamWorkload,omitempty"`
 	PeakHours                []PeakHourData                 `json:"peakHours,omitempty"`
+}
+
+// DashboardOverviewData overview段数据结构（匹配前端期望的字段名）
+type DashboardOverviewData struct {
+	TotalTickets      int     `json:"total_tickets"`
+	PendingTickets    int     `json:"pending_tickets"`
+	InProgressTickets int     `json:"in_progress_tickets"`
+	ResolvedToday     int     `json:"resolved_today"`
+	AvgResponseTime   float64 `json:"avg_response_time"`
+	AvgResolutionTime float64 `json:"avg_resolution_time"`
 }
 
 // GetOverview 获取Dashboard概览数据
@@ -169,8 +180,24 @@ func (h *DashboardHandler) GetOverview(c *gin.Context) {
 		return
 	}
 
+	// 获取扁平化的Overview统计数据
+	overviewStats, err := h.dashboardService.GetDashboardOverviewStats(c.Request.Context(), tenantID)
+	if err != nil {
+		h.logger.Errorw("Failed to get dashboard overview stats", "error", err)
+		common.Fail(c, common.InternalErrorCode, "获取Dashboard统计数据失败")
+		return
+	}
+
 	// 转换为Handler期望的格式
 	overview := DashboardOverview{
+		Overview: DashboardOverviewData{
+			TotalTickets:      overviewStats.TotalTickets,
+			PendingTickets:    overviewStats.PendingTickets,
+			InProgressTickets: overviewStats.InProgressTickets,
+			ResolvedToday:     overviewStats.ResolvedToday,
+			AvgResponseTime:   overviewStats.AvgResponseTime,
+			AvgResolutionTime: overviewStats.AvgResolutionTime,
+		},
 		KPIMetrics:               convertKPIMetrics(overviewData.KPIMetrics),
 		TicketTrend:              convertTicketTrend(overviewData.TicketTrend),
 		IncidentDistribution:     convertIncidentDistribution(overviewData.IncidentDistribution),
