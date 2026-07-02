@@ -102,8 +102,10 @@ type TicketResponse struct {
 	ResolutionCategory string         `json:"resolutionCategory,omitempty"`
 	ResolvedAt         *time.Time     `json:"resolvedAt,omitempty"`
 	ClosedAt           *time.Time     `json:"closedAt,omitempty"`
-	FirstResponseAt    *time.Time     `json:"firstResponseAt,omitempty"`
-	Rating             int            `json:"rating,omitempty"`
+	FirstResponseAt        *time.Time     `json:"first_response_at,omitempty"`
+	SLAResponseDeadline   *time.Time     `json:"sla_response_deadline,omitempty"`
+	SLAResolutionDeadline *time.Time     `json:"sla_resolution_deadline,omitempty"`
+	Rating                int            `json:"rating,omitempty"`
 }
 
 // ListTicketsResponse 工单列表响应
