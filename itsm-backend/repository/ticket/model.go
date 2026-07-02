@@ -84,11 +84,11 @@ func (t *Ticket) IsFinalState() bool {
 // CanTransitionTo 判断是否可以转换到目标状态
 func (t *Ticket) CanTransitionTo(target Status) bool {
 	transitions := map[Status][]Status{
-		StatusNew:        {StatusOpen, StatusCancelled},
+		StatusNew:        {StatusOpen, StatusInProgress, StatusCancelled},
 		StatusOpen:       {StatusInProgress, StatusPending, StatusResolved, StatusCancelled},
 		StatusInProgress: {StatusPending, StatusResolved, StatusCancelled},
 		StatusPending:    {StatusInProgress, StatusResolved, StatusCancelled},
-		StatusResolved:   {StatusClosed, StatusOpen}, // 可重开
+		StatusResolved:   {StatusClosed, StatusOpen, StatusInProgress, StatusResolved},
 		StatusClosed:     {},                         // 终态
 		StatusCancelled:  {},                         // 终态
 	}
