@@ -65,6 +65,7 @@ func (r *EntRepository) GetByID(ctx context.Context, id int, tenantID int) (*Tic
 		Where(
 			ticket.ID(id),
 			ticket.TenantID(tenantID),
+			ticket.DeletedAtIsNil(),
 		).
 		Only(ctx)
 	if err != nil {

@@ -1299,7 +1299,7 @@ func (s *TicketService) GetTicketActivity(ctx context.Context, ticketID int, ten
 		s.logger.Warnw("Failed to get comments for activity", "error", err)
 	}
 
-	if tkt.AssigneeID != nil {
+	if tkt.AssigneeID != nil && *tkt.AssigneeID > 0 {
 		activities = append(activities, map[string]interface{}{
 			"action":    "assigned",
 			"timestamp": tkt.UpdatedAt,
