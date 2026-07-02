@@ -135,7 +135,7 @@ type DashboardOverview struct {
 	KPIMetrics               []KPIMetric                    `json:"kpiMetrics"`
 	TicketTrend              []TicketTrendData              `json:"ticketTrend"`
 	IncidentDistribution     []IncidentDistributionData     `json:"incidentDistribution"`
-	SLAData                  []SLAData                      `json:"slaData"`
+	SLAData                  *service.SLAComplianceData     `json:"sla_data"`
 	SatisfactionData         []SatisfactionData             `json:"satisfactionData"`
 	QuickActions             []QuickAction                  `json:"quickActions"`
 	RecentActivities         []RecentActivity               `json:"recentActivities"`
@@ -201,7 +201,7 @@ func (h *DashboardHandler) GetOverview(c *gin.Context) {
 		KPIMetrics:               convertKPIMetrics(overviewData.KPIMetrics),
 		TicketTrend:              convertTicketTrend(overviewData.TicketTrend),
 		IncidentDistribution:     convertIncidentDistribution(overviewData.IncidentDistribution),
-		SLAData:                  convertSLAData(overviewData.SLAData),
+		SLAData:                  overviewData.SLAData,
 		SatisfactionData:         convertSatisfactionData(overviewData.SatisfactionData),
 		QuickActions:             convertQuickActions(overviewData.QuickActions),
 		RecentActivities:         convertRecentActivities(overviewData.RecentActivities),
@@ -466,7 +466,7 @@ func (h *DashboardHandler) GetSLAData(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, convertSLAData(overviewData.SLAData))
+	common.Success(c, overviewData.SLAData)
 }
 
 // GetSatisfactionData 获取满意度数据

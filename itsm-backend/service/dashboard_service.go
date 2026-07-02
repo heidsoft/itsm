@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 
@@ -32,12 +33,82 @@ type DashboardOverviewStats struct {
 	AvgResolutionTime float64
 }
 
+// SLAComplianceData SLA合规数据（扁平结构，匹配前端 sla_data 接口）
+type SLAComplianceData struct {
+	ComplianceRate            float64 `json:"compliance_rate"`
+	ResponseTimeCompliance    float64 `json:"response_time_compliance"`
+	ResolutionTimeCompliance  float64 `json:"resolution_time_compliance"`
+	AtRiskTickets             int     `json:"at_risk_tickets"`
+	BreachedTickets           int     `json:"breached_tickets"`
+}
+
 // NewDashboardService 创建仪表盘服务实例
 func NewDashboardService(client *ent.Client, logger *zap.SugaredLogger) *DashboardService {
 	return &DashboardService{
 		client: client,
 		logger: logger,
 	}
+}
+
+// GetSLAComplianceData 获取SLA合规数据（基于真实违规记录计算）
+func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID int) (*SLAComplianceData, error) {
+	// 近30天有效工单
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+
+	totalTickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantID(tenantID),
+			ticket.CreatedAtGTE(thirtyDaysAgo),
+			ticket.DeletedAtIsNil(),
+		).
+		Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count tickets: %w", err)
+	}
+
+	// SLA违规数（未解决的）
+	breachedTickets, err := s.client.SLAViolation.Query().
+		Where(
+			slaviolation.TenantID(tenantID),
+			slaviolation.ResolvedAtIsNil(),
+		).
+		Count(ctx)
+	if err != nil {
+		breachedTickets = 0
+	}
+
+	// 即将超时（24小时内到期的有SLA工单）
+	atRiskTickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantID(tenantID),
+			ticket.DeletedAtIsNil(),
+			ticket.SLADefinitionIDNEQ(0),
+			ticket.SLAResponseDeadlineGTE(time.Now()),
+			ticket.SLAResponseDeadlineLTE(time.Now().Add(24*time.Hour)),
+		).
+		Count(ctx)
+	if err != nil {
+		atRiskTickets = 0
+	}
+
+	var complianceRate, responseCompliance, resolutionCompliance float64
+	if totalTickets > 0 {
+		complianceRate = float64(totalTickets-breachedTickets) / float64(totalTickets) * 100
+		responseCompliance = complianceRate
+		resolutionCompliance = complianceRate
+	} else {
+		complianceRate = 100.0
+		responseCompliance = 100.0
+		resolutionCompliance = 100.0
+	}
+
+	return &SLAComplianceData{
+		ComplianceRate:           math.Round(complianceRate*10) / 10,
+		ResponseTimeCompliance:   math.Round(responseCompliance*10) / 10,
+		ResolutionTimeCompliance: math.Round(resolutionCompliance*10) / 10,
+		AtRiskTickets:            atRiskTickets,
+		BreachedTickets:          breachedTickets,
+	}, nil
 }
 
 // GetDashboardOverviewStats 获取Dashboard概览统计
@@ -332,7 +403,7 @@ type DashboardOverviewData struct {
 	KPIMetrics               []KPIMetricData                `json:"kpiMetrics"`
 	TicketTrend              []TicketTrendData              `json:"ticketTrend"`
 	IncidentDistribution     []IncidentDistributionData     `json:"incidentDistribution"`
-	SLAData                  []SLAData                      `json:"slaData"`
+	SLAData                  *SLAComplianceData            `json:"sla_data"`
 	SatisfactionData         []SatisfactionData             `json:"satisfactionData"`
 	QuickActions             []QuickActionData              `json:"quickActions"`
 	RecentActivities         []RecentActivityData           `json:"recentActivities"`
@@ -462,11 +533,11 @@ func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID in
 		return nil, fmt.Errorf("获取事件分布失败: %w", err)
 	}
 
-	// 获取SLA数据
-	slaData, err := s.getSLADataForDashboard(ctx, tenantID)
+	// 获取SLA合规数据
+	slaCompliance, err := s.GetSLAComplianceData(ctx, tenantID)
 	if err != nil {
-		s.logger.Errorw("Failed to get SLA data", "error", err)
-		return nil, fmt.Errorf("获取SLA数据失败: %w", err)
+		s.logger.Errorw("Failed to get SLA compliance data", "error", err)
+		slaCompliance = &SLAComplianceData{}
 	}
 
 	// 获取满意度数据（最近4个月）
@@ -515,7 +586,7 @@ func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID in
 		KPIMetrics:               kpiMetrics,
 		TicketTrend:              ticketTrend,
 		IncidentDistribution:     incidentDistribution,
-		SLAData:                  slaData,
+		SLAData:                  slaCompliance,
 		SatisfactionData:         satisfactionData,
 		QuickActions:             quickActions,
 		RecentActivities:         recentActivities,
@@ -943,6 +1014,7 @@ func (s *DashboardService) calculateActualSLAPerformance(ctx context.Context, sl
 		Where(
 			ticket.TenantIDEQ(tenantID),
 			ticket.CreatedAtGTE(thirtyDaysAgo),
+			ticket.DeletedAtIsNil(),
 		).
 		Count(ctx)
 	if err != nil {
@@ -959,6 +1031,7 @@ func (s *DashboardService) calculateActualSLAPerformance(ctx context.Context, sl
 			ticket.TenantIDEQ(tenantID),
 			ticket.CreatedAtGTE(thirtyDaysAgo),
 			ticket.StatusIn("resolved", "closed"),
+			ticket.DeletedAtIsNil(),
 		).
 		Count(ctx)
 	if err != nil {
