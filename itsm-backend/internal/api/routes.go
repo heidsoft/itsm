@@ -50,7 +50,7 @@ func SetupRoutes(router *gin.Engine) {
 
 		// 健康检查
 		v1.GET("/health", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{
+			common.Success(c, gin.H{
 				"status":  "healthy",
 				"version": "v1",
 			})

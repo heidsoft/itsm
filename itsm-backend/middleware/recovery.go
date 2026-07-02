@@ -1,9 +1,8 @@
 package middleware
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"itsm-backend/common"
 )
 
 // RecoveryMiddleware 恢复中间件，处理panic
@@ -23,10 +22,6 @@ func RecoveryMiddleware() gin.HandlerFunc {
 			)
 		}
 
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":       5001,
-			"message":    "Internal server error",
-			"request_id": c.GetString("request_id"),
-		})
+		common.Fail(c, common.InternalErrorCode, "Internal server error")
 	})
 }
