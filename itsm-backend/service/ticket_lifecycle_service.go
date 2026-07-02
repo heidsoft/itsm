@@ -319,12 +319,12 @@ func (s *TicketLifecycleService) mapProcessStatus(status string) string {
 // 导出的函数供其他服务使用（如 TicketCoreService）
 func IsValidTicketStatusTransition(currentStatus, newStatus string) bool {
 	validTransitions := map[string][]string{
-		common.TicketStatusNew:        {common.TicketStatusOpen, common.TicketStatusAssigned, common.TicketStatusCancelled},
+		common.TicketStatusNew:        {common.TicketStatusOpen, common.TicketStatusAssigned, common.TicketStatusInProgress, common.TicketStatusCancelled},
 		common.TicketStatusAssigned:   {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusClosed, common.TicketStatusCancelled},
 		common.TicketStatusOpen:       {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusClosed, common.TicketStatusCancelled},
 		common.TicketStatusInProgress: {common.TicketStatusResolved, common.TicketStatusPending, common.TicketStatusOpen, common.TicketStatusCancelled},
 		common.TicketStatusPending:    {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusOpen, common.TicketStatusCancelled},
-		common.TicketStatusResolved:   {common.TicketStatusClosed, common.TicketStatusOpen, common.TicketStatusCancelled},
+		common.TicketStatusResolved:   {common.TicketStatusClosed, common.TicketStatusInProgress, common.TicketStatusOpen, common.TicketStatusCancelled},
 		common.TicketStatusClosed:     {common.TicketStatusCancelled}, // 已关闭的工单只能转为取消
 		common.TicketStatusCancelled:  {}, // 已取消的工单不能转换到其他状态
 		common.TicketStatusApproved:   {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusClosed},

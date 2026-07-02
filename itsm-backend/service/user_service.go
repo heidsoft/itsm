@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -51,8 +52,12 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		return nil, fmt.Errorf("邮箱已存在: %s", req.Email)
 	}
 
-	// 加密密码
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	// 加密密码（如果不提供则生成随机密码）
+	password := req.Password
+	if password == "" {
+		password = fmt.Sprintf("P@ssw0rd%08d", time.Now().UnixNano()%100000000)
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("密码加密失败: %w", err)
 	}

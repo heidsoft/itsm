@@ -1502,6 +1502,28 @@ func (s *TicketService) AssignTickets(ctx context.Context, tenantID int, ticketI
 	return nil
 }
 
+// BatchCloseTickets 批量关闭工单
+func (s *TicketService) BatchCloseTickets(ctx context.Context, ticketIDs []int, tenantID int, closeReason string) error {
+	for _, ticketID := range ticketIDs {
+		if _, err := s.CloseTicket(ctx, ticketID, tenantID, closeReason); err != nil {
+			return fmt.Errorf("关闭工单 %d 失败: %v", ticketID, err)
+		}
+	}
+	return nil
+}
+
+// BatchUpdatePriority 批量更新优先级
+func (s *TicketService) BatchUpdatePriority(ctx context.Context, ticketIDs []int, priority string, tenantID int) error {
+	for _, ticketID := range ticketIDs {
+		p := ticket.Priority(priority)
+		_, err := s.repo.Update(ctx, ticketID, &ticket.UpdateParams{Priority: &p}, tenantID)
+		if err != nil {
+			return fmt.Errorf("更新工单 %d 优先级失败: %v", ticketID, err)
+		}
+	}
+	return nil
+}
+
 // GetTicketAnalytics 获取工单分析数据
 func (s *TicketService) GetTicketAnalytics(ctx context.Context, tenantID int, dateFrom, dateTo time.Time) (*dto.TicketAnalyticsResponse, error) {
 	if s.client == nil {

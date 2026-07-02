@@ -279,3 +279,25 @@ type CloseTicketRequest struct {
 	CloseNotes  string `json:"closeNotes,omitempty"`
 	Feedback    string `json:"feedback,omitempty"`
 }
+
+// BatchCloseRequest 批量关闭工单请求
+type BatchCloseRequest struct {
+	TicketIDs []int  `json:"ticketIds" binding:"required,min=1"`
+	CloseReason string `json:"closeReason,omitempty"`
+}
+
+// BatchPriorityRequest 批量更新优先级请求
+type BatchPriorityRequest struct {
+	TicketIDs []int  `json:"ticketIds" binding:"required,min=1"`
+	Priority  string `json:"priority" binding:"required,oneof=low medium high critical urgent"`
+}
+
+// CreateSubtaskRequest 创建子任务请求（轻量级，不强制要求 Priority 等父工单字段）
+type CreateSubtaskRequest struct {
+	Title       string                 `json:"title" binding:"required,min=1,max=200"`
+	Description string                 `json:"description"`
+	Priority    string                 `json:"priority" binding:"omitempty,oneof=low medium high critical urgent"`
+	Type        string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"`
+	AssigneeID  int                    `json:"assigneeId"`
+	FormFields  map[string]interface{} `json:"formFields"`
+}

@@ -927,7 +927,7 @@ func (tc *TicketController) CreateSubtask(c *gin.Context) {
 		return
 	}
 
-	var req dto.CreateTicketRequest
+	var req dto.CreateSubtaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
@@ -936,11 +936,19 @@ func (tc *TicketController) CreateSubtask(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 
-	// 设置父工单ID和请求者ID
-	req.ParentTicketID = &parentID
-	req.RequesterID = userID
+	// 转换为本服务的 CreateTicketRequest（补全父工单字段）
+	fullReq := dto.CreateTicketRequest{
+		Title:          req.Title,
+		Description:    req.Description,
+		Priority:       req.Priority,
+		Type:           req.Type,
+		RequesterID:    userID,
+		ParentTicketID: &parentID,
+		AssigneeID:     req.AssigneeID,
+		FormFields:     req.FormFields,
+	}
 
-	ticket, err := tc.ticketService.CreateTicket(c.Request.Context(), &req, tenantID)
+	ticket, err := tc.ticketService.CreateTicket(c.Request.Context(), &fullReq, tenantID)
 	if err != nil {
 		tc.logger.Errorw("Failed to create subtask", "error", err, "parent_id", parentID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
