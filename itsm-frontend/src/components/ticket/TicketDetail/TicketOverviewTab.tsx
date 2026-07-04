@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
 import { Card, Typography, Space, Button, Badge, Timeline, Input, Divider } from 'antd';
-import { Ticket, WorkflowStep, SLAInfo } from '@/lib/api/api-config';
+import type { Ticket, WorkflowStep, SLAInfo } from '@/lib/api/api-config';
 import { TicketRatingSection } from '@/components/business/TicketRatingSection';
 import { useAuthStore } from '@/lib/store/auth-store';
 

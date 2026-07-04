@@ -22,7 +22,8 @@ import {
   SyncOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@/app/components/PageContainer';
-import { teamService, Team } from '@/lib/services/team-service';
+import type { Team } from '@/lib/services/team-service';
+import { teamService } from '@/lib/services/team-service';
 
 import { UserApi } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n';

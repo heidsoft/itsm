@@ -1,6 +1,7 @@
 'use client';
 
-import React, { PropsWithChildren } from 'react';
+import type { PropsWithChildren } from 'react';
+import React from 'react';
 import { Breadcrumb } from 'antd';
 import Link from 'next/link';
 import { HomeOutlined } from '@ant-design/icons';

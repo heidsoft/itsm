@@ -1,4 +1,5 @@
-import { API_BASE_URL, Tenant } from '@/lib/api/api-config';
+import type { Tenant } from '@/lib/api/api-config';
+import { API_BASE_URL } from '@/lib/api/api-config';
 import { useAuthStore } from '@/lib/store/auth-store';
 
 export class AuthService {

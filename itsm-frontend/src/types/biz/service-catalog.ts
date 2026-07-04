@@ -1,4 +1,5 @@
-import { ServiceCategory, ServiceStatus, ServiceRequestStatus } from '@/constants/service-catalog';
+import type { ServiceCategory, ServiceStatus} from '@/constants/service-catalog';
+import { ServiceRequestStatus } from '@/constants/service-catalog';
 
 export interface ServiceItem {
   id: string;

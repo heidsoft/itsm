@@ -1,7 +1,7 @@
 'use client';
 
 import React, { forwardRef } from 'react';
-import { FormCheckboxProps } from './types';
+import type { FormCheckboxProps } from './types';
 import { FormField } from './form-field';
 
 const Checkbox = forwardRef<HTMLInputElement, Omit<FormCheckboxProps, 'label' | 'error' | 'help'>>(

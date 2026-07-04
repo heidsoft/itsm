@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  problemService,
+import type {
   Problem,
   ProblemStatus,
-  ListProblemsParams,
+  ListProblemsParams} from '@/lib/services/problem-service';
+import {
+  problemService
 } from '@/lib/services/problem-service';
 import { message } from 'antd';
 

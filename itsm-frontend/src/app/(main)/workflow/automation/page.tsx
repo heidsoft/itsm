@@ -37,7 +37,8 @@ import {
   Clock,
   CheckCircle,
 } from 'lucide-react';
-import { TicketAutomationRuleApi, AutomationRule } from '@/lib/api/ticket-automation-rule-api';
+import type { AutomationRule } from '@/lib/api/ticket-automation-rule-api';
+import { TicketAutomationRuleApi } from '@/lib/api/ticket-automation-rule-api';
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;

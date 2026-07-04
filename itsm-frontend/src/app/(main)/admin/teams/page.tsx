@@ -31,7 +31,8 @@ import {
   Search,
 } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
-import { teamService, Team, CreateTeamRequest } from '@/lib/services/team-service';
+import type { Team, CreateTeamRequest } from '@/lib/services/team-service';
+import { teamService } from '@/lib/services/team-service';
 import { UserApi } from '@/lib/api/user-api';
 
 const { Title, Text } = Typography;

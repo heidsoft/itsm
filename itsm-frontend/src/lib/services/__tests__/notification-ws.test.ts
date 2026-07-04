@@ -11,8 +11,9 @@ jest.mock('@/lib/env', () => ({
   },
 }));
 
-import { NotificationWSService, notificationWS, NotificationWSMessage } from '../notification-ws';
-import { TicketNotification } from '@/lib/api/ticket-notification-api';
+import type { NotificationWSMessage } from '../notification-ws';
+import { NotificationWSService, notificationWS } from '../notification-ws';
+import type { TicketNotification } from '@/lib/api/ticket-notification-api';
 
 describe('NotificationWSService', () => {
   let service: NotificationWSService;

@@ -228,7 +228,7 @@ export class WorkflowApi {
   }
 
   static async createProcessDefinition(request: unknown): Promise<WorkflowDefinition> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return WorkflowApi.createWorkflow(request as any);
   }
 
@@ -237,7 +237,7 @@ export class WorkflowApi {
     request: unknown,
     version?: string
   ): Promise<WorkflowDefinition> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return WorkflowApi.updateWorkflow(key, request as any, version);
   }
 
@@ -253,9 +253,9 @@ export class WorkflowApi {
       code: current.code,
       name: current.name,
       description: current.description,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       type: current.type as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       bpmn_xml: (current as any).bpmn_xml,
     });
   }
@@ -273,7 +273,7 @@ export class WorkflowApi {
   static async listWorkflowInstances(
     params?: any
   ): Promise<{ instances: WorkflowInstance[]; total: number }> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return WorkflowApi.getInstances(params as any);
   }
 
@@ -444,9 +444,9 @@ export class WorkflowApi {
       code: `${original.code}_copy_${Date.now()}`,
       name: name || `${original.name} (副本)`,
       description: original.description,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       type: original.type as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       bpmn_xml: (original as any).bpmn_xml,
     });
   }
@@ -878,7 +878,7 @@ export class WorkflowApi {
     // 后端暂无专用节点实例API，尝试从任务列表获取
     try {
       const instance = await WorkflowApi.getInstance(instanceId);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       const _unused = instance;
       const tasksRes = await httpClient.get<
         Array<{
@@ -963,7 +963,7 @@ export class WorkflowApi {
       definition: {
         code: '',
         name: '',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         type: 'ticket' as any,
         version: 1,
         status: WorkflowStatus.DRAFT,
@@ -991,7 +991,7 @@ export class WorkflowApi {
       code: `workflow_${Date.now()}`,
       name,
       description: `从模板 ${templateId} 创建`,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       type: 'ticket' as any,
     });
   }
@@ -1010,7 +1010,7 @@ export class WorkflowApi {
     }
   ): Promise<WorkflowTemplate> {
     // 后端暂无保存模板接口，返回模拟数据
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _unused = workflowId;
     return {
       id: `template_${Date.now()}`,
@@ -1022,7 +1022,7 @@ export class WorkflowApi {
       definition: {
         code: '',
         name: data.name,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         type: 'ticket' as any,
         version: 1,
         status: WorkflowStatus.DRAFT,
@@ -1055,9 +1055,9 @@ export class WorkflowApi {
   ): Promise<WorkflowStats> {
     // return httpClient.get(`/api/v1/workflows/${workflowId}/stats`, params);
     // Return mock for now
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _unused = workflowId;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _unused2 = params;
     return {
       workflowId,

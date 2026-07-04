@@ -11,12 +11,18 @@ import {
   Modal,
   Space,
   Table,
+  Tag,
   Typography,
+  Avatar,
+  List,
+  Transfer,
+  Badge,
 } from 'antd';
 import type { TablePaginationConfig } from 'antd';
-import { Edit, Plus, Search, Trash2, UserPlus, Users } from 'lucide-react';
+import { Edit, Plus, Search, Trash2, UserPlus, Users, User, X, Check } from 'lucide-react';
 import BusinessStatsGrid from '@/components/common/BusinessStatsGrid';
 import { GroupAPI, type Group } from '@/lib/api/group-api';
+import { UserApi, type User } from '@/lib/api/user-api';
 
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
@@ -29,6 +35,15 @@ const GroupManagement: React.FC = () => {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+
+  // 成员管理状态
+  const [memberModalOpen, setMemberModalOpen] = useState(false);
+  const [groupMembers, setGroupMembers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [savingMembers, setSavingMembers] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -117,6 +132,78 @@ const GroupManagement: React.FC = () => {
     });
   };
 
+  // 加载组成员
+  const loadGroupMembers = async (groupId: number) => {
+    setLoadingMembers(true);
+    try {
+      const response = await GroupAPI.getMembers(groupId, { page: 1, page_size: 100 });
+      setGroupMembers(response.members || []);
+      setSelectedUserIds(response.members?.map(m => String(m.id)) || []);
+    } catch (error) {
+      console.error('Failed to load group members:', error);
+      message.error('加载组成员失败');
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  // 加载所有用户（用于添加成员）
+  const loadAllUsers = async () => {
+    try {
+      const response = await UserApi.getUsers({ page: 1, page_size: 500 });
+      setAllUsers(response.users || []);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    }
+  };
+
+  // 打开成员管理弹窗
+  const openMemberModal = async (group: Group) => {
+    setSelectedGroup(group);
+    setMemberModalOpen(true);
+    await loadGroupMembers(group.id);
+    await loadAllUsers();
+  };
+
+  // 保存成员变更
+  const handleSaveMembers = async () => {
+    if (!selectedGroup) return;
+
+    setSavingMembers(true);
+    try {
+      const currentMemberIds = groupMembers.map(m => String(m.id));
+      const newMemberIds = selectedUserIds;
+
+      // 找出需要添加和移除的成员
+      const toAdd = newMemberIds.filter(id => !currentMemberIds.includes(id)).map(Number);
+      const toRemove = currentMemberIds.filter(id => !newMemberIds.includes(id)).map(Number);
+
+      // 执行添加
+      for (const userId of toAdd) {
+        await GroupAPI.addMember(selectedGroup.id, userId);
+      }
+
+      // 执行移除
+      for (const userId of toRemove) {
+        await GroupAPI.removeMember(selectedGroup.id, userId);
+      }
+
+      message.success('组成员更新成功');
+      setMemberModalOpen(false);
+      await loadGroups();
+    } catch (error) {
+      console.error('Failed to save members:', error);
+      message.error('保存组成员失败');
+    } finally {
+      setSavingMembers(false);
+    }
+  };
+
+  // Transfer 的目标key（已选中的成员）
+  const targetKeys = selectedUserIds.filter(id =>
+    groupMembers.some(m => String(m.id) === id)
+  );
+
   const handleTableChange = (nextPagination: TablePaginationConfig) => {
     setPagination(prev => ({
       ...prev,
@@ -165,38 +252,58 @@ const GroupManagement: React.FC = () => {
       ),
     },
     {
+      title: '成员',
+      key: 'members',
+      width: 120,
+      render: (_: unknown, record: Group) => (
+        <Badge count={record.members?.length || 0} showZero color="blue">
+          <Button
+            type="link"
+            icon={<Users size={16} />}
+            onClick={() => openMemberModal(record)}
+          >
+            管理
+          </Button>
+        </Badge>
+      ),
+    },
+    {
       title: '租户ID',
       dataIndex: 'tenantId',
       key: 'tenantId',
-      width: 120,
+      width: 100,
     },
     {
       title: '创建时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (value: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
-      width: 180,
+      width: 160,
     },
     {
       title: '更新时间',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
       render: (value: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
-      width: 180,
+      width: 160,
     },
     {
       title: '操作',
       key: 'actions',
-      width: 160,
+      width: 180,
       render: (_: unknown, record: Group) => (
-        <Space>
-          <Button type="link" icon={<Edit size={16} />} onClick={() => openEditModal(record)}>
+        <Space size="small">
+          <Button type="link" size="small" icon={<Users size={14} />} onClick={() => openMemberModal(record)}>
+            成员
+          </Button>
+          <Button type="link" size="small" icon={<Edit size={14} />} onClick={() => openEditModal(record)}>
             编辑
           </Button>
           <Button
             type="link"
+            size="small"
             danger
-            icon={<Trash2 size={16} />}
+            icon={<Trash2 size={14} />}
             onClick={() => handleDelete(record)}
           >
             删除
@@ -312,6 +419,108 @@ const GroupManagement: React.FC = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* 成员管理模态框 */}
+      <Modal
+        title={
+          <Space>
+            <Users size={18} />
+            <span>管理组成员 - {selectedGroup?.name}</span>
+          </Space>
+        }
+        open={memberModalOpen}
+        onCancel={() => {
+          setMemberModalOpen(false);
+          setSelectedGroup(null);
+          setGroupMembers([]);
+          setSelectedUserIds([]);
+        }}
+        width={700}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setMemberModalOpen(false);
+              setSelectedGroup(null);
+              setGroupMembers([]);
+              setSelectedUserIds([]);
+            }}
+          >
+            取消
+          </Button>,
+          <Button
+            key="save"
+            type="primary"
+            loading={savingMembers}
+            onClick={handleSaveMembers}
+          >
+            保存更改
+          </Button>,
+        ]}
+      >
+        <div className="py-4">
+          <Text type="secondary" className="mb-4 block">
+            从左侧选择用户添加到本组，或移除已有成员。已在本组的成员显示在右侧。
+          </Text>
+
+          <Transfer
+            dataSource={allUsers.map(u => ({
+              key: String(u.id),
+              title: u.name || u.username || `用户#${u.id}`,
+              description: u.email || u.username || '',
+            }))}
+            titles={['可添加的用户', '当前成员']}
+            targetKeys={targetKeys}
+            onChange={setSelectedUserIds}
+            render={item => (
+              <Space>
+                <Avatar size="small" icon={<User size={14} />} />
+                <span>{item.title}</span>
+                <Text type="secondary" className="text-xs">
+                  {item.description}
+                </Text>
+              </Space>
+            )}
+            listStyle={{ width: 280, height: 400 }}
+            showSearch
+            filterOption={(input, item) =>
+              item.title.toLowerCase().includes(input.toLowerCase()) ||
+              item.description.toLowerCase().includes(input.toLowerCase())
+            }
+            locale={{
+              itemsUnit: '用户',
+              itemUnit: '用户',
+            }}
+          />
+
+          {groupMembers.length > 0 && (
+            <div className="mt-4">
+              <Text strong>当前成员预览：</Text>
+              <List
+                size="small"
+                className="mt-2"
+                bordered
+                dataSource={groupMembers}
+                renderItem={item => (
+                  <List.Item>
+                    <Space>
+                      <Avatar size="small" src={item.avatar}>
+                        <User size={14} />
+                      </Avatar>
+                      <Text>{item.name || item.username || `用户#${item.id}`}</Text>
+                      {item.email && (
+                        <Text type="secondary" className="text-xs">
+                          {item.email}
+                        </Text>
+                      )}
+                    </Space>
+                  </List.Item>
+                )}
+              />
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );

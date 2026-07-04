@@ -10,9 +10,10 @@ import {
   PoweroffOutlined, SendOutlined, ReloadOutlined, SettingOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@/app/components/PageContainer';
-import connectorService, {
+import type {
   ConnectorManifest, ConnectorConfig, SendConnectorMessageRequest,
 } from '@/lib/services/connector-service';
+import connectorService from '@/lib/services/connector-service';
 
 const { Text, Paragraph } = Typography;
 

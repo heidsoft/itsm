@@ -99,7 +99,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
   useEffect(() => {
     loadCategories();
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [query]);
 
   const handleSearch = () => {

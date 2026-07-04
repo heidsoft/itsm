@@ -15,7 +15,8 @@ import {
   Spin,
   Alert,
 } from 'antd';
-import dayjs, { Dayjs } from 'dayjs';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import {
   Activity,
   Clock,
@@ -27,8 +28,9 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
+import type {
+  DashboardMetrics} from '@/lib/api/bpmn-dashboard-api';
 import BPMNDashboardApi, {
-  DashboardMetrics,
   ProcessStat,
   TaskStat,
   TrendPoint,

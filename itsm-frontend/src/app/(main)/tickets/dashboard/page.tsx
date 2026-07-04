@@ -30,7 +30,8 @@ import {
   RefreshCw,
   Download,
 } from 'lucide-react';
-import { dashboardService, DashboardOverviewResponse } from '@/lib/services/analytics-service';
+import type { DashboardOverviewResponse } from '@/lib/services/analytics-service';
+import { dashboardService } from '@/lib/services/analytics-service';
 import { ticketService } from '@/lib/services/ticket-service';
 
 const { Option } = Select;

@@ -22,7 +22,8 @@ import { useRouter, useParams } from 'next/navigation';
 import dayjs from 'dayjs';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 
-import { ReleaseApi, Release, ReleaseRequest } from '@/lib/api/release-api';
+import type { Release, ReleaseRequest } from '@/lib/api/release-api';
+import { ReleaseApi } from '@/lib/api/release-api';
 import type { Dayjs } from 'dayjs';
 
 const { TextArea } = Input;

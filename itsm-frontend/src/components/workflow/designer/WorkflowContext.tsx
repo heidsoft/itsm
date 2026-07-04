@@ -3,7 +3,8 @@
 
 'use client';
 
-import React, { createContext, useContext, useReducer, ReactNode, useCallback } from 'react';
+import type { ReactNode} from 'react';
+import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import type {
   WorkflowDesignerContextType,
   WorkflowDefinition,

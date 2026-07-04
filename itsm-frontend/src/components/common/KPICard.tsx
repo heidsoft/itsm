@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { Card, Statistic } from 'antd';
-import { TrendingUp, TrendingDown, LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
 interface KPICardProps {
   title: string;

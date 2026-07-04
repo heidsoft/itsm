@@ -7,7 +7,7 @@
 import React, { useState, useCallback } from 'react';
 import { Card, Row, Col, Input, Select, DatePicker, Button, Space } from 'antd';
 import { Search as SearchIcon, RefreshCw, Filter } from 'lucide-react';
-import { ApprovalChainFilters as ApprovalChainFiltersType } from '@/types/approval-chain';
+import type { ApprovalChainFilters as ApprovalChainFiltersType } from '@/types/approval-chain';
 import { useDebouncedCallback } from '@/lib/component-utils';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
@@ -55,7 +55,7 @@ export function ApprovalChainFilters({
   );
 
   const handleDateRangeChange = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     (dates: any, dateStrings: [string, string]) => {
       const newFilters = {
         ...localFilters,

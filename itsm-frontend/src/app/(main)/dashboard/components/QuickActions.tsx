@@ -12,7 +12,7 @@ import {
   ThunderboltOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { QuickAction } from '../types/dashboard.types';
+import type { QuickAction } from '../types/dashboard.types';
 
 interface QuickActionsProps {
   actions: QuickAction[];

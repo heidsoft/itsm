@@ -2,12 +2,13 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { message } from 'antd';
-import {
-  ticketService,
+import type {
   Ticket,
   TicketStatus,
   TicketPriority,
-  TicketType,
+  TicketType} from '../../lib/services/ticket-service';
+import {
+  ticketService
 } from '../../lib/services/ticket-service';
 
 export interface TicketQueryFilters {
@@ -240,7 +241,7 @@ export const useTickets = (): UseTicketsReturn => {
   // 初始加载 + fetchTrigger 变化时重新拉取
   useEffect(() => {
     fetchTickets();
-  }, [fetchTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchTrigger]);  
 
   // 初始加载统计
   useEffect(() => {

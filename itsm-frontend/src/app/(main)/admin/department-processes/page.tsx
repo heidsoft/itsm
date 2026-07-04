@@ -28,8 +28,10 @@ import {
   CheckCircle,
   AlertTriangle,
 } from 'lucide-react';
-import { ProcessBinding, ProcessBindingApi } from '@/lib/api/process-binding-api';
-import { departmentService, Department } from '@/lib/services/department-service';
+import type { ProcessBinding} from '@/lib/api/process-binding-api';
+import { ProcessBindingApi } from '@/lib/api/process-binding-api';
+import type { Department } from '@/lib/services/department-service';
+import { departmentService } from '@/lib/services/department-service';
 
 const { Option } = Select;
 

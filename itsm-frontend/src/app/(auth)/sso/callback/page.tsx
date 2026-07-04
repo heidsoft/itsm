@@ -8,7 +8,8 @@ import { antdTheme } from '@/lib/antd-theme';
 import { AuthService } from '@/lib/services/auth-service';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { logger } from '@/lib/env';
-import { API_BASE_URL, Tenant } from '@/lib/api/api-config';
+import type { Tenant } from '@/lib/api/api-config';
+import { API_BASE_URL } from '@/lib/api/api-config';
 
 const { Text, Title } = Typography;
 

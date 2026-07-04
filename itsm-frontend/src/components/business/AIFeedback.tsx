@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Star, MessageSquare } from 'lucide-react';
-import { aiSaveFeedback, AIFeedbackRequest } from '@/lib/api/ai-api';
+import type { AIFeedbackRequest } from '@/lib/api/ai-api';
+import { aiSaveFeedback } from '@/lib/api/ai-api';
 import { message } from 'antd';
 
 interface AIFeedbackProps {

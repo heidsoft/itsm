@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { Button, Tooltip, App, Input, Space, Dropdown, MenuProps } from 'antd';
+import type { MenuProps } from 'antd';
+import { Button, Tooltip, App, Input, Space, Dropdown } from 'antd';
 import {
   Save,
   PlayCircle,

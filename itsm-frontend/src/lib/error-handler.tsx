@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { message, notification } from 'antd';
-import { ApiError } from '@/types/api';
+import type { ApiError } from '@/types/api';
 
 // 错误类型枚举
 export enum ErrorType {
@@ -194,7 +194,7 @@ export class ErrorHandler {
   // 显示用户通知
   private showUserNotification(errorInfo: ErrorInfo): void {
     const { severity, message: errorMessage } = errorInfo;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _type = errorInfo.type;
 
     // 根据严重程度选择通知方式

@@ -2,14 +2,15 @@
  * API配置测试
  */
 
+import type {
+  ApiResponse,
+  PaginationRequest,
+  PaginationResponse} from '../api/api-config';
 import {
   API_BASE_URL,
   API_VERSION,
   API_TIMEOUT,
-  API_ERROR_CODES,
-  ApiResponse,
-  PaginationRequest,
-  PaginationResponse,
+  API_ERROR_CODES
 } from '../api/api-config';
 
 describe('API Configuration', () => {

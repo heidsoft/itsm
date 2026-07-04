@@ -5,7 +5,8 @@
  * 整合了原有 TicketApi 和 ticketService 的功能。
  */
 
-import { BaseService, PaginatedResponse, ListParams } from './base-service';
+import type { PaginatedResponse, ListParams } from './base-service';
+import { BaseService } from './base-service';
 import type { Ticket, TicketPriority, TicketStatus } from '@/lib/api/types';
 
 // ==================== 类型定义 ====================

@@ -4,12 +4,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Card, Empty, Select, Input, Tag, Typography, Space, Divider, Alert, Button, Switch, InputNumber } from 'antd';
-import { 
-  User, Users, UserCheck, Hash, Tag as TagIcon, RefreshCw, 
-  Code, Server, GitBranch, PlayCircle, Clock, FileText, 
+import { Card, Empty, Select, Input, Tag, Typography, Space, Divider, Alert, Button, Switch, Tooltip, Collapse, Badge } from 'antd';
+import {
+  User, Users, UserCheck, Hash, Tag as TagIcon, RefreshCw,
+  Code, Server, GitBranch, PlayCircle, Clock, FileText,
   Webhook, Settings, MessageSquare, Mail, AlertTriangle,
-  Database, Link, Timer, MessageCircle, Radio
+  Database, Link, Timer, MessageCircle, Radio, ChevronDown, ChevronRight,
+  Save, Undo, Redo, Info, Zap
 } from 'lucide-react';
 import { GroupAPI, type Group } from '@/lib/api/group-api';
 import { UserApi, type User as ApiUser } from '@/lib/api/user-api';
@@ -123,25 +124,39 @@ export default function WorkflowNodeInspector({
         className="h-full rounded-lg shadow-sm border border-gray-200"
         extra={
           onRefresh && (
-            <Button
-              type="text"
-              size="small"
-              icon={<RefreshCw className="w-3 h-3" />}
-              onClick={onRefresh}
-            >
-              重读
-            </Button>
+            <Tooltip title="刷新选中节点属性">
+              <Button
+                type="text"
+                size="small"
+                icon={<RefreshCw className="w-3 h-3" />}
+                onClick={onRefresh}
+              />
+            </Tooltip>
           )
         }
       >
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
-            <span className="text-xs text-gray-500">
-              点击画布上的节点查看/编辑属性
-            </span>
+            <Space direction="vertical" size={0} align="center">
+              <span className="text-xs text-gray-500">
+                点击画布上的节点查看/编辑属性
+              </span>
+              <Text type="secondary" className="text-xs">
+                支持拖拽节点、连接线、条件配置
+              </Text>
+            </Space>
           }
         />
+        {/* 快捷操作提示 */}
+        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+          <Text strong className="text-xs block mb-2">💡 快捷操作</Text>
+          <Space direction="vertical" size={2} className="w-full">
+            <Text type="secondary" className="text-xs">• 双击节点可快速编辑名称</Text>
+            <Text type="secondary" className="text-xs">• 点击连接线设置流转条件</Text>
+            <Text type="secondary" className="text-xs">• 拖拽节点左侧/右侧创建新流程</Text>
+          </Space>
+        </div>
       </Card>
     );
   }
@@ -398,11 +413,40 @@ export default function WorkflowNodeInspector({
           <>
             <Divider className="my-2" />
 
+            {/* 快捷操作栏 */}
+            <div className="mb-3 p-2 bg-blue-50 rounded-lg">
+              <Space wrap>
+                <Text strong className="text-xs text-blue-700">⚡ 常用配置：</Text>
+                <Button
+                  size="small"
+                  type="text"
+                  onClick={() => apply({ assignee: currentAssignee || 'admin' })}
+                >
+                  设为管理员
+                </Button>
+                <Button
+                  size="small"
+                  type="text"
+                  onClick={() => apply({ priority: '50' })}
+                >
+                  普通优先级
+                </Button>
+                <Button
+                  size="small"
+                  type="text"
+                  onClick={() => apply({ dueDate: 'PT24H' })}
+                >
+                  24小时超时
+                </Button>
+              </Space>
+            </div>
+
             {/* Assignee */}
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <UserCheck className="w-3.5 h-3.5 mr-1" />
                 受理人 (assignee)
+                <Tag color="blue" className="ml-2 text-xs">单人</Tag>
               </Text>
               <Select
                 allowClear
@@ -418,10 +462,13 @@ export default function WorkflowNodeInspector({
                 options={userOptions}
                 size="small"
               />
+              <Text type="secondary" className="text-xs mt-1 block">
+                指定单一用户为该任务的处理人
+              </Text>
             </div>
 
             {/* Candidate Users */}
-            <div>
+            <div className="mt-3">
               <Text strong className="text-sm flex items-center mb-2">
                 <User className="w-3.5 h-3.5 mr-1" />
                 候选人 (candidateUsers)
@@ -441,22 +488,29 @@ export default function WorkflowNodeInspector({
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                任一候选人审批即通过该节点
+                任一候选人可处理该任务
               </Text>
             </div>
 
             {/* Candidate Groups — 核心审批组入口 */}
-            <div>
-              <Text strong className="text-sm flex items-center mb-2">
-                <Users className="w-3.5 h-3.5 mr-1" />
-                候选组 (candidateGroups)
-              </Text>
+            <div className="mt-3">
+              <Space>
+                <Text strong className="text-sm flex items-center">
+                  <Users className="w-3.5 h-3.5 mr-1" />
+                  候选组 (candidateGroups)
+                </Text>
+                <Badge
+                  count={currentCandidateGroups.length}
+                  size="small"
+                  style={{ backgroundColor: currentCandidateGroups.length > 0 ? '#52c41a' : '#d9d9d9' }}
+                />
+              </Space>
               <Select
                 mode="multiple"
                 placeholder="选择审批组（多选）"
                 value={currentCandidateGroups}
                 onChange={values => apply({ candidateGroups: toCsv(values) })}
-                className="w-full"
+                className="w-full mt-2"
                 loading={loadingGroups}
                 maxTagCount="responsive"
                 notFoundContent={
@@ -487,7 +541,7 @@ export default function WorkflowNodeInspector({
                 type="info"
                 showIcon
                 className="mt-2 text-xs"
-                message="提示: 审批组中任一成员审批即视为该节点通过；保存后写入 BPMN XML 的 candidateGroups 属性，后端引擎据此分配任务。"
+                message="审批组中任一成员审批即视为该节点通过"
               />
             </div>
 

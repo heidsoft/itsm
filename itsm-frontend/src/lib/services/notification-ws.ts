@@ -4,7 +4,7 @@
  */
 
 import { logger } from '@/lib/env';
-import { TicketNotification } from '@/lib/api/ticket-notification-api';
+import type { TicketNotification } from '@/lib/api/ticket-notification-api';
 
 export interface NotificationWSMessage {
   type: 'notification' | 'heartbeat' | 'error';

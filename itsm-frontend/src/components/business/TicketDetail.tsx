@@ -5,9 +5,10 @@ import { FileText, Save, X } from 'lucide-react';
 
 import { Button, Space, Typography, App, Tabs, Divider, message } from 'antd';
 import { TicketApi } from '@/lib/api/ticket-api';
-import { TicketNotificationApi, TicketNotification } from '@/lib/api/ticket-notification-api';
-import { Ticket, Attachment, WorkflowStep, SLAInfo } from '@/lib/api/api-config';
-import { Comment } from '@/types/comment';
+import type { TicketNotification } from '@/lib/api/ticket-notification-api';
+import { TicketNotificationApi } from '@/lib/api/ticket-notification-api';
+import type { Ticket, Attachment, WorkflowStep, SLAInfo } from '@/lib/api/api-config';
+import type { Comment } from '@/types/comment';
 import {
   TicketDetailHeader,
   TicketOverviewTab,

@@ -20,11 +20,12 @@ import {
   Alert,
 } from 'antd';
 import { Plus, Edit, Delete, PlayCircle, PauseCircle, Settings } from 'lucide-react';
-import {
-  TicketAutomationRuleApi,
+import type {
   AutomationRule,
   CreateAutomationRuleRequest,
-  UpdateAutomationRuleRequest,
+  UpdateAutomationRuleRequest} from '@/lib/api/ticket-automation-rule-api';
+import {
+  TicketAutomationRuleApi
 } from '@/lib/api/ticket-automation-rule-api';
 
 const { Title, Text } = Typography;

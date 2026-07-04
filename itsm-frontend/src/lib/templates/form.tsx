@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { useState } from 'react';
 import { Form, Input, Button, Select, DatePicker, InputNumber, Space, Modal } from 'antd';
 import type { Rule } from 'antd/es/form';
 import type { FormInstance } from 'antd/es/form';

@@ -1,5 +1,5 @@
 // itsm-frontend/tests/e2e/utils/page-objects/BasePage.ts
-import { Page, Locator } from '@playwright/test';
+import type { Page, Locator } from '@playwright/test';
 
 export abstract class BasePage {
   protected page: Page;

@@ -804,17 +804,18 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           validationIssues={validationIssues} onAIClick={() => setShowAIModal(true)}
         />
 
-        <Content className="p-6 bg-gray-50">
+        <Content className="p-4 md:p-6 bg-gray-50 overflow-hidden">
           <Tabs
             activeKey={activeTab}
             onChange={handleTabChange}
+            size="small"
             items={[
               {
                 key: 'designer',
                 label: '流程设计',
                 children: (
-                  <div className="flex gap-4 h-[calc(100vh-200px)]">
-                    <div className="flex-1 min-w-0">
+                  <div className="flex flex-col md:flex-row gap-2 md:gap-4 h-[calc(100vh-220px)] md:h-[calc(100vh-200px)]">
+                    <div className="flex-1 min-w-0 min-h-[300px] md:min-h-0">
                       <WorkflowCanvas
                         currentXML={currentXML}
                         onSave={handleSave}
@@ -825,7 +826,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                         onSelectionChange={handleSelectionChange}
                       />
                     </div>
-                    <div className="w-80 shrink-0 overflow-y-auto">
+                    <div className="w-full md:w-80 shrink-0 overflow-y-auto bg-white rounded-lg shadow-sm border border-gray-200">
                       <WorkflowNodeInspector
                         selection={selectedNode}
                         onUpdateProperties={handleUpdateNodeProperties}

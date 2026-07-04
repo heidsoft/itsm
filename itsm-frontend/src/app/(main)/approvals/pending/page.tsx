@@ -13,7 +13,8 @@ import {
   UserAddOutlined,
 } from '@ant-design/icons';
 
-import { serviceRequestAPI, ServiceRequest } from '@/lib/api/service-request-api';
+import type { ServiceRequest } from '@/lib/api/service-request-api';
+import { serviceRequestAPI } from '@/lib/api/service-request-api';
 import { WorkflowApi, type WorkflowTask } from '@/lib/api/workflow-api';
 import { useI18n } from '@/lib/i18n';
 
@@ -102,7 +103,7 @@ export default function PendingApprovalsPage() {
 
   useEffect(() => {
     load(1, size);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   return (
@@ -325,7 +326,7 @@ function MyBpmnTaskTab() {
 
   useEffect(() => {
     load(1, size);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   return (

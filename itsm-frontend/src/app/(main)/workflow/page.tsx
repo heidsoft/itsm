@@ -185,7 +185,7 @@ const WorkflowManagementPage = () => {
   // 当工作流列表更新时同步刷新统计
   useEffect(() => {
     loadStats();
-  }, [workflows, pagination.total]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [workflows, pagination.total]);  
 
   // 初始加载工作流列表
   useEffect(() => {
@@ -195,7 +195,7 @@ const WorkflowManagementPage = () => {
   // 当filters变化时重新加载数据（重置到第一页）
   useEffect(() => {
     loadWorkflows(1, pagination.pageSize);
-  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters]);  
 
   const handleCreateWorkflow = () => {
     setEditingWorkflow(null);

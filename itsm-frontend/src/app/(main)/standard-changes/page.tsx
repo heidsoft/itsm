@@ -34,7 +34,8 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { StandardChangeApi, StandardChange } from '@/lib/api/standard-change-api';
+import type { StandardChange } from '@/lib/api/standard-change-api';
+import { StandardChangeApi } from '@/lib/api/standard-change-api';
 import { useI18n } from '@/lib/i18n';
 import { ChangeRiskLabels, ChangeImpactLabels } from '@/constants/change';
 

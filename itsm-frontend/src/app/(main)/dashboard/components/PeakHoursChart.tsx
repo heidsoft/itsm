@@ -5,7 +5,7 @@ import { Tag } from 'antd';
 import { Column } from '@ant-design/charts';
 import { TrendingUp } from 'lucide-react';
 import { DashboardChartCard } from './DashboardChartCard';
-import { PeakHourData } from '../types/dashboard.types';
+import type { PeakHourData } from '../types/dashboard.types';
 
 const PeakHoursChart: React.FC<{ data: PeakHourData[] }> = React.memo(({ data }) => {
   // 确保数据有效性

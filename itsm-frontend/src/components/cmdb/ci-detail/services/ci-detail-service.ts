@@ -4,7 +4,8 @@
  */
 
 import type { CIType } from '@/types/biz/cmdb';
-import { CMDBApi, ConfigurationItem } from '@/lib/api/cmdb-api';
+import type { ConfigurationItem } from '@/lib/api/cmdb-api';
+import { CMDBApi } from '@/lib/api/cmdb-api';
 
 /**
  * 获取 CI 详情和类型列表

@@ -2,7 +2,7 @@
  * 事件管理类型定义
  */
 
-import { IncidentPriority, IncidentSeverity, IncidentStatus } from '@/constants/incident';
+import type { IncidentPriority, IncidentSeverity, IncidentStatus } from '@/constants/incident';
 
 // 事件实体接口
 export interface Incident {

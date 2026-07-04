@@ -10,7 +10,8 @@
  * 6. 节假日管理
  */
 
-import { ApiResponse, PaginatedResponse } from '@/types/api';
+import type { PaginatedResponse } from '@/types/api';
+import { ApiResponse } from '@/types/api';
 
 // SLA状态枚举
 export enum SLAStatus {

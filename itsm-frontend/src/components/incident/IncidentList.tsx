@@ -31,10 +31,11 @@ import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { IncidentApi } from '@/lib/api/';
+import type {
+  IncidentSeverity} from '@/constants/incident';
 import {
   IncidentStatus,
   IncidentPriority,
-  IncidentSeverity,
   IncidentStatusLabels,
   IncidentPriorityLabels,
   IncidentSeverityLabels,
@@ -94,7 +95,7 @@ const IncidentList: React.FC = () => {
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [query.page, query.size, query.scope]);
 
   const handleSearch = () => {

@@ -29,7 +29,8 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
-import { ReleaseApi, Release } from '@/lib/api/release-api';
+import type { Release } from '@/lib/api/release-api';
+import { ReleaseApi } from '@/lib/api/release-api';
 
 const { Title, Text } = Typography;
 

@@ -43,7 +43,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import { Ticket } from '@/lib/services/ticket-service';
+import type { Ticket } from '@/lib/services/ticket-service';
 import { TicketApprovalApi } from '@/lib/api/ticket-approval-api';
 
 const { Title, Text } = Typography;

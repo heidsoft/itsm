@@ -2,7 +2,7 @@
  * 变更管理类型定义
  */
 
-import {
+import type {
   ChangeStatus,
   ChangeType,
   ChangePriority,

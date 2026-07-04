@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
 const { Title, Paragraph } = Typography;
 
 interface BasicInfoCardProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   data: any;
 }
 

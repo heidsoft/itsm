@@ -33,7 +33,8 @@ import {
   ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { KEDBApi, KEDBResponse, KEDBStatsResponse } from '@/lib/api/kedb-api';
+import type { KEDBResponse, KEDBStatsResponse } from '@/lib/api/kedb-api';
+import { KEDBApi } from '@/lib/api/kedb-api';
 
 const { TextArea } = Input;
 const { Text } = Typography;

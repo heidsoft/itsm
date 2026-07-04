@@ -20,7 +20,7 @@ import { useRouter } from 'next/navigation';
 import { IncidentList } from './components/IncidentList';
 import { IncidentFilters } from './components/IncidentFilters';
 import { IncidentStats } from './components/IncidentStats';
-import { Incident } from '@/lib/api/types';
+import type { Incident } from '@/lib/api/types';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import { UserApi } from '@/lib/api/user-api';
 import {

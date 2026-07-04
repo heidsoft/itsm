@@ -29,7 +29,8 @@ import {
   ToggleRight,
 } from 'lucide-react';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
-import { ServiceItem, ServiceCategory } from '@/types/service-catalog';
+import type { ServiceItem} from '@/types/service-catalog';
+import { ServiceCategory } from '@/types/service-catalog';
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, Col, Progress, Row, Tag, Typography } from 'antd';
-import { ReportMetrics } from './ReportMetrics';
+import type { ReportMetrics } from './ReportMetrics';
 
 const { Text } = Typography;
 

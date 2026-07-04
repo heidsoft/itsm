@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { RoutePermission } from '../router/route-config';
+import type { RoutePermission } from '../router/route-config';
 
 /**
  * 根据角色获取权限列表

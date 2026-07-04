@@ -23,7 +23,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { TicketFilterState } from './TicketFilters';
+import type { TicketFilterState } from './TicketFilters';
 
 const { Option } = Select;
 

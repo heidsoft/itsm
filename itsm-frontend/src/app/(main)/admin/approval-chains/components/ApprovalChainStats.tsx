@@ -10,7 +10,7 @@ import {
   Users,
   Settings,
 } from 'lucide-react';
-import { ApprovalChainStats } from '@/types/approval-chain';
+import type { ApprovalChainStats } from '@/types/approval-chain';
 
 const { Title } = Typography;
 

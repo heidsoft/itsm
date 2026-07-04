@@ -70,12 +70,12 @@ export class SLATemplateApi {
     const results: TemplateInstallResult[] = [];
     for (const t of recommended) {
       try {
-        // eslint-disable-next-line no-await-in-loop
+         
         const r = await this.installTemplate(t.key);
         results.push(r);
       } catch (err) {
         // 单个失败不影响其他
-        // eslint-disable-next-line no-console
+         
         console.error(`install template ${t.key} failed`, err);
       }
     }

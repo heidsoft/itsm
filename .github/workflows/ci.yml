@@ -115,6 +115,77 @@ jobs:
       - name: Build Docker image
         run: docker build -t itsm:${{ github.sha }} .
 
+  # E2E 测试（仅在 main 分支或 PR 时运行）
+  e2e:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: itsm-frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: itsm-frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Start backend for E2E
+        working-directory: itsm-backend
+        run: |
+          # 启动后端服务（后台运行）
+          go run main.go &
+          sleep 10
+          # 等待服务就绪
+          for i in {1..30}; do
+            if curl -s http://localhost:8090/api/v1/health > /dev/null 2>&1; then
+              echo "Backend is ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Set API URL
+        working-directory: itsm-frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8090
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+        run: |
+          # 启动前端开发服务器（后台运行）
+          npm run dev &
+          sleep 15
+          # 等待服务就绪
+          for i in {1..30}; do
+            if curl -s http://localhost:3000 > /dev/null 2>&1; then
+              echo "Frontend is ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Run smoke tests
+        working-directory: itsm-frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8090
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+        run: npm run test:smoke
+
+      - name: Run E2E tests (business flows)
+        working-directory: itsm-frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8090
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+        run: npm run test:e2e:business
+        continue-on-error: true
+
   # PR 大小检查
   pr-size:
     runs-on: ubuntu-latest

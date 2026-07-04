@@ -30,8 +30,9 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { TicketViewApi, TicketView, CreateTicketViewRequest } from '@/lib/api/ticket-view-api';
-import { TicketFilterState } from './TicketFilters';
+import type { TicketView, CreateTicketViewRequest } from '@/lib/api/ticket-view-api';
+import { TicketViewApi } from '@/lib/api/ticket-view-api';
+import type { TicketFilterState } from './TicketFilters';
 
 const { Option } = Select;
 const { TextArea } = Input;

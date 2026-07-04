@@ -3,7 +3,8 @@
 import React, { useState, useCallback } from 'react';
 import { Card, Select, Button, Space, Tag, Spin, message, Drawer, Descriptions, Empty } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
-import ReactFlow, { Node, Edge, Controls, Background, useNodesState, useEdgesState, MarkerType, BackgroundVariant, Panel, NodeTypes, Handle, Position } from 'reactflow';
+import type { Node, Edge, NodeTypes} from 'reactflow';
+import ReactFlow, { Controls, Background, useNodesState, useEdgesState, MarkerType, BackgroundVariant, Panel, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { CMDBApi } from '@/lib/api/cmdb-api';

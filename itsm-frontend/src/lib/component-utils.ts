@@ -3,15 +3,16 @@
  * 提供常用的组件工具函数和Hooks
  */
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import type React from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { message, notification } from 'antd';
 import { debounce as _debounce, throttle as _throttle } from 'lodash-es';
 import { logger } from '@/lib/env';
 
 // Cast lodash functions - lodash-es debounce/throttle have known TS generic limitations
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const debounce = _debounce as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const throttle = _throttle as any;
 
 // 防抖Hook
@@ -179,7 +180,7 @@ export const useAsync = <T>(asyncFunction: () => Promise<T>, dependencies: unkno
       setState({ data: null, loading: false, error: error as Error });
       throw error;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, dependencies);
 
   useEffect(() => {
@@ -306,7 +307,7 @@ export const useKeyPress = (
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [...dependencies]);
 };
 

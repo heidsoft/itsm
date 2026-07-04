@@ -3,10 +3,11 @@
  * 提供常用的测试工具函数和Mock数据
  */
 
-import { render, RenderOptions } from '@testing-library/react';
+import type { RenderOptions } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { App, ConfigProvider } from 'antd';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import antdTheme from '@/lib/antd-theme';
 
 // 创建测试用的QueryClient

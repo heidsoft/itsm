@@ -10,7 +10,8 @@ import {
   SyncOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@/app/components/PageContainer';
-import { departmentService, Department } from '@/lib/services/department-service';
+import type { Department } from '@/lib/services/department-service';
+import { departmentService } from '@/lib/services/department-service';
 
 import { UserApi } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n';

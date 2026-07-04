@@ -1,8 +1,9 @@
 import { httpClient } from './http-client';
-import {
+import type {
   ApiResponse,
-  PaginationResponse,
-  GetTenantsParams,
+  GetTenantsParams} from './api-config';
+import {
+  PaginationResponse
 } from './api-config';
 import type {
   MSPAllocation,

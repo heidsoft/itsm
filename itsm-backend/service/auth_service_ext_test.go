@@ -506,7 +506,8 @@ func TestAuthService_ResetPassword(t *testing.T) {
 		updated, err := fx.client.User.Get(fx.ctx, fx.user.ID)
 		require.NoError(t, err)
 		bcryptErr := bcrypt.CompareHashAndPassword(
-			[]byte(updated.PasswordHash), []byte("brand-new-pass"))
+			[]byte(updated.PasswordHash), []byte("brand-new-pass"),
+		)
 		assert.NoError(t, bcryptErr, "新密码应可验证")
 
 		// 验证 token 已被标记为已使用

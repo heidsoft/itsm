@@ -6,15 +6,16 @@ import type { FormInstance } from 'antd/es/form';
 
 import type { CIType, CloudResource, CloudService } from '@/types/biz/cmdb';
 
+import type {
+  CIFormValues,
+  SchemaField} from './ci-editor-shared';
 import {
   buildCloudResourceOptions,
-  CIFormValues,
   cloudProviderOptions,
   cloudSyncStatusOptions,
   criticalityOptions,
   environmentOptions,
   getStatusSelectOptions,
-  SchemaField,
   sourceOptions,
 } from './ci-editor-shared';
 

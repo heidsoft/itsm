@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { IncidentAPI, Incident } from '@/lib/api/incident-api';
+import type { Incident } from '@/lib/api/incident-api';
+import { IncidentAPI } from '@/lib/api/incident-api';
 import { message } from 'antd';
 import { useI18n } from '@/lib/i18n';
 

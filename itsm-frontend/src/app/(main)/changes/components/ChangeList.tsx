@@ -5,7 +5,8 @@ import { Table, Button, Space, Dropdown, Badge, message } from 'antd';
 import type { TablePaginationConfig } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import { Eye, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
-import { Change, changeService } from '@/lib/services/change-service';
+import type { Change} from '@/lib/services/change-service';
+import { changeService } from '@/lib/services/change-service';
 import { getStatusColor, getPriorityColor } from '@/lib/utils/color-tokens';
 
 // Note: getStatusColor and getPriorityColor now use design tokens from color-tokens.ts

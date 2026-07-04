@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from 'antd';
 import { SendOutlined, UserOutlined, EyeOutlined, MessageOutlined } from '@ant-design/icons';
-import { Ticket } from '@/lib/services/ticket-service';
+import type { Ticket } from '@/lib/services/ticket-service';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 

@@ -5,7 +5,7 @@ import { Send, Edit, Trash2, MessageSquare, AtSign, User } from 'lucide-react';
 import { Card, Typography, Button, Input, Avatar, Tag as AntTag, Modal, App } from 'antd';
 import { UserSelect } from '@/components/common/UserSelect';
 import { TicketApi } from '@/lib/api/ticket-api';
-import { Comment } from '@/types/comment';
+import type { Comment } from '@/types/comment';
 
 const { Text, Paragraph } = Typography;
 const { TextArea } = Input;

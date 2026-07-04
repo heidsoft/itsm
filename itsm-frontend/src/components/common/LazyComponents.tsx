@@ -1,6 +1,7 @@
 'use client';
 
-import React, { Suspense, lazy, ComponentType } from 'react';
+import type { ComponentType } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Spin, Skeleton } from 'antd';
 
 // 加载中组件

@@ -203,7 +203,7 @@ describe('API Integration Tests', () => {
           type: 'incident' as const,
         };
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         await expect(TicketApi.createTicket(invalidData as any)).rejects.toThrow(
           '请求参数错误: title is required'
         );

@@ -123,7 +123,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [query]);
 
   const handleSearch = () => {

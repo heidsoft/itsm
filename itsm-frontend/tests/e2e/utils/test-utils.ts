@@ -3,7 +3,8 @@
  * Provides helper functions for authentication, API calls, and test data management
  */
 
-import { Page, expect } from '@playwright/test';
+import type { Page} from '@playwright/test';
+import { expect } from '@playwright/test';
 
 // Test user credentials from seed data (see itsm-backend/pkg/seeder/seeder.go)
 export const TEST_USERS = {

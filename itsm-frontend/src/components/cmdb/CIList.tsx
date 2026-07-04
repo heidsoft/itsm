@@ -16,8 +16,9 @@ import {
   Select,
   App,
   Modal,
-  Breadcrumb,
   Empty,
+  Dropdown,
+  message,
 } from 'antd';
 import {
   SearchOutlined,
@@ -26,6 +27,9 @@ import {
   PlusOutlined,
   ReloadOutlined,
   DeleteOutlined,
+  DownloadOutlined,
+  MoreOutlined,
+  ExportOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
@@ -56,6 +60,7 @@ const CIList: React.FC = () => {
   const [data, setData] = useState<ConfigurationItem[]>([]);
   const [total, setTotal] = useState(0);
   const [types, setTypes] = useState<CIType[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const requestIdRef = useRef(0);
   const isMountedRef = useRef(true);
   const [filters, setFilters] = useState<{
@@ -140,7 +145,7 @@ const CIList: React.FC = () => {
 
   const handleDelete = (id: number) => {
     Modal.confirm({
-      title: '重申此操作',
+      title: '确认删除',
       content: '确定要删除此配置项吗？相关关系也将受到影响。',
       onOk: async () => {
         try {
@@ -153,6 +158,69 @@ const CIList: React.FC = () => {
         }
       },
     });
+  };
+
+  // 批量删除
+  const handleBatchDelete = () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('请先选择要删除的配置项');
+      return;
+    }
+    Modal.confirm({
+      title: '批量删除',
+      content: `确定要删除选中的 ${selectedRowKeys.length} 个配置项吗？此操作不可恢复。`,
+      onOk: async () => {
+        try {
+          const deletePromises = selectedRowKeys.map(id => CMDBApi.deleteCI(String(id)));
+          await Promise.all(deletePromises);
+          message.success(`成功删除 ${selectedRowKeys.length} 个配置项`);
+          setSelectedRowKeys([]);
+          loadData();
+        } catch (e) {
+          message.error('批量删除部分失败，请检查');
+          loadData();
+        }
+      },
+    });
+  };
+
+  // 导出选中项
+  const handleExport = () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('请先选择要导出的配置项');
+      return;
+    }
+    const selectedData = data.filter(item => selectedRowKeys.includes(item.id));
+    const csvContent = [
+      ['ID', '名称', '类型', '云厂商', '状态', '型号', '厂商', '最后更新'].join(','),
+      ...selectedData.map(item => [
+        item.id,
+        item.name,
+        types.find(t => t.id === item.ciTypeId)?.name || item.ci_type || '',
+        item.cloudProvider || item.cloud_provider || '',
+        item.status,
+        item.model || '',
+        item.vendor || '',
+        item.updatedAt || item.updated_at || '',
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `配置项导出_${dayjs().format('YYYYMMDD_HHmmss')}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    message.success(`已导出 ${selectedData.length} 条记录`);
+  };
+
+  // 表格行选择配置
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
   };
 
   const columns = [
@@ -244,91 +312,105 @@ const CIList: React.FC = () => {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">配置管理</h1>
           <p className="text-gray-500 mt-1">管理和维护系统中的所有配置项(CI)及其关系</p>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => router.push('/cmdb/cis/create')}
-          size="large"
-        >
-          录入资产
-        </Button>
+        <Space wrap>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push('/cmdb/cis/create')}
+          >
+            录入资产
+          </Button>
+        </Space>
       </div>
 
       <Card className="rounded-lg shadow-sm border border-gray-200">
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-            <Input
-              placeholder="搜索名称/序列号"
-              allowClear
-              value={filters.search}
-              onChange={event =>
-                updateFilters({
-                  ...filtersRef.current,
-                  search: event.target.value,
-                })
-              }
-              onClear={() =>
-                updateFilters({
-                  ...filtersRef.current,
-                  search: '',
-                })
-              }
-              prefix={<SearchOutlined className="text-gray-400" />}
-              className="w-64"
-            />
-            <Select
-              aria-label="资产类型"
-              placeholder="资产类型"
-              style={{ width: 140 }}
-              allowClear
-              value={filters.ciTypeId}
-              onChange={value => updateFilters({ ...filtersRef.current, ciTypeId: value })}
-            >
-              {types.map(t => (
-                <Option key={t.id} value={t.id}>
-                  {t.name}
-                </Option>
-              ))}
-            </Select>
-            <Select
-              aria-label="状态"
-              placeholder="状态"
-              style={{ width: 110 }}
-              allowClear
-              value={filters.status}
-              onChange={value => updateFilters({ ...filtersRef.current, status: value })}
-            >
-              {Object.entries(CIStatusLabels).map(([value, label]) => (
-                <Option key={value} value={value}>
-                  {label}
-                </Option>
-              ))}
-            </Select>
-            <Space>
-              <Button type="primary" onClick={handleSearch}>
-                查询
-              </Button>
-              <Button icon={<ReloadOutlined />} onClick={loadData} aria-label="刷新" />
-              <Select
-                placeholder="云资源管理"
-                style={{ width: 140 }}
-                onChange={value => router.push(value)}
-                options={[
-                  { label: '云服务目录', value: '/cmdb/cloud-services' },
-                  { label: '云账号管理', value: '/cmdb/cloud-accounts' },
-                  { label: '云资源列表', value: '/cmdb/cloud-resources' },
-                  { label: '对账中心', value: '/cmdb/reconciliation' },
-                ]}
-              />
-            </Space>
+        {/* 搜索工具栏 */}
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <Input
+            placeholder="搜索名称/序列号"
+            allowClear
+            value={filters.search}
+            onChange={event =>
+              updateFilters({
+                ...filtersRef.current,
+                search: event.target.value,
+              })
+            }
+            onClear={() =>
+              updateFilters({
+                ...filtersRef.current,
+                search: '',
+              })
+            }
+            prefix={<SearchOutlined className="text-gray-400" />}
+            style={{ width: 200 }}
+          />
+          <Select
+            aria-label="资产类型"
+            placeholder="资产类型"
+            style={{ width: 140 }}
+            allowClear
+            value={filters.ciTypeId}
+            onChange={value => updateFilters({ ...filtersRef.current, ciTypeId: value })}
+          >
+            {types.map(t => (
+              <Option key={t.id} value={t.id}>
+                {t.name}
+              </Option>
+            ))}
+          </Select>
+          <Select
+            aria-label="状态"
+            placeholder="状态"
+            style={{ width: 110 }}
+            allowClear
+            value={filters.status}
+            onChange={value => updateFilters({ ...filtersRef.current, status: value })}
+          >
+            {Object.entries(CIStatusLabels).map(([value, label]) => (
+              <Option key={value} value={value}>
+                {label}
+              </Option>
+            ))}
+          </Select>
+          <Space>
+            <Button type="primary" onClick={handleSearch}>
+              查询
+            </Button>
+            <Button icon={<ReloadOutlined />} onClick={loadData} loading={loading}>
+              刷新
+            </Button>
+          </Space>
         </div>
+
+        {/* 批量操作工具栏 */}
+        {selectedRowKeys.length > 0 && (
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg flex items-center gap-3">
+            <span className="text-sm text-blue-700">
+              已选择 <strong>{selectedRowKeys.length}</strong> 项
+            </span>
+            <Space>
+              <Button size="small" icon={<ExportOutlined />} onClick={handleExport}>
+                导出
+              </Button>
+              <Button size="small" danger icon={<DeleteOutlined />} onClick={handleBatchDelete}>
+                批量删除
+              </Button>
+            </Space>
+            <Button size="small" type="link" onClick={() => setSelectedRowKeys([])}>
+              取消选择
+            </Button>
+          </div>
+        )}
 
         <Table
           rowKey="id"
+          rowSelection={rowSelection}
           columns={columns as any}
           dataSource={data}
           loading={loading}

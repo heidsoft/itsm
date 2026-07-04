@@ -20,7 +20,8 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 
-import { AssetApi, License, LicenseRequest, type LicenseType } from '@/lib/api/asset-api';
+import type { License, LicenseRequest} from '@/lib/api/asset-api';
+import { AssetApi, type LicenseType } from '@/lib/api/asset-api';
 import type { Dayjs } from 'dayjs';
 
 const { TextArea } = Input;

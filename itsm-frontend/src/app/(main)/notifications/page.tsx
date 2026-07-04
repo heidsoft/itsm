@@ -42,10 +42,11 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import dayjs from 'dayjs';
-import {
-  TicketNotificationApi,
+import type {
   TicketNotification,
-  NotificationPreferenceItem,
+  NotificationPreferenceItem} from '@/lib/api/ticket-notification-api';
+import {
+  TicketNotificationApi
 } from '@/lib/api/ticket-notification-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { notificationWS } from '@/lib/services/notification-ws';

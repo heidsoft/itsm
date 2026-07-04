@@ -2,7 +2,7 @@
  * 工作流引擎服务 - 集成后端BPMN引擎
  */
 
-import { PaginatedResponse } from '@/types/api';
+import type { PaginatedResponse } from '@/types/api';
 
 // 工作流状态枚举
 export enum WorkflowStatus {

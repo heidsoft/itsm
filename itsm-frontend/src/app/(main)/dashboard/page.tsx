@@ -35,7 +35,7 @@ import { KPICards } from './components/KPICards';
 import { ChartsSection } from './components/ChartsSection';
 import { QuickActions } from './components/QuickActions';
 import { useDashboardData } from './hooks/useDashboardData';
-import { QuickAction } from './types/dashboard.types';
+import type { QuickAction } from './types/dashboard.types';
 
 // 动态导入图表组件 - 按需加载，减少初始 bundle 大小
 const TicketTrendChart = dynamic(() => import('./components/TicketTrendChart'), {

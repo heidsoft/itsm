@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, forwardRef } from 'react';
-import { FormDatePickerProps } from './types';
+import type { FormDatePickerProps } from './types';
 import { FormField } from './form-field';
 
 const DatePicker = forwardRef<

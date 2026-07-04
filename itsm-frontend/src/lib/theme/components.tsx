@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { theme, Theme, Colors } from './index';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { Theme, Colors } from './index';
+import { theme } from './index';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 type ColorScheme = 'light' | 'dark';

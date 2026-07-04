@@ -17,7 +17,8 @@ import {
 } from 'antd';
 import { ArrowLeftOutlined, PlayCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
-import { serviceRequestAPI, ProvisioningTask } from '@/lib/api/service-request-api';
+import type { ProvisioningTask } from '@/lib/api/service-request-api';
+import { serviceRequestAPI } from '@/lib/api/service-request-api';
 
 const { Title, Text } = Typography;
 
@@ -87,7 +88,7 @@ export default function MyRequestDetailPage() {
     if (Number.isFinite(requestId) && requestId > 0) {
       load();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [requestId]);
 
   useEffect(() => {
@@ -100,7 +101,7 @@ export default function MyRequestDetailPage() {
     ) {
       loadProvisioningTasks();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [detail]);
 
   const doApprove = async () => {

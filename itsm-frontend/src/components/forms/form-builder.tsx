@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FormBuilderProps, FormFieldConfig } from './types';
+import type { FormBuilderProps, FormFieldConfig } from './types';
 import { FormInput } from './form-input';
 import { FormTextarea } from './form-textarea';
 import { FormSelect } from './form-select';

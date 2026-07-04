@@ -23,7 +23,7 @@ import {
   Col,
 } from 'antd';
 import { Plus, MinusCircle, Edit, Trash2 } from 'lucide-react';
-import {
+import type {
   ApprovalChain,
   ApprovalStep,
   CreateApprovalChainRequest,

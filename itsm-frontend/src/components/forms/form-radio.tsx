@@ -1,7 +1,7 @@
 'use client';
 
 import React, { forwardRef } from 'react';
-import { FormRadioProps, FormRadioGroupProps, RadioOption } from './types';
+import type { FormRadioProps, FormRadioGroupProps, RadioOption } from './types';
 import { FormField } from './form-field';
 
 const Radio = forwardRef<HTMLInputElement, Omit<FormRadioProps, 'label' | 'error' | 'help'>>(

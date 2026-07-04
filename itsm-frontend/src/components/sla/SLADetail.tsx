@@ -34,7 +34,7 @@ const SLADetail: React.FC = () => {
     if (id) {
       loadDetail();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [id]);
 
   const loadDetail = async () => {

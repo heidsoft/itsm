@@ -16,7 +16,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { ReloadOutlined } from '@ant-design/icons';
-import { changeService, ChangeStats } from '@/lib/services/change-service';
+import type { ChangeStats } from '@/lib/services/change-service';
+import { changeService } from '@/lib/services/change-service';
 
 const { Title, Text } = Typography;
 

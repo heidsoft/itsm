@@ -21,7 +21,8 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { GitBranch, Plus, RefreshCw, Search } from 'lucide-react';
-import { DomainConfig, DomainConfigApi, EffectiveConfig } from '@/lib/api/domain-config-api';
+import type { DomainConfig, EffectiveConfig } from '@/lib/api/domain-config-api';
+import { DomainConfigApi } from '@/lib/api/domain-config-api';
 
 const { Title, Text } = Typography;
 

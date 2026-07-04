@@ -1,6 +1,7 @@
 'use client';
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
+import React, { Component } from 'react';
 import { Button, Result, Typography } from 'antd';
 import { RefreshCw, Home, Bug } from 'lucide-react';
 
@@ -167,7 +168,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 (ErrorBoundary as any).displayName = 'ErrorBoundary';
 
 // Global error handler hook

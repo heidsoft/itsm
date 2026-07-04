@@ -1,5 +1,5 @@
 declare module '@ant-design/charts' {
-  import { FC } from 'react';
+  import type { FC } from 'react';
 
   export interface LineConfig {
     data?: unknown[];

@@ -1,7 +1,8 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactNode, useState, lazy, Suspense, useEffect } from 'react';
+import type { ReactNode} from 'react';
+import { useState, lazy, Suspense, useEffect } from 'react';
 
 // 动态导入ReactQueryDevtools，只在开发环境中使用
 // 使用 disableHydrationWarning 防止 SSR 水合错误

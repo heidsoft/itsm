@@ -5,8 +5,10 @@ import { Button, Card, Form, Input, Select, Upload, Space, Row, Col, message, Ta
 import { ArrowLeftOutlined, UploadOutlined, SearchOutlined, CloseOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { IncidentAPI } from '@/lib/api/incident-api';
-import { CMDBApi, ConfigurationItem } from '@/lib/api/cmdb-api';
-import { UserApi, User } from '@/lib/api/user-api';
+import type { ConfigurationItem } from '@/lib/api/cmdb-api';
+import { CMDBApi } from '@/lib/api/cmdb-api';
+import type { User } from '@/lib/api/user-api';
+import { UserApi } from '@/lib/api/user-api';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 
 const { Title, Text } = Typography;

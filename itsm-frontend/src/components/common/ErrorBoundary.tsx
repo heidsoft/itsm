@@ -1,6 +1,7 @@
 'use client';
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
+import React, { Component } from 'react';
 import { Result, Button, Card } from 'antd';
 import { RefreshCw, Home, Bug } from 'lucide-react';
 import { handleErrorBoundary } from '@/lib/hooks/useErrorHandler';
@@ -197,7 +198,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 (ErrorBoundary as any).displayName = 'ErrorBoundary';
 
 // 高阶组件版本

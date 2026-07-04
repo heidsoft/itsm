@@ -1,7 +1,7 @@
 'use client';
 
 import React, { forwardRef, useEffect, useRef } from 'react';
-import { FormTextareaProps } from './types';
+import type { FormTextareaProps } from './types';
 import { FormField } from './form-field';
 
 const Textarea = forwardRef<

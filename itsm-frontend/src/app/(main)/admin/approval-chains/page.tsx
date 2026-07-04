@@ -6,7 +6,7 @@ import { ApprovalChainStatsCards } from './components/ApprovalChainStats';
 import { ApprovalChainFilters } from './components/ApprovalChainFilters';
 import { ApprovalChainTable } from './components/ApprovalChainTable';
 import { ApprovalChainModal } from './components/ApprovalChainModal';
-import {
+import type {
   ApprovalChain,
   ApprovalChainFilters as Filters,
   ApprovalChainStats,

@@ -14,10 +14,12 @@ import {
   Statistic,
   Alert,
 } from 'antd';
-import dayjs, { Dayjs } from 'dayjs';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { AlertTriangle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
 
-import BPMNDashboardApi, { SLAViolation, ProcessMetrics } from '@/lib/api/bpmn-dashboard-api';
+import type { SLAViolation, ProcessMetrics } from '@/lib/api/bpmn-dashboard-api';
+import BPMNDashboardApi from '@/lib/api/bpmn-dashboard-api';
 import { useI18n } from '@/lib/i18n';
 import { WorkflowApi } from '@/lib/api/workflow-api';
 

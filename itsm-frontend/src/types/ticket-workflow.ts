@@ -2,7 +2,7 @@
  * 工单流转相关类型定义
  */
 
-import { TicketStatus, TicketUser } from './ticket';
+import type { TicketStatus, TicketUser } from './ticket';
 
 /**
  * 工单流转操作类型

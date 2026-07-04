@@ -87,16 +87,44 @@ export { SLAApi } from './sla-api';
 
 export { WorkflowApi } from './workflow-api';
 export { BPMNAIApi } from './bpmn-ai-api';
+export { BPMNWorkflowApi } from './bpmn-workflow-api';
+export { BPMNMonitoringApi } from './bpmn-monitoring-api';
+export { BPMNDashboardApi } from './bpmn-dashboard-api';
 export type {
-  BPMNEnterpriseType,
-  BPMNNodePreview,
-  BPMNProcessType,
-  BPMNTemplateSuggestion,
-  GenerateBPMNRequest,
-  GenerateBPMNResponse,
-  PreviewBPMNRequest,
-  PreviewBPMNResponse,
-} from './bpmn-ai-api';
+  ProcessDefinition,
+  ProcessDefinitionListResponse,
+  ProcessInstance,
+  ProcessInstanceListResponse,
+  UserTask,
+  UserTaskListResponse,
+  CounterSignTask,
+  CounterSignStatusResponse,
+  ProcessVersion,
+  ProcessVersionListResponse,
+  VersionCompareResponse,
+  InstanceStats,
+  TaskStats,
+  VersionChangeLog,
+  ChangeLogListResponse,
+} from './bpmn-workflow-api';
+export type {
+  ProcessMetrics,
+  PerformanceMetrics,
+  ProcessInstanceStatus,
+  ProcessTimelineEntry,
+  BottleneckTask,
+  BottleneckAnalysis,
+  PerformanceAlert,
+  SystemHealth,
+} from './bpmn-monitoring-api';
+export type {
+  DashboardMetrics,
+  ProcessHealth,
+  ProcessStat,
+  TaskStat,
+  TrendPoint,
+  ProcessAuditLog,
+} from './bpmn-dashboard-api';
 
 // ==================== 仪表盘和报表API ====================
 

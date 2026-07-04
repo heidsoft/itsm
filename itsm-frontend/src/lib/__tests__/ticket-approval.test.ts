@@ -1,4 +1,5 @@
-import { TicketApprovalApi, ApprovalWorkflow } from '@/lib/api/ticket-approval-api';
+import type { ApprovalWorkflow } from '@/lib/api/ticket-approval-api';
+import { TicketApprovalApi } from '@/lib/api/ticket-approval-api';
 import { httpClient } from '@/lib/api/http-client';
 
 // Mock httpClient methods directly

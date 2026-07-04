@@ -2,7 +2,7 @@
  * 审批链类型定义
  */
 
-import { BaseEntity } from './common';
+import type { BaseEntity } from './common';
 
 export interface ApprovalChain extends BaseEntity {
   name: string;

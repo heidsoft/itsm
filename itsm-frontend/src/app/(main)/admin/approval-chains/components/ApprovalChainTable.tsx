@@ -15,8 +15,9 @@ import {
   Pause,
   Copy,
 } from 'lucide-react';
-import { ApprovalChain, ApprovalChainFilters } from '@/types/approval-chain';
-import { TableColumn, ActionButton } from '@/types/common';
+import type { ApprovalChain} from '@/types/approval-chain';
+import { ApprovalChainFilters } from '@/types/approval-chain';
+import type { TableColumn, ActionButton } from '@/types/common';
 
 interface ApprovalChainTableProps {
   dataSource: ApprovalChain[];

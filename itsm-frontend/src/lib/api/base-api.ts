@@ -4,12 +4,13 @@
  */
 
 import { httpClient } from '@/lib/api/http-client';
-import {
+import type {
   ApiResponse,
   PaginationResponse,
   ListQueryParams,
-  BatchOperationRequest,
-  RequestOptions,
+  RequestOptions} from '@/lib/api/types';
+import {
+  BatchOperationRequest
 } from '@/lib/api/types';
 
 /**

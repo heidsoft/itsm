@@ -73,7 +73,7 @@ const ServiceRequestDetail: React.FC = () => {
 
   useEffect(() => {
     loadDetail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [id]);
 
   // 提交审批

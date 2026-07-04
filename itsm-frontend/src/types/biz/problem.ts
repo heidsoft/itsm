@@ -2,7 +2,7 @@
  * 问题管理类型定义
  */
 
-import { ProblemPriority, ProblemStatus } from '@/constants/problem';
+import type { ProblemPriority, ProblemStatus } from '@/constants/problem';
 
 // 问题实体接口
 export interface Problem {

@@ -74,7 +74,7 @@ const ChangeDetail: React.FC = () => {
     if (id) {
       loadDetail();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [id]);
 
   // 检查是否可以审批

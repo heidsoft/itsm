@@ -10,7 +10,8 @@ import {
   SyncOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@/app/components/PageContainer';
-import { tagService, Tag as ITag } from '@/lib/services/tag-service';
+import type { Tag as ITag } from '@/lib/services/tag-service';
+import { tagService } from '@/lib/services/tag-service';
 import { useI18n } from '@/lib/i18n';
 
 export default function TagsPage() {

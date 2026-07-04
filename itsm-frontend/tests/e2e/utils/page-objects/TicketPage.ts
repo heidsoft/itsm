@@ -1,5 +1,5 @@
 // itsm-frontend/tests/e2e/utils/page-objects/TicketPage.ts
-import { Page, Locator } from '@playwright/test';
+import type { Page, Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 export class TicketPage extends BasePage {

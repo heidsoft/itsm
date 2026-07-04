@@ -31,7 +31,8 @@ import {
   NodeIndexOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
-import type { Node, Edge } from 'reactflow';
+import type { Node, Edge ,
+  NodeProps} from 'reactflow';
 import ReactFlow, {
   Background,
   Controls,
@@ -41,8 +42,7 @@ import ReactFlow, {
   Handle,
   Position,
   useReactFlow,
-  ReactFlowProvider,
-  NodeProps,
+  ReactFlowProvider
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 

@@ -30,9 +30,10 @@ import {
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
+import type {
+  TicketWorkflowState} from '@/types/ticket-workflow';
 import {
   TicketWorkflowAction,
-  TicketWorkflowState,
   ApprovalStatus,
   AcceptTicketRequest,
   RejectTicketRequest,
@@ -41,7 +42,7 @@ import {
   CCTicketRequest,
   ApproveTicketRequest,
 } from '@/types/ticket-workflow';
-import { Ticket } from '@/types/ticket';
+import type { Ticket } from '@/types/ticket';
 
 const { TextArea } = Input;
 const { Option } = Select;

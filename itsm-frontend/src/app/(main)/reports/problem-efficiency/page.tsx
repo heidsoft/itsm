@@ -30,12 +30,13 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import {
-  problemService,
+import type {
   ProblemStatsResponse,
   Problem,
   ProblemStatus,
-  ProblemPriority,
+  ProblemPriority} from '@/lib/services/problem-service';
+import {
+  problemService
 } from '@/lib/services/problem-service';
 
 const { Title, Text } = Typography;

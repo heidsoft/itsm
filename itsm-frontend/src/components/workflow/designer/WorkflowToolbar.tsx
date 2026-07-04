@@ -4,7 +4,8 @@
 'use client';
 
 import React from 'react';
-import { Button, Space, Tag, Breadcrumb, Typography, Dropdown, MenuProps, Tooltip } from 'antd';
+import type { MenuProps} from 'antd';
+import { Button, Space, Tag, Breadcrumb, Typography, Dropdown, Tooltip } from 'antd';
 import {
   SaveOutlined,
   CloudUploadOutlined,

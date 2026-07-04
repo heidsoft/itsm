@@ -17,15 +17,16 @@ import {
   Typography,
   message,
 } from 'antd';
-import { ColumnsType } from 'antd/es/table';
+import type { ColumnsType } from 'antd/es/table';
 import { Delete, Edit, FlaskConical, Plus, RefreshCw } from 'lucide-react';
-import {
+import type {
   ActionConfig,
   AssignmentRule,
   ConditionConfig,
   CreateAssignmentRuleRequest,
-  TicketAssignmentApi,
-  UpdateAssignmentRuleRequest,
+  UpdateAssignmentRuleRequest} from '@/lib/api/ticket-assignment-api';
+import {
+  TicketAssignmentApi
 } from '@/lib/api/ticket-assignment-api';
 
 const { Title, Text } = Typography;

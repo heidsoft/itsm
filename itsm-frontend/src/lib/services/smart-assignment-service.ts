@@ -10,7 +10,8 @@
  * 6. 分配效果评估
  */
 
-import { ApiResponse, PaginatedResponse } from '@/types/api';
+import type { PaginatedResponse } from '@/types/api';
+import { ApiResponse } from '@/types/api';
 
 // 分配策略枚举
 export enum AssignmentStrategy {

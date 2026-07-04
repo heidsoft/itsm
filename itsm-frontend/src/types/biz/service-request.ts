@@ -2,7 +2,7 @@
  * 服务请求模块类型定义
  */
 
-import {
+import type {
   ServiceRequestStatus,
   ApprovalStatus,
   ApprovalStep,

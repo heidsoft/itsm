@@ -5,7 +5,7 @@ import { Table, Tag, Button, Space, Dropdown, message, Modal } from 'antd';
 import { Eye, Edit, MoreHorizontal, AlertTriangle, Trash2 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
-import { Incident } from '@/lib/api/types';
+import type { Incident } from '@/lib/api/types';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import { useI18n } from '@/lib/i18n';
 

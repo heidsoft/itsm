@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FormFieldProps } from './types';
+import type { FormFieldProps } from './types';
 
 export const FormField: React.FC<FormFieldProps> = ({
   name,

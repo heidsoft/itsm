@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { TicketStatus, TicketPriority, TicketType } from '@/lib/services/ticket-service';
-import { TicketQueryFilters } from './useTickets';
+import type { TicketType } from '@/lib/services/ticket-service';
+import { TicketStatus, TicketPriority } from '@/lib/services/ticket-service';
+import type { TicketQueryFilters } from './useTickets';
 
 export type TicketFilterState = {
   status: 'all' | 'open' | 'in_progress' | 'resolved' | 'closed';

@@ -23,14 +23,17 @@ import {
   Statistic,
 } from 'antd';
 import { Plus, Edit, Delete, Copy, Search, Settings } from 'lucide-react';
-import {
+import type {
   ProcessBinding,
-  ProcessBindingApi,
-  ProcessBindingPayload,
+  ProcessBindingPayload} from '@/lib/api/process-binding-api';
+import {
+  ProcessBindingApi
 } from '@/lib/api/process-binding-api';
 import { WorkflowApi } from '@/lib/api/workflow-api';
-import { departmentService, Department } from '@/lib/services/department-service';
-import { teamService, Team } from '@/lib/services/team-service';
+import type { Department } from '@/lib/services/department-service';
+import { departmentService } from '@/lib/services/department-service';
+import type { Team } from '@/lib/services/team-service';
+import { teamService } from '@/lib/services/team-service';
 
 const { Option } = Select;
 

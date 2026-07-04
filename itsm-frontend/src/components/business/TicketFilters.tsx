@@ -21,7 +21,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { TicketViewSelector } from './TicketViewSelector';
-import { TicketView } from '@/lib/api/ticket-view-api';
+import type { TicketView } from '@/lib/api/ticket-view-api';
 import { FilterPresetSelector } from './FilterPresetSelector';
 import { debounce as _debounce } from 'lodash-es';
 const debounce = _debounce as any;

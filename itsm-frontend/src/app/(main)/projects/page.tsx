@@ -22,7 +22,8 @@ import {
   SyncOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@/app/components/PageContainer';
-import { projectService, Project } from '@/lib/services/project-service';
+import type { Project } from '@/lib/services/project-service';
+import { projectService } from '@/lib/services/project-service';
 import { useI18n } from '@/lib/i18n';
 
 const { RangePicker } = DatePicker;

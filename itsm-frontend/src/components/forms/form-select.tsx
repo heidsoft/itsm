@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { FormSelectProps, SelectOption } from './types';
+import type { FormSelectProps, SelectOption } from './types';
 import { FormField } from './form-field';
 
 const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({

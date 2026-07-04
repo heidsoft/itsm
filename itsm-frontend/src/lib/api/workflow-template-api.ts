@@ -106,7 +106,7 @@ export class WorkflowTemplateApi {
 }
 
 // 需要引用 WorkflowDefinitionApi
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const WorkflowDefinitionApi: any = {
   createWorkflow: async (request: any) => {
     // 这里需要实际导入，但为避免循环依赖，暂时留空

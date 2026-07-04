@@ -132,7 +132,7 @@ export default function BottlenecksPage() {
         });
       })
       .catch(err => {
-        // eslint-disable-next-line no-console
+         
         console.error(err);
         if (alive) {
           message.error('加载瓶颈分析失败');

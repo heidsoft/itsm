@@ -3,8 +3,9 @@
 import React, { useCallback, useState } from 'react';
 import { Button, Space, Badge, Table, Empty } from 'antd';
 import { AlertTriangle } from 'lucide-react';
+import type {
+  Ticket} from '../../lib/services/ticket-service';
 import {
-  Ticket,
   TicketStatus,
   TicketPriority,
   TicketType,

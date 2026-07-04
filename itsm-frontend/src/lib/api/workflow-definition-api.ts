@@ -278,7 +278,7 @@ export class WorkflowDefinitionApi {
 }
 
 // 需要引用主 WorkflowApi 来处理循环依赖
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const WorkflowApi: any = WorkflowDefinitionApi;
 
 export default WorkflowDefinitionApi;

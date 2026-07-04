@@ -42,9 +42,10 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import { Ticket } from '@/lib/services/ticket-service';
+import type { Ticket } from '@/lib/services/ticket-service';
 import { TicketRelationsApi } from '@/lib/api/ticket-relations-api';
-import { TicketRelationType, TicketDependency } from '@/types/ticket-relations';
+import type { TicketDependency } from '@/types/ticket-relations';
+import { TicketRelationType } from '@/types/ticket-relations';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;

@@ -8,7 +8,7 @@ import React from 'react';
 import { Menu, Badge } from 'antd';
 import type { MenuProps } from 'antd';
 import styles from '../Sidebar.module.css';
-import { MenuItem } from './menu-config';
+import type { MenuItem } from './menu-config';
 
 interface MenuItemsProps {
   items: MenuItem[];

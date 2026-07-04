@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { ValidationRule } from '../../utils/validation';
+import type { ReactNode } from 'react';
+import type { ValidationRule } from '../../utils/validation';
 
 // 基础表单字段属性
 export interface BaseFormFieldProps {

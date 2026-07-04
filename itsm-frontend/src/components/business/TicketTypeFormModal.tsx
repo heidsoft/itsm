@@ -25,12 +25,13 @@ import {
   ArrowDownOutlined,
   InfoCircleOutlined,
 } from '@ant-design/icons';
-import {
+import type {
   TicketTypeDefinition,
   CustomFieldDefinition,
-  CustomFieldType,
   ApprovalChainDefinition,
-  AssignmentRule,
+  AssignmentRule} from '@/types/ticket-type';
+import {
+  CustomFieldType
 } from '@/types/ticket-type';
 
 const { TextArea } = Input;

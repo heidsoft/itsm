@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 
 const BACKEND_BASE_URL = process.env.ITSM_BACKEND_URL || 'http://localhost:8090';
 

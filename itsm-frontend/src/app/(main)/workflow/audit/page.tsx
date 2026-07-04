@@ -26,10 +26,11 @@ import {
   Activity,
 } from 'lucide-react';
 
-import BPMNDashboardApi, {
+import type {
   ProcessAuditLog,
   QueryAuditLogsRequest,
 } from '@/lib/api/bpmn-dashboard-api';
+import BPMNDashboardApi from '@/lib/api/bpmn-dashboard-api';
 import { useI18n } from '@/lib/i18n';
 import { useAuthStore } from '@/lib/store/auth-store';
 

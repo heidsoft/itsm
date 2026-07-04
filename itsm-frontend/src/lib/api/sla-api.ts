@@ -241,7 +241,7 @@ export class SLAApi {
       slaDefinition: string;
       createdAt: string;
     }>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
   }> {
     const requestBody: any = {};
     if (params?.start_time) requestBody.start_time = params.start_time;

@@ -4,7 +4,7 @@ import React from 'react';
 import { Tag } from 'antd';
 import { Pie } from '@ant-design/charts';
 import { PieChart } from 'lucide-react';
-import { IncidentDistributionData } from '../types/dashboard.types';
+import type { IncidentDistributionData } from '../types/dashboard.types';
 import { DashboardChartCard } from './DashboardChartCard';
 
 const IncidentDistributionChart: React.FC<{ data: IncidentDistributionData[] }> = React.memo(

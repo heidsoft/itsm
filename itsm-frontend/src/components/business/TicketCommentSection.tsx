@@ -18,10 +18,11 @@ import {
   message,
 } from 'antd';
 import { Send, Edit, Trash2, User, AtSign, Lock, MessageSquare } from 'lucide-react';
-import {
-  TicketCommentApi,
+import type {
   TicketComment,
-  CreateTicketCommentRequest,
+  CreateTicketCommentRequest} from '@/lib/api/ticket-comment-api';
+import {
+  TicketCommentApi
 } from '@/lib/api/ticket-comment-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useI18n } from '@/lib/i18n';

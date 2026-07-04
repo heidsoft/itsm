@@ -6,10 +6,11 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"itsm-backend/connector"
-	feishuConnector "itsm-backend/connector/builtin/feishu"
 	"strings"
 	"time"
+
+	"itsm-backend/connector"
+	feishuConnector "itsm-backend/connector/builtin/feishu"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -52,7 +53,6 @@ type TicketServiceConfig struct {
 	ProcessTriggerService ProcessTriggerServiceInterface
 	ProcessResolver       *ProcessResolver
 	ConnectorManager      *connector.Manager // 连接器管理器
-
 }
 
 // NewTicketService 创建工单服务
@@ -496,7 +496,6 @@ func (s *TicketService) GetTicket(ctx context.Context, id int, tenantID int) (*t
 	}
 
 	return updated, nil
-
 }
 
 // GetTicketByNumber 根据编号获取工单
@@ -1018,7 +1017,6 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 	}
 
 	return updated, nil
-
 }
 
 // TicketSLAInfo 工单 SLA 信息（V2 内联定义，避免与 V1 重复）
@@ -1989,7 +1987,6 @@ func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, custo
 	}
 
 	return updated, nil
-
 }
 
 // GetMSPCustomerReports 获取 MSP 客户报告

@@ -21,7 +21,8 @@ import {
 import { useRouter } from 'next/navigation';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { useI18n } from '@/lib/i18n/useI18n';
-import dayjs, { Dayjs } from 'dayjs';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import {
   BarChartOutlined,
   LineChartOutlined,

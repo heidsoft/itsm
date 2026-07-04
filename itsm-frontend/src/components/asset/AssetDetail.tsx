@@ -29,7 +29,8 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
-import { AssetApi, Asset } from '@/lib/api/asset-api';
+import type { Asset } from '@/lib/api/asset-api';
+import { AssetApi } from '@/lib/api/asset-api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;

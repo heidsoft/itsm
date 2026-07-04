@@ -11,7 +11,8 @@ import {
   SyncOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@/app/components/PageContainer';
-import { applicationService, Application, Microservice } from '@/lib/services/application-service';
+import type { Application, Microservice } from '@/lib/services/application-service';
+import { applicationService } from '@/lib/services/application-service';
 import { useI18n } from '@/lib/i18n';
 
 const { TabPane } = Tabs;

@@ -26,8 +26,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { httpClient } from '@/lib/api/http-client';
-import connectorService, { ConnectorConfig } from '@/lib/services/connector-service';
-import marketplaceService, { TenantInstallation } from '@/lib/services/marketplace-service';
+import type { ConnectorConfig } from '@/lib/services/connector-service';
+import connectorService from '@/lib/services/connector-service';
+import type { TenantInstallation } from '@/lib/services/marketplace-service';
+import marketplaceService from '@/lib/services/marketplace-service';
 
 type InstallForm = {
   appId: string;

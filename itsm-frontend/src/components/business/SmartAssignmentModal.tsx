@@ -29,10 +29,11 @@ import {
   CheckCircleOutlined,
   InfoCircleOutlined,
 } from '@ant-design/icons';
-import {
-  TicketAssignmentApi,
+import type {
   AssignRecommendation,
-  AutoAssignResponse,
+  AutoAssignResponse} from '@/lib/api/ticket-assignment-api';
+import {
+  TicketAssignmentApi
 } from '@/lib/api/ticket-assignment-api';
 import { App } from 'antd';
 

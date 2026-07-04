@@ -3,7 +3,7 @@
 import React from 'react';
 import { User, Calendar, Clock, AlertTriangle, Edit, FileText } from 'lucide-react';
 import { Typography, Badge, Tag as AntTag } from 'antd';
-import { Ticket } from '@/lib/api/api-config';
+import type { Ticket } from '@/lib/api/api-config';
 
 const { Title, Text } = Typography;
 

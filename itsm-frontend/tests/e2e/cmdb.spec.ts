@@ -3,7 +3,8 @@
  * 配置管理数据库模块业务测试
  */
 
-import { test, expect, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { loginAndReturn } from './auth-utils';
 
 test.describe('CMDB - 配置管理', () => {

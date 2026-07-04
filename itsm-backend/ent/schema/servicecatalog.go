@@ -54,6 +54,7 @@ func (ServiceCatalog) Fields() []ent.Field {
 		field.Time("updated_at").Comment("更新时间").Default(time.Now).UpdateDefault(time.Now),
 	}
 }
+
 func (ServiceCatalog) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("items", ServiceCatalogItem.Type),

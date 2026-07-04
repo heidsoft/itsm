@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Change, ChangeStats, changeService } from '@/lib/services/change-service';
+import type { Change, ChangeStats} from '@/lib/services/change-service';
+import { changeService } from '@/lib/services/change-service';
 
 export const useChangesData = () => {
   const [changes, setChanges] = useState<Change[]>([]);

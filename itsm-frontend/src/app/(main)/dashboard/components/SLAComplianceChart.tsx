@@ -3,7 +3,7 @@
 import React from 'react';
 import { Progress, Tag, Statistic } from 'antd';
 import { GaugeIcon } from 'lucide-react';
-import { SLAData } from '../types/dashboard.types';
+import type { SLAData } from '../types/dashboard.types';
 import { DashboardChartCard } from './DashboardChartCard';
 
 const SLAComplianceChart: React.FC<{ data: SLAData[]; overallValue?: number }> = React.memo(({ data, overallValue }) => {

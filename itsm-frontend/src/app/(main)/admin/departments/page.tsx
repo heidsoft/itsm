@@ -29,7 +29,8 @@ import {
   Search,
 } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
-import { departmentService, Department, CreateDepartmentRequest } from '@/lib/services/department-service';
+import type { Department, CreateDepartmentRequest } from '@/lib/services/department-service';
+import { departmentService } from '@/lib/services/department-service';
 import { UserApi } from '@/lib/api/user-api';
 
 const { Title, Text } = Typography;

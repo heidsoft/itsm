@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { userPreferences } from '@/lib/user-preferences';
-import { translations, Language } from './translations';
+import type { Language } from './translations';
+import { translations } from './translations';
 
 /**
  * 国际化 Hook

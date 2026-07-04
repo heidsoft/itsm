@@ -7,7 +7,8 @@
 
 import React from 'react';
 import { Tag } from 'antd';
-import { ChangeStatus, ChangeStatusConfig } from '@/constants/taxonomy';
+import type { ChangeStatus} from '@/constants/taxonomy';
+import { ChangeStatusConfig } from '@/constants/taxonomy';
 
 interface ChangeStatusBadgeProps {
   /** 变更状态 */

@@ -63,7 +63,7 @@ export const useSLAViolations = (
     if (autoLoad) {
       refresh();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   /**

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { forwardRef } from 'react';
-import { FormInputProps } from './types';
+import type { FormInputProps } from './types';
 import { FormField } from './form-field';
 
 const Input = forwardRef<HTMLInputElement, Omit<FormInputProps, 'label' | 'error' | 'help'>>(

@@ -6,7 +6,8 @@ import { ArrowLeft } from 'lucide-react';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
 import { App } from 'antd';
-import { ChangeApi, ChangeRequest } from '@/lib/api/change-api';
+import type { ChangeRequest } from '@/lib/api/change-api';
+import { ChangeApi } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n';
 
 const CreateChangePage = () => {

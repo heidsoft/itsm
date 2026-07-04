@@ -31,7 +31,8 @@ import {
   FileZipOutlined,
 } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
-import { TicketAttachmentApi, TicketAttachment } from '@/lib/api/ticket-attachment-api';
+import type { TicketAttachment } from '@/lib/api/ticket-attachment-api';
+import { TicketAttachmentApi } from '@/lib/api/ticket-attachment-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { App } from 'antd';
 import { useI18n } from '@/lib/i18n';

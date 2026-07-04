@@ -1,6 +1,7 @@
 'use client';
 
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 import { theme } from 'antd';
 import { cn } from '@/lib/utils';
 import { layout, semanticSpacing } from '@/lib/design-system/spacing';

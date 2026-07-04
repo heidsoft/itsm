@@ -5,12 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { App, Card, Form, Spin } from 'antd';
 
 import { CIEditorForm } from '@/components/cmdb/CIEditorForm';
-import {
+import type {
   CIFormValues,
+  SchemaField} from '@/components/cmdb/ci-editor-shared';
+import {
   compactRecord,
   extractCloudDataList,
-  normalizeSchemaFields,
-  SchemaField,
+  normalizeSchemaFields
 } from '@/components/cmdb/ci-editor-shared';
 import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { CMDBApi } from '@/lib/api/cmdb-api';

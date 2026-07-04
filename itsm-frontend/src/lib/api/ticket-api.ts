@@ -1,6 +1,6 @@
 import { httpClient } from './http-client';
 import { handleApiRequest } from './base-api-handler';
-import { Ticket, TicketListResponse, CreateTicketRequest, GetTicketsParams } from './api-config';
+import type { Ticket, TicketListResponse, CreateTicketRequest, GetTicketsParams } from './api-config';
 
 export class TicketApi {
   // Get ticket list
@@ -158,7 +158,7 @@ export class TicketApi {
     const response = await httpClient.get<{ tickets?: Ticket[]; data?: Ticket[] }>(
       `/api/v1/tickets/${parentTicketId}/subtasks`
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return (response as any).tickets || (response as any).data || response || [];
   }
 

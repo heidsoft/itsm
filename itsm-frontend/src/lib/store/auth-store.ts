@@ -8,7 +8,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { clearAuthStorage } from '@/lib/auth/token-storage';
 import { setTenant, clearTenant } from '@/lib/auth/tenant-context';
-import { User, Tenant } from '@/lib/api/api-config';
+import type { User, Tenant } from '@/lib/api/api-config';
 import { httpClient } from '@/lib/api/http-client';
 
 // ===================================

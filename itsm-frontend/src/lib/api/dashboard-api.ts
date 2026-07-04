@@ -1,5 +1,5 @@
 import { httpClient } from './http-client';
-import {
+import type {
   DashboardWidget,
   Dashboard,
   DashboardLayout,

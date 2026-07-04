@@ -149,7 +149,7 @@ export function useDataFetch<T = any>(
     return () => {
       mountedRef.current = false;
     };
-  }, dependencies); // eslint-disable-line react-hooks/exhaustive-deps
+  }, dependencies);  
 
   return {
     data,

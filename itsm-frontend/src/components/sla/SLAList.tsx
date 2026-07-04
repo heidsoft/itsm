@@ -55,7 +55,7 @@ const SLAList: React.FC = () => {
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [pagination]);
 
   const handleToggleActive = async (record: SLADefinition, checked: boolean) => {

@@ -1,10 +1,11 @@
 import { httpClient } from './http-client';
+import type {
+  ListQueryParams,
+  PaginationResponse} from './types';
 import {
   API_URLS,
-  ListQueryParams,
   normalizePaginationParams,
-  normalizeDateRangeParams,
-  PaginationResponse,
+  normalizeDateRangeParams
 } from './types';
 
 // 事件管理API接口
@@ -326,6 +327,47 @@ export interface CloudProductEventRequest {
   detectedAt: string;
 }
 
+// ==================== 新增类型定义（类外部）====================
+
+// 事件评论类型
+export interface IncidentComment {
+  id: number;
+  incident_id: number;
+  event_type: string;
+  content: string;
+  user_id: number;
+  user_name?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+// 告警类型定义
+export interface IncidentAlert {
+  id: number;
+  incident_id: number;
+  alert_id: string;
+  alert_name: string;
+  alert_level: string;
+  instance_id: string;
+  region: string;
+  service: string;
+  status: string;
+  acknowledged: boolean;
+  acknowledged_at?: string;
+  acknowledged_by?: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+// 告警列表查询参数
+export interface ListIncidentAlertsParams {
+  status?: string;
+  alert_level?: string;
+  acknowledged?: boolean;
+  page?: number;
+  page_size?: number;
+}
+
 // 事件管理API类
 export class IncidentAPI {
   // 获取事件列表
@@ -407,6 +449,105 @@ export class IncidentAPI {
   // 添加评论（注意：后端期望 content 字段）
   static async addComment(id: number, data: { content: string }): Promise<Incident> {
     const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/comments`, data);
+    return response;
+  }
+
+  // ==================== 新增：确认/关闭/评论/告警 ====================
+
+  /**
+   * 确认事件 (Acknowledge)
+   * 将事件状态从 New 流转到 Acknowledged
+   * 后端: POST /api/v1/incidents/:id/acknowledge
+   */
+  static async acknowledgeIncident(id: number): Promise<{ message: string }> {
+    const response = await httpClient.post<{ message: string }>(
+      `/api/v1/incidents/${id}/acknowledge`,
+      {}
+    );
+    return response;
+  }
+
+  /**
+   * 关闭事件 (Close)
+   * 将已解决的事件关闭
+   * 后端: POST /api/v1/incidents/:id/close
+   * @param id 事件ID
+   * @param data.closeNotes 关闭备注（可选）
+   */
+  static async closeIncident(
+    id: number,
+    data: { closeNotes?: string } = {}
+  ): Promise<{ message: string }> {
+    const response = await httpClient.post<{ message: string }>(
+      `/api/v1/incidents/${id}/close`,
+      data
+    );
+    return response;
+  }
+
+  /**
+   * 获取事件评论列表
+   * 后端: GET /api/v1/incidents/:id/comments
+   */
+  static async getIncidentComments(incidentId: number): Promise<IncidentComment[]> {
+    try {
+      const response = await httpClient.get<IncidentComment[]>(
+        `/api/v1/incidents/${incidentId}/comments`
+      );
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.getIncidentComments error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 删除事件评论
+   * 后端: DELETE /api/v1/incidents/:id/comments/:commentId
+   */
+  static async deleteIncidentComment(
+    incidentId: number,
+    commentId: number
+  ): Promise<void> {
+    await httpClient.delete(`/api/v1/incidents/${incidentId}/comments/${commentId}`);
+  }
+
+  /**
+   * 获取事件关联的告警列表
+   * 后端: GET /api/v1/incidents/:id/alerts
+   */
+  static async getIncidentAlerts(
+    incidentId: number,
+    params?: ListIncidentAlertsParams
+  ): Promise<{ alerts: IncidentAlert[]; total: number }> {
+    try {
+      // 过滤掉undefined值
+      const cleanParams = Object.fromEntries(
+        Object.entries(params || {}).filter(([_, value]) => value !== undefined)
+      );
+      const response = await httpClient.get<{ alerts: IncidentAlert[]; total: number }>(
+        `/api/v1/incidents/${incidentId}/alerts`,
+        cleanParams
+      );
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.getIncidentAlerts error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 确认告警
+   * 后端: POST /api/v1/incidents/:id/alerts/:alertId/acknowledge
+   */
+  static async acknowledgeAlert(
+    incidentId: number,
+    alertId: number
+  ): Promise<{ message: string }> {
+    const response = await httpClient.post<{ message: string }>(
+      `/api/v1/incidents/${incidentId}/alerts/${alertId}/acknowledge`,
+      {}
+    );
     return response;
   }
 

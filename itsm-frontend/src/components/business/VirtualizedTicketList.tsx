@@ -13,8 +13,9 @@ import {
   AlertTriangle,
   MoreHorizontal,
 } from 'lucide-react';
+import type {
+  Ticket} from '../../lib/services/ticket-service';
 import {
-  Ticket,
   TicketStatus,
   TicketPriority,
   TicketType,

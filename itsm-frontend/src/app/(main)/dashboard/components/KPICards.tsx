@@ -13,7 +13,7 @@ import {
   AlertTriangle,
   User,
 } from 'lucide-react';
-import { KPIMetric } from '../types/dashboard.types';
+import type { KPIMetric } from '../types/dashboard.types';
 
 interface KPICardsProps {
   metrics: KPIMetric[];

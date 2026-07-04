@@ -5,7 +5,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { ApprovalChainStatsCards } from '../ApprovalChainStats';
-import { ApprovalChainStats } from '@/types/approval-chain';
+import type { ApprovalChainStats } from '@/types/approval-chain';
 
 describe('ApprovalChainStatsCards', () => {
   const mockStats: ApprovalChainStats = {

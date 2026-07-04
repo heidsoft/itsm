@@ -37,7 +37,8 @@ import {
 import { RiseOutlined, FallOutlined, FileExcelOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
-import { ticketAnalyticsService, TicketAnalyticsResponse } from '@/lib/services/analytics-service';
+import type { TicketAnalyticsResponse } from '@/lib/services/analytics-service';
+import { ticketAnalyticsService } from '@/lib/services/analytics-service';
 import { ticketService, TicketStatsResponse } from '@/lib/services/ticket-service';
 
 const { Title, Text } = Typography;

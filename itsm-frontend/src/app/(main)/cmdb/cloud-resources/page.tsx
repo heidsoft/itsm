@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, App } from 'antd';
+import { Breadcrumb, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, App, Tooltip } from 'antd';
+import { SearchOutlined, ReloadOutlined, PlusOutlined, LinkOutlined, EyeOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
@@ -15,8 +16,18 @@ const providerOptions = [
   { value: 'huawei', label: '华为云' },
   { value: 'tencent', label: '腾讯云' },
   { value: 'azure', label: 'Azure' },
+  { value: 'aws', label: 'AWS' },
   { value: 'onprem', label: '私有云' },
 ];
+
+const statusColors: Record<string, string> = {
+  running: 'green',
+  stopped: 'default',
+  active: 'green',
+  inactive: 'default',
+  available: 'green',
+  unavailable: 'red',
+};
 
 export default function CloudResourcePage() {
   const router = useRouter();
@@ -25,9 +36,13 @@ export default function CloudResourcePage() {
   const [bindForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [resources, setResources] = useState<CloudResource[]>([]);
+  const [total, setTotal] = useState(0);
   const [services, setServices] = useState<CloudService[]>([]);
   const [binding, setBinding] = useState<CloudResource | null>(null);
   const [bindSubmitting, setBindSubmitting] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<CloudResource | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
 
   const provider = Form.useWatch('provider', form);
 
@@ -49,7 +64,7 @@ export default function CloudResourcePage() {
     }
   };
 
-  const loadResources = async () => {
+  const loadResources = async (page = 1, pageSize = 10) => {
     const isMounted = true;
     setLoading(true);
     try {
@@ -58,11 +73,18 @@ export default function CloudResourcePage() {
         provider: values.provider,
         service_id: values.service_id,
         region: values.region,
+        offset: (page - 1) * pageSize,
+        limit: pageSize,
       });
       if (isMounted) {
-        setResources(
-          Array.isArray(list) ? (list as CloudResource[]) : ((list as any).items || (list as any).data || [])
-        );
+        const items = Array.isArray(list)
+          ? (list as CloudResource[])
+          : ((list as any).items || (list as any).data || []);
+        const totalCount = Array.isArray(list)
+          ? items.length
+          : ((list as any).total || items.length);
+        setResources(items);
+        setTotal(totalCount);
       }
     } catch (error) {
       if (isMounted) {
@@ -73,6 +95,18 @@ export default function CloudResourcePage() {
         setLoading(false);
       }
     }
+  };
+
+  // 分页变化处理
+  const handleTableChange = (page: number, pageSize: number) => {
+    setPagination({ current: page, pageSize });
+    loadResources(page, pageSize);
+  };
+
+  // 查看资源详情
+  const handleViewDetail = (record: CloudResource) => {
+    setSelectedRow(record);
+    setDetailOpen(true);
   };
 
   useEffect(() => {
@@ -87,24 +121,25 @@ export default function CloudResourcePage() {
   const columns = [
     {
       title: '厂商',
-      width: 110,
-      render: (_: unknown, record: CloudResource) => {
-        const serviceId = record.serviceId ?? record.service_id;
-        const providerValue = serviceMap.get(serviceId)?.provider;
-        return providerOptions.find(p => p.value === providerValue)?.label || providerValue || '-';
+      dataIndex: 'provider',
+      width: 100,
+      render: (value: string) => {
+        const provider = providerOptions.find(p => p.value === value);
+        return <Tag color="blue">{provider?.label || value || '-'}</Tag>;
       },
     },
     {
       title: '服务',
-      width: 160,
+      width: 140,
       render: (_: unknown, record: CloudResource) => {
         const serviceId = record.serviceId ?? record.service_id;
-        return serviceMap.get(serviceId)?.serviceName ?? serviceMap.get(serviceId)?.service_name ?? `#${serviceId}`;
+        const service = serviceMap.get(serviceId);
+        return service?.serviceName ?? service?.service_name ?? '-';
       },
     },
     {
       title: '资源类型',
-      width: 160,
+      width: 120,
       render: (_: unknown, record: CloudResource) => {
         const serviceId = record.serviceId ?? record.service_id;
         const service = serviceMap.get(serviceId);
@@ -114,34 +149,41 @@ export default function CloudResourcePage() {
     {
       title: '资源ID',
       dataIndex: 'resourceId',
-      width: 200,
+      width: 180,
+      ellipsis: true,
     },
     {
       title: '资源名称',
-      width: 180,
-      render: (_: unknown, record: CloudResource) => record.resourceName ?? record.resource_name ?? '-',
+      dataIndex: 'resourceName',
+      width: 160,
+      ellipsis: true,
+      render: (value?: string) => value || '-',
     },
     {
       title: 'Region',
       dataIndex: 'region',
-      width: 120,
+      width: 100,
       render: (value?: string) => value || '-',
     },
     {
       title: 'Zone',
       dataIndex: 'zone',
-      width: 120,
+      width: 100,
       render: (value?: string) => value || '-',
     },
     {
       title: '状态',
       dataIndex: 'status',
-      width: 110,
-      render: (value?: string) => <Tag color={value ? 'green' : 'default'}>{value || '未知'}</Tag>,
+      width: 100,
+      render: (value?: string) => (
+        <Tag color={statusColors[value || ''] || 'default'}>
+          {value || '未知'}
+        </Tag>
+      ),
     },
     {
       title: '最近发现',
-      width: 160,
+      width: 150,
       render: (_: unknown, record: CloudResource) => {
         const value = record.lastSeenAt ?? record.last_seen_at;
         return value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-';
@@ -150,24 +192,34 @@ export default function CloudResourcePage() {
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 160,
       render: (_: unknown, record: CloudResource) => (
         <Space>
+          <Tooltip title="查看详情">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewDetail(record)}
+              size="small"
+            />
+          </Tooltip>
           <Button
             type="link"
+            size="small"
             onClick={() => router.push(`/cmdb/cis/create?cloud_resource_ref_id=${record.id}`)}
           >
             新建CI
           </Button>
           <Button
             type="link"
+            size="small"
             onClick={() => {
               setBinding(record);
               bindForm.resetFields();
               bindForm.setFieldsValue({ ci_id: undefined });
             }}
           >
-            绑定已有
+            绑定
           </Button>
         </Space>
       ),
@@ -206,7 +258,7 @@ export default function CloudResourcePage() {
 
   return (
     <Card>
-      <div style={{ marginBottom: 16 }}>
+      <div className="mb-4">
         <h1 className="text-2xl font-bold">云资源列表</h1>
         <p className="text-gray-500 mt-1">查看已发现的云资源，并将资源新建或绑定为 CMDB 配置项。</p>
       </div>
@@ -216,67 +268,89 @@ export default function CloudResourcePage() {
         items={[
           { title: '首页' },
           { title: '配置管理' },
-          { title: <a onClick={() => router.push('/cmdb')}>配置项列表</a> },
+          { title: <a onClick={() => router.push('/cmdb')}>CMDB</a> },
           { title: '云资源列表' },
         ]}
       />
 
-      <Form form={form} layout="inline" style={{ marginBottom: 24 }}>
-        <Form.Item name="provider">
-          <Select placeholder="云厂商" style={{ width: 160 }} allowClear>
-            {providerOptions.map(item => (
-              <Option key={item.value} value={item.value}>
-                {item.label}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item name="service_id">
-          <Select
-            placeholder="云服务"
-            style={{ width: 200 }}
-            allowClear
-            showSearch
-            optionFilterProp="label"
-          >
-            {services
-              .filter(service => !provider || service.provider === provider)
-              .map(service => (
-                <Option
-                  key={service.id}
-                  value={service.id}
-                  label={`${service.service_name} (${service.resource_type_name})`}
-                >
-                  {service.serviceName ?? service.service_name} ({service.resourceTypeName ?? service.resource_type_name})
+      {/* 搜索工具栏 */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <Form form={form} layout="inline" className="flex-wrap gap-2">
+          <Form.Item name="provider" className="!mb-0">
+            <Select placeholder="云厂商" style={{ width: 140 }} allowClear>
+              {providerOptions.map(item => (
+                <Option key={item.value} value={item.value}>
+                  {item.label}
                 </Option>
               ))}
-          </Select>
-        </Form.Item>
-        <Form.Item name="region">
-          <Input placeholder="Region" style={{ width: 140 }} allowClear />
-        </Form.Item>
-        <Form.Item>
-          <Space>
-            <Button onClick={loadResources}>查询</Button>
-            <Button onClick={loadResources}>刷新</Button>
-          </Space>
-        </Form.Item>
-      </Form>
+            </Select>
+          </Form.Item>
+          <Form.Item name="service_id" className="!mb-0">
+            <Select
+              placeholder="云服务"
+              style={{ width: 180 }}
+              allowClear
+              showSearch
+              optionFilterProp="label"
+            >
+              {services
+                .filter(service => !provider || service.provider === provider)
+                .map(service => (
+                  <Option
+                    key={service.id}
+                    value={service.id}
+                    label={`${service.service_name} (${service.resource_type_name})`}
+                  >
+                    {service.serviceName ?? service.service_name} ({service.resourceTypeName ?? service.resource_type_name})
+                  </Option>
+                ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="region" className="!mb-0">
+            <Input placeholder="Region" style={{ width: 120 }} allowClear />
+          </Form.Item>
+          <Form.Item className="!mb-0">
+            <Space>
+              <Button type="primary" icon={<SearchOutlined />} onClick={() => loadResources(1, pagination.pageSize)}>
+                查询
+              </Button>
+              <Button icon={<ReloadOutlined />} onClick={() => loadResources(pagination.current, pagination.pageSize)} loading={loading}>
+                刷新
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+        <span className="ml-auto text-sm text-gray-500">
+          共 {total} 条资源
+        </span>
+      </div>
 
       <Table
         rowKey="id"
         loading={loading}
         dataSource={resources}
         columns={columns as any}
-        pagination={{ pageSize: 10 }}
+        pagination={{
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+          total: total,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: total => `共 ${total} 条记录`,
+          pageSizeOptions: ['10', '20', '50', '100'],
+          onChange: handleTableChange,
+        }}
+        scroll={{ x: 1200 }}
       />
 
+      {/* 绑定已有配置项模态框 */}
       <Modal
         title="绑定已有配置项"
         open={Boolean(binding)}
         onCancel={() => setBinding(null)}
         onOk={handleBindExisting}
         confirmLoading={bindSubmitting}
+        width={480}
       >
         <Form form={bindForm} layout="vertical">
           <Form.Item
@@ -287,11 +361,84 @@ export default function CloudResourcePage() {
             <Input placeholder="请输入已存在的配置项ID" />
           </Form.Item>
           {binding && (
-            <div style={{ color: '#888' }}>
-              将绑定资源：{binding.resourceName || binding.resource_name || binding.resourceId || binding.resource_id}
+            <div className="p-3 bg-gray-50 rounded text-sm text-gray-600">
+              <div className="font-medium mb-1">将绑定资源：</div>
+              <div>{binding.resourceName || binding.resource_name || binding.resourceId || binding.resource_id}</div>
+              <div className="text-gray-400 mt-1">
+                {providerOptions.find(p => p.value === binding.provider)?.label} / {binding.region} / {binding.zone}
+              </div>
             </div>
           )}
         </Form>
+      </Modal>
+
+      {/* 资源详情模态框 */}
+      <Modal
+        title="云资源详情"
+        open={detailOpen}
+        onCancel={() => {
+          setDetailOpen(false);
+          setSelectedRow(null);
+        }}
+        footer={[
+          <Button key="close" onClick={() => setDetailOpen(false)}>
+            关闭
+          </Button>,
+          <Button
+            key="create"
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              if (selectedRow) {
+                router.push(`/cmdb/cis/create?cloud_resource_ref_id=${selectedRow.id}`);
+              }
+            }}
+          >
+            新建CI
+          </Button>,
+        ]}
+        width={560}
+      >
+        {selectedRow && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-sm text-gray-500">云厂商</div>
+                <div>{providerOptions.find(p => p.value === selectedRow.provider)?.label || selectedRow.provider || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">服务类型</div>
+                <div>{serviceMap.get(selectedRow.serviceId ?? selectedRow.service_id)?.service_name || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">资源ID</div>
+                <div className="font-mono text-sm">{selectedRow.resourceId || selectedRow.resource_id || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">资源名称</div>
+                <div>{selectedRow.resourceName || selectedRow.resource_name || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Region</div>
+                <div>{selectedRow.region || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Zone</div>
+                <div>{selectedRow.zone || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">状态</div>
+                <Tag color={statusColors[selectedRow.status || ''] || 'default'}>
+                  {selectedRow.status || '未知'}
+                </Tag>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">最近发现</div>
+                <div>{selectedRow.lastSeenAt ? dayjs(selectedRow.lastSeenAt).format('YYYY-MM-DD HH:mm:ss') : '-'}</div>
+              </div>
+            </div>
+          </div>
+        )}
       </Modal>
     </Card>
   );

@@ -70,7 +70,7 @@ const ServiceRequestList: React.FC = () => {
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [query, activeTab]);
 
   // 处理Tab切换

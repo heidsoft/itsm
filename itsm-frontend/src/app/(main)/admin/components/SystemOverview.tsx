@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, Col, Row, Statistic, Typography, theme, Avatar, Progress } from 'antd';
 import { Users, Workflow, BookOpen, AlertCircle, TrendingUp, BarChart3, Activity, Shield, Zap } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { AdminStats } from '../hooks/useAdminData';
+import type { AdminStats } from '../hooks/useAdminData';
 
 const { Paragraph, Title, Text } = Typography;
 

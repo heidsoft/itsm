@@ -2,7 +2,7 @@
  * CMDB 资产管理类型定义
  */
 
-import { CIStatus } from '@/constants/cmdb';
+import type { CIStatus } from '@/constants/cmdb';
 
 // 配置项实体
 export interface ConfigurationItem {

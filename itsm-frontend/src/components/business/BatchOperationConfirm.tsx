@@ -3,7 +3,7 @@
 import React from 'react';
 import { Modal, Typography, List, Tag, Space, Divider } from 'antd';
 import { ExclamationCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import { Ticket } from '@/lib/services/ticket-service';
+import type { Ticket } from '@/lib/services/ticket-service';
 
 const { Text, Paragraph } = Typography;
 

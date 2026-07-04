@@ -31,10 +31,11 @@ import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { ChangeApi } from '@/lib/api/';
+import type {
+  ChangeType,
+  ChangePriority} from '@/constants/change';
 import {
   ChangeStatus,
-  ChangeType,
-  ChangePriority,
   ChangeImpact,
   ChangeRisk,
   ChangeStatusLabels,
@@ -119,7 +120,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [query]);
 
   const handleSearch = () => {

@@ -29,6 +29,9 @@ import {
   ShareAltOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
+import type {
+  DragStartEvent,
+  DragEndEvent} from '@dnd-kit/core';
 import {
   DndContext,
   DragOverlay,
@@ -36,9 +39,7 @@ import {
   KeyboardSensor,
   PointerSensor,
   useSensor,
-  useSensors,
-  DragStartEvent,
-  DragEndEvent,
+  useSensors
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -47,7 +48,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Ticket } from '@/lib/services/ticket-service';
+import type { Ticket } from '@/lib/services/ticket-service';
 import { getStatusConfig, getPriorityConfig } from '@/lib/constants/ticket-constants';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';

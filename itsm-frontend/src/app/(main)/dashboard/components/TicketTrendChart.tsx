@@ -4,7 +4,7 @@ import React from 'react';
 import { Badge } from 'antd';
 import { Line } from '@ant-design/charts';
 import { LineChart } from 'lucide-react'; // Import Lucide LineChart
-import { TicketTrendData } from '../types/dashboard.types';
+import type { TicketTrendData } from '../types/dashboard.types';
 import { DashboardChartCard } from './DashboardChartCard'; // Import from new file
 
 // 工单趋势图

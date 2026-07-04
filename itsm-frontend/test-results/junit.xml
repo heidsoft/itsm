@@ -1,33 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="12" failures="0" errors="0" time="15.121">
-  <testsuite name="src/lib/api/__tests__/bpmn-ai-api.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-06-30T23:23:51" time="0.777" tests="3">
-    <testcase classname="BPMNAIApi" name="generates BPMN XML through the backend AI endpoint" time="0.011">
+<testsuites name="jest tests" tests="6" failures="0" errors="0" time="1.753">
+  <testsuite name="src/lib/store/__tests__/layout-store.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-04T01:15:38" time="0.766" tests="6">
+    <testcase classname="useLayoutStore › 初始状态" name="初始 collapsed 应为 false" time="0.016">
     </testcase>
-    <testcase classname="BPMNAIApi" name="previews BPMN structure through the backend AI endpoint" time="0.002">
+    <testcase classname="useLayoutStore › toggleCollapsed" name="应从 false 切换到 true" time="0.007">
     </testcase>
-    <testcase classname="BPMNAIApi" name="loads template suggestions from the backend AI endpoint" time="0.002">
+    <testcase classname="useLayoutStore › toggleCollapsed" name="应从 true 切换到 false" time="0.003">
     </testcase>
-  </testsuite>
-  <testsuite name="src/components/workflow/__tests__/BPMNDesigner.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-06-30T23:23:51" time="4.069" tests="7">
-    <testcase classname="BPMNDesigner" name="should render toolbar container" time="0.292">
+    <testcase classname="useLayoutStore › setCollapsed" name="应设置 collapsed 为 true" time="0.003">
     </testcase>
-    <testcase classname="BPMNDesigner" name="should render zoom controls section" time="0.097">
+    <testcase classname="useLayoutStore › setCollapsed" name="应设置 collapsed 为 false" time="0.003">
     </testcase>
-    <testcase classname="BPMNDesigner" name="should call onSave when save is triggered" time="0.076">
-    </testcase>
-    <testcase classname="BPMNDesigner" name="should call onDeploy when deploy is triggered" time="0.079">
-    </testcase>
-    <testcase classname="BPMNDesigner" name="should accept custom height prop" time="0.221">
-    </testcase>
-    <testcase classname="BPMNDesigner" name="should have a main container" time="0.091">
-    </testcase>
-    <testcase classname="BPMNDesigner" name="should render with flex layout" time="0.085">
-    </testcase>
-  </testsuite>
-  <testsuite name="src/components/workflow/designer/__tests__/WorkflowAIModal.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-06-30T23:23:51" time="12.911" tests="2">
-    <testcase classname="WorkflowAIModal" name="calls the real BPMN AI generate endpoint and applies generated XML" time="5.506">
-    </testcase>
-    <testcase classname="WorkflowAIModal" name="renders a clean error when generation fails" time="2.486">
+    <testcase classname="useLayoutStore › 多消费者同步" name="状态变化应同步到所有消费者" time="0.003">
     </testcase>
   </testsuite>
 </testsuites>

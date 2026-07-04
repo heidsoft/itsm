@@ -59,14 +59,14 @@ export class ServiceCatalogApi {
     return s;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   private static toServiceItem(raw: any): ServiceItem {
     // 后端 dto.ServiceCatalogResponse: {id,name,category,description,deliveryTime,status,ciTypeId,cloudServiceId,createdAt,updatedAt}
     return {
       id: String(raw?.id),
       name: String(raw?.name || ''),
       // 这里保留后端 category 的原始字符串（前端页面目前以中文分类做统计/图标）
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       category: (raw?.category as any) || ('it_service' as any),
       status: ServiceCatalogApi.toFrontendStatus(raw?.status),
       shortDescription: String(raw?.description || ''),
@@ -86,7 +86,7 @@ export class ServiceCatalogApi {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   private static toServiceRequest(raw: any): any {
     const catalogId = raw?.catalogId ?? raw?.catalog_id ?? raw?.serviceId;
     const requesterId = raw?.requesterId ?? raw?.requester_id ?? raw?.requestedBy;
@@ -416,7 +416,7 @@ export class ServiceCatalogApi {
    * 添加收藏
    */
   static async addFavorite(serviceId: string): Promise<ServiceFavorite> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _serviceId = serviceId;
     return ServiceCatalogApi.unsupportedFeature('服务收藏');
   }
@@ -425,7 +425,7 @@ export class ServiceCatalogApi {
    * 取消收藏
    */
   static async removeFavorite(serviceId: string): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _serviceId = serviceId;
     ServiceCatalogApi.unsupportedFeature('服务收藏');
   }
@@ -446,7 +446,7 @@ export class ServiceCatalogApi {
     rating: number,
     comment?: string
   ): Promise<ServiceRating> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _args = { serviceId, rating, comment };
     return ServiceCatalogApi.unsupportedFeature('服务评分');
   }
@@ -472,7 +472,7 @@ export class ServiceCatalogApi {
    * 标记评分有用
    */
   static async markRatingHelpful(ratingId: string): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _ratingId = ratingId;
     ServiceCatalogApi.unsupportedFeature('评分有用标记');
   }
@@ -507,7 +507,7 @@ export class ServiceCatalogApi {
    * 更新门户配置
    */
   static async updatePortalConfig(config: Partial<PortalConfig>): Promise<PortalConfig> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _config = config;
     return ServiceCatalogApi.unsupportedFeature('门户配置更新');
   }
@@ -550,7 +550,7 @@ export class ServiceCatalogApi {
     }
   ): Promise<ServiceAnalytics> {
     // 后端暂未实现服务分析，返回空数据
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _unused = serviceId;
     return {
       serviceId,

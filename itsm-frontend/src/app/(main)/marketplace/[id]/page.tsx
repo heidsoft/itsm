@@ -21,10 +21,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import marketplaceService, {
+import type {
   MarketplaceItem,
   TenantInstallation,
 } from '@/lib/services/marketplace-service';
+import marketplaceService from '@/lib/services/marketplace-service';
 
 const typeNames = {
   connector: '连接器',

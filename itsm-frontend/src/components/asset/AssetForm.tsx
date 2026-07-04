@@ -21,7 +21,8 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 
-import { AssetApi, Asset, AssetRequest } from '@/lib/api/asset-api';
+import type { Asset, AssetRequest } from '@/lib/api/asset-api';
+import { AssetApi } from '@/lib/api/asset-api';
 import type { Dayjs } from 'dayjs';
 
 const { TextArea } = Input;

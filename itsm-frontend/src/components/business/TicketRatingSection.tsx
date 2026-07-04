@@ -16,10 +16,11 @@ import {
   Empty,
 } from 'antd';
 import { Star, MessageSquare, CheckCircle, Clock } from 'lucide-react';
-import {
-  TicketRatingApi,
+import type {
   TicketRating,
-  SubmitTicketRatingRequest,
+  SubmitTicketRatingRequest} from '@/lib/api/ticket-rating-api';
+import {
+  TicketRatingApi
 } from '@/lib/api/ticket-rating-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { App } from 'antd';

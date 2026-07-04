@@ -72,7 +72,7 @@ export default function SLATemplatesPage() {
       const data = await SLATemplateApi.listTemplates();
       setTemplates(data);
     } catch (err) {
-      // eslint-disable-next-line no-console
+       
       console.error(err);
       message.error('加载 SLA 模板失败');
       setTemplates([]);
@@ -105,7 +105,7 @@ export default function SLATemplatesPage() {
         message.info(`模板「${key}」已存在，未重复安装`);
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
+       
       console.error(err);
       message.error(`安装模板「${key}」失败`);
     } finally {
@@ -128,7 +128,7 @@ export default function SLATemplatesPage() {
       setInstallResults(prev => ({ ...prev, ...map }));
       message.success(`批量安装完成：新增 ${createdCount} 个，已存在 ${existingCount} 个`);
     } catch (err) {
-      // eslint-disable-next-line no-console
+       
       console.error(err);
       message.error('批量安装失败');
     } finally {

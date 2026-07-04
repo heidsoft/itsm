@@ -1,5 +1,5 @@
 import { httpClient } from '@/lib/api/http-client';
-import { Ticket, TicketListResponse } from '@/lib/api/api-config';
+import type { Ticket, TicketListResponse } from '@/lib/api/api-config';
 
 // 工单状态枚举
 export enum TicketStatus {

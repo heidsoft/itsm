@@ -26,7 +26,8 @@ import {
   Divider,
 } from 'antd';
 import { ArrowLeftOutlined, SendOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import dayjs, { Dayjs } from 'dayjs';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { httpClient } from '@/lib/api/http-client';
 
