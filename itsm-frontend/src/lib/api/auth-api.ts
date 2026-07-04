@@ -120,8 +120,8 @@ class AuthApiClient {
         body: JSON.stringify({
           username: loginData.username,
           password: loginData.password,
-          remember_me: loginData.rememberMe,
-          totp_code: loginData.totpCode,
+          rememberMe: loginData.rememberMe,
+          totpCode: loginData.totpCode,
         }),
         signal: controller.signal,
       });

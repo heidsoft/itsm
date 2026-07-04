@@ -47,27 +47,6 @@ const toCamelCase = (obj: unknown): unknown => {
   return obj;
 };
 
-// 递归将对象的 key 从 camelCase 转换为 snake_case
-const toSnakeCase = (obj: unknown): unknown => {
-  if (obj === null || obj === undefined) {
-    return obj;
-  }
-  if (Array.isArray(obj)) {
-    return obj.map(v => toSnakeCase(v));
-  } else if (obj && typeof obj === 'object' && obj.constructor === Object) {
-    const typedObj = obj as Record<string, unknown>;
-    return Object.keys(typedObj).reduce(
-      (result, key) => {
-        const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-        result[snakeKey] = toSnakeCase(typedObj[key]);
-        return result;
-      },
-      {} as Record<string, unknown>
-    );
-  }
-  return obj;
-};
-
 // Request configuration interface
 export interface RequestConfig {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -260,10 +239,12 @@ class HttpClient {
         ...headers,
         ...config.headers,
       },
-      // 自动转换请求 body key 为 snake_case (如果是 JSON 对象)
+      // Normalize request body keys to camelCase to match backend camelCase json tags.
+      // Legacy frontend code may still emit snake_case keys; this safety net can be
+      // removed once all API clients are migrated to native camelCase (Phase 3).
       body:
         config.body && typeof config.body === 'string' && config.body.startsWith('{')
-          ? JSON.stringify(toSnakeCase(JSON.parse(config.body as string)))
+          ? JSON.stringify(toCamelCase(JSON.parse(config.body as string)))
           : config.body,
     };
 
