@@ -111,7 +111,6 @@ func (b *RedisStreamEventBus) Publish(ctx context.Context, event DomainEvent) er
 		Values: values,
 		ID:     id,
 	}).Err()
-
 	if err != nil {
 		return fmt.Errorf("failed to publish event to Redis Stream: %w", err)
 	}
