@@ -7,6 +7,16 @@ import (
 	"go.uber.org/zap"
 )
 
+// defaultLogger 包级默认 logger，用于没有显式传入 logger 的场景
+var defaultLogger = zap.NewNop().Sugar()
+
+// SetDefaultLogger 设置包级默认 logger（应在应用启动时调用）
+func SetDefaultLogger(l *zap.SugaredLogger) {
+	if l != nil {
+		defaultLogger = l
+	}
+}
+
 // GoSafeOptions 安全协程选项
 type GoSafeOptions struct {
 	Logger   *zap.SugaredLogger
@@ -22,23 +32,20 @@ func GoSafe(fn func(), opts ...GoSafeOptions) {
 				stack := debug.Stack()
 
 				// 如果提供了logger，使用结构化日志
+				logger := defaultLogger
+				taskName := "unknown"
 				if len(opts) > 0 && opts[0].Logger != nil {
-					logger := opts[0].Logger
-					taskName := opts[0].TaskName
-					if taskName == "" {
-						taskName = "unknown"
+					logger = opts[0].Logger
+					if opts[0].TaskName != "" {
+						taskName = opts[0].TaskName
 					}
-					logger.Errorw(
-						"Goroutine panic recovered",
-						"task", taskName,
-						"error", fmt.Sprintf("%v", r),
-						"stack", string(stack),
-					)
-				} else {
-					// 回退到标准输出
-					fmt.Printf("[PANIC] Goroutine panic recovered: %v\n", r)
-					fmt.Printf("[PANIC] Stack trace:\n%s\n", stack)
 				}
+				logger.Errorw(
+					"Goroutine panic recovered",
+					"task", taskName,
+					"error", fmt.Sprintf("%v", r),
+					"stack", string(stack),
+				)
 			}
 		}()
 

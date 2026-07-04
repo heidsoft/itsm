@@ -23,13 +23,17 @@ type ToolQueue struct {
 	client  *ent.Client
 	tools   *ToolRegistry
 	tickets *TicketService
+	logger  *zap.SugaredLogger
 }
 
-func NewToolQueue(client *ent.Client, tools *ToolRegistry, capacity int) *ToolQueue {
+func NewToolQueue(client *ent.Client, tools *ToolRegistry, capacity int, logger *zap.SugaredLogger) *ToolQueue {
 	if capacity <= 0 {
 		capacity = 100
 	}
-	q := &ToolQueue{jobs: make(chan ToolJob, capacity), client: client, tools: tools}
+	if logger == nil {
+		logger = zap.NewNop().Sugar()
+	}
+	q := &ToolQueue{jobs: make(chan ToolJob, capacity), client: client, tools: tools, logger: logger}
 	go q.worker()
 	return q
 }
@@ -95,14 +99,12 @@ func (q *ToolQueue) worker() {
 		}
 		if err != nil {
 			if _, updateErr := q.client.ToolInvocation.UpdateOneID(inv.ID).SetStatus("failed").SetError(err.Error()).Save(ctx); updateErr != nil {
-				// log failure to update tool invocation status
-				// fmt.Printf("Failed to update tool invocation status to failed: %v\n", updateErr)
+				q.logger.Errorw("Failed to update tool invocation status to failed", "invocation_id", inv.ID, "error", updateErr)
 			}
 		} else {
 			out, _ := json.Marshal(res)
 			if _, updateErr := q.client.ToolInvocation.UpdateOneID(inv.ID).SetStatus("done").SetResult(string(out)).Save(ctx); updateErr != nil {
-				// log failure to update tool invocation status
-				// fmt.Printf("Failed to update tool invocation status to done: %v\n", updateErr)
+				q.logger.Errorw("Failed to update tool invocation status to done", "invocation_id", inv.ID, "error", updateErr)
 			}
 		}
 		cancel()

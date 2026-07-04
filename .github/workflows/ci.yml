@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+env:
+  GO_VERSION: '1.21'
+  NODE_VERSION: '20'
+
+jobs:
+  # 后端 lint 和测试
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Download Go modules
+        working-directory: itsm-backend
+        run: go mod download
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: itsm-backend
+
+      - name: Run go vet
+        working-directory: itsm-backend
+        run: go vet ./...
+
+      - name: Run tests with coverage
+        working-directory: itsm-backend
+        run: |
+          go test -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out | tail -5
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: itsm-backend/coverage.out
+
+  # 前端 lint 和类型检查
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: itsm-frontend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: itsm-frontend
+        run: npm run lint
+
+      - name: Run type check
+        working-directory: itsm-frontend
+        run: npm run type-check
+
+      - name: Run tests
+        working-directory: itsm-frontend
+        run: npm test -- --coverage
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: itsm-frontend/coverage
+
+  # 构建验证
+  build:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build backend
+        working-directory: itsm-backend
+        run: go build -o itsm-backend main.go
+
+      - name: Build frontend
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - working-directory: itsm-frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build Docker image
+        run: docker build -t itsm:${{ github.sha }} .
+
+  # PR 大小检查
+  pr-size:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR size
+        run: |
+          # 计算增加的代码行数
+          CHANGES=$(git diff --stat --short HEAD~1 HEAD | tail -1)
+          echo "Changes: $CHANGES"
+
+          # 提取增加行数
+          ADDITIONS=$(echo "$CHANGES" | awk '{print $2}')
+          echo "Additions: $ADDITIONS"
+
+          # PR 超过 600 行警告
+          if [ "$ADDITIONS" -gt 600 ]; then
+            echo "::warning::PR has $ADDditions additions. Consider splitting into smaller PRs."
+          fi

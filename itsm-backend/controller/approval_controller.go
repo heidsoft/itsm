@@ -156,15 +156,17 @@ func (c *ApprovalController) ListWorkflows(ctx *gin.Context) {
 		return
 	}
 
-	filters := make(map[string]interface{})
+	// 强类型过滤条件，取代 map[string]interface{}
+	filter := &dto.WorkflowListFilter{}
 	if ticketType := ctx.Query("ticket_type"); ticketType != "" {
-		filters["ticket_type"] = ticketType
+		filter.TicketType = ticketType
 	}
 	if priority := ctx.Query("priority"); priority != "" {
-		filters["priority"] = priority
+		filter.Priority = priority
 	}
 	if isActive := ctx.Query("is_active"); isActive != "" {
-		filters["is_active"] = isActive == "true"
+		val := isActive == "true"
+		filter.IsActive = &val
 	}
 
 	page := 1
@@ -180,7 +182,7 @@ func (c *ApprovalController) ListWorkflows(ctx *gin.Context) {
 		}
 	}
 
-	workflows, total, err := c.approvalService.ListWorkflows(ctx.Request.Context(), filters, tid, page, pageSize)
+	workflows, total, err := c.approvalService.ListWorkflows(ctx.Request.Context(), filter, tid, page, pageSize)
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "获取工作流列表失败: "+err.Error())
 		return

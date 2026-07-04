@@ -34,73 +34,34 @@ func NewApprovalService(client *ent.Client, logger *zap.SugaredLogger) *Approval
 func (s *ApprovalService) CreateWorkflow(ctx context.Context, req *dto.CreateApprovalWorkflowRequest, tenantID int) (*dto.ApprovalWorkflowResponse, error) {
 	s.logger.Infow("Creating approval workflow", "name", req.Name, "tenant_id", tenantID)
 
-	// 转换节点配置为map格式
-	nodesMap := make([]map[string]interface{}, len(req.Nodes))
-	for i, node := range req.Nodes {
-		nodeMap := map[string]interface{}{
-			"level":          node.Level,
-			"name":           node.Name,
-			"approver_type":  node.ApproverType,
-			"approver_ids":   node.ApproverIDs,
-			"approval_mode":  node.ApprovalMode,
-			"allow_reject":   node.AllowReject,
-			"allow_delegate": node.AllowDelegate,
-			"reject_action":  node.RejectAction,
-		}
-		if node.AssigneeType != "" {
-			nodeMap["assignee_type"] = node.AssigneeType
-		}
-		if node.AssigneeValue != "" {
-			nodeMap["assignee_value"] = node.AssigneeValue
-		}
-		if node.MinimumApprovals != nil {
-			nodeMap["minimum_approvals"] = *node.MinimumApprovals
-		}
-		if node.TimeoutHours != nil {
-			nodeMap["timeout_hours"] = *node.TimeoutHours
-		}
-		if len(node.Conditions) > 0 {
-			conditionsMap := make([]map[string]interface{}, len(node.Conditions))
-			for j, cond := range node.Conditions {
-				conditionsMap[j] = map[string]interface{}{
-					"field":    cond.Field,
-					"operator": cond.Operator,
-					"value":    cond.Value,
-				}
-			}
-			nodeMap["conditions"] = conditionsMap
-		}
-		if node.ReturnToLevel != nil {
-			nodeMap["return_to_level"] = *node.ReturnToLevel
-		}
-		nodesMap[i] = nodeMap
+	// 强类型转换：ApprovalNodeRequest -> ApprovalNodeConfig -> map (Ent存储)
+	configs := dto.NodesToConfigs(req.Nodes)
+	nodesMap, err := nodesToMaps(configs)
+	if err != nil {
+		s.logger.Errorw("Failed to convert nodes to maps", "error", err)
+		return nil, fmt.Errorf("failed to convert approval nodes: %w", err)
 	}
 
-	workflow, err := s.client.ApprovalWorkflow.Create().
+	create := s.client.ApprovalWorkflow.Create().
 		SetName(req.Name).
 		SetDescription(req.Description).
 		SetNodes(nodesMap).
 		SetIsActive(req.IsActive).
 		SetTenantID(tenantID).
 		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
-		Save(ctx)
+		SetUpdatedAt(time.Now())
+
+	if req.TicketType != nil {
+		create = create.SetTicketType(*req.TicketType)
+	}
+	if req.Priority != nil {
+		create = create.SetPriority(*req.Priority)
+	}
+
+	workflow, err := create.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to create approval workflow", "error", err)
 		return nil, fmt.Errorf("failed to create approval workflow: %w", err)
-	}
-
-	if req.TicketType != nil {
-		workflow, err = workflow.Update().SetTicketType(*req.TicketType).Save(ctx)
-		if err != nil {
-			s.logger.Errorw("Failed to update ticket type", "error", err)
-		}
-	}
-	if req.Priority != nil {
-		workflow, err = workflow.Update().SetPriority(*req.Priority).Save(ctx)
-		if err != nil {
-			s.logger.Errorw("Failed to update priority", "error", err)
-		}
 	}
 
 	return s.toWorkflowResponse(ctx, workflow), nil
@@ -130,46 +91,12 @@ func (s *ApprovalService) UpdateWorkflow(ctx context.Context, id int, req *dto.U
 		update = update.SetPriority(*req.Priority)
 	}
 	if req.Nodes != nil {
-		// 转换节点配置为map格式
-		nodesMap := make([]map[string]interface{}, len(*req.Nodes))
-		for i, node := range *req.Nodes {
-			nodeMap := map[string]interface{}{
-				"level":          node.Level,
-				"name":           node.Name,
-				"approver_type":  node.ApproverType,
-				"approver_ids":   node.ApproverIDs,
-				"approval_mode":  node.ApprovalMode,
-				"allow_reject":   node.AllowReject,
-				"allow_delegate": node.AllowDelegate,
-				"reject_action":  node.RejectAction,
-			}
-			if node.AssigneeType != "" {
-				nodeMap["assignee_type"] = node.AssigneeType
-			}
-			if node.AssigneeValue != "" {
-				nodeMap["assignee_value"] = node.AssigneeValue
-			}
-			if node.MinimumApprovals != nil {
-				nodeMap["minimum_approvals"] = *node.MinimumApprovals
-			}
-			if node.TimeoutHours != nil {
-				nodeMap["timeout_hours"] = *node.TimeoutHours
-			}
-			if len(node.Conditions) > 0 {
-				conditionsMap := make([]map[string]interface{}, len(node.Conditions))
-				for j, cond := range node.Conditions {
-					conditionsMap[j] = map[string]interface{}{
-						"field":    cond.Field,
-						"operator": cond.Operator,
-						"value":    cond.Value,
-					}
-				}
-				nodeMap["conditions"] = conditionsMap
-			}
-			if node.ReturnToLevel != nil {
-				nodeMap["return_to_level"] = *node.ReturnToLevel
-			}
-			nodesMap[i] = nodeMap
+		// 强类型转换：ApprovalNodeRequest -> ApprovalNodeConfig -> map (Ent存储)
+		configs := dto.NodesToConfigs(*req.Nodes)
+		nodesMap, err := nodesToMaps(configs)
+		if err != nil {
+			s.logger.Errorw("Failed to convert nodes to maps", "error", err)
+			return nil, fmt.Errorf("failed to convert approval nodes: %w", err)
 		}
 		update = update.SetNodes(nodesMap)
 	}
@@ -226,20 +153,22 @@ func (s *ApprovalService) DeleteWorkflow(ctx context.Context, id int, tenantID i
 }
 
 // ListWorkflows 获取审批工作流列表
-func (s *ApprovalService) ListWorkflows(ctx context.Context, filters map[string]interface{}, tenantID int, page, pageSize int) ([]*dto.ApprovalWorkflowResponse, int, error) {
+func (s *ApprovalService) ListWorkflows(ctx context.Context, filter *dto.WorkflowListFilter, tenantID int, page, pageSize int) ([]*dto.ApprovalWorkflowResponse, int, error) {
 	s.logger.Infow("Listing approval workflows", "tenant_id", tenantID)
 
 	query := s.client.ApprovalWorkflow.Query().
 		Where(approvalworkflow.TenantIDEQ(tenantID))
 
-	if ticketType, ok := filters["ticket_type"].(string); ok && ticketType != "" {
-		query = query.Where(approvalworkflow.TicketTypeEQ(ticketType))
-	}
-	if priority, ok := filters["priority"].(string); ok && priority != "" {
-		query = query.Where(approvalworkflow.PriorityEQ(priority))
-	}
-	if isActive, ok := filters["is_active"].(bool); ok {
-		query = query.Where(approvalworkflow.IsActiveEQ(isActive))
+	if filter != nil {
+		if filter.TicketType != "" {
+			query = query.Where(approvalworkflow.TicketTypeEQ(filter.TicketType))
+		}
+		if filter.Priority != "" {
+			query = query.Where(approvalworkflow.PriorityEQ(filter.Priority))
+		}
+		if filter.IsActive != nil {
+			query = query.Where(approvalworkflow.IsActiveEQ(*filter.IsActive))
+		}
 	}
 
 	// 获取总数
@@ -507,28 +436,22 @@ func (s *ApprovalService) handleApprovalRejected(ctx context.Context, record *en
 
 // canPerformAction 检查在指定审批级别是否允许执行该操作
 func (s *ApprovalService) canPerformAction(workflow *ent.ApprovalWorkflow, level int, action string) bool {
-	if len(workflow.Nodes) == 0 {
+	configs := mapsToNodesUnsafe(workflow.Nodes)
+	if len(configs) == 0 {
 		// 如果没有节点配置，默认允许所有操作
 		return true
 	}
 
 	// 查找当前级别的节点配置
-	for _, nodeMap := range workflow.Nodes {
-		if nodeLevel, ok := nodeMap["level"].(float64); ok && int(nodeLevel) == level {
-			// 检查各个操作的允许状态
-			switch action {
-			case "approve":
-				return true // 审批通过总是允许的
-			case "reject":
-				if allowReject, ok := nodeMap["allow_reject"].(bool); ok {
-					return allowReject
-				}
-				return false // 默认不允许拒绝
-			case "delegate":
-				if allowDelegate, ok := nodeMap["allow_delegate"].(bool); ok {
-					return allowDelegate
-				}
-				return false // 默认不允许委托
+	for _, node := range configs {
+		if node.Level == level {
+			switch dto.ApprovalAction(action) {
+			case dto.ApprovalActionApprove:
+				return true // 审批通过总是允许
+			case dto.ApprovalActionReject:
+				return node.AllowReject
+			case dto.ApprovalActionDelegate:
+				return node.AllowDelegate
 			}
 		}
 	}
@@ -576,83 +499,36 @@ func (s *ApprovalService) handleApprovalDelegated(ctx context.Context, record *e
 
 // 辅助方法：转换为响应DTO
 func (s *ApprovalService) toWorkflowResponse(ctx context.Context, workflow *ent.ApprovalWorkflow) *dto.ApprovalWorkflowResponse {
-	nodes := make([]dto.ApprovalNodeResponse, 0)
-	if workflow.Nodes != nil {
-		for i, nodeMap := range workflow.Nodes {
-			level := 0
-			if l, ok := nodeMap["level"].(float64); ok {
-				level = int(l)
-			}
-			node := dto.ApprovalNodeResponse{
-				ID:            fmt.Sprintf("node%d", i+1),
-				Level:         level,
-				Name:          getStringValue(nodeMap["name"]),
-				ApproverType:  getStringValue(nodeMap["approver_type"]),
-				AssigneeType:  getStringValue(nodeMap["assignee_type"]),
-				AssigneeValue: getStringValue(nodeMap["assignee_value"]),
-				ApprovalMode:  getStringValue(nodeMap["approval_mode"]),
-				AllowReject:   getBoolValue(nodeMap["allow_reject"]),
-				AllowDelegate: getBoolValue(nodeMap["allow_delegate"]),
-				RejectAction:  getStringValue(nodeMap["reject_action"]),
-			}
+	// 强类型反序列化：map -> ApprovalNodeConfig
+	configs, err := mapsToNodes(workflow.Nodes)
+	if err != nil {
+		s.logger.Errorw("Failed to parse workflow nodes", "error", err, "workflow_id", workflow.ID)
+		configs = []dto.ApprovalNodeConfig{}
+	}
 
-			switch approverIDs := nodeMap["approver_ids"].(type) {
-			case []interface{}:
-				node.ApproverIDs = make([]int, 0, len(approverIDs))
-				for _, id := range approverIDs {
-					if idVal, ok := id.(float64); ok {
-						node.ApproverIDs = append(node.ApproverIDs, int(idVal))
-					} else if idVal, ok := id.(int); ok {
-						node.ApproverIDs = append(node.ApproverIDs, idVal)
-					}
-				}
-			case []int:
-				node.ApproverIDs = append(node.ApproverIDs, approverIDs...)
-			}
+	// 使用强类型转换生成响应节点
+	nodes := dto.ConfigsToResponses(configs)
 
-			if minApprovals, ok := nodeMap["minimum_approvals"].(float64); ok {
-				min := int(minApprovals)
-				node.MinimumApprovals = &min
+	// 获取审批人姓名（批量查询优化）
+	for i := range nodes {
+		node := &nodes[i]
+		if len(node.ApproverIDs) == 0 {
+			node.ApproverNames = []string{}
+			continue
+		}
+		node.ApproverNames = make([]string, len(node.ApproverIDs))
+		for j, id := range node.ApproverIDs {
+			userEntity, err := s.client.User.Query().
+				Where(
+					user.IDEQ(id),
+					user.TenantIDEQ(workflow.TenantID),
+				).
+				Only(ctx)
+			if err != nil {
+				node.ApproverNames[j] = fmt.Sprintf("用户%d", id)
+				continue
 			}
-			if timeoutHours, ok := nodeMap["timeout_hours"].(float64); ok {
-				timeout := int(timeoutHours)
-				node.TimeoutHours = &timeout
-			}
-			if returnToLevel, ok := nodeMap["return_to_level"].(float64); ok {
-				level := int(returnToLevel)
-				node.ReturnToLevel = &level
-			}
-
-			if conditions, ok := nodeMap["conditions"].([]interface{}); ok {
-				node.Conditions = make([]dto.ApprovalConditionConfig, 0, len(conditions))
-				for _, cond := range conditions {
-					if condMap, ok := cond.(map[string]interface{}); ok {
-						node.Conditions = append(node.Conditions, dto.ApprovalConditionConfig{
-							Field:    condMap["field"].(string),
-							Operator: condMap["operator"].(string),
-							Value:    condMap["value"],
-						})
-					}
-				}
-			}
-
-			// 获取审批人姓名
-			node.ApproverNames = make([]string, len(node.ApproverIDs))
-			for i, id := range node.ApproverIDs {
-				userEntity, err := s.client.User.Query().
-					Where(
-						user.IDEQ(id),
-						user.TenantIDEQ(workflow.TenantID),
-					).
-					Only(ctx)
-				if err != nil {
-					node.ApproverNames[i] = fmt.Sprintf("用户%d", id)
-					continue
-				}
-				node.ApproverNames[i] = userEntity.Name
-			}
-
-			nodes = append(nodes, node)
+			node.ApproverNames[j] = userEntity.Name
 		}
 	}
 
@@ -876,12 +752,13 @@ type workflowNode struct {
 	TimeoutHours  int
 }
 
-// parseWorkflowNodes 解析工作流节点JSON
+// parseWorkflowNodes 解析工作流节点（强类型版本）
 func (s *ApprovalService) parseWorkflowNodes(nodesJSON interface{}) ([]workflowNode, error) {
 	if nodesJSON == nil {
 		return nil, nil
 	}
 
+	// 将 interface{} 转为 []map[string]interface{}
 	var nodesArray []map[string]interface{}
 	switch v := nodesJSON.(type) {
 	case []map[string]interface{}:
@@ -897,57 +774,44 @@ func (s *ApprovalService) parseWorkflowNodes(nodesJSON interface{}) ([]workflowN
 		return nil, fmt.Errorf("invalid nodes format")
 	}
 
-	nodes := make([]workflowNode, 0, len(nodesArray))
-	for i, nodeMap := range nodesArray {
+	// 使用强类型转换器解析
+	configs, err := mapsToNodes(nodesArray)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse workflow nodes: %w", err)
+	}
+
+	nodes := make([]workflowNode, 0, len(configs))
+	for i, config := range configs {
 		node := workflowNode{
-			Level:        i + 1,
-			Name:         fmt.Sprintf("Step %d", i+1),
-			ApprovalMode: "any",
+			Level:         config.Level,
+			Name:          config.Name,
+			ApproverIDs:   config.ApproverIDs,
+			ApprovalMode:  string(config.ApprovalMode),
+			AssigneeType:  config.AssigneeType,
+			AssigneeValue: config.AssigneeValue,
+		}
+		if node.Level < 1 {
+			node.Level = i + 1
+		}
+		if node.Name == "" {
+			node.Name = fmt.Sprintf("Step %d", i+1)
+		}
+		if node.ApprovalMode == "" {
+			node.ApprovalMode = "any"
+		}
+		if config.TimeoutHours != nil {
+			node.TimeoutHours = *config.TimeoutHours
 		}
 
-		if level, ok := nodeMap["level"].(float64); ok {
-			node.Level = int(level)
-		} else if level, ok := nodeMap["level"].(int); ok {
-			node.Level = level
-		}
-		if name, ok := nodeMap["name"].(string); ok {
-			node.Name = name
-		}
-		if approvalMode, ok := nodeMap["approval_mode"].(string); ok && approvalMode != "" {
-			node.ApprovalMode = approvalMode
-		}
-		if timeout, ok := nodeMap["timeout_hours"].(float64); ok {
-			node.TimeoutHours = int(timeout)
-		} else if timeout, ok := nodeMap["timeout_hours"].(int); ok {
-			node.TimeoutHours = timeout
-		}
-
-		switch ids := nodeMap["approver_ids"].(type) {
-		case []interface{}:
-			node.ApproverIDs = make([]int, 0, len(ids))
-			for _, id := range ids {
-				if idVal, ok := id.(float64); ok {
-					node.ApproverIDs = append(node.ApproverIDs, int(idVal))
-				} else if idVal, ok := id.(int); ok {
-					node.ApproverIDs = append(node.ApproverIDs, idVal)
-				}
-			}
-		case []int:
-			node.ApproverIDs = append(node.ApproverIDs, ids...)
-		}
-
-		if assigneeType, ok := nodeMap["assignee_type"].(string); ok {
-			node.AssigneeType = assigneeType
-		}
-		if assigneeValue, ok := nodeMap["assignee_value"].(string); ok {
-			node.AssigneeValue = assigneeValue
-		}
+		// 如果 AssigneeType 为空，检查 ApproverType 中的动态类型
 		if node.AssigneeType == "" {
-			if approverType, ok := nodeMap["approver_type"].(string); ok {
-				switch approverType {
-				case "dept_manager", "team_leader", "project_manager", "temp_team_leader", "amount_based":
-					node.AssigneeType = approverType
-				}
+			switch config.ApproverType {
+			case dto.ApprovalNodeTypeDeptManager,
+				dto.ApprovalNodeTypeTeamLeader,
+				dto.ApprovalNodeTypeProjectManager,
+				dto.ApprovalNodeTypeTempTeamLeader,
+				dto.ApprovalNodeTypeAmountBased:
+				node.AssigneeType = string(config.ApproverType)
 			}
 		}
 
@@ -1075,24 +939,3 @@ func parseAmountThresholds(raw string) ([]approver.AmountThreshold, error) {
 	return thresholds, nil
 }
 
-// 辅助函数：安全获取字符串值
-func getStringValue(v interface{}) string {
-	if v == nil {
-		return ""
-	}
-	if s, ok := v.(string); ok {
-		return s
-	}
-	return ""
-}
-
-// 辅助函数：安全获取布尔值
-func getBoolValue(v interface{}) bool {
-	if v == nil {
-		return false
-	}
-	if b, ok := v.(bool); ok {
-		return b
-	}
-	return false
-}

@@ -1,0 +1,91 @@
+run:
+  timeout: 5m
+  go: "1.25"
+  modules-download-mode: mod
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck       # 检查未处理的 error 返回值
+    - govet          # Go vet 检查
+    - staticcheck    # 静态分析
+    - unused         # 未使用的代码
+    - ineffassign    # 无效赋值
+    - gocritic       # 代码改进建议
+    - revive         # golint 替代，代码风格
+    - gofmt          # 格式化检查
+    - goimports      # import 排序检查
+    - misspell       # 拼写检查
+    - unconvert      # 不必要的类型转换
+    - prealloc       # slice 预分配建议
+    - nolintlint     # nolint 指令规范
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+    exclude-functions:
+      - (io.Closer).Close
+      - (net/http.ResponseWriter).Write
+  govet:
+    enable-all: true
+  staticcheck:
+    checks: ["all"]
+  gocritic:
+    enabled-tags:
+      - performance
+      - style
+      - diagnostic
+    disabled-checks:
+      - hugeParam       # 大结构体参数提示（项目中有意使用）
+      - rangeValCopy    # range 值拷贝提示（部分场景需要拷贝）
+  revive:
+    rules:
+      - name: exported
+        disabled: true  # 项目使用中文注释，不强制 exported 文档
+      - name: var-naming
+        arguments: ["camelCase", "camelCase"]
+      - name: context-as-argument
+      - name: error-return
+      - name: error-strings
+      - name: errorf
+      - name: increment-decrement
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: error-naming
+  goimports:
+    local-prefixes: itsm-backend
+  misspell:
+    locale: US
+
+issues:
+  exclude-rules:
+    # 测试文件允许使用 fmt.Println
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gosec
+        - gocritic
+    # cmd 目录下的工具脚本放宽检查
+    - path: cmd/
+      linters:
+        - errcheck
+    # 迁移文件允许 panic（迁移失败应立即终止）
+    - path: migrations/
+      linters:
+        - errcheck
+    # ent 生成代码不检查
+    - path: ent/
+      linters:
+        - all
+    # fix_ 开头的临时修复脚本放宽
+    - path: fix_
+      linters:
+        - revive
+        - gocritic
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  fix: false

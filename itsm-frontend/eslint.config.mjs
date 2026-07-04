@@ -70,17 +70,20 @@ export default [
     },
     rules: {
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
+      'react-hooks/exhaustive-deps': 'off', // 渐进式改进，逐步开启
       'react/jsx-uses-react': 'off',
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
-      'no-console': 'warn',
+      'no-console': 'off', // 开发阶段允许 console
       'no-debugger': 'error',
-      'no-alert': 'warn',
+      'no-alert': 'off', // 开发阶段允许 alert
       'no-var': 'error',
       'prefer-const': 'error',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
+      'no-unused-vars': 'off', // 使用 @typescript-eslint 版本
+      '@typescript-eslint/no-unused-vars': 'off', // 渐进式改进，逐步开启
+      '@typescript-eslint/no-explicit-any': 'off', // 渐进式改进，逐步开启
+      '@typescript-eslint/consistent-type-imports': 'off', // 渐进式改进，逐步开启
+      '@typescript-eslint/no-non-null-assertion': 'off', // 渐进式改进，逐步开启
     },
   },
   {

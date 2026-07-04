@@ -1,72 +1,42 @@
-# Pull Request Template
+## 概述
 
-## Description
-<!-- Describe the changes made in this pull request. -->
+<!-- 简短描述这次改动解决了什么问题 -->
 
-**Related Issue:** Fixes #(issue number)
+## 改动类型
 
-## Type of Change
-<!-- Mark the appropriate option with an [x]. -->
+- [ ] 新功能 (New Feature)
+- [ ] Bug 修复 (Bug Fix)
+- [ ] 重构 (Refactor)
+- [ ] 文档 (Documentation)
+- [ ] 性能优化 (Performance)
+- [ ] 测试 (Test)
 
-- [ ] 🐛 Bug fix (non-breaking change that fixes an issue)
-- [ ] ✨ New feature (non-breaking change that adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] 📖 Documentation update
-- [ ] 🎨 Style/formatting changes
-- [ ] ♻️ Code refactoring
-- [ ] ⚡ Performance improvement
-- [ ] 🧪 Test addition/update
-- [ ] 🔧 Configuration change
-- [ ] 🚀 CI/CD improvement
-- [ ] Other (please describe):
+## 改动范围
 
-## Changes Made
-<!-- List the major changes in this PR. -->
+<!-- 影响的模块/服务 -->
 
-1. 
-2. 
-3. 
+## 自检清单
 
-## Testing
-<!-- Describe the tests you ran to verify your changes. -->
+<!-- 在提交前确保已完成 -->
 
-- [ ] Unit tests pass locally
-- [ ] Integration tests pass locally
-- [ ] Manual testing completed
-- [ ] No new warnings introduced
+- [ ] 代码符合 golangci-lint / ESLint 规范
+- [ ] 新功能有对应的单元测试
+- [ ] 改动已更新相关文档
+- [ ] 无敏感信息泄露（API Key、密码等）
 
-**Test Configuration:**
-- Go version: 
-- Node.js version: 
-- Database: 
+## 依赖变更
 
-## Screenshots/Recordings
-<!-- If applicable, add screenshots or recordings to help explain your changes. -->
+<!-- 是否有新增依赖 -->
 
-## Checklist
-<!-- Mark the appropriate option with an [x]. -->
+- 新增依赖:
+- 移除依赖:
 
-- [ ] My code follows the project's code style
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published
-- [ ] I have squashed related commits (if applicable)
+## 相关 Issue
 
-## Additional Notes
-<!-- Add any additional notes or context about the PR here. -->
+<!-- 关联的任务/Issue -->
 
-## For Maintainers
-<!-- This section is for maintainers only. -->
+Closes #
 
-- [ ] Code review completed
-- [ ] Tests reviewed
-- [ ] Documentation reviewed
-- [ ] Change log updated (if applicable)
-- [ ] Ready to merge
+## 审查重点（可选）
 
----
-
-**Thank you for contributing to ITSM!** 🚀
+<!-- 特别希望审查者关注的地方 -->

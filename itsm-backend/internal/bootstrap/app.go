@@ -231,7 +231,7 @@ func NewApplication() *Application {
 
 	// AI Tools
 	toolRegistry := service.NewToolRegistry(ragService, incidentService, cmdbService, client)
-	toolQueue := service.NewToolQueue(client, toolRegistry, 100)
+	toolQueue := service.NewToolQueue(client, toolRegistry, 100, sugar)
 
 	ticketController := controller.NewTicketController(ticketService, ticketDependencyService, database.GetRawDB(), sugar)
 	ticketDependencyController := controller.NewTicketDependencyController(ticketDependencyService)
