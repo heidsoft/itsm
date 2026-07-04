@@ -21,7 +21,7 @@ import {
   message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { Search, Plus, Pencil, Trash2, Download, Export, Eye, RotateCcw } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Download, Eye, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -387,7 +387,7 @@ const CIList: React.FC = () => {
               已选择 <strong>{selectedRowKeys.length}</strong> 项
             </span>
             <Space>
-              <Button size="small" icon={<Export />} onClick={handleExport}>
+              <Button size="small" icon={<Download />} onClick={handleExport}>
                 导出
               </Button>
               <Button size="small" danger icon={<Trash2 />} onClick={handleBatchDelete}>

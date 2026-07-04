@@ -37,7 +37,7 @@ const ServiceCatalogUsagePage = () => {
       const { services: servicesData } = await ServiceCatalogApi.getServices({
         page: 1,
         pageSize: 100,
-      } as any);
+      });
 
       setServices(servicesData);
 

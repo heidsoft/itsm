@@ -26,8 +26,8 @@ export default function RelationshipsPage() {
       setLoading(true);
       try {
         const response = await CMDBApi.getCIs({ limit: 200 });
-        const items = (response as any)?.items ?? (response as any)?.cis ?? [];
-        const options = items.map((item: any) => ({
+        const items = response?.items ?? response?.cis ?? [];
+        const options = items.map((item) => ({
           id: item.id,
           name: item.name,
           type: item.ciType ?? item.ci_type ?? item.type ?? '配置项',

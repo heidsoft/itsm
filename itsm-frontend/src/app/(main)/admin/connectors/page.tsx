@@ -5,6 +5,7 @@ import {
   Card, Table, Tag, Button, Space, Modal, Form, Input, Switch, Tabs, message, Drawer,
   Typography, Empty, Alert, Spin, Tooltip,
 } from 'antd';
+import { SendOutlined, PoweroffOutlined } from '@ant-design/icons';
 import { Plus, Settings, RotateCcw, CheckCircle, XCircle, Plug } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type {

@@ -62,7 +62,7 @@ export default function ChangesPage() {
       const response = await ChangeApi.getChanges({
         page: 1,
         page_size: 100,
-        status: statusFilter || undefined,
+        status: (statusFilter as any) || undefined,
         search: debouncedSearch,
       });
       const items = response.changes || [];

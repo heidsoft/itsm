@@ -119,7 +119,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         setWorkflowSteps([]);
       }
       if (slaRes.status === 'fulfilled') {
-        setSlaInfo((slaRes.value as any) || null);
+        setSlaInfo((slaRes.value as unknown as SLAInfo | null) || null);
       }
       if (historyRes.status === 'fulfilled') {
         setTicketHistory(historyRes.value || []);
@@ -306,7 +306,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
                 <div className="p-6">
                   <TicketSubtasks
                     parentTicket={ticket}
-                    subtasks={subtasks as any}
+                    subtasks={subtasks}
                     loading={subtasksLoading}
                     onCreateSubtask={handleCreateSubtask}
                     onUpdateSubtask={handleUpdateSubtask}
@@ -360,7 +360,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'history',
               label: '历史记录',
               children: (
-                <TicketHistory history={ticketHistory as any} formatDateTime={formatDateTime} />
+                <TicketHistory history={ticketHistory as unknown as Parameters<typeof TicketHistory>[0]['history']} formatDateTime={formatDateTime} />
               ),
             },
           ]}

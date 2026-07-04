@@ -40,13 +40,13 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 interface DependencyImpact {
-  ticket_id: number;
-  ticket_number: string;
-  ticket_title: string;
-  impact_level: 'high' | 'medium' | 'low';
-  impact_type: 'blocked' | 'delayed' | 'affected';
-  affected_fields: string[];
-  estimated_delay_hours?: number;
+  ticketId: number;
+  ticketNumber: string;
+  ticketTitle: string;
+  impactLevel: 'high' | 'medium' | 'low';
+  impactType: 'blocked' | 'delayed' | 'affected';
+  affectedFields: string[];
+  estimatedDelayHours?: number;
 }
 
 interface TicketDependencyManagerProps {

@@ -125,7 +125,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
             id: t.id,
             title: t.title,
             status: t.status,
-            number: t.ticketNumber || t.ticket_number,
+            number: t.ticketNumber,
             type: 'ticket' as const,
           }));
           break;

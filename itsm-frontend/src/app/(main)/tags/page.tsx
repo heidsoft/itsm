@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Tag, Space, Modal, Form, Input, ColorPicker, message } from 'antd';
-import { Plus, Pencil, Trash2, RefreshCw, Tag } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw, Tag as TagIcon } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type { Tag as ITag } from '@/lib/services/tag-service';
 import { tagService } from '@/lib/services/tag-service';

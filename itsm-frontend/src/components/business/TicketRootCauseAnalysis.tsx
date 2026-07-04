@@ -65,15 +65,15 @@ interface RootCause {
 }
 
 interface RootCauseAnalysisReport {
-  ticket_id: number;
-  ticket_number: string;
-  ticket_title: string;
-  analysis_date: string;
-  root_causes: RootCause[];
-  analysis_summary: string;
-  confidence_score: number;
-  analysis_method: 'automatic' | 'manual' | 'hybrid';
-  generated_at: string;
+  ticketId: number;
+  ticketNumber: string;
+  ticketTitle: string;
+  analysisDate: string;
+  rootCauses: RootCause[];
+  analysisSummary: string;
+  confidenceScore: number;
+  analysisMethod: 'automatic' | 'manual' | 'hybrid';
+  generatedAt: string;
 }
 
 interface TicketRootCauseAnalysisProps {
@@ -284,7 +284,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                     分析摘要
                   </Title>
                   <Text type="secondary" className="text-sm">
-                    {analysisReport.ticket_number} - {analysisReport.ticket_title}
+                    {analysisReport.ticketNumber} - {analysisReport.ticketTitle}
                   </Text>
                 </div>
                 <div className="text-right">

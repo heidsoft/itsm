@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { LayoutDashboard } from 'lucide-react';
 import { Card, Row, Col, Statistic, Tooltip, Spin, Progress } from 'antd';
 import {
   ArrowUp,

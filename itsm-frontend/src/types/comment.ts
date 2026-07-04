@@ -20,10 +20,8 @@ export enum CommentType {
  */
 export interface Comment {
   id: number;
-  ticket_id: number;
-  ticketId?: number;
-  user_id: number;
-  userId?: number;
+  ticketId: number;
+  userId: number;
   user?: {
     id: number;
     username: string;
@@ -32,14 +30,11 @@ export interface Comment {
     avatar?: string;
   };
   content: string;
-  is_internal: boolean;
-  isInternal?: boolean;
+  isInternal: boolean;
   type?: CommentType;
   mentions?: number[];
   attachments?: number[];
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
+  createdAt: string;
   updatedAt?: string;
 }
 
@@ -48,7 +43,7 @@ export interface Comment {
  */
 export interface CommentCreateRequest {
   content: string;
-  is_internal?: boolean;
+  isInternal?: boolean;
   mentions?: number[];
   attachments?: number[];
 }
@@ -58,19 +53,19 @@ export interface CommentCreateRequest {
  */
 export interface CommentUpdateRequest {
   content?: string;
-  is_internal?: boolean;
+  isInternal?: boolean;
 }
 
 /**
  * 评论列表查询参数
  */
 export interface CommentListQuery {
-  ticket_id: number;
+  ticketId: number;
   type?: CommentType;
-  is_internal?: boolean;
-  user_id?: number;
+  isInternal?: boolean;
+  userId?: number;
   page?: number;
-  page_size?: number;
+  pageSize?: number;
 }
 
 /**
@@ -80,18 +75,18 @@ export interface CommentListResponse {
   comments: Comment[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 /**
  * 评论统计
  */
 export interface CommentStats {
-  total_comments: number;
-  internal_comments: number;
-  public_comments: number;
-  system_comments: number;
-  comments_by_user: Record<number, number>;
+  totalComments: number;
+  internalComments: number;
+  publicComments: number;
+  systemComments: number;
+  commentsByUser: Record<number, number>;
 }
 
 /**
@@ -99,11 +94,11 @@ export interface CommentStats {
  */
 export interface CommentAttachment {
   id: number;
-  comment_id: number;
-  file_name: string;
-  file_path: string;
-  file_url: string;
-  file_size: number;
-  mime_type: string;
-  created_at: string;
+  commentId: number;
+  fileName: string;
+  filePath: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  createdAt: string;
 }

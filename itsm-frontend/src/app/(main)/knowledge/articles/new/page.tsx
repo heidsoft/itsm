@@ -58,7 +58,7 @@ export default function NewKnowledgeArticlePage() {
         tags: values.tags || [],
       });
       message.success('文章创建成功');
-      router.push(`/knowledge/articles/${(created as any).id}`);
+      router.push(`/knowledge/articles/${created.id}`);
     } catch (e: any) {
       message.error('创建失败：' + (e?.message || '未知错误'));
     } finally {

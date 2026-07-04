@@ -212,9 +212,9 @@ export default function EnhancedSystemConfiguration() {
         const uptime = status.uptime || status.upTime;
 
         setSystemStats({
-          uptime: typeof uptime === 'string' ? uptime : calculateUptime(startTime),
+          uptime: typeof uptime === 'string' ? uptime : calculateUptime(typeof startTime === 'string' ? parseInt(startTime, 10) : startTime),
           goroutines: getSystemStatusValue<number>(status, 'goroutines', 'goroutines'),
-          cpuCores: cpu.cores || getSystemStatusValue<number>(status, 'cpuCores', 'cpu_cores'),
+          cpuCores: cpu.cores || getSystemStatusValue<number>(status, 'cpu_cores', 'cpu_cores'),
           memoryUsagePercent: Math.round(memory.usage_percent || memory.usage || 0),
           diskUsagePercent: Math.round(disk.usage_percent || 0),
           activeConnections: getSystemStatusValue<number>(status, 'activeConnections', 'activeConnections'),

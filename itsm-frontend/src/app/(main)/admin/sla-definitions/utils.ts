@@ -13,20 +13,19 @@ export const transformSLA = (item: APISLADefinition): SLADefinition => ({
   id: String(item.id),
   name: item.name,
   description: item.description,
-  // 兼容 service_type 和 serviceType
-  serviceType: item.serviceType || item.service_type || '',
+  serviceType: item.serviceType || '',
   priority: (item.priority || 'P3') as SLADefinition['priority'],
   // 后端返回 camelCase 格式: responseTime, resolutionTime
   responseTime: `${item.responseTime || 0}分钟`,
   resolutionTime: `${item.resolutionTime || 0}分钟`,
   // 可用性字段
-  availability: `${item.availability_target || item.availability || 99.9}%`,
+  availability: `${item.availabilityTarget || item.availability || 99.9}%`,
   businessHours: '7x24',
   escalationRules: [],
   applicableServices: [],
-  status: (item.isActive ?? item.is_active) ? 'active' : 'inactive',
-  createdAt: item.createdAt || item.created_at || '',
-  updatedAt: item.updatedAt || item.updated_at || '',
+  status: item.isActive ? 'active' : 'inactive',
+  createdAt: item.createdAt || '',
+  updatedAt: item.updatedAt || '',
   createdBy: '系统',
 });
 

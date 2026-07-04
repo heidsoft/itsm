@@ -6,7 +6,7 @@
 import React from 'react';
 import type { MenuProps} from 'antd';
 import { Button, Space, Tag, Breadcrumb, Typography, Dropdown, Tooltip } from 'antd';
-import { Save, Pencil, Export, Settings, History, Bug, Rocket, PlayCircle, CloudUpload } from 'lucide-react';
+import { Save, Pencil, Download, Settings, History, Bug, Rocket, PlayCircle, CloudUpload } from 'lucide-react';
 import Link from 'next/link';
 import type { WorkflowDefinition } from './WorkflowTypes';
 
@@ -53,7 +53,7 @@ export default function WorkflowToolbar({
   const moreMenuItems: MenuProps['items'] = [
     {
       key: 'export',
-      icon: <Export />,
+      icon: <Download />,
       label: '导出BPMN',
       onClick: handleExportXML
     },

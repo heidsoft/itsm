@@ -270,7 +270,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
                       <Text strong>
                         {comment.user?.name || comment.user?.username || '未知用户'}
                       </Text>
-                      {comment.is_internal && (
+                      {comment.isInternal && (
                         <Tag color="orange" icon={<Lock className="w-3 h-3" />}>
                           {t('comments.internal') || '内部'}
                         </Tag>

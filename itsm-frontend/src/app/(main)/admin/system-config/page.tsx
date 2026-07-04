@@ -137,7 +137,7 @@ export default function SystemConfiguration() {
           (status.started_at as string);
         const uptime = (status.uptime as string) || (status.upTime as string);
         setSystemStats({
-          uptime: typeof uptime === 'string' ? uptime : calculateUptime(startTime),
+          uptime: typeof uptime === 'string' ? uptime : calculateUptime(startTime ? parseInt(startTime, 10) : undefined),
           goroutines: (status.goroutines as number) || 0,
           cpuCores: cpu.cores || (status.cpu_cores as number) || 0,
           memoryUsagePercent: Math.round(

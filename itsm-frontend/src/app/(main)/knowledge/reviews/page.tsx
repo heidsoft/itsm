@@ -40,7 +40,6 @@ interface ArticleItem {
 }
 import { useI18n } from '@/lib/i18n/useI18n';
 import dayjs from 'dayjs';
-import { Pencil, Eye, Clock, MessageSquare, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Text, Paragraph } = Typography;

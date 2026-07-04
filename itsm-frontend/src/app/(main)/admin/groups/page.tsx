@@ -19,7 +19,7 @@ import {
   Badge,
 } from 'antd';
 import type { TablePaginationConfig } from 'antd';
-import { Edit, Plus, Search, Trash2, UserPlus, Users, User, X, Check } from 'lucide-react';
+import { Edit, Plus, Search, Trash2, UserPlus, Users, User as UserIcon, X, Check } from 'lucide-react';
 import BusinessStatsGrid from '@/components/common/BusinessStatsGrid';
 import { GroupAPI, type Group } from '@/lib/api/group-api';
 import { UserApi, type User } from '@/lib/api/user-api';
@@ -472,10 +472,10 @@ const GroupManagement: React.FC = () => {
             }))}
             titles={['可添加的用户', '当前成员']}
             targetKeys={targetKeys}
-            onChange={setSelectedUserIds}
+            onChange={(keys) => setSelectedUserIds(keys.map(k => String(k)))}
             render={item => (
               <Space>
-                <Avatar size="small" icon={<User size={14} />} />
+                <Avatar size="small" icon={<UserIcon size={14} />} />
                 <span>{item.title}</span>
                 <Text type="secondary" className="text-xs">
                   {item.description}
@@ -505,8 +505,8 @@ const GroupManagement: React.FC = () => {
                 renderItem={item => (
                   <List.Item>
                     <Space>
-                      <Avatar size="small" src={item.avatar}>
-                        <User size={14} />
+                      <Avatar size="small" src={('avatar' in item ? item.avatar : undefined) as string | undefined}>
+                        <UserIcon size={14} />
                       </Avatar>
                       <Text>{item.name || item.username || `用户#${item.id}`}</Text>
                       {item.email && (

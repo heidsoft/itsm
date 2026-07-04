@@ -368,7 +368,7 @@ export default function CloudResourcePage() {
               <div className="font-medium mb-1">将绑定资源：</div>
               <div>{binding.resourceName || binding.resource_name || binding.resourceId || binding.resource_id}</div>
               <div className="text-gray-400 mt-1">
-                {providerOptions.find(p => p.value === binding.provider)?.label} / {binding.region} / {binding.zone}
+                {providerOptions.find(p => p.value === (binding as any).provider)?.label} / {binding.region} / {binding.zone}
               </div>
             </div>
           )}
@@ -407,7 +407,7 @@ export default function CloudResourcePage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="text-sm text-gray-500">云厂商</div>
-                <div>{providerOptions.find(p => p.value === selectedRow.provider)?.label || selectedRow.provider || '-'}</div>
+                <div>{providerOptions.find(p => p.value === (selectedRow as any).provider)?.label || (selectedRow as any).provider || '-'}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">服务类型</div>

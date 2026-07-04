@@ -18,7 +18,7 @@ import {
   Col,
   Divider,
 } from 'antd';
-import { Filter, Plus, Pencil, Trash2, Export, Eye, RotateCcw, AlertCircle } from 'lucide-react';
+import { Filter, Plus, Pencil, Trash2, Download, Eye, RotateCcw, AlertCircle } from 'lucide-react';
 import type { ColumnsType, TableProps, TablePaginationConfig } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
@@ -440,7 +440,7 @@ const TicketList: React.FC<TicketListProps> = ({
                     批量删除 ({selectedTickets.size})
                   </Button>
                 )}
-                <Button icon={<Export />} onClick={handleExport}>
+                <Button icon={<Download />} onClick={handleExport}>
                   导出
                 </Button>
                 <Button

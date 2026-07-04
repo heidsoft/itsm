@@ -403,7 +403,7 @@ export default function ApprovalsCenterPage() {
         </div>
         <Space wrap className="w-full md:w-auto justify-end">
           <Button
-            icon={<RotateCcw spin={loading} />}
+            icon={<RotateCcw className={loading ? 'animate-spin' : ''} />}
             onClick={handleRefresh}
             loading={loading}
             className="w-full md:w-auto"
@@ -695,110 +695,6 @@ export default function ApprovalsCenterPage() {
           </Descriptions>
         )}
       </Drawer>
-    </div>
-  );
-}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="工单待审"
-              value={tickets.length}
-              prefix={<FileText />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="变更待审"
-              value={changes.length}
-              prefix={<Wrench />}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="服务请求待审"
-              value={serviceRequests.length}
-              prefix={<Headphones />}
-              valueStyle={{ color: '#722ed1' }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      <Card>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            {
-              key: 'tickets',
-              label: (
-                <span>
-                  <FileText /> 工单 ({tickets.length})
-                </span>
-              ),
-              children: tickets.length > 0 ? (
-                <Table
-                  rowKey="id"
-                  dataSource={tickets}
-                  columns={columns}
-                  loading={loading}
-                  pagination={{ pageSize: 10 }}
-                />
-              ) : (
-                <Empty description="暂无待审批工单" />
-              ),
-            },
-            {
-              key: 'changes',
-              label: (
-                <span>
-                  <Wrench /> 变更 ({changes.length})
-                </span>
-              ),
-              children: changes.length > 0 ? (
-                <Table
-                  rowKey="id"
-                  dataSource={changes}
-                  columns={columns}
-                  loading={loading}
-                  pagination={{ pageSize: 10 }}
-                />
-              ) : (
-                <Empty description="暂无待审批变更" />
-              ),
-            },
-            {
-              key: 'service-requests',
-              label: (
-                <span>
-                  <Headphones /> 服务请求 ({serviceRequests.length})
-                </span>
-              ),
-              children: serviceRequests.length > 0 ? (
-                <Table
-                  rowKey="id"
-                  dataSource={serviceRequests}
-                  columns={columns}
-                  loading={loading}
-                  pagination={{ pageSize: 10 }}
-                />
-              ) : (
-                <Empty description="暂无待审批服务请求" />
-              ),
-            },
-          ]}
-        />
-      </Card>
     </div>
   );
 }

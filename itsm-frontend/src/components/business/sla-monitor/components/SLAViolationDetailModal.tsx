@@ -75,9 +75,9 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
     >
       <Descriptions bordered column={2}>
         <Descriptions.Item label="ID">{violation.id}</Descriptions.Item>
-        <Descriptions.Item label="工单ID">{violation.ticketId || violation.ticket_id}</Descriptions.Item>
-        <Descriptions.Item label="SLA定义ID">{violation.sla_def_id}</Descriptions.Item>
-        <Descriptions.Item label="违规类型">{violation.violation_type}</Descriptions.Item>
+        <Descriptions.Item label="工单ID">{violation.ticketId}</Descriptions.Item>
+        <Descriptions.Item label="SLA定义ID">{violation.slaDefId}</Descriptions.Item>
+        <Descriptions.Item label="违规类型">{violation.violationType}</Descriptions.Item>
         <Descriptions.Item label="严重程度">
           <Tag color={severityColors[violation.severity] || 'default'}>
             {violation.severity}
@@ -89,12 +89,12 @@ export const SLAViolationDetailModal: React.FC<SLAViolationDetailModalProps> = (
           </Tag>
         </Descriptions.Item>
         <Descriptions.Item label="期望时间">
-          {new Date(violation.expected_time).toLocaleString()}
+          {new Date(violation.expectedTime).toLocaleString()}
         </Descriptions.Item>
         <Descriptions.Item label="实际时间">
-          {new Date(violation.actual_time).toLocaleString()}
+          {new Date(violation.actualTime).toLocaleString()}
         </Descriptions.Item>
-        <Descriptions.Item label="延迟分钟数">{violation.delay_minutes} 分钟</Descriptions.Item>
+        <Descriptions.Item label="延迟分钟数">{violation.delayMinutes} 分钟</Descriptions.Item>
         <Descriptions.Item label="描述" span={2}>
           {violation.description || '-'}
         </Descriptions.Item>

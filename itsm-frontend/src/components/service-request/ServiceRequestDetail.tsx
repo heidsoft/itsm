@@ -57,7 +57,9 @@ const ServiceRequestDetail: React.FC = () => {
     try {
       const data = await ServiceRequestApi.getServiceRequest(Number(id));
       setRequest(data as unknown as ServiceRequest);
-      setApprovals((data as any).approvals || []);
+      // 处理 API 响应中的 approvals 字段（可能是 snake_case）
+      const extData = data as unknown as ServiceRequest & { approvals?: ServiceRequestApproval[] };
+      setApprovals(extData.approvals || []);
     } catch (error) {
       // console.error(error);
       message.error('加载详情失败');

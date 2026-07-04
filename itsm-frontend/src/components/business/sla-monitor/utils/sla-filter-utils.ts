@@ -43,7 +43,7 @@ export const filterSLAViolations = (
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       const matchesDescription = violation.description?.toLowerCase().includes(searchLower);
-      const matchesTicketId = String(violation.ticketId || violation.ticket_id).includes(searchLower);
+      const matchesTicketId = String(violation.ticketId).includes(searchLower);
       if (!matchesDescription && !matchesTicketId) {
         return false;
       }

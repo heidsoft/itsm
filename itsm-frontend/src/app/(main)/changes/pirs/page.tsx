@@ -19,7 +19,6 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { ChangeApi, type PIRResponse, type PIROverallResult } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 import dayjs from 'dayjs';
-import { Trash2, Eye, AlertTriangle, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 
 export default function PIRListPage() {

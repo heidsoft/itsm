@@ -1,6 +1,6 @@
 module itsm-backend
 
-go 1.25.0
+go 1.21
 
 // Replace itsm-backend imports to use local packages
 replace itsm-backend => .

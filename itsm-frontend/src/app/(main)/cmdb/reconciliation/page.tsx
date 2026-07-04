@@ -53,11 +53,11 @@ export default function ReconciliationPage() {
         CMDBApi.getReconciliationResults(),
         CMDBApi.getCloudServices(),
       ]);
-      const r = recon as any;
-      setSummary(r.summary || null);
-      setUnboundResources(r.unboundResources || []);
-      setOrphanCIs(r.orphanCIs || []);
-      setUnlinkedCIs(r.unlinkedCIs || []);
+      const r = recon as unknown as Record<string, unknown>;
+      setSummary((r.summary as any) || null);
+      setUnboundResources((r.unboundResources as any) || []);
+      setOrphanCIs((r.orphanCIs as any) || []);
+      setUnlinkedCIs((r.unlinkedCIs as any) || []);
       setServices(serviceList || []);
     } catch (error) {
       message.error('加载对账数据失败');
@@ -221,7 +221,7 @@ export default function ReconciliationPage() {
             <Statistic
               key={item.key}
               title={item.label}
-              value={summary ? ((summary as any)[item.key] ?? 0) : 0}
+              value={summary ? ((summary as unknown as Record<string, number>)[item.key] ?? 0) : 0}
             />
           ))}
         </Space>

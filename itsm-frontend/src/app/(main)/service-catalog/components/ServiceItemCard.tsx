@@ -156,7 +156,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
       </div>
 
       <Text className="mb-4 block min-h-[40px]">
-        {catalog.shortDescription || (catalog as any).description || ''}
+        {catalog.shortDescription || catalog.fullDescription || ''}
       </Text>
 
       <div className="flex justify-between items-center mt-4">

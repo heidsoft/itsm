@@ -94,8 +94,8 @@ export default function WorkflowNodeInspector({
     const loadRoles = async () => {
       setLoadingRoles(true);
       try {
-        const resp = (await RoleAPI.getRoles()) as any;
-        const list = (resp.roles || resp.data || []) as { id: number; name: string; code: string }[];
+        const resp = await RoleAPI.getRoles();
+        const list = (resp as unknown as { roles?: { id: number; name: string; code: string }[]; data?: { id: number; name: string; code: string }[] })?.roles ?? (resp as unknown as { roles?: { id: number; name: string; code: string }[]; data?: { id: number; name: string; code: string }[] })?.data ?? [];
         if (!cancelled) setRoles(list);
       } catch (err) {
         console.error('加载角色列表失败:', err);
@@ -242,7 +242,7 @@ export default function WorkflowNodeInspector({
 
   // 网关/序列流属性
   const currentConditionExpression = (bo.conditionExpression && typeof bo.conditionExpression === 'object' 
-    ? (bo.conditionExpression as any).body || '' 
+    ? (bo.conditionExpression as unknown as { body?: string })?.body || '' 
     : (bo.conditionExpression as string) || '');
   const currentDefaultFlow = (bo.default as string) || '';
 

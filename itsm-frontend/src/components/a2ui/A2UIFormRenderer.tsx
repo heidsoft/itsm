@@ -227,7 +227,7 @@ const A2UIComponentRenderer: React.FC<{
           const childDef = childComp.component;
           const childType = Object.keys(childDef)[0];
           if (childType === 'Text') {
-            buttonText = (resolveValue((childDef as any).Text?.text, model) as string) || '提交';
+            buttonText = (resolveValue((childDef as unknown as { Text?: { text?: unknown } }).Text?.text, model) as string) || '提交';
           }
         }
       }

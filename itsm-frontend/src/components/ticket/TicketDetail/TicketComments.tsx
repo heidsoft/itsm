@@ -179,7 +179,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
                     <Text strong>{comment.user?.name || comment.user?.username || '未知用户'}</Text>
-                    {comment.is_internal && <AntTag color="orange">仅内部可见</AntTag>}
+                    {comment.isInternal && <AntTag color="orange">仅内部可见</AntTag>}
                     {comment.mentions && comment.mentions.length > 0 && (
                       <AntTag color="blue" icon={<AtSign className="w-3 h-3" />}>
                         @{comment.mentions.length}人

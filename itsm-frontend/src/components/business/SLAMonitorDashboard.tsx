@@ -20,8 +20,7 @@ import {
   message,
   App,
 } from 'antd';
-import { Clock, RotateCcw, Bell, AlertTriangle, CheckCircle, XCircle, Maximize, Minimize } from 'lucide-react';
-import { Activity, AlertTriangle, Target, Zap, BarChart3 } from 'lucide-react';
+import { Clock, RotateCcw, Bell, AlertTriangle, CheckCircle, XCircle, Maximize, Minimize, Activity, Target, Zap, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import SLAApi from '@/lib/api/sla-api';
@@ -101,19 +100,8 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           responseTimeCompliance: data.responseTimeCompliance,
           resolutionTimeCompliance: data.resolutionTimeCompliance,
         });
-        // 转换API响应格式到组件格式
-        const convertedAlerts: SLAAlert[] = (data.alerts || []).map((alert: any) => ({
-          id: alert.id,
-          ticketId: alert.ticketId || alert.ticket_id,
-          ticketNumber: alert.ticketNumber || alert.ticket_number,
-          ticketTitle: alert.ticketTitle || alert.ticket_title,
-          priority: alert.priority,
-          alertLevel: alert.alertLevel || alert.alert_level,
-          timeRemaining: alert.timeRemaining || alert.time_remaining,
-          slaDefinition: alert.slaDefinition || alert.sla_definition,
-          createdAt: alert.createdAt || alert.created_at,
-        }));
-        setAlerts(convertedAlerts);
+        // httpClient 已自动转换为 camelCase
+        setAlerts(data.alerts || []);
         lastUpdateTimeRef.current = new Date();
         return;
       }

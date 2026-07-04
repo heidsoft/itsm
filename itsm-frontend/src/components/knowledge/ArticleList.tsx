@@ -75,7 +75,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
       const resp = await KnowledgeBaseApi.getArticles({
         ...query,
         ...values,
-        categoryId: (values as any).category || undefined,
+        categoryId: (values as unknown as { category?: number }).category || undefined,
       });
       // HTTP client already extracts data, so resp is ListKnowledgeArticlesResponse
       const articles = resp?.articles || [];

@@ -169,7 +169,7 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
       // 如果没有专门的 resolve 接口，通常使用 update 接口
       // 检查 KnowledgeBaseApi 是否有 resolveComment，如果没有则模拟或扩展
       if ('resolveComment' in KnowledgeBaseApi) {
-        await (KnowledgeBaseApi as any).resolveComment(commentId);
+        await (KnowledgeBaseApi as unknown as { resolveComment: (id: number) => Promise<void> }).resolveComment(commentId);
       } else {
         // 回退方案：仅在前端更新状态，或调用通用更新接口
         // await KnowledgeBaseApi.updateComment(commentId, { resolved: true });

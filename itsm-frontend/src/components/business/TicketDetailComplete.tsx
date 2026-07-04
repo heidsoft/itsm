@@ -63,8 +63,7 @@ const { Option } = Select;
 // 工单详情接口
 interface TicketDetailComplete {
   id: number;
-  ticket_number: string;
-  ticketNumber?: string;
+  ticketNumber: string;
   title: string;
   description: string;
   status: string;
@@ -79,7 +78,6 @@ interface TicketDetailComplete {
     phone?: string;
     department: string;
   };
-  assignee_id?: number;
   assigneeId?: number;
   requester: {
     id: number;
@@ -135,11 +133,8 @@ interface Comment {
     avatar?: string;
     role: string;
   };
-  author_id?: number;
   authorId?: number;
-  created_at: string;
   createdAt?: string;
-  is_internal: boolean;
   isInternal?: boolean;
   attachments?: Attachment[];
 }
@@ -173,20 +168,20 @@ interface WorkflowStep {
 
 interface RelatedTicket {
   id: number;
-  ticket_number: string;
+  ticketNumber: string;
   title: string;
   status: string;
   priority: string;
-  relationship_type: 'parent' | 'child' | 'related' | 'duplicate';
+  relationshipType: 'parent' | 'child' | 'related' | 'duplicate';
 }
 
 interface SLAMetrics {
-  response_time: number;
-  resolution_time: number;
-  response_deadline: string;
-  resolution_deadline: string;
-  is_breached: boolean;
-  breach_reason?: string;
+  responseTime: number;
+  resolutionTime: number;
+  responseDeadline: string;
+  resolutionDeadline: string;
+  isBreached: boolean;
+  breachReason?: string;
 }
 
 interface TicketDetailCompleteProps {
@@ -355,7 +350,7 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
             <div className="flex items-center space-x-3 mb-4">
               <Badge
                 status={getStatusColor(ticket.status) as any}
-                text={<span className="text-lg font-medium">{ticket.ticket_number}</span>}
+                text={<span className="text-lg font-medium">{ticket.ticketNumber}</span>}
               />
               <Title level={3} className="mb-0">
                 {isEditing ? (
@@ -640,7 +635,7 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
                           <div className="flex items-center space-x-3">
                             <Link className="w-4 h-4 text-blue-500" />
                             <div>
-                              <div className="font-medium">{related.ticket_number}</div>
+                              <div className="font-medium">{related.ticketNumber}</div>
                               <div className="text-sm text-gray-600">{related.title}</div>
                             </div>
                           </div>
@@ -726,7 +721,7 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
                           <div className="flex items-center space-x-2 mb-2">
                             <span className="font-medium">{comment.author.name}</span>
                             <Tag color="blue">{comment.author.role}</Tag>
-                            {comment.is_internal && <Tag color="orange">内部</Tag>}
+                            {comment.isInternal && <Tag color="orange">内部</Tag>}
                             <span className="text-sm text-gray-500">
                               {comment.createdAt ? new Date(comment.createdAt).toLocaleString('zh-CN') : '-'}
                             </span>

@@ -29,7 +29,6 @@ import {
 } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 import dayjs from 'dayjs';
-import { Undo, AlertTriangle, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
 const { TextArea } = Input;
 const { Text } = Typography;

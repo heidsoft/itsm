@@ -16,7 +16,7 @@ import {
   Typography,
   Checkbox,
 } from 'antd';
-import { Trash2, Export, User, Bell, CheckCircle, Tag, Flag } from 'lucide-react';
+import { Trash2, Download, User as UserIcon, Bell, CheckCircle, Tag, Flag } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { Ticket, TicketStatus, TicketPriority } from '@/lib/api/types';
 import { TicketAPI } from '@/lib/api/ticket-api';
@@ -73,7 +73,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       {
         key: 'assign',
         label: '批量分配',
-        icon: <User />,
+        icon: <UserIcon />,
         description: '将选中的工单分配给指定处理人',
       },
       {
@@ -103,7 +103,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       {
         key: 'export',
         label: '批量导出',
-        icon: <Export />,
+        icon: <Download />,
         description: '导出选中的工单数据',
       },
       {

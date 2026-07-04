@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Typography, Row, Col, Statistic, Button, Space, Select, Tabs, Table, Tag, Progress, Tooltip, message } from 'antd';
 import { SLAMonitorDashboard } from '@/components/business/SLAMonitorDashboard';
-import { AlertTriangle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
-import { AlertTriangle, LineChart } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, RefreshCw, LineChart } from 'lucide-react';
 import { SLAApi } from '@/lib/api/sla-api';
 
 const { Title, Text } = Typography;
@@ -55,7 +54,7 @@ const SLAMonitorPage = () => {
       if (violationsData?.items) {
         setViolations(violationsData.items.map((v: any) => ({
           id: v.id,
-          ticketNo: v.ticketNumber || v.ticket_number || `#${v.ticketId || v.ticket_id}`,
+          ticketNo: v.ticketNumber || `#${v.ticketId}`,
           title: v.ticketTitle || 'Unknown',
           priority: v.priority || 'medium',
           status: v.isResolved ? '已解决' : '处理中',

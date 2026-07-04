@@ -179,7 +179,7 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
         <div className="space-y-6">
           {/* 审批操作 */}
           {canApprove &&
-            ticket.status === ('pending' as any) && ( // 使用any避免类型错误
+            ticket.status === 'pending' && (
               <Card title="审批操作" className="shadow-sm">
                 <Space orientation="vertical" className="w-full">
                   <Button
