@@ -792,6 +792,338 @@ func (h *Handler) ListCloudResources(c *gin.Context) {
 	common.Success(c, resp)
 }
 
+// GetCloudService handles GET /api/v1/cmdb/cloud-services/:id
+func (h *Handler) GetCloudService(c *gin.Context) {
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	result, err := h.svc.GetCloudService(c.Request.Context(), tenantID, id)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, &dto.CloudServiceResponse{
+		ID:               result.ID,
+		ParentID:         result.ParentID,
+		Provider:         result.Provider,
+		Category:         result.Category,
+		ServiceCode:      result.ServiceCode,
+		ServiceName:      result.ServiceName,
+		ResourceTypeCode: result.ResourceTypeCode,
+		ResourceTypeName: result.ResourceTypeName,
+		APIVersion:       result.APIVersion,
+		AttributeSchema:  result.AttributeSchema,
+		IsSystem:         result.IsSystem,
+		IsActive:         result.IsActive,
+		TenantID:         result.TenantID,
+		CreatedAt:        result.CreatedAt,
+		UpdatedAt:        result.UpdatedAt,
+	})
+}
+
+// UpdateCloudService handles PUT /api/v1/cmdb/cloud-services/:id
+func (h *Handler) UpdateCloudService(c *gin.Context) {
+	var req dto.CloudServiceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	isActive := true
+	if req.IsActive != nil {
+		isActive = *req.IsActive
+	}
+	cs := &CloudService{
+		ID:               id,
+		ParentID:         req.ParentID,
+		Provider:         req.Provider,
+		Category:         req.Category,
+		ServiceCode:      req.ServiceCode,
+		ServiceName:      req.ServiceName,
+		ResourceTypeCode: req.ResourceTypeCode,
+		ResourceTypeName: req.ResourceTypeName,
+		APIVersion:       req.APIVersion,
+		AttributeSchema:  req.AttributeSchema,
+		IsActive:         isActive,
+		TenantID:         tenantID,
+	}
+	result, err := h.svc.UpdateCloudService(c.Request.Context(), cs)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, &dto.CloudServiceResponse{
+		ID:               result.ID,
+		ParentID:         result.ParentID,
+		Provider:         result.Provider,
+		Category:         result.Category,
+		ServiceCode:      result.ServiceCode,
+		ServiceName:      result.ServiceName,
+		ResourceTypeCode: result.ResourceTypeCode,
+		ResourceTypeName: result.ResourceTypeName,
+		APIVersion:       result.APIVersion,
+		AttributeSchema:  result.AttributeSchema,
+		IsSystem:         result.IsSystem,
+		IsActive:         result.IsActive,
+		TenantID:         result.TenantID,
+		CreatedAt:        result.CreatedAt,
+		UpdatedAt:        result.UpdatedAt,
+	})
+}
+
+// DeleteCloudService handles DELETE /api/v1/cmdb/cloud-services/:id
+func (h *Handler) DeleteCloudService(c *gin.Context) {
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	err = h.svc.DeleteCloudService(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, nil)
+}
+
+// GetCloudAccount handles GET /api/v1/cmdb/cloud-accounts/:id
+func (h *Handler) GetCloudAccount(c *gin.Context) {
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	result, err := h.svc.GetCloudAccount(c.Request.Context(), tenantID, id)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, &dto.CloudAccountResponse{
+		ID:              result.ID,
+		Provider:        result.Provider,
+		AccountID:       result.AccountID,
+		AccountName:     result.AccountName,
+		CredentialRef:   result.CredentialRef,
+		RegionWhitelist: result.RegionWhitelist,
+		IsActive:        result.IsActive,
+		TenantID:        result.TenantID,
+		CreatedAt:       result.CreatedAt,
+		UpdatedAt:       result.UpdatedAt,
+	})
+}
+
+// UpdateCloudAccount handles PUT /api/v1/cmdb/cloud-accounts/:id
+func (h *Handler) UpdateCloudAccount(c *gin.Context) {
+	var req dto.CloudAccountRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	isActive := true
+	if req.IsActive != nil {
+		isActive = *req.IsActive
+	}
+	ca := &CloudAccount{
+		ID:              id,
+		Provider:        req.Provider,
+		AccountID:       req.AccountID,
+		AccountName:     req.AccountName,
+		CredentialRef:   req.CredentialRef,
+		RegionWhitelist: req.RegionWhitelist,
+		IsActive:        isActive,
+		TenantID:        tenantID,
+	}
+	result, err := h.svc.UpdateCloudAccount(c.Request.Context(), ca)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, &dto.CloudAccountResponse{
+		ID:              result.ID,
+		Provider:        result.Provider,
+		AccountID:       result.AccountID,
+		AccountName:     result.AccountName,
+		CredentialRef:   result.CredentialRef,
+		RegionWhitelist: result.RegionWhitelist,
+		IsActive:        result.IsActive,
+		TenantID:        result.TenantID,
+		CreatedAt:       result.CreatedAt,
+		UpdatedAt:       result.UpdatedAt,
+	})
+}
+
+// DeleteCloudAccount handles DELETE /api/v1/cmdb/cloud-accounts/:id
+func (h *Handler) DeleteCloudAccount(c *gin.Context) {
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	err = h.svc.DeleteCloudAccount(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, nil)
+}
+
+// GetCloudResource handles GET /api/v1/cmdb/cloud-resources/:id
+func (h *Handler) GetCloudResource(c *gin.Context) {
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	result, err := h.svc.GetCloudResource(c.Request.Context(), tenantID, id)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, toCloudResourceDTO(result))
+}
+
+// CreateCloudResource handles POST /api/v1/cmdb/cloud-resources
+func (h *Handler) CreateCloudResource(c *gin.Context) {
+	var req struct {
+		CloudAccountID int                    `json:"cloudAccountId" binding:"required"`
+		ServiceID      int                    `json:"serviceId" binding:"required"`
+		ResourceID     string                 `json:"resourceId" binding:"required"`
+		ResourceName   string                 `json:"resourceName"`
+		Region         string                 `json:"region"`
+		Zone           string                 `json:"zone"`
+		Status         string                 `json:"status"`
+		Tags           map[string]string      `json:"tags"`
+		Metadata       map[string]interface{} `json:"metadata"`
+		LifecycleState string                 `json:"lifecycleState"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	now := time.Now()
+	cr := &CloudResource{
+		CloudAccountID: req.CloudAccountID,
+		ServiceID:      req.ServiceID,
+		ResourceID:     req.ResourceID,
+		ResourceName:   req.ResourceName,
+		Region:         req.Region,
+		Zone:           req.Zone,
+		Status:         req.Status,
+		Tags:           req.Tags,
+		Metadata:       req.Metadata,
+		LifecycleState: req.LifecycleState,
+		FirstSeenAt:    &now,
+		LastSeenAt:     &now,
+		TenantID:       tenantID,
+	}
+	result, err := h.svc.CreateCloudResource(c.Request.Context(), cr)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, toCloudResourceDTO(result))
+}
+
+// UpdateCloudResource handles PUT /api/v1/cmdb/cloud-resources/:id
+func (h *Handler) UpdateCloudResource(c *gin.Context) {
+	var req struct {
+		CloudAccountID int                    `json:"cloudAccountId"`
+		ServiceID      int                    `json:"serviceId"`
+		ResourceID     string                 `json:"resourceId"`
+		ResourceName   string                 `json:"resourceName"`
+		Region         string                 `json:"region"`
+		Zone           string                 `json:"zone"`
+		Status         string                 `json:"status"`
+		Tags           map[string]string      `json:"tags"`
+		Metadata       map[string]interface{} `json:"metadata"`
+		LifecycleState string                 `json:"lifecycleState"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	cr := &CloudResource{
+		ID:             id,
+		CloudAccountID: req.CloudAccountID,
+		ServiceID:      req.ServiceID,
+		ResourceID:     req.ResourceID,
+		ResourceName:   req.ResourceName,
+		Region:         req.Region,
+		Zone:           req.Zone,
+		Status:         req.Status,
+		Tags:           req.Tags,
+		Metadata:       req.Metadata,
+		LifecycleState: req.LifecycleState,
+		TenantID:       tenantID,
+	}
+	result, err := h.svc.UpdateCloudResource(c.Request.Context(), cr)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, toCloudResourceDTO(result))
+}
+
+// DeleteCloudResource handles DELETE /api/v1/cmdb/cloud-resources/:id
+func (h *Handler) DeleteCloudResource(c *gin.Context) {
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	err = h.svc.DeleteCloudResource(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.Success(c, nil)
+}
+
 // Relationship types
 func (h *Handler) ListRelationshipTypes(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")

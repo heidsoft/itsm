@@ -92,7 +92,7 @@ func (s *PriorityMatrixService) GetMatrix(tenantID int) PriorityMatrix {
 func (s *PriorityMatrixService) SetMatrix(tenantID int, matrix PriorityMatrix) error {
 	// 验证矩阵格式是否正确
 	validValues := map[string]bool{"low": true, "medium": true, "high": true, "critical": true}
-	
+
 	for impact, urgencies := range matrix {
 		if !validValues[impact] {
 			return fmt.Errorf("invalid impact value: %s", impact)
@@ -123,17 +123,17 @@ func (s *PriorityMatrixService) InvalidateCache(tenantID int) {
 // CalculatePriority 根据影响范围和紧急程度计算优先级
 func (s *PriorityMatrixService) CalculatePriority(tenantID int, impact, urgency string) (string, error) {
 	matrix := s.GetMatrix(tenantID)
-	
+
 	urgencyMap, ok := matrix[impact]
 	if !ok {
 		return "", fmt.Errorf("impact value %s not found in matrix", impact)
 	}
-	
+
 	priority, ok := urgencyMap[urgency]
 	if !ok {
 		return "", fmt.Errorf("urgency value %s not found in matrix for impact %s", urgency, impact)
 	}
-	
+
 	return priority, nil
 }
 

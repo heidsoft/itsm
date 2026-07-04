@@ -17,6 +17,7 @@ import (
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/handlers/change"
+	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
@@ -258,6 +259,7 @@ type RouterConfig struct {
 	// Domain Handlers
 	ServiceCatalogHandler *service_catalog.Handler
 	ServiceRequestHandler *service_request.Handler
+	CMDBHandler           *cmdb.Handler
 
 	ProblemHandler        *problem.Handler
 	ChangeHandler         *change.Handler
@@ -948,7 +950,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 		// ==================== CMDB ====================
 		if config.CMDBController != nil {
-			SetupCMDBRoutes(tenant.(*gin.RouterGroup), config.CMDBController)
+			SetupCMDBRoutes(tenant.(*gin.RouterGroup), config.CMDBController, config)
 		}
 
 		// ==================== Asset Licenses ====================

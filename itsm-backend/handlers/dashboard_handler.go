@@ -131,7 +131,7 @@ type PeakHourData struct {
 
 // DashboardOverview Dashboard概览数据
 type DashboardOverview struct {
-	Overview                DashboardOverviewData          `json:"overview"`
+	Overview                 DashboardOverviewData          `json:"overview"`
 	KPIMetrics               []KPIMetric                    `json:"kpiMetrics"`
 	TicketTrend              []TicketTrendData              `json:"ticketTrend"`
 	IncidentDistribution     []IncidentDistributionData     `json:"incidentDistribution"`

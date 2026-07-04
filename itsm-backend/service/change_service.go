@@ -559,9 +559,9 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 func isValidChangeStatusTransition(currentStatus, newStatus, changeType string) bool {
 	// 基础转换规则（适用于所有变更类型）
 	baseTransitions := map[string][]string{
-		common.ChangeStatusRejected:   {}, // 被拒绝后不允许转换
-		common.ChangeStatusCompleted:  {}, // 已完成不允许转换
-		common.ChangeStatusCancelled:  {}, // 已取消不允许转换
+		common.ChangeStatusRejected:  {}, // 被拒绝后不允许转换
+		common.ChangeStatusCompleted: {}, // 已完成不允许转换
+		common.ChangeStatusCancelled: {}, // 已取消不允许转换
 	}
 
 	// 不同变更类型的特殊转换规则
@@ -570,19 +570,19 @@ func isValidChangeStatusTransition(currentStatus, newStatus, changeType string) 
 	case string(dto.ChangeTypeStandard):
 		// 标准变更：预授权，可以跳过审批步骤
 		typeSpecificTransitions = map[string][]string{
-			common.ChangeStatusDraft:     {common.ChangeStatusSubmitted, common.ChangeStatusApproved, common.ChangeStatusScheduled, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusSubmitted: {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
-			common.ChangeStatusApproved:  {common.ChangeStatusScheduled, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusScheduled: {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+			common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusApproved, common.ChangeStatusScheduled, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+			common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
+			common.ChangeStatusApproved:   {common.ChangeStatusScheduled, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+			common.ChangeStatusScheduled:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
 			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, common.ChangeStatusCancelled},
 			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
 		}
 	case string(dto.ChangeTypeEmergency):
 		// 紧急变更：可以跳过多个步骤，快速实施
 		typeSpecificTransitions = map[string][]string{
-			common.ChangeStatusDraft:     {common.ChangeStatusSubmitted, common.ChangeStatusApproved, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusSubmitted: {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
-			common.ChangeStatusApproved:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+			common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusApproved, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+			common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
+			common.ChangeStatusApproved:   {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
 			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, common.ChangeStatusCancelled},
 			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
 		}

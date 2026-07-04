@@ -10,9 +10,9 @@ import (
 	"itsm-backend/ent/enttest"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap/zaptest"
 )
 
@@ -150,7 +150,7 @@ func TestSetupRoutes_MSPControllerNil(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 
 	cfg := &RouterConfig{
-		JWTSecret:      "test-secret",
+		JWTSecret:     "test-secret",
 		Logger:        logger,
 		Client:        client,
 		MSPController: nil,
@@ -174,10 +174,10 @@ func TestSetupRoutes_DashboardHandlerNil(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 
 	cfg := &RouterConfig{
-		JWTSecret:         "test-secret",
+		JWTSecret:        "test-secret",
 		Logger:           logger,
 		Client:           client,
-		DashboardHandler:  nil,
+		DashboardHandler: nil,
 	}
 
 	gin.SetMode(gin.TestMode)
@@ -192,9 +192,9 @@ func TestSetupRoutes_CMDBControllerNil(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 
 	cfg := &RouterConfig{
-		JWTSecret:     "test-secret",
-		Logger:       logger,
-		Client:       client,
+		JWTSecret:      "test-secret",
+		Logger:         logger,
+		Client:         client,
 		CMDBController: nil,
 	}
 
@@ -211,8 +211,8 @@ func TestSetupRoutes_IncidentControllerNil(t *testing.T) {
 
 	cfg := &RouterConfig{
 		JWTSecret:          "test-secret",
-		Logger:            logger,
-		Client:            client,
+		Logger:             logger,
+		Client:             client,
 		IncidentController: nil,
 	}
 
@@ -352,8 +352,8 @@ func TestSetupRoutes_LegacyStubs(t *testing.T) {
 
 	cfg := &RouterConfig{
 		JWTSecret:        "test-secret",
-		Logger:          logger,
-		Client:          client,
+		Logger:           logger,
+		Client:           client,
 		TenantController: nil, // triggers legacy stubs
 	}
 

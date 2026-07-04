@@ -89,8 +89,8 @@ func (t *Ticket) CanTransitionTo(target Status) bool {
 		StatusInProgress: {StatusPending, StatusResolved, StatusCancelled},
 		StatusPending:    {StatusInProgress, StatusResolved, StatusCancelled},
 		StatusResolved:   {StatusClosed, StatusOpen, StatusInProgress, StatusResolved},
-		StatusClosed:     {},                         // 终态
-		StatusCancelled:  {},                         // 终态
+		StatusClosed:     {}, // 终态
+		StatusCancelled:  {}, // 终态
 	}
 
 	allowed, exists := transitions[t.Status]

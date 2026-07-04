@@ -416,10 +416,11 @@ func isValidProblemStatusTransition(currentStatus, newStatus string) bool {
 	}
 	return false
 }
+
 // CreateKnownErrorFromProblem 从问题创建已知错误
 func (s *ProblemService) CreateKnownErrorFromProblem(ctx context.Context, problemID int, createdBy int, req *dto.KEDBCreateRequest) (*dto.KEDBResponse, error) {
 	s.logger.Infow("Creating known error from problem", "problemID", problemID, "createdBy", createdBy)
-	
+
 	// 获取问题
 	problem, err := s.client.Problem.Query().
 		Where(problem.IDEQ(problemID)).
@@ -430,7 +431,7 @@ func (s *ProblemService) CreateKnownErrorFromProblem(ctx context.Context, proble
 		}
 		return nil, fmt.Errorf("failed to get problem: %w", err)
 	}
-	
+
 	// 构建创建已知错误的请求
 	createReq := dto.KEDBCreateRequest{
 		Title:            problem.Title,
@@ -443,7 +444,7 @@ func (s *ProblemService) CreateKnownErrorFromProblem(ctx context.Context, proble
 		Keywords:         []string{problem.Title},
 		ProblemID:        &problemID,
 	}
-	
+
 	// 如果用户传入了自定义请求，覆盖默认值
 	if req != nil {
 		if req.Title != "" {
@@ -480,12 +481,12 @@ func (s *ProblemService) CreateKnownErrorFromProblem(ctx context.Context, proble
 			createReq.Keywords = req.Keywords
 		}
 	}
-	
+
 	// 验证必填字段
 	if createReq.Title == "" {
 		return nil, fmt.Errorf("title is required")
 	}
-	
+
 	// 创建已知错误 - 需要先转换为CreateKnownErrorRequest
 	// 注意：这里KnownErrorService需要的是CreateKnownErrorRequest，我先手动映射
 	knownError, err := s.knownErrorService.CreateKnownError(ctx, dto.CreateKnownErrorRequest{
@@ -508,13 +509,13 @@ func (s *ProblemService) CreateKnownErrorFromProblem(ctx context.Context, proble
 		s.logger.Errorw("Failed to create known error from problem", "error", err)
 		return nil, fmt.Errorf("failed to create known error: %w", err)
 	}
-	
+
 	// 关联已知错误到问题
 	err = s.knownErrorService.LinkKnownErrorToProblem(ctx, knownError.ID, problemID)
 	if err != nil {
 		s.logger.Warnw("Failed to link known error to problem", "knownErrorID", knownError.ID, "problemID", problemID, "error", err)
 	}
-	
+
 	// 转换为响应
 	return toKEDBResponse(knownError), nil
 }

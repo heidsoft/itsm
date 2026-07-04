@@ -148,15 +148,15 @@ func TestTicketLifecycle_StatusTransition_TableDriven(t *testing.T) {
 		canTransition bool
 	}{
 		// 已知的有效转换
-		{ "open → in_progress", common.TicketStatusOpen, common.TicketStatusInProgress, true },
-		{ "open → pending", common.TicketStatusOpen, common.TicketStatusPending, true },
-		{ "open → closed", common.TicketStatusOpen, common.TicketStatusClosed, true },
-		{ "in_progress → pending", common.TicketStatusInProgress, common.TicketStatusPending, true },
-		{ "in_progress → open", common.TicketStatusInProgress, common.TicketStatusOpen, true },
-		{ "pending → in_progress", common.TicketStatusPending, common.TicketStatusInProgress, true },
-		{ "resolved → closed", common.TicketStatusResolved, common.TicketStatusClosed, true },
-		{ "resolved → open", common.TicketStatusResolved, common.TicketStatusOpen, true },
-		{ "closed → open", common.TicketStatusClosed, common.TicketStatusOpen, false },
+		{"open → in_progress", common.TicketStatusOpen, common.TicketStatusInProgress, true},
+		{"open → pending", common.TicketStatusOpen, common.TicketStatusPending, true},
+		{"open → closed", common.TicketStatusOpen, common.TicketStatusClosed, true},
+		{"in_progress → pending", common.TicketStatusInProgress, common.TicketStatusPending, true},
+		{"in_progress → open", common.TicketStatusInProgress, common.TicketStatusOpen, true},
+		{"pending → in_progress", common.TicketStatusPending, common.TicketStatusInProgress, true},
+		{"resolved → closed", common.TicketStatusResolved, common.TicketStatusClosed, true},
+		{"resolved → open", common.TicketStatusResolved, common.TicketStatusOpen, true},
+		{"closed → open", common.TicketStatusClosed, common.TicketStatusOpen, false},
 	}
 
 	for _, tt := range tests {
@@ -208,7 +208,7 @@ func TestSLA_CompleteFlow(t *testing.T) {
 	slaPolicy, err := client.SLAPolicy.Create().
 		SetName("Critical SLA").
 		SetDescription("4h response, 24h resolution").
-		SetResponseTimeMinutes(4 * 60). // 4 hours in minutes
+		SetResponseTimeMinutes(4 * 60).    // 4 hours in minutes
 		SetResolutionTimeMinutes(24 * 60). // 24 hours in minutes
 		SetPriority("critical").
 		SetTenantID(tenant.ID).
@@ -282,15 +282,15 @@ func TestSLA_ViolationDetection(t *testing.T) {
 
 func TestSLA_PriorityMapping_TableDriven(t *testing.T) {
 	tests := []struct {
-		name              string
-		priority          string
-		responseTimeMins  int // minutes
+		name               string
+		priority           string
+		responseTimeMins   int // minutes
 		resolutionTimeMins int // minutes
 	}{
-		{ "critical priority", "critical", 4 * 60, 24 * 60 },
-		{ "high priority", "high", 8 * 60, 48 * 60 },
-		{ "medium priority", "medium", 24 * 60, 72 * 60 },
-		{ "low priority", "low", 72 * 60, 168 * 60 }, // 1 week
+		{"critical priority", "critical", 4 * 60, 24 * 60},
+		{"high priority", "high", 8 * 60, 48 * 60},
+		{"medium priority", "medium", 24 * 60, 72 * 60},
+		{"low priority", "low", 72 * 60, 168 * 60}, // 1 week
 	}
 
 	for _, tt := range tests {

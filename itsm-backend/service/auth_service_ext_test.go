@@ -114,8 +114,8 @@ func TestAuthService_Logout(t *testing.T) {
 		defer fx.client.Close()
 
 		fx.service.tokenBlacklist = &TokenBlacklistService{
-			prefix:    "jwt:blacklist:",
-			logger:    zap.NewNop().Sugar(),
+			prefix:      "jwt:blacklist:",
+			logger:      zap.NewNop().Sugar(),
 			redisClient: nil, // 触发 nil pointer panic
 		}
 

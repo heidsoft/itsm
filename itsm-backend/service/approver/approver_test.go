@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"itsm-backend/ent"
-	entuser "itsm-backend/ent/user"
-	"itsm-backend/ent/enttest"
 	_ "github.com/mattn/go-sqlite3"
+	"itsm-backend/ent"
+	"itsm-backend/ent/enttest"
+	entuser "itsm-backend/ent/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

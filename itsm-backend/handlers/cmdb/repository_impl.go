@@ -601,6 +601,47 @@ func (r *EntRepository) GetCloudService(ctx context.Context, tenantID int, id in
 	}, nil
 }
 
+func (r *EntRepository) UpdateCloudService(ctx context.Context, cs *CloudService) (*CloudService, error) {
+	e, err := r.client.CloudService.UpdateOneID(cs.ID).
+		SetProvider(cs.Provider).
+		SetCategory(cs.Category).
+		SetServiceCode(cs.ServiceCode).
+		SetServiceName(cs.ServiceName).
+		SetResourceTypeCode(cs.ResourceTypeCode).
+		SetResourceTypeName(cs.ResourceTypeName).
+		SetAPIVersion(cs.APIVersion).
+		SetAttributeSchema(cs.AttributeSchema).
+		SetIsActive(cs.IsActive).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &CloudService{
+		ID:               e.ID,
+		ParentID:         e.ParentID,
+		Provider:         e.Provider,
+		Category:         e.Category,
+		ServiceCode:      e.ServiceCode,
+		ServiceName:      e.ServiceName,
+		ResourceTypeCode: e.ResourceTypeCode,
+		ResourceTypeName: e.ResourceTypeName,
+		APIVersion:       e.APIVersion,
+		AttributeSchema:  e.AttributeSchema,
+		IsSystem:         e.IsSystem,
+		IsActive:         e.IsActive,
+		TenantID:         e.TenantID,
+		CreatedAt:        e.CreatedAt,
+		UpdatedAt:        e.UpdatedAt,
+	}, nil
+}
+
+func (r *EntRepository) DeleteCloudService(ctx context.Context, id int, tenantID int) error {
+	_, err := r.client.CloudService.Delete().
+		Where(cloudservice.ID(id), cloudservice.TenantID(tenantID)).
+		Exec(ctx)
+	return err
+}
+
 // Cloud accounts
 func (r *EntRepository) CreateCloudAccount(ctx context.Context, ca *CloudAccount) (*CloudAccount, error) {
 	create := r.client.CloudAccount.Create().
@@ -658,6 +699,60 @@ func (r *EntRepository) ListCloudAccounts(ctx context.Context, tenantID int, pro
 	return results, nil
 }
 
+func (r *EntRepository) GetCloudAccount(ctx context.Context, tenantID int, id int) (*CloudAccount, error) {
+	e, err := r.client.CloudAccount.Query().
+		Where(cloudaccount.ID(id), cloudaccount.TenantID(tenantID)).
+		First(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &CloudAccount{
+		ID:              e.ID,
+		Provider:        e.Provider,
+		AccountID:       e.AccountID,
+		AccountName:     e.AccountName,
+		CredentialRef:   e.CredentialRef,
+		RegionWhitelist: e.RegionWhitelist,
+		IsActive:        e.IsActive,
+		TenantID:        e.TenantID,
+		CreatedAt:       e.CreatedAt,
+		UpdatedAt:       e.UpdatedAt,
+	}, nil
+}
+
+func (r *EntRepository) UpdateCloudAccount(ctx context.Context, ca *CloudAccount) (*CloudAccount, error) {
+	e, err := r.client.CloudAccount.UpdateOneID(ca.ID).
+		SetProvider(ca.Provider).
+		SetAccountID(ca.AccountID).
+		SetAccountName(ca.AccountName).
+		SetCredentialRef(ca.CredentialRef).
+		SetRegionWhitelist(ca.RegionWhitelist).
+		SetIsActive(ca.IsActive).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &CloudAccount{
+		ID:              e.ID,
+		Provider:        e.Provider,
+		AccountID:       e.AccountID,
+		AccountName:     e.AccountName,
+		CredentialRef:   e.CredentialRef,
+		RegionWhitelist: e.RegionWhitelist,
+		IsActive:        e.IsActive,
+		TenantID:        e.TenantID,
+		CreatedAt:       e.CreatedAt,
+		UpdatedAt:       e.UpdatedAt,
+	}, nil
+}
+
+func (r *EntRepository) DeleteCloudAccount(ctx context.Context, id int, tenantID int) error {
+	_, err := r.client.CloudAccount.Delete().
+		Where(cloudaccount.ID(id), cloudaccount.TenantID(tenantID)).
+		Exec(ctx)
+	return err
+}
+
 // Cloud resources
 func (r *EntRepository) ListCloudResources(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
 	q := r.client.CloudResource.Query().Where(cloudresource.TenantID(tenantID))
@@ -704,6 +799,140 @@ func (r *EntRepository) ListCloudResources(ctx context.Context, tenantID int, pr
 		})
 	}
 	return results, nil
+}
+
+func (r *EntRepository) GetCloudResource(ctx context.Context, tenantID int, id int) (*CloudResource, error) {
+	e, err := r.client.CloudResource.Query().
+		Where(cloudresource.ID(id), cloudresource.TenantID(tenantID)).
+		First(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var firstSeenAt *time.Time
+	if !e.FirstSeenAt.IsZero() {
+		firstSeenAt = &e.FirstSeenAt
+	}
+	var lastSeenAt *time.Time
+	if !e.LastSeenAt.IsZero() {
+		lastSeenAt = &e.LastSeenAt
+	}
+	return &CloudResource{
+		ID:             e.ID,
+		CloudAccountID: e.CloudAccountID,
+		ServiceID:      e.ServiceID,
+		ResourceID:     e.ResourceID,
+		ResourceName:   e.ResourceName,
+		Region:         e.Region,
+		Zone:           e.Zone,
+		Status:         e.Status,
+		Tags:           e.Tags,
+		Metadata:       e.Metadata,
+		FirstSeenAt:    firstSeenAt,
+		LastSeenAt:     lastSeenAt,
+		LifecycleState: e.LifecycleState,
+		TenantID:       e.TenantID,
+		CreatedAt:      e.CreatedAt,
+		UpdatedAt:      e.UpdatedAt,
+	}, nil
+}
+
+func (r *EntRepository) CreateCloudResource(ctx context.Context, cr *CloudResource) (*CloudResource, error) {
+	create := r.client.CloudResource.Create().
+		SetCloudAccountID(cr.CloudAccountID).
+		SetServiceID(cr.ServiceID).
+		SetResourceID(cr.ResourceID).
+		SetResourceName(cr.ResourceName).
+		SetRegion(cr.Region).
+		SetZone(cr.Zone).
+		SetStatus(cr.Status).
+		SetTags(cr.Tags).
+		SetMetadata(cr.Metadata).
+		SetLifecycleState(cr.LifecycleState).
+		SetTenantID(cr.TenantID)
+	if cr.FirstSeenAt != nil {
+		create = create.SetFirstSeenAt(*cr.FirstSeenAt)
+	}
+	e, err := create.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var firstSeenAt *time.Time
+	if !e.FirstSeenAt.IsZero() {
+		firstSeenAt = &e.FirstSeenAt
+	}
+	var lastSeenAt *time.Time
+	if !e.LastSeenAt.IsZero() {
+		lastSeenAt = &e.LastSeenAt
+	}
+	return &CloudResource{
+		ID:             e.ID,
+		CloudAccountID: e.CloudAccountID,
+		ServiceID:      e.ServiceID,
+		ResourceID:     e.ResourceID,
+		ResourceName:   e.ResourceName,
+		Region:         e.Region,
+		Zone:           e.Zone,
+		Status:         e.Status,
+		Tags:           e.Tags,
+		Metadata:       e.Metadata,
+		FirstSeenAt:    firstSeenAt,
+		LastSeenAt:     lastSeenAt,
+		LifecycleState: e.LifecycleState,
+		TenantID:       e.TenantID,
+		CreatedAt:      e.CreatedAt,
+		UpdatedAt:      e.UpdatedAt,
+	}, nil
+}
+
+func (r *EntRepository) UpdateCloudResource(ctx context.Context, cr *CloudResource) (*CloudResource, error) {
+	update := r.client.CloudResource.UpdateOneID(cr.ID).
+		SetCloudAccountID(cr.CloudAccountID).
+		SetServiceID(cr.ServiceID).
+		SetResourceID(cr.ResourceID).
+		SetResourceName(cr.ResourceName).
+		SetRegion(cr.Region).
+		SetZone(cr.Zone).
+		SetStatus(cr.Status).
+		SetTags(cr.Tags).
+		SetMetadata(cr.Metadata).
+		SetLifecycleState(cr.LifecycleState)
+	e, err := update.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var firstSeenAt *time.Time
+	if !e.FirstSeenAt.IsZero() {
+		firstSeenAt = &e.FirstSeenAt
+	}
+	var lastSeenAt *time.Time
+	if !e.LastSeenAt.IsZero() {
+		lastSeenAt = &e.LastSeenAt
+	}
+	return &CloudResource{
+		ID:             e.ID,
+		CloudAccountID: e.CloudAccountID,
+		ServiceID:      e.ServiceID,
+		ResourceID:     e.ResourceID,
+		ResourceName:   e.ResourceName,
+		Region:         e.Region,
+		Zone:           e.Zone,
+		Status:         e.Status,
+		Tags:           e.Tags,
+		Metadata:       e.Metadata,
+		FirstSeenAt:    firstSeenAt,
+		LastSeenAt:     lastSeenAt,
+		LifecycleState: e.LifecycleState,
+		TenantID:       e.TenantID,
+		CreatedAt:      e.CreatedAt,
+		UpdatedAt:      e.UpdatedAt,
+	}, nil
+}
+
+func (r *EntRepository) DeleteCloudResource(ctx context.Context, id int, tenantID int) error {
+	_, err := r.client.CloudResource.Delete().
+		Where(cloudresource.ID(id), cloudresource.TenantID(tenantID)).
+		Exec(ctx)
+	return err
 }
 
 func (r *EntRepository) ListCIsForReconciliation(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {

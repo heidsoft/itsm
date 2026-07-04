@@ -24,24 +24,24 @@ func (f *TicketAnalyticsFilters) HasFilters() bool {
 
 // AnalyticsTrend 趋势数据点（强类型，用于取代 []map[string]interface{} Trends）
 type AnalyticsTrend struct {
-	Period   string  `json:"period"`    // 时间段标签
-	Created  int     `json:"created"`   // 新建数
-	Resolved int     `json:"resolved"`  // 解决数
-	Backlog  int     `json:"backlog"`   // 积压数
-	AvgTime  float64 `json:"avg_time"`  // 平均处理时间
+	Period   string  `json:"period"`   // 时间段标签
+	Created  int     `json:"created"`  // 新建数
+	Resolved int     `json:"resolved"` // 解决数
+	Backlog  int     `json:"backlog"`  // 积压数
+	AvgTime  float64 `json:"avg_time"` // 平均处理时间
 }
 
 // TicketNotificationData 工单通知数据（强类型，用于替代 map[string]interface{} Data）
 // 当通知类型为 email/sms/webhook 时，使用此结构体组织通知内容
 type TicketNotificationData struct {
-	TicketNumber string `json:"ticket_number,omitempty"`
-	TicketTitle  string `json:"ticket_title,omitempty"`
-	Status       string `json:"status,omitempty"`
-	Priority     string `json:"priority,omitempty"`
-	AssigneeName string `json:"assignee_name,omitempty"`
-	RequesterName string `json:"requester_name,omitempty"`
-	Action       string `json:"action,omitempty"`    // 触发通知的操作
-	Comment     string `json:"comment,omitempty"`     // 审批/操作备注
-	URL         string `json:"url,omitempty"`         // 工单链接
-	Extra       map[string]string `json:"extra,omitempty"` // 扩展字段
+	TicketNumber  string            `json:"ticket_number,omitempty"`
+	TicketTitle   string            `json:"ticket_title,omitempty"`
+	Status        string            `json:"status,omitempty"`
+	Priority      string            `json:"priority,omitempty"`
+	AssigneeName  string            `json:"assignee_name,omitempty"`
+	RequesterName string            `json:"requester_name,omitempty"`
+	Action        string            `json:"action,omitempty"`  // 触发通知的操作
+	Comment       string            `json:"comment,omitempty"` // 审批/操作备注
+	URL           string            `json:"url,omitempty"`     // 工单链接
+	Extra         map[string]string `json:"extra,omitempty"`   // 扩展字段
 }

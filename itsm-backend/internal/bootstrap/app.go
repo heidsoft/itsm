@@ -372,7 +372,6 @@ func NewApplication() *Application {
 	cmdbRepo := cmdb.NewEntRepository(client)
 	cmdbServiceDomain := cmdb.NewService(cmdbRepo, sugar)
 	cmdbHandler := cmdb.NewHandler(cmdbServiceDomain)
-	_ = cmdbHandler // CMDBHandler routes removed; using CMDBController with /configuration-items instead
 
 	// Domain: Service Request (DDD)
 	srRepo := service_request.NewEntRepository(client)
@@ -540,6 +539,7 @@ func NewApplication() *Application {
 		CMDBController:                  cmdbController,
 
 		DashboardHandler:         dashboardHandler,
+		CMDBHandler:              cmdbHandler,
 		ProjectController:        projectController,
 		ApplicationController:    applicationController,
 		TicketCategoryController: ticketCategoryController,

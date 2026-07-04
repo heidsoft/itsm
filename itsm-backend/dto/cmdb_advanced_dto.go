@@ -146,8 +146,8 @@ type BatchCreateCIRequest struct {
 
 // BatchUpdateCIRequest 批量更新CI请求
 type BatchUpdateCIRequest struct {
-	IDs     []int                 `json:"ids" binding:"required,min=1"`
-	Updates *UpdateCIRequest      `json:"updates" binding:"required"`
+	IDs     []int            `json:"ids" binding:"required,min=1"`
+	Updates *UpdateCIRequest `json:"updates" binding:"required"`
 }
 
 // BatchDeleteCIRequest 批量删除CI请求
@@ -165,15 +165,15 @@ type BatchOperationResponse struct {
 
 // BatchUpdateLifecycleRequest 批量更新CI生命周期状态请求
 type BatchUpdateLifecycleRequest struct {
-	IDs     []int  `json:"ids" binding:"required,min=1"`
-	Status  string `json:"status" binding:"required,oneof=draft online maintenance offline scrapped"`
-	Remark  string `json:"remark,omitempty" max:"500"`
+	IDs    []int  `json:"ids" binding:"required,min=1"`
+	Status string `json:"status" binding:"required,oneof=draft online maintenance offline scrapped"`
+	Remark string `json:"remark,omitempty" max:"500"`
 }
 
 // ListResponse 通用列表响应
 type ListResponse[T any] struct {
-	Items []T   `json:"items"`
-	Total int   `json:"total"`
-	Page  int   `json:"page"`
-	Size  int   `json:"size"`
+	Items []T `json:"items"`
+	Total int `json:"total"`
+	Page  int `json:"page"`
+	Size  int `json:"size"`
 }

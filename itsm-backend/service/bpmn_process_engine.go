@@ -1370,8 +1370,12 @@ type bpmnProcessInstanceService struct {
 }
 
 func (s *bpmnProcessInstanceService) GetProcessInstance(ctx context.Context, processInstanceID string) (*ent.ProcessInstance, error) {
+	id, err := strconv.Atoi(processInstanceID)
+	if err != nil {
+		return nil, fmt.Errorf("无效的流程实例ID: %w", err)
+	}
 	query := s.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID))
+		Where(processinstance.ID(id))
 	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
 		query = query.Where(processinstance.TenantID(tenantID))
 	}

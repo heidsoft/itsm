@@ -11,6 +11,7 @@ import (
 func SetupCMDBRoutes(
 	auth *gin.RouterGroup,
 	cmdbController *controller.CMDBController,
+	config *RouterConfig,
 ) {
 	configurationItems := auth.Group("/configuration-items")
 	configurationItems.Use(middleware.RequirePermission("cmdb_ci", "read"))
@@ -177,6 +178,45 @@ func SetupCMDBRoutes(
 			relationships.POST("", middleware.RequirePermission("cmdb_relationship", "write"), cmdbController.CreateCIRelationship)
 			relationships.PUT("/:id", middleware.RequirePermission("cmdb_relationship", "write"), cmdbController.UpdateCIRelationship)
 			relationships.DELETE("/:id", middleware.RequirePermission("cmdb_relationship", "delete"), cmdbController.DeleteCIRelationship)
+		}
+
+		// ------------------------------ 云账号相关路由 ------------------------------
+		cloudAccounts := cmdb.Group("/cloud-accounts")
+		cloudAccounts.Use(middleware.RequirePermission("cmdb_cloud_account", "read"))
+		{
+			cloudAccounts.GET("", config.CMDBHandler.ListCloudAccounts)
+			cloudAccounts.GET("/:id", config.CMDBHandler.GetCloudAccount)
+
+			// 写入权限
+			cloudAccounts.POST("", middleware.RequirePermission("cmdb_cloud_account", "write"), config.CMDBHandler.CreateCloudAccount)
+			cloudAccounts.PUT("/:id", middleware.RequirePermission("cmdb_cloud_account", "write"), config.CMDBHandler.UpdateCloudAccount)
+			cloudAccounts.DELETE("/:id", middleware.RequirePermission("cmdb_cloud_account", "delete"), config.CMDBHandler.DeleteCloudAccount)
+		}
+
+		// ------------------------------ 云服务类型相关路由 ------------------------------
+		cloudServices := cmdb.Group("/cloud-services")
+		cloudServices.Use(middleware.RequirePermission("cmdb_cloud_service", "read"))
+		{
+			cloudServices.GET("", config.CMDBHandler.ListCloudServices)
+			cloudServices.GET("/:id", config.CMDBHandler.GetCloudService)
+
+			// 写入权限
+			cloudServices.POST("", middleware.RequirePermission("cmdb_cloud_service", "write"), config.CMDBHandler.CreateCloudService)
+			cloudServices.PUT("/:id", middleware.RequirePermission("cmdb_cloud_service", "write"), config.CMDBHandler.UpdateCloudService)
+			cloudServices.DELETE("/:id", middleware.RequirePermission("cmdb_cloud_service", "delete"), config.CMDBHandler.DeleteCloudService)
+		}
+
+		// ------------------------------ 云资源相关路由 ------------------------------
+		cloudResources := cmdb.Group("/cloud-resources")
+		cloudResources.Use(middleware.RequirePermission("cmdb_cloud_resource", "read"))
+		{
+			cloudResources.GET("", config.CMDBHandler.ListCloudResources)
+			cloudResources.GET("/:id", config.CMDBHandler.GetCloudResource)
+
+			// 写入权限
+			cloudResources.POST("", middleware.RequirePermission("cmdb_cloud_resource", "write"), config.CMDBHandler.CreateCloudResource)
+			cloudResources.PUT("/:id", middleware.RequirePermission("cmdb_cloud_resource", "write"), config.CMDBHandler.UpdateCloudResource)
+			cloudResources.DELETE("/:id", middleware.RequirePermission("cmdb_cloud_resource", "delete"), config.CMDBHandler.DeleteCloudResource)
 		}
 	}
 }

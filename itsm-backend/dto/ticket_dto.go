@@ -80,29 +80,29 @@ type ListTicketsRequest struct {
 
 // TicketResponse 工单响应
 type TicketResponse struct {
-	ID                 int            `json:"id"`
-	Title              string         `json:"title"`
-	Description        string         `json:"description"`
-	Status             string         `json:"status"`
-	Priority           string         `json:"priority"`
-	Type               string         `json:"type"`
-	TicketNumber       string         `json:"ticketNumber"`
-	RequesterID        int            `json:"requesterId"`
-	AssigneeID         int            `json:"assigneeId,omitempty"`
-	TenantID           int            `json:"tenantId"`
-	CategoryID         int            `json:"categoryId,omitempty"`
-	DepartmentID       int            `json:"departmentId,omitempty"`
-	ParentTicketID     int            `json:"parentTicketId,omitempty"`
-	Version            int            `json:"version"`
-	CreatedAt          time.Time      `json:"createdAt"`
-	UpdatedAt          time.Time      `json:"updatedAt"`
-	Requester          *UserBasicInfo `json:"requester,omitempty"`
-	Assignee           *UserBasicInfo `json:"assignee,omitempty"`
-	Resolution         string         `json:"resolution,omitempty"`
-	ResolutionCategory string         `json:"resolutionCategory,omitempty"`
-	ResolvedAt         *time.Time     `json:"resolvedAt,omitempty"`
-	ClosedAt           *time.Time     `json:"closedAt,omitempty"`
-	FirstResponseAt        *time.Time     `json:"first_response_at,omitempty"`
+	ID                    int            `json:"id"`
+	Title                 string         `json:"title"`
+	Description           string         `json:"description"`
+	Status                string         `json:"status"`
+	Priority              string         `json:"priority"`
+	Type                  string         `json:"type"`
+	TicketNumber          string         `json:"ticketNumber"`
+	RequesterID           int            `json:"requesterId"`
+	AssigneeID            int            `json:"assigneeId,omitempty"`
+	TenantID              int            `json:"tenantId"`
+	CategoryID            int            `json:"categoryId,omitempty"`
+	DepartmentID          int            `json:"departmentId,omitempty"`
+	ParentTicketID        int            `json:"parentTicketId,omitempty"`
+	Version               int            `json:"version"`
+	CreatedAt             time.Time      `json:"createdAt"`
+	UpdatedAt             time.Time      `json:"updatedAt"`
+	Requester             *UserBasicInfo `json:"requester,omitempty"`
+	Assignee              *UserBasicInfo `json:"assignee,omitempty"`
+	Resolution            string         `json:"resolution,omitempty"`
+	ResolutionCategory    string         `json:"resolutionCategory,omitempty"`
+	ResolvedAt            *time.Time     `json:"resolvedAt,omitempty"`
+	ClosedAt              *time.Time     `json:"closedAt,omitempty"`
+	FirstResponseAt       *time.Time     `json:"first_response_at,omitempty"`
 	SLAResponseDeadline   *time.Time     `json:"sla_response_deadline,omitempty"`
 	SLAResolutionDeadline *time.Time     `json:"sla_resolution_deadline,omitempty"`
 	Rating                int            `json:"rating,omitempty"`
@@ -282,7 +282,7 @@ type CloseTicketRequest struct {
 
 // BatchCloseRequest 批量关闭工单请求
 type BatchCloseRequest struct {
-	TicketIDs []int  `json:"ticketIds" binding:"required,min=1"`
+	TicketIDs   []int  `json:"ticketIds" binding:"required,min=1"`
 	CloseReason string `json:"closeReason,omitempty"`
 }
 

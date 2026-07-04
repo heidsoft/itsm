@@ -34,13 +34,22 @@ type Repository interface {
 	CreateCloudService(ctx context.Context, cs *CloudService) (*CloudService, error)
 	ListCloudServices(ctx context.Context, tenantID int, provider string) ([]*CloudService, error)
 	GetCloudService(ctx context.Context, tenantID int, id int) (*CloudService, error)
+	UpdateCloudService(ctx context.Context, cs *CloudService) (*CloudService, error)
+	DeleteCloudService(ctx context.Context, id int, tenantID int) error
 
 	// Cloud accounts
 	CreateCloudAccount(ctx context.Context, ca *CloudAccount) (*CloudAccount, error)
 	ListCloudAccounts(ctx context.Context, tenantID int, provider string) ([]*CloudAccount, error)
+	GetCloudAccount(ctx context.Context, tenantID int, id int) (*CloudAccount, error)
+	UpdateCloudAccount(ctx context.Context, ca *CloudAccount) (*CloudAccount, error)
+	DeleteCloudAccount(ctx context.Context, id int, tenantID int) error
 
 	// Cloud resources
 	ListCloudResources(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error)
+	GetCloudResource(ctx context.Context, tenantID int, id int) (*CloudResource, error)
+	CreateCloudResource(ctx context.Context, cr *CloudResource) (*CloudResource, error)
+	UpdateCloudResource(ctx context.Context, cr *CloudResource) (*CloudResource, error)
+	DeleteCloudResource(ctx context.Context, id int, tenantID int) error
 	ListCIsForReconciliation(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
 	GetCIByCloudResourceRefID(ctx context.Context, tenantID int, cloudResourceRefID int) (*ConfigurationItem, error)
 

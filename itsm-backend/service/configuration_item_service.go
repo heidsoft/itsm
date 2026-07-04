@@ -18,10 +18,10 @@ import (
 
 // ConfigurationItemService 配置项服务
 type ConfigurationItemService struct {
-	client          *ent.Client
-	logger          *zap.SugaredLogger
-	historyService  *CIHistoryService
-	tagService      *CITagService
+	client         *ent.Client
+	logger         *zap.SugaredLogger
+	historyService *CIHistoryService
+	tagService     *CITagService
 }
 
 // NewConfigurationItemService 创建配置项服务
@@ -1332,25 +1332,25 @@ func (s *ConfigurationItemService) applySearchFilters(query *ent.ConfigurationIt
 // convertSortField 转换排序字段为数据库字段名
 func (s *ConfigurationItemService) convertSortField(sortBy string) string {
 	fieldMap := map[string]string{
-		"id":                  configurationitem.FieldID,
-		"name":                configurationitem.FieldName,
-		"ci_type":             configurationitem.FieldCiType,
-		"status":              configurationitem.FieldStatus,
-		"environment":         configurationitem.FieldEnvironment,
-		"criticality":         configurationitem.FieldCriticality,
-		"asset_tag":           configurationitem.FieldAssetTag,
-		"serial_number":       configurationitem.FieldSerialNumber,
-		"vendor":              configurationitem.FieldVendor,
-		"location":            configurationitem.FieldLocation,
-		"assigned_to":         configurationitem.FieldAssignedTo,
-		"owned_by":            configurationitem.FieldOwnedBy,
-		"cloud_provider":      configurationitem.FieldCloudProvider,
-		"cloud_region":        configurationitem.FieldCloudRegion,
-		"created_at":          configurationitem.FieldCreatedAt,
-		"updated_at":          configurationitem.FieldUpdatedAt,
-		"lifecycle_status":    configurationitem.FieldLifecycleStatus,
-		"effective_at":        configurationitem.FieldEffectiveAt,
-		"expire_at":           configurationitem.FieldExpireAt,
+		"id":               configurationitem.FieldID,
+		"name":             configurationitem.FieldName,
+		"ci_type":          configurationitem.FieldCiType,
+		"status":           configurationitem.FieldStatus,
+		"environment":      configurationitem.FieldEnvironment,
+		"criticality":      configurationitem.FieldCriticality,
+		"asset_tag":        configurationitem.FieldAssetTag,
+		"serial_number":    configurationitem.FieldSerialNumber,
+		"vendor":           configurationitem.FieldVendor,
+		"location":         configurationitem.FieldLocation,
+		"assigned_to":      configurationitem.FieldAssignedTo,
+		"owned_by":         configurationitem.FieldOwnedBy,
+		"cloud_provider":   configurationitem.FieldCloudProvider,
+		"cloud_region":     configurationitem.FieldCloudRegion,
+		"created_at":       configurationitem.FieldCreatedAt,
+		"updated_at":       configurationitem.FieldUpdatedAt,
+		"lifecycle_status": configurationitem.FieldLifecycleStatus,
+		"effective_at":     configurationitem.FieldEffectiveAt,
+		"expire_at":        configurationitem.FieldExpireAt,
 	}
 
 	if field, ok := fieldMap[sortBy]; ok {
@@ -1365,11 +1365,11 @@ func (s *ConfigurationItemService) convertSortField(sortBy string) string {
 func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id int, tenantID int, status string, remark string, operatorID int, operatorName string) (*dto.CIResponse, error) {
 	// 校验状态是否合法
 	validStatuses := map[string]bool{
-		"draft":        true,
-		"online":       true,
-		"maintenance":  true,
-		"offline":      true,
-		"scrapped":     true,
+		"draft":       true,
+		"online":      true,
+		"maintenance": true,
+		"offline":     true,
+		"scrapped":    true,
 	}
 	if !validStatuses[status] {
 		return nil, fmt.Errorf("无效的生命周期状态: %s", status)

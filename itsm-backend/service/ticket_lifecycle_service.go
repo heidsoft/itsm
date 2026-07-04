@@ -326,9 +326,9 @@ func IsValidTicketStatusTransition(currentStatus, newStatus string) bool {
 		common.TicketStatusPending:    {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusOpen, common.TicketStatusCancelled},
 		common.TicketStatusResolved:   {common.TicketStatusClosed, common.TicketStatusInProgress, common.TicketStatusOpen, common.TicketStatusCancelled},
 		common.TicketStatusClosed:     {common.TicketStatusCancelled}, // 已关闭的工单只能转为取消
-		common.TicketStatusCancelled:  {}, // 已取消的工单不能转换到其他状态
+		common.TicketStatusCancelled:  {},                             // 已取消的工单不能转换到其他状态
 		common.TicketStatusApproved:   {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusClosed},
-		common.TicketStatusRejected:  {common.TicketStatusOpen, common.TicketStatusCancelled},
+		common.TicketStatusRejected:   {common.TicketStatusOpen, common.TicketStatusCancelled},
 	}
 
 	allowed, ok := validTransitions[currentStatus]

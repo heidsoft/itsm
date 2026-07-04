@@ -287,8 +287,8 @@ func TestSnakeToCamel(t *testing.T) {
 
 func TestParseTime(t *testing.T) {
 	tests := []struct {
-		input    string
-		success  bool
+		input   string
+		success bool
 	}{
 		{"2024-01-15 10:30:00", true},
 		{"2024-01-15T10:30:00Z", true},
@@ -739,9 +739,9 @@ func TestSuccessWithList(t *testing.T) {
 
 func TestConvenienceFailHelpers(t *testing.T) {
 	tests := []struct {
-		name        string
-		fn          func(c *gin.Context, msg string)
-		wantCode    int
+		name         string
+		fn           func(c *gin.Context, msg string)
+		wantCode     int
 		wantHTTPCode int
 	}{
 		{"ParamError", ParamError, ParamErrorCode, http.StatusBadRequest},

@@ -217,11 +217,11 @@ func TestTicketCoreService_CreateTicketBasic_TableDriven(t *testing.T) {
 
 func TestTicketCoreService_ListTickets_TableDriven(t *testing.T) {
 	tests := []struct {
-		name       string
-		req        *dto.ListTicketsRequest
-		setup      func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int)
-		wantCount  int
-		wantError  bool
+		name      string
+		req       *dto.ListTicketsRequest
+		setup     func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int)
+		wantCount int
+		wantError bool
 	}{
 		{
 			name:      "无过滤条件返回所有",
@@ -233,9 +233,9 @@ func TestTicketCoreService_ListTickets_TableDriven(t *testing.T) {
 		{
 			name: "按状态过滤-open",
 			req: &dto.ListTicketsRequest{
-				Page:    1,
+				Page:     1,
 				PageSize: 10,
-				Status:  "open",
+				Status:   "open",
 			},
 			setup:     createTicketsForListTest,
 			wantCount: 3,
@@ -244,9 +244,9 @@ func TestTicketCoreService_ListTickets_TableDriven(t *testing.T) {
 		{
 			name: "按状态过滤-resolved",
 			req: &dto.ListTicketsRequest{
-				Page:    1,
+				Page:     1,
 				PageSize: 10,
-				Status:  "resolved",
+				Status:   "resolved",
 			},
 			setup:     createTicketsForListTest,
 			wantCount: 1,
@@ -255,7 +255,7 @@ func TestTicketCoreService_ListTickets_TableDriven(t *testing.T) {
 		{
 			name: "按优先级过滤-high",
 			req: &dto.ListTicketsRequest{
-				Page:    1,
+				Page:     1,
 				PageSize: 10,
 				Priority: "high",
 			},
@@ -266,9 +266,9 @@ func TestTicketCoreService_ListTickets_TableDriven(t *testing.T) {
 		{
 			name: "按类型过滤-incident",
 			req: &dto.ListTicketsRequest{
-				Page:    1,
+				Page:     1,
 				PageSize: 10,
-				Type:    "incident",
+				Type:     "incident",
 			},
 			setup:     createTicketsForListTest,
 			wantCount: 3,
@@ -289,8 +289,8 @@ func TestTicketCoreService_ListTickets_TableDriven(t *testing.T) {
 		{
 			name: "按受理人过滤",
 			req: &dto.ListTicketsRequest{
-				Page:      1,
-				PageSize:  10,
+				Page:       1,
+				PageSize:   10,
 				AssigneeID: intPtr(0), // 将在 setup 后更新
 			},
 			setup: func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int) {
@@ -338,9 +338,9 @@ func TestTicketCoreService_ListTickets_TableDriven(t *testing.T) {
 		{
 			name: "关键字搜索",
 			req: &dto.ListTicketsRequest{
-				Page:    1,
+				Page:     1,
 				PageSize: 10,
-				Keyword: "网络",
+				Keyword:  "网络",
 			},
 			setup:     createTicketsForListTest,
 			wantCount: 2, // "网络故障"相关
@@ -349,9 +349,9 @@ func TestTicketCoreService_ListTickets_TableDriven(t *testing.T) {
 		{
 			name: "关键字搜索无结果",
 			req: &dto.ListTicketsRequest{
-				Page:    1,
+				Page:     1,
 				PageSize: 10,
-				Keyword: "不存在的内容",
+				Keyword:  "不存在的内容",
 			},
 			setup:     createTicketsForListTest,
 			wantCount: 0,
@@ -439,13 +439,13 @@ func createTicketsForListTest(t *testing.T, ctx context.Context, client *ent.Cli
 
 func TestTicketLifecycleService_StatusTransitions_TableDriven(t *testing.T) {
 	tests := []struct {
-		name           string
-		initialStatus  string
-		targetStatus   string
-		setup          func(t *testing.T, ctx context.Context, client *ent.Client, tenantID, userID int) *ent.Ticket
-		operatorID     int
-		wantError      bool
-		checkResult    func(t *testing.T, ticket *ent.Ticket)
+		name          string
+		initialStatus string
+		targetStatus  string
+		setup         func(t *testing.T, ctx context.Context, client *ent.Client, tenantID, userID int) *ent.Ticket
+		operatorID    int
+		wantError     bool
+		checkResult   func(t *testing.T, ticket *ent.Ticket)
 	}{
 		{
 			name:          "open -> resolved",
@@ -463,8 +463,8 @@ func TestTicketLifecycleService_StatusTransitions_TableDriven(t *testing.T) {
 					Save(ctx)
 				return ticket
 			},
-			operatorID:  0, // 将在测试中设置为 userID
-			wantError:   false,
+			operatorID: 0, // 将在测试中设置为 userID
+			wantError:  false,
 			checkResult: func(t *testing.T, ticket *ent.Ticket) {
 				assert.Equal(t, "resolved", ticket.Status)
 			},
@@ -486,8 +486,8 @@ func TestTicketLifecycleService_StatusTransitions_TableDriven(t *testing.T) {
 					Save(ctx)
 				return ticket
 			},
-			operatorID: 0,
-			wantError:  true, // CloseTicket 要求 resolved/closed 状态，open 不能直接 close
+			operatorID:  0,
+			wantError:   true, // CloseTicket 要求 resolved/closed 状态，open 不能直接 close
 			checkResult: nil,
 		},
 		{
@@ -645,9 +645,9 @@ func TestTicketLifecycleService_IsValidStatusTransition_TableDriven(t *testing.T
 
 func TestTicketLifecycleService_GetEscalatedPriority_TableDriven(t *testing.T) {
 	tests := []struct {
-		name          string
+		name            string
 		currentPriority string
-		want          string
+		want            string
 	}{
 		{"low escalates to medium", "low", "medium"},
 		{"medium escalates to high", "medium", "high"},

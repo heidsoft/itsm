@@ -14,9 +14,9 @@ import (
 
 // CABService 变更咨询委员会服务
 type CABService struct {
-	client              *ent.Client
-	logger              *zap.SugaredLogger
-	changeApprovalServ  *ChangeApprovalService
+	client             *ent.Client
+	logger             *zap.SugaredLogger
+	changeApprovalServ *ChangeApprovalService
 }
 
 // NewCABService 创建CAB服务

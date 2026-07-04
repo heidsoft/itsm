@@ -35,12 +35,12 @@ func TestCreateUser_TableDriven(t *testing.T) {
 			name: "create user with all fields",
 			req: &dto.CreateUserRequest{
 				Username:   "john.doe",
-				Email:     "john@example.com",
-				Name:      "John Doe",
+				Email:      "john@example.com",
+				Name:       "John Doe",
 				Department: "Engineering",
-				Phone:     "+1234567890",
-				Password:  "secure123",
-				Role:      "agent",
+				Phone:      "+1234567890",
+				Password:   "secure123",
+				Role:       "agent",
 			},
 			wantErr: false,
 			checkResponse: func(t *testing.T, user *ent.User) {
@@ -188,11 +188,11 @@ func TestCreateUser_TableDriven(t *testing.T) {
 
 func TestListUsers_WithFilters_TableDriven(t *testing.T) {
 	tests := []struct {
-		name       string
-		req        *dto.ListUsersRequest
-		wantTotal  int
-		wantFirst  string // 期望第一个用户的 username
-		setup      func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int)
+		name      string
+		req       *dto.ListUsersRequest
+		wantTotal int
+		wantFirst string // 期望第一个用户的 username
+		setup     func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int)
 	}{
 		{
 			name: "no filters returns all",
@@ -214,8 +214,8 @@ func TestListUsers_WithFilters_TableDriven(t *testing.T) {
 			},
 			wantTotal: 3,
 			setup: func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int) {
-				createTestUsers(t, ctx, client, tenantID, 3, false)  // active
-				createTestUsers(t, ctx, client, tenantID, 2, true)   // inactive
+				createTestUsers(t, ctx, client, tenantID, 3, false) // active
+				createTestUsers(t, ctx, client, tenantID, 2, true)  // inactive
 			},
 		},
 		{
@@ -235,8 +235,8 @@ func TestListUsers_WithFilters_TableDriven(t *testing.T) {
 			name: "filter by department",
 			req: &dto.ListUsersRequest{
 				Department: "Engineering",
-				Page:      1,
-				PageSize:  10,
+				Page:       1,
+				PageSize:   10,
 			},
 			wantTotal: 2,
 			setup: func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int) {
@@ -415,9 +415,9 @@ func TestUpdateUser_TableDriven(t *testing.T) {
 			},
 		},
 		{
-			name: "empty update does nothing",
+			name:      "empty update does nothing",
 			updateReq: &dto.UpdateUserRequest{},
-			wantErr: false,
+			wantErr:   false,
 			checkResponse: func(t *testing.T, user *ent.User) {
 				// 保持原样
 			},
@@ -565,15 +565,15 @@ func TestChangeUserStatus_TableDriven(t *testing.T) {
 func TestGetUserStats_TableDriven(t *testing.T) {
 	tests := []struct {
 		name       string
-		wantTotal int
+		wantTotal  int
 		wantActive int
-		setup     func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int)
+		setup      func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int)
 	}{
 		{
 			name:       "empty tenant",
 			wantTotal:  0,
 			wantActive: 0,
-			setup:     nil,
+			setup:      nil,
 		},
 		{
 			name:       "all active users",
@@ -647,7 +647,7 @@ func TestDeleteUser_TableDriven(t *testing.T) {
 		setup       func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int) int // 返回创建的 user ID
 	}{
 		{
-			name: "delete existing user (soft delete)",
+			name:    "delete existing user (soft delete)",
 			wantErr: false,
 			setup: func(t *testing.T, ctx context.Context, client *ent.Client, tenantID int) int {
 				u, err := client.User.Create().

@@ -8,15 +8,15 @@ import "fmt"
 type ApprovalNodeType string
 
 const (
-	ApprovalNodeTypeUser            ApprovalNodeType = "user"
-	ApprovalNodeTypeRole            ApprovalNodeType = "role"
-	ApprovalNodeTypeDepartment      ApprovalNodeType = "department"
-	ApprovalNodeTypeDynamic         ApprovalNodeType = "dynamic"
-	ApprovalNodeTypeDeptManager     ApprovalNodeType = "dept_manager"
-	ApprovalNodeTypeTeamLeader      ApprovalNodeType = "team_leader"
-	ApprovalNodeTypeProjectManager  ApprovalNodeType = "project_manager"
-	ApprovalNodeTypeTempTeamLeader  ApprovalNodeType = "temp_team_leader"
-	ApprovalNodeTypeAmountBased     ApprovalNodeType = "amount_based"
+	ApprovalNodeTypeUser           ApprovalNodeType = "user"
+	ApprovalNodeTypeRole           ApprovalNodeType = "role"
+	ApprovalNodeTypeDepartment     ApprovalNodeType = "department"
+	ApprovalNodeTypeDynamic        ApprovalNodeType = "dynamic"
+	ApprovalNodeTypeDeptManager    ApprovalNodeType = "dept_manager"
+	ApprovalNodeTypeTeamLeader     ApprovalNodeType = "team_leader"
+	ApprovalNodeTypeProjectManager ApprovalNodeType = "project_manager"
+	ApprovalNodeTypeTempTeamLeader ApprovalNodeType = "temp_team_leader"
+	ApprovalNodeTypeAmountBased    ApprovalNodeType = "amount_based"
 )
 
 // ApprovalMode 审批模式枚举

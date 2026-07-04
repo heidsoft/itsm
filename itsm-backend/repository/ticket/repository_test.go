@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
+	_ "github.com/mattn/go-sqlite3"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/repository/base"
-	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -63,8 +63,8 @@ func TestRepository_Create(t *testing.T) {
 	params := &CreateParams{
 		Title:       "Test Ticket",
 		Description: "Description",
-		Priority: PriorityMedium,
-		Type:     TypeIncident,
+		Priority:    PriorityMedium,
+		Type:        TypeIncident,
 		RequesterID: fx.user.ID,
 	}
 

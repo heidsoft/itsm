@@ -1,20 +1,20 @@
 package controller
 
 import (
-	"itsm-backend/common"
-	"itsm-backend/service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"itsm-backend/common"
+	"itsm-backend/service"
 )
 
 type EscalationMatrixController struct {
-	logger *zap.SugaredLogger
+	logger                  *zap.SugaredLogger
 	escalationMatrixService *service.EscalationMatrixService
 }
 
 func NewEscalationMatrixController(logger *zap.SugaredLogger, escalationMatrixService *service.EscalationMatrixService) *EscalationMatrixController {
 	return &EscalationMatrixController{
-		logger: logger,
+		logger:                  logger,
 		escalationMatrixService: escalationMatrixService,
 	}
 }

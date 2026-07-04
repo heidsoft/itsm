@@ -33,52 +33,52 @@ func TestCanPerformAction_TableDriven(t *testing.T) {
 		"level1_reject_yes_delegate_no": {
 			Nodes: []map[string]interface{}{
 				{
-					"level":           1,
-					"allow_reject":    true,
-					"allow_delegate":  false,
-					"approval_mode":   "any",
-					"approver_type":   "user",
-					"approver_ids":    []interface{}{1},
-					"reject_action":   "end",
-					"name":            "L1",
+					"level":          1,
+					"allow_reject":   true,
+					"allow_delegate": false,
+					"approval_mode":  "any",
+					"approver_type":  "user",
+					"approver_ids":   []interface{}{1},
+					"reject_action":  "end",
+					"name":           "L1",
 				},
 			},
 		},
 		"level1_reject_no_delegate_yes": {
 			Nodes: []map[string]interface{}{
 				{
-					"level":           1,
-					"allow_reject":    false,
-					"allow_delegate":  true,
-					"approval_mode":   "any",
-					"approver_type":   "user",
-					"approver_ids":    []interface{}{1},
-					"reject_action":   "end",
-					"name":            "L1",
+					"level":          1,
+					"allow_reject":   false,
+					"allow_delegate": true,
+					"approval_mode":  "any",
+					"approver_type":  "user",
+					"approver_ids":   []interface{}{1},
+					"reject_action":  "end",
+					"name":           "L1",
 				},
 			},
 		},
 		"multi_level": {
 			Nodes: []map[string]interface{}{
 				{
-					"level":           1,
-					"allow_reject":    true,
-					"allow_delegate":  false,
-					"approval_mode":   "any",
-					"approver_type":   "user",
-					"approver_ids":    []interface{}{1},
-					"reject_action":   "end",
-					"name":            "L1",
+					"level":          1,
+					"allow_reject":   true,
+					"allow_delegate": false,
+					"approval_mode":  "any",
+					"approver_type":  "user",
+					"approver_ids":   []interface{}{1},
+					"reject_action":  "end",
+					"name":           "L1",
 				},
 				{
-					"level":           2,
-					"allow_reject":    false,
-					"allow_delegate":  true,
-					"approval_mode":   "all",
-					"approver_type":   "user",
-					"approver_ids":    []interface{}{2, 3},
-					"reject_action":   "return",
-					"name":            "L2",
+					"level":          2,
+					"allow_reject":   false,
+					"allow_delegate": true,
+					"approval_mode":  "all",
+					"approver_type":  "user",
+					"approver_ids":   []interface{}{2, 3},
+					"reject_action":  "return",
+					"name":           "L2",
 				},
 			},
 		},
@@ -191,12 +191,12 @@ func TestParseWorkflowNodes_TableDriven(t *testing.T) {
 			name: "single node complete",
 			input: []map[string]interface{}{
 				{
-					"level":          1,
-					"name":           "L1 Approval",
-					"approver_type":  "user",
-					"approver_ids":   []interface{}{float64(10), float64(20)},
-					"approval_mode":  "all",
-					"timeout_hours":  float64(48),
+					"level":         1,
+					"name":          "L1 Approval",
+					"approver_type": "user",
+					"approver_ids":  []interface{}{float64(10), float64(20)},
+					"approval_mode": "all",
+					"timeout_hours": float64(48),
 				},
 			},
 			wantLen: 1,
@@ -236,10 +236,10 @@ func TestParseWorkflowNodes_TableDriven(t *testing.T) {
 			name: "missing name auto-generates",
 			input: []map[string]interface{}{
 				{
-					"level":          1,
-					"approver_type":  "user",
-					"approver_ids":   []interface{}{float64(1)},
-					"approval_mode":  "any",
+					"level":         1,
+					"approver_type": "user",
+					"approver_ids":  []interface{}{float64(1)},
+					"approval_mode": "any",
 				},
 			},
 			wantLen: 1,
@@ -268,10 +268,10 @@ func TestParseWorkflowNodes_TableDriven(t *testing.T) {
 			name: "dynamic approver type sets AssigneeType",
 			input: []map[string]interface{}{
 				{
-					"level":          1,
-					"name":           "Dept Manager",
-					"approver_type":  "dept_manager",
-					"approval_mode":  "any",
+					"level":         1,
+					"name":          "Dept Manager",
+					"approver_type": "dept_manager",
+					"approval_mode": "any",
 				},
 			},
 			wantLen: 1,
@@ -284,22 +284,22 @@ func TestParseWorkflowNodes_TableDriven(t *testing.T) {
 			name: "multiple dynamic types",
 			input: []map[string]interface{}{
 				{
-					"level":          1,
-					"name":           "Team Leader",
-					"approver_type":  "team_leader",
-					"approval_mode":  "any",
+					"level":         1,
+					"name":          "Team Leader",
+					"approver_type": "team_leader",
+					"approval_mode": "any",
 				},
 				{
-					"level":          2,
-					"name":           "Project Manager",
-					"approver_type":  "project_manager",
-					"approval_mode":  "all",
+					"level":         2,
+					"name":          "Project Manager",
+					"approver_type": "project_manager",
+					"approval_mode": "all",
 				},
 				{
-					"level":          3,
-					"name":           "Amount Based",
-					"approver_type":  "amount_based",
-					"approval_mode":  "any",
+					"level":         3,
+					"name":          "Amount Based",
+					"approver_type": "amount_based",
+					"approval_mode": "any",
 				},
 			},
 			wantLen: 3,
@@ -498,12 +498,12 @@ func createTestWorkflowsWithActive(t *testing.T, ctx context.Context, client *en
 
 func TestCreateWorkflow_OptionalFields_TableDriven(t *testing.T) {
 	tests := []struct {
-		name             string
-		ticketType       *string
-		priority         *string
-		wantTicketType   *string
-		wantPriority     *string
-		wantNodesCount   int
+		name           string
+		ticketType     *string
+		priority       *string
+		wantTicketType *string
+		wantPriority   *string
+		wantNodesCount int
 	}{
 		{
 			name:           "no optional fields",
@@ -756,13 +756,13 @@ func TestSubmitApproval_Reject_TerminatesWorkflow(t *testing.T) {
 		SetTenantID(tenant.ID).
 		SetNodes([]map[string]interface{}{
 			{
-				"level":          1,
-				"name":           "L1",
-				"approver_type":  "user",
-				"approver_ids":   []int{approver.ID},
-				"approval_mode":  "any",
-				"allow_reject":   true,
-				"reject_action":  "end",
+				"level":         1,
+				"name":          "L1",
+				"approver_type": "user",
+				"approver_ids":  []int{approver.ID},
+				"approval_mode": "any",
+				"allow_reject":  true,
+				"reject_action": "end",
 			},
 		}).
 		Save(ctx)
@@ -842,13 +842,13 @@ func TestSubmitApproval_Reject_TerminatesWorkflow(t *testing.T) {
 
 func TestSubmitApproval_ErrorPaths_TableDriven(t *testing.T) {
 	tests := []struct {
-		name          string
-		action        string
-		userID        int
-		delegateTo    *int
-		recordStatus  string
-		wantErr       bool
-		errContains   string
+		name         string
+		action       string
+		userID       int
+		delegateTo   *int
+		recordStatus string
+		wantErr      bool
+		errContains  string
 	}{
 		{
 			name:         "wrong user rejected",
@@ -971,14 +971,14 @@ func TestSubmitApproval_ErrorPaths_TableDriven(t *testing.T) {
 
 func TestUpdateWorkflow_WithNodes_TableDriven(t *testing.T) {
 	tests := []struct {
-		name           string
-		initialNodes   []map[string]interface{}
-		updateNodes    *[]dto.ApprovalNodeRequest
-		wantNodeCount  int
-		wantNodeName   string
+		name          string
+		initialNodes  []map[string]interface{}
+		updateNodes   *[]dto.ApprovalNodeRequest
+		wantNodeCount int
+		wantNodeName  string
 	}{
 		{
-			name: "add nodes to empty workflow",
+			name:         "add nodes to empty workflow",
 			initialNodes: []map[string]interface{}{},
 			updateNodes: &[]dto.ApprovalNodeRequest{
 				{
@@ -997,13 +997,13 @@ func TestUpdateWorkflow_WithNodes_TableDriven(t *testing.T) {
 			name: "replace existing nodes",
 			initialNodes: []map[string]interface{}{
 				{
-					"level":          1,
-					"name":           "Old L1",
-					"approver_type":  "user",
-					"approver_ids":   []int{1},
-					"approval_mode":  "any",
-					"allow_reject":   true,
-					"reject_action":  "end",
+					"level":         1,
+					"name":          "Old L1",
+					"approver_type": "user",
+					"approver_ids":  []int{1},
+					"approval_mode": "any",
+					"allow_reject":  true,
+					"reject_action": "end",
 				},
 			},
 			updateNodes: &[]dto.ApprovalNodeRequest{
@@ -1072,9 +1072,9 @@ func TestUpdateWorkflow_WithNodes_TableDriven(t *testing.T) {
 
 func TestTriggerApproval_ApprovalMode_TableDriven(t *testing.T) {
 	tests := []struct {
-		name           string
-		approvalMode   string
-		approverCount  int
+		name            string
+		approvalMode    string
+		approverCount   int
 		wantRecordCount int
 	}{
 		{
@@ -1128,11 +1128,11 @@ func TestTriggerApproval_ApprovalMode_TableDriven(t *testing.T) {
 				SetTenantID(tenant.ID).
 				SetNodes([]map[string]interface{}{
 					{
-						"level":          1,
-						"name":           "L1",
-						"approver_type":  "user",
-						"approver_ids":   approverIDs,
-						"approval_mode":  tt.approvalMode,
+						"level":         1,
+						"name":          "L1",
+						"approver_type": "user",
+						"approver_ids":  approverIDs,
+						"approval_mode": tt.approvalMode,
 					},
 				}).
 				Save(ctx)
@@ -1279,11 +1279,11 @@ func createMatchingWorkflow(t *testing.T, ctx context.Context, client *ent.Clien
 		SetTenantID(tenantID).
 		SetNodes([]map[string]interface{}{
 			{
-				"level":          1,
-				"name":           "L1",
-				"approver_type":  "user",
-				"approver_ids":   []int{1},
-				"approval_mode":  "any",
+				"level":         1,
+				"name":          "L1",
+				"approver_type": "user",
+				"approver_ids":  []int{1},
+				"approval_mode": "any",
 			},
 		})
 	if ticketType != "" {

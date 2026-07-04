@@ -938,4 +938,3 @@ func parseAmountThresholds(raw string) ([]approver.AmountThreshold, error) {
 	}
 	return thresholds, nil
 }
-

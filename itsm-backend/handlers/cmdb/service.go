@@ -92,6 +92,18 @@ func (s *Service) ListCloudServices(ctx context.Context, tenantID int, provider 
 	return s.repo.ListCloudServices(ctx, tenantID, provider)
 }
 
+func (s *Service) GetCloudService(ctx context.Context, tenantID int, id int) (*CloudService, error) {
+	return s.repo.GetCloudService(ctx, tenantID, id)
+}
+
+func (s *Service) UpdateCloudService(ctx context.Context, cs *CloudService) (*CloudService, error) {
+	return s.repo.UpdateCloudService(ctx, cs)
+}
+
+func (s *Service) DeleteCloudService(ctx context.Context, id int, tenantID int) error {
+	return s.repo.DeleteCloudService(ctx, id, tenantID)
+}
+
 // Cloud accounts
 func (s *Service) CreateCloudAccount(ctx context.Context, ca *CloudAccount) (*CloudAccount, error) {
 	return s.repo.CreateCloudAccount(ctx, ca)
@@ -101,9 +113,37 @@ func (s *Service) ListCloudAccounts(ctx context.Context, tenantID int, provider 
 	return s.repo.ListCloudAccounts(ctx, tenantID, provider)
 }
 
+func (s *Service) GetCloudAccount(ctx context.Context, tenantID int, id int) (*CloudAccount, error) {
+	return s.repo.GetCloudAccount(ctx, tenantID, id)
+}
+
+func (s *Service) UpdateCloudAccount(ctx context.Context, ca *CloudAccount) (*CloudAccount, error) {
+	return s.repo.UpdateCloudAccount(ctx, ca)
+}
+
+func (s *Service) DeleteCloudAccount(ctx context.Context, id int, tenantID int) error {
+	return s.repo.DeleteCloudAccount(ctx, id, tenantID)
+}
+
 // Cloud resources
 func (s *Service) ListCloudResources(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
 	return s.repo.ListCloudResources(ctx, tenantID, provider, serviceID, region)
+}
+
+func (s *Service) GetCloudResource(ctx context.Context, tenantID int, id int) (*CloudResource, error) {
+	return s.repo.GetCloudResource(ctx, tenantID, id)
+}
+
+func (s *Service) CreateCloudResource(ctx context.Context, cr *CloudResource) (*CloudResource, error) {
+	return s.repo.CreateCloudResource(ctx, cr)
+}
+
+func (s *Service) UpdateCloudResource(ctx context.Context, cr *CloudResource) (*CloudResource, error) {
+	return s.repo.UpdateCloudResource(ctx, cr)
+}
+
+func (s *Service) DeleteCloudResource(ctx context.Context, id int, tenantID int) error {
+	return s.repo.DeleteCloudResource(ctx, id, tenantID)
 }
 
 func (s *Service) GetReconciliation(ctx context.Context, tenantID int) (*ReconciliationResult, error) {

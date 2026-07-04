@@ -1856,9 +1856,9 @@ func (c *CMDBController) BatchUpdateLifecycleStatus(ctx *gin.Context) {
 	}
 
 	var req struct {
-		IDs     []int  `json:"ids" binding:"required,min=1"`
-		Status  string `json:"status" binding:"required"`
-		Remark  string `json:"remark,omitempty"`
+		IDs    []int  `json:"ids" binding:"required,min=1"`
+		Status string `json:"status" binding:"required"`
+		Remark string `json:"remark,omitempty"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())

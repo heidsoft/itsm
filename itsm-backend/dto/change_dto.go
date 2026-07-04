@@ -137,7 +137,7 @@ type ChangeStatsResponse struct {
 // ChangeApprovalRequest 变更审批请求
 type ChangeApprovalRequest struct {
 	Status  ChangeApprovalStatus `json:"status" binding:"required"` // 审批状态
-	Comment *string      `json:"comment"`                   // 审批意见
+	Comment *string              `json:"comment"`                   // 审批意见
 }
 
 // ChangeStatusUpdateRequest 变更状态更新请求
@@ -246,7 +246,7 @@ type CreateChangeApprovalRequest struct {
 // UpdateChangeApprovalRequest 更新变更审批请求
 type UpdateChangeApprovalRequest struct {
 	Status  ChangeApprovalStatus `json:"status" binding:"required"` // 审批状态
-	Comment *string      `json:"comment"`                   // 审批意见
+	Comment *string              `json:"comment"`                   // 审批意见
 }
 
 // CreateChangeRiskAssessmentRequest 创建变更风险评估请求
