@@ -22,7 +22,7 @@ import {
 } from 'antd';
 
 const { Text } = Typography;
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { Info } from 'lucide-react';
 import { Eye, GitBranch, Users } from 'lucide-react';
 import type {
   WorkflowDefinition,
@@ -209,7 +209,7 @@ export default function WorkflowProperties({
                         </div>
                       }
                     >
-                      <InfoCircleOutlined className="text-gray-400 cursor-help" />
+                      <Info className="text-gray-400 cursor-help" />
                     </Tooltip>
                   </Space>
                 </Text>

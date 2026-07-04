@@ -2,12 +2,7 @@
 
 import React from 'react';
 import { Card, Col, Progress, Row, Statistic } from 'antd';
-import {
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  FileTextOutlined,
-  StarOutlined,
-} from '@ant-design/icons';
+import { FileText, Clock, CheckCircle, Star } from 'lucide-react';
 
 interface ReportMetrics {
   totalTickets: number;
@@ -46,7 +41,7 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
           <Statistic
             title="工单总数"
             value={metrics?.totalTickets}
-            prefix={<FileTextOutlined style={{ color: '#1890ff' }} />}
+            prefix={<FileText style={{ color: '#1890ff' }} />}
             suffix={
               <div className="text-xs text-gray-500">
                 <div>已解决: {metrics?.resolvedTickets}</div>
@@ -61,7 +56,7 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
           <Statistic
             title="平均解决时间"
             value={metrics?.avgResolutionTime}
-            prefix={<ClockCircleOutlined style={{ color: '#52c41a' }} />}
+            prefix={<Clock style={{ color: '#52c41a' }} />}
             suffix="小时"
           />
           <div className="mt-2">
@@ -78,7 +73,7 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
           <Statistic
             title="SLA达标率"
             value={metrics?.slaCompliance}
-            prefix={<CheckCircleOutlined style={{ color: '#1890ff' }} />}
+            prefix={<CheckCircle style={{ color: '#1890ff' }} />}
             suffix="%"
             styles={{
               content: {
@@ -110,7 +105,7 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
             value={metrics?.satisfactionScore}
             precision={1}
             prefix={
-              <StarOutlined
+              <Star
                 style={{
                   color: getSatisfactionColor(metrics?.satisfactionScore || 0),
                 }}

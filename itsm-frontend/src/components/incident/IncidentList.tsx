@@ -20,13 +20,8 @@ import {
   App,
   Empty,
 } from 'antd';
-import {
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  SyncOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import { Search, Plus, Pencil, Eye, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -83,8 +78,9 @@ const IncidentList: React.FC = () => {
         ...values,
       };
       const resp = await IncidentApi.getIncidents(apiQuery);
-      setData((resp as any).items || (resp as any).incidents || []);
-      setTotal((resp as any).total || 0);
+      // 支持 snake_case 和 camelCase 格式
+      setData(resp.incidents || resp.items || []);
+      setTotal(resp.total || 0);
     } catch (error) {
       // console.error(error);
       message.error('加载事件列表失败');
@@ -107,7 +103,7 @@ const IncidentList: React.FC = () => {
     setQuery(prev => ({ ...prev, page: 1 }));
   };
 
-  const columns = [
+  const columns: ColumnsType<Incident> = [
     {
       title: '编号',
       dataIndex: 'incident_number',
@@ -164,14 +160,14 @@ const IncidentList: React.FC = () => {
           <Tooltip title="查看详情">
             <Button
               type="text"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => router.push(`/incidents/${record.id}`)}
             />
           </Tooltip>
           <Tooltip title="编辑">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => router.push(`/incidents/${record.id}/edit`)}
             />
           </Tooltip>
@@ -184,7 +180,7 @@ const IncidentList: React.FC = () => {
     <Card>
       <Form form={form} layout="inline" style={{ marginBottom: 24 }}>
         <Form.Item name="keyword">
-          <Input placeholder="搜索编号或标题" allowClear prefix={<SearchOutlined />} />
+          <Input placeholder="搜索编号或标题" allowClear prefix={<Search />} />
         </Form.Item>
         <Form.Item name="status">
           <Select placeholder="状态" style={{ width: 120 }} allowClear>
@@ -215,7 +211,7 @@ const IncidentList: React.FC = () => {
         <div style={{ flex: 1, textAlign: 'right' }}>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             onClick={() => router.push('/incidents/new')}
           >
             新建事件
@@ -225,7 +221,7 @@ const IncidentList: React.FC = () => {
 
       <Table
         rowKey="id"
-        columns={columns as any}
+        columns={columns}
         dataSource={data}
         loading={loading}
         scroll={{ x: 'max-content' }}

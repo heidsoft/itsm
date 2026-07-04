@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Card, Select, Button, Space, Tag, Spin, message, Drawer, Descriptions, Empty } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { RotateCcw } from 'lucide-react';
 import type { Node, Edge, NodeTypes} from 'reactflow';
 import ReactFlow, { Controls, Background, useNodesState, useEdgesState, MarkerType, BackgroundVariant, Panel, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -84,7 +84,7 @@ export default function TopologyPage() {
             options={ciList.map(ci => ({ value: ci.id, label: ci.name + ' (' + ci.type + ')' }))} allowClear />
           <Select placeholder="关系深度" value={depth} onChange={setDepth} style={{ width: 120 }}
             options={[{ value: 1, label: '1 层' }, { value: 2, label: '2 层' }, { value: 3, label: '3 层' }, { value: 4, label: '4 层' }]} />
-          <Button icon={<ReloadOutlined />} onClick={loadTopology} loading={loading} disabled={!selectedCI}>刷新</Button>
+          <Button icon={<RotateCcw />} onClick={loadTopology} loading={loading} disabled={!selectedCI}>刷新</Button>
         </Space>
       </Card>
       <Card className="shadow-sm rounded-lg" style={{ height: 'calc(100vh - 250px)' }}>

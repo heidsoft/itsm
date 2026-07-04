@@ -453,28 +453,28 @@ type ChangeCalendarResponse struct {
 // CABMemberResponse CAB成员响应
 type CABMemberResponse struct {
 	ID        int       `json:"id"`
-	UserID    int       `json:"user_id"`
-	UserName  string    `json:"user_name"`
+	UserID    int       `json:"userId"`
+	UserName  string    `json:"userName"`
 	Email     string    `json:"email"`
 	Type      string    `json:"type"` // CAB 或 ECAB
 	Role      string    `json:"role"` // member, chair, secretary
-	IsActive  bool      `json:"is_active"`
-	TenantID  int       `json:"tenant_id"`
-	CreatedAt time.Time `json:"created_at"`
+	IsActive  bool      `json:"isActive"`
+	TenantID  int       `json:"tenantId"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 // AddCABMemberRequest 添加CAB成员请求
 type AddCABMemberRequest struct {
-	UserID int    `json:"user_id" binding:"required"`
+	UserID int    `json:"userId" binding:"required"`
 	Type   string `json:"type" binding:"required,oneof=CAB ECAB"`
 	Role   string `json:"role" binding:"omitempty,oneof=member chair secretary"`
 }
 
 // CABApprovalRequest CAB审批请求
 type CABApprovalRequest struct {
-	ChangeID   int                  `json:"change_id" binding:"required"`
-	ApprovalID int                  `json:"approval_id" binding:"required"`
-	ApproverID int                  `json:"approver_id" binding:"required"`
+	ChangeID   int                  `json:"changeId" binding:"required"`
+	ApprovalID int                  `json:"approvalId" binding:"required"`
+	ApproverID int                  `json:"approverId" binding:"required"`
 	Status     ChangeApprovalStatus `json:"status" binding:"required,oneof=approved rejected"`
 	Comment    string               `json:"comment"`
 }

@@ -171,7 +171,7 @@ const IncidentTrendsPage = () => {
           </Col>
           <Col>
             <Space>
-              <Button icon={<ReloadOutlined />} onClick={loadData}>
+              <Button icon={<RotateCcw />} onClick={loadData}>
                 刷新数据
               </Button>
             </Space>
@@ -330,6 +330,6 @@ const IncidentTrendsPage = () => {
 
 // 导入需要的组件
 import { Button } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { RotateCcw } from 'lucide-react';
 
 export default IncidentTrendsPage;

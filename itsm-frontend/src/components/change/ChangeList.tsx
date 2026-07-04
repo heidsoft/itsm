@@ -19,14 +19,8 @@ import {
   Modal,
   Empty,
 } from 'antd';
-import {
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  PlusOutlined,
-  SyncOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import { Search, Plus, Pencil, Trash2, Eye, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -101,14 +95,15 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
         ...query,
         ...values,
       });
-      setData((resp.changes || []) as any);
+      // 支持 snake_case 和 camelCase 格式
+      setData(resp.changes || resp.items || []);
       setTotal(resp.total || 0);
     } catch (error) {
       // 只在有实际错误时显示失败消息，不是因为表单验证导致的
       if (
         error &&
         typeof error === 'object' &&
-        !('name' in error && (error as any).name === 'ValidationError')
+        !('name' in error && (error as { name?: string }).name === 'ValidationError')
       ) {
         console.error('Failed to load changes:', error);
         message.error('加载变更列表失败');
@@ -156,7 +151,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
     });
   };
 
-  const columns = [
+  const columns: ColumnsType<Change> = [
     {
       title: 'ID',
       dataIndex: 'id',
@@ -207,14 +202,14 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
           <Tooltip title="查看详情">
             <Button
               type="text"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => router.push(`/changes/${record.id}`)}
             />
           </Tooltip>
           <Tooltip title="编辑">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => router.push(`/changes/${record.id}/edit`)}
             />
           </Tooltip>
@@ -222,7 +217,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
             <Button
               type="text"
               danger
-              icon={<DeleteOutlined />}
+              icon={<Trash2 />}
               onClick={() => handleDelete(record.id, record.title)}
             />
           </Tooltip>
@@ -241,7 +236,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
           </div>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             onClick={() => router.push('/changes/new')}
             size="large"
           >
@@ -256,7 +251,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
             <Input
               placeholder="搜索标题"
               allowClear
-              prefix={<SearchOutlined className="text-gray-400" />}
+              prefix={<Search className="text-gray-400" />}
               className="w-64"
             />
           </Form.Item>
@@ -283,7 +278,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
               <Button type="primary" onClick={handleSearch}>
                 查询
               </Button>
-              <Button icon={<SyncOutlined />} onClick={loadData} />
+              <Button icon={<RefreshCw />} onClick={loadData} />
             </Space>
           </Form.Item>
         </Form>
@@ -297,7 +292,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
         ) : (
           <Table
             rowKey="id"
-            columns={columns as any}
+            columns={columns}
             dataSource={data}
             loading={loading}
             pagination={{

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, Descriptions, Empty, Spin, Tag, Typography, Alert, List, Space } from 'antd';
-import { ThunderboltOutlined, AlertOutlined, BulbOutlined } from '@ant-design/icons';
+import { AlertTriangle, Zap } from 'lucide-react';
 import { ChangeApi, type ChangeCMDBImpactSummary } from '@/lib/api/change-api';
 
 const { Text, Title } = Typography;
@@ -76,7 +76,7 @@ export default function ChangeCMDBImpactPanel({ changeId }: ChangeCMDBImpactPane
 
   return (
     <Space direction="vertical" size="middle" className="w-full">
-      <Card size="small" title={<><ThunderboltOutlined /> 总体评估</>}>
+      <Card size="small" title={<><Zap /> 总体评估</>}>
         <Descriptions column={2} size="small">
           <Descriptions.Item label="推荐风险等级">
             <Tag color={riskLevelColors[data.recommendedRiskLevel] || 'default'}>
@@ -109,7 +109,7 @@ export default function ChangeCMDBImpactPanel({ changeId }: ChangeCMDBImpactPane
       {data.workflowHints && data.workflowHints.length > 0 && (
         <Card
           size="small"
-          title={<><AlertOutlined /> 工作流提示</>}
+          title={<><AlertTriangle /> 工作流提示</>}
         >
           <List
             size="small"

@@ -14,7 +14,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Alert, Space, Button, Tag } from 'antd';
-import { WifiOutlined, DisconnectOutlined, WarningOutlined } from '@ant-design/icons';
+import { AlertTriangle, Wifi } from 'lucide-react';
 
 const HEALTH_CHECK_INTERVAL_MS = 30_000;
 const ERROR_THRESHOLD = 3;
@@ -101,7 +101,7 @@ export function NetworkStatus({ compact = false, enableFormLock = true }: Networ
   if (status === 'online' || status === 'checking') {
     if (compact) {
       return (
-        <Tag color="green" icon={<WifiOutlined />}>
+        <Tag color="green" icon={<Wifi />}>
           在线
         </Tag>
       );
@@ -111,7 +111,7 @@ export function NetworkStatus({ compact = false, enableFormLock = true }: Networ
 
   if (compact) {
     return (
-      <Tag color={status === 'degraded' ? 'red' : 'orange'} icon={status === 'degraded' ? <WarningOutlined /> : <DisconnectOutlined />}>
+      <Tag color={status === 'degraded' ? 'red' : 'orange'} icon={status === 'degraded' ? <AlertTriangle /> : <DisconnectOutlined />}>
         {status === 'degraded' ? '降级' : '离线'}
       </Tag>
     );
@@ -122,7 +122,7 @@ export function NetworkStatus({ compact = false, enableFormLock = true }: Networ
       banner
       type={status === 'degraded' ? 'error' : 'warning'}
       showIcon
-      icon={status === 'degraded' ? <WarningOutlined /> : <DisconnectOutlined />}
+      icon={status === 'degraded' ? <AlertTriangle /> : <DisconnectOutlined />}
       message={
         <Space>
           <span>

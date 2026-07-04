@@ -18,7 +18,7 @@ import {
   DatePicker,
 } from 'antd';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import { ArrowLeft, Save } from 'lucide-react';
 
 import type { License, LicenseRequest} from '@/lib/api/asset-api';
 import { AssetApi, type LicenseType } from '@/lib/api/asset-api';
@@ -116,7 +116,7 @@ const LicenseForm: React.FC = () => {
         }}
       >
         <div style={{ marginBottom: 16 }}>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/licenses')}>
+          <Button icon={<ArrowLeft />} onClick={() => router.push('/licenses')}>
             返回列表
           </Button>
         </div>
@@ -199,7 +199,7 @@ const LicenseForm: React.FC = () => {
 
         <Form.Item>
           <Space>
-            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={loading}>
+            <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
               {isEdit ? '保存' : '创建'}
             </Button>
             <Button onClick={() => router.push('/licenses')}>取消</Button>

@@ -24,16 +24,7 @@ import {
   Badge,
   message,
 } from 'antd';
-import {
-  LinkOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  BranchesOutlined,
-  SwapOutlined,
-  ExclamationCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-} from '@ant-design/icons';
+import { Plus, Trash2, Link, AlertCircle, CheckCircle, XCircle, GitBranch, Swap } from 'lucide-react';
 import {
   useTicketRelationsQuery,
   useCreateRelationMutation,
@@ -136,7 +127,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
     if (!relations || relations.length === 0) {
       return (
         <Empty description="暂无关联工单" image={Empty.PRESENTED_IMAGE_SIMPLE}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
+          <Button type="primary" icon={<Plus />} onClick={() => setModalVisible(true)}>
             添加关联
           </Button>
         </Empty>
@@ -173,7 +164,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
                   okText="确认"
                   cancelText="取消"
                 >
-                  <Button type="link" danger size="small" icon={<DeleteOutlined />}>
+                  <Button type="link" danger size="small" icon={<Trash2 />}>
                     删除
                   </Button>
                 </Popconfirm>,
@@ -237,7 +228,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
     <Card
       title={
         <Space>
-          <LinkOutlined />
+          <Link />
           <span>工单关联</span>
           {stats && stats.totalRelations > 0 && <Badge count={stats.totalRelations} showZero />}
         </Space>
@@ -245,7 +236,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
       extra={
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<Plus />}
           onClick={() => setModalVisible(true)}
           size="small"
         >

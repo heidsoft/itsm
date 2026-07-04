@@ -32,7 +32,7 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
-import { CheckCircleOutlined, DownloadOutlined, EyeOutlined, RocketOutlined } from '@ant-design/icons';
+import { Download, Eye, CheckCircle, Rocket } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { SLATemplateApi, type SLATemplate, type TemplateInstallResult } from '@/lib/api/sla-template-api';
 
@@ -196,7 +196,7 @@ export default function SLATemplatesPage() {
       render: (_: unknown, t: SLATemplate) => {
         const r = installResults[t.key];
         if (!r) return <Text type="secondary">未安装</Text>;
-        if (r.created) return <Tag color="green" icon={<CheckCircleOutlined />}>已安装（新建）</Tag>;
+        if (r.created) return <Tag color="green" icon={<CheckCircle />}>已安装（新建）</Tag>;
         if (r.wasAlreadyExist) return <Tag color="blue">已存在</Tag>;
         return <Tag color="default">-</Tag>;
       },
@@ -208,7 +208,7 @@ export default function SLATemplatesPage() {
       render: (_: unknown, t: SLATemplate) => (
         <Space>
           <Tooltip title="查看模板详情">
-            <Button type="text" icon={<EyeOutlined />} onClick={() => setDetail(t)} />
+            <Button type="text" icon={<Eye />} onClick={() => setDetail(t)} />
           </Tooltip>
           <Popconfirm
             title={`确认将模板「${t.name}」安装到当前租户？`}
@@ -220,7 +220,7 @@ export default function SLATemplatesPage() {
             <Button
               type="primary"
               size="small"
-              icon={<DownloadOutlined />}
+              icon={<Download />}
               loading={installingKey === t.key}
             >
               安装
@@ -235,7 +235,7 @@ export default function SLATemplatesPage() {
     <div className="space-y-6">
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
-          <RocketOutlined style={{ marginRight: 8 }} />
+          <Rocket style={{ marginRight: 8 }} />
           SLA 模板
         </Title>
         <Paragraph type="secondary">
@@ -290,7 +290,7 @@ export default function SLATemplatesPage() {
           >
             <Button
               type="primary"
-              icon={<RocketOutlined />}
+              icon={<Rocket />}
               loading={installingKey === '__ALL__'}
               disabled={templates.filter(t => t.recommended).length === 0}
             >

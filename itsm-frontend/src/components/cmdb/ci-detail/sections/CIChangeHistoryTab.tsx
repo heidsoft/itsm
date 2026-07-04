@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { Card, Button, Timeline, Empty, Tag, Space, Typography } from 'antd';
-import { HistoryOutlined } from '@ant-design/icons';
+import { History } from 'lucide-react';
 import dayjs from 'dayjs';
 import type { ChangeHistoryData, ChangeLog } from '../types';
 import { ACTION_COLORS } from '../constants';

@@ -3,6 +3,51 @@
  * 统一管理所有API相关的类型定义
  */
 
+// ==================== 工具类型 ====================
+
+/**
+ * 将 snake_case 键转换为 camelCase
+ */
+type SnakeToCamel<S extends string> = S extends `${infer T}_${infer U}`
+  ? `${T}${Capitalize<SnakeToCamel<U>>}`
+  : S;
+
+/**
+ * 将对象的所有键从 snake_case 转换为 camelCase
+ */
+type KeysToCamelCase<T> = {
+  [K in keyof T as SnakeToCamel<K & string>]: T[K] extends object
+    ? KeysToCamelCase<T[K]>
+    : T[K];
+};
+
+/**
+ * API 响应数据兼容类型 - 支持 snake_case 和 camelCase
+ * 用于后端返回字段名不统一的情况
+ */
+export type ApiDataCompat<T> = T | KeysToCamelCase<T>;
+
+/**
+ * 分页数据兼容类型
+ */
+export interface PaginatedDataCompat<T> {
+  items: T[];
+  total: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
+  // 支持 snake_case 变体
+  items_camel?: T[];
+  total_camel?: number;
+}
+
+/**
+ * 带 snake_case 别名的分页响应
+ */
+export interface PaginatedResponseCompat<T> extends BaseResponse<PaginatedDataCompat<T>> {}
+
+// ==================== 基础类型 ====================
+
 // 基础响应类型
 export interface BaseResponse<T = unknown> {
   code: number;

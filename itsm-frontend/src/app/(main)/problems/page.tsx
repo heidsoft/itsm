@@ -12,7 +12,7 @@ import {
   Filter,
   Table as TableIcon,
 } from 'lucide-react';
-import { AppstoreOutlined } from '@ant-design/icons';
+import { LayoutGrid } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ProblemList from '@/components/problem/ProblemList';
 import { ProblemApi, type Problem } from '@/lib/api/problem-api';
@@ -64,8 +64,8 @@ export default function ProblemListPage() {
         priority: priorityFilter,
         search: debouncedSearch,
       });
-      const items = (response as any).problems || [];
-      setProblems(items as Problem[]);
+      const items = response.problems || [];
+      setProblems(items);
     } catch (error) {
       console.error('Failed to fetch problems for kanban:', error);
       setProblems([]);
@@ -257,7 +257,7 @@ export default function ProblemListPage() {
               key: 'kanban',
               label: (
                 <span className="flex items-center gap-2">
-                  <AppstoreOutlined />
+                  <LayoutGrid />
                   看板视图
                 </span>
               ),
@@ -281,7 +281,7 @@ export default function ProblemListPage() {
                     problem.priority || problem.severity || 'medium'
                   }
                   getItemAssignee={(problem: Problem) => {
-                    const assigneeId = problem.assigneeId || (problem as any).assignee_id;
+                    const assigneeId = problem.assigneeId || problem.assignee_id;
                     if (!assigneeId) return null;
                     const data = problem as unknown as Record<string, unknown>;
                     const assigneeName =

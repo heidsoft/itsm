@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeft } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import ProblemDetail from '@/components/problem/ProblemDetail';
 
@@ -16,7 +16,7 @@ export default function ProblemDetailPage() {
       <div style={{ marginBottom: 16 }}>
         <Button
           type="link"
-          icon={<ArrowLeftOutlined />}
+          icon={<ArrowLeft />}
           onClick={() => router.back()}
           style={{ paddingLeft: 0, color: '#666' }}
         >

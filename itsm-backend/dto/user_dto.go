@@ -12,7 +12,7 @@ type CreateUserRequest struct {
 	Department string `json:"department"`
 	Phone      string `json:"phone"`
 	Password   string `json:"password" binding:"required,min=6"`
-	TenantID   int    `json:"tenant_id"`
+	TenantID   int    `json:"tenantId"`
 	// 角色，可选；不提供时使用后端默认值（end_user）
 	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician security end_user user"`
 	// MSP角色，仅当用户属于MSP租户时使用
@@ -33,7 +33,7 @@ type UpdateUserRequest struct {
 // ListUsersRequest 获取用户列表请求
 type ListUsersRequest struct {
 	Page       int    `form:"page,default=1" binding:"min=1"`
-	PageSize   int    `form:"page_size,default=10" binding:"min=1,max=100"`
+	PageSize   int    `form:"pageSize,default=10" binding:"min=1,max=100"`
 	TenantID   int    `form:"tenant_id"`
 	Status     string `form:"status"` // active, inactive
 	Department string `form:"department"`
@@ -52,8 +52,8 @@ type UserDetailResponse struct {
 	TenantID   int       `json:"tenant_id"`
 	Role       string    `json:"role"`
 	MSPRole    *string   `json:"msp_role,omitempty"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 // PagedUsersResponse 分页用户响应
@@ -65,9 +65,9 @@ type PagedUsersResponse struct {
 // PaginationResponse 分页响应
 type PaginationResponse struct {
 	Page      int `json:"page"`
-	PageSize  int `json:"page_size"`
+	PageSize  int `json:"pageSize"`
 	Total     int `json:"total"`
-	TotalPage int `json:"total_page"`
+	TotalPage int `json:"totalPages"`
 }
 
 // ChangeUserStatusRequest 更改用户状态请求
@@ -77,7 +77,7 @@ type ChangeUserStatusRequest struct {
 
 // ResetPasswordRequest 重置密码请求
 type ResetPasswordRequest struct {
-	NewPassword string `json:"new_password" binding:"required,min=6"`
+	NewPassword string `json:"newPassword" binding:"required,min=6"`
 }
 
 // UserStatsResponse 用户统计响应

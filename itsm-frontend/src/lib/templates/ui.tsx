@@ -32,19 +32,7 @@ import {
   Divider,
   Typography,
 } from 'antd';
-import {
-  ExclamationCircleOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  ReloadOutlined,
-  DownloadOutlined,
-  UploadOutlined,
-  SearchOutlined,
-  PlusOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
+import { Search, Plus, Pencil, Trash2, Download, Upload, Eye, Settings, RotateCcw, AlertCircle } from 'lucide-react';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
@@ -128,9 +116,9 @@ export function createActionColumn({
       } else {
         // 默认操作
         actions.push(
-          { key: 'view', label: '查看', icon: <EyeOutlined /> },
-          { key: 'edit', label: '编辑', icon: <EditOutlined /> },
-          { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true }
+          { key: 'view', label: '查看', icon: <Eye /> },
+          { key: 'edit', label: '编辑', icon: <Pencil /> },
+          { key: 'delete', label: '删除', icon: <Trash2 />, danger: true }
         );
       }
 
@@ -221,7 +209,7 @@ export function useConfirmDialog() {
         okButtonProps: { danger },
         onOk: onConfirm,
         onCancel,
-        icon: <ExclamationCircleOutlined />,
+        icon: <AlertCircle />,
       });
     },
     [modal]
@@ -438,7 +426,7 @@ export function AvatarGroup({ users, maxCount = 5, size = 32 }: AvatarGroupProps
     <Avatar.Group maxCount={remainingCount > 0 ? remainingCount : undefined} size={size}>
       {visibleUsers.map((user, index) => (
         <Tooltip key={index} title={user.name}>
-          <Avatar src={user.avatar} icon={<SettingOutlined />}>
+          <Avatar src={user.avatar} icon={<Settings />}>
             {user.name.charAt(0).toUpperCase()}
           </Avatar>
         </Tooltip>
@@ -585,7 +573,7 @@ export function CardList({
   onRowClick={(record) => openDetail(record.id)}
   title="用户列表"
   headerActions={
-    <Button type="primary" icon={<PlusOutlined />}>
+    <Button type="primary" icon={<Plus />}>
       新增
     </Button>
   }
@@ -635,7 +623,7 @@ const handleDelete = () => {
 <EmptyState
   description="暂无数据"
   action={
-    <Button type="primary" icon={<PlusOutlined />}>
+    <Button type="primary" icon={<Plus />}>
       新建
     </Button>
   }
@@ -654,9 +642,9 @@ const columns: ColumnsType<User> = [
   createActionColumn({
     maxVisible: 2,
     render: (record) => [
-      { key: 'view', label: '查看', icon: <EyeOutlined /> },
-      { key: 'edit', label: '编辑', icon: <EditOutlined /> },
-      { key: 'delete', label: '删除', icon: <DeleteOutlined /> },
+      { key: 'view', label: '查看', icon: <Eye /> },
+      { key: 'edit', label: '编辑', icon: <Pencil /> },
+      { key: 'delete', label: '删除', icon: <Trash2 /> },
     ],
   }),
 ];

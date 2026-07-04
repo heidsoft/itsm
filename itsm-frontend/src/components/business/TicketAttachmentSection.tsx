@@ -17,19 +17,7 @@ import {
   Tooltip,
   Empty,
 } from 'antd';
-import {
-  UploadOutlined,
-  DownloadOutlined,
-  EyeOutlined,
-  DeleteOutlined,
-  FileOutlined,
-  FileImageOutlined,
-  FilePdfOutlined,
-  FileWordOutlined,
-  FileExcelOutlined,
-  FilePptOutlined,
-  FileZipOutlined,
-} from '@ant-design/icons';
+import { Trash2, Download, Upload, File, Eye, Image, FileText } from 'lucide-react';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 import type { TicketAttachment } from '@/lib/api/ticket-attachment-api';
 import { TicketAttachmentApi } from '@/lib/api/ticket-attachment-api';
@@ -170,9 +158,9 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
     const iconType = TicketAttachmentApi.getFileIconType(mimeType);
     switch (iconType) {
       case 'image':
-        return <FileImageOutlined style={{ fontSize: 24, color: '#52c41a' }} />;
+        return <Image style={{ fontSize: 24, color: '#52c41a' }} />;
       case 'pdf':
-        return <FilePdfOutlined style={{ fontSize: 24, color: '#ff4d4f' }} />;
+        return <FileText style={{ fontSize: 24, color: '#ff4d4f' }} />;
       case 'word':
         return <FileWordOutlined style={{ fontSize: 24, color: '#1890ff' }} />;
       case 'excel':
@@ -182,7 +170,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       case 'archive':
         return <FileZipOutlined style={{ fontSize: 24, color: '#722ed1' }} />;
       default:
-        return <FileOutlined style={{ fontSize: 24, color: '#8c8c8c' }} />;
+        return <File style={{ fontSize: 24, color: '#8c8c8c' }} />;
     }
   };
 
@@ -216,7 +204,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
         <Card title="上传附件" size="small">
           <Upload.Dragger {...uploadProps} disabled={uploading}>
             <p className="ant-upload-drag-icon">
-              <UploadOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+              <Upload style={{ fontSize: 48, color: '#1890ff' }} />
             </p>
             <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
             <p className="ant-upload-hint">
@@ -253,14 +241,14 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
                   <Tooltip title="预览" key="preview">
                     <Button
                       type="text"
-                      icon={<EyeOutlined />}
+                      icon={<Eye />}
                       onClick={() => handlePreview(attachment)}
                     />
                   </Tooltip>,
                   <Tooltip title="下载" key="download">
                     <Button
                       type="text"
-                      icon={<DownloadOutlined />}
+                      icon={<Download />}
                       onClick={() => handleDownload(attachment)}
                     />
                   </Tooltip>,
@@ -273,7 +261,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
                       cancelText={t('common.cancel')}
                     >
                       <Tooltip title={t('common.delete')}>
-                        <Button type="text" danger icon={<DeleteOutlined />} />
+                        <Button type="text" danger icon={<Trash2 />} />
                       </Tooltip>
                     </Popconfirm>
                   ),

@@ -19,13 +19,7 @@ import {
   Typography,
   message,
 } from 'antd';
-import {
-  ArrowLeftOutlined,
-  RocketOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  CloseCircleOutlined,
-} from '@ant-design/icons';
+import { ArrowLeft, Clock, CheckCircle, XCircle, Rocket } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -119,7 +113,7 @@ const ReleaseDetail: React.FC = () => {
       <Card>
         <div style={{ marginBottom: 24 }}>
           <Button
-            icon={<ArrowLeftOutlined />}
+            icon={<ArrowLeft />}
             onClick={() => router.push('/releases')}
             style={{ marginBottom: 16 }}
           >
@@ -144,10 +138,10 @@ const ReleaseDetail: React.FC = () => {
           current={currentStep}
           style={{ marginBottom: 32 }}
           items={[
-            { title: '草稿', icon: <ClockCircleOutlined /> },
-            { title: '已计划', icon: <ClockCircleOutlined /> },
-            { title: '进行中', icon: <RocketOutlined /> },
-            { title: '已完成', icon: <CheckCircleOutlined /> },
+            { title: '草稿', icon: <Clock /> },
+            { title: '已计划', icon: <Clock /> },
+            { title: '进行中', icon: <Rocket /> },
+            { title: '已完成', icon: <CheckCircle /> },
           ]}
         />
 

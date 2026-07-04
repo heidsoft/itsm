@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Input, Button, List, Avatar, Typography, Space, Spin, message, Divider } from 'antd';
-import { SendOutlined, RobotOutlined, UserOutlined, ClearOutlined } from '@ant-design/icons';
+import { User } from 'lucide-react';
 import { AIApi } from '@/lib/api/';
 import type { AIMessage } from '@/types/biz/ai';
 
@@ -111,7 +111,7 @@ const AIChat: React.FC = () => {
               <List.Item.Meta
                 avatar={
                   <Avatar
-                    icon={item.role === 'user' ? <UserOutlined /> : <RobotOutlined />}
+                    icon={item.role === 'user' ? <User /> : <RobotOutlined />}
                     style={{ backgroundColor: item.role === 'user' ? '#1890ff' : '#52c41a' }}
                   />
                 }

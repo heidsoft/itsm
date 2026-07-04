@@ -31,8 +31,8 @@ import {
   Plus,
   CheckCircle,
   AlertCircle,
+  Bot,
 } from 'lucide-react';
-import { RobotOutlined } from '@ant-design/icons';
 
 // 解决方案推荐接口
 interface SolutionRecommendation {
@@ -322,7 +322,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
       <Card
         title={
           <span className="flex items-center space-x-2">
-            <RobotOutlined className="w-5 h-5 text-purple-500" />
+            <Bot className="w-5 h-5 text-purple-500" />
             <span>AI智能推荐</span>
           </span>
         }

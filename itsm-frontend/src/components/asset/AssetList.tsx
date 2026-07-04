@@ -22,13 +22,7 @@ import {
   Empty,
   message,
 } from 'antd';
-import {
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  PlusOutlined,
-  DesktopOutlined,
-} from '@ant-design/icons';
+import { Search, Plus, Pencil, Eye, Monitor } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -235,7 +229,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
           <Tooltip title="查看资产详情">
             <Button
               type="text"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => router.push(`/assets/${record.id}`)}
               aria-label={`查看资产 ${record.name || record.asset_number}`}
             />
@@ -243,7 +237,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
           <Tooltip title="编辑资产信息">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => router.push(`/assets/${record.id}`)}
               aria-label={`编辑资产 ${record.name || record.asset_number}`}
             />
@@ -258,7 +252,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="总资产数" value={stats.total || 0} prefix={<DesktopOutlined />} />
+            <Statistic title="总资产数" value={stats.total || 0} prefix={<Monitor />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -325,14 +319,14 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
+              <Button type="primary" icon={<Search />} onClick={handleSearch}>
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
               {showActions && (
                 <Button
                   type="primary"
-                  icon={<PlusOutlined />}
+                  icon={<Plus />}
                   onClick={() => router.push('/assets/new')}
                 >
                   创建资产

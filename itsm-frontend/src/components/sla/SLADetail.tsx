@@ -17,7 +17,7 @@ import {
   message,
   Divider,
 } from 'antd';
-import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons';
+import { ArrowLeft, Pencil } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
 import { SLAApi } from '@/lib/api/';
@@ -92,7 +92,7 @@ const SLADetail: React.FC = () => {
         extra={
           <Button
             type="primary"
-            icon={<EditOutlined />}
+            icon={<Pencil />}
             onClick={() => router.push(`/sla/definitions/${data.id}/edit`)}
           >
             编辑
@@ -128,7 +128,7 @@ const SLADetail: React.FC = () => {
         </pre>
 
         <div className="mt-6">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/sla')}>
+          <Button icon={<ArrowLeft />} onClick={() => router.push('/sla')}>
             返回列表
           </Button>
         </div>

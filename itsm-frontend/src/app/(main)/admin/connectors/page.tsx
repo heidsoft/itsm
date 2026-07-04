@@ -5,10 +5,7 @@ import {
   Card, Table, Tag, Button, Space, Modal, Form, Input, Switch, Tabs, message, Drawer,
   Typography, Empty, Alert, Spin, Tooltip,
 } from 'antd';
-import {
-  ApiOutlined, CheckCircleOutlined, CloseCircleOutlined, PlusOutlined,
-  PoweroffOutlined, SendOutlined, ReloadOutlined, SettingOutlined,
-} from '@ant-design/icons';
+import { Plus, Settings, RotateCcw, CheckCircle, XCircle, Plug } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type {
   ConnectorManifest, ConnectorConfig, SendConnectorMessageRequest,
@@ -183,7 +180,7 @@ export default function ConnectorsAdminPage() {
         if (!inst.enabled) return <Tag color="orange">已停用</Tag>;
         const h = health[`${0}/${r.name}/${r.provider}`];
         return h ? (
-          <Tag color={h.ok ? 'green' : 'red'} icon={h.ok ? <CheckCircleOutlined /> : <CloseCircleOutlined />}>
+          <Tag color={h.ok ? 'green' : 'red'} icon={h.ok ? <CheckCircle /> : <XCircle />}>
             {h.ok ? '运行中' : '异常'}
           </Tag>
         ) : <Tag color="green">已启用</Tag>;
@@ -195,14 +192,14 @@ export default function ConnectorsAdminPage() {
         const inst = instanceOf(r);
         return (
           <Space>
-            <Button size="small" icon={<ApiOutlined />} onClick={() => { setDetailTarget(r); setDetailOpen(true); }}>详情</Button>
+            <Button size="small" icon={<Plug />} onClick={() => { setDetailTarget(r); setDetailOpen(true); }}>详情</Button>
             {inst ? (
               <>
                 <Button size="small" icon={<SendOutlined />} onClick={() => openSend(inst)} type="primary" ghost>发消息</Button>
                 <Button size="small" icon={<PoweroffOutlined />} danger onClick={() => handleRevoke(inst)}>停用</Button>
               </>
             ) : (
-              <Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => openProvision(r)}>启用</Button>
+              <Button size="small" type="primary" icon={<Plus />} onClick={() => openProvision(r)}>启用</Button>
             )}
           </Space>
         );
@@ -246,7 +243,7 @@ export default function ConnectorsAdminPage() {
       }}
       extra={
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={load} loading={loading}>刷新</Button>
+          <Button icon={<RotateCcw />} onClick={load} loading={loading}>刷新</Button>
         </Space>
       }
     >

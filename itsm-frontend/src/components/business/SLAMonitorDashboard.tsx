@@ -20,16 +20,7 @@ import {
   message,
   App,
 } from 'antd';
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  WarningOutlined,
-  ClockCircleOutlined,
-  ReloadOutlined,
-  FullscreenOutlined,
-  FullscreenExitOutlined,
-  BellOutlined,
-} from '@ant-design/icons';
+import { Clock, RotateCcw, Bell, AlertTriangle, CheckCircle, XCircle, Maximize, Minimize } from 'lucide-react';
 import { Activity, AlertTriangle, Target, Zap, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -332,7 +323,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         </div>
         <Space>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<RotateCcw />}
             onClick={handleRefresh}
             size={isFullscreen ? 'large' : 'middle'}
             style={{
@@ -344,7 +335,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             刷新
           </Button>
           <Button
-            icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+            icon={isFullscreen ? <Minimize /> : <Maximize />}
             onClick={handleFullscreen}
             size={isFullscreen ? 'large' : 'middle'}
             style={{
@@ -389,7 +380,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
                   fontWeight: 'bold',
                 },
               }}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircle />}
             />
             <Progress
               percent={metrics?.complianceRate || 0}
@@ -429,7 +420,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
                   fontWeight: 'bold',
                 },
               }}
-              prefix={<CloseCircleOutlined />}
+              prefix={<XCircle />}
             />
             <div className="mt-4">
               <Text
@@ -470,7 +461,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
                   fontWeight: 'bold',
                 },
               }}
-              prefix={<WarningOutlined />}
+              prefix={<AlertTriangle />}
             />
             <div className="mt-4">
               <Text
@@ -513,7 +504,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
                   fontWeight: 'bold',
                 },
               }}
-              prefix={<ClockCircleOutlined />}
+              prefix={<Clock />}
             />
             <div className="mt-4">
               <Text
@@ -533,7 +524,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
       <Card
         title={
           <div className="flex items-center gap-2">
-            <BellOutlined style={{ fontSize: '20px' }} />
+            <Bell style={{ fontSize: '20px' }} />
             <span style={{ fontSize: isFullscreen ? '24px' : '18px' }}>SLA告警列表</span>
             <Badge count={alerts.length} showZero className="ml-2" />
           </div>
@@ -567,7 +558,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           />
         ) : (
           <div className="text-center py-12">
-            <CheckCircleOutlined
+            <CheckCircle
               style={{
                 fontSize: '48px',
                 color: isFullscreen ? 'rgba(255,255,255,0.5)' : '#d9d9d9',

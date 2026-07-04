@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Alert } from 'antd';
-import { WifiOutlined, CloudServerOutlined } from '@ant-design/icons';
+import { Wifi, Server } from 'lucide-react';
 
 const RESTORED_DISMISS_MS = 3000;
 
@@ -75,7 +75,7 @@ export const NetworkStatus: React.FC = () => {
           description="请检查您的网络连接，部分功能可能不可用。"
           type="error"
           showIcon
-          icon={<WifiOutlined />}
+          icon={<Wifi />}
           banner
         />
       </div>
@@ -100,7 +100,7 @@ export const NetworkStatus: React.FC = () => {
           description="网络连接已恢复正常。"
           type="success"
           showIcon
-          icon={<CloudServerOutlined />}
+          icon={<Server />}
           banner
         />
       </div>

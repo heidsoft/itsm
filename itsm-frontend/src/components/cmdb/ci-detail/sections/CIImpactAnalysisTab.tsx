@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { Card, Button, Alert, Space, Tag, Typography, List, Tabs, Empty } from 'antd';
-import { ClusterOutlined } from '@ant-design/icons';
+import { Network } from 'lucide-react';
 import type { ImpactAnalysisData, ImpactAnalysisItem, AffectedTicket, AffectedIncident } from '../types';
 import { RISK_LEVEL_COLORS, RISK_LEVEL_LABELS } from '../constants';
 

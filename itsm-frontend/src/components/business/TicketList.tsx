@@ -17,19 +17,7 @@ import {
   Menu,
   App,
 } from 'antd';
-import {
-  PlusOutlined,
-  SearchOutlined,
-  FilterOutlined,
-  DownloadOutlined,
-  DownOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  UserOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+import { ChevronDown, Search, Filter, Plus, Pencil, Trash2, Download, User, Eye, Clock } from 'lucide-react';
 import { TicketApi } from '@/lib/api/ticket-api';
 import type { Ticket, TicketFilterParams, ListTicketsParams } from '@/lib/services/ticket-service';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -64,24 +52,24 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
     setLoading(true);
     try {
       // 构建符合GetTicketsParams的参数
-      const params = {
+      const params: TicketFilterParams = {
         page: currentPage,
         pageSize: pageSize,
         keyword: searchText || undefined,
-        status: filters.status as any,
-        priority: filters.priority as any,
-        type: filters.type as any,
+        status: filters.status,
+        priority: filters.priority,
+        type: filters.type,
         category: filters.category,
-        assigneeId: filters.assignee_id,
-        requesterId: filters.requester_id,
-        dateFrom: filters.date_from,
-        dateTo: filters.date_to,
+        assignee_id: filters.assignee_id,
+        requester_id: filters.requester_id,
+        date_from: filters.date_from,
+        date_to: filters.date_to,
         tags: filters.tags,
-        sortBy: filters.sort_by,
-        sortOrder: filters.sort_order,
+        sort_by: filters.sort_by,
+        sort_order: filters.sort_order,
       };
 
-      const response: TicketListResponse = await TicketApi.getTickets(params as any);
+      const response: TicketListResponse = await TicketApi.getTickets(params);
       setTickets(response.tickets);
       setTotal(response.total);
     } catch (error) {
@@ -186,19 +174,19 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         {
           key: 'view',
           label: '查看详情',
-          icon: <EyeOutlined />,
+          icon: <Eye />,
           onClick: () => onTicketSelect?.(record),
         },
         {
           key: 'edit',
           label: '编辑',
-          icon: <EditOutlined />,
+          icon: <Pencil />,
           onClick: () => onTicketSelect?.(record),
         },
         {
           key: 'delete',
           label: '删除',
-          icon: <DeleteOutlined />,
+          icon: <Trash2 />,
           danger: true,
           onClick: () => {
             Modal.confirm({
@@ -331,7 +319,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         width: 100,
         render: (assignee: any) => (
           <span>
-            <UserOutlined className="mr-1" />
+            <User className="mr-1" />
             {assignee?.name || '未分配'}
           </span>
         ),
@@ -343,7 +331,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         width: 150,
         render: (text: string) => (
           <span>
-            <ClockCircleOutlined className="mr-1" />
+            <Clock className="mr-1" />
             {new Date(text).toLocaleString()}
           </span>
         ),
@@ -355,7 +343,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         render: (_: unknown, record: Ticket) => (
           <Dropdown menu={{ items: getTicketMenu(record) }}>
             <Button type="primary" size="small">
-              操作 <DownOutlined />
+              操作 <ChevronDown />
             </Button>
           </Dropdown>
         ),
@@ -384,17 +372,17 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         <Space>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             onClick={() => onTicketSelect?.({} as Ticket)}
           >
             新建工单
           </Button>
           {selectedRowKeys.length > 0 && (
             <>
-              <Button icon={<DownloadOutlined />} onClick={() => handleBatchAction('export')} loading={batchLoading}>
+              <Button icon={<Download />} onClick={() => handleBatchAction('export')} loading={batchLoading}>
                 导出选中
               </Button>
-              <Button danger icon={<DeleteOutlined />} onClick={() => handleBatchAction('delete')} loading={batchLoading}>
+              <Button danger icon={<Trash2 />} onClick={() => handleBatchAction('delete')} loading={batchLoading}>
                 删除选中
               </Button>
             </>
@@ -410,7 +398,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
             allowClear
             style={{ width: 300 }}
             onSearch={handleSearch}
-            prefix={<SearchOutlined />}
+            prefix={<Search />}
           />
           <Select
             placeholder="状态"

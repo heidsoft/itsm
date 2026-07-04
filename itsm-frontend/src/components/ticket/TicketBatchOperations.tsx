@@ -16,16 +16,7 @@ import {
   Typography,
   Checkbox,
 } from 'antd';
-import {
-  UserOutlined,
-  TagOutlined,
-  FlagOutlined,
-  DeleteOutlined,
-  ExportOutlined,
-  BellOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons';
+import { Trash2, Export, User, Bell, CheckCircle, Tag, Flag } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { Ticket, TicketStatus, TicketPriority } from '@/lib/api/types';
 import { TicketAPI } from '@/lib/api/ticket-api';
@@ -82,37 +73,37 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       {
         key: 'assign',
         label: '批量分配',
-        icon: <UserOutlined />,
+        icon: <User />,
         description: '将选中的工单分配给指定处理人',
       },
       {
         key: 'update_status',
         label: '批量更新状态',
-        icon: <FlagOutlined />,
+        icon: <Flag />,
         description: '批量更新工单状态',
       },
       {
         key: 'add_tags',
         label: '批量添加标签',
-        icon: <TagOutlined />,
+        icon: <Tag />,
         description: '为选中的工单添加标签',
       },
       {
         key: 'set_priority',
         label: '批量设置优先级',
-        icon: <FlagOutlined />,
+        icon: <Flag />,
         description: '批量设置工单优先级',
       },
       {
         key: 'notify',
         label: '批量通知',
-        icon: <BellOutlined />,
+        icon: <Bell />,
         description: '向工单相关人员发送通知',
       },
       {
         key: 'export',
         label: '批量导出',
-        icon: <ExportOutlined />,
+        icon: <Export />,
         description: '导出选中的工单数据',
       },
       {
@@ -123,7 +114,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       {
         key: 'delete',
         label: '批量删除',
-        icon: <DeleteOutlined />,
+        icon: <Trash2 />,
         danger: true,
         description: '删除选中的工单（不可恢复）',
       },
@@ -400,7 +391,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <CheckCircleOutlined className="text-blue-600 text-lg" />
+            <CheckCircle className="text-blue-600 text-lg" />
             <Text strong>已选择 {selectedTickets.length} 个工单</Text>
             <Button size="small" onClick={onSelectionClear}>
               清空选择

@@ -26,22 +26,7 @@ import {
   Modal,
   type MenuProps,
 } from 'antd';
-import {
-  SearchOutlined,
-  PlusOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
-  FilterOutlined,
-  SortAscendingOutlined,
-  DownloadOutlined,
-  UploadOutlined,
-  DeleteOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  ReloadOutlined,
-  StarOutlined,
-  MoreOutlined,
-} from '@ant-design/icons';
+import { Search, Filter, Plus, X, Check, Trash2, Download, Upload, LayoutGrid, RotateCcw, List, ArrowUpDown, Star } from 'lucide-react';
 import { TemplateCard } from './TemplateCard';
 import type { TicketTemplate, TemplateListQuery, TemplateVisibility } from '@/types/template';
 import {
@@ -234,14 +219,14 @@ export const TemplateList: React.FC<TemplateListProps> = ({
     {
       key: 'enable',
       label: '批量启用',
-      icon: <CheckOutlined />,
+      icon: <Check />,
       onClick: () => handleBatchToggle(true),
       disabled: selectedIds.length === 0,
     },
     {
       key: 'disable',
       label: '批量禁用',
-      icon: <CloseOutlined />,
+      icon: <X />,
       onClick: () => handleBatchToggle(false),
       disabled: selectedIds.length === 0,
     },
@@ -251,7 +236,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
     {
       key: 'export',
       label: '批量导出',
-      icon: <DownloadOutlined />,
+      icon: <Download />,
       disabled: selectedIds.length === 0,
     },
     {
@@ -260,7 +245,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
     {
       key: 'delete',
       label: '批量删除',
-      icon: <DeleteOutlined />,
+      icon: <Trash2 />,
       danger: true,
       onClick: handleBatchDelete,
       disabled: selectedIds.length === 0,
@@ -280,7 +265,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
                 allowClear
                 onSearch={handleSearch}
                 style={{ width: 300 }}
-                prefix={<SearchOutlined />}
+                prefix={<Search />}
               />
 
               <Select
@@ -327,7 +312,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
               {selectedIds.length > 0 && (
                 <>
                   <Badge count={selectedIds.length} showZero>
-                    <Button icon={<CheckOutlined />} onClick={handleSelectAll}>
+                    <Button icon={<Check />} onClick={handleSelectAll}>
                       {selectedIds.length === templates.length ? '取消全选' : '全选'}
                     </Button>
                   </Badge>
@@ -340,19 +325,19 @@ export const TemplateList: React.FC<TemplateListProps> = ({
 
               <Radio.Group value={viewMode} onChange={e => setViewMode(e.target.value)}>
                 <Radio.Button value="grid">
-                  <AppstoreOutlined />
+                  <LayoutGrid />
                 </Radio.Button>
                 <Radio.Button value="list">
-                  <UnorderedListOutlined />
+                  <List />
                 </Radio.Button>
               </Radio.Group>
 
-              <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+              <Button icon={<RotateCcw />} onClick={() => refetch()}>
                 刷新
               </Button>
 
               {showActions && (
-                <Button type="primary" icon={<PlusOutlined />} onClick={onCreateClick}>
+                <Button type="primary" icon={<Plus />} onClick={onCreateClick}>
                   创建模板
                 </Button>
               )}
@@ -367,7 +352,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
           <Card>
             <Empty description="暂无模板" image={Empty.PRESENTED_IMAGE_SIMPLE}>
               {showActions && (
-                <Button type="primary" icon={<PlusOutlined />} onClick={onCreateClick}>
+                <Button type="primary" icon={<Plus />} onClick={onCreateClick}>
                   创建第一个模板
                 </Button>
               )}

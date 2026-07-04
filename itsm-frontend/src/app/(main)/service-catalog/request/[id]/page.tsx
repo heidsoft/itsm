@@ -25,7 +25,7 @@ import {
   Tag,
   Divider,
 } from 'antd';
-import { ArrowLeftOutlined, SendOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { ArrowLeft, Clock } from 'lucide-react';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
@@ -115,7 +115,7 @@ export default function ServiceCatalogRequestPage() {
       />
       <Card>
         <Space className="mb-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/service-catalog')}>
+          <Button icon={<ArrowLeft />} onClick={() => router.push('/service-catalog')}>
             返回
           </Button>
           <Title level={3} style={{ margin: 0 }}>
@@ -132,7 +132,7 @@ export default function ServiceCatalogRequestPage() {
               <Space>
                 <Text strong>{catalog.name}</Text>
                 {catalog.delivery_time != null && (
-                  <Tag icon={<ClockCircleOutlined />} color="blue">
+                  <Tag icon={<Clock />} color="blue">
                     交付时长 {catalog.delivery_time} 天
                   </Tag>
                 )}

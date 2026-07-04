@@ -5,13 +5,7 @@
 
 import React from 'react';
 import { Button, Space, Dropdown, Tooltip } from 'antd';
-import {
-  ReloadOutlined,
-  DownloadOutlined,
-  DeleteOutlined,
-  MoreOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { Plus, Trash2, Download, RotateCcw } from 'lucide-react';
 import type { MenuProps } from 'antd';
 
 export interface TicketsToolbarProps {
@@ -107,7 +101,7 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
         {/* 刷新按钮 */}
         <Tooltip title="刷新数据">
           <Button
-            icon={<ReloadOutlined spin={loading} />}
+            icon={<RotateCcw spin={loading} />}
             onClick={onRefresh}
             loading={loading}
             data-testid="refresh-button"
@@ -119,7 +113,7 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
         {/* 导出按钮 */}
         {canExport && (
           <Tooltip title="导出工单">
-            <Button icon={<DownloadOutlined />} onClick={onExport}>
+            <Button icon={<Download />} onClick={onExport}>
               导出
             </Button>
           </Tooltip>
@@ -134,7 +128,7 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
 
         {/* 创建工单按钮 */}
         {canCreate && (
-          <Button type="primary" icon={<PlusOutlined />} onClick={onCreate}>
+          <Button type="primary" icon={<Plus />} onClick={onCreate}>
             创建工单
           </Button>
         )}

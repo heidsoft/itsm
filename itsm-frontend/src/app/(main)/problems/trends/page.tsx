@@ -23,14 +23,7 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { useI18n } from '@/lib/i18n/useI18n';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import {
-  BarChartOutlined,
-  LineChartOutlined,
-  PieChartOutlined,
-  RiseOutlined,
-  FallOutlined,
-  MinusOutlined,
-} from '@ant-design/icons';
+import { Minus, BarChart3, LineChart, PieChart } from 'lucide-react';
 import { ProblemApi, type ProblemTrendData } from '@/lib/api/problem-api';
 
 const { RangePicker } = DatePicker;
@@ -41,7 +34,7 @@ const trendDirectionConfig: Record<string, { color: string; icon: React.ReactNod
   {
     increasing: { color: '#ff4d4f', icon: <RiseOutlined />, text: '上升' },
     decreasing: { color: '#52c41a', icon: <FallOutlined />, text: '下降' },
-    stable: { color: '#1890ff', icon: <MinusOutlined />, text: '稳定' },
+    stable: { color: '#1890ff', icon: <Minus />, text: '稳定' },
   };
 
 export default function ProblemTrendsPage() {
@@ -190,7 +183,7 @@ export default function ProblemTrendsPage() {
                   <Statistic
                     title="问题总数"
                     value={trendData.total_problems || 0}
-                    prefix={<BarChartOutlined className="text-blue-500" />}
+                    prefix={<BarChart3 className="text-blue-500" />}
                     valueStyle={{ color: '#1890ff' }}
                   />
                 </Card>
@@ -200,7 +193,7 @@ export default function ProblemTrendsPage() {
                   <Statistic
                     title="已解决"
                     value={trendData.resolved_problems || 0}
-                    prefix={<LineChartOutlined className="text-green-500" />}
+                    prefix={<LineChart className="text-green-500" />}
                     valueStyle={{ color: '#52c41a' }}
                   />
                 </Card>
@@ -210,7 +203,7 @@ export default function ProblemTrendsPage() {
                   <Statistic
                     title="待处理"
                     value={trendData.open_problems || 0}
-                    prefix={<PieChartOutlined className="text-orange-500" />}
+                    prefix={<PieChart className="text-orange-500" />}
                     valueStyle={{ color: '#fa8c16' }}
                   />
                 </Card>
@@ -222,7 +215,7 @@ export default function ProblemTrendsPage() {
                     value={(trendData.resolution_rate || 0) * 100}
                     precision={1}
                     suffix="%"
-                    prefix={<LineChartOutlined className="text-purple-500" />}
+                    prefix={<LineChart className="text-purple-500" />}
                     valueStyle={{ color: trendData.resolution_rate >= 0.7 ? '#52c41a' : '#fa8c16' }}
                   />
                 </Card>

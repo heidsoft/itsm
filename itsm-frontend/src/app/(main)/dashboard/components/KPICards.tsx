@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { DashboardOutlined } from '@ant-design/icons';
+import { LayoutDashboard } from 'lucide-react';
 import { Card, Row, Col, Statistic, Tooltip, Spin, Progress } from 'antd';
 import {
   ArrowUp,
@@ -209,7 +209,7 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
         >
           <div className="text-gray-500">
             <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <DashboardOutlined className="text-3xl text-gray-400" />
+              <LayoutDashboard className="text-3xl text-gray-400" />
             </div>
             <p className="text-base font-medium text-gray-700 mb-1">暂无KPI数据</p>
             <p className="text-sm text-gray-500">系统正在收集数据，请稍后查看</p>

@@ -23,14 +23,7 @@ import {
   Spin,
   message,
 } from 'antd';
-import {
-  ZoomInOutlined,
-  ZoomOutOutlined,
-  FullscreenOutlined,
-  ReloadOutlined,
-  NodeIndexOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
+import { RotateCcw, AlertTriangle, Maximize, ZoomIn, ZoomOut, Network } from 'lucide-react';
 import type { Node, Edge ,
   NodeProps} from 'reactflow';
 import ReactFlow, {
@@ -283,7 +276,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
       <Card
         title={
           <Space>
-            <NodeIndexOutlined />
+            <Network />
             <span>服务拓扑图</span>
             {graph && <Tag color="blue">{graph.total_nodes} 个节点</Tag>}
           </Space>
@@ -301,7 +294,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
               ]}
             />
             <Tooltip title="刷新">
-              <Button icon={<ReloadOutlined />} onClick={loadTopology} />
+              <Button icon={<RotateCcw />} onClick={loadTopology} />
             </Tooltip>
           </Space>
         }
@@ -386,7 +379,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
       <Drawer
         title={
           <Space>
-            <WarningOutlined />
+            <AlertTriangle />
             <span>影响分析 - {selectedNode?.name}</span>
             {impactAnalysis && (
               <Tag color={riskLevelColors[impactAnalysis.risk_level]}>

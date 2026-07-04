@@ -20,17 +20,8 @@ import {
   Dropdown,
   message,
 } from 'antd';
-import {
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  DeleteOutlined,
-  DownloadOutlined,
-  MoreOutlined,
-  ExportOutlined,
-} from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import { Search, Plus, Pencil, Trash2, Download, Export, Eye, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -86,7 +77,8 @@ const CIList: React.FC = () => {
     try {
       const res = await CMDBApi.getCITypes();
       if (!isMountedRef.current) return;
-      const list = (res as any)?.data ?? res;
+      // 支持多种响应格式
+      const list = res?.data ?? res?.items ?? res;
       setTypes(Array.isArray(list) ? list : []);
     } catch (e) {
       if (!isMountedRef.current) return;
@@ -107,8 +99,8 @@ const CIList: React.FC = () => {
         status: currentFilters.status,
       });
       if (!isMountedRef.current || requestId !== requestIdRef.current) return;
-      setData((resp as any).items ?? (resp as any).cis ?? []);
-      setTotal((resp as any).total ?? 0);
+      setData(resp.items ?? resp.cis ?? []);
+      setTotal(resp.total ?? 0);
     } catch (error) {
       if (!isMountedRef.current || requestId !== requestIdRef.current) return;
       const errorMessage = getErrorMessage(error);
@@ -223,7 +215,7 @@ const CIList: React.FC = () => {
     onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
   };
 
-  const columns = [
+  const columns: ColumnsType<ConfigurationItem> = [
     {
       title: 'ID',
       dataIndex: 'id',
@@ -291,7 +283,7 @@ const CIList: React.FC = () => {
           <Tooltip title="编辑">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               aria-label="编辑"
               onClick={() => router.push(`/cmdb/cis/${record.id}/edit`)}
             />
@@ -300,7 +292,7 @@ const CIList: React.FC = () => {
             <Button
               type="text"
               danger
-              icon={<DeleteOutlined />}
+              icon={<Trash2 />}
               aria-label="删除"
               onClick={() => handleDelete(record.id)}
             />
@@ -320,7 +312,7 @@ const CIList: React.FC = () => {
         <Space wrap>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             onClick={() => router.push('/cmdb/cis/create')}
           >
             录入资产
@@ -347,7 +339,7 @@ const CIList: React.FC = () => {
                 search: '',
               })
             }
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<Search className="text-gray-400" />}
             style={{ width: 200 }}
           />
           <Select
@@ -382,7 +374,7 @@ const CIList: React.FC = () => {
             <Button type="primary" onClick={handleSearch}>
               查询
             </Button>
-            <Button icon={<ReloadOutlined />} onClick={loadData} loading={loading}>
+            <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
               刷新
             </Button>
           </Space>
@@ -395,10 +387,10 @@ const CIList: React.FC = () => {
               已选择 <strong>{selectedRowKeys.length}</strong> 项
             </span>
             <Space>
-              <Button size="small" icon={<ExportOutlined />} onClick={handleExport}>
+              <Button size="small" icon={<Export />} onClick={handleExport}>
                 导出
               </Button>
-              <Button size="small" danger icon={<DeleteOutlined />} onClick={handleBatchDelete}>
+              <Button size="small" danger icon={<Trash2 />} onClick={handleBatchDelete}>
                 批量删除
               </Button>
             </Space>
@@ -411,7 +403,7 @@ const CIList: React.FC = () => {
         <Table
           rowKey="id"
           rowSelection={rowSelection}
-          columns={columns as any}
+          columns={columns}
           dataSource={data}
           loading={loading}
           locale={{

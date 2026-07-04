@@ -19,17 +19,7 @@ import {
   Form,
   App,
 } from 'antd';
-import {
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  UserOutlined,
-  CalendarOutlined,
-  ClockCircleOutlined,
-  PlusOutlined,
-  FilterOutlined,
-  SortAscendingOutlined,
-} from '@ant-design/icons';
+import { Filter, Plus, Pencil, Trash2, User, Calendar, Clock, ArrowUpDown } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -147,7 +137,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   const getTicketMenu = (ticket: Ticket): MenuProps['items'] => [
     {
       key: 'view',
-      icon: <EditOutlined />,
+      icon: <Pencil />,
       label: '查看详情',
       onClick: () => {
         if (onTicketSelect) {
@@ -159,7 +149,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
     },
     {
       key: 'edit',
-      icon: <EditOutlined />,
+      icon: <Pencil />,
       label: '编辑',
       onClick: () => router.push(`/tickets/${ticket.id}`),
     },
@@ -168,7 +158,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
     },
     {
       key: 'delete',
-      icon: <DeleteOutlined />,
+      icon: <Trash2 />,
       label: '删除',
       danger: true,
       onClick: () => handleDeleteTicket(ticket),
@@ -263,14 +253,14 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
 
           {/* 时间信息 */}
           <div className="flex items-center text-xs text-gray-400">
-            <ClockCircleOutlined className="mr-1" />
+            <Clock className="mr-1" />
             {dayjs(ticket.createdAt).fromNow()}
           </div>
 
           {/* 分配人信息 */}
           {ticket.assignee && (
             <div className="flex items-center mt-2">
-              <Avatar size="small" icon={<UserOutlined />} className="mr-2" />
+              <Avatar size="small" icon={<User />} className="mr-2" />
               <Text className="text-xs">{ticket.assignee.name || ticket.assignee.username}</Text>
             </div>
           )}
@@ -278,7 +268,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           {/* 截止时间 */}
           {ticket.dueTime && (
             <div className="flex items-center mt-1">
-              <CalendarOutlined className="mr-1 text-xs text-red-500" />
+              <Calendar className="mr-1 text-xs text-red-500" />
               <Text className="text-xs text-red-500">
                 截止: {dayjs(ticket.dueTime).format('MM-DD HH:mm')}
               </Text>
@@ -345,7 +335,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
             <Space>
               <Button
                 type="primary"
-                icon={<PlusOutlined />}
+                icon={<Plus />}
                 onClick={() => router.push('/tickets/create')}
               >
                 新建工单

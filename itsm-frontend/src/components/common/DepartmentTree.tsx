@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Tree, Card, Spin, App } from 'antd';
-import { ClusterOutlined } from '@ant-design/icons';
+import { Network } from 'lucide-react';
 import { CommonApi } from '@/lib/api/';
 import type { Department } from '@/types/biz/common';
 
@@ -44,7 +44,7 @@ const DepartmentTree: React.FC = () => {
     <Card
       title={
         <span>
-          <ClusterOutlined /> 组织架构
+          <Network /> 组织架构
         </span>
       }
     >

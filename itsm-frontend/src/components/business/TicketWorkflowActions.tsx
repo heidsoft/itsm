@@ -17,18 +17,7 @@ import {
   Avatar,
   Tooltip,
 } from 'antd';
-import {
-  CheckOutlined,
-  CloseOutlined,
-  RollbackOutlined,
-  SendOutlined,
-  MailOutlined,
-  ArrowUpOutlined,
-  UserSwitchOutlined,
-  MoreOutlined,
-  FileTextOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+import { ArrowUp, X, Check, FileText, Clock, Undo, Mail } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type {
   TicketWorkflowState} from '@/types/ticket-workflow';
@@ -350,7 +339,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
       <Button
         key="accept"
         type="primary"
-        icon={<CheckOutlined />}
+        icon={<Check />}
         onClick={() => openActionModal(TicketWorkflowAction.ACCEPT)}
       >
         接单
@@ -363,14 +352,14 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
       <Space key="approval">
         <Button
           type="primary"
-          icon={<CheckOutlined />}
+          icon={<Check />}
           onClick={() => openActionModal(TicketWorkflowAction.APPROVE)}
         >
           审批通过
         </Button>
         <Button
           danger
-          icon={<CloseOutlined />}
+          icon={<X />}
           onClick={() => openActionModal(TicketWorkflowAction.APPROVE_REJECT)}
         >
           审批拒绝
@@ -384,7 +373,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
       <Button
         key="resolve"
         type="primary"
-        icon={<CheckOutlined />}
+        icon={<Check />}
         onClick={() => openActionModal(TicketWorkflowAction.RESOLVE)}
       >
         解决
@@ -410,7 +399,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
     moreActions.push({
       key: 'reject',
       label: '驳回',
-      icon: <CloseOutlined />,
+      icon: <X />,
       onClick: () => openActionModal(TicketWorkflowAction.REJECT),
     });
   }
@@ -419,7 +408,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
     moreActions.push({
       key: 'withdraw',
       label: '撤回',
-      icon: <RollbackOutlined />,
+      icon: <Undo />,
       onClick: () => openActionModal(TicketWorkflowAction.WITHDRAW),
     });
   }
@@ -437,7 +426,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
     moreActions.push({
       key: 'cc',
       label: '抄送',
-      icon: <MailOutlined />,
+      icon: <Mail />,
       onClick: () => openActionModal(TicketWorkflowAction.CC),
     });
   }
@@ -449,13 +438,13 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
     {
       key: 'escalate',
       label: '升级',
-      icon: <ArrowUpOutlined />,
+      icon: <ArrowUp />,
       onClick: () => openActionModal(TicketWorkflowAction.ESCALATE),
     },
     {
       key: 'reopen',
       label: '重开',
-      icon: <RollbackOutlined />,
+      icon: <Undo />,
       onClick: () => openActionModal(TicketWorkflowAction.REOPEN),
     }
   );
@@ -533,7 +522,7 @@ export const ApprovalProgress: React.FC<{
           <div className="text-sm text-gray-500 mb-2">当前审批人：</div>
           <Space wrap>
             {workflowState.pendingApprovers.map(approver => (
-              <Tag key={approver.id} icon={<ClockCircleOutlined />} color="blue">
+              <Tag key={approver.id} icon={<Clock />} color="blue">
                 {approver.fullName}
               </Tag>
             ))}
@@ -577,7 +566,7 @@ export const ApprovalProgress: React.FC<{
                   <div className="text-sm text-gray-500 mt-1">{approval.levelName}</div>
                   {approval.comment && (
                     <div className="text-sm mt-1 text-gray-600">
-                      <FileTextOutlined className="mr-1" />
+                      <FileText className="mr-1" />
                       {approval.comment}
                     </div>
                   )}

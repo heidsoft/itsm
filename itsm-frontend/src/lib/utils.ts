@@ -222,6 +222,93 @@ export function isValidPhone(phone: string): boolean {
 }
 
 /**
+ * 将 snake_case 字符串转换为 camelCase
+ * @param str snake_case 字符串
+ * @returns camelCase 字符串
+ */
+export function snakeToCamel(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+/**
+ * 将对象的所有键从 snake_case 转换为 camelCase
+ * @param obj 要转换的对象
+ * @returns 转换后的对象
+ */
+export function keysToCamelCase<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
+  if (obj === null || typeof obj !== 'object') return obj as unknown as Record<string, unknown>;
+  if (Array.isArray(obj)) return obj.map(item => keysToCamelCase(item as Record<string, unknown>)) as unknown as Record<string, unknown>;
+
+  const result: Record<string, unknown> = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const camelKey = snakeToCamel(key);
+      const value = obj[key];
+      result[camelKey] = typeof value === 'object' && value !== null
+        ? keysToCamelCase(value as Record<string, unknown>)
+        : value;
+    }
+  }
+  return result;
+}
+
+/**
+ * 从 API 响应中提取数据，支持 snake_case 和 camelCase
+ * @param response API 响应对象
+ * @param key 要提取的键名
+ * @returns 提取的数据
+ */
+export function getApiData<T>(response: Record<string, unknown>, key: keyof T): unknown {
+  const camelKey = snakeToCamel(key as string);
+  const snakeKey = key as string;
+
+  // 优先返回 camelCase 格式
+  if (camelKey in response) return response[camelKey];
+  // 其次返回 snake_case 格式
+  if (snakeKey in response) return response[snakeKey];
+  // 返回 undefined
+  return undefined;
+}
+
+/**
+ * 从 API 分页响应中提取列表数据
+ * @param response API 响应对象
+ * @returns 列表数据
+ */
+export function extractListData<T>(response: Record<string, unknown>): T[] {
+  const items = getApiData<{ items?: T[] }>(response, 'items') as T[] | undefined;
+  if (items) return items;
+
+  // 尝试常见变体
+  const data = response.data;
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === 'object') {
+    const dataItems = getApiData<{ items?: T[] }>(data as Record<string, unknown>, 'items') as T[] | undefined;
+    if (dataItems) return dataItems;
+  }
+
+  return [];
+}
+
+/**
+ * 从 API 分页响应中提取总数
+ * @param response API 响应对象
+ * @returns 数据总数
+ */
+export function extractTotal(response: Record<string, unknown>): number {
+  const total = getApiData<{ total?: number }>(response, 'total') as number | undefined;
+  if (typeof total === 'number') return total;
+
+  const data = response.data;
+  if (data && typeof data === 'object') {
+    const dataTotal = getApiData<{ total?: number }>(data as Record<string, unknown>, 'total') as number | undefined;
+    if (typeof dataTotal === 'number') return dataTotal;
+  }
+
+  return 0;
+}
+
+/**
  * 获取URL查询参数
  * @param url URL字符串
  * @returns 查询参数对象

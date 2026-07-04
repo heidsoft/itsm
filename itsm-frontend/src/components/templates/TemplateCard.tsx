@@ -19,20 +19,7 @@ import {
   Dropdown,
   type MenuProps,
 } from 'antd';
-import {
-  EditOutlined,
-  CopyOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  StarOutlined,
-  StarFilled,
-  MoreOutlined,
-  UserOutlined,
-  ClockCircleOutlined,
-  FileTextOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+import { Pencil, Trash2, Copy, User, FileText, Eye, Clock, AlertCircle, CheckCircle, Star } from 'lucide-react';
 import type { TicketTemplate } from '@/types/template';
 
 export interface TemplateCardProps {
@@ -71,19 +58,19 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
     {
       key: 'view',
       label: '查看详情',
-      icon: <EyeOutlined />,
+      icon: <Eye />,
       onClick: () => onView?.(template),
     },
     {
       key: 'edit',
       label: '编辑模板',
-      icon: <EditOutlined />,
+      icon: <Pencil />,
       onClick: () => onEdit?.(template),
     },
     {
       key: 'duplicate',
       label: '复制模板',
-      icon: <CopyOutlined />,
+      icon: <Copy />,
       onClick: () => onDuplicate?.(template),
     },
     {
@@ -92,7 +79,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
     {
       key: 'delete',
       label: '删除模板',
-      icon: <DeleteOutlined />,
+      icon: <Trash2 />,
       danger: true,
       onClick: () => {},
     },
@@ -129,7 +116,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
                 : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             }}
           >
-            {template.icon || <FileTextOutlined />}
+            {template.icon || <FileText />}
           </div>
         )}
       </div>
@@ -142,7 +129,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
             <Button
               type="text"
               size="small"
-              icon={isFavorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
+              icon={isFavorite ? <Star style={{ color: '#faad14' }} /> : <Star />}
               onClick={handleFavoriteClick}
             />
           </Tooltip>
@@ -170,7 +157,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
         <Space size="large">
           <Tooltip title="使用次数">
             <Space size={4}>
-              <FileTextOutlined className="text-gray-400" />
+              <FileText className="text-gray-400" />
               <span className="text-sm text-gray-600">{template.usageCount}</span>
             </Space>
           </Tooltip>
@@ -196,13 +183,13 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
       <div className="mt-3 flex items-center justify-between">
         <Space size={4}>
           {template.isDraft && (
-            <Tag color="warning" icon={<ExclamationCircleOutlined />}>
+            <Tag color="warning" icon={<AlertCircle />}>
               草稿
             </Tag>
           )}
           {!template.isActive && <Tag color="default">已禁用</Tag>}
           {template.isActive && !template.isDraft && (
-            <Tag color="success" icon={<CheckCircleOutlined />}>
+            <Tag color="success" icon={<CheckCircle />}>
               已发布
             </Tag>
           )}
@@ -228,7 +215,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           }}
         >
-          {template.icon || <FileTextOutlined />}
+          {template.icon || <FileText />}
         </div>
 
         {/* 中间：信息 */}
@@ -251,7 +238,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               <Button
                 type="text"
                 size="small"
-                icon={isFavorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
+                icon={isFavorite ? <Star style={{ color: '#faad14' }} /> : <Star />}
                 onClick={handleFavoriteClick}
               />
             </Tooltip>
@@ -275,19 +262,19 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
             <Space size="large" className="text-sm text-gray-500">
               <Tooltip title="使用次数">
                 <Space size={4}>
-                  <FileTextOutlined />
+                  <FileText />
                   <span>{template.usageCount}</span>
                 </Space>
               </Tooltip>
               <Tooltip title="评分">
                 <Space size={4}>
-                  <StarFilled style={{ color: '#faad14', fontSize: 12 }} />
+                  <Star style={{ color: '#faad14', fontSize: 12 }} />
                   <span>{template.rating.toFixed(1)}</span>
                 </Space>
               </Tooltip>
               <Tooltip title="更新时间">
                 <Space size={4}>
-                  <ClockCircleOutlined />
+                  <Clock />
                   <span>{new Date(template.updatedAt).toLocaleDateString()}</span>
                 </Space>
               </Tooltip>
@@ -300,7 +287,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
           <Tooltip title="查看">
             <Button
               type="text"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={e => {
                 e.stopPropagation();
                 onView?.(template);
@@ -310,7 +297,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
           <Tooltip title="编辑">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={e => {
                 e.stopPropagation();
                 onEdit?.(template);
@@ -320,7 +307,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
           <Tooltip title="复制">
             <Button
               type="text"
-              icon={<CopyOutlined />}
+              icon={<Copy />}
               onClick={e => {
                 e.stopPropagation();
                 onDuplicate?.(template);
@@ -340,7 +327,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
             <Button
               type="text"
               danger
-              icon={<DeleteOutlined />}
+              icon={<Trash2 />}
               onClick={e => e.stopPropagation()}
             />
           </Popconfirm>

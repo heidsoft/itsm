@@ -21,17 +21,7 @@ import {
   Empty,
   Tooltip,
 } from 'antd';
-import {
-  SearchOutlined,
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  ReloadOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+import { Search, Plus, Pencil, Trash2, Eye, RotateCcw, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import type { KEDBResponse, KEDBStatsResponse } from '@/lib/api/kedb-api';
 import { KEDBApi } from '@/lib/api/kedb-api';
@@ -278,7 +268,7 @@ export default function KnownErrorsPage() {
             <Button
               type="link"
               size="small"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => handleView(record)}
             />
           </Tooltip>
@@ -286,7 +276,7 @@ export default function KnownErrorsPage() {
             <Button
               type="link"
               size="small"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => handleEdit(record)}
             />
           </Tooltip>
@@ -295,7 +285,7 @@ export default function KnownErrorsPage() {
               <Button
                 type="link"
                 size="small"
-                icon={<CheckCircleOutlined />}
+                icon={<CheckCircle />}
                 onClick={() => handlePromote(record.id)}
               />
             </Tooltip>
@@ -308,7 +298,7 @@ export default function KnownErrorsPage() {
             cancelText="取消"
           >
             <Tooltip title="删除">
-              <Button type="link" size="small" danger icon={<DeleteOutlined />} />
+              <Button type="link" size="small" danger icon={<Trash2 />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -413,7 +403,7 @@ export default function KnownErrorsPage() {
               ))}
             </Select>
             <Space>
-              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
+              <Button type="primary" icon={<Search />} onClick={handleSearch}>
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
@@ -425,7 +415,7 @@ export default function KnownErrorsPage() {
         <Card
           title="已知错误列表"
           extra={
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+            <Button type="primary" icon={<Plus />} onClick={handleAdd}>
               新建已知错误
             </Button>
           }

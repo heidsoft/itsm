@@ -154,7 +154,7 @@ const MyRequestsPage = () => {
         page,
         pageSize,
         status: status === 'all' ? undefined : status,
-      } as any);
+      });
 
       setRequests((data.requests || []) as ServiceRequest[]);
       setTotal(data.total || 0);

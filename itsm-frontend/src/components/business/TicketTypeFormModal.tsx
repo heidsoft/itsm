@@ -18,13 +18,7 @@ import {
   Tag,
   Collapse,
 } from 'antd';
-import {
-  PlusOutlined,
-  DeleteOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons';
+import { ArrowUp, ArrowDown, Plus, Trash2, Info } from 'lucide-react';
 import type {
   TicketTypeDefinition,
   CustomFieldDefinition,
@@ -245,11 +239,11 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <Form.Item label="图标" name="icon">
                 <Select placeholder="选择图标">
-                  <Option value="BugOutlined">🐛 故障</Option>
-                  <Option value="CustomerServiceOutlined">🎧 服务</Option>
-                  <Option value="ToolOutlined">🔧 维护</Option>
-                  <Option value="QuestionCircleOutlined">❓ 问题</Option>
-                  <Option value="ThunderboltOutlined">⚡ 紧急</Option>
+                  <Option value="Bug">🐛 故障</Option>
+                  <Option value="Headphones">🎧 服务</Option>
+                  <Option value="Wrench">🔧 维护</Option>
+                  <Option value="HelpCircle">❓ 问题</Option>
+                  <Option value="Zap">⚡ 紧急</Option>
                 </Select>
               </Form.Item>
 
@@ -273,14 +267,14 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
               <span className="text-gray-600">
                 配置此工单类型的自定义字段（共 {customFields.length} 个）
               </span>
-              <Button type="dashed" icon={<PlusOutlined />} onClick={addCustomField}>
+              <Button type="dashed" icon={<Plus />} onClick={addCustomField}>
                 添加字段
               </Button>
             </div>
 
             {customFields.length === 0 ? (
               <div className="text-center py-8 text-gray-400">
-                <InfoCircleOutlined className="text-4xl mb-2" />
+                <Info className="text-4xl mb-2" />
                 <div>暂无自定义字段，点击上方按钮添加</div>
               </div>
             ) : (
@@ -294,14 +288,14 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                         <Button
                           type="text"
                           size="small"
-                          icon={<ArrowUpOutlined />}
+                          icon={<ArrowUp />}
                           disabled={index === 0}
                           onClick={() => moveField(index, 'up')}
                         />
                         <Button
                           type="text"
                           size="small"
-                          icon={<ArrowDownOutlined />}
+                          icon={<ArrowDown />}
                           disabled={index === customFields.length - 1}
                           onClick={() => moveField(index, 'down')}
                         />
@@ -309,7 +303,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                           type="text"
                           size="small"
                           danger
-                          icon={<DeleteOutlined />}
+                          icon={<Trash2 />}
                           onClick={() => removeCustomField(index)}
                         />
                       </Space>
@@ -373,14 +367,14 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
             <div className="space-y-4 mt-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">配置审批级别（共 {approvalChain.length} 级）</span>
-                <Button type="dashed" icon={<PlusOutlined />} onClick={addApprovalLevel}>
+                <Button type="dashed" icon={<Plus />} onClick={addApprovalLevel}>
                   添加审批级别
                 </Button>
               </div>
 
               {approvalChain.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">
-                  <InfoCircleOutlined className="text-4xl mb-2" />
+                  <Info className="text-4xl mb-2" />
                   <div>暂无审批级别，点击上方按钮添加</div>
                 </div>
               ) : (
@@ -395,7 +389,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                           type="text"
                           size="small"
                           danger
-                          icon={<DeleteOutlined />}
+                          icon={<Trash2 />}
                           onClick={() => removeApprovalLevel(index)}
                         />
                       }
@@ -524,10 +518,10 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
           {form.getFieldValue('autoAssignEnabled') && (
             <div className="mt-4">
               <div className="text-sm text-gray-600 mb-2">
-                <InfoCircleOutlined className="mr-1" />
+                <Info className="mr-1" />
                 配置自动分配规则，系统将根据规则自动分配工单
               </div>
-              <Button type="dashed" block icon={<PlusOutlined />}>
+              <Button type="dashed" block icon={<Plus />}>
                 添加分配规则
               </Button>
             </div>

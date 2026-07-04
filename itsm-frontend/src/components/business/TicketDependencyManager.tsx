@@ -26,19 +26,7 @@ import {
   Empty,
   Divider,
 } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  LinkOutlined,
-  BranchesOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ShareAltOutlined,
-  BarChartOutlined,
-} from '@ant-design/icons';
+import { Plus, Pencil, Trash2, Eye, Clock, Link, Share2, AlertTriangle, CheckCircle, BarChart3, GitBranch } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -323,7 +311,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
             <Button
               type="link"
               size="small"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => {
                 // 跳转到工单详情页
                 window.open(`/tickets/${record.target_ticket_id}`, '_blank');
@@ -337,7 +325,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
               <Button
                 type="link"
                 size="small"
-                icon={<EditOutlined />}
+                icon={<Pencil />}
                 onClick={() => {
                   setEditingDependency(record);
                   form.setFieldsValue(record);
@@ -350,7 +338,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                 title="确定要删除这个依赖关系吗？"
                 onConfirm={() => handleDeleteDependency(record.id)}
               >
-                <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+                <Button type="link" size="small" danger icon={<Trash2 />}>
                   删除
                 </Button>
               </Popconfirm>
@@ -394,9 +382,9 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       key: 'impact_type',
       render: (type: string) => {
         const typeMap: Record<string, { text: string; icon: React.ReactNode }> = {
-          blocked: { text: '被阻塞', icon: <WarningOutlined /> },
-          delayed: { text: '延迟', icon: <ClockCircleOutlined /> },
-          affected: { text: '受影响', icon: <CheckCircleOutlined /> },
+          blocked: { text: '被阻塞', icon: <AlertTriangle /> },
+          delayed: { text: '延迟', icon: <Clock /> },
+          affected: { text: '受影响', icon: <CheckCircle /> },
         };
         const config = typeMap[type] || { text: type, icon: null };
         return (
@@ -494,7 +482,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
               key: 'dependencies',
               label: (
                 <span>
-                  <LinkOutlined /> 依赖关系
+                  <Link /> 依赖关系
                   {dependencies.length > 0 && (
                     <Badge count={dependencies.length} className="ml-2" />
                   )}
@@ -509,7 +497,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                     {canManage && (
                       <Button
                         type="primary"
-                        icon={<PlusOutlined />}
+                        icon={<Plus />}
                         onClick={() => {
                           setEditingDependency(null);
                           form.resetFields();
@@ -531,7 +519,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                       {canManage && (
                         <Button
                           type="primary"
-                          icon={<PlusOutlined />}
+                          icon={<Plus />}
                           onClick={() => {
                             setEditingDependency(null);
                             form.resetFields();
@@ -573,7 +561,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
               key: 'impact',
               label: (
                 <span>
-                  <WarningOutlined /> 影响分析
+                  <AlertTriangle /> 影响分析
                   {impactAnalysis.length > 0 && (
                     <Badge count={impactAnalysis.length} className="ml-2" />
                   )}
@@ -606,7 +594,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
               key: 'graph',
               label: (
                 <span>
-                  <BranchesOutlined /> 依赖图谱
+                  <GitBranch /> 依赖图谱
                 </span>
               ),
               children: (
@@ -629,7 +617,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
               key: 'stats',
               label: (
                 <span>
-                  <BarChartOutlined /> 统计信息
+                  <BarChart3 /> 统计信息
                 </span>
               ),
               children: (
@@ -637,7 +625,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                   <Row gutter={16}>
                     <Col xs={24} sm={12} md={6}>
                       <Card>
-                        <Statistic title="总依赖数" value={stats.total} prefix={<LinkOutlined />} />
+                        <Statistic title="总依赖数" value={stats.total} prefix={<Link />} />
                       </Card>
                     </Col>
                     <Col xs={24} sm={12} md={6}>
@@ -646,7 +634,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                           title="阻塞中"
                           value={stats.blocking}
                           styles={{ content: { color: '#ff4d4f' } }}
-                          prefix={<WarningOutlined />}
+                          prefix={<AlertTriangle />}
                         />
                       </Card>
                     </Col>
@@ -656,7 +644,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                           title="硬依赖"
                           value={stats.hardDeps}
                           styles={{ content: { color: '#faad14' } }}
-                          prefix={<LinkOutlined />}
+                          prefix={<Link />}
                         />
                       </Card>
                     </Col>
@@ -666,7 +654,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                           title="高影响"
                           value={stats.highImpact}
                           styles={{ content: { color: '#ff4d4f' } }}
-                          prefix={<WarningOutlined />}
+                          prefix={<AlertTriangle />}
                         />
                       </Card>
                     </Col>

@@ -7,14 +7,7 @@
 
 import React from 'react';
 import { Modal, Progress, Space, Button, Alert, Statistic, Row, Col, List, Tag, Spin } from 'antd';
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  PauseCircleOutlined,
-  PlayCircleOutlined,
-  StopOutlined,
-  DownloadOutlined,
-} from '@ant-design/icons';
+import { Download, CheckCircle, XCircle, PlayCircle, PauseCircle } from 'lucide-react';
 import { useBatchOperationProgressQuery } from '@/lib/hooks/useBatchOperations';
 import { BatchOperationStatus } from '@/types/batch-operations';
 
@@ -108,7 +101,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
               <Statistic
                 title="总数"
                 value={progress.totalCount}
-                prefix={<CheckCircleOutlined />}
+                prefix={<CheckCircle />}
               />
             </Col>
             <Col span={8}>
@@ -116,7 +109,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
                 title="成功"
                 value={progress.successCount}
                 styles={{ content: { color: '#3f8600' } }}
-                prefix={<CheckCircleOutlined />}
+                prefix={<CheckCircle />}
               />
             </Col>
             <Col span={8}>
@@ -124,7 +117,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
                 title="失败"
                 value={progress.failedCount}
                 styles={{ content: { color: '#cf1322' } }}
-                prefix={<CloseCircleOutlined />}
+                prefix={<XCircle />}
               />
             </Col>
           </Row>
@@ -173,9 +166,9 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
           {isRunning && (
             <Space>
               {isPaused ? (
-                <Button icon={<PlayCircleOutlined />}>继续</Button>
+                <Button icon={<PlayCircle />}>继续</Button>
               ) : (
-                <Button icon={<PauseCircleOutlined />}>暂停</Button>
+                <Button icon={<PauseCircle />}>暂停</Button>
               )}
               <Button danger icon={<StopOutlined />}>
                 取消

@@ -19,14 +19,8 @@ import {
   Modal,
   Empty,
 } from 'antd';
-import {
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  PlusOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import { Search, Plus, Pencil, Trash2, Eye, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -104,14 +98,14 @@ const ProblemList: React.FC<ProblemListProps> = ({
         ...query,
         ...values,
       });
-      setData((resp.problems || []) as unknown as Problem[]);
-      setTotal((resp as any).total || 0);
+      setData(resp.problems || resp.items || []);
+      setTotal(resp.total || 0);
     } catch (error) {
       // 只在有实际错误时显示失败消息，不是因为表单验证导致的
       if (
         error &&
         typeof error === 'object' &&
-        !('name' in error && (error as any).name === 'ValidationError')
+        !('name' in error && (error as { name?: string }).name === 'ValidationError')
       ) {
         console.error('Failed to load problems:', error);
         message.error('加载问题列表失败');
@@ -151,7 +145,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
     });
   };
 
-  const columns = [
+  const columns: ColumnsType<Problem> = [
     {
       title: 'ID',
       dataIndex: 'id',
@@ -198,14 +192,14 @@ const ProblemList: React.FC<ProblemListProps> = ({
           <Tooltip title="查看详情">
             <Button
               type="text"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => router.push(`/problems/${record.id}`)}
             />
           </Tooltip>
           <Tooltip title="编辑">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => router.push(`/problems/${record.id}/edit`)}
             />
           </Tooltip>
@@ -213,7 +207,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
             <Button
               type="text"
               danger
-              icon={<DeleteOutlined />}
+              icon={<Trash2 />}
               onClick={() => handleDelete(record.id)}
             />
           </Tooltip>
@@ -232,7 +226,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
           </div>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             onClick={() => router.push('/problems/new')}
             size="large"
           >
@@ -247,7 +241,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
             <Input
               placeholder="搜索标题或内容"
               allowClear
-              prefix={<SearchOutlined className="text-gray-400" />}
+              prefix={<Search className="text-gray-400" />}
               className="w-64"
             />
           </Form.Item>
@@ -288,7 +282,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
         ) : (
           <Table
             rowKey="id"
-            columns={columns as any}
+            columns={columns}
             dataSource={data}
             loading={loading}
             pagination={{

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Modal, Typography, List, Tag, Space, Divider } from 'antd';
-import { ExclamationCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 import type { Ticket } from '@/lib/services/ticket-service';
 
 const { Text, Paragraph } = Typography;
@@ -43,7 +43,7 @@ const OPERATION_CONFIG: Record<
 > = {
   delete: {
     title: '确认批量删除',
-    icon: <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />,
+    icon: <AlertCircle style={{ color: '#ff4d4f' }} />,
     description: '此操作将永久删除选中的工单，且无法恢复',
     danger: true,
     getContent: props => (
@@ -82,7 +82,7 @@ const OPERATION_CONFIG: Record<
   },
   assign: {
     title: '确认批量分配',
-    icon: <CheckCircleOutlined style={{ color: '#1890ff' }} />,
+    icon: <CheckCircle style={{ color: '#1890ff' }} />,
     description: '将选中的工单分配给指定处理人',
     getContent: props => (
       <div>
@@ -123,7 +123,7 @@ const OPERATION_CONFIG: Record<
   },
   updateStatus: {
     title: '确认批量更新状态',
-    icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
+    icon: <CheckCircle style={{ color: '#52c41a' }} />,
     description: '批量更新选中工单的状态',
     getContent: props => (
       <div>
@@ -164,7 +164,7 @@ const OPERATION_CONFIG: Record<
   },
   updatePriority: {
     title: '确认批量更新优先级',
-    icon: <CheckCircleOutlined style={{ color: '#faad14' }} />,
+    icon: <CheckCircle style={{ color: '#faad14' }} />,
     description: '批量更新选中工单的优先级',
     getContent: props => (
       <div>
@@ -205,7 +205,7 @@ const OPERATION_CONFIG: Record<
   },
   export: {
     title: '确认导出',
-    icon: <CheckCircleOutlined style={{ color: '#1890ff' }} />,
+    icon: <CheckCircle style={{ color: '#1890ff' }} />,
     description: '导出选中的工单数据',
     getContent: props => (
       <div>
@@ -220,7 +220,7 @@ const OPERATION_CONFIG: Record<
   },
   archive: {
     title: '确认批量归档',
-    icon: <CheckCircleOutlined style={{ color: '#722ed1' }} />,
+    icon: <CheckCircle style={{ color: '#722ed1' }} />,
     description: '将选中的工单归档',
     getContent: props => (
       <div>

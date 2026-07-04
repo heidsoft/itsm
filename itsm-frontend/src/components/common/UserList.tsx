@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Tag, Space, Button, App } from 'antd';
-import { UserOutlined, TeamOutlined } from '@ant-design/icons';
+import { User, Users } from 'lucide-react';
 import { CommonApi } from '@/lib/api/';
 import { UserRoleLabels } from '@/constants/common';
 import type { User } from '@/types/biz/common';
@@ -37,7 +37,7 @@ const UserList: React.FC = () => {
       key: 'username',
       render: (text: string) => (
         <Space>
-          <UserOutlined /> {text}
+          <User /> {text}
         </Space>
       ),
     },
@@ -79,7 +79,7 @@ const UserList: React.FC = () => {
     <Card
       title={
         <span>
-          <TeamOutlined /> 用户管理
+          <Users /> 用户管理
         </span>
       }
     >

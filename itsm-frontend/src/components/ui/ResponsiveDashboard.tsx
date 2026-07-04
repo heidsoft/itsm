@@ -2,13 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Row, Col, Typography, Space, Button, Dropdown, Skeleton, Card } from 'antd';
-import {
-  SettingOutlined,
-  ReloadOutlined,
-  FullscreenOutlined,
-  DownloadOutlined,
-  FilterOutlined,
-} from '@ant-design/icons';
+import { Filter, Download, Settings, RotateCcw, Maximize } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -191,7 +185,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
           key="refresh"
           type="text"
           size="small"
-          icon={<ReloadOutlined />}
+          icon={<RotateCcw />}
           onClick={() => onWidgetRefresh(widget.id)}
           title="刷新"
         />
@@ -204,7 +198,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
           key="configure"
           type="text"
           size="small"
-          icon={<SettingOutlined />}
+          icon={<Settings />}
           onClick={() => onWidgetConfigure(widget.id)}
           title="配置"
         />
@@ -275,7 +269,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
       </div>
       <Space>
         <Button
-          icon={<FilterOutlined />}
+          icon={<Filter />}
           onClick={() => {
             /* 打开过滤器 */
           }}
@@ -283,7 +277,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
           过滤
         </Button>
         <Button
-          icon={<ReloadOutlined />}
+          icon={<RotateCcw />}
           onClick={() => {
             /* 刷新所有 */
           }}
@@ -292,7 +286,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
           刷新
         </Button>
         <Button
-          icon={<DownloadOutlined />}
+          icon={<Download />}
           onClick={() => {
             /* 导出数据 */
           }}
@@ -306,26 +300,26 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
                 {
                   key: 'addWidget',
                   label: '添加组件',
-                  icon: <SettingOutlined />,
+                  icon: <Settings />,
                 },
                 {
                   key: 'editLayout',
                   label: '编辑布局',
-                  icon: <SettingOutlined />,
+                  icon: <Settings />,
                 },
                 {
                   key: 'settings',
                   label: '仪表盘设置',
-                  icon: <SettingOutlined />,
+                  icon: <Settings />,
                 },
               ],
             }}
           >
-            <Button icon={<SettingOutlined />}>设置</Button>
+            <Button icon={<Settings />}>设置</Button>
           </Dropdown>
         )}
         <Button
-          icon={<FullscreenOutlined />}
+          icon={<Maximize />}
           onClick={() => {
             /* 进入全屏 */
           }}

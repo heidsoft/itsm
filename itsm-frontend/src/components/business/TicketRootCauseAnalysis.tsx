@@ -25,17 +25,7 @@ import {
   Statistic,
   Tooltip,
 } from 'antd';
-import {
-  SearchOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ReloadOutlined,
-  DownloadOutlined,
-  FileTextOutlined,
-  LinkOutlined,
-  BarChartOutlined,
-} from '@ant-design/icons';
+import { Search, Download, FileText, Clock, RotateCcw, Link, AlertTriangle, CheckCircle, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { TicketRootCauseApi } from '@/lib/api/ticket-root-cause-api';
@@ -256,7 +246,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
           <Space>
             <Button
               type="primary"
-              icon={<SearchOutlined />}
+              icon={<Search />}
               onClick={performAnalysis}
               loading={analyzing}
             >
@@ -264,14 +254,14 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
             </Button>
             <Tooltip title="导出功能即将推出">
               <Button
-                icon={<DownloadOutlined />}
+                icon={<Download />}
                 disabled
                 onClick={() => antMessage.info('导出功能即将推出，敬请期待')}
               >
                 导出报告
               </Button>
             </Tooltip>
-            <Button icon={<ReloadOutlined />} onClick={performAnalysis} loading={analyzing}>
+            <Button icon={<RotateCcw />} onClick={performAnalysis} loading={analyzing}>
               刷新
             </Button>
           </Space>
@@ -434,7 +424,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                         <Statistic
                           title="受影响工单"
                           value={selectedRootCause.impact_scope.affected_tickets}
-                          prefix={<FileTextOutlined />}
+                          prefix={<FileText />}
                         />
                       </Card>
                     </Col>
@@ -443,7 +433,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                         <Statistic
                           title="受影响用户"
                           value={selectedRootCause.impact_scope.affected_users}
-                          prefix={<LinkOutlined />}
+                          prefix={<Link />}
                         />
                       </Card>
                     </Col>

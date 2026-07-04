@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Form, Select, DatePicker, Input, Button, Space, Card, Tag } from 'antd';
-import { SearchOutlined, ClearOutlined, FilterOutlined } from '@ant-design/icons';
+import { Search, Filter } from 'lucide-react';
 import type { TicketFilters } from '@/types/ticket';
 
 const { RangePicker } = DatePicker;
@@ -128,7 +128,7 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
     <Card
       title={
         <Space>
-          <FilterOutlined />
+          <Filter />
           <span>筛选条件</span>
         </Space>
       }
@@ -145,7 +145,7 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* 搜索关键词 */}
           <Form.Item label="搜索" name="search">
-            <Input placeholder="搜索工单编号、标题" prefix={<SearchOutlined />} allowClear />
+            <Input placeholder="搜索工单编号、标题" prefix={<Search />} allowClear />
           </Form.Item>
 
           {/* 状态筛选 */}
@@ -231,7 +231,7 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
           <Button icon={<ClearOutlined />} onClick={handleReset}>
             重置
           </Button>
-          <Button type="primary" icon={<SearchOutlined />} onClick={onSearch} loading={loading}>
+          <Button type="primary" icon={<Search />} onClick={onSearch} loading={loading}>
             搜索
           </Button>
         </div>

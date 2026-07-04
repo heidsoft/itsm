@@ -2,13 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Tag, Space, Modal, Form, Input, Select, TreeSelect, App } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  TeamOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+import { Plus, Pencil, Trash2, Users, RefreshCw } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type { Department } from '@/lib/services/department-service';
 import { departmentService } from '@/lib/services/department-service';
@@ -82,7 +76,7 @@ export default function DepartmentsPage() {
       key: 'manager',
       render: (text: string) => (
         <Space>
-          <TeamOutlined />
+          <Users />
           {text || '-'}
         </Space>
       ),
@@ -97,11 +91,11 @@ export default function DepartmentsPage() {
       key: 'action',
       render: (_: unknown, record: Department) => (
         <Space size="middle">
-          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          <Button type="text" icon={<Pencil />} onClick={() => handleEdit(record)} />
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<Trash2 />}
             onClick={() => handleDelete(record)}
           />
         </Space>
@@ -167,13 +161,13 @@ export default function DepartmentsPage() {
         },
       }}
       extra={[
-        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchDepartments} loading={fetching}>
+        <Button key="refresh" icon={<RefreshCw />} onClick={fetchDepartments} loading={fetching}>
           {t('common.refresh')}
         </Button>,
         <Button
           key="create"
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<Plus />}
           onClick={() => {
             form.resetFields();
             setIsModalVisible(true);

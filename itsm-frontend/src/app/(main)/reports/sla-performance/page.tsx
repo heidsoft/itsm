@@ -26,12 +26,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import {
-  ReloadOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+import { Clock, RotateCcw, CheckCircle, XCircle } from 'lucide-react';
 
 const { Title, Text } = Typography;
 
@@ -131,7 +126,7 @@ const SLAPerformanceReport = () => {
             <Text className="text-gray-600">SLA合规率监控</Text>
           </Col>
           <Col>
-            <Button icon={<ReloadOutlined />} onClick={loadData}>
+            <Button icon={<RotateCcw />} onClick={loadData}>
               刷新数据
             </Button>
           </Col>
@@ -162,7 +157,7 @@ const SLAPerformanceReport = () => {
                             : '#ff4d4f',
                     },
                   }}
-                  prefix={<CheckCircleOutlined />}
+                  prefix={<CheckCircle />}
                 />
               </Card>
             </Col>
@@ -172,7 +167,7 @@ const SLAPerformanceReport = () => {
                   title="达标次数"
                   value={totalMet}
                   styles={{ content: { color: COLORS.met } }}
-                  prefix={<CheckCircleOutlined />}
+                  prefix={<CheckCircle />}
                 />
               </Card>
             </Col>
@@ -182,7 +177,7 @@ const SLAPerformanceReport = () => {
                   title="违规次数"
                   value={totalBreached}
                   styles={{ content: { color: COLORS.breached } }}
-                  prefix={<CloseCircleOutlined />}
+                  prefix={<XCircle />}
                 />
               </Card>
             </Col>
@@ -248,14 +243,14 @@ const SLAPerformanceReport = () => {
                     />
                     <div className="flex justify-between mt-2 text-sm text-gray-500">
                       <span>
-                        <CheckCircleOutlined
+                        <CheckCircle
                           className="inline mr-1"
                           style={{ color: COLORS.met }}
                         />
                         {sla.met}%
                       </span>
                       <span>
-                        <CloseCircleOutlined
+                        <XCircle
                           className="inline mr-1"
                           style={{ color: COLORS.breached }}
                         />

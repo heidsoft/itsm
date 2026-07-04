@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Table, Tag, Space, Button, Tooltip, Popconfirm } from 'antd';
-import { EyeOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
+import { Pencil, Trash2, User, Eye } from 'lucide-react';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { Ticket } from '@/types/ticket';
 import { AvatarImage } from '@/components/ui/OptimizedImage';
@@ -188,7 +188,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
             <Button
               type="link"
               size="small"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => onView(record)}
             />
           </Tooltip>
@@ -198,7 +198,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
               <Button
                 type="link"
                 size="small"
-                icon={<EditOutlined />}
+                icon={<Pencil />}
                 onClick={() => onEdit(record)}
               />
             </Tooltip>
@@ -212,7 +212,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
               cancelText="取消"
             >
               <Tooltip title="删除">
-                <Button type="link" size="small" danger icon={<DeleteOutlined />} />
+                <Button type="link" size="small" danger icon={<Trash2 />} />
               </Tooltip>
             </Popconfirm>
           )}

@@ -2,14 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Tag, Space, Modal, Form, Input, Select, Tabs, message } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  AppstoreOutlined,
-  ApiOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+import { Plus, Pencil, Trash2, LayoutGrid, RefreshCw, Plug } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type { Application, Microservice } from '@/lib/services/application-service';
 import { applicationService } from '@/lib/services/application-service';
@@ -61,7 +54,7 @@ export default function ApplicationsPage() {
       key: 'name',
       render: (text: string) => (
         <Space>
-          <AppstoreOutlined />
+          <LayoutGrid />
           <span className="font-medium">{text}</span>
         </Space>
       ),
@@ -94,13 +87,13 @@ export default function ApplicationsPage() {
         <Space size="middle">
           <Button
             type="text"
-            icon={<EditOutlined />}
+            icon={<Pencil />}
             onClick={() => handleEdit(record as ApplicationRecord, 'application')}
           />
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<Trash2 />}
             onClick={() => handleDelete(record as ApplicationRecord)}
           />
         </Space>
@@ -115,7 +108,7 @@ export default function ApplicationsPage() {
       key: 'name',
       render: (text: string) => (
         <Space>
-          <ApiOutlined />
+          <Plug />
           <span className="font-medium">{text}</span>
         </Space>
       ),
@@ -144,13 +137,13 @@ export default function ApplicationsPage() {
         <Space size="middle">
           <Button
             type="text"
-            icon={<EditOutlined />}
+            icon={<Pencil />}
             onClick={() => handleEdit(record as MicroserviceRecord, 'microservice')}
           />
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<Trash2 />}
             onClick={() => handleDelete(record as MicroserviceRecord)}
           />
         </Space>
@@ -230,10 +223,10 @@ const handleDelete = (record: RecordData) => {
         breadcrumb: { items: [{ title: '首页' }, { title: '应用管理' }] },
       }}
       extra={[
-        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchData} loading={fetching}>
+        <Button key="refresh" icon={<RefreshCw />} onClick={fetchData} loading={fetching}>
           刷新
         </Button>,
-        <Button key="create" type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+        <Button key="create" type="primary" icon={<Plus />} onClick={handleCreate}>
           新建{activeTab === 'applications' ? '应用' : '微服务'}
         </Button>,
       ]}

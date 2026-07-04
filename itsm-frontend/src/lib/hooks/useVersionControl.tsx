@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Modal, message } from 'antd';
-import { ExclamationCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { RefreshCw, AlertCircle } from 'lucide-react';
 
 /**
  * 版本冲突错误
@@ -176,7 +176,7 @@ export function useVersionControl<T extends { version?: number; id?: number }>(
         Modal.confirm({
           title: (
             <span>
-              <ExclamationCircleOutlined style={{ color: '#faad14', marginRight: 8 }} />
+              <AlertCircle style={{ color: '#faad14', marginRight: 8 }} />
               检测到并发修改
             </span>
           ),

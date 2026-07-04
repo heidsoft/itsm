@@ -20,7 +20,7 @@ import {
 } from 'antd';
 import { useRouter, useParams } from 'next/navigation';
 import dayjs from 'dayjs';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import { ArrowLeft, Save } from 'lucide-react';
 
 import type { Release, ReleaseRequest } from '@/lib/api/release-api';
 import { ReleaseApi } from '@/lib/api/release-api';
@@ -141,7 +141,7 @@ const ReleaseForm: React.FC = () => {
         }}
       >
         <div style={{ marginBottom: 16 }}>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/releases')}>
+          <Button icon={<ArrowLeft />} onClick={() => router.push('/releases')}>
             返回列表
           </Button>
         </div>
@@ -248,7 +248,7 @@ const ReleaseForm: React.FC = () => {
 
         <Form.Item>
           <Space>
-            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={loading}>
+            <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
               {isEdit ? '保存' : '创建'}
             </Button>
             <Button onClick={() => router.push('/releases')}>取消</Button>

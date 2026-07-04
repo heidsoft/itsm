@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Form, Input, Select, Upload, Space, Row, Col, message, Tabs, Typography, Divider, Tag, Spin } from 'antd';
-import { ArrowLeftOutlined, UploadOutlined, SearchOutlined, CloseOutlined } from '@ant-design/icons';
+import { ArrowLeft, Search, X, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import type { ConfigurationItem } from '@/lib/api/cmdb-api';
@@ -126,7 +126,7 @@ export default function CreateIncidentPage() {
       <div className="mb-6">
         <Button
           type="link"
-          icon={<ArrowLeftOutlined />}
+          icon={<ArrowLeft />}
           onClick={() => router.back()}
           style={{ paddingLeft: 0 }}
         >
@@ -284,7 +284,7 @@ export default function CreateIncidentPage() {
                             <div className="relative">
                               <Input
                                 placeholder="搜索配置项名称或编号"
-                                prefix={<SearchOutlined />}
+                                prefix={<Search />}
                                 value={ciSearchTerm}
                                 onChange={e => setCISearchTerm(e.target.value)}
                                 suffix={ciSearching ? <Spin size="small" /> : null}
@@ -392,7 +392,7 @@ export default function CreateIncidentPage() {
                           }}
                         >
                           <Upload name="logo" action="/upload.do" listType="text">
-                            <Button icon={<UploadOutlined />}>上传附件</Button>
+                            <Button icon={<Upload />}>上传附件</Button>
                           </Upload>
                         </Form.Item>
                         <Text type="secondary">

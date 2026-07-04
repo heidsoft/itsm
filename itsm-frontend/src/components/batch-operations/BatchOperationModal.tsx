@@ -20,7 +20,7 @@ import {
   Radio,
   Checkbox,
 } from 'antd';
-import { ExclamationCircleOutlined, RocketOutlined, EyeOutlined } from '@ant-design/icons';
+import { Eye, AlertCircle, Rocket } from 'lucide-react';
 import { BatchOperationType, type BatchOperationData } from '@/types/batch-operations';
 import {
   useBatchAssignMutation,
@@ -253,7 +253,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
               description="删除操作不可撤销，请谨慎操作！"
               type="warning"
               showIcon
-              icon={<ExclamationCircleOutlined />}
+              icon={<AlertCircle />}
               className="mb-4"
             />
             <Form.Item label="删除原因" name="reason">
@@ -309,7 +309,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
           <Button
             key="submit"
             type="primary"
-            icon={<RocketOutlined />}
+            icon={<Rocket />}
             loading={mutation.isPending}
             onClick={handleSubmit}
           >

@@ -22,13 +22,7 @@ import {
   Badge,
   Tabs,
 } from 'antd';
-import {
-  PlusOutlined,
-  DeleteOutlined,
-  LinkOutlined,
-  NodeIndexOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+import { Plus, Trash2, Eye, Link, Network } from 'lucide-react';
 import dayjs from 'dayjs';
 
 import {
@@ -260,7 +254,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
               description="确定要删除此关系吗？"
               onConfirm={() => handleDelete(record.id)}
             >
-              <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+              <Button type="text" danger icon={<Trash2 />} size="small" />
             </Popconfirm>
           </Tooltip>
         </Space>
@@ -273,7 +267,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       key: 'outgoing',
       label: (
         <span>
-          <LinkOutlined /> 出向关系 ({outgoingRelations.length})
+          <Link /> 出向关系 ({outgoingRelations.length})
         </span>
       ),
       children: (
@@ -292,7 +286,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       key: 'incoming',
       label: (
         <span>
-          <NodeIndexOutlined /> 入向关系 ({incomingRelations.length})
+          <Network /> 入向关系 ({incomingRelations.length})
         </span>
       ),
       children: (
@@ -314,7 +308,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       <Card
         title={
           <Space>
-            <LinkOutlined />
+            <Link />
             <span>CI关系管理</span>
             <Text type="secondary">({ciName})</Text>
           </Space>
@@ -323,12 +317,12 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           <Space>
             <Button
               type="primary"
-              icon={<PlusOutlined />}
+              icon={<Plus />}
               onClick={() => handleOpenCreate('outgoing')}
             >
               添加出向关系
             </Button>
-            <Button icon={<PlusOutlined />} onClick={() => handleOpenCreate('incoming')}>
+            <Button icon={<Plus />} onClick={() => handleOpenCreate('incoming')}>
               添加入向关系
             </Button>
           </Space>

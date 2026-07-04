@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Spin } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LoadingSpinnerProps {
@@ -58,10 +58,9 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     <span role="status" aria-label={ariaLabel} className="inline-flex items-center">
       <Spin
         indicator={
-          <LoadingOutlined
-            style={{ fontSize: getSize() }}
-            spin
-            className={cn(getColorClass(), className)}
+          <Loader2
+            size={getSize()}
+            className={cn('animate-spin', getColorClass(), className)}
           />
         }
       />

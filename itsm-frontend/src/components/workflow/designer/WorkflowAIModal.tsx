@@ -20,15 +20,7 @@ import {
   Tag,
   Typography,
 } from 'antd';
-import { 
-  RocketOutlined, 
-  RobotOutlined, 
-  BugOutlined, 
-  SendOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  CloseCircleOutlined
-} from '@ant-design/icons';
+import { AlertTriangle, CheckCircle, XCircle, Bug, Rocket } from 'lucide-react';
 import { getBpmnDesignerApi } from './WorkflowCanvas';
 import {
   BPMNAIApi,
@@ -320,7 +312,7 @@ export default function WorkflowAIModal({
             key: 'generate',
             label: (
               <Space>
-                <RocketOutlined />
+                <Rocket />
                 生成流程
               </Space>
             ),
@@ -433,7 +425,7 @@ export default function WorkflowAIModal({
                   <Button
                     onClick={handleLoadTemplateSuggestions}
                     loading={templateLoading}
-                    icon={<RocketOutlined />}
+                    icon={<Rocket />}
                   >
                     推荐模板
                   </Button>
@@ -565,11 +557,11 @@ export default function WorkflowAIModal({
                       <div className="pt-1">
                         {
                         item.type === 'error' ? (
-                          <CloseCircleOutlined className="text-red-500 text-xl" />
+                          <XCircle className="text-red-500 text-xl" />
                         ) : item.type === 'warning' ? (
-                          <WarningOutlined className="text-yellow-500 text-xl" />
+                          <AlertTriangle className="text-yellow-500 text-xl" />
                         ) : (
-                          <CheckCircleOutlined className="text-green-500 text-xl" />
+                          <CheckCircle className="text-green-500 text-xl" />
                         )
                         }
                       </div>
@@ -603,7 +595,7 @@ export default function WorkflowAIModal({
             key: 'compliance',
             label: (
               <Space>
-                <BugOutlined />
+                <Bug />
                 合规检查
               </Space>
             ),
@@ -614,7 +606,7 @@ export default function WorkflowAIModal({
             </Paragraph>
             
             <div className="mb-4">
-              <Button type="primary" onClick={handleComplianceCheck} loading={loading} icon={<BugOutlined />}>
+              <Button type="primary" onClick={handleComplianceCheck} loading={loading} icon={<Bug />}>
                 开始合规检查
               </Button>
             </div>
@@ -631,11 +623,11 @@ export default function WorkflowAIModal({
                       <div className="pt-1">
                         {
                         item.type === 'violation' ? (
-                          <CloseCircleOutlined className="text-red-500 text-xl" />
+                          <XCircle className="text-red-500 text-xl" />
                         ) : item.type === 'warning' ? (
-                          <WarningOutlined className="text-yellow-500 text-xl" />
+                          <AlertTriangle className="text-yellow-500 text-xl" />
                         ) : (
-                          <CheckCircleOutlined className="text-green-500 text-xl" />
+                          <CheckCircle className="text-green-500 text-xl" />
                         )
                         }
                       </div>

@@ -2,12 +2,7 @@
 
 import React from 'react';
 import { Card, Row, Col, Skeleton } from 'antd';
-import {
-  FileTextOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+import { FileText, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface TicketStatsProps {
   stats: {
@@ -89,28 +84,28 @@ export const TicketStats: React.FC<TicketStatsProps> = React.memo(({ stats, load
     {
       title: '总工单数',
       value: safeStats.total || 0,
-      icon: <FileTextOutlined />,
+      icon: <FileText />,
       color: 'text-blue-600',
       bgColor: 'from-blue-50 to-blue-100',
     },
     {
       title: '待处理',
       value: safeStats.open || 0,
-      icon: <ClockCircleOutlined />,
+      icon: <Clock />,
       color: 'text-orange-600',
       bgColor: 'from-orange-50 to-orange-100',
     },
     {
       title: '已解决',
       value: safeStats.resolved || 0,
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircle />,
       color: 'text-green-600',
       bgColor: 'from-green-50 to-green-100',
     },
     {
       title: '高优先级',
       value: safeStats.highPriority || 0,
-      icon: <ExclamationCircleOutlined />,
+      icon: <AlertCircle />,
       color: 'text-red-600',
       bgColor: 'from-red-50 to-red-100',
     },

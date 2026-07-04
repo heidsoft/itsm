@@ -6,10 +6,10 @@ import "time"
 type SystemConfigRequest struct {
 	Key         string `json:"key"`
 	Value       string `json:"value"`
-	ValueType   string `json:"value_type"`
+	ValueType   string `json:"valueType"`
 	Category    string `json:"category"`
 	Description string `json:"description"`
-	TenantID    int    `json:"tenant_id"`
+	TenantID    int    `json:"tenantId"`
 }
 
 // SystemConfigResponse 响应
@@ -20,10 +20,10 @@ type SystemConfigResponse struct {
 	ValueType   string    `json:"value_type"`
 	Category    string    `json:"category"`
 	Description string    `json:"description"`
-	CreatedBy   string    `json:"created_by"`
+	CreatedBy   string    `json:"createdBy"`
 	TenantID    int       `json:"tenant_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // SystemConfigListResponse 列表响应
@@ -38,6 +38,6 @@ type SystemConfigListResponse struct {
 type UpdateSystemConfigRequest struct {
 	Key         string `json:"key"`
 	Value       string `json:"value"`
-	ValueType   string `json:"value_type"`
+	ValueType   string `json:"valueType"`
 	Description string `json:"description"`
 }

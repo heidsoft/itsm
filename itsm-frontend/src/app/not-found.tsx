@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Result, Button } from 'antd';
-import { HomeOutlined, DashboardOutlined } from '@ant-design/icons';
+import { LayoutDashboard, Home } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -22,12 +22,12 @@ export default function NotFound() {
           <Button
             key="dashboard"
             type="primary"
-            icon={<DashboardOutlined />}
+            icon={<LayoutDashboard />}
             onClick={() => router.push('/dashboard')}
           >
             返回仪表盘
           </Button>,
-          <Button key="home" icon={<HomeOutlined />} onClick={() => router.push('/')}>
+          <Button key="home" icon={<Home />} onClick={() => router.push('/')}>
             返回首页
           </Button>,
         ]}

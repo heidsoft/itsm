@@ -14,7 +14,7 @@ import {
   App,
   Tooltip,
 } from 'antd';
-import { SendOutlined, UserOutlined, EyeOutlined, MessageOutlined } from '@ant-design/icons';
+import { User, Eye, MessageSquare } from 'lucide-react';
 import type { Ticket } from '@/lib/services/ticket-service';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -146,7 +146,7 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
             {onlineUsers.map(user => (
               <Tooltip key={user.id} title={user.name}>
                 <Badge dot status="success" offset={[-2, 2]}>
-                  <Avatar size="small" src={user.avatar} icon={<UserOutlined />}>
+                  <Avatar size="small" src={user.avatar} icon={<User />}>
                     {user.name?.[0]}
                   </Avatar>
                 </Badge>
@@ -160,7 +160,7 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
       <Card
         title={
           <div className="flex items-center gap-2">
-            <MessageOutlined />
+            <MessageSquare />
             <span>实时协作</span>
             {messages.length > 0 && <Badge count={messages.length} showZero className="ml-2" />}
           </div>
@@ -174,7 +174,7 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
             renderItem={message => (
               <List.Item className="!px-0 !py-2 border-b border-gray-100 last:border-0">
                 <div className="flex items-start gap-3 w-full">
-                  <Avatar size="small" src={message.user_avatar} icon={<UserOutlined />}>
+                  <Avatar size="small" src={message.user_avatar} icon={<User />}>
                     {message.user_name?.[0]}
                   </Avatar>
                   <div className="flex-1">
@@ -202,7 +202,7 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
           />
         ) : (
           <div className="text-center py-8 text-gray-500">
-            <MessageOutlined className="text-4xl mb-2 text-gray-300" />
+            <MessageSquare className="text-4xl mb-2 text-gray-300" />
             <div>暂无协作消息</div>
           </div>
         )}

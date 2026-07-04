@@ -22,18 +22,7 @@ import {
   Tooltip,
   Popconfirm,
 } from 'antd';
-import {
-  SettingOutlined,
-  BellOutlined,
-  WarningOutlined,
-  CloseCircleOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+import { Plus, Pencil, Trash2, Eye, Settings, Clock, Bell, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -322,7 +311,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
           <Button
             type="link"
             size="small"
-            icon={<EditOutlined />}
+            icon={<Pencil />}
             onClick={() => handleOpenRuleModal(record)}
           >
             编辑
@@ -331,7 +320,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
             title="确定要删除这个预警规则吗？"
             onConfirm={() => handleDeleteRule(record.id)}
           >
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+            <Button type="link" size="small" danger icon={<Trash2 />}>
               删除
             </Button>
           </Popconfirm>
@@ -415,7 +404,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
           const secs = remainingSec % 60;
           return (
             <Tooltip title={`冷却窗口 ${minutes} 分钟，剩余 ${remainingSec} 秒后释放`}>
-              <Tag color="orange" icon={<ClockCircleOutlined />}>
+              <Tag color="orange" icon={<Clock />}>
                 {`${mins}分${secs}秒后冷却`}
               </Tag>
             </Tooltip>
@@ -423,14 +412,14 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
         }
         if (suppressed) {
           return (
-            <Tag color="default" icon={<CloseCircleOutlined />}>
+            <Tag color="default" icon={<XCircle />}>
               已抑制
             </Tag>
           );
         }
         return (
           <Tooltip title={`冷却窗口 ${minutes} 分钟，当前空闲`}>
-            <Tag color="green" icon={<CheckCircleOutlined />}>
+            <Tag color="green" icon={<CheckCircle />}>
               空闲
             </Tag>
           </Tooltip>
@@ -458,10 +447,10 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
         title={
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <SettingOutlined />
+              <Settings />
               <span>预警规则配置</span>
             </div>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenRuleModal()}>
+            <Button type="primary" icon={<Plus />} onClick={() => handleOpenRuleModal()}>
               创建预警规则
             </Button>
           </div>
@@ -488,7 +477,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       <Card
         title={
           <div className="flex items-center gap-2">
-            <BellOutlined />
+            <Bell />
             <span>预警历史记录</span>
             <Badge count={alertHistory.length} showZero className="ml-2" />
           </div>

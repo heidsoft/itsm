@@ -3,12 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Row, Col, Button, Space, Breadcrumb } from 'antd';
-import {
-  ArrowLeftOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  DownloadOutlined,
-} from '@ant-design/icons';
+import { ArrowLeft, Plus, Download, RotateCcw } from 'lucide-react';
 
 // 企业级页面模板接口
 interface EnterprisePageTemplateProps {
@@ -53,21 +48,21 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
     <Space>
       <Button
         type="primary"
-        icon={<PlusOutlined />}
+        icon={<Plus />}
         className="enterprise-btn enterprise-btn-primary"
         onClick={() => router.push('/tickets/create')}
       >
         新建
       </Button>
       <Button
-        icon={<ReloadOutlined />}
+        icon={<RotateCcw />}
         className="enterprise-btn enterprise-btn-ghost"
         onClick={() => window.location.reload()}
       >
         刷新
       </Button>
       <Button
-        icon={<DownloadOutlined />}
+        icon={<Download />}
         className="enterprise-btn enterprise-btn-ghost"
         onClick={() => {
           // 导出功能由子组件通过 props 覆盖
@@ -87,7 +82,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
             {showBackButton && (
               <Button
                 type="text"
-                icon={<ArrowLeftOutlined />}
+                icon={<ArrowLeft />}
                 className="enterprise-btn enterprise-btn-ghost"
               >
                 返回
@@ -122,7 +117,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
             {showBackButton && (
               <Button
                 type="text"
-                icon={<ArrowLeftOutlined />}
+                icon={<ArrowLeft />}
                 className="mr-2"
                 onClick={() => router.back()}
               >

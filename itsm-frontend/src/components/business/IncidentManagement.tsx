@@ -30,28 +30,7 @@ import {
   Progress,
   Empty,
 } from 'antd';
-import {
-  PlusOutlined,
-  SearchOutlined,
-  FilterOutlined,
-  ReloadOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  UserAddOutlined,
-  ExclamationCircleOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  WarningOutlined,
-  InfoCircleOutlined,
-  BellOutlined,
-  BarChartOutlined,
-  SettingOutlined,
-  LinkOutlined,
-  UserOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+import { Search, Filter, Plus, Pencil, Trash2, User, UserPlus, Eye, Settings, Calendar, Clock, RotateCcw, Bell, Link, Info, AlertTriangle, AlertCircle, CheckCircle, XCircle, BarChart3 } from 'lucide-react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/zh-cn';
@@ -201,12 +180,12 @@ export const IncidentManagement: React.FC = () => {
   // 获取状态图标
   const getStatusIcon = (status: string) => {
     const icons: Record<string, React.ReactNode> = {
-      new: <InfoCircleOutlined />,
-      in_progress: <ClockCircleOutlined />,
-      resolved: <CheckCircleOutlined />,
-      closed: <CloseCircleOutlined />,
+      new: <Info />,
+      in_progress: <Clock />,
+      resolved: <CheckCircle />,
+      closed: <XCircle />,
     };
-    return icons[status] || <InfoCircleOutlined />;
+    return icons[status] || <Info />;
   };
 
   // 表格列定义
@@ -305,7 +284,7 @@ export const IncidentManagement: React.FC = () => {
           <Tooltip title="查看详情">
             <Button
               type="text"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => {
                 setSelectedIncident(record);
                 setDetailVisible(true);
@@ -315,7 +294,7 @@ export const IncidentManagement: React.FC = () => {
           <Tooltip title="编辑">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => {
                 setSelectedIncident(record);
                 setCreateVisible(true);
@@ -325,7 +304,7 @@ export const IncidentManagement: React.FC = () => {
           <Tooltip title="分配">
             <Button
               type="text"
-              icon={<UserAddOutlined />}
+              icon={<UserPlus />}
               onClick={() => {
                 setSelectedIncident(record);
                 setAssignVisible(true);
@@ -349,10 +328,10 @@ export const IncidentManagement: React.FC = () => {
             <Text type="secondary">管理和监控IT事件，确保系统稳定运行</Text>
           </div>
           <Space>
-            <Button icon={<BarChartOutlined />} onClick={() => setMonitoringVisible(true)}>
+            <Button icon={<BarChart3 />} onClick={() => setMonitoringVisible(true)}>
               监控面板
             </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateVisible(true)}>
+            <Button type="primary" icon={<Plus />} onClick={() => setCreateVisible(true)}>
               创建事件
             </Button>
           </Space>
@@ -363,7 +342,7 @@ export const IncidentManagement: React.FC = () => {
       <Row gutter={16} className="mb-6">
         <Col span={6}>
           <Card>
-            <Statistic title="总事件数" value={total} prefix={<InfoCircleOutlined />} />
+            <Statistic title="总事件数" value={total} prefix={<Info />} />
           </Card>
         </Col>
         <Col span={6}>
@@ -371,7 +350,7 @@ export const IncidentManagement: React.FC = () => {
             <Statistic
               title="进行中"
               value={incidents.filter(i => i.status === 'in_progress').length}
-              prefix={<ClockCircleOutlined />}
+              prefix={<Clock />}
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
@@ -381,7 +360,7 @@ export const IncidentManagement: React.FC = () => {
             <Statistic
               title="已解决"
               value={incidents.filter(i => i.status === 'resolved').length}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircle />}
               styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
@@ -391,7 +370,7 @@ export const IncidentManagement: React.FC = () => {
             <Statistic
               title="严重事件"
               value={incidents.filter(i => i.severity === 'critical').length}
-              prefix={<ExclamationCircleOutlined />}
+              prefix={<AlertCircle />}
               styles={{ content: { color: '#f5222d' } }}
             />
           </Card>
@@ -404,7 +383,7 @@ export const IncidentManagement: React.FC = () => {
           <Col span={6}>
             <Input
               placeholder="搜索事件标题或编号"
-              prefix={<SearchOutlined />}
+              prefix={<Search />}
               onChange={e => handleFilterChange('search', e.target.value)}
             />
           </Col>
@@ -460,7 +439,7 @@ export const IncidentManagement: React.FC = () => {
             />
           </Col>
           <Col span={2}>
-            <Button icon={<ReloadOutlined />} onClick={fetchIncidents} loading={loading} />
+            <Button icon={<RotateCcw />} onClick={fetchIncidents} loading={loading} />
           </Col>
         </Row>
       </Card>
@@ -577,8 +556,8 @@ const IncidentDetailDrawer: React.FC<{
       onClose={onClose}
       extra={
         <Space>
-          <Button icon={<EditOutlined />}>编辑</Button>
-          <Button icon={<ReloadOutlined />} onClick={fetchIncidentDetails}>
+          <Button icon={<Pencil />}>编辑</Button>
+          <Button icon={<RotateCcw />} onClick={fetchIncidentDetails}>
             刷新
           </Button>
         </Space>
@@ -784,13 +763,13 @@ const IncidentEvents: React.FC<{ events: IncidentEvent[]; loading: boolean }> = 
 }) => {
   const getEventIcon = (eventType: string) => {
     const icons: Record<string, React.ReactNode> = {
-      creation: <PlusOutlined />,
-      update: <EditOutlined />,
-      escalation: <ExclamationCircleOutlined />,
-      assignment: <UserOutlined />,
-      status_change: <ClockCircleOutlined />,
+      creation: <Plus />,
+      update: <Pencil />,
+      escalation: <AlertCircle />,
+      assignment: <User />,
+      status_change: <Clock />,
     };
-    return icons[eventType] || <InfoCircleOutlined />;
+    return icons[eventType] || <Info />;
   };
 
   const getSeverityColor = (severity: string) => {
@@ -853,11 +832,11 @@ const IncidentAlerts: React.FC<{ alerts: IncidentAlert[]; loading: boolean }> = 
 }) => {
   const getAlertIcon = (alertType: string) => {
     const icons: Record<string, React.ReactNode> = {
-      escalation: <ExclamationCircleOutlined />,
-      notification: <BellOutlined />,
-      warning: <WarningOutlined />,
+      escalation: <AlertCircle />,
+      notification: <Bell />,
+      warning: <AlertTriangle />,
     };
-    return icons[alertType] || <BellOutlined />;
+    return icons[alertType] || <Bell />;
   };
 
   const getSeverityColor = (severity: string) => {
@@ -941,12 +920,12 @@ const IncidentMetrics: React.FC<{ metrics: IncidentMetric[]; loading: boolean }>
 }) => {
   const getMetricIcon = (metricType: string) => {
     const icons: Record<string, React.ReactNode> = {
-      response_time: <ClockCircleOutlined />,
-      resolution_time: <CheckCircleOutlined />,
-      cpu_usage: <BarChartOutlined />,
-      memory_usage: <BarChartOutlined />,
+      response_time: <Clock />,
+      resolution_time: <CheckCircle />,
+      cpu_usage: <BarChart3 />,
+      memory_usage: <BarChart3 />,
     };
-    return icons[metricType] || <BarChartOutlined />;
+    return icons[metricType] || <BarChart3 />;
   };
 
   return (
@@ -1238,7 +1217,7 @@ const IncidentMonitoringPanel: React.FC<{
       open={visible}
       onClose={onClose}
       extra={
-        <Button icon={<ReloadOutlined />} onClick={fetchMonitoringData} loading={loading}>
+        <Button icon={<RotateCcw />} onClick={fetchMonitoringData} loading={loading}>
           刷新
         </Button>
       }
@@ -1256,7 +1235,7 @@ const IncidentMonitoringPanel: React.FC<{
                 <Statistic
                   title="总事件数"
                   value={monitoringData.total_incidents}
-                  prefix={<InfoCircleOutlined />}
+                  prefix={<Info />}
                 />
               </Card>
             </Col>
@@ -1265,7 +1244,7 @@ const IncidentMonitoringPanel: React.FC<{
                 <Statistic
                   title="进行中"
                   value={monitoringData.open_incidents}
-                  prefix={<ClockCircleOutlined />}
+                  prefix={<Clock />}
                   styles={{ content: { color: '#1890ff' } }}
                 />
               </Card>
@@ -1275,7 +1254,7 @@ const IncidentMonitoringPanel: React.FC<{
                 <Statistic
                   title="已解决"
                   value={monitoringData.resolved_incidents}
-                  prefix={<CheckCircleOutlined />}
+                  prefix={<CheckCircle />}
                   styles={{ content: { color: '#52c41a' } }}
                 />
               </Card>
@@ -1287,7 +1266,7 @@ const IncidentMonitoringPanel: React.FC<{
                   value={monitoringData.resolution_rate}
                   suffix="%"
                   precision={1}
-                  prefix={<BarChartOutlined />}
+                  prefix={<BarChart3 />}
                   styles={{ content: { color: '#52c41a' } }}
                 />
               </Card>

@@ -2,15 +2,7 @@
 
 import React from 'react';
 import { Card, Row, Col, Button, Empty, Spin, App } from 'antd';
-import {
-  PlusOutlined,
-  ArrowRightOutlined,
-  FileTextOutlined,
-  WarningOutlined,
-  FundOutlined,
-  RiseOutlined,
-  ThunderboltOutlined,
-} from '@ant-design/icons';
+import { ArrowRight, Plus, FileText, AlertTriangle, TrendingUp, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { QuickAction } from '../types/dashboard.types';
 
@@ -47,15 +39,15 @@ const EnterpriseQuickActionCard: React.FC<{
     const iconStyle = { fontSize: 28 };
     switch (action.id) {
       case 'create-ticket':
-        return <FileTextOutlined style={iconStyle} />;
+        return <FileText style={iconStyle} />;
       case 'create-incident':
-        return <WarningOutlined style={iconStyle} />;
+        return <AlertTriangle style={iconStyle} />;
       case 'create-change':
-        return <FundOutlined style={iconStyle} />;
+        return <TrendingUp style={iconStyle} />;
       case 'view-reports':
         return <RiseOutlined style={iconStyle} />;
       default:
-        return <PlusOutlined style={iconStyle} />;
+        return <Plus style={iconStyle} />;
     }
   };
 
@@ -114,7 +106,7 @@ const EnterpriseQuickActionCard: React.FC<{
                 color: action.color,
                 borderColor: action.color,
               }}
-              icon={<ArrowRightOutlined />}
+              icon={<ArrowRight />}
               iconPlacement='end'
               onClick={e => {
                 e.stopPropagation();
@@ -158,7 +150,7 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(
           {showTitle && !compact && (
             <div className='mb-4'>
               <h2 className='text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2'>
-                <ThunderboltOutlined className='text-xl text-blue-500' />
+                <Zap className='text-xl text-blue-500' />
                 快速操作
               </h2>
               <p className='text-sm text-gray-600'>常用任务和快捷方式</p>
@@ -202,7 +194,7 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(
         {showTitle && !compact && (
           <div className='mb-4'>
             <h2 className='text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2'>
-              <ThunderboltOutlined className='text-xl text-blue-500' />
+              <Zap className='text-xl text-blue-500' />
               快速操作
             </h2>
             <p className='text-sm text-gray-600'>常用任务和快捷方式</p>

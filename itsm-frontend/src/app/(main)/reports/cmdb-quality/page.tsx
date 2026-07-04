@@ -14,7 +14,7 @@ import {
   LineChart,
   Line,
 } from 'recharts';
-import { ReloadOutlined } from '@ant-design/icons';
+import { RotateCcw } from 'lucide-react';
 
 const { Title, Text } = Typography;
 
@@ -120,7 +120,7 @@ const CMDBQualityReport = () => {
             <Text className="text-gray-600">配置项数据质量监控</Text>
           </Col>
           <Col>
-            <Button icon={<ReloadOutlined />} onClick={loadData}>
+            <Button icon={<RotateCcw />} onClick={loadData}>
               刷新数据
             </Button>
           </Col>

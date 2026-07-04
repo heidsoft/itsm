@@ -4,14 +4,14 @@ import type { PropsWithChildren } from 'react';
 import React from 'react';
 import { Breadcrumb } from 'antd';
 import Link from 'next/link';
-import { HomeOutlined } from '@ant-design/icons';
+import { Home } from 'lucide-react';
 
 const TicketLayout: React.FC<PropsWithChildren> = ({ children }) => {
   const breadcrumbItems = [
     {
       title: (
         <Link href="/">
-          <HomeOutlined />
+          <Home />
         </Link>
       ),
     },

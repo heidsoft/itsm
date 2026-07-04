@@ -19,22 +19,7 @@ import {
   Col,
   Switch,
 } from 'antd';
-import {
-  FilterOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  ExportOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  MoreOutlined,
-  UserOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  ExclamationCircleOutlined,
-  LockOutlined,
-  UnlockOutlined,
-} from '@ant-design/icons';
+import { Filter, Plus, Pencil, Trash2, Export, User, Lock, Unlock, Eye, RotateCcw, Mail, Phone, AlertCircle } from 'lucide-react';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
@@ -150,13 +135,13 @@ const UserList: React.FC<UserListProps> = ({
     items: [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <Eye />,
         label: '查看详情',
         onClick: () => handleViewUser(record),
       },
       {
         key: 'edit',
-        icon: <EditOutlined />,
+        icon: <Pencil />,
         label: '编辑用户',
         onClick: () => handleEditUser(record),
       },
@@ -165,7 +150,7 @@ const UserList: React.FC<UserListProps> = ({
       },
       {
         key: 'status',
-        icon: record.active ? <LockOutlined /> : <UnlockOutlined />, // 改为 active
+        icon: record.active ? <Lock /> : <Unlock />, // 改为 active
         label: record.active ? '禁用用户' : '启用用户', // 改为 active
         onClick: () => handleToggleStatus(record),
       },
@@ -179,7 +164,7 @@ const UserList: React.FC<UserListProps> = ({
       },
       {
         key: 'delete',
-        icon: <DeleteOutlined />,
+        icon: <Trash2 />,
         label: '删除用户',
         danger: true,
         onClick: () => handleDeleteUser(record),
@@ -215,7 +200,7 @@ const UserList: React.FC<UserListProps> = ({
     Modal.confirm({
       title: '重置密码',
       content: `确定要重置用户 ${user.name} 的密码吗？`,
-      icon: <ExclamationCircleOutlined />,
+      icon: <AlertCircle />,
       okText: '重置',
       cancelText: '取消',
       onOk: async () => {
@@ -235,7 +220,7 @@ const UserList: React.FC<UserListProps> = ({
     Modal.confirm({
       title: '确认删除',
       content: `确定要删除用户 ${user.name} 吗？此操作不可恢复。`,
-      icon: <ExclamationCircleOutlined />,
+      icon: <AlertCircle />,
       okText: '删除',
       okType: 'danger',
       cancelText: '取消',
@@ -330,7 +315,7 @@ const UserList: React.FC<UserListProps> = ({
       fixed: 'left',
       render: (_, record) => (
         <Space>
-          <Avatar size="small" icon={<UserOutlined />} /> {/* 移除src={record.avatar} */}
+          <Avatar size="small" icon={<User />} /> {/* 移除src={record.avatar} */}
           <div>
             <div>
               <Button
@@ -353,12 +338,12 @@ const UserList: React.FC<UserListProps> = ({
       render: (_, record) => (
         <Space orientation="vertical" size="small">
           <Space size="small">
-            <MailOutlined style={{ color: '#999' }} />
+            <Mail style={{ color: '#999' }} />
             <span>{record.email}</span>
           </Space>
           {record.phone && (
             <Space size="small">
-              <PhoneOutlined style={{ color: '#999' }} />
+              <Phone style={{ color: '#999' }} />
               <span>{record.phone}</span>
             </Space>
           )}
@@ -511,10 +496,10 @@ const UserList: React.FC<UserListProps> = ({
                   onSearch={handleSearch}
                   onChange={e => setSearchText(e.target.value)}
                 />
-                <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>
+                <Button icon={<Filter />} onClick={() => setShowFilters(!showFilters)}>
                   筛选
                 </Button>
-                <Button icon={<ReloadOutlined />} onClick={() => fetchUsers()}>
+                <Button icon={<RotateCcw />} onClick={() => fetchUsers()}>
                   刷新
                 </Button>
               </Space>
@@ -527,12 +512,12 @@ const UserList: React.FC<UserListProps> = ({
                     <Button onClick={() => handleBatchAction('禁用')}>批量禁用</Button>
                   </>
                 )}
-                <Button icon={<ExportOutlined />} onClick={handleExport}>
+                <Button icon={<Export />} onClick={handleExport}>
                   导出
                 </Button>
                 <Button
                   type="primary"
-                  icon={<PlusOutlined />}
+                  icon={<Plus />}
                   onClick={() => router.push('/users/new')}
                 >
                   新建用户

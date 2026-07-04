@@ -27,18 +27,7 @@ import {
   Empty,
   Tooltip,
 } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  FileTextOutlined,
-  SolutionOutlined,
-  ExperimentOutlined,
-  LinkOutlined,
-  BookOutlined,
-} from '@ant-design/icons';
+import { Plus, Pencil, Trash2, FileText, Clock, Link, CheckCircle, FlaskConical } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useParams } from 'next/navigation';
 
@@ -400,7 +389,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       key: 'overview',
       label: (
         <span>
-          <FileTextOutlined /> 调查概览
+          <FileText /> 调查概览
         </span>
       ),
       children: (
@@ -516,7 +505,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
           title="调查步骤"
           extra={
             summary?.investigation && (
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setStepModalOpen(true)}>
+              <Button type="primary" icon={<Plus />} onClick={() => setStepModalOpen(true)}>
                 添加步骤
               </Button>
             )
@@ -543,7 +532,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       key: 'root-cause',
       label: (
         <span>
-          <ExperimentOutlined /> 根因分析
+          <FlaskConical /> 根因分析
         </span>
       ),
       children: (
@@ -554,7 +543,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             !summary?.root_cause_analysis && (
               <Button
                 type="primary"
-                icon={<PlusOutlined />}
+                icon={<Plus />}
                 onClick={() => setRootCauseModalOpen(true)}
               >
                 开始分析
@@ -609,7 +598,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       key: 'solutions',
       label: (
         <span>
-          <CheckCircleOutlined /> 解决方案 ({summary?.solutions.length || 0})
+          <CheckCircle /> 解决方案 ({summary?.solutions.length || 0})
         </span>
       ),
       children: (
@@ -619,7 +608,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             summary?.investigation && (
               <Button
                 type="primary"
-                icon={<PlusOutlined />}
+                icon={<Plus />}
                 onClick={() => setSolutionModalOpen(true)}
               >
                 添加方案
@@ -716,7 +705,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       key: 'relationships',
       label: (
         <span>
-          <LinkOutlined /> 关联 ({summary?.relationships.length || 0})
+          <Link /> 关联 ({summary?.relationships.length || 0})
         </span>
       ),
       children: (

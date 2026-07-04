@@ -2,14 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, Typography, Space, Button, Tabs, Badge, Alert } from 'antd';
-import {
-  PlusOutlined,
-  TableOutlined,
-  AppstoreOutlined,
-  BarChartOutlined,
-  SearchOutlined,
-  BellOutlined,
-} from '@ant-design/icons';
+import { Search, Plus, LayoutGrid, Bell, BarChart3, Table } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import TicketList from '@/components/ticket/TicketList';
@@ -162,7 +155,7 @@ export default function TicketsPage() {
             </div>
             <Space>
               <Button
-                icon={<SearchOutlined />}
+                icon={<Search />}
                 onClick={() => {
                   const newShow = !showAdvancedSearch;
                   setShowAdvancedSearch(newShow);
@@ -179,7 +172,7 @@ export default function TicketsPage() {
               </Button>
               <Badge count={ticketStats.overdue} size="small">
                 <Button
-                  icon={<BellOutlined />}
+                  icon={<Bell />}
                   onClick={() => {
                     setActiveTab('list');
                     router.push('/tickets?tab=list', { scroll: false });
@@ -189,7 +182,7 @@ export default function TicketsPage() {
                 </Button>
               </Badge>
               <Link href="/tickets/create">
-                <Button type="primary" icon={<PlusOutlined />}>
+                <Button type="primary" icon={<Plus />}>
                   新建工单
                 </Button>
               </Link>
@@ -204,7 +197,7 @@ export default function TicketsPage() {
                   <Text type="secondary">总工单</Text>
                   <div className="text-2xl font-bold">{ticketStats.total}</div>
                 </div>
-                <TableOutlined className="text-2xl text-blue-500" />
+                <Table className="text-2xl text-blue-500" />
               </div>
             </Card>
             <Card size="small" className="rounded-lg shadow-sm">
@@ -213,7 +206,7 @@ export default function TicketsPage() {
                   <Text type="secondary">待处理</Text>
                   <div className="text-2xl font-bold text-orange-500">{ticketStats.open}</div>
                 </div>
-                <BellOutlined className="text-2xl text-orange-500" />
+                <Bell className="text-2xl text-orange-500" />
               </div>
             </Card>
             <Card size="small" className="rounded-lg shadow-sm">
@@ -222,7 +215,7 @@ export default function TicketsPage() {
                   <Text type="secondary">超时工单</Text>
                   <div className="text-2xl font-bold text-red-500">{ticketStats.overdue}</div>
                 </div>
-                <BellOutlined className="text-2xl text-red-500" />
+                <Bell className="text-2xl text-red-500" />
               </div>
             </Card>
             <Card size="small" className="rounded-lg shadow-sm">
@@ -231,7 +224,7 @@ export default function TicketsPage() {
                   <Text type="secondary">今日新增</Text>
                   <div className="text-2xl font-bold text-green-500">{ticketStats.today}</div>
                 </div>
-                <PlusOutlined className="text-2xl text-green-500" />
+                <Plus className="text-2xl text-green-500" />
               </div>
             </Card>
           </div>
@@ -260,7 +253,7 @@ export default function TicketsPage() {
               key: 'list',
               label: (
                 <span className="flex items-center gap-2">
-                  <TableOutlined />
+                  <Table />
                   列表视图
                 </span>
               ),
@@ -269,7 +262,7 @@ export default function TicketsPage() {
               key: 'kanban',
               label: (
                 <span className="flex items-center gap-2">
-                  <AppstoreOutlined />
+                  <LayoutGrid />
                   看板视图
                 </span>
               ),
@@ -294,7 +287,7 @@ export default function TicketsPage() {
             type="primary"
             shape="circle"
             size="large"
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             onClick={() => router.push('/tickets/create')}
             className="shadow-lg hover:scale-110 transition-transform"
           />

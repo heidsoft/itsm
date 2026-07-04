@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, Row, Col, Input, Select, Button } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { Search } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 const { Search } = Input;
@@ -160,7 +160,7 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">{t('incidents.actions')}</label>
               <Button
-                icon={<SearchOutlined />}
+                icon={<Search />}
                 onClick={onRefresh || (() => {})}
                 loading={loading}
                 size="large"

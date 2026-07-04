@@ -34,21 +34,7 @@ import {
   Col,
   Result,
 } from 'antd';
-import {
-  EditOutlined,
-  ArrowLeftOutlined,
-  SearchOutlined,
-  SolutionOutlined,
-  LinkOutlined,
-  BookOutlined,
-  HistoryOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  PlusOutlined,
-  FileTextOutlined,
-  ClockCircleOutlined,
-  AlertOutlined,
-} from '@ant-design/icons';
+import { ArrowLeft, Search, Plus, Pencil, FileText, Clock, History, Link, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -317,7 +303,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
       key: 'basic',
       label: (
         <span>
-          <FileTextOutlined /> 基本信息
+          <FileText /> 基本信息
         </span>
       ),
       children: <BasicInfoCard data={data} />,
@@ -326,7 +312,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
       key: 'investigation',
       label: (
         <span>
-          <SearchOutlined /> 问题调查
+          <Search /> 问题调查
         </span>
       ),
       children: (
@@ -350,7 +336,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
           extra={
             <Button
               type="primary"
-              icon={<PlusOutlined />}
+              icon={<Plus />}
               onClick={() => setSolutionModalVisible(true)}
             >
               添加方案
@@ -420,14 +406,14 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
       key: 'incidents',
       label: (
         <span>
-          <LinkOutlined /> 关联事件 ({relatedIncidents.length})
+          <Link /> 关联事件 ({relatedIncidents.length})
         </span>
       ),
       children: (
         <Card
           title="关联事件"
           extra={
-            <Button icon={<LinkOutlined />} onClick={() => setLinkingIncidentModalVisible(true)}>
+            <Button icon={<Link />} onClick={() => setLinkingIncidentModalVisible(true)}>
               关联事件
             </Button>
           }
@@ -460,7 +446,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
                                 : '#1890ff',
                         }}
                       >
-                        <AlertOutlined />
+                        <AlertTriangle />
                       </Avatar>
                     }
                     title={
@@ -494,7 +480,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
       key: 'changes',
       label: (
         <span>
-          <HistoryOutlined /> 关联变更 ({changeRequests.length})
+          <History /> 关联变更 ({changeRequests.length})
         </span>
       ),
       children: (
@@ -514,7 +500,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
                   <List.Item.Meta
                     avatar={
                       <Avatar style={{ backgroundColor: '#1890ff' }}>
-                        <HistoryOutlined />
+                        <History />
                       </Avatar>
                     }
                     title={
@@ -595,7 +581,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
       <Card styles={{ body: { padding: '16px 24px' } }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/problems')}>
+            <Button icon={<ArrowLeft />} onClick={() => router.push('/problems')}>
               返回列表
             </Button>
             <Title level={4} style={{ margin: 0 }}>
@@ -604,7 +590,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
             <Tag color={statusColors[data.status]}>{ProblemStatusLabels[data.status]}</Tag>
           </Space>
           <Space>
-            <Button icon={<EditOutlined />} onClick={() => router.push(`/problems/${data.id}/edit`)}>
+            <Button icon={<Pencil />} onClick={() => router.push(`/problems/${data.id}/edit`)}>
               编辑
             </Button>
             {data.status === ProblemStatus.OPEN && (
@@ -645,7 +631,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
             <Statistic
               title="关联事件"
               value={relatedIncidents.length}
-              prefix={<LinkOutlined />}
+              prefix={<Link />}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
@@ -665,7 +651,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
             <Statistic
               title="关联变更"
               value={changeRequests.length}
-              prefix={<HistoryOutlined />}
+              prefix={<History />}
               valueStyle={{ color: '#722ed1' }}
             />
           </Card>

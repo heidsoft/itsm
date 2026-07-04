@@ -30,20 +30,7 @@ import {
   Empty,
   Badge,
 } from 'antd';
-import {
-  PlusOutlined,
-  DeleteOutlined,
-  CopyOutlined,
-  EditOutlined,
-  DragOutlined,
-  EyeOutlined,
-  SettingOutlined,
-  QuestionCircleOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-} from '@ant-design/icons';
+import { ArrowUp, ArrowDown, Plus, Pencil, Trash2, Copy, Eye, Settings, AlertTriangle, HelpCircle, CheckCircle, GripVertical } from 'lucide-react';
 import type {
   DragEndEvent} from '@dnd-kit/core';
 import {
@@ -333,7 +320,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
               {...listeners}
               className="cursor-move text-gray-400 hover:text-gray-600"
             >
-              <DragOutlined style={{ fontSize: 16 }} />
+              <GripVertical style={{ fontSize: 16 }} />
             </div>
 
             <div className="flex items-center gap-2">
@@ -364,7 +351,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
               <Button
                 type="text"
                 size="small"
-                icon={<ArrowUpOutlined />}
+                icon={<ArrowUp />}
                 onClick={() => onMoveUp(index)}
                 disabled={isFirst}
               />
@@ -373,7 +360,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
               <Button
                 type="text"
                 size="small"
-                icon={<ArrowDownOutlined />}
+                icon={<ArrowDown />}
                 onClick={() => onMoveDown(index)}
                 disabled={isLast}
               />
@@ -382,7 +369,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
               <Button
                 type="text"
                 size="small"
-                icon={<EditOutlined />}
+                icon={<Pencil />}
                 onClick={() => onEdit(field)}
               />
             </Tooltip>
@@ -390,7 +377,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
               <Button
                 type="text"
                 size="small"
-                icon={<CopyOutlined />}
+                icon={<Copy />}
                 onClick={() => onDuplicate(field)}
               />
             </Tooltip>
@@ -399,7 +386,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
                 type="text"
                 size="small"
                 danger
-                icon={<DeleteOutlined />}
+                icon={<Trash2 />}
                 onClick={() => onDelete(field.id)}
               />
             </Tooltip>
@@ -628,7 +615,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                             type="text"
                             danger
                             size="small"
-                            icon={<DeleteOutlined />}
+                            icon={<Trash2 />}
                             onClick={() => remove(fieldItem.name)}
                           />
                         }
@@ -666,7 +653,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                       type="dashed"
                       onClick={() => add({ label: '', value: '' })}
                       block
-                      icon={<PlusOutlined />}
+                      icon={<Plus />}
                     >
                       添加选项
                     </Button>
@@ -967,7 +954,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
                       <div className="font-medium text-sm">{typeConfig.label}</div>
                       <div className="text-xs text-gray-500">{typeConfig.description}</div>
                     </div>
-                    <PlusOutlined className="text-blue-500" />
+                    <Plus className="text-blue-500" />
                   </div>
                 </Card>
               ))}

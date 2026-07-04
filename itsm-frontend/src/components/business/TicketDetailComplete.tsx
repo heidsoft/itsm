@@ -61,7 +61,7 @@ const { Text, Title } = Typography;
 const { Option } = Select;
 
 // 工单详情接口
-interface EnhancedTicket {
+interface TicketDetailComplete {
   id: number;
   ticket_number: string;
   ticketNumber?: string;
@@ -189,9 +189,9 @@ interface SLAMetrics {
   breach_reason?: string;
 }
 
-interface EnhancedTicketDetailProps {
-  ticket: EnhancedTicket;
-  onUpdate: (updates: Partial<EnhancedTicket>) => Promise<void>;
+interface TicketDetailCompleteProps {
+  ticket: TicketDetailComplete;
+  onUpdate: (updates: Partial<TicketDetailComplete>) => Promise<void>;
   onAssign: (assigneeId: number) => Promise<void>;
   onStatusChange: (status: string) => Promise<void>;
   onPriorityChange: (priority: string) => Promise<void>;
@@ -202,7 +202,7 @@ interface EnhancedTicketDetailProps {
   canChangeStatus: boolean;
 }
 
-export const EnhancedTicketDetail: React.FC<EnhancedTicketDetailProps> = ({
+export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
   ticket,
   onUpdate,
   onAssign,
@@ -216,7 +216,7 @@ export const EnhancedTicketDetail: React.FC<EnhancedTicketDetailProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
-  const [editingTicket, setEditingTicket] = useState<EnhancedTicket>(ticket);
+  const [editingTicket, setEditingTicket] = useState<TicketDetailComplete>(ticket);
   const [commentText, setCommentText] = useState('');
   const [isInternalComment, setIsInternalComment] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -904,4 +904,4 @@ export const EnhancedTicketDetail: React.FC<EnhancedTicketDetailProps> = ({
   );
 };
 
-export default EnhancedTicketDetail;
+export default TicketDetailComplete;

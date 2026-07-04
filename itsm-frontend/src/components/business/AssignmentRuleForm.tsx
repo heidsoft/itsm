@@ -22,7 +22,7 @@ import {
   Tag,
   message,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { Plus, X, Save, Trash2 } from 'lucide-react';
 import type { AssignmentRule } from '@/lib/api/ticket-assignment-api';
 
 const { TextArea } = Input;
@@ -157,7 +157,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
                       <Button
                         type="link"
                         danger
-                        icon={<DeleteOutlined />}
+                        icon={<Trash2 />}
                         onClick={() => {
                           remove(field.name);
                         }}
@@ -208,7 +208,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
                   </Card>
                 );
               })}
-              <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+              <Button type="dashed" onClick={() => add()} block icon={<Plus />}>
                 添加条件
               </Button>
             </div>
@@ -260,10 +260,10 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
 
       <Form.Item>
         <Space>
-          <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>
+          <Button type="primary" htmlType="submit" icon={<Save />}>
             {editingRule ? '更新规则' : '创建规则'}
           </Button>
-          <Button onClick={onCancel} icon={<CloseOutlined />}>
+          <Button onClick={onCancel} icon={<X />}>
             取消
           </Button>
         </Space>

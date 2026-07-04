@@ -20,15 +20,7 @@ import {
   Divider,
   Tag,
 } from 'antd';
-import {
-  SaveOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ShareAltOutlined,
-  EyeOutlined,
-  PlusOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
+import { Plus, Save, Pencil, Trash2, Eye, Settings, Share2 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { TicketView, CreateTicketViewRequest } from '@/lib/api/ticket-view-api';
 import { TicketViewApi } from '@/lib/api/ticket-view-api';
@@ -197,13 +189,13 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
     {
       key: 'edit',
       label: '编辑',
-      icon: <EditOutlined />,
+      icon: <Pencil />,
       onClick: () => handleEditView(view),
     },
     {
       key: 'delete',
       label: '删除',
-      icon: <DeleteOutlined />,
+      icon: <Trash2 />,
       danger: true,
       onClick: () => {
         Modal.confirm({
@@ -216,7 +208,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
     {
       key: 'share',
       label: view.is_shared ? '取消共享' : '共享',
-      icon: <ShareAltOutlined />,
+      icon: <Share2 />,
       onClick: async () => {
         try {
           await TicketViewApi.updateView(view.id, { is_shared: !view.is_shared });
@@ -246,7 +238,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
               <Divider style={{ margin: '8px 0' }} />
               <Button
                 type="text"
-                icon={<PlusOutlined />}
+                icon={<Plus />}
                 block
                 onClick={() => {
                   form.resetFields();
@@ -279,7 +271,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
 
         {currentView && (
           <Dropdown menu={{ items: getViewMenuItems(currentView) }} trigger={['click']}>
-            <Button icon={<SettingOutlined />}>管理</Button>
+            <Button icon={<Settings />}>管理</Button>
           </Dropdown>
         )}
       </Space>

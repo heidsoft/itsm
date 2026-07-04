@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Typography, Row, Col, Statistic, Button, Space, Select, Tabs, Table, Tag, Progress, Tooltip, message } from 'antd';
 import { SLAMonitorDashboard } from '@/components/business/SLAMonitorDashboard';
 import { AlertTriangle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
-import { WarningOutlined, LineChartOutlined } from '@ant-design/icons';
+import { AlertTriangle, LineChart } from 'lucide-react';
 import { SLAApi } from '@/lib/api/sla-api';
 
 const { Title, Text } = Typography;
@@ -272,7 +272,7 @@ const SLAMonitorPage = () => {
             <Statistic
               title="风险中"
               value={stats.atRiskTickets}
-              prefix={<WarningOutlined className="text-orange-500 mr-2" />}
+              prefix={<AlertTriangle className="text-orange-500 mr-2" />}
               styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
@@ -356,7 +356,7 @@ const SLAMonitorPage = () => {
                         <Statistic
                           title="总请求数"
                           value={serviceSummary.total}
-                          prefix={<LineChartOutlined />}
+                          prefix={<LineChart />}
                         />
                       </Card>
                     </Col>

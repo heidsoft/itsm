@@ -22,7 +22,7 @@ import {
   Space,
   message,
 } from 'antd';
-import { ArrowLeftOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 import { Modal, Input } from 'antd';
@@ -228,7 +228,7 @@ const ChangeDetail: React.FC = () => {
       <Card>
         <div style={{ marginBottom: 24 }}>
           <Button
-            icon={<ArrowLeftOutlined />}
+            icon={<ArrowLeft />}
             onClick={() => router.push('/changes')}
             style={{ marginBottom: 16 }}
           >
@@ -245,14 +245,14 @@ const ChangeDetail: React.FC = () => {
               <Space>
                 <Button
                   type="primary"
-                  icon={<CheckCircleOutlined />}
+                  icon={<CheckCircle />}
                   onClick={() => setApprovalModalVisible(true)}
                 >
                   批准
                 </Button>
                 <Button
                   danger
-                  icon={<CloseCircleOutlined />}
+                  icon={<XCircle />}
                   onClick={() => setRejectModalVisible(true)}
                 >
                   拒绝
@@ -335,9 +335,9 @@ const ChangeDetail: React.FC = () => {
                         <List.Item.Meta
                           avatar={
                             record.status === 'approved' ? (
-                              <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 24 }} />
+                              <CheckCircle style={{ color: '#52c41a', fontSize: 24 }} />
                             ) : (
-                              <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 24 }} />
+                              <XCircle style={{ color: '#ff4d4f', fontSize: 24 }} />
                             )
                           }
                           title={

@@ -18,13 +18,7 @@ import {
   Typography,
   message,
 } from 'antd';
-import {
-  SearchOutlined,
-  ReloadOutlined,
-  ClearOutlined,
-  SaveOutlined,
-  FilterOutlined,
-} from '@ant-design/icons';
+import { Search, Filter, Save, RotateCcw } from 'lucide-react';
 import type { FormInstance } from 'antd';
 import dayjs from 'dayjs';
 import type { RangePickerProps } from 'antd/es/date-picker';
@@ -194,7 +188,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
     <Row gutter={[16, 0]}>
       <Col span={6}>
         <Form.Item label="关键字搜索" name="keyword">
-          <Input placeholder="标题、描述、工单号..." prefix={<SearchOutlined />} />
+          <Input placeholder="标题、描述、工单号..." prefix={<Search />} />
         </Form.Item>
       </Col>
       <Col span={6}>
@@ -419,11 +413,11 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
       title={
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <FilterOutlined className="mr-2" />
+            <Filter className="mr-2" />
             <span>高级搜索</span>
           </div>
           <Space>
-            <Button size="small" icon={<SaveOutlined />} onClick={saveSearch}>
+            <Button size="small" icon={<Save />} onClick={saveSearch}>
               保存搜索
             </Button>
           </Space>
@@ -468,10 +462,10 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         {/* 操作按钮 */}
         <div className="flex justify-between items-center mt-6">
           <Space>
-            <Button type="primary" icon={<SearchOutlined />} htmlType="submit" loading={loading}>
+            <Button type="primary" icon={<Search />} htmlType="submit" loading={loading}>
               搜索
             </Button>
-            <Button icon={<ReloadOutlined />} onClick={handleReset}>
+            <Button icon={<RotateCcw />} onClick={handleReset}>
               重置
             </Button>
           </Space>

@@ -26,7 +26,7 @@ import {
   AlertTriangle,
   FileSpreadsheet as FileExcel,
 } from 'lucide-react';
-import { UploadOutlined } from '@ant-design/icons';
+import { Upload } from 'lucide-react';
 import {
   ticketCategoryService,
   type CreateCategoryRequest,
@@ -242,7 +242,7 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
         <Card size="small" title="选择文件">
           <Dragger {...uploadProps}>
             <p className="ant-upload-drag-icon">
-              <UploadOutlined className="text-4xl text-blue-500" />
+              <Upload className="text-4xl text-blue-500" />
             </p>
             <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
             <p className="ant-upload-hint">支持 .xlsx, .xls, .csv 格式，文件大小不超过 10MB</p>

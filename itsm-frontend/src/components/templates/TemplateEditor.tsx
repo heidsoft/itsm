@@ -33,22 +33,7 @@ import {
   ColorPicker,
   type UploadFile,
 } from 'antd';
-import {
-  SaveOutlined,
-  EyeOutlined,
-  CloseOutlined,
-  PlusOutlined,
-  UploadOutlined,
-  InfoCircleOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  RocketOutlined,
-  HistoryOutlined,
-  SettingOutlined,
-  LockOutlined,
-  ThunderboltOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+import { Plus, X, Save, Upload, Lock, FileText, Eye, Settings, History, Info, AlertCircle, CheckCircle, Zap, Rocket } from 'lucide-react';
 import { FieldDesigner } from './FieldDesigner';
 import type {
   TicketTemplate,
@@ -78,31 +63,31 @@ const STEPS = [
   {
     key: 'basic',
     title: '基础信息',
-    icon: <FileTextOutlined />,
+    icon: <FileText />,
     description: '模板名称、描述、分类等',
   },
   {
     key: 'fields',
     title: '字段设计',
-    icon: <SettingOutlined />,
+    icon: <Settings />,
     description: '配置工单字段',
   },
   {
     key: 'defaults',
     title: '默认配置',
-    icon: <InfoCircleOutlined />,
+    icon: <Info />,
     description: '设置默认值',
   },
   {
     key: 'permissions',
     title: '权限配置',
-    icon: <LockOutlined />,
+    icon: <Lock />,
     description: '控制可见性',
   },
   {
     key: 'automation',
     title: '自动化',
-    icon: <ThunderboltOutlined />,
+    icon: <Zap />,
     description: '配置自动化规则',
   },
 ];
@@ -288,7 +273,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 { min: 2, max: 100, message: '名称长度为2-100个字符' },
               ]}
             >
-              <Input placeholder="如：软件安装申请" size="large" prefix={<FileTextOutlined />} />
+              <Input placeholder="如：软件安装申请" size="large" prefix={<FileText />} />
             </Form.Item>
 
             <Form.Item
@@ -346,7 +331,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               >
                 {coverImage.length === 0 && (
                   <div>
-                    <PlusOutlined />
+                    <Plus />
                     <div style={{ marginTop: 8 }}>上传封面</div>
                   </div>
                 )}
@@ -573,7 +558,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           <Panel
             header={
               <Space>
-                <ThunderboltOutlined />
+                <Zap />
                 <strong>自动分配</strong>
               </Space>
             }
@@ -628,7 +613,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           <Panel
             header={
               <Space>
-                <CheckCircleOutlined />
+                <CheckCircle />
                 <strong>审批流程</strong>
               </Space>
             }
@@ -688,7 +673,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           <Panel
             header={
               <Space>
-                <InfoCircleOutlined />
+                <Info />
                 <strong>自动通知</strong>
               </Space>
             }
@@ -760,15 +745,15 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           </Space>
 
           <Space>
-            <Button icon={<EyeOutlined />} onClick={() => setActiveTab('preview')}>
+            <Button icon={<Eye />} onClick={() => setActiveTab('preview')}>
               预览
             </Button>
-            <Button icon={<SaveOutlined />} onClick={handleSaveDraft}>
+            <Button icon={<Save />} onClick={handleSaveDraft}>
               保存草稿
             </Button>
             <Button
               type="primary"
-              icon={<RocketOutlined />}
+              icon={<Rocket />}
               onClick={handlePublish}
               loading={
                 createMutation.isPending || updateMutation.isPending || publishMutation.isPending
@@ -776,7 +761,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             >
               发布模板
             </Button>
-            <Button icon={<CloseOutlined />} onClick={handleCancel}>
+            <Button icon={<X />} onClick={handleCancel}>
               取消
             </Button>
           </Space>
@@ -812,7 +797,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             {currentStep === STEPS.length - 1 ? (
               <Button
                 type="primary"
-                icon={<RocketOutlined />}
+                icon={<Rocket />}
                 onClick={handlePublish}
                 loading={
                   createMutation.isPending || updateMutation.isPending || publishMutation.isPending

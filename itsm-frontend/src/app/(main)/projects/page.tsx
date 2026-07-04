@@ -14,13 +14,7 @@ import {
   Progress,
   message,
 } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ProjectOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+import { Plus, Pencil, Trash2, RefreshCw, Briefcase } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type { Project } from '@/lib/services/project-service';
 import { projectService } from '@/lib/services/project-service';
@@ -60,7 +54,7 @@ export default function ProjectsPage() {
       key: 'name',
       render: (text: string) => (
         <Space>
-          <ProjectOutlined />
+          <Briefcase />
           <span className="font-medium">{text}</span>
         </Space>
       ),
@@ -103,11 +97,11 @@ export default function ProjectsPage() {
       key: 'action',
       render: (_: unknown, record: Project) => (
         <Space size="middle">
-          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          <Button type="text" icon={<Pencil />} onClick={() => handleEdit(record)} />
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<Trash2 />}
             onClick={() => handleDelete(record)}
           />
         </Space>
@@ -162,13 +156,13 @@ export default function ProjectsPage() {
         breadcrumb: { items: [{ title: '首页' }, { title: '项目管理' }] },
       }}
       extra={[
-        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchProjects} loading={fetching}>
+        <Button key="refresh" icon={<RefreshCw />} onClick={fetchProjects} loading={fetching}>
           刷新
         </Button>,
         <Button
           key="create"
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<Plus />}
           onClick={() => setIsModalVisible(true)}
         >
           新建项目

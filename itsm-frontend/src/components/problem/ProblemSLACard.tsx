@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Tag, Space, Statistic, Row, Col } from 'antd';
-import { ClockCircleOutlined, WarningOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { ProblemApi, type Problem } from '@/lib/api/problem-api';
 
 interface ProblemSLACardProps {
@@ -25,9 +25,9 @@ interface SLAInfo {
 }
 
 const SLA_STATUS_CONFIG: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-  ok: { color: 'success', text: '正常', icon: <CheckCircleOutlined /> },
-  warning: { color: 'warning', text: '即将到期', icon: <WarningOutlined /> },
-  breached: { color: 'error', text: '已违规', icon: <WarningOutlined /> },
+  ok: { color: 'success', text: '正常', icon: <CheckCircle /> },
+  warning: { color: 'warning', text: '即将到期', icon: <AlertTriangle /> },
+  breached: { color: 'error', text: '已违规', icon: <AlertTriangle /> },
 };
 
 const ProblemSLACard: React.FC<ProblemSLACardProps> = ({ problem }) => {
@@ -77,7 +77,7 @@ const ProblemSLACard: React.FC<ProblemSLACardProps> = ({ problem }) => {
       size="small"
       title={
         <Space>
-          <ClockCircleOutlined />
+          <Clock />
           <span>SLA信息</span>
           <Tag color={config.color} icon={config.icon}>
             {config.text}

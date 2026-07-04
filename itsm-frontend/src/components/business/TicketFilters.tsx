@@ -12,13 +12,7 @@ import {
   Tag,
   Badge,
 } from 'antd';
-import {
-  SearchOutlined,
-  ReloadOutlined,
-  FilterOutlined,
-  ClearOutlined,
-  CloseOutlined,
-} from '@ant-design/icons';
+import { Search, Filter, X, RotateCcw } from 'lucide-react';
 import dayjs from 'dayjs';
 import { TicketViewSelector } from './TicketViewSelector';
 import type { TicketView } from '@/lib/api/ticket-view-api';
@@ -262,7 +256,7 @@ function TicketFilters({
           <Col xs={24} sm={24} md={8} lg={6}>
             <Input
               placeholder="搜索工单标题或描述..."
-              prefix={<SearchOutlined />}
+              prefix={<Search />}
               value={localKeyword}
               onChange={handleSearchInputChange}
               onPressEnter={handleSearch}
@@ -345,7 +339,7 @@ function TicketFilters({
           <Col xs={12} sm={8} md={6} lg={4}>
             <Space.Compact style={{ width: '100%' }}>
               <Button
-                icon={<SearchOutlined />}
+                icon={<Search />}
                 type={activeFilters.length > 0 ? 'primary' : 'default'}
                 onClick={handleSearch}
                 loading={loading}
@@ -367,7 +361,7 @@ function TicketFilters({
               </Button>
               {onRefresh && (
                 <Button
-                  icon={<ReloadOutlined />}
+                  icon={<RotateCcw />}
                   onClick={onRefresh}
                   loading={loading}
                   data-testid="filter-refresh-btn"
@@ -386,7 +380,7 @@ function TicketFilters({
             <Col span={24}>
               <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-gray-100">
                 <span className="text-sm text-gray-500 flex items-center gap-1">
-                  <FilterOutlined />
+                  <Filter />
                   已应用筛选：
                 </span>
                 {activeFilters.map(filter => (
@@ -403,7 +397,7 @@ function TicketFilters({
                 <Button
                   type="link"
                   size="small"
-                  icon={<CloseOutlined />}
+                  icon={<X />}
                   onClick={handleReset}
                   className="p-0 h-auto"
                 >

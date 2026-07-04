@@ -17,17 +17,7 @@ import {
   Col,
   Dropdown,
 } from 'antd';
-import {
-  SearchOutlined,
-  FilterOutlined,
-  SettingOutlined,
-  PlusOutlined,
-  EyeOutlined,
-  EditOutlined,
-  MoreOutlined,
-  SaveOutlined,
-  ShareAltOutlined,
-} from '@ant-design/icons';
+import { Search, Filter, Plus, Save, Pencil, Eye, Settings, Share2 } from 'lucide-react';
 import type { MenuProps, DropDownProps } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -155,7 +145,7 @@ function DefaultCard<T>({
       {
         key: 'view',
         label: '查看详情',
-        icon: <EyeOutlined />,
+        icon: <Eye />,
         onClick: () => onClick(),
       },
       ...(onEdit
@@ -163,7 +153,7 @@ function DefaultCard<T>({
             {
               key: 'edit',
               label: '编辑',
-              icon: <EditOutlined />,
+              icon: <Pencil />,
               onClick: () => onEdit(),
             },
           ]
@@ -409,7 +399,7 @@ export function UnifiedKanbanBoard<T>({
               value={searchKeyword}
               onChange={e => setSearchKeyword(e.target.value)}
               style={{ width: 250 }}
-              prefix={<SearchOutlined />}
+              prefix={<Search />}
             />
             {showStatusFilter && (
               <Select
@@ -449,14 +439,14 @@ export function UnifiedKanbanBoard<T>({
                   {
                     key: 'save',
                     label: '保存当前视图',
-                    icon: <SaveOutlined />,
+                    icon: <Save />,
                     disabled: true,
                     onClick: () => antMessage.info('保存视图功能即将推出，敬请期待'),
                   },
                   {
                     key: 'share',
                     label: '共享视图',
-                    icon: <ShareAltOutlined />,
+                    icon: <Share2 />,
                     disabled: true,
                     onClick: () => antMessage.info('共享功能即将推出，敬请期待'),
                   },
@@ -464,7 +454,7 @@ export function UnifiedKanbanBoard<T>({
               }}
               trigger={['click']}
             >
-              <Button icon={<SettingOutlined />}>视图设置</Button>
+              <Button icon={<Settings />}>视图设置</Button>
             </Dropdown>
           </div>
         </div>

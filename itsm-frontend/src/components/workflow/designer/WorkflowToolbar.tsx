@@ -6,18 +6,7 @@
 import React from 'react';
 import type { MenuProps} from 'antd';
 import { Button, Space, Tag, Breadcrumb, Typography, Dropdown, Tooltip } from 'antd';
-import {
-  SaveOutlined,
-  CloudUploadOutlined,
-  PlayCircleOutlined,
-  ExportOutlined,
-  HistoryOutlined,
-  SettingOutlined,
-  EditOutlined,
-  BugOutlined,
-  RocketOutlined,
-  RobotOutlined
-} from '@ant-design/icons';
+import { Save, Pencil, Export, Settings, History, Bug, Rocket, PlayCircle, CloudUpload } from 'lucide-react';
 import Link from 'next/link';
 import type { WorkflowDefinition } from './WorkflowTypes';
 
@@ -64,13 +53,13 @@ export default function WorkflowToolbar({
   const moreMenuItems: MenuProps['items'] = [
     {
       key: 'export',
-      icon: <ExportOutlined />,
+      icon: <Export />,
       label: '导出BPMN',
       onClick: handleExportXML
     },
     {
       key: 'history',
-      icon: <HistoryOutlined />,
+      icon: <History />,
       label: '版本历史',
       onClick: () => {
         // 切换到版本标签页
@@ -81,7 +70,7 @@ export default function WorkflowToolbar({
     },
     {
       key: 'settings',
-      icon: <SettingOutlined />,
+      icon: <Settings />,
       label: '流程设置',
       onClick: () => {
         // 切换到配置标签页
@@ -95,7 +84,7 @@ export default function WorkflowToolbar({
     },
     {
       key: 'validate',
-      icon: <BugOutlined />,
+      icon: <Bug />,
       label: (
         <Space>
           校验流程
@@ -114,7 +103,7 @@ export default function WorkflowToolbar({
   const aiMenuItems: MenuProps['items'] = [
     {
       key: 'generate',
-      icon: <RocketOutlined />,
+      icon: <Rocket />,
       label: 'AI生成流程',
       onClick: onAIClick
     },
@@ -126,7 +115,7 @@ export default function WorkflowToolbar({
     },
     {
       key: 'check',
-      icon: <BugOutlined />,
+      icon: <Bug />,
       label: 'AI合规检查',
       onClick: onAIClick
     }
@@ -173,7 +162,7 @@ export default function WorkflowToolbar({
         </Dropdown>
 
         <Button
-          icon={<SaveOutlined />}
+          icon={<Save />}
           loading={saving}
           onClick={() => onSave(currentXML)}
         >
@@ -183,7 +172,7 @@ export default function WorkflowToolbar({
         {workflow?.status !== 'active' && (
           <Button
             type="primary"
-            icon={<CloudUploadOutlined />}
+            icon={<CloudUpload />}
             loading={deploying}
             onClick={() => onSaveAndDeploy(currentXML)}
           >
@@ -194,7 +183,7 @@ export default function WorkflowToolbar({
         {workflow?.status === 'active' && (
           <Button
             type="primary"
-            icon={<PlayCircleOutlined />}
+            icon={<PlayCircle />}
             loading={deploying}
             onClick={onDeploy}
           >

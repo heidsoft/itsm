@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Table, Tag, Button, Tabs, Card, Space, Tooltip, message, Empty } from 'antd';
-import { EyeOutlined, CheckCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { Eye, RefreshCw, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -129,7 +129,7 @@ const ServiceRequestList: React.FC = () => {
           <Tooltip title="查看详情">
             <Button
               type="text"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
               onClick={() => router.push(`/service-requests/${record.id}`)}
             />
@@ -138,7 +138,7 @@ const ServiceRequestList: React.FC = () => {
             <Tooltip title="审批">
               <Button
                 type="text"
-                icon={<CheckCircleOutlined />}
+                icon={<CheckCircle />}
                 className="text-green-600 hover:text-green-800 hover:bg-green-50"
                 onClick={() => router.push(`/service-requests/${record.id}`)}
               />
@@ -162,7 +162,7 @@ const ServiceRequestList: React.FC = () => {
             { label: '待办审批', key: 'approvals' },
           ]}
         />
-        <Button icon={<SyncOutlined />} onClick={loadData}>
+        <Button icon={<RefreshCw />} onClick={loadData}>
           刷新
         </Button>
       </div>

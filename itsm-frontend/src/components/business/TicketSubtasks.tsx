@@ -20,16 +20,7 @@ import {
   Popconfirm,
   Timeline,
 } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  LinkOutlined,
-  BarChartOutlined,
-  UnorderedListOutlined,
-} from '@ant-design/icons';
+import { Plus, Pencil, Trash2, Clock, Link, CheckCircle, BarChart3, List } from 'lucide-react';
 import { List, GanttChart } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import type { Ticket } from '@/lib/services/ticket-service';
@@ -257,7 +248,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
               <Button
                 type="link"
                 size="small"
-                icon={<EditOutlined />}
+                icon={<Pencil />}
                 onClick={() => handleOpenModal(record)}
               >
                 编辑
@@ -266,7 +257,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
                 title="确定要删除这个子任务吗？"
                 onConfirm={() => handleDelete(record.id)}
               >
-                <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+                <Button type="link" size="small" danger icon={<Trash2 />}>
                   删除
                 </Button>
               </Popconfirm>
@@ -340,9 +331,9 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
               color={statusConfig.color}
               dot={
                 subtask.status === 'resolved' || subtask.status === 'closed' ? (
-                  <CheckCircleOutlined />
+                  <CheckCircle />
                 ) : (
-                  <ClockCircleOutlined />
+                  <Clock />
                 )
               }
             >
@@ -421,14 +412,14 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
               </Button>
               <Button
                 type={viewMode === 'timeline' ? 'primary' : 'default'}
-                icon={<ClockCircleOutlined />}
+                icon={<Clock />}
                 onClick={() => setViewMode('timeline')}
               >
                 时间线
               </Button>
             </Button.Group>
             {canEdit && (
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenModal()}>
+              <Button type="primary" icon={<Plus />} onClick={() => handleOpenModal()}>
                 创建子任务
               </Button>
             )}

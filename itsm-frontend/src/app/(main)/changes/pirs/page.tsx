@@ -13,19 +13,13 @@ import {
   Descriptions,
   Divider,
 } from 'antd';
-import {
-  CheckCircleOutlined,
-  WarningOutlined,
-  CloseCircleOutlined,
-  EyeOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+import { Trash2, Eye, AlertTriangle, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { ChangeApi, type PIRResponse, type PIROverallResult } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 import dayjs from 'dayjs';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { Trash2, Eye, AlertTriangle, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 
 export default function PIRListPage() {
@@ -85,19 +79,19 @@ export default function PIRListPage() {
     switch (result) {
       case 'successful':
         return (
-          <Tag icon={<CheckCircleOutlined />} color="success">
+          <Tag icon={<CheckCircle />} color="success">
             成功
           </Tag>
         );
       case 'partially_successful':
         return (
-          <Tag icon={<WarningOutlined />} color="warning">
+          <Tag icon={<AlertTriangle />} color="warning">
             部分成功
           </Tag>
         );
       case 'failed':
         return (
-          <Tag icon={<CloseCircleOutlined />} color="error">
+          <Tag icon={<XCircle />} color="error">
             失败
           </Tag>
         );
@@ -167,7 +161,7 @@ export default function PIRListPage() {
         <Space>
           <Button
             type="link"
-            icon={<EyeOutlined />}
+            icon={<Eye />}
             onClick={() => {
               setSelectedPIR(record);
               setDetailModalVisible(true);
@@ -178,7 +172,7 @@ export default function PIRListPage() {
           <Button
             type="link"
             danger
-            icon={<DeleteOutlined />}
+            icon={<Trash2 />}
             onClick={() => {
               setSelectedPIR(record);
               setDeleteModalVisible(true);
@@ -334,7 +328,7 @@ export default function PIRListPage() {
       <Modal
         title={
           <Space>
-            <ExclamationCircleOutlined style={{ color: '#faad14' }} />
+            <AlertCircle style={{ color: '#faad14' }} />
             确认删除
           </Space>
         }

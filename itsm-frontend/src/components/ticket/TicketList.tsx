@@ -18,17 +18,7 @@ import {
   Col,
   Divider,
 } from 'antd';
-import {
-  FilterOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  ExportOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  MoreOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+import { Filter, Plus, Pencil, Trash2, Export, Eye, RotateCcw, AlertCircle } from 'lucide-react';
 import type { ColumnsType, TableProps, TablePaginationConfig } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
@@ -365,13 +355,13 @@ const TicketList: React.FC<TicketListProps> = ({
           const items: MenuProps['items'] = [
             {
               key: 'view',
-              icon: <EyeOutlined />,
+              icon: <Eye />,
               label: '查看详情',
               onClick: () => router.push(`/tickets/${record.id}`),
             },
             {
               key: 'edit',
-              icon: <EditOutlined />,
+              icon: <Pencil />,
               label: '编辑',
               onClick: () => router.push(`/tickets/${record.id}`),
             },
@@ -380,7 +370,7 @@ const TicketList: React.FC<TicketListProps> = ({
             },
             {
               key: 'delete',
-              icon: <DeleteOutlined />,
+              icon: <Trash2 />,
               label: '删除',
               danger: true,
               onClick: () => {
@@ -435,10 +425,10 @@ const TicketList: React.FC<TicketListProps> = ({
                   style={{ width: 300 }}
                   allowClear
                 />
-                <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>
+                <Button icon={<Filter />} onClick={() => setShowFilters(!showFilters)}>
                   过滤器
                 </Button>
-                <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={loading}>
+                <Button icon={<RotateCcw />} onClick={handleRefresh} loading={loading}>
                   刷新
                 </Button>
               </Space>
@@ -446,16 +436,16 @@ const TicketList: React.FC<TicketListProps> = ({
             <Col>
               <Space>
                 {selectedTickets.size > 0 && (
-                  <Button danger icon={<DeleteOutlined />} onClick={handleBatchDelete}>
+                  <Button danger icon={<Trash2 />} onClick={handleBatchDelete}>
                     批量删除 ({selectedTickets.size})
                   </Button>
                 )}
-                <Button icon={<ExportOutlined />} onClick={handleExport}>
+                <Button icon={<Export />} onClick={handleExport}>
                   导出
                 </Button>
                 <Button
                   type="primary"
-                  icon={<PlusOutlined />}
+                  icon={<Plus />}
                   onClick={() => router.push('/tickets/create')}
                 >
                   创建工单
@@ -577,7 +567,7 @@ const TicketList: React.FC<TicketListProps> = ({
         okButtonProps={{ danger: true }}
       >
         <p>
-          <ExclamationCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
+          <AlertCircle style={{ color: '#ff4d4f', marginRight: 8 }} />
           确定要删除工单 <strong>{ticketToDelete?.ticketNumber || '-'}</strong> 吗？此操作不可撤销。
         </p>
       </Modal>

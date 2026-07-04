@@ -15,7 +15,7 @@ import {
   Avatar,
 } from 'antd';
 import { Plus, Search, Filter, Table as TableIcon } from 'lucide-react';
-import { AppstoreOutlined } from '@ant-design/icons';
+import { LayoutGrid } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { IncidentList } from './components/IncidentList';
 import { IncidentFilters } from './components/IncidentFilters';
@@ -82,8 +82,7 @@ export default function IncidentsPage() {
         page_size: pageSize, // Use actual pageSize state
         search: debouncedSearch || undefined,
       });
-      const resp = response as unknown as Record<string, unknown>;
-      const items = (resp.items || resp.incidents || []) as Incident[];
+      const items = response.incidents || response.data || [];
 
       // Fetch users to map reporter names
       const userMap = new Map<number, string>();
@@ -107,7 +106,7 @@ export default function IncidentsPage() {
       });
 
       setIncidents(enriched);
-      const totalCount = (resp as any).total || enriched.length;
+      const totalCount = response.total || enriched.length;
       setTotal(totalCount);
     } catch (error) {
       console.error('Failed to fetch incidents:', error);
@@ -197,7 +196,7 @@ export default function IncidentsPage() {
               key: 'kanban',
               label: (
                 <span className="flex items-center gap-2">
-                  <AppstoreOutlined />
+                  <LayoutGrid />
                   看板视图
                 </span>
               ),

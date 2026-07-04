@@ -17,17 +17,7 @@ import {
   message,
   App,
 } from 'antd';
-import {
-  SearchOutlined,
-  FilterOutlined,
-  SettingOutlined,
-  PlusOutlined,
-  EyeOutlined,
-  EditOutlined,
-  MoreOutlined,
-  SaveOutlined,
-  ShareAltOutlined,
-} from '@ant-design/icons';
+import { Search, Filter, Plus, Save, Pencil, Eye, Settings, Share2 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type {
   DragStartEvent,
@@ -99,13 +89,13 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
     {
       key: 'view',
       label: '查看详情',
-      icon: <EyeOutlined />,
+      icon: <Eye />,
       onClick: onClick,
     },
     {
       key: 'edit',
       label: '编辑',
-      icon: <EditOutlined />,
+      icon: <Pencil />,
       onClick: onEdit,
     },
   ];
@@ -370,13 +360,13 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
     {
       key: 'save',
       label: '保存当前视图',
-      icon: <SaveOutlined />,
+      icon: <Save />,
       onClick: () => setSaveViewModalVisible(true),
     },
     {
       key: 'share',
       label: '共享视图',
-      icon: <ShareAltOutlined />,
+      icon: <Share2 />,
       disabled: true,
       onClick: () => antMessage.info('共享功能即将推出，敬请期待'),
     },
@@ -401,7 +391,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
             value={searchKeyword}
             onChange={e => setSearchKeyword(e.target.value)}
             style={{ width: 250 }}
-            prefix={<SearchOutlined />}
+            prefix={<Search />}
           />
           <Select
             value={filterStatus}
@@ -431,7 +421,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <Dropdown menu={{ items: viewMenuItems }} trigger={['click']}>
-            <Button icon={<SettingOutlined />}>视图设置</Button>
+            <Button icon={<Settings />}>视图设置</Button>
           </Dropdown>
         </div>
       </div>

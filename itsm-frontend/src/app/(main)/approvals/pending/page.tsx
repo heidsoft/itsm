@@ -3,15 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Card, Space, Button, Table, Tag, App, Empty, Tooltip, Popconfirm, Tabs, message } from 'antd';
-import {
-  ReloadOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  BranchesOutlined,
-  UserAddOutlined,
-} from '@ant-design/icons';
+import { X, Check, UserPlus, RotateCcw, CheckCircle, XCircle, GitBranch } from 'lucide-react';
 
 import type { ServiceRequest } from '@/lib/api/service-request-api';
 import { serviceRequestAPI } from '@/lib/api/service-request-api';
@@ -115,7 +107,7 @@ export default function PendingApprovalsPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-0">我的待办审批</h2>
               <p className="text-gray-500 mt-1 mb-0">V0：按角色返回当前需要我处理的服务请求 + BPMN 任务</p>
             </div>
-            <Button icon={<ReloadOutlined />} onClick={() => load(page, size)} loading={loading}>
+            <Button icon={<RotateCcw />} onClick={() => load(page, size)} loading={loading}>
               刷新
             </Button>
           </div>
@@ -129,7 +121,7 @@ export default function PendingApprovalsPage() {
                 key: 'service-request',
                 label: (
                   <span>
-                    <CheckOutlined /> 服务请求审批
+                    <Check /> 服务请求审批
                   </span>
                 ),
                 children: (
@@ -151,7 +143,7 @@ export default function PendingApprovalsPage() {
                 key: 'bpmn-task',
                 label: (
                   <span>
-                    <BranchesOutlined /> 我作为候选组员（BPMN）
+                    <GitBranch /> 我作为候选组员（BPMN）
                   </span>
                 ),
                 children: <MyBpmnTaskTab />,
@@ -183,7 +175,7 @@ function ServiceRequestTable(props: {
       {rows.length === 0 && !loading ? (
         <Empty description="暂无待审批事项" image={Empty.PRESENTED_IMAGE_SIMPLE}>
           <div className="text-center">
-            <CheckCircleOutlined className="text-4xl text-green-500 mb-4" />
+            <CheckCircle className="text-4xl text-green-500 mb-4" />
             <p className="text-gray-500">所有服务请求审批已处理完成</p>
           </div>
         </Empty>
@@ -239,7 +231,7 @@ function ServiceRequestTable(props: {
                     <Button
                       type="primary"
                       size="small"
-                      icon={<CheckOutlined />}
+                      icon={<Check />}
                       loading={processingIds.has(r.id)}
                       onClick={() => onApprove(r.id)}
                     >
@@ -258,7 +250,7 @@ function ServiceRequestTable(props: {
                       <Button
                         danger
                         size="small"
-                        icon={<CloseOutlined />}
+                        icon={<X />}
                         loading={processingIds.has(r.id)}
                       >
                         拒绝
@@ -335,14 +327,14 @@ function MyBpmnTaskTab() {
         <div className="text-sm text-gray-500">
           包含我作为 <b>被指派人</b>、<b>候选人</b> 或 <b>候选组员</b> 的待办 BPMN UserTask。
         </div>
-        <Button size="small" icon={<ReloadOutlined />} onClick={() => load(page, size)} loading={loading}>
+        <Button size="small" icon={<RotateCcw />} onClick={() => load(page, size)} loading={loading}>
           刷新
         </Button>
       </div>
       {tasks.length === 0 && !loading ? (
         <Empty description="暂无 BPMN 待办任务" image={Empty.PRESENTED_IMAGE_SIMPLE}>
           <div className="text-center">
-            <CheckCircleOutlined className="text-4xl text-green-500 mb-4" />
+            <CheckCircle className="text-4xl text-green-500 mb-4" />
             <p className="text-gray-500">没有需要我处理的 BPMN 审批节点</p>
           </div>
         </Empty>
@@ -396,7 +388,7 @@ function MyBpmnTaskTab() {
                       <Button
                         type="primary"
                         size="small"
-                        icon={<UserAddOutlined />}
+                        icon={<UserPlus />}
                         loading={claimingIds.has(r.id)}
                         onClick={() => handleClaim(r.id)}
                       >

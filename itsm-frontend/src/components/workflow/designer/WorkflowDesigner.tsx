@@ -6,14 +6,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Layout, Tabs, Form, Modal, Tag, Button, Space, Typography, Switch, App } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { 
-  CheckCircleOutlined, 
-  CloseCircleOutlined, 
-  WarningOutlined, 
-  BugOutlined,
-  HistoryOutlined,
-  DiffOutlined
-} from '@ant-design/icons';
+import { History, AlertTriangle, CheckCircle, XCircle, Bug } from 'lucide-react';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { UserApi } from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
@@ -893,7 +886,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                       <Space>
                         <Button 
                           type="primary" 
-                          icon={<BugOutlined />} 
+                          icon={<Bug />} 
                           onClick={() => validateWorkflow(true)}
                           loading={validating}
                         >
@@ -910,7 +903,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 
                     {validationIssues.length === 0 ? (
                       <div className="text-center py-12">
-                        <CheckCircleOutlined className="text-4xl text-green-500 mb-2" />
+                        <CheckCircle className="text-4xl text-green-500 mb-2" />
                         <Title level={4}>流程校验通过</Title>
                         <Text type="secondary">未发现任何问题，可以正常部署</Text>
                       </div>
@@ -926,11 +919,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                               <div className="pt-1">
                                 {
                                 item.type === 'error' ? (
-                                  <CloseCircleOutlined className="text-red-500 text-xl" />
+                                  <XCircle className="text-red-500 text-xl" />
                                 ) : item.type === 'warning' ? (
-                                  <WarningOutlined className="text-yellow-500 text-xl" />
+                                  <AlertTriangle className="text-yellow-500 text-xl" />
                                 ) : (
-                                  <CheckCircleOutlined className="text-blue-500 text-xl" />
+                                  <CheckCircle className="text-blue-500 text-xl" />
                                 )
                                 }
                               </div>

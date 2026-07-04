@@ -24,24 +24,17 @@ import {
   Tag,
   Alert,
 } from 'antd';
-import {
-  RocketOutlined,
-  PlusCircleOutlined,
-  AppstoreOutlined,
-  DatabaseOutlined,
-  RobotOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons';
+import { LayoutGrid, CheckCircle, PlusCircle, Database, Rocket } from 'lucide-react';
 
 const { Title, Paragraph } = Typography;
 
 type StepKey = 'welcome' | 'first-ticket' | 'catalog' | 'cmdb' | 'ai-triage' | 'done';
 
 const STEPS: Array<{ key: StepKey; title: string; icon: React.ReactNode }> = [
-  { key: 'welcome', title: '欢迎', icon: <RocketOutlined /> },
-  { key: 'first-ticket', title: '创建工单', icon: <PlusCircleOutlined /> },
-  { key: 'catalog', title: '服务目录', icon: <AppstoreOutlined /> },
-  { key: 'cmdb', title: 'CMDB', icon: <DatabaseOutlined /> },
+  { key: 'welcome', title: '欢迎', icon: <Rocket /> },
+  { key: 'first-ticket', title: '创建工单', icon: <PlusCircle /> },
+  { key: 'catalog', title: '服务目录', icon: <LayoutGrid /> },
+  { key: 'cmdb', title: 'CMDB', icon: <Database /> },
   { key: 'ai-triage', title: 'AI 分诊', icon: <RobotOutlined /> },
 ];
 
@@ -115,7 +108,7 @@ export default function FirstRunWizard({ initialStep, onFinish }: WizardProps) {
             </Button>
             <Space>
               {currentIndex > 0 && <Button onClick={goPrev}>上一步</Button>}
-              <Button type="primary" onClick={goNext} icon={<CheckCircleOutlined />}>
+              <Button type="primary" onClick={goNext} icon={<CheckCircle />}>
                 {currentIndex === STEPS.length - 1 ? '完成' : '下一步'}
               </Button>
             </Space>
@@ -129,7 +122,7 @@ export default function FirstRunWizard({ initialStep, onFinish }: WizardProps) {
 function WelcomeStep() {
   return (
     <Result
-      icon={<RocketOutlined style={{ color: '#1677ff' }} />}
+      icon={<Rocket style={{ color: '#1677ff' }} />}
       title="5 分钟快速了解 AI-Native ITSM"
       subTitle="我们将引导你完成：创建第一个工单、浏览服务目录、配置 CMDB、体验 AI 分诊。"
       extra={

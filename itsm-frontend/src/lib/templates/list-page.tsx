@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { Table, Button, Space, message, Card } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Plus, RotateCcw } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 
 interface DataItem {
@@ -70,10 +70,10 @@ export function createListPage<T extends DataItem>(config: {
         title={`${config.name}管理`}
         extra={
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={loadData}>
+            <Button icon={<RotateCcw />} onClick={loadData}>
               刷新
             </Button>
-            <Button type="primary" icon={<PlusOutlined />}>
+            <Button type="primary" icon={<Plus />}>
               新建{config.name}
             </Button>
           </Space>

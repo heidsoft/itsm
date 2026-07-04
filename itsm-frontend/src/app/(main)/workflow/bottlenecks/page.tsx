@@ -31,14 +31,7 @@ import {
   Tag,
   Typography,
 } from 'antd';
-import {
-  BarChartOutlined,
-  ClockCircleOutlined,
-  RocketOutlined,
-  SearchOutlined,
-  ThunderboltOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
+import { Search, Clock, AlertTriangle, BarChart3, Zap, Rocket } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { BPMNMonitoringApi, type BottleneckTask } from '@/lib/api/bpmn-monitoring-api';
 import { BPMNDashboardApi, type ProcessStat } from '@/lib/api/bpmn-dashboard-api';
@@ -193,7 +186,7 @@ export default function BottlenecksPage() {
       width: 120,
       render: (_: unknown, t: BottleneckTask) => (
         <Space size={4}>
-          <ClockCircleOutlined />
+          <Clock />
           <Text strong>{formatSeconds(t.waitTimeSeconds)}</Text>
         </Space>
       ),
@@ -247,7 +240,7 @@ export default function BottlenecksPage() {
     <div className="space-y-6">
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
-          <BarChartOutlined style={{ marginRight: 8 }} />
+          <BarChart3 style={{ marginRight: 8 }} />
           BPMN 节点停留时间分析
         </Title>
         <Paragraph type="secondary">
@@ -275,7 +268,7 @@ export default function BottlenecksPage() {
           <Input
             placeholder="或输入流程 key 检索"
             allowClear
-            prefix={<SearchOutlined />}
+            prefix={<Search />}
             value={keyword}
             onChange={e => setKeyword(e.target.value)}
             style={{ width: 240 }}
@@ -292,7 +285,7 @@ export default function BottlenecksPage() {
             ]}
           />
           <Button
-            icon={<RocketOutlined />}
+            icon={<Rocket />}
             onClick={() => {
               if (keyword) setSelectedProcess(keyword);
             }}
@@ -315,7 +308,7 @@ export default function BottlenecksPage() {
                   title="严重程度"
                   value={analysis?.severity?.toUpperCase() ?? '-'}
                   valueStyle={{ color: severityColorMap[analysis?.severity ?? 'low'] ?? 'green' }}
-                  prefix={<WarningOutlined />}
+                  prefix={<AlertTriangle />}
                 />
               </Card>
             </Col>
@@ -324,7 +317,7 @@ export default function BottlenecksPage() {
                 <Statistic
                   title="瓶颈任务数"
                   value={analysis?.bottleneckTasks.length ?? 0}
-                  prefix={<ThunderboltOutlined />}
+                  prefix={<Zap />}
                 />
               </Card>
             </Col>

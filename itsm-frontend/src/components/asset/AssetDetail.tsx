@@ -20,12 +20,7 @@ import {
   message,
   Typography,
 } from 'antd';
-import {
-  ArrowLeftOutlined,
-  DesktopOutlined,
-  UserOutlined,
-  EnvironmentOutlined,
-} from '@ant-design/icons';
+import { ArrowLeft, User, Monitor, MapPin } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -143,7 +138,7 @@ const AssetDetail: React.FC = () => {
       <Card>
         <div style={{ marginBottom: 24 }}>
           <Button
-            icon={<ArrowLeftOutlined />}
+            icon={<ArrowLeft />}
             onClick={() => router.push('/assets')}
             style={{ marginBottom: 16 }}
           >
@@ -234,7 +229,7 @@ const AssetDetail: React.FC = () => {
             编辑
           </Button>
           {asset.status === 'available' && (
-            <Button icon={<UserOutlined />} onClick={() => setAssignModalVisible(true)}>
+            <Button icon={<User />} onClick={() => setAssignModalVisible(true)}>
               分配资产
             </Button>
           )}

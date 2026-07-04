@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Result, Button } from 'antd';
-import { ReloadOutlined, DashboardOutlined } from '@ant-design/icons';
+import { LayoutDashboard, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -30,12 +30,12 @@ export default function Error({
         title="页面出错了"
         subTitle="抱歉，页面遇到了一个意外错误。请尝试重试或返回仪表盘。"
         extra={[
-          <Button key="retry" type="primary" icon={<ReloadOutlined />} onClick={() => reset()}>
+          <Button key="retry" type="primary" icon={<RotateCcw />} onClick={() => reset()}>
             重试
           </Button>,
           <Button
             key="dashboard"
-            icon={<DashboardOutlined />}
+            icon={<LayoutDashboard />}
             onClick={() => router.push('/dashboard')}
           >
             返回仪表盘

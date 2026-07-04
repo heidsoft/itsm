@@ -22,13 +22,7 @@ import {
   Progress,
   Empty,
 } from 'antd';
-import {
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  PlusOutlined,
-  KeyOutlined,
-} from '@ant-design/icons';
+import { Search, Plus, Pencil, Eye, Key } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -228,7 +222,7 @@ const LicenseList: React.FC = () => {
           <Tooltip title="查看许可证详情">
             <Button
               type="text"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => router.push(`/licenses/${record.id}`)}
               aria-label={`查看许可证 ${record.name || '详情'}`}
             />
@@ -236,7 +230,7 @@ const LicenseList: React.FC = () => {
           <Tooltip title="编辑许可证信息">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => router.push(`/licenses/${record.id}`)}
               aria-label={`编辑许可证 ${record.name || '详情'}`}
             />
@@ -251,7 +245,7 @@ const LicenseList: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="总许可证" value={stats.total || 0} prefix={<KeyOutlined />} />
+            <Statistic title="总许可证" value={stats.total || 0} prefix={<Key />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -326,13 +320,13 @@ const LicenseList: React.FC = () => {
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
+              <Button type="primary" icon={<Search />} onClick={handleSearch}>
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
               <Button
                 type="primary"
-                icon={<PlusOutlined />}
+                icon={<Plus />}
                 onClick={() => router.push('/licenses/new')}
               >
                 创建许可证

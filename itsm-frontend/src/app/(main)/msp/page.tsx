@@ -19,13 +19,7 @@ import {
   DatePicker,
   message,
 } from 'antd';
-import {
-  UserOutlined,
-  FileTextOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+import { User, FileText, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import MSPService from '@/lib/services/msp-service';
 import type { MSPAllocation, MSPCustomerReport, MSPContext, MSPAllocationHistory } from '@/types/msp';
 
@@ -263,7 +257,7 @@ export default function MSPDashboardPage() {
         <Card>
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <div style={{ marginBottom: 24 }}>
-              <Avatar size={80} icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
+              <Avatar size={80} icon={<User />} style={{ backgroundColor: '#1890ff' }} />
             </div>
             <Alert
               message="MSP 管理控制台"
@@ -319,12 +313,12 @@ export default function MSPDashboardPage() {
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col span={6}>
           <Card>
-            <Statistic title="负责客户数" value={customers.length} prefix={<UserOutlined />} />
+            <Statistic title="负责客户数" value={customers.length} prefix={<User />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="分配数量" value={allocations.length} prefix={<FileTextOutlined />} />
+            <Statistic title="分配数量" value={allocations.length} prefix={<FileText />} />
           </Card>
         </Col>
         <Col span={6}>
@@ -332,7 +326,7 @@ export default function MSPDashboardPage() {
             <Statistic
               title="本月工单"
               value={reports.reduce((sum, r) => sum + r.total_tickets, 0)}
-              prefix={<ClockCircleOutlined />}
+              prefix={<Clock />}
             />
           </Card>
         </Col>
@@ -341,7 +335,7 @@ export default function MSPDashboardPage() {
             <Statistic
               title="已解决"
               value={reports.reduce((sum, r) => sum + r.resolved_tickets, 0)}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircle />}
             />
           </Card>
         </Col>

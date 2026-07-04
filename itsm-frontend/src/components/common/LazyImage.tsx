@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Skeleton } from 'antd';
-import { FileImageOutlined } from '@ant-design/icons';
+import { Image } from 'lucide-react';
 
 interface LazyImageProps {
   src: string;
@@ -120,7 +120,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
       className={className}
     >
       <div style={{ textAlign: 'center' }}>
-        <FileImageOutlined style={{ fontSize: 48, marginBottom: 8 }} />
+        <Image style={{ fontSize: 48, marginBottom: 8 }} />
         <div style={{ fontSize: 12 }}>图片加载失败</div>
       </div>
     </div>

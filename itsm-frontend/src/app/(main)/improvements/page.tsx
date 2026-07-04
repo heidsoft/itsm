@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Table, Button, Tag, Space, Card, App, Empty } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Plus, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import { useI18n } from '@/lib/i18n';
@@ -134,12 +134,12 @@ const ImprovementListPage = () => {
             <p className="text-gray-500 mt-1">识别、规划和实施IT服务和流程的改进</p>
           </div>
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={loadImprovements} loading={loading}>
+            <Button icon={<RotateCcw />} onClick={loadImprovements} loading={loading}>
               刷新
             </Button>
             <Button
               type="primary"
-              icon={<PlusOutlined />}
+              icon={<Plus />}
               onClick={() => router.push('/improvements/new')}
             >
               新建改进计划

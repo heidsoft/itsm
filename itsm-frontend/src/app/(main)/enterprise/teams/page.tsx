@@ -14,13 +14,7 @@ import {
   Tooltip,
   message,
 } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  UserOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+import { Plus, Pencil, Trash2, User, RefreshCw } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type { Team } from '@/lib/services/team-service';
 import { teamService } from '@/lib/services/team-service';
@@ -97,7 +91,7 @@ export default function TeamsPage() {
           <Avatar.Group maxCount={3}>
             {members.map(member => (
               <Tooltip key={member.id} title={member.name || member.username}>
-                <Avatar style={{ backgroundColor: '#87d068' }} icon={<UserOutlined />}>
+                <Avatar style={{ backgroundColor: '#87d068' }} icon={<User />}>
                   {(member.name || member.username || '?')[0].toUpperCase()}
                 </Avatar>
               </Tooltip>
@@ -116,11 +110,11 @@ export default function TeamsPage() {
       key: 'action',
       render: (_: unknown, record: Team) => (
         <Space size="middle">
-          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          <Button type="text" icon={<Pencil />} onClick={() => handleEdit(record)} />
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<Trash2 />}
             onClick={() => handleDelete(record)}
           />
         </Space>
@@ -181,13 +175,13 @@ export default function TeamsPage() {
         },
       }}
       extra={[
-        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchTeams} loading={fetching}>
+        <Button key="refresh" icon={<RefreshCw />} onClick={fetchTeams} loading={fetching}>
           {t('common.refresh')}
         </Button>,
         <Button
           key="create"
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<Plus />}
           onClick={() => {
             form.resetFields();
             setIsModalVisible(true);

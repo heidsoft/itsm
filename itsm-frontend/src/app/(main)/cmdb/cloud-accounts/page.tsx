@@ -18,13 +18,7 @@ import {
   message,
   Switch,
 } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+import { Search, Plus, Pencil, Trash2, RotateCcw } from 'lucide-react';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { CloudAccount } from '@/types/biz/cmdb';
@@ -217,7 +211,7 @@ export default function CloudAccountPage() {
           <Tooltip title="编辑">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => handleEdit(record)}
               size="small"
             />
@@ -230,7 +224,7 @@ export default function CloudAccountPage() {
             cancelText="取消"
           >
             <Tooltip title="删除">
-              <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+              <Button type="text" danger icon={<Trash2 />} size="small" />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -259,7 +253,7 @@ export default function CloudAccountPage() {
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Input
           placeholder="搜索账号名称/ID"
-          prefix={<SearchOutlined className="text-gray-400" />}
+          prefix={<Search className="text-gray-400" />}
           value={searchText}
           onChange={e => setSearchText(e.target.value)}
           allowClear
@@ -279,10 +273,10 @@ export default function CloudAccountPage() {
           ))}
         </Select>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={loadData} loading={loading}>
+          <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
             刷新
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+          <Button type="primary" icon={<Plus />} onClick={() => setCreateOpen(true)}>
             新增云账号
           </Button>
         </Space>

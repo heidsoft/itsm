@@ -19,7 +19,7 @@ import {
   Typography,
   Breadcrumb,
 } from 'antd';
-import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeft, Save } from 'lucide-react';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 
 const { Title } = Typography;
@@ -74,7 +74,7 @@ export default function NewKnowledgeArticlePage() {
       />
       <Card>
         <Space className="mb-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/knowledge')}>
+          <Button icon={<ArrowLeft />} onClick={() => router.push('/knowledge')}>
             返回
           </Button>
           <Title level={3} style={{ margin: 0 }}>
@@ -131,7 +131,7 @@ export default function NewKnowledgeArticlePage() {
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={loading}>
+              <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
                 保存草稿
               </Button>
               <Button onClick={() => router.push('/knowledge')}>取消</Button>

@@ -7,15 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Button, Modal, Space, Tag, message, Input, Empty, Card } from 'antd';
-import {
-  PlusOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  LinkOutlined,
-  FileTextOutlined,
-  AlertOutlined,
-  SwapOutlined,
-} from '@ant-design/icons';
+import { Search, Plus, Trash2, FileText, Link, AlertTriangle, Swap } from 'lucide-react';
 import {
   ProblemApi,
   type AssociatedItem,
@@ -33,9 +25,9 @@ interface ProblemAssociationsTabProps {
 type RelatedType = 'ticket' | 'incident' | 'change';
 
 const TYPE_CONFIG: Record<RelatedType, { label: string; icon: React.ReactNode; color: string }> = {
-  ticket: { label: '工单', icon: <FileTextOutlined />, color: 'blue' },
-  incident: { label: '事件', icon: <AlertOutlined />, color: 'orange' },
-  change: { label: '变更', icon: <SwapOutlined />, color: 'purple' },
+  ticket: { label: '工单', icon: <FileText />, color: 'blue' },
+  incident: { label: '事件', icon: <AlertTriangle />, color: 'orange' },
+  change: { label: '变更', icon: <Swap />, color: 'purple' },
 };
 
 const STATUS_COLOR_MAP: Record<string, string> = {
@@ -203,7 +195,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
             type="link"
             danger
             size="small"
-            icon={<DeleteOutlined />}
+            icon={<Trash2 />}
             onClick={() => handleRemove(type, record.id)}
           >
             移除
@@ -227,7 +219,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
           <Button
             type="dashed"
             size="small"
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             onClick={() => openAddModal(type)}
           >
             添加{config.label}
@@ -266,7 +258,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
       <Modal
         title={
           <Space>
-            <LinkOutlined />
+            <Link />
             <span>添加{TYPE_CONFIG[addType].label}关联</span>
           </Space>
         }
@@ -283,7 +275,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
       >
         <Input.Search
           placeholder={`搜索${TYPE_CONFIG[addType].label}标题或编号`}
-          enterButton={<SearchOutlined />}
+          enterButton={<Search />}
           onSearch={handleSearch}
           loading={searchLoading}
           style={{ marginBottom: 16 }}

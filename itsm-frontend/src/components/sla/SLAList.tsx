@@ -18,13 +18,7 @@ import {
   Switch,
   Empty,
 } from 'antd';
-import {
-  PlusOutlined,
-  ReloadOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  BellOutlined,
-} from '@ant-design/icons';
+import { Plus, Pencil, Trash2, RotateCcw, Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -139,14 +133,14 @@ const SLAList: React.FC = () => {
           <Tooltip title="编辑">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => router.push(`/sla/definitions/${record.id}/edit`)}
             />
           </Tooltip>
           <Tooltip title="预警规则">
             <Button
               type="text"
-              icon={<BellOutlined />}
+              icon={<Bell />}
               onClick={() => router.push(`/sla/definitions/${record.id}/alerts`)}
             />
           </Tooltip>
@@ -154,7 +148,7 @@ const SLAList: React.FC = () => {
             <Button
               type="text"
               danger
-              icon={<DeleteOutlined />}
+              icon={<Trash2 />}
               onClick={() => handleDelete(record.id)}
             />
           </Tooltip>
@@ -175,13 +169,13 @@ const SLAList: React.FC = () => {
         <Space>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             onClick={() => router.push('/sla/definitions/new')}
           >
             新建 SLA
           </Button>
         </Space>
-        <Button icon={<ReloadOutlined />} onClick={loadData} />
+        <Button icon={<RotateCcw />} onClick={loadData} />
       </div>
 
       <Table

@@ -17,12 +17,7 @@ import {
   Alert,
   Typography,
 } from 'antd';
-import {
-  CheckCircleOutlined,
-  WarningOutlined,
-  CloseCircleOutlined,
-  RollbackOutlined,
-} from '@ant-design/icons';
+import { Undo, AlertTriangle, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { PageContainer } from '@/components/layout/PageContainer';
 import {
@@ -34,7 +29,7 @@ import {
 } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 import dayjs from 'dayjs';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { Undo, AlertTriangle, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -148,19 +143,19 @@ export default function PIRPage() {
     switch (result) {
       case 'successful':
         return (
-          <Tag icon={<CheckCircleOutlined />} color="success">
+          <Tag icon={<CheckCircle />} color="success">
             成功
           </Tag>
         );
       case 'partially_successful':
         return (
-          <Tag icon={<WarningOutlined />} color="warning">
+          <Tag icon={<AlertTriangle />} color="warning">
             部分成功
           </Tag>
         );
       case 'failed':
         return (
-          <Tag icon={<CloseCircleOutlined />} color="error">
+          <Tag icon={<XCircle />} color="error">
             失败
           </Tag>
         );
@@ -199,7 +194,7 @@ export default function PIRPage() {
               </Descriptions.Item>
               {pir.rollbackPerformed && (
                 <Descriptions.Item label="回滚">
-                  <Tag icon={<RollbackOutlined />} color="warning">
+                  <Tag icon={<Undo />} color="warning">
                     已回滚
                   </Tag>
                 </Descriptions.Item>
@@ -238,19 +233,19 @@ export default function PIRPage() {
               <Select placeholder="选择实施结果">
                 <Select.Option value="successful">
                   <Space>
-                    <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                    <CheckCircle style={{ color: '#52c41a' }} />
                     成功 - 变更完全按计划实施，达到预期目标
                   </Space>
                 </Select.Option>
                 <Select.Option value="partially_successful">
                   <Space>
-                    <WarningOutlined style={{ color: '#faad14' }} />
+                    <AlertTriangle style={{ color: '#faad14' }} />
                     部分成功 - 变更实施但存在一些问题
                   </Space>
                 </Select.Option>
                 <Select.Option value="failed">
                   <Space>
-                    <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                    <XCircle style={{ color: '#ff4d4f' }} />
                     失败 - 变更未能达到预期目标或需要回滚
                   </Space>
                 </Select.Option>
@@ -359,7 +354,7 @@ export default function PIRPage() {
       <Modal
         title={
           <Space>
-            <ExclamationCircleOutlined style={{ color: '#faad14' }} />
+            <AlertCircle style={{ color: '#faad14' }} />
             确认删除
           </Space>
         }

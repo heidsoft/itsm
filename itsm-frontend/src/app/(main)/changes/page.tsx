@@ -12,7 +12,7 @@ import {
   Table as TableIcon,
   Calendar,
 } from 'lucide-react';
-import { AppstoreOutlined } from '@ant-design/icons';
+import { LayoutGrid } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ChangeList from '@/components/change/ChangeList';
 import { ChangeApi, type Change } from '@/lib/api/change-api';
@@ -62,11 +62,11 @@ export default function ChangesPage() {
       const response = await ChangeApi.getChanges({
         page: 1,
         page_size: 100,
-        status: statusFilter as any, // ChangeStatus is string enum
+        status: statusFilter || undefined,
         search: debouncedSearch,
       });
-      const items = (response as any).items || (response as any).changes || [];
-      setChanges(items as Change[]);
+      const items = response.changes || [];
+      setChanges(items);
     } catch (error) {
       console.error('Failed to fetch changes for kanban:', error);
       setChanges([]);
@@ -259,7 +259,7 @@ export default function ChangesPage() {
               key: 'kanban',
               label: (
                 <span className="flex items-center gap-2">
-                  <AppstoreOutlined />
+                  <LayoutGrid />
                   看板视图
                 </span>
               ),
@@ -281,19 +281,13 @@ export default function ChangesPage() {
                   getItemDescription={(change: Change) => change.description || ''}
                   getItemPriority={(change: Change) => change.priority || 'medium'}
                   getItemAssignee={(change: Change) => {
-                    const assigneeId = change.assigneeId || (change as any).assignee_id;
+                    const assigneeId = change.assigneeId;
                     if (!assigneeId) return null;
-                    const data = change as unknown as Record<string, unknown>;
-                    const assigneeName =
-                      (data.assignee_name as string) || (data.assigneeName as string);
+                    const assigneeName = change.assigneeName;
                     return { name: assigneeName || `用户 #${assigneeId}` };
                   }}
-                  getItemCreatedAt={(change: Change) =>
-                    change.createdAt || (change as any).created_at || ''
-                  }
-                  getItemUpdatedAt={(change: Change) =>
-                    change.updatedAt || (change as any).updated_at || ''
-                  }
+                  getItemCreatedAt={(change: Change) => change.createdAt || ''}
+                  getItemUpdatedAt={(change: Change) => change.updatedAt || ''}
                   onItemClick={(change: Change) => router.push(`/changes/${change.id}`)}
                   onItemEdit={(change: Change) => router.push(`/changes/${change.id}/edit`)}
                   columnConfigs={KANBAN_COLUMNS}

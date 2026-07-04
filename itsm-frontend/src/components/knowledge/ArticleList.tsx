@@ -20,14 +20,7 @@ import {
   Empty,
   App,
 } from 'antd';
-import {
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+import { Search, Plus, Pencil, Trash2, Eye, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -172,7 +165,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
           <Tooltip title="编辑">
             <Button
               size="small"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => router.push(`/knowledge/articles/${record.id}/edit`)}
               style={{ backgroundColor: '#3b82f6', color: '#fff', border: 'none' }}
             />
@@ -180,7 +173,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
           <Tooltip title="删除">
             <Button
               size="small"
-              icon={<DeleteOutlined />}
+              icon={<Trash2 />}
               onClick={() => handleDelete(record.id)}
               style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none' }}
             />
@@ -200,7 +193,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
           </div>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             onClick={() => router.push('/knowledge/articles/new')}
             size="large"
           >
@@ -215,7 +208,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
             <Input
               placeholder="搜索标题/内容"
               allowClear
-              prefix={<SearchOutlined className="text-gray-400" />}
+              prefix={<Search className="text-gray-400" />}
               className="w-64"
             />
           </Form.Item>

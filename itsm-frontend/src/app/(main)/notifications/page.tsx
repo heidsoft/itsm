@@ -65,7 +65,13 @@ const normalizeNotification = (notification: TicketNotification): TicketNotifica
 });
 
 // 通知事件类型配置
-const EVENT_TYPES = [
+interface EventTypeConfig {
+  type: string;
+  nameKey: string;
+  descKey: string;
+}
+
+const EVENT_TYPES: EventTypeConfig[] = [
   {
     type: 'ticket_created',
     nameKey: 'notifications.ticketCreated',
@@ -119,7 +125,14 @@ const EVENT_TYPES = [
 ];
 
 // 通知渠道配置
-const CHANNELS = [
+interface ChannelConfig {
+  key: string;
+  nameKey: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+}
+
+const CHANNELS: ChannelConfig[] = [
   { key: 'email', nameKey: 'notifications.email', icon: Mail, color: 'blue' },
   { key: 'in_app', nameKey: 'notifications.inApp', icon: MessageSquare, color: 'default' },
   { key: 'sms', nameKey: 'notifications.sms', icon: Smartphone, color: 'green' },

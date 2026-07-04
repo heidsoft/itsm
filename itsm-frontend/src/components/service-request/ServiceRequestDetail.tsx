@@ -19,12 +19,7 @@ import {
   Spin,
   Divider,
 } from 'antd';
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  FieldTimeOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { User, CheckCircle, XCircle, Timer } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -123,11 +118,11 @@ const ServiceRequestDetail: React.FC = () => {
             color={approvalStatusColors[app.status] || 'gray'}
             dot={
               app.status === ApprovalStatus.APPROVED ? (
-                <CheckCircleOutlined />
+                <CheckCircle />
               ) : app.status === ApprovalStatus.REJECTED ? (
-                <CloseCircleOutlined />
+                <XCircle />
               ) : (
-                <FieldTimeOutlined />
+                <Timer />
               )
             }
           >
@@ -229,14 +224,14 @@ const ServiceRequestDetail: React.FC = () => {
                     <Space style={{ width: '100%', justifyContent: 'center' }}>
                       <Button
                         type="primary"
-                        icon={<CheckCircleOutlined />}
+                        icon={<CheckCircle />}
                         onClick={() => openActionModal(ApprovalAction.APPROVE)}
                       >
                         通过
                       </Button>
                       <Button
                         danger
-                        icon={<CloseCircleOutlined />}
+                        icon={<XCircle />}
                         onClick={() => openActionModal(ApprovalAction.REJECT)}
                       >
                         拒绝

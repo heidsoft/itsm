@@ -19,7 +19,7 @@ import {
   message,
   Typography,
 } from 'antd';
-import { ArrowLeftOutlined, KeyOutlined, UserOutlined } from '@ant-design/icons';
+import { ArrowLeft, User, Key } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -126,7 +126,7 @@ const LicenseDetail: React.FC = () => {
       <Card>
         <div style={{ marginBottom: 24 }}>
           <Button
-            icon={<ArrowLeftOutlined />}
+            icon={<ArrowLeft />}
             onClick={() => router.push('/licenses')}
             style={{ marginBottom: 16 }}
           >
@@ -233,7 +233,7 @@ const LicenseDetail: React.FC = () => {
         <Card title="授权用户">
           <Space wrap>
             {license.users.map((userId, index) => (
-              <Tag key={index} icon={<UserOutlined />}>
+              <Tag key={index} icon={<User />}>
                 {license.user_names?.[index] || `用户 ${userId}`}
               </Tag>
             ))}
@@ -257,7 +257,7 @@ const LicenseDetail: React.FC = () => {
             编辑
           </Button>
           {license.status === 'active' && license.available_quantity > 0 && (
-            <Button icon={<UserOutlined />} onClick={() => setAssignModalVisible(true)}>
+            <Button icon={<User />} onClick={() => setAssignModalVisible(true)}>
               分配给用户
             </Button>
           )}

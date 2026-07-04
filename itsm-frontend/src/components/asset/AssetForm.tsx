@@ -19,7 +19,7 @@ import {
   Tooltip,
 } from 'antd';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import { ArrowLeft, Save } from 'lucide-react';
 
 import type { Asset, AssetRequest } from '@/lib/api/asset-api';
 import { AssetApi } from '@/lib/api/asset-api';
@@ -169,7 +169,7 @@ const AssetForm: React.FC = () => {
         }}
       >
         <div style={{ marginBottom: 16 }}>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/assets')}>
+          <Button icon={<ArrowLeft />} onClick={() => router.push('/assets')}>
             返回列表
           </Button>
         </div>
@@ -365,7 +365,7 @@ const AssetForm: React.FC = () => {
 
         <Form.Item>
           <Space>
-            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={loading}>
+            <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
               {isEdit ? '保存' : '创建'}
             </Button>
             <Button onClick={() => router.push('/assets')}>取消</Button>

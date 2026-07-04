@@ -15,7 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { ReloadOutlined } from '@ant-design/icons';
+import { RotateCcw } from 'lucide-react';
 import type { ChangeStats } from '@/lib/services/change-service';
 import { changeService } from '@/lib/services/change-service';
 
@@ -142,7 +142,7 @@ const ChangeSuccessReport = () => {
             <Text className="text-gray-600">变更执行情况监控</Text>
           </Col>
           <Col>
-            <Button icon={<ReloadOutlined />} onClick={loadData}>
+            <Button icon={<RotateCcw />} onClick={loadData}>
               刷新数据
             </Button>
           </Col>

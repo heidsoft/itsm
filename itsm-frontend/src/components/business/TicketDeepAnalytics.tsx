@@ -27,17 +27,7 @@ import {
   Modal,
   Tooltip as AntTooltip,
 } from 'antd';
-import {
-  BarChartOutlined,
-  LineChartOutlined,
-  PieChartOutlined,
-  TableOutlined,
-  DownloadOutlined,
-  SettingOutlined,
-  FilterOutlined,
-  ReloadOutlined,
-  SaveOutlined,
-} from '@ant-design/icons';
+import { Filter, Save, Download, Settings, RotateCcw, CheckCircle, BarChart3, LineChart, PieChart, Table } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -55,7 +45,7 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { CheckCircleOutlined } from '@ant-design/icons';
+import { Filter, Save, Download, Settings, RotateCcw, CheckCircle, BarChart3, LineChart, PieChart, Table } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import dayjs from 'dayjs';
@@ -358,7 +348,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
           </Title>
           <Space>
             <Button
-              icon={<SettingOutlined />}
+              icon={<Settings />}
               onClick={() => {
                 form.setFieldsValue(config);
                 setConfigModalVisible(true);
@@ -368,12 +358,12 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
             </Button>
             {canExport && (
               <AntTooltip title="导出功能即将推出">
-                <Button icon={<DownloadOutlined />} disabled onClick={handleExport}>
+                <Button icon={<Download />} disabled onClick={handleExport}>
                   导出
                 </Button>
               </AntTooltip>
             )}
-            <Button icon={<ReloadOutlined />} onClick={loadAnalyticsData} loading={loading}>
+            <Button icon={<RotateCcw />} onClick={loadAnalyticsData} loading={loading}>
               刷新
             </Button>
           </Space>
@@ -401,19 +391,19 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
             style={{ width: 120 }}
           >
             <Option value="line">
-              <LineChartOutlined /> 折线图
+              <LineChart /> 折线图
             </Option>
             <Option value="bar">
-              <BarChartOutlined /> 柱状图
+              <BarChart3 /> 柱状图
             </Option>
             <Option value="pie">
-              <PieChartOutlined /> 饼图
+              <PieChart /> 饼图
             </Option>
             <Option value="area">
               <AreaChart /> 面积图
             </Option>
             <Option value="table">
-              <TableOutlined /> 表格
+              <Table /> 表格
             </Option>
           </Select>
         </Space>
@@ -426,7 +416,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
             <Statistic
               title="总工单数"
               value={summaryData.total || 0}
-              prefix={<BarChartOutlined />}
+              prefix={<BarChart3 />}
             />
           </Card>
         </Col>
@@ -436,7 +426,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               title="已解决"
               value={summaryData.resolved || 0}
               styles={{ content: { color: '#3f8600' } }}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircle />}
             />
           </Card>
         </Col>

@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, Tag, Button, Space, Skeleton, message, Typography, Tabs } from 'antd';
-import { EditOutlined, ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons';
+import { ArrowLeft, Search, Pencil } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 
 import { ProblemApi } from '@/lib/api/';
@@ -75,7 +75,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       key: 'investigation',
       label: (
         <span>
-          <SearchOutlined /> 问题调查
+          <Search /> 问题调查
         </span>
       ),
       children: (
@@ -94,7 +94,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       <Card styles={{ body: { padding: '16px 24px' } }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/problems')}>
+            <Button icon={<ArrowLeft />} onClick={() => router.push('/problems')}>
               返回列表
             </Button>
             <Title level={4} style={{ margin: 0 }}>
@@ -106,7 +106,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           </Space>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => router.push(`/problems/${data.id}/edit`)}
             >
               编辑

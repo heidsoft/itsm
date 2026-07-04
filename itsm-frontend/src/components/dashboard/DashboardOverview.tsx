@@ -143,8 +143,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       setUserStats(mappedUserStats);
       setSystemStats(mappedSystemStats);
 
-      // 转换最近工单 - 使用 any 临时绕过类型检查，后续可完善
-      const mappedTickets = (recentTicketsData.tickets as any[]).map((t) => {
+      // 转换最近工单
+      const mappedTickets = recentTicketsData.tickets.map((t) => {
         const requester = t.requester ? {
           id: t.requester.id,
           fullName: t.requester.name,
@@ -195,8 +195,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
       setRecentTickets(mappedTickets);
 
-      // 转换活跃用户 - 使用 any 临时绕过类型检查
-      const mappedUsers = (activeUsersData.users as any[]).map((u) => {
+      // 转换活跃用户
+      const mappedUsers = activeUsersData.users.map((u) => {
         return {
           ...u,
           fullName: u.name || u.username,

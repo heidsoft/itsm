@@ -22,13 +22,7 @@ import {
   Empty,
   message,
 } from 'antd';
-import {
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  PlusOutlined,
-  RocketOutlined,
-} from '@ant-design/icons';
+import { Search, Plus, Pencil, Eye, Rocket } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -208,7 +202,7 @@ const ReleaseList: React.FC = () => {
           <Tooltip title="查看发布详情">
             <Button
               type="text"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => router.push(`/releases/${record.id}`)}
               aria-label={`查看发布 ${record.title || record.release_number || '详情'}`}
             />
@@ -216,7 +210,7 @@ const ReleaseList: React.FC = () => {
           <Tooltip title="编辑发布信息">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => router.push(`/releases/${record.id}`)}
               aria-label={`编辑发布 ${record.title || record.release_number || '详情'}`}
             />
@@ -231,7 +225,7 @@ const ReleaseList: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="总发布数" value={stats.total || 0} prefix={<RocketOutlined />} />
+            <Statistic title="总发布数" value={stats.total || 0} prefix={<Rocket />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -296,13 +290,13 @@ const ReleaseList: React.FC = () => {
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
+              <Button type="primary" icon={<Search />} onClick={handleSearch}>
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
               <Button
                 type="primary"
-                icon={<PlusOutlined />}
+                icon={<Plus />}
                 onClick={() => router.push('/releases/new')}
               >
                 创建发布

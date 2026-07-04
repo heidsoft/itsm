@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, App, Tooltip } from 'antd';
-import { SearchOutlined, ReloadOutlined, PlusOutlined, LinkOutlined, EyeOutlined } from '@ant-design/icons';
+import { Search, Plus, Eye, RotateCcw, Link } from 'lucide-react';
 import dayjs from 'dayjs';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
@@ -198,7 +198,7 @@ export default function CloudResourcePage() {
           <Tooltip title="查看详情">
             <Button
               type="text"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => handleViewDetail(record)}
               size="small"
             />
@@ -311,10 +311,10 @@ export default function CloudResourcePage() {
           </Form.Item>
           <Form.Item className="!mb-0">
             <Space>
-              <Button type="primary" icon={<SearchOutlined />} onClick={() => loadResources(1, pagination.pageSize)}>
+              <Button type="primary" icon={<Search />} onClick={() => loadResources(1, pagination.pageSize)}>
                 查询
               </Button>
-              <Button icon={<ReloadOutlined />} onClick={() => loadResources(pagination.current, pagination.pageSize)} loading={loading}>
+              <Button icon={<RotateCcw />} onClick={() => loadResources(pagination.current, pagination.pageSize)} loading={loading}>
                 刷新
               </Button>
             </Space>
@@ -387,7 +387,7 @@ export default function CloudResourcePage() {
           <Button
             key="create"
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             onClick={() => {
               if (selectedRow) {
                 router.push(`/cmdb/cis/create?cloud_resource_ref_id=${selectedRow.id}`);

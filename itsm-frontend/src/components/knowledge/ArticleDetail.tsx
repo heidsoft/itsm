@@ -18,13 +18,7 @@ import {
   Divider,
   Tabs,
 } from 'antd';
-import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  UserOutlined,
-  CalendarOutlined,
-  FolderOutlined,
-} from '@ant-design/icons';
+import { ArrowLeft, Pencil, User, Folder, Calendar } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -117,12 +111,12 @@ const ArticleDetail: React.FC = () => {
               marginBottom: 16,
             }}
           >
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/knowledge')}>
+            <Button icon={<ArrowLeft />} onClick={() => router.push('/knowledge')}>
               返回列表
             </Button>
             <Button
               type="primary"
-              icon={<EditOutlined />}
+              icon={<Pencil />}
               onClick={() => router.push(`/knowledge/articles/${article.id}/edit`)}
             >
               编辑文章
@@ -133,15 +127,15 @@ const ArticleDetail: React.FC = () => {
 
           <Space split={<Divider type="vertical" />} wrap>
             <Space>
-              <UserOutlined />
+              <User />
               <Text type="secondary">作者: {article.author}</Text>
             </Space>
             <Space>
-              <CalendarOutlined />
+              <Calendar />
               <Text type="secondary">{dayjs(article.createdAt).format('YYYY-MM-DD HH:mm')}</Text>
             </Space>
             <Space>
-              <FolderOutlined />
+              <Folder />
               <Text type="secondary">{article.category || '未分类'}</Text>
             </Space>
             <Tag color={KnowledgeStatusColors[status]}>{KnowledgeStatusLabels[status]}</Tag>

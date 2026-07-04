@@ -34,7 +34,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { RiseOutlined, FallOutlined, FileExcelOutlined, ReloadOutlined } from '@ant-design/icons';
+import { RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 import type { TicketAnalyticsResponse } from '@/lib/services/analytics-service';
@@ -240,7 +240,7 @@ const TicketAnalytics: React.FC = () => {
               format="YYYY-MM-DD"
               allowClear={false}
             />
-            <Button icon={<ReloadOutlined />} onClick={fetchData} loading={loading}>
+            <Button icon={<RotateCcw />} onClick={fetchData} loading={loading}>
               刷新数据
             </Button>
             <Button

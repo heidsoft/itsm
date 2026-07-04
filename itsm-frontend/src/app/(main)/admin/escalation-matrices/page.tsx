@@ -12,7 +12,7 @@
  */
 
 import { Alert, Card, Col, Row, Space, Statistic, Table, Tag, Typography } from 'antd';
-import { AlertOutlined, ClockCircleOutlined, NotificationOutlined, TeamOutlined } from '@ant-design/icons';
+import { Users, Clock, Bell, AlertTriangle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   EscalationMatrixApi,
@@ -99,7 +99,7 @@ export default function EscalationMatricesPage() {
       width: 130,
       render: (v: number) => (
         <Space>
-          <ClockCircleOutlined />
+          <Clock />
           <Text strong>{formatMinutes(v)}</Text>
         </Space>
       ),
@@ -121,7 +121,7 @@ export default function EscalationMatricesPage() {
         ) : (
           <Space size={4} wrap>
             {ids.map(id => (
-              <Tag key={id} color="purple" icon={<TeamOutlined />}>
+              <Tag key={id} color="purple" icon={<Users />}>
                 {id}
               </Tag>
             ))}
@@ -135,7 +135,7 @@ export default function EscalationMatricesPage() {
       render: (channels: string[]) => (
         <Space size={4} wrap>
           {channels.map(c => (
-            <Tag key={c} color="cyan" icon={<NotificationOutlined />}>
+            <Tag key={c} color="cyan" icon={<Bell />}>
               {c}
             </Tag>
           ))}
@@ -148,7 +148,7 @@ export default function EscalationMatricesPage() {
     <div className="space-y-6">
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
-          <AlertOutlined style={{ marginRight: 8 }} />
+          <AlertTriangle style={{ marginRight: 8 }} />
           SLA 升级矩阵
         </Title>
         <Paragraph type="secondary">
@@ -223,7 +223,7 @@ export default function EscalationMatricesPage() {
                   >
                     <Space size="small" wrap>
                       <Tag color="blue">L{level.level}</Tag>
-                      <ClockCircleOutlined />
+                      <Clock />
                       <Text>{formatMinutes(level.thresholdMinutes)}</Text>
                       <Tag color="geekblue">{level.targetType}</Tag>
                       {level.notifyChannels.map(c => (

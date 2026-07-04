@@ -16,13 +16,7 @@ import {
   Typography,
   Tabs,
 } from 'antd';
-import {
-  EyeOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  EditOutlined,
-  MessageOutlined,
-} from '@ant-design/icons';
+import { Pencil, Eye, Clock, MessageSquare, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
@@ -46,7 +40,7 @@ interface ArticleItem {
 }
 import { useI18n } from '@/lib/i18n/useI18n';
 import dayjs from 'dayjs';
-import { ExclamationCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Pencil, Eye, Clock, MessageSquare, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Text, Paragraph } = Typography;
@@ -54,9 +48,9 @@ const { Text, Paragraph } = Typography;
 // 状态标签映射
 const statusTagMap: Record<string, { color: string; text: string; icon?: React.ReactNode }> = {
   draft: { color: 'default', text: '草稿' },
-  pending_review: { color: 'orange', text: '待审核', icon: <ClockCircleOutlined /> },
-  approved: { color: 'green', text: '已发布', icon: <CheckCircleOutlined /> },
-  rejected: { color: 'red', text: '已拒绝', icon: <CloseCircleOutlined /> },
+  pending_review: { color: 'orange', text: '待审核', icon: <Clock /> },
+  approved: { color: 'green', text: '已发布', icon: <CheckCircle /> },
+  rejected: { color: 'red', text: '已拒绝', icon: <XCircle /> },
   archived: { color: 'default', text: '已归档' },
 };
 
@@ -188,7 +182,7 @@ export default function KnowledgeReviewListPage() {
         <Space>
           <Button
             type="link"
-            icon={<EyeOutlined />}
+            icon={<Eye />}
             onClick={() => {
               setSelectedArticle(record);
               setDetailModalVisible(true);
@@ -200,7 +194,7 @@ export default function KnowledgeReviewListPage() {
             <>
               <Button
                 type="link"
-                icon={<CheckCircleOutlined />}
+                icon={<CheckCircle />}
                 onClick={() => {
                   setSelectedArticle(record);
                   setReviewAction('approve');
@@ -212,7 +206,7 @@ export default function KnowledgeReviewListPage() {
               <Button
                 type="link"
                 danger
-                icon={<CloseCircleOutlined />}
+                icon={<XCircle />}
                 onClick={() => {
                   setSelectedArticle(record);
                   setReviewAction('reject');
@@ -385,7 +379,7 @@ export default function KnowledgeReviewListPage() {
       <Modal
         title={
           <Space>
-            <ExclamationCircleOutlined
+            <AlertCircle
               style={{ color: reviewAction === 'approve' ? '#52c41a' : '#ff4d4f' }}
             />
             {reviewAction === 'approve' ? '批准发布' : '拒绝发布'}

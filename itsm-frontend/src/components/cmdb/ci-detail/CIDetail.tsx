@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Card, Tabs, Breadcrumb, Button, Space, Tag, Typography, Result, Skeleton } from 'antd';
-import { ArrowLeftOutlined, NodeIndexOutlined, LinkOutlined, ClusterOutlined, HistoryOutlined } from '@ant-design/icons';
+import { ArrowLeft, History, Link, Network } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
 import { useCIDetail } from './hooks/useCIDetail';
@@ -69,7 +69,7 @@ export const CIDetail: React.FC = () => {
       key: 'topology',
       label: (
         <span>
-          <NodeIndexOutlined /> 服务拓扑
+          <Network /> 服务拓扑
         </span>
       ),
       children: <CITopologyGraph ciId={ci.id} />,
@@ -78,7 +78,7 @@ export const CIDetail: React.FC = () => {
       key: 'relationships',
       label: (
         <span>
-          <LinkOutlined /> 关系管理
+          <Link /> 关系管理
         </span>
       ),
       children: (
@@ -95,7 +95,7 @@ export const CIDetail: React.FC = () => {
       key: 'impact',
       label: (
         <span>
-          <ClusterOutlined /> 影响分析
+          <Network /> 影响分析
         </span>
       ),
       children: (
@@ -110,7 +110,7 @@ export const CIDetail: React.FC = () => {
       key: 'history',
       label: (
         <span>
-          <HistoryOutlined /> 变更历史
+          <History /> 变更历史
         </span>
       ),
       children: (
@@ -138,7 +138,7 @@ export const CIDetail: React.FC = () => {
       <Card>
         <div style={{ marginBottom: 24 }}>
           <Button
-            icon={<ArrowLeftOutlined />}
+            icon={<ArrowLeft />}
             onClick={() => router.push('/cmdb')}
             style={{ marginBottom: 16 }}
           >

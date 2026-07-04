@@ -32,25 +32,23 @@ import {
   ConfigProvider,
 } from 'antd';
 import {
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ReloadOutlined,
-  FileTextOutlined,
-  ToolOutlined,
-  AlertOutlined,
-  CustomerServiceOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  EyeOutlined,
-  CheckCircleFilled,
-  CloseCircleFilled,
-  BellOutlined,
-  FilterOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
-  LoadingOutlined,
-  ArrowRightOutlined,
-} from '@ant-design/icons';
+  CheckCircle,
+  Clock,
+  RotateCcw,
+  FileText,
+  Wrench,
+  AlertTriangle,
+  Headphones,
+  Check,
+  X,
+  Eye,
+  Bell,
+  Filter,
+  LayoutGrid,
+  List,
+  Loader2,
+  ArrowRight,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { httpClient } from '@/lib/api/http-client';
@@ -275,7 +273,7 @@ export default function ApprovalsCenterPage() {
           </Link>
           {record.description && (
             <Tooltip title={record.description}>
-              <EyeOutlined className="text-gray-400 cursor-pointer hover:text-blue-500" />
+              <Eye className="text-gray-400 cursor-pointer hover:text-blue-500" />
             </Tooltip>
           )}
         </div>
@@ -327,7 +325,7 @@ export default function ApprovalsCenterPage() {
             <Button
               type="primary"
               size="small"
-              icon={<CheckOutlined />}
+              icon={<Check />}
               onClick={() => handleQuickApprove(record)}
               loading={approving?.id === String(record.id) && approving?.action === 'approve'}
               className="!bg-green-500 !border-green-500 hover:!bg-green-600 hover:!border-green-600"
@@ -339,7 +337,7 @@ export default function ApprovalsCenterPage() {
             <Button
               danger
               size="small"
-              icon={<CloseOutlined />}
+              icon={<X />}
               onClick={() => handleQuickReject(record)}
               loading={approving?.id === String(record.id) && approving?.action === 'reject'}
             >
@@ -349,7 +347,7 @@ export default function ApprovalsCenterPage() {
           <Tooltip title="查看详情">
             <Button
               size="small"
-              icon={<EyeOutlined />}
+              icon={<Eye />}
               onClick={() => setDetailDrawer({ open: true, item: record })}
             />
           </Tooltip>
@@ -374,7 +372,7 @@ export default function ApprovalsCenterPage() {
   const EmptyState = ({ type }: { type: string }) => (
     <div className="flex flex-col items-center justify-center py-16 px-4">
       <div className="w-20 h-20 mb-6 rounded-full bg-gray-100 flex items-center justify-center">
-        <ClockCircleOutlined className="text-4xl text-gray-300" />
+        <Clock className="text-4xl text-gray-300" />
       </div>
       <Title level={4} className="text-gray-500 mb-2">暂无待审批{type}</Title>
       <Text type="secondary">当前没有需要审批的{type}，可以稍后刷新查看最新</Text>
@@ -396,7 +394,7 @@ export default function ApprovalsCenterPage() {
       <div className="mb-4 md:mb-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-50 flex items-center justify-center">
-            <CheckCircleOutlined className="text-xl md:text-2xl text-blue-500" />
+            <CheckCircle className="text-xl md:text-2xl text-blue-500" />
           </div>
           <div>
             <Title level={3} className="!mb-0 !text-xl md:!text-2xl">审批中心</Title>
@@ -405,7 +403,7 @@ export default function ApprovalsCenterPage() {
         </div>
         <Space wrap className="w-full md:w-auto justify-end">
           <Button
-            icon={<ReloadOutlined spin={loading} />}
+            icon={<RotateCcw spin={loading} />}
             onClick={handleRefresh}
             loading={loading}
             className="w-full md:w-auto"
@@ -413,7 +411,7 @@ export default function ApprovalsCenterPage() {
             刷新
           </Button>
           <Link href="/approvals/pending" className="w-full md:w-auto">
-            <Button type="primary" icon={<ClockCircleOutlined />} className="w-full md:w-auto">
+            <Button type="primary" icon={<Clock />} className="w-full md:w-auto">
               待我审批
             </Button>
           </Link>
@@ -430,7 +428,7 @@ export default function ApprovalsCenterPage() {
                 <div className="text-2xl md:text-3xl font-bold text-blue-600">{totalPending}</div>
               </div>
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-50 flex items-center justify-center">
-                <ClockCircleOutlined className="text-lg md:text-xl text-blue-500" />
+                <Clock className="text-lg md:text-xl text-blue-500" />
               </div>
             </div>
           </Card>
@@ -443,7 +441,7 @@ export default function ApprovalsCenterPage() {
                 <div className="text-2xl md:text-3xl font-bold text-green-600">{tickets.length}</div>
               </div>
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-green-50 flex items-center justify-center">
-                <FileTextOutlined className="text-lg md:text-xl text-green-500" />
+                <FileText className="text-lg md:text-xl text-green-500" />
               </div>
             </div>
           </Card>
@@ -456,7 +454,7 @@ export default function ApprovalsCenterPage() {
                 <div className="text-2xl md:text-3xl font-bold text-orange-600">{changes.length}</div>
               </div>
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-orange-50 flex items-center justify-center">
-                <ToolOutlined className="text-lg md:text-xl text-orange-500" />
+                <Wrench className="text-lg md:text-xl text-orange-500" />
               </div>
             </div>
           </Card>
@@ -469,7 +467,7 @@ export default function ApprovalsCenterPage() {
                 <div className="text-2xl md:text-3xl font-bold text-purple-600">{serviceRequests.length}</div>
               </div>
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-purple-50 flex items-center justify-center">
-                <CustomerServiceOutlined className="text-lg md:text-xl text-purple-500" />
+                <Headphones className="text-lg md:text-xl text-purple-500" />
               </div>
             </div>
           </Card>
@@ -486,10 +484,10 @@ export default function ApprovalsCenterPage() {
               <Button size="small" onClick={() => setSelectedItems([])}>取消</Button>
             </div>
             <Space>
-              <Button type="primary" icon={<CheckOutlined />} onClick={handleBatchApprove} className="!bg-green-500">
+              <Button type="primary" icon={<Check />} onClick={handleBatchApprove} className="!bg-green-500">
                 批量批准
               </Button>
-              <Button danger icon={<CloseOutlined />} onClick={handleBatchReject}>
+              <Button danger icon={<X />} onClick={handleBatchReject}>
                 批量拒绝
               </Button>
             </Space>
@@ -509,7 +507,7 @@ export default function ApprovalsCenterPage() {
                 key: 'tickets',
                 label: (
                   <span className="flex items-center gap-2">
-                    <FileTextOutlined /> 工单
+                    <FileText /> 工单
                     <Badge count={tickets.length} showZero={false} />
                   </span>
                 ),
@@ -518,7 +516,7 @@ export default function ApprovalsCenterPage() {
                 key: 'changes',
                 label: (
                   <span className="flex items-center gap-2">
-                    <ToolOutlined /> 变更
+                    <Wrench /> 变更
                     <Badge count={changes.length} showZero={false} />
                   </span>
                 ),
@@ -527,7 +525,7 @@ export default function ApprovalsCenterPage() {
                 key: 'service-requests',
                 label: (
                   <span className="flex items-center gap-2">
-                    <CustomerServiceOutlined /> 服务请求
+                    <Headphones /> 服务请求
                     <Badge count={serviceRequests.length} showZero={false} />
                   </span>
                 ),
@@ -537,7 +535,7 @@ export default function ApprovalsCenterPage() {
           <div className="flex items-center gap-2">
             <Tooltip title="列表视图">
               <Button
-                icon={<UnorderedListOutlined />}
+                icon={<List />}
                 type={viewMode === 'list' ? 'primary' : 'default'}
                 onClick={() => setViewMode('list')}
                 size="small"
@@ -545,7 +543,7 @@ export default function ApprovalsCenterPage() {
             </Tooltip>
             <Tooltip title="卡片视图">
               <Button
-                icon={<AppstoreOutlined />}
+                icon={<LayoutGrid />}
                 type={viewMode === 'card' ? 'primary' : 'default'}
                 onClick={() => setViewMode('card')}
                 size="small"
@@ -584,7 +582,7 @@ export default function ApprovalsCenterPage() {
                     <Button
                       key="approve"
                       type="text"
-                      icon={<CheckOutlined />}
+                      icon={<Check />}
                       onClick={(e) => { e.stopPropagation(); handleQuickApprove(item); }}
                       className="text-green-600 hover:text-green-700"
                     >
@@ -594,7 +592,7 @@ export default function ApprovalsCenterPage() {
                       key="reject"
                       type="text"
                       danger
-                      icon={<CloseOutlined />}
+                      icon={<X />}
                       onClick={(e) => { e.stopPropagation(); handleQuickReject(item); }}
                     >
                       拒绝
@@ -602,7 +600,7 @@ export default function ApprovalsCenterPage() {
                     <Button
                       key="detail"
                       type="text"
-                      icon={<EyeOutlined />}
+                      icon={<Eye />}
                       onClick={(e) => { e.stopPropagation(); setDetailDrawer({ open: true, item }); }}
                     >
                       详情
@@ -658,7 +656,7 @@ export default function ApprovalsCenterPage() {
           <Space>
             <Button
               type="primary"
-              icon={<CheckOutlined />}
+              icon={<Check />}
               onClick={() => detailDrawer.item && handleQuickApprove(detailDrawer.item)}
               className="!bg-green-500"
             >
@@ -666,7 +664,7 @@ export default function ApprovalsCenterPage() {
             </Button>
             <Button
               danger
-              icon={<CloseOutlined />}
+              icon={<X />}
               onClick={() => detailDrawer.item && handleQuickReject(detailDrawer.item)}
             >
               拒绝
@@ -709,7 +707,7 @@ export default function ApprovalsCenterPage() {
             <Statistic
               title="工单待审"
               value={tickets.length}
-              prefix={<FileTextOutlined />}
+              prefix={<FileText />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -719,7 +717,7 @@ export default function ApprovalsCenterPage() {
             <Statistic
               title="变更待审"
               value={changes.length}
-              prefix={<ToolOutlined />}
+              prefix={<Wrench />}
               valueStyle={{ color: '#fa8c16' }}
             />
           </Card>
@@ -729,7 +727,7 @@ export default function ApprovalsCenterPage() {
             <Statistic
               title="服务请求待审"
               value={serviceRequests.length}
-              prefix={<CustomerServiceOutlined />}
+              prefix={<Headphones />}
               valueStyle={{ color: '#722ed1' }}
             />
           </Card>
@@ -745,7 +743,7 @@ export default function ApprovalsCenterPage() {
               key: 'tickets',
               label: (
                 <span>
-                  <FileTextOutlined /> 工单 ({tickets.length})
+                  <FileText /> 工单 ({tickets.length})
                 </span>
               ),
               children: tickets.length > 0 ? (
@@ -764,7 +762,7 @@ export default function ApprovalsCenterPage() {
               key: 'changes',
               label: (
                 <span>
-                  <ToolOutlined /> 变更 ({changes.length})
+                  <Wrench /> 变更 ({changes.length})
                 </span>
               ),
               children: changes.length > 0 ? (
@@ -783,7 +781,7 @@ export default function ApprovalsCenterPage() {
               key: 'service-requests',
               label: (
                 <span>
-                  <CustomerServiceOutlined /> 服务请求 ({serviceRequests.length})
+                  <Headphones /> 服务请求 ({serviceRequests.length})
                 </span>
               ),
               children: serviceRequests.length > 0 ? (

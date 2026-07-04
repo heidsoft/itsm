@@ -6,12 +6,31 @@ import { Card, Row, Col, Statistic, Button, Space, Tabs, Spin } from 'antd';
 import { useI18n } from '@/lib/i18n/useI18n';
 import { SLAApi } from '@/lib/api/sla-api';
 
+// 兼容旧前端 snake_case 和新前端 camelCase
+interface SLAStatsResponse {
+  total_definitions?: number;
+  totalDefinitions?: number;
+  active_definitions?: number;
+  activeDefinitions?: number;
+  total_violations?: number;
+  totalViolations?: number;
+  open_violations?: number;
+  openViolations?: number;
+  overall_compliance_rate?: number;
+  overallComplianceRate?: number;
+}
+
 interface SLAStats {
   totalDefinitions: number;
   activeDefinitions: number;
   totalViolations: number;
   openViolations: number;
   overallComplianceRate: number;
+}
+
+// 工具函数：提取兼容字段值
+function getSLAStatsValue(data: SLAStatsResponse, camelKey: keyof SLAStatsResponse, snakeKey: string): number {
+  return (data[camelKey] ?? data[snakeKey as keyof SLAStatsResponse] ?? 0) as number;
 }
 
 export default function SLAPage() {
@@ -36,13 +55,13 @@ export default function SLAPage() {
       const data = await SLAApi.getSLAStats();
 
       // 映射后端 snake_case 字段到前端 camelCase
+      const response = data as unknown as SLAStatsResponse;
       setStats({
-        totalDefinitions: (data as any).total_definitions || (data as any).totalDefinitions || 0,
-        activeDefinitions: (data as any).active_definitions || (data as any).activeDefinitions || 0,
-        totalViolations: (data as any).total_violations || (data as any).totalViolations || 0,
-        openViolations: (data as any).open_violations || (data as any).openViolations || 0,
-        overallComplianceRate:
-          (data as any).overall_compliance_rate || (data as any).overallComplianceRate || 100,
+        totalDefinitions: getSLAStatsValue(response, 'totalDefinitions', 'total_definitions'),
+        activeDefinitions: getSLAStatsValue(response, 'activeDefinitions', 'active_definitions'),
+        totalViolations: getSLAStatsValue(response, 'totalViolations', 'total_violations'),
+        openViolations: getSLAStatsValue(response, 'openViolations', 'open_violations'),
+        overallComplianceRate: getSLAStatsValue(response, 'overallComplianceRate', 'overall_compliance_rate'),
       });
     } catch (error) {
       console.error('Failed to load SLA stats:', error);

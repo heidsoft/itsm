@@ -25,17 +25,7 @@ import {
   Progress,
   Tooltip as AntTooltip,
 } from 'antd';
-import {
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  BarChartOutlined,
-  DownloadOutlined,
-  ReloadOutlined,
-  CalendarOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+import { ArrowUp, ArrowDown, Download, Calendar, Clock, RotateCcw, AlertTriangle, CheckCircle, BarChart3 } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -155,11 +145,11 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'up':
-        return <ArrowUpOutlined style={{ color: '#ff4d4f' }} />;
+        return <ArrowUp style={{ color: '#ff4d4f' }} />;
       case 'down':
-        return <ArrowDownOutlined style={{ color: '#52c41a' }} />;
+        return <ArrowDown style={{ color: '#52c41a' }} />;
       default:
-        return <BarChartOutlined style={{ color: '#1890ff' }} />;
+        return <BarChart3 style={{ color: '#1890ff' }} />;
     }
   };
 
@@ -291,11 +281,11 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
           </Title>
           <Space>
             <AntTooltip title="导出功能即将推出">
-              <Button icon={<DownloadOutlined />} disabled onClick={handleExport}>
+              <Button icon={<Download />} disabled onClick={handleExport}>
                 导出报告
               </Button>
             </AntTooltip>
-            <Button icon={<ReloadOutlined />} onClick={loadPrediction} loading={loading}>
+            <Button icon={<RotateCcw />} onClick={loadPrediction} loading={loading}>
               刷新
             </Button>
           </Space>
@@ -340,7 +330,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                   precision={1}
                   suffix="%"
                   styles={{ content: { color: '#3f8600' } }}
-                  prefix={<CheckCircleOutlined />}
+                  prefix={<CheckCircle />}
                 />
               </Card>
             </Col>
@@ -351,7 +341,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                   value={predictionReport.metrics.next_week_prediction}
                   suffix="个工单"
                   styles={{ content: { color: '#1890ff' } }}
-                  prefix={<CalendarOutlined />}
+                  prefix={<Calendar />}
                 />
               </Card>
             </Col>
@@ -362,7 +352,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                   value={predictionReport.metrics.next_month_prediction}
                   suffix="个工单"
                   styles={{ content: { color: '#faad14' } }}
-                  prefix={<CalendarOutlined />}
+                  prefix={<Calendar />}
                 />
               </Card>
             </Col>
@@ -512,7 +502,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
               description={`根据预测分析，系统检测到${predictionReport.metrics.risk_level === 'high' ? '高风险' : '中等风险'}因素。建议采取相应措施。`}
               type={predictionReport.metrics.risk_level === 'high' ? 'error' : 'warning'}
               showIcon
-              icon={<WarningOutlined />}
+              icon={<AlertTriangle />}
               action={
                 <Button size="small" type="primary">
                   查看详情

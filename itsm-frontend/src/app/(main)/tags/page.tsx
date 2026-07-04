@@ -2,13 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Tag, Space, Modal, Form, Input, ColorPicker, message } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  TagOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+import { Plus, Pencil, Trash2, RefreshCw, Tag } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type { Tag as ITag } from '@/lib/services/tag-service';
 import { tagService } from '@/lib/services/tag-service';
@@ -47,7 +41,7 @@ export default function TagsPage() {
       render: (text: string, record: ITag) => (
         <Tag color={record.color}>
           <Space>
-            <TagOutlined />
+            <Tag />
             {text}
           </Space>
         </Tag>
@@ -76,11 +70,11 @@ export default function TagsPage() {
       key: 'action',
       render: (_: unknown, record: ITag) => (
         <Space size="middle">
-          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          <Button type="text" icon={<Pencil />} onClick={() => handleEdit(record)} />
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<Trash2 />}
             onClick={() => handleDelete(record)}
           />
         </Space>
@@ -139,13 +133,13 @@ export default function TagsPage() {
         breadcrumb: { items: [{ title: '首页' }, { title: '标签管理' }] },
       }}
       extra={[
-        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchTags} loading={fetching}>
+        <Button key="refresh" icon={<RefreshCw />} onClick={fetchTags} loading={fetching}>
           刷新
         </Button>,
         <Button
           key="create"
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<Plus />}
           onClick={() => setIsModalVisible(true)}
         >
           新建标签

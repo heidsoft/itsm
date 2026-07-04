@@ -16,7 +16,7 @@ import {
   Space,
 } from 'antd';
 import { AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { ReloadOutlined } from '@ant-design/icons';
+import { RotateCcw } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -203,7 +203,7 @@ const ProblemEfficiencyPage = () => {
             <Text className="text-gray-600">问题处理效率监控</Text>
           </Col>
           <Col>
-            <Button icon={<ReloadOutlined />} onClick={loadData}>
+            <Button icon={<RotateCcw />} onClick={loadData}>
               刷新数据
             </Button>
           </Col>

@@ -14,14 +14,7 @@ import {
   Tag,
   Checkbox,
 } from 'antd';
-import {
-  SaveOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  StarOutlined,
-  StarFilled,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { Plus, Save, Pencil, Trash2, Star } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { TicketFilterState } from './TicketFilters';
 
@@ -159,13 +152,13 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
     {
       key: 'favorite',
       label: preset.is_favorite ? '取消收藏' : '收藏',
-      icon: preset.is_favorite ? <StarFilled /> : <StarOutlined />,
+      icon: preset.is_favorite ? <Star /> : <Star />,
       onClick: () => handleToggleFavorite(preset.id),
     },
     {
       key: 'edit',
       label: '编辑',
-      icon: <EditOutlined />,
+      icon: <Pencil />,
       onClick: () => {
         form.setFieldsValue({
           name: preset.name,
@@ -181,7 +174,7 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
     {
       key: 'delete',
       label: '删除',
-      icon: <DeleteOutlined />,
+      icon: <Trash2 />,
       danger: true,
       onClick: () => {
         Modal.confirm({
@@ -225,7 +218,7 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
                       onClick={() => handlePresetSelect(preset.id)}
                     >
                       <Space>
-                        <StarFilled style={{ color: '#faad14' }} />
+                        <Star style={{ color: '#faad14' }} />
                         <span>{preset.name}</span>
                       </Space>
                       <Dropdown menu={{ items: getPresetMenuItems(preset) }} trigger={['click']}>
@@ -282,7 +275,7 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
               <div style={{ borderTop: '1px solid #f0f0f0', margin: '4px 0' }} />
               <Button
                 type="text"
-                icon={<PlusOutlined />}
+                icon={<Plus />}
                 block
                 onClick={() => {
                   form.resetFields();

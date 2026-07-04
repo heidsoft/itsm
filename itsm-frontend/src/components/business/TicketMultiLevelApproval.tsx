@@ -27,19 +27,7 @@ import {
   InputNumber,
   Tabs,
 } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  SettingOutlined,
-  HistoryOutlined,
-  BarChartOutlined,
-} from '@ant-design/icons';
+import { Plus, Pencil, Trash2, User, Eye, Settings, Clock, History, CheckCircle, XCircle, BarChart3 } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -359,7 +347,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
           <Button
             type="link"
             size="small"
-            icon={<EyeOutlined />}
+            icon={<Eye />}
             onClick={() => {
               setCurrentWorkflow(record);
               setActiveTab('workflow');
@@ -372,7 +360,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
               <Button
                 type="link"
                 size="small"
-                icon={<EditOutlined />}
+                icon={<Pencil />}
                 onClick={() => {
                   setEditingWorkflow(record);
                   setCurrentWorkflow(record);
@@ -390,7 +378,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                   loadWorkflows();
                 }}
               >
-                <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+                <Button type="link" size="small" danger icon={<Trash2 />}>
                   删除
                 </Button>
               </Popconfirm>
@@ -444,11 +432,11 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
       render: (status: string) => {
         const statusConfig: Record<string, { color: string; text: string; icon: React.ReactNode }> =
           {
-            pending: { color: 'orange', text: '待审批', icon: <ClockCircleOutlined /> },
-            approved: { color: 'green', text: '已批准', icon: <CheckCircleOutlined /> },
-            rejected: { color: 'red', text: '已拒绝', icon: <CloseCircleOutlined /> },
-            delegated: { color: 'blue', text: '已委派', icon: <UserOutlined /> },
-            timeout: { color: 'default', text: '超时', icon: <ClockCircleOutlined /> },
+            pending: { color: 'orange', text: '待审批', icon: <Clock /> },
+            approved: { color: 'green', text: '已批准', icon: <CheckCircle /> },
+            rejected: { color: 'red', text: '已拒绝', icon: <XCircle /> },
+            delegated: { color: 'blue', text: '已委派', icon: <User /> },
+            timeout: { color: 'default', text: '超时', icon: <Clock /> },
           };
         const config = statusConfig[status] || { color: 'default', text: status, icon: null };
         return (
@@ -489,7 +477,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
               key: 'workflow',
               label: (
                 <span>
-                  <SettingOutlined /> 审批流程
+                  <Settings /> 审批流程
                 </span>
               ),
               children: (
@@ -502,7 +490,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                     {canManage && (
                       <Button
                         type="primary"
-                        icon={<PlusOutlined />}
+                        icon={<Plus />}
                         onClick={() => {
                           setEditingWorkflow(null);
                           setCurrentWorkflow(null);
@@ -539,7 +527,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                             <Button
                               type="primary"
                               size="small"
-                              icon={<PlusOutlined />}
+                              icon={<Plus />}
                               onClick={() => {
                                 setEditingNode(null);
                                 nodeForm.resetFields();
@@ -615,7 +603,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                                   <Button
                                     type="link"
                                     size="small"
-                                    icon={<EditOutlined />}
+                                    icon={<Pencil />}
                                     onClick={() => {
                                       setEditingNode(node);
                                       nodeForm.setFieldsValue(node);
@@ -632,7 +620,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                                       type="link"
                                       size="small"
                                       danger
-                                      icon={<DeleteOutlined />}
+                                      icon={<Trash2 />}
                                     >
                                       删除
                                     </Button>
@@ -652,7 +640,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
               key: 'history',
               label: (
                 <span>
-                  <HistoryOutlined /> 审批历史
+                  <History /> 审批历史
                 </span>
               ),
               children: (
@@ -673,7 +661,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
               key: 'stats',
               label: (
                 <span>
-                  <BarChartOutlined /> 审批统计
+                  <BarChart3 /> 审批统计
                 </span>
               ),
               children: (
@@ -684,7 +672,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                         <Statistic
                           title="总审批数"
                           value={stats.total}
-                          prefix={<CheckCircleOutlined />}
+                          prefix={<CheckCircle />}
                         />
                       </Card>
                     </Col>
@@ -694,7 +682,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                           title="待审批"
                           value={stats.pending}
                           styles={{ content: { color: '#faad14' } }}
-                          prefix={<ClockCircleOutlined />}
+                          prefix={<Clock />}
                         />
                       </Card>
                     </Col>
@@ -704,7 +692,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                           title="已批准"
                           value={stats.approved}
                           styles={{ content: { color: '#3f8600' } }}
-                          prefix={<CheckCircleOutlined />}
+                          prefix={<CheckCircle />}
                         />
                       </Card>
                     </Col>
@@ -716,7 +704,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                           precision={1}
                           suffix="%"
                           styles={{ content: { color: '#1890ff' } }}
-                          prefix={<BarChartOutlined />}
+                          prefix={<BarChart3 />}
                         />
                       </Card>
                     </Col>

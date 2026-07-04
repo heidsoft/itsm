@@ -15,7 +15,7 @@ import {
   Table,
   Alert,
 } from 'antd';
-import { ArrowLeftOutlined, PlayCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import { ArrowLeft, RotateCcw, PlayCircle } from 'lucide-react';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import type { ProvisioningTask } from '@/lib/api/service-request-api';
 import { serviceRequestAPI } from '@/lib/api/service-request-api';
@@ -178,7 +178,7 @@ export default function MyRequestDetailPage() {
       <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         <Card>
           <Space align="center">
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/my-requests')}>
+            <Button icon={<ArrowLeft />} onClick={() => router.push('/my-requests')}>
               返回
             </Button>
             <div>
@@ -279,7 +279,7 @@ export default function MyRequestDetailPage() {
               />
               <Button
                 type="primary"
-                icon={<PlayCircleOutlined />}
+                icon={<PlayCircle />}
                 onClick={handleStartProvisioning}
                 loading={executing}
                 size="large"
@@ -299,7 +299,7 @@ export default function MyRequestDetailPage() {
                 交付任务
                 <Button
                   type="link"
-                  icon={<ReloadOutlined />}
+                  icon={<RotateCcw />}
                   onClick={loadProvisioningTasks}
                   loading={loadingTasks}
                   size="small"
@@ -388,7 +388,7 @@ export default function MyRequestDetailPage() {
                   <div style={{ marginTop: 16 }}>
                     <Button
                       type="primary"
-                      icon={<PlayCircleOutlined />}
+                      icon={<PlayCircle />}
                       onClick={() => {
                         const pendingTask = provisioningTasks.find(t => t.status === 'pending');
                         if (pendingTask) {

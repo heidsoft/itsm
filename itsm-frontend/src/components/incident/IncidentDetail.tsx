@@ -24,18 +24,7 @@ import {
   Empty,
   Spin,
 } from 'antd';
-import {
-  EditOutlined,
-  ArrowUpOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ExclamationCircleOutlined,
-  FileTextOutlined,
-  AreaChartOutlined,
-  ApiOutlined,
-  PlusOutlined,
-  SaveOutlined,
-} from '@ant-design/icons';
+import { ArrowUp, Plus, Save, Pencil, FileText, Clock, AlertCircle, CheckCircle, Plug, AreaChart } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -424,18 +413,18 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             </div>
             <Space>
               <Button
-                icon={<EditOutlined />}
+                icon={<Pencil />}
                 onClick={() => router.push(`/incidents/${data.id}/edit`)}
               >
                 编辑
               </Button>
-              <Button icon={<ArrowUpOutlined />} onClick={handleEscalate} loading={escalating}>
+              <Button icon={<ArrowUp />} onClick={handleEscalate} loading={escalating}>
                 升级
               </Button>
               {data.status !== IncidentStatus.RESOLVED && (
                 <Button
                   type="primary"
-                  icon={<CheckCircleOutlined />}
+                  icon={<CheckCircle />}
                   onClick={handleResolveClick}
                   loading={resolving}
                 >
@@ -447,7 +436,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         </Card>
 
         {/* 基本信息 */}
-        <Card title="基本信息" extra={<Button type="link" icon={<EditOutlined />} onClick={handleEditCategory}>编辑分类</Button>}>
+        <Card title="基本信息" extra={<Button type="link" icon={<Pencil />} onClick={handleEditCategory}>编辑分类</Button>}>
           <Descriptions column={2}>
             <Descriptions.Item label="报告人ID">{data.reporterId}</Descriptions.Item>
             <Descriptions.Item label="负责人ID">{data.assigneeId || '-'}</Descriptions.Item>
@@ -491,7 +480,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             <Card
               title={
                 <Space>
-                  <FileTextOutlined />
+                  <FileText />
                   根因分析
                   {rootCauseData?.status && (
                     <Tag color={rootCauseData.status === 'completed' ? 'success' : 'processing'}>
@@ -501,7 +490,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 </Space>
               }
               extra={
-                <Button type="link" icon={<EditOutlined />} onClick={handleEditRootCause}>
+                <Button type="link" icon={<Pencil />} onClick={handleEditRootCause}>
                   {rootCauseData?.id ? '编辑' : '添加'}
                 </Button>
               }
@@ -537,7 +526,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 </Descriptions>
               ) : (
                 <Empty description="暂无根因分析" image={Empty.PRESENTED_IMAGE_SIMPLE}>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={handleEditRootCause}>
+                  <Button type="primary" icon={<Plus />} onClick={handleEditRootCause}>
                     添加根因分析
                   </Button>
                 </Empty>
@@ -548,7 +537,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             <Card
               title={
                 <Space>
-                  <AreaChartOutlined />
+                  <AreaChart />
                   影响评估
                   {(impactData?.businessImpact || impactData?.technicalImpact) && (
                     <Badge
@@ -564,7 +553,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 </Space>
               }
               extra={
-                <Button type="link" icon={<EditOutlined />} onClick={handleEditImpact}>
+                <Button type="link" icon={<Pencil />} onClick={handleEditImpact}>
                   {impactData?.id ? '编辑' : '添加'}
                 </Button>
               }
@@ -599,7 +588,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 </Descriptions>
               ) : (
                 <Empty description="暂无影响评估" image={Empty.PRESENTED_IMAGE_SIMPLE}>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={handleEditImpact}>
+                  <Button type="primary" icon={<Plus />} onClick={handleEditImpact}>
                     添加影响评估
                   </Button>
                 </Empty>
@@ -610,7 +599,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             <Card
               title={
                 <Space>
-                  <ApiOutlined />
+                  <Plug />
                   事件分类
                   {classificationData?.classificationConfidence !== undefined && (
                     <Tag color={classificationData.classificationConfidence >= 80 ? 'green' : 'orange'}>
@@ -620,7 +609,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 </Space>
               }
               extra={
-                <Button type="link" icon={<EditOutlined />} onClick={handleEditCategory}>
+                <Button type="link" icon={<Pencil />} onClick={handleEditCategory}>
                   {classificationData?.id ? '编辑' : '添加'}
                 </Button>
               }
@@ -639,7 +628,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 </Descriptions>
               ) : (
                 <Empty description="暂无事件分类" image={Empty.PRESENTED_IMAGE_SIMPLE}>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={handleEditCategory}>
+                  <Button type="primary" icon={<Plus />} onClick={handleEditCategory}>
                     添加事件分类
                   </Button>
                 </Empty>
@@ -705,7 +694,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       <Modal
         title={
           <Space>
-            <CheckCircleOutlined style={{ color: '#52c41a' }} />
+            <CheckCircle style={{ color: '#52c41a' }} />
             解决事件
           </Space>
         }
@@ -744,7 +733,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           </Form.Item>
           {data?.problemId && (
             <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>
-              <ExclamationCircleOutlined style={{ marginRight: 8, color: '#faad14' }} />
+              <AlertCircle style={{ marginRight: 8, color: '#faad14' }} />
               <span>此事件已关联问题记录 #{data.problemId}</span>
             </div>
           )}
@@ -755,7 +744,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       <Modal
         title={
           <Space>
-            <FileTextOutlined />
+            <FileText />
             根因分析
           </Space>
         }
@@ -807,7 +796,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       <Modal
         title={
           <Space>
-            <AreaChartOutlined />
+            <AreaChart />
             影响评估
           </Space>
         }
@@ -867,7 +856,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       <Modal
         title={
           <Space>
-            <ApiOutlined />
+            <Plug />
             事件分类
           </Space>
         }

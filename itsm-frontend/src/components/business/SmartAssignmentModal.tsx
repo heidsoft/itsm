@@ -23,12 +23,7 @@ import {
   Divider,
   message,
 } from 'antd';
-import {
-  UserOutlined,
-  ThunderboltOutlined,
-  CheckCircleOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons';
+import { User, Info, CheckCircle, Zap } from 'lucide-react';
 import type {
   AssignRecommendation,
   AutoAssignResponse} from '@/lib/api/ticket-assignment-api';
@@ -123,7 +118,7 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
     <Modal
       title={
         <Space>
-          <ThunderboltOutlined style={{ color: '#1890ff' }} />
+          <Zap style={{ color: '#1890ff' }} />
           <span>智能分配工单</span>
         </Space>
       }
@@ -140,7 +135,7 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
             message="智能分配说明"
             description="系统将根据处理人的技能匹配度、当前工作负载、历史处理记录等因素，为您推荐最合适的处理人。"
             type="info"
-            icon={<InfoCircleOutlined />}
+            icon={<Info />}
             showIcon
           />
 
@@ -150,7 +145,7 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
               <Text strong>快速操作</Text>
               <Button
                 type="primary"
-                icon={<ThunderboltOutlined />}
+                icon={<Zap />}
                 size="large"
                 block
                 loading={autoAssigning}
@@ -186,12 +181,12 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
                   ]}
                 >
                   <List.Item.Meta
-                    avatar={<Avatar src={item.user_avatar} icon={<UserOutlined />} size="large" />}
+                    avatar={<Avatar src={item.user_avatar} icon={<User />} size="large" />}
                     title={
                       <Space>
                         <Text strong>{item.user_name}</Text>
                         {index === 0 && (
-                          <Tag color="gold" icon={<CheckCircleOutlined />}>
+                          <Tag color="gold" icon={<CheckCircle />}>
                             最佳推荐
                           </Tag>
                         )}
