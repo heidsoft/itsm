@@ -180,6 +180,29 @@ export interface A2UIValue {
   valueBoolean?: boolean;
 }
 
+// ==================== 数据模型 ====================
+
+/**
+ * A2UI 数据模型接口
+ */
+export interface A2UIDataModel {
+  ticket: {
+    title: string;
+    type: string;
+    priority: string;
+    description: string;
+    [key: string]: unknown;
+  };
+  ui: {
+    canSubmit: boolean;
+    status: string;
+    statusColor: string;
+    errors: Record<string, string>;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 // ==================== 数据模型工具函数 ====================
 
 /**

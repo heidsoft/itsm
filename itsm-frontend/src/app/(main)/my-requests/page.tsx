@@ -153,7 +153,7 @@ const MyRequestsPage = () => {
       const data = await ServiceCatalogApi.getServiceRequests({
         page,
         pageSize,
-        status: status === 'all' ? undefined : status,
+        status: (status === 'all' ? undefined : status) as any,
       });
 
       setRequests((data.requests || []) as ServiceRequest[]);

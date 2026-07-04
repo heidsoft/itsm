@@ -34,7 +34,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, FileSpreadsheet, TrendingUp, TrendingDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 import type { TicketAnalyticsResponse } from '@/lib/services/analytics-service';
@@ -244,7 +244,7 @@ const TicketAnalytics: React.FC = () => {
               刷新数据
             </Button>
             <Button
-              icon={<FileExcelOutlined />}
+              icon={<FileSpreadsheet />}
               onClick={() => handleExport('excel')}
               loading={exporting}
             >
@@ -265,7 +265,7 @@ const TicketAnalytics: React.FC = () => {
                   <Statistic
                     title="总工单数"
                     value={analyticsData.total_tickets}
-                    prefix={<RiseOutlined style={{ color: '#1890ff' }} />}
+                    prefix={<TrendingUp style={{ color: '#1890ff' }} />}
                     styles={{ content: { color: '#1890ff' } }}
                   />
                 </Card>
@@ -275,7 +275,7 @@ const TicketAnalytics: React.FC = () => {
                   <Statistic
                     title="待处理工单"
                     value={analyticsData.open_tickets}
-                    prefix={<RiseOutlined style={{ color: '#fa8c16' }} />}
+                    prefix={<TrendingUp style={{ color: '#fa8c16' }} />}
                     styles={{ content: { color: '#fa8c16' } }}
                   />
                 </Card>
@@ -285,7 +285,7 @@ const TicketAnalytics: React.FC = () => {
                   <Statistic
                     title="已解决工单"
                     value={analyticsData.resolved_tickets}
-                    prefix={<RiseOutlined style={{ color: '#52c41a' }} />}
+                    prefix={<TrendingUp style={{ color: '#52c41a' }} />}
                     styles={{ content: { color: '#52c41a' } }}
                   />
                 </Card>
@@ -295,7 +295,7 @@ const TicketAnalytics: React.FC = () => {
                   <Statistic
                     title="超时工单"
                     value={analyticsData.overdue_tickets}
-                    prefix={<FallOutlined style={{ color: '#ff4d4f' }} />}
+                    prefix={<TrendingDown style={{ color: '#ff4d4f' }} />}
                     styles={{ content: { color: '#ff4d4f' } }}
                   />
                 </Card>

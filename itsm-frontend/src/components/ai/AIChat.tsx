@@ -6,7 +6,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Input, Button, List, Avatar, Typography, Space, Spin, message, Divider } from 'antd';
-import { User } from 'lucide-react';
+import { ClearOutlined, SendOutlined } from '@ant-design/icons';
+import { User, Bot, X } from 'lucide-react';
 import { AIApi } from '@/lib/api/';
 import type { AIMessage } from '@/types/biz/ai';
 
@@ -83,11 +84,11 @@ const AIChat: React.FC = () => {
     <Card
       title={
         <span>
-          <RobotOutlined /> AI 助手
+          <Bot /> AI 助手
         </span>
       }
       extra={
-        <Button size="small" icon={<ClearOutlined />} onClick={handleClear}>
+        <Button size="small" icon={<X />} onClick={handleClear}>
           清空
         </Button>
       }
@@ -111,7 +112,7 @@ const AIChat: React.FC = () => {
               <List.Item.Meta
                 avatar={
                   <Avatar
-                    icon={item.role === 'user' ? <User /> : <RobotOutlined />}
+                    icon={item.role === 'user' ? <User /> : <Bot />}
                     style={{ backgroundColor: item.role === 'user' ? '#1890ff' : '#52c41a' }}
                   />
                 }

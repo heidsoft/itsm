@@ -1238,7 +1238,7 @@ const WorkflowManagementPage = () => {
             try {
               if (editingWorkflow) {
                 // 更新现有工作流
-                const updateData: UpdateWorkflowRequest = {
+                const updateData: any = {
                   bpmn_xml: xml,
                 };
                 await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), updateData);
@@ -1265,7 +1265,7 @@ const WorkflowManagementPage = () => {
             try {
               if (editingWorkflow) {
                 // 先保存BPMN XML
-                const updateData: UpdateWorkflowRequest = {
+                const updateData: any = {
                   bpmn_xml: xml,
                 };
                 await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), updateData);

@@ -23,7 +23,7 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { useI18n } from '@/lib/i18n/useI18n';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { Minus, BarChart3, LineChart, PieChart } from 'lucide-react';
+import { Minus, BarChart3, LineChart, PieChart, TrendingUp, TrendingDown } from 'lucide-react';
 import { ProblemApi, type ProblemTrendData } from '@/lib/api/problem-api';
 
 const { RangePicker } = DatePicker;
@@ -32,8 +32,8 @@ const { Text, Title } = Typography;
 // 趋势方向映射
 const trendDirectionConfig: Record<string, { color: string; icon: React.ReactNode; text: string }> =
   {
-    increasing: { color: '#ff4d4f', icon: <RiseOutlined />, text: '上升' },
-    decreasing: { color: '#52c41a', icon: <FallOutlined />, text: '下降' },
+    increasing: { color: '#ff4d4f', icon: <TrendingUp />, text: '上升' },
+    decreasing: { color: '#52c41a', icon: <TrendingDown />, text: '下降' },
     stable: { color: '#1890ff', icon: <Minus />, text: '稳定' },
   };
 

@@ -3,15 +3,10 @@
 import React, { useState, useCallback } from 'react';
 import { Form, Input, Select, Button, Card, Space, Spin, message } from 'antd';
 import { Send, Bot, CheckCircle } from 'lucide-react';
-import type { A2UIComponent, ValueDef, OptionItem } from '@/types/a2ui';
+import type { A2UIComponent, A2UIDataModel, ValueDef, OptionItem, ActionDef, TextProps } from '@/types/a2ui';
 import { getValueByPath, setValueByPath } from '@/types/a2ui';
 import { isAuthenticated } from '@/lib/auth/token-storage';
 import { A2UIApi } from '@/lib/api/a2ui-api';
-
-// 本地类型定义（避免循环引用）
-interface A2UIDataModel {
-  [path: string]: unknown;
-}
 
 // 解析值定义（字面量或路径）
 function resolveValue(def: ValueDef | undefined, model: A2UIDataModel): unknown {
@@ -223,12 +218,9 @@ const A2UIComponentRenderer: React.FC<{
       let buttonText = '提交';
       if (btnProps?.child) {
         const childComp = allComponents.find(c => c.id === btnProps.child);
-        if (childComp) {
-          const childDef = childComp.component;
-          const childType = Object.keys(childDef)[0];
-          if (childType === 'Text') {
-            buttonText = (resolveValue((childDef as unknown as { Text?: { text?: unknown } }).Text?.text, model) as string) || '提交';
-          }
+        if (childComp && 'Text' in childComp.component) {
+          const textProps = (childComp.component as { Text: TextProps }).Text;
+          buttonText = (resolveValue(textProps.text, model) as string) || '提交';
         }
       }
 

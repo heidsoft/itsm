@@ -37,8 +37,8 @@ const SLAMonitorPage = () => {
     try {
       const [statsData, monitoringData, violationsData] = await Promise.all([
         SLAApi.getSLAStats(),
-        SLAApi.getSLAMonitoring({ start_time: '30d', end_time: 'now' }),
-        SLAApi.getSLAViolations({ page: 1, size: 20, is_resolved: false })
+        SLAApi.getSLAMonitoring({ startTime: '30d', endTime: 'now' }),
+        SLAApi.getSLAViolations({ page: 1, size: 20, isResolved: false })
       ]);
 
       setStats({

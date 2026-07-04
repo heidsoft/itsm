@@ -25,7 +25,7 @@ import {
   Tag,
   Divider,
 } from 'antd';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, Send } from 'lucide-react';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
@@ -239,7 +239,7 @@ export default function ServiceCatalogRequestPage() {
               <Button
                 type="primary"
                 htmlType="submit"
-                icon={<SendOutlined />}
+                icon={<Send />}
                 loading={loading}
               >
                 提交申请

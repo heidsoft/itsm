@@ -24,7 +24,7 @@ import {
   Tag,
   Alert,
 } from 'antd';
-import { LayoutGrid, CheckCircle, PlusCircle, Database, Rocket } from 'lucide-react';
+import { LayoutGrid, CheckCircle, PlusCircle, Database, Rocket, Bot } from 'lucide-react';
 
 const { Title, Paragraph } = Typography;
 
@@ -35,7 +35,7 @@ const STEPS: Array<{ key: StepKey; title: string; icon: React.ReactNode }> = [
   { key: 'first-ticket', title: '创建工单', icon: <PlusCircle /> },
   { key: 'catalog', title: '服务目录', icon: <LayoutGrid /> },
   { key: 'cmdb', title: 'CMDB', icon: <Database /> },
-  { key: 'ai-triage', title: 'AI 分诊', icon: <RobotOutlined /> },
+  { key: 'ai-triage', title: 'AI 分诊', icon: <Bot /> },
 ];
 
 interface WizardProps {

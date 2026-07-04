@@ -95,7 +95,7 @@ export default function IncidentsPage() {
 
       // Enrich incidents with reporter object if user exists
       const enriched = items.map(inc => {
-        const reporterId = inc.reporter_id || inc.reporterId;
+        const reporterId = inc.reporter_id || (inc as any).reporterId;
         const reporterName = reporterId ? userMap.get(reporterId) : undefined;
         return {
           ...inc,
@@ -105,7 +105,7 @@ export default function IncidentsPage() {
         };
       });
 
-      setIncidents(enriched);
+      setIncidents(enriched as any);
       const totalCount = response.total || enriched.length;
       setTotal(totalCount);
     } catch (error) {
