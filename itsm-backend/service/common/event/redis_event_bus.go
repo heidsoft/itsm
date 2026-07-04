@@ -13,52 +13,52 @@ import (
 
 // RedisStreamConfig Redis Stream 配置
 type RedisStreamConfig struct {
-	Addr         string // Redis 地址，如 "localhost:6379"
-	Password     string // 密码
-	DB           int    // 数据库编号
+	Addr          string // Redis 地址，如 "localhost:6379"
+	Password      string // 密码
+	DB            int    // 数据库编号
 	ConsumerGroup string // 消费者组名
-	ConsumerName string // 消费者名称
+	ConsumerName  string // 消费者名称
 }
 
 // RedisStreamEventBus 基于 Redis Stream 的事件总线（生产环境推荐）
 // 支持消息持久化、消费者组、消息确认等特性
 type RedisStreamEventBus struct {
-	redis         *redis.Client
-	config        RedisStreamConfig
-	handlers      map[string][]EventHandler
-	mu            sync.RWMutex
-	wg            sync.WaitGroup
-	ctx           context.Context
-	cancel        context.CancelFunc
-	stopCh        chan struct{}
-	processedIDs  map[string]bool // 简单幂等：记录已处理消息ID
+	redis        *redis.Client
+	config       RedisStreamConfig
+	handlers     map[string][]EventHandler
+	mu           sync.RWMutex
+	wg           sync.WaitGroup
+	ctx          context.Context
+	cancel       context.CancelFunc
+	stopCh       chan struct{}
+	processedIDs map[string]bool // 简单幂等：记录已处理消息ID
 }
 
 func NewRedisStreamEventBus(config RedisStreamConfig) (*RedisStreamEventBus, error) {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	bus := &RedisStreamEventBus{
 		redis: redis.NewClient(&redis.Options{
 			Addr:     config.Addr,
 			Password: config.Password,
 			DB:       config.DB,
 		}),
-		config:        config,
-		handlers:      make(map[string][]EventHandler),
-		ctx:           ctx,
-		cancel:        cancel,
-		stopCh:        make(chan struct{}),
-		processedIDs:  make(map[string]bool),
+		config:       config,
+		handlers:     make(map[string][]EventHandler),
+		ctx:          ctx,
+		cancel:       cancel,
+		stopCh:       make(chan struct{}),
+		processedIDs: make(map[string]bool),
 	}
-	
+
 	// 测试连接
 	if err := bus.redis.Ping(ctx).Err(); err != nil {
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
-	
+
 	// 创建消费者组（如果不存在）
 	bus.createConsumerGroupIfNeeded(ctx)
-	
+
 	log.Printf("[EVENT] RedisStreamEventBus initialized with group: %s", config.ConsumerGroup)
 	return bus, nil
 }
@@ -73,7 +73,7 @@ func (b *RedisStreamEventBus) createConsumerGroupIfNeeded(ctx context.Context) {
 		"itsm:approval.completed",
 		"itsm:ai.triage.completed",
 	}
-	
+
 	for _, topic := range topics {
 		// XPENDING 用于检查消费者组是否存在
 		_, err := b.redis.XPending(ctx, topic, b.config.ConsumerGroup).Result()
@@ -89,21 +89,21 @@ func (b *RedisStreamEventBus) createConsumerGroupIfNeeded(ctx context.Context) {
 
 func (b *RedisStreamEventBus) Publish(ctx context.Context, event DomainEvent) error {
 	topic := fmt.Sprintf("itsm:%s", event.EventType())
-	
+
 	// 序列化事件
 	payload, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("failed to marshal event: %w", err)
 	}
-	
+
 	// 构建消息
 	values := map[string]interface{}{
-		"tenant_id": event.TenantID(),
-		"event_type": event.EventType(),
-		"payload":   string(payload),
+		"tenant_id":   event.TenantID(),
+		"event_type":  event.EventType(),
+		"payload":     string(payload),
 		"occurred_at": event.OccurredAt().Format(time.RFC3339),
 	}
-	
+
 	// 添加到 Stream
 	id := fmt.Sprintf("%d-%d", time.Now().UnixMilli(), 0)
 	err = b.redis.XAdd(ctx, &redis.XAddArgs{
@@ -111,11 +111,11 @@ func (b *RedisStreamEventBus) Publish(ctx context.Context, event DomainEvent) er
 		Values: values,
 		ID:     id,
 	}).Err()
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to publish event to Redis Stream: %w", err)
 	}
-	
+
 	log.Printf("[EVENT] Published %s to %s (ID: %s)", event.EventType(), topic, id)
 	return nil
 }
@@ -123,10 +123,10 @@ func (b *RedisStreamEventBus) Publish(ctx context.Context, event DomainEvent) er
 func (b *RedisStreamEventBus) Subscribe(handler EventHandler) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	
+
 	topic := handler.Topic()
 	b.handlers[topic] = append(b.handlers[topic], handler)
-	
+
 	log.Printf("[EVENT] Subscribed %s to topic %s", handler.Name(), topic)
 	return nil
 }
@@ -134,10 +134,10 @@ func (b *RedisStreamEventBus) Subscribe(handler EventHandler) error {
 func (b *RedisStreamEventBus) Unsubscribe(handler EventHandler) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	
+
 	topic := handler.Topic()
 	handlers := b.handlers[topic]
-	
+
 	for i, h := range handlers {
 		if h.Name() == handler.Name() {
 			b.handlers[topic] = append(handlers[:i], handlers[i+1:]...)
@@ -145,19 +145,19 @@ func (b *RedisStreamEventBus) Unsubscribe(handler EventHandler) error {
 			return nil
 		}
 	}
-	
+
 	return nil
 }
 
 func (b *RedisStreamEventBus) Start(ctx context.Context) error {
 	log.Println("[EVENT] RedisStreamEventBus started")
-	
+
 	// 为每个主题启动消费者协程
 	for topic := range b.handlers {
 		b.wg.Add(1)
 		go b.consumeLoop(ctx, topic)
 	}
-	
+
 	// 等待停止信号
 	select {
 	case <-ctx.Done():
@@ -169,9 +169,9 @@ func (b *RedisStreamEventBus) Start(ctx context.Context) error {
 
 func (b *RedisStreamEventBus) consumeLoop(ctx context.Context, topic string) {
 	defer b.wg.Done()
-	
+
 	fullTopic := fmt.Sprintf("itsm:%s", topic)
-	
+
 	for {
 		select {
 		case <-b.ctx.Done():
@@ -179,7 +179,7 @@ func (b *RedisStreamEventBus) consumeLoop(ctx context.Context, topic string) {
 			return
 		default:
 		}
-		
+
 		// 阻塞读取消息
 		streams, err := b.redis.XReadGroup(ctx, &redis.XReadGroupArgs{
 			Group:    b.config.ConsumerGroup,
@@ -188,7 +188,7 @@ func (b *RedisStreamEventBus) consumeLoop(ctx context.Context, topic string) {
 			Count:    1,
 			Block:    5 * time.Second,
 		}).Result()
-		
+
 		if err == redis.Nil {
 			continue // 超时，继续循环
 		}
@@ -197,7 +197,7 @@ func (b *RedisStreamEventBus) consumeLoop(ctx context.Context, topic string) {
 			time.Sleep(time.Second)
 			continue
 		}
-		
+
 		// 处理消息
 		for _, stream := range streams {
 			for _, message := range stream.Messages {
@@ -217,30 +217,30 @@ func (b *RedisStreamEventBus) processMessage(ctx context.Context, topic string, 
 		return
 	}
 	b.mu.Unlock()
-	
+
 	// 获取处理器
 	b.mu.RLock()
 	handlers := make([]EventHandler, len(b.handlers[topic]))
 	copy(handlers, b.handlers[topic])
 	b.mu.RUnlock()
-	
+
 	if len(handlers) == 0 {
 		log.Printf("[EVENT] No handlers for topic %s, acking anyway", topic)
 		b.redis.XAck(ctx, fmt.Sprintf("itsm:%s", topic), b.config.ConsumerGroup, message.ID)
 		return
 	}
-	
+
 	// 解析事件
 	eventType := message.Values["event_type"].(string)
 	payload := []byte(message.Values["payload"].(string))
-	
+
 	event, err := UnmarshalEvent(payload, eventType)
 	if err != nil {
 		log.Printf("[EVENT] Failed to unmarshal event: %v", err)
 		b.redis.XAck(ctx, fmt.Sprintf("itsm:%s", topic), b.config.ConsumerGroup, message.ID)
 		return
 	}
-	
+
 	// 调用处理器
 	for _, handler := range handlers {
 		err := handler.Handle(ctx, event)
@@ -249,12 +249,12 @@ func (b *RedisStreamEventBus) processMessage(ctx context.Context, topic string, 
 			// 可以选择不 ACK，让消息重新投递
 		}
 	}
-	
+
 	// 标记已处理并确认
 	b.mu.Lock()
 	b.processedIDs[message.ID] = true
 	b.mu.Unlock()
-	
+
 	b.redis.XAck(ctx, fmt.Sprintf("itsm:%s", topic), b.config.ConsumerGroup, message.ID)
 }
 
@@ -264,7 +264,7 @@ func (b *RedisStreamEventBus) Stop() error {
 		return nil
 	default:
 	}
-	
+
 	log.Println("[EVENT] RedisStreamEventBus stopping...")
 	b.cancel()
 	b.wg.Wait()

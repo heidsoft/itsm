@@ -22,14 +22,14 @@ var (
 func initEventBus() {
 	// 开发环境：使用内存事件总线
 	EventBusInstance = NewInMemoryEventBus()
-	
+
 	// 或者生产环境：使用 Redis Stream
 	// EventBusInstance, _ = NewRedisStreamEventBus(RedisStreamConfig{
 	// 	Addr:         "localhost:6379",
 	// 	ConsumerGroup: "itsm-consumers",
 	// 	ConsumerName:  "worker-1",
 	// })
-	
+
 	// 注册处理器
 	RegisterEventHandlers(EventBusInstance)
 }
@@ -40,13 +40,13 @@ func RegisterEventHandlers(bus EventBus) {
 		e := event.(*TicketCreatedEvent)
 		return handleAITriage(ctx, e.TenantID, e.TicketID, e.Title)
 	}))
-	
+
 	// SLA 监控处理器
 	bus.Subscribe(NewFuncHandler("ticket.created", "sla-monitor", 20, func(ctx context.Context, event DomainEvent) error {
 		e := event.(*TicketCreatedEvent)
 		return handleSLAMonitoring(ctx, e.TenantID, e.TicketID, e.Priority)
 	}))
-	
+
 	// 通知处理器
 	bus.Subscribe(NewFuncHandler("ticket.created", "notification", 30, func(ctx context.Context, event DomainEvent) error {
 		e := event.(*TicketCreatedEvent)
@@ -63,7 +63,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req CreateTicketReques
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 2. 发布领域事件
 	err = EventBusInstance.Publish(ctx, NewTicketCreatedEvent(
 		req.TenantID,
@@ -77,7 +77,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req CreateTicketReques
 		log.Printf("Failed to publish event: %v", err)
 		// 不返回错误，确保主流程成功
 	}
-	
+
 	return ticket, nil
 }
 
@@ -85,16 +85,16 @@ func (s *TicketService) CreateTicket(ctx context.Context, req CreateTicketReques
 
 func handleAITriage(ctx context.Context, tenantID, ticketID, title string) error {
 	log.Printf("[AI-Triage] Processing ticket %s from tenant %s", ticketID, tenantID)
-	
+
 	// 调用 AI 服务进行分诊
 	category, assignee, err := aiService.Triage(ctx, title)
 	if err != nil {
 		return err
 	}
-	
+
 	// 更新工单分类
 	repo.UpdateTicketCategory(ctx, ticketID, category)
-	
+
 	// 发布分诊完成事件
 	EventBusInstance.Publish(ctx, NewAITriageCompletedEvent(
 		tenantID,
@@ -104,7 +104,7 @@ func handleAITriage(ctx context.Context, tenantID, ticketID, title string) error
 		assignee.ID,
 		assignee.Confidence,
 	))
-	
+
 	return nil
 }
 */
@@ -113,28 +113,28 @@ func handleAITriage(ctx context.Context, tenantID, ticketID, title string) error
 func TestInMemoryEventBus(t *testing.T) {
 	bus := NewInMemoryEventBus()
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// 注册测试处理器
 	bus.Subscribe(NewFuncHandler("ticket.created", "test-handler-1", 1, func(ctx context.Context, event DomainEvent) error {
 		log.Printf("Handler 1 received: %s", event.EventType())
 		return nil
 	}))
-	
+
 	// 测试发布
 	err := bus.Publish(ctx, NewTicketCreatedEvent("tenant-1", "ticket-1", "T-001", "Test Ticket", "high", "user-1"))
 	if err != nil {
 		t.Errorf("Publish failed: %v", err)
 	}
-	
+
 	// 等待异步处理
 	time.Sleep(100 * time.Millisecond)
-	
+
 	// 验证处理器数量
 	count := bus.GetHandlerCount("ticket.created")
 	if count != 1 {
 		t.Errorf("Expected 1 handler, got %d", count)
 	}
-	
+
 	cancel()
 	bus.Stop()
 }
@@ -143,22 +143,22 @@ func TestInMemoryEventBus(t *testing.T) {
 func ExampleInMemoryEventBus() {
 	bus := NewInMemoryEventBus()
 	ctx := context.Background()
-	
+
 	// 订阅
 	bus.Subscribe(NewFuncHandler("ticket.created", "handler-1", 1, func(ctx context.Context, event DomainEvent) error {
 		e := event.(*TicketCreatedEvent)
 		fmt.Printf("Processed ticket: %s\n", e.TicketNumber)
 		return nil
 	}))
-	
+
 	// 发布
 	bus.Publish(ctx, NewTicketCreatedEvent("tenant-1", "1", "T-100", "Help", "medium", "admin"))
-	
+
 	// 等待处理
 	time.Sleep(50 * time.Millisecond)
-	
+
 	bus.Stop()
-	
+
 	// Output:
 	// Processed ticket: T-100
 }

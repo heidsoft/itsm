@@ -11,10 +11,10 @@ import (
 
 // DomainEvent 领域事件接口 - 所有事件的根接口
 type DomainEvent interface {
-	EventType() string       // 事件类型，如 "ticket.created"
-	TenantID() string        // 租户 ID，用于多租户隔离
-	OccurredAt() time.Time   // 事件发生时间
-	Payload() interface{}    // 事件载荷
+	EventType() string     // 事件类型，如 "ticket.created"
+	TenantID() string      // 租户 ID，用于多租户隔离
+	OccurredAt() time.Time // 事件发生时间
+	Payload() interface{}  // 事件载荷
 }
 
 // BaseEvent 基础事件实现 - 简化事件定义
@@ -25,10 +25,10 @@ type BaseEvent struct {
 	payload    interface{}
 }
 
-func (e *BaseEvent) EventType() string  { return e.eventType }
-func (e *BaseEvent) TenantID() string   { return e.tenantID }
+func (e *BaseEvent) EventType() string     { return e.eventType }
+func (e *BaseEvent) TenantID() string      { return e.tenantID }
 func (e *BaseEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e *BaseEvent) Payload() interface{} { return e.payload }
+func (e *BaseEvent) Payload() interface{}  { return e.payload }
 
 // NewBaseEvent 创建基础事件的工厂函数
 func NewBaseEvent(eventType, tenantID string, payload interface{}) *BaseEvent {
@@ -83,28 +83,28 @@ func NewTicketAssignedEvent(tenantID, ticketID, assigneeID, assignee string) *Ti
 // TicketStatusChangedEvent 工单状态变更事件
 type TicketStatusChangedEvent struct {
 	*BaseEvent
-	TicketID    string `json:"ticket_id"`
-	OldStatus   string `json:"old_status"`
-	NewStatus   string `json:"new_status"`
-	ChangedBy   string `json:"changed_by"`
+	TicketID  string `json:"ticket_id"`
+	OldStatus string `json:"old_status"`
+	NewStatus string `json:"new_status"`
+	ChangedBy string `json:"changed_by"`
 }
 
 func NewTicketStatusChangedEvent(tenantID, ticketID, oldStatus, newStatus, changedBy string) *TicketStatusChangedEvent {
 	return &TicketStatusChangedEvent{
-		BaseEvent:   NewBaseEvent("ticket.status.changed", tenantID, nil),
-		TicketID:    ticketID,
-		OldStatus:   oldStatus,
-		NewStatus:   newStatus,
-		ChangedBy:   changedBy,
+		BaseEvent: NewBaseEvent("ticket.status.changed", tenantID, nil),
+		TicketID:  ticketID,
+		OldStatus: oldStatus,
+		NewStatus: newStatus,
+		ChangedBy: changedBy,
 	}
 }
 
 // SLABreachedEvent SLA 违规事件
 type SLABreachedEvent struct {
 	*BaseEvent
-	TicketID     string `json:"ticket_id"`
-	SLAPolicyID  string `json:"sla_policy_id"`
-	BreachedType string `json:"breached_type"` // "response" or "resolve"
+	TicketID     string    `json:"ticket_id"`
+	SLAPolicyID  string    `json:"sla_policy_id"`
+	BreachedType string    `json:"breached_type"` // "response" or "resolve"
 	BreachedAt   time.Time `json:"breached_at"`
 }
 
@@ -121,11 +121,11 @@ func NewSLABreachedEvent(tenantID, ticketID, slaPolicyID, breachedType string, b
 // ApprovalCompletedEvent 审批完成事件
 type ApprovalCompletedEvent struct {
 	*BaseEvent
-	ApprovalID    string `json:"approval_id"`
-	EntityType   string `json:"entity_type"`   // "ticket", "change"
-	EntityID      string `json:"entity_id"`
+	ApprovalID     string `json:"approval_id"`
+	EntityType     string `json:"entity_type"` // "ticket", "change"
+	EntityID       string `json:"entity_id"`
 	ApprovalResult string `json:"approval_result"` // "approved", "rejected"
-	ApprovedBy   string `json:"approved_by"`
+	ApprovedBy     string `json:"approved_by"`
 }
 
 func NewApprovalCompletedEvent(tenantID, approvalID, entityType, entityID, result, approvedBy string) *ApprovalCompletedEvent {
@@ -142,21 +142,21 @@ func NewApprovalCompletedEvent(tenantID, approvalID, entityType, entityID, resul
 // AITriageCompletedEvent AI 分诊完成事件
 type AITriageCompletedEvent struct {
 	*BaseEvent
-	TicketID     string `json:"ticket_id"`
-	CategoryID   string `json:"category_id"`
-	CategoryName string `json:"category_name"`
-	Confidence   float64 `json:"confidence"`
-	SuggestedAssigneeID string `json:"suggested_assignee_id"`
+	TicketID            string  `json:"ticket_id"`
+	CategoryID          string  `json:"category_id"`
+	CategoryName        string  `json:"category_name"`
+	Confidence          float64 `json:"confidence"`
+	SuggestedAssigneeID string  `json:"suggested_assignee_id"`
 }
 
 func NewAITriageCompletedEvent(tenantID, ticketID, categoryID, categoryName, suggestedAssigneeID string, confidence float64) *AITriageCompletedEvent {
 	return &AITriageCompletedEvent{
-		BaseEvent:            NewBaseEvent("ai.triage.completed", tenantID, nil),
-		TicketID:             ticketID,
-		CategoryID:           categoryID,
-		CategoryName:         categoryName,
-		Confidence:           confidence,
-		SuggestedAssigneeID:  suggestedAssigneeID,
+		BaseEvent:           NewBaseEvent("ai.triage.completed", tenantID, nil),
+		TicketID:            ticketID,
+		CategoryID:          categoryID,
+		CategoryName:        categoryName,
+		Confidence:          confidence,
+		SuggestedAssigneeID: suggestedAssigneeID,
 	}
 }
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	"itsm-backend/service/common"
 	"itsm-backend/service/dto"
 )
@@ -19,16 +19,16 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
     if err != nil {
         return nil, err
     }
-    
+
     // 2. 同步计算SLA（阻塞）
     s.slaSvc.CalculateSLADeadlineFromRequest(ctx, tenantID, ...)
-    
+
     // 3. 同步触发审批（阻塞）
     s.approvalSvc.TriggerApproval(ctx, ...)
-    
+
     // 4. 异步发送通知（goroutine）
     go s.notificationSvc.SendTicketCreatedNotification(ctx, tkt)
-    
+
     return tkt, nil
 }
 
@@ -39,7 +39,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
     if err != nil {
         return nil, err
     }
-    
+
     // 2. 发布领域事件（异步处理交给订阅者）
     s.eventBus.Publish(ctx, common.NewTicketCreatedEvent(
         fmt.Sprintf("%d", tenantID),  // tenantID
@@ -49,7 +49,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
         string(tkt.Priority),
         fmt.Sprintf("%d", tkt.RequesterID),
     ))
-    
+
     return tkt, nil
 }
 
@@ -65,16 +65,16 @@ func (h *SLAMonitorHandler) Name() string    { return "sla-monitor" }
 
 func (h *SLAMonitorHandler) Handle(ctx context.Context, event DomainEvent) error {
     e := event.(*common.TicketCreatedEvent)
-    
+
     // 计算 SLA 截止时间
-    result, err := h.slaService.CalculateSLADeadlineFromRequest(ctx, 
+    result, err := h.slaService.CalculateSLADeadlineFromRequest(ctx,
         e.TenantID, e.TicketNumber, e.Priority)
     if err != nil {
         return err
     }
-    
+
     // 更新工单
-    return h.repo.UpdateSLADeadlines(ctx, e.TicketID, 
+    return h.repo.UpdateSLADeadlines(ctx, e.TicketID,
         result.ResponseDeadline, result.ResolutionDeadline, tenantID)
 }
 
@@ -88,7 +88,7 @@ func (h *ApprovalHandler) Name() string    { return "approval-trigger" }
 
 func (h *ApprovalHandler) Handle(ctx context.Context, event DomainEvent) error {
     e := event.(*common.TicketCreatedEvent)
-    
+
     _, err := h.approvalService.TriggerApproval(ctx, &ApprovalTriggerRequest{
         TicketID:     e.TicketID,
         TicketNumber: e.TicketNumber,
@@ -116,11 +116,11 @@ func (h *NotificationHandler) Handle(ctx context.Context, event DomainEvent) err
 
 // TicketEventService 事件驱动的工单服务
 type TicketEventService struct {
-	repo      TicketRepository
-	eventBus  EventBus
-	slaSvc    SLAService
+	repo        TicketRepository
+	eventBus    EventBus
+	slaSvc      SLAService
 	approvalSvc ApprovalService
-	notifSvc  NotificationService
+	notifSvc    NotificationService
 }
 
 // NewTicketEventService 创建事件驱动的工单服务
@@ -129,12 +129,12 @@ func NewTicketEventService(repo TicketRepository, eventBus EventBus) *TicketEven
 		repo:     repo,
 		eventBus: eventBus,
 	}
-	
+
 	// 注册事件处理器
 	eventBus.Subscribe(&slaMonitorHandler{svc: svc})
 	eventBus.Subscribe(&approvalHandler{svc: svc})
 	eventBus.Subscribe(&notificationHandler{svc: svc})
-	
+
 	return svc
 }
 
@@ -149,7 +149,7 @@ func (s *TicketEventService) CreateTicket(ctx context.Context, req *dto.CreateTi
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 2. 发布领域事件（异步处理）
 	s.eventBus.Publish(ctx, NewTicketCreatedEvent(
 		fmt.Sprintf("%d", tenantID),
@@ -159,7 +159,7 @@ func (s *TicketEventService) CreateTicket(ctx context.Context, req *dto.CreateTi
 		string(tkt.Priority),
 		fmt.Sprintf("%d", req.RequesterID),
 	))
-	
+
 	return tkt, nil
 }
 
@@ -169,17 +169,17 @@ type slaMonitorHandler struct {
 	svc *TicketEventService
 }
 
-func (h *slaMonitorHandler) Topic() string     { return "ticket.created" }
-func (h *slaMonitorHandler) Priority() int      { return 10 }
-func (h *slaMonitorHandler) Name() string       { return "sla-monitor" }
+func (h *slaMonitorHandler) Topic() string { return "ticket.created" }
+func (h *slaMonitorHandler) Priority() int { return 10 }
+func (h *slaMonitorHandler) Name() string  { return "sla-monitor" }
 
 func (h *slaMonitorHandler) Handle(ctx context.Context, event DomainEvent) error {
 	e := event.(*TicketCreatedEvent)
-	
+
 	// 模拟 SLA 计算
 	deadline := time.Now().Add(4 * time.Hour)
 	_ = deadline // 使用
-	
+
 	return nil // 简化示例
 }
 
@@ -187,16 +187,16 @@ type approvalHandler struct {
 	svc *TicketEventService
 }
 
-func (h *approvalHandler) Topic() string     { return "ticket.created" }
-func (h *approvalHandler) Priority() int      { return 20 }
-func (h *approvalHandler) Name() string       { return "approval-trigger" }
+func (h *approvalHandler) Topic() string { return "ticket.created" }
+func (h *approvalHandler) Priority() int { return 20 }
+func (h *approvalHandler) Name() string  { return "approval-trigger" }
 
 func (h *approvalHandler) Handle(ctx context.Context, event DomainEvent) error {
 	e := event.(*TicketCreatedEvent)
-	
+
 	// 触发审批流程
 	_ = e.TicketID
-	
+
 	return nil // 简化示例
 }
 
@@ -204,16 +204,16 @@ type notificationHandler struct {
 	svc *TicketEventService
 }
 
-func (h *notificationHandler) Topic() string     { return "ticket.created" }
-func (h *notificationHandler) Priority() int      { return 30 }
-func (h *notificationHandler) Name() string       { return "notification" }
+func (h *notificationHandler) Topic() string { return "ticket.created" }
+func (h *notificationHandler) Priority() int { return 30 }
+func (h *notificationHandler) Name() string  { return "notification" }
 
 func (h *notificationHandler) Handle(ctx context.Context, event DomainEvent) error {
 	e := event.(*TicketCreatedEvent)
-	
+
 	// 发送通知
 	_ = e.TicketID
-	
+
 	return nil // 简化示例
 }
 
