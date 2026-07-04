@@ -255,6 +255,7 @@ type RouterConfig struct {
 	VendorController       *controller.VendorController
 	AssetLicenseController *controller.AssetLicenseController
 	SurveyController       *controller.SurveyController
+	CloudController       *controller.CloudController
 
 	// Domain Handlers
 	ServiceCatalogHandler *service_catalog.Handler
@@ -1600,6 +1601,42 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				surveys.GET("/:id/responses", config.SurveyController.GetSurveyResponses)
 				surveys.GET("/:id/analytics", config.SurveyController.GetAnalytics)
 				surveys.POST("/responses", config.SurveyController.SubmitResponse)
+			}
+		}
+
+		// ==================== Cloud (云账号/云资源/云服务) ====================
+		if config.CloudController != nil {
+			cloud := tenant.(*gin.RouterGroup).Group("/cloud")
+			{
+				// Cloud Accounts (云账号)
+				cloudAccounts := cloud.Group("/accounts")
+				{
+					cloudAccounts.GET("", middleware.RequirePermission("cloud_account", "read"), config.CloudController.ListCloudAccounts)
+					cloudAccounts.POST("", middleware.RequirePermission("cloud_account", "write"), config.CloudController.CreateCloudAccount)
+					cloudAccounts.GET("/:id", middleware.RequirePermission("cloud_account", "read"), config.CloudController.GetCloudAccount)
+					cloudAccounts.PUT("/:id", middleware.RequirePermission("cloud_account", "write"), config.CloudController.UpdateCloudAccount)
+					cloudAccounts.DELETE("/:id", middleware.RequirePermission("cloud_account", "delete"), config.CloudController.DeleteCloudAccount)
+				}
+
+				// Cloud Services (云服务)
+				cloudServices := cloud.Group("/services")
+				{
+					cloudServices.GET("", middleware.RequirePermission("cloud_service", "read"), config.CloudController.ListCloudServices)
+					cloudServices.POST("", middleware.RequirePermission("cloud_service", "write"), config.CloudController.CreateCloudService)
+					cloudServices.GET("/:id", middleware.RequirePermission("cloud_service", "read"), config.CloudController.GetCloudService)
+					cloudServices.PUT("/:id", middleware.RequirePermission("cloud_service", "write"), config.CloudController.UpdateCloudService)
+					cloudServices.DELETE("/:id", middleware.RequirePermission("cloud_service", "delete"), config.CloudController.DeleteCloudService)
+				}
+
+				// Cloud Resources (云资源)
+				cloudResources := cloud.Group("/resources")
+				{
+					cloudResources.GET("", middleware.RequirePermission("cloud_resource", "read"), config.CloudController.ListCloudResources)
+					cloudResources.POST("", middleware.RequirePermission("cloud_resource", "write"), config.CloudController.CreateCloudResource)
+					cloudResources.GET("/:id", middleware.RequirePermission("cloud_resource", "read"), config.CloudController.GetCloudResource)
+					cloudResources.PUT("/:id", middleware.RequirePermission("cloud_resource", "write"), config.CloudController.UpdateCloudResource)
+					cloudResources.DELETE("/:id", middleware.RequirePermission("cloud_resource", "delete"), config.CloudController.DeleteCloudResource)
+				}
 			}
 		}
 

@@ -473,6 +473,10 @@ func NewApplication() *Application {
 	surveyService := service.NewSurveyService(client, sugar)
 	surveyController := controller.NewSurveyController(surveyService)
 
+	// Cloud Service & Controller
+	cloudService := service.NewCloudService(client, sugar)
+	cloudController := controller.NewCloudController(cloudService, sugar)
+
 	// WebSocket Service
 	wsService := service.NewWebSocketService(sugar)
 
@@ -573,6 +577,7 @@ func NewApplication() *Application {
 		AssetController:        assetController,
 		AssetLicenseController: assetLicenseController,
 		SurveyController:       surveyController,
+		CloudController:       cloudController,
 
 		// Domain Handlers
 		ServiceCatalogHandler: scHandler,

@@ -1290,3 +1290,108 @@ func ToCITagResponseList(tags []*ent.CITag) []*CITagResponse {
 	}
 	return res
 }
+
+// ===================================
+// Cloud Mappers
+// ===================================
+
+// ToCloudAccountResponse 转换云账号实体为响应
+func ToCloudAccountResponse(account *ent.CloudAccount) *CloudAccountResponse {
+	if account == nil {
+		return nil
+	}
+	return &CloudAccountResponse{
+		ID:              account.ID,
+		Provider:        account.Provider,
+		AccountID:       account.AccountID,
+		AccountName:     account.AccountName,
+		CredentialRef:   account.CredentialRef,
+		RegionWhitelist: account.RegionWhitelist,
+		IsActive:        account.IsActive,
+		TenantID:        account.TenantID,
+		CreatedAt:       account.CreatedAt,
+		UpdatedAt:       account.UpdatedAt,
+	}
+}
+
+// ToCloudAccountResponseList 转换云账号实体列表为响应列表
+func ToCloudAccountResponseList(accounts []*ent.CloudAccount) []*CloudAccountResponse {
+	if accounts == nil {
+		return nil
+	}
+	res := make([]*CloudAccountResponse, len(accounts))
+	for i, account := range accounts {
+		res[i] = ToCloudAccountResponse(account)
+	}
+	return res
+}
+
+// ToCloudServiceResponse 转换云服务实体为响应
+func ToCloudServiceResponse(service *ent.CloudService) *CloudServiceResponse {
+	if service == nil {
+		return nil
+	}
+	return &CloudServiceResponse{
+		ID:                service.ID,
+		ParentID:          service.ParentID,
+		Provider:          service.Provider,
+		Category:          service.Category,
+		ServiceCode:       service.ServiceCode,
+		ServiceName:       service.ServiceName,
+		ResourceTypeCode:  service.ResourceTypeCode,
+		ResourceTypeName:  service.ResourceTypeName,
+		APIVersion:        service.APIVersion,
+		AttributeSchema:   service.AttributeSchema,
+		IsSystem:          service.IsSystem,
+		IsActive:          service.IsActive,
+		TenantID:          service.TenantID,
+		CreatedAt:         service.CreatedAt,
+		UpdatedAt:         service.UpdatedAt,
+	}
+}
+
+// ToCloudServiceResponseList 转换云服务实体列表为响应列表
+func ToCloudServiceResponseList(services []*ent.CloudService) []*CloudServiceResponse {
+	if services == nil {
+		return nil
+	}
+	res := make([]*CloudServiceResponse, len(services))
+	for i, service := range services {
+		res[i] = ToCloudServiceResponse(service)
+	}
+	return res
+}
+
+// ToCloudResourceResponse 转换云资源实体为响应
+func ToCloudResourceResponse(resource *ent.CloudResource) *CloudResourceResponse {
+	if resource == nil {
+		return nil
+	}
+	return &CloudResourceResponse{
+		ID:             resource.ID,
+		CloudAccountID: resource.CloudAccountID,
+		ServiceID:      resource.ServiceID,
+		ResourceID:     resource.ResourceID,
+		ResourceName:   resource.ResourceName,
+		Region:         resource.Region,
+		Zone:           resource.Zone,
+		Status:         resource.Status,
+		Tags:           resource.Tags,
+		Metadata:       resource.Metadata,
+		TenantID:       resource.TenantID,
+		CreatedAt:      resource.CreatedAt,
+		UpdatedAt:      resource.UpdatedAt,
+	}
+}
+
+// ToCloudResourceResponseList 转换云资源实体列表为响应列表
+func ToCloudResourceResponseList(resources []*ent.CloudResource) []*CloudResourceResponse {
+	if resources == nil {
+		return nil
+	}
+	res := make([]*CloudResourceResponse, len(resources))
+	for i, resource := range resources {
+		res[i] = ToCloudResourceResponse(resource)
+	}
+	return res
+}
