@@ -13,7 +13,7 @@ type CreateAutomationRuleRequest struct {
 	Priority    int                      `json:"priority"`
 	Conditions  []map[string]interface{} `json:"conditions" binding:"required"`
 	Actions     []map[string]interface{} `json:"actions" binding:"required"`
-	IsActive    bool                     `json:"is_active"`
+	IsActive    bool                     `json:"isActive"`
 }
 
 // UpdateAutomationRuleRequest 更新自动化规则请求
@@ -23,13 +23,13 @@ type UpdateAutomationRuleRequest struct {
 	Priority    *int                     `json:"priority"`
 	Conditions  []map[string]interface{} `json:"conditions"`
 	Actions     []map[string]interface{} `json:"actions"`
-	IsActive    *bool                    `json:"is_active"`
+	IsActive    *bool                    `json:"isActive"`
 }
 
 // TestAutomationRuleRequest 测试自动化规则请求
 type TestAutomationRuleRequest struct {
-	RuleID   int `json:"rule_id" binding:"required"`
-	TicketID int `json:"ticket_id" binding:"required"`
+	RuleID   int `json:"ruleId" binding:"required"`
+	TicketID int `json:"ticketId" binding:"required"`
 }
 
 // TestAutomationRuleResponse 测试自动化规则响应
@@ -48,14 +48,14 @@ type AutomationRuleResponse struct {
 	Priority       int                      `json:"priority"`
 	Conditions     []map[string]interface{} `json:"conditions"`
 	Actions        []map[string]interface{} `json:"actions"`
-	IsActive       bool                     `json:"is_active"`
-	ExecutionCount int                      `json:"execution_count"`
-	LastExecutedAt *time.Time               `json:"last_executed_at,omitempty"`
-	CreatedBy      int                      `json:"created_by"`
+	IsActive       bool                     `json:"isActive"`
+	ExecutionCount int                      `json:"executionCount"`
+	LastExecutedAt *time.Time               `json:"lastExecutedAt,omitempty"`
+	CreatedBy      int                      `json:"createdBy"`
 	Creator        *UserResponse            `json:"creator,omitempty"`
-	TenantID       int                      `json:"tenant_id"`
-	CreatedAt      time.Time                `json:"created_at"`
-	UpdatedAt      time.Time                `json:"updated_at"`
+	TenantID       int                      `json:"tenantId"`
+	CreatedAt      time.Time                `json:"createdAt"`
+	UpdatedAt      time.Time                `json:"updatedAt"`
 }
 
 // ListAutomationRulesResponse 自动化规则列表响应

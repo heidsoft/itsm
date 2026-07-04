@@ -86,7 +86,7 @@ func (tac *TicketAssignmentController) ReassignTicket(c *gin.Context) {
 	}
 
 	var req struct {
-		NewAssigneeID int    `json:"new_assignee_id" binding:"required"`
+		NewAssigneeID int    `json:"newAssigneeId" binding:"required"`
 		Reason        string `json:"reason"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {

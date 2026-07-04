@@ -19,7 +19,7 @@ type AutoAssignmentRule struct {
 	Conditions  map[string]interface{} `json:"conditions"`
 	Actions     map[string]interface{} `json:"actions"`
 	Priority    int                    `json:"priority"`
-	IsActive    bool                   `json:"is_active"`
+	IsActive    bool                   `json:"isActive"`
 }
 
 // 智能路由规则
@@ -28,9 +28,9 @@ type SmartRoutingRule struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
 	Conditions  map[string]interface{} `json:"conditions"`
-	RouteTo     string                 `json:"route_to"`
+	RouteTo     string                 `json:"routeTo"`
 	Priority    int                    `json:"priority"`
-	IsActive    bool                   `json:"is_active"`
+	IsActive    bool                   `json:"isActive"`
 }
 
 // 自动升级规则
@@ -39,10 +39,10 @@ type AutoEscalationRule struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
 	Conditions  map[string]interface{} `json:"conditions"`
-	EscalateTo  string                 `json:"escalate_to"`
-	TimeLimit   time.Duration          `json:"time_limit"`
+	EscalateTo  string                 `json:"escalateTo"`
+	TimeLimit   time.Duration          `json:"timeLimit"`
 	Priority    int                    `json:"priority"`
-	IsActive    bool                   `json:"is_active"`
+	IsActive    bool                   `json:"isActive"`
 }
 
 type WorkflowAutomationService struct {

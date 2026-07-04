@@ -33,7 +33,7 @@ type CreateRoleRequest struct {
 	Description string   `json:"description"`
 	Permissions []string `json:"permissions"`
 	Status      string   `json:"status"`
-	IsSystem    bool     `json:"is_system"`
+	IsSystem    bool     `json:"isSystem"`
 }
 
 // UpdateRoleRequest represents the request for updating a role
@@ -43,7 +43,7 @@ type UpdateRoleRequest struct {
 	Description *string  `json:"description"`
 	Permissions []string `json:"permissions"`
 	Status      *string  `json:"status"`
-	IsActive    *bool    `json:"is_active"` // 是否启用角色
+	IsActive    *bool    `json:"isActive"` // 是否启用角色
 }
 
 // GetRolesParams represents the query parameters for listing roles

@@ -13,7 +13,7 @@ type gaReadinessModule struct {
 	Name      string `json:"name"`
 	Status    string `json:"status"`
 	Endpoint  string `json:"endpoint"`
-	DataCount int    `json:"data_count"`
+	DataCount int    `json:"dataCount"`
 }
 
 type gaReadinessCheck struct {
@@ -27,7 +27,7 @@ type gaReadinessResponse struct {
 	Version     string              `json:"version"`
 	Target      string              `json:"target"`
 	Status      string              `json:"status"`
-	GeneratedAt time.Time           `json:"generated_at"`
+	GeneratedAt time.Time           `json:"generatedAt"`
 	Modules     []gaReadinessModule `json:"modules"`
 	Checks      []gaReadinessCheck  `json:"checks"`
 	Summary     map[string]int      `json:"summary"`

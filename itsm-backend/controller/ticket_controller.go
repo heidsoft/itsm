@@ -325,9 +325,6 @@ func (tc *TicketController) AssignTicket(c *gin.Context) {
 	}
 	// 兼容 snake_case 字段名 assignee_id
 	assigneeID := req.AssigneeID
-	if assigneeID == 0 && req.AssigneeIDAlt != 0 {
-		assigneeID = req.AssigneeIDAlt
-	}
 	if assigneeID <= 0 {
 		common.Fail(c, common.ParamErrorCode, "assigneeId 必填")
 		return
@@ -774,17 +771,13 @@ func (tc *TicketController) UpdateTicketTemplateStatus(c *gin.Context) {
 	}
 
 	var req struct {
-		IsActive    *bool `json:"isActive"`
-		IsActiveAlt *bool `json:"is_active"`
+		IsActive *bool `json:"isActive"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 	isActive := req.IsActive
-	if isActive == nil {
-		isActive = req.IsActiveAlt
-	}
 	if isActive == nil {
 		common.Fail(c, common.ParamErrorCode, "is_active is required")
 		return
@@ -868,15 +861,9 @@ func normalizeTicketTemplate(template interface{}) gin.H {
 	}
 	formFields := tmpl.FormFields
 	if formFields == nil {
-		formFields = tmpl.FormFieldsAlt
-	}
-	if formFields == nil {
 		formFields = gin.H{}
 	}
 	isActive := tmpl.IsActive
-	if tmpl.IsActiveAlt != nil {
-		isActive = *tmpl.IsActiveAlt
-	}
 	return gin.H{
 		"id":             tmpl.ID,
 		"name":           tmpl.Name,

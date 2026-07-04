@@ -6,32 +6,32 @@ import (
 
 // NotificationPreferenceRequest 通知偏好请求
 type NotificationPreferenceRequest struct {
-	EventType       string  `json:"event_type" binding:"required"`
-	EmailEnabled    *bool   `json:"email_enabled"`
-	SMSEnabled      *bool   `json:"sms_enabled"`
-	InAppEnabled    *bool   `json:"in_app_enabled"`
-	PushEnabled     *bool   `json:"push_enabled"`
+	EventType       string  `json:"eventType" binding:"required"`
+	EmailEnabled    *bool   `json:"emailEnabled"`
+	SMSEnabled      *bool   `json:"smsEnabled"`
+	InAppEnabled    *bool   `json:"inAppEnabled"`
+	PushEnabled     *bool   `json:"pushEnabled"`
 	Frequency       string  `json:"frequency"`
-	QuietHoursStart *string `json:"quiet_hours_start"`
-	QuietHoursEnd   *string `json:"quiet_hours_end"`
+	QuietHoursStart *string `json:"quietHoursStart"`
+	QuietHoursEnd   *string `json:"quietHoursEnd"`
 	Timezone        string  `json:"timezone"`
 }
 
 // NotificationPreferenceResponse 通知偏好响应
 type NotificationPreferenceResponse struct {
 	ID              int       `json:"id"`
-	UserID          int       `json:"user_id"`
-	EventType       string    `json:"event_type"`
-	EmailEnabled    bool      `json:"email_enabled"`
-	SmsEnabled      bool      `json:"sms_enabled"`
-	InAppEnabled    bool      `json:"in_app_enabled"`
-	PushEnabled     bool      `json:"push_enabled"`
+	UserID          int       `json:"userId"`
+	EventType       string    `json:"eventType"`
+	EmailEnabled    bool      `json:"emailEnabled"`
+	SmsEnabled      bool      `json:"smsEnabled"`
+	InAppEnabled    bool      `json:"inAppEnabled"`
+	PushEnabled     bool      `json:"pushEnabled"`
 	Frequency       string    `json:"frequency"`
-	QuietHoursStart time.Time `json:"quiet_hours_start"`
-	QuietHoursEnd   time.Time `json:"quiet_hours_end"`
+	QuietHoursStart time.Time `json:"quietHoursStart"`
+	QuietHoursEnd   time.Time `json:"quietHoursEnd"`
 	Timezone        string    `json:"timezone"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
 }
 
 // BulkNotificationPreferenceRequest 批量更新通知偏好请求

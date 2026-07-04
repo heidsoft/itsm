@@ -68,18 +68,18 @@ const (
 type ApprovalNodeConfig struct {
 	Level            int                       `json:"level"`
 	Name             string                    `json:"name"`
-	ApproverType     ApprovalNodeType          `json:"approver_type"`
-	ApproverIDs      []int                     `json:"approver_ids,omitempty"`
-	AssigneeType     string                    `json:"assignee_type,omitempty"`
-	AssigneeValue    string                    `json:"assignee_value,omitempty"`
-	ApprovalMode     ApprovalMode              `json:"approval_mode"`
-	MinimumApprovals *int                      `json:"minimum_approvals,omitempty"`
-	TimeoutHours     *int                      `json:"timeout_hours,omitempty"`
+	ApproverType     ApprovalNodeType          `json:"approverType"`
+	ApproverIDs      []int                     `json:"approverIds,omitempty"`
+	AssigneeType     string                    `json:"assigneeType,omitempty"`
+	AssigneeValue    string                    `json:"assigneeValue,omitempty"`
+	ApprovalMode     ApprovalMode              `json:"approvalMode"`
+	MinimumApprovals *int                      `json:"minimumApprovals,omitempty"`
+	TimeoutHours     *int                      `json:"timeoutHours,omitempty"`
 	Conditions       []ApprovalConditionConfig `json:"conditions,omitempty"`
-	AllowReject      bool                      `json:"allow_reject"`
-	AllowDelegate    bool                      `json:"allow_delegate"`
-	RejectAction     ApprovalRejectAction      `json:"reject_action"`
-	ReturnToLevel    *int                      `json:"return_to_level,omitempty"`
+	AllowReject      bool                      `json:"allowReject"`
+	AllowDelegate    bool                      `json:"allowDelegate"`
+	RejectAction     ApprovalRejectAction      `json:"rejectAction"`
+	ReturnToLevel    *int                      `json:"returnToLevel,omitempty"`
 }
 
 // WorkflowListFilter 审批工作流列表过滤条件（强类型，取代 map[string]interface{}）

@@ -278,8 +278,8 @@ func (c *BPMNWorkflowController) CloneProcessDefinition(ctx *gin.Context) {
 	}
 
 	var req struct {
-		NewKey  string `json:"new_key" binding:"required"`
-		NewName string `json:"new_name" binding:"required"`
+		NewKey  string `json:"newKey" binding:"required"`
+		NewName string `json:"newName" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -359,8 +359,8 @@ func (c *BPMNWorkflowController) SetProcessDefinitionActive(ctx *gin.Context) {
 // StartProcess 启动流程实例
 func (c *BPMNWorkflowController) StartProcess(ctx *gin.Context) {
 	var req struct {
-		ProcessDefinitionKey string                 `json:"process_definition_key" binding:"required"`
-		BusinessKey          string                 `json:"business_key" binding:"required"`
+		ProcessDefinitionKey string                 `json:"processDefinitionKey" binding:"required"`
+		BusinessKey          string                 `json:"businessKey" binding:"required"`
 		Variables            map[string]interface{} `json:"variables"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -644,7 +644,7 @@ func (c *BPMNWorkflowController) ClaimTask(ctx *gin.Context) {
 	}
 
 	var req struct {
-		UserID int `json:"user_id"`
+		UserID int `json:"userId"`
 	}
 	// 如果请求中提供了user_id则使用，否则使用当前登录用户
 	if err := ctx.ShouldBindJSON(&req); err == nil && req.UserID > 0 {

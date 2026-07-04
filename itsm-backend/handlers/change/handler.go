@@ -400,7 +400,7 @@ func (h *Handler) AssignChange(c *gin.Context) {
 	tenantID := tenantIDVal.(int)
 
 	var req struct {
-		AssigneeID int `json:"assignee_id" binding:"required"`
+		AssigneeID int `json:"assigneeId" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, http.StatusBadRequest, "assignee_id is required")

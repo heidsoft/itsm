@@ -15,17 +15,17 @@ type CreateKnownErrorRequest struct {
 	Title            string   `json:"title" binding:"required"`
 	Description      string   `json:"description"`
 	Symptoms         string   `json:"symptoms"`
-	RootCause        string   `json:"root_cause"`
+	RootCause        string   `json:"rootCause"`
 	Workaround       string   `json:"workaround"`
 	Resolution       string   `json:"resolution"`
 	Status           string   `json:"status" binding:"omitempty,oneof=draft active resolved deprecated"`
 	Category         string   `json:"category"`
 	Severity         string   `json:"severity" binding:"omitempty,oneof=critical high medium low"`
-	AffectedProducts []string `json:"affected_products"`
-	AffectedCIs      []string `json:"affected_cis"`
+	AffectedProducts []string `json:"affectedProducts"`
+	AffectedCIs      []string `json:"affectedCis"`
 	Keywords         []string `json:"keywords"`
-	CreatedBy        int      `json:"created_by" binding:"required"`
-	TenantID         int      `json:"tenant_id" binding:"required"`
+	CreatedBy        int      `json:"createdBy" binding:"required"`
+	TenantID         int      `json:"tenantId" binding:"required"`
 }
 
 // Known Error severities
@@ -41,15 +41,15 @@ type KEDBCreateRequest struct {
 	Title            string   `json:"title" binding:"required"`
 	Description      string   `json:"description"`
 	Symptoms         string   `json:"symptoms"`
-	RootCause        string   `json:"root_cause"`
+	RootCause        string   `json:"rootCause"`
 	Workaround       string   `json:"workaround"`
 	Resolution       string   `json:"resolution"`
 	Category         string   `json:"category"`
 	Severity         string   `json:"severity"`
-	AffectedProducts []string `json:"affected_products"`
-	AffectedCIs      []string `json:"affected_cis"`
+	AffectedProducts []string `json:"affectedProducts"`
+	AffectedCIs      []string `json:"affectedCis"`
 	Keywords         []string `json:"keywords"`
-	ProblemID        *int     `json:"problem_id"`
+	ProblemID        *int     `json:"problemId"`
 }
 
 // KEDBUpdateRequest 更新已知错误请求
@@ -57,16 +57,16 @@ type KEDBUpdateRequest struct {
 	Title            *string  `json:"title"`
 	Description      *string  `json:"description"`
 	Symptoms         *string  `json:"symptoms"`
-	RootCause        *string  `json:"root_cause"`
+	RootCause        *string  `json:"rootCause"`
 	Workaround       *string  `json:"workaround"`
 	Resolution       *string  `json:"resolution"`
 	Category         *string  `json:"category"`
 	Severity         *string  `json:"severity"`
 	Status           *string  `json:"status"`
-	AffectedProducts []string `json:"affected_products"`
-	AffectedCIs      []string `json:"affected_cis"`
+	AffectedProducts []string `json:"affectedProducts"`
+	AffectedCIs      []string `json:"affectedCis"`
 	Keywords         []string `json:"keywords"`
-	IsKnownError     *bool    `json:"is_known_error"`
+	IsKnownError     *bool    `json:"isKnownError"`
 }
 
 // KEDBResponse 已知错误响应 (KEDB专用，包含更多字段)
@@ -75,26 +75,26 @@ type KEDBResponse struct {
 	Title            string     `json:"title"`
 	Description      string     `json:"description"`
 	Symptoms         string     `json:"symptoms"`
-	RootCause        string     `json:"root_cause"`
+	RootCause        string     `json:"rootCause"`
 	Workaround       string     `json:"workaround"`
 	Resolution       string     `json:"resolution"`
 	Status           string     `json:"status"`
 	Category         string     `json:"category"`
 	Severity         string     `json:"severity"`
-	AffectedProducts []string   `json:"affected_products"`
-	AffectedCIs      []string   `json:"affected_cis"`
+	AffectedProducts []string   `json:"affectedProducts"`
+	AffectedCIs      []string   `json:"affectedCis"`
 	Keywords         []string   `json:"keywords"`
-	OccurrenceCount  int        `json:"occurrence_count"`
-	ProblemID        *int       `json:"problem_id"`
-	CreatedBy        int        `json:"created_by"`
-	TenantID         int        `json:"tenant_id"`
-	IsKnownError     bool       `json:"is_known_error"`
-	FirstOccurrence  *time.Time `json:"first_occurrence"`
-	LastOccurrence   *time.Time `json:"last_occurrence"`
-	ResolvedAt       *time.Time `json:"resolved_at"`
-	ClosedAt         *time.Time `json:"closed_at"`
-	CreatedAt        time.Time  `json:"created_at"`
-	UpdatedAt        time.Time  `json:"updated_at"`
+	OccurrenceCount  int        `json:"occurrenceCount"`
+	ProblemID        *int       `json:"problemId"`
+	CreatedBy        int        `json:"createdBy"`
+	TenantID         int        `json:"tenantId"`
+	IsKnownError     bool       `json:"isKnownError"`
+	FirstOccurrence  *time.Time `json:"firstOccurrence"`
+	LastOccurrence   *time.Time `json:"lastOccurrence"`
+	ResolvedAt       *time.Time `json:"resolvedAt"`
+	ClosedAt         *time.Time `json:"closedAt"`
+	CreatedAt        time.Time  `json:"createdAt"`
+	UpdatedAt        time.Time  `json:"updatedAt"`
 }
 
 // KEDBListRequest 列出已知错误请求
@@ -112,7 +112,7 @@ type KEDBListResponse struct {
 	Items    []*KEDBResponse `json:"items"`
 	Total    int             `json:"total"`
 	Page     int             `json:"page"`
-	PageSize int             `json:"page_size"`
+	PageSize int             `json:"pageSize"`
 }
 
 // KEDBStatsResponse KEDB统计响应

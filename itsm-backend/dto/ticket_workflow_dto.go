@@ -35,7 +35,7 @@ const (
 type WorkflowUserInfo struct {
 	ID         int    `json:"id"`
 	Username   string `json:"username"`
-	FullName   string `json:"full_name"`
+	FullName   string `json:"fullName"`
 	Email      string `json:"email"`
 	Avatar     string `json:"avatar,omitempty"`
 	Department string `json:"department,omitempty"`
@@ -52,155 +52,148 @@ type AttachmentInfo struct {
 // TicketWorkflowRecord 工单流转记录
 type TicketWorkflowRecord struct {
 	ID          int                    `json:"id"`
-	TicketID    int                    `json:"ticket_id"`
+	TicketID    int                    `json:"ticketId"`
 	Action      TicketWorkflowAction   `json:"action"`
-	FromStatus  *string                `json:"from_status,omitempty"`
-	ToStatus    *string                `json:"to_status,omitempty"`
+	FromStatus  *string                `json:"fromStatus,omitempty"`
+	ToStatus    *string                `json:"toStatus,omitempty"`
 	Operator    WorkflowUserInfo       `json:"operator"`
-	FromUser    *WorkflowUserInfo      `json:"from_user,omitempty"`
-	ToUser      *WorkflowUserInfo      `json:"to_user,omitempty"`
+	FromUser    *WorkflowUserInfo      `json:"fromUser,omitempty"`
+	ToUser      *WorkflowUserInfo      `json:"toUser,omitempty"`
 	Comment     string                 `json:"comment,omitempty"`
 	Reason      string                 `json:"reason,omitempty"`
 	Attachments []AttachmentInfo       `json:"attachments,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-	CreatedAt   time.Time              `json:"created_at"`
+	CreatedAt   time.Time              `json:"createdAt"`
 }
 
 // ApprovalRecord 审批记录
 type ApprovalRecord struct {
 	ID          int               `json:"id"`
-	TicketID    int               `json:"ticket_id"`
+	TicketID    int               `json:"ticketId"`
 	Level       int               `json:"level"`
-	LevelName   string            `json:"level_name"`
+	LevelName   string            `json:"levelName"`
 	Approver    WorkflowUserInfo  `json:"approver"`
 	Status      ApprovalStatus    `json:"status"`
 	Action      *string           `json:"action,omitempty"` // approve, reject, delegate
 	Comment     string            `json:"comment,omitempty"`
 	Attachments []AttachmentInfo  `json:"attachments,omitempty"`
-	DelegateTo  *WorkflowUserInfo `json:"delegate_to,omitempty"`
-	ProcessedAt *time.Time        `json:"processed_at,omitempty"`
-	CreatedAt   time.Time         `json:"created_at"`
+	DelegateTo  *WorkflowUserInfo `json:"delegateTo,omitempty"`
+	ProcessedAt *time.Time        `json:"processedAt,omitempty"`
+	CreatedAt   time.Time         `json:"createdAt"`
 }
 
 // TicketWorkflowState 工单流转状态
 type TicketWorkflowState struct {
-	TicketID             int                    `json:"ticket_id"`
-	CurrentStatus        string                 `json:"current_status"`
-	CurrentAssignee      *WorkflowUserInfo      `json:"current_assignee,omitempty"`
-	ApprovalStatus       *ApprovalStatus        `json:"approval_status,omitempty"`
-	CurrentApprovalLevel *int                   `json:"current_approval_level,omitempty"`
-	TotalApprovalLevels  *int                   `json:"total_approval_levels,omitempty"`
-	PendingApprovers     []WorkflowUserInfo     `json:"pending_approvers,omitempty"`
-	CompletedApprovals   []ApprovalRecord       `json:"completed_approvals,omitempty"`
-	CanAccept            bool                   `json:"can_accept"`
-	CanReject            bool                   `json:"can_reject"`
-	CanWithdraw          bool                   `json:"can_withdraw"`
-	CanForward           bool                   `json:"can_forward"`
-	CanCC                bool                   `json:"can_cc"`
-	CanApprove           bool                   `json:"can_approve"`
-	CanResolve           bool                   `json:"can_resolve"`
-	CanClose             bool                   `json:"can_close"`
-	AvailableActions     []TicketWorkflowAction `json:"available_actions"`
+	TicketID             int                    `json:"ticketId"`
+	CurrentStatus        string                 `json:"currentStatus"`
+	CurrentAssignee      *WorkflowUserInfo      `json:"currentAssignee,omitempty"`
+	ApprovalStatus       *ApprovalStatus        `json:"approvalStatus,omitempty"`
+	CurrentApprovalLevel *int                   `json:"currentApprovalLevel,omitempty"`
+	TotalApprovalLevels  *int                   `json:"totalApprovalLevels,omitempty"`
+	PendingApprovers     []WorkflowUserInfo     `json:"pendingApprovers,omitempty"`
+	CompletedApprovals   []ApprovalRecord       `json:"completedApprovals,omitempty"`
+	CanAccept            bool                   `json:"canAccept"`
+	CanReject            bool                   `json:"canReject"`
+	CanWithdraw          bool                   `json:"canWithdraw"`
+	CanForward           bool                   `json:"canForward"`
+	CanCC                bool                   `json:"canCc"`
+	CanApprove           bool                   `json:"canApprove"`
+	CanResolve           bool                   `json:"canResolve"`
+	CanClose             bool                   `json:"canClose"`
+	AvailableActions     []TicketWorkflowAction `json:"availableActions"`
 }
 
 // AcceptTicketRequest 接单请求
 type AcceptTicketRequest struct {
-	TicketID    int    `json:"ticket_id"`
-	TicketIDAlt int    `json:"ticketId"` // camelCase 兼容
-	Comment     string `json:"comment"`
+	TicketID int    `json:"ticketId"`
+	Comment  string `json:"comment"`
 }
 
 // RejectTicketRequest 驳回请求
 type RejectTicketRequest struct {
-	TicketID       int     `json:"ticket_id"`
-	TicketIDAlt    int     `json:"ticketId"` // camelCase 兼容
+	TicketID       int     `json:"ticketId"`
 	Reason         string  `json:"reason" binding:"required"`
 	Comment        string  `json:"comment" binding:"required"`
-	ReturnToStatus *string `json:"return_to_status"`
+	ReturnToStatus *string `json:"returnToStatus"`
 }
 
 // WithdrawTicketRequest 撤回请求
 type WithdrawTicketRequest struct {
-	TicketID    int    `json:"ticket_id"`
-	TicketIDAlt int    `json:"ticketId"` // camelCase 兼容
-	Reason      string `json:"reason" binding:"required"`
+	TicketID int    `json:"ticketId"`
+	Reason   string `json:"reason" binding:"required"`
 }
 
 // ForwardTicketRequest 转发请求
 type ForwardTicketRequest struct {
-	TicketID          int    `json:"ticket_id"`
-	TicketIDAlt       int    `json:"ticketId"` // camelCase 兼容
-	ToUserID          int    `json:"to_user_id" binding:"required"`
+	TicketID          int    `json:"ticketId"`
+	ToUserID          int    `json:"toUserId" binding:"required"`
 	Comment           string `json:"comment" binding:"required"`
-	TransferOwnership bool   `json:"transfer_ownership"`
+	TransferOwnership bool   `json:"transferOwnership"`
 }
 
 // CCTicketRequest 抄送请求
 type CCTicketRequest struct {
-	TicketID    int    `json:"ticket_id"`
-	TicketIDAlt int    `json:"ticketId"` // camelCase 兼容
-	CCUsers     []int  `json:"cc_users" binding:"required,min=1"`
-	Comment     string `json:"comment"`
+	TicketID int    `json:"ticketId"`
+	CCUsers  []int  `json:"ccUsers" binding:"required,min=1"`
+	Comment  string `json:"comment"`
 }
 
 // ApproveTicketRequest 审批请求
 type ApproveTicketRequest struct {
-	TicketID         int    `json:"ticket_id"`
-	TicketIDAlt      int    `json:"ticketId"` // camelCase 兼容
-	ApprovalID       int    `json:"approval_id" binding:"required"`
+	TicketID         int    `json:"ticketId"`
+	ApprovalID       int    `json:"approvalId" binding:"required"`
 	Action           string `json:"action" binding:"required,oneof=approve reject delegate"`
 	Comment          string `json:"comment"`
-	DelegateToUserID *int   `json:"delegate_to_user_id"`
+	DelegateToUserID *int   `json:"delegateToUserId"`
 }
 
 // ReopenTicketRequest 重开工单请求
 type ReopenTicketRequest struct {
-	TicketID    int    `json:"ticket_id"`
-	TicketIDAlt int    `json:"ticketId"` // camelCase 兼容
-	Reason      string `json:"reason" binding:"required"`
+	TicketID int    `json:"ticketId"`
+	Reason   string `json:"reason" binding:"required"`
 }
 
 // TicketCC 抄送人
 type TicketCC struct {
 	ID       int              `json:"id"`
-	TicketID int              `json:"ticket_id"`
+	TicketID int              `json:"ticketId"`
 	User     WorkflowUserInfo `json:"user"`
-	AddedBy  WorkflowUserInfo `json:"added_by"`
-	AddedAt  time.Time        `json:"added_at"`
-	IsActive bool             `json:"is_active"`
+	AddedBy  WorkflowUserInfo `json:"addedBy"`
+	AddedAt  time.Time        `json:"addedAt"`
+	IsActive bool             `json:"isActive"`
 }
 
 // TicketWorkflowStats 工单流转统计
 type TicketWorkflowStats struct {
-	TotalTransitions      int                          `json:"total_transitions"`
-	AverageTransitionTime float64                      `json:"average_transition_time"` // 小时
-	ByAction              map[TicketWorkflowAction]int `json:"by_action"`
-	ByStatus              map[string]int               `json:"by_status"`
-	ApprovalStats         ApprovalStatistics           `json:"approval_stats"`
+	TotalTransitions      int                          `json:"totalTransitions"`
+	AverageTransitionTime float64                      `json:"averageTransitionTime"` // 小时
+	ByAction              map[TicketWorkflowAction]int `json:"byAction"`
+	ByStatus              map[string]int               `json:"byStatus"`
+	ApprovalStats         ApprovalStatistics           `json:"approvalStats"`
 }
 
 // ApprovalStatistics 审批统计
 type ApprovalStatistics struct {
-	TotalApprovals      int     `json:"total_approvals"`
-	ApprovedCount       int     `json:"approved_count"`
-	RejectedCount       int     `json:"rejected_count"`
-	AverageApprovalTime float64 `json:"average_approval_time"` // 小时
-	ApprovalRate        float64 `json:"approval_rate"`         // 百分比
+	TotalApprovals      int     `json:"totalApprovals"`
+	ApprovedCount       int     `json:"approvedCount"`
+	RejectedCount       int     `json:"rejectedCount"`
+	AverageApprovalTime float64 `json:"averageApprovalTime"` // 小时
+	ApprovalRate        float64 `json:"approvalRate"`        // 百分比
 }
 
 // TicketActionPermissions 工单操作权限
 type TicketActionPermissions struct {
-	CanAccept       bool `json:"can_accept"`
-	CanReject       bool `json:"can_reject"`
-	CanWithdraw     bool `json:"can_withdraw"`
-	CanForward      bool `json:"can_forward"`
-	CanCC           bool `json:"can_cc"`
-	CanApprove      bool `json:"can_approve"`
-	CanResolve      bool `json:"can_resolve"`
-	CanClose        bool `json:"can_close"`
-	CanReopen       bool `json:"can_reopen"`
-	CanEdit         bool `json:"can_edit"`
-	CanDelete       bool `json:"can_delete"`
-	CanComment      bool `json:"can_comment"`
-	CanViewInternal bool `json:"can_view_internal"`
+	CanAccept       bool `json:"canAccept"`
+	CanReject       bool `json:"canReject"`
+	CanWithdraw     bool `json:"canWithdraw"`
+	CanForward      bool `json:"canForward"`
+	CanCC           bool `json:"canCc"`
+	CanApprove      bool `json:"canApprove"`
+	CanResolve      bool `json:"canResolve"`
+	CanClose        bool `json:"canClose"`
+	CanReopen       bool `json:"canReopen"`
+	CanEdit         bool `json:"canEdit"`
+	CanDelete       bool `json:"canDelete"`
+	CanComment      bool `json:"canComment"`
+	CanViewInternal bool `json:"canViewInternal"`
 }

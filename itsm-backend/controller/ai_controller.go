@@ -104,7 +104,7 @@ func (a *AIController) Triage(c *gin.Context) {
 
 type SummarizeRequest struct {
 	Text   string `json:"text" binding:"required"`
-	MaxLen int    `json:"max_len"`
+	MaxLen int    `json:"maxLen"`
 }
 
 // Summarize text for internal/external updates
@@ -156,7 +156,7 @@ func (a *AIController) SimilarIncidents(c *gin.Context) {
 type ChatRequest struct {
 	Query          string `json:"query" binding:"required"`
 	Limit          int    `json:"limit"`
-	ConversationID int    `json:"conversation_id"`
+	ConversationID int    `json:"conversationId"`
 }
 
 // Chat godoc
@@ -429,8 +429,8 @@ func (a *AIController) RunEmbed(c *gin.Context) {
 type FeedbackRequest struct {
 	Kind     string  `json:"kind" binding:"required"`
 	Query    string  `json:"query"`
-	ItemType *string `json:"item_type"`
-	ItemID   *int    `json:"item_id"`
+	ItemType *string `json:"itemType"`
+	ItemID   *int    `json:"itemId"`
 	Useful   bool    `json:"useful" binding:"required"`
 	Score    *int    `json:"score"`
 	Notes    *string `json:"notes"`

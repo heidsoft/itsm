@@ -29,20 +29,20 @@ func NewTicketAssignmentService(client *ent.Client, logger *zap.SugaredLogger) *
 
 // AssignmentRequest 分配请求
 type AssignmentRequest struct {
-	TicketID       int      `json:"ticket_id"`
-	CategoryID     *int     `json:"category_id,omitempty"`
+	TicketID       int      `json:"ticketId"`
+	CategoryID     *int     `json:"categoryId,omitempty"`
 	Priority       string   `json:"priority"`
-	RequiredSkills []string `json:"required_skills,omitempty"`
-	TenantID       int      `json:"tenant_id"`
-	AutoAssign     bool     `json:"auto_assign"`
-	PreferredUser  *int     `json:"preferred_user,omitempty"`
+	RequiredSkills []string `json:"requiredSkills,omitempty"`
+	TenantID       int      `json:"tenantId"`
+	AutoAssign     bool     `json:"autoAssign"`
+	PreferredUser  *int     `json:"preferredUser,omitempty"`
 }
 
 // AssignmentResponse 分配响应
 type AssignmentResponse struct {
-	TicketID       int     `json:"ticket_id"`
-	AssignedTo     *int    `json:"assigned_to,omitempty"`
-	AssignmentType string  `json:"assignment_type"` // auto, manual, routing
+	TicketID       int     `json:"ticketId"`
+	AssignedTo     *int    `json:"assignedTo,omitempty"`
+	AssignmentType string  `json:"assignmentType"` // auto, manual, routing
 	Reason         string  `json:"reason"`
 	Score          float64 `json:"score,omitempty"`
 	Alternatives   []int   `json:"alternatives,omitempty"`
@@ -50,11 +50,11 @@ type AssignmentResponse struct {
 
 // UserWorkload 用户工作负载信息
 type UserWorkload struct {
-	UserID        int           `json:"user_id"`
+	UserID        int           `json:"userId"`
 	Username      string        `json:"username"`
-	ActiveTickets int           `json:"active_tickets"`
-	TotalTickets  int           `json:"total_tickets"`
-	AvgResolution time.Duration `json:"avg_resolution"`
+	ActiveTickets int           `json:"activeTickets"`
+	TotalTickets  int           `json:"totalTickets"`
+	AvgResolution time.Duration `json:"avgResolution"`
 	Skills        []string      `json:"skills"`
 	Categories    []int         `json:"categories"`
 	Score         float64       `json:"score"`
@@ -67,8 +67,8 @@ type RoutingRule struct {
 	Priority   int      `json:"priority"`
 	Conditions []string `json:"conditions"`
 	Actions    []string `json:"actions"`
-	IsActive   bool     `json:"is_active"`
-	TenantID   int      `json:"tenant_id"`
+	IsActive   bool     `json:"isActive"`
+	TenantID   int      `json:"tenantId"`
 }
 
 // AssignTicket 智能分配工单

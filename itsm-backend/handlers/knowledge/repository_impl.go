@@ -158,7 +158,7 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 
 	// Sum of view counts
 	type ViewSum struct {
-		TotalViews int `json:"total_views"`
+		TotalViews int `json:"total_views"` // matches ent aggregate alias for Scan()
 	}
 	var viewResult []ViewSum
 	err = r.client.KnowledgeArticle.Query().
@@ -175,7 +175,7 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 
 	// Sum of like counts
 	type LikeSum struct {
-		TotalLikes int `json:"total_likes"`
+		TotalLikes int `json:"total_likes"` // matches ent aggregate alias for Scan()
 	}
 	var likeResult []LikeSum
 	err = r.client.KnowledgeArticle.Query().

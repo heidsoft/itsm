@@ -314,11 +314,11 @@ func (c *ApprovalController) GetApprovalRecords(ctx *gin.Context) {
 // SubmitApproval 提交审批
 func (c *ApprovalController) SubmitApproval(ctx *gin.Context) {
 	var req struct {
-		TicketID         int    `json:"ticket_id" binding:"required"`
-		ApprovalID       int    `json:"approval_id" binding:"required"`
+		TicketID         int    `json:"ticketId" binding:"required"`
+		ApprovalID       int    `json:"approvalId" binding:"required"`
 		Action           string `json:"action" binding:"required,oneof=approve reject delegate"`
 		Comment          string `json:"comment"`
-		DelegateToUserID *int   `json:"delegate_to_user_id,omitempty"`
+		DelegateToUserID *int   `json:"delegateToUserId,omitempty"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {

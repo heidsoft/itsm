@@ -38,8 +38,8 @@ func (h *Handler) Login(c *gin.Context) {
 	var req struct {
 		Username   string `json:"username" binding:"required"`
 		Password   string `json:"password" binding:"required"`
-		TenantID   int    `json:"tenant_id"`
-		TenantCode string `json:"tenant_code"`
+		TenantID   int    `json:"tenantId"`
+		TenantCode string `json:"tenantCode"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, http.StatusBadRequest, err.Error())
@@ -70,7 +70,7 @@ func (h *Handler) Login(c *gin.Context) {
 
 func (h *Handler) RefreshToken(c *gin.Context) {
 	var req struct {
-		RefreshToken string `json:"refresh_token" binding:"required"`
+		RefreshToken string `json:"refreshToken" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, http.StatusBadRequest, err.Error())
@@ -166,8 +166,8 @@ func (h *Handler) CreateDepartment(c *gin.Context) {
 		Name        string `json:"name" binding:"required"`
 		Code        string `json:"code" binding:"required"`
 		Description string `json:"description"`
-		ManagerID   int    `json:"manager_id"`
-		ParentID    int    `json:"parent_id"`
+		ManagerID   int    `json:"managerId"`
+		ParentID    int    `json:"parentId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, http.StatusBadRequest, err.Error())
@@ -202,8 +202,8 @@ func (h *Handler) UpdateDepartment(c *gin.Context) {
 		Name        string `json:"name"`
 		Code        string `json:"code"`
 		Description string `json:"description"`
-		ManagerID   int    `json:"manager_id"`
-		ParentID    int    `json:"parent_id"`
+		ManagerID   int    `json:"managerId"`
+		ParentID    int    `json:"parentId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, http.StatusBadRequest, err.Error())
@@ -260,7 +260,7 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 		Name        string `json:"name" binding:"required"`
 		Code        string `json:"code" binding:"required"`
 		Description string `json:"description"`
-		ManagerID   int    `json:"manager_id"`
+		ManagerID   int    `json:"managerId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, http.StatusBadRequest, err.Error())
@@ -294,7 +294,7 @@ func (h *Handler) UpdateTeam(c *gin.Context) {
 		Name        string `json:"name"`
 		Code        string `json:"code"`
 		Description string `json:"description"`
-		ManagerID   int    `json:"manager_id"`
+		ManagerID   int    `json:"managerId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, http.StatusBadRequest, err.Error())

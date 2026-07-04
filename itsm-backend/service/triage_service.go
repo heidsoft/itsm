@@ -49,10 +49,10 @@ func (t *TriageService) normalizeResult(result TriageResult) TriageResult {
 type TriageResult struct {
 	Category     string  `json:"category"`
 	Priority     string  `json:"priority"`
-	AssigneeID   int     `json:"assignee_id"`
+	AssigneeID   int     `json:"assigneeId"`
 	Confidence   float64 `json:"confidence"`
 	Explanation  string  `json:"explanation"`
-	SuggestedFix string  `json:"suggested_fix,omitempty"`
+	SuggestedFix string  `json:"suggestedFix,omitempty"`
 }
 
 // TriageService provides LLM-powered ticket triage and classification
@@ -394,7 +394,7 @@ func (t *TriageService) BatchSuggest(ctx context.Context, tickets []struct {
 type TriageWithMetadata struct {
 	Result  TriageResult  `json:"result"`
 	Method  string        `json:"method"`
-	Latency time.Duration `json:"latency_ms"`
+	Latency time.Duration `json:"latencyMs"`
 	Model   string        `json:"model,omitempty"`
 }
 

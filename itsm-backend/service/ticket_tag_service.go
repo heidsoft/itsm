@@ -289,8 +289,8 @@ type CreateTagRequest struct {
 	Name        string `json:"name" binding:"required"`
 	Color       string `json:"color"`
 	Description string `json:"description"`
-	IsActive    bool   `json:"is_active"`
-	TenantID    int    `json:"tenant_id" binding:"required"`
+	IsActive    bool   `json:"isActive"`
+	TenantID    int    `json:"tenantId" binding:"required"`
 }
 
 // UpdateTagRequest 更新标签请求
@@ -298,13 +298,13 @@ type UpdateTagRequest struct {
 	Name        string `json:"name"`
 	Color       string `json:"color"`
 	Description string `json:"description"`
-	IsActive    *bool  `json:"is_active"`
+	IsActive    *bool  `json:"isActive"`
 }
 
 // ListTagsRequest 获取标签列表请求
 type ListTagsRequest struct {
 	Page     int   `json:"page" form:"page"`
-	PageSize int   `json:"page_size" form:"page_size"`
-	IsActive *bool `json:"is_active" form:"is_active"`
-	TenantID int   `json:"tenant_id" form:"tenant_id"`
+	PageSize int   `json:"pageSize" form:"page_size"`
+	IsActive *bool `json:"isActive" form:"is_active"`
+	TenantID int   `json:"tenantId" form:"tenant_id"`
 }

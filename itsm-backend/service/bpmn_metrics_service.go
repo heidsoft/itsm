@@ -30,16 +30,16 @@ func NewBPMNMetricsService(client *ent.Client, logger *zap.SugaredLogger) *BPMNM
 
 // DashboardMetrics 仪表盘指标
 type DashboardMetrics struct {
-	TotalProcesses    int            `json:"total_processes"`
-	ActiveInstances   int            `json:"active_instances"`
-	CompletedToday    int            `json:"completed_today"`
-	OpenTasks         int            `json:"open_tasks"`
-	SLAComplianceRate float64        `json:"sla_compliance_rate"`
-	AvgCompletionTime float64        `json:"avg_completion_time_minutes"`
-	ProcessHealth     *ProcessHealth `json:"process_health"`
-	TopProcesses      []ProcessStat  `json:"top_processes"`
-	TaskDistribution  []TaskStat     `json:"task_distribution"`
-	TrendData         []TrendPoint   `json:"trend_data"`
+	TotalProcesses    int            `json:"totalProcesses"`
+	ActiveInstances   int            `json:"activeInstances"`
+	CompletedToday    int            `json:"completedToday"`
+	OpenTasks         int            `json:"openTasks"`
+	SLAComplianceRate float64        `json:"slaComplianceRate"`
+	AvgCompletionTime float64        `json:"avgCompletionTimeMinutes"`
+	ProcessHealth     *ProcessHealth `json:"processHealth"`
+	TopProcesses      []ProcessStat  `json:"topProcesses"`
+	TaskDistribution  []TaskStat     `json:"taskDistribution"`
+	TrendData         []TrendPoint   `json:"trendData"`
 }
 
 // ProcessHealth 流程健康度
@@ -47,16 +47,16 @@ type ProcessHealth struct {
 	Healthy     int     `json:"healthy"`
 	Warning     int     `json:"warning"`
 	Critical    int     `json:"critical"`
-	HealthScore float64 `json:"health_score"` // 0-100
+	HealthScore float64 `json:"healthScore"` // 0-100
 }
 
 // ProcessStat 流程统计
 type ProcessStat struct {
-	ProcessDefinitionKey string  `json:"process_definition_key"`
-	TotalInstances       int     `json:"total_instances"`
-	RunningInstances     int     `json:"running_instances"`
-	CompletedInstances   int     `json:"completed_instances"`
-	AvgDuration          float64 `json:"avg_duration_minutes"`
+	ProcessDefinitionKey string  `json:"processDefinitionKey"`
+	TotalInstances       int     `json:"totalInstances"`
+	RunningInstances     int     `json:"runningInstances"`
+	CompletedInstances   int     `json:"completedInstances"`
+	AvgDuration          float64 `json:"avgDurationMinutes"`
 }
 
 // TaskStat 任务统计
@@ -417,13 +417,13 @@ func (s *BPMNMetricsService) GetProcessMetrics(ctx context.Context, processDefin
 
 // BPMNProcessMetrics 流程指标
 type BPMNProcessMetrics struct {
-	TotalInstances      int     `json:"total_instances"`
-	RunningInstances    int     `json:"running_instances"`
-	CompletedInstances  int     `json:"completed_instances"`
-	TerminatedInstances int     `json:"terminated_instances"`
-	CompletionRate      float64 `json:"completion_rate"`
-	SLAComplianceRate   float64 `json:"sla_compliance_rate"`
-	AvgCompletionTime   float64 `json:"avg_completion_time_minutes"`
+	TotalInstances      int     `json:"totalInstances"`
+	RunningInstances    int     `json:"runningInstances"`
+	CompletedInstances  int     `json:"completedInstances"`
+	TerminatedInstances int     `json:"terminatedInstances"`
+	CompletionRate      float64 `json:"completionRate"`
+	SLAComplianceRate   float64 `json:"slaComplianceRate"`
+	AvgCompletionTime   float64 `json:"avgCompletionTimeMinutes"`
 }
 
 // GetBottleneckAnalysis 获取瓶颈分析
@@ -498,9 +498,9 @@ type TaskStats struct {
 
 // BottleneckInfo 瓶颈信息
 type BottleneckInfo struct {
-	TaskName    string  `json:"task_name"`
-	TotalCount  int     `json:"total_count"`
-	AvgDuration float64 `json:"avg_duration_minutes"`
-	MaxDuration float64 `json:"max_duration_minutes"`
-	MinDuration float64 `json:"min_duration_minutes"`
+	TaskName    string  `json:"taskName"`
+	TotalCount  int     `json:"totalCount"`
+	AvgDuration float64 `json:"avgDurationMinutes"`
+	MaxDuration float64 `json:"maxDurationMinutes"`
+	MinDuration float64 `json:"minDurationMinutes"`
 }

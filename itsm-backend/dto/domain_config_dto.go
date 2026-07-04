@@ -8,18 +8,18 @@ import (
 
 type DomainConfigResponse struct {
 	ID           int                    `json:"id"`
-	ConfigKey    string                 `json:"config_key"`
-	ConfigType   string                 `json:"config_type"`
-	ConfigValue  map[string]interface{} `json:"config_value"`
-	InheritMode  string                 `json:"inherit_mode"`
-	TenantID     int                    `json:"tenant_id"`
-	DepartmentID int                    `json:"department_id"`
-	TeamID       int                    `json:"team_id"`
+	ConfigKey    string                 `json:"configKey"`
+	ConfigType   string                 `json:"configType"`
+	ConfigValue  map[string]interface{} `json:"configValue"`
+	InheritMode  string                 `json:"inheritMode"`
+	TenantID     int                    `json:"tenantId"`
+	DepartmentID int                    `json:"departmentId"`
+	TeamID       int                    `json:"teamId"`
 	Version      int                    `json:"version"`
-	IsActive     bool                   `json:"is_active"`
+	IsActive     bool                   `json:"isActive"`
 	Description  string                 `json:"description,omitempty"`
-	CreatedAt    time.Time              `json:"created_at"`
-	UpdatedAt    time.Time              `json:"updated_at"`
+	CreatedAt    time.Time              `json:"createdAt"`
+	UpdatedAt    time.Time              `json:"updatedAt"`
 }
 
 func ToDomainConfigResponse(config *ent.DomainConfig) *DomainConfigResponse {

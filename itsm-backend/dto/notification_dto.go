@@ -9,12 +9,12 @@ type Notification struct {
 	Message    string    `json:"message"`
 	Type       string    `json:"type"`
 	Read       bool      `json:"read"`
-	ActionURL  *string   `json:"action_url,omitempty"`
-	ActionText *string   `json:"action_text,omitempty"`
-	UserID     int       `json:"user_id"`
-	TenantID   int       `json:"tenant_id"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ActionURL  *string   `json:"actionUrl,omitempty"`
+	ActionText *string   `json:"actionText,omitempty"`
+	UserID     int       `json:"userId"`
+	TenantID   int       `json:"tenantId"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 // CreateNotificationRequest 创建通知请求
@@ -22,10 +22,10 @@ type CreateNotificationRequest struct {
 	Title      string  `json:"title" binding:"required"`
 	Message    string  `json:"message" binding:"required"`
 	Type       string  `json:"type" binding:"required,oneof=info success warning error"`
-	ActionURL  *string `json:"action_url,omitempty"`
-	ActionText *string `json:"action_text,omitempty"`
-	UserID     int     `json:"user_id" binding:"required"`
-	TenantID   int     `json:"tenant_id" binding:"required"`
+	ActionURL  *string `json:"actionUrl,omitempty"`
+	ActionText *string `json:"actionText,omitempty"`
+	UserID     int     `json:"userId" binding:"required"`
+	TenantID   int     `json:"tenantId" binding:"required"`
 }
 
 // UpdateNotificationRequest 更新通知请求
@@ -34,8 +34,8 @@ type UpdateNotificationRequest struct {
 	Message    *string `json:"message,omitempty"`
 	Type       *string `json:"type,omitempty" binding:"omitempty,oneof=info success warning error"`
 	Read       *bool   `json:"read,omitempty"`
-	ActionURL  *string `json:"action_url,omitempty"`
-	ActionText *string `json:"action_text,omitempty"`
+	ActionURL  *string `json:"actionUrl,omitempty"`
+	ActionText *string `json:"actionText,omitempty"`
 }
 
 // GetNotificationsRequest 获取通知列表请求
@@ -58,20 +58,20 @@ type NotificationListResponse struct {
 
 // MarkNotificationReadRequest 标记通知已读请求
 type MarkNotificationReadRequest struct {
-	NotificationID int `json:"notification_id" binding:"required"`
-	UserID         int `json:"user_id" binding:"required"`
-	TenantID       int `json:"tenant_id" binding:"required"`
+	NotificationID int `json:"notificationId" binding:"required"`
+	UserID         int `json:"userId" binding:"required"`
+	TenantID       int `json:"tenantId" binding:"required"`
 }
 
 // MarkAllNotificationsReadRequest 标记所有通知已读请求
 type MarkAllNotificationsReadRequest struct {
-	UserID   int `json:"user_id" binding:"required"`
-	TenantID int `json:"tenant_id" binding:"required"`
+	UserID   int `json:"userId" binding:"required"`
+	TenantID int `json:"tenantId" binding:"required"`
 }
 
 // DeleteNotificationRequest 删除通知请求
 type DeleteNotificationRequest struct {
-	NotificationID int `json:"notification_id" binding:"required"`
-	UserID         int `json:"user_id" binding:"required"`
-	TenantID       int `json:"tenant_id" binding:"required"`
+	NotificationID int `json:"notificationId" binding:"required"`
+	UserID         int `json:"userId" binding:"required"`
+	TenantID       int `json:"tenantId" binding:"required"`
 }

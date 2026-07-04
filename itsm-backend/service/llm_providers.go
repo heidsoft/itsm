@@ -213,7 +213,7 @@ func NewMiniMaxProvider(apiKey, model string) *MiniMaxProvider {
 // MiniMax Anthropic-format request
 type MiniMaxAnthropicRequest struct {
 	Model       string                    `json:"model"`
-	MaxTokens   int                       `json:"max_tokens"`
+	MaxTokens   int                       `json:"maxTokens"`
 	System      string                    `json:"system,omitempty"`
 	Temperature float64                   `json:"temperature,omitempty"`
 	Messages    []MiniMaxAnthropicMessage `json:"messages"`
@@ -235,7 +235,7 @@ type MiniMaxAnthropicResponse struct {
 		Text string `json:"text"`
 	} `json:"content"`
 	Model      string `json:"model"`
-	StopReason string `json:"stop_reason"`
+	StopReason string `json:"stopReason"`
 }
 
 func (p *MiniMaxProvider) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {
@@ -318,8 +318,8 @@ type OllamaChatRequest struct {
 	Stream  bool `json:"stream"`
 	Options struct {
 		Temperature float64 `json:"temperature"`
-		TopK        int     `json:"top_k"`
-		TopP        float64 `json:"top_p"`
+		TopK        int     `json:"topK"`
+		TopP        float64 `json:"topP"`
 	} `json:"options,omitempty"`
 }
 
@@ -327,9 +327,9 @@ type OllamaChatRequest struct {
 type OllamaChatResponse struct {
 	Response      string   `json:"response"`
 	Done          bool     `json:"done"`
-	TotalDuration int64    `json:"total_duration,omitempty"`
-	EvalCount     int      `json:"eval_count,omitempty"`
-	StopReasons   []string `json:"stop_reason,omitempty"`
+	TotalDuration int64    `json:"totalDuration,omitempty"`
+	EvalCount     int      `json:"evalCount,omitempty"`
+	StopReasons   []string `json:"stopReason,omitempty"`
 }
 
 func (p *LocalProvider) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {

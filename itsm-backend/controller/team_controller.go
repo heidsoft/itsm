@@ -35,7 +35,7 @@ func (c *TeamController) CreateTeam(ctx *gin.Context) {
 		Name        string `json:"name" binding:"required"`
 		Code        string `json:"code" binding:"required"`
 		Description string `json:"description"`
-		ManagerID   int    `json:"manager_id"`
+		ManagerID   int    `json:"managerId"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -60,8 +60,8 @@ func (c *TeamController) CreateTeam(ctx *gin.Context) {
 // AddMember 添加成员
 func (c *TeamController) AddMember(ctx *gin.Context) {
 	var req struct {
-		TeamID int `json:"team_id" binding:"required"`
-		UserID int `json:"user_id" binding:"required"`
+		TeamID int `json:"teamId" binding:"required"`
+		UserID int `json:"userId" binding:"required"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -106,7 +106,7 @@ func (c *TeamController) UpdateTeam(ctx *gin.Context) {
 		Name        *string `json:"name"`
 		Code        *string `json:"code"`
 		Description *string `json:"description"`
-		ManagerID   *int    `json:"manager_id"`
+		ManagerID   *int    `json:"managerId"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {

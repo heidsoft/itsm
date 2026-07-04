@@ -113,19 +113,10 @@ func (s *TicketService) SetProcessResolver(r *ProcessResolver) {
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ticket.Ticket, error) {
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
 
-	ticketType := normalizeCreateTicketType(req.Type, req.FormFields, req.FormFieldsAlt)
+	ticketType := normalizeCreateTicketType(req.Type, req.FormFields)
 	assigneeID := req.AssigneeID
-	if assigneeID == 0 && req.AssigneeIDAlt != 0 {
-		assigneeID = req.AssigneeIDAlt
-	}
 	categoryID := req.CategoryID
-	if categoryID == nil {
-		categoryID = req.CategoryIDAlt
-	}
 	workflowDefinitionKey := req.WorkflowDefinitionKey
-	if workflowDefinitionKey == "" {
-		workflowDefinitionKey = req.WorkflowDefinitionKeyAlt
-	}
 
 	// 转换 DTO 到领域参数
 	params := &ticket.CreateParams{
@@ -1593,20 +1584,12 @@ func (s *TicketService) CreateTicketTemplate(ctx context.Context, tenantID int, 
 	}
 	formFields := createReq.FormFields
 	if formFields == nil {
-		formFields = createReq.FormFieldsAlt
-	}
-	if formFields == nil {
 		formFields = make(map[string]interface{})
 	}
 	if len(createReq.Fields) > 0 {
 		formFields["fields"] = createReq.Fields
 	}
 	isActive := true
-	if createReq.IsActiveAlt != nil {
-		isActive = *createReq.IsActiveAlt
-	} else if createReq.IsActive {
-		isActive = true
-	}
 	priority := strings.TrimSpace(createReq.Priority)
 	if priority == "" {
 		priority = "medium"
@@ -1640,9 +1623,6 @@ func (s *TicketService) UpdateTicketTemplate(ctx context.Context, tenantID int, 
 		return nil, fmt.Errorf("ent client not available for template")
 	}
 	formFields := updateReq.FormFields
-	if formFields == nil {
-		formFields = updateReq.FormFieldsAlt
-	}
 	if formFields == nil && len(updateReq.Fields) > 0 {
 		formFields = map[string]interface{}{"fields": updateReq.Fields}
 	} else if len(updateReq.Fields) > 0 {
@@ -1819,10 +1799,8 @@ func (s *TicketService) toTicketTemplateDTO(template *ent.TicketTemplate) (*dto.
 		Priority:      template.Priority,
 		Fields:        fields,
 		FormFields:    formFields,
-		FormFieldsAlt: formFields,
 		WorkflowSteps: workflowSteps,
 		IsActive:      isActive,
-		IsActiveAlt:   &isActive,
 		CreatedAt:     template.CreatedAt,
 		UpdatedAt:     template.UpdatedAt,
 	}, nil

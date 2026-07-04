@@ -8,19 +8,17 @@ import (
 
 // CreateTicketCommentRequest 创建工单评论请求
 type CreateTicketCommentRequest struct {
-	Content          string `json:"content" binding:"required,min=1,max=5000"`
-	IsInternal       bool   `json:"isInternal"`            // 是否内部备注
-	IsInternalLegacy *bool  `json:"is_internal,omitempty"` // 兼容旧格式
-	Mentions         []int  `json:"mentions"`              // @的用户ID列表
-	Attachments      []int  `json:"attachments"`           // 附件ID列表（后续实现）
+	Content     string `json:"content" binding:"required,min=1,max=5000"`
+	IsInternal  bool   `json:"isInternal"`  // 是否内部备注
+	Mentions    []int  `json:"mentions"`    // @的用户ID列表
+	Attachments []int  `json:"attachments"` // 附件ID列表（后续实现）
 }
 
 // UpdateTicketCommentRequest 更新工单评论请求
 type UpdateTicketCommentRequest struct {
-	Content          string `json:"content" binding:"omitempty,min=1,max=5000"`
-	IsInternal       *bool  `json:"isInternal"`            // 是否内部备注
-	IsInternalLegacy *bool  `json:"is_internal,omitempty"` // 兼容旧格式
-	Mentions         []int  `json:"mentions"`              // @的用户ID列表
+	Content    string `json:"content" binding:"omitempty,min=1,max=5000"`
+	IsInternal *bool  `json:"isInternal"` // 是否内部备注
+	Mentions   []int  `json:"mentions"`   // @的用户ID列表
 }
 
 // TicketCommentResponse 工单评论响应
@@ -44,15 +42,9 @@ type ListTicketCommentsResponse struct {
 }
 
 func (r *CreateTicketCommentRequest) Normalize() {
-	if r.IsInternalLegacy != nil {
-		r.IsInternal = *r.IsInternalLegacy
-	}
 }
 
 func (r *UpdateTicketCommentRequest) Normalize() {
-	if r.IsInternal == nil && r.IsInternalLegacy != nil {
-		r.IsInternal = r.IsInternalLegacy
-	}
 }
 
 // ToTicketCommentResponse 将 Ent 实体转换为 DTO

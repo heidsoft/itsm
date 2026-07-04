@@ -57,8 +57,8 @@ type SLAComplianceResult struct {
 	CreatedAt               *time.Time `json:"createdAt,omitempty"`
 	FirstResponseAt         *time.Time `json:"firstResponseAt,omitempty"`
 	ResolvedAt              *time.Time `json:"resolvedAt,omitempty"`
-	ActualResponseMinutes   float64    `json:"actual_response_minutes"`
-	ActualResolutionMinutes float64    `json:"actual_resolution_minutes"`
+	ActualResponseMinutes   float64    `json:"actualResponseMinutes"`
+	ActualResolutionMinutes float64    `json:"actualResolutionMinutes"`
 	Compliant               bool       `json:"compliant"`
 	Message                 string     `json:"message"`
 }

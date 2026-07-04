@@ -116,12 +116,12 @@ type CreateKnownErrorFromProblemRequest struct {
 	Title            *string  `json:"title"`
 	Description      *string  `json:"description"`
 	Symptoms         *string  `json:"symptoms"`
-	RootCause        *string  `json:"root_cause"`
+	RootCause        *string  `json:"rootCause"`
 	Workaround       *string  `json:"workaround"`
 	Resolution       *string  `json:"resolution"`
 	Category         *string  `json:"category"`
 	Severity         *string  `json:"severity" binding:"omitempty,oneof=critical high medium low"`
-	AffectedProducts []string `json:"affected_products"`
-	AffectedCIs      []string `json:"affected_cis"`
+	AffectedProducts []string `json:"affectedProducts"`
+	AffectedCIs      []string `json:"affectedCis"`
 	Keywords         []string `json:"keywords"`
 }

@@ -17,33 +17,33 @@ func NewService( /*db *sql.DB*/ ) *Service {
 
 // SLAData represents the complete SLA dashboard data
 type SLAData struct {
-	TotalTickets      int64   `json:"total_tickets"`
-	OpenTickets       int64   `json:"open_tickets"`
-	InProgressTickets int64   `json:"in_progress_tickets"`
-	ResolvedTickets   int64   `json:"resolved_tickets"`
-	AvgResponseTime   float64 `json:"avg_response_time_hours"`
-	AvgResolutionTime float64 `json:"avg_resolution_time_hours"`
-	SLAComplianceRate float64 `json:"sla_compliance_rate"`
-	BreachedTickets   int64   `json:"breached_tickets"`
-	LastUpdated       string  `json:"last_updated"`
+	TotalTickets      int64   `json:"totalTickets"`
+	OpenTickets       int64   `json:"openTickets"`
+	InProgressTickets int64   `json:"inProgressTickets"`
+	ResolvedTickets   int64   `json:"resolvedTickets"`
+	AvgResponseTime   float64 `json:"avgResponseTimeHours"`
+	AvgResolutionTime float64 `json:"avgResolutionTimeHours"`
+	SLAComplianceRate float64 `json:"slaComplianceRate"`
+	BreachedTickets   int64   `json:"breachedTickets"`
+	LastUpdated       string  `json:"lastUpdated"`
 }
 
 // ChartData represents chart specific data
 type ChartData struct {
-	TrendData            []TrendPoint        `json:"trend_data"`
-	IncidentDistribution Distribution        `json:"incident_distribution"`
-	ResponseTimeBuckets  []Bucket            `json:"response_time_buckets"`
-	TeamWorkload         []TeamMember        `json:"team_workload"`
-	SLATargets           []SLATarget         `json:"sla_targets"`
-	PeakHours            []PeakHour          `json:"peak_hours"`
-	SatisfactionTrend    []SatisfactionPoint `json:"satisfaction_trend"`
+	TrendData            []TrendPoint        `json:"trendData"`
+	IncidentDistribution Distribution        `json:"incidentDistribution"`
+	ResponseTimeBuckets  []Bucket            `json:"responseTimeBuckets"`
+	TeamWorkload         []TeamMember        `json:"teamWorkload"`
+	SLATargets           []SLATarget         `json:"slaTargets"`
+	PeakHours            []PeakHour          `json:"peakHours"`
+	SatisfactionTrend    []SatisfactionPoint `json:"satisfactionTrend"`
 }
 
 // TrendPoint for ticket trend chart
 type TrendPoint struct {
 	Date       string `json:"date"`
 	Open       int64  `json:"open"`
-	InProgress int64  `json:"in_progress"`
+	InProgress int64  `json:"inProgress"`
 	Resolved   int64  `json:"resolved"`
 	Closed     int64  `json:"closed"`
 }
@@ -63,38 +63,38 @@ type Category struct {
 // Bucket for histogram data
 type Bucket struct {
 	Range       string  `json:"range"` // e.g., "0-1h", "1-2h"
-	TicketCount int64   `json:"ticket_count"`
+	TicketCount int64   `json:"ticketCount"`
 	Percentage  float64 `json:"percentage"`
 }
 
 // TeamMember for workload chart
 type TeamMember struct {
 	Name            string  `json:"name"`
-	AssignedTickets int64   `json:"assigned_tickets"`
-	CompletionRate  float64 `json:"completion_rate"`
+	AssignedTickets int64   `json:"assignedTickets"`
+	CompletionRate  float64 `json:"completionRate"`
 }
 
 // SLATarget for SLA monitoring
 type SLATarget struct {
 	Name       string  `json:"name"` // e.g., "SLA-P0-紧急"
-	CurrentPct float64 `json:"current_percentage"`
-	TargetPct  float64 `json:"target_percentage"`
+	CurrentPct float64 `json:"currentPercentage"`
+	TargetPct  float64 `json:"targetPercentage"`
 	Status     string  `json:"status"` // "good", "warning", "critical"
 }
 
 // PeakHour for hourly distribution
 type PeakHour struct {
 	Hour        int   `json:"hour"` // 0-23
-	TicketCount int64 `json:"ticket_count"`
+	TicketCount int64 `json:"ticketCount"`
 }
 
 // SatisfactionPoint for satisfaction trend
 type SatisfactionPoint struct {
 	Month         string  `json:"month"` // e.g., "2025-01"
-	AverageRating float64 `json:"average_rating"`
-	FeedbackCount int64   `json:"feedback_count"`
-	MaxRating     int     `json:"max_rating"`
-	MinRating     int     `json:"min_rating"`
+	AverageRating float64 `json:"averageRating"`
+	FeedbackCount int64   `json:"feedbackCount"`
+	MaxRating     int     `json:"maxRating"`
+	MinRating     int     `json:"minRating"`
 }
 
 // DashboardResponse is the complete API response

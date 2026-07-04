@@ -135,7 +135,7 @@ type DashboardOverview struct {
 	KPIMetrics               []KPIMetric                    `json:"kpiMetrics"`
 	TicketTrend              []TicketTrendData              `json:"ticketTrend"`
 	IncidentDistribution     []IncidentDistributionData     `json:"incidentDistribution"`
-	SLAData                  *service.SLAComplianceData     `json:"sla_data"`
+	SLAData                  *service.SLAComplianceData     `json:"slaData"`
 	SatisfactionData         []SatisfactionData             `json:"satisfactionData"`
 	QuickActions             []QuickAction                  `json:"quickActions"`
 	RecentActivities         []RecentActivity               `json:"recentActivities"`
@@ -146,12 +146,12 @@ type DashboardOverview struct {
 
 // DashboardOverviewData overview段数据结构（匹配前端期望的字段名）
 type DashboardOverviewData struct {
-	TotalTickets      int     `json:"total_tickets"`
-	PendingTickets    int     `json:"pending_tickets"`
-	InProgressTickets int     `json:"in_progress_tickets"`
-	ResolvedToday     int     `json:"resolved_today"`
-	AvgResponseTime   float64 `json:"avg_response_time"`
-	AvgResolutionTime float64 `json:"avg_resolution_time"`
+	TotalTickets      int     `json:"totalTickets"`
+	PendingTickets    int     `json:"pendingTickets"`
+	InProgressTickets int     `json:"inProgressTickets"`
+	ResolvedToday     int     `json:"resolvedToday"`
+	AvgResponseTime   float64 `json:"avgResponseTime"`
+	AvgResolutionTime float64 `json:"avgResolutionTime"`
 }
 
 // GetOverview 获取Dashboard概览数据

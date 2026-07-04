@@ -11,16 +11,16 @@ type CreateTenantRequest struct {
 	Status          *string                `json:"status,omitempty" binding:"omitempty,oneof=active suspended expired deleted" comment:"租户状态"`
 	Settings        map[string]interface{} `json:"settings,omitempty" comment:"租户配置"`
 	Quota           map[string]interface{} `json:"quota,omitempty" comment:"资源配额"`
-	ExpiresAt       *time.Time             `json:"expires_at,omitempty" comment:"过期时间"`
-	ParentTenantID  *int                   `json:"parent_tenant_id,omitempty" comment:"父租户ID"`
-	MSPProviderID   *int                   `json:"msp_provider_id,omitempty" comment:"MSP 提供方租户ID"`
-	PlanCode        *string                `json:"plan_code,omitempty" comment:"套餐编码"`
-	BillingEnabled  *bool                  `json:"billing_enabled,omitempty" comment:"是否启用计费/核算"`
-	CostCenterCode  *string                `json:"cost_center_code,omitempty" comment:"成本中心编码"`
-	LegalEntityCode *string                `json:"legal_entity_code,omitempty" comment:"法人实体编码"`
+	ExpiresAt       *time.Time             `json:"expiresAt,omitempty" comment:"过期时间"`
+	ParentTenantID  *int                   `json:"parentTenantId,omitempty" comment:"父租户ID"`
+	MSPProviderID   *int                   `json:"mspProviderId,omitempty" comment:"MSP 提供方租户ID"`
+	PlanCode        *string                `json:"planCode,omitempty" comment:"套餐编码"`
+	BillingEnabled  *bool                  `json:"billingEnabled,omitempty" comment:"是否启用计费/核算"`
+	CostCenterCode  *string                `json:"costCenterCode,omitempty" comment:"成本中心编码"`
+	LegalEntityCode *string                `json:"legalEntityCode,omitempty" comment:"法人实体编码"`
 	Currency        *string                `json:"currency,omitempty" comment:"结算币种"`
-	ServiceTier     *string                `json:"service_tier,omitempty" comment:"服务等级"`
-	OwnerContact    *string                `json:"owner_contact,omitempty" comment:"租户负责人联系方式"`
+	ServiceTier     *string                `json:"serviceTier,omitempty" comment:"服务等级"`
+	OwnerContact    *string                `json:"ownerContact,omitempty" comment:"租户负责人联系方式"`
 }
 
 // UpdateTenantRequest 更新租户请求
@@ -31,16 +31,16 @@ type UpdateTenantRequest struct {
 	Status          *string                `json:"status,omitempty" binding:"omitempty,oneof=active suspended expired deleted" comment:"租户状态"`
 	Settings        map[string]interface{} `json:"settings,omitempty" comment:"租户配置"`
 	Quota           map[string]interface{} `json:"quota,omitempty" comment:"资源配额"`
-	ExpiresAt       *time.Time             `json:"expires_at,omitempty" comment:"过期时间"`
-	ParentTenantID  *int                   `json:"parent_tenant_id,omitempty" comment:"父租户ID"`
-	MSPProviderID   *int                   `json:"msp_provider_id,omitempty" comment:"MSP 提供方租户ID"`
-	PlanCode        *string                `json:"plan_code,omitempty" comment:"套餐编码"`
-	BillingEnabled  *bool                  `json:"billing_enabled,omitempty" comment:"是否启用计费/核算"`
-	CostCenterCode  *string                `json:"cost_center_code,omitempty" comment:"成本中心编码"`
-	LegalEntityCode *string                `json:"legal_entity_code,omitempty" comment:"法人实体编码"`
+	ExpiresAt       *time.Time             `json:"expiresAt,omitempty" comment:"过期时间"`
+	ParentTenantID  *int                   `json:"parentTenantId,omitempty" comment:"父租户ID"`
+	MSPProviderID   *int                   `json:"mspProviderId,omitempty" comment:"MSP 提供方租户ID"`
+	PlanCode        *string                `json:"planCode,omitempty" comment:"套餐编码"`
+	BillingEnabled  *bool                  `json:"billingEnabled,omitempty" comment:"是否启用计费/核算"`
+	CostCenterCode  *string                `json:"costCenterCode,omitempty" comment:"成本中心编码"`
+	LegalEntityCode *string                `json:"legalEntityCode,omitempty" comment:"法人实体编码"`
 	Currency        *string                `json:"currency,omitempty" comment:"结算币种"`
-	ServiceTier     *string                `json:"service_tier,omitempty" comment:"服务等级"`
-	OwnerContact    *string                `json:"owner_contact,omitempty" comment:"租户负责人联系方式"`
+	ServiceTier     *string                `json:"serviceTier,omitempty" comment:"服务等级"`
+	OwnerContact    *string                `json:"ownerContact,omitempty" comment:"租户负责人联系方式"`
 }
 
 // ListTenantsRequest 租户列表请求

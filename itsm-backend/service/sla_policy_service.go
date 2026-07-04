@@ -253,7 +253,7 @@ func (s *SLAPolicyService) CalculateSLAExpireTime(ctx context.Context, policy *e
 // GetSLAComplianceRate 获取SLA合规率
 func (s *SLAPolicyService) GetSLAComplianceRate(ctx context.Context, tenantID int, startDate, endDate time.Time) (float64, error) {
 	var violatedTickets []struct {
-		TicketID int `json:"ticket_id"`
+		TicketID int `json:"ticket_id"` // json tag matches SQL column for ent GroupBy().Scan()
 	}
 	if err := s.client.SLAViolation.Query().
 		Where(

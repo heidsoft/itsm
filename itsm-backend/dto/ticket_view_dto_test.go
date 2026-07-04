@@ -8,31 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateTicketViewRequestNormalizeUsesLegacyFields(t *testing.T) {
-	isShared := true
-	req := CreateTicketViewRequest{
-		SortConfigLegacy:  map[string]interface{}{"field": "priority"},
-		GroupConfigLegacy: map[string]interface{}{"field": "status"},
-		IsSharedLegacy:    &isShared,
-	}
-
-	req.Normalize()
-
-	assert.Equal(t, map[string]interface{}{"field": "priority"}, req.SortConfig)
-	assert.Equal(t, map[string]interface{}{"field": "status"}, req.GroupConfig)
-	assert.True(t, req.IsShared)
-}
-
-func TestShareTicketViewRequestNormalizeUsesLegacyTeamIDs(t *testing.T) {
-	req := ShareTicketViewRequest{
-		TeamIDsLegacy: []int{1, 2, 3},
-	}
-
-	req.Normalize()
-
-	assert.Equal(t, []int{1, 2, 3}, req.TeamIDs)
-}
-
 func TestTicketViewResponseUsesCamelCaseJSON(t *testing.T) {
 	resp := TicketViewResponse{
 		ID:          1,

@@ -8,36 +8,29 @@ import (
 
 // CreateTicketViewRequest 创建工单视图请求
 type CreateTicketViewRequest struct {
-	Name              string                 `json:"name" binding:"required"`
-	Description       *string                `json:"description"`
-	Filters           map[string]interface{} `json:"filters"`
-	Columns           []string               `json:"columns"`
-	SortConfig        map[string]interface{} `json:"sortConfig"`
-	SortConfigLegacy  map[string]interface{} `json:"sort_config"`
-	GroupConfig       map[string]interface{} `json:"groupConfig"`
-	GroupConfigLegacy map[string]interface{} `json:"group_config"`
-	IsShared          bool                   `json:"isShared"`
-	IsSharedLegacy    *bool                  `json:"is_shared"`
+	Name        string                 `json:"name" binding:"required"`
+	Description *string                `json:"description"`
+	Filters     map[string]interface{} `json:"filters"`
+	Columns     []string               `json:"columns"`
+	SortConfig  map[string]interface{} `json:"sortConfig"`
+	GroupConfig map[string]interface{} `json:"groupConfig"`
+	IsShared    bool                   `json:"isShared"`
 }
 
 // UpdateTicketViewRequest 更新工单视图请求
 type UpdateTicketViewRequest struct {
-	Name              *string                `json:"name"`
-	Description       *string                `json:"description"`
-	Filters           map[string]interface{} `json:"filters"`
-	Columns           []string               `json:"columns"`
-	SortConfig        map[string]interface{} `json:"sortConfig"`
-	SortConfigLegacy  map[string]interface{} `json:"sort_config"`
-	GroupConfig       map[string]interface{} `json:"groupConfig"`
-	GroupConfigLegacy map[string]interface{} `json:"group_config"`
-	IsShared          *bool                  `json:"isShared"`
-	IsSharedLegacy    *bool                  `json:"is_shared"`
+	Name        *string                `json:"name"`
+	Description *string                `json:"description"`
+	Filters     map[string]interface{} `json:"filters"`
+	Columns     []string               `json:"columns"`
+	SortConfig  map[string]interface{} `json:"sortConfig"`
+	GroupConfig map[string]interface{} `json:"groupConfig"`
+	IsShared    *bool                  `json:"isShared"`
 }
 
 // ShareTicketViewRequest 共享工单视图请求
 type ShareTicketViewRequest struct {
-	TeamIDs       []int `json:"teamIds"`  // 共享给哪些团队
-	TeamIDsLegacy []int `json:"team_ids"` // 兼容旧字段
+	TeamIDs []int `json:"teamIds"` // 共享给哪些团队
 }
 
 // TicketViewResponse 工单视图响应
@@ -99,31 +92,10 @@ func ToTicketViewResponse(view *ent.TicketView, creator *ent.User) *TicketViewRe
 }
 
 func (r *CreateTicketViewRequest) Normalize() {
-	if r.SortConfig == nil && r.SortConfigLegacy != nil {
-		r.SortConfig = r.SortConfigLegacy
-	}
-	if r.GroupConfig == nil && r.GroupConfigLegacy != nil {
-		r.GroupConfig = r.GroupConfigLegacy
-	}
-	if r.IsSharedLegacy != nil {
-		r.IsShared = *r.IsSharedLegacy
-	}
 }
 
 func (r *UpdateTicketViewRequest) Normalize() {
-	if r.SortConfig == nil && r.SortConfigLegacy != nil {
-		r.SortConfig = r.SortConfigLegacy
-	}
-	if r.GroupConfig == nil && r.GroupConfigLegacy != nil {
-		r.GroupConfig = r.GroupConfigLegacy
-	}
-	if r.IsShared == nil && r.IsSharedLegacy != nil {
-		r.IsShared = r.IsSharedLegacy
-	}
 }
 
 func (r *ShareTicketViewRequest) Normalize() {
-	if len(r.TeamIDs) == 0 && len(r.TeamIDsLegacy) > 0 {
-		r.TeamIDs = r.TeamIDsLegacy
-	}
 }

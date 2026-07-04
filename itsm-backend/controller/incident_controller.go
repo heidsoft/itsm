@@ -728,9 +728,6 @@ func (c *IncidentController) AssignIncident(ctx *gin.Context) {
 		return
 	}
 	assigneeID := req.AssigneeID
-	if assigneeID == 0 && req.AssigneeIDAlt != 0 {
-		assigneeID = req.AssigneeIDAlt
-	}
 	if assigneeID <= 0 {
 		common.Fail(ctx, common.ParamErrorCode, "assigneeId 必填")
 		return

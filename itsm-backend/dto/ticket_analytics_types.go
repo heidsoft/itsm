@@ -6,8 +6,8 @@ type TicketAnalyticsFilters struct {
 	Priority    []string          `json:"priority,omitempty"`
 	Category    []string          `json:"category,omitempty"`
 	Type        []string          `json:"type,omitempty"`
-	AssigneeID  *int              `json:"assignee_id,omitempty"`
-	RequesterID *int              `json:"requester_id,omitempty"`
+	AssigneeID  *int              `json:"assigneeId,omitempty"`
+	RequesterID *int              `json:"requesterId,omitempty"`
 	Tags        []string          `json:"tags,omitempty"`
 	Custom      map[string]string `json:"custom,omitempty"` // 自定义字段过滤（key=fieldName）
 }
@@ -28,18 +28,18 @@ type AnalyticsTrend struct {
 	Created  int     `json:"created"`  // 新建数
 	Resolved int     `json:"resolved"` // 解决数
 	Backlog  int     `json:"backlog"`  // 积压数
-	AvgTime  float64 `json:"avg_time"` // 平均处理时间
+	AvgTime  float64 `json:"avgTime"`  // 平均处理时间
 }
 
 // TicketNotificationData 工单通知数据（强类型，用于替代 map[string]interface{} Data）
 // 当通知类型为 email/sms/webhook 时，使用此结构体组织通知内容
 type TicketNotificationData struct {
-	TicketNumber  string            `json:"ticket_number,omitempty"`
-	TicketTitle   string            `json:"ticket_title,omitempty"`
+	TicketNumber  string            `json:"ticketNumber,omitempty"`
+	TicketTitle   string            `json:"ticketTitle,omitempty"`
 	Status        string            `json:"status,omitempty"`
 	Priority      string            `json:"priority,omitempty"`
-	AssigneeName  string            `json:"assignee_name,omitempty"`
-	RequesterName string            `json:"requester_name,omitempty"`
+	AssigneeName  string            `json:"assigneeName,omitempty"`
+	RequesterName string            `json:"requesterName,omitempty"`
 	Action        string            `json:"action,omitempty"`  // 触发通知的操作
 	Comment       string            `json:"comment,omitempty"` // 审批/操作备注
 	URL           string            `json:"url,omitempty"`     // 工单链接

@@ -32,7 +32,7 @@ func (c *TicketDependencyController) AnalyzeDependencyImpact(ctx *gin.Context) {
 
 	var req struct {
 		Action    string  `json:"action" binding:"required,oneof=close delete change_status" example:"close"`
-		NewStatus *string `json:"new_status,omitempty" example:"closed"`
+		NewStatus *string `json:"newStatus,omitempty" example:"closed"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误")

@@ -498,7 +498,7 @@ func (r *EntRepository) GetComplianceReportData(ctx context.Context, tenantID in
 	// 2. Count distinct tickets with at least one unresolved violation in the period
 	var violatedCount int
 	var groups []struct {
-		TicketID int `json:"ticket_id"`
+		TicketID int `json:"ticket_id"` // json tag matches SQL column for ent GroupBy().Scan()
 	}
 	scanErr := r.client.SLAViolation.Query().
 		Where(

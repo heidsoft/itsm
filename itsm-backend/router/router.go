@@ -49,17 +49,13 @@ func withIncidentIDParam(handler gin.HandlerFunc) gin.HandlerFunc {
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 
 		var req struct {
-			IncidentID    int `json:"incidentId"`
-			IncidentIDAlt int `json:"incident_id"`
+			IncidentID int `json:"incidentId"`
 		}
 		if err := json.Unmarshal(body, &req); err != nil {
 			common.Fail(c, common.ParamErrorCode, "invalid request body")
 			return
 		}
 		incidentID := req.IncidentID
-		if incidentID == 0 {
-			incidentID = req.IncidentIDAlt
-		}
 		if incidentID == 0 {
 			common.Fail(c, common.ParamErrorCode, "incidentId is required")
 			return
@@ -255,7 +251,7 @@ type RouterConfig struct {
 	VendorController       *controller.VendorController
 	AssetLicenseController *controller.AssetLicenseController
 	SurveyController       *controller.SurveyController
-	CloudController       *controller.CloudController
+	CloudController        *controller.CloudController
 
 	// Domain Handlers
 	ServiceCatalogHandler *service_catalog.Handler

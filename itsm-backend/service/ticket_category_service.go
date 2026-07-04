@@ -368,10 +368,10 @@ type CreateCategoryRequest struct {
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
 	Code        string `json:"code" binding:"required"`
-	ParentID    int    `json:"parent_id"`
-	SortOrder   int    `json:"sort_order"`
-	IsActive    bool   `json:"is_active"`
-	TenantID    int    `json:"tenant_id" binding:"required"`
+	ParentID    int    `json:"parentId"`
+	SortOrder   int    `json:"sortOrder"`
+	IsActive    bool   `json:"isActive"`
+	TenantID    int    `json:"tenantId" binding:"required"`
 }
 
 // UpdateCategoryRequest 更新分类请求
@@ -379,25 +379,25 @@ type UpdateCategoryRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Code        string `json:"code"`
-	ParentID    *int   `json:"parent_id"`
-	SortOrder   *int   `json:"sort_order"`
-	IsActive    *bool  `json:"is_active"`
+	ParentID    *int   `json:"parentId"`
+	SortOrder   *int   `json:"sortOrder"`
+	IsActive    *bool  `json:"isActive"`
 }
 
 // MoveCategoryRequest 移动分类请求
 type MoveCategoryRequest struct {
-	NewParentID  *int `json:"new_parent_id"`
-	NewSortOrder *int `json:"new_sort_order"`
+	NewParentID  *int `json:"newParentId"`
+	NewSortOrder *int `json:"newSortOrder"`
 }
 
 // ListCategoriesRequest 获取分类列表请求
 type ListCategoriesRequest struct {
 	Page     int   `json:"page" form:"page"`
-	PageSize int   `json:"page_size" form:"page_size"`
-	ParentID *int  `json:"parent_id" form:"parent_id"`
+	PageSize int   `json:"pageSize" form:"page_size"`
+	ParentID *int  `json:"parentId" form:"parent_id"`
 	Level    int   `json:"level" form:"level"`
-	IsActive *bool `json:"is_active" form:"is_active"`
-	TenantID int   `json:"tenant_id" form:"tenant_id"`
+	IsActive *bool `json:"isActive" form:"is_active"`
+	TenantID int   `json:"tenantId" form:"tenant_id"`
 }
 
 // CategoryTreeItem 分类树项目
@@ -407,7 +407,7 @@ type CategoryTreeItem struct {
 	Description string              `json:"description"`
 	Code        string              `json:"code"`
 	Level       int                 `json:"level"`
-	SortOrder   int                 `json:"sort_order"`
-	IsActive    bool                `json:"is_active"`
+	SortOrder   int                 `json:"sortOrder"`
+	IsActive    bool                `json:"isActive"`
 	Children    []*CategoryTreeItem `json:"children"`
 }

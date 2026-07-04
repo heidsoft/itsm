@@ -329,7 +329,7 @@ func (c *BPMNProcessTriggerController) InitDepartmentProcesses(ctx *gin.Context)
 	}
 
 	var req struct {
-		DepartmentType string `json:"department_type" binding:"required"`
+		DepartmentType string `json:"departmentType" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, 1001, err.Error())
@@ -363,12 +363,12 @@ func (c *BPMNProcessTriggerController) ListDomainConfigs(ctx *gin.Context) {
 // SetDomainConfig 创建或更新层级配置
 func (c *BPMNProcessTriggerController) SetDomainConfig(ctx *gin.Context) {
 	var req struct {
-		ConfigType   string                 `json:"config_type" binding:"required"`
-		ConfigKey    string                 `json:"config_key" binding:"required"`
-		ConfigValue  map[string]interface{} `json:"config_value" binding:"required"`
-		InheritMode  string                 `json:"inherit_mode"`
-		DepartmentID int                    `json:"department_id"`
-		TeamID       int                    `json:"team_id"`
+		ConfigType   string                 `json:"configType" binding:"required"`
+		ConfigKey    string                 `json:"configKey" binding:"required"`
+		ConfigValue  map[string]interface{} `json:"configValue" binding:"required"`
+		InheritMode  string                 `json:"inheritMode"`
+		DepartmentID int                    `json:"departmentId"`
+		TeamID       int                    `json:"teamId"`
 		Description  string                 `json:"description"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {

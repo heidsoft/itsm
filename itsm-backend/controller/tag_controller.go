@@ -75,9 +75,9 @@ func (c *TagController) ListTags(ctx *gin.Context) {
 // BindTag 绑定标签
 func (c *TagController) BindTag(ctx *gin.Context) {
 	var req struct {
-		TagID      int    `json:"tag_id" binding:"required"`
-		EntityType string `json:"entity_type" binding:"required,oneof=project application microservice department team"`
-		EntityID   int    `json:"entity_id" binding:"required"`
+		TagID      int    `json:"tagId" binding:"required"`
+		EntityType string `json:"entityType" binding:"required,oneof=project application microservice department team"`
+		EntityID   int    `json:"entityId" binding:"required"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {

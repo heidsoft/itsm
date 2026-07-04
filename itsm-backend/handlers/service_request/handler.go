@@ -411,12 +411,6 @@ func (h *Handler) Delete(c *gin.Context) {
 }
 
 func normalizeCreateServiceRequest(req *dto.CreateServiceRequestRequest) {
-	if req.CatalogID == 0 {
-		req.CatalogID = req.CatalogIDAlt
-	}
-	if req.FormData == nil {
-		req.FormData = req.FormDataAlt
-	}
 	if req.FormData == nil {
 		req.FormData = map[string]any{}
 	}
@@ -431,15 +425,9 @@ func normalizeCreateServiceRequest(req *dto.CreateServiceRequestRequest) {
 		}
 	}
 	if req.CostCenter == "" {
-		req.CostCenter = req.CostCenterAlt
-	}
-	if req.CostCenter == "" {
 		if costCenter, ok := req.FormData["cost_center"].(string); ok {
 			req.CostCenter = costCenter
 		}
-	}
-	if req.DataClassification == "" {
-		req.DataClassification = req.DataClassificationAlt
 	}
 	if req.DataClassification == "" {
 		if classification, ok := req.FormData["data_classification"].(string); ok {
@@ -449,19 +437,10 @@ func normalizeCreateServiceRequest(req *dto.CreateServiceRequestRequest) {
 	if req.DataClassification == "" {
 		req.DataClassification = "internal"
 	}
-	if !req.NeedsPublicIP {
-		req.NeedsPublicIP = req.NeedsPublicIPAlt
-	}
-	if len(req.SourceIPWhitelist) == 0 {
-		req.SourceIPWhitelist = req.SourceIPWhitelistAlt
-	}
 	if len(req.SourceIPWhitelist) == 0 {
 		if whitelist, ok := req.FormData["source_ip_whitelist"].([]string); ok {
 			req.SourceIPWhitelist = whitelist
 		}
-	}
-	if req.ExpireAt == nil {
-		req.ExpireAt = req.ExpireAtAlt
 	}
 	if req.ExpireAt == nil {
 		if expireAt, ok := req.FormData["expire_at"].(string); ok {
@@ -474,36 +453,12 @@ func normalizeCreateServiceRequest(req *dto.CreateServiceRequestRequest) {
 		defaultExpireAt := time.Now().Add(30 * 24 * time.Hour)
 		req.ExpireAt = &defaultExpireAt
 	}
-	if req.ComplianceAckAlt != nil {
-		req.ComplianceAck = *req.ComplianceAckAlt
-	}
 	if ack, ok := req.FormData["compliance_ack"].(bool); ok {
 		req.ComplianceAck = ack
 	}
 }
 
 func normalizeUpdateServiceRequest(req *dto.UpdateServiceRequestRequest) {
-	if req.FormData == nil {
-		req.FormData = req.FormDataAlt
-	}
-	if req.CostCenter == "" {
-		req.CostCenter = req.CostCenterAlt
-	}
-	if req.DataClassification == "" {
-		req.DataClassification = req.DataClassificationAlt
-	}
-	if !req.NeedsPublicIP {
-		req.NeedsPublicIP = req.NeedsPublicIPAlt
-	}
-	if len(req.SourceIPWhitelist) == 0 {
-		req.SourceIPWhitelist = req.SourceIPWhitelistAlt
-	}
-	if req.ExpireAt == nil {
-		req.ExpireAt = req.ExpireAtAlt
-	}
-	if req.ComplianceAckAlt != nil {
-		req.ComplianceAck = *req.ComplianceAckAlt
-	}
 }
 
 func normalizeServiceRequestStatus(status string) string {

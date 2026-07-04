@@ -35,8 +35,8 @@ func (c *DepartmentController) CreateDepartment(ctx *gin.Context) {
 		Name        string `json:"name" binding:"required"`
 		Code        string `json:"code" binding:"required"`
 		Description string `json:"description"`
-		ManagerID   int    `json:"manager_id"`
-		ParentID    int    `json:"parent_id"`
+		ManagerID   int    `json:"managerId"`
+		ParentID    int    `json:"parentId"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -102,8 +102,8 @@ func (c *DepartmentController) UpdateDepartment(ctx *gin.Context) {
 		Name        string `json:"name"`
 		Code        string `json:"code"`
 		Description string `json:"description"`
-		ManagerID   int    `json:"manager_id"`
-		ParentID    int    `json:"parent_id"`
+		ManagerID   int    `json:"managerId"`
+		ParentID    int    `json:"parentId"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {

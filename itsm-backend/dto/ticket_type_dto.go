@@ -181,15 +181,15 @@ type CreateTicketTypeRequest struct {
 	Description        string                    `json:"description"`
 	Icon               string                    `json:"icon"`
 	Color              string                    `json:"color"`
-	CustomFields       []CustomFieldDefinition   `json:"custom_fields"`
-	ApprovalEnabled    bool                      `json:"approval_enabled"`
-	ApprovalChain      []ApprovalChainDefinition `json:"approval_chain,omitempty"`
-	SLAEnabled         bool                      `json:"sla_enabled"`
-	DefaultSLAID       *int                      `json:"default_sla_id,omitempty"`
-	AutoAssignEnabled  bool                      `json:"auto_assign_enabled"`
-	AssignmentRules    []AssignmentRule          `json:"assignment_rules,omitempty"`
-	NotificationConfig *NotificationConfig       `json:"notification_config,omitempty"`
-	PermissionConfig   *PermissionConfig         `json:"permission_config,omitempty"`
+	CustomFields       []CustomFieldDefinition   `json:"customFields"`
+	ApprovalEnabled    bool                      `json:"approvalEnabled"`
+	ApprovalChain      []ApprovalChainDefinition `json:"approvalChain,omitempty"`
+	SLAEnabled         bool                      `json:"slaEnabled"`
+	DefaultSLAID       *int                      `json:"defaultSlaId,omitempty"`
+	AutoAssignEnabled  bool                      `json:"autoAssignEnabled"`
+	AssignmentRules    []AssignmentRule          `json:"assignmentRules,omitempty"`
+	NotificationConfig *NotificationConfig       `json:"notificationConfig,omitempty"`
+	PermissionConfig   *PermissionConfig         `json:"permissionConfig,omitempty"`
 }
 
 // UpdateTicketTypeRequest 更新工单类型请求
@@ -199,15 +199,15 @@ type UpdateTicketTypeRequest struct {
 	Icon               *string                    `json:"icon"`
 	Color              *string                    `json:"color"`
 	Status             *TicketTypeStatus          `json:"status"`
-	CustomFields       *[]CustomFieldDefinition   `json:"custom_fields"`
-	ApprovalEnabled    *bool                      `json:"approval_enabled"`
-	ApprovalChain      *[]ApprovalChainDefinition `json:"approval_chain"`
-	SLAEnabled         *bool                      `json:"sla_enabled"`
-	DefaultSLAID       *int                       `json:"default_sla_id"`
-	AutoAssignEnabled  *bool                      `json:"auto_assign_enabled"`
-	AssignmentRules    *[]AssignmentRule          `json:"assignment_rules"`
-	NotificationConfig *NotificationConfig        `json:"notification_config"`
-	PermissionConfig   *PermissionConfig          `json:"permission_config"`
+	CustomFields       *[]CustomFieldDefinition   `json:"customFields"`
+	ApprovalEnabled    *bool                      `json:"approvalEnabled"`
+	ApprovalChain      *[]ApprovalChainDefinition `json:"approvalChain"`
+	SLAEnabled         *bool                      `json:"slaEnabled"`
+	DefaultSLAID       *int                       `json:"defaultSlaId"`
+	AutoAssignEnabled  *bool                      `json:"autoAssignEnabled"`
+	AssignmentRules    *[]AssignmentRule          `json:"assignmentRules"`
+	NotificationConfig *NotificationConfig        `json:"notificationConfig"`
+	PermissionConfig   *PermissionConfig          `json:"permissionConfig"`
 }
 
 // ListTicketTypesRequest 查询工单类型列表请求

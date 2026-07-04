@@ -59,19 +59,19 @@ type ProcessVariable struct {
 	Value                interface{}            `json:"value"`
 	Type                 VariableType           `json:"type"`
 	Scope                VariableScope          `json:"scope"`
-	ProcessDefinitionKey string                 `json:"process_definition_key,omitempty"`
-	ProcessInstanceID    string                 `json:"process_instance_id,omitempty"`
-	TaskID               string                 `json:"task_id,omitempty"`
-	ExecutionID          string                 `json:"execution_id,omitempty"`
-	IsTransient          bool                   `json:"is_transient"`               // 是否为临时变量
-	IsReadOnly           bool                   `json:"is_read_only"`               // 是否为只读变量
-	IsRequired           bool                   `json:"is_required"`                // 是否为必需变量
-	DefaultValue         interface{}            `json:"default_value,omitempty"`    // 默认值
-	ValidationRules      map[string]interface{} `json:"validation_rules,omitempty"` // 验证规则
+	ProcessDefinitionKey string                 `json:"processDefinitionKey,omitempty"`
+	ProcessInstanceID    string                 `json:"processInstanceId,omitempty"`
+	TaskID               string                 `json:"taskId,omitempty"`
+	ExecutionID          string                 `json:"executionId,omitempty"`
+	IsTransient          bool                   `json:"isTransient"`               // 是否为临时变量
+	IsReadOnly           bool                   `json:"isReadOnly"`                // 是否为只读变量
+	IsRequired           bool                   `json:"isRequired"`                // 是否为必需变量
+	DefaultValue         interface{}            `json:"defaultValue,omitempty"`    // 默认值
+	ValidationRules      map[string]interface{} `json:"validationRules,omitempty"` // 验证规则
 	Description          string                 `json:"description,omitempty"`
-	TenantID             int                    `json:"tenant_id"`
-	CreatedAt            time.Time              `json:"created_at"`
-	UpdatedAt            time.Time              `json:"updated_at"`
+	TenantID             int                    `json:"tenantId"`
+	CreatedAt            time.Time              `json:"createdAt"`
+	UpdatedAt            time.Time              `json:"updatedAt"`
 }
 
 // CreateVariableRequest 创建变量请求
@@ -80,44 +80,44 @@ type CreateVariableRequest struct {
 	Value                interface{}            `json:"value"`
 	Type                 VariableType           `json:"type" binding:"required"`
 	Scope                VariableScope          `json:"scope" binding:"required"`
-	ProcessDefinitionKey string                 `json:"process_definition_key,omitempty"`
-	ProcessInstanceID    string                 `json:"process_instance_id,omitempty"`
-	TaskID               string                 `json:"task_id,omitempty"`
-	ExecutionID          string                 `json:"execution_id,omitempty"`
-	IsTransient          bool                   `json:"is_transient"`
-	IsReadOnly           bool                   `json:"is_read_only"`
-	IsRequired           bool                   `json:"is_required"`
-	DefaultValue         interface{}            `json:"default_value,omitempty"`
-	ValidationRules      map[string]interface{} `json:"validation_rules,omitempty"`
+	ProcessDefinitionKey string                 `json:"processDefinitionKey,omitempty"`
+	ProcessInstanceID    string                 `json:"processInstanceId,omitempty"`
+	TaskID               string                 `json:"taskId,omitempty"`
+	ExecutionID          string                 `json:"executionId,omitempty"`
+	IsTransient          bool                   `json:"isTransient"`
+	IsReadOnly           bool                   `json:"isReadOnly"`
+	IsRequired           bool                   `json:"isRequired"`
+	DefaultValue         interface{}            `json:"defaultValue,omitempty"`
+	ValidationRules      map[string]interface{} `json:"validationRules,omitempty"`
 	Description          string                 `json:"description,omitempty"`
-	TenantID             int                    `json:"tenant_id" binding:"required"`
+	TenantID             int                    `json:"tenantId" binding:"required"`
 }
 
 // UpdateVariableRequest 更新变量请求
 type UpdateVariableRequest struct {
 	Value           interface{}            `json:"value,omitempty"`
-	IsTransient     *bool                  `json:"is_transient,omitempty"`
-	IsReadOnly      *bool                  `json:"is_read_only,omitempty"`
-	IsRequired      *bool                  `json:"is_required,omitempty"`
-	DefaultValue    interface{}            `json:"default_value,omitempty"`
-	ValidationRules map[string]interface{} `json:"validation_rules,omitempty"`
+	IsTransient     *bool                  `json:"isTransient,omitempty"`
+	IsReadOnly      *bool                  `json:"isReadOnly,omitempty"`
+	IsRequired      *bool                  `json:"isRequired,omitempty"`
+	DefaultValue    interface{}            `json:"defaultValue,omitempty"`
+	ValidationRules map[string]interface{} `json:"validationRules,omitempty"`
 	Description     string                 `json:"description,omitempty"`
 }
 
 // ListVariablesRequest 查询变量请求
 type ListVariablesRequest struct {
-	ProcessDefinitionKey string        `json:"process_definition_key,omitempty"`
-	ProcessInstanceID    string        `json:"process_instance_id,omitempty"`
-	TaskID               string        `json:"task_id,omitempty"`
-	ExecutionID          string        `json:"execution_id,omitempty"`
+	ProcessDefinitionKey string        `json:"processDefinitionKey,omitempty"`
+	ProcessInstanceID    string        `json:"processInstanceId,omitempty"`
+	TaskID               string        `json:"taskId,omitempty"`
+	ExecutionID          string        `json:"executionId,omitempty"`
 	Scope                VariableScope `json:"scope,omitempty"`
 	Type                 VariableType  `json:"type,omitempty"`
-	IsTransient          *bool         `json:"is_transient,omitempty"`
-	IsReadOnly           *bool         `json:"is_read_only,omitempty"`
-	IsRequired           *bool         `json:"is_required,omitempty"`
-	TenantID             int           `json:"tenant_id" binding:"required"`
+	IsTransient          *bool         `json:"isTransient,omitempty"`
+	IsReadOnly           *bool         `json:"isReadOnly,omitempty"`
+	IsRequired           *bool         `json:"isRequired,omitempty"`
+	TenantID             int           `json:"tenantId" binding:"required"`
 	Page                 int           `json:"page"`
-	PageSize             int           `json:"page_size"`
+	PageSize             int           `json:"pageSize"`
 }
 
 // CreateVariable 创建流程变量

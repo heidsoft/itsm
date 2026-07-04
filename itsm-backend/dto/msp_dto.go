@@ -54,15 +54,15 @@ type MSPAllocationDTO struct {
 
 // CreateAllocationRequest 创建分配请求
 type CreateAllocationRequest struct {
-	MSPUserID        int    `json:"msp_user_id" binding:"required"`
-	CustomerTenantID int    `json:"customer_tenant_id" binding:"required"`
+	MSPUserID        int    `json:"mspUserId" binding:"required"`
+	CustomerTenantID int    `json:"customerTenantId" binding:"required"`
 	Role             string `json:"role" binding:"omitempty,oneof=primary backup specialist"`
 }
 
 // DeallocateRequest 解除分配请求
 type DeallocateRequest struct {
-	MSPUserID        int    `json:"msp_user_id" binding:"required"`
-	CustomerTenantID int    `json:"customer_tenant_id" binding:"required"`
+	MSPUserID        int    `json:"mspUserId" binding:"required"`
+	CustomerTenantID int    `json:"customerTenantId" binding:"required"`
 	Reason           string `json:"reason,omitempty"`
 }
 
@@ -80,8 +80,8 @@ type TicketMSPInfo struct {
 
 // AssignMSPTechnicianRequest 为工单分配 MSP 技术员请求
 type AssignMSPTechnicianRequest struct {
-	CustomerTenantID int `json:"customer_tenant_id" binding:"required"`
-	AssignerUserID   int `json:"assigner_user_id,omitempty"`
+	CustomerTenantID int `json:"customerTenantId" binding:"required"`
+	AssignerUserID   int `json:"assignerUserId,omitempty"`
 }
 
 // ==================== MSP 上下文 DTO ====================
@@ -180,27 +180,27 @@ type MSPReportListResponse[T any] struct {
 // MSPAllocationQueryParam MSP 分配查询参数
 type MSPAllocationQueryParam struct {
 	Page              int    `json:"page,omitempty" form:"page"`
-	PageSize          int    `json:"page_size,omitempty" form:"page_size"`
-	MSPUserID         int    `json:"msp_user_id,omitempty" form:"msp_user_id"`
-	CustomerTenantID  int    `json:"customer_tenant_id,omitempty" form:"customer_tenant_id"`
+	PageSize          int    `json:"pageSize,omitempty" form:"page_size"`
+	MSPUserID         int    `json:"mspUserId,omitempty" form:"msp_user_id"`
+	CustomerTenantID  int    `json:"customerTenantId,omitempty" form:"customer_tenant_id"`
 	Role              string `json:"role,omitempty" form:"role"`
-	IncludeDeassigned bool   `json:"include_deassigned,omitempty" form:"include_deassigned"`
+	IncludeDeassigned bool   `json:"includeDeassigned,omitempty" form:"include_deassigned"`
 }
 
 // MSPTicketQueryParam MSP 工单查询参数
 type MSPTicketQueryParam struct {
 	Page             int    `json:"page,omitempty" form:"page"`
-	PageSize         int    `json:"page_size,omitempty" form:"page_size"`
-	CustomerTenantID int    `json:"customer_tenant_id,omitempty" form:"customer_tenant_id" binding:"required"`
+	PageSize         int    `json:"pageSize,omitempty" form:"page_size"`
+	CustomerTenantID int    `json:"customerTenantId,omitempty" form:"customer_tenant_id" binding:"required"`
 	Status           string `json:"status,omitempty" form:"status"`
-	AssignedToMSP    bool   `json:"assigned_to_msp,omitempty" form:"assigned_to_msp"`
-	ManagedByUserID  int    `json:"managed_by_user_id,omitempty" form:"managed_by_user_id"`
+	AssignedToMSP    bool   `json:"assignedToMsp,omitempty" form:"assigned_to_msp"`
+	ManagedByUserID  int    `json:"managedByUserId,omitempty" form:"managed_by_user_id"`
 }
 
 // MSPReportQueryParam MSP 报表查询参数
 type MSPReportQueryParam struct {
-	StartDate        string `json:"start_date" form:"start_date" binding:"required"`
-	EndDate          string `json:"end_date" form:"end_date" binding:"required"`
-	CustomerTenantID *int   `json:"customer_tenant_id,omitempty" form:"customer_tenant_id"`
-	MSPUserID        *int   `json:"msp_user_id,omitempty" form:"msp_user_id"`
+	StartDate        string `json:"startDate" form:"start_date" binding:"required"`
+	EndDate          string `json:"endDate" form:"end_date" binding:"required"`
+	CustomerTenantID *int   `json:"customerTenantId,omitempty" form:"customer_tenant_id"`
+	MSPUserID        *int   `json:"mspUserId,omitempty" form:"msp_user_id"`
 }

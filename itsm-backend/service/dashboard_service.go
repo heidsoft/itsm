@@ -35,11 +35,11 @@ type DashboardOverviewStats struct {
 
 // SLAComplianceData SLA合规数据（扁平结构，匹配前端 sla_data 接口）
 type SLAComplianceData struct {
-	ComplianceRate           float64 `json:"compliance_rate"`
-	ResponseTimeCompliance   float64 `json:"response_time_compliance"`
-	ResolutionTimeCompliance float64 `json:"resolution_time_compliance"`
-	AtRiskTickets            int     `json:"at_risk_tickets"`
-	BreachedTickets          int     `json:"breached_tickets"`
+	ComplianceRate           float64 `json:"complianceRate"`
+	ResponseTimeCompliance   float64 `json:"responseTimeCompliance"`
+	ResolutionTimeCompliance float64 `json:"resolutionTimeCompliance"`
+	AtRiskTickets            int     `json:"atRiskTickets"`
+	BreachedTickets          int     `json:"breachedTickets"`
 }
 
 // NewDashboardService 创建仪表盘服务实例
@@ -433,7 +433,7 @@ type DashboardOverviewData struct {
 	KPIMetrics               []KPIMetricData                `json:"kpiMetrics"`
 	TicketTrend              []TicketTrendData              `json:"ticketTrend"`
 	IncidentDistribution     []IncidentDistributionData     `json:"incidentDistribution"`
-	SLAData                  *SLAComplianceData             `json:"sla_data"`
+	SLAData                  *SLAComplianceData             `json:"slaData"`
 	SatisfactionData         []SatisfactionData             `json:"satisfactionData"`
 	QuickActions             []QuickActionData              `json:"quickActions"`
 	RecentActivities         []RecentActivityData           `json:"recentActivities"`

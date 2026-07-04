@@ -35,7 +35,7 @@ func (c *ApplicationController) CreateApplication(ctx *gin.Context) {
 		Name      string `json:"name" binding:"required"`
 		Code      string `json:"code" binding:"required"`
 		Type      string `json:"type"`
-		ProjectID int    `json:"project_id"`
+		ProjectID int    `json:"projectId"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -86,7 +86,7 @@ func (c *ApplicationController) CreateMicroservice(ctx *gin.Context) {
 		Code          string `json:"code" binding:"required"`
 		Language      string `json:"language"`
 		Framework     string `json:"framework"`
-		ApplicationID int    `json:"application_id" binding:"required"`
+		ApplicationID int    `json:"applicationId" binding:"required"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -121,7 +121,7 @@ func (c *ApplicationController) UpdateApplication(ctx *gin.Context) {
 		Name      *string `json:"name"`
 		Code      *string `json:"code"`
 		Type      *string `json:"type"`
-		ProjectID *int    `json:"project_id"`
+		ProjectID *int    `json:"projectId"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -197,7 +197,7 @@ func (c *ApplicationController) UpdateMicroservice(ctx *gin.Context) {
 		Code          *string `json:"code"`
 		Language      *string `json:"language"`
 		Framework     *string `json:"framework"`
-		ApplicationID *int    `json:"application_id"`
+		ApplicationID *int    `json:"applicationId"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {

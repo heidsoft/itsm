@@ -15,29 +15,22 @@ type UserBasicInfo struct {
 
 // CreateTicketRequest 创建工单请求
 type CreateTicketRequest struct {
-	Title                    string                 `json:"title" binding:"required,min=2,max=200"`
-	Description              string                 `json:"description" binding:"required,min=0,max=5000"`
-	Priority                 string                 `json:"priority" binding:"required,oneof=low medium high critical urgent"`
-	Type                     string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"` // 工单类型
-	TypeID                   string                 `json:"type_id,omitempty"`                                                             // 兼容旧前端预设类型ID
-	Category                 string                 `json:"category"`                                                                      // 分类名称（可选，前端传入）
-	CategoryID               *int                   `json:"categoryId,omitempty"`                                                          // 分类ID（优先使用）
-	CategoryIDAlt            *int                   `json:"category_id,omitempty"`                                                         // 兼容 snake_case
-	TemplateID               *int                   `json:"templateId,omitempty"`                                                          // 模板ID
-	TemplateIDAlt            *int                   `json:"template_id,omitempty"`                                                         // 兼容 snake_case
-	RequesterID              int                    `json:"requesterId" binding:"omitempty"`                                               // 从认证上下文中获取，前端可不传
-	AssigneeID               int                    `json:"assigneeId"`
-	AssigneeIDAlt            int                    `json:"assignee_id,omitempty"` // 兼容 snake_case
-	ParentTicketID           *int                   `json:"parentTicketId,omitempty"`
-	ParentTicketIDAlt        *int                   `json:"parent_ticket_id,omitempty"` // 兼容 snake_case
-	TagIDs                   []int                  `json:"tagIds,omitempty"`           // 标签ID列表
-	TagIDsAlt                []int                  `json:"tag_ids,omitempty"`          // 兼容 snake_case
-	Tags                     []string               `json:"tags"`                       // 标签名称列表（兼容旧格式）
-	FormFields               map[string]interface{} `json:"formFields"`
-	FormFieldsAlt            map[string]interface{} `json:"form_fields,omitempty"` // 兼容 snake_case
-	Attachments              []string               `json:"attachments"`
-	WorkflowDefinitionKey    string                 `json:"workflowDefinitionKey"`             // 工作流定义Key（可选，优先级高于自动选择）
-	WorkflowDefinitionKeyAlt string                 `json:"workflow_definition_key,omitempty"` // 兼容 snake_case
+	Title                 string                 `json:"title" binding:"required,min=2,max=200"`
+	Description           string                 `json:"description" binding:"required,min=0,max=5000"`
+	Priority              string                 `json:"priority" binding:"required,oneof=low medium high critical urgent"`
+	Type                  string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"` // 工单类型
+	TypeID                string                 `json:"typeId,omitempty"`                                                              // 兼容旧前端预设类型ID
+	Category              string                 `json:"category"`                                                                      // 分类名称（可选，前端传入）
+	CategoryID            *int                   `json:"categoryId,omitempty"`                                                          // 分类ID（优先使用）
+	TemplateID            *int                   `json:"templateId,omitempty"`                                                          // 模板ID
+	RequesterID           int                    `json:"requesterId" binding:"omitempty"`                                               // 从认证上下文中获取，前端可不传
+	AssigneeID            int                    `json:"assigneeId"`
+	ParentTicketID        *int                   `json:"parentTicketId,omitempty"`
+	TagIDs                []int                  `json:"tagIds,omitempty"` // 标签ID列表
+	Tags                  []string               `json:"tags"`             // 标签名称列表（兼容旧格式）
+	FormFields            map[string]interface{} `json:"formFields"`
+	Attachments           []string               `json:"attachments"`
+	WorkflowDefinitionKey string                 `json:"workflowDefinitionKey"` // 工作流定义Key（可选，优先级高于自动选择）
 }
 
 // UpdateTicketRequest 更新工单请求
@@ -102,9 +95,9 @@ type TicketResponse struct {
 	ResolutionCategory    string         `json:"resolutionCategory,omitempty"`
 	ResolvedAt            *time.Time     `json:"resolvedAt,omitempty"`
 	ClosedAt              *time.Time     `json:"closedAt,omitempty"`
-	FirstResponseAt       *time.Time     `json:"first_response_at,omitempty"`
-	SLAResponseDeadline   *time.Time     `json:"sla_response_deadline,omitempty"`
-	SLAResolutionDeadline *time.Time     `json:"sla_resolution_deadline,omitempty"`
+	FirstResponseAt       *time.Time     `json:"firstResponseAt,omitempty"`
+	SLAResponseDeadline   *time.Time     `json:"slaResponseDeadline,omitempty"`
+	SLAResolutionDeadline *time.Time     `json:"slaResolutionDeadline,omitempty"`
 	Rating                int            `json:"rating,omitempty"`
 }
 
@@ -179,10 +172,9 @@ type TicketTemplate struct {
 	Priority      string                   `json:"priority"`
 	Fields        []map[string]interface{} `json:"fields,omitempty"`
 	FormFields    map[string]interface{}   `json:"formFields"`
-	FormFieldsAlt map[string]interface{}   `json:"form_fields,omitempty"`
-	WorkflowSteps []map[string]interface{} `json:"workflow_steps,omitempty"`
+	WorkflowSteps []map[string]interface{} `json:"workflowSteps,omitempty"`
 	IsActive      bool                     `json:"isActive"`
-	IsActiveAlt   *bool                    `json:"is_active,omitempty"`
+	IsActiveAlt   *bool                    `json:"-"` // internal flag: force-update isActive (not JSON-bound)
 	CreatedAt     time.Time                `json:"createdAt"`
 	UpdatedAt     time.Time                `json:"updatedAt"`
 }
@@ -252,8 +244,7 @@ type TicketAnalyticsResponse struct {
 // 兼容前端两种字段命名：assigneeId (camelCase) 和 assignee_id (snake_case)
 // 由控制器进行非零校验
 type AssignTicketRequest struct {
-	AssigneeID    int `json:"assigneeId"`
-	AssigneeIDAlt int `json:"assignee_id"`
+	AssigneeID int `json:"assigneeId"`
 }
 
 // EscalateTicketRequest 升级工单请求
@@ -264,7 +255,6 @@ type EscalateTicketRequest struct {
 // ResolveTicketRequest 解决工单请求
 type ResolveTicketRequest struct {
 	TicketID           int    `json:"ticketId"`
-	TicketIDAlt        int    `json:"ticket_id"`
 	Resolution         string `json:"resolution"` // 解决方案（可选，兼容前端发送 solution）
 	Solution           string `json:"solution"`   // 兼容前端字段名
 	ResolutionCategory string `json:"resolutionCategory,omitempty"`
@@ -274,7 +264,6 @@ type ResolveTicketRequest struct {
 // CloseTicketRequest 关闭工单请求
 type CloseTicketRequest struct {
 	TicketID    int    `json:"ticketId"`
-	TicketIDAlt int    `json:"ticket_id"`
 	CloseReason string `json:"closeReason,omitempty"`
 	CloseNotes  string `json:"closeNotes,omitempty"`
 	Feedback    string `json:"feedback,omitempty"`

@@ -17,11 +17,11 @@ type SystemConfigResponse struct {
 	ID          int       `json:"id"`
 	Key         string    `json:"key"`
 	Value       string    `json:"value"`
-	ValueType   string    `json:"value_type"`
+	ValueType   string    `json:"valueType"`
 	Category    string    `json:"category"`
 	Description string    `json:"description"`
 	CreatedBy   string    `json:"createdBy"`
-	TenantID    int       `json:"tenant_id"`
+	TenantID    int       `json:"tenantId"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }

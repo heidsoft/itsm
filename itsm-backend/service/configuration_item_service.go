@@ -38,9 +38,6 @@ func NewConfigurationItemService(client *ent.Client, logger *zap.SugaredLogger, 
 func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.CreateCIRequest, tenantID int) (*dto.CIResponse, error) {
 	ciTypeID := req.CITypeID
 	if ciTypeID == 0 {
-		ciTypeID = req.CITypeIDSnake
-	}
-	if ciTypeID == 0 {
 		return nil, fmt.Errorf("CI type id is required")
 	}
 
@@ -349,9 +346,6 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 		update.SetCloudResourceRefID(req.CloudResourceRefID)
 	}
 	ciTypeID := req.CITypeID
-	if ciTypeID == 0 {
-		ciTypeID = req.CITypeIDSnake
-	}
 	if ciTypeID != 0 {
 		// 如果更新了CI类型，需要同步更新CiType字段
 		ciType, err := s.client.CIType.Query().
@@ -469,7 +463,7 @@ func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int)
 		Count  int    `json:"count"`
 	}
 	type ciTypeCount struct {
-		CiType string `json:"ci_type"`
+		CiType string `json:"ci_type"` // matches ent GroupBy column for Scan()
 		Count  int    `json:"count"`
 	}
 	type environmentCount struct {
@@ -694,9 +688,6 @@ func (s *ConfigurationItemService) BatchCreateCI(ctx context.Context, req *dto.B
 		// 检查CI类型
 		ciTypeID := item.CITypeID
 		if ciTypeID == 0 {
-			ciTypeID = item.CITypeIDSnake
-		}
-		if ciTypeID == 0 {
 			failedIDs = append(failedIDs, tempID)
 			errors = append(errors, fmt.Sprintf("CI %d: CI type id is required", tempID))
 			continue
@@ -893,11 +884,8 @@ func (s *ConfigurationItemService) BatchUpdateCI(ctx context.Context, req *dto.B
 
 	// 处理CI类型更新
 	var ciType *ent.CIType
-	if req.Updates.CITypeID != 0 || req.Updates.CITypeIDSnake != 0 {
+	if req.Updates.CITypeID != 0 {
 		ciTypeID := req.Updates.CITypeID
-		if ciTypeID == 0 {
-			ciTypeID = req.Updates.CITypeIDSnake
-		}
 		ciType, err = tx.CIType.Query().
 			Where(citype.IDEQ(ciTypeID), citype.TenantIDEQ(tenantID)).
 			First(ctx)

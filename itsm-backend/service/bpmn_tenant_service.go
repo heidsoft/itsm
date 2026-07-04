@@ -179,12 +179,12 @@ func (s *BPMNTenantService) GetTenantStatistics(ctx context.Context, tenantID in
 
 // TenantBPMNStats 租户BPMN统计数据
 type TenantBPMNStats struct {
-	TotalDefinitions   int `json:"total_definitions"`
-	TotalInstances     int `json:"total_instances"`
-	RunningInstances   int `json:"running_instances"`
-	CompletedInstances int `json:"completed_instances"`
-	TotalTasks         int `json:"total_tasks"`
-	OpenTasks          int `json:"open_tasks"`
+	TotalDefinitions   int `json:"totalDefinitions"`
+	TotalInstances     int `json:"totalInstances"`
+	RunningInstances   int `json:"runningInstances"`
+	CompletedInstances int `json:"completedInstances"`
+	TotalTasks         int `json:"totalTasks"`
+	OpenTasks          int `json:"openTasks"`
 }
 
 // ValidateTenantAccess 验证租户访问权限

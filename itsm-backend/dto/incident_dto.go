@@ -83,8 +83,7 @@ type UpdateIncidentRequest struct {
 
 // AssignIncidentRequest 分配事件请求
 type AssignIncidentRequest struct {
-	AssigneeID    int `json:"assigneeId" binding:"required"`
-	AssigneeIDAlt int `json:"assignee_id"` // 兼容 snake_case
+	AssigneeID int `json:"assigneeId" binding:"required"`
 }
 
 type IncidentResponse struct {

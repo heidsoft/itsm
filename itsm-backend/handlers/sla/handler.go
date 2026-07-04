@@ -343,7 +343,7 @@ func (h *Handler) UpdateViolationStatus(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 
 	var req struct {
-		IsResolved bool   `json:"is_resolved"`
+		IsResolved bool   `json:"isResolved"`
 		Notes      string `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {

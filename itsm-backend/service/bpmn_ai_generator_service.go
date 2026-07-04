@@ -199,7 +199,7 @@ func (s *BPMNAIGeneratorService) parseLLMResponse(response string) (string, *Gen
 
 // GenerationMetadata 生成的元数据
 type GenerationMetadata struct {
-	NodeCount   int    `json:"node_count"`
+	NodeCount   int    `json:"nodeCount"`
 	Complexity  string `json:"complexity"`
 	Explanation string `json:"explanation"`
 }

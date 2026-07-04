@@ -41,19 +41,19 @@ const (
 
 // GatewayExecutionRequest 网关执行请求
 type GatewayExecutionRequest struct {
-	ProcessInstanceID    string                 `json:"process_instance_id" binding:"required"`
-	ProcessDefinitionKey string                 `json:"process_definition_key" binding:"required"`
-	GatewayID            string                 `json:"gateway_id" binding:"required"`
-	GatewayType          GatewayType            `json:"gateway_type" binding:"required"`
+	ProcessInstanceID    string                 `json:"processInstanceId" binding:"required"`
+	ProcessDefinitionKey string                 `json:"processDefinitionKey" binding:"required"`
+	GatewayID            string                 `json:"gatewayId" binding:"required"`
+	GatewayType          GatewayType            `json:"gatewayType" binding:"required"`
 	Variables            map[string]interface{} `json:"variables"`
-	TenantID             int                    `json:"tenant_id" binding:"required"`
+	TenantID             int                    `json:"tenantId" binding:"required"`
 }
 
 // GatewayExecutionResult 网关执行结果
 type GatewayExecutionResult struct {
-	NextActivities []string               `json:"next_activities"`
+	NextActivities []string               `json:"nextActivities"`
 	Variables      map[string]interface{} `json:"variables"`
-	ExecutedAt     time.Time              `json:"executed_at"`
+	ExecutedAt     time.Time              `json:"executedAt"`
 }
 
 // ExecuteGateway 执行网关逻辑

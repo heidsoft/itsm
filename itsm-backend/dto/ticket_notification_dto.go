@@ -9,15 +9,15 @@ import (
 // TicketNotificationResponse 工单通知响应
 type TicketNotificationResponse struct {
 	ID        int        `json:"id"`
-	TicketID  int        `json:"ticket_id"`
-	UserID    int        `json:"user_id"`
+	TicketID  int        `json:"ticketId"`
+	UserID    int        `json:"userId"`
 	Type      string     `json:"type"`    // created, assigned, status_changed, commented, sla_warning, resolved, closed
 	Channel   string     `json:"channel"` // email, in_app, sms
 	Content   string     `json:"content"`
-	SentAt    *time.Time `json:"sent_at,omitempty"`
-	ReadAt    *time.Time `json:"read_at,omitempty"`
+	SentAt    *time.Time `json:"sentAt,omitempty"`
+	ReadAt    *time.Time `json:"readAt,omitempty"`
 	Status    string     `json:"status"` // pending, sent, read
-	CreatedAt time.Time  `json:"created_at"`
+	CreatedAt time.Time  `json:"createdAt"`
 	User      *UserInfo  `json:"user,omitempty"` // 接收人信息
 }
 
@@ -29,7 +29,7 @@ type ListTicketNotificationsResponse struct {
 
 // SendTicketNotificationRequest 发送工单通知请求
 type SendTicketNotificationRequest struct {
-	UserIDs []int  `json:"user_ids" binding:"required,min=1"`                 // 接收人ID列表
+	UserIDs []int  `json:"userIds" binding:"required,min=1"`                  // 接收人ID列表
 	Type    string `json:"type" binding:"required"`                           // 通知类型
 	Channel string `json:"channel" binding:"required,oneof=email in_app sms"` // 通知渠道
 	Content string `json:"content" binding:"required"`                        // 通知内容
@@ -37,19 +37,19 @@ type SendTicketNotificationRequest struct {
 
 // UpdateNotificationPreferencesRequest 更新通知偏好请求
 type UpdateNotificationPreferencesRequest struct {
-	EmailEnabled   bool `json:"email_enabled"`    // 是否启用邮件通知
-	InAppEnabled   bool `json:"in_app_enabled"`   // 是否启用站内消息通知
-	SmsEnabled     bool `json:"sms_enabled"`      // 是否启用短信通知（可选）
-	SlaWarningTime int  `json:"sla_warning_time"` // SLA警告提前时间（分钟）
+	EmailEnabled   bool `json:"emailEnabled"`   // 是否启用邮件通知
+	InAppEnabled   bool `json:"inAppEnabled"`   // 是否启用站内消息通知
+	SmsEnabled     bool `json:"smsEnabled"`     // 是否启用短信通知（可选）
+	SlaWarningTime int  `json:"slaWarningTime"` // SLA警告提前时间（分钟）
 }
 
 // NotificationPreferencesResponse 通知偏好响应
 type NotificationPreferencesResponse struct {
-	UserID         int  `json:"user_id"`
-	EmailEnabled   bool `json:"email_enabled"`
-	InAppEnabled   bool `json:"in_app_enabled"`
-	SmsEnabled     bool `json:"sms_enabled"`
-	SlaWarningTime int  `json:"sla_warning_time"`
+	UserID         int  `json:"userId"`
+	EmailEnabled   bool `json:"emailEnabled"`
+	InAppEnabled   bool `json:"inAppEnabled"`
+	SmsEnabled     bool `json:"smsEnabled"`
+	SlaWarningTime int  `json:"slaWarningTime"`
 }
 
 // ToTicketNotificationResponse 将 Ent 实体转换为 DTO

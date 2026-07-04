@@ -12,16 +12,16 @@ type ConnectorManifestDTO struct {
 	Description   string     `json:"description"`
 	Author        string     `json:"author,omitempty"`
 	Homepage      string     `json:"homepage,omitempty"`
-	IconURL       string     `json:"icon_url,omitempty"`
+	IconURL       string     `json:"iconUrl,omitempty"`
 	Capabilities  []string   `json:"capabilities"`
 	Tags          []string   `json:"tags,omitempty"`
-	MinITSMVer    string     `json:"min_itsm_ver,omitempty"`
+	MinITSMVer    string     `json:"minItsmVer,omitempty"`
 	Local         bool       `json:"local"`     // 是否本地内置
 	Installed     bool       `json:"installed"` // 当前租户是否已安装
 	Enabled       bool       `json:"enabled"`
 	Healthy       bool       `json:"healthy"`
-	LastCheckedAt *time.Time `json:"last_checked_at,omitempty"`
-	LastError     string     `json:"last_error,omitempty"`
+	LastCheckedAt *time.Time `json:"lastCheckedAt,omitempty"`
+	LastError     string     `json:"lastError,omitempty"`
 	Lifecycle     string     `json:"lifecycle"` // available / installed / enabled / healthy / unhealthy
 	Category      string     `json:"category"`
 }
@@ -72,7 +72,7 @@ type CardElementDTO struct {
 	Text     string                 `json:"text,omitempty"`
 	Fields   []KVDTO                `json:"fields,omitempty"`
 	Action   *ActionDTO             `json:"action,omitempty"`
-	ImageURL string                 `json:"image_url,omitempty"`
+	ImageURL string                 `json:"imageUrl,omitempty"`
 	Extras   map[string]interface{} `json:"extras,omitempty"`
 }
 
@@ -98,9 +98,9 @@ type ActionDTO struct {
 // ConnectorHealthDTO 健康检查结果
 type ConnectorHealthDTO struct {
 	OK        bool                   `json:"ok"`
-	LatencyMs int64                  `json:"latency_ms"`
+	LatencyMs int64                  `json:"latencyMs"`
 	Message   string                 `json:"message,omitempty"`
-	CheckedAt time.Time              `json:"checked_at"`
+	CheckedAt time.Time              `json:"checkedAt"`
 	Extra     map[string]interface{} `json:"extra,omitempty"`
 }
 
@@ -112,10 +112,10 @@ type ConnectorConfigDTO struct {
 	Enabled       bool                   `json:"enabled"`
 	Healthy       bool                   `json:"healthy"`
 	Lifecycle     string                 `json:"lifecycle"`
-	LastCheckedAt *time.Time             `json:"last_checked_at,omitempty"`
-	LastError     string                 `json:"last_error,omitempty"`
-	CreatedAt     time.Time              `json:"created_at"`
-	UpdatedAt     time.Time              `json:"updated_at"`
+	LastCheckedAt *time.Time             `json:"lastCheckedAt,omitempty"`
+	LastError     string                 `json:"lastError,omitempty"`
+	CreatedAt     time.Time              `json:"createdAt"`
+	UpdatedAt     time.Time              `json:"updatedAt"`
 	Credentials   map[string]string      `json:"credentials,omitempty"` // 脱敏：仅返回键名
 	Settings      map[string]interface{} `json:"settings,omitempty"`
 	Labels        map[string]string      `json:"labels,omitempty"`
@@ -130,7 +130,7 @@ type ConnectorLifecycleDTO struct {
 	Enabled       bool       `json:"enabled"`
 	Healthy       bool       `json:"healthy"`
 	Lifecycle     string     `json:"lifecycle"`
-	LastCheckedAt *time.Time `json:"last_checked_at,omitempty"`
-	LastError     string     `json:"last_error,omitempty"`
+	LastCheckedAt *time.Time `json:"lastCheckedAt,omitempty"`
+	LastError     string     `json:"lastError,omitempty"`
 	Capabilities  []string   `json:"capabilities,omitempty"`
 }

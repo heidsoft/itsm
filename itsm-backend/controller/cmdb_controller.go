@@ -515,9 +515,6 @@ func (c *CMDBController) CreateCI(ctx *gin.Context) {
 	}
 
 	if req.CITypeID == 0 {
-		req.CITypeID = req.CITypeIDSnake
-	}
-	if req.CITypeID == 0 {
 		common.Fail(ctx, common.ParamErrorCode, "CI类型ID不能为空")
 		return
 	}

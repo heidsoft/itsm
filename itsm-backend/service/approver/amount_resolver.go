@@ -10,8 +10,8 @@ import (
 
 // AmountThreshold defines approval threshold
 type AmountThreshold struct {
-	MinAmount float64 `json:"min_amount"`
-	MaxAmount float64 `json:"max_amount"` // 0 means no upper limit
+	MinAmount float64 `json:"minAmount"`
+	MaxAmount float64 `json:"maxAmount"` // 0 means no upper limit
 	Role      string  `json:"role"`
 }
 

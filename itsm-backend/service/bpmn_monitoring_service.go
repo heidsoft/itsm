@@ -39,138 +39,138 @@ func (s *BPMNMonitoringService) SetAuditService(auditService *BPMNAuditService) 
 
 // ProcessMetrics 流程指标
 type ProcessMetrics struct {
-	ProcessDefinitionKey string                  `json:"process_definition_key"`
-	TotalInstances       int                     `json:"total_instances"`
-	RunningInstances     int                     `json:"running_instances"`
-	CompletedInstances   int                     `json:"completed_instances"`
-	FailedInstances      int                     `json:"failed_instances"`
-	AverageDuration      time.Duration           `json:"average_duration"`
-	SuccessRate          float64                 `json:"success_rate"`
-	PerformanceMetrics   *PerformanceMetrics     `json:"performance_metrics"`
-	TaskMetrics          map[string]*TaskMetrics `json:"task_metrics"`
-	BottleneckAnalysis   *BottleneckAnalysis     `json:"bottleneck_analysis"`
-	TenantID             int                     `json:"tenant_id"`
-	TimeRange            string                  `json:"time_range"`
+	ProcessDefinitionKey string                  `json:"processDefinitionKey"`
+	TotalInstances       int                     `json:"totalInstances"`
+	RunningInstances     int                     `json:"runningInstances"`
+	CompletedInstances   int                     `json:"completedInstances"`
+	FailedInstances      int                     `json:"failedInstances"`
+	AverageDuration      time.Duration           `json:"averageDuration"`
+	SuccessRate          float64                 `json:"successRate"`
+	PerformanceMetrics   *PerformanceMetrics     `json:"performanceMetrics"`
+	TaskMetrics          map[string]*TaskMetrics `json:"taskMetrics"`
+	BottleneckAnalysis   *BottleneckAnalysis     `json:"bottleneckAnalysis"`
+	TenantID             int                     `json:"tenantId"`
+	TimeRange            string                  `json:"timeRange"`
 }
 
 // PerformanceMetrics 性能指标
 type PerformanceMetrics struct {
-	Throughput          float64 `json:"throughput"`            // 吞吐量（实例/小时）
-	AverageResponseTime float64 `json:"average_response_time"` // 平均响应时间
-	PeakConcurrency     int     `json:"peak_concurrency"`      // 峰值并发数
-	ResourceUtilization float64 `json:"resource_utilization"`  // 资源利用率
-	ErrorRate           float64 `json:"error_rate"`            // 错误率
-	Availability        float64 `json:"availability"`          // 可用性
-	LatencyPercentile95 float64 `json:"latency_percentile_95"` // 95%延迟
-	LatencyPercentile99 float64 `json:"latency_percentile_99"` // 99%延迟
+	Throughput          float64 `json:"throughput"`          // 吞吐量（实例/小时）
+	AverageResponseTime float64 `json:"averageResponseTime"` // 平均响应时间
+	PeakConcurrency     int     `json:"peakConcurrency"`     // 峰值并发数
+	ResourceUtilization float64 `json:"resourceUtilization"` // 资源利用率
+	ErrorRate           float64 `json:"errorRate"`           // 错误率
+	Availability        float64 `json:"availability"`        // 可用性
+	LatencyPercentile95 float64 `json:"latencyPercentile95"` // 95%延迟
+	LatencyPercentile99 float64 `json:"latencyPercentile99"` // 99%延迟
 }
 
 // TaskMetrics 任务指标
 type TaskMetrics struct {
-	TaskID              string             `json:"task_id"`
-	TaskName            string             `json:"task_name"`
-	TotalExecutions     int                `json:"total_executions"`
-	CompletedExecutions int                `json:"completed_executions"`
-	FailedExecutions    int                `json:"failed_executions"`
-	AverageDuration     time.Duration      `json:"average_duration"`
-	SuccessRate         float64            `json:"success_rate"`
-	AssigneePerformance map[string]float64 `json:"assignee_performance"`
-	WaitTime            time.Duration      `json:"wait_time"`       // 等待时间
-	ProcessingTime      time.Duration      `json:"processing_time"` // 处理时间
-	QueueLength         int                `json:"queue_length"`    // 队列长度
-	Priority            string             `json:"priority"`        // 优先级
+	TaskID              string             `json:"taskId"`
+	TaskName            string             `json:"taskName"`
+	TotalExecutions     int                `json:"totalExecutions"`
+	CompletedExecutions int                `json:"completedExecutions"`
+	FailedExecutions    int                `json:"failedExecutions"`
+	AverageDuration     time.Duration      `json:"averageDuration"`
+	SuccessRate         float64            `json:"successRate"`
+	AssigneePerformance map[string]float64 `json:"assigneePerformance"`
+	WaitTime            time.Duration      `json:"waitTime"`       // 等待时间
+	ProcessingTime      time.Duration      `json:"processingTime"` // 处理时间
+	QueueLength         int                `json:"queueLength"`    // 队列长度
+	Priority            string             `json:"priority"`       // 优先级
 }
 
 // BottleneckAnalysis 瓶颈分析
 type BottleneckAnalysis struct {
-	BottleneckTasks     []*BottleneckTask     `json:"bottleneck_tasks"`
-	SlowestPaths        []*SlowestPath        `json:"slowest_paths"`
-	ResourceConstraints []*ResourceConstraint `json:"resource_constraints"`
+	BottleneckTasks     []*BottleneckTask     `json:"bottleneckTasks"`
+	SlowestPaths        []*SlowestPath        `json:"slowestPaths"`
+	ResourceConstraints []*ResourceConstraint `json:"resourceConstraints"`
 	Recommendations     []string              `json:"recommendations"`
 	Severity            string                `json:"severity"` // low, medium, high, critical
 }
 
 // BottleneckTask 瓶颈任务
 type BottleneckTask struct {
-	TaskID                   string        `json:"task_id"`
-	TaskName                 string        `json:"task_name"`
-	BottleneckType           string        `json:"bottleneck_type"` // processing, waiting, resource
-	ImpactScore              float64       `json:"impact_score"`    // 0-100
-	AverageDuration          time.Duration `json:"average_duration"`
-	WaitTime                 time.Duration `json:"wait_time"`
-	QueueLength              int           `json:"queue_length"`
+	TaskID                   string        `json:"taskId"`
+	TaskName                 string        `json:"taskName"`
+	BottleneckType           string        `json:"bottleneckType"` // processing, waiting, resource
+	ImpactScore              float64       `json:"impactScore"`    // 0-100
+	AverageDuration          time.Duration `json:"averageDuration"`
+	WaitTime                 time.Duration `json:"waitTime"`
+	QueueLength              int           `json:"queueLength"`
 	Assignee                 string        `json:"assignee"`
 	Recommendation           string        `json:"recommendation"`
-	WaitTimeSeconds          int           `json:"wait_time_seconds"`
-	ProcessingTimeSeconds    int           `json:"processing_time_seconds"`
-	TotalDurationSeconds     int           `json:"total_duration_seconds"`
-	P95WaitTimeSeconds       int           `json:"p95_wait_time_seconds"`
-	P95ProcessingTimeSeconds int           `json:"p95_processing_time_seconds"`
-	P95TotalDurationSeconds  int           `json:"p95_total_duration_seconds"`
-	SampleCount              int           `json:"sample_count"`
+	WaitTimeSeconds          int           `json:"waitTimeSeconds"`
+	ProcessingTimeSeconds    int           `json:"processingTimeSeconds"`
+	TotalDurationSeconds     int           `json:"totalDurationSeconds"`
+	P95WaitTimeSeconds       int           `json:"p95WaitTimeSeconds"`
+	P95ProcessingTimeSeconds int           `json:"p95ProcessingTimeSeconds"`
+	P95TotalDurationSeconds  int           `json:"p95TotalDurationSeconds"`
+	SampleCount              int           `json:"sampleCount"`
 }
 
 // SlowestPath 最慢路径
 type SlowestPath struct {
-	PathID          string        `json:"path_id"`
-	PathName        string        `json:"path_name"`
-	TotalDuration   time.Duration `json:"total_duration"`
-	TaskCount       int           `json:"task_count"`
-	BottleneckTasks []string      `json:"bottleneck_tasks"`
+	PathID          string        `json:"pathId"`
+	PathName        string        `json:"pathName"`
+	TotalDuration   time.Duration `json:"totalDuration"`
+	TaskCount       int           `json:"taskCount"`
+	BottleneckTasks []string      `json:"bottleneckTasks"`
 	Optimization    string        `json:"optimization"`
 }
 
 // ResourceConstraint 资源约束
 type ResourceConstraint struct {
-	ResourceType   string  `json:"resource_type"` // human, system, external
-	ResourceName   string  `json:"resource_name"`
+	ResourceType   string  `json:"resourceType"` // human, system, external
+	ResourceName   string  `json:"resourceName"`
 	Utilization    float64 `json:"utilization"` // 0-100
 	Capacity       int     `json:"capacity"`
-	CurrentLoad    int     `json:"current_load"`
-	ConstraintType string  `json:"constraint_type"` // capacity, skill, availability
-	Impact         string  `json:"impact"`          // low, medium, high
+	CurrentLoad    int     `json:"currentLoad"`
+	ConstraintType string  `json:"constraintType"` // capacity, skill, availability
+	Impact         string  `json:"impact"`         // low, medium, high
 }
 
 // ProcessInstanceStatus 流程实例状态
 type ProcessInstanceStatus struct {
-	ProcessInstanceID string                 `json:"process_instance_id"`
+	ProcessInstanceID string                 `json:"processInstanceId"`
 	Status            string                 `json:"status"`
-	CurrentTask       string                 `json:"current_task"`
+	CurrentTask       string                 `json:"currentTask"`
 	Assignee          string                 `json:"assignee"`
-	StartTime         time.Time              `json:"start_time"`
-	ExpectedEndTime   *time.Time             `json:"expected_end_time"`
+	StartTime         time.Time              `json:"startTime"`
+	ExpectedEndTime   *time.Time             `json:"expectedEndTime"`
 	Variables         map[string]interface{} `json:"variables"`
 	Progress          float64                `json:"progress"`
-	TenantID          int                    `json:"tenant_id"`
-	EstimatedDuration time.Duration          `json:"estimated_duration"`
-	RiskLevel         string                 `json:"risk_level"` // low, medium, high
+	TenantID          int                    `json:"tenantId"`
+	EstimatedDuration time.Duration          `json:"estimatedDuration"`
+	RiskLevel         string                 `json:"riskLevel"` // low, medium, high
 }
 
 // AuditLogEntry 审计日志条目
 type AuditLogEntry struct {
 	ID           string                 `json:"id"`
 	Timestamp    time.Time              `json:"timestamp"`
-	UserID       string                 `json:"user_id"`
+	UserID       string                 `json:"userId"`
 	Action       string                 `json:"action"`
-	ResourceType string                 `json:"resource_type"`
-	ResourceID   string                 `json:"resource_id"`
+	ResourceType string                 `json:"resourceType"`
+	ResourceID   string                 `json:"resourceId"`
 	Details      map[string]interface{} `json:"details"`
-	IPAddress    string                 `json:"ip_address"`
-	UserAgent    string                 `json:"user_agent"`
-	TenantID     int                    `json:"tenant_id"`
+	IPAddress    string                 `json:"ipAddress"`
+	UserAgent    string                 `json:"userAgent"`
+	TenantID     int                    `json:"tenantId"`
 }
 
 // RealTimeMetrics 实时指标
 type RealTimeMetrics struct {
-	ActiveInstances int                 `json:"active_instances"`
-	ActiveTasks     int                 `json:"active_tasks"`
-	QueueLength     int                 `json:"queue_length"`
+	ActiveInstances int                 `json:"activeInstances"`
+	ActiveTasks     int                 `json:"activeTasks"`
+	QueueLength     int                 `json:"queueLength"`
 	Throughput      float64             `json:"throughput"`
-	ErrorRate       float64             `json:"error_rate"`
-	ResponseTime    time.Duration       `json:"response_time"`
-	ResourceUsage   map[string]float64  `json:"resource_usage"`
+	ErrorRate       float64             `json:"errorRate"`
+	ResponseTime    time.Duration       `json:"responseTime"`
+	ResourceUsage   map[string]float64  `json:"resourceUsage"`
 	Alerts          []*PerformanceAlert `json:"alerts"`
-	LastUpdated     time.Time           `json:"last_updated"`
+	LastUpdated     time.Time           `json:"lastUpdated"`
 }
 
 // PerformanceAlert 性能告警
@@ -180,8 +180,8 @@ type PerformanceAlert struct {
 	Severity     string    `json:"severity"` // info, warning, error, critical
 	Message      string    `json:"message"`
 	Timestamp    time.Time `json:"timestamp"`
-	ResourceID   string    `json:"resource_id"`
-	ResourceType string    `json:"resource_type"`
+	ResourceID   string    `json:"resourceId"`
+	ResourceType string    `json:"resourceType"`
 	Value        float64   `json:"value"`
 	Threshold    float64   `json:"threshold"`
 	Status       string    `json:"status"` // active, resolved, acknowledged
@@ -189,11 +189,11 @@ type PerformanceAlert struct {
 
 // ProcessMetricsRequest 流程指标请求
 type ProcessMetricsRequest struct {
-	ProcessDefinitionKey string     `json:"process_definition_key"`
-	TenantID             int        `json:"tenant_id"`
-	TimeRange            string     `json:"time_range"`
-	StartTime            *time.Time `json:"start_time"`
-	EndTime              *time.Time `json:"end_time"`
+	ProcessDefinitionKey string     `json:"processDefinitionKey"`
+	TenantID             int        `json:"tenantId"`
+	TimeRange            string     `json:"timeRange"`
+	StartTime            *time.Time `json:"startTime"`
+	EndTime              *time.Time `json:"endTime"`
 }
 
 // calculateAverageDuration 计算平均持续时间
@@ -558,34 +558,34 @@ type ProcessTimelineEntry struct {
 	ID              string                 `json:"id"`
 	Sequence        int                    `json:"sequence"`
 	Timestamp       time.Time              `json:"timestamp"`
-	EventType       string                 `json:"event_type"`
-	ActivityID      string                 `json:"activity_id"`
-	ActivityName    string                 `json:"activity_name"`
-	ActivityType    string                 `json:"activity_type"`
-	UserID          int                    `json:"user_id"`
-	UserName        string                 `json:"user_name"`
-	AssigneeID      int                    `json:"assignee_id"`
-	AssigneeName    string                 `json:"assignee_name"`
-	TenantID        int                    `json:"tenant_id"`
-	VariablesBefore map[string]interface{} `json:"variables_before,omitempty"`
-	VariablesAfter  map[string]interface{} `json:"variables_after,omitempty"`
+	EventType       string                 `json:"eventType"`
+	ActivityID      string                 `json:"activityId"`
+	ActivityName    string                 `json:"activityName"`
+	ActivityType    string                 `json:"activityType"`
+	UserID          int                    `json:"userId"`
+	UserName        string                 `json:"userName"`
+	AssigneeID      int                    `json:"assigneeId"`
+	AssigneeName    string                 `json:"assigneeName"`
+	TenantID        int                    `json:"tenantId"`
+	VariablesBefore map[string]interface{} `json:"variablesBefore,omitempty"`
+	VariablesAfter  map[string]interface{} `json:"variablesAfter,omitempty"`
 	Comment         string                 `json:"comment,omitempty"`
-	DurationMs      int                    `json:"duration_ms"`
-	NodeDurationMs  int                    `json:"node_duration_ms"`
+	DurationMs      int                    `json:"durationMs"`
+	NodeDurationMs  int                    `json:"nodeDurationMs"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // AuditLogRequest 审计日志请求
 type AuditLogRequest struct {
-	UserID       string     `json:"user_id,omitempty"`
+	UserID       string     `json:"userId,omitempty"`
 	Action       string     `json:"action,omitempty"`
-	ResourceType string     `json:"resource_type,omitempty"`
-	ResourceID   string     `json:"resource_id,omitempty"`
-	StartTime    *time.Time `json:"start_time,omitempty"`
-	EndTime      *time.Time `json:"end_time,omitempty"`
-	TenantID     int        `json:"tenant_id" binding:"required"`
+	ResourceType string     `json:"resourceType,omitempty"`
+	ResourceID   string     `json:"resourceId,omitempty"`
+	StartTime    *time.Time `json:"startTime,omitempty"`
+	EndTime      *time.Time `json:"endTime,omitempty"`
+	TenantID     int        `json:"tenantId" binding:"required"`
 	Page         int        `json:"page"`
-	PageSize     int        `json:"page_size"`
+	PageSize     int        `json:"pageSize"`
 }
 
 // GetSystemHealth 获取系统健康状态

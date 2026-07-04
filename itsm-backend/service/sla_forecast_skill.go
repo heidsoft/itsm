@@ -26,8 +26,8 @@ type ForecastInput struct {
 type PredictionPoint struct {
 	Date       time.Time `json:"date"`
 	Predicted  float64   `json:"predicted"`
-	LowerBound float64   `json:"lower_bound"`
-	UpperBound float64   `json:"upper_bound"`
+	LowerBound float64   `json:"lowerBound"`
+	UpperBound float64   `json:"upperBound"`
 	Confidence float64   `json:"confidence"`
 	Anomaly    bool      `json:"anomaly"`
 }
@@ -35,12 +35,12 @@ type PredictionPoint struct {
 // ForecastOutput 预测输出结构
 type ForecastOutput struct {
 	Predictions  []PredictionPoint `json:"predictions"`
-	Confidence   float64           `json:"confidence"`    // 真实计算
-	Model        string            `json:"model"`         // "statistical" | "llm_insight"
-	Insights     string            `json:"insights"`      // LLM生成的洞察
-	Seasonality  map[string]bool   `json:"seasonality"`   // 检测到的季节性
-	Trend        string            `json:"trend"`         // "increasing" | "decreasing" | "stable"
-	AnomalyDates []string          `json:"anomaly_dates"` // 异常日期
+	Confidence   float64           `json:"confidence"`   // 真实计算
+	Model        string            `json:"model"`        // "statistical" | "llm_insight"
+	Insights     string            `json:"insights"`     // LLM生成的洞察
+	Seasonality  map[string]bool   `json:"seasonality"`  // 检测到的季节性
+	Trend        string            `json:"trend"`        // "increasing" | "decreasing" | "stable"
+	AnomalyDates []string          `json:"anomalyDates"` // 异常日期
 }
 
 // ForecastData 内部使用的数据结构

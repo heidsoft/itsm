@@ -38,7 +38,7 @@ func NewGuidanceClient(baseURL string, logger *zap.SugaredLogger) *GuidanceClien
 type GuidanceTriageRequest struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	TenantID    int    `json:"tenant_id"`
+	TenantID    int    `json:"tenantId"`
 }
 
 // GuidanceTriageResponse matches the Python sidecar's TriageResponse
@@ -47,10 +47,10 @@ type GuidanceTriageResponse struct {
 	Priority     string  `json:"priority"`
 	Confidence   float64 `json:"confidence"`
 	Explanation  string  `json:"explanation"`
-	SuggestedFix string  `json:"suggested_fix,omitempty"`
-	AssigneeID   int     `json:"assignee_id"`
+	SuggestedFix string  `json:"suggestedFix,omitempty"`
+	AssigneeID   int     `json:"assigneeId"`
 	Method       string  `json:"method"`
-	LatencyMs    float64 `json:"latency_ms"`
+	LatencyMs    float64 `json:"latencyMs"`
 }
 
 // Triage calls the Guidance sidecar for constrained JSON output

@@ -432,12 +432,12 @@ func TestApprovalService_TriggerApproval_CreateRecords_FromApproverIDs(t *testin
 		SetTenantID(testTenant.ID).
 		SetNodes([]map[string]interface{}{
 			{
-				"level":         1,
-				"name":          "L1",
-				"approver_type": "user",
-				"approver_ids":  []int{approver1.ID, approver2.ID},
-				"approval_mode": "all",
-				"timeout_hours": 1,
+				"level":        1,
+				"name":         "L1",
+				"approverType": "user",
+				"approverIds":  []int{approver1.ID, approver2.ID},
+				"approvalMode": "all",
+				"timeoutHours": 1,
 			},
 		}).
 		Save(ctx)
@@ -496,11 +496,11 @@ func TestApprovalService_TriggerApproval_IsIdempotent(t *testing.T) {
 		SetTenantID(testTenant.ID).
 		SetNodes([]map[string]interface{}{
 			{
-				"level":         1,
-				"name":          "L1",
-				"approver_type": "user",
-				"approver_ids":  []int{approver.ID},
-				"approval_mode": "any",
+				"level":        1,
+				"name":         "L1",
+				"approverType": "user",
+				"approverIds":  []int{approver.ID},
+				"approvalMode": "any",
 			},
 		}).
 		Save(ctx)
@@ -562,11 +562,11 @@ func TestApprovalService_SubmitApproval_Approve_UpdatesTicketWhenLastPending(t *
 		SetTenantID(testTenant.ID).
 		SetNodes([]map[string]interface{}{
 			{
-				"level":         1,
-				"name":          "L1",
-				"approver_type": "user",
-				"approver_ids":  []int{approver.ID},
-				"approval_mode": "any",
+				"level":        1,
+				"name":         "L1",
+				"approverType": "user",
+				"approverIds":  []int{approver.ID},
+				"approvalMode": "any",
 			},
 		}).
 		Save(ctx)

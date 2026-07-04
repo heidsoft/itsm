@@ -177,8 +177,8 @@ func simpleTruncate(text string, maxLen int) string {
 type SummaryWithMetadata struct {
 	Summary   string        `json:"summary"`
 	Method    string        `json:"method"` // "llm" or "fallback"
-	Latency   time.Duration `json:"latency_ms"`
-	CharCount int           `json:"char_count"`
+	Latency   time.Duration `json:"latencyMs"`
+	CharCount int           `json:"charCount"`
 }
 
 // SummarizeWithMetadata returns summary with additional metadata

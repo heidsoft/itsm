@@ -25,17 +25,17 @@ func NewWorkflowApprovalService(client *ent.Client, engine *WorkflowEngine) *Wor
 // ApprovalTask 审批任务
 type ApprovalTask struct {
 	ID           int                    `json:"id"`
-	InstanceID   int                    `json:"instance_id"`
-	StepID       string                 `json:"step_id"`
-	StepName     string                 `json:"step_name"`
-	AssigneeID   int                    `json:"assignee_id"`
-	AssigneeName string                 `json:"assignee_name"`
+	InstanceID   int                    `json:"instanceId"`
+	StepID       string                 `json:"stepId"`
+	StepName     string                 `json:"stepName"`
+	AssigneeID   int                    `json:"assigneeId"`
+	AssigneeName string                 `json:"assigneeName"`
 	Status       string                 `json:"status"` // pending, approved, rejected, cancelled
 	Priority     string                 `json:"priority"`
-	DueDate      *time.Time             `json:"due_date"`
-	CreatedAt    time.Time              `json:"created_at"`
-	UpdatedAt    time.Time              `json:"updated_at"`
-	CompletedAt  *time.Time             `json:"completed_at"`
+	DueDate      *time.Time             `json:"dueDate"`
+	CreatedAt    time.Time              `json:"createdAt"`
+	UpdatedAt    time.Time              `json:"updatedAt"`
+	CompletedAt  *time.Time             `json:"completedAt"`
 	Comment      string                 `json:"comment"`
 	Data         map[string]interface{} `json:"data"`
 }
@@ -237,53 +237,53 @@ func (s *WorkflowApprovalService) GetApprovalHistory(ctx context.Context, instan
 
 // CreateApprovalTaskRequest 创建审批任务请求
 type CreateApprovalTaskRequest struct {
-	InstanceID   int                    `json:"instance_id" binding:"required"`
-	StepID       string                 `json:"step_id" binding:"required"`
-	StepName     string                 `json:"step_name" binding:"required"`
-	AssigneeID   int                    `json:"assignee_id" binding:"required"`
-	AssigneeName string                 `json:"assignee_name" binding:"required"`
+	InstanceID   int                    `json:"instanceId" binding:"required"`
+	StepID       string                 `json:"stepId" binding:"required"`
+	StepName     string                 `json:"stepName" binding:"required"`
+	AssigneeID   int                    `json:"assigneeId" binding:"required"`
+	AssigneeName string                 `json:"assigneeName" binding:"required"`
 	Priority     string                 `json:"priority"`
-	DueDate      *time.Time             `json:"due_date"`
+	DueDate      *time.Time             `json:"dueDate"`
 	Data         map[string]interface{} `json:"data"`
 }
 
 // GetApprovalTasksRequest 获取审批任务请求
 type GetApprovalTasksRequest struct {
-	AssigneeID int    `json:"assignee_id"`
+	AssigneeID int    `json:"assigneeId"`
 	Status     string `json:"status"`
 	Priority   string `json:"priority"`
 	Page       int    `json:"page"`
-	PageSize   int    `json:"page_size"`
+	PageSize   int    `json:"pageSize"`
 }
 
 // ApproveTaskRequest 审批通过请求
 type ApproveTaskRequest struct {
-	TaskID  int    `json:"task_id" binding:"required"`
-	UserID  int    `json:"user_id" binding:"required"`
+	TaskID  int    `json:"taskId" binding:"required"`
+	UserID  int    `json:"userId" binding:"required"`
 	Comment string `json:"comment"`
 }
 
 // RejectTaskRequest 审批拒绝请求
 type RejectTaskRequest struct {
-	TaskID  int    `json:"task_id" binding:"required"`
-	UserID  int    `json:"user_id" binding:"required"`
+	TaskID  int    `json:"taskId" binding:"required"`
+	UserID  int    `json:"userId" binding:"required"`
 	Comment string `json:"comment"`
 }
 
 // CancelTaskRequest 取消审批任务请求
 type CancelTaskRequest struct {
-	TaskID  int    `json:"task_id" binding:"required"`
-	UserID  int    `json:"user_id" binding:"required"`
-	IsAdmin bool   `json:"is_admin"`
+	TaskID  int    `json:"taskId" binding:"required"`
+	UserID  int    `json:"userId" binding:"required"`
+	IsAdmin bool   `json:"isAdmin"`
 	Comment string `json:"comment"`
 }
 
 // ReassignTaskRequest 重新分配审批任务请求
 type ReassignTaskRequest struct {
-	TaskID          int    `json:"task_id" binding:"required"`
-	UserID          int    `json:"user_id" binding:"required"`
-	IsAdmin         bool   `json:"is_admin"`
-	NewAssigneeID   int    `json:"new_assignee_id" binding:"required"`
-	NewAssigneeName string `json:"new_assignee_name" binding:"required"`
+	TaskID          int    `json:"taskId" binding:"required"`
+	UserID          int    `json:"userId" binding:"required"`
+	IsAdmin         bool   `json:"isAdmin"`
+	NewAssigneeID   int    `json:"newAssigneeId" binding:"required"`
+	NewAssigneeName string `json:"newAssigneeName" binding:"required"`
 	Comment         string `json:"comment"`
 }

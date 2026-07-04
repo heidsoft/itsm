@@ -321,16 +321,16 @@ func (s *BPMNDeploymentService) GetDeploymentHistory(ctx context.Context, proces
 type DeployProcessDefinitionRequest struct {
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
-	BPMNXML     string `json:"bpmn_xml" binding:"required"`
-	TenantID    int    `json:"tenant_id" binding:"required"`
+	BPMNXML     string `json:"bpmnXml" binding:"required"`
+	TenantID    int    `json:"tenantId" binding:"required"`
 }
 
 // ListDeploymentsRequest 获取部署记录列表请求
 type ListDeploymentsRequest struct {
-	TenantID  int       `json:"tenant_id"`
+	TenantID  int       `json:"tenantId"`
 	Status    string    `json:"status"`
-	StartTime time.Time `json:"start_time"`
-	EndTime   time.Time `json:"end_time"`
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime"`
 	Page      int       `json:"page" binding:"required,min=1"`
-	PageSize  int       `json:"page_size" binding:"required,min=1,max=100"`
+	PageSize  int       `json:"pageSize" binding:"required,min=1,max=100"`
 }

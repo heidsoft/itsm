@@ -16,7 +16,7 @@ type CreateUserRequest struct {
 	// 角色，可选；不提供时使用后端默认值（end_user）
 	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician security end_user user"`
 	// MSP角色，仅当用户属于MSP租户时使用
-	MSPRole string `json:"msp_role,omitempty" binding:"omitempty,oneof=provider_admin provider_agent customer_user"`
+	MSPRole string `json:"mspRole,omitempty" binding:"omitempty,oneof=provider_admin provider_agent customer_user"`
 }
 
 // UpdateUserRequest 更新用户请求
@@ -49,9 +49,9 @@ type UserDetailResponse struct {
 	Department string    `json:"department"`
 	Phone      string    `json:"phone"`
 	Active     bool      `json:"active"`
-	TenantID   int       `json:"tenant_id"`
+	TenantID   int       `json:"tenantId"`
 	Role       string    `json:"role"`
-	MSPRole    *string   `json:"msp_role,omitempty"`
+	MSPRole    *string   `json:"mspRole,omitempty"`
 	CreatedAt  time.Time `json:"createdAt"`
 	UpdatedAt  time.Time `json:"updatedAt"`
 }
@@ -108,7 +108,7 @@ type SystemStatsResponse struct {
 
 // BatchUpdateUsersRequest 批量更新用户请求
 type BatchUpdateUsersRequest struct {
-	UserIDs    []int  `json:"user_ids" binding:"required,min=1"`
+	UserIDs    []int  `json:"userIds" binding:"required,min=1"`
 	Action     string `json:"action" binding:"required,oneof=activate deactivate department"`
 	Department string `json:"department,omitempty"`
 }
@@ -116,14 +116,14 @@ type BatchUpdateUsersRequest struct {
 // SearchUsersRequest 搜索用户请求
 type SearchUsersRequest struct {
 	Keyword  string `json:"keyword" form:"keyword" binding:"omitempty,min=1"`
-	TenantID int    `json:"tenant_id" form:"tenant_id"`
+	TenantID int    `json:"tenantId" form:"tenant_id"`
 	Limit    int    `json:"limit" form:"limit,default=10" binding:"min=1,max=50"`
 }
 
 // ImportUsersRequest 批量导入用户请求
 type ImportUsersRequest struct {
 	Users    []CreateUserRequest `json:"users" binding:"required,min=1,max=100"`
-	TenantID int                 `json:"tenant_id" binding:"required,min=1"`
+	TenantID int                 `json:"tenantId" binding:"required,min=1"`
 }
 
 // ImportUsersResponse 批量导入用户响应

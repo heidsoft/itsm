@@ -11,14 +11,14 @@ type User struct {
 	Email        string    `json:"email"`
 	Name         string    `json:"name"`
 	Role         string    `json:"role"`
-	MSPRole      *string   `json:"msp_role,omitempty"`
+	MSPRole      *string   `json:"mspRole,omitempty"`
 	Department   string    `json:"department"`
-	DepartmentID int       `json:"department_id"`
+	DepartmentID int       `json:"departmentId"`
 	Phone        string    `json:"phone"`
 	Active       bool      `json:"active"`
-	TenantID     int       `json:"tenant_id"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	TenantID     int       `json:"tenantId"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 	Permissions  []string  `json:"permissions,omitempty"` // 用户权限列表
 }
 
@@ -28,12 +28,12 @@ type Department struct {
 	Name        string        `json:"name"`
 	Code        string        `json:"code"`
 	Description string        `json:"description"`
-	ManagerID   int           `json:"manager_id"`
-	ParentID    int           `json:"parent_id"`
-	TenantID    int           `json:"tenant_id"`
+	ManagerID   int           `json:"managerId"`
+	ParentID    int           `json:"parentId"`
+	TenantID    int           `json:"tenantId"`
 	Children    []*Department `json:"children,omitempty"`
-	CreatedAt   time.Time     `json:"created_at"`
-	UpdatedAt   time.Time     `json:"updated_at"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	UpdatedAt   time.Time     `json:"updatedAt"`
 }
 
 // Team represents a group of users
@@ -43,10 +43,10 @@ type Team struct {
 	Code        string    `json:"code"`
 	Description string    `json:"description"`
 	Status      string    `json:"status"`
-	ManagerID   int       `json:"manager_id"`
-	TenantID    int       `json:"tenant_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ManagerID   int       `json:"managerId"`
+	TenantID    int       `json:"tenantId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // Tag represents a metadata label
@@ -56,30 +56,30 @@ type Tag struct {
 	Code        string    `json:"code"`
 	Description string    `json:"description"`
 	Color       string    `json:"color"`
-	TenantID    int       `json:"tenant_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	TenantID    int       `json:"tenantId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // AuditLog represents a system activity record
 type AuditLog struct {
 	ID          int       `json:"id"`
-	CreatedAt   time.Time `json:"created_at"`
-	TenantID    int       `json:"tenant_id"`
-	UserID      int       `json:"user_id"`
-	RequestID   string    `json:"request_id"`
+	CreatedAt   time.Time `json:"createdAt"`
+	TenantID    int       `json:"tenantId"`
+	UserID      int       `json:"userId"`
+	RequestID   string    `json:"requestId"`
 	IP          string    `json:"ip"`
 	Resource    string    `json:"resource"`
 	Action      string    `json:"action"`
 	Path        string    `json:"path"`
 	Method      string    `json:"method"`
-	StatusCode  int       `json:"status_code"`
-	RequestBody string    `json:"request_body"`
+	StatusCode  int       `json:"statusCode"`
+	RequestBody string    `json:"requestBody"`
 }
 
 // AuthResult contains tokens and user context
 type AuthResult struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 	User         *User  `json:"user"`
 }

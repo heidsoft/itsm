@@ -79,7 +79,7 @@ func (h *Handler) Chat(c *gin.Context) {
 	var req struct {
 		Query          string `json:"query" binding:"required"`
 		Limit          int    `json:"limit"`
-		ConversationID int    `json:"conversation_id"`
+		ConversationID int    `json:"conversationId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, err.Error())
@@ -195,8 +195,8 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 	var req struct {
 		Kind     string  `json:"kind" binding:"required"`
 		Query    string  `json:"query"`
-		ItemType *string `json:"item_type"`
-		ItemID   *int    `json:"item_id"`
+		ItemType *string `json:"itemType"`
+		ItemID   *int    `json:"itemId"`
 		Useful   bool    `json:"useful" binding:"required"`
 		Score    *int    `json:"score"`
 		Notes    *string `json:"notes"`
@@ -231,8 +231,8 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 func (h *Handler) RecordAudit(c *gin.Context) {
 	var req struct {
 		Scenario      string                 `json:"scenario" binding:"required"`
-		InputRef      string                 `json:"input_ref" binding:"required"`
-		PromptVersion string                 `json:"prompt_version"`
+		InputRef      string                 `json:"inputRef" binding:"required"`
+		PromptVersion string                 `json:"promptVersion"`
 		Model         string                 `json:"model"`
 		Confidence    float64                `json:"confidence"`
 		Suggestion    map[string]interface{} `json:"suggestion" binding:"required"`
@@ -389,7 +389,7 @@ func (h *Handler) Triage(c *gin.Context) {
 func (h *Handler) CreateTicketByAI(c *gin.Context) {
 	var req struct {
 		Description string `json:"description" binding:"required"`
-		TenantID    int    `json:"tenant_id"`
+		TenantID    int    `json:"tenantId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())

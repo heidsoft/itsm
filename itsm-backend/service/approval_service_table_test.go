@@ -33,68 +33,68 @@ func TestCanPerformAction_TableDriven(t *testing.T) {
 		"level1_reject_yes_delegate_no": {
 			Nodes: []map[string]interface{}{
 				{
-					"level":          1,
-					"allow_reject":   true,
-					"allow_delegate": false,
-					"approval_mode":  "any",
-					"approver_type":  "user",
-					"approver_ids":   []interface{}{1},
-					"reject_action":  "end",
-					"name":           "L1",
+					"level":         1,
+					"allowReject":   true,
+					"allowDelegate": false,
+					"approvalMode":  "any",
+					"approverType":  "user",
+					"approverIds":   []interface{}{1},
+					"rejectAction":  "end",
+					"name":          "L1",
 				},
 			},
 		},
 		"level1_reject_no_delegate_yes": {
 			Nodes: []map[string]interface{}{
 				{
-					"level":          1,
-					"allow_reject":   false,
-					"allow_delegate": true,
-					"approval_mode":  "any",
-					"approver_type":  "user",
-					"approver_ids":   []interface{}{1},
-					"reject_action":  "end",
-					"name":           "L1",
+					"level":         1,
+					"allowReject":   false,
+					"allowDelegate": true,
+					"approvalMode":  "any",
+					"approverType":  "user",
+					"approverIds":   []interface{}{1},
+					"rejectAction":  "end",
+					"name":          "L1",
 				},
 			},
 		},
 		"multi_level": {
 			Nodes: []map[string]interface{}{
 				{
-					"level":          1,
-					"allow_reject":   true,
-					"allow_delegate": false,
-					"approval_mode":  "any",
-					"approver_type":  "user",
-					"approver_ids":   []interface{}{1},
-					"reject_action":  "end",
-					"name":           "L1",
+					"level":         1,
+					"allowReject":   true,
+					"allowDelegate": false,
+					"approvalMode":  "any",
+					"approverType":  "user",
+					"approverIds":   []interface{}{1},
+					"rejectAction":  "end",
+					"name":          "L1",
 				},
 				{
-					"level":          2,
-					"allow_reject":   false,
-					"allow_delegate": true,
-					"approval_mode":  "all",
-					"approver_type":  "user",
-					"approver_ids":   []interface{}{2, 3},
-					"reject_action":  "return",
-					"name":           "L2",
+					"level":         2,
+					"allowReject":   false,
+					"allowDelegate": true,
+					"approvalMode":  "all",
+					"approverType":  "user",
+					"approverIds":   []interface{}{2, 3},
+					"rejectAction":  "return",
+					"name":          "L2",
 				},
 			},
 		},
 		"with_optional_fields": {
 			Nodes: []map[string]interface{}{
 				{
-					"level":             1,
-					"allow_reject":      true,
-					"allow_delegate":    true,
-					"approval_mode":     "all",
-					"approver_type":     "user",
-					"approver_ids":      []interface{}{1, 2},
-					"reject_action":     "end",
-					"name":              "L1",
-					"minimum_approvals": min5,
-					"timeout_hours":     timeout24,
+					"level":            1,
+					"allowReject":      true,
+					"allowDelegate":    true,
+					"approvalMode":     "all",
+					"approverType":     "user",
+					"approverIds":      []interface{}{1, 2},
+					"rejectAction":     "end",
+					"name":             "L1",
+					"minimumApprovals": min5,
+					"timeoutHours":     timeout24,
 				},
 			},
 		},
@@ -191,12 +191,12 @@ func TestParseWorkflowNodes_TableDriven(t *testing.T) {
 			name: "single node complete",
 			input: []map[string]interface{}{
 				{
-					"level":         1,
-					"name":          "L1 Approval",
-					"approver_type": "user",
-					"approver_ids":  []interface{}{float64(10), float64(20)},
-					"approval_mode": "all",
-					"timeout_hours": float64(48),
+					"level":        1,
+					"name":         "L1 Approval",
+					"approverType": "user",
+					"approverIds":  []interface{}{float64(10), float64(20)},
+					"approvalMode": "all",
+					"timeoutHours": float64(48),
 				},
 			},
 			wantLen: 1,
@@ -213,16 +213,16 @@ func TestParseWorkflowNodes_TableDriven(t *testing.T) {
 			name: "missing level auto-increments",
 			input: []map[string]interface{}{
 				{
-					"name":          "First",
-					"approver_type": "user",
-					"approver_ids":  []interface{}{float64(1)},
-					"approval_mode": "any",
+					"name":         "First",
+					"approverType": "user",
+					"approverIds":  []interface{}{float64(1)},
+					"approvalMode": "any",
 				},
 				{
-					"name":          "Second",
-					"approver_type": "user",
-					"approver_ids":  []interface{}{float64(2)},
-					"approval_mode": "any",
+					"name":         "Second",
+					"approverType": "user",
+					"approverIds":  []interface{}{float64(2)},
+					"approvalMode": "any",
 				},
 			},
 			wantLen: 2,
@@ -236,10 +236,10 @@ func TestParseWorkflowNodes_TableDriven(t *testing.T) {
 			name: "missing name auto-generates",
 			input: []map[string]interface{}{
 				{
-					"level":         1,
-					"approver_type": "user",
-					"approver_ids":  []interface{}{float64(1)},
-					"approval_mode": "any",
+					"level":        1,
+					"approverType": "user",
+					"approverIds":  []interface{}{float64(1)},
+					"approvalMode": "any",
 				},
 			},
 			wantLen: 1,
@@ -252,10 +252,10 @@ func TestParseWorkflowNodes_TableDriven(t *testing.T) {
 			name: "missing approval_mode defaults to any",
 			input: []map[string]interface{}{
 				{
-					"level":         1,
-					"name":          "L1",
-					"approver_type": "user",
-					"approver_ids":  []interface{}{float64(1)},
+					"level":        1,
+					"name":         "L1",
+					"approverType": "user",
+					"approverIds":  []interface{}{float64(1)},
 				},
 			},
 			wantLen: 1,
@@ -268,10 +268,10 @@ func TestParseWorkflowNodes_TableDriven(t *testing.T) {
 			name: "dynamic approver type sets AssigneeType",
 			input: []map[string]interface{}{
 				{
-					"level":         1,
-					"name":          "Dept Manager",
-					"approver_type": "dept_manager",
-					"approval_mode": "any",
+					"level":        1,
+					"name":         "Dept Manager",
+					"approverType": "dept_manager",
+					"approvalMode": "any",
 				},
 			},
 			wantLen: 1,
@@ -284,22 +284,22 @@ func TestParseWorkflowNodes_TableDriven(t *testing.T) {
 			name: "multiple dynamic types",
 			input: []map[string]interface{}{
 				{
-					"level":         1,
-					"name":          "Team Leader",
-					"approver_type": "team_leader",
-					"approval_mode": "any",
+					"level":        1,
+					"name":         "Team Leader",
+					"approverType": "team_leader",
+					"approvalMode": "any",
 				},
 				{
-					"level":         2,
-					"name":          "Project Manager",
-					"approver_type": "project_manager",
-					"approval_mode": "all",
+					"level":        2,
+					"name":         "Project Manager",
+					"approverType": "project_manager",
+					"approvalMode": "all",
 				},
 				{
-					"level":         3,
-					"name":          "Amount Based",
-					"approver_type": "amount_based",
-					"approval_mode": "any",
+					"level":        3,
+					"name":         "Amount Based",
+					"approverType": "amount_based",
+					"approvalMode": "any",
 				},
 			},
 			wantLen: 3,
@@ -721,8 +721,8 @@ func TestMapsToNodesUnsafe_InvalidInput(t *testing.T) {
 	// 传入无法反序列化的数据
 	invalidMaps := []map[string]interface{}{
 		{
-			"level":         "not-a-number", // 错误的类型
-			"approval_mode": "any",
+			"level":        "not-a-number", // 错误的类型
+			"approvalMode": "any",
 		},
 	}
 	result := mapsToNodesUnsafe(invalidMaps)
@@ -756,13 +756,13 @@ func TestSubmitApproval_Reject_TerminatesWorkflow(t *testing.T) {
 		SetTenantID(tenant.ID).
 		SetNodes([]map[string]interface{}{
 			{
-				"level":         1,
-				"name":          "L1",
-				"approver_type": "user",
-				"approver_ids":  []int{approver.ID},
-				"approval_mode": "any",
-				"allow_reject":  true,
-				"reject_action": "end",
+				"level":        1,
+				"name":         "L1",
+				"approverType": "user",
+				"approverIds":  []int{approver.ID},
+				"approvalMode": "any",
+				"allowReject":  true,
+				"rejectAction": "end",
 			},
 		}).
 		Save(ctx)
@@ -903,14 +903,14 @@ func TestSubmitApproval_ErrorPaths_TableDriven(t *testing.T) {
 				SetTenantID(tenant.ID).
 				SetNodes([]map[string]interface{}{
 					{
-						"level":          1,
-						"name":           "L1",
-						"approver_type":  "user",
-						"approver_ids":   []int{approver.ID},
-						"approval_mode":  "any",
-						"allow_reject":   true,
-						"allow_delegate": true,
-						"reject_action":  "end",
+						"level":         1,
+						"name":          "L1",
+						"approverType":  "user",
+						"approverIds":   []int{approver.ID},
+						"approvalMode":  "any",
+						"allowReject":   true,
+						"allowDelegate": true,
+						"rejectAction":  "end",
 					},
 				}).
 				Save(ctx)
@@ -997,13 +997,13 @@ func TestUpdateWorkflow_WithNodes_TableDriven(t *testing.T) {
 			name: "replace existing nodes",
 			initialNodes: []map[string]interface{}{
 				{
-					"level":         1,
-					"name":          "Old L1",
-					"approver_type": "user",
-					"approver_ids":  []int{1},
-					"approval_mode": "any",
-					"allow_reject":  true,
-					"reject_action": "end",
+					"level":        1,
+					"name":         "Old L1",
+					"approverType": "user",
+					"approverIds":  []int{1},
+					"approvalMode": "any",
+					"allowReject":  true,
+					"rejectAction": "end",
 				},
 			},
 			updateNodes: &[]dto.ApprovalNodeRequest{
@@ -1128,11 +1128,11 @@ func TestTriggerApproval_ApprovalMode_TableDriven(t *testing.T) {
 				SetTenantID(tenant.ID).
 				SetNodes([]map[string]interface{}{
 					{
-						"level":         1,
-						"name":          "L1",
-						"approver_type": "user",
-						"approver_ids":  approverIDs,
-						"approval_mode": tt.approvalMode,
+						"level":        1,
+						"name":         "L1",
+						"approverType": "user",
+						"approverIds":  approverIDs,
+						"approvalMode": tt.approvalMode,
 					},
 				}).
 				Save(ctx)
@@ -1279,11 +1279,11 @@ func createMatchingWorkflow(t *testing.T, ctx context.Context, client *ent.Clien
 		SetTenantID(tenantID).
 		SetNodes([]map[string]interface{}{
 			{
-				"level":         1,
-				"name":          "L1",
-				"approver_type": "user",
-				"approver_ids":  []int{1},
-				"approval_mode": "any",
+				"level":        1,
+				"name":         "L1",
+				"approverType": "user",
+				"approverIds":  []int{1},
+				"approvalMode": "any",
 			},
 		})
 	if ticketType != "" {

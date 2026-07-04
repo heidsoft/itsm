@@ -22,13 +22,13 @@ type SLAMonitorService struct {
 }
 
 type SLAMetrics struct {
-	ResponseTime       float64 `json:"response_time"`
-	ResolutionTime     float64 `json:"resolution_time"`
-	SLACompliance      float64 `json:"sla_compliance"`
-	TotalTickets       int     `json:"total_tickets"`
-	ViolatedTickets    int     `json:"violated_tickets"`
-	AvgResponseMinutes float64 `json:"avg_response_minutes"`
-	AvgResolutionHours float64 `json:"avg_resolution_hours"`
+	ResponseTime       float64 `json:"responseTime"`
+	ResolutionTime     float64 `json:"resolutionTime"`
+	SLACompliance      float64 `json:"slaCompliance"`
+	TotalTickets       int     `json:"totalTickets"`
+	ViolatedTickets    int     `json:"violatedTickets"`
+	AvgResponseMinutes float64 `json:"avgResponseMinutes"`
+	AvgResolutionHours float64 `json:"avgResolutionHours"`
 }
 
 func NewSLAMonitorService(client *ent.Client, logger *zap.SugaredLogger) *SLAMonitorService {
@@ -49,11 +49,11 @@ func (s *SLAMonitorService) SetNotificationService(notificationSvc *TicketNotifi
 }
 
 type SLACheckStats struct {
-	TotalChecked       int `json:"total_checked"`       // 检查的工单总数
-	NewViolations      int `json:"new_violations"`      // 新创建的违规数
-	ExistingViolations int `json:"existing_violations"` // 已存在的违规数
-	WarningsTriggered  int `json:"warnings_triggered"`  // 触发的预警数
-	AlertsTriggered    int `json:"alerts_triggered"`    // 触发的告警数
+	TotalChecked       int `json:"totalChecked"`       // 检查的工单总数
+	NewViolations      int `json:"newViolations"`      // 新创建的违规数
+	ExistingViolations int `json:"existingViolations"` // 已存在的违规数
+	WarningsTriggered  int `json:"warningsTriggered"`  // 触发的预警数
+	AlertsTriggered    int `json:"alertsTriggered"`    // 触发的告警数
 }
 
 // CheckSLAViolations 检查所有工单的SLA违规情况
@@ -428,11 +428,11 @@ func (s *SLAMonitorService) GetSLAComplianceByDefinition(ctx context.Context, te
 }
 
 type SLAComplianceStat struct {
-	SLADefinitionID   int     `json:"sla_definition_id"`
-	SLADefinitionName string  `json:"sla_definition_name"`
-	TotalTickets      int     `json:"total_tickets"`
-	ViolatedTickets   int     `json:"violated_tickets"`
-	ComplianceRate    float64 `json:"compliance_rate"`
+	SLADefinitionID   int     `json:"slaDefinitionId"`
+	SLADefinitionName string  `json:"slaDefinitionName"`
+	TotalTickets      int     `json:"totalTickets"`
+	ViolatedTickets   int     `json:"violatedTickets"`
+	ComplianceRate    float64 `json:"complianceRate"`
 }
 
 // StartSLAWatcher 启动SLA定时检查任务

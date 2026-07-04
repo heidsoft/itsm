@@ -13,7 +13,7 @@ import (
 
 type CloudController struct {
 	cloudService *service.CloudService
-	logger      *zap.SugaredLogger
+	logger       *zap.SugaredLogger
 }
 
 func NewCloudController(cloudService *service.CloudService, logger *zap.SugaredLogger) *CloudController {

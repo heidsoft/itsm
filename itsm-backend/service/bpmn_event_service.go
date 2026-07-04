@@ -51,12 +51,12 @@ type EventDefinition struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
 	Position    Position               `json:"position"`
-	Incoming    []string               `json:"incoming"`               // 入向流ID列表
-	Outgoing    []string               `json:"outgoing"`               // 出向流ID列表
-	Properties  map[string]interface{} `json:"properties"`             // 事件属性
-	Handler     string                 `json:"handler,omitempty"`      // 事件处理器
-	Timeout     string                 `json:"timeout,omitempty"`      // 超时设置
-	RetryPolicy *RetryPolicy           `json:"retry_policy,omitempty"` // 重试策略
+	Incoming    []string               `json:"incoming"`              // 入向流ID列表
+	Outgoing    []string               `json:"outgoing"`              // 出向流ID列表
+	Properties  map[string]interface{} `json:"properties"`            // 事件属性
+	Handler     string                 `json:"handler,omitempty"`     // 事件处理器
+	Timeout     string                 `json:"timeout,omitempty"`     // 超时设置
+	RetryPolicy *RetryPolicy           `json:"retryPolicy,omitempty"` // 重试策略
 }
 
 // Position 位置信息
@@ -67,41 +67,41 @@ type Position struct {
 
 // RetryPolicy 重试策略
 type RetryPolicy struct {
-	MaxAttempts       int           `json:"max_attempts"`       // 最大重试次数
-	InitialDelay      time.Duration `json:"initial_delay"`      // 初始延迟
-	MaxDelay          time.Duration `json:"max_delay"`          // 最大延迟
-	BackoffMultiplier float64       `json:"backoff_multiplier"` // 退避乘数
+	MaxAttempts       int           `json:"maxAttempts"`       // 最大重试次数
+	InitialDelay      time.Duration `json:"initialDelay"`      // 初始延迟
+	MaxDelay          time.Duration `json:"maxDelay"`          // 最大延迟
+	BackoffMultiplier float64       `json:"backoffMultiplier"` // 退避乘数
 }
 
 // EventInstance 事件实例
 type EventInstance struct {
 	ID                string                 `json:"id"`
-	EventDefinitionID string                 `json:"event_definition_id"`
-	ProcessInstanceID string                 `json:"process_instance_id"`
+	EventDefinitionID string                 `json:"eventDefinitionId"`
+	ProcessInstanceID string                 `json:"processInstanceId"`
 	Status            string                 `json:"status"` // pending, triggered, completed, failed
-	TriggeredAt       *time.Time             `json:"triggered_at,omitempty"`
-	CompletedAt       *time.Time             `json:"completed_at,omitempty"`
+	TriggeredAt       *time.Time             `json:"triggeredAt,omitempty"`
+	CompletedAt       *time.Time             `json:"completedAt,omitempty"`
 	Variables         map[string]interface{} `json:"variables"`
 	Error             string                 `json:"error,omitempty"`
-	RetryCount        int                    `json:"retry_count"`
-	TenantID          int                    `json:"tenant_id"`
-	CreatedAt         time.Time              `json:"created_at"`
-	UpdatedAt         time.Time              `json:"updated_at"`
+	RetryCount        int                    `json:"retryCount"`
+	TenantID          int                    `json:"tenantId"`
+	CreatedAt         time.Time              `json:"createdAt"`
+	UpdatedAt         time.Time              `json:"updatedAt"`
 }
 
 // EventTriggerRequest 事件触发请求
 type EventTriggerRequest struct {
-	EventDefinitionID string                 `json:"event_definition_id" binding:"required"`
-	ProcessInstanceID string                 `json:"process_instance_id,omitempty"`
+	EventDefinitionID string                 `json:"eventDefinitionId" binding:"required"`
+	ProcessInstanceID string                 `json:"processInstanceId,omitempty"`
 	Variables         map[string]interface{} `json:"variables"`
-	TenantID          int                    `json:"tenant_id" binding:"required"`
+	TenantID          int                    `json:"tenantId" binding:"required"`
 }
 
 // EventTriggerResult 事件触发结果
 type EventTriggerResult struct {
-	EventInstanceID string                 `json:"event_instance_id"`
+	EventInstanceID string                 `json:"eventInstanceId"`
 	Status          string                 `json:"status"`
-	NextActivities  []string               `json:"next_activities"`
+	NextActivities  []string               `json:"nextActivities"`
 	Variables       map[string]interface{} `json:"variables"`
 	Error           error                  `json:"error,omitempty"`
 }
@@ -402,15 +402,15 @@ func (s *BPMNEventService) GetEventInstances(ctx context.Context, req *ListEvent
 
 // ListEventInstancesRequest 查询事件实例请求
 type ListEventInstancesRequest struct {
-	EventDefinitionID string    `json:"event_definition_id,omitempty"`
-	ProcessInstanceID string    `json:"process_instance_id,omitempty"`
+	EventDefinitionID string    `json:"eventDefinitionId,omitempty"`
+	ProcessInstanceID string    `json:"processInstanceId,omitempty"`
 	Status            string    `json:"status,omitempty"`
 	Trigger           string    `json:"trigger,omitempty"`
-	StartTime         time.Time `json:"start_time,omitempty"`
-	EndTime           time.Time `json:"end_time,omitempty"`
-	TenantID          int       `json:"tenant_id" binding:"required"`
+	StartTime         time.Time `json:"startTime,omitempty"`
+	EndTime           time.Time `json:"endTime,omitempty"`
+	TenantID          int       `json:"tenantId" binding:"required"`
 	Page              int       `json:"page"`
-	PageSize          int       `json:"page_size"`
+	PageSize          int       `json:"pageSize"`
 }
 
 // GetEventStatistics 获取事件统计信息

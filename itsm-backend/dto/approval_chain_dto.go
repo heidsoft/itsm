@@ -5,7 +5,7 @@ import "time"
 // ApprovalChainStepDTO 审批链步骤
 type ApprovalChainStepDTO struct {
 	Level      int    `json:"level"`
-	ApproverID int    `json:"approver_id,omitempty"`
+	ApproverID int    `json:"approverId,omitempty"`
 	Role       string `json:"role"`
 	Name       string `json:"name"`
 	IsRequired bool   `json:"isRequired"`

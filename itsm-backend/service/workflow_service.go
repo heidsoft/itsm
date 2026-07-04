@@ -306,8 +306,8 @@ type CreateWorkflowRequest struct {
 	Type        string                 `json:"type" binding:"required"`
 	Definition  map[string]interface{} `json:"definition" binding:"required"`
 	Version     string                 `json:"version"`
-	IsActive    bool                   `json:"is_active"`
-	TenantID    int                    `json:"tenant_id" binding:"required"`
+	IsActive    bool                   `json:"isActive"`
+	TenantID    int                    `json:"tenantId" binding:"required"`
 }
 
 // UpdateWorkflowRequest 更新工作流请求
@@ -317,34 +317,34 @@ type UpdateWorkflowRequest struct {
 	Type        string                 `json:"type"`
 	Definition  map[string]interface{} `json:"definition"`
 	Version     string                 `json:"version"`
-	IsActive    *bool                  `json:"is_active"`
+	IsActive    *bool                  `json:"isActive"`
 }
 
 // ListWorkflowsRequest 获取工作流列表请求
 type ListWorkflowsRequest struct {
 	Page      int    `json:"page" form:"page"`
-	PageSize  int    `json:"page_size" form:"page_size"`
+	PageSize  int    `json:"pageSize" form:"page_size"`
 	Type      string `json:"type" form:"type"`
-	IsActive  *bool  `json:"is_active" form:"is_active"`
-	TenantID  int    `json:"tenant_id" form:"tenant_id"`
-	SortBy    string `json:"sort_by" form:"sort_by"`
-	SortOrder string `json:"sort_order" form:"sort_order"`
+	IsActive  *bool  `json:"isActive" form:"is_active"`
+	TenantID  int    `json:"tenantId" form:"tenant_id"`
+	SortBy    string `json:"sortBy" form:"sort_by"`
+	SortOrder string `json:"sortOrder" form:"sort_order"`
 }
 
 // StartWorkflowRequest 启动工作流请求
 type StartWorkflowRequest struct {
-	WorkflowID int                    `json:"workflow_id" binding:"required"`
-	EntityID   int                    `json:"entity_id" binding:"required"`
-	EntityType string                 `json:"entity_type" binding:"required"`
+	WorkflowID int                    `json:"workflowId" binding:"required"`
+	EntityID   int                    `json:"entityId" binding:"required"`
+	EntityType string                 `json:"entityType" binding:"required"`
 	Context    map[string]interface{} `json:"context"`
-	TenantID   int                    `json:"tenant_id" binding:"required"`
+	TenantID   int                    `json:"tenantId" binding:"required"`
 }
 
 // ExecuteWorkflowStepRequest 执行工作流步骤请求
 type ExecuteWorkflowStepRequest struct {
-	InstanceID int                    `json:"instance_id" binding:"required"`
+	InstanceID int                    `json:"instanceId" binding:"required"`
 	Action     string                 `json:"action" binding:"required"`
-	NextStep   string                 `json:"next_step"`
+	NextStep   string                 `json:"nextStep"`
 	Status     string                 `json:"status"`
 	Context    map[string]interface{} `json:"context"`
 }

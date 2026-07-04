@@ -39,18 +39,18 @@ type CITypeResponse struct {
 
 // 生命周期管理DTO
 type UpdateCILifecycleStateRequest struct {
-	CIID      int       `json:"ci_id" binding:"required"`
+	CIID      int       `json:"ciId" binding:"required"`
 	State     string    `json:"state" binding:"required"`
 	Reason    string    `json:"reason"`
-	ChangedBy string    `json:"changed_by" binding:"required"`
-	ChangedAt time.Time `json:"changed_at"`
+	ChangedBy string    `json:"changedBy" binding:"required"`
+	ChangedAt time.Time `json:"changedAt"`
 	TenantID  int       `json:"tenantId"`
 }
 
 // 批量导入DTO
 type BatchImportCIData struct {
 	Name       string                 `json:"name"`
-	CITypeID   int                    `json:"ci_type_id"`
+	CITypeID   int                    `json:"ciTypeId"`
 	Attributes map[string]interface{} `json:"attributes"`
 	Status     string                 `json:"status"`
 }
@@ -61,18 +61,18 @@ type BatchImportCIsRequest struct {
 }
 
 type BatchImportCIsResponse struct {
-	TotalCount   int      `json:"total_count"`
-	SuccessCount int      `json:"success_count"`
-	FailureCount int      `json:"failure_count"`
+	TotalCount   int      `json:"totalCount"`
+	SuccessCount int      `json:"successCount"`
+	FailureCount int      `json:"failureCount"`
 	Errors       []string `json:"errors"`
 }
 
 // CI属性定义相关DTO
 type CIAttributeDefinitionRequest struct {
 	Name            string                 `json:"name" binding:"required"`
-	DisplayName     string                 `json:"display_name" binding:"required"`
+	DisplayName     string                 `json:"displayName" binding:"required"`
 	Description     string                 `json:"description"`
-	DataType        string                 `json:"data_type" binding:"required,oneof=string integer float boolean date datetime json enum reference"`
+	DataType        string                 `json:"dataType" binding:"required,oneof=string integer float boolean date datetime json enum reference"`
 	IsRequired      bool                   `json:"isRequired"`
 	IsUnique        bool                   `json:"isUnique"`
 	DefaultValue    string                 `json:"defaultValue"`
@@ -81,7 +81,7 @@ type CIAttributeDefinitionRequest struct {
 	ReferenceType   string                 `json:"referenceType"`
 	DisplayOrder    int                    `json:"displayOrder"`
 	IsSearchable    bool                   `json:"isSearchable"`
-	CITypeID        int                    `json:"ci_type_id" binding:"required"`
+	CITypeID        int                    `json:"ciTypeId" binding:"required"`
 }
 
 type CIAttributeDefinitionResponse struct {
@@ -100,7 +100,7 @@ type CIAttributeDefinitionResponse struct {
 	IsSearchable    bool                   `json:"isSearchable"`
 	IsSystem        bool                   `json:"isSystem"`
 	IsActive        bool                   `json:"isActive"`
-	CITypeID        int                    `json:"ci_type_id"`
+	CITypeID        int                    `json:"ciTypeId"`
 	TenantID        int                    `json:"tenantId"`
 	CreatedAt       time.Time              `json:"createdAt"`
 	UpdatedAt       time.Time              `json:"updatedAt"`
@@ -115,25 +115,25 @@ type CITypeWithAttributesResponse struct {
 	Icon                 string                          `json:"icon"`
 	IsSystem             bool                            `json:"isSystem"`
 	IsActive             bool                            `json:"isActive"`
-	AttributeDefinitions []CIAttributeDefinitionResponse `json:"attribute_definitions"`
+	AttributeDefinitions []CIAttributeDefinitionResponse `json:"attributeDefinitions"`
 	CreatedAt            time.Time                       `json:"createdAt"`
 	UpdatedAt            time.Time                       `json:"updatedAt"`
 }
 
 type ValidateCIAttributesRequest struct {
-	CITypeID   int                    `json:"ci_type_id" binding:"required"`
+	CITypeID   int                    `json:"ciTypeId" binding:"required"`
 	Attributes map[string]interface{} `json:"attributes" binding:"required"`
 }
 
 type ValidateCIAttributesResponse struct {
-	IsValid              bool                   `json:"is_valid"`
+	IsValid              bool                   `json:"isValid"`
 	Errors               map[string]string      `json:"errors"`
 	Warnings             map[string]string      `json:"warnings"`
-	NormalizedAttributes map[string]interface{} `json:"normalized_attributes"`
+	NormalizedAttributes map[string]interface{} `json:"normalizedAttributes"`
 }
 
 type CIAttributeSearchRequest struct {
-	CITypeID   int                    `json:"ci_type_id,omitempty"`
+	CITypeID   int                    `json:"ciTypeId,omitempty"`
 	Attributes map[string]interface{} `json:"attributes" binding:"required"`
 	Limit      int                    `json:"limit,omitempty"`
 	Offset     int                    `json:"offset,omitempty"`

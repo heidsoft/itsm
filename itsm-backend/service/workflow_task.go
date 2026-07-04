@@ -25,19 +25,19 @@ func NewWorkflowTaskService(client *ent.Client, engine *WorkflowEngine) *Workflo
 // WorkflowTask 工作流任务
 type WorkflowTask struct {
 	ID           int                    `json:"id"`
-	InstanceID   int                    `json:"instance_id"`
-	StepID       string                 `json:"step_id"`
-	StepName     string                 `json:"step_name"`
-	TaskType     string                 `json:"task_type"` // manual, automated, approval, notification
-	AssigneeID   int                    `json:"assignee_id"`
-	AssigneeName string                 `json:"assignee_name"`
+	InstanceID   int                    `json:"instanceId"`
+	StepID       string                 `json:"stepId"`
+	StepName     string                 `json:"stepName"`
+	TaskType     string                 `json:"taskType"` // manual, automated, approval, notification
+	AssigneeID   int                    `json:"assigneeId"`
+	AssigneeName string                 `json:"assigneeName"`
 	Status       string                 `json:"status"`   // pending, in_progress, completed, failed, cancelled
 	Priority     string                 `json:"priority"` // low, medium, high, urgent
-	DueDate      *time.Time             `json:"due_date"`
-	StartedAt    *time.Time             `json:"started_at"`
-	CompletedAt  *time.Time             `json:"completed_at"`
-	CreatedAt    time.Time              `json:"created_at"`
-	UpdatedAt    time.Time              `json:"updated_at"`
+	DueDate      *time.Time             `json:"dueDate"`
+	StartedAt    *time.Time             `json:"startedAt"`
+	CompletedAt  *time.Time             `json:"completedAt"`
+	CreatedAt    time.Time              `json:"createdAt"`
+	UpdatedAt    time.Time              `json:"updatedAt"`
 	Description  string                 `json:"description"`
 	Instructions string                 `json:"instructions"`
 	Data         map[string]interface{} `json:"data"`
@@ -245,14 +245,14 @@ func (s *WorkflowTaskService) GetTaskMetrics(ctx context.Context, req *GetTaskMe
 
 // CreateTaskRequest 创建任务请求
 type CreateTaskRequest struct {
-	InstanceID   int                    `json:"instance_id" binding:"required"`
-	StepID       string                 `json:"step_id" binding:"required"`
-	StepName     string                 `json:"step_name" binding:"required"`
-	TaskType     string                 `json:"task_type" binding:"required"`
-	AssigneeID   int                    `json:"assignee_id" binding:"required"`
-	AssigneeName string                 `json:"assignee_name" binding:"required"`
+	InstanceID   int                    `json:"instanceId" binding:"required"`
+	StepID       string                 `json:"stepId" binding:"required"`
+	StepName     string                 `json:"stepName" binding:"required"`
+	TaskType     string                 `json:"taskType" binding:"required"`
+	AssigneeID   int                    `json:"assigneeId" binding:"required"`
+	AssigneeName string                 `json:"assigneeName" binding:"required"`
 	Priority     string                 `json:"priority"`
-	DueDate      *time.Time             `json:"due_date"`
+	DueDate      *time.Time             `json:"dueDate"`
 	Description  string                 `json:"description"`
 	Instructions string                 `json:"instructions"`
 	Data         map[string]interface{} `json:"data"`
@@ -260,25 +260,25 @@ type CreateTaskRequest struct {
 
 // GetTasksRequest 获取任务请求
 type GetTasksRequest struct {
-	InstanceID int    `json:"instance_id"`
-	AssigneeID int    `json:"assignee_id"`
+	InstanceID int    `json:"instanceId"`
+	AssigneeID int    `json:"assigneeId"`
 	Status     string `json:"status"`
 	Priority   string `json:"priority"`
-	TaskType   string `json:"task_type"`
+	TaskType   string `json:"taskType"`
 	Page       int    `json:"page"`
-	PageSize   int    `json:"page_size"`
+	PageSize   int    `json:"pageSize"`
 }
 
 // StartTaskRequest 开始任务请求
 type StartTaskRequest struct {
-	TaskID int `json:"task_id" binding:"required"`
-	UserID int `json:"user_id" binding:"required"`
+	TaskID int `json:"taskId" binding:"required"`
+	UserID int `json:"userId" binding:"required"`
 }
 
 // CompleteTaskRequest 完成任务请求
 type CompleteTaskRequest struct {
-	TaskID    int                    `json:"task_id" binding:"required"`
-	UserID    int                    `json:"user_id" binding:"required"`
+	TaskID    int                    `json:"taskId" binding:"required"`
+	UserID    int                    `json:"userId" binding:"required"`
 	Result    map[string]interface{} `json:"result"`
 	Variables map[string]interface{} `json:"variables"`
 	Comment   string                 `json:"comment"`
@@ -286,45 +286,45 @@ type CompleteTaskRequest struct {
 
 // FailTaskRequest 任务失败请求
 type FailTaskRequest struct {
-	TaskID int    `json:"task_id" binding:"required"`
-	UserID int    `json:"user_id" binding:"required"`
+	TaskID int    `json:"taskId" binding:"required"`
+	UserID int    `json:"userId" binding:"required"`
 	Error  string `json:"error"`
 }
 
 // CancelWorkflowTaskRequest 取消工作流任务请求
 type CancelWorkflowTaskRequest struct {
-	TaskID  int    `json:"task_id" binding:"required"`
-	UserID  int    `json:"user_id" binding:"required"`
-	IsAdmin bool   `json:"is_admin"`
+	TaskID  int    `json:"taskId" binding:"required"`
+	UserID  int    `json:"userId" binding:"required"`
+	IsAdmin bool   `json:"isAdmin"`
 	Comment string `json:"comment"`
 }
 
 // ReassignWorkflowTaskRequest 重新分配工作流任务请求
 type ReassignWorkflowTaskRequest struct {
-	TaskID          int    `json:"task_id" binding:"required"`
-	UserID          int    `json:"user_id" binding:"required"`
-	IsAdmin         bool   `json:"is_admin"`
-	NewAssigneeID   int    `json:"new_assignee_id" binding:"required"`
-	NewAssigneeName string `json:"new_assignee_name" binding:"required"`
+	TaskID          int    `json:"taskId" binding:"required"`
+	UserID          int    `json:"userId" binding:"required"`
+	IsAdmin         bool   `json:"isAdmin"`
+	NewAssigneeID   int    `json:"newAssigneeId" binding:"required"`
+	NewAssigneeName string `json:"newAssigneeName" binding:"required"`
 	Comment         string `json:"comment"`
 }
 
 // GetTaskMetricsRequest 获取任务指标请求
 type GetTaskMetricsRequest struct {
-	InstanceID int       `json:"instance_id"`
-	AssigneeID int       `json:"assignee_id"`
-	StartDate  time.Time `json:"start_date"`
-	EndDate    time.Time `json:"end_date"`
+	InstanceID int       `json:"instanceId"`
+	AssigneeID int       `json:"assigneeId"`
+	StartDate  time.Time `json:"startDate"`
+	EndDate    time.Time `json:"endDate"`
 }
 
 // WorkflowTaskMetrics 工作流任务指标
 type WorkflowTaskMetrics struct {
-	TotalTasks      int     `json:"total_tasks"`
-	CompletedTasks  int     `json:"completed_tasks"`
-	FailedTasks     int     `json:"failed_tasks"`
-	CancelledTasks  int     `json:"cancelled_tasks"`
-	CompletionRate  float64 `json:"completion_rate"`
-	AverageDuration float64 `json:"average_duration"`
-	OnTimeTasks     int     `json:"on_time_tasks"`
-	OverdueTasks    int     `json:"overdue_tasks"`
+	TotalTasks      int     `json:"totalTasks"`
+	CompletedTasks  int     `json:"completedTasks"`
+	FailedTasks     int     `json:"failedTasks"`
+	CancelledTasks  int     `json:"cancelledTasks"`
+	CompletionRate  float64 `json:"completionRate"`
+	AverageDuration float64 `json:"averageDuration"`
+	OnTimeTasks     int     `json:"onTimeTasks"`
+	OverdueTasks    int     `json:"overdueTasks"`
 }

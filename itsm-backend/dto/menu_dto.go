@@ -21,11 +21,11 @@ type CreateMenuRequest struct {
 	Name           string  `json:"name" binding:"required"`
 	Path           string  `json:"path" binding:"required"`
 	Icon           string  `json:"icon,omitempty"`
-	ParentID       *int    `json:"parent_id,omitempty"`
-	PermissionCode *string `json:"permission_code,omitempty"`
-	SortOrder      int     `json:"sort_order"`
-	IsVisible      *bool   `json:"is_visible,omitempty"`
-	IsEnabled      *bool   `json:"is_enabled,omitempty"`
+	ParentID       *int    `json:"parentId,omitempty"`
+	PermissionCode *string `json:"permissionCode,omitempty"`
+	SortOrder      int     `json:"sortOrder"`
+	IsVisible      *bool   `json:"isVisible,omitempty"`
+	IsEnabled      *bool   `json:"isEnabled,omitempty"`
 	Description    string  `json:"description,omitempty"`
 }
 
@@ -34,11 +34,11 @@ type UpdateMenuRequest struct {
 	Name           *string `json:"name,omitempty"`
 	Path           *string `json:"path,omitempty"`
 	Icon           *string `json:"icon,omitempty"`
-	ParentID       *int    `json:"parent_id,omitempty"`
-	PermissionCode *string `json:"permission_code,omitempty"`
-	SortOrder      *int    `json:"sort_order,omitempty"`
-	IsVisible      *bool   `json:"is_visible,omitempty"`
-	IsEnabled      *bool   `json:"is_enabled,omitempty"`
+	ParentID       *int    `json:"parentId,omitempty"`
+	PermissionCode *string `json:"permissionCode,omitempty"`
+	SortOrder      *int    `json:"sortOrder,omitempty"`
+	IsVisible      *bool   `json:"isVisible,omitempty"`
+	IsEnabled      *bool   `json:"isEnabled,omitempty"`
 	Description    *string `json:"description,omitempty"`
 }
 

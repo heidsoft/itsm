@@ -28,46 +28,46 @@ const (
 // ProcessTriggerRequest 流程触发请求
 type ProcessTriggerRequest struct {
 	// 业务标识
-	BusinessType    BusinessType `json:"business_type" binding:"required"`
-	BusinessSubType string       `json:"business_sub_type,omitempty"`
-	BusinessID      int          `json:"business_id" binding:"required"`
+	BusinessType    BusinessType `json:"businessType" binding:"required"`
+	BusinessSubType string       `json:"businessSubType,omitempty"`
+	BusinessID      int          `json:"businessId" binding:"required"`
 
 	// 多维流程路由上下文
-	DepartmentID int    `json:"department_id,omitempty"`
-	TeamID       int    `json:"team_id,omitempty"`
-	ProjectID    int    `json:"project_id,omitempty"`
+	DepartmentID int    `json:"departmentId,omitempty"`
+	TeamID       int    `json:"teamId,omitempty"`
+	ProjectID    int    `json:"projectId,omitempty"`
 	Scenario     string `json:"scenario,omitempty"`
 	Category     string `json:"category,omitempty"`
 
 	// 流程定义（可选，如果不传则根据业务类型自动匹配）
-	ProcessDefinitionKey string `json:"process_definition_key,omitempty"`
-	ProcessVersion       int    `json:"process_version,omitempty"`
+	ProcessDefinitionKey string `json:"processDefinitionKey,omitempty"`
+	ProcessVersion       int    `json:"processVersion,omitempty"`
 
 	// 流程变量
 	Variables map[string]interface{} `json:"variables,omitempty"`
 
 	// 触发者信息
-	TriggeredBy string    `json:"triggered_by"`
-	TriggeredAt time.Time `json:"triggered_at"`
-	TenantID    int       `json:"tenant_id"`
+	TriggeredBy string    `json:"triggeredBy"`
+	TriggeredAt time.Time `json:"triggeredAt"`
+	TenantID    int       `json:"tenantId"`
 }
 
 // ProcessTriggerResponse 流程触发响应
 type ProcessTriggerResponse struct {
 	// 流程实例信息
-	ProcessInstanceID     int    `json:"process_instance_id"`
-	ProcessDefinitionKey  string `json:"process_definition_key"`
-	ProcessDefinitionName string `json:"process_definition_name"`
-	BusinessKey           string `json:"business_key"`
+	ProcessInstanceID     int    `json:"processInstanceId"`
+	ProcessDefinitionKey  string `json:"processDefinitionKey"`
+	ProcessDefinitionName string `json:"processDefinitionName"`
+	BusinessKey           string `json:"businessKey"`
 
 	// 状态信息
 	Status              ProcessStatus `json:"status"`
-	CurrentActivityID   string        `json:"current_activity_id,omitempty"`
-	CurrentActivityName string        `json:"current_activity_name,omitempty"`
+	CurrentActivityID   string        `json:"currentActivityId,omitempty"`
+	CurrentActivityName string        `json:"currentActivityName,omitempty"`
 
 	// 任务信息
-	StartTime time.Time  `json:"start_time"`
-	EndTime   *time.Time `json:"end_time,omitempty"`
+	StartTime time.Time  `json:"startTime"`
+	EndTime   *time.Time `json:"endTime,omitempty"`
 
 	// 消息
 	Message string `json:"message,omitempty"`
@@ -76,50 +76,50 @@ type ProcessTriggerResponse struct {
 // ProcessBinding 流程绑定配置（用于配置表）
 type ProcessBinding struct {
 	ID                   int                    `json:"id"`
-	BusinessType         BusinessType           `json:"business_type" binding:"required"`
-	BusinessSubType      string                 `json:"business_sub_type,omitempty"` // 子类型（如：ticket的incident/change/problem）
-	ProcessDefinitionKey string                 `json:"process_definition_key" binding:"required"`
-	ProcessVersion       int                    `json:"process_version,omitempty"`
-	IsDefault            bool                   `json:"is_default"` // 是否默认流程
-	Priority             int                    `json:"priority"`   // 优先级（多个匹配时使用）
-	IsActive             bool                   `json:"is_active"`
-	DepartmentID         int                    `json:"department_id"`
-	TeamID               int                    `json:"team_id"`
+	BusinessType         BusinessType           `json:"businessType" binding:"required"`
+	BusinessSubType      string                 `json:"businessSubType,omitempty"` // 子类型（如：ticket的incident/change/problem）
+	ProcessDefinitionKey string                 `json:"processDefinitionKey" binding:"required"`
+	ProcessVersion       int                    `json:"processVersion,omitempty"`
+	IsDefault            bool                   `json:"isDefault"` // 是否默认流程
+	Priority             int                    `json:"priority"`  // 优先级（多个匹配时使用）
+	IsActive             bool                   `json:"isActive"`
+	DepartmentID         int                    `json:"departmentId"`
+	TeamID               int                    `json:"teamId"`
 	Scenario             string                 `json:"scenario,omitempty"`
 	Category             string                 `json:"category,omitempty"`
 	Conditions           map[string]interface{} `json:"conditions,omitempty"`
-	ApprovalChainID      string                 `json:"approval_chain_id,omitempty"`
-	SLAPolicyID          string                 `json:"sla_policy_id,omitempty"`
+	ApprovalChainID      string                 `json:"approvalChainId,omitempty"`
+	SLAPolicyID          string                 `json:"slaPolicyId,omitempty"`
 	Overrides            map[string]interface{} `json:"overrides,omitempty"`
-	TenantID             int                    `json:"tenant_id"`
-	CreatedAt            time.Time              `json:"created_at"`
-	UpdatedAt            time.Time              `json:"updated_at"`
+	TenantID             int                    `json:"tenantId"`
+	CreatedAt            time.Time              `json:"createdAt"`
+	UpdatedAt            time.Time              `json:"updatedAt"`
 }
 
 // ProcessBindingQueryRequest 查询流程绑定配置请求
 type ProcessBindingQueryRequest struct {
-	BusinessType    BusinessType `form:"business_type" json:"business_type,omitempty"`
-	BusinessSubType string       `form:"business_sub_type" json:"business_sub_type,omitempty"`
-	DepartmentID    int          `form:"department_id" json:"department_id,omitempty"`
-	TeamID          int          `form:"team_id" json:"team_id,omitempty"`
+	BusinessType    BusinessType `form:"business_type" json:"businessType,omitempty"`
+	BusinessSubType string       `form:"business_sub_type" json:"businessSubType,omitempty"`
+	DepartmentID    int          `form:"department_id" json:"departmentId,omitempty"`
+	TeamID          int          `form:"team_id" json:"teamId,omitempty"`
 	Scenario        string       `form:"scenario" json:"scenario,omitempty"`
 	Category        string       `form:"category" json:"category,omitempty"`
-	IsActive        *bool        `form:"is_active" json:"is_active,omitempty"`
+	IsActive        *bool        `form:"is_active" json:"isActive,omitempty"`
 	TenantID        int          `json:"-"` // 从上下文获取，不从请求参数绑定
 }
 
 // BatchProcessBindingRequest 批量绑定请求
 type BatchProcessBindingRequest struct {
 	Bindings []ProcessBinding `json:"bindings" binding:"required,dive"`
-	TenantID int              `json:"tenant_id"`
+	TenantID int              `json:"tenantId"`
 }
 
 // StandardVariables 标准流程变量
 type StandardVariables struct {
 	// 业务标识（必填）
-	BusinessType string `json:"business_type"` // 业务类型
-	BusinessID   int    `json:"business_id"`   // 业务记录ID
-	BusinessKey  string `json:"business_key"`  // 业务唯一键（可选）
+	BusinessType string `json:"businessType"` // 业务类型
+	BusinessID   int    `json:"businessId"`   // 业务记录ID
+	BusinessKey  string `json:"businessKey"`  // 业务唯一键（可选）
 
 	// 业务基本信息
 	Title       string `json:"title,omitempty"`       // 标题
@@ -128,37 +128,37 @@ type StandardVariables struct {
 	Severity    string `json:"severity,omitempty"`    // 严重程度
 
 	// 申请人/发起人信息
-	ApplicantID   string `json:"applicant_id,omitempty"`   // 申请人ID
-	ApplicantName string `json:"applicant_name,omitempty"` // 申请人名称
-	ApplicantDept string `json:"applicant_dept,omitempty"` // 申请人部门
+	ApplicantID   string `json:"applicantId,omitempty"`   // 申请人ID
+	ApplicantName string `json:"applicantName,omitempty"` // 申请人名称
+	ApplicantDept string `json:"applicantDept,omitempty"` // 申请人部门
 
 	// 处理人信息
-	HandlerID    string `json:"handler_id,omitempty"`    // 当前处理人ID
-	HandlerName  string `json:"handler_name,omitempty"`  // 当前处理人名称
-	AssigneeID   string `json:"assignee_id,omitempty"`   // 受理人ID
-	AssigneeName string `json:"assignee_name,omitempty"` // 受理人名称
+	HandlerID    string `json:"handlerId,omitempty"`    // 当前处理人ID
+	HandlerName  string `json:"handlerName,omitempty"`  // 当前处理人名称
+	AssigneeID   string `json:"assigneeId,omitempty"`   // 受理人ID
+	AssigneeName string `json:"assigneeName,omitempty"` // 受理人名称
 
 	// 审批信息
-	ApproverID     string `json:"approver_id,omitempty"`     // 审批人ID
-	ApproverName   string `json:"approver_name,omitempty"`   // 审批人名称
-	ApprovalResult string `json:"approval_result,omitempty"` // 审批结果
+	ApproverID     string `json:"approverId,omitempty"`     // 审批人ID
+	ApproverName   string `json:"approverName,omitempty"`   // 审批人名称
+	ApprovalResult string `json:"approvalResult,omitempty"` // 审批结果
 
 	// 时间相关
-	DueDate        string `json:"due_date,omitempty"`        // 截止日期
-	EstimatedHours int    `json:"estimated_hours,omitempty"` // 预估工时
+	DueDate        string `json:"dueDate,omitempty"`        // 截止日期
+	EstimatedHours int    `json:"estimatedHours,omitempty"` // 预估工时
 
 	// 分类信息
-	Category1 string `json:"category_1,omitempty"` // 一级分类
-	Category2 string `json:"category_2,omitempty"` // 二级分类
+	Category1 string `json:"category1,omitempty"` // 一级分类
+	Category2 string `json:"category2,omitempty"` // 二级分类
 
 	// SLA相关
-	SLAID           int    `json:"sla_id,omitempty"`            // SLA ID
-	SLAPriority     string `json:"sla_priority,omitempty"`      // SLA优先级
-	ResponseDueTime string `json:"response_due_time,omitempty"` // 响应截止时间
-	ResolveDueTime  string `json:"resolve_due_time,omitempty"`  // 解决截止时间
+	SLAID           int    `json:"slaId,omitempty"`           // SLA ID
+	SLAPriority     string `json:"slaPriority,omitempty"`     // SLA优先级
+	ResponseDueTime string `json:"responseDueTime,omitempty"` // 响应截止时间
+	ResolveDueTime  string `json:"resolveDueTime,omitempty"`  // 解决截止时间
 
 	// 扩展字段
-	CustomFields map[string]interface{} `json:"custom_fields,omitempty"`
+	CustomFields map[string]interface{} `json:"customFields,omitempty"`
 }
 
 // ConvertToMap 将标准变量转换为Map
@@ -266,16 +266,16 @@ func (sv *StandardVariables) ConvertToMap() map[string]interface{} {
 type ServiceTaskResult struct {
 	Success     bool                   `json:"success"`
 	Message     string                 `json:"message,omitempty"`
-	OutputVars  map[string]interface{} `json:"output_vars,omitempty"`
-	UpdatedData map[string]interface{} `json:"updated_data,omitempty"`
+	OutputVars  map[string]interface{} `json:"outputVars,omitempty"`
+	UpdatedData map[string]interface{} `json:"updatedData,omitempty"`
 }
 
 // CallbackRequest 流程回调请求
 type CallbackRequest struct {
-	ProcessInstanceID int               `json:"process_instance_id" binding:"required"`
-	ActivityID        string            `json:"activity_id" binding:"required"`
-	ActivityType      string            `json:"activity_type" binding:"required"` // service_task/script_task
+	ProcessInstanceID int               `json:"processInstanceId" binding:"required"`
+	ActivityID        string            `json:"activityId" binding:"required"`
+	ActivityType      string            `json:"activityType" binding:"required"` // service_task/script_task
 	Result            ServiceTaskResult `json:"result"`
-	ExecutedBy        string            `json:"executed_by"`
-	ExecutedAt        time.Time         `json:"executed_at"`
+	ExecutedBy        string            `json:"executedBy"`
+	ExecutedAt        time.Time         `json:"executedAt"`
 }

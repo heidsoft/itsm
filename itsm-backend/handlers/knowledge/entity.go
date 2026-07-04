@@ -11,11 +11,11 @@ type Article struct {
 	Content     string    `json:"content"`
 	Category    string    `json:"category"`
 	Tags        []string  `json:"tags"`
-	AuthorID    int       `json:"author_id"`
-	TenantID    int       `json:"tenant_id"`
-	IsPublished bool      `json:"is_published"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	AuthorID    int       `json:"authorId"`
+	TenantID    int       `json:"tenantId"`
+	IsPublished bool      `json:"isPublished"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // Category represents a knowledge category

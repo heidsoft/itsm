@@ -10,30 +10,30 @@ type ServiceCatalogItemResponse struct {
 	Details          string                 `json:"details"`
 	Category         string                 `json:"category"`
 	Icon             string                 `json:"icon"`
-	FormSchema       map[string]interface{} `json:"form_schema"`
-	SlaID            int                    `json:"sla_id"`
-	ApprovalChainID  int                    `json:"approval_chain_id"`
-	IsActive         bool                   `json:"is_active"`
-	RequiresApproval bool                   `json:"requires_approval"`
-	EstimatedDays    int                    `json:"estimated_days"`
-	TenantID         int                    `json:"tenant_id"`
-	CreatedAt        time.Time              `json:"created_at"`
-	UpdatedAt        time.Time              `json:"updated_at"`
+	FormSchema       map[string]interface{} `json:"formSchema"`
+	SlaID            int                    `json:"slaId"`
+	ApprovalChainID  int                    `json:"approvalChainId"`
+	IsActive         bool                   `json:"isActive"`
+	RequiresApproval bool                   `json:"requiresApproval"`
+	EstimatedDays    int                    `json:"estimatedDays"`
+	TenantID         int                    `json:"tenantId"`
+	CreatedAt        time.Time              `json:"createdAt"`
+	UpdatedAt        time.Time              `json:"updatedAt"`
 }
 
 // CreateServiceCatalogItemRequest 创建服务目录项请求
 type CreateServiceCatalogItemRequest struct {
-	CatalogID        int                    `json:"catalog_id" binding:"required"`
+	CatalogID        int                    `json:"catalogId" binding:"required"`
 	Name             string                 `json:"name" binding:"required"`
 	Description      string                 `json:"description"`
 	Details          string                 `json:"details"`
 	Category         string                 `json:"category"`
 	Icon             string                 `json:"icon"`
-	FormSchema       map[string]interface{} `json:"form_schema"`
-	SlaID            int                    `json:"sla_id"`
-	ApprovalChainID  int                    `json:"approval_chain_id"`
-	RequiresApproval bool                   `json:"requires_approval"`
-	EstimatedDays    int                    `json:"estimated_days"`
+	FormSchema       map[string]interface{} `json:"formSchema"`
+	SlaID            int                    `json:"slaId"`
+	ApprovalChainID  int                    `json:"approvalChainId"`
+	RequiresApproval bool                   `json:"requiresApproval"`
+	EstimatedDays    int                    `json:"estimatedDays"`
 }
 
 // UpdateServiceCatalogItemRequest 更新服务目录项请求
@@ -43,10 +43,10 @@ type UpdateServiceCatalogItemRequest struct {
 	Details          *string                 `json:"details"`
 	Category         *string                 `json:"category"`
 	Icon             *string                 `json:"icon"`
-	FormSchema       *map[string]interface{} `json:"form_schema"`
-	SlaID            *int                    `json:"sla_id"`
-	ApprovalChainID  *int                    `json:"approval_chain_id"`
-	IsActive         *bool                   `json:"is_active"`
-	RequiresApproval *bool                   `json:"requires_approval"`
-	EstimatedDays    *int                    `json:"estimated_days"`
+	FormSchema       *map[string]interface{} `json:"formSchema"`
+	SlaID            *int                    `json:"slaId"`
+	ApprovalChainID  *int                    `json:"approvalChainId"`
+	IsActive         *bool                   `json:"isActive"`
+	RequiresApproval *bool                   `json:"requiresApproval"`
+	EstimatedDays    *int                    `json:"estimatedDays"`
 }

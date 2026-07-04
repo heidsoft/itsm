@@ -577,7 +577,7 @@ func NewApplication() *Application {
 		AssetController:        assetController,
 		AssetLicenseController: assetLicenseController,
 		SurveyController:       surveyController,
-		CloudController:       cloudController,
+		CloudController:        cloudController,
 
 		// Domain Handlers
 		ServiceCatalogHandler: scHandler,

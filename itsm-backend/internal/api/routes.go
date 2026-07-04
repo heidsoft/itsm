@@ -88,7 +88,7 @@ type StandardResponse struct {
 	Message   string      `json:"message"`
 	Data      interface{} `json:"data,omitempty"`
 	Timestamp string      `json:"timestamp,omitempty"`
-	TraceID   string      `json:"trace_id,omitempty"`
+	TraceID   string      `json:"traceId,omitempty"`
 }
 
 // 标准化分页响应
@@ -99,11 +99,11 @@ type PaginatedResponse struct {
 		Items      interface{} `json:"items"`
 		Total      int         `json:"total"`
 		Page       int         `json:"page"`
-		PageSize   int         `json:"page_size"`
-		TotalPages int         `json:"total_pages"`
+		PageSize   int         `json:"pageSize"`
+		TotalPages int         `json:"totalPages"`
 	} `json:"data"`
 	Timestamp string `json:"timestamp,omitempty"`
-	TraceID   string `json:"trace_id,omitempty"`
+	TraceID   string `json:"traceId,omitempty"`
 }
 
 // 批量操作响应
@@ -118,7 +118,7 @@ type BatchResponse struct {
 	} `json:"errors,omitempty"`
 	Data      interface{} `json:"data,omitempty"`
 	Timestamp string      `json:"timestamp,omitempty"`
-	TraceID   string      `json:"trace_id,omitempty"`
+	TraceID   string      `json:"traceId,omitempty"`
 }
 
 // 标准化错误响应
@@ -128,7 +128,7 @@ type ErrorResponse struct {
 	Details   map[string]interface{} `json:"details,omitempty"`
 	Field     string                 `json:"field,omitempty"`
 	Timestamp string                 `json:"timestamp,omitempty"`
-	TraceID   string                 `json:"trace_id,omitempty"`
+	TraceID   string                 `json:"traceId,omitempty"`
 }
 
 // 成功响应辅助函数
@@ -152,8 +152,8 @@ func SuccessWithPagination(c *gin.Context, items interface{}, total, page, pageS
 		Items      interface{} `json:"items"`
 		Total      int         `json:"total"`
 		Page       int         `json:"page"`
-		PageSize   int         `json:"page_size"`
-		TotalPages int         `json:"total_pages"`
+		PageSize   int         `json:"pageSize"`
+		TotalPages int         `json:"totalPages"`
 	}{
 		Items:      items,
 		Total:      total,

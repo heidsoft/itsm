@@ -424,7 +424,7 @@ func (h *Handler) UpdateRootCause(c *gin.Context) {
 	}
 
 	var req struct {
-		RootCause map[string]interface{} `json:"root_cause"`
+		RootCause map[string]interface{} `json:"rootCause"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, err.Error())
@@ -478,7 +478,7 @@ func (h *Handler) UpdateImpactAssessment(c *gin.Context) {
 	}
 
 	var req struct {
-		ImpactAnalysis map[string]interface{} `json:"impact_analysis"`
+		ImpactAnalysis map[string]interface{} `json:"impactAnalysis"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, err.Error())

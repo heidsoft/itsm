@@ -28,14 +28,14 @@ type CreateTicketRequest struct {
 	Title        string                 `json:"title"`
 	Description  string                 `json:"description"`
 	Priority     string                 `json:"priority"`
-	CategoryID   *int                   `json:"category_id,omitempty"`
-	TemplateID   *int                   `json:"template_id,omitempty"`
-	ParentID     *int                   `json:"parent_id,omitempty"`
-	RelatedIDs   []int                  `json:"related_ids,omitempty"`
-	TagIDs       []int                  `json:"tag_ids,omitempty"`
-	TenantID     int                    `json:"tenant_id"`
-	AssignedTo   *int                   `json:"assigned_to,omitempty"`
-	CustomFields map[string]interface{} `json:"custom_fields,omitempty"`
+	CategoryID   *int                   `json:"categoryId,omitempty"`
+	TemplateID   *int                   `json:"templateId,omitempty"`
+	ParentID     *int                   `json:"parentId,omitempty"`
+	RelatedIDs   []int                  `json:"relatedIds,omitempty"`
+	TagIDs       []int                  `json:"tagIds,omitempty"`
+	TenantID     int                    `json:"tenantId"`
+	AssignedTo   *int                   `json:"assignedTo,omitempty"`
+	CustomFields map[string]interface{} `json:"customFields,omitempty"`
 }
 
 // TicketResponse 工单响应
@@ -45,16 +45,16 @@ type TicketResponse struct {
 	Description  string                 `json:"description"`
 	Priority     string                 `json:"priority"`
 	Status       string                 `json:"status"`
-	CategoryID   *int                   `json:"category_id,omitempty"`
-	TemplateID   *int                   `json:"template_id,omitempty"`
-	ParentID     *int                   `json:"parent_id,omitempty"`
-	RelatedIDs   []int                  `json:"related_ids,omitempty"`
-	TagIDs       []int                  `json:"tag_ids,omitempty"`
-	TenantID     int                    `json:"tenant_id"`
-	AssignedTo   *int                   `json:"assigned_to,omitempty"`
-	CustomFields map[string]interface{} `json:"custom_fields,omitempty"`
-	CreatedAt    time.Time              `json:"created_at"`
-	UpdatedAt    time.Time              `json:"updated_at"`
+	CategoryID   *int                   `json:"categoryId,omitempty"`
+	TemplateID   *int                   `json:"templateId,omitempty"`
+	ParentID     *int                   `json:"parentId,omitempty"`
+	RelatedIDs   []int                  `json:"relatedIds,omitempty"`
+	TagIDs       []int                  `json:"tagIds,omitempty"`
+	TenantID     int                    `json:"tenantId"`
+	AssignedTo   *int                   `json:"assignedTo,omitempty"`
+	CustomFields map[string]interface{} `json:"customFields,omitempty"`
+	CreatedAt    time.Time              `json:"createdAt"`
+	UpdatedAt    time.Time              `json:"updatedAt"`
 }
 
 // CreateTicket 创建工单
@@ -288,9 +288,9 @@ func (s *TicketAssociationService) GetTicketDependencies(ctx context.Context, ti
 
 // UpdateAssociationsRequest 更新关联关系请求
 type UpdateAssociationsRequest struct {
-	ParentID   *int  `json:"parent_id,omitempty"`
-	RelatedIDs []int `json:"related_ids,omitempty"`
-	TagIDs     []int `json:"tag_ids,omitempty"`
+	ParentID   *int  `json:"parentId,omitempty"`
+	RelatedIDs []int `json:"relatedIds,omitempty"`
+	TagIDs     []int `json:"tagIds,omitempty"`
 }
 
 // TicketHierarchy 工单层级结构
@@ -301,9 +301,9 @@ type TicketHierarchy struct {
 
 // TicketDependencies 工单依赖关系
 type TicketDependencies struct {
-	ParentChain    []*TicketResponse `json:"parent_chain"`
-	ChildrenTree   []*TicketResponse `json:"children_tree"`
-	RelatedTickets []*TicketResponse `json:"related_tickets"`
+	ParentChain    []*TicketResponse `json:"parentChain"`
+	ChildrenTree   []*TicketResponse `json:"childrenTree"`
+	RelatedTickets []*TicketResponse `json:"relatedTickets"`
 }
 
 // buildTicketResponse 构建工单响应
@@ -404,9 +404,9 @@ func (s *TicketAssociationService) getChildrenTree(ctx context.Context, ticketID
 type ConfigurationItemResponse struct {
 	ID           int    `json:"id"`
 	Name         string `json:"name"`
-	CIType       string `json:"ci_type"`
+	CIType       string `json:"ciType"`
 	Status       string `json:"status"`
-	SerialNumber string `json:"serial_number,omitempty"`
+	SerialNumber string `json:"serialNumber,omitempty"`
 }
 
 // AddConfigurationItem 添加配置项关联

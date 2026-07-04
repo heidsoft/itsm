@@ -23,36 +23,36 @@ func NewWorkflowMonitorService(client *ent.Client, engine *WorkflowEngine) *Work
 
 // WorkflowMetrics 工作流指标
 type WorkflowMetrics struct {
-	TotalInstances     int     `json:"total_instances"`
-	ActiveInstances    int     `json:"active_instances"`
-	CompletedInstances int     `json:"completed_instances"`
-	FailedInstances    int     `json:"failed_instances"`
-	AverageDuration    float64 `json:"average_duration"`
-	SuccessRate        float64 `json:"success_rate"`
+	TotalInstances     int     `json:"totalInstances"`
+	ActiveInstances    int     `json:"activeInstances"`
+	CompletedInstances int     `json:"completedInstances"`
+	FailedInstances    int     `json:"failedInstances"`
+	AverageDuration    float64 `json:"averageDuration"`
+	SuccessRate        float64 `json:"successRate"`
 	Throughput         float64 `json:"throughput"` // 每小时完成的工作流数量
 }
 
 // StepMetrics 步骤指标
 type StepMetrics struct {
-	StepID          string  `json:"step_id"`
-	StepName        string  `json:"step_name"`
-	TotalExecutions int     `json:"total_executions"`
-	SuccessCount    int     `json:"success_count"`
-	FailureCount    int     `json:"failure_count"`
-	AverageDuration float64 `json:"average_duration"`
-	BottleneckScore float64 `json:"bottleneck_score"` // 瓶颈评分
-	TimeoutCount    int     `json:"timeout_count"`
+	StepID          string  `json:"stepId"`
+	StepName        string  `json:"stepName"`
+	TotalExecutions int     `json:"totalExecutions"`
+	SuccessCount    int     `json:"successCount"`
+	FailureCount    int     `json:"failureCount"`
+	AverageDuration float64 `json:"averageDuration"`
+	BottleneckScore float64 `json:"bottleneckScore"` // 瓶颈评分
+	TimeoutCount    int     `json:"timeoutCount"`
 }
 
 // WorkflowPerformanceMetrics 工作流性能指标
 type WorkflowPerformanceMetrics struct {
-	ResponseTime   float64 `json:"response_time"`   // 平均响应时间
-	Throughput     float64 `json:"throughput"`      // 吞吐量
-	ErrorRate      float64 `json:"error_rate"`      // 错误率
-	ResourceUsage  float64 `json:"resource_usage"`  // 资源使用率
-	QueueLength    int     `json:"queue_length"`    // 队列长度
-	ProcessingTime float64 `json:"processing_time"` // 处理时间
-	WaitTime       float64 `json:"wait_time"`       // 等待时间
+	ResponseTime   float64 `json:"responseTime"`   // 平均响应时间
+	Throughput     float64 `json:"throughput"`     // 吞吐量
+	ErrorRate      float64 `json:"errorRate"`      // 错误率
+	ResourceUsage  float64 `json:"resourceUsage"`  // 资源使用率
+	QueueLength    int     `json:"queueLength"`    // 队列长度
+	ProcessingTime float64 `json:"processingTime"` // 处理时间
+	WaitTime       float64 `json:"waitTime"`       // 等待时间
 }
 
 // AlertRule 告警规则
@@ -65,22 +65,22 @@ type AlertRule struct {
 	Threshold   float64   `json:"threshold"` // 阈值
 	Severity    string    `json:"severity"`  // 严重程度
 	Enabled     bool      `json:"enabled"`   // 是否启用
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // Alert 告警
 type Alert struct {
 	ID             int        `json:"id"`
-	RuleID         int        `json:"rule_id"`
-	InstanceID     int        `json:"instance_id"`
-	StepID         string     `json:"step_id"`
+	RuleID         int        `json:"ruleId"`
+	InstanceID     int        `json:"instanceId"`
+	StepID         string     `json:"stepId"`
 	Message        string     `json:"message"`
 	Severity       string     `json:"severity"`
 	Status         string     `json:"status"` // active, resolved, acknowledged
-	CreatedAt      time.Time  `json:"created_at"`
-	ResolvedAt     *time.Time `json:"resolved_at"`
-	AcknowledgedAt *time.Time `json:"acknowledged_at"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	ResolvedAt     *time.Time `json:"resolvedAt"`
+	AcknowledgedAt *time.Time `json:"acknowledgedAt"`
 }
 
 // GetWorkflowMetrics 获取工作流指标
@@ -178,31 +178,31 @@ func (s *WorkflowMonitorService) CheckAlertRules(ctx context.Context) error {
 
 // GetWorkflowMetricsRequest 获取工作流指标请求
 type GetWorkflowMetricsRequest struct {
-	WorkflowID int       `json:"workflow_id"`
-	StartDate  time.Time `json:"start_date"`
-	EndDate    time.Time `json:"end_date"`
+	WorkflowID int       `json:"workflowId"`
+	StartDate  time.Time `json:"startDate"`
+	EndDate    time.Time `json:"endDate"`
 }
 
 // GetStepMetricsRequest 获取步骤指标请求
 type GetStepMetricsRequest struct {
-	InstanceID int       `json:"instance_id"`
-	StepID     string    `json:"step_id"`
-	StartDate  time.Time `json:"start_date"`
-	EndDate    time.Time `json:"end_date"`
+	InstanceID int       `json:"instanceId"`
+	StepID     string    `json:"stepId"`
+	StartDate  time.Time `json:"startDate"`
+	EndDate    time.Time `json:"endDate"`
 }
 
 // GetPerformanceMetricsRequest 获取性能指标请求
 type GetPerformanceMetricsRequest struct {
-	WorkflowID int       `json:"workflow_id"`
-	StartDate  time.Time `json:"start_date"`
-	EndDate    time.Time `json:"end_date"`
+	WorkflowID int       `json:"workflowId"`
+	StartDate  time.Time `json:"startDate"`
+	EndDate    time.Time `json:"endDate"`
 }
 
 // GetBottlenecksRequest 获取瓶颈分析请求
 type GetBottlenecksRequest struct {
-	WorkflowID int       `json:"workflow_id"`
-	StartDate  time.Time `json:"start_date"`
-	EndDate    time.Time `json:"end_date"`
+	WorkflowID int       `json:"workflowId"`
+	StartDate  time.Time `json:"startDate"`
+	EndDate    time.Time `json:"endDate"`
 	Limit      int       `json:"limit"`
 }
 
@@ -233,7 +233,7 @@ type UpdateAlertRuleRequest struct {
 type GetAlertsRequest struct {
 	Status     string `json:"status"`
 	Severity   string `json:"severity"`
-	WorkflowID int    `json:"workflow_id"`
+	WorkflowID int    `json:"workflowId"`
 	Page       int    `json:"page"`
-	PageSize   int    `json:"page_size"`
+	PageSize   int    `json:"pageSize"`
 }

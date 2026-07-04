@@ -174,7 +174,7 @@ func (ttc *TicketTagController) AssignTagsToTicket(c *gin.Context) {
 	}
 
 	var req struct {
-		TagIDs []int    `json:"tag_ids"`
+		TagIDs []int    `json:"tagIds"`
 		Tags   []string `json:"tags"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -220,7 +220,7 @@ func (ttc *TicketTagController) RemoveTagsFromTicket(c *gin.Context) {
 	}
 
 	var req struct {
-		TagIDs []int    `json:"tag_ids"`
+		TagIDs []int    `json:"tagIds"`
 		Tags   []string `json:"tags"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -56,10 +56,10 @@ type ChangeMetrics struct {
 
 // ResourceMetrics 资源指标
 type ResourceMetrics struct {
-	TotalResources int                      `json:"total_resources"`
-	ByCloud        map[string]int           `json:"by_cloud"`
-	ByType         map[string]int           `json:"by_type"`
-	ByStatus       map[string]int           `json:"by_status"`
+	TotalResources int                      `json:"totalResources"`
+	ByCloud        map[string]int           `json:"byCloud"`
+	ByType         map[string]int           `json:"byType"`
+	ByStatus       map[string]int           `json:"byStatus"`
 	Distribution   []MultiCloudResourceData `json:"distribution"`
-	HealthStatus   []ResourceHealthData     `json:"health_status"`
+	HealthStatus   []ResourceHealthData     `json:"healthStatus"`
 }

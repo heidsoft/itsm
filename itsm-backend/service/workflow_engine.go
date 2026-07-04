@@ -26,8 +26,8 @@ type WorkflowDefinition struct {
 	ID          string                 `json:"id"`
 	Name        string                 `json:"name"`
 	Version     string                 `json:"version"`
-	StartEvent  string                 `json:"start_event"`
-	EndEvent    string                 `json:"end_event"`
+	StartEvent  string                 `json:"startEvent"`
+	EndEvent    string                 `json:"endEvent"`
 	Steps       []WorkflowStep         `json:"steps"`
 	Transitions []WorkflowTransition   `json:"transitions"`
 	Variables   map[string]interface{} `json:"variables"`
@@ -50,8 +50,8 @@ type WorkflowStep struct {
 // WorkflowTransition 工作流转换
 type WorkflowTransition struct {
 	ID        string             `json:"id"`
-	FromStep  string             `json:"from_step"`
-	ToStep    string             `json:"to_step"`
+	FromStep  string             `json:"fromStep"`
+	ToStep    string             `json:"toStep"`
 	Condition *WorkflowCondition `json:"condition,omitempty"`
 	Actions   []string           `json:"actions,omitempty"`
 	Auto      bool               `json:"auto"` // 是否自动转换
@@ -69,23 +69,23 @@ type WorkflowCondition struct {
 
 // WorkflowExecutionContext 工作流执行上下文
 type WorkflowExecutionContext struct {
-	InstanceID  int                    `json:"instance_id"`
-	WorkflowID  int                    `json:"workflow_id"`
-	TenantID    int                    `json:"tenant_id"`
-	CurrentStep string                 `json:"current_step"`
+	InstanceID  int                    `json:"instanceId"`
+	WorkflowID  int                    `json:"workflowId"`
+	TenantID    int                    `json:"tenantId"`
+	CurrentStep string                 `json:"currentStep"`
 	Variables   map[string]interface{} `json:"variables"`
 	History     []WorkflowHistory      `json:"history"`
 	Status      string                 `json:"status"`
-	StartedAt   time.Time              `json:"started_at"`
-	CompletedAt *time.Time             `json:"completed_at,omitempty"`
+	StartedAt   time.Time              `json:"startedAt"`
+	CompletedAt *time.Time             `json:"completedAt,omitempty"`
 }
 
 // WorkflowHistory 工作流执行历史
 type WorkflowHistory struct {
-	StepID    string                 `json:"step_id"`
-	StepName  string                 `json:"step_name"`
+	StepID    string                 `json:"stepId"`
+	StepName  string                 `json:"stepName"`
 	Action    string                 `json:"action"`
-	UserID    int                    `json:"user_id"`
+	UserID    int                    `json:"userId"`
 	Timestamp time.Time              `json:"timestamp"`
 	Data      map[string]interface{} `json:"data,omitempty"`
 	Comment   string                 `json:"comment,omitempty"`
@@ -498,11 +498,11 @@ func containsString(slice []string, value string) bool {
 
 // CompleteWorkflowStepRequest 完成工作流步骤请求
 type CompleteWorkflowStepRequest struct {
-	InstanceID int                    `json:"instance_id" binding:"required"`
+	InstanceID int                    `json:"instanceId" binding:"required"`
 	Action     string                 `json:"action" binding:"required"`
 	Variables  map[string]interface{} `json:"variables"`
 	Data       map[string]interface{} `json:"data"`
 	Comment    string                 `json:"comment"`
-	UserID     int                    `json:"user_id" binding:"required"`
-	TenantID   int                    `json:"tenant_id"`
+	UserID     int                    `json:"userId" binding:"required"`
+	TenantID   int                    `json:"tenantId"`
 }

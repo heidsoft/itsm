@@ -29,12 +29,12 @@ func NewProcessRoutingService(client *ent.Client, logger *zap.SugaredLogger) *Pr
 
 // RoutingContext contains the context for process routing decisions
 type RoutingContext struct {
-	BusinessType    string                 `json:"business_type"`
-	BusinessSubType string                 `json:"business_sub_type,omitempty"`
-	TenantID        int                    `json:"tenant_id"`
-	DepartmentID    int                    `json:"department_id,omitempty"`
-	TeamID          int                    `json:"team_id,omitempty"`
-	ProjectID       int                    `json:"project_id,omitempty"`
+	BusinessType    string                 `json:"businessType"`
+	BusinessSubType string                 `json:"businessSubType,omitempty"`
+	TenantID        int                    `json:"tenantId"`
+	DepartmentID    int                    `json:"departmentId,omitempty"`
+	TeamID          int                    `json:"teamId,omitempty"`
+	ProjectID       int                    `json:"projectId,omitempty"`
 	Scenario        string                 `json:"scenario,omitempty"`
 	Category        string                 `json:"category,omitempty"`
 	Variables       map[string]interface{} `json:"variables,omitempty"`
@@ -42,12 +42,12 @@ type RoutingContext struct {
 
 // RoutingResult contains the result of a routing decision
 type RoutingResult struct {
-	ProcessDefinitionKey string                 `json:"process_definition_key"`
-	ApprovalChainID      string                 `json:"approval_chain_id,omitempty"`
-	SLAPolicyID          string                 `json:"sla_policy_id,omitempty"`
+	ProcessDefinitionKey string                 `json:"processDefinitionKey"`
+	ApprovalChainID      string                 `json:"approvalChainId,omitempty"`
+	SLAPolicyID          string                 `json:"slaPolicyId,omitempty"`
 	Overrides            map[string]interface{} `json:"overrides,omitempty"`
-	MatchedRuleID        int                    `json:"matched_rule_id"`
-	MatchedRuleName      string                 `json:"matched_rule_name,omitempty"`
+	MatchedRuleID        int                    `json:"matchedRuleId"`
+	MatchedRuleName      string                 `json:"matchedRuleName,omitempty"`
 }
 
 // FindBestRoute finds the best matching process binding using priority-based scoring

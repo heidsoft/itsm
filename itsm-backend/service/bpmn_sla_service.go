@@ -29,12 +29,12 @@ func NewBPMNSLAService(client *ent.Client, logger *zap.SugaredLogger) *BPMNSLASe
 
 // ProcessSLA 流程SLA定义
 type ProcessSLA struct {
-	ProcessDefinitionKey string `json:"process_definition_key"`
-	TaskDefinitionKey    string `json:"task_definition_key,omitempty"`
-	MilestoneName        string `json:"milestone_name"` // 开始->审批, 审批->执行
-	DeadlineMinutes      int    `json:"deadline_minutes"`
-	WarningMinutes       int    `json:"warning_minutes"` // 预警时间
-	BusinessHoursOnly    bool   `json:"business_hours_only"`
+	ProcessDefinitionKey string `json:"processDefinitionKey"`
+	TaskDefinitionKey    string `json:"taskDefinitionKey,omitempty"`
+	MilestoneName        string `json:"milestoneName"` // 开始->审批, 审批->执行
+	DeadlineMinutes      int    `json:"deadlineMinutes"`
+	WarningMinutes       int    `json:"warningMinutes"` // 预警时间
+	BusinessHoursOnly    bool   `json:"businessHoursOnly"`
 	Priority             string `json:"priority,omitempty"` // 对应任务优先级
 }
 
@@ -389,9 +389,9 @@ type SLAInfo struct {
 	Status           string    `json:"status"`
 	Deadline         time.Time `json:"deadline"`
 	Warning          time.Time `json:"warning"`
-	ElapsedMinutes   int       `json:"elapsed_minutes"`
-	TotalMinutes     int       `json:"total_minutes"`
-	RemainingMinutes int       `json:"remaining_minutes"`
+	ElapsedMinutes   int       `json:"elapsedMinutes"`
+	TotalMinutes     int       `json:"totalMinutes"`
+	RemainingMinutes int       `json:"remainingMinutes"`
 }
 
 // SLAViolation SLA违规

@@ -44,9 +44,9 @@ const (
 
 // DepartmentProcessTemplate defines a department-specific process template
 type DepartmentProcessTemplate struct {
-	DepartmentCode string                 `json:"department_code"`
+	DepartmentCode string                 `json:"departmentCode"`
 	Scenario       ScenarioType           `json:"scenario"`
-	ProcessKey     string                 `json:"process_key"`
+	ProcessKey     string                 `json:"processKey"`
 	Description    string                 `json:"description"`
 	Priority       int                    `json:"priority"`
 	Conditions     map[string]interface{} `json:"conditions,omitempty"`

@@ -31,31 +31,31 @@ func NewKnowledgeIntegrationService(client *ent.Client) *KnowledgeIntegrationSer
 
 // SolutionRecommendation 解决方案推荐
 type SolutionRecommendation struct {
-	ArticleID      int       `json:"article_id"`
+	ArticleID      int       `json:"articleId"`
 	Title          string    `json:"title"`
 	Content        string    `json:"content"`
-	RelevanceScore float64   `json:"relevance_score"`
+	RelevanceScore float64   `json:"relevanceScore"`
 	Category       string    `json:"category"`
 	Tags           []string  `json:"tags"`
-	LastUpdated    time.Time `json:"last_updated"`
+	LastUpdated    time.Time `json:"lastUpdated"`
 }
 
 // KnowledgeAssociation 知识库关联
 type KnowledgeAssociation struct {
-	TicketID        int       `json:"ticket_id"`
-	ArticleID       int       `json:"article_id"`
-	AssociationType string    `json:"association_type"` // auto, manual, suggested
-	RelevanceScore  float64   `json:"relevance_score"`
-	CreatedAt       time.Time `json:"created_at"`
+	TicketID        int       `json:"ticketId"`
+	ArticleID       int       `json:"articleId"`
+	AssociationType string    `json:"associationType"` // auto, manual, suggested
+	RelevanceScore  float64   `json:"relevanceScore"`
+	CreatedAt       time.Time `json:"createdAt"`
 }
 
 // AIRecommendation AI辅助建议
 type AIRecommendation struct {
-	TicketID   int      `json:"ticket_id"`
-	Category   string   `json:"suggested_category"`
-	Priority   string   `json:"suggested_priority"`
-	Tags       []string `json:"suggested_tags"`
-	Assignee   *int     `json:"suggested_assignee"`
+	TicketID   int      `json:"ticketId"`
+	Category   string   `json:"suggestedCategory"`
+	Priority   string   `json:"suggestedPriority"`
+	Tags       []string `json:"suggestedTags"`
+	Assignee   *int     `json:"suggestedAssignee"`
 	Confidence float64  `json:"confidence"`
 	Reason     string   `json:"reason"`
 }
@@ -488,8 +488,8 @@ func (s *KnowledgeIntegrationService) UpdateArticleViewCount(ctx context.Context
 
 // AssociateWithKnowledgeRequest 关联知识库文章请求
 type AssociateWithKnowledgeRequest struct {
-	ArticleID       int    `json:"article_id" binding:"required"`
-	AssociationType string `json:"association_type" binding:"required"` // auto, manual, suggested
+	ArticleID       int    `json:"articleId" binding:"required"`
+	AssociationType string `json:"associationType" binding:"required"` // auto, manual, suggested
 }
 
 // SearchKnowledgeRequest 搜索知识库请求

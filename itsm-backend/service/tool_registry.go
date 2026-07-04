@@ -10,11 +10,11 @@ import (
 type ToolDefinition struct {
 	Name         string                 `json:"name"`
 	Description  string                 `json:"description"`
-	ReadOnly     bool                   `json:"read_only"`
+	ReadOnly     bool                   `json:"readOnly"`
 	Resource     string                 `json:"resource"`
 	Action       string                 `json:"action"`
-	ArgsSchema   map[string]interface{} `json:"args_schema"`
-	ResultSchema map[string]interface{} `json:"result_schema"`
+	ArgsSchema   map[string]interface{} `json:"argsSchema"`
+	ResultSchema map[string]interface{} `json:"resultSchema"`
 }
 
 type ToolRegistry struct {

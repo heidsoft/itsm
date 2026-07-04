@@ -27,37 +27,37 @@ type StandardChangeResponse struct {
 
 // CreateStandardChangeRequest 创建标准变更模板请求
 type CreateStandardChangeRequest struct {
-	Title              string   `json:"title" binding:"required"`               // 模板标题
-	Description        string   `json:"description"`                            // 模板描述
-	ImplementationPlan string   `json:"implementation_plan" binding:"required"` // 实施计划
-	RollbackPlan       string   `json:"rollback_plan" binding:"required"`       // 回滚计划
-	Justification      string   `json:"justification"`                          // 变更理由
-	Category           string   `json:"category"`                               // 分类
-	RiskLevel          string   `json:"risk_level"`                             // 风险等级
-	ImpactScope        string   `json:"impact_scope"`                           // 影响范围
-	ExpectedDuration   int      `json:"expected_duration"`                      // 预计工期
-	ApprovalRequired   bool     `json:"approval_required"`                      // 是否需要审批
-	AffectedCis        []string `json:"affected_cis"`                           // 受影响配置项
-	Prerequisites      []string `json:"prerequisites"`                          // 前置条件
-	Remarks            string   `json:"remarks"`                                // 备注
+	Title              string   `json:"title" binding:"required"`              // 模板标题
+	Description        string   `json:"description"`                           // 模板描述
+	ImplementationPlan string   `json:"implementationPlan" binding:"required"` // 实施计划
+	RollbackPlan       string   `json:"rollbackPlan" binding:"required"`       // 回滚计划
+	Justification      string   `json:"justification"`                         // 变更理由
+	Category           string   `json:"category"`                              // 分类
+	RiskLevel          string   `json:"riskLevel"`                             // 风险等级
+	ImpactScope        string   `json:"impactScope"`                           // 影响范围
+	ExpectedDuration   int      `json:"expectedDuration"`                      // 预计工期
+	ApprovalRequired   bool     `json:"approvalRequired"`                      // 是否需要审批
+	AffectedCis        []string `json:"affectedCis"`                           // 受影响配置项
+	Prerequisites      []string `json:"prerequisites"`                         // 前置条件
+	Remarks            string   `json:"remarks"`                               // 备注
 }
 
 // UpdateStandardChangeRequest 更新标准变更模板请求
 type UpdateStandardChangeRequest struct {
-	Title              *string  `json:"title"`               // 模板标题
-	Description        *string  `json:"description"`         // 模板描述
-	ImplementationPlan *string  `json:"implementation_plan"` // 实施计划
-	RollbackPlan       *string  `json:"rollback_plan"`       // 回滚计划
-	Justification      *string  `json:"justification"`       // 变更理由
-	Category           *string  `json:"category"`            // 分类
-	RiskLevel          *string  `json:"risk_level"`          // 风险等级
-	ImpactScope        *string  `json:"impact_scope"`        // 影响范围
-	ExpectedDuration   *int     `json:"expected_duration"`   // 预计工期
-	ApprovalRequired   *bool    `json:"approval_required"`   // 是否需要审批
-	AffectedCis        []string `json:"affected_cis"`        // 受影响配置项
-	Prerequisites      []string `json:"prerequisites"`       // 前置条件
-	Remarks            *string  `json:"remarks"`             // 备注
-	IsActive           *bool    `json:"is_active"`           // 是否启用
+	Title              *string  `json:"title"`              // 模板标题
+	Description        *string  `json:"description"`        // 模板描述
+	ImplementationPlan *string  `json:"implementationPlan"` // 实施计划
+	RollbackPlan       *string  `json:"rollbackPlan"`       // 回滚计划
+	Justification      *string  `json:"justification"`      // 变更理由
+	Category           *string  `json:"category"`           // 分类
+	RiskLevel          *string  `json:"riskLevel"`          // 风险等级
+	ImpactScope        *string  `json:"impactScope"`        // 影响范围
+	ExpectedDuration   *int     `json:"expectedDuration"`   // 预计工期
+	ApprovalRequired   *bool    `json:"approvalRequired"`   // 是否需要审批
+	AffectedCis        []string `json:"affectedCis"`        // 受影响配置项
+	Prerequisites      []string `json:"prerequisites"`      // 前置条件
+	Remarks            *string  `json:"remarks"`            // 备注
+	IsActive           *bool    `json:"isActive"`           // 是否启用
 }
 
 // StandardChangeListResponse 标准变更模板列表响应
@@ -68,10 +68,10 @@ type StandardChangeListResponse struct {
 
 // InstantiateStandardChangeRequest 从模板实例化变更请求
 type InstantiateStandardChangeRequest struct {
-	Title            string     `json:"title"`              // 可选：自定义标题
-	PlannedStartDate *time.Time `json:"planned_start_date"` // 计划开始时间
-	PlannedEndDate   *time.Time `json:"planned_end_date"`   // 计划结束时间
-	AffectedCis      []string   `json:"affected_cis"`       // 受影响配置项（可覆盖）
+	Title            string     `json:"title"`            // 可选：自定义标题
+	PlannedStartDate *time.Time `json:"plannedStartDate"` // 计划开始时间
+	PlannedEndDate   *time.Time `json:"plannedEndDate"`   // 计划结束时间
+	AffectedCis      []string   `json:"affectedCis"`      // 受影响配置项（可覆盖）
 }
 
 // StandardChangeCategory 标准变更分类统计

@@ -8,10 +8,10 @@ type TicketTagResponse struct {
 	Name        string    `json:"name"`
 	Color       string    `json:"color"`
 	Description string    `json:"description"`
-	IsActive    bool      `json:"is_active"`
-	TenantID    int       `json:"tenant_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	IsActive    bool      `json:"isActive"`
+	TenantID    int       `json:"tenantId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // TicketCategoryResponse 分类响应
@@ -20,12 +20,12 @@ type TicketCategoryResponse struct {
 	Name        string    `json:"name"`
 	Code        string    `json:"code"`
 	Description string    `json:"description"`
-	ParentID    *int      `json:"parent_id,omitempty"`
-	SortOrder   int       `json:"sort_order"`
-	IsActive    bool      `json:"is_active"`
-	TenantID    int       `json:"tenant_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ParentID    *int      `json:"parentId,omitempty"`
+	SortOrder   int       `json:"sortOrder"`
+	IsActive    bool      `json:"isActive"`
+	TenantID    int       `json:"tenantId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // TicketCategoryTreeResponse 分类树响应
@@ -34,6 +34,6 @@ type TicketCategoryTreeResponse struct {
 	Name        string                        `json:"name"`
 	Code        string                        `json:"code"`
 	Description string                        `json:"description"`
-	SortOrder   int                           `json:"sort_order"`
+	SortOrder   int                           `json:"sortOrder"`
 	Children    []*TicketCategoryTreeResponse `json:"children,omitempty"`
 }

@@ -4,19 +4,19 @@ import "time"
 
 // 工单根因分析相关DTO（使用TicketRootCause前缀避免与problem_investigation_dto.go中的RootCauseAnalysis冲突）
 type TicketRootCauseAnalysisRequest struct {
-	TicketID int `json:"ticket_id" binding:"required" example:"1001"`
+	TicketID int `json:"ticketId" binding:"required" example:"1001"`
 }
 
 type TicketRootCauseAnalysisResponse struct {
-	TicketID        int                       `json:"ticket_id" example:"1001"`
-	TicketNumber    string                    `json:"ticket_number" example:"T-2024-001"`
-	TicketTitle     string                    `json:"ticket_title" example:"系统响应缓慢"`
-	AnalysisDate    string                    `json:"analysis_date" example:"2024-01-15"`
-	RootCauses      []TicketRootCauseResponse `json:"root_causes"`
-	AnalysisSummary string                    `json:"analysis_summary" example:"系统自动分析识别出2个可能的根本原因"`
-	ConfidenceScore float64                   `json:"confidence_score" example:"0.85"`
-	AnalysisMethod  string                    `json:"analysis_method" example:"automatic"`
-	GeneratedAt     time.Time                 `json:"generated_at" example:"2024-01-01T00:00:00Z"`
+	TicketID        int                       `json:"ticketId" example:"1001"`
+	TicketNumber    string                    `json:"ticketNumber" example:"T-2024-001"`
+	TicketTitle     string                    `json:"ticketTitle" example:"系统响应缓慢"`
+	AnalysisDate    string                    `json:"analysisDate" example:"2024-01-15"`
+	RootCauses      []TicketRootCauseResponse `json:"rootCauses"`
+	AnalysisSummary string                    `json:"analysisSummary" example:"系统自动分析识别出2个可能的根本原因"`
+	ConfidenceScore float64                   `json:"confidenceScore" example:"0.85"`
+	AnalysisMethod  string                    `json:"analysisMethod" example:"automatic"`
+	GeneratedAt     time.Time                 `json:"generatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 type TicketRootCauseResponse struct {
@@ -26,12 +26,12 @@ type TicketRootCauseResponse struct {
 	Confidence      float64                      `json:"confidence" example:"0.92"`
 	Category        string                       `json:"category" example:"database"`
 	Evidence        []RootCauseEvidenceItem      `json:"evidence"`
-	RelatedTickets  []RootCauseRelatedTicketInfo `json:"related_tickets"`
-	ImpactScope     RootCauseImpactScopeInfo     `json:"impact_scope"`
+	RelatedTickets  []RootCauseRelatedTicketInfo `json:"relatedTickets"`
+	ImpactScope     RootCauseImpactScopeInfo     `json:"impactScope"`
 	Recommendations []string                     `json:"recommendations" example:"[\"增加数据库连接池大小\"]"`
 	Status          string                       `json:"status" example:"identified"`
-	CreatedAt       time.Time                    `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt       time.Time                    `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	CreatedAt       time.Time                    `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt       time.Time                    `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 type RootCauseEvidenceItem struct {
@@ -49,7 +49,7 @@ type RootCauseRelatedTicketInfo struct {
 }
 
 type RootCauseImpactScopeInfo struct {
-	AffectedTickets int      `json:"affected_tickets" example:"15"`
-	AffectedUsers   int      `json:"affected_users" example:"120"`
-	AffectedSystems []string `json:"affected_systems" example:"[\"CRM系统\",\"订单系统\"]"`
+	AffectedTickets int      `json:"affectedTickets" example:"15"`
+	AffectedUsers   int      `json:"affectedUsers" example:"120"`
+	AffectedSystems []string `json:"affectedSystems" example:"[\"CRM系统\",\"订单系统\"]"`
 }

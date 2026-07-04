@@ -29,62 +29,62 @@ func NewBPMNVersionService(client *ent.Client, logger *zap.SugaredLogger) *BPMNV
 // ProcessVersion 流程版本信息
 type ProcessVersion struct {
 	ID                   string    `json:"id"`
-	ProcessDefinitionKey string    `json:"process_definition_key"`
+	ProcessDefinitionKey string    `json:"processDefinitionKey"`
 	Version              int       `json:"version"`
 	Name                 string    `json:"name"`
 	Description          string    `json:"description"`
-	BPMNXML              string    `json:"bpmn_xml"`
-	DeploymentID         string    `json:"deployment_id"`
-	IsActive             bool      `json:"is_active"`
-	CreatedAt            time.Time `json:"created_at"`
-	UpdatedAt            time.Time `json:"updated_at"`
-	CreatedBy            string    `json:"created_by"`
-	TenantID             int       `json:"tenant_id"`
-	ChangeLog            string    `json:"change_log"`
-	CompatibilityNotes   string    `json:"compatibility_notes"`
+	BPMNXML              string    `json:"bpmnXml"`
+	DeploymentID         string    `json:"deploymentId"`
+	IsActive             bool      `json:"isActive"`
+	CreatedAt            time.Time `json:"createdAt"`
+	UpdatedAt            time.Time `json:"updatedAt"`
+	CreatedBy            string    `json:"createdBy"`
+	TenantID             int       `json:"tenantId"`
+	ChangeLog            string    `json:"changeLog"`
+	CompatibilityNotes   string    `json:"compatibilityNotes"`
 }
 
 // CreateVersionRequest 创建版本请求
 type CreateVersionRequest struct {
-	ProcessDefinitionKey string `json:"process_definition_key" binding:"required"`
+	ProcessDefinitionKey string `json:"processDefinitionKey" binding:"required"`
 	Name                 string `json:"name" binding:"required"`
 	Description          string `json:"description"`
-	BPMNXML              string `json:"bpmn_xml" binding:"required"`
-	ChangeLog            string `json:"change_log"`
-	CompatibilityNotes   string `json:"compatibility_notes"`
-	TenantID             int    `json:"tenant_id" binding:"required"`
-	CreatedBy            string `json:"created_by"`
+	BPMNXML              string `json:"bpmnXml" binding:"required"`
+	ChangeLog            string `json:"changeLog"`
+	CompatibilityNotes   string `json:"compatibilityNotes"`
+	TenantID             int    `json:"tenantId" binding:"required"`
+	CreatedBy            string `json:"createdBy"`
 }
 
 // UpdateVersionRequest 更新版本请求
 type UpdateVersionRequest struct {
 	Name               string `json:"name"`
 	Description        string `json:"description"`
-	BPMNXML            string `json:"bpmn_xml"`
-	ChangeLog          string `json:"change_log"`
-	CompatibilityNotes string `json:"compatibility_notes"`
+	BPMNXML            string `json:"bpmnXml"`
+	ChangeLog          string `json:"changeLog"`
+	CompatibilityNotes string `json:"compatibilityNotes"`
 }
 
 // VersionComparison 版本比较结果
 type VersionComparison struct {
-	BaseVersion     *ProcessVersion `json:"base_version"`
-	TargetVersion   *ProcessVersion `json:"target_version"`
+	BaseVersion     *ProcessVersion `json:"baseVersion"`
+	TargetVersion   *ProcessVersion `json:"targetVersion"`
 	Changes         []ChangeDetail  `json:"changes"`
-	BreakingChanges []string        `json:"breaking_changes"`
+	BreakingChanges []string        `json:"breakingChanges"`
 	Compatibility   string          `json:"compatibility"`
 }
 
 // ChangeDetail 变更详情
 type ChangeDetail struct {
-	Type        string `json:"type"`         // "added", "removed", "modified"
-	ChangeType  string `json:"change_type"`  // 变更类型
-	ElementType string `json:"element_type"` // "task", "gateway", "event", "flow"
-	ElementID   string `json:"element_id"`
-	ElementName string `json:"element_name"`
+	Type        string `json:"type"`        // "added", "removed", "modified"
+	ChangeType  string `json:"changeType"`  // 变更类型
+	ElementType string `json:"elementType"` // "task", "gateway", "event", "flow"
+	ElementID   string `json:"elementId"`
+	ElementName string `json:"elementName"`
 	Description string `json:"description"`
-	Impact      string `json:"impact"`              // "low", "medium", "high", "critical"
-	OldValue    string `json:"old_value,omitempty"` // 旧值
-	NewValue    string `json:"new_value,omitempty"` // 新值
+	Impact      string `json:"impact"`             // "low", "medium", "high", "critical"
+	OldValue    string `json:"oldValue,omitempty"` // 旧值
+	NewValue    string `json:"newValue,omitempty"` // 新值
 }
 
 // CreateVersion 创建新版本

@@ -985,80 +985,80 @@ type CreateProcessDefinitionRequest struct {
 	Name             string                 `json:"name" binding:"required"`
 	Description      string                 `json:"description"`
 	Category         string                 `json:"category"`
-	BPMNXML          string                 `json:"bpmn_xml" binding:"required"`
-	ProcessVariables map[string]interface{} `json:"process_variables"`
-	TenantID         int                    `json:"tenant_id" binding:"required"`
+	BPMNXML          string                 `json:"bpmnXml" binding:"required"`
+	ProcessVariables map[string]interface{} `json:"processVariables"`
+	TenantID         int                    `json:"tenantId" binding:"required"`
 }
 
 type UpdateProcessDefinitionRequest struct {
 	Name             string                 `json:"name"`
 	Description      string                 `json:"description"`
 	Category         string                 `json:"category"`
-	BPMNXML          string                 `json:"bpmn_xml"`
-	ProcessVariables map[string]interface{} `json:"process_variables"`
-	IsActive         *bool                  `json:"is_active"`
+	BPMNXML          string                 `json:"bpmnXml"`
+	ProcessVariables map[string]interface{} `json:"processVariables"`
+	IsActive         *bool                  `json:"isActive"`
 }
 
 type ListProcessDefinitionsRequest struct {
 	Key      string `json:"key"`
 	Category string `json:"category"`
-	IsActive *bool  `json:"is_active"`
-	TenantID int    `json:"tenant_id"`
+	IsActive *bool  `json:"isActive"`
+	TenantID int    `json:"tenantId"`
 	Page     int    `json:"page"`
-	PageSize int    `json:"page_size"`
+	PageSize int    `json:"pageSize"`
 }
 
 type ListProcessInstancesRequest struct {
-	ProcessDefinitionKey string `json:"process_definition_key"`
+	ProcessDefinitionKey string `json:"processDefinitionKey"`
 	Status               string `json:"status"`
-	BusinessKey          string `json:"business_key"`
-	TenantID             int    `json:"tenant_id"`
+	BusinessKey          string `json:"businessKey"`
+	TenantID             int    `json:"tenantId"`
 	Page                 int    `json:"page"`
-	PageSize             int    `json:"page_size"`
+	PageSize             int    `json:"pageSize"`
 }
 
 type ListUserTasksRequest struct {
 	Assignee        string `json:"assignee"`
-	CandidateUsers  string `json:"candidate_users"`
-	CandidateGroups string `json:"candidate_groups"`
+	CandidateUsers  string `json:"candidateUsers"`
+	CandidateGroups string `json:"candidateGroups"`
 	// UserID 为「我的待办」语义：查询“分配给我 OR 我在候选人 OR 我所在组作为候选组”的任务。
 	// 传入后：Assignee/CandidateUsers/CandidateGroups 会被忽略（可选透传）。
-	UserID               int    `json:"user_id"`
+	UserID               int    `json:"userId"`
 	Status               string `json:"status"`
-	ProcessDefinitionKey string `json:"process_definition_key"`
-	ProcessInstanceID    int    `json:"process_instance_id"`
-	TenantID             int    `json:"tenant_id"`
+	ProcessDefinitionKey string `json:"processDefinitionKey"`
+	ProcessInstanceID    int    `json:"processInstanceId"`
+	TenantID             int    `json:"tenantId"`
 	Page                 int    `json:"page"`
-	PageSize             int    `json:"page_size"`
+	PageSize             int    `json:"pageSize"`
 }
 
 type TaskStatisticsRequest struct {
-	ProcessDefinitionKey string     `json:"process_definition_key"`
+	ProcessDefinitionKey string     `json:"processDefinitionKey"`
 	Assignee             string     `json:"assignee"`
 	Status               string     `json:"status"`
-	TenantID             int        `json:"tenant_id"`
-	StartDate            *time.Time `json:"start_date"`
-	EndDate              *time.Time `json:"end_date"`
+	TenantID             int        `json:"tenantId"`
+	StartDate            *time.Time `json:"startDate"`
+	EndDate              *time.Time `json:"endDate"`
 }
 
 type TaskStatistics struct {
-	TotalTasks        int                    `json:"total_tasks"`
-	CompletedTasks    int                    `json:"completed_tasks"`
-	PendingTasks      int                    `json:"pending_tasks"`
-	OverdueTasks      int                    `json:"overdue_tasks"`
-	AverageCompletion float64                `json:"average_completion"`
-	StatusBreakdown   map[string]int         `json:"status_breakdown"`
-	AssigneeBreakdown map[string]int         `json:"assignee_breakdown"`
-	TimeDistribution  map[string]interface{} `json:"time_distribution"`
+	TotalTasks        int                    `json:"totalTasks"`
+	CompletedTasks    int                    `json:"completedTasks"`
+	PendingTasks      int                    `json:"pendingTasks"`
+	OverdueTasks      int                    `json:"overdueTasks"`
+	AverageCompletion float64                `json:"averageCompletion"`
+	StatusBreakdown   map[string]int         `json:"statusBreakdown"`
+	AssigneeBreakdown map[string]int         `json:"assigneeBreakdown"`
+	TimeDistribution  map[string]interface{} `json:"timeDistribution"`
 }
 
 // InstanceStatisticsRequest 实例统计请求
 type InstanceStatisticsRequest struct {
-	ProcessDefinitionKey string     `json:"process_definition_key"`
+	ProcessDefinitionKey string     `json:"processDefinitionKey"`
 	Status               string     `json:"status"`
-	TenantID             int        `json:"tenant_id"`
-	StartDate            *time.Time `json:"start_date"`
-	EndDate              *time.Time `json:"end_date"`
+	TenantID             int        `json:"tenantId"`
+	StartDate            *time.Time `json:"startDate"`
+	EndDate              *time.Time `json:"endDate"`
 }
 
 // InstanceStatistics 实例统计
@@ -1072,7 +1072,7 @@ type InstanceStatistics struct {
 
 // CounterSignStatus 会签状态
 type CounterSignStatus struct {
-	ParentTaskID string `json:"parent_task_id"`
+	ParentTaskID string `json:"parentTaskId"`
 	Total        int    `json:"total"`
 	Completed    int    `json:"completed"`
 	Approved     int    `json:"approved"`
@@ -1083,7 +1083,7 @@ type CounterSignStatus struct {
 
 // CounterSignRequest 会签请求
 type CounterSignRequest struct {
-	ApprovalType string   `json:"approval_type"` // serial, parallel
+	ApprovalType string   `json:"approvalType"` // serial, parallel
 	Approvers    []string `json:"approvers"`
 	Threshold    int      `json:"threshold"`
 }

@@ -1332,21 +1332,21 @@ func ToCloudServiceResponse(service *ent.CloudService) *CloudServiceResponse {
 		return nil
 	}
 	return &CloudServiceResponse{
-		ID:                service.ID,
-		ParentID:          service.ParentID,
-		Provider:          service.Provider,
-		Category:          service.Category,
-		ServiceCode:       service.ServiceCode,
-		ServiceName:       service.ServiceName,
-		ResourceTypeCode:  service.ResourceTypeCode,
-		ResourceTypeName:  service.ResourceTypeName,
-		APIVersion:        service.APIVersion,
-		AttributeSchema:   service.AttributeSchema,
-		IsSystem:          service.IsSystem,
-		IsActive:          service.IsActive,
-		TenantID:          service.TenantID,
-		CreatedAt:         service.CreatedAt,
-		UpdatedAt:         service.UpdatedAt,
+		ID:               service.ID,
+		ParentID:         service.ParentID,
+		Provider:         service.Provider,
+		Category:         service.Category,
+		ServiceCode:      service.ServiceCode,
+		ServiceName:      service.ServiceName,
+		ResourceTypeCode: service.ResourceTypeCode,
+		ResourceTypeName: service.ResourceTypeName,
+		APIVersion:       service.APIVersion,
+		AttributeSchema:  service.AttributeSchema,
+		IsSystem:         service.IsSystem,
+		IsActive:         service.IsActive,
+		TenantID:         service.TenantID,
+		CreatedAt:        service.CreatedAt,
+		UpdatedAt:        service.UpdatedAt,
 	}
 }
 

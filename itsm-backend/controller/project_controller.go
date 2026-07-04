@@ -35,8 +35,8 @@ func (c *ProjectController) CreateProject(ctx *gin.Context) {
 	var req struct {
 		Name         string `json:"name" binding:"required"`
 		Code         string `json:"code" binding:"required"`
-		DepartmentID int    `json:"department_id"`
-		ManagerID    int    `json:"manager_id"`
+		DepartmentID int    `json:"departmentId"`
+		ManagerID    int    `json:"managerId"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -92,8 +92,8 @@ func (c *ProjectController) UpdateProject(ctx *gin.Context) {
 	var req struct {
 		Name         *string `json:"name"`
 		Code         *string `json:"code"`
-		DepartmentID *int    `json:"department_id"`
-		ManagerID    *int    `json:"manager_id"`
+		DepartmentID *int    `json:"departmentId"`
+		ManagerID    *int    `json:"managerId"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {

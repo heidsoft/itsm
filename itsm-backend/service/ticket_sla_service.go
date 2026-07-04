@@ -31,17 +31,17 @@ type TicketSLAServiceInterface interface {
 
 // TicketSLAInfoResult 工单SLA信息（计算结果）
 type TicketSLAInfoResult struct {
-	TicketID           int        `json:"ticket_id"`
-	TicketNumber       string     `json:"ticket_number"`
+	TicketID           int        `json:"ticketId"`
+	TicketNumber       string     `json:"ticketNumber"`
 	Priority           string     `json:"priority"`
-	TicketType         string     `json:"ticket_type"`
-	ResponseDeadline   *time.Time `json:"response_deadline"`
-	ResolutionDeadline *time.Time `json:"resolution_deadline"`
-	ResponseTimeUsed   int        `json:"response_time_used"`   // 分钟
-	ResolutionTimeUsed int        `json:"resolution_time_used"` // 分钟
-	ResponseBreached   bool       `json:"response_breached"`
-	ResolutionBreached bool       `json:"resolution_breached"`
-	SLAStatus          string     `json:"sla_status"` // ok, warning, breached
+	TicketType         string     `json:"ticketType"`
+	ResponseDeadline   *time.Time `json:"responseDeadline"`
+	ResolutionDeadline *time.Time `json:"resolutionDeadline"`
+	ResponseTimeUsed   int        `json:"responseTimeUsed"`   // 分钟
+	ResolutionTimeUsed int        `json:"resolutionTimeUsed"` // 分钟
+	ResponseBreached   bool       `json:"responseBreached"`
+	ResolutionBreached bool       `json:"resolutionBreached"`
+	SLAStatus          string     `json:"slaStatus"` // ok, warning, breached
 }
 
 // SLADeadlineResult SLA截止时间计算结果
@@ -54,13 +54,13 @@ type SLADeadlineResult struct {
 
 // TicketStats 工单统计
 type TicketStats struct {
-	TotalTickets      int `json:"total_tickets"`
-	OpenTickets       int `json:"open_tickets"`
-	InProgressTickets int `json:"in_progress_tickets"`
-	ResolvedTickets   int `json:"resolved_tickets"`
-	ClosedTickets     int `json:"closed_tickets"`
-	OverdueTickets    int `json:"overdue_tickets"`
-	BreachedTickets   int `json:"breached_tickets"`
+	TotalTickets      int `json:"totalTickets"`
+	OpenTickets       int `json:"openTickets"`
+	InProgressTickets int `json:"inProgressTickets"`
+	ResolvedTickets   int `json:"resolvedTickets"`
+	ClosedTickets     int `json:"closedTickets"`
+	OverdueTickets    int `json:"overdueTickets"`
+	BreachedTickets   int `json:"breachedTickets"`
 }
 
 // TicketSLAService 工单SLA服务

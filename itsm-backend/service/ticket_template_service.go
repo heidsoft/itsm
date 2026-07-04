@@ -181,10 +181,10 @@ type CreateTemplateRequest struct {
 	Description   string                   `json:"description"`
 	Category      string                   `json:"category" binding:"required"`
 	Priority      string                   `json:"priority"`
-	FormFields    map[string]interface{}   `json:"form_fields"`
-	WorkflowSteps []map[string]interface{} `json:"workflow_steps"`
-	IsActive      bool                     `json:"is_active"`
-	TenantID      int                      `json:"tenant_id" binding:"required"`
+	FormFields    map[string]interface{}   `json:"formFields"`
+	WorkflowSteps []map[string]interface{} `json:"workflowSteps"`
+	IsActive      bool                     `json:"isActive"`
+	TenantID      int                      `json:"tenantId" binding:"required"`
 }
 
 // UpdateTemplateRequest 更新模板请求
@@ -193,18 +193,18 @@ type UpdateTemplateRequest struct {
 	Description   string                   `json:"description"`
 	Category      string                   `json:"category"`
 	Priority      string                   `json:"priority"`
-	FormFields    map[string]interface{}   `json:"form_fields"`
-	WorkflowSteps []map[string]interface{} `json:"workflow_steps"`
-	IsActive      *bool                    `json:"is_active"`
+	FormFields    map[string]interface{}   `json:"formFields"`
+	WorkflowSteps []map[string]interface{} `json:"workflowSteps"`
+	IsActive      *bool                    `json:"isActive"`
 }
 
 // ListTemplatesRequest 获取模板列表请求
 type ListTemplatesRequest struct {
 	Page      int    `json:"page" form:"page"`
-	PageSize  int    `json:"page_size" form:"page_size"`
+	PageSize  int    `json:"pageSize" form:"page_size"`
 	Category  string `json:"category" form:"category"`
-	IsActive  *bool  `json:"is_active" form:"is_active"`
-	TenantID  int    `json:"tenant_id" form:"tenant_id"`
-	SortBy    string `json:"sort_by" form:"sort_by"`
-	SortOrder string `json:"sort_order" form:"sort_order"`
+	IsActive  *bool  `json:"isActive" form:"is_active"`
+	TenantID  int    `json:"tenantId" form:"tenant_id"`
+	SortBy    string `json:"sortBy" form:"sort_by"`
+	SortOrder string `json:"sortOrder" form:"sort_order"`
 }

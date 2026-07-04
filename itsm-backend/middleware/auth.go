@@ -12,11 +12,11 @@ import (
 )
 
 type Claims struct {
-	UserID    int    `json:"user_id"`
+	UserID    int    `json:"userId"`
 	Username  string `json:"username"`
 	Role      string `json:"role"`
-	TenantID  int    `json:"tenant_id"`
-	TokenType string `json:"token_type"` // "access" 或 "refresh"
+	TenantID  int    `json:"tenantId"`
+	TokenType string `json:"tokenType"` // "access" 或 "refresh"
 	jwt.RegisteredClaims
 }
 

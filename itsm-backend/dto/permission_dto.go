@@ -19,7 +19,7 @@ type PermissionResponse struct {
 	Description string    `json:"description"`
 	Resource    string    `json:"resource"`
 	Action      string    `json:"action"`
-	TenantID    int       `json:"tenant_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	TenantID    int       `json:"tenantId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }

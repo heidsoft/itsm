@@ -30,7 +30,7 @@ type ResolvedConfig struct {
 	Key         string                 `json:"key"`
 	Value       map[string]interface{} `json:"value"`
 	Source      string                 `json:"source"` // global, tenant, department, team
-	InheritMode string                 `json:"inherit_mode"`
+	InheritMode string                 `json:"inheritMode"`
 	Version     int                    `json:"version"`
 }
 

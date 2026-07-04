@@ -188,16 +188,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 func normalizeServiceCatalogRequest(req *dto.CreateServiceCatalogRequest) {
 	if req.DeliveryTime == "" {
-		req.DeliveryTime = req.DeliveryTimeAlt
-	}
-	if req.DeliveryTime == "" {
 		req.DeliveryTime = "1"
-	}
-	if req.CITypeID == 0 {
-		req.CITypeID = req.CITypeIDAlt
-	}
-	if req.CloudServiceID == 0 {
-		req.CloudServiceID = req.CloudServiceIDAlt
 	}
 	if req.Status == "" {
 		req.Status = "enabled"
@@ -205,15 +196,6 @@ func normalizeServiceCatalogRequest(req *dto.CreateServiceCatalogRequest) {
 }
 
 func normalizeUpdateServiceCatalogRequest(req *dto.UpdateServiceCatalogRequest) {
-	if req.DeliveryTime == "" {
-		req.DeliveryTime = req.DeliveryTimeAlt
-	}
-	if req.CITypeID == 0 {
-		req.CITypeID = req.CITypeIDAlt
-	}
-	if req.CloudServiceID == 0 {
-		req.CloudServiceID = req.CloudServiceIDAlt
-	}
 }
 
 // Delete handles DeleteServiceCatalog

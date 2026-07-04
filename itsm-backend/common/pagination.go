@@ -10,17 +10,17 @@ import (
 // PaginationRequest 分页请求参数
 type PaginationRequest struct {
 	Page     int `json:"page" form:"page" binding:"min=1"`
-	PageSize int `json:"page_size" form:"page_size" binding:"min=1,max=100"`
+	PageSize int `json:"pageSize" form:"page_size" binding:"min=1,max=100"`
 }
 
 // PaginationResponse 分页响应结构
 type PaginationResponse struct {
 	Page       int   `json:"page"`
-	PageSize   int   `json:"page_size"`
+	PageSize   int   `json:"pageSize"`
 	Total      int64 `json:"total"`
-	TotalPages int   `json:"total_pages"`
-	HasNext    bool  `json:"has_next"`
-	HasPrev    bool  `json:"has_prev"`
+	TotalPages int   `json:"totalPages"`
+	HasNext    bool  `json:"hasNext"`
+	HasPrev    bool  `json:"hasPrev"`
 }
 
 // ListResponse 列表响应结构

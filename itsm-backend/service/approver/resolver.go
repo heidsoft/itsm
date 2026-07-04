@@ -11,21 +11,21 @@ import (
 
 // ApproverInfo contains resolved approver information
 type ApproverInfo struct {
-	UserID    int    `json:"user_id"`
-	UserName  string `json:"user_name"`
-	UserEmail string `json:"user_email,omitempty"`
+	UserID    int    `json:"userId"`
+	UserName  string `json:"userName"`
+	UserEmail string `json:"userEmail,omitempty"`
 	Role      string `json:"role,omitempty"`
 	Source    string `json:"source"` // department, team, project, role, user, amount
 }
 
 // ApproverContext provides context for approver resolution
 type ApproverContext struct {
-	TenantID     int                    `json:"tenant_id"`
-	TicketID     int                    `json:"ticket_id,omitempty"`
-	RequesterID  int                    `json:"requester_id,omitempty"`
-	DepartmentID int                    `json:"department_id,omitempty"`
-	TeamID       int                    `json:"team_id,omitempty"`
-	ProjectID    int                    `json:"project_id,omitempty"`
+	TenantID     int                    `json:"tenantId"`
+	TicketID     int                    `json:"ticketId,omitempty"`
+	RequesterID  int                    `json:"requesterId,omitempty"`
+	DepartmentID int                    `json:"departmentId,omitempty"`
+	TeamID       int                    `json:"teamId,omitempty"`
+	ProjectID    int                    `json:"projectId,omitempty"`
 	Amount       float64                `json:"amount,omitempty"`
 	Variables    map[string]interface{} `json:"variables,omitempty"`
 }

@@ -24,9 +24,9 @@ type ticketCategoryImportRow struct {
 	Name        string `json:"name"`
 	Code        string `json:"code"`
 	Description string `json:"description"`
-	ParentCode  string `json:"parent_code"`
-	SortOrder   int    `json:"sort_order"`
-	IsActive    bool   `json:"is_active"`
+	ParentCode  string `json:"parentCode"`
+	SortOrder   int    `json:"sortOrder"`
+	IsActive    bool   `json:"isActive"`
 }
 
 func NewTicketCategoryController(categoryService *service.TicketCategoryService, logger *zap.SugaredLogger) *TicketCategoryController {
