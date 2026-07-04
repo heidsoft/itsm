@@ -24,6 +24,14 @@ interface SLAInfo {
   slaStatus: string;
 }
 
+/**
+ * 扩展的 Problem 类型，包含 SLA 相关字段（向后兼容）
+ */
+interface ProblemWithSLA extends Problem {
+  responseDeadline?: string;
+  resolutionDeadline?: string;
+}
+
 const SLA_STATUS_CONFIG: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
   ok: { color: 'success', text: '正常', icon: <CheckCircle /> },
   warning: { color: 'warning', text: '即将到期', icon: <AlertTriangle /> },

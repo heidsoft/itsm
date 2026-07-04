@@ -534,7 +534,7 @@ export default function NotificationsPage() {
             label: (
               <Space>
                 {getChannelIcon(channel.key)}
-                {t(channel.nameKey as any)}
+                {t(channel.nameKey)}
               </Space>
             ),
           }))}
@@ -549,7 +549,7 @@ export default function NotificationsPage() {
           allowClear
           options={EVENT_TYPES.map(event => ({
             value: event.type,
-            label: t(event.nameKey as any),
+            label: t(event.nameKey),
           }))}
         />
       </Col>
@@ -691,10 +691,10 @@ export default function NotificationsPage() {
                 <Row key={event.type} gutter={[16, 16]} align="middle" className="mb-2">
                   <Col xs={24} md={8}>
                     <div>
-                      <Text>{t(event.nameKey as any)}</Text>
+                      <Text>{t(event.nameKey)}</Text>
                       <br />
                       <Text type="secondary" className="text-xs">
-                        {t(event.descKey as any)}
+                        {t(event.descKey)}
                       </Text>
                     </div>
                   </Col>

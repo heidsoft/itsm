@@ -52,7 +52,7 @@ import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview } from '@/components/ui/StatsOverview';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
-import { WorkflowType } from '@/types/workflow';
+import { WorkflowType, CreateWorkflowRequest, UpdateWorkflowRequest } from '@/types/workflow';
 
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
@@ -1151,14 +1151,16 @@ const WorkflowManagementPage = () => {
           onFinish={async values => {
             try {
               if (editingWorkflow) {
-                await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), {
+                const updateData: UpdateWorkflowRequest = {
                   ...values,
-                } as any);
+                };
+                await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), updateData);
               } else {
-                await WorkflowAPI.createWorkflow({
+                const createData: CreateWorkflowRequest = {
                   ...values,
                   code: values.code || `workflow_${Date.now()}`,
-                } as any);
+                };
+                await WorkflowAPI.createWorkflow(createData);
               }
               message.success(
                 editingWorkflow ? t('workflow.updateSuccess') : t('workflow.createWorkflowSuccess')
@@ -1236,19 +1238,21 @@ const WorkflowManagementPage = () => {
             try {
               if (editingWorkflow) {
                 // 更新现有工作流
-                await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), {
+                const updateData: UpdateWorkflowRequest = {
                   bpmn_xml: xml,
-                } as any);
+                };
+                await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), updateData);
                 message.success(t('workflow.saveSuccess'));
               } else {
                 // 创建新工作流
-                await WorkflowAPI.createWorkflow({
+                const createData: CreateWorkflowRequest = {
                   name: t('workflow.newBPMNWorkflow'),
                   description: t('workflow.bpmnWorkflowDescription'),
                   code: `workflow_${Date.now()}`,
                   type: WorkflowType.APPROVAL,
                   bpmn_xml: xml,
-                });
+                };
+                await WorkflowAPI.createWorkflow(createData);
                 message.success(t('workflow.createWorkflowSuccess'));
               }
               setDesignerVisible(false);
@@ -1261,9 +1265,10 @@ const WorkflowManagementPage = () => {
             try {
               if (editingWorkflow) {
                 // 先保存BPMN XML
-                await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), {
+                const updateData: UpdateWorkflowRequest = {
                   bpmn_xml: xml,
-                } as any);
+                };
+                await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), updateData);
                 // 然后部署工作流
                 await WorkflowAPI.deployWorkflow(String(editingWorkflow.id));
                 message.success(t('workflow.deploySuccess'));

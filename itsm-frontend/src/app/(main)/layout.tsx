@@ -12,6 +12,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { NetworkStatus } from '@/components/common/NetworkStatus';
 import { useLayoutStore } from '@/lib/store/layout-store';
 import { useAuthStore } from '@/lib/store/auth-store';
+import type { Tenant } from '@/lib/api/api-config';
 
 const { Content } = Layout;
 
@@ -96,15 +97,16 @@ export default function MainLayout({
           : undefined
       );
       if (currentTenant) {
-        setCurrentTenant({
+        const tenantData: Tenant = {
           id: Number(currentTenant.id),
           name: String(currentTenant.name),
           code: String(currentTenant.code),
-          type: currentTenant.type,
-          status: currentTenant.status,
+          type: currentTenant.type || 'standard',
+          status: currentTenant.status || 'active',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        } as any);
+        };
+        setCurrentTenant(tenantData);
       }
       setIsAuthenticated(true);
       setCheckingAuth(false);
