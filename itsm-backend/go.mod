@@ -3,7 +3,7 @@ module itsm-backend
 go 1.21
 
 // Replace itsm-backend imports to use local packages
-replace itsm-backend => .
+replace itsm-backend => ./
 
 require (
 	entgo.io/ent v0.14.5

@@ -45,7 +45,7 @@ const EnterpriseQuickActionCard: React.FC<{
       case 'create-change':
         return <TrendingUp style={iconStyle} />;
       case 'view-reports':
-        return <RiseOutlined style={iconStyle} />;
+        return <TrendingUp style={iconStyle} />;
       default:
         return <Plus style={iconStyle} />;
     }
