@@ -76,6 +76,7 @@ export interface DashboardOverviewResponse {
     description: string;
     user: string;
     timestamp: string;
+    ticketId?: number; // 动态字段，用于工单相关活动
   }>;
   kpi_metrics: Array<{
     id: string;

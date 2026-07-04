@@ -144,7 +144,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
               {record.title}
             </div>
             <div style={{ fontSize: 'small', color: '#666' }}>
-              #{(record as any).incident_number || record.incidentNumber} • {record.category}
+              #{record.incidentNumber || (record as unknown as { incident_number?: string }).incident_number || '-'} • {record.category}
             </div>
           </div>
         </div>

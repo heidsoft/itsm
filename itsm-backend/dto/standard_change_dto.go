@@ -15,7 +15,7 @@ type StandardChangeResponse struct {
 	ImpactScope        string    `json:"impactScope"`        // 影响范围
 	ExpectedDuration   int       `json:"expectedDuration"`   // 预计工期（分钟）
 	ApprovalRequired   bool      `json:"approvalRequired"`   // 是否需要审批
-	AffectedCis        []string  `json:"affectedCIs"`        // 典型受影响的配置项
+	AffectedCis        []string  `json:"affectedCis"`        // 典型受影响的配置项
 	Prerequisites      []string  `json:"prerequisites"`      // 前置条件
 	Remarks            string    `json:"remarks"`            // 备注
 	CreatedBy          int       `json:"createdBy"`          // 创建人ID

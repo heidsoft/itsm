@@ -77,12 +77,15 @@ export default function CloudResourcePage() {
         limit: pageSize,
       });
       if (isMounted) {
-        const items = Array.isArray(list)
-          ? (list as CloudResource[])
-          : ((list as any).items || (list as any).data || []);
-        const totalCount = Array.isArray(list)
+        // API 返回兼容处理：可能是数组或 { items, total } 格式
+        type ApiListResponse = CloudResource[] | { items?: CloudResource[]; data?: CloudResource[]; total?: number };
+        const response = list as ApiListResponse;
+        const items = Array.isArray(response)
+          ? response
+          : (response.items || response.data || []);
+        const totalCount = Array.isArray(response)
           ? items.length
-          : ((list as any).total || items.length);
+          : (response.total ?? items.length);
         setResources(items);
         setTotal(totalCount);
       }
@@ -329,7 +332,7 @@ export default function CloudResourcePage() {
         rowKey="id"
         loading={loading}
         dataSource={resources}
-        columns={columns as any}
+        columns={columns as unknown as React.ComponentProps<typeof Table>['columns']}
         pagination={{
           current: pagination.current,
           pageSize: pagination.pageSize,

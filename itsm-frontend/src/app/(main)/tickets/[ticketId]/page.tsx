@@ -100,7 +100,7 @@ const TicketDetailPage: React.FC = () => {
   const isRequester = ticket?.requesterId === currentUser?.id;
 
   // 判断工单是否处于终态（不可再操作）
-  const isTicketFinal = ticket ? isFinalStatus(ticket.status as any) : false;
+  const isTicketFinal = ticket ? isFinalStatus(ticket.status as import('@/lib/api/types').TicketStatus) : false;
 
   // Get ticket details
   const fetchTicket = useCallback(async () => {
@@ -234,7 +234,7 @@ const TicketDetailPage: React.FC = () => {
     try {
       // 状态转换验证
       if (values.status && ticket?.status && values.status !== ticket.status) {
-        if (!isValidTransition(ticket.status as any, values.status as any)) {
+        if (!isValidTransition(ticket.status as import('@/lib/api/types').TicketStatus, values.status as import('@/lib/api/types').TicketStatus)) {
           antMessage.error(
             `不允许从 "${statusMap[ticket.status]?.text || ticket.status}" 转换到 "${statusMap[values.status]?.text || values.status}"`
           );

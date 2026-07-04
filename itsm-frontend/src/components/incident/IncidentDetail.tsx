@@ -643,8 +643,8 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             <Timeline>
               {data.resolutionSteps.map((step, index) => (
                 <Timeline.Item key={index}>
-                  <p>{(step as any).description || '处理步骤'}</p>
-                  <span style={{ fontSize: '12px', color: '#999' }}>{(step as any).timestamp}</span>
+                  <p>{(step as unknown as { description?: string }).description || '处理步骤'}</p>
+                  <span style={{ fontSize: '12px', color: '#999' }}>{(step as unknown as { timestamp?: string }).timestamp}</span>
                 </Timeline.Item>
               ))}
             </Timeline>

@@ -37,7 +37,7 @@ import {
   Clock,
   CheckCircle,
 } from 'lucide-react';
-import type { AutomationRule } from '@/lib/api/ticket-automation-rule-api';
+import type { AutomationRule, CreateAutomationRuleRequest, UpdateAutomationRuleRequest } from '@/lib/api/ticket-automation-rule-api';
 import { TicketAutomationRuleApi } from '@/lib/api/ticket-automation-rule-api';
 import { useI18n } from '@/lib/i18n';
 
@@ -387,11 +387,11 @@ const WorkflowAutomationPage = () => {
               if (editingRule) {
                 await TicketAutomationRuleApi.updateRule(editingRule.id, {
                   ...values,
-                } as any);
+                } as unknown as UpdateAutomationRuleRequest);
               } else {
                 await TicketAutomationRuleApi.createRule({
                   ...values,
-                } as any);
+                } as unknown as CreateAutomationRuleRequest);
               }
               message.success(editingRule ? t('common.ruleUpdated') : t('common.ruleCreated'));
               setModalVisible(false);

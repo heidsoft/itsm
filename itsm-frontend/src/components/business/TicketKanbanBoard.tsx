@@ -130,7 +130,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
             <div className="flex items-center gap-1">
               {ticket.assignee ? (
                 <>
-                  <Avatar size={16} src={(ticket.assignee as any).avatar}>
+                  <Avatar size={16} src={ticket.assignee?.avatar}>
                     {ticket.assignee.name?.[0]}
                   </Avatar>
                   <span>{ticket.assignee.name}</span>
@@ -287,7 +287,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
 
   // 拖拽开始
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId((event.active.id as any).toString());
+    setActiveId(String(event.active.id));
   };
 
   // 拖拽结束
@@ -299,7 +299,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
       return;
     }
 
-    const ticketId = Number((active.id as any).toString());
+    const ticketId = Number(String(active.id));
 
     // 获取源工单状态
     const sourceTicket = tickets.find(t => t.id === ticketId);

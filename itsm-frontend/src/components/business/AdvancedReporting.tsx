@@ -734,7 +734,7 @@ const AdvancedReporting: React.FC = () => {
                         <div className="text-center text-gray-500">
                           <BarChart3 className="w-12 h-12 mx-auto mb-2" />
                           <div>图表组件</div>
-                          <div className="text-xs">{(widget.config as any).chartType}</div>
+                          <div className="text-xs">{widget.config?.chartType}</div>
                         </div>
                       )}
                       {widget.type === 'metric' && (

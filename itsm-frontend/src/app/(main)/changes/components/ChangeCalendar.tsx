@@ -42,7 +42,7 @@ export const ChangeCalendar: React.FC<ChangeCalendarProps> = ({ onDateSelect }) 
     try {
       setLoading(true);
       const response = await ChangeApi.getChanges({ page: 1, page_size: 100 });
-      setChanges((response as any).items || response.changes || []);
+      setChanges(response?.changes ?? []);
     } catch (error) {
       message.error('加载变更数据失败');
     } finally {

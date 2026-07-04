@@ -157,8 +157,8 @@ export function CSDMHub() {
         CMDBApi.getReconciliationResults(),
       ]);
 
-      const statsData = (stats as any)?.data ?? stats;
-      const reconData = (reconciliation as any)?.data ?? reconciliation;
+      const statsData = (stats as Record<string, unknown>)?.data ?? stats;
+      const reconData = (reconciliation as Record<string, unknown>)?.data ?? reconciliation;
       const summary = (reconData?.summary ?? {}) as Record<string, unknown>;
       const unboundResources = normalizeList<Record<string, unknown>>(reconData?.unboundResources ?? reconData?.unbound_resources);
       const orphanCIs = normalizeList<Record<string, unknown>>(reconData?.orphanCIs ?? reconData?.orphan_cis);

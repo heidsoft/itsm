@@ -99,10 +99,10 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
       );
     }
 
-    if ((filters as any).assigneeId) {
+    if (filters.assigneeId && filters.assigneeId.length > 0) {
       tags.push(
-        <Tag key="assignee" closable onClose={() => onChange({ assigneeId: undefined } as any)}>
-          指派人: {(filters as any).assigneeId}
+        <Tag key="assignee" closable onClose={() => onChange({ assigneeId: undefined })}>
+          指派人: {filters.assigneeId.join(', ')}
         </Tag>
       );
     }

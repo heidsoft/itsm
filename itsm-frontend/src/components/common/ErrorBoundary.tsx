@@ -199,7 +199,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 }
 
  
-(ErrorBoundary as any).displayName = 'ErrorBoundary';
+(ErrorBoundary as unknown as React.ComponentType<ErrorBoundaryProps>).displayName = 'ErrorBoundary';
 
 // 高阶组件版本
 export const withErrorBoundary = <P extends object>(

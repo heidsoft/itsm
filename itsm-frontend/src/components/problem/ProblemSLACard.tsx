@@ -11,7 +11,7 @@ import { Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { ProblemApi, type Problem } from '@/lib/api/problem-api';
 
 interface ProblemSLACardProps {
-  problem: Problem;
+  problem: ProblemWithSLA;
 }
 
 interface SLAInfo {
@@ -75,8 +75,8 @@ const ProblemSLACard: React.FC<ProblemSLACardProps> = ({ problem }) => {
     return `${hours}小时${minutes}分钟`;
   };
 
-  const responseDeadline = slaInfo?.responseDeadline || (problem as any).responseDeadline;
-  const resolutionDeadline = slaInfo?.resolutionDeadline || (problem as any).resolutionDeadline;
+  const responseDeadline = slaInfo?.responseDeadline || problem.responseDeadline;
+  const resolutionDeadline = slaInfo?.resolutionDeadline || problem.resolutionDeadline;
   const responseBreached = slaInfo?.responseBreached || false;
   const resolutionBreached = slaInfo?.resolutionBreached || false;
 

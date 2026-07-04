@@ -59,7 +59,7 @@ const ServiceRequestList: React.FC = () => {
         });
       }
       setData((resp.requests || []) as unknown as ServiceRequest[]);
-      setTotal((resp as any).total || 0);
+      setTotal(resp?.total ?? 0);
     } catch (error) {
       // console.error(error);
       message.error('加载服务请求失败');

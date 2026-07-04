@@ -79,10 +79,11 @@ export default function MSPManagementPage() {
       setAllocations(allocRes.allocations);
       setCustomers(custRes.customers);
 
-      // 从用户 API 获取完整用户列表
-      const allUsers = (usersRes as any)?.users || (usersRes as any)?.data?.users || [];
+      // 从用户 API 获取完整用户列表 - 处理多种返回格式
+      type UsersResponse = { users?: { id: number; username?: string; name?: string }[]; data?: { users?: { id: number; username?: string; name?: string }[] } };
+      const allUsers = (usersRes as UsersResponse)?.users || (usersRes as UsersResponse)?.data?.users || [];
       if (allUsers.length > 0) {
-        setMSPUsers(allUsers.map((u: any) => ({ id: u.id, username: u.username || u.name || '' })));
+        setMSPUsers(allUsers.map((u) => ({ id: u.id, username: u.username || u.name || '' })));
       } else {
         // 降级：从已有分配中提取用户
         const uniqueUsers = Array.from(

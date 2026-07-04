@@ -66,7 +66,7 @@ type CreateChangeRequest struct {
 	PlannedEndDate     *time.Time `json:"plannedEndDate"`           // 计划结束时间
 	ImplementationPlan string     `json:"implementationPlan"`       // 实施计划
 	RollbackPlan       string     `json:"rollbackPlan"`             // 回滚计划
-	AffectedCIs        []string   `json:"affectedCIs"`              // 受影响的配置项
+	AffectedCIs        []string   `json:"affectedCis"`              // 受影响的配置项
 }
 
 // UpdateChangeRequest 更新变更请求
@@ -82,7 +82,7 @@ type UpdateChangeRequest struct {
 	PlannedEndDate     *time.Time      `json:"plannedEndDate"`     // 计划结束时间
 	ImplementationPlan *string         `json:"implementationPlan"` // 实施计划
 	RollbackPlan       *string         `json:"rollbackPlan"`       // 回滚计划
-	AffectedCIs        []string        `json:"affectedCIs"`        // 受影响的配置项
+	AffectedCIs        []string        `json:"affectedCis"`        // 受影响的配置项
 	RelatedTickets     []string        `json:"relatedTickets"`     // 相关工单
 }
 
@@ -108,7 +108,7 @@ type ChangeResponse struct {
 	ActualEndDate      *time.Time     `json:"actualEndDate"`      // 实际结束时间
 	ImplementationPlan string         `json:"implementationPlan"` // 实施计划
 	RollbackPlan       string         `json:"rollbackPlan"`       // 回滚计划
-	AffectedCIs        []string       `json:"affectedCIs"`        // 受影响的配置项
+	AffectedCIs        []string       `json:"affectedCis"`        // 受影响的配置项
 	RelatedTickets     []string       `json:"relatedTickets"`     // 相关工单
 	CreatedAt          time.Time      `json:"createdAt"`          // 创建时间
 	UpdatedAt          time.Time      `json:"updatedAt"`          // 更新时间
@@ -340,7 +340,7 @@ type ChangeCMDBImpactSummary struct {
 	RequiresBackoutPlan     bool     `json:"requiresBackoutPlan"`
 	WorkflowHints           []string `json:"workflowHints"`
 	ITILPractices           []string `json:"itilPractices"`
-	AffectedCIs             []int    `json:"affectedCIs"`
+	AffectedCIs             []int    `json:"affectedCis"`
 }
 
 // ChangeImplementationPlanResponse 变更实施计划响应

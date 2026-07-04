@@ -20,7 +20,7 @@ export enum ApiErrorCode {
   SUCCESS = 0,
   PARAM_ERROR = 1001,
   AUTH_FAILED = 2001,
-  NOT_FOUND = 3001,
+  NOT_FOUND = 4004,
   INTERNAL_ERROR = 5001,
 }
 

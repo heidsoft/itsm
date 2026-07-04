@@ -114,8 +114,8 @@ export const IncidentManagement: React.FC = () => {
         ...filters,
       };
       const data = await IncidentAPI.listIncidents(params);
-      const list = (data as any).incidents ?? (data as any).items ?? [];
-      const totalCount = (data as any).total ?? (Array.isArray(list) ? list.length : 0);
+      const list = data.incidents ?? data.data ?? [];
+      const totalCount = data.total ?? (Array.isArray(list) ? list.length : 0);
       setIncidents(list);
       setTotal(totalCount);
     } catch (error) {
@@ -532,7 +532,7 @@ const IncidentDetailDrawer: React.FC<{
 
       setEvents(Array.isArray(eventsData) ? eventsData : []);
       setAlerts(Array.isArray(alertsData) ? alertsData : []);
-      setMetrics((metricsData as any)?.data || metricsData || {});
+      setMetrics(metricsData?.data ?? metricsData ?? {});
     } catch (error) {
       message.error('获取事件详情失败');
     } finally {

@@ -118,12 +118,12 @@ const ChangeDetail: React.FC = () => {
     setLoading(true);
     try {
       const data = await ChangeApi.getChange(Number(id!));
-      setChange(data as any);
+      setChange(data);
 
       // Try to load approval summary
       try {
         const summary = await ChangeApi.getApprovalSummary(Number(id));
-        setApprovals(summary as any);
+        setApprovals(summary as import('@/lib/api/change-api').ChangeApproval[]);
       } catch (e) {
         // console.warn('Failed to load approval summary', e);
       }
