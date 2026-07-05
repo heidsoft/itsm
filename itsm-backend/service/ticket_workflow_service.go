@@ -763,8 +763,7 @@ func (s *TicketWorkflowService) createWorkflowRecordWithClient(ctx context.Conte
 		SetTicketID(record.TicketID).
 		SetAction(string(record.Action)).
 		SetOperatorID(record.Operator.ID).
-		SetTenantID(tenantID).
-		SetCreatedAt(record.CreatedAt)
+		SetTenantID(tenantID)
 
 	if record.FromStatus != nil {
 		create.SetFromStatus(*record.FromStatus)
