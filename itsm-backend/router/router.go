@@ -1232,6 +1232,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			// 实际业务仍在 /org/* 与 /system/* 与 /tenants，旧路径保持只读 GET，避免破坏现有调用方
 			{
 				tenant.GET("/departments", config.CommonHandler.ListDepartments)
+				tenant.GET("/departments/tree", config.CommonHandler.GetDepartmentTree)
 				tenant.GET("/teams", config.CommonHandler.ListTeams)
 				tenant.GET("/tags", config.CommonHandler.ListTags)
 			}
