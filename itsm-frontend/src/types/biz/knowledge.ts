@@ -32,10 +32,12 @@ export interface ArticleQuery {
 }
 
 export interface ArticleListResponse {
-  articles: KnowledgeArticle[];
+  articles?: KnowledgeArticle[];
+  items?: KnowledgeArticle[];
   total: number;
-  page: number;
-  size: number;
+  page?: number;
+  size?: number;
+  pageSize?: number;
 }
 
 export type KnowledgeArticleStatus = 'draft' | 'pending_review' | 'approved' | 'rejected' | 'archived';

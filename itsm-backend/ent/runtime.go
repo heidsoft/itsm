@@ -3680,12 +3680,15 @@ func init() {
 	ticketview.DefaultUpdatedAt = ticketviewDescUpdatedAt.Default.(func() time.Time)
 	// ticketview.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	ticketview.UpdateDefaultUpdatedAt = ticketviewDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ticketworkflowrecordMixin := schema.TicketWorkflowRecord{}.Mixin()
+	ticketworkflowrecordMixinFields0 := ticketworkflowrecordMixin[0].Fields()
+	_ = ticketworkflowrecordMixinFields0
 	ticketworkflowrecordFields := schema.TicketWorkflowRecord{}.Fields()
 	_ = ticketworkflowrecordFields
-	// ticketworkflowrecordDescCreatedAt is the schema descriptor for created_at field.
-	ticketworkflowrecordDescCreatedAt := ticketworkflowrecordFields[11].Descriptor()
-	// ticketworkflowrecord.DefaultCreatedAt holds the default value on creation for the created_at field.
-	ticketworkflowrecord.DefaultCreatedAt = ticketworkflowrecordDescCreatedAt.Default.(func() time.Time)
+	// ticketworkflowrecordDescCreateTime is the schema descriptor for create_time field.
+	ticketworkflowrecordDescCreateTime := ticketworkflowrecordMixinFields0[0].Descriptor()
+	// ticketworkflowrecord.DefaultCreateTime holds the default value on creation for the create_time field.
+	ticketworkflowrecord.DefaultCreateTime = ticketworkflowrecordDescCreateTime.Default.(func() time.Time)
 	toolinvocationFields := schema.ToolInvocation{}.Fields()
 	_ = toolinvocationFields
 	// toolinvocationDescCreatedAt is the schema descriptor for created_at field.

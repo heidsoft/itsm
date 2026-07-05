@@ -19,6 +19,8 @@ type TicketWorkflowRecord struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// CreateTime holds the value of the "create_time" field.
+	CreateTime time.Time `json:"create_time,omitempty"`
 	// 工单ID
 	TicketID int `json:"ticket_id,omitempty"`
 	// 操作: accept/reject/approve/resolve/close/reopen/forward/cc/withdraw/delegate
@@ -41,8 +43,6 @@ type TicketWorkflowRecord struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
-	// 创建时间
-	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TicketWorkflowRecordQuery when eager-loading is set.
 	Edges        TicketWorkflowRecordEdges `json:"edges"`
@@ -80,7 +80,7 @@ func (*TicketWorkflowRecord) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case ticketworkflowrecord.FieldAction, ticketworkflowrecord.FieldFromStatus, ticketworkflowrecord.FieldToStatus, ticketworkflowrecord.FieldComment, ticketworkflowrecord.FieldReason:
 			values[i] = new(sql.NullString)
-		case ticketworkflowrecord.FieldCreatedAt:
+		case ticketworkflowrecord.FieldCreateTime:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -103,6 +103,12 @@ func (_m *TicketWorkflowRecord) assignValues(columns []string, values []any) err
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int(value.Int64)
+		case ticketworkflowrecord.FieldCreateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field create_time", values[i])
+			} else if value.Valid {
+				_m.CreateTime = value.Time
+			}
 		case ticketworkflowrecord.FieldTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_id", values[i])
@@ -171,12 +177,6 @@ func (_m *TicketWorkflowRecord) assignValues(columns []string, values []any) err
 			} else if value.Valid {
 				_m.TenantID = int(value.Int64)
 			}
-		case ticketworkflowrecord.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
-			} else if value.Valid {
-				_m.CreatedAt = value.Time
-			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -218,6 +218,9 @@ func (_m *TicketWorkflowRecord) String() string {
 	var builder strings.Builder
 	builder.WriteString("TicketWorkflowRecord(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
+	builder.WriteString("create_time=")
+	builder.WriteString(_m.CreateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("ticket_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TicketID))
 	builder.WriteString(", ")
@@ -250,9 +253,6 @@ func (_m *TicketWorkflowRecord) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
-	builder.WriteString(", ")
-	builder.WriteString("created_at=")
-	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

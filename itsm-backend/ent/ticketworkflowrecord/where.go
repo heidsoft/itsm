@@ -55,6 +55,11 @@ func IDLTE(id int) predicate.TicketWorkflowRecord {
 	return predicate.TicketWorkflowRecord(sql.FieldLTE(FieldID, id))
 }
 
+// CreateTime applies equality check predicate on the "create_time" field. It's identical to CreateTimeEQ.
+func CreateTime(v time.Time) predicate.TicketWorkflowRecord {
+	return predicate.TicketWorkflowRecord(sql.FieldEQ(FieldCreateTime, v))
+}
+
 // TicketID applies equality check predicate on the "ticket_id" field. It's identical to TicketIDEQ.
 func TicketID(v int) predicate.TicketWorkflowRecord {
 	return predicate.TicketWorkflowRecord(sql.FieldEQ(FieldTicketID, v))
@@ -105,9 +110,44 @@ func TenantID(v int) predicate.TicketWorkflowRecord {
 	return predicate.TicketWorkflowRecord(sql.FieldEQ(FieldTenantID, v))
 }
 
-// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
-func CreatedAt(v time.Time) predicate.TicketWorkflowRecord {
-	return predicate.TicketWorkflowRecord(sql.FieldEQ(FieldCreatedAt, v))
+// CreateTimeEQ applies the EQ predicate on the "create_time" field.
+func CreateTimeEQ(v time.Time) predicate.TicketWorkflowRecord {
+	return predicate.TicketWorkflowRecord(sql.FieldEQ(FieldCreateTime, v))
+}
+
+// CreateTimeNEQ applies the NEQ predicate on the "create_time" field.
+func CreateTimeNEQ(v time.Time) predicate.TicketWorkflowRecord {
+	return predicate.TicketWorkflowRecord(sql.FieldNEQ(FieldCreateTime, v))
+}
+
+// CreateTimeIn applies the In predicate on the "create_time" field.
+func CreateTimeIn(vs ...time.Time) predicate.TicketWorkflowRecord {
+	return predicate.TicketWorkflowRecord(sql.FieldIn(FieldCreateTime, vs...))
+}
+
+// CreateTimeNotIn applies the NotIn predicate on the "create_time" field.
+func CreateTimeNotIn(vs ...time.Time) predicate.TicketWorkflowRecord {
+	return predicate.TicketWorkflowRecord(sql.FieldNotIn(FieldCreateTime, vs...))
+}
+
+// CreateTimeGT applies the GT predicate on the "create_time" field.
+func CreateTimeGT(v time.Time) predicate.TicketWorkflowRecord {
+	return predicate.TicketWorkflowRecord(sql.FieldGT(FieldCreateTime, v))
+}
+
+// CreateTimeGTE applies the GTE predicate on the "create_time" field.
+func CreateTimeGTE(v time.Time) predicate.TicketWorkflowRecord {
+	return predicate.TicketWorkflowRecord(sql.FieldGTE(FieldCreateTime, v))
+}
+
+// CreateTimeLT applies the LT predicate on the "create_time" field.
+func CreateTimeLT(v time.Time) predicate.TicketWorkflowRecord {
+	return predicate.TicketWorkflowRecord(sql.FieldLT(FieldCreateTime, v))
+}
+
+// CreateTimeLTE applies the LTE predicate on the "create_time" field.
+func CreateTimeLTE(v time.Time) predicate.TicketWorkflowRecord {
+	return predicate.TicketWorkflowRecord(sql.FieldLTE(FieldCreateTime, v))
 }
 
 // TicketIDEQ applies the EQ predicate on the "ticket_id" field.
@@ -683,46 +723,6 @@ func TenantIDLT(v int) predicate.TicketWorkflowRecord {
 // TenantIDLTE applies the LTE predicate on the "tenant_id" field.
 func TenantIDLTE(v int) predicate.TicketWorkflowRecord {
 	return predicate.TicketWorkflowRecord(sql.FieldLTE(FieldTenantID, v))
-}
-
-// CreatedAtEQ applies the EQ predicate on the "created_at" field.
-func CreatedAtEQ(v time.Time) predicate.TicketWorkflowRecord {
-	return predicate.TicketWorkflowRecord(sql.FieldEQ(FieldCreatedAt, v))
-}
-
-// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
-func CreatedAtNEQ(v time.Time) predicate.TicketWorkflowRecord {
-	return predicate.TicketWorkflowRecord(sql.FieldNEQ(FieldCreatedAt, v))
-}
-
-// CreatedAtIn applies the In predicate on the "created_at" field.
-func CreatedAtIn(vs ...time.Time) predicate.TicketWorkflowRecord {
-	return predicate.TicketWorkflowRecord(sql.FieldIn(FieldCreatedAt, vs...))
-}
-
-// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
-func CreatedAtNotIn(vs ...time.Time) predicate.TicketWorkflowRecord {
-	return predicate.TicketWorkflowRecord(sql.FieldNotIn(FieldCreatedAt, vs...))
-}
-
-// CreatedAtGT applies the GT predicate on the "created_at" field.
-func CreatedAtGT(v time.Time) predicate.TicketWorkflowRecord {
-	return predicate.TicketWorkflowRecord(sql.FieldGT(FieldCreatedAt, v))
-}
-
-// CreatedAtGTE applies the GTE predicate on the "created_at" field.
-func CreatedAtGTE(v time.Time) predicate.TicketWorkflowRecord {
-	return predicate.TicketWorkflowRecord(sql.FieldGTE(FieldCreatedAt, v))
-}
-
-// CreatedAtLT applies the LT predicate on the "created_at" field.
-func CreatedAtLT(v time.Time) predicate.TicketWorkflowRecord {
-	return predicate.TicketWorkflowRecord(sql.FieldLT(FieldCreatedAt, v))
-}
-
-// CreatedAtLTE applies the LTE predicate on the "created_at" field.
-func CreatedAtLTE(v time.Time) predicate.TicketWorkflowRecord {
-	return predicate.TicketWorkflowRecord(sql.FieldLTE(FieldCreatedAt, v))
 }
 
 // HasTicket applies the HasEdge predicate on the "ticket" edge.

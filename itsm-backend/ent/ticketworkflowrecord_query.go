@@ -298,12 +298,12 @@ func (_q *TicketWorkflowRecordQuery) WithTicket(opts ...func(*TicketQuery)) *Tic
 // Example:
 //
 //	var v []struct {
-//		TicketID int `json:"ticket_id,omitempty"`
+//		CreateTime time.Time `json:"create_time,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.TicketWorkflowRecord.Query().
-//		GroupBy(ticketworkflowrecord.FieldTicketID).
+//		GroupBy(ticketworkflowrecord.FieldCreateTime).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *TicketWorkflowRecordQuery) GroupBy(field string, fields ...string) *TicketWorkflowRecordGroupBy {
@@ -321,11 +321,11 @@ func (_q *TicketWorkflowRecordQuery) GroupBy(field string, fields ...string) *Ti
 // Example:
 //
 //	var v []struct {
-//		TicketID int `json:"ticket_id,omitempty"`
+//		CreateTime time.Time `json:"create_time,omitempty"`
 //	}
 //
 //	client.TicketWorkflowRecord.Query().
-//		Select(ticketworkflowrecord.FieldTicketID).
+//		Select(ticketworkflowrecord.FieldCreateTime).
 //		Scan(ctx, &v)
 func (_q *TicketWorkflowRecordQuery) Select(fields ...string) *TicketWorkflowRecordSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)

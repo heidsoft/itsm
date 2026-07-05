@@ -14,6 +14,8 @@ const (
 	Label = "ticket_workflow_record"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldCreateTime holds the string denoting the create_time field in the database.
+	FieldCreateTime = "create_time"
 	// FieldTicketID holds the string denoting the ticket_id field in the database.
 	FieldTicketID = "ticket_id"
 	// FieldAction holds the string denoting the action field in the database.
@@ -36,8 +38,6 @@ const (
 	FieldMetadata = "metadata"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
-	// FieldCreatedAt holds the string denoting the created_at field in the database.
-	FieldCreatedAt = "created_at"
 	// EdgeTicket holds the string denoting the ticket edge name in mutations.
 	EdgeTicket = "ticket"
 	// Table holds the table name of the ticketworkflowrecord in the database.
@@ -54,6 +54,7 @@ const (
 // Columns holds all SQL columns for ticketworkflowrecord fields.
 var Columns = []string{
 	FieldID,
+	FieldCreateTime,
 	FieldTicketID,
 	FieldAction,
 	FieldFromStatus,
@@ -65,7 +66,6 @@ var Columns = []string{
 	FieldReason,
 	FieldMetadata,
 	FieldTenantID,
-	FieldCreatedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -79,8 +79,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
-	DefaultCreatedAt func() time.Time
+	// DefaultCreateTime holds the default value on creation for the "create_time" field.
+	DefaultCreateTime func() time.Time
 )
 
 // OrderOption defines the ordering options for the TicketWorkflowRecord queries.
@@ -89,6 +89,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByCreateTime orders the results by the create_time field.
+func ByCreateTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreateTime, opts...).ToFunc()
 }
 
 // ByTicketID orders the results by the ticket_id field.
@@ -139,11 +144,6 @@ func ByReason(opts ...sql.OrderTermOption) OrderOption {
 // ByTenantID orders the results by the tenant_id field.
 func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
-}
-
-// ByCreatedAt orders the results by the created_at field.
-func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
 // ByTicketField orders the results by ticket field.

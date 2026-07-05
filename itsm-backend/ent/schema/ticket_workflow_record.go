@@ -13,9 +13,10 @@ type TicketWorkflowRecord struct {
 }
 
 // Mixin of the TicketWorkflowRecord
+// 注意：不使用 mixin.Time{}，因为 SQL 迁移只定义了 created_at 字段
 func (TicketWorkflowRecord) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		mixin.Time{},
+		mixin.CreateTime{},
 	}
 }
 

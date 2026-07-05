@@ -21,6 +21,20 @@ type TicketWorkflowRecordCreate struct {
 	hooks    []Hook
 }
 
+// SetCreateTime sets the "create_time" field.
+func (_c *TicketWorkflowRecordCreate) SetCreateTime(v time.Time) *TicketWorkflowRecordCreate {
+	_c.mutation.SetCreateTime(v)
+	return _c
+}
+
+// SetNillableCreateTime sets the "create_time" field if the given value is not nil.
+func (_c *TicketWorkflowRecordCreate) SetNillableCreateTime(v *time.Time) *TicketWorkflowRecordCreate {
+	if v != nil {
+		_c.SetCreateTime(*v)
+	}
+	return _c
+}
+
 // SetTicketID sets the "ticket_id" field.
 func (_c *TicketWorkflowRecordCreate) SetTicketID(v int) *TicketWorkflowRecordCreate {
 	_c.mutation.SetTicketID(v)
@@ -135,20 +149,6 @@ func (_c *TicketWorkflowRecordCreate) SetTenantID(v int) *TicketWorkflowRecordCr
 	return _c
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (_c *TicketWorkflowRecordCreate) SetCreatedAt(v time.Time) *TicketWorkflowRecordCreate {
-	_c.mutation.SetCreatedAt(v)
-	return _c
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_c *TicketWorkflowRecordCreate) SetNillableCreatedAt(v *time.Time) *TicketWorkflowRecordCreate {
-	if v != nil {
-		_c.SetCreatedAt(*v)
-	}
-	return _c
-}
-
 // SetTicket sets the "ticket" edge to the Ticket entity.
 func (_c *TicketWorkflowRecordCreate) SetTicket(v *Ticket) *TicketWorkflowRecordCreate {
 	return _c.SetTicketID(v.ID)
@@ -189,14 +189,17 @@ func (_c *TicketWorkflowRecordCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *TicketWorkflowRecordCreate) defaults() {
-	if _, ok := _c.mutation.CreatedAt(); !ok {
-		v := ticketworkflowrecord.DefaultCreatedAt()
-		_c.mutation.SetCreatedAt(v)
+	if _, ok := _c.mutation.CreateTime(); !ok {
+		v := ticketworkflowrecord.DefaultCreateTime()
+		_c.mutation.SetCreateTime(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *TicketWorkflowRecordCreate) check() error {
+	if _, ok := _c.mutation.CreateTime(); !ok {
+		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "TicketWorkflowRecord.create_time"`)}
+	}
 	if _, ok := _c.mutation.TicketID(); !ok {
 		return &ValidationError{Name: "ticket_id", err: errors.New(`ent: missing required field "TicketWorkflowRecord.ticket_id"`)}
 	}
@@ -208,9 +211,6 @@ func (_c *TicketWorkflowRecordCreate) check() error {
 	}
 	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "TicketWorkflowRecord.tenant_id"`)}
-	}
-	if _, ok := _c.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "TicketWorkflowRecord.created_at"`)}
 	}
 	if len(_c.mutation.TicketIDs()) == 0 {
 		return &ValidationError{Name: "ticket", err: errors.New(`ent: missing required edge "TicketWorkflowRecord.ticket"`)}
@@ -241,6 +241,10 @@ func (_c *TicketWorkflowRecordCreate) createSpec() (*TicketWorkflowRecord, *sqlg
 		_node = &TicketWorkflowRecord{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(ticketworkflowrecord.Table, sqlgraph.NewFieldSpec(ticketworkflowrecord.FieldID, field.TypeInt))
 	)
+	if value, ok := _c.mutation.CreateTime(); ok {
+		_spec.SetField(ticketworkflowrecord.FieldCreateTime, field.TypeTime, value)
+		_node.CreateTime = value
+	}
 	if value, ok := _c.mutation.Action(); ok {
 		_spec.SetField(ticketworkflowrecord.FieldAction, field.TypeString, value)
 		_node.Action = value
@@ -280,10 +284,6 @@ func (_c *TicketWorkflowRecordCreate) createSpec() (*TicketWorkflowRecord, *sqlg
 	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(ticketworkflowrecord.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
-	}
-	if value, ok := _c.mutation.CreatedAt(); ok {
-		_spec.SetField(ticketworkflowrecord.FieldCreatedAt, field.TypeTime, value)
-		_node.CreatedAt = value
 	}
 	if nodes := _c.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

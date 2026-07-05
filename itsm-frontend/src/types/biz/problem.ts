@@ -55,10 +55,11 @@ export interface ProblemQuery {
 
 // 列表响应
 export interface ProblemListResponse {
-  problems: Problem[];
+  problems?: Problem[];
+  items?: Problem[];
   total: number;
-  page: number;
-  pageSize: number;
+  page?: number;
+  pageSize?: number;
 }
 
 // 统计响应

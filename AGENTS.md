@@ -223,3 +223,127 @@ threshold_percentage
 ```bash
 cd itsm-frontend && npm run type-check
 ```
+
+## 数据结构约定
+
+### 前后端字段命名规范
+
+| 层级 | 命名风格 | 示例 |
+|------|---------|------|
+| 后端 Ent Schema | snake_case | `assignee_id`, `ticket_number`, `created_at` |
+| 后端 DTO 响应 | camelCase | `assigneeId`, `ticketNumber`, `createdAt` |
+| 前端 TypeScript | camelCase | `assigneeId`, `ticketNumber`, `createdAt` |
+| 数据库字段 | snake_case | `assignee_id`, `ticket_number` |
+
+### 核心规则
+
+1. **后端 → 前端**：DTO 必须使用 camelCase 响应
+2. **前端 → 后端**：API 请求 payload 使用 camelCase
+3. **数据库**：Ent Schema 使用 snake_case
+4. **Mapper 转换**：DTO 层负责 snake_case → camelCase 转换
+
+### 响应类型驼峰约定
+
+所有 API 响应类型必须使用驼峰命名：
+
+```typescript
+// ✅ 正确：使用驼峰命名的响应类型
+interface TicketResponse {
+  id: string;
+  ticketNumber: string;
+  title: string;
+  assigneeId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ❌ 错误：使用蛇形命名
+interface TicketResponse {
+  id: string;
+  ticket_number: string;  // 不符合规范
+  assignee_id: string;   // 不符合规范
+}
+```
+
+### DTO Mapper 实现规范
+
+```go
+// ✅ 正确：在 DTO 层完成转换
+func ToTicketResponse(ticket *ent.Ticket) *TicketResponse {
+    return &TicketResponse{
+        ID:           ticket.ID.String(),
+        TicketNumber: ticket.TicketNumber,
+        Title:        ticket.Title,
+        AssigneeID:   ticket.AssigneeID,      // Ent 字段 snake_case
+        Status:       ticket.Status,            // Ent 字段 snake_case
+        CreatedAt:    ticket.CreatedAt.Format(), // 转换为字符串
+        UpdatedAt:    ticket.UpdatedAt.Format(),
+    }
+}
+
+// ❌ 错误：直接返回 Ent 模型
+func GetTicket(c echo.Context) error {
+    ticket, _ := svc.GetTicket(...)
+    return c.JSON(200, ticket) // 泄漏 Ent 模型
+}
+```
+
+## 文件命名规范
+
+### 后端 (Go)
+
+| 类型 | 命名风格 | 示例 |
+|------|---------|------|
+| Controller | `*_controller.go` | `ticket_controller.go` |
+| Service | `*_service.go` | `ticket_service.go` |
+| DTO | `*_dto.go` | `ticket_dto.go` |
+| Schema | `*.go` (ent) | `ticket.go` |
+| Middleware | `*_middleware.go` | `auth_middleware.go` |
+
+### 前端 (TypeScript/Next.js)
+
+| 类型 | 命名风格 | 示例 |
+|------|---------|------|
+| 页面 | `page.tsx` | `tickets/page.tsx` |
+| 组件 | `*.tsx` (PascalCase) | `TicketList.tsx` |
+| 工具函数 | `*.ts` (camelCase) | `formatDate.ts` |
+| API 客户端 | `*Api.ts` | `TicketApi.ts` |
+| 类型定义 | `*.ts` | `types/ticket.ts` |
+| Hooks | `use*.ts` | `useTicket.ts` |
+
+### 目录结构命名
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── (main)/            # 路由组 (括号命名)
+│   ├── tickets/           # 页面目录 (kebab-case)
+│   │   ├── page.tsx
+│   │   └── [id]/
+│   │       └── page.tsx
+│   └── components/        # 组件目录
+│       ├── TicketList/    # 组件文件夹 (PascalCase)
+│       │   └── index.tsx
+│       └── ui/            # 通用组件
+└── lib/
+    ├── api/               # API 客户端
+    ├── stores/            # Zustand stores
+    └── utils/             # 工具函数
+```
+
+### 禁止的命名方式
+
+- ❌ `TicketListComponent.tsx` → ✅ `TicketList.tsx`
+- ❌ `ticket_service.ts` → ✅ `ticketService.ts`
+- ❌ `get_tickets.go` → ✅ `ticket_service.go`
+- ❌ `APIUtils.ts` → ✅ `apiUtils.ts`
+
+## 工程要求摘要
+
+### 必须遵守的规则
+
+1. **DTO 返回**：Controller 必须返回 DTO，禁止返回 Ent 模型
+2. **字段命名**：后端 DTO 使用 camelCase，前端使用 camelCase
+3. **文件命名**：遵循上述命名规范（Go 用 snake_case，TypeScript 用 PascalCase/camelCase）
+4. **Mapper 转换**：DTO 层负责 snake_case → camelCase 转换
