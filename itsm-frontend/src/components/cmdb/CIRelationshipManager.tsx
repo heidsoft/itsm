@@ -341,7 +341,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       >
         <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Form.Item
-            name="target_ci_id"
+            name="targetCiId"
             label={createType === 'outgoing' ? '目标CI' : '源CI'}
             rules={[{ required: true, message: '请选择CI' }]}
           >
@@ -364,7 +364,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           </Form.Item>
 
           <Form.Item
-            name="relationship_type"
+            name="relationshipType"
             label="关系类型"
             rules={[{ required: true, message: '请选择关系类型' }]}
           >
@@ -392,7 +392,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
               </Select>
             </Form.Item>
 
-            <Form.Item name="impact_level" label="影响程度" style={{ width: '50%' }}>
+            <Form.Item name="impactLevel" label="影响程度" style={{ width: '50%' }}>
               <Select placeholder="选择程度" defaultValue="medium">
                 <Option value="critical">致命</Option>
                 <Option value="high">高</Option>

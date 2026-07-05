@@ -304,7 +304,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           <Col xs={24}>
             <Form.Item
               label="回滚策略"
-              name="rollback_strategy"
+              name="rollbackStrategy"
               rules={[{ required: true, message: '请选择回滚策略' }]}
             >
               <Select placeholder="选择回滚策略">
@@ -350,7 +350,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           <Col xs={24} lg={12}>
             <Form.Item
               label="回滚触发条件"
-              name="rollback_triggers"
+              name="rollbackTriggers"
               rules={[{ required: true, message: '请选择触发条件' }]}
             >
               <Select mode="multiple" placeholder="选择触发回滚的条件" style={{ width: '100%' }}>
@@ -370,7 +370,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           <Col xs={24} lg={12}>
             <Form.Item
               label="回滚团队"
-              name="rollback_team"
+              name="rollbackTeam"
               rules={[{ required: true, message: '请指定回滚团队成员' }]}
             >
               <Select mode="tags" placeholder="指定回滚团队成员" style={{ width: '100%' }}>
@@ -423,7 +423,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           <Col xs={24} lg={12}>
             <Form.Item
               label="回滚测试计划"
-              name="rollback_test_plan"
+              name="rollbackTestPlan"
               rules={[{ required: true, message: '请制定测试计划' }]}
             >
               <TextArea rows={4} placeholder="描述回滚前的测试方案..." maxLength={1000} showCount />
@@ -433,7 +433,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           <Col xs={24} lg={12}>
             <Form.Item
               label="回滚验证方案"
-              name="rollback_verification"
+              name="rollbackVerification"
               rules={[{ required: true, message: '请制定验证方案' }]}
             >
               <TextArea

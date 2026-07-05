@@ -774,14 +774,14 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       >
         <Form form={stepForm} layout="vertical" onFinish={handleCreateStep}>
           <Form.Item
-            name="step_title"
+            name="stepTitle"
             label="步骤标题"
             rules={[{ required: true, message: '请输入步骤标题' }]}
           >
             <Input placeholder="请输入步骤标题" />
           </Form.Item>
           <Form.Item
-            name="step_description"
+            name="stepDescription"
             label="步骤描述"
             rules={[{ required: true, message: '请输入步骤描述' }]}
           >
@@ -811,7 +811,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       >
         <Form form={rootCauseForm} layout="vertical" onFinish={handleCreateRootCause}>
           <Form.Item
-            name="analysis_method"
+            name="analysisMethod"
             label="分析方法"
             rules={[{ required: true, message: '请选择分析方法' }]}
           >
@@ -823,20 +823,20 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             </Select>
           </Form.Item>
           <Form.Item
-            name="root_cause_description"
+            name="rootCauseDescription"
             label="根本原因"
             rules={[{ required: true, message: '请输入根本原因描述' }]}
           >
             <TextArea rows={4} placeholder="请详细描述问题的根本原因" />
           </Form.Item>
-          <Form.Item name="contributing_factors" label="促成因素">
+          <Form.Item name="contributingFactors" label="促成因素">
             <TextArea rows={3} placeholder="导致问题发生的其他因素（可选）" />
           </Form.Item>
           <Form.Item name="evidence" label="证据支持">
             <TextArea rows={3} placeholder="支持您分析的证据材料（可选）" />
           </Form.Item>
           <Form.Item
-            name="confidence_level"
+            name="confidenceLevel"
             label="置信度"
             rules={[{ required: true, message: '请选择置信度' }]}
           >
@@ -867,7 +867,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       >
         <Form form={solutionForm} layout="vertical" onFinish={handleCreateSolution}>
           <Form.Item
-            name="solution_type"
+            name="solutionType"
             label="方案类型"
             rules={[{ required: true, message: '请选择方案类型' }]}
           >
@@ -879,7 +879,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             </Select>
           </Form.Item>
           <Form.Item
-            name="solution_description"
+            name="solutionDescription"
             label="方案描述"
             rules={[{ required: true, message: '请输入方案描述' }]}
           >
@@ -898,14 +898,14 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             </Select>
           </Form.Item>
           <Space style={{ width: '100%' }} size="large">
-            <Form.Item name="estimated_effort_hours" label="预估工时(小时)">
+            <Form.Item name="estimatedEffortHours" label="预估工时(小时)">
               <Input type="number" placeholder="0" />
             </Form.Item>
-            <Form.Item name="estimated_cost" label="预估成本">
+            <Form.Item name="estimatedCost" label="预估成本">
               <Input type="number" placeholder="0" />
             </Form.Item>
           </Space>
-          <Form.Item name="risk_assessment" label="风险评估">
+          <Form.Item name="riskAssessment" label="风险评估">
             <TextArea rows={2} placeholder="实施该方案的风险（可选）" />
           </Form.Item>
           <Form.Item>
@@ -929,14 +929,14 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       >
         <Form form={knowledgeForm} layout="vertical" onFinish={handleCreateKnowledgeArticle}>
           <Form.Item
-            name="article_title"
+            name="articleTitle"
             label="文章标题"
             rules={[{ required: true, message: '请输入文章标题' }]}
           >
             <Input placeholder="请输入文章标题" defaultValue={`[问题] ${problemTitle}`} />
           </Form.Item>
           <Form.Item
-            name="article_type"
+            name="articleType"
             label="文章类型"
             rules={[{ required: true, message: '请选择文章类型' }]}
           >
@@ -948,7 +948,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             </Select>
           </Form.Item>
           <Form.Item
-            name="article_content"
+            name="articleContent"
             label="文章内容"
             rules={[{ required: true, message: '请输入文章内容' }]}
           >

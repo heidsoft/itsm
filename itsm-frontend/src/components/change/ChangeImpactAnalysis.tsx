@@ -341,7 +341,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           <Col xs={24} lg={12}>
             <Form.Item
               label="业务影响分析"
-              name="business_impact"
+              name="businessImpact"
               rules={[{ required: true, message: '请分析业务影响' }]}
             >
               <TextArea
@@ -357,7 +357,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           <Col xs={24} lg={12}>
             <Form.Item
               label="技术影响分析"
-              name="technical_impact"
+              name="technicalImpact"
               rules={[{ required: true, message: '请分析技术影响' }]}
             >
               <TextArea
@@ -373,7 +373,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           <Col xs={24}>
             <Form.Item
               label="用户影响分析"
-              name="user_impact"
+              name="userImpact"
               rules={[{ required: true, message: '请分析用户影响' }]}
             >
               <TextArea
@@ -417,7 +417,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
             {/* 受影响用户数 */}
             <Form.Item
               label="受影响用户数"
-              name="affected_users"
+              name="affectedUsers"
               rules={[{ required: true, message: '请输入受影响用户数' }]}
             >
               <Input
@@ -430,7 +430,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
             {/* 预计停机时间 */}
             <Form.Item
               label="预计停机时间（分钟）"
-              name="estimated_downtime"
+              name="estimatedDowntime"
               rules={[{ required: true, message: '请输入预计停机时间' }]}
             >
               <Input
@@ -443,7 +443,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
             {/* 数据风险等级 */}
             <Form.Item
               label="数据风险等级"
-              name="data_risk_level"
+              name="dataRiskLevel"
               rules={[{ required: true, message: '请选择数据风险等级' }]}
             >
               <Select placeholder="选择数据风险等级">
@@ -455,7 +455,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
             </Form.Item>
 
             {/* 服务依赖 */}
-            <Form.Item label="服务依赖" name="service_dependencies">
+            <Form.Item label="服务依赖" name="serviceDependencies">
               <Select mode="tags" placeholder="选择或输入依赖的服务" style={{ width: '100%' }}>
                 <Option value="认证服务">认证服务</Option>
                 <Option value="支付服务">支付服务</Option>
@@ -470,7 +470,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           <Col xs={24} lg={12}>
             <Form.Item
               label="备份策略"
-              name="backup_strategy"
+              name="backupStrategy"
               rules={[{ required: true, message: '请制定备份策略' }]}
             >
               <TextArea
@@ -486,7 +486,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           <Col xs={24} lg={12}>
             <Form.Item
               label="恢复计划"
-              name="recovery_plan"
+              name="recoveryPlan"
               rules={[{ required: true, message: '请制定恢复计划' }]}
             >
               <TextArea
