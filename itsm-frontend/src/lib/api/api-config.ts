@@ -325,8 +325,11 @@ export interface SystemConfig {
 }
 
 export interface SystemConfigListResponse {
-  configs: SystemConfig[];
+  configs?: SystemConfig[];
+  items?: SystemConfig[];
   total: number;
+  page?: number;
+  size?: number;
 }
 
 export interface UpdateSystemConfigRequest {

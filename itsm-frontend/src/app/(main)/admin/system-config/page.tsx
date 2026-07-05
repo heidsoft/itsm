@@ -108,7 +108,7 @@ export default function SystemConfiguration() {
       const response = await SystemConfigAPI.getConfigs();
       const configMap: Record<string, unknown> = {};
 
-      response.configs.forEach((item: { key: string; value: unknown }) => {
+      response.configs?.forEach((item: { key: string; value: unknown }) => {
         configMap[item.key] = normalizeConfigValue(item.key, item.value);
       });
 
