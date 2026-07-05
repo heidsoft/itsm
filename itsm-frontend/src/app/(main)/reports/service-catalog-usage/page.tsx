@@ -47,7 +47,7 @@ const ServiceCatalogUsagePage = () => {
         // 生成按服务类型分布数据（基于实际服务）
         const serviceUsage = servicesData.map((service: any, index: number) => ({
           name: service.name || `服务 ${service.id}`,
-          value: service.usage_count || service.request_count || 0,
+          value: service.usageCount || service.requestCount || 0,
           color: COLORS[index % COLORS.length],
         }));
 

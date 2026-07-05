@@ -42,6 +42,26 @@ export type {
 // Backward-compatible alias used by some pages
 export type WorkflowTask = NodeInstance;
 
+// 后端 BPMN 任务原始结构（兼容多种字段命名）
+interface BpmnTaskRaw {
+  id?: string | number;
+  taskId?: string;
+  ID?: string;
+  processInstanceId?: string;
+  instanceId?: string;
+  taskDefinitionKey?: string;
+  taskName?: string;
+  taskType?: string;
+  status?: string;
+  assignee?: string;
+  createdTime?: string;
+  createdAt?: string;
+  dueDate?: string;
+  taskVariables?: Record<string, unknown>;
+  variables?: Record<string, unknown>;
+  retryCount?: number;
+}
+
 export class WorkflowApi {
   private static escapeCSV(value: unknown): string {
     const text =
@@ -64,11 +84,11 @@ export class WorkflowApi {
   }> {
     const params: Record<string, string | number> = {};
     if (query?.page) params.page = query.page;
-    if (query?.pageSize) params.page_size = query.pageSize;
+    if (query?.pageSize) params.pageSize = query.pageSize;
 
     // 修正: 确保路径与后端一致，后端可能是 /api/v1/bpmn/process-definitions
     const res = await httpClient.get<
-      | Array<{ id: number; key: string; name: string; description?: string; version: number; status: string; created_at: string; updated_at: string; }>
+      | Array<{ id: number; key: string; name: string; description?: string; version: number; status: string; createdAt: string; updatedAt: string; }>
       | {
           data?: Array<{
             id: number;
@@ -77,11 +97,11 @@ export class WorkflowApi {
             description?: string;
             version: number | string;
             status?: string;
-            is_active?: boolean;
+            isActive?: boolean;
             category?: string;
-            bpmn_xml?: string;
-            created_at: string;
-            updated_at: string;
+            bpmnXml?: string;
+            createdAt: string;
+            updatedAt: string;
           }>;
           items?: Array<{
             id: number;
@@ -90,11 +110,11 @@ export class WorkflowApi {
             description?: string;
             version: number | string;
             status?: string;
-            is_active?: boolean;
+            isActive?: boolean;
             category?: string;
-            bpmn_xml?: string;
-            created_at: string;
-            updated_at: string;
+            bpmnXml?: string;
+            createdAt: string;
+            updatedAt: string;
           }>;
           list?: Array<{
             id: number;
@@ -103,21 +123,21 @@ export class WorkflowApi {
             description?: string;
             version: number | string;
             status?: string;
-            is_active?: boolean;
+            isActive?: boolean;
             category?: string;
-            bpmn_xml?: string;
-            created_at: string;
-            updated_at: string;
+            bpmnXml?: string;
+            createdAt: string;
+            updatedAt: string;
           }>;
           total?: number;
           pagination?: { total: number };
         }
     >('/api/v1/bpmn/process-definitions', params);
 
-    const list = Array.isArray(res) ? res : ((res as any).data || (res as any).items || (res as any).list || []);
+    const list = Array.isArray(res) ? res : (res.data || res.items || res.list || []);
     const total = Array.isArray(res)
       ? list.length
-      : ((res as any).total ?? (res as any).pagination?.total ?? list.length);
+      : (res.total ?? res.pagination?.total ?? list.length);
     const workflows: WorkflowDefinition[] = list.map((item: {
       id: number;
       key: string;
@@ -125,11 +145,11 @@ export class WorkflowApi {
       description?: string;
       version: number | string;
       status?: string;
-      is_active?: boolean;
+      isActive?: boolean;
       category?: string;
-      bpmn_xml?: string;
-      created_at: string;
-      updated_at: string;
+      bpmnXml?: string;
+      createdAt: string;
+      updatedAt: string;
     }) => ({
       id: String(item.id || ''),
       code: item.key || '',
@@ -138,7 +158,7 @@ export class WorkflowApi {
       version: Number(item.version) || 1,
       status: item.status
         ? (item.status as WorkflowStatus)
-        : item.is_active
+        : item.isActive
           ? WorkflowStatus.ACTIVE
           : WorkflowStatus.DRAFT,
       nodes: [],
@@ -152,11 +172,11 @@ export class WorkflowApi {
       },
       createdBy: 0,
       createdByName: '',
-      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
-      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
       description: item.description,
       category: item.category,
-      bpmn_xml: item.bpmn_xml || (item as any).bpmnXml,
+      bpmnXml: item.bpmnXml,
     })) as WorkflowDefinition[];
     return { workflows, total };
   }
@@ -176,12 +196,12 @@ export class WorkflowApi {
       type?: string;
       version: number;
       status: string;
-      is_active?: boolean;
-      bpmn_xml?: string;
-      approval_config?: Record<string, unknown>;
-      sla_config?: Record<string, unknown>;
-      created_at: string;
-      updated_at: string;
+      isActive?: boolean;
+      bpmnXml?: string;
+      approvalConfig?: Record<string, unknown>;
+      slaConfig?: Record<string, unknown>;
+      createdAt: string;
+      updatedAt: string;
     }>(`/api/v1/bpmn/process-definitions/${id}`);
 
     const item = res;
@@ -193,7 +213,7 @@ export class WorkflowApi {
       version: item.version || 1,
       status: item.status
         ? (item.status as WorkflowStatus)
-        : item.is_active
+        : item.isActive
           ? WorkflowStatus.ACTIVE
           : WorkflowStatus.DRAFT,
       nodes: [],
@@ -207,14 +227,14 @@ export class WorkflowApi {
       },
       createdBy: 0,
       createdByName: '',
-      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
-      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
       description: item.description,
-      bpmn_xml: item.bpmn_xml || (item as any).bpmnXml,
+      bpmnXml: item.bpmnXml,
       category: item.category || item.type || 'general',
-      approval_config: item.approval_config as any,
-      sla_config: item.sla_config as any,
-    } as any;
+      approvalConfig: item.approvalConfig,
+      slaConfig: item.slaConfig,
+    };
   }
 
   // ==================== Backward-compatible method aliases (legacy pages) ====================
@@ -227,18 +247,16 @@ export class WorkflowApi {
     return WorkflowApi.getWorkflowVersions(key);
   }
 
-  static async createProcessDefinition(request: unknown): Promise<WorkflowDefinition> {
-     
-    return WorkflowApi.createWorkflow(request as any);
+  static async createProcessDefinition(request: CreateWorkflowRequest): Promise<WorkflowDefinition> {
+    return WorkflowApi.createWorkflow(request);
   }
 
   static async updateProcessDefinition(
     key: string,
-    request: unknown,
+    request: UpdateWorkflowRequest,
     version?: string
   ): Promise<WorkflowDefinition> {
-     
-    return WorkflowApi.updateWorkflow(key, request as any, version);
+    return WorkflowApi.updateWorkflow(key, request, version);
   }
 
   static async deployProcessDefinition(key: string, version?: string): Promise<void> {
@@ -254,9 +272,9 @@ export class WorkflowApi {
       name: current.name,
       description: current.description,
        
-      type: current.type as any,
+      type: current.type,
        
-      bpmn_xml: (current as any).bpmn_xml,
+      bpmnXml: current.bpmnXml,
     });
   }
 
@@ -271,10 +289,15 @@ export class WorkflowApi {
   }
 
   static async listWorkflowInstances(
-    params?: any
+    params?: {
+      workflowId?: string;
+      ticketId?: number;
+      status?: string;
+      page?: number;
+      pageSize?: number;
+    }
   ): Promise<{ instances: WorkflowInstance[]; total: number }> {
-     
-    return WorkflowApi.getInstances(params as any);
+    return WorkflowApi.getInstances(params);
   }
 
   static async listWorkflowTasks(instanceId: string): Promise<WorkflowTask[]> {
@@ -282,9 +305,9 @@ export class WorkflowApi {
     try {
       const tenantId = httpClient.getTenantId() || 1;
       const res = await httpClient.get<{ items?: any[]; list?: any[]; data?: any[] }>('/api/v1/bpmn/tasks', {
-        process_instance_id: instanceId,
+        processInstanceId: instanceId,
         page: 1,
-        page_size: 100,
+        pageSize: 100,
       });
       
       // 解析响应数据
@@ -297,18 +320,18 @@ export class WorkflowApi {
       
       // 转换为 WorkflowTask 格式
       return tasks.map((task: any) => ({
-        id: task.id || task.task_id || task.ID,
+        id: String(task.id || task.taskId || task.ID || ''),
         instanceId: instanceId,
-        nodeId: task.task_id || task.task_definition_key || '',
-        nodeName: task.task_name || task.taskName || '',
-        nodeType: task.task_type || task.taskType || 'user_task',
-        status: task.status || 'pending',
-        assignee: task.assignee || '',
+        nodeId: task.taskId || task.taskDefinitionKey || '',
+        nodeName: task.taskName || task.taskName || '',
+        nodeType: task.taskType || task.taskType || 'user_task',
+        status: (task.status || 'pending') as NodeInstance['status'],
+        assignee: task.assignee ? parseInt(task.assignee, 10) : undefined,
         assigneeId: task.assignee ? parseInt(task.assignee, 10) : undefined,
-        createdAt: task.created_time || task.createdAt || new Date().toISOString(),
-        dueDate: task.due_date || task.dueDate || null,
-        variables: task.task_variables || task.variables || {},
-        retryCount: task.retry_count || 0,
+        createdAt: task.createdTime || task.createdAt || new Date().toISOString(),
+        dueDate: task.dueDate || task.dueDate || null,
+        variables: task.taskVariables || task.variables || {},
+        retryCount: task.retryCount || 0,
       }));
     } catch (error) {
       console.error('Failed to fetch workflow tasks:', error);
@@ -335,33 +358,34 @@ export class WorkflowApi {
   ): Promise<{ items: WorkflowTask[]; total: number; page: number; size: number }> {
     const query: Record<string, unknown> = {
       page: params?.page ?? 1,
-      page_size: params?.pageSize ?? 20,
+      pageSize: params?.pageSize ?? 20,
     };
     if (params?.status) {
       query.status = params.status;
     }
-    const res = (await httpClient.get('/api/v1/bpmn/tasks', query)) as any;
+    const res = await httpClient.get<BpmnTaskRaw[] | { items?: BpmnTaskRaw[]; list?: BpmnTaskRaw[]; data?: BpmnTaskRaw[]; total?: number; page?: number; size?: number }>('/api/v1/bpmn/tasks', query);
     // 兼容多种返回结构：后端 ListResponse / items / list / data
-    const raw = Array.isArray(res)
+    const raw: BpmnTaskRaw[] = Array.isArray(res)
       ? res
       : (res?.items || res?.list || res?.data || []);
-    const items: WorkflowTask[] = (raw as any[]).map((task: any) => ({
-      id: task.id || task.task_id || task.ID,
-      instanceId: task.process_instance_id || task.instanceId || '',
-      nodeId: task.task_id || task.task_definition_key || '',
-      nodeName: task.task_name || task.taskName || '',
-      nodeType: task.task_type || task.taskType || 'user_task',
-      status: task.status || 'pending',
-      assignee: task.assignee || '',
+    const items: WorkflowTask[] = raw.map((task) => ({
+      id: String(task.id || task.taskId || task.ID || ''),
+      instanceId: task.processInstanceId || task.instanceId || '',
+      nodeId: task.taskId || task.taskDefinitionKey || '',
+      nodeName: task.taskName || task.taskName || '',
+      nodeType: task.taskType || task.taskType || 'user_task',
+      status: (task.status || 'pending') as NodeInstance['status'],
+      assignee: task.assignee ? parseInt(task.assignee, 10) : undefined,
       assigneeId: task.assignee ? parseInt(task.assignee, 10) : undefined,
-      createdAt: task.created_time || task.createdAt || new Date().toISOString(),
-      dueDate: task.due_date || task.dueDate || null,
-      variables: task.task_variables || task.variables || {},
-      retryCount: task.retry_count || 0,
+      createdAt: task.createdTime || task.createdAt || new Date().toISOString(),
+      dueDate: task.dueDate || task.dueDate || null,
+      variables: task.taskVariables || task.variables || {},
+      retryCount: task.retryCount || 0,
     }));
-    const total = Number(res?.total ?? items.length);
-    const page = Number(res?.page ?? params?.page ?? 1);
-    const size = Number(res?.size ?? params?.pageSize ?? items.length);
+    const meta = Array.isArray(res) ? null : res;
+    const total = Number(meta?.total ?? items.length);
+    const page = Number(meta?.page ?? params?.page ?? 1);
+    const size = Number(meta?.size ?? params?.pageSize ?? items.length);
     return { items, total, page, size };
   }
 
@@ -392,8 +416,8 @@ export class WorkflowApi {
       name: request.name,
       description: request.description,
       category: request.type, // Map type to category
-      bpmn_xml: (request as any).bpmn_xml,
-      tenant_id: tenantId,
+      bpmnXml: request.bpmnXml,
+      tenantId: tenantId,
     };
     return httpClient.post('/api/v1/bpmn/process-definitions', payload);
   }
@@ -409,7 +433,7 @@ export class WorkflowApi {
     const payload = {
       name: request.name,
       description: request.description,
-      bpmn_xml: (request as any).bpmn_xml,
+      bpmnXml: request.bpmnXml,
     };
     // Backend expects key in path. Assuming id passed here is key.
     // Also backend needs version parameter. We default to 1.0.0 or need to fetch it.
@@ -445,9 +469,9 @@ export class WorkflowApi {
       name: name || `${original.name} (副本)`,
       description: original.description,
        
-      type: original.type as any,
+      type: original.type,
        
-      bpmn_xml: (original as any).bpmn_xml,
+      bpmnXml: original.bpmnXml,
     });
   }
 
@@ -491,7 +515,7 @@ export class WorkflowApi {
       exportedBy: 'system',
       workflow: {
         ...workflow,
-        bpmn_xml: (workflow as any).bpmn_xml || '',
+        bpmnXml: workflow.bpmnXml || '',
       },
     };
   }
@@ -508,8 +532,8 @@ export class WorkflowApi {
       code: data.workflow.code || `imported_${Date.now()}`,
       name: data.workflow.name,
       description: data.workflow.description,
-      type: (data.workflow as any).type || 'ticket',
-      bpmn_xml: data.workflow.bpmn_xml || (data.workflow as any).bpmn_xml,
+      type: data.workflow.type,
+      bpmnXml: data.workflow.bpmnXml,
     });
   }
 
@@ -524,11 +548,11 @@ export class WorkflowApi {
       key?: string;
       name?: string;
       description?: string;
-      bpmn_xml?: string;
+      bpmnXml?: string;
       version?: number;
       status?: string;
-      created_at?: string;
-      updated_at?: string;
+      createdAt?: string;
+      updatedAt?: string;
       [key: string]: unknown;
     }
 
@@ -544,11 +568,11 @@ export class WorkflowApi {
         key: string;
         name: string;
         description?: string;
-        bpmn_xml?: string;
+        bpmnXml?: string;
         version: number;
         status: string;
-        created_at: string;
-        updated_at: string;
+        createdAt: string;
+        updatedAt: string;
       }>
     >(`/api/v1/bpmn/versions?process_key=${workflowId}`);
 
@@ -571,10 +595,10 @@ export class WorkflowApi {
       },
       createdBy: 0,
       createdByName: '',
-      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
-      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
       description: item.description,
-      bpmn_xml: item.bpmn_xml || (item as any).bpmnXml,
+      bpmnXml: item.bpmnXml,
     })) as WorkflowDefinition[];
   }
 
@@ -625,62 +649,62 @@ export class WorkflowApi {
     baseVersion: number,
     targetVersion: number
   ): Promise<{
-    elements_added: string[];
-    elements_removed: string[];
-    elements_modified: string[];
-    connections_added: string[];
-    connections_removed: string[];
-    variables_changed: string[];
-    is_identical: boolean;
+    elementsAdded: string[];
+    elementsRemoved: string[];
+    elementsModified: string[];
+    connectionsAdded: string[];
+    connectionsRemoved: string[];
+    variablesChanged: string[];
+    isIdentical: boolean;
   }> {
     interface CompareResponse {
-      added_nodes?: string[];
-      removed_nodes?: string[];
-      modified_nodes?: string[];
+      addedNodes?: string[];
+      removedNodes?: string[];
+      modifiedNodes?: string[];
     }
 
     interface VersionComparisonResponse {
-      elements_added: string[];
-      elements_removed: string[];
-      elements_modified: string[];
-      connections_added: string[];
-      connections_removed: string[];
-      variables_changed: string[];
-      is_identical: boolean;
+      elementsAdded: string[];
+      elementsRemoved: string[];
+      elementsModified: string[];
+      connectionsAdded: string[];
+      connectionsRemoved: string[];
+      variablesChanged: string[];
+      isIdentical: boolean;
     }
 
     const res = await httpClient.get<{
-      added_nodes?: string[];
-      removed_nodes?: string[];
-      modified_nodes?: string[];
+      addedNodes?: string[];
+      removedNodes?: string[];
+      modifiedNodes?: string[];
     }>(`/api/v1/bpmn/versions/${processKey}/compare`, {
-      base_version: baseVersion,
-      target_version: targetVersion,
+      baseVersion: baseVersion,
+      targetVersion: targetVersion,
     });
     const data = res;
     if (!data) {
       return {
-        elements_added: [],
-        elements_removed: [],
-        elements_modified: [],
-        connections_added: [],
-        connections_removed: [],
-        variables_changed: [],
-        is_identical: true,
+        elementsAdded: [],
+        elementsRemoved: [],
+        elementsModified: [],
+        connectionsAdded: [],
+        connectionsRemoved: [],
+        variablesChanged: [],
+        isIdentical: true,
       };
     }
     // 适配后端返回格式
     return {
-      elements_added: data.added_nodes || [],
-      elements_removed: data.removed_nodes || [],
-      elements_modified: data.modified_nodes || [],
-      connections_added: [],
-      connections_removed: [],
-      variables_changed: [],
-      is_identical: !(
-        data.added_nodes?.length ||
-        data.removed_nodes?.length ||
-        data.modified_nodes?.length
+      elementsAdded: data.addedNodes || [],
+      elementsRemoved: data.removedNodes || [],
+      elementsModified: data.modifiedNodes || [],
+      connectionsAdded: [],
+      connectionsRemoved: [],
+      variablesChanged: [],
+      isIdentical: !(
+        data.addedNodes?.length ||
+        data.removedNodes?.length ||
+        data.modifiedNodes?.length
       ),
     };
   }
@@ -692,27 +716,27 @@ export class WorkflowApi {
    */
   static async startWorkflow(request: StartWorkflowRequest): Promise<WorkflowInstance> {
     const payload = {
-      process_definition_key: request.workflowId, // Assuming workflowId is the Key
-      business_key: `BIZ-${Date.now()}`, // Auto generate or from request
+      processDefinitionKey: request.workflowId, // Assuming workflowId is the Key
+      businessKey: `BIZ-${Date.now()}`, // Auto generate or from request
       variables: request.variables,
     };
     const item = await httpClient.post<{
       id: string;
-      process_instance_id: string;
-      process_definition_key: string;
-      business_key: string;
+      processInstanceId: string;
+      processDefinitionKey: string;
+      businessKey: string;
       status: string;
-      start_time: string;
-      end_time?: string;
+      startTime: string;
+      endTime?: string;
     }>('/api/v1/bpmn/process-instances', payload);
     return {
-      id: item.process_instance_id || item.id || '',
-      workflowId: item.process_definition_key || '',
+      id: item.processInstanceId || item.id || '',
+      workflowId: item.processDefinitionKey || '',
       workflowName: '',
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
       variables: {},
-      startTime: item.start_time ? new Date(item.start_time) : new Date(),
+      startTime: item.startTime ? new Date(item.startTime) : new Date(),
       startedBy: 0,
       startedByName: '',
     };
@@ -733,12 +757,12 @@ export class WorkflowApi {
   }> {
     interface ProcessInstanceResponse {
       id?: string;
-      instance_id?: string;
-      process_definition_key?: string;
-      business_key?: string;
+      instanceId?: string;
+      processDefinitionKey?: string;
+      businessKey?: string;
       status?: string;
-      start_time?: string;
-      end_time?: string;
+      startTime?: string;
+      endTime?: string;
       [key: string]: unknown;
     }
 
@@ -748,28 +772,28 @@ export class WorkflowApi {
       instances?: T[];
       pagination?: {
         page: number;
-        page_size: number;
+        pageSize: number;
         total: number;
       };
       total?: number;
     }
 
     const query: Record<string, string | number> = {};
-    if (params?.workflowId) query.process_definition_key = params.workflowId;
+    if (params?.workflowId) query.processDefinitionKey = params.workflowId;
     if (params?.status) query.status = params.status;
     if (params?.page) query.page = params.page;
-    if (params?.pageSize) query.page_size = params.pageSize;
+    if (params?.pageSize) query.pageSize = params.pageSize;
 
     // 修正: 确保路径与后端一致
     const res = await httpClient.get<{
       data?: Array<{
         id: string;
-        instance_id: string;
-        process_definition_key: string;
-        business_key: string;
+        instanceId: string;
+        processDefinitionKey: string;
+        businessKey: string;
         status: string;
-        start_time: string;
-        end_time?: string;
+        startTime: string;
+        endTime?: string;
       }>;
       pagination?: { total: number };
       total?: number;
@@ -777,20 +801,20 @@ export class WorkflowApi {
     // httpClient.get returns responseData.data directly, which is an array
     const list = Array.isArray(res) ? res : res?.data || [];
     const instances: WorkflowInstance[] = list.map(item => ({
-      id: item.instance_id || item.id || '',
-      workflowId: item.process_definition_key || '',
+      id: item.instanceId || item.id || '',
+      workflowId: item.processDefinitionKey || '',
       workflowName: '',
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
       variables: {},
-      startTime: item.start_time ? new Date(item.start_time) : new Date(),
-      endTime: item.end_time ? new Date(item.end_time) : undefined,
+      startTime: item.startTime ? new Date(item.startTime) : new Date(),
+      endTime: item.endTime ? new Date(item.endTime) : undefined,
       startedBy: 0,
       startedByName: '',
     }));
     return {
       instances,
-      total: (res as any)?.pagination?.total || (res as any)?.total || list.length,
+      total: res?.pagination?.total || res?.total || list.length,
     };
   }
 
@@ -800,22 +824,22 @@ export class WorkflowApi {
   static async getInstance(instanceId: string): Promise<WorkflowInstance> {
     const item = await httpClient.get<{
       id: string;
-      instance_id: string;
-      process_definition_key: string;
-      business_key: string;
+      instanceId: string;
+      processDefinitionKey: string;
+      businessKey: string;
       status: string;
-      start_time: string;
-      end_time?: string;
+      startTime: string;
+      endTime?: string;
     }>(`/api/v1/bpmn/process-instances/${instanceId}`);
     return {
-      id: item.instance_id || item.id || '',
-      workflowId: item.process_definition_key || '',
+      id: item.instanceId || item.id || '',
+      workflowId: item.processDefinitionKey || '',
       workflowName: '',
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
       variables: {},
-      startTime: item?.start_time ? new Date(item.start_time) : new Date(),
-      endTime: item?.end_time ? new Date(item.end_time) : undefined,
+      startTime: item?.startTime ? new Date(item.startTime) : new Date(),
+      endTime: item?.endTime ? new Date(item.endTime) : undefined,
       startedBy: 0,
       startedByName: '',
     };
@@ -860,13 +884,13 @@ export class WorkflowApi {
   static async getNodeInstances(instanceId: string): Promise<NodeInstance[]> {
     interface TaskResponse {
       id?: string;
-      task_id?: string;
+      taskId?: string;
       name?: string;
       status?: string;
       assignee?: string;
-      assignee_name?: string;
-      created_time?: string;
-      due_date?: string;
+      assigneeName?: string;
+      createdTime?: string;
+      dueDate?: string;
       [key: string]: unknown;
     }
 
@@ -883,26 +907,26 @@ export class WorkflowApi {
       const tasksRes = await httpClient.get<
         Array<{
           id: string;
-          task_id: string;
+          taskId: string;
           name: string;
           status: string;
           assignee?: string;
-          assignee_name?: string;
-          created_time?: string;
-          due_date?: string;
+          assigneeName?: string;
+          createdTime?: string;
+          dueDate?: string;
         }>
       >(`/api/v1/bpmn/tasks?processInstanceId=${instanceId}`);
       const list = tasksRes || [];
       return list.map(item => ({
-        id: item.task_id || item.id || '',
+        id: item.taskId || item.id || '',
         instanceId: instanceId,
-        nodeId: item.task_id || '',
+        nodeId: item.taskId || '',
         nodeName: item.name || '',
         status:
           (item.status as 'pending' | 'running' | 'completed' | 'failed' | 'skipped') || 'pending',
         assignee: item.assignee ? parseInt(item.assignee) : undefined,
-        assigneeName: item.assignee_name,
-        startTime: item.created_time ? new Date(item.created_time) : undefined,
+        assigneeName: item.assigneeName,
+        startTime: item.createdTime ? new Date(item.createdTime) : undefined,
         retryCount: 0,
       }));
     } catch {
@@ -964,7 +988,7 @@ export class WorkflowApi {
         code: '',
         name: '',
          
-        type: 'ticket' as any,
+        type: WorkflowType.TICKET,
         version: 1,
         status: WorkflowStatus.DRAFT,
         nodes: [],
@@ -992,7 +1016,7 @@ export class WorkflowApi {
       name,
       description: `从模板 ${templateId} 创建`,
        
-      type: 'ticket' as any,
+      type: WorkflowType.TICKET,
     });
   }
 
@@ -1023,7 +1047,7 @@ export class WorkflowApi {
         code: '',
         name: data.name,
          
-        type: 'ticket' as any,
+        type: WorkflowType.TICKET,
         version: 1,
         status: WorkflowStatus.DRAFT,
         nodes: [],
@@ -1075,10 +1099,10 @@ export class WorkflowApi {
    * 获取实例统计
    */
   static async getInstanceStats(params?: {
-    process_definition_key?: string;
+    processDefinitionKey?: string;
     status?: string;
-    start_date?: string;
-    end_date?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<{
     total: number;
     running: number;
@@ -1087,34 +1111,21 @@ export class WorkflowApi {
     terminated: number;
   }> {
     const query: Record<string, string> = {};
-    if (params?.process_definition_key)
-      query.process_definition_key = params.process_definition_key;
+    if (params?.processDefinitionKey)
+      query.processDefinitionKey = params.processDefinitionKey;
     if (params?.status) query.status = params.status;
-    if (params?.start_date) query.start_date = params.start_date;
-    if (params?.end_date) query.end_date = params.end_date;
+    if (params?.startDate) query.startDate = params.startDate;
+    if (params?.endDate) query.endDate = params.endDate;
 
-    const res = await httpClient.get<
-      | {
-          total: number;
-          running: number;
-          completed: number;
-          suspended: number;
-          terminated: number;
-        }
-      | {
-          code: number;
-          message: string;
-          data: {
-            total: number;
-            running: number;
-            completed: number;
-            suspended: number;
-            terminated: number;
-          };
-        }
-    >('/api/v1/bpmn/stats/instances', query);
+    const res = await httpClient.get<{
+      total: number;
+      running: number;
+      completed: number;
+      suspended: number;
+      terminated: number;
+    }>('/api/v1/bpmn/stats/instances', query);
 
-    const data = (res as any)?.data || res;
+    const data = res;
     return data || {
       total: 0,
       running: 0,
@@ -1128,54 +1139,41 @@ export class WorkflowApi {
    * 获取任务统计
    */
   static async getTaskStats(params?: {
-    process_definition_key?: string;
+    processDefinitionKey?: string;
     assignee?: string;
     status?: string;
-    start_date?: string;
-    end_date?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<{
-    total_tasks: number;
-    completed_tasks: number;
-    pending_tasks: number;
-    overdue_tasks: number;
-    average_completion: number;
+    totalTasks: number;
+    completedTasks: number;
+    pendingTasks: number;
+    overdueTasks: number;
+    averageCompletion: number;
   }> {
     const query: Record<string, string> = {};
-    if (params?.process_definition_key)
-      query.process_definition_key = params.process_definition_key;
+    if (params?.processDefinitionKey)
+      query.processDefinitionKey = params.processDefinitionKey;
     if (params?.assignee) query.assignee = params.assignee;
     if (params?.status) query.status = params.status;
-    if (params?.start_date) query.start_date = params.start_date;
-    if (params?.end_date) query.end_date = params.end_date;
+    if (params?.startDate) query.startDate = params.startDate;
+    if (params?.endDate) query.endDate = params.endDate;
 
-    const res = await httpClient.get<
-      | {
-          total_tasks: number;
-          completed_tasks: number;
-          pending_tasks: number;
-          overdue_tasks: number;
-          average_completion: number;
-        }
-      | {
-          code: number;
-          message: string;
-          data: {
-            total_tasks: number;
-            completed_tasks: number;
-            pending_tasks: number;
-            overdue_tasks: number;
-            average_completion: number;
-          };
-        }
-    >('/api/v1/bpmn/stats/tasks', query);
+    const res = await httpClient.get<{
+      totalTasks: number;
+      completedTasks: number;
+      pendingTasks: number;
+      overdueTasks: number;
+      averageCompletion: number;
+    }>('/api/v1/bpmn/stats/tasks', query);
 
-    const data = (res as any)?.data || res;
+    const data = res;
     return data || {
-      total_tasks: 0,
-      completed_tasks: 0,
-      pending_tasks: 0,
-      overdue_tasks: 0,
-      average_completion: 0,
+      totalTasks: 0,
+      completedTasks: 0,
+      pendingTasks: 0,
+      overdueTasks: 0,
+      averageCompletion: 0,
     };
   }
 
@@ -1191,7 +1189,7 @@ export class WorkflowApi {
     threshold?: number
   ): Promise<
     Array<{
-      task_id: string;
+      taskId: string;
       assignee: string;
       status: string;
     }>
@@ -1200,12 +1198,12 @@ export class WorkflowApi {
       code: number;
       message: string;
       data: Array<{
-        task_id: string;
+        taskId: string;
         assignee: string;
         status: string;
       }>;
     }>(`/api/v1/bpmn/tasks/${taskId}/counter-sign`, {
-      approval_type: approvalType,
+      approvalType: approvalType,
       approvers,
       threshold: threshold || approvers.length,
     });
@@ -1217,7 +1215,7 @@ export class WorkflowApi {
    * 获取会签状态
    */
   static async getCounterSignStatus(taskId: string): Promise<{
-    parent_task_id: string;
+    parentTaskId: string;
     total: number;
     completed: number;
     approved: number;
@@ -1229,7 +1227,7 @@ export class WorkflowApi {
       code: number;
       message: string;
       data: {
-        parent_task_id: string;
+        parentTaskId: string;
         total: number;
         completed: number;
         approved: number;
@@ -1241,7 +1239,7 @@ export class WorkflowApi {
 
     return (
       res?.data || {
-        parent_task_id: taskId,
+        parentTaskId: taskId,
         total: 0,
         completed: 0,
         approved: 0,
@@ -1311,14 +1309,14 @@ export class WorkflowApi {
         endDate: params.endDate,
       }),
       WorkflowApi.getInstanceStats({
-        process_definition_key: params.workflowId,
-        start_date: params.startDate,
-        end_date: params.endDate,
+        processDefinitionKey: params.workflowId,
+        startDate: params.startDate,
+        endDate: params.endDate,
       }),
       WorkflowApi.getTaskStats({
-        process_definition_key: params.workflowId,
-        start_date: params.startDate,
-        end_date: params.endDate,
+        processDefinitionKey: params.workflowId,
+        startDate: params.startDate,
+        endDate: params.endDate,
       }),
     ]);
 
@@ -1334,11 +1332,11 @@ export class WorkflowApi {
       ['失败实例', workflowStats.failedInstances],
       ['暂停实例', instanceStats.suspended],
       ['终止实例', instanceStats.terminated],
-      ['总任务数', taskStats.total_tasks],
-      ['已完成任务', taskStats.completed_tasks],
-      ['待办任务', taskStats.pending_tasks],
-      ['逾期任务', taskStats.overdue_tasks],
-      ['平均任务完成时间', taskStats.average_completion],
+      ['总任务数', taskStats.totalTasks],
+      ['已完成任务', taskStats.completedTasks],
+      ['待办任务', taskStats.pendingTasks],
+      ['逾期任务', taskStats.overdueTasks],
+      ['平均任务完成时间', taskStats.averageCompletion],
       ['成功率', workflowStats.successRate],
       ['平均耗时', workflowStats.avgDuration],
       ['导出格式请求', params.format],

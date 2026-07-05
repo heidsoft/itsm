@@ -22,7 +22,7 @@ export interface ConnectorManifest {
   description?: string;
   author?: string;
   homepage?: string;
-  icon_url?: string;
+  iconUrl?: string;
   capabilities: string[];
   tags?: string[];
   local: boolean;
@@ -66,9 +66,9 @@ export interface SendConnectorMessageRequest {
 
 export interface ConnectorHealth {
   ok: boolean;
-  latency_ms?: number;
+  latencyMs?: number;
   message?: string;
-  checked_at?: string;
+  checkedAt?: string;
   extra?: Record<string, unknown>;
 }
 
@@ -97,7 +97,7 @@ class ConnectorService {
     await httpClient.delete(`${this.baseUrl}/configs/${encodeURIComponent(name)}`);
   }
 
-  /** 发送测试消息（向 settings.debug_channel） */
+  /** 发送测试消息（向 settings.debugChannel） */
   async test(name: string): Promise<{ sent: boolean; channel: string }> {
     return httpClient.post(`${this.baseUrl}/${encodeURIComponent(name)}/test`);
   }

@@ -78,7 +78,7 @@ const CIList: React.FC = () => {
       const res = await CMDBApi.getCITypes();
       if (!isMountedRef.current) return;
       // 支持多种响应格式
-      const list = res?.data ?? res?.items ?? res;
+      const list = (res as any)?.data ?? (res as any)?.items ?? res;
       setTypes(Array.isArray(list) ? list : []);
     } catch (e) {
       if (!isMountedRef.current) return;
@@ -94,12 +94,12 @@ const CIList: React.FC = () => {
       const resp = await CMDBApi.getCIs({
         offset: query.offset,
         limit: query.limit,
-        ci_type_id: currentFilters.ciTypeId,
+        ciTypeId: currentFilters.ciTypeId,
         search: currentFilters.search || undefined,
         status: currentFilters.status,
       });
       if (!isMountedRef.current || requestId !== requestIdRef.current) return;
-      setData(resp.items ?? resp.cis ?? []);
+      setData((resp as any).items ?? (resp as any).cis ?? [] as any);
       setTotal(resp.total ?? 0);
     } catch (error) {
       if (!isMountedRef.current || requestId !== requestIdRef.current) return;
@@ -188,12 +188,12 @@ const CIList: React.FC = () => {
       ...selectedData.map(item => [
         item.id,
         item.name,
-        types.find(t => t.id === item.ciTypeId)?.name || item.ci_type || '',
-        item.cloudProvider || item.cloud_provider || '',
+        types.find(t => t.id === item.ciTypeId)?.name || (item as any).ciType || '',
+        item.cloudProvider || (item as any).cloudProvider || '',
         item.status,
         item.model || '',
         item.vendor || '',
-        item.updatedAt || item.updated_at || '',
+        item.updatedAt || item.updatedAt || '',
       ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')),
     ].join('\n');
 
@@ -239,14 +239,14 @@ const CIList: React.FC = () => {
       title: '类型',
       width: 120,
       render: (_: unknown, record: ConfigurationItem) => {
-        const typeId = record.ciTypeId ?? record.ci_type_id;
+        const typeId = record.ciTypeId ?? record.ciTypeId;
         return types.find(t => t.id === typeId)?.name || record.type || `类型 ${typeId}`;
       },
     },
     {
       title: '云厂商',
       width: 120,
-      render: (_: unknown, record: ConfigurationItem) => record.cloudProvider ?? record.cloud_provider ?? '-',
+      render: (_: unknown, record: ConfigurationItem) => record.cloudProvider ?? record.cloudProvider ?? '-',
     },
     {
       title: '状态',
@@ -258,7 +258,7 @@ const CIList: React.FC = () => {
     },
     {
       title: '型号/厂商',
-      key: 'model_vendor',
+      key:'modelVendor',
       width: 180,
       render: (_: unknown, record: ConfigurationItem) => (
         <span>
@@ -270,7 +270,7 @@ const CIList: React.FC = () => {
       title: '最后更新',
       width: 160,
       render: (_: unknown, record: ConfigurationItem) => {
-        const date = record.updatedAt ?? record.updated_at;
+        const date = record.updatedAt ?? record.updatedAt;
         return date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-';
       },
     },

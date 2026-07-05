@@ -117,8 +117,8 @@ export class TemplateApi {
     versionB: string
   ): Promise<unknown> {
     return httpClient.get(`/api/v1/templates/${templateId}/compare`, {
-      version_a: versionA,
-      version_b: versionB,
+      versionA: versionA,
+      versionB: versionB,
     });
   }
 
@@ -214,7 +214,7 @@ export class TemplateApi {
    */
   static async getRecommendedTemplates(userId?: string): Promise<TicketTemplate[]> {
     return httpClient.get<TicketTemplate[]>('/api/v1/templates/recommended', {
-      user_id: userId,
+      userId: userId,
     });
   }
 
@@ -279,7 +279,7 @@ export class TemplateApi {
     const response = await httpClient.request({
       method: 'POST',
       url: '/api/v1/templates/export/batch',
-      data: { template_ids: templateIds, ...format },
+      data: { templateIds: templateIds, ...format },
       responseType: 'blob',
     });
     return response as Blob;
@@ -332,7 +332,7 @@ export class TemplateApi {
   ): Promise<{ available: boolean; suggestions?: string[] }> {
     return httpClient.get('/api/v1/templates/check-name', {
       name,
-      exclude_id: excludeId,
+      excludeId: excludeId,
     });
   }
 
@@ -346,8 +346,8 @@ export class TemplateApi {
     isActive: boolean
   ): Promise<{ success: number; failed: number }> {
     return httpClient.post('/api/v1/templates/batch/toggle', {
-      template_ids: templateIds,
-      is_active: isActive,
+      templateIds: templateIds,
+      isActive: isActive,
     });
   }
 
@@ -360,7 +360,7 @@ export class TemplateApi {
     return httpClient.request({
       method: 'DELETE',
       url: '/api/v1/templates/batch',
-      data: { template_ids: templateIds },
+      data: { templateIds: templateIds },
     });
   }
 
@@ -371,7 +371,7 @@ export class TemplateApi {
     templateIds: string[]
   ): Promise<{ success: number; failed: number }> {
     return httpClient.post('/api/v1/templates/batch/archive', {
-      template_ids: templateIds,
+      templateIds: templateIds,
     });
   }
 
@@ -383,8 +383,8 @@ export class TemplateApi {
     categoryId: string
   ): Promise<{ success: number; failed: number }> {
     return httpClient.post('/api/v1/templates/batch/update-category', {
-      template_ids: templateIds,
-      category_id: categoryId,
+      templateIds: templateIds,
+      categoryId: categoryId,
     });
   }
 
@@ -424,7 +424,7 @@ export class TemplateApi {
     categoryId?: string
   ): Promise<Array<{ name: string; type: string; label: string }>> {
     return httpClient.get('/api/v1/templates/field-suggestions', {
-      category_id: categoryId,
+      categoryId: categoryId,
     });
   }
 
@@ -445,7 +445,7 @@ export class TemplateApi {
     sampleData?: Record<string, unknown>
   ): Promise<unknown> {
     return httpClient.post(`/api/v1/templates/${templateId}/preview`, {
-      sample_data: sampleData,
+      sampleData: sampleData,
     });
   }
 
@@ -462,7 +462,7 @@ export class TemplateApi {
     approvalWorkflow: unknown;
   }> {
     return httpClient.post(`/api/v1/templates/${templateId}/test-automation`, {
-      test_data: testData,
+      testData: testData,
     });
   }
 
@@ -493,10 +493,10 @@ export class TemplateApi {
    * 检查模板是否已收藏
    */
   static async isFavorite(templateId: string): Promise<boolean> {
-    const result = await httpClient.get<{ is_favorite: boolean }>(
+    const result = await httpClient.get<{ isFavorite: boolean }>(
       `/api/v1/templates/${templateId}/favorite/status`
     );
-    return result.is_favorite;
+    return result.isFavorite;
   }
 }
 

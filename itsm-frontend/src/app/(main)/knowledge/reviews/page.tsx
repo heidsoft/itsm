@@ -47,7 +47,7 @@ const { Text, Paragraph } = Typography;
 // 状态标签映射
 const statusTagMap: Record<string, { color: string; text: string; icon?: React.ReactNode }> = {
   draft: { color: 'default', text: '草稿' },
-  pending_review: { color: 'orange', text: '待审核', icon: <Clock /> },
+  pendingReview: { color: 'orange', text: '待审核', icon: <Clock /> },
   approved: { color: 'green', text: '已发布', icon: <CheckCircle /> },
   rejected: { color: 'red', text: '已拒绝', icon: <XCircle /> },
   archived: { color: 'default', text: '已归档' },

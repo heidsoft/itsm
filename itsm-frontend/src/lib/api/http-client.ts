@@ -47,6 +47,9 @@ const toCamelCase = (obj: unknown): unknown => {
   return obj;
 };
 
+// 将 camelCase key 转换为 snake_case（用于查询参数，后端 form tag 为 snake_case）
+const toSnakeCase = (s: string): string => s.replace(/([A-Z])/g, g => '_' + g.toLowerCase());
+
 // Request configuration interface
 export interface RequestConfig {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -204,7 +207,7 @@ class HttpClient {
         },
         credentials: 'include', // Include httpOnly cookies
         body: JSON.stringify({
-          refresh_token: refreshToken,
+          refreshToken: refreshToken,
         }),
       });
 
@@ -407,17 +410,17 @@ class HttpClient {
           ? // blob passthrough
             await (async () => {
               const url = `${this.baseURL}${endpoint}`;
-              const headers = { ...this.getHeaders(), ...(cfg.headers || {}) };
-              if (body instanceof FormData) delete (headers as any)['Content-Type'];
+              const headers: Record<string, string> = { ...this.getHeaders(), ...(cfg.headers || {}) };
+              if (body instanceof FormData) delete headers['Content-Type'];
               else headers['Content-Type'] = headers['Content-Type'] || 'application/json';
-              const res = await fetch(url, { method, headers, body: body as any });
+              const res = await fetch(url, { method, headers, body: body ?? null });
               if (!res.ok) throw new Error(`HTTP error! status: ${res?.status}`);
-              return (await res.blob()) as any;
+              return (await res.blob()) as unknown as T;
             })()
           : await this.requestInternal<T>(endpoint, {
               method,
               headers: cfg.headers,
-              body: body as any,
+              body,
             });
 
       return data as T;
@@ -429,7 +432,7 @@ class HttpClient {
     return this.requestInternal<T>(endpoint, {
       method: cfg.method || 'GET',
       headers: cfg.headers,
-      body: cfg.body as any,
+      body: cfg.body,
       timeout: cfg.timeout,
     });
   }
@@ -440,7 +443,8 @@ class HttpClient {
       const searchParams = new URLSearchParams();
       Object.entries(params as Record<string, unknown>).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          searchParams.append(key, String(value));
+          // 查询参数 key 转为 snake_case 以匹配后端 form tag
+          searchParams.append(toSnakeCase(key), String(value));
         }
       });
       url += `?${searchParams.toString()}`;
@@ -525,7 +529,7 @@ class HttpClient {
       }
 
       if (config?.responseType === 'blob') {
-        return (await response.blob()) as any;
+        return (await response.blob()) as unknown as T;
       }
 
       const responseData = (await response.json()) as ApiResponse<T>;

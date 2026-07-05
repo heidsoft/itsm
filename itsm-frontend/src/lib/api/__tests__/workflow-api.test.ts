@@ -35,12 +35,12 @@ describe('WorkflowApi', () => {
       const mockData = [
         {
           id: 1,
-          key: 'approval_workflow',
+          key:'approvalWorkflow',
           name: 'Approval Workflow',
           description: 'Test workflow',
           version: 1,
-          created_at: '2024-01-01T10:00:00Z',
-          updated_at: '2024-01-01T10:00:00Z',
+          createdAt: '2024-01-01T10:00:00Z',
+          updatedAt: '2024-01-01T10:00:00Z',
         },
       ];
 
@@ -73,7 +73,7 @@ describe('WorkflowApi', () => {
 
       expect(httpClient.get).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({ page: 2, page_size: 10 })
+        expect.objectContaining({ page: 2, pageSize: 10 })
       );
     });
   });
@@ -82,12 +82,12 @@ describe('WorkflowApi', () => {
     it('should fetch single workflow successfully', async () => {
       const mockData = {
         id: 1,
-        key: 'approval_workflow',
+        key:'approvalWorkflow',
         name: 'Approval Workflow',
         description: 'Test workflow',
         version: 1,
-        created_at: '2024-01-01T10:00:00Z',
-        updated_at: '2024-01-01T10:00:00Z',
+        createdAt: '2024-01-01T10:00:00Z',
+        updatedAt: '2024-01-01T10:00:00Z',
       };
 
       (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
@@ -112,7 +112,7 @@ describe('WorkflowApi', () => {
     it('should fetch process definition using key', async () => {
       const mockData = {
         id: 1,
-        key: 'test_process',
+        key:'testProcess',
         name: 'Test Process',
         version: 1,
       };
@@ -128,8 +128,8 @@ describe('WorkflowApi', () => {
   describe('getProcessVersions', () => {
     it('should fetch all versions of a process', async () => {
       const mockData = [
-        { id: 1, key: 'test_process', version: 1, name: 'Test Process v1' },
-        { id: 2, key: 'test_process', version: 2, name: 'Test Process v2' },
+        { id: 1, key:'testProcess', version: 1, name: 'Test Process v1' },
+        { id: 2, key:'testProcess', version: 2, name: 'Test Process v2' },
       ];
 
       (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
@@ -149,11 +149,11 @@ describe('WorkflowApi', () => {
       const mockData = [
         {
           id: '1',
-          instance_id: '1',
-          process_definition_key: 'approval_workflow',
-          business_key: 'ticket-123',
+          instanceId: '1',
+          processDefinitionKey: 'approval_workflow',
+          businessKey: 'ticket-123',
           status: 'running',
-          start_time: '2024-01-01T10:00:00Z',
+          startTime: '2024-01-01T10:00:00Z',
         },
       ];
 
@@ -174,11 +174,11 @@ describe('WorkflowApi', () => {
     it('should start a new workflow', async () => {
       const mockData = {
         id: '1',
-        process_instance_id: '1',
-        process_definition_key: 'approval_workflow',
-        business_key: 'BIZ-123',
+        processInstanceId: '1',
+        processDefinitionKey: 'approval_workflow',
+        businessKey: 'BIZ-123',
         status: 'running',
-        start_time: '2024-01-01T10:00:00Z',
+        startTime: '2024-01-01T10:00:00Z',
       };
 
       (httpClient.post as jest.Mock).mockResolvedValueOnce(mockData);

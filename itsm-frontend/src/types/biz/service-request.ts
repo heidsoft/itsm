@@ -51,37 +51,24 @@ export interface ServiceRequestApproval {
 // 服务请求实体 (对应后端 DTO)
 export interface ServiceRequest {
   id: number;
-  catalog_id: number;
-  catalogId?: number;
-  requester_id: number;
-  requesterId?: number;
+  catalogId: number;
+  requesterId: number;
   status: ServiceRequestStatus | string;
   title?: string;
   reason?: string;
-  form_data?: Record<string, any>;
   formData?: Record<string, any>;
 
-  cost_center?: string;
   costCenter?: string;
-  data_classification?: string;
   dataClassification?: string;
-  needs_public_ip?: boolean;
   needsPublicIp?: boolean;
-  source_ip_whitelist?: string[];
   sourceIpWhitelist?: string[];
-  expire_at?: string;
   expireAt?: string;
-  compliance_ack: boolean;
-  complianceAck?: boolean;
+  complianceAck: boolean;
 
-  current_level: number;
-  currentLevel?: number;
-  total_levels: number;
-  totalLevels?: number;
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  currentLevel: number;
+  totalLevels: number;
+  createdAt: string;
+  updatedAt: string;
 
   approvals?: ServiceRequestApproval[];
   catalog?: ServiceCatalogRef; // 后端目前可能未填充，需注意
@@ -90,17 +77,17 @@ export interface ServiceRequest {
 
 // 创建服务请求参数
 export interface CreateServiceRequestRequest {
-  catalog_id: number;
+  catalogId: number;
   title?: string;
   reason?: string;
-  form_data?: Record<string, any>;
+  formData?: Record<string, any>;
 
-  cost_center?: string;
-  data_classification?: string;
-  needs_public_ip?: boolean;
-  source_ip_whitelist?: string[];
-  expire_at?: string;
-  compliance_ack: boolean;
+  costCenter?: string;
+  dataClassification?: string;
+  needsPublicIp?: boolean;
+  sourceIpWhitelist?: string[];
+  expireAt?: string;
+  complianceAck: boolean;
 }
 
 // 审批动作请求参数

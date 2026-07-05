@@ -20,10 +20,10 @@ export const useIncidentsData = () => {
     keyword: '',
   });
   const [metrics, setMetrics] = useState({
-    total_incidents: 0,
-    critical_incidents: 0,
-    major_incidents: 0,
-    avg_resolution_time: 0,
+    totalIncidents: 0,
+    criticalIncidents: 0,
+    majorIncidents: 0,
+    avgResolutionTime: 0,
   });
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export const useIncidentsData = () => {
     try {
       const response = await IncidentAPI.listIncidents({
         page: currentPage,
-        page_size: pageSize,
+        pageSize: pageSize,
         status: filters.status,
         priority: filters.priority,
         source: filters.source,
@@ -56,18 +56,18 @@ export const useIncidentsData = () => {
     try {
       const response = await IncidentAPI.getIncidentMetrics();
       setMetrics({
-        total_incidents: response.total_incidents || response.totalIncidents || 0,
-        critical_incidents: response.critical_incidents || response.criticalIncidents || 0,
-        major_incidents: response.major_incidents || response.majorIncidents || 0,
-        avg_resolution_time: response.avg_resolution_time || response.avgResolutionTime || 0,
+        totalIncidents: response.totalIncidents || response.totalIncidents || 0,
+        criticalIncidents: response.criticalIncidents || response.criticalIncidents || 0,
+        majorIncidents: response.majorIncidents || response.majorIncidents || 0,
+        avgResolutionTime: response.avgResolutionTime || response.avgResolutionTime || 0,
       });
     } catch (error) {
       console.error('Failed to load metrics:', error);
       setMetrics({
-        total_incidents: 0,
-        critical_incidents: 0,
-        major_incidents: 0,
-        avg_resolution_time: 0,
+        totalIncidents: 0,
+        criticalIncidents: 0,
+        majorIncidents: 0,
+        avgResolutionTime: 0,
       });
     }
   };

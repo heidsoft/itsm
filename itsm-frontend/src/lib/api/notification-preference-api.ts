@@ -42,25 +42,25 @@ export class NotificationPreferenceApi {
 
   /**
    * 获取当前用户的通知偏好设置列表（兼容profile页面）
-   * 返回 { preferences: [...], event_types: [...] } 格式
+   * 返回 { preferences: [...], eventTypes: [...] } 格式
    */
   static async getPreferences(): Promise<{
     preferences: Array<{
-      event_type: string;
-      email_enabled: boolean;
-      in_app_enabled: boolean;
+      eventType: string;
+      emailEnabled: boolean;
+      inAppEnabled: boolean;
       timezone?: string;
     }>;
-    event_types: string[];
+    eventTypes: string[];
   }> {
     return httpClient.get<{
       preferences: Array<{
-        event_type: string;
-        email_enabled: boolean;
-        in_app_enabled: boolean;
+        eventType: string;
+        emailEnabled: boolean;
+        inAppEnabled: boolean;
         timezone?: string;
       }>;
-      event_types: string[];
+      eventTypes: string[];
     }>(`${this.baseURL}`);
   }
 
@@ -125,9 +125,9 @@ export class NotificationPreferenceApi {
    */
   static async bulkUpdate(data: {
     preferences: Array<{
-      event_type: string;
-      email_enabled: boolean;
-      in_app_enabled: boolean;
+      eventType: string;
+      emailEnabled: boolean;
+      inAppEnabled: boolean;
       timezone?: string;
     }>;
   }): Promise<{ preferences: unknown[] }> {

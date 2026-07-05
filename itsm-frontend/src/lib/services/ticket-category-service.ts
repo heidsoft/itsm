@@ -6,13 +6,13 @@ export interface TicketCategory {
   name: string;
   description: string;
   code: string;
-  parent_id: number;
+  parentId: number;
   level: number;
-  sort_order: number;
-  is_active: boolean;
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
+  sortOrder: number;
+  isActive: boolean;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
   children?: TicketCategory[];
 }
 
@@ -21,9 +21,9 @@ export interface CreateCategoryRequest {
   name: string;
   description: string;
   code: string;
-  parent_id: number;
-  sort_order: number;
-  is_active: boolean;
+  parentId: number;
+  sortOrder: number;
+  isActive: boolean;
 }
 
 // 更新分类请求
@@ -31,18 +31,18 @@ export interface UpdateCategoryRequest {
   name?: string;
   description?: string;
   code?: string;
-  parent_id?: number;
-  sort_order?: number;
-  is_active?: boolean;
+  parentId?: number;
+  sortOrder?: number;
+  isActive?: boolean;
 }
 
 // 分类列表请求参数
 export interface ListCategoriesParams {
   page?: number;
-  page_size?: number;
-  parent_id?: number;
+  pageSize?: number;
+  parentId?: number;
   level?: number;
-  is_active?: boolean;
+  isActive?: boolean;
 }
 
 // 分类列表响应
@@ -58,36 +58,28 @@ export interface CategoryTreeItem {
   description: string;
   code: string;
   level: number;
-  sort_order: number;
-  sortOrder?: number;
-  is_active: boolean;
-  isActive?: boolean;
+  sortOrder: number;
+  isActive: boolean;
   children: CategoryTreeItem[];
-  parent_id?: number;
   parentId?: number;
-  tenant_id?: number;
   tenantId?: number;
-  created_at?: string;
   createdAt?: string;
-  updated_at?: string;
   updatedAt?: string;
-  created_by?: string;
   createdBy?: string;
-  updated_by?: string;
   updatedBy?: string;
 }
 
 // 移动分类请求
 export interface MoveCategoryRequest {
-  new_parent_id?: number;
-  new_sort_order?: number;
+  newParentId?: number;
+  newSortOrder?: number;
 }
 
 // 批量更新分类请求
 export interface BatchUpdateCategoriesRequest {
   id: number;
-  parent_id?: number;
-  sort_order: number;
+  parentId?: number;
+  sortOrder: number;
   level: number;
 }
 

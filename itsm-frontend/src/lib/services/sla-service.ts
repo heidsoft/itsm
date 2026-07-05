@@ -259,7 +259,7 @@ export class SLAService {
   // SLA定义管理
   async getSLADefinitions(params?: SLAQueryParams): Promise<PaginatedResponse<SLADefinition>> {
     const response = await fetch(
-      `${this.baseUrl}/definitions?${new URLSearchParams(params as any)}`
+      `${this.baseUrl}/definitions?${new URLSearchParams(params as Record<string, string>)}`
     );
     if (!response.ok) throw new Error('Failed to fetch SLA definitions');
     return response.json();
@@ -303,10 +303,10 @@ export class SLAService {
     page?: number;
     pageSize?: number;
     status?: string;
-    sla_definition_id?: number;
-    assigned_to?: number;
+    slaDefinitionId?: number;
+    assignedTo?: number;
   }): Promise<PaginatedResponse<SLAInstance>> {
-    const response = await fetch(`${this.baseUrl}/instances?${new URLSearchParams(params as any)}`);
+    const response = await fetch(`${this.baseUrl}/instances?${new URLSearchParams(params as Record<string, string>)}`);
     if (!response.ok) throw new Error('Failed to fetch SLA instances');
     return response.json();
   }
@@ -335,22 +335,22 @@ export class SLAService {
 
   // SLA统计和报告
   async getSLAStats(params?: {
-    date_range?: string;
-    sla_definition_id?: number;
-    assigned_to?: number;
+    dateRange?: string;
+    slaDefinitionId?: number;
+    assignedTo?: number;
   }): Promise<SLAStats> {
-    const response = await fetch(`${this.baseUrl}/stats?${new URLSearchParams(params as any)}`);
+    const response = await fetch(`${this.baseUrl}/stats?${new URLSearchParams(params as Record<string, string>)}`);
     if (!response.ok) throw new Error('Failed to fetch SLA stats');
     return response.json();
   }
 
   async getSLAReport(params: {
-    start_date: string;
-    end_date: string;
-    sla_definition_id?: number;
+    startDate: string;
+    endDate: string;
+    slaDefinitionId?: number;
     format?: 'pdf' | 'excel' | 'csv';
   }): Promise<SLAReport> {
-    const response = await fetch(`${this.baseUrl}/reports?${new URLSearchParams(params as any)}`);
+    const response = await fetch(`${this.baseUrl}/reports?${new URLSearchParams(params as unknown as Record<string, string>)}`);
     if (!response.ok) throw new Error('Failed to fetch SLA report');
     return response.json();
   }

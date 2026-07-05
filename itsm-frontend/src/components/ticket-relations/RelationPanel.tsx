@@ -24,7 +24,7 @@ import {
   Badge,
   message,
 } from 'antd';
-import { Plus, Trash2, Link, AlertCircle, CheckCircle, XCircle, GitBranch, Swap } from 'lucide-react';
+import { Plus, Trash2, Link, AlertCircle, CheckCircle, XCircle, GitBranch, ArrowLeftRight } from 'lucide-react';
 import {
   useTicketRelationsQuery,
   useCreateRelationMutation,

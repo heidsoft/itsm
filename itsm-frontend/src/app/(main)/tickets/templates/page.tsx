@@ -212,7 +212,7 @@ const templateCategories = [
     ],
   },
   {
-    key: 'service_request',
+    key:'serviceRequest',
     label: 'Service Request',
     icon: <FileText size={16} />,
     color: 'blue',
@@ -308,7 +308,7 @@ const TicketTemplatesPage = () => {
       const { default: TicketApi } = await import('@/lib/api/ticket-api');
       const response = await TicketApi.getTemplates({
         page: 1,
-        page_size: 100,
+        pageSize: 100,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
       });
 
@@ -320,8 +320,8 @@ const TicketTemplatesPage = () => {
           description: string;
           category: string;
           content?: Record<string, unknown>;
-          created_at?: string;
-          updated_at?: string;
+          createdAt?: string;
+          updatedAt?: string;
         }) => ({
           id: item.id,
           name: item.name,
@@ -346,8 +346,8 @@ const TicketTemplatesPage = () => {
           isActive: true,
           isPublic: true,
           createdBy: 'System',
-          createdAt: item.created_at || new Date().toISOString(),
-          updatedAt: item.updated_at || new Date().toISOString(),
+          createdAt: item.createdAt || new Date().toISOString(),
+          updatedAt: item.updatedAt || new Date().toISOString(),
           usageCount: 0,
           rating: 4.0,
           version: '1.0',

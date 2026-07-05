@@ -38,7 +38,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
     try {
       await TicketApi.addTicketComment(ticketId, {
         content: newComment,
-        is_internal: isInternal,
+        isInternal: isInternal,
         mentions: mentionedUsers,
       });
       setNewComment('');
@@ -186,7 +186,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                       </AntTag>
                     )}
                     <Text type="secondary" className="text-sm">
-                      {formatDateTime(comment.createdAt || comment.created_at || '')}
+                      {formatDateTime(comment.createdAt || comment.createdAt || '')}
                     </Text>
                     {comment.updatedAt && comment.createdAt && comment.updatedAt !== comment.createdAt && (
                       <Text type="secondary" className="text-xs">

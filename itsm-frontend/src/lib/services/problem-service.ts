@@ -24,18 +24,18 @@ export interface Problem {
   status: ProblemStatus;
   priority: ProblemPriority;
   category: string;
-  root_cause: string;
+  rootCause: string;
   impact: string;
-  assignee_id?: number;
+  assigneeId?: number;
   assignee?: {
     id: number;
     name: string;
     username: string;
   };
-  created_by: number;
-  created_at: string;
-  updated_at: string;
-  tenant_id: number;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+  tenantId: number;
 }
 
 // 创建问题请求
@@ -44,9 +44,9 @@ export interface CreateProblemRequest {
   description: string;
   priority: ProblemPriority;
   category: string;
-  root_cause: string;
+  rootCause: string;
   impact: string;
-  assignee_id?: number;
+  assigneeId?: number;
 }
 
 // 更新问题请求
@@ -56,23 +56,23 @@ export interface UpdateProblemRequest {
   status?: ProblemStatus;
   priority?: ProblemPriority;
   category?: string;
-  root_cause?: string;
+  rootCause?: string;
   impact?: string;
-  assignee_id?: number;
+  assigneeId?: number;
 }
 
 // 问题列表查询参数
 export interface ListProblemsParams {
   page?: number;
-  page_size?: number;
+  pageSize?: number;
   status?: ProblemStatus;
   priority?: ProblemPriority;
   category?: string;
   keyword?: string;
-  date_from?: string;
-  date_to?: string;
-  sort_by?: string;
-  sort_order?: 'asc' | 'desc';
+  dateFrom?: string;
+  dateTo?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 // 问题列表响应
@@ -80,7 +80,7 @@ export interface ListProblemsResponse {
   problems: Problem[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 // 问题统计响应
@@ -110,21 +110,21 @@ class ProblemService {
   // 创建问题
   async createProblem(
     data: CreateProblemRequest
-  ): Promise<{ message: string; problem_id: number }> {
-    return httpClient.post<{ message: string; problem_id: number }>(this.baseUrl, data);
+  ): Promise<{ message: string; problemId: number }> {
+    return httpClient.post<{ message: string; problemId: number }>(this.baseUrl, data);
   }
 
   // 更新问题
   async updateProblem(
     id: number,
     data: UpdateProblemRequest
-  ): Promise<{ message: string; problem_id: number }> {
-    return httpClient.put<{ message: string; problem_id: number }>(`${this.baseUrl}/${id}`, data);
+  ): Promise<{ message: string; problemId: number }> {
+    return httpClient.put<{ message: string; problemId: number }>(`${this.baseUrl}/${id}`, data);
   }
 
   // 删除问题
-  async deleteProblem(id: number): Promise<{ message: string; problem_id: number }> {
-    return httpClient.delete<{ message: string; problem_id: number }>(`${this.baseUrl}/${id}`);
+  async deleteProblem(id: number): Promise<{ message: string; problemId: number }> {
+    return httpClient.delete<{ message: string; problemId: number }>(`${this.baseUrl}/${id}`);
   }
 
   // 获取问题统计
@@ -136,8 +136,8 @@ class ProblemService {
   async addProblemComment(
     problemId: number,
     content: string
-  ): Promise<{ message: string; comment_id: number }> {
-    return httpClient.post<{ message: string; comment_id: number }>(
+  ): Promise<{ message: string; commentId: number }> {
+    return httpClient.post<{ message: string; commentId: number }>(
       `${this.baseUrl}/${problemId}/comments`,
       { content }
     );
@@ -147,10 +147,10 @@ class ProblemService {
   async getProblemComments(problemId: number): Promise<{
     comments: Array<{
       id: number;
-      problem_id: number;
-      user_id: number;
+      problemId: number;
+      userId: number;
       content: string;
-      created_at: string;
+      createdAt: string;
       user?: {
         id: number;
         name: string;

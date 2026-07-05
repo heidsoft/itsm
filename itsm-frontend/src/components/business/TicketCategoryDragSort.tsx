@@ -181,7 +181,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
   // 更新排序
   const updateSortOrders = (items: CategoryTreeItem[], parentLevel: number = 0) => {
     items.forEach((item, index) => {
-      item.sort_order = parentLevel * 1000 + index;
+      item.sortOrder = parentLevel * 1000 + index;
       item.level = parentLevel;
       if (item.children && item.children.length > 0) {
         updateSortOrders(item.children, parentLevel + 1);
@@ -222,8 +222,8 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
       items.forEach((item, index) => {
         updates.push({
           id: item.id,
-          parent_id: parentId,
-          sort_order: index,
+          parentId: parentId,
+          sortOrder: index,
           level: level,
         });
 
@@ -458,16 +458,16 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                         <div className="flex items-center space-x-2">
                           <div
                             className={`px-2 py-1 rounded text-xs ${
-                              category.is_active
+                              category.isActive
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
                             }`}
                           >
-                            {category.is_active ? '启用' : '禁用'}
+                            {category.isActive ? '启用' : '禁用'}
                           </div>
 
                           <Text type="secondary" className="text-xs">
-                            排序: {category.sort_order}
+                            排序: {category.sortOrder}
                           </Text>
 
                           <Space size="small">
@@ -546,16 +546,16 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                                           <div className="flex items-center space-x-2">
                                             <div
                                               className={`px-2 py-1 rounded text-xs ${
-                                                child.is_active
+                                                child.isActive
                                                   ? 'bg-green-100 text-green-800'
                                                   : 'bg-red-100 text-red-800'
                                               }`}
                                             >
-                                              {child.is_active ? '启用' : '禁用'}
+                                              {child.isActive ? '启用' : '禁用'}
                                             </div>
 
                                             <Text type="secondary" className="text-xs">
-                                              排序: {child.sort_order}
+                                              排序: {child.sortOrder}
                                             </Text>
                                           </div>
                                         </div>

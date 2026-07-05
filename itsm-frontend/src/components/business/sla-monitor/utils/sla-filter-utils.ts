@@ -24,7 +24,7 @@ export const filterSLAViolations = (
     }
 
     // 类型过滤
-    if (filters.type && violation.violation_type !== filters.type) {
+    if (filters.type && violation.violationType !== filters.type) {
       return false;
     }
 

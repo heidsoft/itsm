@@ -26,7 +26,7 @@ import {
   Modal,
   type MenuProps,
 } from 'antd';
-import { Search, Filter, Plus, X, Check, Trash2, Download, Upload, LayoutGrid, RotateCcw, List, ArrowUpDown, Star } from 'lucide-react';
+import { Search as SearchIcon, Filter, Plus, X, Check, Trash2, Download, Upload, LayoutGrid, RotateCcw, List, ArrowUpDown, Star, MoreHorizontal } from 'lucide-react';
 import { TemplateCard } from './TemplateCard';
 import type { TicketTemplate, TemplateListQuery, TemplateVisibility } from '@/types/template';
 import {
@@ -265,7 +265,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
                 allowClear
                 onSearch={handleSearch}
                 style={{ width: 300 }}
-                prefix={<Search />}
+                prefix={<SearchIcon />}
               />
 
               <Select
@@ -318,7 +318,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
                   </Badge>
 
                   <Dropdown menu={{ items: batchMenuItems }} trigger={['click']}>
-                    <Button icon={<MoreOutlined />}>批量操作</Button>
+                    <Button icon={<MoreHorizontal />}>批量操作</Button>
                   </Dropdown>
                 </>
               )}

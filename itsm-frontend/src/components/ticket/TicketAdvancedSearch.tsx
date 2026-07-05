@@ -32,7 +32,7 @@ const { Text } = Typography;
 export interface AdvancedSearchFilters {
   // 基础信息
   keyword?: string;
-  ticket_number?: string;
+  ticketNumber?: string;
   title?: string;
   description?: string;
 
@@ -43,30 +43,30 @@ export interface AdvancedSearchFilters {
   category?: string[];
 
   // 人员
-  reporter_id?: number;
-  assignee_id?: number;
-  created_by?: number;
+  reporterId?: number;
+  assigneeId?: number;
+  createdBy?: number;
 
   // 时间范围
-  created_after?: string;
-  created_before?: string;
-  updated_after?: string;
-  updated_before?: string;
-  due_after?: string;
-  due_before?: string;
-  resolved_after?: string;
-  resolved_before?: string;
+  createdAfter?: string;
+  createdBefore?: string;
+  updatedAfter?: string;
+  updatedBefore?: string;
+  dueAfter?: string;
+  dueBefore?: string;
+  resolvedAfter?: string;
+  resolvedBefore?: string;
 
   // 配置项
-  configuration_item_id?: number;
+  configurationItemId?: number;
 
   // 来源和渠道
   source?: string[];
   channel?: string[];
 
   // SLA相关
-  sla_breach?: boolean;
-  sla_warning?: boolean;
+  slaBreach?: boolean;
+  slaWarning?: boolean;
 
   // 自定义字段
   tags?: string[];
@@ -123,7 +123,7 @@ const SEARCH_TEMPLATES = [
     description: '分配给我且未完成的工单',
     filters: {
       status: ['new', 'open', 'in_progress'],
-      assignee_id: 1, // 当前用户ID
+      assigneeId: 1, // 当前用户ID
     },
   },
   {
@@ -137,15 +137,15 @@ const SEARCH_TEMPLATES = [
     name: 'SLA即将超时',
     description: 'SLA即将超时的工单',
     filters: {
-      sla_warning: true,
+      slaWarning: true,
     },
   },
   {
     name: '本周创建工单',
     description: '本周内创建的所有工单',
     filters: {
-      created_after: dayjs().startOf('week').format('YYYY-MM-DD'),
-      created_before: dayjs().endOf('week').format('YYYY-MM-DD'),
+      createdAfter: dayjs().startOf('week').format('YYYY-MM-DD'),
+      createdBefore: dayjs().endOf('week').format('YYYY-MM-DD'),
     },
   },
   {
@@ -269,11 +269,11 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
             onChange={dates => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
-                  created_after: dates[0].format('YYYY-MM-DD'),
-                  created_before: dates[1].format('YYYY-MM-DD'),
+                  createdAfter: dates[0].format('YYYY-MM-DD'),
+                  createdBefore: dates[1].format('YYYY-MM-DD'),
                 });
               } else {
-                form.setFieldsValue({ created_after: undefined, created_before: undefined });
+                form.setFieldsValue({ createdAfter: undefined, createdBefore: undefined });
               }
             }}
           />
@@ -288,11 +288,11 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
             onChange={dates => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
-                  updated_after: dates[0].format('YYYY-MM-DD'),
-                  updated_before: dates[1].format('YYYY-MM-DD'),
+                  updatedAfter: dates[0].format('YYYY-MM-DD'),
+                  updatedBefore: dates[1].format('YYYY-MM-DD'),
                 });
               } else {
-                form.setFieldsValue({ updated_after: undefined, updated_before: undefined });
+                form.setFieldsValue({ updatedAfter: undefined, updatedBefore: undefined });
               }
             }}
           />
@@ -307,11 +307,11 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
             onChange={dates => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
-                  due_after: dates[0].format('YYYY-MM-DD'),
-                  due_before: dates[1].format('YYYY-MM-DD'),
+                  dueAfter: dates[0].format('YYYY-MM-DD'),
+                  dueBefore: dates[1].format('YYYY-MM-DD'),
                 });
               } else {
-                form.setFieldsValue({ due_after: undefined, due_before: undefined });
+                form.setFieldsValue({ dueAfter: undefined, dueBefore: undefined });
               }
             }}
           />
@@ -326,11 +326,11 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
             onChange={dates => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
-                  resolved_after: dates[0].format('YYYY-MM-DD'),
-                  resolved_before: dates[1].format('YYYY-MM-DD'),
+                  resolvedAfter: dates[0].format('YYYY-MM-DD'),
+                  resolvedBefore: dates[1].format('YYYY-MM-DD'),
                 });
               } else {
-                form.setFieldsValue({ resolved_after: undefined, resolved_before: undefined });
+                form.setFieldsValue({ resolvedAfter: undefined, resolvedBefore: undefined });
               }
             }}
           />

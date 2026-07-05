@@ -79,7 +79,7 @@ const IncidentList: React.FC = () => {
       };
       const resp = await IncidentApi.getIncidents(apiQuery);
       // 支持 snake_case 和 camelCase 格式
-      setData(resp.incidents || resp.items || []);
+      setData((resp.incidents || resp.items || []) as Incident[]);
       setTotal(resp.total || 0);
     } catch (error) {
       // console.error(error);
@@ -106,7 +106,7 @@ const IncidentList: React.FC = () => {
   const columns: ColumnsType<Incident> = [
     {
       title: '编号',
-      dataIndex: 'incident_number',
+      dataIndex:'incidentNumber',
       width: 120,
       render: (text: string) => <a>{text}</a>,
     },
@@ -140,13 +140,13 @@ const IncidentList: React.FC = () => {
     },
     {
       title: '报告人',
-      dataIndex: 'reporter_id', // 暂时显示ID，后续关联User
+      dataIndex:'reporterId', // 暂时显示ID，后续关联User
       width: 100,
       responsive: ['lg'],
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
+      dataIndex: 'createdAt',
       width: 180,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
       responsive: ['sm'],

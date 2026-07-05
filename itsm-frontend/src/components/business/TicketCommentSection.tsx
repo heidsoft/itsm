@@ -88,7 +88,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
     try {
       const request: CreateTicketCommentRequest = {
         content: newComment.trim(),
-        is_internal: isInternal,
+        isInternal: isInternal,
       };
 
       const comment = await TicketCommentApi.createComment(ticketId, request);
@@ -175,12 +175,12 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
   // 检查权限
   const canEdit = (comment: TicketComment) => {
     if (canEditComment) return canEditComment(comment);
-    return comment.user_id === user?.id;
+    return comment.userId === user?.id;
   };
 
   const canDelete = (comment: TicketComment) => {
     if (canDeleteComment) return canDeleteComment(comment);
-    return comment.user_id === user?.id;
+    return comment.userId === user?.id;
   };
 
   return (

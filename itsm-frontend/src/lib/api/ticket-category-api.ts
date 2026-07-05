@@ -9,28 +9,28 @@ export interface TicketCategory {
   id: number;
   name: string;
   description: string;
-  parent_id: number | null;
+  parentId: number | null;
   level: number;
   path: string;
-  sort_order: number;
-  is_active: boolean;
-  is_default: boolean;
+  sortOrder: number;
+  isActive: boolean;
+  isDefault: boolean;
   color: string;
   icon: string;
-  ticket_count?: number;
+  ticketCount?: number;
   children?: TicketCategory[];
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 创建分类请求
 export interface CreateCategoryRequest {
   name: string;
   description?: string;
-  parent_id?: number;
-  sort_order?: number;
-  is_active?: boolean;
-  is_default?: boolean;
+  parentId?: number;
+  sortOrder?: number;
+  isActive?: boolean;
+  isDefault?: boolean;
   color?: string;
   icon?: string;
 }
@@ -39,10 +39,10 @@ export interface CreateCategoryRequest {
 export interface UpdateCategoryRequest {
   name?: string;
   description?: string;
-  parent_id?: number;
-  sort_order?: number;
-  is_active?: boolean;
-  is_default?: boolean;
+  parentId?: number;
+  sortOrder?: number;
+  isActive?: boolean;
+  isDefault?: boolean;
   color?: string;
   icon?: string;
 }
@@ -51,9 +51,9 @@ export class TicketCategoryApi {
   // 获取分类列表 - 支持两种后端响应格式
   static async getCategories(params?: {
     page?: number;
-    page_size?: number;
-    parent_id?: number;
-    is_active?: boolean;
+    pageSize?: number;
+    parentId?: number;
+    isActive?: boolean;
     keyword?: string;
   }): Promise<{
     categories?: TicketCategory[];
@@ -94,9 +94,9 @@ export class TicketCategoryApi {
       name: string;
       code: string;
       description: string;
-      parent_code: string;
-      sort_order: number;
-      is_active: boolean;
+      parentCode: string;
+      sortOrder: number;
+      isActive: boolean;
     }[]
   > {
     return httpClient.post('/api/v1/ticket-categories/import/preview', formData);

@@ -45,7 +45,7 @@ const statusColorMap: Record<string, string> = {
 
 const taskStatusColorMap: Record<string, string> = {
   pending: 'gold',
-  in_progress: 'blue',
+  inProgress: 'blue',
   completed: 'green',
   failed: 'red',
   cancelled: 'gray',
@@ -101,7 +101,7 @@ export default function WorkflowInstancesPage() {
           pageSize: 50,
         }),
         WorkflowApi.getInstanceStats({
-          process_definition_key: keyword || undefined,
+          processDefinitionKey: keyword || undefined,
           status,
         }),
       ]);
@@ -109,7 +109,7 @@ export default function WorkflowInstancesPage() {
       const rows = (instanceResponse.instances || []).map(instance => ({
         id: instance.id,
         businessKey:
-          (instance as unknown as Record<string, string>).business_key ||
+          (instance as unknown as Record<string, string>).businessKey ||
           instance.workflowId ||
           '-',
         processDefinitionKey: instance.workflowId || '-',
@@ -397,8 +397,8 @@ export default function WorkflowInstancesPage() {
                           <span className="font-medium text-sm">
                             {log.action.replace('_', ' ')}
                           </span>
-                          {log.activity_name && (
-                            <Tag>{log.activity_name}</Tag>
+                          {log.activityName && (
+                            <Tag>{log.activityName}</Tag>
                           )}
                         </Space>
                         <span className="text-xs text-gray-500">
@@ -407,22 +407,22 @@ export default function WorkflowInstancesPage() {
                       </div>
                       
                       <div className="text-xs text-gray-600 mb-1 pl-5">
-                        {log.user_name && (
+                        {log.userName && (
                           <span className="mr-3">
                             <User className="w-3 h-3 inline mr-1" />
-                            {log.user_name}
+                            {log.userName}
                           </span>
                         )}
-                        {log.assignee_name && (
+                        {log.assigneeName && (
                           <span className="mr-3">
                             <User className="w-3 h-3 inline mr-1" />
-                            处理人: {log.assignee_name}
+                            处理人: {log.assigneeName}
                           </span>
                         )}
-                        {log.duration_ms && (
+                        {log.durationMs && (
                           <span>
                             <Clock className="w-3 h-3 inline mr-1" />
-                            耗时: {formatDuration(log.duration_ms)}
+                            耗时: {formatDuration(log.durationMs)}
                           </span>
                         )}
                       </div>
@@ -434,12 +434,12 @@ export default function WorkflowInstancesPage() {
                         </div>
                       )}
 
-                      {(log.variables_after && Object.keys(log.variables_after).length > 0) && (
+                      {(log.variablesAfter && Object.keys(log.variablesAfter).length > 0) && (
                         <div className="text-xs ml-5 mt-1">
                           <details className="cursor-pointer">
                             <summary className="text-blue-500">变量变更</summary>
                             <pre className="mt-1 p-2 bg-gray-50 rounded overflow-x-auto text-[10px]">
-                              {JSON.stringify(log.variables_after, null, 2)}
+                              {JSON.stringify(log.variablesAfter, null, 2)}
                             </pre>
                           </details>
                         </div>

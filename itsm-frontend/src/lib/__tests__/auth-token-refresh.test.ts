@@ -129,8 +129,8 @@ describe('Auth Token Refresh Mechanism', () => {
           code: 0,
           message: 'success',
           data: {
-            access_token: 'new-access-token',
-            refresh_token: 'new-refresh-token',
+            accessToken: 'new-access-token',
+            refreshToken: 'new-refresh-token',
           },
         }),
       });
@@ -347,8 +347,8 @@ describe('Auth Token Refresh Mechanism', () => {
           code: 0,
           message: 'success',
           data: {
-            access_token: 'initial-access',
-            refresh_token: 'initial-refresh',
+            accessToken: 'initial-access',
+            refreshToken: 'initial-refresh',
             user: { id: 1, username: 'admin' },
           },
         }),
@@ -366,8 +366,8 @@ describe('Auth Token Refresh Mechanism', () => {
           code: 0,
           message: 'success',
           data: {
-            access_token: 'refreshed-access',
-            refresh_token: 'refreshed-refresh',
+            accessToken: 'refreshed-access',
+            refreshToken: 'refreshed-refresh',
           },
         }),
       });

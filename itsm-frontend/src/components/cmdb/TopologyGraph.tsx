@@ -186,7 +186,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
           stroke: getEdgeColor(edge.strength),
           strokeWidth: getEdgeWidth(edge.strength),
         },
-        label: edge.relationship_label,
+        label: edge.relationshipLabel,
         labelStyle: {
           fill: '#666',
           fontSize: 11,
@@ -278,7 +278,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
           <Space>
             <Network />
             <span>服务拓扑图</span>
-            {graph && <Tag color="blue">{graph.total_nodes} 个节点</Tag>}
+            {graph && <Tag color="blue">{graph.totalNodes} 个节点</Tag>}
           </Space>
         }
         extra={
@@ -382,8 +382,8 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
             <AlertTriangle />
             <span>影响分析 - {selectedNode?.name}</span>
             {impactAnalysis && (
-              <Tag color={riskLevelColors[impactAnalysis.risk_level]}>
-                {riskLevelLabels[impactAnalysis.risk_level]}风险
+              <Tag color={riskLevelColors[impactAnalysis.riskLevel]}>
+                {riskLevelLabels[impactAnalysis.riskLevel]}风险
               </Tag>
             )}
           </Space>
@@ -397,7 +397,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
             {/* 风险摘要 */}
             <Alert
               type={
-                riskLevelColors[impactAnalysis.risk_level] as
+                riskLevelColors[impactAnalysis.riskLevel] as
                   | 'error'
                   | 'warning'
                   | 'info'
@@ -411,17 +411,17 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
 
             {/* 上游影响 */}
             <Card title="上游影响（依赖此CI的）" size="small" style={{ marginBottom: 16 }}>
-              {impactAnalysis.upstream_impact.length > 0 ? (
+              {impactAnalysis.upstreamImpact.length > 0 ? (
                 <List
-                  dataSource={impactAnalysis.upstream_impact}
+                  dataSource={impactAnalysis.upstreamImpact}
                   renderItem={item => (
                     <List.Item>
                       <Descriptions column={1} size="small">
-                        <Descriptions.Item label="CI名称">{item.ci_name}</Descriptions.Item>
+                        <Descriptions.Item label="CI名称">{item.ciName}</Descriptions.Item>
                         <Descriptions.Item label="关系">{item.relationship}</Descriptions.Item>
                         <Descriptions.Item label="影响程度">
-                          <Tag color={riskLevelColors[item.impact_level]}>
-                            {riskLevelLabels[item.impact_level]}
+                          <Tag color={riskLevelColors[item.impactLevel]}>
+                            {riskLevelLabels[item.impactLevel]}
                           </Tag>
                         </Descriptions.Item>
                       </Descriptions>
@@ -435,17 +435,17 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
 
             {/* 下游影响 */}
             <Card title="下游影响（此CI依赖的）" size="small" style={{ marginBottom: 16 }}>
-              {impactAnalysis.downstream_impact.length > 0 ? (
+              {impactAnalysis.downstreamImpact.length > 0 ? (
                 <List
-                  dataSource={impactAnalysis.downstream_impact}
+                  dataSource={impactAnalysis.downstreamImpact}
                   renderItem={item => (
                     <List.Item>
                       <Descriptions column={1} size="small">
-                        <Descriptions.Item label="CI名称">{item.ci_name}</Descriptions.Item>
+                        <Descriptions.Item label="CI名称">{item.ciName}</Descriptions.Item>
                         <Descriptions.Item label="关系">{item.relationship}</Descriptions.Item>
                         <Descriptions.Item label="影响程度">
-                          <Tag color={riskLevelColors[item.impact_level]}>
-                            {riskLevelLabels[item.impact_level]}
+                          <Tag color={riskLevelColors[item.impactLevel]}>
+                            {riskLevelLabels[item.impactLevel]}
                           </Tag>
                         </Descriptions.Item>
                       </Descriptions>
@@ -458,16 +458,16 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
             </Card>
 
             {/* 关键依赖 */}
-            {impactAnalysis.critical_dependencies.length > 0 && (
+            {impactAnalysis.criticalDependencies.length > 0 && (
               <Card title="关键依赖" size="small" style={{ marginBottom: 16 }}>
                 <Alert
                   type="error"
                   message="以下为关键依赖，变更需谨慎"
                   description={
                     <ul style={{ margin: '8px 0', paddingLeft: 20 }}>
-                      {impactAnalysis.critical_dependencies.map((dep, idx) => (
+                      {impactAnalysis.criticalDependencies.map((dep, idx) => (
                         <li key={idx}>
-                          {dep.ci_name} ({dep.relationship})
+                          {dep.ciName} ({dep.relationship})
                         </li>
                       ))}
                     </ul>
@@ -477,11 +477,11 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
             )}
 
             {/* 受影响的工单 */}
-            {impactAnalysis.affected_tickets.length > 0 && (
+            {impactAnalysis.affectedTickets.length > 0 && (
               <Card title="受影响的工单" size="small" style={{ marginBottom: 16 }}>
                 <List
                   size="small"
-                  dataSource={impactAnalysis.affected_tickets}
+                  dataSource={impactAnalysis.affectedTickets}
                   renderItem={ticket => (
                     <List.Item>
                       <List.Item.Meta
@@ -495,11 +495,11 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
             )}
 
             {/* 受影响的事件 */}
-            {impactAnalysis.affected_incidents.length > 0 && (
+            {impactAnalysis.affectedIncidents.length > 0 && (
               <Card title="受影响的事件" size="small">
                 <List
                   size="small"
-                  dataSource={impactAnalysis.affected_incidents}
+                  dataSource={impactAnalysis.affectedIncidents}
                   renderItem={incident => (
                     <List.Item>
                       <List.Item.Meta

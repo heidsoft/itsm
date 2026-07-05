@@ -6,16 +6,16 @@
 import { httpClient } from './http-client';
 
 export interface AssignRecommendation {
-  user_id: number;
-  user_name: string;
-  user_email?: string;
-  user_avatar?: string;
+  userId: number;
+  userName: string;
+  userEmail?: string;
+  userAvatar?: string;
   score: number;
   reason: string;
   factors: {
-    skill_match?: number;
+    skillMatch?: number;
     workload?: number;
-    history_success?: number;
+    historySuccess?: number;
     availability?: number;
   };
 }
@@ -32,12 +32,9 @@ type RawAssignRecommendation = Partial<AssignRecommendation> & {
 };
 
 export interface AutoAssignResponse {
-  ticket_id: number;
-  ticketId?: number;
-  assigned_to?: number;
+  ticketId: number;
   assignedTo?: number;
-  assignment_type: 'rule' | 'smart' | 'manual';
-  assignmentType?: 'rule' | 'smart' | 'manual';
+  assignmentType: 'rule' | 'smart' | 'manual';
   reason: string;
   score?: number;
 }
@@ -62,11 +59,11 @@ export interface ActionConfig {
   type: 'user' | 'round_robin' | 'load_balance' | 'assign' | 'set_priority' | 'set_status' | 'notify' | 'escalate';
   value?: number | number[] | string | boolean;
   params?: {
-    assignee_id?: number;
+    assigneeId?: number;
     priority?: string;
     status?: string;
-    notify_users?: number[];
-    escalation_level?: number;
+    notifyUsers?: number[];
+    escalationLevel?: number;
   };
 }
 
@@ -77,16 +74,11 @@ export interface AssignmentRule {
   priority: number;
   conditions: ConditionConfig[];
   actions: ActionConfig;
-  is_active: boolean;
-  isActive?: boolean;
-  execution_count: number;
-  executionCount?: number;
-  last_executed_at?: string;
+  isActive: boolean;
+  executionCount: number;
   lastExecutedAt?: string;
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateAssignmentRuleRequest {
@@ -95,7 +87,6 @@ export interface CreateAssignmentRuleRequest {
   priority: number;
   conditions: ConditionConfig[];
   actions: ActionConfig;
-  is_active?: boolean;
   isActive?: boolean;
 }
 
@@ -105,20 +96,16 @@ export interface UpdateAssignmentRuleRequest {
   priority?: number;
   conditions?: ConditionConfig[];
   actions?: ActionConfig;
-  is_active?: boolean;
   isActive?: boolean;
 }
 
 export interface TestAssignmentRuleRequest {
-  rule_id: number;
-  ruleId?: number;
-  ticket_id: number;
-  ticketId?: number;
+  ruleId: number;
+  ticketId: number;
 }
 
 export interface TestAssignmentRuleResponse {
   matched: boolean;
-  assigned_to?: number;
   assignedTo?: number;
   reason?: string;
   score?: number;
@@ -136,31 +123,28 @@ export interface ListAssignmentRulesResponse {
 
 function normalizeRecommendation(item: RawAssignRecommendation): AssignRecommendation {
   return {
-    user_id: item.user_id ?? item.userId ?? 0,
-    user_name: item.user_name ?? item.userName ?? item.name ?? item.username ?? `用户 ${item.userId ?? item.user_id ?? ''}`.trim(),
-    user_email: item.user_email ?? item.userEmail,
-    user_avatar: item.user_avatar ?? item.userAvatar,
+    userId: item.userId ?? item.userId ?? 0,
+    userName: item.userName ?? item.userName ?? item.name ?? item.username ?? `用户 ${item.userId ?? item.userId ?? ''}`.trim(),
+    userEmail: item.userEmail ?? item.userEmail,
+    userAvatar: item.userAvatar ?? item.userAvatar,
     score: item.score ?? 0,
     reason: item.reason ?? '',
     factors: item.factors ?? {
       workload: item.workload,
-      skill_match: item.skills?.length ? 100 : undefined,
+      skillMatch: item.skills?.length ? 100 : undefined,
     },
   };
 }
 
 function normalizeAutoAssign(response: AutoAssignResponse): AutoAssignResponse {
-  const assignedTo = response.assigned_to ?? response.assignedTo;
-  const ticketId = response.ticket_id ?? response.ticketId ?? 0;
-  const assignmentType = response.assignment_type ?? response.assignmentType ?? 'smart';
+  const assignedTo = response.assignedTo;
+  const ticketId = response.ticketId ?? 0;
+  const assignmentType = response.assignmentType ?? 'smart';
 
   return {
     ...response,
-    ticket_id: ticketId,
     ticketId,
-    assigned_to: assignedTo,
     assignedTo,
-    assignment_type: assignmentType,
     assignmentType,
   };
 }
@@ -178,16 +162,11 @@ function normalizeRule(rule: AssignmentRule): AssignmentRule {
     ...rawRule,
     actions: rawRule.actions || { type: 'user', value: 0 },
     conditions: rawRule.conditions || [],
-    is_active: rawRule.is_active ?? rawRule.isActive ?? false,
-    isActive: rawRule.isActive ?? rawRule.is_active ?? false,
-    execution_count: rawRule.execution_count ?? rawRule.executionCount ?? 0,
-    executionCount: rawRule.executionCount ?? rawRule.execution_count ?? 0,
-    last_executed_at: rawRule.last_executed_at ?? rawRule.lastExecutedAt,
-    lastExecutedAt: rawRule.lastExecutedAt ?? rawRule.last_executed_at,
-    created_at: rawRule.created_at ?? rawRule.createdAt ?? '',
-    createdAt: rawRule.createdAt ?? rawRule.created_at ?? '',
-    updated_at: rawRule.updated_at ?? rawRule.updatedAt ?? '',
-    updatedAt: rawRule.updatedAt ?? rawRule.updated_at ?? '',
+    isActive: rawRule.isActive ?? rawRule.isActive ?? false,
+    executionCount: rawRule.executionCount ?? rawRule.executionCount ?? 0,
+    lastExecutedAt: rawRule.lastExecutedAt ?? rawRule.lastExecutedAt,
+    createdAt: rawRule.createdAt ?? rawRule.createdAt ?? '',
+    updatedAt: rawRule.updatedAt ?? rawRule.updatedAt ?? '',
   };
 }
 
@@ -195,8 +174,8 @@ function toBackendRulePayload<T extends CreateAssignmentRuleRequest | UpdateAssi
   data: T
 ): T {
   const payload = { ...data } as T;
-  if ('is_active' in payload && payload.is_active !== undefined) {
-    payload.isActive = payload.is_active;
+  if ('is_active' in payload && payload.isActive !== undefined) {
+    payload.isActive = payload.isActive;
   }
   return payload;
 }
@@ -283,14 +262,13 @@ export class TicketAssignmentApi {
     const response = await httpClient.post<TestAssignmentRuleResponse>(
       '/api/v1/tickets/assignment-rules/test',
       {
-        ruleId: data.rule_id ?? data.ruleId,
-        ticketId: data.ticket_id ?? data.ticketId,
+        ruleId: data.ruleId ?? data.ruleId,
+        ticketId: data.ticketId ?? data.ticketId,
       }
     );
     return {
       ...response,
-      assigned_to: response.assigned_to ?? response.assignedTo,
-      assignedTo: response.assignedTo ?? response.assigned_to,
+      assignedTo: response.assignedTo,
     };
   }
 }

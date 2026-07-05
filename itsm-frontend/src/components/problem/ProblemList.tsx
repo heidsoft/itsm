@@ -98,7 +98,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
         ...query,
         ...values,
       });
-      setData(resp.problems || resp.items || []);
+      setData((resp.problems || resp.items || []) as unknown as Problem[]);
       setTotal(resp.total || 0);
     } catch (error) {
       // 只在有实际错误时显示失败消息，不是因为表单验证导致的
@@ -179,7 +179,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
     },
     {
       title: '更新时间',
-      dataIndex: 'updated_at',
+      dataIndex: 'updatedAt',
       width: 180,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },

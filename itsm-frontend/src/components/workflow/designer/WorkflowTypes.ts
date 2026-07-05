@@ -9,29 +9,29 @@ export interface WorkflowDefinition {
   category: string;
   status: 'draft' | 'active' | 'inactive' | 'archived';
   xml: string;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
   tags: string[];
-  approval_config?: ApprovalConfig;
+  approvalConfig?: ApprovalConfig;
   variables?: WorkflowVariable[];
-  sla_config?: SLAConfig;
+  slaConfig?: SLAConfig;
 }
 
 export interface ApprovalConfig {
-  require_approval: boolean;
-  approval_type: 'single' | 'parallel' | 'sequential' | 'conditional';
+  requireApproval: boolean;
+  approvalType: 'single' | 'parallel' | 'sequential' | 'conditional';
   // 节点级“用户指派”兑底。可为空。
   approvers: string[];
   // 审批组是节点级，存于 BPMN userTask candidateGroups，不在此字段。需在「节点属性」面板中设。
-  auto_approve_roles: string[];
-  escalation_rules: EscalationRule[];
+  autoApproveRoles: string[];
+  escalationRules: EscalationRule[];
 }
 
 export interface EscalationRule {
   level: number;
-  timeout_hours: number;
-  escalate_to: string[];
+  timeoutHours: number;
+  escalateTo: string[];
   action: 'notify' | 'auto_approve' | 'escalate';
 }
 
@@ -39,25 +39,25 @@ export interface WorkflowVariable {
   name: string;
   type: 'string' | 'number' | 'boolean' | 'date' | 'object';
   required: boolean;
-  default_value?: string | number | boolean | Date | Record<string, unknown>;
+  defaultValue?: string | number | boolean | Date | Record<string, unknown>;
   description: string;
 }
 
 export interface SLAConfig {
-  response_time_hours: number;
-  resolution_time_hours: number;
-  business_hours_only: boolean;
-  exclude_weekends: boolean;
-  exclude_holidays: boolean;
+  responseTimeHours: number;
+  resolutionTimeHours: number;
+  businessHoursOnly: boolean;
+  excludeWeekends: boolean;
+  excludeHolidays: boolean;
 }
 
 export interface WorkflowVersion {
   id: string;
   version: string;
   status: 'draft' | 'active' | 'archived';
-  created_at: string;
-  created_by: string;
-  change_log: string;
+  createdAt: string;
+  createdBy: string;
+  changeLog: string;
   xml: string;
 }
 
@@ -124,10 +124,10 @@ export interface WorkflowTemplate {
   name: string;
   description: string;
   category: string;
-  bpmn_xml: string;
-  approval_config: {
-    require_approval: boolean;
-    approval_type: 'single' | 'parallel' | 'sequential' | 'conditional';
+  bpmnXml: string;
+  approvalConfig: {
+    requireApproval: boolean;
+    approvalType: 'single' | 'parallel' | 'sequential' | 'conditional';
     approvers: string[];
   };
 }

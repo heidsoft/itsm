@@ -68,7 +68,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
 
       const [slaResponse, userResponse] = await Promise.all([
         SLAApi.getSLADefinitions(),
-        UserApi.getUsers({ page: 1, page_size: 100, status: 'active' }),
+        UserApi.getUsers({ page: 1, pageSize: 100, status: 'active' }),
       ]);
 
       setSlas(slaResponse.items);

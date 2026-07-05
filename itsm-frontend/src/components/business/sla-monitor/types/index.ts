@@ -86,19 +86,19 @@ export interface SLAStats {
 export interface SLAAlertRule {
   id: number;
   name: string;
-  sla_definition_id: number;
-  alert_level: 'warning' | 'critical' | 'severe';
-  threshold_percentage: number;
-  notification_channels: string[];
-  escalation_enabled?: boolean;
-  escalation_levels?: Array<{
+  slaDefinitionId: number;
+  alertLevel: 'warning' | 'critical' | 'severe';
+  thresholdPercentage: number;
+  notificationChannels: string[];
+  escalationEnabled?: boolean;
+  escalationLevels?: Array<{
     level: number;
-    threshold_percentage: number;
-    notification_channels: string[];
+    thresholdPercentage: number;
+    notificationChannels: string[];
   }>;
-  is_active: boolean;
-  created_at: string;
-  updated_at?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 // ============ Hook 返回类型 ============

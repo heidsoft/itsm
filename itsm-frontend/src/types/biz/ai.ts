@@ -5,34 +5,34 @@
 export interface AIConversation {
   id: number;
   title: string;
-  user_id: number;
-  tenant_id: number;
-  created_at: string;
+  userId: number;
+  tenantId: number;
+  createdAt: string;
 }
 
 export interface AIMessage {
   id: number;
-  conversation_id: number;
+  conversationId: number;
   role: string;
   content: string;
-  request_id?: string;
-  created_at: string;
+  requestId?: string;
+  createdAt: string;
 }
 
 export interface RCAAnalysis {
   id: number;
-  ticket_id: number;
-  ticket_number: string;
-  ticket_title: string;
-  analysis_date: string;
-  root_causes: unknown[];
-  analysis_summary: string;
-  confidence_score: number;
-  analysis_method: string;
-  created_at: string;
+  ticketId: number;
+  ticketNumber: string;
+  ticketTitle: string;
+  analysisDate: string;
+  rootCauses: unknown[];
+  analysisSummary: string;
+  confidenceScore: number;
+  analysisMethod: string;
+  createdAt: string;
 }
 
 export interface AIChatResponse {
   answers: unknown[];
-  conversation_id: number;
+  conversationId: number;
 }

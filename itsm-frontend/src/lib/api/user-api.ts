@@ -21,7 +21,7 @@ export interface CreateUserRequest {
   department: string;
   phone: string;
   password: string;
-  tenant_id: number;
+  tenantId: number;
 }
 
 export interface UpdateUserRequest {
@@ -34,8 +34,8 @@ export interface UpdateUserRequest {
 
 export interface ListUsersParams {
   page?: number;
-  page_size?: number;
-  tenant_id?: number;
+  pageSize?: number;
+  tenantId?: number;
   status?: string;
   department?: string;
   search?: string;
@@ -45,9 +45,9 @@ export interface PagedUsersResponse {
   users: User[];
   pagination: {
     page: number;
-    page_size: number;
+    pageSize: number;
     total: number;
-    total_page: number;
+    totalPage: number;
   };
 }
 
@@ -58,14 +58,14 @@ export interface UserStatsResponse {
 }
 
 export interface BatchUpdateUsersRequest {
-  user_ids: number[];
+  userIds: number[];
   action: 'activate' | 'deactivate' | 'department';
   department?: string;
 }
 
 export interface SearchUsersParams {
   keyword: string;
-  tenant_id?: number;
+  tenantId?: number;
   limit?: number;
 }
 
@@ -104,12 +104,12 @@ export class UserApi {
 
   // 重置用户密码
   static async resetPassword(id: number, newPassword: string): Promise<void> {
-    await httpClient.put(`${this.baseURL}/${id}/reset-password`, { new_password: newPassword });
+    await httpClient.put(`${this.baseURL}/${id}/reset-password`, { newPassword: newPassword });
   }
 
   // 获取用户统计
   static async getUserStats(tenantId?: number): Promise<UserStatsResponse> {
-    const params = tenantId ? { tenant_id: tenantId } : {};
+    const params = tenantId ? { tenantId: tenantId } : {};
     return httpClient.get<UserStatsResponse>(`${this.baseURL}/stats`, params);
   }
 

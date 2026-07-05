@@ -25,9 +25,9 @@ const NOTIFICATION_PAGE_SIZE = 10;
 
 const normalizeNotification = (notification: TicketNotification): TicketNotification => ({
   ...notification,
-  createdAt: notification.createdAt || notification.created_at,
-  readAt: notification.readAt || notification.read_at,
-  sentAt: notification.sentAt || notification.sent_at,
+  createdAt: notification.createdAt || notification.createdAt,
+  readAt: notification.readAt || notification.readAt,
+  sentAt: notification.sentAt || notification.sentAt,
 });
 
 interface HeaderProps {
@@ -90,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
     try {
       const response = await TicketNotificationApi.getUserNotifications({
         page: 1,
-        page_size: NOTIFICATION_PAGE_SIZE,
+        pageSize: NOTIFICATION_PAGE_SIZE,
       });
       setNotifications((response.notifications || []).map(normalizeNotification));
     } catch (error) {

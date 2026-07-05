@@ -36,7 +36,7 @@ const statusColors: Record<string, string> = {
   completed: 'success',
   cancelled: 'default',
   failed: 'error',
-  rolled_back: 'warning',
+  rolledBack: 'warning',
 };
 
 // 类型颜色映射
@@ -54,7 +54,7 @@ const statusLabels: Record<string, string> = {
   completed: '已完成',
   cancelled: '已取消',
   failed: '失败',
-  rolled_back: '已回滚',
+  rolledBack: '已回滚',
 };
 
 const ReleaseDetail: React.FC = () => {
@@ -126,7 +126,7 @@ const ReleaseDetail: React.FC = () => {
               <Title level={3} style={{ marginBottom: 8 }}>
                 {release.title}
               </Title>
-              <Text type="secondary">发布编号: {release.release_number}</Text>
+              <Text type="secondary">发布编号: {release.releaseNumber}</Text>
             </div>
             <Tag color={statusColors[release.status]} style={{ padding: '4px 12px', fontSize: 14 }}>
               {statusLabels[release.status]}
@@ -176,33 +176,33 @@ const ReleaseDetail: React.FC = () => {
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="紧急发布">
-            {release.is_emergency ? <Tag color="red">是</Tag> : <Tag>否</Tag>}
+            {release.isEmergency ? <Tag color="red">是</Tag> : <Tag>否</Tag>}
           </Descriptions.Item>
           <Descriptions.Item label="需要审批">
-            {release.requires_approval ? <Tag color="blue">是</Tag> : <Tag>否</Tag>}
+            {release.requiresApproval ? <Tag color="blue">是</Tag> : <Tag>否</Tag>}
           </Descriptions.Item>
-          <Descriptions.Item label="负责人">{release.owner_name || '-'}</Descriptions.Item>
+          <Descriptions.Item label="负责人">{release.ownerName || '-'}</Descriptions.Item>
           <Descriptions.Item label="计划发布日期">
-            {release.planned_release_date
-              ? dayjs(release.planned_release_date).format('YYYY-MM-DD HH:mm')
+            {release.plannedReleaseDate
+              ? dayjs(release.plannedReleaseDate).format('YYYY-MM-DD HH:mm')
               : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="实际发布日期">
-            {release.actual_release_date
-              ? dayjs(release.actual_release_date).format('YYYY-MM-DD HH:mm')
+            {release.actualReleaseDate
+              ? dayjs(release.actualReleaseDate).format('YYYY-MM-DD HH:mm')
               : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="计划开始时间">
-            {release.planned_start_date
-              ? dayjs(release.planned_start_date).format('YYYY-MM-DD HH:mm')
+            {release.plannedStartDate
+              ? dayjs(release.plannedStartDate).format('YYYY-MM-DD HH:mm')
               : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="计划结束时间">
-            {release.planned_end_date
-              ? dayjs(release.planned_end_date).format('YYYY-MM-DD HH:mm')
+            {release.plannedEndDate
+              ? dayjs(release.plannedEndDate).format('YYYY-MM-DD HH:mm')
               : '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="创建人">{release.created_by_name}</Descriptions.Item>
+          <Descriptions.Item label="创建人">{release.createdByName}</Descriptions.Item>
           <Descriptions.Item label="创建时间">
             {dayjs(release.createdAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
@@ -215,56 +215,56 @@ const ReleaseDetail: React.FC = () => {
         </Card>
       )}
 
-      {release.release_notes && (
+      {release.releaseNotes && (
         <Card title="发布说明">
           <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
-            {release.release_notes}
+            {release.releaseNotes}
           </pre>
         </Card>
       )}
 
-      {release.affected_systems && release.affected_systems.length > 0 && (
+      {release.affectedSystems && release.affectedSystems.length > 0 && (
         <Card title="受影响的系统">
           <Space wrap>
-            {release.affected_systems.map((system, index) => (
+            {release.affectedSystems.map((system, index) => (
               <Tag key={index}>{system}</Tag>
             ))}
           </Space>
         </Card>
       )}
 
-      {release.affected_components && release.affected_components.length > 0 && (
+      {release.affectedComponents && release.affectedComponents.length > 0 && (
         <Card title="受影响的组件">
           <Space wrap>
-            {release.affected_components.map((component, index) => (
+            {release.affectedComponents.map((component, index) => (
               <Tag key={index}>{component}</Tag>
             ))}
           </Space>
         </Card>
       )}
 
-      {release.deployment_steps && release.deployment_steps.length > 0 && (
+      {release.deploymentSteps && release.deploymentSteps.length > 0 && (
         <Card title="部署步骤">
           <Timeline>
-            {release.deployment_steps.map((step, index) => (
+            {release.deploymentSteps.map((step, index) => (
               <Timeline.Item key={index}>{step}</Timeline.Item>
             ))}
           </Timeline>
         </Card>
       )}
 
-      {release.rollback_procedure && (
+      {release.rollbackProcedure && (
         <Card title="回滚程序">
           <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
-            {release.rollback_procedure}
+            {release.rollbackProcedure}
           </pre>
         </Card>
       )}
 
-      {release.validation_criteria && (
+      {release.validationCriteria && (
         <Card title="验证标准">
           <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
-            {release.validation_criteria}
+            {release.validationCriteria}
           </pre>
         </Card>
       )}

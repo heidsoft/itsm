@@ -78,13 +78,13 @@ export default function CloudServicePage() {
     try {
       const values = await createForm.validateFields();
       const payload = { ...values } as Record<string, any>;
-      if (values.attribute_schema) {
+      if (values.attributeSchema) {
         try {
-          payload.attribute_schema =
-            typeof values.attribute_schema === 'string'
-              ? JSON.parse(values.attribute_schema)
-              : values.attribute_schema;
-          const fields = payload.attribute_schema?.fields;
+          payload.attributeSchema =
+            typeof values.attributeSchema === 'string'
+              ? JSON.parse(values.attributeSchema)
+              : values.attributeSchema;
+          const fields = payload.attributeSchema?.fields;
           if (fields) {
             if (!Array.isArray(fields)) {
               message.error(t('cmdb.propertyTemplateMustBeArray'));
@@ -128,14 +128,14 @@ export default function CloudServicePage() {
     },
     {
       title: '上级服务',
-      dataIndex: 'parent_id',
+      dataIndex: 'parentId',
       width: 160,
       render: (value?: number) =>
-        value ? serviceMap.get(value)?.service_name || `#${value}` : '-',
+        value ? serviceMap.get(value)?.serviceName || `#${value}` : '-',
     },
     {
       title: '服务代码',
-      dataIndex: 'service_code',
+      dataIndex: 'serviceCode',
       width: 140,
     },
     {
@@ -146,28 +146,28 @@ export default function CloudServicePage() {
     },
     {
       title: '服务名称',
-      dataIndex: 'service_name',
+      dataIndex: 'serviceName',
       width: 160,
     },
     {
       title: '资源类型代码',
-      dataIndex: 'resource_type_code',
+      dataIndex: 'resourceTypeCode',
       width: 160,
     },
     {
       title: '资源类型名称',
-      dataIndex: 'resource_type_name',
+      dataIndex: 'resourceTypeName',
       width: 160,
     },
     {
       title: 'API版本',
-      dataIndex: 'api_version',
+      dataIndex: 'apiVersion',
       width: 120,
       render: (value?: string) => value || '-',
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
+      dataIndex: 'isActive',
       width: 80,
       render: (value: boolean) => (
         <Tag color={value ? 'green' : 'default'}>{value ? '启用' : '停用'}</Tag>
@@ -255,9 +255,9 @@ export default function CloudServicePage() {
                   <Option
                     key={service.id}
                     value={service.id}
-                    label={`${service.service_name} (${service.service_code})`}
+                    label={`${service.serviceName} (${service.serviceCode})`}
                   >
-                    {service.service_name} ({service.service_code})
+                    {service.serviceName} ({service.serviceCode})
                   </Option>
                 ))}
             </Select>

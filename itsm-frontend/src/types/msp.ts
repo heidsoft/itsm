@@ -14,72 +14,72 @@ export type AllocationRole = 'primary' | 'backup' | 'specialist';
 // MSP 分配 DTO
 export interface MSPAllocation {
   id: number;
-  msp_user_id: number;
-  msp_username?: string;
-  customer_tenant_id: number;
-  customer_name?: string;
+  mspUserId: number;
+  mspUsername?: string;
+  customerTenantId: number;
+  customerName?: string;
   role: AllocationRole;
-  assigned_at: string;
-  deassigned_at?: string;
+  assignedAt: string;
+  deassignedAt?: string;
 }
 
 // 创建分配请求
 export interface CreateAllocationRequest {
-  msp_user_id: number;
-  customer_tenant_id: number;
+  mspUserId: number;
+  customerTenantId: number;
   role?: AllocationRole;
 }
 
 // 工单的 MSP 信息
 export interface TicketMSPInfo {
-  is_managed_by_msp: boolean;
-  msp_provider_id?: number;
-  msp_provider_name?: string;
-  managed_by_user_id?: number;
-  managed_by_username?: string;
-  msp_ticket_id?: string;
+  isManagedByMsp: boolean;
+  mspProviderId?: number;
+  mspProviderName?: string;
+  managedByUserId?: number;
+  managedByUsername?: string;
+  mspTicketId?: string;
 }
 
 // 工作流节点的 MSP 配置
 export interface WorkflowNodeMSPConfig {
-  enable_msp_support: boolean;
-  allowed_msp_roles?: MSPRole[];
-  require_msp_approval: boolean;
+  enableMspSupport: boolean;
+  allowedMspRoles?: MSPRole[];
+  requireMspApproval: boolean;
 }
 
 // MSP 上下文（用于中间件）
 export interface MSPContext {
-  is_msp: boolean;
-  msp_user_id: number;
-  customer_tenant_id?: number;
+  isMsp: boolean;
+  mspUserId: number;
+  customerTenantId?: number;
   role?: string;
-  allowed_customers: number[];
+  allowedCustomers: number[];
 }
 
 // MSP 报表数据
 export interface MSPCustomerReport {
-  customer_tenant_id: number;
-  customer_name: string;
+  customerTenantId: number;
+  customerName: string;
   period: string;
-  total_tickets: number;
-  resolved_tickets: number;
-  msp_handling_time_avg: number; // 小时
-  sla_compliance_rate: number; // 0-1
+  totalTickets: number;
+  resolvedTickets: number;
+  mspHandlingTimeAvg: number; // 小时
+  slaComplianceRate: number; // 0-1
 }
 
 // MSP 分配历史
 export interface MSPAllocationHistory {
   id: number;
-  msp_user_id: number;
-  msp_username: string;
-  customer_tenant_id: number;
-  customer_name: string;
+  mspUserId: number;
+  mspUsername: string;
+  customerTenantId: number;
+  customerName: string;
   role: AllocationRole;
-  assigned_at: string;
-  deassigned_at?: string;
-  deallocation_reason?: string;
-  created_by: number;
-  created_by_name?: string;
+  assignedAt: string;
+  deassignedAt?: string;
+  deallocationReason?: string;
+  createdBy: number;
+  createdByName?: string;
 }
 
 // API 响应类型
@@ -102,9 +102,9 @@ export interface MSPCustomerTicketsResponse {
     id: number;
     title: string;
     status: string;
-    assignee_id?: number;
-    assignee_name?: string;
-    created_at: string;
+    assigneeId?: number;
+    assigneeName?: string;
+    createdAt: string;
     tenant: {
       id: number;
       code: string;
@@ -121,18 +121,18 @@ export interface Tenant extends Record<string, unknown> {
   code: string;
   domain?: string;
   type: TenantType;
-  parent_tenant_id?: number;
-  msp_provider_id?: number;
+  parentTenantId?: number;
+  mspProviderId?: number;
   status: 'active' | 'suspended' | 'expired';
-  expires_at?: string;
-  created_at: string;
-  updated_at: string;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
 
   // 关联关系
   parent?: Tenant;
   children?: Tenant[];
-  msp_provider?: Tenant;
-  msp_customers?: Tenant[];
+  mspProvider?: Tenant;
+  mspCustomers?: Tenant[];
 }
 
 // 扩展 User 类型
@@ -140,36 +140,36 @@ export interface User extends Record<string, unknown> {
   id: number;
   username: string;
   email: string;
-  tenant_id: number;
-  msp_role?: MSPRole;
-  assigned_by_msp_id?: number;
-  created_at: string;
-  updated_at: string;
+  tenantId: number;
+  mspRole?: MSPRole;
+  assignedByMspId?: number;
+  createdAt: string;
+  updatedAt: string;
 
   // 关联关系
   tenant?: Tenant;
-  msp_allocations?: MSPAllocation[];
+  mspAllocations?: MSPAllocation[];
 }
 
 // 扩展 Ticket 类型
 export interface Ticket extends Record<string, unknown> {
   id: number;
-  tenant_id: number;
+  tenantId: number;
   title: string;
   description?: string;
   status: string;
-  assignee_id?: number;
-  is_managed_by_msp: boolean;
-  msp_provider_id?: number;
-  managed_by_user_id?: number;
-  msp_ticket_id?: string;
-  created_at: string;
-  updated_at: string;
+  assigneeId?: number;
+  isManagedByMsp: boolean;
+  mspProviderId?: number;
+  managedByUserId?: number;
+  mspTicketId?: string;
+  createdAt: string;
+  updatedAt: string;
 
   // 关联关系
   tenant?: Tenant;
   assignee?: User;
-  msp_provider?: Tenant;
-  msp_user?: User;
-  msp_info?: TicketMSPInfo;
+  mspProvider?: Tenant;
+  mspUser?: User;
+  mspInfo?: TicketMSPInfo;
 }

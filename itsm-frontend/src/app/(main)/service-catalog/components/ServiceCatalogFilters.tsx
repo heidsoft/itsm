@@ -102,9 +102,9 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
               <Option
                 key={service.id}
                 value={service.id}
-                label={`${service.service_name} (${service.resource_type_name})`}
+                label={`${service.serviceName} (${service.resourceTypeName})`}
               >
-                {service.service_name} ({service.resource_type_name})
+                {service.serviceName} ({service.resourceTypeName})
               </Option>
             ))}
           </Select>

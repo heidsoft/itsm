@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   Card,
-  Upload,
+  Upload as AntUpload,
   Button,
   List,
   Space,
   Typography,
   Modal,
-  Image,
+  Image as AntImage,
   Progress,
   message,
   Popconfirm,
@@ -17,7 +17,7 @@ import {
   Tooltip,
   Empty,
 } from 'antd';
-import { Trash2, Download, Upload, File, Eye, Image, FileText } from 'lucide-react';
+import { Trash2, Download, File, Eye, Image, FileText, FileType, Sheet, Presentation, FileArchive } from 'lucide-react';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 import type { TicketAttachment } from '@/lib/api/ticket-attachment-api';
 import { TicketAttachmentApi } from '@/lib/api/ticket-attachment-api';
@@ -132,7 +132,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
   // 预览附件
   const handlePreview = (attachment: TicketAttachment) => {
     // 判断是否为图片
-    if (attachment.mime_type?.startsWith('image/')) {
+    if (attachment.mimeType?.startsWith('image/')) {
       setPreviewAttachment(attachment);
       setPreviewVisible(true);
     } else {
@@ -147,7 +147,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
     const downloadUrl = TicketAttachmentApi.getDownloadUrl(ticketId, attachment.id);
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = attachment.file_name;
+    link.download = attachment.fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -162,13 +162,13 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       case 'pdf':
         return <FileText style={{ fontSize: 24, color: '#ff4d4f' }} />;
       case 'word':
-        return <FileWordOutlined style={{ fontSize: 24, color: '#1890ff' }} />;
+        return <FileType style={{ fontSize: 24, color: '#1890ff' }} />;
       case 'excel':
-        return <FileExcelOutlined style={{ fontSize: 24, color: '#52c41a' }} />;
+        return <Sheet style={{ fontSize: 24, color: '#52c41a' }} />;
       case 'powerpoint':
-        return <FilePptOutlined style={{ fontSize: 24, color: '#ff9800' }} />;
+        return <Presentation style={{ fontSize: 24, color: '#ff9800' }} />;
       case 'archive':
-        return <FileZipOutlined style={{ fontSize: 24, color: '#722ed1' }} />;
+        return <FileArchive style={{ fontSize: 24, color: '#722ed1' }} />;
       default:
         return <File style={{ fontSize: 24, color: '#8c8c8c' }} />;
     }
@@ -202,15 +202,15 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       {/* 上传区域 */}
       {canUpload && (
         <Card title="上传附件" size="small">
-          <Upload.Dragger {...uploadProps} disabled={uploading}>
+          <AntUpload.Dragger {...uploadProps} disabled={uploading}>
             <p className="ant-upload-drag-icon">
-              <Upload style={{ fontSize: 48, color: '#1890ff' }} />
+              <AntUpload style={{ fontSize: 48, color: '#1890ff' }} />
             </p>
             <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
             <p className="ant-upload-hint">
               支持多文件上传，单个文件最大10MB。支持图片、PDF、Office文档等格式
             </p>
-          </Upload.Dragger>
+          </AntUpload.Dragger>
 
           {/* 上传进度 */}
           {Object.keys(uploadProgress).length > 0 && (
@@ -268,12 +268,12 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
                 ].filter(Boolean)}
               >
                 <List.Item.Meta
-                  avatar={getFileIcon(attachment.mime_type || attachment.file_type)}
+                  avatar={getFileIcon(attachment.mimeType || attachment.fileType)}
                   title={
                     <Space>
-                      <Text strong>{attachment.file_name}</Text>
+                      <Text strong>{attachment.fileName}</Text>
                       <Tag color="blue">
-                        {TicketAttachmentApi.formatFileSize(attachment.file_size)}
+                        {TicketAttachmentApi.formatFileSize(attachment.fileSize)}
                       </Tag>
                     </Space>
                   }
@@ -305,11 +305,11 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
         {previewAttachment && (
           <div>
             <Text strong className="block mb-4">
-              {previewAttachment.file_name}
+              {previewAttachment.fileName}
             </Text>
-            <Image
+            <AntImage
               src={TicketAttachmentApi.getPreviewUrl(ticketId, previewAttachment.id)}
-              alt={previewAttachment.file_name}
+              alt={previewAttachment.fileName}
               style={{ width: '100%' }}
             />
           </div>

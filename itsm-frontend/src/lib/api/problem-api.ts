@@ -8,8 +8,8 @@ import { httpClient } from './http-client';
 // ==================== 问题趋势相关类型 ====================
 
 export interface ProblemTrendRequest {
-  start_date: string;
-  end_date: string;
+  startDate: string;
+  endDate: string;
   category?: string;
 }
 
@@ -27,25 +27,25 @@ export interface MonthlyCount {
 
 export interface ProblemTrendData {
   period: string;
-  total_problems: number;
-  resolved_problems: number;
-  open_problems: number;
-  resolution_rate: number;
-  avg_resolution_time_hours: number;
-  category_breakdown: Record<string, number>;
-  priority_breakdown: Record<string, number>;
-  trend_direction: string;
-  top_categories: CategoryCount[];
-  monthly_trend: MonthlyCount[];
+  totalProblems: number;
+  resolvedProblems: number;
+  openProblems: number;
+  resolutionRate: number;
+  avgResolutionTimeHours: number;
+  categoryBreakdown: Record<string, number>;
+  priorityBreakdown: Record<string, number>;
+  trendDirection: string;
+  topCategories: CategoryCount[];
+  monthlyTrend: MonthlyCount[];
 }
 
 export interface ProblemHotspotsData {
-  period_start: string;
-  period_end: string;
-  category_breakdown: Record<string, number>;
-  priority_breakdown: Record<string, number>;
+  periodStart: string;
+  periodEnd: string;
+  categoryBreakdown: Record<string, number>;
+  priorityBreakdown: Record<string, number>;
   hotspots: string[];
-  avg_per_category: number;
+  avgPerCategory: number;
 }
 
 export interface Problem {
@@ -57,22 +57,15 @@ export interface Problem {
   severity: string;
   category?: string;
   impact?: string;
-  assignee_id?: number;
   assigneeId?: number;
-  reporter_id?: number;
   reporterId?: number;
-  root_cause?: string;
   rootCause?: string;
   workaround?: string;
   resolution?: string;
-  affected_incidents?: number[];
   affectedIncidents?: number[];
-  related_changes?: number[];
   relatedChanges?: number[];
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
   // P0 修复暴露的预先 TS 错误：ProblemSLACard 引用 problem.slaStatus
   slaStatus?: 'ok' | 'warning' | 'breached';
   responseDeadline?: string;
@@ -81,9 +74,10 @@ export interface Problem {
 
 export interface ProblemListResponse {
   problems: Problem[];
+  items?: Problem[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 // ==================== 问题关联 ====================
@@ -169,7 +163,7 @@ export class ProblemApi {
    * 记录根本原因
    */
   static async recordRootCause(id: number, rootCause: string): Promise<Problem> {
-    return httpClient.post(`/api/v1/problems/${id}/root-cause`, { root_cause: rootCause });
+    return httpClient.post(`/api/v1/problems/${id}/root-cause`, { rootCause: rootCause });
   }
 
   /**

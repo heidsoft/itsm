@@ -27,7 +27,7 @@ import {
   Empty,
   Tooltip,
 } from 'antd';
-import { Plus, Pencil, Trash2, FileText, Clock, Link, CheckCircle, FlaskConical } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, Clock, Link, CheckCircle, FlaskConical, BookOpen, ClipboardCheck } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useParams } from 'next/navigation';
 
@@ -51,9 +51,9 @@ const { Option } = Select;
 
 // 状态标签映射
 const statusColors: Record<string, string> = {
-  not_started: 'default',
-  in_progress: 'processing',
-  on_hold: 'warning',
+  notStarted: 'default',
+  inProgress: 'processing',
+  onHold: 'warning',
   completed: 'success',
   cancelled: 'error',
   blocked: 'error',
@@ -61,9 +61,9 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  not_started: '未开始',
-  in_progress: '进行中',
-  on_hold: '暂停',
+  notStarted: '未开始',
+  inProgress: '进行中',
+  onHold: '暂停',
   completed: '已完成',
   cancelled: '已取消',
   blocked: '已阻塞',
@@ -87,7 +87,7 @@ const methodLabels: Record<string, string> = {
   '5-whys': '5个为什么',
   fishbone: '鱼骨图',
   timeline: '时间线',
-  fault_tree: '故障树',
+  faultTree: '故障树',
 };
 
 interface ProblemInvestigationTabProps {
@@ -141,7 +141,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   const handleCreateInvestigation = async () => {
     try {
       await ProblemInvestigationAPI.createInvestigation({
-        problem_id: Number(id) || problemId,
+        problemId: Number(id) || problemId,
       });
       message.success('创建调查成功');
       loadSummary();
@@ -152,18 +152,18 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
   // 创建调查步骤
   const handleCreateStep = async (values: {
-    step_title: string;
-    step_description?: string;
-    assigned_to?: number;
+    stepTitle: string;
+    stepDescription?: string;
+    assignedTo?: number;
     notes?: string;
   }) => {
     try {
       const data: CreateStepRequest = {
-        investigation_id: summary?.investigation?.id!,
-        step_number: (summary?.steps?.length || 0) + 1,
-        step_title: values.step_title,
-        step_description: values.step_description || '',
-        assigned_to: values.assigned_to,
+        investigationId: summary?.investigation?.id!,
+        stepNumber: (summary?.steps?.length || 0) + 1,
+        stepTitle: values.stepTitle,
+        stepDescription: values.stepDescription || '',
+        assignedTo: values.assignedTo,
         notes: values.notes,
       };
       await ProblemInvestigationAPI.createStep(data);
@@ -191,20 +191,20 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
   // 创建根本原因分析
   const handleCreateRootCause = async (values: {
-    analysis_method: string;
-    root_cause_description: string;
-    contributing_factors?: string;
+    analysisMethod: string;
+    rootCauseDescription: string;
+    contributingFactors?: string;
     evidence?: string;
-    confidence_level: 'low' | 'medium' | 'high';
+    confidenceLevel: 'low' | 'medium' | 'high';
   }) => {
     try {
       const data: CreateRootCauseRequest = {
-        problem_id: Number(id) || problemId,
-        analysis_method: values.analysis_method,
-        root_cause_description: values.root_cause_description,
-        contributing_factors: values.contributing_factors || undefined,
+        problemId: Number(id) || problemId,
+        analysisMethod: values.analysisMethod,
+        rootCauseDescription: values.rootCauseDescription,
+        contributingFactors: values.contributingFactors || undefined,
         evidence: values.evidence || undefined,
-        confidence_level: values.confidence_level,
+        confidenceLevel: values.confidenceLevel,
       };
       await ProblemInvestigationAPI.createRootCause(data);
       message.success('创建成功');
@@ -218,22 +218,22 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
   // 创建解决方案
   const handleCreateSolution = async (values: {
-    solution_type: SolutionType;
-    solution_description: string;
+    solutionType: SolutionType;
+    solutionDescription: string;
     priority?: string;
-    estimated_effort_hours?: number;
-    estimated_cost?: number;
-    risk_assessment?: string;
+    estimatedEffortHours?: number;
+    estimatedCost?: number;
+    riskAssessment?: string;
   }) => {
     try {
       const data: CreateSolutionRequest = {
-        problem_id: Number(id) || problemId,
-        solution_type: values.solution_type,
-        solution_description: values.solution_description,
+        problemId: Number(id) || problemId,
+        solutionType: values.solutionType,
+        solutionDescription: values.solutionDescription,
         priority: values.priority || 'medium',
-        estimated_effort_hours: values.estimated_effort_hours,
-        estimated_cost: values.estimated_cost,
-        risk_assessment: values.risk_assessment,
+        estimatedEffortHours: values.estimatedEffortHours,
+        estimatedCost: values.estimatedCost,
+        riskAssessment: values.riskAssessment,
       };
       await ProblemInvestigationAPI.createSolution(data);
       message.success('创建成功');
@@ -247,17 +247,17 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
   // 沉淀到知识库
   const handleCreateKnowledgeArticle = async (values: {
-    article_title: string;
-    article_content: string;
-    article_type?: string;
+    articleTitle: string;
+    articleContent: string;
+    articleType?: string;
     tags?: string[];
   }) => {
     try {
       const data: CreateKnowledgeArticleRequest = {
-        problem_id: Number(id) || problemId,
-        article_title: values.article_title,
-        article_content: values.article_content,
-        article_type: values.article_type || '',
+        problemId: Number(id) || problemId,
+        articleTitle: values.articleTitle,
+        articleContent: values.articleContent,
+        articleType: values.articleType || '',
         tags: values.tags,
       };
       await ProblemInvestigationAPI.createKnowledgeArticle(data);
@@ -274,19 +274,19 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   const stepColumns = [
     {
       title: '序号',
-      dataIndex: 'step_number',
-      key: 'step_number',
+      dataIndex:'stepNumber',
+      key:'stepNumber',
       width: 60,
     },
     {
       title: '步骤标题',
-      dataIndex: 'step_title',
-      key: 'step_title',
+      dataIndex:'stepTitle',
+      key:'stepTitle',
     },
     {
       title: '描述',
-      dataIndex: 'step_description',
-      key: 'step_description',
+      dataIndex:'stepDescription',
+      key:'stepDescription',
       ellipsis: true,
     },
     {
@@ -297,13 +297,13 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
     },
     {
       title: '负责人',
-      dataIndex: 'assigned_to_name',
-      key: 'assigned_to_name',
+      dataIndex:'assignedToName',
+      key:'assignedToName',
     },
     {
       title: '完成时间',
-      dataIndex: 'completion_date',
-      key: 'completion_date',
+      dataIndex:'completionDate',
+      key:'completionDate',
       render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
     },
     {
@@ -329,8 +329,8 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   const solutionColumns = [
     {
       title: '类型',
-      dataIndex: 'solution_type',
-      key: 'solution_type',
+      dataIndex:'solutionType',
+      key:'solutionType',
       render: (type: string) => {
         const colors: Record<string, string> = {
           workaround: 'orange',
@@ -349,8 +349,8 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
     },
     {
       title: '描述',
-      dataIndex: 'solution_description',
-      key: 'solution_description',
+      dataIndex:'solutionDescription',
+      key:'solutionDescription',
       ellipsis: true,
     },
     {
@@ -367,8 +367,8 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         const statusMap: Record<string, { color: string; label: string }> = {
           proposed: { color: 'default', label: '已提议' },
           approved: { color: 'blue', label: '已批准' },
-          pending_implementation: { color: 'orange', label: '待实施' },
-          in_progress: { color: 'processing', label: '实施中' },
+          pendingImplementation: { color: 'orange', label: '待实施' },
+          inProgress: { color: 'processing', label: '实施中' },
           implemented: { color: 'success', label: '已实施' },
           rejected: { color: 'error', label: '已拒绝' },
         };
@@ -378,8 +378,8 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
     },
     {
       title: '提议人',
-      dataIndex: 'proposed_by_name',
-      key: 'proposed_by_name',
+      dataIndex:'proposedByName',
+      key:'proposedByName',
     },
   ];
 
@@ -403,16 +403,16 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                   </Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="调查人">
-                  {summary.investigation.investigator_name || '-'}
+                  {summary.investigation.investigatorName || '-'}
                 </Descriptions.Item>
                 <Descriptions.Item label="开始日期">
-                  {summary.investigation.start_date
-                    ? dayjs(summary.investigation.start_date).format('YYYY-MM-DD')
+                  {summary.investigation.startDate
+                    ? dayjs(summary.investigation.startDate).format('YYYY-MM-DD')
                     : '-'}
                 </Descriptions.Item>
                 <Descriptions.Item label="预计完成">
-                  {summary.investigation.estimated_completion_date
-                    ? dayjs(summary.investigation.estimated_completion_date).format('YYYY-MM-DD')
+                  {summary.investigation.estimatedCompletionDate
+                    ? dayjs(summary.investigation.estimatedCompletionDate).format('YYYY-MM-DD')
                     : '-'}
                 </Descriptions.Item>
               </Descriptions>
@@ -420,7 +420,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               <Divider />
 
               <Title level={5}>调查概要</Title>
-              <Paragraph>{summary.investigation.investigation_summary || '暂无调查概要'}</Paragraph>
+              <Paragraph>{summary.investigation.investigationSummary || '暂无调查概要'}</Paragraph>
 
               <Divider />
 
@@ -440,26 +440,26 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
               <Divider />
 
-              {summary.root_cause_analysis && (
+              {summary.rootCauseAnalysis && (
                 <>
                   <Title level={5}>根本原因分析</Title>
                   <Alert
                     type="info"
-                    message={`分析方法: ${methodLabels[summary.root_cause_analysis.analysis_method] || summary.root_cause_analysis.analysis_method}`}
+                    message={`分析方法: ${methodLabels[summary.rootCauseAnalysis.analysisMethod] || summary.rootCauseAnalysis.analysisMethod}`}
                     description={
                       <>
                         <p>
                           <strong>原因描述:</strong>{' '}
-                          {summary.root_cause_analysis.root_cause_description}
+                          {summary.rootCauseAnalysis.rootCauseDescription}
                         </p>
                         <p>
                           <strong>置信度:</strong>{' '}
-                          {confidenceLabels[summary.root_cause_analysis.confidence_level]}
+                          {confidenceLabels[summary.rootCauseAnalysis.confidenceLevel]}
                         </p>
-                        {summary.root_cause_analysis.contributing_factors && (
+                        {summary.rootCauseAnalysis.contributingFactors && (
                           <p>
                             <strong>促成因素:</strong>{' '}
-                            {summary.root_cause_analysis.contributing_factors}
+                            {summary.rootCauseAnalysis.contributingFactors}
                           </p>
                         )}
                       </>
@@ -497,7 +497,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       key: 'steps',
       label: (
         <span>
-          <SolutionOutlined /> 调查步骤 ({summary?.steps.length || 0})
+          <ClipboardCheck /> 调查步骤 ({summary?.steps.length || 0})
         </span>
       ),
       children: (
@@ -540,7 +540,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
           title="根本原因分析"
           extra={
             summary?.investigation &&
-            !summary?.root_cause_analysis && (
+            !summary?.rootCauseAnalysis && (
               <Button
                 type="primary"
                 icon={<Plus />}
@@ -551,20 +551,20 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             )
           }
         >
-          {summary?.root_cause_analysis ? (
+          {summary?.rootCauseAnalysis ? (
             <>
               <Descriptions column={2}>
                 <Descriptions.Item label="分析方法">
-                  {methodLabels[summary.root_cause_analysis.analysis_method] ||
-                    summary.root_cause_analysis.analysis_method}
+                  {methodLabels[summary.rootCauseAnalysis.analysisMethod] ||
+                    summary.rootCauseAnalysis.analysisMethod}
                 </Descriptions.Item>
                 <Descriptions.Item label="置信度">
-                  <Tag color={statusColors[summary.root_cause_analysis.confidence_level]}>
-                    {confidenceLabels[summary.root_cause_analysis.confidence_level]}
+                  <Tag color={statusColors[summary.rootCauseAnalysis.confidenceLevel]}>
+                    {confidenceLabels[summary.rootCauseAnalysis.confidenceLevel]}
                   </Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="分析师" span={2}>
-                  {summary.root_cause_analysis.analyst_name || '-'}
+                  {summary.rootCauseAnalysis.analystName || '-'}
                 </Descriptions.Item>
               </Descriptions>
 
@@ -572,18 +572,18 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 
               <Title level={5}>根本原因</Title>
               <Paragraph style={{ fontSize: 16 }}>
-                {summary.root_cause_analysis.root_cause_description}
+                {summary.rootCauseAnalysis.rootCauseDescription}
               </Paragraph>
 
               <Divider />
 
               <Title level={5}>促成因素</Title>
-              <Paragraph>{summary.root_cause_analysis.contributing_factors || '无'}</Paragraph>
+              <Paragraph>{summary.rootCauseAnalysis.contributingFactors || '无'}</Paragraph>
 
               <Divider />
 
               <Title level={5}>证据支持</Title>
-              <Paragraph>{summary.root_cause_analysis.evidence || '无'}</Paragraph>
+              <Paragraph>{summary.rootCauseAnalysis.evidence || '无'}</Paragraph>
             </>
           ) : (
             <Empty
@@ -637,18 +637,18 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       key: 'knowledge',
       label: (
         <span>
-          <BookOutlined /> 知识沉淀 ({summary?.knowledge_articles.length || 0})
+          <BookOpen /> 知识沉淀 ({summary?.knowledgeArticles.length || 0})
         </span>
       ),
       children: (
         <Card
           title="知识库文章"
           extra={
-            (summary?.root_cause_analysis ||
+            (summary?.rootCauseAnalysis ||
               (summary?.solutions && summary.solutions.length > 0)) && (
               <Button
                 type="primary"
-                icon={<BookOutlined />}
+                icon={<BookOpen />}
                 onClick={() => setKnowledgeModalOpen(true)}
               >
                 沉淀到知识库
@@ -656,11 +656,11 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             )
           }
         >
-          {summary?.knowledge_articles && summary.knowledge_articles.length > 0 ? (
+          {summary?.knowledgeArticles && summary.knowledgeArticles.length > 0 ? (
             <Table
               columns={[
-                { title: '标题', dataIndex: 'article_title', key: 'article_title' },
-                { title: '类型', dataIndex: 'article_type', key: 'article_type' },
+                { title: '标题', dataIndex:'articleTitle', key:'articleTitle' },
+                { title: '类型', dataIndex:'articleType', key:'articleType' },
                 {
                   title: '标签',
                   dataIndex: 'tags',
@@ -673,7 +673,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                     </Space>
                   ),
                 },
-                { title: '阅读量', dataIndex: 'view_count', key: 'view_count' },
+                { title: '阅读量', dataIndex:'viewCount', key:'viewCount' },
                 {
                   title: '状态',
                   dataIndex: 'status',
@@ -686,12 +686,12 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                 },
                 {
                   title: '创建时间',
-                  dataIndex: 'created_at',
-                  key: 'created_at',
+                  dataIndex: 'createdAt',
+                  key: 'createdAt',
                   render: (d: string) => dayjs(d).format('YYYY-MM-DD'),
                 },
               ]}
-              dataSource={summary.knowledge_articles}
+              dataSource={summary.knowledgeArticles}
               rowKey="id"
               pagination={false}
             />
@@ -715,8 +715,8 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               columns={[
                 {
                   title: '类型',
-                  dataIndex: 'related_type',
-                  key: 'related_type',
+                  dataIndex:'relatedType',
+                  key:'relatedType',
                   render: (type: string) => {
                     const colors: Record<string, string> = {
                       ticket: 'blue',
@@ -731,11 +731,11 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                     return <Tag color={colors[type]}>{labels[type]}</Tag>;
                   },
                 },
-                { title: '标题', dataIndex: 'related_title', key: 'related_title' },
+                { title: '标题', dataIndex:'relatedTitle', key:'relatedTitle' },
                 {
                   title: '关联类型',
-                  dataIndex: 'relationship_type',
-                  key: 'relationship_type',
+                  dataIndex:'relationshipType',
+                  key:'relationshipType',
                 },
                 {
                   title: '描述',
@@ -960,16 +960,16 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
 ${problemDescription || '请描述问题背景'}
 
 ## 根本原因
-${summary?.root_cause_analysis?.root_cause_description || '请描述根本原因'}
+${summary?.rootCauseAnalysis?.rootCauseDescription || '请描述根本原因'}
 
 ## 解决方案
-${summary?.solutions?.map((s: ProblemSolution) => `- ${s.solution_description}`).join('\n') || '请描述解决方案'}
+${summary?.solutions?.map((s: ProblemSolution) => `- ${s.solutionDescription}`).join('\n') || '请描述解决方案'}
 
 ## 预防措施
 ${
   summary?.solutions
-    ?.filter((s: ProblemSolution) => s.solution_type === 'prevention')
-    .map((s: ProblemSolution) => `- ${s.solution_description}`)
+    ?.filter((s: ProblemSolution) => s.solutionType === 'prevention')
+    .map((s: ProblemSolution) => `- ${s.solutionDescription}`)
     .join('\n') || ''
 }
               `.trim()}

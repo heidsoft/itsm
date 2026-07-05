@@ -7,6 +7,7 @@ import { useState, useCallback, useMemo } from 'react';
 import type { FormInstance } from 'antd/es/form';
 import type { TicketFormValues, UseTicketFormReturn, UseTicketFormConfig, User, TicketTemplate } from '../types';
 import { TICKET_FORM_STEPS } from '../utils/ticket-form-utils';
+import { TicketType, TicketPriority } from '@/lib/services/ticket-service';
 import { submitTicket, updateTicket } from '../services/ticket-modal-service';
 
 export const useTicketForm = ({
@@ -34,9 +35,9 @@ export const useTicketForm = ({
       {
         id: 1,
         name: 'System Login Issue',
-        type: 'incident' as any,
+        type: TicketType.INCIDENT,
         category: 'System Access',
-        priority: 'medium' as any,
+        priority: TicketPriority.MEDIUM,
         description: 'User unable to login to system, technical support needed',
         estimatedTime: '2 hours',
         sla: '4 hours',
@@ -44,9 +45,9 @@ export const useTicketForm = ({
       {
         id: 2,
         name: 'Printer Malfunction',
-        type: 'incident' as any,
+        type: TicketType.INCIDENT,
         category: 'Hardware Equipment',
-        priority: 'high' as any,
+        priority: TicketPriority.HIGH,
         description: 'Office printer not working properly',
         estimatedTime: '1 hour',
         sla: '2 hours',
@@ -54,9 +55,9 @@ export const useTicketForm = ({
       {
         id: 3,
         name: 'Software Installation Request',
-        type: 'service_request' as any,
+        type: TicketType.SERVICE_REQUEST,
         category: 'Software Services',
-        priority: 'low' as any,
+        priority: TicketPriority.LOW,
         description: 'Need to install new office software',
         estimatedTime: '30 minutes',
         sla: '4 hours',

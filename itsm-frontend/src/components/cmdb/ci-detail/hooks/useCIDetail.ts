@@ -119,7 +119,7 @@ export const useCIDetail = (): UseCIDetailReturn => {
   /**
    * 计算类型信息
    */
-  const typeInfo = types.find(t => t.id === ci?.ci_type_id);
+  const typeInfo = types.find(t => t.id === ci?.ciTypeId);
 
   return {
     ci,

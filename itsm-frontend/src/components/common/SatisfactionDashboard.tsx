@@ -107,29 +107,29 @@ export const SatisfactionDashboard: React.FC = () => {
       }
 
       const stats = await TicketRatingApi.getRatingStats({
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
       });
 
       const data: SatisfactionData = {
-        overallScore: stats.average_rating || 0,
-        totalResponses: stats.total_ratings || 0,
+        overallScore: stats.averageRating || 0,
+        totalResponses: stats.totalRatings || 0,
         responseRate: 0, // API暂不支持
         trend: 'stable', // API暂不支持
-        categoryScores: Object.values(stats.by_category || {}).map((c: any) => ({
-          category: c.category_name,
-          score: c.average_rating,
-          count: c.total_ratings,
+        categoryScores: Object.values(stats.byCategory || {}).map((c: any) => ({
+          category: c.categoryName,
+          score: c.averageRating,
+          count: c.totalRatings,
           trend: 'stable',
         })),
         monthlyTrend: [], // API暂不支持
-        agentPerformance: Object.values(stats.by_assignee || {}).map((a: any) => ({
-          agent: a.assignee_name,
-          avatar: a.assignee_name?.[0] || 'U',
-          score: a.average_rating,
-          tickets: a.total_ratings,
+        agentPerformance: Object.values(stats.byAssignee || {}).map((a: any) => ({
+          agent: a.assigneeName,
+          avatar: a.assigneeName?.[0] || 'U',
+          score: a.averageRating,
+          tickets: a.totalRatings,
           responseTime: 0,
-          satisfaction: (a.average_rating / 5) * 100,
+          satisfaction: (a.averageRating / 5) * 100,
         })),
         recentFeedback: [], // API暂不支持列表查询
       };

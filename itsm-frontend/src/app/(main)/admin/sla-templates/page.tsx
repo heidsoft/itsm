@@ -48,7 +48,7 @@ const priorityColorMap: Record<string, string> = {
 const industryLabelMap: Record<string, string> = {
   incident: '事件',
   change: '变更',
-  service_request: '服务请求',
+  serviceRequest: '服务请求',
 };
 
 function formatMinutes(mins?: number): string {

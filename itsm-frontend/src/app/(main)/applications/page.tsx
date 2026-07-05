@@ -62,7 +62,7 @@ export default function ApplicationsPage() {
     { title: '应用代码', dataIndex: 'code', key: 'code' },
     {
       title: '所属项目',
-      dataIndex: 'project_id',
+      dataIndex:'projectId',
       key: 'project',
       render: (id: number) => <span>ID: {id}</span>,
     },
@@ -116,7 +116,7 @@ export default function ApplicationsPage() {
     { title: '服务代码', dataIndex: 'code', key: 'code' },
     {
       title: '所属应用',
-      dataIndex: 'application_id',
+      dataIndex:'applicationId',
       key: 'application',
       render: (id: number) => <span>App ID: {id}</span>,
     },

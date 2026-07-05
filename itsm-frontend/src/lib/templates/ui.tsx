@@ -32,7 +32,7 @@ import {
   Divider,
   Typography,
 } from 'antd';
-import { Search, Plus, Pencil, Trash2, Download, Upload, Eye, Settings, RotateCcw, AlertCircle } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Download, Upload, Eye, Settings, RotateCcw, AlertCircle, MoreHorizontal } from 'lucide-react';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
@@ -41,9 +41,10 @@ import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 interface StandardTableProps<T> {
   columns: ColumnsType<T>;
   dataSource: T[];
+  pagination?: Record<string, unknown>;
+  title?: React.ReactNode;
   loading?: boolean;
   rowKey?: string | ((record: T) => string);
-  pagination?: TablePaginationConfig | false;
   onChange?: (
     pagination: TablePaginationConfig,
     filters: Record<string, FilterValue | null>,
@@ -51,7 +52,6 @@ interface StandardTableProps<T> {
   ) => void;
   onRowClick?: (record: T) => void;
   headerActions?: React.ReactNode;
-  title?: React.ReactNode;
   emptyMessage?: string;
 }
 
@@ -152,7 +152,7 @@ export function createActionColumn({
               menu={{ items: moreActions.map(a => ({ ...a, danger: undefined })) }}
               trigger={['click']}
             >
-              <Button type="link" size="small" icon={<MoreOutlined />} />
+              <Button type="link" size="small" icon={<MoreHorizontal />} />
             </Dropdown>
           )}
         </Space>
@@ -522,7 +522,7 @@ export function Section({ title, children, extra }: SectionProps) {
 // ============ 卡片列表组件 ============
 
 interface CardListProps {
-  title?: string;
+  title?: React.ReactNode;
   items: {
     title: string;
     description?: string;

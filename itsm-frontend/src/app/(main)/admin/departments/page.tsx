@@ -74,7 +74,7 @@ export default function DepartmentManagement() {
   // 加载用户列表（用于选择部门经理）
   const loadUsers = useCallback(async () => {
     try {
-      const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+      const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
       setUsers(
         response.users.map(user => ({
           label: user.name || user.username,
@@ -167,8 +167,8 @@ export default function DepartmentManagement() {
       name: record.name,
       code: record.code,
       description: record.description,
-      manager_id: record.manager_id,
-      parent_id: record.parent_id,
+      managerId: record.managerId,
+      parentId: record.parentId,
     });
     setShowModal(true);
   };
@@ -194,7 +194,7 @@ export default function DepartmentManagement() {
     },
     {
       title: '部门经理',
-      dataIndex: 'manager_id',
+      dataIndex:'managerId',
       key: 'manager',
       render: (managerId: number) => {
         const user = users.find(u => u.value === managerId);

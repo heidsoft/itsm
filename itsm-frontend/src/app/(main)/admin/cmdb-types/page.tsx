@@ -253,7 +253,7 @@ const CMDBTypesManagement = () => {
       setCiTypes(types);
 
       // 计算统计数据
-      const activeCount = types.filter((t: CIType) => t.is_active).length;
+      const activeCount = types.filter((t: CIType) => t.isActive).length;
 
       setStats({
         total: types.length,
@@ -274,7 +274,7 @@ const CMDBTypesManagement = () => {
   // 处理表单提交
   const handleSubmit = async (values: Record<string, any>) => {
     try {
-      const normalizedFields = normalizeAttributeTemplateFields(values.schema_fields);
+      const normalizedFields = normalizeAttributeTemplateFields(values.schemaFields);
       const duplicateKeys = normalizedFields
         .map(field => field.key)
         .filter((key, index, keys): key is string => Boolean(key) && keys.indexOf(key) !== index);
@@ -283,7 +283,7 @@ const CMDBTypesManagement = () => {
         return;
       }
 
-      const schemaText = buildAttributeSchemaFromFields(values.schema_fields);
+      const schemaText = buildAttributeSchemaFromFields(values.schemaFields);
       const schemaError = validateAttributeSchema(schemaText);
       if (schemaError) {
         message.error(schemaError);
@@ -295,8 +295,8 @@ const CMDBTypesManagement = () => {
         description: values.description || '',
         icon: values.icon || '',
         color: values.color || '#1890ff',
-        attribute_schema: schemaText,
-        is_active: values.is_active ?? true,
+        attributeSchema: schemaText,
+        isActive: values.isActive ?? true,
       };
 
       if (editingType) {
@@ -323,17 +323,17 @@ const CMDBTypesManagement = () => {
       description: type.description,
       icon: type.icon,
       color: type.color,
-      attribute_schema: type.attribute_schema
+      attributeSchema: type.attributeSchema
         ? (() => {
             try {
-              return JSON.stringify(JSON.parse(type.attribute_schema), null, 2);
+              return JSON.stringify(JSON.parse(type.attributeSchema), null, 2);
             } catch {
-              return type.attribute_schema;
+              return type.attributeSchema;
             }
           })()
         : '',
-      schema_fields: parseAttributeSchemaToFields(type.attribute_schema),
-      is_active: type.is_active,
+      schemaFields: parseAttributeSchemaToFields(type.attributeSchema),
+      isActive: type.isActive,
     });
     setShowModal(true);
   };
@@ -351,8 +351,8 @@ const CMDBTypesManagement = () => {
 
   const handleUseDefaultAttributeSchema = () => {
     form.setFieldsValue({
-      attribute_schema: DEFAULT_ATTRIBUTE_SCHEMA,
-      schema_fields: parseAttributeSchemaToFields(DEFAULT_ATTRIBUTE_SCHEMA),
+      attributeSchema: DEFAULT_ATTRIBUTE_SCHEMA,
+      schemaFields: parseAttributeSchemaToFields(DEFAULT_ATTRIBUTE_SCHEMA),
     });
   };
 
@@ -379,7 +379,7 @@ const CMDBTypesManagement = () => {
       type.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      !statusFilter || (statusFilter === 'active' ? type.is_active : !type.is_active);
+      !statusFilter || (statusFilter === 'active' ? type.isActive : !type.isActive);
 
     return matchesSearch && matchesStatus;
   });
@@ -432,8 +432,8 @@ const CMDBTypesManagement = () => {
     },
     {
       title: '属性模板',
-      dataIndex: 'attribute_schema',
-      key: 'attribute_schema',
+      dataIndex: 'attributeSchema',
+      key: 'attributeSchema',
       width: 120,
       render: (schema: string) => {
         const fieldCount = getAttributeSchemaFieldCount(schema);
@@ -442,8 +442,8 @@ const CMDBTypesManagement = () => {
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       width: 100,
       render: (isActive: boolean) => (
         <Tag
@@ -574,7 +574,7 @@ const CMDBTypesManagement = () => {
                 onClick={() => {
                   setEditingType(null);
                   form.resetFields();
-                  form.setFieldsValue({ is_active: true, color: '#1890ff', schema_fields: [] });
+                  form.setFieldsValue({ isActive: true, color: '#1890ff', schemaFields: [] });
                   setShowModal(true);
                 }}
               >
@@ -641,7 +641,7 @@ const CMDBTypesManagement = () => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ is_active: true, color: '#1890ff' }}
+          initialValues={{ isActive: true, color: '#1890ff' }}
         >
           <Form.Item
             name="name"
@@ -778,8 +778,8 @@ const CMDBTypesManagement = () => {
               size="small"
               onClick={() =>
                 form.setFieldsValue({
-                  schema_fields: [],
-                  attribute_schema: '',
+                  schemaFields: [],
+                  attributeSchema: '',
                 })
               }
             >

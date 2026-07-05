@@ -53,8 +53,8 @@ interface PredictionData {
   date: string;
   actual?: number;
   predicted: number;
-  upper_bound?: number;
-  lower_bound?: number;
+  upperBound?: number;
+  lowerBound?: number;
   confidence?: number;
 }
 
@@ -63,21 +63,21 @@ interface PredictionMetrics {
   mape: number; // Mean Absolute Percentage Error
   rmse: number; // Root Mean Square Error
   trend: 'up' | 'down' | 'stable';
-  trend_strength: number;
-  next_week_prediction: number;
-  next_month_prediction: number;
-  risk_level: 'low' | 'medium' | 'high';
-  risk_factors: string[];
+  trendStrength: number;
+  nextWeekPrediction: number;
+  nextMonthPrediction: number;
+  riskLevel: 'low' | 'medium' | 'high';
+  riskFactors: string[];
 }
 
 interface PredictionReport {
   period: string;
   summary: string;
-  key_findings: string[];
+  keyFindings: string[];
   recommendations: string[];
   metrics: PredictionMetrics;
   data: PredictionData[];
-  generated_at: string;
+  generatedAt: string;
 }
 
 interface TicketTrendPredictionProps {
@@ -107,11 +107,11 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
       setLoading(true);
       // 调用实际API
       const data = await TicketPredictionApi.getTrendPrediction({
-        ticket_type: ticketType,
+        ticketType: ticketType,
         category: category,
-        time_range: [timeRange[0].format('YYYY-MM-DD'), timeRange[1].format('YYYY-MM-DD')],
-        prediction_period: predictionPeriod,
-        model_type: modelType,
+        timeRange: [timeRange[0].format('YYYY-MM-DD'), timeRange[1].format('YYYY-MM-DD')],
+        predictionPeriod: predictionPeriod,
+        modelType: modelType,
       });
 
       if (data) {
@@ -173,8 +173,8 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
       date: format(new Date(item.date), 'MM-dd'),
       actual: item.actual,
       predicted: item.predicted,
-      upper: item.upper_bound,
-      lower: item.lower_bound,
+      upper: item.upperBound,
+      lower: item.lowerBound,
     }));
 
     return (
@@ -240,12 +240,12 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
       // 调用真实导出API
       const { TicketPredictionApi } = await import('@/lib/api/ticket-prediction-api');
       const request = {
-        time_range: [timeRange[0].format('YYYY-MM-DD'), timeRange[1].format('YYYY-MM-DD')] as [
+        timeRange: [timeRange[0].format('YYYY-MM-DD'), timeRange[1].format('YYYY-MM-DD')] as [
           string,
           string,
         ],
-        prediction_period: predictionPeriod as 'week' | 'month' | 'quarter',
-        model_type: 'arima' as const,
+        predictionPeriod: predictionPeriod as 'week' | 'month' | 'quarter',
+        modelType: 'arima' as const,
       };
       const blob = await TicketPredictionApi.exportPredictionReport(request, 'excel');
       const url = window.URL.createObjectURL(blob);
@@ -338,7 +338,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
               <Card>
                 <Statistic
                   title="下周预测"
-                  value={predictionReport.metrics.next_week_prediction}
+                  value={predictionReport.metrics.nextWeekPrediction}
                   suffix="个工单"
                   styles={{ content: { color: '#1890ff' } }}
                   prefix={<Calendar />}
@@ -349,7 +349,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
               <Card>
                 <Statistic
                   title="下月预测"
-                  value={predictionReport.metrics.next_month_prediction}
+                  value={predictionReport.metrics.nextMonthPrediction}
                   suffix="个工单"
                   styles={{ content: { color: '#faad14' } }}
                   prefix={<Calendar />}
@@ -376,9 +376,9 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                   </div>
                   <Progress
                     type="circle"
-                    percent={predictionReport.metrics.trend_strength * 100}
+                    percent={predictionReport.metrics.trendStrength * 100}
                     size={60}
-                    format={() => `${(predictionReport.metrics.trend_strength * 100).toFixed(0)}%`}
+                    format={() => `${(predictionReport.metrics.trendStrength * 100).toFixed(0)}%`}
                   />
                 </div>
               </Card>
@@ -407,7 +407,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                   <div>
                     <Title level={5}>关键发现</Title>
                     <ul className="list-disc list-inside space-y-2">
-                      {predictionReport.key_findings.map((finding, index) => (
+                      {predictionReport.keyFindings.map((finding, index) => (
                         <li key={index}>
                           <Text>{finding}</Text>
                         </li>
@@ -469,10 +469,10 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                       风险级别
                     </Text>
                     <div className="mt-2">
-                      <Tag color={getRiskLevelColor(predictionReport.metrics.risk_level)}>
-                        {predictionReport.metrics.risk_level === 'low'
+                      <Tag color={getRiskLevelColor(predictionReport.metrics.riskLevel)}>
+                        {predictionReport.metrics.riskLevel === 'low'
                           ? '低风险'
-                          : predictionReport.metrics.risk_level === 'medium'
+                          : predictionReport.metrics.riskLevel === 'medium'
                             ? '中风险'
                             : '高风险'}
                       </Tag>
@@ -483,7 +483,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                       风险因素
                     </Text>
                     <div className="mt-2 space-y-1">
-                      {predictionReport.metrics.risk_factors.map((factor, index) => (
+                      {predictionReport.metrics.riskFactors.map((factor, index) => (
                         <Tag key={index} color="orange">
                           {factor}
                         </Tag>
@@ -496,11 +496,11 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
           </Row>
 
           {/* 风险预警 */}
-          {predictionReport.metrics.risk_level !== 'low' && (
+          {predictionReport.metrics.riskLevel !== 'low' && (
             <Alert
               message="风险预警"
-              description={`根据预测分析，系统检测到${predictionReport.metrics.risk_level === 'high' ? '高风险' : '中等风险'}因素。建议采取相应措施。`}
-              type={predictionReport.metrics.risk_level === 'high' ? 'error' : 'warning'}
+              description={`根据预测分析，系统检测到${predictionReport.metrics.riskLevel === 'high' ? '高风险' : '中等风险'}因素。建议采取相应措施。`}
+              type={predictionReport.metrics.riskLevel === 'high' ? 'error' : 'warning'}
               showIcon
               icon={<AlertTriangle />}
               action={
@@ -514,7 +514,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
           <Card>
             <div className="flex items-center justify-between">
               <Text type="secondary" className="text-sm">
-                报告生成时间：{predictionReport.generated_at}
+                报告生成时间：{predictionReport.generatedAt}
               </Text>
               <Text type="secondary" className="text-sm">
                 预测模型：{modelType.toUpperCase()}

@@ -48,8 +48,8 @@ interface ServiceItemCardProps {
   catalog: ServiceItem & {
     priority?: string;
     shortDescription?: string;
-    sla_time?: string;
-    estimated_time?: string;
+    slaTime?: string;
+    estimatedTime?: string;
     rating?: number;
   };
 }
@@ -163,7 +163,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
         <div className="flex items-center">
           <Clock size={14} className="mr-1 text-gray-500" />
           <Text type="secondary" className="!text-xs">
-            {catalog.sla_time || catalog.estimated_time || ''}
+            {catalog.slaTime || catalog.estimatedTime || ''}
           </Text>
         </div>
         <div>

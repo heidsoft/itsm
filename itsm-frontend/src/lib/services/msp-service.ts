@@ -81,9 +81,9 @@ export class MSPService {
       id: number;
       title: string;
       status: string;
-      assignee_id?: number;
-      assignee_name?: string;
-      created_at: string;
+      assigneeId?: number;
+      assigneeName?: string;
+      createdAt: string;
       tenant: { id: number; code: string; name: string };
     }>;
     total: number;
@@ -118,9 +118,9 @@ export class MSPService {
    * 获取客户服务报表
    */
   static async getCustomerReports(params: {
-    start_date: string;
-    end_date: string;
-    customer_tenant_id?: number;
+    startDate: string;
+    endDate: string;
+    customerTenantId?: number;
   }): Promise<MSPCustomerReport[]> {
     const res = await MSPAPI.getCustomerReports(params);
     return res.data || [];
@@ -164,10 +164,10 @@ export class MSPService {
    * 获取分配历史
    */
   static async getAllocationHistory(params: {
-    msp_user_id?: number;
-    customer_tenant_id?: number;
-    start_date?: string;
-    end_date?: string;
+    mspUserId?: number;
+    customerTenantId?: number;
+    startDate?: string;
+    endDate?: string;
   }): Promise<MSPAllocationHistory[]> {
     const res = await MSPAPI.getAllocationHistory(params);
     return res.data || [];

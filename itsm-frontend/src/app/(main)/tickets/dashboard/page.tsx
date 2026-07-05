@@ -112,14 +112,14 @@ const TicketDashboardPage = () => {
     if (dashboardData?.overview) {
       const o = dashboardData.overview;
       return {
-        totalTickets: o.total_tickets,
-        pendingTickets: o.pending_tickets,
-        resolvedTickets: o.resolved_today,
-        avgResponseTime: o.avg_response_time,
-        avgResolutionTime: o.avg_resolution_time,
+        totalTickets: o.totalTickets,
+        pendingTickets: o.pendingTickets,
+        resolvedTickets: o.resolvedToday,
+        avgResponseTime: o.avgResponseTime,
+        avgResolutionTime: o.avgResolutionTime,
         customerSatisfaction: 0,
         monthlyGrowth: 0,
-        openTickets: o.pending_tickets,
+        openTickets: o.pendingTickets,
         slaCompliance: 0,
       };
     }
@@ -139,12 +139,12 @@ const TicketDashboardPage = () => {
   // 获取SLA数据
   const getSLAData = () => {
     return (
-      dashboardData?.sla_data || {
-        compliance_rate: 0,
-        response_time_compliance: 0,
-        resolution_time_compliance: 0,
-        at_risk_tickets: 0,
-        breached_tickets: 0,
+      dashboardData?.slaData || {
+        complianceRate: 0,
+        responseTimeCompliance: 0,
+        resolutionTimeCompliance: 0,
+        atRiskTickets: 0,
+        breachedTickets: 0,
       }
     );
   };
@@ -188,19 +188,19 @@ const TicketDashboardPage = () => {
           <Card>
             <Statistic
               title="SLA合规率"
-              value={slaData.compliance_rate}
+              value={slaData.complianceRate}
               suffix="%"
               prefix={<TrendingUp size={16} style={{ color: '#3b82f6' }} />}
               styles={{
                 content: {
-                  color: slaData.compliance_rate >= 95 ? '#52c41a' : '#faad14',
+                  color: slaData.complianceRate >= 95 ? '#52c41a' : '#faad14',
                 },
               }}
             />
             <Progress
-              percent={slaData.compliance_rate}
+              percent={slaData.complianceRate}
               showInfo={false}
-              strokeColor={slaData.compliance_rate >= 95 ? '#52c41a' : '#faad14'}
+              strokeColor={slaData.complianceRate >= 95 ? '#52c41a' : '#faad14'}
               className="mt-2"
             />
           </Card>
@@ -211,7 +211,7 @@ const TicketDashboardPage = () => {
 
   const renderSLAMetrics = () => {
     const slaData = getSLAData();
-    const stats = ticketStats || { total: 0, high_priority: 0, urgent: 0 };
+    const stats = ticketStats || { total: 0, highPriority: 0, urgent: 0 };
 
     return (
       <Row gutter={[16, 16]} className="mb-6">
@@ -219,19 +219,19 @@ const TicketDashboardPage = () => {
           <Card title="SLA概览" className="h-full">
             <div className="text-center mb-4">
               <div className="text-3xl font-bold text-blue-600 mb-2">
-                {stats.total - (slaData.breached_tickets || 0)}
+                {stats.total - (slaData.breachedTickets || 0)}
               </div>
               <Text type="secondary">SLA合规工单数</Text>
             </div>
             <Progress
-              percent={slaData.compliance_rate || 0}
+              percent={slaData.complianceRate || 0}
               strokeColor="#52c41a"
               showInfo={false}
             />
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span>总工单: {stats.total}</span>
-                <span>已违规: {slaData.breached_tickets || 0}</span>
+                <span>已违规: {slaData.breachedTickets || 0}</span>
               </div>
             </div>
           </Card>
@@ -253,10 +253,10 @@ const TicketDashboardPage = () => {
               <div>
                 <div className="flex justify-between mb-2">
                   <Text>高</Text>
-                  <Text strong>{stats.high_priority || 0}</Text>
+                  <Text strong>{stats.highPriority || 0}</Text>
                 </div>
                 <Progress
-                  percent={stats.total > 0 ? ((stats.high_priority || 0) / stats.total) * 100 : 0}
+                  percent={stats.total > 0 ? ((stats.highPriority || 0) / stats.total) * 100 : 0}
                   strokeColor="#faad14"
                   showInfo={false}
                 />
@@ -269,15 +269,15 @@ const TicketDashboardPage = () => {
             <div className="space-y-3">
               <Alert
                 message="即将超时工单"
-                description={`${slaData.at_risk_tickets || 0} 个工单即将超时`}
+                description={`${slaData.atRiskTickets || 0} 个工单即将超时`}
                 type="warning"
                 showIcon
                 icon={<Clock size={16} />}
               />
               <Alert
                 message="SLA合规状态"
-                description={`当前合规率: ${slaData.compliance_rate?.toFixed(1) || 0}%`}
-                type={slaData.compliance_rate >= 95 ? 'success' : 'warning'}
+                description={`当前合规率: ${slaData.complianceRate?.toFixed(1) || 0}%`}
+                type={slaData.complianceRate >= 95 ? 'success' : 'warning'}
                 showIcon
                 icon={<CheckCircle size={16} />}
               />
@@ -352,7 +352,7 @@ const TicketDashboardPage = () => {
   );
 
   const renderRecentActivities = () => {
-    const activities = dashboardData?.recent_activities || [];
+    const activities = dashboardData?.recentActivities || [];
 
     return (
       <Card title="最近活动" className="mb-6">
@@ -400,7 +400,7 @@ const TicketDashboardPage = () => {
   };
 
   const renderTrends = () => {
-    const trendData = dashboardData?.ticket_trend || [];
+    const trendData = dashboardData?.ticketTrend || [];
 
     return (
       <Card title="趋势分析" className="mb-6">
@@ -449,9 +449,9 @@ const TicketDashboardPage = () => {
   };
 
   const renderAdvancedMetrics = () => {
-    const satisfactionData = dashboardData?.satisfaction_data || {
-      average_rating: 0,
-      total_ratings: 0,
+    const satisfactionData = dashboardData?.satisfactionData || {
+      averageRating: 0,
+      totalRatings: 0,
     };
 
     return (
@@ -461,12 +461,12 @@ const TicketDashboardPage = () => {
             <Card title="客户满意度" size="small">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {satisfactionData.average_rating?.toFixed(1) || 'N/A'}
+                  {satisfactionData.averageRating?.toFixed(1) || 'N/A'}
                 </div>
                 <Text type="secondary">平均评分</Text>
-                <Rate disabled value={satisfactionData.average_rating || 0} className="mt-2" />
+                <Rate disabled value={satisfactionData.averageRating || 0} className="mt-2" />
                 <div className="text-sm text-gray-500 mt-2">
-                  共 {satisfactionData.total_ratings || 0} 条评价
+                  共 {satisfactionData.totalRatings || 0} 条评价
                 </div>
               </div>
             </Card>

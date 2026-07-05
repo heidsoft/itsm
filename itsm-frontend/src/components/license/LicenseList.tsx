@@ -122,8 +122,8 @@ const LicenseList: React.FC = () => {
     },
     {
       title: '类型',
-      dataIndex: 'license_type',
-      key: 'license_type',
+      dataIndex:'licenseType',
+      key:'licenseType',
       width: 120,
       render: (type: string) => (
         <Tag color={typeColors[type] || 'default'}>
@@ -166,13 +166,13 @@ const LicenseList: React.FC = () => {
       width: 150,
       render: (_: any, record: any) => {
         const percent =
-          record.total_quantity > 0 ? (record.used_quantity / record.total_quantity) * 100 : 0;
+          record.totalQuantity > 0 ? (record.usedQuantity / record.totalQuantity) * 100 : 0;
         return (
           <Progress
             percent={Math.round(percent)}
             size="small"
             status={percent >= 100 ? 'exception' : percent >= 80 ? 'normal' : 'success'}
-            format={() => `${record.used_quantity}/${record.total_quantity}`}
+            format={() => `${record.usedQuantity}/${record.totalQuantity}`}
           />
         );
       },
@@ -192,8 +192,8 @@ const LicenseList: React.FC = () => {
     },
     {
       title: '到期日期',
-      dataIndex: 'expiry_date',
-      key: 'expiry_date',
+      dataIndex:'expiryDate',
+      key:'expiryDate',
       width: 120,
       render: (date: string) => {
         // 处理空值和空白字符串
@@ -208,8 +208,8 @@ const LicenseList: React.FC = () => {
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 150,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },
@@ -261,7 +261,7 @@ const LicenseList: React.FC = () => {
           <Card>
             <Statistic
               title="即将过期"
-              value={stats.expiring_soon || 0}
+              value={stats.expiringSoon || 0}
               styles={{ content: { color: '#faad14' } }}
             />
           </Card>
@@ -279,10 +279,10 @@ const LicenseList: React.FC = () => {
           <Card>
             <Statistic
               title="合规率"
-              value={stats.compliance_rate || 0}
+              value={stats.complianceRate || 0}
               suffix="%"
               styles={{
-                content: { color: (stats.compliance_rate || 0) >= 80 ? '#52c41a' : '#ff4d4f' },
+                content: { color: (stats.complianceRate || 0) >= 80 ? '#52c41a' : '#ff4d4f' },
               }}
             />
           </Card>

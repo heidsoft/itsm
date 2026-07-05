@@ -378,8 +378,8 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
     },
     {
       title: '影响类型',
-      dataIndex: 'impact_type',
-      key: 'impact_type',
+      dataIndex:'impactType',
+      key:'impactType',
       render: (type: string) => {
         const typeMap: Record<string, { text: string; icon: React.ReactNode }> = {
           blocked: { text: '被阻塞', icon: <AlertTriangle /> },
@@ -399,8 +399,8 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
     },
     {
       title: '受影响字段',
-      dataIndex: 'affected_fields',
-      key: 'affected_fields',
+      dataIndex:'affectedFields',
+      key:'affectedFields',
       render: (fields: string[]) => (
         <Space>
           {fields.map(field => (
@@ -582,7 +582,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                     <Table
                       columns={impactColumns}
                       dataSource={impactAnalysis}
-                      rowKey="ticket_id"
+                      rowKey="ticketId"
                       scroll={{ x: 'max-content' }}
                       pagination={false}
                     />

@@ -132,14 +132,14 @@ const EscalationRuleManagement = () => {
         description: item.description || '',
         triggerCondition: item.condition || '',
         priority: item.priority || 'P3',
-        serviceType: item.service_type || '全部',
-        escalationLevels: item.escalation_levels || [],
-        status: (item.is_active ? 'active' : 'inactive') as 'active' | 'inactive' | 'draft',
-        createdAt: item.createdAt || item.created_at || new Date().toISOString(),
-        updatedAt: item.updatedAt || item.updated_at || new Date().toISOString(),
+        serviceType: item.serviceType || '全部',
+        escalationLevels: item.escalationLevels || [],
+        status: (item.isActive ? 'active' : 'inactive') as 'active' | 'inactive' | 'draft',
+        createdAt: item.createdAt || item.createdAt || new Date().toISOString(),
+        updatedAt: item.updatedAt || item.updatedAt || new Date().toISOString(),
         createdBy: '系统',
-        usageCount: item.usage_count || 0,
-        lastTriggered: item.last_triggered || '',
+        usageCount: item.usageCount || 0,
+        lastTriggered: item.lastTriggered || '',
       }));
       setEscalationRules(rules);
     } catch (error) {
@@ -236,15 +236,15 @@ const EscalationRuleManagement = () => {
         name: values.name,
         description: values.description || '',
         priority: values.priority || 'P3',
-        service_type: values.serviceType || 'all',
+        serviceType: values.serviceType || 'all',
         condition: values.triggerCondition || '',
-        is_active: values.status === 'active',
-        sla_definition_id: 1, // 默认SLA定义
-        alert_level: 'warning' as const,
-        threshold_percentage: 80,
-        notification_channels: ['email'],
-        escalation_enabled: true,
-        escalation_levels: [],
+        isActive: values.status === 'active',
+        slaDefinitionId: 1, // 默认SLA定义
+        alertLevel: 'warning' as const,
+        thresholdPercentage: 80,
+        notificationChannels: ['email'],
+        escalationEnabled: true,
+        escalationLevels: [],
       };
 
       if (selectedRule) {

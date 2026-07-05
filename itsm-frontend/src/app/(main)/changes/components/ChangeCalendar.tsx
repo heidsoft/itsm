@@ -41,7 +41,7 @@ export const ChangeCalendar: React.FC<ChangeCalendarProps> = ({ onDateSelect }) 
   const loadChanges = async () => {
     try {
       setLoading(true);
-      const response = await ChangeApi.getChanges({ page: 1, page_size: 100 });
+      const response = await ChangeApi.getChanges({ page: 1, pageSize: 100 });
       setChanges((response?.changes ?? []) as Change[]);
     } catch (error) {
       message.error('加载变更数据失败');

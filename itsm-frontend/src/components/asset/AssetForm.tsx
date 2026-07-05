@@ -100,21 +100,21 @@ const AssetForm: React.FC = () => {
   };
 
   const onFinish = async (values: {
-    asset_number: string;
+    assetNumber: string;
     name: string;
     description?: string;
     type: string;
     category?: string;
     subcategory?: string;
-    ci_id?: number;
-    serial_number?: string;
+    ciId?: number;
+    serialNumber?: string;
     model?: string;
     manufacturer?: string;
     vendor?: string;
-    purchase_date?: Dayjs;
-    purchase_price?: number;
-    warranty_expiry?: Dayjs;
-    support_expiry?: Dayjs;
+    purchaseDate?: Dayjs;
+    purchasePrice?: number;
+    warrantyExpiry?: Dayjs;
+    supportExpiry?: Dayjs;
     location?: string;
     department?: string;
     tags?: string[];
@@ -122,21 +122,21 @@ const AssetForm: React.FC = () => {
     setLoading(true);
     try {
       const data: AssetRequest = {
-        asset_number: values.asset_number,
+        assetNumber: values.assetNumber,
         name: values.name,
         description: values.description,
         type: values.type as Asset['type'],
         category: values.category,
         subcategory: values.subcategory,
-        ci_id: values.ci_id,
-        serial_number: values.serial_number,
+        ciId: values.ciId,
+        serialNumber: values.serialNumber,
         model: values.model,
         manufacturer: values.manufacturer,
         vendor: values.vendor,
-        purchase_date: values.purchase_date?.toISOString(),
-        purchase_price: values.purchase_price,
-        warranty_expiry: values.warranty_expiry?.toISOString(),
-        support_expiry: values.support_expiry?.toISOString(),
+        purchaseDate: values.purchaseDate?.toISOString(),
+        purchasePrice: values.purchasePrice,
+        warrantyExpiry: values.warrantyExpiry?.toISOString(),
+        supportExpiry: values.supportExpiry?.toISOString(),
         location: values.location,
         department: values.department,
         tags: values.tags,

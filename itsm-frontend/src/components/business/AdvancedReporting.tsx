@@ -70,16 +70,16 @@ interface ReportDefinition {
   name: string;
   description: string;
   category: 'ticket' | 'sla' | 'user' | 'system' | 'custom';
-  data_source: string;
+  dataSource: string;
   query: string;
   parameters: ReportParameter[];
   visualization: 'table' | 'chart' | 'dashboard';
-  chart_type?: 'bar' | 'line' | 'pie' | 'area' | 'scatter';
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'scatter';
   schedule?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
 }
 
 interface ReportParameter {
@@ -87,20 +87,20 @@ interface ReportParameter {
   type: 'string' | 'number' | 'date' | 'select' | 'boolean';
   label: string;
   required: boolean;
-  default_value?: unknown;
+  defaultValue?: unknown;
   options?: { label: string; value: unknown }[];
 }
 
 interface ReportExecution {
   id: number;
-  report_id: number;
-  report_name: string;
+  reportId: number;
+  reportName: string;
   status: 'running' | 'completed' | 'failed';
-  started_at: string;
-  completed_at?: string;
-  result_count?: number;
-  error_message?: string;
-  created_by: string;
+  startedAt: string;
+  completedAt?: string;
+  resultCount?: number;
+  errorMessage?: string;
+  createdBy: string;
 }
 
 interface ReportData {
@@ -151,7 +151,7 @@ const AdvancedReporting: React.FC = () => {
           name: '工单处理效率分析',
           description: '分析工单处理效率、响应时间和解决时间',
           category: 'ticket',
-          data_source: 'tickets',
+          dataSource: 'tickets',
           query:
             'SELECT * FROM tickets WHERE created_at >= :start_date AND created_at <= :end_date',
           parameters: [
@@ -180,18 +180,18 @@ const AdvancedReporting: React.FC = () => {
             },
           ],
           visualization: 'chart',
-          chart_type: 'bar',
-          is_active: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z',
-          created_by: '张三',
+          chartType: 'bar',
+          isActive: true,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+          createdBy: '张三',
         },
         {
           id: 2,
           name: 'SLA合规率报表',
           description: '统计SLA合规率、违规情况和趋势分析',
           category: 'sla',
-          data_source: 'sla_metrics',
+          dataSource: 'sla_metrics',
           query: 'SELECT * FROM sla_metrics WHERE period = :period',
           parameters: [
             {
@@ -204,21 +204,21 @@ const AdvancedReporting: React.FC = () => {
                 { label: '周', value: 'weekly' },
                 { label: '月', value: 'monthly' },
               ],
-              default_value: 'monthly',
+              defaultValue: 'monthly',
             },
           ],
           visualization: 'dashboard',
-          is_active: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z',
-          created_by: '李四',
+          isActive: true,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+          createdBy: '李四',
         },
         {
           id: 3,
           name: '用户工作量统计',
           description: '统计用户工作量、处理工单数量和效率',
           category: 'user',
-          data_source: 'user_workload',
+          dataSource: 'user_workload',
           query: 'SELECT * FROM user_workload WHERE user_id = :user_id',
           parameters: [
             {
@@ -234,31 +234,31 @@ const AdvancedReporting: React.FC = () => {
             },
           ],
           visualization: 'table',
-          is_active: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z',
-          created_by: '王五',
+          isActive: true,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+          createdBy: '王五',
         },
       ];
 
       const mockExecutions: ReportExecution[] = [
         {
           id: 1,
-          report_id: 1,
-          report_name: '工单处理效率分析',
+          reportId: 1,
+          reportName: '工单处理效率分析',
           status: 'completed',
-          started_at: '2024-01-15T10:00:00Z',
-          completed_at: '2024-01-15T10:05:00Z',
-          result_count: 1250,
-          created_by: '张三',
+          startedAt: '2024-01-15T10:00:00Z',
+          completedAt: '2024-01-15T10:05:00Z',
+          resultCount: 1250,
+          createdBy: '张三',
         },
         {
           id: 2,
-          report_id: 2,
-          report_name: 'SLA合规率报表',
+          reportId: 2,
+          reportName: 'SLA合规率报表',
           status: 'running',
-          started_at: '2024-01-15T10:30:00Z',
-          created_by: '李四',
+          startedAt: '2024-01-15T10:30:00Z',
+          createdBy: '李四',
         },
       ];
 
@@ -305,9 +305,9 @@ const AdvancedReporting: React.FC = () => {
       const newReport: ReportDefinition = {
         id: Date.now(),
         ...values,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        created_by: '当前用户',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdBy: '当前用户',
       };
 
       setReports(prev => [...prev, newReport]);
@@ -327,7 +327,7 @@ const AdvancedReporting: React.FC = () => {
         setReports(prev =>
           prev.map(r =>
             r.id === selectedReport.id
-              ? { ...r, ...values, updated_at: new Date().toISOString() }
+              ? { ...r, ...values, updatedAt: new Date().toISOString() }
               : r
           )
         );
@@ -488,7 +488,7 @@ const AdvancedReporting: React.FC = () => {
                       : '自定义'}
             </span>
             <span>•</span>
-            <span>创建者：{record.created_by}</span>
+            <span>创建者：{record.createdBy}</span>
           </div>
         </div>
       ),
@@ -506,15 +506,15 @@ const AdvancedReporting: React.FC = () => {
                 ? '图表'
                 : '仪表盘'}
           </Tag>
-          {record.chart_type && (
+          {record.chartType && (
             <div className="text-xs text-gray-500">
-              {record.chart_type === 'bar'
+              {record.chartType === 'bar'
                 ? '柱状图'
-                : record.chart_type === 'line'
+                : record.chartType === 'line'
                   ? '折线图'
-                  : record.chart_type === 'pie'
+                  : record.chartType === 'pie'
                     ? '饼图'
-                    : record.chart_type === 'area'
+                    : record.chartType === 'area'
                       ? '面积图'
                       : '散点图'}
             </div>
@@ -524,11 +524,11 @@ const AdvancedReporting: React.FC = () => {
     },
     {
       title: '状态',
-      key: 'is_active',
+      key: 'isActive',
       width: 80,
       render: (_, record) => (
-        <Tag color={record.is_active ? 'success' : 'default'}>
-          {record.is_active ? '启用' : '禁用'}
+        <Tag color={record.isActive ? 'success' : 'default'}>
+          {record.isActive ? '启用' : '禁用'}
         </Tag>
       ),
     },
@@ -569,8 +569,8 @@ const AdvancedReporting: React.FC = () => {
   const executionColumns: ColumnsType<ReportExecution> = [
     {
       title: '报表名称',
-      key: 'report_name',
-      render: (_, record) => <div className="font-medium">{record.report_name}</div>,
+      key:'reportName',
+      render: (_, record) => <div className="font-medium">{record.reportName}</div>,
     },
     {
       title: '状态',
@@ -589,12 +589,12 @@ const AdvancedReporting: React.FC = () => {
     },
     {
       title: '执行时间',
-      key: 'execution_time',
+      key:'executionTime',
       width: 150,
       render: (_, record) => (
         <div className="text-sm">
-          <div>开始：{new Date(record.started_at).toLocaleString()}</div>
-          {record.completed_at && <div>完成：{new Date(record.completed_at).toLocaleString()}</div>}
+          <div>开始：{new Date(record.startedAt).toLocaleString()}</div>
+          {record.completedAt && <div>完成：{new Date(record.completedAt).toLocaleString()}</div>}
         </div>
       ),
     },
@@ -604,11 +604,11 @@ const AdvancedReporting: React.FC = () => {
       width: 100,
       render: (_, record) => (
         <div className="text-sm">
-          {record.status === 'completed' && record.result_count && (
-            <div>记录数：{record.result_count}</div>
+          {record.status === 'completed' && record.resultCount && (
+            <div>记录数：{record.resultCount}</div>
           )}
-          {record.status === 'failed' && record.error_message && (
-            <div className="text-red-500">错误：{record.error_message}</div>
+          {record.status === 'failed' && record.errorMessage && (
+            <div className="text-red-500">错误：{record.errorMessage}</div>
           )}
         </div>
       ),

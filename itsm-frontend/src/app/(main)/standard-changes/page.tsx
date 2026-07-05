@@ -84,10 +84,10 @@ export default function StandardChangesPage() {
     try {
       const data = await StandardChangeApi.getTemplates({
         page,
-        page_size: pageSize,
+        pageSize: pageSize,
         category: category || undefined,
         search: search || undefined,
-        active_only: true,
+        activeOnly: true,
       });
       setTemplates(data.templates);
       setTotal(data.total);
@@ -124,15 +124,15 @@ export default function StandardChangesPage() {
     form.setFieldsValue({
       title: template.title,
       description: template.description,
-      implementation_plan: template.implementationPlan,
-      rollback_plan: template.rollbackPlan,
+      implementationPlan: template.implementationPlan,
+      rollbackPlan: template.rollbackPlan,
       justification: template.justification,
       category: template.category,
-      risk_level: template.riskLevel,
-      impact_scope: template.impactScope,
-      expected_duration: template.expectedDuration,
-      approval_required: template.approvalRequired,
-      affected_cis: template.affectedCIs,
+      riskLevel: template.riskLevel,
+      impactScope: template.impactScope,
+      expectedDuration: template.expectedDuration,
+      approvalRequired: template.approvalRequired,
+      affectedCis: template.affectedCIs,
       prerequisites: template.prerequisites,
       remarks: template.remarks,
     });
@@ -164,7 +164,7 @@ export default function StandardChangesPage() {
       const result = await StandardChangeApi.instantiate(selectedTemplate.id, values);
       message.success(t('standardChanges.instantiateSuccess') || '已成功从模板创建变更');
       setInstantiateModalVisible(false);
-      router.push(`/changes/${result.change_id}`);
+      router.push(`/changes/${result.changeId}`);
     } catch (error) {
       console.error('Failed to instantiate:', error);
       message.error(t('standardChanges.instantiateFailed') || '从模板创建变更失败');

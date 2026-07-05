@@ -175,12 +175,12 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
       if (type === 'password') {
         return (
           <PasswordInput
-            {...commonProps}
+            {...(commonProps as any)}
           />
         );
       }
 
-      return <Input {...commonProps} type={type} />;
+      return <Input {...(commonProps as any)} type={type} />;
     };
 
     return (

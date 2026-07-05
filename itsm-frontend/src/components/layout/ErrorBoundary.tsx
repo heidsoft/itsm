@@ -169,7 +169,7 @@ class ErrorBoundary extends Component<Props, State> {
 }
 
  
-ErrorBoundary.displayName = 'ErrorBoundary';
+(ErrorBoundary as unknown as { displayName: string }).displayName = 'ErrorBoundary';
 
 // Global error handler hook
 export const useErrorHandler = () => {

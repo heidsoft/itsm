@@ -39,39 +39,27 @@ interface ApprovalWorkflow {
   id: number;
   name: string;
   description?: string;
-  ticket_type?: string;
   ticketType?: string;
   priority?: string;
-  is_active: boolean;
-  isActive?: boolean;
-  workflow_id?: string;
+  isActive: boolean;
   workflowId?: string;
   nodes?: ApprovalNode[];
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface ApprovalNode {
   level: number;
   name: string;
-  approver_type: string;
-  approver_ids?: number[];
-  assignee_type?: string;
-  assignee_value?: string;
-  approval_mode: string;
-  timeout_hours?: number;
-  allow_reject: boolean;
-  allowReject?: boolean;
-  allow_delegate: boolean;
-  allowDelegate?: boolean;
-  reject_action: string;
-  rejectAction?: string;
   approverType?: string;
   approverIds?: number[];
   assigneeType?: string;
   assigneeValue?: string;
   approvalMode?: string;
   timeoutHours?: number;
+  allowReject?: boolean;
+  allowDelegate?: boolean;
+  rejectAction?: string;
 }
 
 export default function ApprovalManagement() {
@@ -94,14 +82,14 @@ export default function ApprovalManagement() {
     try {
       const response = await httpClient.get<{ items: ApprovalWorkflow[]; total: number }>(
         '/api/v1/approval-workflows',
-        { page: 1, page_size: 100 }
+        { page: 1, pageSize: 100 }
       );
       const items = (response.items || []).map(normalizeWorkflow);
       setWorkflows(items);
       setStats({
         total: response.total || 0,
-        active: items.filter(w => w.is_active).length,
-        inactive: items.filter(w => !w.is_active).length,
+        active: items.filter(w => w.isActive).length,
+        inactive: items.filter(w => !w.isActive).length,
       });
     } catch (error) {
       console.error('Failed to load workflows:', error);
@@ -140,7 +128,7 @@ export default function ApprovalManagement() {
 
       const data = {
         ...values,
-        is_active: values.is_active ?? true,
+        isActive: values.isActive ?? true,
         nodes: normalizeNodes(values.nodes || []),
       };
 
@@ -184,10 +172,10 @@ export default function ApprovalManagement() {
     form.setFieldsValue({
       name: record.name,
       description: record.description,
-      ticket_type: record.ticket_type || record.ticketType,
+      ticketType: record.ticketType || record.ticketType,
       priority: record.priority,
-      is_active: record.is_active ?? record.isActive,
-      workflow_id: record.workflow_id || record.workflowId,
+      isActive: record.isActive ?? record.isActive,
+      workflowId: record.workflowId || record.workflowId,
       nodes: record.nodes?.length ? record.nodes : [defaultApprovalNode()],
     });
     setShowModal(true);
@@ -197,9 +185,9 @@ export default function ApprovalManagement() {
   const handleToggleStatus = async (record: ApprovalWorkflow) => {
     try {
       await httpClient.patch(`/api/v1/approval-workflows/${record.id}`, {
-        is_active: !record.is_active,
+        isActive: !record.isActive,
       });
-      message.success(`${record.is_active ? '停用' : '启用'}成功`);
+      message.success(`${record.isActive ? '停用' : '启用'}成功`);
       loadWorkflows();
     } catch (error) {
       console.error('Failed to toggle status:', error);
@@ -222,8 +210,8 @@ export default function ApprovalManagement() {
     },
     {
       title: '工单类型',
-      dataIndex: 'ticket_type',
-      key: 'ticket_type',
+      dataIndex:'ticketType',
+      key:'ticketType',
       render: (text: string) => <Tag color="blue">{text || '-'}</Tag>,
     },
     {
@@ -234,7 +222,7 @@ export default function ApprovalManagement() {
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
+      dataIndex: 'isActive',
       key: 'status',
       render: (isActive: boolean) => (
         <Tag color={isActive ? 'success' : 'default'}>
@@ -250,8 +238,8 @@ export default function ApprovalManagement() {
     },
     {
       title: 'BPMN工作流',
-      dataIndex: 'workflow_id',
-      key: 'workflow_id',
+      dataIndex:'workflowId',
+      key:'workflowId',
       render: (workflowId: string) => (
         workflowId ? (
           <Tag color="blue">已关联</Tag>
@@ -275,7 +263,7 @@ export default function ApprovalManagement() {
             type="text"
             onClick={() => handleToggleStatus(record)}
           >
-            {record.is_active ? '停用' : '启用'}
+            {record.isActive ? '停用' : '启用'}
           </Button>
           <Popconfirm
             title="确认删除"
@@ -355,7 +343,7 @@ export default function ApprovalManagement() {
             icon={<Plus size={16} />}
             onClick={() => {
               setSelectedWorkflow(null);
-              form.setFieldsValue({ is_active: true, nodes: [defaultApprovalNode()] });
+              form.setFieldsValue({ isActive: true, nodes: [defaultApprovalNode()] });
               setShowModal(true);
             }}
           >
@@ -601,32 +589,32 @@ function defaultApprovalNode(level = 1): ApprovalNode {
   return {
     level,
     name: `审批节点 ${level}`,
-    approver_type: 'role',
-    approver_ids: [],
-    approval_mode: 'any',
-    allow_reject: true,
-    allow_delegate: false,
-    reject_action: 'end',
+    approverType: 'role',
+    approverIds: [],
+    approvalMode: 'any',
+    allowReject: true,
+    allowDelegate: false,
+    rejectAction: 'end',
   };
 }
 
 function normalizeNodes(nodes: ApprovalNode[]): ApprovalNode[] {
   return nodes.map((node, index) => {
-    const approverIds = node.approver_ids || node.approverIds || [];
+    const approverIds = node.approverIds || node.approverIds || [];
     return {
       ...defaultApprovalNode(index + 1),
       ...node,
-      approver_type: node.approver_type || node.approverType || 'role',
-      approver_ids: approverIds
+      approverType: node.approverType || node.approverType || 'role',
+      approverIds: approverIds
       .map(id => Number(id))
       .filter(id => Number.isInteger(id) && id > 0),
-      assignee_type: node.assignee_type || node.assigneeType,
-      assignee_value: node.assignee_value || node.assigneeValue,
-      approval_mode: node.approval_mode || node.approvalMode || 'any',
-      timeout_hours: node.timeout_hours || node.timeoutHours,
-      allow_reject: node.allow_reject ?? node.allowReject ?? true,
-      allow_delegate: node.allow_delegate ?? node.allowDelegate ?? false,
-      reject_action: node.reject_action || node.rejectAction || 'end',
+      assigneeType: node.assigneeType || node.assigneeType,
+      assigneeValue: node.assigneeValue || node.assigneeValue,
+      approvalMode: node.approvalMode || node.approvalMode || 'any',
+      timeoutHours: node.timeoutHours || node.timeoutHours,
+      allowReject: node.allowReject ?? node.allowReject ?? true,
+      allowDelegate: node.allowDelegate ?? node.allowDelegate ?? false,
+      rejectAction: node.rejectAction || node.rejectAction || 'end',
       level: Number(node.level || index + 1),
     };
   });
@@ -635,8 +623,8 @@ function normalizeNodes(nodes: ApprovalNode[]): ApprovalNode[] {
 function normalizeWorkflow(workflow: ApprovalWorkflow): ApprovalWorkflow {
   return {
     ...workflow,
-    ticket_type: workflow.ticket_type || workflow.ticketType,
-    is_active: workflow.is_active ?? workflow.isActive ?? false,
+    ticketType: workflow.ticketType || workflow.ticketType,
+    isActive: workflow.isActive ?? workflow.isActive ?? false,
     nodes: workflow.nodes ? normalizeNodes(workflow.nodes) : [],
   };
 }

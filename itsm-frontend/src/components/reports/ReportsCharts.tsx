@@ -95,8 +95,8 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
     },
     {
       title: '平均时间',
-      dataIndex: 'avg_time',
-      key: 'avg_time',
+      dataIndex:'avgTime',
+      key:'avgTime',
       render: (avgTime?: number) => (avgTime ? `${avgTime.toFixed(2)}小时` : '-'),
     },
   ];
@@ -176,7 +176,7 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
                 dot={{ fill: '#1890ff', r: 4 }}
                 activeDot={{ r: 6 }}
               />
-              {data.some(item => item.avg_time) && (
+              {data.some(item => item.avgTime) && (
                 <Line
                   type="monotone"
                   dataKey="avg_time"
@@ -259,7 +259,7 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Bar>
-              {data.some(item => item.avg_time) && (
+              {data.some(item => item.avgTime) && (
                 <Bar
                   dataKey="avg_time"
                   fill="#52c41a"

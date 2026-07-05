@@ -25,7 +25,7 @@ export class WorkflowDefinitionApi {
   }> {
     const params: Record<string, string | number> = {};
     if (query?.page) params.page = query.page;
-    if (query?.pageSize) params.page_size = query.pageSize;
+    if (query?.pageSize) params.pageSize = query.pageSize;
 
     const res = await httpClient.get<
       Array<{
@@ -35,8 +35,8 @@ export class WorkflowDefinitionApi {
         description?: string;
         version: number;
         status: string;
-        created_at: string;
-        updated_at: string;
+        createdAt: string;
+        updatedAt: string;
       }>
     >('/api/v1/bpmn/process-definitions', params);
 
@@ -59,8 +59,8 @@ export class WorkflowDefinitionApi {
       },
       createdBy: 0,
       createdByName: '',
-      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
-      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
       description: item.description,
     })) as WorkflowDefinition[];
     return { workflows, total: list.length };
@@ -77,8 +77,8 @@ export class WorkflowDefinitionApi {
       description?: string;
       version: number;
       status: string;
-      created_at: string;
-      updated_at: string;
+      createdAt: string;
+      updatedAt: string;
     }>(`/api/v1/bpmn/process-definitions/${id}`);
 
     const item = res;
@@ -100,8 +100,8 @@ export class WorkflowDefinitionApi {
       },
       createdBy: 0,
       createdByName: '',
-      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
-      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
       description: item.description,
     };
   }
@@ -117,8 +117,8 @@ export class WorkflowDefinitionApi {
       name: request.name,
       description: request.description,
       category: request.type,
-      bpmn_xml: (request as any).bpmn_xml,
-      tenant_id: tenantId,
+      bpmnXml: request.bpmnXml,
+      tenantId: tenantId,
     };
     return httpClient.post('/api/v1/bpmn/process-definitions', payload);
   }
@@ -134,7 +134,7 @@ export class WorkflowDefinitionApi {
     const payload = {
       name: request.name,
       description: request.description,
-      bpmn_xml: (request as any).bpmn_xml,
+      bpmnXml: request.bpmnXml,
     };
     const ver = version || '1.0.0';
     const response = await httpClient.put<{
@@ -165,8 +165,8 @@ export class WorkflowDefinitionApi {
       code: `${original.code}_copy_${Date.now()}`,
       name: name || `${original.name} (副本)`,
       description: original.description,
-      type: original.type as any,
-      bpmn_xml: (original as any).bpmn_xml,
+      type: original.type,
+      bpmnXml: original.bpmnXml,
     });
   }
 
@@ -213,7 +213,7 @@ export class WorkflowDefinitionApi {
       exportedBy: 'system',
       workflow: {
         ...workflow,
-        bpmn_xml: (workflow as any).bpmn_xml || '',
+        bpmnXml: workflow.bpmnXml || '',
       },
     };
   }
@@ -229,8 +229,8 @@ export class WorkflowDefinitionApi {
       code: data.workflow.code || `imported_${Date.now()}`,
       name: data.workflow.name,
       description: data.workflow.description,
-      type: (data.workflow as any).type || 'ticket',
-      bpmn_xml: data.workflow.bpmn_xml || (data.workflow as any).bpmn_xml,
+      type: data.workflow.type,
+      bpmnXml: data.workflow.bpmnXml,
     });
   }
 
@@ -240,16 +240,16 @@ export class WorkflowDefinitionApi {
     return WorkflowDefinitionApi.getWorkflow(key);
   }
 
-  static async createProcessDefinition(request: unknown): Promise<WorkflowDefinition> {
-    return WorkflowDefinitionApi.createWorkflow(request as any);
+  static async createProcessDefinition(request: CreateWorkflowRequest): Promise<WorkflowDefinition> {
+    return WorkflowDefinitionApi.createWorkflow(request);
   }
 
   static async updateProcessDefinition(
     key: string,
-    request: unknown,
+    request: UpdateWorkflowRequest,
     version?: string
   ): Promise<WorkflowDefinition> {
-    return WorkflowDefinitionApi.updateWorkflow(key, request as any, version);
+    return WorkflowDefinitionApi.updateWorkflow(key, request, version);
   }
 
   static async deployProcessDefinition(key: string, version?: string): Promise<void> {
@@ -262,8 +262,8 @@ export class WorkflowDefinitionApi {
       code: current.code,
       name: current.name,
       description: current.description,
-      type: current.type as any,
-      bpmn_xml: (current as any).bpmn_xml,
+      type: current.type,
+      bpmnXml: current.bpmnXml,
     });
   }
 

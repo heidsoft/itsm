@@ -49,43 +49,43 @@ const { TabPane } = Tabs;
 // 事件接口定义
 interface IncidentEvent {
   id: number;
-  incident_id: number;
-  event_type: string;
-  event_name: string;
+  incidentId: number;
+  eventType: string;
+  eventName: string;
   description: string;
   status: string;
   severity: string;
   data?: unknown;
-  occurred_at: string;
-  user_id?: number;
+  occurredAt: string;
+  userId?: number;
   source: string;
   metadata?: unknown;
 }
 
 interface IncidentAlert {
   id: number;
-  incident_id: number;
-  alert_type: string;
-  alert_name: string;
+  incidentId: number;
+  alertType: string;
+  alertName: string;
   message: string;
   severity: string;
   status: string;
   channels: string[];
   recipients: string[];
-  triggered_at: string;
-  acknowledged_at?: string;
-  resolved_at?: string;
-  acknowledged_by?: number;
+  triggeredAt: string;
+  acknowledgedAt?: string;
+  resolvedAt?: string;
+  acknowledgedBy?: number;
 }
 
 interface IncidentMetric {
   id: number;
-  incident_id: number;
-  metric_type: string;
-  metric_name: string;
-  metric_value: number;
+  incidentId: number;
+  metricType: string;
+  metricName: string;
+  metricValue: number;
   unit?: string;
-  measured_at: string;
+  measuredAt: string;
   tags?: Record<string, string>;
   metadata?: unknown;
 }
@@ -110,7 +110,7 @@ export const IncidentManagement: React.FC = () => {
     try {
       const params: ListIncidentsRequest = {
         page: currentPage,
-        page_size: pageSize,
+        pageSize: pageSize,
         ...filters,
       };
       const data = await IncidentAPI.listIncidents(params);
@@ -148,7 +148,7 @@ export const IncidentManagement: React.FC = () => {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       new: 'blue',
-      in_progress: 'orange',
+      inProgress: 'orange',
       resolved: 'green',
       closed: 'gray',
     };
@@ -181,7 +181,7 @@ export const IncidentManagement: React.FC = () => {
   const getStatusIcon = (status: string) => {
     const icons: Record<string, React.ReactNode> = {
       new: <Info />,
-      in_progress: <Clock />,
+      inProgress: <Clock />,
       resolved: <CheckCircle />,
       closed: <XCircle />,
     };
@@ -192,8 +192,8 @@ export const IncidentManagement: React.FC = () => {
   const columns = [
     {
       title: '事件编号',
-      dataIndex: 'incident_number',
-      key: 'incident_number',
+      dataIndex:'incidentNumber',
+      key:'incidentNumber',
       width: 120,
       render: (text: string) => (
         <Text code style={{ fontSize: '12px' }}>
@@ -262,15 +262,15 @@ export const IncidentManagement: React.FC = () => {
     },
     {
       title: '检测时间',
-      dataIndex: 'detected_at',
-      key: 'detected_at',
+      dataIndex:'detectedAt',
+      key:'detectedAt',
       width: 150,
       render: (time: string) => dayjs(time).format('YYYY-MM-DD HH:mm'),
     },
     {
       title: '升级级别',
-      dataIndex: 'escalation_level',
-      key: 'escalation_level',
+      dataIndex:'escalationLevel',
+      key:'escalationLevel',
       width: 100,
       render: (level: number) =>
         level > 0 ? <Badge count={level} style={{ backgroundColor: '#f50' }} /> : '-',
@@ -550,7 +550,7 @@ const IncidentDetailDrawer: React.FC<{
 
   return (
     <Drawer
-      title={`事件详情 - ${incident.incidentNumber || incident.incident_number}`}
+      title={`事件详情 - ${incident.incidentNumber || incident.incidentNumber}`}
       styles={{ wrapper: { width: 800 } }}
       open={visible}
       onClose={onClose}
@@ -589,7 +589,7 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       new: 'blue',
-      in_progress: 'orange',
+      inProgress: 'orange',
       resolved: 'green',
       closed: 'gray',
     };
@@ -633,7 +633,7 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
             <div className="mb-4">
               <Text strong>事件编号</Text>
               <div className="mt-1">
-                <Text code>{incident.incidentNumber || incident.incident_number}</Text>
+                <Text code>{incident.incidentNumber || incident.incidentNumber}</Text>
               </div>
             </div>
           </Col>
@@ -701,22 +701,22 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
               </div>
             </div>
           </Col>
-          {incident.resolvedAt || incident.resolved_at && (
+          {incident.resolvedAt || incident.resolvedAt && (
             <Col span={12}>
               <div className="mb-4">
                 <Text strong>解决时间</Text>
                 <div className="mt-1">
-                  <Text>{dayjs(incident.resolvedAt || incident.resolved_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                  <Text>{dayjs(incident.resolvedAt || incident.resolvedAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
                 </div>
               </div>
             </Col>
           )}
-          {incident.closedAt || incident.closed_at && (
+          {incident.closedAt || incident.closedAt && (
             <Col span={12}>
               <div className="mb-4">
                 <Text strong>关闭时间</Text>
                 <div className="mt-1">
-                  <Text>{dayjs(incident.closedAt || incident.closed_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                  <Text>{dayjs(incident.closedAt || incident.closedAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
                 </div>
               </div>
             </Col>
@@ -725,7 +725,7 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
       </Card>
 
       {/* 升级信息 */}
-      {(incident.escalationLevel ?? incident.escalation_level ?? 0) > 0 && (
+      {(incident.escalationLevel ?? incident.escalationLevel ?? 0) > 0 && (
         <Card title="升级信息">
           <Row gutter={[16, 16]}>
             <Col span={12}>
@@ -733,18 +733,18 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
                 <Text strong>升级级别</Text>
                 <div className="mt-1">
                   <Badge
-                    count={incident.escalationLevel ?? incident.escalation_level ?? 0}
+                    count={incident.escalationLevel ?? incident.escalationLevel ?? 0}
                     style={{ backgroundColor: '#f50' }}
                   />
                 </div>
               </div>
             </Col>
-            {incident.escalatedAt || incident.escalated_at && (
+            {incident.escalatedAt || incident.escalatedAt && (
               <Col span={12}>
                 <div className="mb-4">
                   <Text strong>升级时间</Text>
                   <div className="mt-1">
-                    <Text>{dayjs(incident.escalatedAt || incident.escalated_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                    <Text>{dayjs(incident.escalatedAt || incident.escalatedAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
                   </div>
                 </div>
               </Col>
@@ -767,7 +767,7 @@ const IncidentEvents: React.FC<{ events: IncidentEvent[]; loading: boolean }> = 
       update: <Pencil />,
       escalation: <AlertCircle />,
       assignment: <User />,
-      status_change: <Clock />,
+      statusChange: <Clock />,
     };
     return icons[eventType] || <Info />;
   };
@@ -793,11 +793,11 @@ const IncidentEvents: React.FC<{ events: IncidentEvent[]; loading: boolean }> = 
           {events.map(event => (
             <Timeline.Item
               key={event.id}
-              dot={getEventIcon(event.event_type)}
+              dot={getEventIcon(event.eventType)}
               color={getSeverityColor(event.severity)}
             >
               <div className="mb-2">
-                <Text strong>{event.event_name}</Text>
+                <Text strong>{event.eventName}</Text>
                 <Tag color={getSeverityColor(event.severity)} className="ml-2">
                   {event.severity}
                 </Tag>
@@ -807,7 +807,7 @@ const IncidentEvents: React.FC<{ events: IncidentEvent[]; loading: boolean }> = 
               </div>
               <div className="text-gray-500 text-sm">
                 <Text type="secondary">
-                  {dayjs(event.occurred_at).format('YYYY-MM-DD HH:mm:ss')}
+                  {dayjs(event.occurredAt).format('YYYY-MM-DD HH:mm:ss')}
                 </Text>
                 {event.source && (
                   <Text type="secondary" className="ml-2">
@@ -872,13 +872,13 @@ const IncidentAlerts: React.FC<{ alerts: IncidentAlert[]; loading: boolean }> = 
               <List.Item.Meta
                 avatar={
                   <Avatar
-                    icon={getAlertIcon(alert.alert_type)}
+                    icon={getAlertIcon(alert.alertType)}
                     style={{ backgroundColor: getSeverityColor(alert.severity) }}
                   />
                 }
                 title={
                   <div className="flex items-center justify-between">
-                    <Text strong>{alert.alert_name}</Text>
+                    <Text strong>{alert.alertName}</Text>
                     <Space>
                       <Tag color={getSeverityColor(alert.severity)}>{alert.severity}</Tag>
                       <Tag color={getStatusColor(alert.status)}>{alert.status}</Tag>
@@ -892,7 +892,7 @@ const IncidentAlerts: React.FC<{ alerts: IncidentAlert[]; loading: boolean }> = 
                     </div>
                     <div className="text-gray-500 text-sm">
                       <Text type="secondary">
-                        触发时间: {dayjs(alert.triggered_at).format('YYYY-MM-DD HH:mm:ss')}
+                        触发时间: {dayjs(alert.triggeredAt).format('YYYY-MM-DD HH:mm:ss')}
                       </Text>
                       {alert.channels && alert.channels.length > 0 && (
                         <Text type="secondary" className="ml-4">
@@ -920,10 +920,10 @@ const IncidentMetrics: React.FC<{ metrics: IncidentMetric[]; loading: boolean }>
 }) => {
   const getMetricIcon = (metricType: string) => {
     const icons: Record<string, React.ReactNode> = {
-      response_time: <Clock />,
-      resolution_time: <CheckCircle />,
-      cpu_usage: <BarChart3 />,
-      memory_usage: <BarChart3 />,
+      responseTime: <Clock />,
+      resolutionTime: <CheckCircle />,
+      cpuUsage: <BarChart3 />,
+      memoryUsage: <BarChart3 />,
     };
     return icons[metricType] || <BarChart3 />;
   };
@@ -940,12 +940,12 @@ const IncidentMetrics: React.FC<{ metrics: IncidentMetric[]; loading: boolean }>
             <Col span={8} key={metric.id}>
               <Card size="small">
                 <div className="text-center">
-                  <div className="mb-2">{getMetricIcon(metric.metric_type)}</div>
+                  <div className="mb-2">{getMetricIcon(metric.metricType)}</div>
                   <div className="mb-1">
-                    <Text strong>{metric.metric_name}</Text>
+                    <Text strong>{metric.metricName}</Text>
                   </div>
                   <div className="text-2xl font-bold mb-1">
-                    {metric.metric_value}
+                    {metric.metricValue}
                     {metric.unit && (
                       <Text type="secondary" className="text-sm ml-1">
                         {metric.unit}
@@ -954,7 +954,7 @@ const IncidentMetrics: React.FC<{ metrics: IncidentMetric[]; loading: boolean }>
                   </div>
                   <div className="text-gray-500 text-sm">
                     <Text type="secondary">
-                      {dayjs(metric.measured_at).format('YYYY-MM-DD HH:mm')}
+                      {dayjs(metric.measuredAt).format('YYYY-MM-DD HH:mm')}
                     </Text>
                   </div>
                 </div>
@@ -1193,8 +1193,8 @@ const IncidentMonitoringPanel: React.FC<{
     setLoading(true);
     try {
       const data = await httpClient.post('/api/v1/incidents/monitoring', {
-        start_time: dayjs().subtract(7, 'day').toISOString(),
-        end_time: dayjs().toISOString(),
+        startTime: dayjs().subtract(7, 'day').toISOString(),
+        endTime: dayjs().toISOString(),
       });
       setMonitoringData(data);
     } catch (error) {
@@ -1234,7 +1234,7 @@ const IncidentMonitoringPanel: React.FC<{
               <Card>
                 <Statistic
                   title="总事件数"
-                  value={monitoringData.total_incidents}
+                  value={monitoringData.totalIncidents}
                   prefix={<Info />}
                 />
               </Card>
@@ -1243,7 +1243,7 @@ const IncidentMonitoringPanel: React.FC<{
               <Card>
                 <Statistic
                   title="进行中"
-                  value={monitoringData.open_incidents}
+                  value={monitoringData.openIncidents}
                   prefix={<Clock />}
                   styles={{ content: { color: '#1890ff' } }}
                 />
@@ -1253,7 +1253,7 @@ const IncidentMonitoringPanel: React.FC<{
               <Card>
                 <Statistic
                   title="已解决"
-                  value={monitoringData.resolved_incidents}
+                  value={monitoringData.resolvedIncidents}
                   prefix={<CheckCircle />}
                   styles={{ content: { color: '#52c41a' } }}
                 />
@@ -1263,7 +1263,7 @@ const IncidentMonitoringPanel: React.FC<{
               <Card>
                 <Statistic
                   title="解决率"
-                  value={monitoringData.resolution_rate}
+                  value={monitoringData.resolutionRate}
                   suffix="%"
                   precision={1}
                   prefix={<BarChart3 />}
@@ -1282,9 +1282,9 @@ const IncidentMonitoringPanel: React.FC<{
 
           {/* 严重事件列表 */}
           <Card title="严重事件">
-            {monitoringData.critical_incidents > 0 ? (
+            {monitoringData.criticalIncidents > 0 ? (
               <Alert
-                message={`发现 ${monitoringData.critical_incidents} 个严重事件`}
+                message={`发现 ${monitoringData.criticalIncidents} 个严重事件`}
                 type="error"
                 showIcon
                 action={

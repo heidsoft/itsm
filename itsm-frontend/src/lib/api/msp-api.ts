@@ -38,8 +38,8 @@ export class MSPAPI {
    */
   static async deallocate(mspUserId: number, customerTenantId: number, reason?: string): Promise<ApiResponse<void>> {
     return httpClient.post<ApiResponse<void>>('/api/v1/msp/allocations/deallocate', {
-      msp_user_id: mspUserId,
-      customer_tenant_id: customerTenantId,
+      mspUserId: mspUserId,
+      customerTenantId: customerTenantId,
       reason,
     });
   }
@@ -77,8 +77,8 @@ export class MSPAPI {
     return httpClient.post<ApiResponse<{ id: number; status: string }>>(
       `/api/v1/msp/tickets/${ticketId}/assign`,
       {
-        customer_tenant_id: customerTenantId,
-        assigner_user_id: assignerUserId,
+        customerTenantId: customerTenantId,
+        assignerUserId: assignerUserId,
       }
     );
   }
@@ -89,7 +89,7 @@ export class MSPAPI {
    * 获取客户服务报表
    */
   static async getCustomerReports(
-    params: { start_date: string; end_date: string; customer_tenant_id?: number }
+    params: { startDate: string; endDate: string; customerTenantId?: number }
   ): Promise<ApiResponse<MSPCustomerReport[]>> {
     return httpClient.get<ApiResponse<MSPCustomerReport[]>>('/api/v1/msp/reports/customers', params);
   }
@@ -98,7 +98,7 @@ export class MSPAPI {
    * 获取 MSP 员工绩效报表
    */
   static async getMSPPerformanceReports(
-    params: { start_date: string; end_date: string; msp_user_id?: number }
+    params: { startDate: string; endDate: string; mspUserId?: number }
   ): Promise<ApiResponse<MSPCustomerReport[]>> {
     return httpClient.get<ApiResponse<MSPCustomerReport[]>>('/api/v1/msp/reports/performance', params);
   }
@@ -110,10 +110,10 @@ export class MSPAPI {
    */
   static async isMSPUser(): Promise<{ isMSP: boolean; isAdmin: boolean }> {
     try {
-      const res = await httpClient.get<ApiResponse<{ is_msp: boolean; is_admin?: boolean }>>('/api/v1/msp/status');
+      const res = await httpClient.get<ApiResponse<{ isMsp: boolean; isAdmin?: boolean }>>('/api/v1/msp/status');
       return {
-        isMSP: res.data?.is_msp || false,
-        isAdmin: res.data?.is_admin || false,
+        isMSP: res.data?.isMsp || false,
+        isAdmin: res.data?.isAdmin || false,
       };
     } catch {
       return { isMSP: false, isAdmin: false };
@@ -133,7 +133,7 @@ export class MSPAPI {
    * 获取分配历史记录
    */
   static async getAllocationHistory(
-    params: { msp_user_id?: number; customer_tenant_id?: number; start_date?: string; end_date?: string }
+    params: { mspUserId?: number; customerTenantId?: number; startDate?: string; endDate?: string }
   ): Promise<ApiResponse<MSPAllocationHistory[]>> {
     return httpClient.get<ApiResponse<MSPAllocationHistory[]>>('/api/v1/msp/allocations/history', params);
   }

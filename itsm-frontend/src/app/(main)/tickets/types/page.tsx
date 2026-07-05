@@ -27,11 +27,11 @@ interface TicketCategory {
   name: string;
   code?: string;
   description?: string;
-  parent_id?: number | null;
-  sla_hours?: number;
+  parentId?: number | null;
+  slaHours?: number;
   priority?: string;
-  required_fields?: string[];
-  sort_order?: number;
+  requiredFields?: string[];
+  sortOrder?: number;
 }
 
 export default function TicketTypesPage() {
@@ -42,7 +42,7 @@ export default function TicketTypesPage() {
   useEffect(() => {
     setLoading(true);
     httpClient
-      .get<any>('/api/v1/ticket-categories', { page: 1, page_size: 200 })
+      .get<any>('/api/v1/ticket-categories', { page: 1, pageSize: 200 })
       .then((res: any) => {
         const items = res?.data?.items || res?.items || res?.data || [];
         setData(items);
@@ -124,7 +124,7 @@ export default function TicketTypesPage() {
               },
               {
                 title: 'SLA（小时）',
-                dataIndex: 'sla_hours',
+                dataIndex:'slaHours',
                 width: 100,
                 render: (v?: number) => (v != null ? `${v} h` : '-'),
               },
@@ -135,7 +135,7 @@ export default function TicketTypesPage() {
               },
               {
                 title: '必填字段',
-                dataIndex: 'required_fields',
+                dataIndex:'requiredFields',
                 width: 200,
                 render: (fields?: string[]) =>
                   fields && fields.length > 0 ? (

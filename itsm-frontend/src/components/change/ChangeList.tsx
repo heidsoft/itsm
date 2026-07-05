@@ -96,7 +96,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
         ...values,
       });
       // 支持 snake_case 和 camelCase 格式
-      setData(resp.changes || resp.items || []);
+      setData((resp as any).changes || (resp as any).items || [] as any);
       setTotal(resp.total || 0);
     } catch (error) {
       // 只在有实际错误时显示失败消息，不是因为表单验证导致的
@@ -184,12 +184,12 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
     },
     {
       title: '创建人',
-      dataIndex: 'created_by_name',
+      dataIndex:'createdByName',
       width: 100,
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
+      dataIndex: 'createdAt',
       width: 160,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },

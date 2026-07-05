@@ -19,7 +19,7 @@ import {
   Col,
   Switch,
 } from 'antd';
-import { Filter, Plus, Pencil, Trash2, Export, User, Lock, Unlock, Eye, RotateCcw, Mail, Phone, AlertCircle } from 'lucide-react';
+import { Filter, Plus, Pencil, Trash2, Download, UserIcon, Lock, Unlock, Eye, RotateCcw, Mail, Phone, AlertCircle, MoreHorizontal } from 'lucide-react';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
@@ -65,7 +65,7 @@ const UserList: React.FC<UserListProps> = ({
         const response = await UserApi.getUsers({
           // 改为 getUsers
           page: params?.page,
-          page_size: params?.pageSize, // 改为 page_size
+          pageSize: params?.pageSize, // 改为 page_size
           // filters: params?.filters,  // 移除filters，不在ListUsersParams中
         });
 
@@ -247,7 +247,7 @@ const UserList: React.FC<UserListProps> = ({
       const { UserApi } = await import('@/lib/api/user-api');
       const userIds = selectedRowKeys.map(k => Number(k));
       await UserApi.batchUpdateUsers({
-        user_ids: userIds,
+        userIds: userIds,
         action: action === '启用' ? 'activate' : 'deactivate',
       });
       message.success(`批量${action}成功`);
@@ -315,7 +315,7 @@ const UserList: React.FC<UserListProps> = ({
       fixed: 'left',
       render: (_, record) => (
         <Space>
-          <Avatar size="small" icon={<User />} /> {/* 移除src={record.avatar} */}
+          <Avatar size="small" icon={<UserIcon />} /> {/* 移除src={record.avatar} */}
           <div>
             <div>
               <Button
@@ -410,7 +410,7 @@ const UserList: React.FC<UserListProps> = ({
       fixed: 'right',
       render: (_, record) => (
         <Dropdown menu={getActionMenu(record)} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<MoreHorizontal />} />
         </Dropdown>
       ),
     },
@@ -512,7 +512,7 @@ const UserList: React.FC<UserListProps> = ({
                     <Button onClick={() => handleBatchAction('禁用')}>批量禁用</Button>
                   </>
                 )}
-                <Button icon={<Export />} onClick={handleExport}>
+                <Button icon={<Download />} onClick={handleExport}>
                   导出
                 </Button>
                 <Button

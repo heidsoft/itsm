@@ -87,14 +87,14 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
 
   // 发送通知
   const handleSendNotification = async (values: {
-    user_ids: number[];
+    userIds: number[];
     type: string;
     channel: 'email' | 'in_app' | 'sms';
     content: string;
   }) => {
     try {
       const request: SendTicketNotificationRequest = {
-        user_ids: values.user_ids,
+        userIds: values.userIds,
         type: values.type,
         channel: values.channel,
         content: values.content,
@@ -109,13 +109,13 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
         // 创建一个临时通知对象用于回调
         const tempNotification: TicketNotification = {
           id: Date.now(),
-          ticket_id: ticketId,
-          user_id: values.user_ids[0],
+          ticketId: ticketId,
+          userId: values.userIds[0],
           type: values.type as any,
           channel: values.channel,
           content: values.content,
           status: 'sent',
-          created_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
         };
         onNotificationSent(tempNotification);
       }
@@ -140,9 +140,9 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
     const labels: Record<string, string> = {
       created: '工单创建',
       assigned: '工单分配',
-      status_changed: '状态变更',
+      statusChanged: '状态变更',
       commented: '新增评论',
-      sla_warning: 'SLA警告',
+      slaWarning: 'SLA警告',
       resolved: '工单已解决',
       closed: '工单已关闭',
     };
@@ -154,9 +154,9 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
     const colors: Record<string, string> = {
       created: 'blue',
       assigned: 'cyan',
-      status_changed: 'orange',
+      statusChanged: 'orange',
       commented: 'purple',
-      sla_warning: 'red',
+      slaWarning: 'red',
       resolved: 'green',
       closed: 'default',
     };
@@ -278,16 +278,16 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
                           <Clock style={{ fontSize: 12, marginRight: 4 }} />
                           创建时间: {formatDateTime(notification.createdAt)}
                         </span>
-                        {notification.sent_at && (
+                        {notification.sentAt && (
                           <span>
                             <Send style={{ fontSize: 12, marginRight: 4 }} />
-                            发送时间: {formatDateTime(notification.sent_at)}
+                            发送时间: {formatDateTime(notification.sentAt)}
                           </span>
                         )}
-                        {notification.read_at && (
+                        {notification.readAt && (
                           <span>
                             <Eye style={{ fontSize: 12, marginRight: 4 }} />
-                            阅读时间: {formatDateTime(notification.read_at)}
+                            阅读时间: {formatDateTime(notification.readAt)}
                           </span>
                         )}
                         {notification.user && (

@@ -5,11 +5,11 @@ export interface Department {
   name: string;
   code: string;
   description?: string;
-  manager_id?: number;
-  parent_id?: number;
+  managerId?: number;
+  parentId?: number;
   children?: Department[];
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
   // Frontend specific helper
   key?: number;
   title?: string;
@@ -27,16 +27,16 @@ export interface CreateDepartmentRequest {
   name: string;
   code: string;
   description?: string;
-  manager_id?: number;
-  parent_id?: number;
+  managerId?: number;
+  parentId?: number;
 }
 
 export interface UpdateDepartmentRequest {
   name?: string;
   code?: string;
   description?: string;
-  manager_id?: number;
-  parent_id?: number;
+  managerId?: number;
+  parentId?: number;
 }
 
 class DepartmentService {
@@ -48,11 +48,11 @@ class DepartmentService {
       name: department.name || '',
       code: department.code || '',
       description: department.description,
-      manager_id: department.manager_id ?? department.managerId,
-      parent_id: department.parent_id ?? department.parentId,
+      managerId: department.managerId ?? department.managerId,
+      parentId: department.parentId ?? department.parentId,
       children: department.children?.map(child => this.normalizeDepartment(child)),
-      created_at: department.created_at || department.createdAt,
-      updated_at: department.updated_at || department.updatedAt,
+      createdAt: department.createdAt || department.createdAt,
+      updatedAt: department.updatedAt || department.updatedAt,
     };
   }
 

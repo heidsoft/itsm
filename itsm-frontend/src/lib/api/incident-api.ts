@@ -20,18 +20,17 @@ export interface Incident {
   type: string;
   // 支持 camelCase 和 snake_case 两种格式
   incidentNumber?: string;
-  incident_number?: string;
   isMajorIncident?: boolean;
   reporter?: {
     id: number;
     name: string;
   };
-  reporter_id?: number;
+  reporterId?: number;
   assignee?: {
     id: number;
     name: string;
   };
-  assignee_id?: number;
+  assigneeId?: number;
   // 配置项关联
   configurationItemId?: number;
   configurationItem?: {
@@ -54,29 +53,19 @@ export interface Incident {
   securityEventDetails?: unknown;
   // 时间字段 - 同时支持两种格式
   detectedAt?: string;
-  detected_at?: string;
   confirmedAt?: string;
-  confirmed_at?: string;
   resolvedAt?: string;
-  resolved_at?: string;
   closedAt?: string;
-  closed_at?: string;
   escalatedAt?: string;
-  escalated_at?: string;
   createdAt?: string;
-  created_at?: string;
   updatedAt?: string;
-  updated_at?: string;
   // 新增字段
   category?: string;
   subcategory?: string;
   resolution?: string;
   resolutionCode?: string;
-  resolution_code?: string;
   problemId?: number; // 关联的问题ID
-  problem_id?: number;
   escalationLevel?: number;
-  escalation_level?: number;
   impactAnalysis?: {
     businessImpact?: {
       affectedUsers?: number;
@@ -115,11 +104,8 @@ export interface CreateIncidentRequest {
   isMajorIncident?: boolean;
   // 同时支持 camelCase 和 snake_case
   assigneeId?: number;
-  assignee_id?: number;
   assignedTo?: number; // Added for compatibility with UI forms
-  assigned_to?: number; // Backend expects this
   configurationItemId?: number;
-  configuration_item_id?: number;
   category?: string;
   subcategory?: string;
   impact?: string; // Added for UI
@@ -267,7 +253,8 @@ export interface ListIncidentsRequest extends ListQueryParams {
 }
 
 export interface ListIncidentsResponse extends PaginationResponse<Incident> {
-  incidents: Incident[]; // 保持向后兼容
+  incidents: Incident[];
+  items?: Incident[]; // 保持向后兼容
 }
 
 export interface IncidentMetrics {
@@ -279,12 +266,6 @@ export interface IncidentMetrics {
   avgResolutionTime?: number;
   mtta?: number;
   mttr?: number;
-  // snake_case
-  total_incidents?: number;
-  open_incidents?: number;
-  critical_incidents?: number;
-  major_incidents?: number;
-  avg_resolution_time?: number;
 }
 
 // 阿里云告警事件
@@ -332,40 +313,40 @@ export interface CloudProductEventRequest {
 // 事件评论类型
 export interface IncidentComment {
   id: number;
-  incident_id: number;
-  event_type: string;
+  incidentId: number;
+  eventType: string;
   content: string;
-  user_id: number;
-  user_name?: string;
-  created_at: string;
-  updated_at?: string;
+  userId: number;
+  userName?: string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 // 告警类型定义
 export interface IncidentAlert {
   id: number;
-  incident_id: number;
-  alert_id: string;
-  alert_name: string;
-  alert_level: string;
-  instance_id: string;
+  incidentId: number;
+  alertId: string;
+  alertName: string;
+  alertLevel: string;
+  instanceId: string;
   region: string;
   service: string;
   status: string;
   acknowledged: boolean;
-  acknowledged_at?: string;
-  acknowledged_by?: number;
-  created_at: string;
-  updated_at?: string;
+  acknowledgedAt?: string;
+  acknowledgedBy?: number;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 // 告警列表查询参数
 export interface ListIncidentAlertsParams {
   status?: string;
-  alert_level?: string;
+  alertLevel?: string;
   acknowledged?: boolean;
   page?: number;
-  page_size?: number;
+  pageSize?: number;
 }
 
 // 事件管理API类
@@ -431,9 +412,9 @@ export class IncidentAPI {
     id: number,
     data: {
       resolution: string;
-      resolution_code?: string;
-      root_cause?: string;
-      problem_id?: number;
+      resolutionCode?: string;
+      rootCause?: string;
+      problemId?: number;
     }
   ): Promise<Incident> {
     const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/resolve`, data);
@@ -833,12 +814,6 @@ export class IncidentAPI {
   // 获取事件活动记录
   static async getIncidentEvents(incidentId: number): Promise<any[]> {
     const response = await httpClient.get<any[]>(`/api/v1/incidents/${incidentId}/events`);
-    return response;
-  }
-
-  // 获取事件告警
-  static async getIncidentAlerts(incidentId: number): Promise<any[]> {
-    const response = await httpClient.get<any[]>(`/api/v1/incidents/${incidentId}/alerts`);
     return response;
   }
 

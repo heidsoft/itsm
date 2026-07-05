@@ -20,7 +20,7 @@ import {
   Tag,
   Typography,
 } from 'antd';
-import { AlertTriangle, CheckCircle, XCircle, Bug, Rocket } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, Bug, Rocket, Send, Bot } from 'lucide-react';
 import { getBpmnDesignerApi } from './WorkflowCanvas';
 import {
   BPMNAIApi,
@@ -294,7 +294,7 @@ export default function WorkflowAIModal({
     <Modal
       title={
         <Space>
-          <RobotOutlined className="text-blue-500" />
+          <Bot className="text-blue-500" />
           <span>AI工作流助手</span>
         </Space>
       }
@@ -418,7 +418,7 @@ export default function WorkflowAIModal({
                     type="default"
                     onClick={handlePreviewProcess}
                     loading={previewLoading}
-                    icon={<RobotOutlined />}
+                    icon={<Bot />}
                   >
                     预览结构
                   </Button>
@@ -429,7 +429,7 @@ export default function WorkflowAIModal({
                   >
                     推荐模板
                   </Button>
-                  <Button type="primary" htmlType="submit" loading={loading} icon={<SendOutlined />}>
+                  <Button type="primary" htmlType="submit" loading={loading} icon={<Send />}>
                     生成流程
                   </Button>
                 </Space>
@@ -529,7 +529,7 @@ export default function WorkflowAIModal({
             key: 'optimize',
             label: (
               <Space>
-                <RobotOutlined />
+                <Bot />
                 优化建议
               </Space>
             ),
@@ -540,7 +540,7 @@ export default function WorkflowAIModal({
             </Paragraph>
             
             <div className="mb-4">
-              <Button type="primary" onClick={handleGetSuggestions} loading={loading} icon={<RobotOutlined />}>
+              <Button type="primary" onClick={handleGetSuggestions} loading={loading} icon={<Bot />}>
                 获取优化建议
               </Button>
             </div>

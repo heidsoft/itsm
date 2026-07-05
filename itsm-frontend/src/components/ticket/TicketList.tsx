@@ -18,7 +18,7 @@ import {
   Col,
   Divider,
 } from 'antd';
-import { Filter, Plus, Pencil, Trash2, Download, Eye, RotateCcw, AlertCircle } from 'lucide-react';
+import { Filter, Plus, Pencil, Trash2, Download, Eye, RotateCcw, AlertCircle, MoreHorizontal } from 'lucide-react';
 import type { ColumnsType, TableProps, TablePaginationConfig } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
@@ -50,7 +50,7 @@ interface TicketListProps {
 const TICKET_STATUS_CONFIG: Record<string, { color: string; text: string }> = {
   new: { color: 'blue', text: '新建' },
   open: { color: 'blue', text: '待处理' },
-  in_progress: { color: 'orange', text: '处理中' },
+  inProgress: { color: 'orange', text: '处理中' },
   pending: { color: 'yellow', text: '等待中' },
   resolved: { color: 'green', text: '已解决' },
   closed: { color: 'default', text: '已关闭' },
@@ -382,7 +382,7 @@ const TicketList: React.FC<TicketListProps> = ({
 
           return (
             <Dropdown menu={{ items }} trigger={['click']}>
-              <Button type="text" icon={<MoreOutlined />} />
+              <Button type="text" icon={<MoreHorizontal />} />
             </Dropdown>
           );
         },

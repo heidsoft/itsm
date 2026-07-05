@@ -59,22 +59,22 @@ const TicketAnalytics: React.FC = () => {
 
   function getInitialData(): TicketAnalyticsResponse {
     return {
-      total_tickets: 0,
-      open_tickets: 0,
-      resolved_tickets: 0,
-      closed_tickets: 0,
-      overdue_tickets: 0,
-      daily_trend: [],
-      status_distribution: [],
-      priority_distribution: [],
-      type_distribution: [],
-      processing_time_stats: {
-        avg_processing_time: 0,
-        avg_resolution_time: 0,
-        sla_compliance_rate: 0,
+      totalTickets: 0,
+      openTickets: 0,
+      resolvedTickets: 0,
+      closedTickets: 0,
+      overdueTickets: 0,
+      dailyTrend: [],
+      statusDistribution: [],
+      priorityDistribution: [],
+      typeDistribution: [],
+      processingTimeStats: {
+        avgProcessingTime: 0,
+        avgResolutionTime: 0,
+        slaComplianceRate: 0,
       },
-      team_performance: [],
-      hot_categories: [],
+      teamPerformance: [],
+      hotCategories: [],
     };
   }
 
@@ -84,30 +84,30 @@ const TicketAnalytics: React.FC = () => {
     try {
       const [analyticsRes, statsRes] = await Promise.all([
         ticketAnalyticsService.getAnalytics({
-          date_from: dateRange[0].format('YYYY-MM-DD'),
-          date_to: dateRange[1].format('YYYY-MM-DD'),
+          dateFrom: dateRange[0].format('YYYY-MM-DD'),
+          dateTo: dateRange[1].format('YYYY-MM-DD'),
         }),
         ticketService.getTicketStats(),
       ]);
 
       // 适配后端返回格式到前端期望的格式
       const adaptedData: TicketAnalyticsResponse = {
-        total_tickets: statsRes.total || analyticsRes.total_tickets || 0,
-        open_tickets: statsRes.open || analyticsRes.open_tickets || 0,
-        resolved_tickets: statsRes.resolved || analyticsRes.resolved_tickets || 0,
-        closed_tickets: analyticsRes.closed_tickets || 0,
-        overdue_tickets: statsRes.overdue || analyticsRes.overdue_tickets || 0,
-        daily_trend: analyticsRes.daily_trend || [],
-        status_distribution: analyticsRes.status_distribution || [],
-        priority_distribution: analyticsRes.priority_distribution || [],
-        type_distribution: analyticsRes.type_distribution || [],
-        processing_time_stats: analyticsRes.processing_time_stats || {
-          avg_processing_time: 0,
-          avg_resolution_time: 0,
-          sla_compliance_rate: 0,
+        totalTickets: statsRes.total || analyticsRes.totalTickets || 0,
+        openTickets: statsRes.open || analyticsRes.openTickets || 0,
+        resolvedTickets: statsRes.resolved || analyticsRes.resolvedTickets || 0,
+        closedTickets: analyticsRes.closedTickets || 0,
+        overdueTickets: statsRes.overdue || analyticsRes.overdueTickets || 0,
+        dailyTrend: analyticsRes.dailyTrend || [],
+        statusDistribution: analyticsRes.statusDistribution || [],
+        priorityDistribution: analyticsRes.priorityDistribution || [],
+        typeDistribution: analyticsRes.typeDistribution || [],
+        processingTimeStats: analyticsRes.processingTimeStats || {
+          avgProcessingTime: 0,
+          avgResolutionTime: 0,
+          slaComplianceRate: 0,
         },
-        team_performance: analyticsRes.team_performance || [],
-        hot_categories: analyticsRes.hot_categories || [],
+        teamPerformance: analyticsRes.teamPerformance || [],
+        hotCategories: analyticsRes.hotCategories || [],
       };
 
       setAnalyticsData(adaptedData);
@@ -129,8 +129,8 @@ const TicketAnalytics: React.FC = () => {
     setExporting(true);
     try {
       const blob = await ticketAnalyticsService.exportAnalytics({
-        date_from: dateRange[0].format('YYYY-MM-DD'),
-        date_to: dateRange[1].format('YYYY-MM-DD'),
+        dateFrom: dateRange[0].format('YYYY-MM-DD'),
+        dateTo: dateRange[1].format('YYYY-MM-DD'),
         format,
       });
 
@@ -162,14 +162,14 @@ const TicketAnalytics: React.FC = () => {
   const teamColumns = [
     {
       title: '处理人',
-      dataIndex: 'assignee_name',
-      key: 'assignee_name',
+      dataIndex:'assigneeName',
+      key:'assigneeName',
     },
     {
       title: '处理工单数',
-      dataIndex: 'total_handled',
-      key: 'total_handled',
-      sorter: (a: any, b: any) => a.total_handled - b.total_handled,
+      dataIndex:'totalHandled',
+      key:'totalHandled',
+      sorter: (a: any, b: any) => a.totalHandled - b.totalHandled,
     },
     {
       title: '已解决',
@@ -178,14 +178,14 @@ const TicketAnalytics: React.FC = () => {
     },
     {
       title: '平均响应时间(小时)',
-      dataIndex: 'avg_response_time',
-      key: 'avg_response_time',
+      dataIndex:'avgResponseTime',
+      key:'avgResponseTime',
       render: (time: number) => time?.toFixed(1) || '-',
     },
     {
       title: '平均解决时间(小时)',
-      dataIndex: 'avg_resolution_time',
-      key: 'avg_resolution_time',
+      dataIndex:'avgResolutionTime',
+      key:'avgResolutionTime',
       render: (time: number) => time?.toFixed(1) || '-',
     },
   ];
@@ -264,7 +264,7 @@ const TicketAnalytics: React.FC = () => {
                 <Card>
                   <Statistic
                     title="总工单数"
-                    value={analyticsData.total_tickets}
+                    value={analyticsData.totalTickets}
                     prefix={<TrendingUp style={{ color: '#1890ff' }} />}
                     styles={{ content: { color: '#1890ff' } }}
                   />
@@ -274,7 +274,7 @@ const TicketAnalytics: React.FC = () => {
                 <Card>
                   <Statistic
                     title="待处理工单"
-                    value={analyticsData.open_tickets}
+                    value={analyticsData.openTickets}
                     prefix={<TrendingUp style={{ color: '#fa8c16' }} />}
                     styles={{ content: { color: '#fa8c16' } }}
                   />
@@ -284,7 +284,7 @@ const TicketAnalytics: React.FC = () => {
                 <Card>
                   <Statistic
                     title="已解决工单"
-                    value={analyticsData.resolved_tickets}
+                    value={analyticsData.resolvedTickets}
                     prefix={<TrendingUp style={{ color: '#52c41a' }} />}
                     styles={{ content: { color: '#52c41a' } }}
                   />
@@ -294,7 +294,7 @@ const TicketAnalytics: React.FC = () => {
                 <Card>
                   <Statistic
                     title="超时工单"
-                    value={analyticsData.overdue_tickets}
+                    value={analyticsData.overdueTickets}
                     prefix={<TrendingDown style={{ color: '#ff4d4f' }} />}
                     styles={{ content: { color: '#ff4d4f' } }}
                   />
@@ -307,7 +307,7 @@ const TicketAnalytics: React.FC = () => {
               <Col span={24}>
                 <Card title="工单趋势（最近30天）">
                   <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={analyticsData.daily_trend}>
+                    <LineChart data={analyticsData.dailyTrend}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" />
                       <YAxis />
@@ -347,7 +347,7 @@ const TicketAnalytics: React.FC = () => {
                   <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
                       <Pie
-                        data={analyticsData.status_distribution}
+                        data={analyticsData.statusDistribution}
                         cx="50%"
                         cy="50%"
                         outerRadius={80}
@@ -356,7 +356,7 @@ const TicketAnalytics: React.FC = () => {
                           `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
                         }
                       >
-                        {analyticsData.status_distribution?.map((entry, index) => (
+                        {analyticsData.statusDistribution?.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
@@ -368,13 +368,13 @@ const TicketAnalytics: React.FC = () => {
               <Col xs={24} md={8}>
                 <Card title="优先级分布">
                   <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={analyticsData.priority_distribution}>
+                    <BarChart data={analyticsData.priorityDistribution}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />
                       <RechartsTooltip />
                       <Bar dataKey="value" fill="#1890ff">
-                        {analyticsData.priority_distribution?.map((entry, index) => (
+                        {analyticsData.priorityDistribution?.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Bar>
@@ -388,14 +388,14 @@ const TicketAnalytics: React.FC = () => {
                     <div className="flex justify-between items-center">
                       <Text>平均处理时间:</Text>
                       <Tag color="blue">
-                        {analyticsData.processing_time_stats?.avg_processing_time?.toFixed(1) || 0}
+                        {analyticsData.processingTimeStats?.avgProcessingTime?.toFixed(1) || 0}
                         小时
                       </Tag>
                     </div>
                     <div className="flex justify-between items-center">
                       <Text>平均解决时间:</Text>
                       <Tag color="orange">
-                        {analyticsData.processing_time_stats?.avg_resolution_time?.toFixed(1) || 0}
+                        {analyticsData.processingTimeStats?.avgResolutionTime?.toFixed(1) || 0}
                         小时
                       </Tag>
                     </div>
@@ -403,12 +403,12 @@ const TicketAnalytics: React.FC = () => {
                       <Text>SLA达成率:</Text>
                       <Tag
                         color={
-                          analyticsData.processing_time_stats?.sla_compliance_rate >= 90
+                          analyticsData.processingTimeStats?.slaComplianceRate >= 90
                             ? 'green'
                             : 'red'
                         }
                       >
-                        {analyticsData.processing_time_stats?.sla_compliance_rate?.toFixed(1) || 0}%
+                        {analyticsData.processingTimeStats?.slaComplianceRate?.toFixed(1) || 0}%
                       </Tag>
                     </div>
                   </div>
@@ -422,8 +422,8 @@ const TicketAnalytics: React.FC = () => {
             <Card title="团队处理效率统计">
               <Table
                 columns={teamColumns}
-                dataSource={analyticsData.team_performance}
-                rowKey="assignee_name"
+                dataSource={analyticsData.teamPerformance}
+                rowKey="assigneeName"
                 pagination={false}
                 size="middle"
               />
@@ -437,7 +437,7 @@ const TicketAnalytics: React.FC = () => {
                 <Card title="热门工单类别">
                   <Table
                     columns={categoryColumns}
-                    dataSource={analyticsData.hot_categories}
+                    dataSource={analyticsData.hotCategories}
                     rowKey="category"
                     pagination={false}
                     size="middle"
@@ -447,7 +447,7 @@ const TicketAnalytics: React.FC = () => {
               <Col span={8}>
                 <Card title="类型分布">
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={analyticsData.type_distribution}>
+                    <BarChart data={analyticsData.typeDistribution}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />

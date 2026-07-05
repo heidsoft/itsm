@@ -106,7 +106,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
   const handleSaveView = async (values: {
     name: string;
     description?: string;
-    is_shared: boolean;
+    isShared: boolean;
   }) => {
     try {
       const viewData: CreateTicketViewRequest = {
@@ -114,11 +114,11 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
         description: values.description,
         filters: filters as any,
         columns: [], // 默认列，后续可以从表格配置中获取
-        sort_config: {
+        sortConfig: {
           field: filters.sortBy?.split('_')[0] || 'createdAt',
           order: (filters.sortBy?.split('_')[1] as 'asc' | 'desc') || 'desc',
         },
-        is_shared: values.is_shared,
+        isShared: values.isShared,
       };
 
       await TicketViewApi.createView(viewData);
@@ -136,7 +136,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
   const handleUpdateView = async (values: {
     name: string;
     description?: string;
-    is_shared: boolean;
+    isShared: boolean;
   }) => {
     if (!editingView) return;
 
@@ -145,7 +145,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
         name: values.name,
         description: values.description,
         filters: filters as any,
-        is_shared: values.is_shared,
+        isShared: values.isShared,
       });
       message.success('视图更新成功');
       setEditModalVisible(false);
@@ -179,7 +179,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
     form.setFieldsValue({
       name: view.name,
       description: view.description,
-      is_shared: view.is_shared,
+      isShared: view.isShared,
     });
     setEditModalVisible(true);
   };
@@ -207,12 +207,12 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
     },
     {
       key: 'share',
-      label: view.is_shared ? '取消共享' : '共享',
+      label: view.isShared ? '取消共享' : '共享',
       icon: <Share2 />,
       onClick: async () => {
         try {
-          await TicketViewApi.updateView(view.id, { is_shared: !view.is_shared });
-          message.success(view.is_shared ? '已取消共享' : '已共享');
+          await TicketViewApi.updateView(view.id, { isShared: !view.isShared });
+          message.success(view.isShared ? '已取消共享' : '已共享');
           loadViews();
         } catch (error) {
           message.error('操作失败');
@@ -254,7 +254,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
             <Option key={view.id} value={view.id}>
               <Space>
                 <span>{view.name}</span>
-                {view.is_shared && (
+                {view.isShared && (
                   <Tag color="blue" style={{ marginRight: 0 }}>
                     共享
                   </Tag>
@@ -292,7 +292,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
           form={form}
           layout="vertical"
           onFinish={handleSaveView}
-          initialValues={{ is_shared: false }}
+          initialValues={{ isShared: false }}
         >
           <Form.Item
             name="name"

@@ -140,7 +140,7 @@ const ServiceCatalogManagement = () => {
         category: values.category,
         shortDescription: values.description,
         fullDescription: values.description,
-        availability: values.delivery_time ? { responseTime: values.delivery_time } : undefined,
+        availability: values.deliveryTime ? { responseTime: values.deliveryTime } : undefined,
         ciTypeId: values.ciTypeId,
         cloudServiceId: values.cloudServiceId,
         ...(values.status ? { status: values.status } : {}),
@@ -171,7 +171,7 @@ const ServiceCatalogManagement = () => {
       name: catalog.name,
       category: catalog.category,
       description: catalog.shortDescription || catalog.fullDescription,
-      delivery_time: catalog.availability?.responseTime,
+      deliveryTime: catalog.availability?.responseTime,
       status: catalog.status,
       ciTypeId: catalog.ciTypeId,
       cloudServiceId: catalog.cloudServiceId,
@@ -276,7 +276,7 @@ const ServiceCatalogManagement = () => {
         catalog.status,
         catalog.shortDescription,
         ciType?.name || '',
-        cloudService ? `${cloudService.service_name} (${cloudService.resource_type_name})` : '',
+        cloudService ? `${cloudService.serviceName} (${cloudService.resourceTypeName})` : '',
         catalog.availability?.responseTime || '',
         catalog.createdAt,
         catalog.updatedAt,
@@ -366,13 +366,13 @@ const ServiceCatalogManagement = () => {
       width: 180,
       render: (_: number | undefined, record: ServiceItem) => {
         const service = cloudServices.find(item => item.id === record.cloudServiceId);
-        return service ? `${service.service_name} (${service.resource_type_name})` : '-';
+        return service ? `${service.serviceName} (${service.resourceTypeName})` : '-';
       },
     },
     {
       title: '交付时间',
-      dataIndex: 'delivery_time',
-      key: 'delivery_time',
+      dataIndex:'deliveryTime',
+      key:'deliveryTime',
       width: 120,
       render: (_: unknown, record: ServiceItem) => (
         <span className="text-sm flex items-center">
@@ -597,9 +597,9 @@ const ServiceCatalogManagement = () => {
                 <Option
                   key={service.id}
                   value={service.id}
-                  label={`${service.service_name} (${service.resource_type_name})`}
+                  label={`${service.serviceName} (${service.resourceTypeName})`}
                 >
-                  {service.service_name} ({service.resource_type_name})
+                  {service.serviceName} ({service.resourceTypeName})
                 </Option>
               ))}
             </Select>
@@ -832,9 +832,9 @@ const ServiceCatalogManagement = () => {
                     <Option
                       key={service.id}
                       value={service.id}
-                      label={`${service.service_name} (${service.resource_type_name})`}
+                      label={`${service.serviceName} (${service.resourceTypeName})`}
                     >
-                      {service.service_name} ({service.resource_type_name})
+                      {service.serviceName} ({service.resourceTypeName})
                     </Option>
                   ))}
                 </Select>

@@ -8,31 +8,24 @@ export interface KnowledgeArticle {
   content: string;
   summary?: string;
   category: string;
-  category_id?: number;
   categoryId?: number;
-  category_name?: string;
   categoryName?: string;
   tags: string[];
   status: string;
   author: string;
-  author_id?: number;
   authorId?: number;
   authorName?: string;
   views?: number;
-  helpful_count?: number;
   helpfulCount?: number;
-  tenant_id: number;
-  tenantId?: number;
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
   submittedAt?: string;
 }
 
 export interface ArticleQuery {
   page?: number;
-  page_size?: number;
+  pageSize?: number;
   category?: string;
   search?: string;
   status?: string;

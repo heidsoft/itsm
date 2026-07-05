@@ -39,19 +39,19 @@ const { TextArea } = Input;
 
 // 关系类型中文映射
 const relationshipTypeLabels: Record<string, string> = {
-  depends_on: '依赖',
+  dependsOn: '依赖',
   hosts: '托管',
-  hosted_on: '所属',
-  connects_to: '连接',
-  runs_on: '运行',
+  hostedOn: '所属',
+  connectsTo: '连接',
+  runsOn: '运行',
   contains: '包含',
-  part_of: '组成',
+  partOf: '组成',
   impacts: '影响',
-  impacted_by: '受影响于',
+  impactedBy: '受影响于',
   owns: '拥有',
-  owned_by: '被拥有',
+  ownedBy: '被拥有',
   uses: '使用',
-  used_by: '被使用',
+  usedBy: '被使用',
 };
 
 // 关系强度标签
@@ -108,8 +108,8 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
         includeIncoming: true,
         activeOnly: false,
       });
-      setOutgoingRelations(data.outgoing_relations);
-      setIncomingRelations(data.incoming_relations);
+      setOutgoingRelations(data.outgoingRelations);
+      setIncomingRelations(data.incomingRelations);
     } catch (error) {
       message.error('加载关系失败');
     } finally {
@@ -149,15 +149,15 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
   // 创建关系
   const handleCreate = async (values: any) => {
     try {
-      const targetCiId = values.target_ci_id;
-      delete values.target_ci_id;
+      const targetCiId = values.targetCiId;
+      delete values.targetCiId;
 
       const data: CreateRelationshipRequest = {
-        source_ci_id: createType === 'outgoing' ? ciId : targetCiId,
-        target_ci_id: createType === 'outgoing' ? targetCiId : ciId,
-        relationship_type: values.relationship_type,
+        sourceCiId: createType === 'outgoing' ? ciId : targetCiId,
+        targetCiId: createType === 'outgoing' ? targetCiId : ciId,
+        relationshipType: values.relationshipType,
         strength: values.strength,
-        impact_level: values.impact_level,
+        impactLevel: values.impactLevel,
         description: values.description,
       };
 
@@ -188,20 +188,20 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
   const columns = [
     {
       title: '关系类型',
-      dataIndex: 'relationship_type_name',
-      key: 'relationship_type',
+      dataIndex:'relationshipTypeName',
+      key:'relationshipType',
       width: 100,
     },
     {
       title: '关联CI',
-      key: 'related_ci',
+      key:'relatedCi',
       render: (_: unknown, record: CIRelationship) => (
         <Space orientation="vertical" size={0}>
           <Text strong>
-            {record.source_ci_id === ciId ? record.target_ci_name : record.source_ci_name}
+            {record.sourceCiId === ciId ? record.targetCiName : record.sourceCiName}
           </Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            {record.source_ci_id === ciId ? record.target_ci_type : record.source_ci_type}
+            {record.sourceCiId === ciId ? record.targetCiType : record.sourceCiType}
           </Text>
         </Space>
       ),
@@ -218,8 +218,8 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
     },
     {
       title: '影响',
-      dataIndex: 'impact_level',
-      key: 'impact_level',
+      dataIndex:'impactLevel',
+      key:'impactLevel',
       width: 80,
       render: (level: string) => {
         const config = strengthLabels[level] || strengthLabels.low;
@@ -228,8 +228,8 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       width: 80,
       render: (active: boolean) => (
         <Badge status={active ? 'success' : 'default'} text={active ? '启用' : '禁用'} />
@@ -237,8 +237,8 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 160,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },

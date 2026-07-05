@@ -13,6 +13,11 @@ import {
   Save, Undo, Redo, Info, Zap
 } from 'lucide-react';
 import { GroupAPI, type Group } from '@/lib/api/group-api';
+
+// bpmn-js 事件定义最小类型（库本身类型较松）
+interface BpmnEventDefinition {
+  $type: string;
+}
 import { UserApi, type User as ApiUser } from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
 import { httpClient } from '@/lib/api/http-client';
@@ -71,7 +76,7 @@ export default function WorkflowNodeInspector({
     const loadUsers = async () => {
       setLoadingUsers(true);
       try {
-        const resp = await UserApi.getUsers({ page: 1, page_size: 200 });
+        const resp = await UserApi.getUsers({ page: 1, pageSize: 200 });
         if (!cancelled) setUsers((resp.users as ApiUser[]) || []);
       } catch (err) {
         console.error('加载用户列表失败:', err);
@@ -83,7 +88,7 @@ export default function WorkflowNodeInspector({
       setLoadingGroups(true);
       try {
         const tenantId = httpClient.getTenantId() || 1;
-        const resp = await GroupAPI.getGroups({ page: 1, page_size: 200, tenant_id: tenantId });
+        const resp = await GroupAPI.getGroups({ page: 1, pageSize: 200, tenantId: tenantId });
         if (!cancelled) setGroups(resp.groups || []);
       } catch (err) {
         console.error('加载组列表失败:', err);
@@ -186,19 +191,19 @@ export default function WorkflowNodeInspector({
 
   // 事件类型判断
   const isTimerEvent = selection.businessObject?.eventDefinitionType === 'timer' || 
-    (selection.businessObject?.eventDefinitions as any[])?.some(d => d.$type === 'bpmn:TimerEventDefinition');
+    (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:TimerEventDefinition');
   const isMessageEvent = selection.businessObject?.eventDefinitionType === 'message' ||
-    (selection.businessObject?.eventDefinitions as any[])?.some(d => d.$type === 'bpmn:MessageEventDefinition');
+    (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:MessageEventDefinition');
   const isSignalEvent = selection.businessObject?.eventDefinitionType === 'signal' ||
-    (selection.businessObject?.eventDefinitions as any[])?.some(d => d.$type === 'bpmn:SignalEventDefinition');
+    (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:SignalEventDefinition');
   const isErrorEvent = selection.businessObject?.eventDefinitionType === 'error' ||
-    (selection.businessObject?.eventDefinitions as any[])?.some(d => d.$type === 'bpmn:ErrorEventDefinition');
+    (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:ErrorEventDefinition');
   const isEscalationEvent = selection.businessObject?.eventDefinitionType === 'escalation' ||
-    (selection.businessObject?.eventDefinitions as any[])?.some(d => d.$type === 'bpmn:EscalationEventDefinition');
+    (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:EscalationEventDefinition');
   const isConditionalEvent = selection.businessObject?.eventDefinitionType === 'conditional' ||
-    (selection.businessObject?.eventDefinitions as any[])?.some(d => d.$type === 'bpmn:ConditionalEventDefinition');
-  const isTerminateEvent = (selection.businessObject?.eventDefinitions as any[])?.some(d => d.$type === 'bpmn:TerminateEventDefinition');
-  const isCancelEvent = (selection.businessObject?.eventDefinitions as any[])?.some(d => d.$type === 'bpmn:CancelEventDefinition');
+    (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:ConditionalEventDefinition');
+  const isTerminateEvent = (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:TerminateEventDefinition');
+  const isCancelEvent = (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:CancelEventDefinition');
   
   const bo = (selection.businessObject || {}) as Record<string, unknown>;
 

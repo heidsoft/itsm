@@ -12,9 +12,9 @@ import type { SLAViolation, SLAAlertRule } from '../types';
 export const fetchSLAViolations = async (params?: {
   status?: string;
   severity?: string;
-  sla_type?: string;
-  start_date?: string;
-  end_date?: string;
+  slaType?: string;
+  startDate?: string;
+  endDate?: string;
   search?: string;
 }): Promise<SLAViolation[]> => {
   const response = await SLAApi.getSLAViolations({
@@ -69,11 +69,11 @@ export const fetchAlertRules = async (): Promise<SLAAlertRule[]> => {
 export const createAlertRule = async (rule: Partial<SLAAlertRule>): Promise<SLAAlertRule> => {
   const response = await SLAApi.createAlertRule({
     name: rule.name || 'New Rule',
-    sla_definition_id: rule.sla_definition_id || 0,
-    alert_level: rule.alert_level || 'warning',
-    threshold_percentage: rule.threshold_percentage || 80,
-    notification_channels: rule.notification_channels || ['email'],
-    is_active: rule.is_active ?? true,
+    slaDefinitionId: rule.slaDefinitionId || 0,
+    alertLevel: rule.alertLevel || 'warning',
+    thresholdPercentage: rule.thresholdPercentage || 80,
+    notificationChannels: rule.notificationChannels || ['email'],
+    isActive: rule.isActive ?? true,
   });
   return response as SLAAlertRule;
 };
@@ -84,10 +84,10 @@ export const createAlertRule = async (rule: Partial<SLAAlertRule>): Promise<SLAA
 export const updateAlertRule = async (ruleId: number, rule: Partial<SLAAlertRule>): Promise<SLAAlertRule> => {
   const response = await SLAApi.updateAlertRule(ruleId, {
     name: rule.name,
-    alert_level: rule.alert_level,
-    threshold_percentage: rule.threshold_percentage,
-    notification_channels: rule.notification_channels,
-    is_active: rule.is_active,
+    alertLevel: rule.alertLevel,
+    thresholdPercentage: rule.thresholdPercentage,
+    notificationChannels: rule.notificationChannels,
+    isActive: rule.isActive,
   });
   return response as SLAAlertRule;
 };

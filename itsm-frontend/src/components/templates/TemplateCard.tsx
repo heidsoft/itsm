@@ -19,7 +19,7 @@ import {
   Dropdown,
   type MenuProps,
 } from 'antd';
-import { Pencil, Trash2, Copy, User, FileText, Eye, Clock, AlertCircle, CheckCircle, Star } from 'lucide-react';
+import { Pencil, Trash2, Copy, User, FileText, Eye, Clock, AlertCircle, CheckCircle, Star, MoreHorizontal } from 'lucide-react';
 import type { TicketTemplate } from '@/types/template';
 
 export interface TemplateCardProps {
@@ -173,7 +173,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
           <Button
             type="text"
             size="small"
-            icon={<MoreOutlined />}
+            icon={<MoreHorizontal />}
             onClick={e => e.stopPropagation()}
           />
         </Dropdown>

@@ -77,18 +77,18 @@ const CreateCIPage: React.FC = () => {
     if (!resourceRefId) return;
     const parsed = Number(resourceRefId);
     if (Number.isNaN(parsed)) return;
-    form.setFieldsValue({ cloud_resource_ref_id: parsed });
+    form.setFieldsValue({ cloudResourceRefId: parsed });
     const resource = cloudResources.find(item => item.id === parsed);
     if (!resource) return;
-    const service = cloudServiceMap.get(resource.service_id);
-    setSchemaFields(normalizeSchemaFields(service?.attribute_schema));
+    const service = cloudServiceMap.get(resource.serviceId);
+    setSchemaFields(normalizeSchemaFields(service?.attributeSchema));
     form.setFieldsValue({
-      cloud_resource_id: resource.resource_id,
-      cloud_region: resource.region,
-      cloud_zone: resource.zone,
-      cloud_account_id: String(resource.cloud_account_id),
-      cloud_provider: service?.provider,
-      cloud_resource_type: service?.resource_type_code,
+      cloudResourceId: resource.resourceId,
+      cloudRegion: resource.region,
+      cloudZone: resource.zone,
+      cloudAccountId: String(resource.cloudAccountId),
+      cloudProvider: service?.provider,
+      cloudResourceType: service?.resourceTypeCode,
     });
   }, [cloudResources, cloudServices, cloudServiceMap, form, searchParams]);
 
@@ -98,22 +98,22 @@ const CreateCIPage: React.FC = () => {
       return;
     }
     const resource = cloudResources.find(item => item.id === value);
-    const service = resource ? cloudServiceMap.get(resource.service_id) : undefined;
-    setSchemaFields(normalizeSchemaFields(service?.attribute_schema));
+    const service = resource ? cloudServiceMap.get(resource.serviceId) : undefined;
+    setSchemaFields(normalizeSchemaFields(service?.attributeSchema));
     if (!resource) return;
     form.setFieldsValue({
-      cloud_resource_id: resource.resource_id,
-      cloud_region: resource.region,
-      cloud_zone: resource.zone,
-      cloud_account_id: String(resource.cloud_account_id),
-      cloud_provider: service?.provider,
-      cloud_resource_type: service?.resource_type_code,
+      cloudResourceId: resource.resourceId,
+      cloudRegion: resource.region,
+      cloudZone: resource.zone,
+      cloudAccountId: String(resource.cloudAccountId),
+      cloudProvider: service?.provider,
+      cloudResourceType: service?.resourceTypeCode,
     });
   };
 
   const handleCITypeChange = (value?: number) => {
     const selectedType = types.find(type => type.id === value);
-    setTypeSchemaFields(normalizeSchemaFields(selectedType?.attribute_schema));
+    setTypeSchemaFields(normalizeSchemaFields(selectedType?.attributeSchema));
     form.setFieldValue('custom_attributes', undefined);
   };
 
@@ -131,7 +131,7 @@ const CreateCIPage: React.FC = () => {
           return;
         }
       }
-      const customAttributes = compactRecord(values.custom_attributes as Record<string, unknown> | undefined);
+      const customAttributes = compactRecord(values.customAttributes as Record<string, unknown> | undefined);
       attributes = {
         ...(attributes || {}),
         ...(customAttributes || {}),
@@ -143,30 +143,30 @@ const CreateCIPage: React.FC = () => {
       setSaving(true);
       await CMDBApi.createCI({
         name: values.name,
-        ciTypeId: Number(values.ci_type_id),
+        ciTypeId: Number(values.ciTypeId),
         status: values.status,
         description: values.description,
         attributes,
-        serialNumber: values.serial_number,
+        serialNumber: values.serialNumber,
         model: values.model,
         vendor: values.vendor,
-        assetTag: values.asset_tag,
+        assetTag: values.assetTag,
         location: values.location,
-        assignedTo: values.assigned_to,
-        ownedBy: values.owned_by,
+        assignedTo: values.assignedTo,
+        ownedBy: values.ownedBy,
         environment: values.environment || '',
         criticality: values.criticality || '',
-        discoverySource: values.discovery_source,
+        discoverySource: values.discoverySource,
         source: values.source,
-        cloudProvider: values.cloud_provider,
-        cloudAccountId: values.cloud_account_id,
-        cloudRegion: values.cloud_region,
-        cloudZone: values.cloud_zone,
-        cloudResourceId: values.cloud_resource_id,
-        cloudResourceType: values.cloud_resource_type,
-        cloudSyncStatus: values.cloud_sync_status,
-        cloudResourceRefId: values.cloud_resource_ref_id,
-        cloudMetadata: values.cloud_metadata,
+        cloudProvider: values.cloudProvider,
+        cloudAccountId: values.cloudAccountId,
+        cloudRegion: values.cloudRegion,
+        cloudZone: values.cloudZone,
+        cloudResourceId: values.cloudResourceId,
+        cloudResourceType: values.cloudResourceType,
+        cloudSyncStatus: values.cloudSyncStatus,
+        cloudResourceRefId: values.cloudResourceRefId,
+        cloudMetadata: values.cloudMetadata,
       });
       message.success(t('cmdb.createCISuccess'));
       router.push('/cmdb');

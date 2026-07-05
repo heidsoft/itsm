@@ -12,81 +12,64 @@ export type AssetType = 'hardware' | 'software' | 'cloud' | 'license';
 
 // 资产请求接口
 export interface AssetRequest {
-  asset_number: string;
+  assetNumber: string;
   name: string;
   description?: string;
   type?: AssetType;
   category?: string;
   subcategory?: string;
-  ci_id?: number;
-  assigned_to?: number;
-  location_id?: number;
-  serial_number?: string;
+  ciId?: number;
+  assignedTo?: number;
+  locationId?: number;
+  serialNumber?: string;
   model?: string;
   manufacturer?: string;
   vendor?: string;
-  purchase_date?: string;
-  purchase_price?: number;
-  warranty_expiry?: string;
-  support_expiry?: string;
+  purchaseDate?: string;
+  purchasePrice?: number;
+  warrantyExpiry?: string;
+  supportExpiry?: string;
   location?: string;
   department?: string;
-  parent_asset_id?: number;
+  parentAssetId?: number;
   specifications?: Record<string, string>;
-  custom_fields?: Record<string, string>;
+  customFields?: Record<string, string>;
   tags?: string[];
 }
 
 // 资产响应接口
 export interface Asset {
   id: number;
-  asset_number: string;
-  assetNumber?: string;
+  assetNumber: string;
   name: string;
   description?: string;
   type: AssetType;
   status: AssetStatus;
   category?: string;
   subcategory?: string;
-  tenant_id: number;
-  tenantId?: number;
-  ci_id?: number;
+  tenantId: number;
   ciId?: number;
-  ci_name?: string;
   ciName?: string;
-  assigned_to?: number;
   assignedTo?: number;
-  assigned_to_name?: string;
   assignedToName?: string;
-  location_id?: number;
   locationId?: number;
-  serial_number?: string;
   serialNumber?: string;
   model?: string;
   manufacturer?: string;
   vendor?: string;
-  purchase_date?: string;
   purchaseDate?: string;
-  purchase_price?: number;
   purchasePrice?: number;
-  warranty_expiry?: string;
   warrantyExpiry?: string;
-  support_expiry?: string;
   supportExpiry?: string;
   location?: string;
   department?: string;
-  parent_asset_id?: number;
   parentAssetId?: number;
-  parent_asset_name?: string;
   parentAssetName?: string;
   specifications?: Record<string, string>;
-  custom_fields?: Record<string, string>;
   customFields?: Record<string, string>;
   tags?: string[];
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 资产列表响应
@@ -99,7 +82,7 @@ export interface AssetListResponse {
 export interface AssetStatsResponse {
   total: number;
   available: number;
-  in_use: number;
+  inUse: number;
   maintenance: number;
   retired: number;
   disposed: number;
@@ -108,22 +91,22 @@ export interface AssetStatsResponse {
 // 资产状态更新请求
 export interface AssetStatusUpdateRequest {
   status: AssetStatus;
-  assigned_to?: number;
+  assignedTo?: number;
   comment?: string;
 }
 
 // 资产分配请求
 export interface AssetAssignRequest {
-  assigned_to: number;
+  assignedTo: number;
   comment?: string;
 }
 
 // 资产退役请求
 export interface AssetRetireRequest {
-  retire_date: string;
-  retire_reason: string;
-  disposal_method?: string;
-  disposal_value?: number;
+  retireDate: string;
+  retireReason: string;
+  disposalMethod?: string;
+  disposalValue?: number;
   comment?: string;
 }
 
@@ -138,15 +121,15 @@ export interface LicenseRequest {
   name: string;
   description?: string;
   vendor?: string;
-  license_type?: LicenseType;
-  total_quantity?: number;
-  asset_id?: number;
-  purchase_date?: string;
-  purchase_price?: number;
-  expiry_date?: string;
-  support_vendor?: string;
-  support_contact?: string;
-  renewal_cost?: string;
+  licenseType?: LicenseType;
+  totalQuantity?: number;
+  assetId?: number;
+  purchaseDate?: string;
+  purchasePrice?: number;
+  expiryDate?: string;
+  supportVendor?: string;
+  supportContact?: string;
+  renewalCost?: string;
   notes?: string;
   users?: number[];
   tags?: string[];
@@ -155,47 +138,30 @@ export interface LicenseRequest {
 // 许可证响应接口
 export interface License {
   id: number;
-  license_key?: string;
   licenseKey?: string;
   name: string;
   description?: string;
   vendor?: string;
-  license_type: LicenseType;
-  licenseType?: LicenseType;
-  total_quantity: number;
-  totalQuantity?: number;
-  used_quantity: number;
-  usedQuantity?: number;
-  available_quantity: number;
-  availableQuantity?: number;
-  tenant_id: number;
-  tenantId?: number;
-  asset_id?: number;
+  licenseType: LicenseType;
+  totalQuantity: number;
+  usedQuantity: number;
+  availableQuantity: number;
+  tenantId: number;
   assetId?: number;
-  asset_name?: string;
   assetName?: string;
-  purchase_date?: string;
   purchaseDate?: string;
-  purchase_price?: number;
   purchasePrice?: number;
-  expiry_date?: string;
   expiryDate?: string;
-  support_vendor?: string;
   supportVendor?: string;
-  support_contact?: string;
   supportContact?: string;
-  renewal_cost?: string;
   renewalCost?: string;
   status: LicenseStatus;
   notes?: string;
   users?: number[];
-  user_names?: string[];
   userNames?: string[];
   tags?: string[];
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 许可证列表响应
@@ -209,14 +175,14 @@ export interface LicenseStatsResponse {
   total: number;
   active: number;
   expired: number;
-  expiring_soon: number;
+  expiringSoon: number;
   depleted: number;
-  compliance_rate: number;
+  complianceRate: number;
 }
 
 // 许可证分配请求
 export interface LicenseAssignRequest {
-  user_ids: number[];
+  userIds: number[];
   comment?: string;
 }
 
@@ -261,7 +227,7 @@ export class AssetApi {
   ): Promise<Asset> {
     return httpClient.put<Asset>(`/api/v1/assets/${id}/status`, {
       status,
-      assigned_to: assignedTo,
+      assignedTo: assignedTo,
     });
   }
 
@@ -272,12 +238,12 @@ export class AssetApi {
 
   // 分配资产
   static async assignAsset(id: number, assignedTo: number): Promise<Asset> {
-    return httpClient.put<Asset>(`/api/v1/assets/${id}/assign`, { assigned_to: assignedTo });
+    return httpClient.put<Asset>(`/api/v1/assets/${id}/assign`, { assignedTo: assignedTo });
   }
 
   // 退役资产
   static async retireAsset(id: number, reason: string): Promise<Asset> {
-    return httpClient.put<Asset>(`/api/v1/assets/${id}/retire`, { retire_reason: reason });
+    return httpClient.put<Asset>(`/api/v1/assets/${id}/retire`, { retireReason: reason });
   }
 
   // 获取许可证列表
@@ -317,6 +283,6 @@ export class AssetApi {
 
   // 分配许可证给用户
   static async assignLicenseUsers(id: number, userIds: number[]): Promise<License> {
-    return httpClient.put<License>(`/api/v1/licenses/${id}/assign`, { user_ids: userIds });
+    return httpClient.put<License>(`/api/v1/licenses/${id}/assign`, { userIds: userIds });
   }
 }

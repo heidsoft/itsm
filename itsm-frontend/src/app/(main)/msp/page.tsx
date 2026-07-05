@@ -89,8 +89,8 @@ export default function MSPDashboardPage() {
       const endDate = new Date().toISOString().split('T')[0];
       const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       const reportsData = await MSPService.getCustomerReports({
-        start_date: startDate,
-        end_date: endDate,
+        startDate: startDate,
+        endDate: endDate,
       });
       setReports(reportsData);
     } catch (err: any) {
@@ -133,7 +133,7 @@ export default function MSPDashboardPage() {
     try {
       const end = endDate || new Date().toISOString().split('T')[0];
       const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const data = await MSPService.getCustomerReports({ start_date: start, end_date: end });
+      const data = await MSPService.getCustomerReports({ startDate: start, endDate: end });
       setPerformanceReports(data);
     } catch (err: any) {
       message.error(err.message || '加载绩效报表失败');
@@ -156,8 +156,8 @@ export default function MSPDashboardPage() {
   };
 
   const allocationColumns = [
-    { title: 'MSP 员工', dataIndex: 'msp_username', key: 'msp_username' },
-    { title: '客户租户', dataIndex: 'customer_name', key: 'customer_name' },
+    { title: 'MSP 员工', dataIndex: 'mspUsername', key:'mspUsername' },
+    { title: '客户租户', dataIndex: 'customerName', key:'customerName' },
     {
       title: '角色',
       dataIndex: 'role',
@@ -176,33 +176,33 @@ export default function MSPDashboardPage() {
   ];
 
   const reportColumns = [
-    { title: '客户名称', dataIndex: 'customer_name', key: 'customer_name' },
+    { title: '客户名称', dataIndex: 'customerName', key:'customerName' },
     {
       title: '工单总数',
-      dataIndex: 'total_tickets',
-      key: 'total_tickets',
-      sorter: (a: MSPCustomerReport, b: MSPCustomerReport) => a.total_tickets - b.total_tickets,
+      dataIndex: 'totalTickets',
+      key: 'totalTickets',
+      sorter: (a: MSPCustomerReport, b: MSPCustomerReport) => a.totalTickets - b.totalTickets,
     },
-    { title: '已解决', dataIndex: 'resolved_tickets', key: 'resolved_tickets' },
+    { title: '已解决', dataIndex: 'resolvedTickets', key: 'resolvedTickets' },
     {
       title: '解决率',
-      key: 'resolution_rate',
+      key:'resolutionRate',
       render: (record: MSPCustomerReport) => {
-        const rate = record.total_tickets > 0 ? Number(((record.resolved_tickets / record.total_tickets) * 100).toFixed(1)) : 0;
+        const rate = record.totalTickets > 0 ? Number(((record.resolvedTickets / record.totalTickets) * 100).toFixed(1)) : 0;
         return <Tag color={rate >= 90 ? 'green' : rate >= 70 ? 'orange' : 'red'}>{rate}%</Tag>;
       },
     },
     {
       title: '平均处理时长(小时)',
-      dataIndex: 'msp_handling_time_avg',
-      key: 'msp_handling_time_avg',
+      dataIndex: 'mspHandlingTimeAvg',
+      key: 'mspHandlingTimeAvg',
       render: (val: number) => val?.toFixed(2) || '-',
     },
     {
       title: 'SLA 合规率',
-      key: 'sla_compliance_rate',
+      key: 'slaComplianceRate',
       render: (_: any, record: MSPCustomerReport) => {
-        const val = record.sla_compliance_rate;
+        const val = record.slaComplianceRate;
         const rate = (val * 100).toFixed(1);
         return <Tag color={val >= 0.95 ? 'green' : val >= 0.8 ? 'orange' : 'red'}>{rate}%</Tag>;
       },
@@ -217,8 +217,8 @@ export default function MSPDashboardPage() {
       key: 'status',
       render: (status: string) => <Tag>{status}</Tag>,
     },
-    { title: '负责人', dataIndex: 'assignee_name', key: 'assignee_name', render: (v: string) => v || '未分配' },
-    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
+    { title: '负责人', dataIndex: 'assigneeName', key: 'assigneeName', render: (v: string) => v || '未分配' },
+    { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
     {
       title: '操作',
       key: 'action',
@@ -235,8 +235,8 @@ export default function MSPDashboardPage() {
   ];
 
   const historyColumns = [
-    { title: 'MSP 员工', dataIndex: 'msp_username', key: 'msp_username' },
-    { title: '客户', dataIndex: 'customer_name', key: 'customer_name' },
+    { title: 'MSP 员工', dataIndex: 'mspUsername', key:'mspUsername' },
+    { title: '客户', dataIndex: 'customerName', key:'customerName' },
     {
       title: '角色',
       dataIndex: 'role',
@@ -246,9 +246,9 @@ export default function MSPDashboardPage() {
         return <Tag color={color}>{role.toUpperCase()}</Tag>;
       },
     },
-    { title: '分配时间', dataIndex: 'assigned_at', key: 'assigned_at', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
-    { title: '解除时间', dataIndex: 'deassigned_at', key: 'deassigned_at', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
-    { title: '解除原因', dataIndex: 'deallocation_reason', key: 'deallocation_reason', render: (v: string) => v || '-' },
+    { title: '分配时间', dataIndex: 'assignedAt', key:'assignedAt', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
+    { title: '解除时间', dataIndex: 'deassignedAt', key:'deassignedAt', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
+    { title: '解除原因', dataIndex:'deallocationReason', key:'deallocationReason', render: (v: string) => v || '-' },
   ];
 
   if (!isMSP && !isAdmin) {
@@ -325,7 +325,7 @@ export default function MSPDashboardPage() {
           <Card>
             <Statistic
               title="本月工单"
-              value={reports.reduce((sum, r) => sum + r.total_tickets, 0)}
+              value={reports.reduce((sum, r) => sum + r.totalTickets, 0)}
               prefix={<Clock />}
             />
           </Card>
@@ -334,7 +334,7 @@ export default function MSPDashboardPage() {
           <Card>
             <Statistic
               title="已解决"
-              value={reports.reduce((sum, r) => sum + r.resolved_tickets, 0)}
+              value={reports.reduce((sum, r) => sum + r.resolvedTickets, 0)}
               prefix={<CheckCircle />}
             />
           </Card>
@@ -403,7 +403,7 @@ export default function MSPDashboardPage() {
               <Table
                 columns={reportColumns}
                 dataSource={reports}
-                rowKey="customer_tenant_id"
+                rowKey="customerTenantId"
                 loading={loading}
                 pagination={{ pageSize: 10 }}
               />
@@ -426,7 +426,7 @@ export default function MSPDashboardPage() {
                 <Table
                   columns={reportColumns}
                   dataSource={performanceReports}
-                  rowKey="customer_tenant_id"
+                  rowKey="customerTenantId"
                   loading={perfLoading}
                   pagination={{ pageSize: 10 }}
                   locale={{ emptyText: '点击"加载绩效数据"按钮查看报表' }}
@@ -466,14 +466,14 @@ export default function MSPDashboardPage() {
               <Card title="当前 MSP 上下文">
                 <List
                   dataSource={[
-                    { label: '是否 MSP', value: mspContext?.is_msp },
-                    { label: 'MSP 用户 ID', value: mspContext?.msp_user_id },
-                    { label: '当前客户租户', value: mspContext?.customer_tenant_id || '未指定' },
+                    { label: '是否 MSP', value: mspContext?.isMsp },
+                    { label: 'MSP 用户 ID', value: mspContext?.mspUserId },
+                    { label: '当前客户租户', value: mspContext?.customerTenantId || '未指定' },
                     { label: '分配角色', value: mspContext?.role || 'N/A' },
                     {
                       label: '允许访问的客户',
-                      value: mspContext?.allowed_customers?.length
-                        ? mspContext.allowed_customers.join(', ')
+                      value: mspContext?.allowedCustomers?.length
+                        ? mspContext.allowedCustomers.join(', ')
                         : '无',
                     },
                   ]}

@@ -4,9 +4,9 @@ import { httpClient } from './http-client';
 export interface TicketRating {
   rating: number; // 1-5星
   comment: string;
-  rated_at?: string;
-  rated_by: number;
-  rated_by_name?: string;
+  ratedAt?: string;
+  ratedBy: number;
+  ratedByName?: string;
 }
 
 export interface SubmitTicketRatingRequest {
@@ -15,34 +15,34 @@ export interface SubmitTicketRatingRequest {
 }
 
 export interface RatingStats {
-  total_ratings: number;
-  average_rating: number;
-  rating_distribution: {
+  totalRatings: number;
+  averageRating: number;
+  ratingDistribution: {
     [key: number]: number; // {1: 10, 2: 5, 3: 8, 4: 20, 5: 30}
   };
-  by_assignee?: {
+  byAssignee?: {
     [key: number]: {
-      assignee_id: number;
-      assignee_name: string;
-      total_ratings: number;
-      average_rating: number;
+      assigneeId: number;
+      assigneeName: string;
+      totalRatings: number;
+      averageRating: number;
     };
   };
-  by_category?: {
+  byCategory?: {
     [key: number]: {
-      category_id: number;
-      category_name: string;
-      total_ratings: number;
-      average_rating: number;
+      categoryId: number;
+      categoryName: string;
+      totalRatings: number;
+      averageRating: number;
     };
   };
 }
 
 export interface GetRatingStatsParams {
-  assignee_id?: number;
-  category_id?: number;
-  start_date?: string;
-  end_date?: string;
+  assigneeId?: number;
+  categoryId?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
 export class TicketRatingApi {

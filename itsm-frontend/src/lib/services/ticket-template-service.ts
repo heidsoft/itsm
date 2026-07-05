@@ -6,9 +6,9 @@ export interface TicketTemplate {
   description: string;
   category: string;
   fields: TemplateField[];
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TemplateField {
@@ -17,8 +17,8 @@ export interface TemplateField {
   type: 'text' | 'textarea' | 'select' | 'number' | 'date' | 'checkbox';
   required: boolean;
   options?: string[];
-  default_value?: string;
-  validation_rules?: string[];
+  defaultValue?: string;
+  validationRules?: string[];
 }
 
 export interface CreateTemplateRequest {
@@ -33,22 +33,22 @@ export interface UpdateTemplateRequest {
   description?: string;
   category?: string;
   fields?: TemplateField[];
-  is_active?: boolean;
+  isActive?: boolean;
 }
 
 export interface ListTemplatesParams {
   category?: string;
   search?: string;
-  is_active?: boolean;
+  isActive?: boolean;
   page?: number;
-  page_size?: number;
+  pageSize?: number;
 }
 
 export interface TemplateListResponse {
   templates: TicketTemplate[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 class TicketTemplateService {
@@ -58,9 +58,9 @@ class TicketTemplateService {
       // 将params对象转换为查询参数
       const queryParams: Record<string, unknown> = {};
       if (params.page) queryParams.page = params.page;
-      if (params.page_size) queryParams.page_size = params.page_size;
+      if (params.pageSize) queryParams.pageSize = params.pageSize;
       if (params.category) queryParams.category = params.category;
-      if (params.is_active !== undefined) queryParams.is_active = params.is_active;
+      if (params.isActive !== undefined) queryParams.isActive = params.isActive;
 
       const response = await httpClient.get<TemplateListResponse>(
         '/api/v1/tickets/templates',
@@ -125,7 +125,7 @@ class TicketTemplateService {
       const response = await httpClient.patch<TicketTemplate>(
         `/api/v1/tickets/templates/${id}/status`,
         {
-          is_active: isActive,
+          isActive: isActive,
         }
       );
       return response;

@@ -66,13 +66,13 @@ export default function ProjectsPage() {
     },
     {
       title: '所属部门',
-      dataIndex: 'department_name',
+      dataIndex:'departmentName',
       key: 'department',
       render: (id: number) => <span>ID: {id}</span>,
     },
     {
       title: '负责人',
-      dataIndex: 'manager_name',
+      dataIndex:'managerName',
       key: 'manager',
       render: (id: number) => <span>ID: {id}</span>,
     },

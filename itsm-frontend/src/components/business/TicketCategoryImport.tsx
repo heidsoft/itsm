@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import {
   Modal,
   Button,
-  Upload,
+  Upload as AntUpload,
   message,
   Progress,
   Alert,
@@ -25,8 +25,8 @@ import {
   Info,
   AlertTriangle,
   FileSpreadsheet as FileExcel,
+  Upload,
 } from 'lucide-react';
-import { Upload } from 'lucide-react';
 import {
   ticketCategoryService,
   type CreateCategoryRequest,
@@ -34,7 +34,7 @@ import {
 import { TicketCategoryApi } from '../../lib/api/ticket-category-api';
 
 const { Text, Title } = Typography;
-const { Dragger } = Upload;
+const { Dragger } = AntUpload;
 
 interface TicketCategoryImportProps {
   visible: boolean;
@@ -260,14 +260,14 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
                 { title: '描述', dataIndex: 'description', key: 'description' },
                 {
                   title: '父级代码',
-                  dataIndex: 'parent_code',
-                  key: 'parent_code',
+                  dataIndex:'parentCode',
+                  key:'parentCode',
                 },
-                { title: '排序', dataIndex: 'sort_order', key: 'sort_order' },
+                { title: '排序', dataIndex:'sortOrder', key:'sortOrder' },
                 {
                   title: '状态',
-                  dataIndex: 'is_active',
-                  key: 'is_active',
+                  dataIndex: 'isActive',
+                  key: 'isActive',
                   render: (value: boolean) => (
                     <Tag color={value ? 'green' : 'red'}>{value ? '启用' : '禁用'}</Tag>
                   ),

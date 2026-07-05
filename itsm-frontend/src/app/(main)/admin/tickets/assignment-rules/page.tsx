@@ -43,14 +43,14 @@ interface RuleFormValues {
   name: string;
   description?: string;
   priority?: number;
-  is_active?: boolean;
+  isActive?: boolean;
   conditions: string;
   actions: string;
 }
 
 interface TestFormValues {
-  rule_id: number;
-  ticket_id: number;
+  ruleId: number;
+  ticketId: number;
 }
 
 function formatDate(value?: string) {
@@ -108,7 +108,7 @@ export default function AssignmentRulesPage() {
       name: '',
       description: '',
       priority: 1,
-      is_active: true,
+      isActive: true,
       conditions: DEFAULT_CONDITIONS,
       actions: DEFAULT_ACTION,
     });
@@ -121,7 +121,7 @@ export default function AssignmentRulesPage() {
       name: rule.name,
       description: rule.description,
       priority: rule.priority,
-      is_active: rule.is_active,
+      isActive: rule.isActive,
       conditions: stringifyJson(rule.conditions, DEFAULT_CONDITIONS),
       actions: stringifyJson(rule.actions, DEFAULT_ACTION),
     });
@@ -142,7 +142,7 @@ export default function AssignmentRulesPage() {
         name: values.name,
         description: values.description,
         priority: values.priority || 1,
-        is_active: values.is_active ?? true,
+        isActive: values.isActive ?? true,
         conditions,
         actions,
       };
@@ -178,8 +178,8 @@ export default function AssignmentRulesPage() {
 
   const toggleRule = async (rule: AssignmentRule) => {
     try {
-      await TicketAssignmentApi.updateRule(rule.id, { is_active: !rule.is_active });
-      message.success(rule.is_active ? '规则已禁用' : '规则已启用');
+      await TicketAssignmentApi.updateRule(rule.id, { isActive: !rule.isActive });
+      message.success(rule.isActive ? '规则已禁用' : '规则已启用');
       await loadRules();
     } catch {
       message.error('切换规则状态失败');
@@ -189,7 +189,7 @@ export default function AssignmentRulesPage() {
   const openTestModal = (rule: AssignmentRule) => {
     setTestResult('');
     testForm.resetFields();
-    testForm.setFieldValue('rule_id', rule.id);
+    (testForm as any).setFieldValue('rule_id', rule.id);
     setTestModalOpen(true);
   };
 
@@ -198,12 +198,12 @@ export default function AssignmentRulesPage() {
       const values = await testForm.validateFields();
       setTesting(true);
       const response = await TicketAssignmentApi.testRule({
-        rule_id: values.rule_id,
-        ticket_id: values.ticket_id,
+        ruleId: values.ruleId,
+        ticketId: values.ticketId,
       });
       setTestResult(
         response.matched
-          ? `匹配成功${response.assigned_to ? `，推荐分配给用户 ID ${response.assigned_to}` : ''}。${response.reason || ''}`
+          ? `匹配成功${response.assignedTo ? `，推荐分配给用户 ID ${response.assignedTo}` : ''}。${response.reason || ''}`
           : `未匹配。${response.reason || ''}`
       );
     } catch {
@@ -247,22 +247,22 @@ export default function AssignmentRulesPage() {
     },
     {
       title: '执行次数',
-      dataIndex: 'execution_count',
-      key: 'execution_count',
+      dataIndex:'executionCount',
+      key:'executionCount',
       width: 100,
       render: (count: number) => count || 0,
     },
     {
       title: '最近执行',
-      dataIndex: 'last_executed_at',
-      key: 'last_executed_at',
+      dataIndex:'lastExecutedAt',
+      key:'lastExecutedAt',
       width: 180,
       render: formatDate,
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       width: 110,
       render: (active: boolean, record) => (
         <Switch

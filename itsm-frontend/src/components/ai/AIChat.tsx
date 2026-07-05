@@ -6,8 +6,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Input, Button, List, Avatar, Typography, Space, Spin, message, Divider } from 'antd';
-import { ClearOutlined, SendOutlined } from '@ant-design/icons';
-import { User, Bot, X } from 'lucide-react';
+import { User, Bot, X, Send, Eraser } from 'lucide-react';
 import { AIApi } from '@/lib/api/';
 import type { AIMessage } from '@/types/biz/ai';
 
@@ -35,10 +34,10 @@ const AIChat: React.FC = () => {
 
     const userMsg: AIMessage = {
       id: Date.now(),
-      conversation_id: convId || 0,
+      conversationId: convId || 0,
       role: 'user',
       content: query,
-      created_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
 
     setMessages(prev => [...prev, userMsg]);
@@ -48,11 +47,11 @@ const AIChat: React.FC = () => {
     try {
       const res = await AIApi.chat({
         query: userMsg.content,
-        conversation_id: convId,
+        conversationId: convId,
         limit: 5,
       });
 
-      setConvId(res.conversation_id);
+      setConvId(res.conversationId);
 
       // Format answers from list to string for display
       const assistantContent = (Array.isArray(res.answers) ? res.answers : [])
@@ -61,10 +60,10 @@ const AIChat: React.FC = () => {
 
       const assistantMsg: AIMessage = {
         id: Date.now() + 1,
-        conversation_id: res.conversation_id,
+        conversationId: res.conversationId,
         role: 'assistant',
         content: assistantContent || '抱歉，我没有找到相关的答案。',
-        created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       };
 
       setMessages(prev => [...prev, assistantMsg]);
@@ -153,7 +152,7 @@ const AIChat: React.FC = () => {
             onPressEnter={handleSend}
             disabled={loading}
           />
-          <Button type="primary" icon={<SendOutlined />} onClick={handleSend} loading={loading}>
+          <Button type="primary" icon={<Send />} onClick={handleSend} loading={loading}>
             发送
           </Button>
         </Space.Compact>

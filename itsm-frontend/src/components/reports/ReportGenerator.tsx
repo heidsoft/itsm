@@ -92,10 +92,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
       const config: Partial<AnalyticsConfig> = {
         dimensions: values.dimensions,
         metrics: values.metrics,
-        chart_type: values.chart_type,
-        time_range: timeRange,
+        chartType: values.chartType,
+        timeRange: timeRange,
         filters: values.filters || {},
-        group_by: values.group_by,
+        groupBy: values.groupBy,
       };
 
       // 使用API获取真实数据预览
@@ -116,10 +116,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
       const config: Partial<AnalyticsConfig> = {
         dimensions: values.dimensions,
         metrics: values.metrics,
-        chart_type: values.chart_type,
-        time_range: timeRange,
+        chartType: values.chartType,
+        timeRange: timeRange,
         filters: values.filters || {},
-        group_by: values.group_by,
+        groupBy: values.groupBy,
       };
 
       onGenerate(config);
@@ -144,9 +144,9 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
         initialValues={{
           dimensions: ['created_date'],
           metrics: ['count'],
-          chart_type: 'bar',
+          chartType: 'bar',
           page: 1,
-          page_size: 20,
+          pageSize: 20,
         }}
       >
         <Row gutter={[16, 16]}>
@@ -306,7 +306,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
               <Card size="small">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-orange-600">
-                    {previewData.summary.avg_response_time.toFixed(1)}h
+                    {previewData.summary.avgResponseTime.toFixed(1)}h
                   </div>
                   <div className="text-gray-500">平均响应时间</div>
                 </div>
@@ -316,7 +316,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
               <Card size="small">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-600">
-                    {previewData.summary.sla_compliance.toFixed(1)}%
+                    {previewData.summary.slaCompliance.toFixed(1)}%
                   </div>
                   <div className="text-gray-500">SLA合规率</div>
                 </div>

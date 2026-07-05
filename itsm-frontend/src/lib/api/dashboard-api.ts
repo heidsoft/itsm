@@ -105,7 +105,7 @@ export class DashboardAPI {
    * @returns 仪表盘配置
    */
   static async getDashboardConfig(userId?: number): Promise<Dashboard> {
-    const params = userId ? { user_id: userId } : {};
+    const params = userId ? { userId: userId } : {};
     return await httpClient.get<Dashboard>('/api/v1/dashboard/config', params);
   }
 
@@ -124,7 +124,7 @@ export class DashboardAPI {
    * @returns 仪表盘布局
    */
   static async getDashboardLayout(userId?: number): Promise<DashboardLayout> {
-    const params = userId ? { user_id: userId } : {};
+    const params = userId ? { userId: userId } : {};
     return await httpClient.get<DashboardLayout>('/api/v1/dashboard/layout', params);
   }
 
@@ -299,7 +299,7 @@ export class DashboardAPI {
     page: number;
     pageSize: number;
   }> {
-    return await httpClient.get('/api/v1/dashboard/reports', { page, page_size: pageSize });
+    return await httpClient.get('/api/v1/dashboard/reports', { page, pageSize: pageSize });
   }
 
   /**
@@ -321,8 +321,8 @@ export class DashboardAPI {
    */
   static async exportDashboard(
     params?: Record<string, unknown>
-  ): Promise<{ download_url: string }> {
-    return await httpClient.post<{ download_url: string }>('/api/v1/dashboard/export', params);
+  ): Promise<{ downloadUrl: string }> {
+    return await httpClient.post<{ downloadUrl: string }>('/api/v1/dashboard/export', params);
   }
 
   /**

@@ -72,7 +72,7 @@ export default function WorkflowProperties({
   const handleApprovalTypeChange = (value: string) => {
     setApprovalConfig({
       ...approvalConfig,
-      approval_type: value as 'single' | 'parallel' | 'sequential' | 'conditional',
+      approvalType: value as 'single' | 'parallel' | 'sequential' | 'conditional',
     });
   };
 
@@ -88,42 +88,42 @@ export default function WorkflowProperties({
   const handleAutoApproveRolesChange = (value: string[]) => {
     setApprovalConfig({
       ...approvalConfig,
-      auto_approve_roles: value,
+      autoApproveRoles: value,
     });
   };
 
   // 响应时间变更
   const handleResponseTimeChange = (value: string) => {
     onUpdateSLA?.({
-      response_time_hours: parseInt(value) || 24,
+      responseTimeHours: parseInt(value) || 24,
     });
   };
 
   // 解决时间变更
   const handleResolutionTimeChange = (value: string) => {
     onUpdateSLA?.({
-      resolution_time_hours: parseInt(value) || 72,
+      resolutionTimeHours: parseInt(value) || 72,
     });
   };
 
   // 仅工作时间变更
   const handleBusinessHoursChange = (checked: boolean) => {
     onUpdateSLA?.({
-      business_hours_only: checked,
+      businessHoursOnly: checked,
     });
   };
 
   // 排除周末变更
   const handleExcludeWeekendsChange = (checked: boolean) => {
     onUpdateSLA?.({
-      exclude_weekends: checked,
+      excludeWeekends: checked,
     });
   };
 
   // 排除节假日变更
   const handleExcludeHolidaysChange = (checked: boolean) => {
     onUpdateSLA?.({
-      exclude_holidays: checked,
+      excludeHolidays: checked,
     });
   };
 
@@ -156,9 +156,9 @@ export default function WorkflowProperties({
               <div className="flex justify-between items-center ml-2">
                 <div>
                   <Text strong>版本 {version.version}</Text>
-                  <div className="text-sm text-gray-500 mt-1">{version.change_log}</div>
+                  <div className="text-sm text-gray-500 mt-1">{version.changeLog}</div>
                   <div className="text-xs text-gray-400 mt-1">
-                    {new Date(version.created_at).toLocaleString()} - {version.created_by}
+                    {new Date(version.createdAt).toLocaleString()} - {version.createdBy}
                   </div>
                 </div>
                 <Space>
@@ -214,7 +214,7 @@ export default function WorkflowProperties({
                   </Space>
                 </Text>
                 <Select
-                  value={approvalConfig.approval_type}
+                  value={approvalConfig.approvalType}
                   onChange={handleApprovalTypeChange}
                   className="w-full"
                 >
@@ -272,7 +272,7 @@ export default function WorkflowProperties({
                 <Select
                   mode="multiple"
                   placeholder="选择角色"
-                  value={approvalConfig.auto_approve_roles}
+                  value={approvalConfig.autoApproveRoles}
                   onChange={handleAutoApproveRolesChange}
                   className="w-full"
                   loading={loadingRoles}
@@ -303,7 +303,7 @@ export default function WorkflowProperties({
                 <Input
                   type="number"
                   suffix="小时"
-                  value={workflow?.sla_config?.response_time_hours}
+                  value={workflow?.slaConfig?.responseTimeHours}
                   onChange={e => handleResponseTimeChange(e.target.value)}
                 />
               </div>
@@ -316,7 +316,7 @@ export default function WorkflowProperties({
                 <Input
                   type="number"
                   suffix="小时"
-                  value={workflow?.sla_config?.resolution_time_hours}
+                  value={workflow?.slaConfig?.resolutionTimeHours}
                   onChange={e => handleResolutionTimeChange(e.target.value)}
                 />
               </div>
@@ -329,7 +329,7 @@ export default function WorkflowProperties({
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <Checkbox
-                      checked={workflow?.sla_config?.business_hours_only}
+                      checked={workflow?.slaConfig?.businessHoursOnly}
                       onChange={e => handleBusinessHoursChange(e.target.checked)}
                     >
                       仅工作时间
@@ -337,7 +337,7 @@ export default function WorkflowProperties({
                   </div>
                   <div className="flex items-center">
                     <Checkbox
-                      checked={workflow?.sla_config?.exclude_weekends}
+                      checked={workflow?.slaConfig?.excludeWeekends}
                       onChange={e => handleExcludeWeekendsChange(e.target.checked)}
                     >
                       排除周末
@@ -345,7 +345,7 @@ export default function WorkflowProperties({
                   </div>
                   <div className="flex items-center">
                     <Checkbox
-                      checked={workflow?.sla_config?.exclude_holidays}
+                      checked={workflow?.slaConfig?.excludeHolidays}
                       onChange={e => handleExcludeHolidaysChange(e.target.checked)}
                     >
                       排除节假日

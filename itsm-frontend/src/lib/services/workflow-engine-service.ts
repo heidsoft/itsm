@@ -31,7 +31,7 @@ export interface WorkflowDefinition {
   description?: string;
   version: string;
   category: string;
-  bpmn_xml: string;
+  bpmnXml: string;
   isActive: boolean;
   isLatest: boolean;
   processVariables?: Record<string, any>;
@@ -123,8 +123,8 @@ export class WorkflowEngineService {
     name: string;
     description?: string;
     category?: string;
-    bpmn_xml: string;
-    process_variables?: Record<string, any>;
+    bpmnXml: string;
+    processVariables?: Record<string, any>;
   }): Promise<WorkflowDefinition> {
     const response = await fetch(`${this.baseUrl}/process-definitions`, {
       method: 'POST',
@@ -186,8 +186,8 @@ export class WorkflowEngineService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        process_definition_key: processDefinitionKey,
-        business_key: businessKey,
+        processDefinitionKey: processDefinitionKey,
+        businessKey: businessKey,
         variables: variables || {},
       }),
     });

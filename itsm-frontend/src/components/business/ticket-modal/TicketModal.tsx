@@ -31,7 +31,7 @@ export const TicketModal: React.FC<TicketModalProps> = React.memo(
             type: editingTicket.type,
             category: editingTicket.category,
             priority: editingTicket.priority,
-            assignee_id: editingTicket.assigneeId,
+            assigneeId: editingTicket.assigneeId,
             description: editingTicket.description,
           });
         } else {

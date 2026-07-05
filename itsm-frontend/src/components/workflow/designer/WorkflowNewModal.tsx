@@ -18,8 +18,8 @@ interface WorkflowNewModalProps {
   onCreateCustom: (values: {
     name: string;
     description?: string;
-    sla_response?: number;
-    sla_resolution?: number;
+    slaResponse?: number;
+    slaResolution?: number;
   }) => void;
 }
 
@@ -39,25 +39,25 @@ export default function WorkflowNewModal({
       version: '1.0.0',
       category: template.category,
       status: 'draft',
-      xml: template.bpmn_xml,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      created_by: '当前用户',
+      xml: template.bpmnXml,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: '当前用户',
       tags: [],
-      approval_config: {
-        require_approval: template.approval_config.require_approval,
-        approval_type: template.approval_config.approval_type,
-        approvers: template.approval_config.approvers,
-        auto_approve_roles: [],
-        escalation_rules: [],
+      approvalConfig: {
+        requireApproval: template.approvalConfig.requireApproval,
+        approvalType: template.approvalConfig.approvalType,
+        approvers: template.approvalConfig.approvers,
+        autoApproveRoles: [],
+        escalationRules: [],
       },
       variables: [],
-      sla_config: {
-        response_time_hours: 24,
-        resolution_time_hours: 72,
-        business_hours_only: true,
-        exclude_weekends: true,
-        exclude_holidays: true,
+      slaConfig: {
+        responseTimeHours: 24,
+        resolutionTimeHours: 72,
+        businessHoursOnly: true,
+        excludeWeekends: true,
+        excludeHolidays: true,
       },
     };
     onSelectTemplate(newWorkflow);

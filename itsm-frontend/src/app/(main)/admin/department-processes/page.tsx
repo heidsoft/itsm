@@ -109,7 +109,7 @@ export default function DepartmentProcessPage() {
   // Build department tree
   const buildDeptTree = (depts: Department[], parentId: number = 0): DepartmentTreeNode[] => {
     return depts
-      .filter(d => d.parent_id === parentId)
+      .filter(d => (d as any).parentId === parentId)
       .map(d => ({
         title: `${d.name} (${d.code})`,
         key: d.id,
@@ -143,14 +143,14 @@ export default function DepartmentProcessPage() {
     },
     {
       title: 'Business Type',
-      dataIndex: 'business_type',
-      key: 'business_type',
+      dataIndex:'businessType',
+      key:'businessType',
       render: (type: string) => <Tag>{type}</Tag>,
     },
     {
       title: 'Process',
-      dataIndex: 'process_definition_key',
-      key: 'process_definition_key',
+      dataIndex:'processDefinitionKey',
+      key:'processDefinitionKey',
       render: (key: string) => <Tag color="cyan">{key}</Tag>,
     },
     {
@@ -160,8 +160,8 @@ export default function DepartmentProcessPage() {
     },
     {
       title: 'Status',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       render: (active: boolean) => (
         <Tag icon={active ? <CheckCircle /> : <AlertTriangle />} color={active ? 'success' : 'error'}>
           {active ? 'Active' : 'Inactive'}
@@ -173,7 +173,7 @@ export default function DepartmentProcessPage() {
   // Statistics
   const stats = {
     total: deptProcesses.length,
-    active: deptProcesses.filter(p => p.is_active).length,
+    active: deptProcesses.filter(p => (p as any).isActive).length,
     scenarios: new Set(deptProcesses.map(p => p.scenario).filter(Boolean)).size,
   };
 

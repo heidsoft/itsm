@@ -3,7 +3,6 @@ import { httpClient } from './http-client';
 export interface TriageResult {
   category: string;
   priority: string;
-  assignee_id?: number;
   assigneeId?: number;
   confidence: number;
   explanation: string;
@@ -11,7 +10,7 @@ export interface TriageResult {
 }
 
 export interface RagAnswer {
-  object_type: string;
+  objectType: string;
   id: number;
   title?: string;
   category?: string;
@@ -23,20 +22,20 @@ export interface RagAnswer {
 export interface AIFeedbackRequest {
   kind: string;
   query?: string;
-  item_type?: string;
-  item_id?: number;
+  itemType?: string;
+  itemId?: number;
   useful: boolean;
   score?: number;
   notes?: string;
 }
 
 export interface AIMetrics {
-  total_requests: number;
-  total_feedback: number;
-  useful_feedback: number;
-  useful_rate: number;
-  by_kind: Record<string, number>;
-  avg_response_time_seconds: number;
+  totalRequests: number;
+  totalFeedback: number;
+  usefulFeedback: number;
+  usefulRate: number;
+  byKind: Record<string, number>;
+  avgResponseTimeSeconds: number;
 }
 
 export async function aiTriage(title: string, description: string): Promise<TriageResult> {
@@ -59,8 +58,7 @@ export async function aiTriage(title: string, description: string): Promise<Tria
     confidence: typeof suggestions.confidence === 'number' ? suggestions.confidence : 0,
     explanation: suggestions.reasoning || '',
     urgency: suggestions.urgency,
-    assignee_id: 0,
-    assigneeId: undefined,
+    assigneeId: 0,
   };
 }
 
@@ -115,13 +113,13 @@ export class AIApi {
 
   static async chat(params: {
     query: string;
-    conversation_id?: number;
+    conversationId?: number;
     limit?: number;
   }): Promise<any> {
     return httpClient.post(`/api/v1/ai/chat`, {
       query: params.query,
       limit: params.limit,
-      conversation_id: params.conversation_id,
+      conversationId: params.conversationId,
     });
   }
 

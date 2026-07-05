@@ -51,7 +51,6 @@ const IncidentDistributionChart: React.FC<{ data: IncidentDistributionData[] }> 
       },
       animation: {
         appear: {
-          animation: 'fade-in',
           duration: 1200,
         },
       },

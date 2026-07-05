@@ -40,23 +40,23 @@ const normalizeAuditLog = (log: ProcessAuditLog): ProcessAuditLog => {
   const raw = log as any;
   return {
     ...log,
-    process_instance_id: raw.process_instance_id ?? raw.processInstanceId,
-    process_instance_key: raw.process_instance_key ?? raw.processInstanceKey ?? '',
-    process_definition_key: raw.process_definition_key ?? raw.processDefinitionKey ?? '',
-    process_definition_id: raw.process_definition_id ?? raw.processDefinitionId,
-    activity_id: raw.activity_id ?? raw.activityId ?? '',
-    activity_name: raw.activity_name ?? raw.activityName ?? '',
-    activity_type: raw.activity_type ?? raw.activityType ?? '',
-    user_id: raw.user_id ?? raw.userId,
-    user_name: raw.user_name ?? raw.userName ?? '',
-    assignee_id: raw.assignee_id ?? raw.assigneeId,
-    assignee_name: raw.assignee_name ?? raw.assigneeName ?? '',
-    variables_before: raw.variables_before ?? raw.variablesBefore ?? {},
-    variables_after: raw.variables_after ?? raw.variablesAfter ?? {},
-    ip_address: raw.ip_address ?? raw.ipAddress ?? '',
-    user_agent: raw.user_agent ?? raw.userAgent ?? '',
-    tenant_id: raw.tenant_id ?? raw.tenantId,
-    duration_ms: raw.duration_ms ?? raw.durationMs,
+    processInstanceId: raw.processInstanceId ?? raw.processInstanceId,
+    processInstanceKey: raw.processInstanceKey ?? raw.processInstanceKey ?? '',
+    processDefinitionKey: raw.processDefinitionKey ?? raw.processDefinitionKey ?? '',
+    processDefinitionId: raw.processDefinitionId ?? raw.processDefinitionId,
+    activityId: raw.activityId ?? raw.activityId ?? '',
+    activityName: raw.activityName ?? raw.activityName ?? '',
+    activityType: raw.activityType ?? raw.activityType ?? '',
+    userId: raw.userId ?? raw.userId,
+    userName: raw.userName ?? raw.userName ?? '',
+    assigneeId: raw.assigneeId ?? raw.assigneeId,
+    assigneeName: raw.assigneeName ?? raw.assigneeName ?? '',
+    variablesBefore: raw.variablesBefore ?? raw.variablesBefore ?? {},
+    variablesAfter: raw.variablesAfter ?? raw.variablesAfter ?? {},
+    ipAddress: raw.ipAddress ?? raw.ipAddress ?? '',
+    userAgent: raw.userAgent ?? raw.userAgent ?? '',
+    tenantId: raw.tenantId ?? raw.tenantId,
+    durationMs: raw.durationMs ?? raw.durationMs,
   };
 };
 
@@ -75,7 +75,7 @@ export default function AuditLogsPage() {
   // 筛选条件
   const [filters, setFilters] = useState<QueryAuditLogsRequest>({
     page: 1,
-    page_size: 20,
+    pageSize: 20,
   });
 
   const { currentTenant } = useAuthStore();
@@ -91,9 +91,9 @@ export default function AuditLogsPage() {
     try {
       const request: QueryAuditLogsRequest = {
         ...filters,
-        tenant_id: tenantId,
+        tenantId: tenantId,
         page,
-        page_size: pageSize,
+        pageSize: pageSize,
       };
       const result = await BPMNDashboardApi.queryAuditLogs(request);
       setLogs((result.list || []).map(normalizeAuditLog));
@@ -174,33 +174,33 @@ export default function AuditLogsPage() {
       ),
     },
     {
-      title: t('bpmn.audit.activity_name') || '活动',
-      dataIndex: 'activity_name',
-      key: 'activity_name',
+      title: t('bpmn.audit.activityName') || '活动',
+      dataIndex:'activityName',
+      key:'activityName',
       width: 150,
       render: (name: string, record: ProcessAuditLog) => (
         <Space>
-          {getActivityTypeIcon(record.activity_type)}
-          {name || record.activity_id}
+          {getActivityTypeIcon(record.activityType)}
+          {name || record.activityId}
         </Space>
       ),
     },
     {
       title: t('bpmn.audit.user') || '操作人',
-      dataIndex: 'user_name',
-      key: 'user_name',
+      dataIndex:'userName',
+      key:'userName',
       width: 120,
     },
     {
       title: t('bpmn.audit.assignee') || '受理人',
-      dataIndex: 'assignee_name',
-      key: 'assignee_name',
+      dataIndex:'assigneeName',
+      key:'assigneeName',
       width: 120,
     },
     {
-      title: t('bpmn.audit.process_instance') || '流程实例',
-      dataIndex: 'process_instance_key',
-      key: 'process_instance_key',
+      title: t('bpmn.audit.processInstance') || '流程实例',
+      dataIndex:'processInstanceKey',
+      key:'processInstanceKey',
       width: 180,
     },
     {
@@ -226,7 +226,7 @@ export default function AuditLogsPage() {
           <Button
             type="link"
             size="small"
-            onClick={() => fetchTimeline(record.process_instance_key)}
+            onClick={() => fetchTimeline(record.processInstanceKey)}
           >
             {t('bpmn.audit.timeline') || '时间线'}
           </Button>
@@ -263,9 +263,9 @@ export default function AuditLogsPage() {
       <Card size="small">
         <Space wrap>
           <Input
-            placeholder={t('bpmn.audit.process_definition_key') || '流程定义Key'}
+            placeholder={t('bpmn.audit.processDefinitionKey') || '流程定义Key'}
             style={{ width: 200 }}
-            onChange={(e) => setFilters({ ...filters, process_definition_key: e.target.value || undefined })}
+            onChange={(e) => setFilters({ ...filters, processDefinitionKey: e.target.value || undefined })}
             allowClear
           />
           <Select
@@ -276,18 +276,18 @@ export default function AuditLogsPage() {
             allowClear
           />
           <Input
-            placeholder={t('bpmn.audit.user_id') || '用户ID'}
+            placeholder={t('bpmn.audit.userId') || '用户ID'}
             type="number"
             style={{ width: 100 }}
-            onChange={(e) => setFilters({ ...filters, user_id: e.target.value ? parseInt(e.target.value) : undefined })}
+            onChange={(e) => setFilters({ ...filters, userId: e.target.value ? parseInt(e.target.value) : undefined })}
             allowClear
           />
           <RangePicker
             onChange={(dates, dateStrings) => {
               setFilters({
                 ...filters,
-                start_time: dateStrings[0] || undefined,
-                end_time: dateStrings[1] || undefined,
+                startTime: dateStrings[0] || undefined,
+                endTime: dateStrings[1] || undefined,
               });
             }}
           />
@@ -333,37 +333,37 @@ export default function AuditLogsPage() {
               <Tag color={getActionColor(selectedLog.action)}>{selectedLog.action}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="活动类型">
-              {selectedLog.activity_type}
+              {selectedLog.activityType}
             </Descriptions.Item>
             <Descriptions.Item label="活动名称" span={2}>
-              {selectedLog.activity_name}
+              {selectedLog.activityName}
             </Descriptions.Item>
             <Descriptions.Item label="操作人">
-              {selectedLog.user_name} (ID: {selectedLog.user_id})
+              {selectedLog.userName} (ID: {selectedLog.userId})
             </Descriptions.Item>
             <Descriptions.Item label="受理人">
-              {selectedLog.assignee_name} (ID: {selectedLog.assignee_id})
+              {selectedLog.assigneeName} (ID: {selectedLog.assigneeId})
             </Descriptions.Item>
             <Descriptions.Item label="流程实例Key" span={2}>
-              {selectedLog.process_instance_key}
+              {selectedLog.processInstanceKey}
             </Descriptions.Item>
             <Descriptions.Item label="流程定义Key" span={2}>
-              {selectedLog.process_definition_key}
+              {selectedLog.processDefinitionKey}
             </Descriptions.Item>
             <Descriptions.Item label="备注" span={2}>
               {selectedLog.comment || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="IP地址" span={2}>
-              {selectedLog.ip_address || '-'}
+              {selectedLog.ipAddress || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="变量变更前" span={2}>
               <pre className="text-xs bg-gray-50 p-2 rounded">
-                {JSON.stringify(selectedLog.variables_before, null, 2) || '-'}
+                {JSON.stringify(selectedLog.variablesBefore, null, 2) || '-'}
               </pre>
             </Descriptions.Item>
             <Descriptions.Item label="变量变更后" span={2}>
               <pre className="text-xs bg-gray-50 p-2 rounded">
-                {JSON.stringify(selectedLog.variables_after, null, 2) || '-'}
+                {JSON.stringify(selectedLog.variablesAfter, null, 2) || '-'}
               </pre>
             </Descriptions.Item>
           </Descriptions>
@@ -372,7 +372,7 @@ export default function AuditLogsPage() {
 
       {/* Timeline Modal */}
       <Modal
-        title={t('bpmn.audit.process_timeline') || '流程时间线'}
+        title={t('bpmn.audit.processTimeline') || '流程时间线'}
         open={timelineVisible}
         onCancel={() => setTimelineVisible(false)}
         footer={null}
@@ -390,11 +390,11 @@ export default function AuditLogsPage() {
                 <div>
                   <Space>
                     <Tag color={getActionColor(log.action)}>{log.action}</Tag>
-                    <span>{log.activity_name}</span>
+                    <span>{log.activityName}</span>
                   </Space>
                   <div className="text-sm text-gray-500 mt-1">
                     <Space>
-                      <User size={12} /> {log.user_name}
+                      <User size={12} /> {log.userName}
                       <Clock size={12} /> {new Date(log.timestamp).toLocaleString()}
                     </Space>
                   </div>

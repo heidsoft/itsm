@@ -169,7 +169,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     form.setFieldsValue({
       escalationLevel: (data?.escalationLevel || 0) + 1,
       reason: '',
-      auto_assign: true,
+      autoAssign: true,
     });
     setEscalateModalVisible(true);
   };
@@ -179,9 +179,9 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     setEscalating(true);
     try {
       await IncidentAPI.escalateIncident(data.id, {
-        escalationLevel: values.escalationLevel || values.escalation_level,
+        escalationLevel: values.escalationLevel || values.escalationLevel,
         reason: values.reason,
-        autoAssign: values.autoAssign || values.auto_assign,
+        autoAssign: values.autoAssign || values.autoAssign,
       });
       message.success('事件升级成功');
       setEscalateModalVisible(false);
@@ -214,7 +214,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       // 使用专门的 resolve 端点，而非直接更新状态
       await IncidentAPI.resolveIncident(data.id, {
         resolution: values.resolution,
-        resolution_code: values.resolutionCode,
+        resolutionCode: values.resolutionCode,
       });
       message.success('事件已解决');
       setResolveModalVisible(false);

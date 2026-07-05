@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, Descriptions, Empty, Spin, Tag, Typography, Alert, List, Space } from 'antd';
-import { AlertTriangle, Zap } from 'lucide-react';
+import { AlertTriangle, Zap, Lightbulb } from 'lucide-react';
 import { ChangeApi, type ChangeCMDBImpactSummary } from '@/lib/api/change-api';
 
 const { Text, Title } = Typography;
@@ -20,11 +20,11 @@ const impactScopeColors: Record<string, string> = {
 };
 
 const itilPracticeLabels: Record<string, string> = {
-  service_configuration_management: '服务配置管理',
-  change_enablement: '变更启用',
-  incident_management: '事件管理',
-  risk_management: '风险管理',
-  monitoring_and_event_management: '监控与事件管理',
+  serviceConfigurationManagement: '服务配置管理',
+  changeEnablement: '变更启用',
+  incidentManagement: '事件管理',
+  riskManagement: '风险管理',
+  monitoringAndEventManagement: '监控与事件管理',
 };
 
 export interface ChangeCMDBImpactPanelProps {
@@ -120,7 +120,7 @@ export default function ChangeCMDBImpactPanel({ changeId }: ChangeCMDBImpactPane
       )}
 
       {data.itilPractices && data.itilPractices.length > 0 && (
-        <Card size="small" title={<><BulbOutlined /> ITIL 4 实践建议</>}>
+        <Card size="small" title={<><Lightbulb /> ITIL 4 实践建议</>}>
           <Space wrap>
             {data.itilPractices.map(p => (
               <Tag key={p} color="blue">

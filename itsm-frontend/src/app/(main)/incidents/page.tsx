@@ -53,7 +53,7 @@ const KANBAN_COLUMNS: KanbanColumnConfig<Incident>[] = [
   { key: 'new', title: '新建', color: '#1890ff' },
   { key: 'acknowledged', title: '已确认', color: '#722ed1' },
   { key: 'assigned', title: '已分配', color: '#13c2c2' },
-  { key: 'in_progress', title: '处理中', color: '#1890ff' },
+  { key:'inProgress', title: '处理中', color: '#1890ff' },
   { key: 'resolved', title: '已解决', color: '#52c41a' },
   { key: 'closed', title: '已关闭', color: '#d9d9d9' },
 ];
@@ -79,7 +79,7 @@ export default function IncidentsPage() {
     try {
       const response = await IncidentAPI.listIncidents({
         page, // Use actual page state
-        page_size: pageSize, // Use actual pageSize state
+        pageSize: pageSize, // Use actual pageSize state
         search: debouncedSearch || undefined,
       });
       const items = response.incidents || response.data || [];
@@ -87,7 +87,7 @@ export default function IncidentsPage() {
       // Fetch users to map reporter names
       const userMap = new Map<number, string>();
       try {
-        const usersResponse = await UserApi.getUsers({ page_size: 100 });
+        const usersResponse = await UserApi.getUsers({ pageSize: 100 });
         usersResponse.users.forEach(user => userMap.set(user.id, user.name));
       } catch (e) {
         console.warn('Failed to fetch users for reporter names', e);
@@ -95,7 +95,7 @@ export default function IncidentsPage() {
 
       // Enrich incidents with reporter object if user exists
       const enriched = items.map(inc => {
-        const reporterId = inc.reporter_id || (inc as any).reporterId;
+        const reporterId = inc.reporterId || (inc as any).reporterId;
         const reporterName = reporterId ? userMap.get(reporterId) : undefined;
         return {
           ...inc,
@@ -129,11 +129,11 @@ export default function IncidentsPage() {
     try {
       const stats = await IncidentAPI.getIncidentMetrics();
       setMetrics({
-        totalIncidents: stats.totalIncidents || stats.total_incidents || 0,
-        openIncidents: stats.openIncidents || stats.open_incidents || 0,
-        criticalIncidents: stats.criticalIncidents || stats.critical_incidents || 0,
-        majorIncidents: stats.majorIncidents || stats.major_incidents || 0,
-        avgResolutionTime: stats.avgResolutionTime || stats.avg_resolution_time || 0,
+        totalIncidents: stats.totalIncidents || stats.totalIncidents || 0,
+        openIncidents: stats.openIncidents || stats.openIncidents || 0,
+        criticalIncidents: stats.criticalIncidents || stats.criticalIncidents || 0,
+        majorIncidents: stats.majorIncidents || stats.majorIncidents || 0,
+        avgResolutionTime: stats.avgResolutionTime || stats.avgResolutionTime || 0,
       });
     } catch (error) {
       console.error('Failed to fetch incident stats:', error);
@@ -279,7 +279,7 @@ export default function IncidentsPage() {
             getItemStatus={(incident: Incident) => incident.status}
             getItemTitle={(incident: Incident) => incident.title || `事件 #${incident.id}`}
             getItemNumber={(incident: Incident) =>
-              incident.incident_number || incident.incidentNumber || String(incident.id)
+              incident.incidentNumber || incident.incidentNumber || String(incident.id)
             }
             getItemDescription={(incident: Incident) => incident.description || ''}
             getItemPriority={(incident: Incident) =>
@@ -287,11 +287,11 @@ export default function IncidentsPage() {
             }
             getItemAssignee={(incident: Incident) =>
               incident.assignee
-                ? { name: incident.assignee.name || incident.assignee_name || '未分配' }
+                ? { name: incident.assignee.name || incident.assigneeName || '未分配' }
                 : null
             }
-            getItemCreatedAt={(incident: Incident) => incident.createdAt || incident.created_at}
-            getItemUpdatedAt={(incident: Incident) => incident.updatedAt || incident.updated_at}
+            getItemCreatedAt={(incident: Incident) => incident.createdAt || incident.createdAt}
+            getItemUpdatedAt={(incident: Incident) => incident.updatedAt || incident.updatedAt}
             onItemClick={handleView}
             onItemEdit={handleEdit}
             columnConfigs={KANBAN_COLUMNS}

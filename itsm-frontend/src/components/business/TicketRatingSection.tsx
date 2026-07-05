@@ -184,16 +184,16 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
           <Divider style={{ margin: '12px 0' }} />
 
           <div className="flex items-center space-x-4 text-sm text-gray-500">
-            {rating.rated_at && (
+            {rating.ratedAt && (
               <div className="flex items-center space-x-1">
                 <Clock style={{ fontSize: 14 }} />
-                <Text>评分时间: {formatDateTime(rating.rated_at)}</Text>
+                <Text>评分时间: {formatDateTime(rating.ratedAt)}</Text>
               </div>
             )}
-            {rating.rated_by_name && (
+            {rating.ratedByName && (
               <div className="flex items-center space-x-1">
                 <CheckCircle style={{ fontSize: 14 }} />
-                <Text>评分人: {rating.rated_by_name}</Text>
+                <Text>评分人: {rating.ratedByName}</Text>
               </div>
             )}
           </div>

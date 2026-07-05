@@ -17,7 +17,7 @@ import {
   Col,
   Dropdown,
 } from 'antd';
-import { Search, Filter, Plus, Save, Pencil, Eye, Settings, Share2 } from 'lucide-react';
+import { Search as SearchIcon, Filter, Plus, Save, Pencil, Eye, Settings, Share2, MoreHorizontal } from 'lucide-react';
 import type { MenuProps, DropDownProps } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -176,7 +176,7 @@ function DefaultCard<T>({
         menuItems.length > 0
           ? [
               <Dropdown key="more" menu={{ items: menuItems }} trigger={['click']}>
-                <MoreOutlined />
+                <MoreHorizontal />
               </Dropdown>,
             ]
           : []

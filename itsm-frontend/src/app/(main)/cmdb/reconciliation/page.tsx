@@ -15,6 +15,7 @@ import {
   message,
 } from 'antd';
 import dayjs from 'dayjs';
+import type { ColumnsType } from 'antd/es/table';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type {
@@ -53,11 +54,11 @@ export default function ReconciliationPage() {
         CMDBApi.getReconciliationResults(),
         CMDBApi.getCloudServices(),
       ]);
-      const r = recon as unknown as Record<string, unknown>;
-      setSummary((r.summary as any) || null);
-      setUnboundResources((r.unboundResources as any) || []);
-      setOrphanCIs((r.orphanCIs as any) || []);
-      setUnlinkedCIs((r.unlinkedCIs as any) || []);
+      const r = recon as unknown as ReconciliationResponse;
+      setSummary(r.summary || null);
+      setUnboundResources(r.unboundResources || []);
+      setOrphanCIs(r.orphanCIs || []);
+      setUnlinkedCIs(r.unlinkedCIs || []);
       setServices(serviceList || []);
     } catch (error) {
       message.error('加载对账数据失败');
@@ -78,15 +79,15 @@ export default function ReconciliationPage() {
       return;
     }
     try {
-      const service = serviceMap.get(bindResource.serviceId ?? bindResource.service_id);
+      const service = serviceMap.get(bindResource.serviceId ?? bindResource.serviceId);
       await CMDBApi.updateCI(String(ciID), {
         cloudResourceRefId: bindResource.id,
         cloudProvider: service?.provider,
-        cloudAccountId: String(bindResource.cloudAccountId ?? bindResource.cloud_account_id),
+        cloudAccountId: String(bindResource.cloudAccountId ?? bindResource.cloudAccountId),
         cloudRegion: bindResource.region,
         cloudZone: bindResource.zone,
-        cloudResourceId: bindResource.resourceId ?? bindResource.resource_id,
-        cloudResourceType: service?.resourceTypeCode ?? service?.resource_type_code,
+        cloudResourceId: bindResource.resourceId ?? bindResource.resourceId,
+        cloudResourceType: service?.resourceTypeCode ?? service?.resourceTypeCode,
         cloudMetadata: bindResource.metadata,
         cloudSyncStatus: 'success',
       });
@@ -100,12 +101,12 @@ export default function ReconciliationPage() {
     }
   };
 
-  const resourceColumns = [
+  const resourceColumns: ColumnsType<CloudResource> = [
     {
       title: '资源名称',
       width: 180,
       render: (_: unknown, record: CloudResource) =>
-        record.resourceName || record.resource_name || record.resourceId || record.resource_id,
+        record.resourceName || record.resourceName || record.resourceId || record.resourceId,
     },
     {
       title: '资源ID',
@@ -116,9 +117,9 @@ export default function ReconciliationPage() {
       title: '资源类型',
       width: 160,
       render: (_: unknown, record: CloudResource) => {
-        const serviceID = record.serviceId ?? record.service_id;
+        const serviceID = record.serviceId ?? record.serviceId;
         const service = serviceMap.get(serviceID);
-        return service?.resourceTypeName ?? service?.resource_type_name ?? `#${serviceID}`;
+        return service?.resourceTypeName ?? service?.resourceTypeName ?? `#${serviceID}`;
       },
     },
     {
@@ -137,7 +138,7 @@ export default function ReconciliationPage() {
       title: '最近发现',
       width: 160,
       render: (_: unknown, record: CloudResource) => {
-        const value = record.lastSeenAt ?? record.last_seen_at;
+        const value = record.lastSeenAt ?? record.lastSeenAt;
         return value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-';
       },
     },
@@ -168,7 +169,7 @@ export default function ReconciliationPage() {
     },
   ];
 
-  const ciColumns = [
+  const ciColumns: ColumnsType<ConfigurationItem> = [
     {
       title: 'CI ID',
       dataIndex: 'id',
@@ -188,13 +189,13 @@ export default function ReconciliationPage() {
       title: '云资源ID',
       width: 200,
       render: (_: unknown, record: ConfigurationItem) =>
-        record.cloudResourceId ?? record.cloud_resource_id ?? '-',
+        record.cloudResourceId ?? record.cloudResourceId ?? '-',
     },
     {
       title: '云厂商',
       width: 120,
       render: (_: unknown, record: ConfigurationItem) =>
-        record.cloudProvider ?? record.cloud_provider ?? '-',
+        record.cloudProvider ?? record.cloudProvider ?? '-',
     },
   ];
 
@@ -230,7 +231,7 @@ export default function ReconciliationPage() {
       <Card title="待绑定云资源" style={{ marginBottom: 16 }} loading={loading}>
         <Table
           rowKey="id"
-          columns={resourceColumns as any}
+          columns={resourceColumns}
           dataSource={unboundResources}
           pagination={{ pageSize: 8 }}
         />
@@ -239,7 +240,7 @@ export default function ReconciliationPage() {
       <Card title="孤儿配置项（引用资源不存在）" style={{ marginBottom: 16 }} loading={loading}>
         <Table
           rowKey="id"
-          columns={ciColumns as any}
+          columns={ciColumns}
           dataSource={orphanCIs}
           pagination={{ pageSize: 8 }}
         />
@@ -248,7 +249,7 @@ export default function ReconciliationPage() {
       <Card title="未关联配置项（有云资源ID但未绑定）" loading={loading}>
         <Table
           rowKey="id"
-          columns={ciColumns as any}
+          columns={ciColumns}
           dataSource={unlinkedCIs}
           pagination={{ pageSize: 8 }}
         />

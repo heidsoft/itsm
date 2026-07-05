@@ -64,9 +64,9 @@ const TENANT_STATUS = {
 const TENANT_TYPES = {
   standard: { label: '标准租户', color: 'blue' },
   internal: { label: '内部组织', color: 'cyan' },
-  saas_customer: { label: 'SaaS客户', color: 'green' },
-  msp_provider: { label: 'MSP服务商', color: 'gold' },
-  msp_customer: { label: 'MSP客户', color: 'purple' },
+  saasCustomer: { label: 'SaaS客户', color: 'green' },
+  mspProvider: { label: 'MSP服务商', color: 'gold' },
+  mspCustomer: { label: 'MSP客户', color: 'purple' },
   msp: { label: 'MSP兼容', color: 'orange' },
   customer: { label: '客户兼容', color: 'default' },
 };

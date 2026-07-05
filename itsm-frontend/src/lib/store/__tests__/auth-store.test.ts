@@ -57,15 +57,20 @@ describe('useAuthStore', () => {
       const mockUser = {
         id: 1,
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         role: 'admin',
-        tenant_id: 1,
+        tenantId: 1,
       };
-      
+
       const mockTenant = {
         id: 1,
         name: 'Test Tenant',
         code: 'test',
+        type: 'standard' as const,
+        status: 'active' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       act(() => {
@@ -73,7 +78,7 @@ describe('useAuthStore', () => {
       });
 
       const state = useAuthStore.getState();
-      
+
       expect(state.user).toEqual(mockUser);
       expect(state.isAuthenticated).toBe(true);
       expect(state.isLoading).toBe(false);
@@ -86,9 +91,10 @@ describe('useAuthStore', () => {
       const mockUser = {
         id: 1,
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         role: 'user',
-        tenant_id: 1,
+        tenantId: 1,
       };
 
       act(() => {
@@ -108,9 +114,10 @@ describe('useAuthStore', () => {
       const mockUser = {
         id: 1,
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         role: 'admin',
-        tenant_id: 1,
+        tenantId: 1,
       };
       
       act(() => {
@@ -140,9 +147,10 @@ describe('useAuthStore', () => {
       const mockUser = {
         id: 1,
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         role: 'user',
-        tenant_id: 1,
+        tenantId: 1,
       };
       
       act(() => {
@@ -200,6 +208,10 @@ describe('useAuthStore', () => {
         id: 1,
         name: 'Test Tenant',
         code: 'test',
+        type: 'standard' as const,
+        status: 'active' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       act(() => {
@@ -219,6 +231,10 @@ describe('useAuthStore', () => {
         id: 1,
         name: 'Test Tenant',
         code: 'test',
+        type: 'standard' as const,
+        status: 'active' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       act(() => {
@@ -244,9 +260,10 @@ describe('useAuthStore', () => {
       const mockUser = {
         id: 1,
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
-        role: 'user',
-        tenant_id: 1,
+        role: 'admin',
+        tenantId: 1,
         permissions: ['ticket:view', 'ticket:create'],
       };
 
@@ -264,9 +281,10 @@ describe('useAuthStore', () => {
       const mockUser = {
         id: 1,
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         role: 'user',
-        tenant_id: 1,
+        tenantId: 1,
         permissions: ['ticket:view'],
       };
 
@@ -291,9 +309,10 @@ describe('useAuthStore', () => {
       const mockUser = {
         id: 1,
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         role: 'admin',
-        tenant_id: 1,
+        tenantId: 1,
       };
 
       act(() => {
@@ -309,9 +328,10 @@ describe('useAuthStore', () => {
       const mockUser = {
         id: 1,
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         role: 'user',
-        tenant_id: 1,
+        tenantId: 1,
       };
 
       act(() => {
@@ -329,9 +349,10 @@ describe('useAuthStore', () => {
       const mockUser = {
         id: 1,
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         role: 'admin',
-        tenant_id: 1,
+        tenantId: 1,
       };
 
       act(() => {
@@ -347,9 +368,10 @@ describe('useAuthStore', () => {
       const mockUser = {
         id: 1,
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         role: 'super_admin',
-        tenant_id: 1,
+        tenantId: 1,
       };
 
       act(() => {
@@ -365,9 +387,10 @@ describe('useAuthStore', () => {
       const mockUser = {
         id: 1,
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         role: 'user',
-        tenant_id: 1,
+        tenantId: 1,
       };
 
       act(() => {
@@ -403,8 +426,8 @@ describe('useTenantStore', () => {
       const { useTenantStore } = await import('../auth-store');
       
       const mockTenants = [
-        { id: 1, name: 'Tenant 1', code: 't1' },
-        { id: 2, name: 'Tenant 2', code: 't2' },
+        { id: 1, name: 'Tenant 1', code: 't1', type: 'standard' as const, status: 'active' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 2, name: 'Tenant 2', code: 't2', type: 'standard' as const, status: 'active' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       ];
 
       act(() => {
@@ -419,7 +442,7 @@ describe('useTenantStore', () => {
     it('应添加租户到列表', async () => {
       const { useTenantStore } = await import('../auth-store');
       
-      const mockTenant = { id: 1, name: 'New Tenant', code: 'new' };
+      const mockTenant = { id: 1, name: 'New Tenant', code: 'new', type: 'standard' as const, status: 'active' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 
       act(() => {
         useTenantStore.getState().addTenant(mockTenant);
@@ -434,8 +457,8 @@ describe('useTenantStore', () => {
       const { useTenantStore } = await import('../auth-store');
       
       const mockTenants = [
-        { id: 1, name: 'Tenant 1', code: 't1' },
-        { id: 2, name: 'Tenant 2', code: 't2' },
+        { id: 1, name: 'Tenant 1', code: 't1', type: 'standard' as const, status: 'active' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 2, name: 'Tenant 2', code: 't2', type: 'standard' as const, status: 'active' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       ];
 
       act(() => {
@@ -457,8 +480,8 @@ describe('useTenantStore', () => {
       const { useTenantStore } = await import('../auth-store');
       
       const mockTenants = [
-        { id: 1, name: 'Tenant 1', code: 't1' },
-        { id: 2, name: 'Tenant 2', code: 't2' },
+        { id: 1, name: 'Tenant 1', code: 't1', type: 'standard' as const, status: 'active' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 2, name: 'Tenant 2', code: 't2', type: 'standard' as const, status: 'active' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       ];
 
       act(() => {

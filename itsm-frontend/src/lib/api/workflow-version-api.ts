@@ -19,11 +19,11 @@ export class WorkflowVersionApi {
         key: string;
         name: string;
         description?: string;
-        bpmn_xml?: string;
+        bpmnXml?: string;
         version: number;
         status: string;
-        created_at: string;
-        updated_at: string;
+        createdAt: string;
+        updatedAt: string;
       }>
     >(`/api/v1/bpmn/versions?process_key=${workflowId}`);
 
@@ -46,10 +46,10 @@ export class WorkflowVersionApi {
       },
       createdBy: 0,
       createdByName: '',
-      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
-      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
       description: item.description,
-      bpmn_xml: item.bpmn_xml || (item as any).bpmnXml,
+      bpmnXml: item.bpmnXml || (item as any).bpmnXml,
     })) as WorkflowDefinition[];
   }
 
@@ -99,46 +99,46 @@ export class WorkflowVersionApi {
     baseVersion: number,
     targetVersion: number
   ): Promise<{
-    elements_added: string[];
-    elements_removed: string[];
-    elements_modified: string[];
-    connections_added: string[];
-    connections_removed: string[];
-    variables_changed: string[];
-    is_identical: boolean;
+    elementsAdded: string[];
+    elementsRemoved: string[];
+    elementsModified: string[];
+    connectionsAdded: string[];
+    connectionsRemoved: string[];
+    variablesChanged: string[];
+    isIdentical: boolean;
   }> {
     const res = await httpClient.get<{
-      added_nodes?: string[];
-      removed_nodes?: string[];
-      modified_nodes?: string[];
+      addedNodes?: string[];
+      removedNodes?: string[];
+      modifiedNodes?: string[];
     }>(`/api/v1/bpmn/versions/${processKey}/compare`, {
-      base_version: baseVersion,
-      target_version: targetVersion,
+      baseVersion: baseVersion,
+      targetVersion: targetVersion,
     });
     const data = res;
     if (!data) {
       return {
-        elements_added: [],
-        elements_removed: [],
-        elements_modified: [],
-        connections_added: [],
-        connections_removed: [],
-        variables_changed: [],
-        is_identical: true,
+        elementsAdded: [],
+        elementsRemoved: [],
+        elementsModified: [],
+        connectionsAdded: [],
+        connectionsRemoved: [],
+        variablesChanged: [],
+        isIdentical: true,
       };
     }
     // 适配后端返回格式
     return {
-      elements_added: data.added_nodes || [],
-      elements_removed: data.removed_nodes || [],
-      elements_modified: data.modified_nodes || [],
-      connections_added: [],
-      connections_removed: [],
-      variables_changed: [],
-      is_identical: !(
-        data.added_nodes?.length ||
-        data.removed_nodes?.length ||
-        data.modified_nodes?.length
+      elementsAdded: data.addedNodes || [],
+      elementsRemoved: data.removedNodes || [],
+      elementsModified: data.modifiedNodes || [],
+      connectionsAdded: [],
+      connectionsRemoved: [],
+      variablesChanged: [],
+      isIdentical: !(
+        data.addedNodes?.length ||
+        data.removedNodes?.length ||
+        data.modifiedNodes?.length
       ),
     };
   }

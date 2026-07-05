@@ -33,7 +33,7 @@ export default function TeamsPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+      const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
       setUsers(
         response.users.map(user => ({
           label: user.name || user.username,
@@ -78,7 +78,7 @@ export default function TeamsPage() {
     },
     {
       title: t('enterprise.teams.manager'),
-      dataIndex: 'manager_id',
+      dataIndex:'managerId',
       key: 'manager',
       render: (text: number) => <span>{text ? `用户ID: ${text}` : '-'}</span>,
     },

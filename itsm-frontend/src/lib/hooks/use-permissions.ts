@@ -7,7 +7,7 @@ import type { RoutePermission } from '../router/route-config';
  */
 const getRolePermissions = (role: string): RoutePermission[] => {
   const rolePermissionMap: Record<string, RoutePermission[]> = {
-    super_admin: [
+    superAdmin: [
       { resource: 'ticket', action: 'read' },
       { resource: 'ticket', action: 'create' },
       { resource: 'ticket', action: 'update' },

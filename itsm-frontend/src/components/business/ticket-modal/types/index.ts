@@ -35,8 +35,8 @@ export interface TicketFormValues {
   type: TicketType;
   category: string;
   priority: TicketPriority;
-  assignee_id?: number;
-  estimated_time?: string; // 或使用 dayjs.Dayjs 类型
+  assigneeId?: number;
+  estimatedTime?: string; // 或使用 dayjs.Dayjs 类型
   attachments?: any[];
 }
 
@@ -46,8 +46,8 @@ export interface TicketFormData {
   type?: TicketType;
   category?: string;
   priority?: TicketPriority;
-  assignee_id?: number;
-  estimated_time?: string;
+  assigneeId?: number;
+  estimatedTime?: string;
 }
 
 // ============ 步骤配置类型 ============

@@ -57,7 +57,7 @@ export default function ConfigInheritancePage() {
       const values = await form.validateFields();
       await DomainConfigApi.save({
         ...values,
-        config_value: parseJSONObject(values.config_value),
+        configValue: parseJSONObject(values.configValue),
       });
       message.success('配置已保存');
       setModalOpen(false);
@@ -74,10 +74,10 @@ export default function ConfigInheritancePage() {
       const values = await previewForm.validateFields();
       setPreviewLoading(true);
       const data = await DomainConfigApi.getEffective({
-        config_type: values.config_type,
-        config_key: values.config_key,
-        department_id: values.department_id,
-        team_id: values.team_id,
+        configType: values.configType,
+        configKey: values.configKey,
+        departmentId: values.departmentId,
+        teamId: values.teamId,
       });
       setEffectiveConfig(data);
     } catch (error) {
@@ -91,29 +91,29 @@ export default function ConfigInheritancePage() {
   const columns: ColumnsType<DomainConfig> = [
     {
       title: '配置类型',
-      dataIndex: 'config_type',
-      key: 'config_type',
+      dataIndex:'configType',
+      key:'configType',
       render: value => <Tag color="blue">{value}</Tag>,
     },
     {
       title: '配置键',
-      dataIndex: 'config_key',
-      key: 'config_key',
+      dataIndex:'configKey',
+      key:'configKey',
     },
     {
       title: '作用域',
       key: 'scope',
       render: (_, record) => {
-        if (record.team_id > 0) return <Tag color="purple">Team #{record.team_id}</Tag>;
-        if (record.department_id > 0) return <Tag color="geekblue">Department #{record.department_id}</Tag>;
-        if (record.tenant_id > 0) return <Tag color="green">Tenant</Tag>;
+        if (record.teamId > 0) return <Tag color="purple">Team #{record.teamId}</Tag>;
+        if (record.departmentId > 0) return <Tag color="geekblue">Department #{record.departmentId}</Tag>;
+        if ((record as any).tenantId > 0) return <Tag color="green">Tenant</Tag>;
         return <Tag>Global</Tag>;
       },
     },
     {
       title: '继承模式',
-      dataIndex: 'inherit_mode',
-      key: 'inherit_mode',
+      dataIndex:'inheritMode',
+      key:'inheritMode',
       render: value => {
         const color = value === 'override' ? 'red' : value === 'extend' ? 'gold' : 'default';
         return <Tag color={color}>{value}</Tag>;
@@ -206,7 +206,7 @@ export default function ConfigInheritancePage() {
               <Alert
                 style={{ marginTop: 16 }}
                 type="success"
-                message={`来源：${effectiveConfig.source} / 模式：${effectiveConfig.inherit_mode} / 版本：${effectiveConfig.version}`}
+                message={`来源：${effectiveConfig.source} / 模式：${effectiveConfig.inheritMode} / 版本：${effectiveConfig.version}`}
                 description={<pre style={{ margin: 0 }}>{JSON.stringify(effectiveConfig.value, null, 2)}</pre>}
               />
             )}

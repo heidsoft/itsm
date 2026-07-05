@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { Space, Button, Dropdown, Badge, Tooltip, type MenuProps } from 'antd';
-import { X, Check, Pencil, Trash2, Download, UserPlus, XCircle, Tags } from 'lucide-react';
+import { X, Check, Pencil, Trash2, Download, UserPlus, XCircle, Tags, MoreHorizontal } from 'lucide-react';
 import { BatchOperationModal } from './BatchOperationModal';
 import { BatchOperationType } from '@/types/batch-operations';
 
@@ -193,7 +193,7 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
 
           {/* 更多操作 */}
           <Dropdown menu={{ items: moreMenuItems }} trigger={['click']}>
-            <Button icon={<MoreOutlined />} disabled={isOverLimit}>
+            <Button icon={<MoreHorizontal />} disabled={isOverLimit}>
               更多
             </Button>
           </Dropdown>

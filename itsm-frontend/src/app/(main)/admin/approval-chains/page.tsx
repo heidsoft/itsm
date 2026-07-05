@@ -74,7 +74,7 @@ const toBackendPayload = (data: ApprovalChainSubmitData, fallback?: ApprovalChai
   status: data.isActive ?? fallback?.isActive ? 'active' : 'inactive',
   chain: (data.steps || fallback?.steps || []).map((step, index) => ({
     level: index + 1,
-    approver_id: step.approverId || undefined,
+    approverId: step.approverId || undefined,
     role: step.approverType === 'role' ? step.approverName : '',
     name: step.approverName || step.stepName,
     isRequired: step.isRequired,
@@ -127,7 +127,7 @@ export default function ApprovalChainsPage() {
 
       const params = {
         page: pagination.current,
-        page_size: pagination.pageSize,
+        pageSize: pagination.pageSize,
         ...filters,
       };
 

@@ -35,9 +35,9 @@ export const useSLAViolations = (
       const data = await fetchSLAViolations({
         status: filters.status || undefined,
         severity: filters.severity || undefined,
-        sla_type: filters.type || undefined,
-        start_date: filters.dateRange?.[0]?.format('YYYY-MM-DD'),
-        end_date: filters.dateRange?.[1]?.format('YYYY-MM-DD'),
+        slaType: filters.type || undefined,
+        startDate: filters.dateRange?.[0]?.format('YYYY-MM-DD'),
+        endDate: filters.dateRange?.[1]?.format('YYYY-MM-DD'),
         search: filters.search || undefined,
       });
       setViolations(data);

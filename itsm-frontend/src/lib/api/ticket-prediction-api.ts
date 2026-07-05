@@ -5,19 +5,19 @@
 import { httpClient } from './http-client';
 
 export interface PredictionRequest {
-  ticket_type?: string;
+  ticketType?: string;
   category?: string;
-  time_range: [string, string];
-  prediction_period: 'week' | 'month' | 'quarter';
-  model_type: 'arima' | 'exponential' | 'linear';
+  timeRange: [string, string];
+  predictionPeriod: 'week' | 'month' | 'quarter';
+  modelType: 'arima' | 'exponential' | 'linear';
 }
 
 export interface PredictionDataPoint {
   date: string;
   actual?: number;
   predicted: number;
-  upper_bound?: number;
-  lower_bound?: number;
+  upperBound?: number;
+  lowerBound?: number;
   confidence?: number;
 }
 
@@ -26,21 +26,21 @@ export interface PredictionMetrics {
   mape: number;
   rmse: number;
   trend: 'up' | 'down' | 'stable';
-  trend_strength: number;
-  next_week_prediction: number;
-  next_month_prediction: number;
-  risk_level: 'low' | 'medium' | 'high';
-  risk_factors: string[];
+  trendStrength: number;
+  nextWeekPrediction: number;
+  nextMonthPrediction: number;
+  riskLevel: 'low' | 'medium' | 'high';
+  riskFactors: string[];
 }
 
 export interface PredictionReport {
   period: string;
   summary: string;
-  key_findings: string[];
+  keyFindings: string[];
   recommendations: string[];
   metrics: PredictionMetrics;
   data: PredictionDataPoint[];
-  generated_at: string;
+  generatedAt: string;
 }
 
 export class TicketPredictionApi {

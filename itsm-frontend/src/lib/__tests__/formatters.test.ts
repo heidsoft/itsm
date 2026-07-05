@@ -76,7 +76,7 @@ describe('mapLabel', () => {
   it('should handle complex map', () => {
     const map = {
       open: '打开',
-      in_progress: '进行中',
+      inProgress: '进行中',
       resolved: '已解决',
       closed: '已关闭',
     };

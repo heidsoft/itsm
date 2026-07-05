@@ -154,9 +154,9 @@ export class BPMNMonitoringApi {
     endTime?: string;
   }): Promise<ProcessMetrics> {
     const query: Record<string, string> = {};
-    if (params?.timeRange) query.time_range = params.timeRange;
-    if (params?.startTime) query.start_time = params.startTime;
-    if (params?.endTime) query.end_time = params.endTime;
+    if (params?.timeRange) query.timeRange = params.timeRange;
+    if (params?.startTime) query.startTime = params.startTime;
+    if (params?.endTime) query.endTime = params.endTime;
     const res = await httpClient.get<{ data?: ProcessMetrics } & ProcessMetrics>(
       `${this.baseUrl}/metrics`,
       query
@@ -167,7 +167,7 @@ export class BPMNMonitoringApi {
   /** 获取单个流程 key 的指标 */
   static async getProcessMetricsByKey(processKey: string, timeRange?: string): Promise<ProcessMetrics> {
     const query: Record<string, string> = {};
-    if (timeRange) query.time_range = timeRange;
+    if (timeRange) query.timeRange = timeRange;
     const res = await httpClient.get<{ data?: ProcessMetrics } & ProcessMetrics>(
       `${this.baseUrl}/metrics/${encodeURIComponent(processKey)}`,
       query
@@ -200,8 +200,8 @@ export class BPMNMonitoringApi {
   }): Promise<ProcessInstanceStatusListResponse> {
     const query: Record<string, string> = {};
     if (params?.page) query.page = String(params.page);
-    if (params?.pageSize) query.page_size = String(params.pageSize);
-    if (params?.processKey) query.process_key = params.processKey;
+    if (params?.pageSize) query.pageSize = String(params.pageSize);
+    if (params?.processKey) query.processKey = params.processKey;
     if (params?.status) query.status = params.status;
     const res = await httpClient.get<
       { data?: ProcessInstanceStatusListResponse } & ProcessInstanceStatusListResponse
@@ -215,7 +215,7 @@ export class BPMNMonitoringApi {
   /** 获取性能指标 */
   static async getPerformanceMetrics(timeRange?: string): Promise<PerformanceMetrics> {
     const query: Record<string, string> = {};
-    if (timeRange) query.time_range = timeRange;
+    if (timeRange) query.timeRange = timeRange;
     const res = await httpClient.get<
       { data?: PerformanceMetrics } & PerformanceMetrics
     >(`${this.baseUrl}/performance`, query);
@@ -253,7 +253,7 @@ export class BPMNMonitoringApi {
     timeRange?: string
   ): Promise<BottleneckAnalysis> {
     const query: Record<string, string> = {};
-    if (timeRange) query.time_range = timeRange;
+    if (timeRange) query.timeRange = timeRange;
     const res = await httpClient.get<{ data?: ProcessMetrics } & ProcessMetrics>(
       `${this.baseUrl}/metrics/${encodeURIComponent(processKey)}`,
       query

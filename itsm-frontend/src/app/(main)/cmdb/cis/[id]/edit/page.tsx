@@ -102,39 +102,39 @@ const EditCIPage: React.FC = () => {
 
   useEffect(() => {
     if (!ci || typesLoading || initializedRef.current) return;
-    const ciTypeId = ci.ci_type_id ?? ci.ciTypeId ?? 0;
+    const ciTypeId = ci.ciTypeId ?? ci.ciTypeId ?? 0;
     const selectedType = types.find(type => type.id === ciTypeId);
-    const initialTypeSchemaFields = normalizeSchemaFields(selectedType?.attribute_schema);
+    const initialTypeSchemaFields = normalizeSchemaFields(selectedType?.attributeSchema);
     const attributeRecord =
       ci.attributes && typeof ci.attributes === 'object' ? (ci.attributes as Record<string, unknown>) : undefined;
     const remainingAttributes = omitSchemaFieldValues(attributeRecord, initialTypeSchemaFields);
 
     const initialValues: Partial<CIFormValues> = {
       name: ci.name,
-      ci_type_id: ciTypeId,
+      ciTypeId: ciTypeId,
       status: ci.status,
       description: ci.description,
-      serial_number: ci.serial_number ?? ci.serialNumber,
+      serialNumber: ci.serialNumber ?? ci.serialNumber,
       model: ci.model,
       vendor: ci.vendor,
       location: ci.location,
-      asset_tag: ci.asset_tag ?? ci.assetTag,
-      assigned_to: ci.assigned_to ?? ci.assignedTo,
-      owned_by: ci.owned_by ?? ci.ownedBy,
+      assetTag: ci.assetTag ?? ci.assetTag,
+      assignedTo: ci.assignedTo ?? ci.assignedTo,
+      ownedBy: ci.ownedBy ?? ci.ownedBy,
       environment: ci.environment,
       criticality: ci.criticality,
-      discovery_source: ci.discovery_source ?? ci.discoverySource,
+      discoverySource: ci.discoverySource ?? ci.discoverySource,
       source: ci.source,
-      cloud_provider: ci.cloud_provider ?? ci.cloudProvider,
-      cloud_account_id: ci.cloud_account_id ? String(ci.cloud_account_id) : undefined,
-      cloud_region: ci.cloud_region ?? ci.cloudRegion,
-      cloud_zone: ci.cloud_zone ?? ci.cloudZone,
-      cloud_resource_id: ci.cloud_resource_id ?? ci.cloudResourceId,
-      cloud_resource_type: ci.cloud_resource_type ?? ci.cloudResourceType,
-      cloud_sync_status: ci.cloud_sync_status ?? ci.cloudSyncStatus,
-      cloud_resource_ref_id: ci.cloud_resource_ref_id ?? ci.cloudResourceRefId,
-      cloud_metadata: ci.cloud_metadata as Record<string, {} | undefined> | undefined,
-      custom_attributes: attributeRecord as Record<string, {} | undefined> | undefined,
+      cloudProvider: ci.cloudProvider ?? ci.cloudProvider,
+      cloudAccountId: ci.cloudAccountId ? String(ci.cloudAccountId) : undefined,
+      cloudRegion: ci.cloudRegion ?? ci.cloudRegion,
+      cloudZone: ci.cloudZone ?? ci.cloudZone,
+      cloudResourceId: ci.cloudResourceId ?? ci.cloudResourceId,
+      cloudResourceType: ci.cloudResourceType ?? ci.cloudResourceType,
+      cloudSyncStatus: ci.cloudSyncStatus ?? ci.cloudSyncStatus,
+      cloudResourceRefId: ci.cloudResourceRefId ?? ci.cloudResourceRefId,
+      cloudMetadata: ci.cloudMetadata as Record<string, {} | undefined> | undefined,
+      customAttributes: attributeRecord as Record<string, {} | undefined> | undefined,
     };
     if (remainingAttributes) {
       initialValues.attributes = JSON.stringify(remainingAttributes, null, 2);
@@ -146,11 +146,11 @@ const EditCIPage: React.FC = () => {
   }, [ci, form, types, typesLoading]);
 
   useEffect(() => {
-    const cloudResourceRefId = ci?.cloud_resource_ref_id ?? ci?.cloudResourceRefId;
+    const cloudResourceRefId = ci?.cloudResourceRefId ?? ci?.cloudResourceRefId;
     if (!cloudResourceRefId || !cloudResources.length || !cloudServices.length) return;
     const resource = cloudResources.find(item => item.id === cloudResourceRefId);
-      const service = resource ? cloudServiceMap.get(resource.service_id) : undefined;
-      setSchemaFields(normalizeSchemaFields(service?.attribute_schema));
+      const service = resource ? cloudServiceMap.get(resource.serviceId) : undefined;
+      setSchemaFields(normalizeSchemaFields(service?.attributeSchema));
   }, [ci, cloudResources, cloudServices, cloudServiceMap]);
 
   const handleCloudResourceChange = (value?: number) => {
@@ -159,22 +159,22 @@ const EditCIPage: React.FC = () => {
       return;
     }
     const resource = cloudResources.find(item => item.id === value);
-    const service = resource ? cloudServiceMap.get(resource.service_id) : undefined;
-    setSchemaFields(normalizeSchemaFields(service?.attribute_schema));
+    const service = resource ? cloudServiceMap.get(resource.serviceId) : undefined;
+    setSchemaFields(normalizeSchemaFields(service?.attributeSchema));
     if (!resource) return;
     form.setFieldsValue({
-      cloud_resource_id: resource.resource_id,
-      cloud_region: resource.region,
-      cloud_zone: resource.zone,
-      cloud_account_id: String(resource.cloud_account_id),
-      cloud_provider: service?.provider,
-      cloud_resource_type: service?.resource_type_code,
+      cloudResourceId: resource.resourceId,
+      cloudRegion: resource.region,
+      cloudZone: resource.zone,
+      cloudAccountId: String(resource.cloudAccountId),
+      cloudProvider: service?.provider,
+      cloudResourceType: service?.resourceTypeCode,
     });
   };
 
   const handleCITypeChange = (value?: number) => {
     const selectedType = types.find(type => type.id === value);
-    setTypeSchemaFields(normalizeSchemaFields(selectedType?.attribute_schema));
+    setTypeSchemaFields(normalizeSchemaFields(selectedType?.attributeSchema));
     form.setFieldValue('custom_attributes', undefined);
   };
 
@@ -192,7 +192,7 @@ const EditCIPage: React.FC = () => {
           return;
         }
       }
-      const customAttributes = compactRecord(values.custom_attributes as Record<string, unknown> | undefined);
+      const customAttributes = compactRecord(values.customAttributes as Record<string, unknown> | undefined);
       attributes = {
         ...(attributes || {}),
         ...(customAttributes || {}),
@@ -203,30 +203,30 @@ const EditCIPage: React.FC = () => {
       setSaving(true);
       await CMDBApi.updateCI(id, {
         name: values.name,
-        ci_type_id: values.ci_type_id,
+        ciTypeId: values.ciTypeId,
         status: values.status,
         description: values.description,
         attributes,
-        serial_number: values.serial_number,
+        serialNumber: values.serialNumber,
         model: values.model,
         vendor: values.vendor,
         location: values.location,
-        asset_tag: values.asset_tag,
-        assigned_to: values.assigned_to,
-        owned_by: values.owned_by,
+        assetTag: values.assetTag,
+        assignedTo: values.assignedTo,
+        ownedBy: values.ownedBy,
         environment: values.environment,
         criticality: values.criticality,
-        discovery_source: values.discovery_source,
+        discoverySource: values.discoverySource,
         source: values.source,
-        cloud_provider: values.cloud_provider,
-        cloud_account_id: values.cloud_account_id,
-        cloud_region: values.cloud_region,
-        cloud_zone: values.cloud_zone,
-        cloud_resource_id: values.cloud_resource_id,
-        cloud_resource_type: values.cloud_resource_type,
-        cloud_sync_status: values.cloud_sync_status,
-        cloud_resource_ref_id: values.cloud_resource_ref_id,
-        cloud_metadata: values.cloud_metadata,
+        cloudProvider: values.cloudProvider,
+        cloudAccountId: values.cloudAccountId,
+        cloudRegion: values.cloudRegion,
+        cloudZone: values.cloudZone,
+        cloudResourceId: values.cloudResourceId,
+        cloudResourceType: values.cloudResourceType,
+        cloudSyncStatus: values.cloudSyncStatus,
+        cloudResourceRefId: values.cloudResourceRefId,
+        cloudMetadata: values.cloudMetadata,
       });
       message.success('配置项更新成功');
       router.push('/cmdb');

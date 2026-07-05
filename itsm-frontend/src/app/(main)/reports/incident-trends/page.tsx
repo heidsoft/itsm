@@ -76,22 +76,22 @@ const IncidentTrendsPage = () => {
       setLoading(true);
       const [analyticsRes, statsRes] = await Promise.all([
         ticketAnalyticsService.getAnalytics({
-          date_from: dateRange[0].format('YYYY-MM-DD'),
-          date_to: dateRange[1].format('YYYY-MM-DD'),
+          dateFrom: dateRange[0].format('YYYY-MM-DD'),
+          dateTo: dateRange[1].format('YYYY-MM-DD'),
         }),
         ticketService.getTicketStats(),
       ]);
 
       // 处理趋势数据 - 如果没有真实数据，显示空状态而非模拟数据
-      if (analyticsRes.daily_trend && analyticsRes.daily_trend.length > 0) {
-        setTrendData(analyticsRes.daily_trend);
+      if (analyticsRes.dailyTrend && analyticsRes.dailyTrend.length > 0) {
+        setTrendData(analyticsRes.dailyTrend);
       } else {
         setTrendData([]);
       }
 
       // 处理优先级数据 - 使用真实数据
-      if (analyticsRes.priority_distribution && analyticsRes.priority_distribution.length > 0) {
-        setPriorityData(analyticsRes.priority_distribution);
+      if (analyticsRes.priorityDistribution && analyticsRes.priorityDistribution.length > 0) {
+        setPriorityData(analyticsRes.priorityDistribution);
       } else {
         // 使用 API 返回的统计值作为后备（如果可用）
         setPriorityData([
@@ -104,11 +104,11 @@ const IncidentTrendsPage = () => {
 
       // 更新统计
       setStats({
-        total: statsRes.total || analyticsRes.total_tickets || 0,
-        created: analyticsRes.daily_trend?.reduce((sum, d) => sum + d.created, 0) || 0,
-        resolved: analyticsRes.daily_trend?.reduce((sum, d) => sum + d.resolved, 0) || 0,
-        avgResponseTime: analyticsRes.processing_time_stats?.avg_processing_time || 0,
-        avgResolutionTime: analyticsRes.processing_time_stats?.avg_resolution_time || 0,
+        total: statsRes.total || analyticsRes.totalTickets || 0,
+        created: analyticsRes.dailyTrend?.reduce((sum, d) => sum + d.created, 0) || 0,
+        resolved: analyticsRes.dailyTrend?.reduce((sum, d) => sum + d.resolved, 0) || 0,
+        avgResponseTime: analyticsRes.processingTimeStats?.avgProcessingTime || 0,
+        avgResolutionTime: analyticsRes.processingTimeStats?.avgResolutionTime || 0,
       });
     } catch (error) {
       console.error('加载报表数据失败:', error);

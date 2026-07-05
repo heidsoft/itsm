@@ -14,7 +14,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Alert, Space, Button, Tag } from 'antd';
-import { AlertTriangle, Wifi } from 'lucide-react';
+import { AlertTriangle, Wifi, Unplug } from 'lucide-react';
 
 const HEALTH_CHECK_INTERVAL_MS = 30_000;
 const ERROR_THRESHOLD = 3;
@@ -111,7 +111,7 @@ export function NetworkStatus({ compact = false, enableFormLock = true }: Networ
 
   if (compact) {
     return (
-      <Tag color={status === 'degraded' ? 'red' : 'orange'} icon={status === 'degraded' ? <AlertTriangle /> : <DisconnectOutlined />}>
+      <Tag color={status === 'degraded' ? 'red' : 'orange'} icon={status === 'degraded' ? <AlertTriangle /> : <Unplug />}>
         {status === 'degraded' ? '降级' : '离线'}
       </Tag>
     );
@@ -122,7 +122,7 @@ export function NetworkStatus({ compact = false, enableFormLock = true }: Networ
       banner
       type={status === 'degraded' ? 'error' : 'warning'}
       showIcon
-      icon={status === 'degraded' ? <AlertTriangle /> : <DisconnectOutlined />}
+      icon={status === 'degraded' ? <AlertTriangle /> : <Unplug />}
       message={
         <Space>
           <span>

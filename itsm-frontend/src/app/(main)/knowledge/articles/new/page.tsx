@@ -54,7 +54,7 @@ export default function NewKnowledgeArticlePage() {
         title: values.title,
         content: values.content,
         category:
-          categories.find(c => c.id === values.category_id)?.name || String(values.category_id),
+          categories.find(c => c.id === values.categoryId)?.name || String(values.categoryId),
         tags: values.tags || [],
       });
       message.success('文章创建成功');
@@ -85,7 +85,7 @@ export default function NewKnowledgeArticlePage() {
           form={form}
           layout="vertical"
           onFinish={onFinish}
-          initialValues={{ category_id: 1, tags: [] }}
+          initialValues={{ categoryId: 1, tags: [] }}
         >
           <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
             <Input placeholder="例如：VPN 拨号失败排查指南" maxLength={200} />

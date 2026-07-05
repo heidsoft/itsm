@@ -63,85 +63,85 @@ export interface CISavedView {
 /** CI搜索过滤器 */
 export interface CISearchFilter {
   keyword?: string;
-  ci_type_id?: number;
+  ciTypeId?: number;
   status?: string;
   environment?: string;
   criticality?: string;
-  asset_tag?: string;
-  serial_number?: string;
+  assetTag?: string;
+  serialNumber?: string;
   vendor?: string;
   location?: string;
-  assigned_to?: string;
-  owned_by?: string;
-  tag_ids?: number[];
+  assignedTo?: string;
+  ownedBy?: string;
+  tagIds?: number[];
   attributes?: Record<string, unknown>;
-  date_from?: string;
-  date_to?: string;
-  cloud_provider?: string;
-  cloud_region?: string;
-  cloud_resource_id?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  cloudProvider?: string;
+  cloudRegion?: string;
+  cloudResourceId?: string;
 }
 
 /** 导入任务 */
 export interface ImportTask {
-  task_id: string;
+  taskId: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
-  total_count: number;
-  success_count: number;
-  failed_count: number;
+  totalCount: number;
+  successCount: number;
+  failedCount: number;
   errors?: ImportError[];
-  created_at: string;
-  completed_at?: string;
+  createdAt: string;
+  completedAt?: string;
 }
 
 /** 导入错误 */
 export interface ImportError {
-  row_number: number;
-  field_name: string;
+  rowNumber: number;
+  fieldName: string;
   message: string;
 }
 
 /** 导出任务 */
 export interface ExportTask {
-  task_id: string;
+  taskId: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
-  file_url?: string;
-  total_count: number;
-  file_size?: number;
-  created_at: string;
-  completed_at?: string;
-  expires_at: string;
+  fileUrl?: string;
+  totalCount: number;
+  fileSize?: number;
+  createdAt: string;
+  completedAt?: string;
+  expiresAt: string;
 }
 
 /** 导入请求 */
 export interface CreateImportRequest {
-  file_url: string;
-  file_type: 'xlsx' | 'csv';
-  update_mode: 'skip' | 'overwrite' | 'merge';
-  sheet_name?: string;
+  fileUrl: string;
+  fileType: 'xlsx' | 'csv';
+  updateMode: 'skip' | 'overwrite' | 'merge';
+  sheetName?: string;
 }
 
 /** 导出请求 */
 export interface CreateExportRequest {
   filters?: CISearchFilter;
-  export_type: 'xlsx' | 'csv';
-  export_fields?: string[];
+  exportType: 'xlsx' | 'csv';
+  exportFields?: string[];
 }
 
 /** CI属性定义 */
 export interface CIAttributeDefinition {
   id: number;
   name: string;
-  display_name: string;
-  data_type: string;
-  is_required: boolean;
-  is_unique: boolean;
-  default_value?: string;
+  displayName: string;
+  dataType: string;
+  isRequired: boolean;
+  isUnique: boolean;
+  defaultValue?: string;
   options?: AttributeOption[];
-  validation_rule?: string;
+  validationRule?: string;
   description?: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** 属性选项 */
@@ -156,23 +156,23 @@ export type LifecycleStatus = 'draft' | 'online' | 'maintenance' | 'offline' | '
 /** 生命周期历史记录 */
 export interface LifecycleHistoryItem {
   id: number;
-  ci_id: number;
-  from_status: string;
-  to_status: string;
-  changed_by: string;
-  changed_at: string;
+  ciId: number;
+  fromStatus: string;
+  toStatus: string;
+  changedBy: string;
+  changedAt: string;
   reason?: string;
 }
 
 /** 版本信息 */
 export interface CIVersion {
   version: number;
-  ci_id: number;
+  ciId: number;
   name: string;
   status: string;
   attributes: Record<string, unknown>;
-  created_by: string;
-  created_at: string;
+  createdBy: string;
+  createdAt: string;
 }
 
 // ==================== API 服务 ====================
@@ -189,7 +189,7 @@ export class CMDBAdvancedApi {
   /** 获取标签列表 */
   static async getTags(params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
     keyword?: string;
   }): Promise<CITagListResponse> {
     return httpClient.get(`${CMDB_BASE}/tags`, params);
@@ -220,7 +220,7 @@ export class CMDBAdvancedApi {
   /** 获取视图列表 */
   static async getViews(params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
   }): Promise<{
     items: CISavedView[];
     total: number;
@@ -269,7 +269,7 @@ export class CMDBAdvancedApi {
   /** 获取导入任务列表 */
   static async getImportTasks(params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
   }): Promise<{
     items: ImportTask[];
     total: number;
@@ -292,7 +292,7 @@ export class CMDBAdvancedApi {
   /** 获取导出任务列表 */
   static async getExportTasks(params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
   }): Promise<{
     items: ExportTask[];
     total: number;
@@ -323,8 +323,8 @@ export class CMDBAdvancedApi {
   }>): Promise<{
     items: Array<{ id: number; name: string; success: boolean; error?: string }>;
     total: number;
-    success_count: number;
-    failed_count: number;
+    successCount: number;
+    failedCount: number;
   }> {
     return httpClient.post(`${CMDB_BASE}/cis/batch`, { items });
   }
@@ -336,16 +336,16 @@ export class CMDBAdvancedApi {
   }>): Promise<{
     items: Array<{ id: number; success: boolean; error?: string }>;
     total: number;
-    success_count: number;
-    failed_count: number;
+    successCount: number;
+    failedCount: number;
   }> {
     return httpClient.put(`${CMDB_BASE}/cis/batch`, { items });
   }
 
   /** 批量删除CI */
   static async batchDeleteCI(ids: number[]): Promise<{
-    deleted_count: number;
-    failed_ids: number[];
+    deletedCount: number;
+    failedIds: number[];
   }> {
     return httpClient.delete(`${CMDB_BASE}/cis/batch`, { ids });
   }
@@ -356,8 +356,8 @@ export class CMDBAdvancedApi {
     status: LifecycleStatus,
     reason?: string
   ): Promise<{
-    updated_count: number;
-    failed_ids: number[];
+    updatedCount: number;
+    failedIds: number[];
   }> {
     return httpClient.put(`${CMDB_BASE}/cis/batch/lifecycle`, {
       ids,
@@ -382,9 +382,9 @@ export class CMDBAdvancedApi {
     status: LifecycleStatus,
     reason?: string
   ): Promise<{
-    ci_id: number;
+    ciId: number;
     status: LifecycleStatus;
-    changed_at: string;
+    changedAt: string;
   }> {
     return httpClient.put(`${CMDB_BASE}/cis/${ciId}/lifecycle`, {
       status,
@@ -403,7 +403,7 @@ export class CMDBAdvancedApi {
     id: number;
     name: string;
     version: number;
-    reverted_at: string;
+    revertedAt: string;
   }> {
     return httpClient.post(`${CMDB_BASE}/cis/${ciId}/revert`, {
       version,
@@ -415,16 +415,16 @@ export class CMDBAdvancedApi {
 
   /** 给CI添加标签 */
   static async addTagsToCI(ciId: number, tagIds: number[]): Promise<{
-    ci_id: number;
-    tag_ids: number[];
+    ciId: number;
+    tagIds: number[];
   }> {
     return httpClient.post(`${CMDB_BASE}/cis/${ciId}/tags`, { tagIds });
   }
 
   /** 从CI移除标签 */
   static async removeTagsFromCI(ciId: number, tagIds: number[]): Promise<{
-    ci_id: number;
-    removed_tag_ids: number[];
+    ciId: number;
+    removedTagIds: number[];
   }> {
     return httpClient.delete(`${CMDB_BASE}/cis/${ciId}/tags`, { tagIds });
   }
@@ -446,15 +446,15 @@ export class CMDBAdvancedApi {
 
   /** 创建属性定义 */
   static async createAttributeDefinition(data: {
-    ci_type_id: number;
+    ciTypeId: number;
     name: string;
-    display_name: string;
-    data_type: string;
-    is_required?: boolean;
-    is_unique?: boolean;
-    default_value?: string;
+    displayName: string;
+    dataType: string;
+    isRequired?: boolean;
+    isUnique?: boolean;
+    defaultValue?: string;
     options?: AttributeOption[];
-    validation_rule?: string;
+    validationRule?: string;
     description?: string;
   }): Promise<CIAttributeDefinition> {
     return httpClient.post(`${CMDB_BASE}/attributes`, data);
@@ -465,13 +465,13 @@ export class CMDBAdvancedApi {
     id: number,
     data: Partial<{
       name: string;
-      display_name: string;
-      data_type: string;
-      is_required: boolean;
-      is_unique: boolean;
-      default_value: string;
+      displayName: string;
+      dataType: string;
+      isRequired: boolean;
+      isUnique: boolean;
+      defaultValue: string;
       options: AttributeOption[];
-      validation_rule: string;
+      validationRule: string;
       description: string;
     }>
   ): Promise<CIAttributeDefinition> {
@@ -488,20 +488,20 @@ export class CMDBAdvancedApi {
   /** 获取CI关系列表 */
   static async getRelationships(params?: {
     page?: number;
-    page_size?: number;
-    source_ci_id?: number;
-    target_ci_id?: number;
-    relationship_type?: string;
+    pageSize?: number;
+    sourceCiId?: number;
+    targetCiId?: number;
+    relationshipType?: string;
   }): Promise<{
     items: Array<{
       id: number;
-      source_ci_id: number;
-      source_ci_name: string;
-      target_ci_id: number;
-      target_ci_name: string;
-      relationship_type: string;
+      sourceCiId: number;
+      sourceCiName: string;
+      targetCiId: number;
+      targetCiName: string;
+      relationshipType: string;
       description: string;
-      created_at: string;
+      createdAt: string;
     }>;
     total: number;
   }> {
@@ -511,11 +511,11 @@ export class CMDBAdvancedApi {
   /** 获取CI关系详情 */
   static async getRelationship(id: number): Promise<{
     id: number;
-    source_ci_id: number;
-    target_ci_id: number;
-    relationship_type: string;
+    sourceCiId: number;
+    targetCiId: number;
+    relationshipType: string;
     description: string;
-    created_at: string;
+    createdAt: string;
   }> {
     return httpClient.get(`${CMDB_BASE}/relationships/${id}`);
   }
@@ -524,7 +524,7 @@ export class CMDBAdvancedApi {
   static async updateRelationship(
     id: number,
     data: {
-      relationship_type?: string;
+      relationshipType?: string;
       description?: string;
     }
   ): Promise<{

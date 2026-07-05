@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Button, Space, Dropdown, Tooltip } from 'antd';
-import { Plus, Trash2, Download, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, Download, RotateCcw, MoreHorizontal } from 'lucide-react';
 import type { MenuProps } from 'antd';
 
 export interface TicketsToolbarProps {
@@ -101,7 +101,7 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
         {/* 刷新按钮 */}
         <Tooltip title="刷新数据">
           <Button
-            icon={<RotateCcw spin={loading} />}
+            icon={<RotateCcw className={loading ? 'animate-spin' : ''} />}
             onClick={onRefresh}
             loading={loading}
             data-testid="refresh-button"
@@ -122,7 +122,7 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
         {/* 批量操作按钮（仅在有选中项时显示） */}
         {selectedCount > 0 && (
           <Dropdown menu={{ items: batchMenuItems }} placement="bottomRight">
-            <Button icon={<MoreOutlined />}>批量操作</Button>
+            <Button icon={<MoreHorizontal />}>批量操作</Button>
           </Dropdown>
         )}
 
@@ -135,7 +135,7 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
 
         {/* 更多操作 */}
         <Dropdown menu={{ items: moreMenuItems }} placement="bottomRight">
-          <Button icon={<MoreOutlined />} />
+          <Button icon={<MoreHorizontal />} />
         </Dropdown>
       </Space>
     </div>

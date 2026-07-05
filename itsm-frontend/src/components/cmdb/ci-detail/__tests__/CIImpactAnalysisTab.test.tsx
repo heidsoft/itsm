@@ -16,45 +16,45 @@ jest.mock('@/lib/i18n', () => ({
 
 describe('CIImpactAnalysisTab', () => {
   const mockImpactAnalysis: ImpactAnalysisData = {
-    target_ci: {
+    targetCi: {
       id: 'ci-001',
       name: 'Web Server 1',
       type: 'server',
     },
-    upstream_impact: [
+    upstreamImpact: [
       {
-        ci_id: 2,
-        ci_name: 'Load Balancer',
-        ci_type: 'network',
+        ciId: 2,
+        ciName: 'Load Balancer',
+        ciType: 'network',
         relationship: 'depends_on',
-        impact_level: 'high',
+        impactLevel: 'high',
         distance: 1,
         direction: 'upstream',
       },
     ],
-    downstream_impact: [
+    downstreamImpact: [
       {
-        ci_id: 3,
-        ci_name: 'Application Service',
-        ci_type: 'service',
+        ciId: 3,
+        ciName: 'Application Service',
+        ciType: 'service',
         relationship: 'contains',
-        impact_level: 'medium',
+        impactLevel: 'medium',
         distance: 1,
         direction: 'downstream',
       },
     ],
-    critical_dependencies: [
+    criticalDependencies: [
       {
-        ci_id: 4,
-        ci_name: 'Database Server',
-        ci_type: 'database',
+        ciId: 4,
+        ciName: 'Database Server',
+        ciType: 'database',
         relationship: 'depends_on',
-        impact_level: 'critical',
+        impactLevel: 'critical',
         distance: 1,
         direction: 'upstream',
       },
     ],
-    affected_tickets: [
+    affectedTickets: [
       {
         id: 1,
         ticketNumber: 'TICKET-001',
@@ -63,7 +63,7 @@ describe('CIImpactAnalysisTab', () => {
         priority: 'high',
       },
     ],
-    affected_incidents: [
+    affectedIncidents: [
       {
         id: 1,
         title: 'Service degradation',
@@ -71,7 +71,7 @@ describe('CIImpactAnalysisTab', () => {
         severity: 'high',
       },
     ],
-    risk_level: 'high',
+    riskLevel: 'high',
     summary: 'High risk due to critical dependencies',
   };
 

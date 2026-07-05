@@ -8,38 +8,29 @@ import type { CIType, CloudService, CloudAccount } from '@/types/biz/cmdb';
 export interface ConfigurationItem {
   id: number;
   name: string;
-  ci_type: string;
-  ciType?: string;
+  ciType: string;
   status: string;
   environment: string;
   criticality: string;
-  asset_tag?: string;
   assetTag?: string;
-  serial_number?: string;
   serialNumber?: string;
   location?: string;
-  assigned_to?: string;
   assignedTo?: string;
-  owned_by?: string;
   ownedBy?: string;
-  discovery_source?: string;
   discoverySource?: string;
   attributes?: Record<string, unknown>;
-  tenant_id: number;
-  tenantId?: number;
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CIRelationship {
   id: number;
   type: string;
   description?: string;
-  parent_id: number;
-  child_id: number;
-  created_at: string;
+  parentId: number;
+  childId: number;
+  createdAt: string;
 }
 
 export interface CreateCIRequest {
@@ -76,8 +67,8 @@ export interface CITopology {
 }
 
 export interface GetCIListRequest {
-  ci_type?: string;
-  ci_type_id?: number;
+  ciType?: string;
+  ciTypeId?: number;
   search?: string;
   status?: string;
   environment?: string;
@@ -147,8 +138,8 @@ export class CMDBApi {
     description?: string;
     icon?: string;
     color?: string;
-    attribute_schema?: string;
-    is_active?: boolean;
+    attributeSchema?: string;
+    isActive?: boolean;
   }): Promise<CIType> {
     return httpClient.post(`${BASE}/types`, data);
   }
@@ -158,8 +149,8 @@ export class CMDBApi {
     description?: string;
     icon?: string;
     color?: string;
-    attribute_schema?: string;
-    is_active?: boolean;
+    attributeSchema?: string;
+    isActive?: boolean;
   }): Promise<CIType> {
     return httpClient.put(`${BASE}/types/${id}`, data);
   }
@@ -186,15 +177,15 @@ export class CMDBApi {
     return httpClient.get(`${BASE}/${id}/health`);
   }
 
-  static async getCIChangeHistory(id: number, params?: { page?: number; page_size?: number }): Promise<{ items?: Array<Record<string, unknown>>; data?: Array<Record<string, unknown>>; total?: number }> {
+  static async getCIChangeHistory(id: number, params?: { page?: number; pageSize?: number }): Promise<{ items?: Array<Record<string, unknown>>; data?: Array<Record<string, unknown>>; total?: number }> {
     return httpClient.get(`${BASE}/${id}/change-history`, params);
   }
 
   // ==================== Relationships ====================
 
   static async createCIRelationship(data: {
-    parent_id: number;
-    child_id: number;
+    parentId: number;
+    childId: number;
     type: string;
     description?: string;
   }): Promise<CIRelationship> {
@@ -202,14 +193,14 @@ export class CMDBApi {
   }
 
   static async createRelationship(request: {
-    source_ci_id: number;
-    target_ci_id: number;
+    sourceCiId: number;
+    targetCiId: number;
     type: string;
     description?: string;
   }): Promise<CIRelationship> {
     return this.createCIRelationship({
-      parent_id: request.source_ci_id,
-      child_id: request.target_ci_id,
+      parentId: request.sourceCiId,
+      childId: request.targetCiId,
       type: request.type,
       description: request.description,
     });
@@ -278,18 +269,18 @@ export class CMDBApi {
   }
 
   static async getDiscoveryHistory(ruleId?: string): Promise<Array<Record<string, unknown>>> {
-    return httpClient.get(`${BASE}/discovery/results`, ruleId ? { source_id: ruleId } : undefined);
+    return httpClient.get(`${BASE}/discovery/results`, ruleId ? { sourceId: ruleId } : undefined);
   }
 
   static async runDiscoveryRule(ruleId: string): Promise<void> {
-    return httpClient.post(`${BASE}/discovery/jobs`, { source_id: ruleId });
+    return httpClient.post(`${BASE}/discovery/jobs`, { sourceId: ruleId });
   }
 
   // ==================== Search ====================
 
   static async searchCIs(query: {
     keyword?: string;
-    ci_type?: string;
+    ciType?: string;
     status?: string;
   }): Promise<{ items: ConfigurationItem[]; total: number }> {
     const result = await this.getCIs(query);

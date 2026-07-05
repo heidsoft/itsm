@@ -41,9 +41,9 @@ const CreateProblemPageContent = () => {
         description: values.description,
         priority: values.priority,
         category: values.category,
-        root_cause: values.root_cause,
+        rootCause: values.rootCause,
         impact: values.impact,
-        assignee_id: values.assignee_id,
+        assigneeId: values.assigneeId,
       });
 
       message.success(t('problems.createSuccess'));

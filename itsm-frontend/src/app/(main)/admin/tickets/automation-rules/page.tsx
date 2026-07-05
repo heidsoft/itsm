@@ -61,7 +61,7 @@ const AutomationRulesPage: React.FC = () => {
     form.resetFields();
     form.setFieldsValue({
       priority: 1,
-      is_active: true,
+      isActive: true,
       conditions: [],
       actions: [],
     });
@@ -75,7 +75,7 @@ const AutomationRulesPage: React.FC = () => {
       name: rule.name,
       description: rule.description,
       priority: rule.priority,
-      is_active: rule.is_active,
+      isActive: rule.isActive,
       conditions: rule.conditions,
       actions: rule.actions,
     });
@@ -97,9 +97,9 @@ const AutomationRulesPage: React.FC = () => {
   const handleToggleActive = async (rule: AutomationRule) => {
     try {
       await TicketAutomationRuleApi.updateRule(rule.id, {
-        is_active: !rule.is_active,
+        isActive: !rule.isActive,
       });
-      message.success(rule.is_active ? '规则已禁用' : '规则已启用');
+      message.success(rule.isActive ? '规则已禁用' : '规则已启用');
       loadRules();
     } catch (error) {
       message.error('操作失败');
@@ -115,7 +115,7 @@ const AutomationRulesPage: React.FC = () => {
         name: values.name,
         description: values.description,
         priority: values.priority || 1,
-        is_active: values.is_active,
+        isActive: values.isActive,
         conditions: values.conditions || [],
         actions: values.actions || [],
       };
@@ -161,15 +161,15 @@ const AutomationRulesPage: React.FC = () => {
     },
     {
       title: '执行次数',
-      dataIndex: 'execution_count',
-      key: 'execution_count',
+      dataIndex:'executionCount',
+      key:'executionCount',
       width: 100,
       render: (count: number) => <Tag>{count || 0}</Tag>,
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       width: 100,
       render: (active: boolean, record: AutomationRule) => (
         <Switch

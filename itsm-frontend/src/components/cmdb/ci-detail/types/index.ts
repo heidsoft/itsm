@@ -8,22 +8,22 @@ import type { FC, ReactNode } from 'react';
 // ============ 影响分析类型 ============
 
 export interface ImpactAnalysisData {
-  target_ci: unknown;
-  upstream_impact: ImpactAnalysisItem[];
-  downstream_impact: ImpactAnalysisItem[];
-  critical_dependencies: ImpactAnalysisItem[];
-  affected_tickets: AffectedTicket[];
-  affected_incidents: AffectedIncident[];
-  risk_level: 'critical' | 'high' | 'medium' | 'low';
+  targetCi: unknown;
+  upstreamImpact: ImpactAnalysisItem[];
+  downstreamImpact: ImpactAnalysisItem[];
+  criticalDependencies: ImpactAnalysisItem[];
+  affectedTickets: AffectedTicket[];
+  affectedIncidents: AffectedIncident[];
+  riskLevel: 'critical' | 'high' | 'medium' | 'low';
   summary: string;
 }
 
 export interface ImpactAnalysisItem {
-  ci_id: number;
-  ci_name: string;
-  ci_type: string;
+  ciId: number;
+  ciName: string;
+  ciType: string;
   relationship: string;
-  impact_level: 'critical' | 'high' | 'medium' | 'low';
+  impactLevel: 'critical' | 'high' | 'medium' | 'low';
   distance: number;
   direction: string; // 'upstream' or 'downstream'
 }
@@ -51,7 +51,7 @@ export interface ChangeHistoryData {
   logs: ChangeLog[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 export interface ChangeLog {
@@ -61,11 +61,8 @@ export interface ChangeLog {
   path?: string;
   Method?: string;
   StatusCode?: number | string;
-  created_at?: string;
   createdAt?: string;
-  updated_by?: string;
   updatedBy?: string;
-  updated_at?: string;
   updatedAt?: string;
   description?: string;
   [key: string]: unknown;

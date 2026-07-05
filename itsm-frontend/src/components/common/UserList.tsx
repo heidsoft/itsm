@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Tag, Space, Button, App } from 'antd';
-import { User, Users } from 'lucide-react';
+import { User as UserIcon, Users } from 'lucide-react';
 import { CommonApi } from '@/lib/api/';
 import { UserRoleLabels } from '@/constants/common';
 import type { User } from '@/types/biz/common';
@@ -37,7 +37,7 @@ const UserList: React.FC = () => {
       key: 'username',
       render: (text: string) => (
         <Space>
-          <User /> {text}
+          <UserIcon /> {text}
         </Space>
       ),
     },
@@ -69,8 +69,8 @@ const UserList: React.FC = () => {
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       render: (text: string) => new Date(text).toLocaleString(),
     },
   ];

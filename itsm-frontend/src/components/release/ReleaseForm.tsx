@@ -51,11 +51,11 @@ const ReleaseForm: React.FC = () => {
       // 设置表单值
       form.setFieldsValue({
         ...data,
-        planned_release_date: data.planned_release_date
-          ? dayjs(data.planned_release_date)
+        plannedReleaseDate: data.plannedReleaseDate
+          ? dayjs(data.plannedReleaseDate)
           : undefined,
-        planned_start_date: data.planned_start_date ? dayjs(data.planned_start_date) : undefined,
-        planned_end_date: data.planned_end_date ? dayjs(data.planned_end_date) : undefined,
+        plannedStartDate: data.plannedStartDate ? dayjs(data.plannedStartDate) : undefined,
+        plannedEndDate: data.plannedEndDate ? dayjs(data.plannedEndDate) : undefined,
       });
     } catch (error) {
       message.error('加载发布详情失败');
@@ -65,50 +65,50 @@ const ReleaseForm: React.FC = () => {
   };
 
   const onFinish = async (values: {
-    release_number: string;
+    releaseNumber: string;
     title: string;
     description?: string;
     type?: Release['type'];
     environment?: Release['environment'];
     severity?: Release['severity'];
-    change_id?: number;
-    owner_id?: number;
-    planned_release_date?: Dayjs;
-    planned_start_date?: Dayjs;
-    planned_end_date?: Dayjs;
-    release_notes?: string;
-    rollback_procedure?: string;
-    validation_criteria?: string;
-    affected_systems?: string[];
-    affected_components?: string[];
-    deployment_steps?: string[];
+    changeId?: number;
+    ownerId?: number;
+    plannedReleaseDate?: Dayjs;
+    plannedStartDate?: Dayjs;
+    plannedEndDate?: Dayjs;
+    releaseNotes?: string;
+    rollbackProcedure?: string;
+    validationCriteria?: string;
+    affectedSystems?: string[];
+    affectedComponents?: string[];
+    deploymentSteps?: string[];
     tags?: string[];
-    is_emergency?: boolean;
-    requires_approval?: boolean;
+    isEmergency?: boolean;
+    requiresApproval?: boolean;
   }) => {
     setLoading(true);
     try {
       const data: ReleaseRequest = {
-        release_number: values.release_number,
+        releaseNumber: values.releaseNumber,
         title: values.title,
         description: values.description,
         type: values.type,
         environment: values.environment,
         severity: values.severity,
-        change_id: values.change_id,
-        owner_id: values.owner_id,
-        planned_release_date: values.planned_release_date?.toISOString(),
-        planned_start_date: values.planned_start_date?.toISOString(),
-        planned_end_date: values.planned_end_date?.toISOString(),
-        release_notes: values.release_notes,
-        rollback_procedure: values.rollback_procedure,
-        validation_criteria: values.validation_criteria,
-        affected_systems: values.affected_systems,
-        affected_components: values.affected_components,
-        deployment_steps: values.deployment_steps,
+        changeId: values.changeId,
+        ownerId: values.ownerId,
+        plannedReleaseDate: values.plannedReleaseDate?.toISOString(),
+        plannedStartDate: values.plannedStartDate?.toISOString(),
+        plannedEndDate: values.plannedEndDate?.toISOString(),
+        releaseNotes: values.releaseNotes,
+        rollbackProcedure: values.rollbackProcedure,
+        validationCriteria: values.validationCriteria,
+        affectedSystems: values.affectedSystems,
+        affectedComponents: values.affectedComponents,
+        deploymentSteps: values.deploymentSteps,
         tags: values.tags,
-        is_emergency: values.is_emergency,
-        requires_approval: values.requires_approval,
+        isEmergency: values.isEmergency,
+        requiresApproval: values.requiresApproval,
       };
 
       if (isEdit) {
@@ -136,8 +136,8 @@ const ReleaseForm: React.FC = () => {
           type: 'minor',
           environment: 'staging',
           severity: 'medium',
-          is_emergency: false,
-          requires_approval: true,
+          isEmergency: false,
+          requiresApproval: true,
         }}
       >
         <div style={{ marginBottom: 16 }}>

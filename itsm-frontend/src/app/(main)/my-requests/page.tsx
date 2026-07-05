@@ -19,10 +19,8 @@ import {
 // API 接口类型定义
 interface ServiceRequest {
   id: number;
-  catalog_id: number;
-  catalogId?: number;
-  requester_id: number;
-  requesterId?: number;
+  catalogId: number;
+  requesterId: number;
   status:
     | 'submitted'
     | 'manager_approved'
@@ -35,8 +33,7 @@ interface ServiceRequest {
     | 'cancelled'
     | string;
   reason: string;
-  created_at: string;
-  createdAt?: string;
+  createdAt: string;
   catalog?: {
     id: number;
     name: string;
@@ -55,9 +52,9 @@ import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 const RequestStatusBadge = ({ status }: { status: string }) => {
   const statusConfig = {
     submitted: { label: '已提交', color: 'gold', icon: Clock, pulse: true },
-    manager_approved: { label: '主管已批', color: 'blue', icon: Hourglass, pulse: true },
-    it_approved: { label: 'IT已批', color: 'blue', icon: Hourglass, pulse: true },
-    security_approved: { label: '安全已批', color: 'green', icon: CheckCircle, pulse: false },
+    managerApproved: { label: '主管已批', color: 'blue', icon: Hourglass, pulse: true },
+    itApproved: { label: 'IT已批', color: 'blue', icon: Hourglass, pulse: true },
+    securityApproved: { label: '安全已批', color: 'green', icon: CheckCircle, pulse: false },
     provisioning: { label: '交付中', color: 'processing', icon: Hourglass, pulse: true },
     delivered: { label: '已交付', color: 'success', icon: CheckCircle, pulse: false },
     failed: { label: '交付失败', color: 'error', icon: XCircle, pulse: false },

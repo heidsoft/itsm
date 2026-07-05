@@ -9,12 +9,12 @@ export interface WorkflowTemplate {
   description: string;
   category: string;
   icon: string;
-  bpmn_xml: string;
+  bpmnXml: string;
   // 关联的工单类型code（如 k8s_scale, account_apply 等）
   ticketTypeCode?: string;
-  approval_config: {
-    require_approval: boolean;
-    approval_type: 'single' | 'parallel' | 'sequential';
+  approvalConfig: {
+    requireApproval: boolean;
+    approvalType: 'single' | 'parallel' | 'sequential';
     approvers: string[];
   };
 }
@@ -29,7 +29,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     description: '员工请假申请审批，支持年假、病假、事假等类型',
     category: 'hr',
     icon: 'Calendar',
-    bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
+    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_LeaveRequest" name="请假审批流程" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="开始">
@@ -87,9 +87,9 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>`,
-    approval_config: {
-      require_approval: true,
-      approval_type: 'sequential',
+    approvalConfig: {
+      requireApproval: true,
+      approvalType: 'sequential',
       approvers: [],
     },
   },
@@ -99,7 +99,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     description: '员工费用报销审批，支持差旅、招待、采购等费用类型',
     category: 'finance',
     icon: 'DollarSign',
-    bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
+    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_ExpenseApproval" name="费用报销流程" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="开始">
@@ -140,9 +140,9 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     </bpmn:sequenceFlow>
   </bpmn:process>
 </bpmn:definitions>`,
-    approval_config: {
-      require_approval: true,
-      approval_type: 'sequential',
+    approvalConfig: {
+      requireApproval: true,
+      approvalType: 'sequential',
       approvers: [],
     },
   },
@@ -152,7 +152,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     description: '办公用品、设备采购审批流程，支持金额阈值自动路由',
     category: 'procurement',
     icon: 'ShoppingCart',
-    bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
+    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_Procurement" name="采购审批流程" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="开始"/>
@@ -163,9 +163,9 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     <bpmn:endEvent id="EndEvent_Approved" name="审批通过"/>
   </bpmn:process>
 </bpmn:definitions>`,
-    approval_config: {
-      require_approval: true,
-      approval_type: 'sequential',
+    approvalConfig: {
+      requireApproval: true,
+      approvalType: 'sequential',
       approvers: [],
     },
   },
@@ -175,7 +175,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     description: 'IT系统变更、配置变更审批流程，包含评估和测试环节',
     category: 'it',
     icon: 'GitBranch',
-    bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
+    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_ChangeRequest" name="变更管理流程" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="开始">
@@ -212,9 +212,9 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_Verification" targetRef="EndEvent_Completed" />
   </bpmn:process>
 </bpmn:definitions>`,
-    approval_config: {
-      require_approval: true,
-      approval_type: 'sequential',
+    approvalConfig: {
+      requireApproval: true,
+      approvalType: 'sequential',
       approvers: [],
     },
   },
@@ -224,7 +224,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     description: '合同签订审批流程，包含法务审核和会签环节',
     category: 'legal',
     icon: 'FileText',
-    bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
+    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_ContractApproval" name="合同审批流程" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="开始">
@@ -263,9 +263,9 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_GMApproval" targetRef="EndEvent_Approved" />
   </bpmn:process>
 </bpmn:definitions>`,
-    approval_config: {
-      require_approval: true,
-      approval_type: 'parallel',
+    approvalConfig: {
+      requireApproval: true,
+      approvalType: 'parallel',
       approvers: [],
     },
   },
@@ -275,16 +275,16 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     description: '从零开始创建自定义流程',
     category: 'custom',
     icon: 'Plus',
-    bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
+    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_Custom" name="自定义流程" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="开始"/>
     <bpmn:endEvent id="EndEvent_1" name="结束"/>
   </bpmn:process>
 </bpmn:definitions>`,
-    approval_config: {
-      require_approval: false,
-      approval_type: 'single',
+    approvalConfig: {
+      requireApproval: false,
+      approvalType: 'single',
       approvers: [],
     },
   },

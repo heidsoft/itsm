@@ -25,9 +25,9 @@ interface IncidentFormValues {
   category?: string;
   impact?: 'critical' | 'high' | 'medium' | 'low';
   urgency?: 'critical' | 'high' | 'medium' | 'low';
-  assigned_to?: number;
-  affected_systems?: string[];
-  root_cause?: string;
+  assignedTo?: number;
+  affectedSystems?: string[];
+  rootCause?: string;
 }
 
 export default function CreateIncidentPage() {
@@ -48,7 +48,7 @@ export default function CreateIncidentPage() {
     const fetchUsers = async () => {
       setUsersLoading(true);
       try {
-        const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+        const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
         setUsers(response.users || []);
       } catch (error) {
         // 用户列表加载失败不阻塞页面，使用空列表
@@ -107,7 +107,7 @@ export default function CreateIncidentPage() {
         category: values.category,
         impact: values.impact,
         urgency: values.urgency,
-        assigned_to: values.assigned_to,
+        assignedTo: values.assignedTo,
         // 关联第一个CI（后续可扩展支持多个CI）
         configurationItemId: selectedCIs.length > 0 ? selectedCIs[0].id : undefined,
       });
@@ -274,7 +274,7 @@ export default function CreateIncidentPage() {
                                     onClose={() => handleRemoveCI(ci.id)}
                                     color="blue"
                                   >
-                                    {ci.name} ({ci.ci_type || ci.ciType || 'CI'})
+                                    {ci.name} ({ci.ciType || ci.ciType || 'CI'})
                                   </Tag>
                                 ))}
                               </div>
@@ -301,7 +301,7 @@ export default function CreateIncidentPage() {
                                     >
                                       <div>
                                         <div className="font-medium">{ci.name}</div>
-                                        <div className="text-xs text-gray-500">{ci.ci_type || ci.ciType || 'CI'} - {ci.status}</div>
+                                        <div className="text-xs text-gray-500">{ci.ciType || ci.ciType || 'CI'} - {ci.status}</div>
                                       </div>
                                       {selectedCIs.find(item => item.id === ci.id) && (
                                         <Tag color="green">已选择</Tag>

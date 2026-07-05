@@ -49,8 +49,8 @@ interface Ticket {
   priority: string;
   category: string;
   assignee: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface TicketRelation {
@@ -59,7 +59,7 @@ interface TicketRelation {
   targetTicket: Ticket;
   relationType: 'parent' | 'child' | 'duplicate' | 'related' | 'blocked_by' | 'blocks';
   description: string;
-  created_at: string;
+  createdAt: string;
 }
 
 interface MergeCandidate {
@@ -164,7 +164,7 @@ export const TicketAssociation: React.FC = () => {
         targetTicket: tickets.find(t => t.id === values.targetTicketId)!,
         relationType: values.relationType,
         description: values.description,
-        created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       };
 
       setRelations([...relations, newRelation]);
@@ -316,8 +316,8 @@ export const TicketAssociation: React.FC = () => {
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       render: (text: string) => <Text>{text}</Text>,
     },
     {

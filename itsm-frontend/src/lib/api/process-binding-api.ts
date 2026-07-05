@@ -2,24 +2,24 @@ import { httpClient } from './http-client';
 
 export interface ProcessBinding {
   id: number;
-  business_type: string;
-  business_sub_type?: string;
-  process_definition_key: string;
-  process_version?: number;
-  is_default?: boolean;
+  businessType: string;
+  businessSubType?: string;
+  processDefinitionKey: string;
+  processVersion?: number;
+  isDefault?: boolean;
   priority: number;
-  is_active: boolean;
-  department_id?: number;
-  team_id?: number;
+  isActive: boolean;
+  departmentId?: number;
+  teamId?: number;
   scenario?: string;
   category?: string;
   conditions?: Record<string, unknown>;
-  approval_chain_id?: string;
-  sla_policy_id?: string;
+  approvalChainId?: string;
+  slaPolicyId?: string;
   overrides?: Record<string, unknown>;
-  tenant_id?: number;
-  created_at?: string;
-  updated_at?: string;
+  tenantId?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type ProcessBindingPayload = Omit<
@@ -35,10 +35,8 @@ type RawProcessBinding = Partial<ProcessBinding> & {
   isDefault?: boolean;
   isActive?: boolean;
   departmentId?: number;
-  department_name?: string;
   departmentName?: string;
   teamId?: number;
-  team_name?: string;
   teamName?: string;
   approvalChainId?: string;
   slaPolicyId?: string;
@@ -48,33 +46,33 @@ type RawProcessBinding = Partial<ProcessBinding> & {
 };
 
 export interface ProcessBindingQuery {
-  business_type?: string;
-  business_sub_type?: string;
-  department_id?: number;
-  team_id?: number;
+  businessType?: string;
+  businessSubType?: string;
+  departmentId?: number;
+  teamId?: number;
   scenario?: string;
   category?: string;
-  is_active?: boolean;
+  isActive?: boolean;
 }
 
 function normalizeBinding(binding: RawProcessBinding): ProcessBinding {
   return {
     ...binding,
     id: binding.id || 0,
-    business_type: binding.business_type || binding.businessType || '',
-    business_sub_type: binding.business_sub_type || binding.businessSubType,
-    process_definition_key: binding.process_definition_key || binding.processDefinitionKey || '',
-    process_version: binding.process_version ?? binding.processVersion,
-    is_default: binding.is_default ?? binding.isDefault ?? false,
+    businessType: binding.businessType || binding.businessType || '',
+    businessSubType: binding.businessSubType || binding.businessSubType,
+    processDefinitionKey: binding.processDefinitionKey || binding.processDefinitionKey || '',
+    processVersion: binding.processVersion ?? binding.processVersion,
+    isDefault: binding.isDefault ?? binding.isDefault ?? false,
     priority: binding.priority ?? 0,
-    is_active: binding.is_active ?? binding.isActive ?? false,
-    department_id: binding.department_id ?? binding.departmentId,
-    team_id: binding.team_id ?? binding.teamId,
-    approval_chain_id: binding.approval_chain_id ?? binding.approvalChainId,
-    sla_policy_id: binding.sla_policy_id ?? binding.slaPolicyId,
-    tenant_id: binding.tenant_id ?? binding.tenantId,
-    created_at: binding.created_at ?? binding.createdAt,
-    updated_at: binding.updated_at ?? binding.updatedAt,
+    isActive: binding.isActive ?? binding.isActive ?? false,
+    departmentId: binding.departmentId ?? binding.departmentId,
+    teamId: binding.teamId ?? binding.teamId,
+    approvalChainId: binding.approvalChainId ?? binding.approvalChainId,
+    slaPolicyId: binding.slaPolicyId ?? binding.slaPolicyId,
+    tenantId: binding.tenantId ?? binding.tenantId,
+    createdAt: binding.createdAt ?? binding.createdAt,
+    updatedAt: binding.updatedAt ?? binding.updatedAt,
   };
 }
 
@@ -131,7 +129,7 @@ export class ProcessBindingApi {
     departmentType: string
   ): Promise<void> {
     await httpClient.post(`/api/v1/departments/${departmentId}/init-processes`, {
-      department_type: departmentType,
+      departmentType: departmentType,
     });
   }
 }

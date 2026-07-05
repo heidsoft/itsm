@@ -29,22 +29,22 @@ export type ImpactLevel = 'critical' | 'high' | 'medium' | 'low';
 // CI关系
 export interface CIRelationship {
   id: number;
-  source_ci_id: number;
-  source_ci_name: string;
-  source_ci_type: string;
-  target_ci_id: number;
-  target_ci_name: string;
-  target_ci_type: string;
-  relationship_type: CIRelationshipType;
-  relationship_type_name: string;
+  sourceCiId: number;
+  sourceCiName: string;
+  sourceCiType: string;
+  targetCiId: number;
+  targetCiName: string;
+  targetCiType: string;
+  relationshipType: CIRelationshipType;
+  relationshipTypeName: string;
   strength: RelationshipStrength;
-  impact_level: ImpactLevel;
-  is_active: boolean;
-  is_discovered: boolean;
+  impactLevel: ImpactLevel;
+  isActive: boolean;
+  isDiscovered: boolean;
   description: string;
   metadata: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 拓扑节点
@@ -52,7 +52,7 @@ export interface TopologyNode {
   id: number;
   name: string;
   type: string;
-  type_name: string;
+  typeName: string;
   status: string;
   criticality: string;
   icon?: string;
@@ -64,43 +64,43 @@ export interface TopologyEdge {
   id: number;
   source: number;
   target: number;
-  relationship_type: string;
-  relationship_label: string;
+  relationshipType: string;
+  relationshipLabel: string;
   strength: string;
-  impact_level: string;
+  impactLevel: string;
 }
 
 // 拓扑图
 export interface TopologyGraph {
   nodes: TopologyNode[];
   edges: TopologyEdge[];
-  root_ci_id: number;
+  rootCiId: number;
   depth: number;
-  total_nodes: number;
-  total_edges: number;
+  totalNodes: number;
+  totalEdges: number;
 }
 
 // 影响分析项
 export interface ImpactAnalysisItem {
-  ci_id: number;
-  ci_name: string;
-  ci_type: string;
+  ciId: number;
+  ciName: string;
+  ciType: string;
   relationship: string;
-  impact_level: ImpactLevel;
+  impactLevel: ImpactLevel;
   distance: number;
   direction: 'upstream' | 'downstream';
-  affected_count: number;
+  affectedCount: number;
 }
 
 // 影响分析响应
 export interface ImpactAnalysisResponse {
-  target_ci: TopologyNode;
-  upstream_impact: ImpactAnalysisItem[];
-  downstream_impact: ImpactAnalysisItem[];
-  critical_dependencies: ImpactAnalysisItem[];
-  affected_tickets: AffectedTicket[];
-  affected_incidents: AffectedIncident[];
-  risk_level: 'critical' | 'high' | 'medium' | 'low';
+  targetCi: TopologyNode;
+  upstreamImpact: ImpactAnalysisItem[];
+  downstreamImpact: ImpactAnalysisItem[];
+  criticalDependencies: ImpactAnalysisItem[];
+  affectedTickets: AffectedTicket[];
+  affectedIncidents: AffectedIncident[];
+  riskLevel: 'critical' | 'high' | 'medium' | 'low';
   summary: string;
 }
 
@@ -110,7 +110,7 @@ export interface AffectedTicket {
   title: string;
   status: string;
   priority: string;
-  created_at: string;
+  createdAt: string;
 }
 
 // 受影响事件
@@ -119,27 +119,27 @@ export interface AffectedIncident {
   title: string;
   status: string;
   severity: string;
-  created_at: string;
+  createdAt: string;
 }
 
 // 创建关系请求
 export interface CreateRelationshipRequest {
-  source_ci_id: number;
-  target_ci_id: number;
-  relationship_type: CIRelationshipType;
+  sourceCiId: number;
+  targetCiId: number;
+  relationshipType: CIRelationshipType;
   strength?: RelationshipStrength;
-  impact_level?: ImpactLevel;
+  impactLevel?: ImpactLevel;
   description?: string;
   metadata?: Record<string, unknown>;
 }
 
 // 更新关系请求
 export interface UpdateRelationshipRequest {
-  relationship_type?: CIRelationshipType;
+  relationshipType?: CIRelationshipType;
   strength?: RelationshipStrength;
-  impact_level?: ImpactLevel;
+  impactLevel?: ImpactLevel;
   description?: string;
-  is_active?: boolean;
+  isActive?: boolean;
 }
 
 // 关系类型信息
@@ -183,10 +183,10 @@ export const CIRelationshipAPI = {
       activeOnly?: boolean;
     }
   ): Promise<{
-    outgoing_relations: CIRelationship[];
-    incoming_relations: CIRelationship[];
-    total_outgoing: number;
-    total_incoming: number;
+    outgoingRelations: CIRelationship[];
+    incomingRelations: CIRelationship[];
+    totalOutgoing: number;
+    totalIncoming: number;
   }> {
     const params = new URLSearchParams();
     params.append('ci_id', String(ciId));
@@ -197,13 +197,13 @@ export const CIRelationshipAPI = {
       `/api/v1/configuration-items/relationships?${params.toString()}`
     );
     const arr = Array.isArray(list) ? list : [];
-    const outgoing = arr.filter(r => r.source_ci_id === ciId);
-    const incoming = arr.filter(r => r.target_ci_id === ciId);
+    const outgoing = arr.filter(r => r.sourceCiId === ciId);
+    const incoming = arr.filter(r => r.targetCiId === ciId);
     return {
-      outgoing_relations: outgoing,
-      incoming_relations: incoming,
-      total_outgoing: outgoing.length,
-      total_incoming: incoming.length,
+      outgoingRelations: outgoing,
+      incomingRelations: incoming,
+      totalOutgoing: outgoing.length,
+      totalIncoming: incoming.length,
     };
   },
 
@@ -220,8 +220,8 @@ export const CIRelationshipAPI = {
 
   // 批量创建关系（逐个调用，后端无 batch 路由）
   async batchCreateRelationships(relationships: CreateRelationshipRequest[]): Promise<{
-    created_count: number;
-    failed_count: number;
+    createdCount: number;
+    failedCount: number;
     errors: string[];
   }> {
     let created = 0;
@@ -236,20 +236,20 @@ export const CIRelationshipAPI = {
         errors.push(e?.message ?? String(e));
       }
     }
-    return { created_count: created, failed_count: failed, errors };
+    return { createdCount: created, failedCount: failed, errors };
   },
 
   // 获取可用的目标CI列表（通过 getCIs 搜索）
   async getAvailableCIs(ciId: number, search?: string): Promise<TopologyNode[]> {
     const { CMDBApi } = await import('./cmdb-api');
-    const result = await CMDBApi.getCIs(search ? { ci_type: undefined, status: undefined } : undefined);
+    const result = await CMDBApi.getCIs(search ? { ciType: undefined, status: undefined } : undefined);
     const items = result.items ?? result.cis ?? [];
     const filtered = items.filter((ci: any) => ci.id !== ciId);
     return filtered.map((ci: any) => ({
       id: ci.id,
       name: ci.name,
-      type: ci.ci_type ?? ci.type ?? '',
-      type_name: ci.ci_type ?? ci.type ?? '',
+      type: ci.ciType ?? ci.type ?? '',
+      typeName: ci.ciType ?? ci.type ?? '',
       status: ci.status ?? '',
       criticality: ci.criticality ?? '',
       attributes: ci.attributes ?? {},

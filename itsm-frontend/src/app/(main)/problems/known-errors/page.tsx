@@ -74,7 +74,7 @@ export default function KnownErrorsPage() {
     try {
       const params = {
         page: pagination.current,
-        page_size: pagination.pageSize,
+        pageSize: pagination.pageSize,
         ...searchParams,
       };
       // 移除空参数
@@ -139,14 +139,14 @@ export default function KnownErrorsPage() {
       title: record.title,
       description: record.description,
       symptoms: record.symptoms,
-      root_cause: record.root_cause,
+      rootCause: record.rootCause,
       workaround: record.workaround,
       resolution: record.resolution,
       category: record.category,
       severity: record.severity,
       status: record.status,
-      affected_products: record.affected_products,
-      affected_cis: record.affected_cis,
+      affectedProducts: record.affectedProducts,
+      affectedCis: record.affectedCis,
       keywords: record.keywords,
     });
     setIsModalOpen(true);
@@ -236,7 +236,7 @@ export default function KnownErrorsPage() {
     },
     {
       title: '发生次数',
-      dataIndex: 'occurrence_count',
+      dataIndex:'occurrenceCount',
       width: 100,
     },
     {
@@ -552,7 +552,7 @@ export default function KnownErrorsPage() {
               {viewRecord.symptoms || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="根本原因" span={2}>
-              {viewRecord.root_cause || '-'}
+              {viewRecord.rootCause || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="临时解决方案" span={2}>
               {viewRecord.workaround || '-'}
@@ -567,7 +567,7 @@ export default function KnownErrorsPage() {
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="发生次数">
-              {viewRecord.occurrence_count}
+              {viewRecord.occurrenceCount}
             </Descriptions.Item>
             <Descriptions.Item label="关键词" span={2}>
               {viewRecord.keywords?.map((k, i) => (
@@ -575,16 +575,16 @@ export default function KnownErrorsPage() {
               )) || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="受影响的产品" span={2}>
-              {viewRecord.affected_products?.join(', ') || '-'}
+              {viewRecord.affectedProducts?.join(', ') || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="受影响的配置项" span={2}>
-              {viewRecord.affected_cis?.join(', ') || '-'}
+              {viewRecord.affectedCis?.join(', ') || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="创建时间">
-              {new Date(viewRecord.created_at).toLocaleString()}
+              {new Date(viewRecord.createdAt).toLocaleString()}
             </Descriptions.Item>
             <Descriptions.Item label="更新时间">
-              {new Date(viewRecord.updated_at).toLocaleString()}
+              {new Date(viewRecord.updatedAt).toLocaleString()}
             </Descriptions.Item>
           </Descriptions>
         )}

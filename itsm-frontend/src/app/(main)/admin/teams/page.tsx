@@ -65,7 +65,7 @@ export default function TeamManagement() {
   // 加载用户列表
   const loadUsers = useCallback(async () => {
     try {
-      const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+      const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
       setUsers(
         response.users.map(user => ({
           label: user.name || user.username,
@@ -146,7 +146,7 @@ export default function TeamManagement() {
       name: record.name,
       code: record.code,
       description: record.description,
-      manager_id: record.manager_id,
+      managerId: record.managerId,
     });
     setShowModal(true);
   };
@@ -167,7 +167,7 @@ export default function TeamManagement() {
     },
     {
       title: '团队经理',
-      dataIndex: 'manager_id',
+      dataIndex:'managerId',
       key: 'manager',
       render: (managerId: number) => {
         const user = users.find(u => u.value === managerId);

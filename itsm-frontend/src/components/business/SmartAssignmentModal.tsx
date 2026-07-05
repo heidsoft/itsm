@@ -80,9 +80,9 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
     setAutoAssigning(true);
     try {
       const response: AutoAssignResponse = await TicketAssignmentApi.autoAssign(ticketId);
-      if (response.assigned_to) {
+      if (response.assignedTo) {
         message.success(`工单已自动分配给推荐的处理人`);
-        onSuccess(response.assigned_to);
+        onSuccess(response.assignedTo);
         onCancel();
       } else {
         message.warning('自动分配失败，请手动选择处理人');
@@ -174,17 +174,17 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
                     <Button
                       key="select"
                       type="primary"
-                      onClick={() => handleSelectAssignee(item.user_id)}
+                      onClick={() => handleSelectAssignee(item.userId)}
                     >
                       选择
                     </Button>,
                   ]}
                 >
                   <List.Item.Meta
-                    avatar={<Avatar src={item.user_avatar} icon={<User />} size="large" />}
+                    avatar={<Avatar src={item.userAvatar} icon={<User />} size="large" />}
                     title={
                       <Space>
-                        <Text strong>{item.user_name}</Text>
+                        <Text strong>{item.userName}</Text>
                         {index === 0 && (
                           <Tag color="gold" icon={<CheckCircle />}>
                             最佳推荐
@@ -201,10 +201,10 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
                           <Text type="secondary">{item.reason}</Text>
                         </Paragraph>
                         <Space size="middle">
-                          {item.factors.skill_match !== undefined && (
+                          {item.factors.skillMatch !== undefined && (
                             <Tooltip title="技能匹配度">
                               <Text type="secondary" style={{ fontSize: 12 }}>
-                                技能: {item.factors.skill_match}%
+                                技能: {item.factors.skillMatch}%
                               </Text>
                             </Tooltip>
                           )}
@@ -215,10 +215,10 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
                               </Text>
                             </Tooltip>
                           )}
-                          {item.factors.history_success !== undefined && (
+                          {item.factors.historySuccess !== undefined && (
                             <Tooltip title="历史成功率">
                               <Text type="secondary" style={{ fontSize: 12 }}>
-                                成功率: {item.factors.history_success}%
+                                成功率: {item.factors.historySuccess}%
                               </Text>
                             </Tooltip>
                           )}

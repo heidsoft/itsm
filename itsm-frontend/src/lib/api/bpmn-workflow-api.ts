@@ -30,19 +30,19 @@ export interface ProcessDefinition {
   version: number;
   status: 'draft' | 'active' | 'suspended' | 'archived';
   xml: string;
-  deployment_id?: number;
-  deployment_time?: string;
-  tenant_id?: number;
-  created_by?: number;
-  created_at?: string;
-  updated_at?: string;
+  deploymentId?: number;
+  deploymentTime?: string;
+  tenantId?: number;
+  createdBy?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProcessDefinitionListResponse {
   items: ProcessDefinition[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 // 流程定义请求
@@ -62,23 +62,23 @@ export interface UpdateProcessDefinitionRequest {
 }
 
 export interface CloneProcessDefinitionRequest {
-  new_key: string;
-  new_name: string;
+  newKey: string;
+  newName: string;
   description?: string;
 }
 
 // 流程实例
 export interface ProcessInstance {
   id: string;
-  process_definition_key: string;
-  process_definition_version?: number;
-  business_key?: string;
+  processDefinitionKey: string;
+  processDefinitionVersion?: number;
+  businessKey?: string;
   status: 'created' | 'running' | 'completed' | 'terminated' | 'suspended';
-  start_time?: string;
-  end_time?: string;
+  startTime?: string;
+  endTime?: string;
   duration?: number;
-  start_user_id?: number;
-  tenant_id?: number;
+  startUserId?: number;
+  tenantId?: number;
   variables?: Record<string, unknown>;
 }
 
@@ -86,12 +86,12 @@ export interface ProcessInstanceListResponse {
   items: ProcessInstance[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 export interface StartProcessRequest {
-  process_definition_key: string;
-  business_key?: string;
+  processDefinitionKey: string;
+  businessKey?: string;
   variables?: Record<string, unknown>;
 }
 
@@ -99,30 +99,30 @@ export interface StartProcessRequest {
 export interface UserTask {
   id: string;
   name: string;
-  task_definition_key: string;
-  process_instance_id: string;
-  process_definition_key?: string;
+  taskDefinitionKey: string;
+  processInstanceId: string;
+  processDefinitionKey?: string;
   assignee?: number;
-  assignee_name?: string;
-  candidate_users?: number[];
-  candidate_groups?: string[];
-  due_date?: string;
+  assigneeName?: string;
+  candidateUsers?: number[];
+  candidateGroups?: string[];
+  dueDate?: string;
   priority?: number;
   status?: string;
-  created_time?: string;
-  claimed_time?: string;
-  completed_time?: string;
+  createdTime?: string;
+  claimedTime?: string;
+  completedTime?: string;
 }
 
 export interface UserTaskListResponse {
   items: UserTask[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 export interface ClaimTaskRequest {
-  user_id: number;
+  userId: number;
 }
 
 export interface CompleteTaskRequest {
@@ -137,31 +137,31 @@ export interface AssignTaskRequest {
 // 会签
 export interface CounterSignTask {
   id: string;
-  main_task_id: string;
-  user_id: number;
-  user_name?: string;
+  mainTaskId: string;
+  userId: number;
+  userName?: string;
   status: 'pending' | 'approved' | 'rejected';
   comment?: string;
-  created_time?: string;
-  completed_time?: string;
+  createdTime?: string;
+  completedTime?: string;
 }
 
 export interface CounterSignRequest {
   users: number[];
   type: 'sequential' | 'parallel';
-  vote_type: 'agree' | 'disagree' | 'abstain';
+  voteType: 'agree' | 'disagree' | 'abstain';
 }
 
 export interface CounterSignStatusResponse {
-  main_task_id: string;
+  mainTaskId: string;
   type: string;
   total: number;
   approved: number;
   rejected: number;
   abstained: number;
   completed: boolean;
-  created_time?: string;
-  completed_time?: string;
+  createdTime?: string;
+  completedTime?: string;
 }
 
 export interface VoteRequest {
@@ -177,16 +177,16 @@ export interface ProcessVersion {
   description?: string;
   xml: string;
   status: string;
-  is_activated: boolean;
-  created_by?: number;
-  created_at?: string;
+  isActivated: boolean;
+  createdBy?: number;
+  createdAt?: string;
 }
 
 export interface ProcessVersionListResponse {
   items: ProcessVersion[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 export interface CreateVersionRequest {
@@ -209,41 +209,41 @@ export interface VersionCompareResponse {
 
 // 统计
 export interface InstanceStats {
-  total_instances: number;
-  running_instances: number;
-  completed_instances: number;
-  terminated_instances: number;
-  suspended_instances: number;
-  avg_duration_minutes?: number;
-  completion_rate?: number;
+  totalInstances: number;
+  runningInstances: number;
+  completedInstances: number;
+  terminatedInstances: number;
+  suspendedInstances: number;
+  avgDurationMinutes?: number;
+  completionRate?: number;
 }
 
 export interface TaskStats {
-  total_tasks: number;
-  pending_tasks: number;
-  completed_tasks: number;
-  overdue_tasks: number;
-  avg_completion_time_minutes?: number;
-  completion_rate?: number;
+  totalTasks: number;
+  pendingTasks: number;
+  completedTasks: number;
+  overdueTasks: number;
+  avgCompletionTimeMinutes?: number;
+  completionRate?: number;
 }
 
 // 变更日志
 export interface VersionChangeLog {
   id: number;
-  process_definition_key: string;
+  processDefinitionKey: string;
   version: number;
-  change_type: string;
-  changed_fields: string[];
-  change_details?: string;
-  created_by?: number;
-  created_at?: string;
+  changeType: string;
+  changedFields: string[];
+  changeDetails?: string;
+  createdBy?: number;
+  createdAt?: string;
 }
 
 export interface ChangeLogListResponse {
   items: VersionChangeLog[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 // ============================================================
@@ -273,14 +273,14 @@ export class BPMNWorkflowApi {
    */
   static async listProcessDefinitions(params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
     category?: string;
     status?: string;
     keyword?: string;
   }): Promise<ProcessDefinitionListResponse> {
     const query: Record<string, string> = {};
     if (params?.page) query.page = String(params.page);
-    if (params?.page_size) query.page_size = String(params.page_size);
+    if (params?.pageSize) query.pageSize = String(params.pageSize);
     if (params?.category) query.category = params.category;
     if (params?.status) query.status = params.status;
     if (params?.keyword) query.keyword = params.keyword;
@@ -383,20 +383,20 @@ export class BPMNWorkflowApi {
    */
   static async listProcessInstances(params?: {
     page?: number;
-    page_size?: number;
-    process_definition_key?: string;
+    pageSize?: number;
+    processDefinitionKey?: string;
     status?: string;
-    start_time_from?: string;
-    start_time_to?: string;
+    startTimeFrom?: string;
+    startTimeTo?: string;
   }): Promise<ProcessInstanceListResponse> {
     const query: Record<string, string> = {};
     if (params?.page) query.page = String(params.page);
-    if (params?.page_size) query.page_size = String(params.page_size);
-    if (params?.process_definition_key)
-      query.process_definition_key = params.process_definition_key;
+    if (params?.pageSize) query.pageSize = String(params.pageSize);
+    if (params?.processDefinitionKey)
+      query.processDefinitionKey = params.processDefinitionKey;
     if (params?.status) query.status = params.status;
-    if (params?.start_time_from) query.start_time_from = params.start_time_from;
-    if (params?.start_time_to) query.start_time_to = params.start_time_to;
+    if (params?.startTimeFrom) query.startTimeFrom = params.startTimeFrom;
+    if (params?.startTimeTo) query.startTimeTo = params.startTimeTo;
 
     const res = await httpClient.get<
       { data?: ProcessInstanceListResponse } & ProcessInstanceListResponse
@@ -467,19 +467,19 @@ export class BPMNWorkflowApi {
    */
   static async listUserTasks(params?: {
     page?: number;
-    page_size?: number;
-    process_instance_id?: string;
-    process_definition_key?: string;
+    pageSize?: number;
+    processInstanceId?: string;
+    processDefinitionKey?: string;
     assignee?: number;
     status?: string;
   }): Promise<UserTaskListResponse> {
     const query: Record<string, string> = {};
     if (params?.page) query.page = String(params.page);
-    if (params?.page_size) query.page_size = String(params.page_size);
-    if (params?.process_instance_id)
-      query.process_instance_id = params.process_instance_id;
-    if (params?.process_definition_key)
-      query.process_definition_key = params.process_definition_key;
+    if (params?.pageSize) query.pageSize = String(params.pageSize);
+    if (params?.processInstanceId)
+      query.processInstanceId = params.processInstanceId;
+    if (params?.processDefinitionKey)
+      query.processDefinitionKey = params.processDefinitionKey;
     if (params?.assignee) query.assignee = String(params.assignee);
     if (params?.status) query.status = params.status;
 
@@ -600,15 +600,15 @@ export class BPMNWorkflowApi {
    * 获取流程实例统计
    */
   static async getInstanceStats(params?: {
-    process_definition_key?: string;
-    start_time?: string;
-    end_time?: string;
+    processDefinitionKey?: string;
+    startTime?: string;
+    endTime?: string;
   }): Promise<InstanceStats> {
     const query: Record<string, string> = {};
-    if (params?.process_definition_key)
-      query.process_definition_key = params.process_definition_key;
-    if (params?.start_time) query.start_time = params.start_time;
-    if (params?.end_time) query.end_time = params.end_time;
+    if (params?.processDefinitionKey)
+      query.processDefinitionKey = params.processDefinitionKey;
+    if (params?.startTime) query.startTime = params.startTime;
+    if (params?.endTime) query.endTime = params.endTime;
 
     const res = await httpClient.get<{ data?: InstanceStats } & InstanceStats>(
       `${this.baseUrl}/stats/instances`,
@@ -621,15 +621,15 @@ export class BPMNWorkflowApi {
    * 获取任务统计
    */
   static async getTaskStats(params?: {
-    process_definition_key?: string;
-    start_time?: string;
-    end_time?: string;
+    processDefinitionKey?: string;
+    startTime?: string;
+    endTime?: string;
   }): Promise<TaskStats> {
     const query: Record<string, string> = {};
-    if (params?.process_definition_key)
-      query.process_definition_key = params.process_definition_key;
-    if (params?.start_time) query.start_time = params.start_time;
-    if (params?.end_time) query.end_time = params.end_time;
+    if (params?.processDefinitionKey)
+      query.processDefinitionKey = params.processDefinitionKey;
+    if (params?.startTime) query.startTime = params.startTime;
+    if (params?.endTime) query.endTime = params.endTime;
 
     const res = await httpClient.get<{ data?: TaskStats } & TaskStats>(
       `${this.baseUrl}/stats/tasks`,
@@ -645,11 +645,11 @@ export class BPMNWorkflowApi {
    */
   static async listVersions(key: string, params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
   }): Promise<ProcessVersionListResponse> {
     const query: Record<string, string> = {};
     if (params?.page) query.page = String(params.page);
-    if (params?.page_size) query.page_size = String(params.page_size);
+    if (params?.pageSize) query.pageSize = String(params.pageSize);
 
     const res = await httpClient.get<
       { data?: ProcessVersionListResponse } & ProcessVersionListResponse
@@ -731,12 +731,12 @@ export class BPMNWorkflowApi {
     key: string,
     params?: {
       page?: number;
-      page_size?: number;
+      pageSize?: number;
     }
   ): Promise<ChangeLogListResponse> {
     const query: Record<string, string> = { key };
     if (params?.page) query.page = String(params.page);
-    if (params?.page_size) query.page_size = String(params.page_size);
+    if (params?.pageSize) query.pageSize = String(params.pageSize);
 
     const res = await httpClient.get<
       { data?: ChangeLogListResponse } & ChangeLogListResponse

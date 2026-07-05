@@ -27,13 +27,12 @@ import {
   Modal,
   Tooltip as AntTooltip,
 } from 'antd';
-import { Filter, Save, Download, Settings, RotateCcw, CheckCircle, BarChart3, LineChart, PieChart, Table } from 'lucide-react';
 import {
-  LineChart,
+  LineChart as RechartsLineChart,
   Line,
-  BarChart,
+  BarChart as RechartsBarChart,
   Bar,
-  PieChart,
+  PieChart as RechartsPieChart,
   Pie,
   Cell,
   XAxis,
@@ -45,7 +44,7 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { Filter, Save, Download, Settings, RotateCcw, CheckCircle, BarChart3, LineChart, PieChart, Table } from 'lucide-react';
+import { Filter, Save, Download, Settings, RotateCcw, CheckCircle, BarChart3, Table2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import dayjs from 'dayjs';
@@ -78,10 +77,10 @@ interface ChartData {
 interface AnalyticsConfig {
   dimensions: string[];
   metrics: string[];
-  chart_type: 'line' | 'bar' | 'pie' | 'area' | 'table';
-  time_range: [string, string];
+  chartType: 'line' | 'bar' | 'pie' | 'area' | 'table';
+  timeRange: [string, string];
   filters: Record<string, unknown>;
-  group_by?: string;
+  groupBy?: string;
 }
 
 interface TicketDeepAnalyticsProps {
@@ -100,8 +99,8 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
   const [config, setConfig] = useState<AnalyticsConfig>({
     dimensions: ['status'],
     metrics: ['count'],
-    chart_type: 'bar',
-    time_range: [
+    chartType: 'bar',
+    timeRange: [
       format(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
       format(new Date(), 'yyyy-MM-dd'),
     ],
@@ -136,17 +135,17 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
     { key: 'category', label: '分类', type: 'category' },
     { key: 'assignee', label: '处理人', type: 'category' },
     { key: 'department', label: '部门', type: 'category' },
-    { key: 'created_date', label: '创建日期', type: 'time' },
-    { key: 'resolved_date', label: '解决日期', type: 'time' },
+    { key:'createdDate', label: '创建日期', type: 'time' },
+    { key:'resolvedDate', label: '解决日期', type: 'time' },
   ];
 
   // 可用指标
   const availableMetrics: AnalyticsMetric[] = [
     { key: 'count', label: '数量', type: 'count' },
-    { key: 'response_time', label: '平均响应时间', type: 'avg', field: 'response_time' },
-    { key: 'resolution_time', label: '平均解决时间', type: 'avg', field: 'resolution_time' },
-    { key: 'sla_compliance', label: 'SLA合规率', type: 'avg', field: 'sla_compliance' },
-    { key: 'customer_satisfaction', label: '客户满意度', type: 'avg', field: 'rating' },
+    { key:'responseTime', label: '平均响应时间', type: 'avg', field: 'response_time' },
+    { key:'resolutionTime', label: '平均解决时间', type: 'avg', field: 'resolution_time' },
+    { key:'slaCompliance', label: 'SLA合规率', type: 'avg', field: 'sla_compliance' },
+    { key:'customerSatisfaction', label: '客户满意度', type: 'avg', field: 'rating' },
   ];
 
   // 加载分析数据
@@ -166,10 +165,10 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         setSummaryData({
           total: 0,
           resolved: 0,
-          avg_response_time: 0,
-          avg_resolution_time: 0,
-          sla_compliance: 0,
-          customer_satisfaction: 0,
+          avgResponseTime: 0,
+          avgResolutionTime: 0,
+          slaCompliance: 0,
+          customerSatisfaction: 0,
         });
         antMessage.info('未找到符合条件的数据');
       }
@@ -180,10 +179,10 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
       setSummaryData({
         total: 0,
         resolved: 0,
-        avg_response_time: 0,
-        avg_resolution_time: 0,
-        sla_compliance: 0,
-        customer_satisfaction: 0,
+        avgResponseTime: 0,
+        avgResolutionTime: 0,
+        slaCompliance: 0,
+        customerSatisfaction: 0,
       });
     } finally {
       setLoading(false);
@@ -249,37 +248,37 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
 
     const COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2'];
 
-    switch (config.chart_type) {
+    switch (config.chartType) {
       case 'line':
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={chartData}>
+            <RechartsLineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
               <Legend />
               <Line type="monotone" dataKey="value" stroke="#1890ff" strokeWidth={2} />
-            </LineChart>
+            </RechartsLineChart>
           </ResponsiveContainer>
         );
       case 'bar':
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={chartData}>
+            <RechartsBarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
               <Legend />
               <Bar dataKey="value" fill="#1890ff" />
-            </BarChart>
+            </RechartsBarChart>
           </ResponsiveContainer>
         );
       case 'pie':
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <PieChart>
+            <RechartsPieChart>
               <Pie
                 data={chartData}
                 cx="50%"
@@ -295,7 +294,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
                 ))}
               </Pie>
               <Tooltip />
-            </PieChart>
+            </RechartsPieChart>
           </ResponsiveContainer>
         );
       case 'area':
@@ -325,7 +324,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               { title: '名称', dataIndex: 'name', key: 'name' },
               { title: '数值', dataIndex: 'value', key: 'value' },
               ...(config.metrics.includes('response_time')
-                ? [{ title: '平均响应时间', dataIndex: 'avg_time', key: 'avg_time' }]
+                ? [{ title: '平均响应时间', dataIndex:'avgTime', key:'avgTime' }]
                 : []),
             ]}
             rowKey="name"
@@ -373,37 +372,37 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         <Space className="mb-4" wrap>
           <RangePicker
             value={[
-              config.time_range[0] ? dayjs(config.time_range[0]) : null,
-              config.time_range[1] ? dayjs(config.time_range[1]) : null,
+              config.timeRange[0] ? dayjs(config.timeRange[0]) : null,
+              config.timeRange[1] ? dayjs(config.timeRange[1]) : null,
             ]}
             onChange={dates => {
               if (dates) {
                 setConfig({
                   ...config,
-                  time_range: [dates[0]!.format('YYYY-MM-DD'), dates[1]!.format('YYYY-MM-DD')],
+                  timeRange: [dates[0]!.format('YYYY-MM-DD'), dates[1]!.format('YYYY-MM-DD')],
                 });
               }
             }}
           />
           <Select
-            value={config.chart_type}
-            onChange={value => setConfig({ ...config, chart_type: value })}
+            value={config.chartType}
+            onChange={value => setConfig({ ...config, chartType: value })}
             style={{ width: 120 }}
           >
             <Option value="line">
-              <LineChart /> 折线图
+              <RechartsLineChart /> 折线图
             </Option>
             <Option value="bar">
               <BarChart3 /> 柱状图
             </Option>
             <Option value="pie">
-              <PieChart /> 饼图
+              <RechartsPieChart /> 饼图
             </Option>
             <Option value="area">
               <AreaChart /> 面积图
             </Option>
             <Option value="table">
-              <Table /> 表格
+              <Table2 /> 表格
             </Option>
           </Select>
         </Space>
@@ -434,7 +433,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
           <Card>
             <Statistic
               title="平均响应时间"
-              value={summaryData.avg_response_time || 0}
+              value={summaryData.avgResponseTime || 0}
               precision={1}
               suffix="小时"
               styles={{ content: { color: '#1890ff' } }}
@@ -445,7 +444,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
           <Card>
             <Statistic
               title="SLA合规率"
-              value={summaryData.sla_compliance || 0}
+              value={summaryData.slaCompliance || 0}
               precision={1}
               suffix="%"
               styles={{ content: { color: '#52c41a' } }}

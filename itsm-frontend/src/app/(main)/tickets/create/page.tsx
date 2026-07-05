@@ -164,7 +164,7 @@ export default function CreateTicketPage() {
         type: inferTicketType(selectedType),
         category: values.category || (selectedType ? selectedType.category : undefined),
         formFields: selectedType ? { presetTypeId: selectedType.id } : undefined,
-        workflow_definition_key: selectedType?.workflowTemplateId,
+        workflowDefinitionKey: selectedType?.workflowTemplateId,
       });
 
       message.success('工单创建成功');

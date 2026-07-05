@@ -25,80 +25,59 @@ export type ReleaseEnvironment = 'dev' | 'staging' | 'production';
 
 // 发布请求接口
 export interface ReleaseRequest {
-  release_number: string;
+  releaseNumber: string;
   title: string;
   description?: string;
   type?: ReleaseType;
   environment?: ReleaseEnvironment;
   severity?: ReleaseSeverity;
-  change_id?: number;
-  owner_id?: number;
-  planned_release_date?: string;
-  planned_start_date?: string;
-  planned_end_date?: string;
-  release_notes?: string;
-  rollback_procedure?: string;
-  validation_criteria?: string;
-  affected_systems?: string[];
-  affected_components?: string[];
-  deployment_steps?: string[];
+  changeId?: number;
+  ownerId?: number;
+  plannedReleaseDate?: string;
+  plannedStartDate?: string;
+  plannedEndDate?: string;
+  releaseNotes?: string;
+  rollbackProcedure?: string;
+  validationCriteria?: string;
+  affectedSystems?: string[];
+  affectedComponents?: string[];
+  deploymentSteps?: string[];
   tags?: string[];
-  is_emergency?: boolean;
-  requires_approval?: boolean;
+  isEmergency?: boolean;
+  requiresApproval?: boolean;
 }
 
 // 发布响应接口
 export interface Release {
   id: number;
-  release_number: string;
-  releaseNumber?: string;
+  releaseNumber: string;
   title: string;
   description?: string;
   type: ReleaseType;
   status: ReleaseStatus;
   severity: ReleaseSeverity;
   environment: ReleaseEnvironment;
-  change_id?: number;
   changeId?: number;
-  owner_id?: number;
   ownerId?: number;
-  owner_name?: string;
   ownerName?: string;
-  created_by: number;
-  createdBy?: number;
-  created_by_name: string;
-  createdByName?: string;
-  tenant_id: number;
-  tenantId?: number;
-  planned_release_date?: string;
+  createdBy: number;
+  createdByName: string;
+  tenantId: number;
   plannedReleaseDate?: string;
-  actual_release_date?: string;
   actualReleaseDate?: string;
-  planned_start_date?: string;
   plannedStartDate?: string;
-  planned_end_date?: string;
   plannedEndDate?: string;
-  release_notes?: string;
   releaseNotes?: string;
-  rollback_procedure?: string;
   rollbackProcedure?: string;
-  validation_criteria?: string;
   validationCriteria?: string;
-  affected_systems?: string[];
   affectedSystems?: string[];
-  affected_components?: string[];
   affectedComponents?: string[];
-  deployment_steps?: string[];
   deploymentSteps?: string[];
   tags?: string[];
-  is_emergency: boolean;
-  isEmergency?: boolean;
-  requires_approval: boolean;
-  requiresApproval?: boolean;
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  isEmergency: boolean;
+  requiresApproval: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 发布列表响应
@@ -112,11 +91,11 @@ export interface ReleaseStatsResponse {
   total: number;
   draft: number;
   scheduled: number;
-  in_progress: number;
+  inProgress: number;
   completed: number;
   cancelled: number;
   failed: number;
-  rolled_back: number;
+  rolledBack: number;
 }
 
 // 发布状态更新请求

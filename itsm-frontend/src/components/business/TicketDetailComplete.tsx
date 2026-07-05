@@ -87,31 +87,22 @@ interface TicketDetailComplete {
     phone?: string;
     department: string;
   };
-  requester_id?: number;
   requesterId?: number;
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
-  due_date?: string;
+  createdAt: string;
+  updatedAt: string;
   dueDate?: string;
-  sla_deadline?: string;
   slaDeadline?: string;
   tags: string[];
   impact: 'low' | 'medium' | 'high' | 'critical';
   urgency: 'low' | 'medium' | 'high' | 'critical';
   resolution?: string;
-  work_notes?: string;
   workNotes?: string;
   attachments: Attachment[];
   comments: Comment[];
   activities: Activity[];
-  workflow_steps: WorkflowStep[];
-  workflowSteps?: WorkflowStep[];
-  related_tickets: RelatedTicket[];
-  relatedTickets?: RelatedTicket[];
-  sla_metrics: SLAMetrics;
-  slaMetrics?: SLAMetrics;
+  workflowSteps: WorkflowStep[];
+  relatedTickets: RelatedTicket[];
+  slaMetrics: SLAMetrics;
 }
 
 interface Attachment {
@@ -120,8 +111,8 @@ interface Attachment {
   size: number;
   type: string;
   url: string;
-  uploaded_by: string;
-  uploaded_at: string;
+  uploadedBy: string;
+  uploadedAt: string;
 }
 
 interface Comment {
@@ -161,8 +152,8 @@ interface WorkflowStep {
     name: string;
     avatar?: string;
   };
-  due_date?: string;
-  completed_at?: string;
+  dueDate?: string;
+  completedAt?: string;
   comments?: string;
 }
 
@@ -222,7 +213,7 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       open: 'blue',
-      in_progress: 'processing',
+      inProgress: 'processing',
       pending: 'warning',
       resolved: 'success',
       closed: 'default',
@@ -285,7 +276,7 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
           name: '当前用户',
           role: '用户',
         },
-        is_internal: isInternalComment,
+        isInternal: isInternalComment,
       });
       setCommentText('');
       message.success('评论添加成功');
@@ -314,13 +305,13 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
 
   // 计算SLA状态
   const getSLAStatus = () => {
-    if (!ticket.sla_metrics) return null;
+    if (!ticket.slaMetrics) return null;
 
     const now = new Date();
-    const responseDeadline = new Date(ticket.sla_metrics.response_deadline);
-    const resolutionDeadline = new Date(ticket.sla_metrics.resolution_deadline);
+    const responseDeadline = new Date(ticket.slaMetrics.responseDeadline);
+    const resolutionDeadline = new Date(ticket.slaMetrics.resolutionDeadline);
 
-    if (ticket.sla_metrics.is_breached) {
+    if (ticket.slaMetrics.isBreached) {
       return { status: 'breached', color: 'red', text: 'SLA已违反' };
     }
 
@@ -486,11 +477,11 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
                           <Text type="secondary">工作备注</Text>
                           {isEditing ? (
                             <TextArea
-                              value={editingTicket.work_notes || ''}
+                              value={editingTicket.workNotes || ''}
                               onChange={e =>
                                 setEditingTicket({
                                   ...editingTicket,
-                                  work_notes: e.target.value,
+                                  workNotes: e.target.value,
                                 })
                               }
                               rows={3}
@@ -499,7 +490,7 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
                             />
                           ) : (
                             <div className="mt-2 p-3 bg-gray-50 rounded-md">
-                              {ticket.work_notes || '暂无工作备注'}
+                              {ticket.workNotes || '暂无工作备注'}
                             </div>
                           )}
                         </div>
@@ -552,22 +543,22 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
                         </div>
 
                         {/* SLA信息 */}
-                        {ticket.sla_metrics && (
+                        {ticket.slaMetrics && (
                           <div>
                             <Text type="secondary">SLA信息</Text>
                             <div className="mt-2 space-y-2">
                               <div className="flex justify-between">
                                 <span>响应时间:</span>
-                                <span>{ticket.sla_metrics.response_time}分钟</span>
+                                <span>{ticket.slaMetrics.responseTime}分钟</span>
                               </div>
                               <div className="flex justify-between">
                                 <span>解决时间:</span>
-                                <span>{ticket.sla_metrics.resolution_time}分钟</span>
+                                <span>{ticket.slaMetrics.resolutionTime}分钟</span>
                               </div>
                               <div className="flex justify-between">
                                 <span>响应截止:</span>
                                 <span>
-                                  {new Date(ticket.sla_metrics.response_deadline).toLocaleString(
+                                  {new Date(ticket.slaMetrics.responseDeadline).toLocaleString(
                                     'zh-CN'
                                   )}
                                 </span>
@@ -581,10 +572,10 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
                 </Card>
 
                 {/* 工作流状态 */}
-                {ticket.workflow_steps.length > 0 && (
+                {ticket.workflowSteps.length > 0 && (
                   <Card title="工作流状态" className="shadow-sm">
                     <Timeline>
-                      {ticket.workflow_steps.map((step, index) => (
+                      {ticket.workflowSteps.map((step, index) => (
                         <Timeline.Item
                           key={step.id}
                           color={
@@ -609,10 +600,10 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
                             </div>
                             <div className="text-right">
                               <div className="text-sm text-gray-500">
-                                {step.status === 'completed' && step.completed_at
-                                  ? new Date(step.completed_at).toLocaleDateString('zh-CN')
-                                  : step.due_date
-                                    ? `截止: ${new Date(step.due_date).toLocaleDateString('zh-CN')}`
+                                {step.status === 'completed' && step.completedAt
+                                  ? new Date(step.completedAt).toLocaleDateString('zh-CN')
+                                  : step.dueDate
+                                    ? `截止: ${new Date(step.dueDate).toLocaleDateString('zh-CN')}`
                                     : ''}
                               </div>
                             </div>
@@ -624,10 +615,10 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
                 )}
 
                 {/* 相关工单 */}
-                {ticket.related_tickets.length > 0 && (
+                {ticket.relatedTickets.length > 0 && (
                   <Card title="相关工单" className="shadow-sm">
                     <div className="space-y-2">
-                      {ticket.related_tickets.map(related => (
+                      {ticket.relatedTickets.map(related => (
                         <div
                           key={related.id}
                           className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
@@ -643,10 +634,10 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
                             <Tag color={getStatusColor(related.status)}>{related.status}</Tag>
                             <Tag color={getPriorityColor(related.priority)}>{related.priority}</Tag>
                             <Tag color="blue">
-                              {related.relationship_type === 'parent' && '父工单'}
-                              {related.relationship_type === 'child' && '子工单'}
-                              {related.relationship_type === 'related' && '相关'}
-                              {related.relationship_type === 'duplicate' && '重复'}
+                              {related.relationshipType === 'parent' && '父工单'}
+                              {related.relationshipType === 'child' && '子工单'}
+                              {related.relationshipType === 'related' && '相关'}
+                              {related.relationshipType === 'duplicate' && '重复'}
                             </Tag>
                           </div>
                         </div>
@@ -803,8 +794,8 @@ export const TicketDetailComplete: React.FC<TicketDetailCompleteProps> = ({
                               {attachment.type} • {(attachment.size / 1024).toFixed(1)} KB
                             </div>
                             <div className="text-sm text-gray-400">
-                              上传者: {attachment.uploaded_by} •{' '}
-                              {new Date(attachment.uploaded_at).toLocaleString('zh-CN')}
+                              上传者: {attachment.uploadedBy} •{' '}
+                              {new Date(attachment.uploadedAt).toLocaleString('zh-CN')}
                             </div>
                           </div>
                         </div>

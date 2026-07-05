@@ -46,8 +46,8 @@ interface SLAAlert {
   ticketId: number;
   ticketNumber: string;
   ticketTitle: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  alertLevel: 'warning' | 'critical';
+  priority: string;
+  alertLevel: string;
   timeRemaining: number; // 小时
   slaDefinition: string;
   createdAt: string;
@@ -82,9 +82,9 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
 
       // 调用实际的API
       const data = await SLAApi.getSLAMonitoring({
-        tenant_id: selectedTenant,
-        start_time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        end_time: new Date().toISOString(),
+        tenantId: selectedTenant,
+        startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        endTime: new Date().toISOString(),
       });
 
       if (data) {

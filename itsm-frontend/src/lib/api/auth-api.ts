@@ -148,8 +148,8 @@ class AuthApiClient {
         // Token 在 httpOnly cookie 中，前端无法直接访问
         token: undefined,
         refreshToken: undefined,
-        requiresMfa: responseData.requires_mfa,
-        mfaType: responseData.mfa_type,
+        requiresMfa: responseData.requiresMfa,
+        mfaType: responseData.mfaType,
         user: responseData.user,
       };
     } catch (error) {
@@ -207,7 +207,7 @@ class AuthApiClient {
 
       return {
         success: true,
-        token: data.access_token || data.token,
+        token: data.accessToken || data.token,
       };
     } catch (error) {
       console.error('Token refresh error:', error);
@@ -318,7 +318,7 @@ class AuthApiClient {
       return {
         success: true,
         token: data.token,
-        refreshToken: data.refresh_token,
+        refreshToken: data.refreshToken,
         user: data.user,
       };
     } catch (error) {
@@ -357,7 +357,7 @@ class AuthApiClient {
 
       return {
         success: true,
-        redirectUrl: data.redirect_url,
+        redirectUrl: data.redirectUrl,
       };
     } catch (error) {
       console.error('SSO initiation error:', error);

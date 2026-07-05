@@ -53,8 +53,8 @@ describe('TicketApi', () => {
           ],
           total: 1,
           page: 1,
-          page_size: 20,
-          total_pages: 1,
+          pageSize: 20,
+          totalPages: 1,
         },
       };
 
@@ -85,8 +85,8 @@ describe('TicketApi', () => {
           tickets: [],
           total: 0,
           page: 1,
-          page_size: 20,
-          total_pages: 0,
+          pageSize: 20,
+          totalPages: 0,
         },
       };
 
@@ -110,8 +110,8 @@ describe('TicketApi', () => {
           items: [],
           total: 0,
           page: 1,
-          page_size: 10,
-          total_pages: 0,
+          pageSize: 10,
+          totalPages: 0,
         },
       };
 
@@ -351,7 +351,7 @@ describe('TicketApi', () => {
         message: 'success',
         data: {
           id: 1,
-          assignee_id: 42,
+          assigneeId: 42,
         },
       };
 
@@ -381,9 +381,9 @@ describe('TicketApi', () => {
         message: 'success',
         data: {
           id: 1,
-          ticket_id: 1,
+          ticketId: 1,
           content: 'Test comment',
-          created_by: 1,
+          createdBy: 1,
         },
       };
 

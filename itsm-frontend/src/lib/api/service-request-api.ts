@@ -122,48 +122,32 @@ class ServiceRequestAPI {
   }
 
   private normalizeRequest(raw: any): ServiceRequest {
-    const catalogId = raw?.catalogId ?? raw?.catalog_id;
-    const requesterId = raw?.requesterId ?? raw?.requester_id;
-    const createdAt = raw?.createdAt ?? raw?.created_at;
-    const updatedAt = raw?.updatedAt ?? raw?.updated_at;
+    const catalogId = raw?.catalogId;
+    const requesterId = raw?.requesterId;
+    const createdAt = raw?.createdAt;
+    const updatedAt = raw?.updatedAt;
     return {
       ...raw,
       catalogId,
-      catalog_id: catalogId,
       requesterId,
-      requester_id: requesterId,
-      ciId: raw?.ciId ?? raw?.ci_id,
-      ci_id: raw?.ci_id ?? raw?.ciId,
-      formData: raw?.formData ?? raw?.form_data ?? {},
-      form_data: raw?.form_data ?? raw?.formData ?? {},
-      costCenter: raw?.costCenter ?? raw?.cost_center,
-      cost_center: raw?.cost_center ?? raw?.costCenter,
-      dataClassification: raw?.dataClassification ?? raw?.data_classification,
-      data_classification: raw?.data_classification ?? raw?.dataClassification,
-      needsPublicIp: raw?.needsPublicIp ?? raw?.needsPublicIP ?? raw?.needs_public_ip,
-      needsPublicIP: raw?.needsPublicIP ?? raw?.needsPublicIp ?? raw?.needs_public_ip,
-      needs_public_ip: raw?.needs_public_ip ?? raw?.needsPublicIP ?? raw?.needsPublicIp,
-      sourceIpWhitelist: raw?.sourceIpWhitelist ?? raw?.sourceIPWhitelist ?? raw?.source_ip_whitelist,
-      sourceIPWhitelist: raw?.sourceIPWhitelist ?? raw?.sourceIpWhitelist ?? raw?.source_ip_whitelist,
-      source_ip_whitelist: raw?.source_ip_whitelist ?? raw?.sourceIPWhitelist ?? raw?.sourceIpWhitelist,
-      expireAt: raw?.expireAt ?? raw?.expire_at,
-      expire_at: raw?.expire_at ?? raw?.expireAt,
-      complianceAck: raw?.complianceAck ?? raw?.compliance_ack,
-      compliance_ack: raw?.compliance_ack ?? raw?.complianceAck,
-      currentLevel: raw?.currentLevel ?? raw?.current_level,
-      current_level: raw?.current_level ?? raw?.currentLevel,
-      totalLevels: raw?.totalLevels ?? raw?.total_levels,
-      total_levels: raw?.total_levels ?? raw?.totalLevels,
+      ciId: raw?.ciId,
+      formData: raw?.formData ?? {},
+      costCenter: raw?.costCenter,
+      dataClassification: raw?.dataClassification,
+      needsPublicIp: raw?.needsPublicIp ?? raw?.needsPublicIP,
+      sourceIpWhitelist: raw?.sourceIpWhitelist ?? raw?.sourceIPWhitelist,
+      expireAt: raw?.expireAt,
+      complianceAck: raw?.complianceAck,
+      currentLevel: raw?.currentLevel,
+      totalLevels: raw?.totalLevels,
       createdAt,
-      created_at: createdAt,
       updatedAt,
-      updated_at: updatedAt,
       catalog: raw?.catalog || {
         id: catalogId,
         name: raw?.serviceName || (catalogId ? `服务 #${catalogId}` : '未知服务'),
         category: raw?.category || '',
         description: raw?.reason || '',
-        deliveryTime: raw?.deliveryTime || raw?.delivery_time || '',
+        deliveryTime: raw?.deliveryTime || raw?.deliveryTime || '',
       },
       requester: raw?.requester || {
         id: requesterId,

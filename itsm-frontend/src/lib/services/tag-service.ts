@@ -6,8 +6,8 @@ export interface Tag {
   code: string;
   description?: string;
   color?: string;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateTagRequest {
@@ -38,9 +38,9 @@ class TagService {
 
   async bindTag(tagId: number, entityType: string, entityId: number): Promise<void> {
     return httpClient.post<void>(`${this.baseUrl}/bind`, {
-      tag_id: tagId,
-      entity_type: entityType,
-      entity_id: entityId,
+      tagId: tagId,
+      entityType: entityType,
+      entityId: entityId,
     });
   }
 }

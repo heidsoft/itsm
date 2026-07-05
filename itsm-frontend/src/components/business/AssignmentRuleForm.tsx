@@ -51,7 +51,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
     { value: 'priority', label: '优先级' },
     { value: 'category_id', label: '工单分类' },
     { value: 'department_id', label: '部门' },
-    { value: 'requester_id', label: '申请人' },
+    { value: 'requesterId', label: '申请人' },
     { value: 'title', label: '标题关键词' },
   ];
 
@@ -101,7 +101,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
       onFinish={handleSubmit}
       initialValues={{
         priority: 0,
-        is_active: true,
+        isActive: true,
         conditions: [],
         actions: {},
       }}

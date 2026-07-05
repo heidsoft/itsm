@@ -9,15 +9,15 @@ export interface KEDBCreateRequest {
   title: string;
   description?: string;
   symptoms?: string;
-  root_cause?: string;
+  rootCause?: string;
   workaround?: string;
   resolution?: string;
   category?: string;
   severity?: string;
-  affected_products?: string[];
-  affected_cis?: string[];
+  affectedProducts?: string[];
+  affectedCis?: string[];
   keywords?: string[];
-  problem_id?: number;
+  problemId?: number;
 }
 
 // KEDB 更新请求
@@ -25,16 +25,16 @@ export interface KEDBUpdateRequest {
   title?: string;
   description?: string;
   symptoms?: string;
-  root_cause?: string;
+  rootCause?: string;
   workaround?: string;
   resolution?: string;
   category?: string;
   severity?: string;
   status?: string;
-  affected_products?: string[];
-  affected_cis?: string[];
+  affectedProducts?: string[];
+  affectedCis?: string[];
   keywords?: string[];
-  is_known_error?: boolean;
+  isKnownError?: boolean;
 }
 
 // KEDB 响应
@@ -43,22 +43,22 @@ export interface KEDBResponse {
   title: string;
   description: string;
   symptoms: string;
-  root_cause: string;
+  rootCause: string;
   workaround: string;
   resolution: string;
   status: string;
   category: string;
   severity: string;
-  affected_products: string[];
-  affected_cis: string[];
+  affectedProducts: string[];
+  affectedCis: string[];
   keywords: string[];
-  occurrence_count: number;
-  problem_id?: number;
-  created_by: number;
-  tenant_id: number;
-  is_known_error: boolean;
-  created_at: string;
-  updated_at: string;
+  occurrenceCount: number;
+  problemId?: number;
+  createdBy: number;
+  tenantId: number;
+  isKnownError: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // KEDB 列表响应
@@ -66,7 +66,7 @@ export interface KEDBListResponse {
   items: KEDBResponse[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 // KEDB 统计响应
@@ -86,7 +86,7 @@ export class KEDBApi {
   // 获取已知错误列表
   static async getKnownErrors(params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
     status?: string;
     category?: string;
     severity?: string;

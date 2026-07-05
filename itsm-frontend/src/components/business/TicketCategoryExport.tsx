@@ -54,16 +54,16 @@ interface ExportItem {
   name?: string;
   code?: string;
   description?: string;
-  parent_id?: number;
-  parent_name?: string;
+  parentId?: number;
+  parentName?: string;
   level?: number;
-  sort_order?: number;
-  is_active?: string;
-  tenant_id?: number;
-  created_at?: string;
-  updated_at?: string;
-  created_by?: string;
-  updated_by?: string;
+  sortOrder?: number;
+  isActive?: string;
+  tenantId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
@@ -99,16 +99,16 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
     { key: 'name', label: '分类名称', required: true },
     { key: 'code', label: '分类代码', required: true },
     { key: 'description', label: '分类描述' },
-    { key: 'parent_id', label: '父分类ID' },
-    { key: 'parent_name', label: '父分类名称' },
+    { key: 'parentId', label: '父分类ID' },
+    { key:'parentName', label: '父分类名称' },
     { key: 'level', label: '层级' },
-    { key: 'sort_order', label: '排序顺序' },
-    { key: 'is_active', label: '是否启用' },
-    { key: 'tenant_id', label: '租户ID' },
-    { key: 'created_at', label: '创建时间' },
-    { key: 'updated_at', label: '更新时间' },
-    { key: 'created_by', label: '创建人' },
-    { key: 'updated_by', label: '更新人' },
+    { key:'sortOrder', label: '排序顺序' },
+    { key: 'isActive', label: '是否启用' },
+    { key: 'tenantId', label: '租户ID' },
+    { key: 'createdAt', label: '创建时间' },
+    { key: 'updatedAt', label: '更新时间' },
+    { key:'createdBy', label: '创建人' },
+    { key:'updatedBy', label: '更新人' },
   ];
 
   // 处理导出
@@ -178,22 +178,22 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
             item.description = category.description || '';
             break;
           case 'parent_id':
-            item.parent_id = category.parent_id;
+            item.parentId = category.parentId;
             break;
           case 'parent_name':
-            item.parent_name = parentName;
+            item.parentName = parentName;
             break;
           case 'level':
             item.level = category.level;
             break;
           case 'sort_order':
-            item.sort_order = category.sort_order;
+            item.sortOrder = category.sortOrder;
             break;
           case 'is_active':
-            item.is_active = category.is_active ? '是' : '否';
+            item.isActive = category.isActive ? '是' : '否';
             break;
           case 'tenant_id':
-            item.tenantId = Number(category.tenantId) || Number(category.tenant_id) || undefined;
+            item.tenantId = Number(category.tenantId) || Number(category.tenantId) || undefined;
             break;
           case 'createdAt':
             item.createdAt = category.createdAt;
@@ -202,10 +202,10 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
             item.updatedAt = category.updatedAt;
             break;
           case 'created_by':
-            item.created_by = category.created_by || '';
+            item.createdBy = category.createdBy || '';
             break;
           case 'updated_by':
-            item.updated_by = category.updated_by || '';
+            item.updatedBy = category.updatedBy || '';
             break;
         }
       });
@@ -222,7 +222,7 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
 
     // 处理所有顶级分类
     categories.forEach(category => {
-      if (options.includeInactive || category.is_active) {
+      if (options.includeInactive || category.isActive) {
         processCategory(category);
       }
     });

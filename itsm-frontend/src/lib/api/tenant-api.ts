@@ -40,6 +40,6 @@ export class TenantAPI {
 
   // 切换租户（如果用户属于多个租户）
   static async switchTenant(tenantId: number): Promise<void> {
-    return httpClient.post<void>('/api/v1/tenants/switch', { tenant_id: tenantId });
+    return httpClient.post<void>('/api/v1/tenants/switch', { tenantId: tenantId });
   }
 }

@@ -120,7 +120,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
         description: values.description,
         priority: values.priority || 'medium',
         status: values.status || 'open',
-        assigneeId: values.assigneeId || values.assignee_id,
+        assigneeId: values.assigneeId || values.assigneeId,
         dueDate: values.dueDate ? format(values.dueDate, 'yyyy-MM-dd') : undefined,
       };
 

@@ -4,20 +4,20 @@ export interface Project {
   id: number;
   name: string;
   code: string;
-  department_id?: number;
-  manager_id?: number;
-  start_date?: string;
-  end_date?: string;
+  departmentId?: number;
+  managerId?: number;
+  startDate?: string;
+  endDate?: string;
   status?: string;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateProjectRequest {
   name: string;
   code: string;
-  department_id?: number;
-  manager_id?: number;
+  departmentId?: number;
+  managerId?: number;
 }
 
 class ProjectService {

@@ -182,8 +182,8 @@ const TicketApprovalWorkflowPage = () => {
       const { WorkflowAPI } = await import('@/lib/api/workflow-api');
       const response = (await WorkflowAPI.getProcessDefinition(id)) as any;
 
-      if (response?.bpmn_xml) {
-        let xmlContent = response.bpmn_xml;
+      if (response?.bpmnXml) {
+        let xmlContent = response.bpmnXml;
         // 尝试Base64解码
         if (!xmlContent.trim().startsWith('<?xml')) {
           try {
@@ -203,7 +203,7 @@ const TicketApprovalWorkflowPage = () => {
         nodes: [],
         metadata: {
           version: response.version || '1.0.0',
-          lastModified: response.updatedAt || response.updated_at || new Date().toISOString(),
+          lastModified: response.updatedAt || response.updatedAt || new Date().toISOString(),
           nodeCount: 0,
           approvalCount: 0,
         },
@@ -264,7 +264,7 @@ const TicketApprovalWorkflowPage = () => {
         name: values.name || t('workflow.ticketApprovalProcess'),
         description: values.description || '',
         type: values.category || 'approval',
-        bpmn_xml: currentXML,
+        bpmnXml: currentXML,
       };
 
       if (workflow?.id) {

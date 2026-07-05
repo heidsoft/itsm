@@ -124,7 +124,7 @@ export default function KnowledgePage() {
         title: a.title || '',
         views: a.views || 0,
         author: a.author || '-',
-        date: a.published_at ? new Date(a.published_at).toLocaleDateString() : '-',
+        date: a.publishedAt ? new Date(a.publishedAt).toLocaleDateString() : '-',
         category: a.category || '-',
       }));
 

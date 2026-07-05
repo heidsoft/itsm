@@ -22,7 +22,6 @@ const TicketTrendChart: React.FC<{ data: TicketTrendData[] }> = React.memo(({ da
     smooth: true,
     animation: {
       appear: {
-        animation: 'path-in',
         duration: 1200,
       },
     },

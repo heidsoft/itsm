@@ -71,7 +71,7 @@ export default function CloudResourcePage() {
       const values = form.getFieldsValue();
       const list = await CMDBApi.getCloudResources({
         provider: values.provider,
-        service_id: values.service_id,
+        serviceId: values.serviceId,
         region: values.region,
         offset: (page - 1) * pageSize,
         limit: pageSize,
@@ -135,18 +135,18 @@ export default function CloudResourcePage() {
       title: '服务',
       width: 140,
       render: (_: unknown, record: CloudResource) => {
-        const serviceId = record.serviceId ?? record.service_id;
+        const serviceId = record.serviceId ?? record.serviceId;
         const service = serviceMap.get(serviceId);
-        return service?.serviceName ?? service?.service_name ?? '-';
+        return service?.serviceName ?? service?.serviceName ?? '-';
       },
     },
     {
       title: '资源类型',
       width: 120,
       render: (_: unknown, record: CloudResource) => {
-        const serviceId = record.serviceId ?? record.service_id;
+        const serviceId = record.serviceId ?? record.serviceId;
         const service = serviceMap.get(serviceId);
-        return service?.resourceTypeName ?? service?.resource_type_name ?? '-';
+        return service?.resourceTypeName ?? service?.resourceTypeName ?? '-';
       },
     },
     {
@@ -188,7 +188,7 @@ export default function CloudResourcePage() {
       title: '最近发现',
       width: 150,
       render: (_: unknown, record: CloudResource) => {
-        const value = record.lastSeenAt ?? record.last_seen_at;
+        const value = record.lastSeenAt ?? record.lastSeenAt;
         return value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-';
       },
     },
@@ -219,7 +219,7 @@ export default function CloudResourcePage() {
             onClick={() => {
               setBinding(record);
               bindForm.resetFields();
-              bindForm.setFieldsValue({ ci_id: undefined });
+              bindForm.setFieldsValue({ ciId: undefined });
             }}
           >
             绑定
@@ -233,16 +233,16 @@ export default function CloudResourcePage() {
     if (!binding) return;
     try {
       const values = await bindForm.validateFields();
-      const service = serviceMap.get(binding.serviceId ?? binding.service_id);
+      const service = serviceMap.get(binding.serviceId ?? binding.serviceId);
       setBindSubmitting(true);
-      await CMDBApi.updateCI(values.ci_id, {
+      await CMDBApi.updateCI(values.ciId, {
         cloudResourceRefId: binding.id,
         cloudProvider: service?.provider,
-        cloudAccountId: String(binding.cloudAccountId ?? binding.cloud_account_id),
+        cloudAccountId: String(binding.cloudAccountId ?? binding.cloudAccountId),
         cloudRegion: binding.region,
         cloudZone: binding.zone,
-        cloudResourceId: binding.resourceId ?? binding.resource_id,
-        cloudResourceType: service?.resourceTypeCode ?? service?.resource_type_code,
+        cloudResourceId: binding.resourceId ?? binding.resourceId,
+        cloudResourceType: service?.resourceTypeCode ?? service?.resourceTypeCode,
         cloudMetadata: binding.metadata,
         cloudSyncStatus: 'success',
       });
@@ -302,9 +302,9 @@ export default function CloudResourcePage() {
                   <Option
                     key={service.id}
                     value={service.id}
-                    label={`${service.service_name} (${service.resource_type_name})`}
+                    label={`${service.serviceName} (${service.resourceTypeName})`}
                   >
-                    {service.serviceName ?? service.service_name} ({service.resourceTypeName ?? service.resource_type_name})
+                    {service.serviceName ?? service.serviceName} ({service.resourceTypeName ?? service.resourceTypeName})
                   </Option>
                 ))}
             </Select>
@@ -366,7 +366,7 @@ export default function CloudResourcePage() {
           {binding && (
             <div className="p-3 bg-gray-50 rounded text-sm text-gray-600">
               <div className="font-medium mb-1">将绑定资源：</div>
-              <div>{binding.resourceName || binding.resource_name || binding.resourceId || binding.resource_id}</div>
+              <div>{binding.resourceName || binding.resourceName || binding.resourceId || binding.resourceId}</div>
               <div className="text-gray-400 mt-1">
                 {providerOptions.find(p => p.value === (binding as any).provider)?.label} / {binding.region} / {binding.zone}
               </div>
@@ -411,15 +411,15 @@ export default function CloudResourcePage() {
               </div>
               <div>
                 <div className="text-sm text-gray-500">服务类型</div>
-                <div>{serviceMap.get(selectedRow.serviceId ?? selectedRow.service_id)?.service_name || '-'}</div>
+                <div>{serviceMap.get(selectedRow.serviceId ?? selectedRow.serviceId)?.serviceName || '-'}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">资源ID</div>
-                <div className="font-mono text-sm">{selectedRow.resourceId || selectedRow.resource_id || '-'}</div>
+                <div className="font-mono text-sm">{selectedRow.resourceId || selectedRow.resourceId || '-'}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">资源名称</div>
-                <div>{selectedRow.resourceName || selectedRow.resource_name || '-'}</div>
+                <div>{selectedRow.resourceName || selectedRow.resourceName || '-'}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">Region</div>

@@ -31,7 +31,7 @@ export class RoleAPI {
     const normalizedParams = params
       ? {
           ...params,
-          page_size: params.page_size || params.size,
+          pageSize: params.pageSize || params.size,
           size: undefined,
         }
       : undefined;
@@ -99,6 +99,6 @@ export class RoleAPI {
 
   // 分配权限给角色
   static async assignPermissions(roleId: number, permissionIds: number[]): Promise<void> {
-    await httpClient.post(`/api/v1/roles/${roleId}/permissions`, { permission_ids: permissionIds });
+    await httpClient.post(`/api/v1/roles/${roleId}/permissions`, { permissionIds: permissionIds });
   }
 }

@@ -11,11 +11,11 @@ interface HistoryRecord {
   user?: {
     name?: string;
   };
-  field_name: string;
-  change_reason?: string;
-  old_value: string;
-  new_value: string;
-  changed_at: string;
+  fieldName: string;
+  changeReason?: string;
+  oldValue: string;
+  newValue: string;
+  changedAt: string;
 }
 
 interface TicketHistoryProps {
@@ -34,15 +34,15 @@ export const TicketHistory: React.FC<TicketHistoryProps> = ({ history, formatDat
               <div className="flex items-center justify-between">
                 <div>
                   <Text strong>{record.user?.name || '系统'}</Text>
-                  <div className="text-sm text-gray-600">修改了 {record.field_name}</div>
-                  {record.change_reason && (
-                    <div className="text-sm text-gray-500">原因: {record.change_reason}</div>
+                  <div className="text-sm text-gray-600">修改了 {record.fieldName}</div>
+                  {record.changeReason && (
+                    <div className="text-sm text-gray-500">原因: {record.changeReason}</div>
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-sm text-gray-500">{formatDateTime(record.changed_at)}</div>
+                  <div className="text-sm text-gray-500">{formatDateTime(record.changedAt)}</div>
                   <div className="text-xs text-gray-400">
-                    {record.old_value} → {record.new_value}
+                    {record.oldValue} → {record.newValue}
                   </div>
                 </div>
               </div>

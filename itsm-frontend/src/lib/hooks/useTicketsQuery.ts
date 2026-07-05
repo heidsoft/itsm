@@ -16,7 +16,7 @@ export interface TicketQueryFilters {
   priority?: TicketPriority;
   type?: TicketType;
   category?: string;
-  assignee_id?: number;
+  assigneeId?: number;
   keyword?: string;
   dateRange?: [string, string];
   tags?: string[];
@@ -71,8 +71,8 @@ export const useTicketsQuery = (
           tickets: Array.isArray(response?.tickets) ? response.tickets : [],
           total,
           page: response?.page || pagination.current,
-          page_size: pageSize,
-          total_pages: totalPages,
+          pageSize: pageSize,
+          totalPages: totalPages,
         };
       } catch (error) {
         console.error('Failed to fetch tickets:', error);

@@ -68,8 +68,8 @@ export const csrfProtection = {
         });
         if (response.ok) {
           const data = await response.json();
-          if (data.code === 0 && data.data?.csrf_token) {
-            csrfProtection.privateToken = data.data.csrf_token;
+          if (data.code === 0 && data.data?.csrfToken) {
+            csrfProtection.privateToken = data.data.csrfToken;
             return csrfProtection.privateToken;
           }
         }

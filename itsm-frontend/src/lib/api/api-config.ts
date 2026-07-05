@@ -99,61 +99,61 @@ export interface GetTenantsParams {
 import type { Ticket as BaseTicket } from './types';
 
 export interface Ticket extends BaseTicket {
-  tenant_id?: number;
+  tenantId?: number;
   tenant?: Tenant;
   // 扩展字段
   subcategory?: string;
   impact?: string;
   urgency?: string;
-  work_notes?: string;
+  workNotes?: string;
   dueDate?: string; // 兼容旧字段名
-  escalation_level?: number;
+  escalationLevel?: number;
   source?: string;
-  business_value?: string;
-  custom_fields?: Record<string, unknown>;
+  businessValue?: string;
+  customFields?: Record<string, unknown>;
 }
 
 // 附件接口
 export interface Attachment {
   id: number;
   filename: string;
-  original_name: string;
-  file_size: number;
-  mime_type: string;
+  originalName: string;
+  fileSize: number;
+  mimeType: string;
   url: string;
-  uploaded_by: number;
-  uploaded_at: string;
+  uploadedBy: number;
+  uploadedAt: string;
   uploader?: User;
 }
 
 // 工作流步骤接口
 export interface WorkflowStep {
   id: number;
-  step_name: string;
-  step_order: number;
+  stepName: string;
+  stepOrder: number;
   status: 'pending' | 'in_progress' | 'completed' | 'skipped';
-  assignee_id?: number;
+  assigneeId?: number;
   assignee?: User;
-  started_at?: string;
-  completed_at?: string;
+  startedAt?: string;
+  completedAt?: string;
   comments?: string;
-  required_approval: boolean;
-  approval_status?: 'pending' | 'approved' | 'rejected';
-  approval_comments?: string;
+  requiredApproval: boolean;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  approvalComments?: string;
 }
 
 // 评论接口
 export interface Comment {
   id: number;
-  ticket_id?: number;
+  ticketId?: number;
   content: string;
   type?: 'comment' | 'work_note' | 'system';
-  created_by?: number;
-  user_id?: number;
-  created_at: string;
-  updated_at?: string;
+  createdBy?: number;
+  userId?: number;
+  createdAt: string;
+  updatedAt?: string;
   author?: User;
-  is_internal: boolean;
+  isInternal: boolean;
   mentions?: number[];
   attachments?: number[];
   user?: {
@@ -163,19 +163,19 @@ export interface Comment {
     email: string;
     role?: string;
     department?: string;
-    tenant_id?: number;
+    tenantId?: number;
   };
 }
 
 // SLA信息接口
 export interface SLAInfo {
-  sla_id: number;
-  sla_name: string;
-  response_time: number; // 分钟
-  resolution_time: number; // 分钟
-  start_time: string;
-  due_time: string;
-  breach_time?: string;
+  slaId: number;
+  slaName: string;
+  responseTime: number; // 分钟
+  resolutionTime: number; // 分钟
+  startTime: string;
+  dueTime: string;
+  breachTime?: string;
   status: 'active' | 'breached' | 'completed';
 }
 
@@ -207,10 +207,10 @@ export interface CreateTicketRequest {
   priority: string;
   type?: 'incident' | 'service_request' | 'change' | 'problem' | string;
   category?: string;
-  category_id?: number;
+  categoryId?: number;
   formFields?: Record<string, unknown>;
   assigneeId?: number;
-  workflow_definition_key?: string;
+  workflowDefinitionKey?: string;
 }
 
 export interface UpdateStatusRequest {
@@ -265,7 +265,6 @@ export interface Role {
   permissions: string[];
   status?: 'active' | 'inactive';
   isSystem?: boolean;
-  is_system?: boolean; // Compatible with backend snake_case
   userCount?: number;
   createdAt: string;
   updatedAt: string;
@@ -297,7 +296,7 @@ export interface UpdateRoleRequest {
 export interface GetRolesParams {
   page?: number;
   size?: number;
-  page_size?: number;
+  pageSize?: number;
   status?: string;
   search?: string;
 }

@@ -8,15 +8,10 @@ import { SLAApi } from '@/lib/api/sla-api';
 
 // 兼容旧前端 snake_case 和新前端 camelCase
 interface SLAStatsResponse {
-  total_definitions?: number;
   totalDefinitions?: number;
-  active_definitions?: number;
   activeDefinitions?: number;
-  total_violations?: number;
   totalViolations?: number;
-  open_violations?: number;
   openViolations?: number;
-  overall_compliance_rate?: number;
   overallComplianceRate?: number;
 }
 

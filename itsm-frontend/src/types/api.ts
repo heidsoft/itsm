@@ -36,9 +36,7 @@ export interface PaginatedDataCompat<T> {
   page?: number;
   pageSize?: number;
   totalPages?: number;
-  // 支持 snake_case 变体
-  items_camel?: T[];
-  total_camel?: number;
+
 }
 
 /**

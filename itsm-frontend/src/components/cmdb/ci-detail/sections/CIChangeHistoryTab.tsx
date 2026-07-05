@@ -69,8 +69,8 @@ export const CIChangeHistoryTab: React.FC<CIChangeHistoryTabProps> = ({
                 </div>
                 <div>
                   <Text type="secondary">
-                    {log.updated_by && `操作人: ${log.updated_by} - `}
-                    {dayjs(log.createdAt || log.created_at || log.updatedAt || log.updated_at || null).format('YYYY-MM-DD HH:mm:ss')}
+                    {log.updatedBy && `操作人: ${log.updatedBy} - `}
+                    {dayjs(log.createdAt || log.createdAt || log.updatedAt || log.updatedAt || null).format('YYYY-MM-DD HH:mm:ss')}
                   </Text>
                 </div>
               </div>

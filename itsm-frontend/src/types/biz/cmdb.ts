@@ -13,51 +13,32 @@ export interface ConfigurationItem {
   status: CIStatus;
   environment?: string;
   criticality?: string;
-  asset_tag?: string;
   assetTag?: string;
   location?: string;
-  serial_number?: string;
   serialNumber?: string;
   model?: string;
   vendor?: string;
-  ci_type_id: number;
-  ciTypeId?: number;
-  tenant_id: number;
-  tenantId?: number;
-  assigned_to?: string;
+  ciTypeId: number;
+  tenantId: number;
   assignedTo?: string;
-  owned_by?: string;
   ownedBy?: string;
-  discovery_source?: string;
   discoverySource?: string;
   source?: string;
-  cloud_provider?: string;
   cloudProvider?: string;
-  cloud_account_id?: string;
   cloudAccountId?: string;
-  cloud_region?: string;
   cloudRegion?: string;
-  cloud_zone?: string;
   cloudZone?: string;
-  cloud_resource_id?: string;
   cloudResourceId?: string;
-  cloud_resource_type?: string;
   cloudResourceType?: string;
-  cloud_resource_ref_id?: number;
   cloudResourceRefId?: number;
-  cloud_metadata?: Record<string, any>;
+  cloudMetadata?: Record<string, any>;
   cloudTags?: Record<string, any>;
-  cloud_metrics?: Record<string, any>;
   cloudMetrics?: Record<string, any>;
-  cloud_sync_time?: string;
   cloudSyncTime?: string;
-  cloud_sync_status?: string;
   cloudSyncStatus?: string;
   attributes?: Record<string, any>;
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // CI 类型实体
@@ -67,131 +48,113 @@ export interface CIType {
   description: string;
   icon?: string;
   color?: string;
-  attribute_schema?: string;
-  is_active: boolean;
-  tenant_id: number;
+  attributeSchema?: string;
+  isActive: boolean;
+  tenantId: number;
 }
 
 export interface CloudService {
   id: number;
-  parent_id?: number;
   parentId?: number;
   provider: string;
   category?: string;
-  service_code: string;
-  serviceCode?: string;
-  service_name: string;
-  serviceName?: string;
-  resource_type_code: string;
-  resourceTypeCode?: string;
-  resource_type_name: string;
-  resourceTypeName?: string;
-  api_version?: string;
+  serviceCode: string;
+  serviceName: string;
+  resourceTypeCode: string;
+  resourceTypeName: string;
   apiVersion?: string;
-  attribute_schema?: Record<string, any>;
   attributeSchema?: Record<string, any>;
-  is_system?: boolean;
   isSystem?: boolean;
-  is_active: boolean;
-  isActive?: boolean;
-  tenant_id: number;
-  tenantId?: number;
+  isActive: boolean;
+  tenantId: number;
 }
 
 export interface CloudAccount {
   id: number;
   provider: string;
-  account_id: string;
-  account_name: string;
-  credential_ref?: string;
-  region_whitelist?: string[];
-  is_active: boolean;
-  tenant_id: number;
+  accountId: string;
+  accountName: string;
+  credentialRef?: string;
+  regionWhitelist?: string[];
+  isActive: boolean;
+  tenantId: number;
 }
 
 export interface CloudResource {
   id: number;
-  cloud_account_id: number;
-  cloudAccountId?: number;
-  service_id: number;
-  serviceId?: number;
-  resource_id: string;
-  resourceId?: string;
-  resource_name?: string;
+  cloudAccountId: number;
+  serviceId: number;
+  resourceId: string;
   resourceName?: string;
   region?: string;
   zone?: string;
   status?: string;
   tags?: Record<string, string>;
   metadata?: Record<string, any>;
-  first_seen_at?: string;
   firstSeenAt?: string;
-  last_seen_at?: string;
   lastSeenAt?: string;
-  lifecycle_state?: string;
   lifecycleState?: string;
-  tenant_id: number;
-  tenantId?: number;
+  tenantId: number;
 }
 
 export interface RelationshipType {
   id: number;
   name: string;
   directional: boolean;
-  reverse_name?: string;
+  reverseName?: string;
   description?: string;
-  tenant_id: number;
+  tenantId: number;
 }
 
 export interface DiscoverySource {
   id: string;
   name: string;
-  source_type: string;
+  sourceType: string;
   provider?: string;
-  is_active: boolean;
+  isActive: boolean;
   description?: string;
-  tenant_id: number;
+  tenantId: number;
 }
 
 export interface DiscoveryJob {
   id: number;
-  source_id: string;
+  sourceId: string;
   status: string;
-  started_at?: string;
-  finished_at?: string;
+  startedAt?: string;
+  finishedAt?: string;
   summary?: Record<string, any>;
-  tenant_id: number;
+  tenantId: number;
 }
 
 export interface DiscoveryResult {
   id: number;
-  job_id: number;
-  ci_id?: number;
+  jobId: number;
+  ciId?: number;
   action: string;
-  resource_type?: string;
-  resource_id?: string;
+  resourceType?: string;
+  resourceId?: string;
   diff?: Record<string, any>;
   status: string;
-  tenant_id: number;
+  tenantId: number;
 }
 
 // CI 关系实体
 export interface CIRelationship {
   id: number;
-  source_ci_id: number;
-  target_ci_id: number;
-  relationship_type_id: number;
+  sourceCiId: number;
+  targetCiId: number;
+  relationshipTypeId: number;
   description?: string;
-  tenant_id: number;
+  tenantId: number;
 }
 
 // 统计信息
 export interface CMDBStats {
-  total_count: number;
-  active_count: number;
-  inactive_count: number;
-  maintenance_count: number;
-  type_distribution: Record<string, number>;
+  totalCount: number;
+  activeCount: number;
+  inactiveCount: number;
+  maintenanceCount: number;
+  typeDistribution: Record<string, number>;
 }
 
 export interface ReconciliationSummary {
@@ -220,8 +183,8 @@ export interface CIListResponse {
 // 查询参数
 export interface CIQuery {
   page?: number;
-  page_size?: number;
+  pageSize?: number;
   status?: string;
-  ci_type_id?: number;
+  ciTypeId?: number;
   search?: string;
 }

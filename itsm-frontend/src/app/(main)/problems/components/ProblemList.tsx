@@ -86,7 +86,7 @@ export const ProblemList: React.FC<ProblemListProps> = ({
   const columns = [
     {
       title: '问题信息',
-      key: 'problem_info',
+      key:'problemInfo',
       width: 300,
       render: (_: unknown, record: Problem) => (
         <div style={{ display: 'flex', alignItems: 'center' }}>

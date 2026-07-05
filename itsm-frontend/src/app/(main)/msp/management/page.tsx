@@ -74,7 +74,7 @@ export default function MSPManagementPage() {
       const [allocRes, custRes, usersRes] = await Promise.all([
         MSPService.getAllocations(),
         MSPService.getCustomers(),
-        UserApi.getUsers({ page: 1, page_size: 200 }).catch(() => ({ users: [] })),
+        UserApi.getUsers({ page: 1, pageSize: 200 }).catch(() => ({ users: [] })),
       ]);
       setAllocations(allocRes.allocations);
       setCustomers(custRes.customers);
@@ -89,8 +89,8 @@ export default function MSPManagementPage() {
         const uniqueUsers = Array.from(
           new Map(
             allocRes.allocations.map(a => [
-              a.msp_user_id,
-              { id: a.msp_user_id, username: a.msp_username || '' },
+              a.mspUserId,
+              { id: a.mspUserId, username: a.mspUsername || '' },
             ])
           ).values()
         );
@@ -118,11 +118,11 @@ export default function MSPManagementPage() {
   const handleDeallocate = async (allocation: MSPAllocation) => {
     Modal.confirm({
       title: '确认解除分配',
-      content: `确定要解除 ${allocation.msp_username} 对客户 ${allocation.customer_name} 的分配吗？`,
+      content: `确定要解除 ${allocation.mspUsername} 对客户 ${allocation.customerName} 的分配吗？`,
       onOk: async () => {
         setDeallocateLoading(true);
         try {
-          await MSPService.deallocate(allocation.msp_user_id, allocation.customer_tenant_id);
+          await MSPService.deallocate(allocation.mspUserId, allocation.customerTenantId);
           message.success('分配已解除');
           loadData();
         } catch (err: any) {
@@ -137,13 +137,13 @@ export default function MSPManagementPage() {
   const columns = [
     {
       title: 'MSP 员工',
-      dataIndex: 'msp_username',
-      key: 'msp_username',
+      dataIndex: 'mspUsername',
+      key:'mspUsername',
     },
     {
       title: '客户',
-      dataIndex: 'customer_name',
-      key: 'customer_name',
+      dataIndex: 'customerName',
+      key:'customerName',
     },
     {
       title: '角色',
@@ -216,7 +216,7 @@ export default function MSPManagementPage() {
       >
         <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Form.Item
-            name="msp_user_id"
+            name="mspUserId"
             label="MSP 员工"
             rules={[{ required: true, message: '请选择 MSP 员工' }]}
           >
@@ -230,7 +230,7 @@ export default function MSPManagementPage() {
           </Form.Item>
 
           <Form.Item
-            name="customer_tenant_id"
+            name="customerTenantId"
             label="客户租户"
             rules={[{ required: true, message: '请选择客户租户' }]}
           >

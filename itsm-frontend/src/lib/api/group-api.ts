@@ -23,8 +23,8 @@ export interface UpdateGroupRequest {
 
 export interface GetGroupsParams {
   page?: number;
-  page_size?: number;
-  tenant_id?: number;
+  pageSize?: number;
+  tenantId?: number;
   search?: string;
 }
 
@@ -73,7 +73,7 @@ export class GroupAPI {
 
   static async getMembers(
     id: number,
-    params: { page?: number; page_size?: number } = {}
+    params: { page?: number; pageSize?: number } = {}
   ): Promise<GroupMembersResponse> {
     return httpClient.get<GroupMembersResponse>(`${this.baseURL}/${id}/members`, params);
   }

@@ -5,6 +5,9 @@
 import { httpClient } from './http-client';
 import type {
   ServiceItem,
+  ServiceStatus,
+  ServiceCategory,
+  ServiceRequestStatus,
   PortalConfig,
   ServiceFavorite,
   ServiceRating,
@@ -36,7 +39,7 @@ export class ServiceCatalogApi {
 
   private static toFrontendStatus(status?: unknown) {
     const s = String(status || '');
-    return (s === 'enabled' ? 'published' : 'retired') as any;
+    return (s === 'enabled' ? 'published' : 'retired') as ServiceStatus;
   }
 
   private static escapeCSV(value: unknown): string {
@@ -67,7 +70,7 @@ export class ServiceCatalogApi {
       name: String(raw?.name || ''),
       // 这里保留后端 category 的原始字符串（前端页面目前以中文分类做统计/图标）
        
-      category: (raw?.category as any) || ('it_service' as any),
+      category: (raw?.category as ServiceCategory) || ('it_service' as ServiceCategory),
       status: ServiceCatalogApi.toFrontendStatus(raw?.status),
       shortDescription: String(raw?.description || ''),
       fullDescription: String(raw?.description || ''),
@@ -88,10 +91,10 @@ export class ServiceCatalogApi {
 
    
   private static toServiceRequest(raw: any): any {
-    const catalogId = raw?.catalogId ?? raw?.catalog_id ?? raw?.serviceId;
-    const requesterId = raw?.requesterId ?? raw?.requester_id ?? raw?.requestedBy;
-    const createdAt = raw?.createdAt ?? raw?.created_at;
-    const updatedAt = raw?.updatedAt ?? raw?.updated_at;
+    const catalogId = raw?.catalogId ?? raw?.catalogId ?? raw?.serviceId;
+    const requesterId = raw?.requesterId ?? raw?.requesterId ?? raw?.requestedBy;
+    const createdAt = raw?.createdAt ?? raw?.createdAt;
+    const updatedAt = raw?.updatedAt ?? raw?.updatedAt;
     const catalog = raw?.catalog || {
       id: catalogId,
       name: raw?.serviceName || raw?.title || (catalogId ? `服务 #${catalogId}` : '未知服务'),
@@ -115,33 +118,19 @@ export class ServiceCatalogApi {
       catalog,
       requester,
       catalogId,
-      catalog_id: catalogId,
       requesterId,
-      requester_id: requesterId,
-      ciId: raw?.ciId ?? raw?.ci_id,
-      ci_id: raw?.ci_id ?? raw?.ciId,
-      formData: raw?.formData ?? raw?.form_data ?? {},
-      form_data: raw?.form_data ?? raw?.formData ?? {},
-      costCenter: raw?.costCenter ?? raw?.cost_center,
-      cost_center: raw?.cost_center ?? raw?.costCenter,
-      dataClassification: raw?.dataClassification ?? raw?.data_classification,
-      data_classification: raw?.data_classification ?? raw?.dataClassification,
-      needsPublicIP: raw?.needsPublicIP ?? raw?.needs_public_ip,
-      needs_public_ip: raw?.needs_public_ip ?? raw?.needsPublicIP,
-      sourceIPWhitelist: raw?.sourceIPWhitelist ?? raw?.source_ip_whitelist,
-      source_ip_whitelist: raw?.source_ip_whitelist ?? raw?.sourceIPWhitelist,
-      complianceAck: raw?.complianceAck ?? raw?.compliance_ack,
-      compliance_ack: raw?.compliance_ack ?? raw?.complianceAck,
-      currentLevel: raw?.currentLevel ?? raw?.current_level,
-      current_level: raw?.current_level ?? raw?.currentLevel,
-      totalLevels: raw?.totalLevels ?? raw?.total_levels,
-      total_levels: raw?.total_levels ?? raw?.totalLevels,
-      expireAt: raw?.expireAt ?? raw?.expire_at,
-      expire_at: raw?.expire_at ?? raw?.expireAt,
+      ciId: raw?.ciId,
+      formData: raw?.formData ?? raw?.formData ?? {},
+      costCenter: raw?.costCenter ?? raw?.costCenter,
+      dataClassification: raw?.dataClassification ?? raw?.dataClassification,
+      needsPublicIp: raw?.needsPublicIp ?? raw?.needsPublicIP,
+      sourceIpWhitelist: raw?.sourceIpWhitelist ?? raw?.sourceIPWhitelist,
+      complianceAck: raw?.complianceAck ?? raw?.complianceAck,
+      currentLevel: raw?.currentLevel ?? raw?.currentLevel,
+      totalLevels: raw?.totalLevels ?? raw?.totalLevels,
+      expireAt: raw?.expireAt ?? raw?.expireAt,
       createdAt,
-      created_at: createdAt,
       updatedAt,
-      updated_at: updatedAt,
     };
   }
 
@@ -205,12 +194,12 @@ export class ServiceCatalogApi {
       name: request.name,
       category: String(request.category),
       description: request.shortDescription || request.fullDescription || '',
-      ci_type_id: request.ciTypeId,
-      cloud_service_id: request.cloudServiceId,
-      delivery_time: String(
+      ciTypeId: request.ciTypeId,
+      cloudServiceId: request.cloudServiceId,
+      deliveryTime: String(
         request.availability?.responseTime ?? request.availability?.resolutionTime ?? 1
       ),
-      status: ServiceCatalogApi.toBackendStatus((request as any).status) || 'enabled',
+      status: ServiceCatalogApi.toBackendStatus(request.status) || 'enabled',
     };
     const resp = await httpClient.post<any>('/api/v1/service-catalogs', payload);
     return ServiceCatalogApi.toServiceItem(resp);
@@ -227,11 +216,11 @@ export class ServiceCatalogApi {
       payload.description = request.shortDescription || request.fullDescription || '';
     }
     if (request.availability?.responseTime !== undefined) {
-      payload.delivery_time = String(request.availability.responseTime);
+      payload.deliveryTime = String(request.availability.responseTime);
     }
-    if (request.ciTypeId !== undefined) payload.ci_type_id = request.ciTypeId;
-    if (request.cloudServiceId !== undefined) payload.cloud_service_id = request.cloudServiceId;
-    const st = ServiceCatalogApi.toBackendStatus((request as any).status);
+    if (request.ciTypeId !== undefined) payload.ciTypeId = request.ciTypeId;
+    if (request.cloudServiceId !== undefined) payload.cloudServiceId = request.cloudServiceId;
+    const st = ServiceCatalogApi.toBackendStatus(request.status);
     if (st) payload.status = st;
 
     const resp = await httpClient.put<any>(`/api/v1/service-catalogs/${id}`, payload);
@@ -270,11 +259,11 @@ export class ServiceCatalogApi {
    */
   static async cloneService(id: string, name: string): Promise<ServiceItem> {
     const src = await ServiceCatalogApi.getService(id);
+    const { id: _omit, ...rest } = src;
     return ServiceCatalogApi.createService({
-      ...src,
-      id: undefined as any,
+      ...rest,
       name,
-    } as any);
+    });
   }
 
   // ==================== 服务请求管理 ====================
@@ -333,20 +322,20 @@ export class ServiceCatalogApi {
 
     // V0：最小字段集合。复杂字段（成本中心/分级/到期/公网白名单）可先从 formData 透传，后续再做强校验与表单化。
     const payload: unknown = {
-      catalog_id: Number(request.serviceId),
+      catalogId: Number(request.serviceId),
       title: title ? String(title) : undefined,
       reason,
-      form_data: request.formData || {},
-      compliance_ack: Boolean(request.formData?.compliance_ack ?? true), // 以表单勾选为准，兜底为 true
-      data_classification: String(request.formData?.data_classification || 'internal'),
-      needs_public_ip: Boolean(request.formData?.needs_public_ip || false),
-      source_ip_whitelist: Array.isArray(request.formData?.source_ip_whitelist)
-        ? request.formData?.source_ip_whitelist
+      formData: request.formData || {},
+      complianceAck: Boolean(request.formData?.complianceAck ?? true), // 以表单勾选为准，兜底为 true
+      dataClassification: String(request.formData?.dataClassification || 'internal'),
+      needsPublicIp: Boolean(request.formData?.needsPublicIp || false),
+      sourceIpWhitelist: Array.isArray(request.formData?.sourceIpWhitelist)
+        ? request.formData?.sourceIpWhitelist
         : undefined,
-      cost_center: request.formData?.cost_center
-        ? String(request.formData?.cost_center)
+      costCenter: request.formData?.costCenter
+        ? String(request.formData?.costCenter)
         : undefined,
-      expire_at: request.formData?.expire_at ? request.formData?.expire_at : undefined,
+      expireAt: request.formData?.expireAt ? request.formData?.expireAt : undefined,
     };
 
     return httpClient.post('/api/v1/service-requests', payload);
@@ -359,7 +348,7 @@ export class ServiceCatalogApi {
     await httpClient.put(`/api/v1/service-requests/${id}/status`, {
       status: 'cancelled',
       comment: reason,
-    } as any);
+    });
   }
 
   /**
@@ -389,7 +378,7 @@ export class ServiceCatalogApi {
     await httpClient.put(`/api/v1/service-requests/${id}/status`, {
       status: 'completed',
       comment: notes,
-    } as any);
+    });
   }
 
   /**
@@ -529,14 +518,14 @@ export class ServiceCatalogApi {
       totalServices: resp.totalServices || 0,
       publishedServices: resp.publishedServices || 0,
       totalRequests: 0,
-      avgRating: 0,
-      topCategories: Object.entries(resp.categories || {}).map(([name, count]) => ({
-        name,
-        count: count as number,
-      })),
-      requestsByStatus: {},
-      servicesByStatus: {},
-    } as any;
+      pendingRequests: 0,
+      completedRequests: 0,
+      servicesByCategory: {} as Record<ServiceCategory, number>,
+      requestsByStatus: {} as Record<ServiceRequestStatus, number>,
+      topServices: [],
+      recentRequests: [],
+      trends: [],
+    };
   }
 
   /**

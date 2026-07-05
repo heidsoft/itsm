@@ -94,8 +94,8 @@ export default function ServiceGraphRegistryPage() {
     },
     {
       title: '类型',
-      dataIndex: 'source_type',
-      key: 'source_type',
+      dataIndex: 'sourceType',
+      key: 'sourceType',
       render: (value: string) => <Tag color="blue">{value || '-'}</Tag>,
     },
     {
@@ -106,8 +106,8 @@ export default function ServiceGraphRegistryPage() {
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       render: (value: boolean) => <Badge status={value ? 'success' : 'default'} text={value ? '启用' : '停用'} />,
     },
     {
@@ -126,23 +126,23 @@ export default function ServiceGraphRegistryPage() {
     },
     {
       title: '服务代码',
-      dataIndex: 'service_code',
-      key: 'service_code',
+      dataIndex: 'serviceCode',
+      key: 'serviceCode',
     },
     {
       title: '服务名称',
-      dataIndex: 'service_name',
-      key: 'service_name',
+      dataIndex: 'serviceName',
+      key: 'serviceName',
     },
     {
       title: '资源类型',
-      dataIndex: 'resource_type_name',
-      key: 'resource_type_name',
+      dataIndex: 'resourceTypeName',
+      key: 'resourceTypeName',
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       render: (value: boolean) => <Tag color={value ? 'green' : 'default'}>{value ? '启用' : '停用'}</Tag>,
     },
   ];
@@ -155,18 +155,18 @@ export default function ServiceGraphRegistryPage() {
     },
     {
       title: '账号名称',
-      dataIndex: 'account_name',
-      key: 'account_name',
+      dataIndex: 'accountName',
+      key: 'accountName',
     },
     {
       title: '账号ID',
-      dataIndex: 'account_id',
-      key: 'account_id',
+      dataIndex: 'accountId',
+      key: 'accountId',
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       render: (value: boolean) => <Tag color={value ? 'green' : 'default'}>{value ? '启用' : '停用'}</Tag>,
     },
   ];
@@ -179,8 +179,8 @@ export default function ServiceGraphRegistryPage() {
     },
     {
       title: '源ID',
-      dataIndex: 'source_id',
-      key: 'source_id',
+      dataIndex: 'sourceId',
+      key: 'sourceId',
     },
     {
       title: '状态',
@@ -190,14 +190,14 @@ export default function ServiceGraphRegistryPage() {
     },
     {
       title: '开始时间',
-      dataIndex: 'started_at',
-      key: 'started_at',
+      dataIndex: 'startedAt',
+      key: 'startedAt',
       render: (value?: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
     },
     {
       title: '结束时间',
-      dataIndex: 'finished_at',
-      key: 'finished_at',
+      dataIndex: 'finishedAt',
+      key: 'finishedAt',
       render: (value?: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
     },
   ];

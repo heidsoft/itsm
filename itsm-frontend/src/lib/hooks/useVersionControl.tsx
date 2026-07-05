@@ -99,12 +99,12 @@ export function parseVersionConflictError(error: unknown): VersionConflictError 
       status?: number;
       code?: number;
       statusCode?: number;
-      data?: { version?: number; current_version?: number; server_data?: unknown };
+      data?: { version?: number; currentVersion?: number; serverData?: unknown };
     };
 
     if (err.status === 409 || err.code === 409 || err.statusCode === 409) {
-      const serverVersion = err.data?.version ?? err.data?.current_version ?? 0;
-      return new VersionConflictError(0, serverVersion, err.data?.server_data);
+      const serverVersion = err.data?.version ?? err.data?.currentVersion ?? 0;
+      return new VersionConflictError(0, serverVersion, err.data?.serverData);
     }
   }
 

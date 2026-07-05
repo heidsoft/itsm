@@ -37,7 +37,7 @@ export default function ProblemEditPage() {
           priority: data.priority,
           category: data.category,
           status: data.status,
-          root_cause: data.rootCause,
+          rootCause: data.rootCause,
           impact: data.impact,
         });
       } catch (error) {

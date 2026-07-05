@@ -284,7 +284,7 @@ export function StatusBadge({ status, children, size = 'sm', className = '' }: S
   const statusLabels = {
     new: '新建',
     open: '开放',
-    in_progress: '处理中',
+    inProgress: '处理中',
     pending: '待处理',
     resolved: '已解决',
     closed: '已关闭',

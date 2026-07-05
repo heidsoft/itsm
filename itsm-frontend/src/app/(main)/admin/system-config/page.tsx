@@ -128,20 +128,20 @@ export default function SystemConfiguration() {
     const fetchSystemStats = async () => {
       try {
         const status = (await SystemConfigAPI.getSystemStatus()) || {};
-        const cpu = (status.cpu as { cores?: number; usage_percent?: number; usage?: number }) || {};
-        const memory = (status.memory as { usage_percent?: number; usage?: number }) || {};
+        const cpu = (status.cpu as { cores?: number; usagePercent?: number; usage?: number }) || {};
+        const memory = (status.memory as { usagePercent?: number; usage?: number }) || {};
         const startTime =
           (status.startTime as string) ||
-          (status.start_time as string) ||
+          (status.startTime as string) ||
           (status.startedAt as string) ||
-          (status.started_at as string);
+          (status.startedAt as string);
         const uptime = (status.uptime as string) || (status.upTime as string);
         setSystemStats({
           uptime: typeof uptime === 'string' ? uptime : calculateUptime(startTime ? parseInt(startTime, 10) : undefined),
           goroutines: (status.goroutines as number) || 0,
-          cpuCores: cpu.cores || (status.cpu_cores as number) || 0,
+          cpuCores: cpu.cores || (status.cpuCores as number) || 0,
           memoryUsagePercent: Math.round(
-            memory.usage_percent || memory.usage || 0
+            memory.usagePercent || memory.usage || 0
           ),
         });
       } catch (error) {

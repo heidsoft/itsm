@@ -14,7 +14,7 @@ interface EntityName {
   id: number;
   title: string;
   status: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export const EntityNameApi = {

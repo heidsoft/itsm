@@ -83,7 +83,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
   const [analyticsConfig, setAnalyticsConfig] = useState<Partial<AnalyticsConfig>>({
     dimensions: ['created_date'],
     metrics: ['count'],
-    chart_type: 'line',
+    chartType: 'line',
   });
   const [customTimeRange, setCustomTimeRange] = useState<[string, string]>([
     format(subDays(new Date(), 30), 'yyyy-MM-dd'),

@@ -57,7 +57,7 @@ const statusMap: Record<
 > = {
   new: { text: '新建', status: 'default' },
   open: { text: '处理中', status: 'processing' },
-  in_progress: { text: '进行中', status: 'processing' },
+  inProgress: { text: '进行中', status: 'processing' },
   pending: { text: '挂起', status: 'warning' },
   resolved: { text: '已解决', status: 'success' },
   closed: { text: '已关闭', status: 'default' },
@@ -84,12 +84,12 @@ const TicketDetailPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [slaInfo, setSlaInfo] = useState<{
-    sla_name: string;
-    response_deadline: string | null;
-    resolution_deadline: string | null;
-    is_breached: boolean;
-    response_time_remaining: number | null;
-    resolution_time_remaining: number | null;
+    slaName: string;
+    responseDeadline: string | null;
+    resolutionDeadline: string | null;
+    isBreached: boolean;
+    responseTimeRemaining: number | null;
+    resolutionTimeRemaining: number | null;
   } | null>(null);
   const [assignForm] = Form.useForm();
   const [editForm] = Form.useForm();
@@ -130,7 +130,7 @@ const TicketDetailPage: React.FC = () => {
   const fetchUsers = useCallback(async () => {
     try {
       setLoadingUsers(true);
-      const data = await UserApi.getUsers({ page_size: 100 });
+      const data = await UserApi.getUsers({ pageSize: 100 });
       setUsers(data.users || []);
     } catch (error) {
       // 用户获取失败时使用空数组，不显示错误提示
@@ -201,7 +201,7 @@ const TicketDetailPage: React.FC = () => {
   };
 
   // Handle assignment submit
-  const handleAssignSubmit = async (values: { assignee_id: number; comment?: string }) => {
+  const handleAssignSubmit = async (values: { assigneeId: number; comment?: string }) => {
     try {
       setAssigning(true);
       await TicketApi.assignTicket(ticketId, values);
@@ -427,45 +427,45 @@ const TicketDetailPage: React.FC = () => {
               <Space orientation="vertical" style={{ width: '100%' }}>
                 <div className="flex justify-between">
                   <Text type="secondary">SLA定义:</Text>
-                  <Tag color={slaInfo.is_breached ? 'red' : 'blue'}>{slaInfo.sla_name}</Tag>
+                  <Tag color={slaInfo.isBreached ? 'red' : 'blue'}>{slaInfo.slaName}</Tag>
                 </div>
-                {slaInfo.response_deadline && (
+                {slaInfo.responseDeadline && (
                   <div className="flex justify-between">
                     <Text type="secondary">响应截止:</Text>
                     <Text
                       type={
-                        slaInfo.response_time_remaining !== null &&
-                        slaInfo.response_time_remaining < 0
+                        slaInfo.responseTimeRemaining !== null &&
+                        slaInfo.responseTimeRemaining < 0
                           ? 'danger'
                           : undefined
                       }
                     >
-                      {new Date(slaInfo.response_deadline).toLocaleString()}
-                      {slaInfo.response_time_remaining !== null &&
-                        slaInfo.response_time_remaining < 0 &&
+                      {new Date(slaInfo.responseDeadline).toLocaleString()}
+                      {slaInfo.responseTimeRemaining !== null &&
+                        slaInfo.responseTimeRemaining < 0 &&
                         ' (已超时)'}
                     </Text>
                   </div>
                 )}
-                {slaInfo.resolution_deadline && (
+                {slaInfo.resolutionDeadline && (
                   <div className="flex justify-between">
                     <Text type="secondary">解决截止:</Text>
                     <Text
                       type={
-                        slaInfo.resolution_time_remaining !== null &&
-                        slaInfo.resolution_time_remaining < 0
+                        slaInfo.resolutionTimeRemaining !== null &&
+                        slaInfo.resolutionTimeRemaining < 0
                           ? 'danger'
                           : undefined
                       }
                     >
-                      {new Date(slaInfo.resolution_deadline).toLocaleString()}
-                      {slaInfo.resolution_time_remaining !== null &&
-                        slaInfo.resolution_time_remaining < 0 &&
+                      {new Date(slaInfo.resolutionDeadline).toLocaleString()}
+                      {slaInfo.resolutionTimeRemaining !== null &&
+                        slaInfo.resolutionTimeRemaining < 0 &&
                         ' (已超时)'}
                     </Text>
                   </div>
                 )}
-                {slaInfo.is_breached && <Tag color="red">SLA已违规</Tag>}
+                {slaInfo.isBreached && <Tag color="red">SLA已违规</Tag>}
               </Space>
             </Card>
           )}

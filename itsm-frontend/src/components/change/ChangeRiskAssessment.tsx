@@ -40,14 +40,14 @@ interface ChangeRiskAssessmentProps {
 }
 
 interface RiskAssessmentData {
-  risk_level: ChangeRisk;
-  risk_description: string;
-  impact_analysis: string;
-  mitigation_measures: string;
-  contingency_plan: string;
-  risk_owner: string;
-  risk_score?: number;
-  risk_factors?: string[];
+  riskLevel: ChangeRisk;
+  riskDescription: string;
+  impactAnalysis: string;
+  mitigationMeasures: string;
+  contingencyPlan: string;
+  riskOwner: string;
+  riskScore?: number;
+  riskFactors?: string[];
 }
 
 const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
@@ -101,8 +101,8 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
   useEffect(() => {
     if (initialData) {
       form.setFieldsValue(initialData);
-      if (initialData.risk_factors) {
-        setRiskFactors(initialData.risk_factors);
+      if (initialData.riskFactors) {
+        setRiskFactors(initialData.riskFactors);
       }
     }
   }, [initialData, form]);
@@ -113,8 +113,8 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
       setSubmitting(true);
       const assessmentData: RiskAssessmentData = {
         ...values,
-        risk_score: riskScore,
-        risk_factors: riskFactors,
+        riskScore: riskScore,
+        riskFactors: riskFactors,
       };
 
       onSave?.(assessmentData);

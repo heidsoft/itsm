@@ -83,7 +83,7 @@ const AssetDetail: React.FC = () => {
   const handleAssign = async () => {
     try {
       const values = await form.validateFields();
-      await AssetApi.assignAsset(Number(id), values.assigned_to);
+      await AssetApi.assignAsset(Number(id), values.assignedTo);
       message.success('分配成功');
       setAssignModalVisible(false);
       loadDetail();
@@ -151,7 +151,7 @@ const AssetDetail: React.FC = () => {
               <Title level={3} style={{ marginBottom: 8 }}>
                 {asset.name}
               </Title>
-              <Text type="secondary">资产编号: {asset.asset_number}</Text>
+              <Text type="secondary">资产编号: {asset.assetNumber}</Text>
             </div>
             <Space>
               <Tag color={statusColors[asset.status]} style={{ padding: '4px 12px', fontSize: 14 }}>
@@ -163,7 +163,7 @@ const AssetDetail: React.FC = () => {
         </div>
 
         <Descriptions bordered column={2}>
-          <Descriptions.Item label="资产编号">{asset.asset_number}</Descriptions.Item>
+          <Descriptions.Item label="资产编号">{asset.assetNumber}</Descriptions.Item>
           <Descriptions.Item label="资产名称">{asset.name}</Descriptions.Item>
           <Descriptions.Item label="类型">
             <Tag>{typeLabels[asset.type]}</Tag>
@@ -173,19 +173,19 @@ const AssetDetail: React.FC = () => {
           </Descriptions.Item>
           <Descriptions.Item label="分类">{asset.category || '-'}</Descriptions.Item>
           <Descriptions.Item label="子分类">{asset.subcategory || '-'}</Descriptions.Item>
-          <Descriptions.Item label="序列号">{asset.serial_number || '-'}</Descriptions.Item>
+          <Descriptions.Item label="序列号">{asset.serialNumber || '-'}</Descriptions.Item>
           <Descriptions.Item label="型号">{asset.model || '-'}</Descriptions.Item>
           <Descriptions.Item label="制造商">{asset.manufacturer || '-'}</Descriptions.Item>
           <Descriptions.Item label="供应商">{asset.vendor || '-'}</Descriptions.Item>
-          <Descriptions.Item label="分配给">{asset.assigned_to_name || '-'}</Descriptions.Item>
+          <Descriptions.Item label="分配给">{asset.assignedToName || '-'}</Descriptions.Item>
           <Descriptions.Item label="所属部门">{asset.department || '-'}</Descriptions.Item>
           <Descriptions.Item label="位置">{asset.location || '-'}</Descriptions.Item>
-          <Descriptions.Item label="采购日期">{asset.purchase_date || '-'}</Descriptions.Item>
+          <Descriptions.Item label="采购日期">{asset.purchaseDate || '-'}</Descriptions.Item>
           <Descriptions.Item label="采购价格">
-            {asset.purchase_price ? `¥${asset.purchase_price}` : '-'}
+            {asset.purchasePrice ? `¥${asset.purchasePrice}` : '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="保修期到期">{asset.warranty_expiry || '-'}</Descriptions.Item>
-          <Descriptions.Item label="支持期到期">{asset.support_expiry || '-'}</Descriptions.Item>
+          <Descriptions.Item label="保修期到期">{asset.warrantyExpiry || '-'}</Descriptions.Item>
+          <Descriptions.Item label="支持期到期">{asset.supportExpiry || '-'}</Descriptions.Item>
           <Descriptions.Item label="创建时间">
             {dayjs(asset.createdAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>

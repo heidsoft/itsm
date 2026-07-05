@@ -190,12 +190,12 @@ export function useCreateRelationshipMutation() {
       message.success('关系已创建');
       queryClient.invalidateQueries({
         queryKey: CMDB_KEYS.ciRelationships(
-          String((result as any).parent_id ?? (result as any).sourceCI)
+          String((result as any).parentId ?? (result as any).sourceCI)
         ),
       });
       queryClient.invalidateQueries({
         queryKey: CMDB_KEYS.ciRelationships(
-          String((result as any).child_id ?? (result as any).targetCI)
+          String((result as any).childId ?? (result as any).targetCI)
         ),
       });
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.stats() });

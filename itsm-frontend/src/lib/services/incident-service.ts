@@ -155,21 +155,21 @@ class IncidentService {
   // 创建事件
   async createIncident(
     data: CreateIncidentRequest
-  ): Promise<{ message: string; incident_id: number }> {
-    return httpClient.post<{ message: string; incident_id: number }>(this.baseUrl, data);
+  ): Promise<{ message: string; incidentId: number }> {
+    return httpClient.post<{ message: string; incidentId: number }>(this.baseUrl, data);
   }
 
   // 更新事件
   async updateIncident(
     id: number,
     data: UpdateIncidentRequest
-  ): Promise<{ message: string; incident_id: number }> {
-    return httpClient.put<{ message: string; incident_id: number }>(`${this.baseUrl}/${id}`, data);
+  ): Promise<{ message: string; incidentId: number }> {
+    return httpClient.put<{ message: string; incidentId: number }>(`${this.baseUrl}/${id}`, data);
   }
 
   // 删除事件
-  async deleteIncident(id: number): Promise<{ message: string; incident_id: number }> {
-    return httpClient.delete<{ message: string; incident_id: number }>(`${this.baseUrl}/${id}`);
+  async deleteIncident(id: number): Promise<{ message: string; incidentId: number }> {
+    return httpClient.delete<{ message: string; incidentId: number }>(`${this.baseUrl}/${id}`);
   }
 
   // 获取事件统计

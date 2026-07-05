@@ -77,7 +77,7 @@ export class SLAApi {
     if (params) {
       if (params.page) queryParams.page = String(params.page);
       if (params.size) queryParams.size = String(params.size);
-      if (params.isActive !== undefined) queryParams.is_active = String(params.isActive);
+      if (params.isActive !== undefined) queryParams.isActive = String(params.isActive);
       if (params.name) queryParams.name = params.name;
     }
     return httpClient.get('/api/v1/sla/definitions', queryParams);
@@ -108,7 +108,7 @@ export class SLAApi {
 
   // 检查工单SLA合规性
   static async checkTicketCompliance(ticketId: number): Promise<{
-    is_compliant: boolean;
+    isCompliant: boolean;
     violations: SLAViolation[];
   }> {
     return httpClient.post(`/api/v1/sla/check-compliance/${ticketId}`);
@@ -133,10 +133,10 @@ export class SLAApi {
     if (params) {
       if (params.page) queryParams.page = String(params.page);
       if (params.size) queryParams.size = String(params.size);
-      if (params.isResolved !== undefined) queryParams.is_resolved = String(params.isResolved);
+      if (params.isResolved !== undefined) queryParams.isResolved = String(params.isResolved);
       if (params.severity) queryParams.severity = params.severity;
-      if (params.violationType) queryParams.violation_type = params.violationType;
-      if (params.slaDefinitionId) queryParams.sla_definition_id = String(params.slaDefinitionId);
+      if (params.violationType) queryParams.violationType = params.violationType;
+      if (params.slaDefinitionId) queryParams.slaDefinitionId = String(params.slaDefinitionId);
     }
     return httpClient.get('/api/v1/sla/violations', queryParams);
   }
@@ -147,7 +147,7 @@ export class SLAApi {
     isResolved: boolean,
     notes?: string
   ): Promise<void> {
-    return httpClient.put(`/api/v1/sla/violations/${id}`, { is_resolved: isResolved, notes });
+    return httpClient.put(`/api/v1/sla/violations/${id}`, { isResolved: isResolved, notes });
   }
 
   // 获取SLA合规报告
@@ -158,8 +158,8 @@ export class SLAApi {
   }): Promise<SLAComplianceReport> {
     // 调用合规报告端点 - 后端期望 snake_case 参数
     const report = await httpClient.get<SLAComplianceReport>('/api/v1/sla/compliance-report', {
-      start_date: params.startDate,
-      end_date: params.endDate,
+      startDate: params.startDate,
+      endDate: params.endDate,
     });
 
     // httpClient 已自动将 snake_case 转换为 camelCase
@@ -226,19 +226,20 @@ export class SLAApi {
   }> {
     // 转换为后端期望的 snake_case
     const requestBody: Record<string, string> = {};
-    if (params?.startTime) requestBody.start_time = params.startTime;
-    if (params?.endTime) requestBody.end_time = params.endTime;
-    if (params?.slaDefinitionId) requestBody.sla_definition_id = String(params.slaDefinitionId);
+    if (params?.startTime) requestBody.startTime = params.startTime;
+    if (params?.endTime) requestBody.endTime = params.endTime;
+    if (params?.slaDefinitionId) requestBody.slaDefinitionId = String(params.slaDefinitionId);
 
+    // httpClient 会自动将 snake_case 转换为 camelCase
     const response = await httpClient.post<{
-      total_tickets: number;
-      violated_tickets: number;
-      at_risk_tickets?: number;
-      compliance_rate?: number;
-      average_response_time?: number;
-      average_resolution_time?: number;
-      response_time_compliance?: number;
-      resolution_time_compliance?: number;
+      totalTickets: number;
+      violatedTickets: number;
+      atRiskTickets?: number;
+      complianceRate?: number;
+      averageResponseTime?: number;
+      averageResolutionTime?: number;
+      responseTimeCompliance?: number;
+      resolutionTimeCompliance?: number;
       alerts?: Array<{
         id: string;
         ticketId: number;
@@ -252,7 +253,6 @@ export class SLAApi {
       }>;
     }>('/api/v1/sla/monitoring', requestBody);
 
-    // httpClient 已自动将 snake_case 转换为 camelCase
     const violationRate =
       response.totalTickets > 0 ? (response.violatedTickets / response.totalTickets) * 100 : 0;
     const compliantTickets = response.totalTickets - response.violatedTickets;
@@ -297,33 +297,23 @@ export class SLAApi {
       avgResolutionTime: number;
     }>;
   }> {
-    // 使用 monitoring 端点获取指标数据
+    // 使用 monitoring 端点获取指标数据 - httpClient 会自动转换 snake_case 为 camelCase
     const monitoring = await httpClient.post<{
-      average_response_time?: number;
+      averageResponseTime?: number;
       averageResolutionTime?: number;
-      average_resolution_time?: number;
-      compliance_rate?: number;
       complianceRate?: number;
-      violated_tickets?: number;
       violatedTickets?: number;
       alerts?: Array<{
-        ticket_id?: number;
         ticketId?: number;
-        ticket_title?: string;
         ticketTitle?: string;
         priority?: string;
-        sla_definition?: string;
         slaDefinition?: string;
-        time_remaining?: number;
         timeRemaining?: number;
-        alert_level?: 'warning' | 'critical' | 'severe';
         alertLevel?: 'warning' | 'critical' | 'severe';
-        created_at?: string;
         createdAt?: string;
       }>;
     }>('/api/v1/sla/monitoring', {});
 
-    // httpClient 已自动将 snake_case 转换为 camelCase
     return {
       responseTimeAvg: monitoring.averageResponseTime || 0,
       resolutionTimeAvg: monitoring.averageResolutionTime || 0,
@@ -349,18 +339,12 @@ export class SLAApi {
     // 从 monitoring 端点获取预警数据
     const monitoring = await httpClient.post<{
       alerts?: Array<{
-        ticket_id?: number;
         ticketId?: number;
-        ticket_title?: string;
         ticketTitle?: string;
         priority?: string;
-        sla_definition?: string;
         slaDefinition?: string;
-        time_remaining?: number;
         timeRemaining?: number;
-        alert_level?: 'warning' | 'critical' | 'severe';
         alertLevel?: 'warning' | 'critical' | 'severe';
-        created_at?: string;
         createdAt?: string;
       }>;
     }>('/api/v1/sla/monitoring', {});
@@ -368,13 +352,13 @@ export class SLAApi {
     // 如果有 alerts 则使用，否则返回空数组
     if (monitoring.alerts && Array.isArray(monitoring.alerts)) {
       return monitoring.alerts.map((item) => ({
-        ticketId: item.ticketId || item.ticket_id || 0,
-        ticketTitle: item.ticketTitle || item.ticket_title || `Ticket #${item.ticketId || item.ticket_id || 0}`,
+        ticketId: item.ticketId || item.ticketId || 0,
+        ticketTitle: item.ticketTitle || item.ticketTitle || `Ticket #${item.ticketId || item.ticketId || 0}`,
         priority: item.priority || 'medium',
-        slaDefinition: item.slaDefinition || item.sla_definition || 'SLA',
-        timeRemaining: item.timeRemaining || item.time_remaining || 0,
-        alertLevel: item.alertLevel || item.alert_level || 'warning',
-        createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+        slaDefinition: item.slaDefinition || item.slaDefinition || 'SLA',
+        timeRemaining: item.timeRemaining || item.timeRemaining || 0,
+        alertLevel: item.alertLevel || item.alertLevel || 'warning',
+        createdAt: item.createdAt || item.createdAt || new Date().toISOString(),
       }));
     }
 
@@ -394,17 +378,17 @@ export class SLAApi {
   // 创建SLA预警规则
   static async createAlertRule(data: {
     name: string;
-    sla_definition_id: number;
-    alert_level: 'warning' | 'critical' | 'severe';
-    threshold_percentage: number;
-    notification_channels: string[];
-    escalation_enabled?: boolean;
-    escalation_levels?: Array<{
+    slaDefinitionId: number;
+    alertLevel: 'warning' | 'critical' | 'severe';
+    thresholdPercentage: number;
+    notificationChannels: string[];
+    escalationEnabled?: boolean;
+    escalationLevels?: Array<{
       level: number;
       threshold: number;
-      notify_users: number[];
+      notifyUsers: number[];
     }>;
-    is_active: boolean;
+    isActive: boolean;
   }): Promise<unknown> {
     return httpClient.post('/api/v1/sla/alert-rules', data);
   }
@@ -414,10 +398,10 @@ export class SLAApi {
     id: number,
     data: Partial<{
       name: string;
-      alert_level: 'warning' | 'critical' | 'severe';
-      threshold_percentage: number;
-      notification_channels: string[];
-      is_active: boolean;
+      alertLevel: 'warning' | 'critical' | 'severe';
+      thresholdPercentage: number;
+      notificationChannels: string[];
+      isActive: boolean;
     }>
   ): Promise<any> {
     // 修正: 确保路径与后端一致，去掉 v2
@@ -432,9 +416,9 @@ export class SLAApi {
 
   // 获取SLA预警规则列表
   static async getAlertRules(params?: {
-    sla_definition_id?: number;
-    is_active?: boolean;
-    alert_level?: string;
+    slaDefinitionId?: number;
+    isActive?: boolean;
+    alertLevel?: string;
   }): Promise<any[]> {
     return httpClient.get('/api/v1/sla/alert-rules', params);
   }
@@ -447,19 +431,19 @@ export class SLAApi {
 
   // 获取SLA预警历史
   static async getAlertHistory(params?: {
-    sla_definition_id?: number;
-    alert_rule_id?: number;
-    ticket_id?: number;
-    alert_level?: string;
-    start_time?: string;
-    end_time?: string;
+    slaDefinitionId?: number;
+    alertRuleId?: number;
+    ticketId?: number;
+    alertLevel?: string;
+    startTime?: string;
+    endTime?: string;
     page?: number;
-    page_size?: number;
+    pageSize?: number;
   }): Promise<{
     items: unknown[];
     total: number;
     page: number;
-    page_size: number;
+    pageSize: number;
   }> {
     // 修正: 确保路径与后端一致，去掉 v2
     return httpClient.get('/api/v1/sla/alert-history', params);
@@ -468,7 +452,7 @@ export class SLAApi {
   // ==================== 兼容别名（旧代码使用） ====================
 
   /** @deprecated 使用 getSLADefinitions */
-  static getDefinitions(params?: { page?: number; size?: number; is_active?: boolean; name?: string }) {
+  static getDefinitions(params?: { page?: number; size?: number; isActive?: boolean; name?: string }) {
     return this.getSLADefinitions(params);
   }
 

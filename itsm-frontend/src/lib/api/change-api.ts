@@ -215,7 +215,7 @@ export class ChangeApi {
   // 获取变更列表
   static async getChanges(params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
     status?: ChangeStatus;
     type?: ChangeType;
     priority?: ChangePriority;
@@ -285,8 +285,8 @@ export class ChangeApi {
   }
 
   // 分配变更
-  static async assignChange(id: number, assignee_id: number): Promise<void> {
-    return httpClient.post(`/api/v1/changes/${id}/assign`, { assignee_id });
+  static async assignChange(id: number, assigneeId: number): Promise<void> {
+    return httpClient.post(`/api/v1/changes/${id}/assign`, { assigneeId });
   }
 
   // 获取变更审批历史
@@ -316,8 +316,8 @@ export class ChangeApi {
   static async exportChanges(params?: {
     format?: 'excel' | 'pdf' | 'csv';
     status?: ChangeStatus;
-    start_date?: string;
-    end_date?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<Blob> {
     return httpClient.request<Blob>({
       url: '/api/v1/changes/export',
@@ -368,7 +368,7 @@ export class ChangeApi {
   // PIR总体结果类型
   static async getPIRs(params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
     result?: 'successful' | 'partially_successful' | 'failed' | '全部';
   }): Promise<PIRListResponse> {
     return httpClient.get<PIRListResponse>('/api/v1/changes/pirs', params as Record<string, unknown>);

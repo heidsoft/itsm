@@ -33,7 +33,7 @@ import {
   ColorPicker,
   type UploadFile,
 } from 'antd';
-import { Plus, X, Save, Upload, Lock, FileText, Eye, Settings, History, Info, AlertCircle, CheckCircle, Zap, Rocket } from 'lucide-react';
+import { Plus, X, Save, Lock, FileText, Eye, Settings, History, Info, AlertCircle, CheckCircle, Zap, Rocket } from 'lucide-react';
 import { FieldDesigner } from './FieldDesigner';
 import type {
   TicketTemplate,

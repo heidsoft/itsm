@@ -64,13 +64,9 @@ interface Notification {
   channel: 'in_app' | 'email' | 'sms' | 'webhook';
   status: 'pending' | 'sent' | 'failed' | 'read';
   recipient: string;
-  sent_at?: string;
   sentAt?: string;
-  read_at?: string;
   readAt?: string;
-  created_at: string;
-  createdAt?: string;
-  template_id?: number;
+  createdAt: string;
   templateId?: number;
   metadata?: Record<string, any>;
 }
@@ -84,9 +80,9 @@ interface NotificationTemplate {
   subject?: string;
   content: string;
   variables: string[];
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface NotificationChannel {
@@ -94,18 +90,18 @@ interface NotificationChannel {
   name: string;
   type: 'email' | 'sms' | 'webhook' | 'in_app';
   config: Record<string, any>;
-  is_active: boolean;
+  isActive: boolean;
   status: 'connected' | 'disconnected' | 'error';
-  last_used?: string;
+  lastUsed?: string;
 }
 
 interface NotificationStats {
   total: number;
   unread: number;
-  sent_today: number;
-  failed_today: number;
-  delivery_rate: number;
-  avg_response_time: number;
+  sentToday: number;
+  failedToday: number;
+  deliveryRate: number;
+  avgResponseTime: number;
 }
 
 const NotificationCenter: React.FC<{
@@ -119,10 +115,10 @@ const NotificationCenter: React.FC<{
   const [stats, setStats] = useState<NotificationStats>({
     total: 0,
     unread: 0,
-    sent_today: 0,
-    failed_today: 0,
-    delivery_rate: 0,
-    avg_response_time: 0,
+    sentToday: 0,
+    failedToday: 0,
+    deliveryRate: 0,
+    avgResponseTime: 0,
   });
   const [loading, setLoading] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -148,7 +144,7 @@ const NotificationCenter: React.FC<{
     const csvContent = [
       ['ID', '标题', '内容', '类型', '状态', '接收人', '发送时间'].join(','),
       ...filteredNotifications.map(n =>
-        [n.id, n.title, n.message, n.type, n.status, n.recipient, n.sent_at || ''].join(',')
+        [n.id, n.title, n.message, n.type, n.status, n.recipient, n.sentAt || ''].join(',')
       ),
     ].join('\n');
 
@@ -184,10 +180,10 @@ const NotificationCenter: React.FC<{
           channel: 'in_app',
           status: 'read',
           recipient: '张三',
-          sent_at: '2024-01-15T10:30:00Z',
-          read_at: '2024-01-15T10:35:00Z',
-          created_at: '2024-01-15T10:30:00Z',
-          template_id: 1,
+          sentAt: '2024-01-15T10:30:00Z',
+          readAt: '2024-01-15T10:35:00Z',
+          createdAt: '2024-01-15T10:30:00Z',
+          templateId: 1,
         },
         {
           id: 2,
@@ -197,9 +193,9 @@ const NotificationCenter: React.FC<{
           channel: 'email',
           status: 'sent',
           recipient: '李四',
-          sent_at: '2024-01-15T09:00:00Z',
-          created_at: '2024-01-15T09:00:00Z',
-          template_id: 2,
+          sentAt: '2024-01-15T09:00:00Z',
+          createdAt: '2024-01-15T09:00:00Z',
+          templateId: 2,
         },
         {
           id: 3,
@@ -209,9 +205,9 @@ const NotificationCenter: React.FC<{
           channel: 'sms',
           status: 'sent',
           recipient: '王五',
-          sent_at: '2024-01-15T08:00:00Z',
-          created_at: '2024-01-15T08:00:00Z',
-          template_id: 3,
+          sentAt: '2024-01-15T08:00:00Z',
+          createdAt: '2024-01-15T08:00:00Z',
+          templateId: 3,
         },
       ];
 
@@ -225,9 +221,9 @@ const NotificationCenter: React.FC<{
           subject: '工单分配通知',
           content: '您有一个新的工单被分配：{{ticket_title}}，优先级：{{priority}}',
           variables: ['ticket_title', 'priority'],
-          is_active: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z',
+          isActive: true,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
         },
         {
           id: 2,
@@ -238,9 +234,9 @@ const NotificationCenter: React.FC<{
           subject: 'SLA预警通知',
           content: '工单{{ticket_id}}即将超时，剩余时间：{{remaining_time}}',
           variables: ['ticket_id', 'remaining_time'],
-          is_active: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z',
+          isActive: true,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
         },
       ];
 
@@ -250,13 +246,13 @@ const NotificationCenter: React.FC<{
           name: '邮件通知',
           type: 'email',
           config: {
-            smtp_server: 'smtp.company.com',
-            smtp_port: 587,
+            smtpServer: 'smtp.company.com',
+            smtpPort: 587,
             username: 'notifications@company.com',
           },
-          is_active: true,
+          isActive: true,
           status: 'connected',
-          last_used: '2024-01-15T10:30:00Z',
+          lastUsed: '2024-01-15T10:30:00Z',
         },
         {
           id: 'sms',
@@ -264,12 +260,12 @@ const NotificationCenter: React.FC<{
           type: 'sms',
           config: {
             provider: '阿里云',
-            api_key: '***',
-            template_id: 'SMS_123456',
+            apiKey: '***',
+            templateId: 'SMS_123456',
           },
-          is_active: true,
+          isActive: true,
           status: 'connected',
-          last_used: '2024-01-15T09:00:00Z',
+          lastUsed: '2024-01-15T09:00:00Z',
         },
         {
           id: 'webhook',
@@ -280,7 +276,7 @@ const NotificationCenter: React.FC<{
             method: 'POST',
             headers: { Authorization: 'Bearer ***' },
           },
-          is_active: false,
+          isActive: false,
           status: 'disconnected',
         },
       ];
@@ -293,17 +289,17 @@ const NotificationCenter: React.FC<{
       const total = mockNotifications.length;
       const unread = mockNotifications.filter(n => n.status === 'pending').length;
       const sentToday = mockNotifications.filter(
-        n => n.sent_at && new Date(n.sent_at).toDateString() === new Date().toDateString()
+        n => n.sentAt && new Date(n.sentAt).toDateString() === new Date().toDateString()
       ).length;
       const failedToday = mockNotifications.filter(n => n.status === 'failed').length;
 
       setStats({
         total,
         unread,
-        sent_today: sentToday,
-        failed_today: failedToday,
-        delivery_rate: 95.5,
-        avg_response_time: 2.3,
+        sentToday: sentToday,
+        failedToday: failedToday,
+        deliveryRate: 95.5,
+        avgResponseTime: 2.3,
       });
     } catch (error) {
       message.error('加载数据失败');
@@ -319,7 +315,7 @@ const NotificationCenter: React.FC<{
 
       setNotifications(prev =>
         prev.map(n =>
-          n.id === id ? { ...n, status: 'read' as const, read_at: new Date().toISOString() } : n
+          n.id === id ? { ...n, status: 'read' as const, readAt: new Date().toISOString() } : n
         )
       );
 
@@ -335,7 +331,7 @@ const NotificationCenter: React.FC<{
       await new Promise(resolve => setTimeout(resolve, 200));
 
       setNotifications(prev =>
-        prev.map(n => ({ ...n, status: 'read' as const, read_at: new Date().toISOString() }))
+        prev.map(n => ({ ...n, status: 'read' as const, readAt: new Date().toISOString() }))
       );
 
       message.success('已全部标记为已读');
@@ -365,7 +361,7 @@ const NotificationCenter: React.FC<{
         setTemplates(prev =>
           prev.map(t =>
             t.id === selectedTemplate.id
-              ? { ...t, ...values, updated_at: new Date().toISOString() }
+              ? { ...t, ...values, updatedAt: new Date().toISOString() }
               : t
           )
         );
@@ -375,8 +371,8 @@ const NotificationCenter: React.FC<{
         const newTemplate: NotificationTemplate = {
           id: Date.now(),
           ...values,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
         setTemplates(prev => [...prev, newTemplate]);
         message.success('模板创建成功');
@@ -617,11 +613,11 @@ const NotificationCenter: React.FC<{
     },
     {
       title: '状态',
-      key: 'is_active',
+      key: 'isActive',
       width: 80,
       render: (_, record) => (
-        <Tag color={record.is_active ? 'success' : 'default'}>
-          {record.is_active ? '启用' : '禁用'}
+        <Tag color={record.isActive ? 'success' : 'default'}>
+          {record.isActive ? '启用' : '禁用'}
         </Tag>
       ),
     },
@@ -683,8 +679,8 @@ const NotificationCenter: React.FC<{
       width: 120,
       render: (_, record) => (
         <div className="space-y-1">
-          <Tag color={record.is_active ? 'success' : 'default'}>
-            {record.is_active ? '启用' : '禁用'}
+          <Tag color={record.isActive ? 'success' : 'default'}>
+            {record.isActive ? '启用' : '禁用'}
           </Tag>
           <Tag
             color={
@@ -706,11 +702,11 @@ const NotificationCenter: React.FC<{
     },
     {
       title: '最后使用',
-      key: 'last_used',
+      key:'lastUsed',
       width: 150,
       render: (_, record) => (
         <div className="text-sm text-gray-500">
-          {record.last_used ? new Date(record.last_used).toLocaleString() : '从未使用'}
+          {record.lastUsed ? new Date(record.lastUsed).toLocaleString() : '从未使用'}
         </div>
       ),
     },
@@ -788,7 +784,7 @@ const NotificationCenter: React.FC<{
                 <Card size="small">
                   <Statistic
                     title="今日发送"
-                    value={stats.sent_today}
+                    value={stats.sentToday}
                     styles={{ content: { color: '#52c41a' } }}
                     prefix={<CheckCircle className="w-4 h-4" />}
                   />
@@ -798,10 +794,10 @@ const NotificationCenter: React.FC<{
                 <Card size="small">
                   <Statistic
                     title="发送成功率"
-                    value={stats.delivery_rate}
+                    value={stats.deliveryRate}
                     suffix="%"
                     styles={{ content: { color: '#52c41a' } }}
-                    prefix={<Progress type="circle" size={24} percent={stats.delivery_rate} />}
+                    prefix={<Progress type="circle" size={24} percent={stats.deliveryRate} />}
                   />
                 </Card>
               </Col>

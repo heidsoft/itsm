@@ -86,13 +86,13 @@ export class AuthService {
 
     try {
       const data = await this.makeRequest<{
-        access_token: string;
-        refresh_token?: string;
+        accessToken: string;
+        refreshToken?: string;
       }>('/api/v1/auth/refresh', {
         method: 'POST',
         credentials: 'include', // Include httpOnly cookies
         body: JSON.stringify({
-          refresh_token: refreshToken,
+          refreshToken: refreshToken,
         }),
       });
 
@@ -135,8 +135,8 @@ export class AuthService {
   ): Promise<boolean> {
     try {
       const data = await this.makeRequest<{
-        access_token: string;
-        refresh_token: string;
+        accessToken: string;
+        refreshToken: string;
         user: unknown;
         tenant?: unknown;
       }>('/api/v1/auth/login', {
@@ -144,15 +144,15 @@ export class AuthService {
         body: JSON.stringify({
           username,
           password,
-          tenant_code: tenantCode,
+          tenantCode: tenantCode,
         }),
       });
 
       // Token 仅通过 httpOnly cookie 管理（由后端设置）
       // 前端仅设置 auth-token cookie 供 middleware 路由守卫使用
-      if (typeof window !== 'undefined' && data.access_token) {
+      if (typeof window !== 'undefined' && data.accessToken) {
         const cookieMaxAge = rememberMe ? 7 * 24 * 60 * 60 : 0; // 7天或会话级
-        document.cookie = `auth-token=${data.access_token}; path=/; max-age=${cookieMaxAge}; SameSite=Lax`;
+        document.cookie = `auth-token=${data.accessToken}; path=/; max-age=${cookieMaxAge}; SameSite=Lax`;
       }
 
       // 使用store管理登录状态
@@ -165,20 +165,20 @@ export class AuthService {
           username: String(u?.username || username),
           role: String(u?.role || 'end_user'),
           email: String(u?.email || ''),
-          name: String(u?.name || u?.full_name || ''),
+          name: String(u?.name || u?.fullName || ''),
           tenantId: u?.tenantId
             ? Number(u.tenantId)
-            : u?.tenant_id
-              ? Number(u.tenant_id)
+            : u?.tenantId
+              ? Number(u.tenantId)
               : undefined,
           department: u?.department,
           permissions: u?.permissions,
-          createdAt: u?.createdAt || u?.created_at,
-          updatedAt: u?.updatedAt || u?.updated_at,
+          createdAt: u?.createdAt || u?.createdAt,
+          updatedAt: u?.updatedAt || u?.updatedAt,
         },
-        data.access_token || 'authenticated',
+        data.accessToken || 'authenticated',
         {
-          id: Number(t?.id || u?.tenant_id || 1),
+          id: Number(t?.id || u?.tenantId || 1),
           name: String(t?.name || '默认租户'),
           code: String(t?.code || tenantCode || 'default'),
           type: (t?.type || 'standard') as any,
@@ -214,7 +214,7 @@ export class AuthService {
             username: params.username,
             email: params.email,
             password: params.password,
-            full_name: params.fullName,
+            fullName: params.fullName,
             phone: params.phone,
             company: params.company,
             role: params.role,
@@ -236,7 +236,7 @@ export class AuthService {
         method: 'POST',
         body: JSON.stringify({
           email,
-          tenant_code: tenantCode,
+          tenantCode: tenantCode,
         }),
       });
 
@@ -261,7 +261,7 @@ export class AuthService {
           token: params.token,
           email: params.email,
           password: params.password,
-          password_confirm: params.passwordConfirm,
+          passwordConfirm: params.passwordConfirm,
         }),
       });
 

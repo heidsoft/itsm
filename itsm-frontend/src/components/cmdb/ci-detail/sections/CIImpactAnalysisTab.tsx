@@ -38,17 +38,17 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
             <Space>
               <Tag
                 color={
-                  item.impact_level === 'critical'
+                  item.impactLevel === 'critical'
                     ? 'red'
-                    : item.impact_level === 'high'
+                    : item.impactLevel === 'high'
                       ? 'orange'
                       : 'blue'
                 }
               >
-                {item.impact_level}
+                {item.impactLevel}
               </Tag>
-              <Text>{item.ci_name}</Text>
-              <Text type="secondary">- {item.ci_type}</Text>
+              <Text>{item.ciName}</Text>
+              <Text type="secondary">- {item.ciType}</Text>
               <Text type="secondary">- {item.relationship}</Text>
               <Text type="secondary">- 距离: {item.distance}</Text>
             </Space>
@@ -135,16 +135,16 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
             title="风险等级"
             description={
               <Space>
-                <Tag color={RISK_LEVEL_COLORS[impactAnalysis.risk_level]}>
-                  {RISK_LEVEL_LABELS[impactAnalysis.risk_level]}
+                <Tag color={RISK_LEVEL_COLORS[impactAnalysis.riskLevel]}>
+                  {RISK_LEVEL_LABELS[impactAnalysis.riskLevel]}
                 </Tag>
                 <Text>{impactAnalysis.summary}</Text>
               </Space>
             }
             type={
-              impactAnalysis.risk_level === 'critical'
+              impactAnalysis.riskLevel === 'critical'
                 ? 'error'
-                : impactAnalysis.risk_level === 'high'
+                : impactAnalysis.riskLevel === 'high'
                   ? 'warning'
                   : 'info'
             }
@@ -155,23 +155,23 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
             items={[
               {
                 key: 'upstream',
-                label: `上游影响 (${impactAnalysis.upstream_impact?.length || 0})`,
-                children: renderImpactList(impactAnalysis.upstream_impact, '无上游依赖'),
+                label: `上游影响 (${impactAnalysis.upstreamImpact?.length || 0})`,
+                children: renderImpactList(impactAnalysis.upstreamImpact, '无上游依赖'),
               },
               {
                 key: 'downstream',
-                label: `下游影响 (${impactAnalysis.downstream_impact?.length || 0})`,
-                children: renderImpactList(impactAnalysis.downstream_impact, '无下游影响'),
+                label: `下游影响 (${impactAnalysis.downstreamImpact?.length || 0})`,
+                children: renderImpactList(impactAnalysis.downstreamImpact, '无下游影响'),
               },
               {
                 key: 'tickets',
-                label: `关联工单 (${impactAnalysis.affected_tickets?.length || 0})`,
-                children: renderAffectedTickets(impactAnalysis.affected_tickets, '无关联工单'),
+                label: `关联工单 (${impactAnalysis.affectedTickets?.length || 0})`,
+                children: renderAffectedTickets(impactAnalysis.affectedTickets, '无关联工单'),
               },
               {
                 key: 'incidents',
-                label: `关联事件 (${impactAnalysis.affected_incidents?.length || 0})`,
-                children: renderAffectedIncidents(impactAnalysis.affected_incidents, '无关联事件'),
+                label: `关联事件 (${impactAnalysis.affectedIncidents?.length || 0})`,
+                children: renderAffectedIncidents(impactAnalysis.affectedIncidents, '无关联事件'),
               },
             ]}
           />

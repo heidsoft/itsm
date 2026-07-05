@@ -29,11 +29,11 @@ const { RangePicker } = DatePicker;
 
 interface SLAChartData {
   date: string;
-  compliance_rate: number;
-  avg_response_time: number;
-  avg_resolution_time: number;
-  ticket_count: number;
-  violation_count: number;
+  complianceRate: number;
+  avgResponseTime: number;
+  avgResolutionTime: number;
+  ticketCount: number;
+  violationCount: number;
 }
 
 interface SLADashboardChartsProps {
@@ -90,11 +90,11 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
       if (metrics.trendData && metrics.trendData.length > 0) {
         const formattedData: SLAChartData[] = metrics.trendData.map(item => ({
           date: dayjs(item.date).format('MM-DD'),
-          compliance_rate: Number(item.complianceRate?.toFixed(1) || 0),
-          avg_response_time: Number(item.avgResponseTime?.toFixed(2) || 0),
-          avg_resolution_time: Number(item.avgResolutionTime?.toFixed(2) || 0),
-          ticket_count: 0, // API 未返回此字段，设为 0
-          violation_count: 0, // API 未返回此字段，设为 0
+          complianceRate: Number(item.complianceRate?.toFixed(1) || 0),
+          avgResponseTime: Number(item.avgResponseTime?.toFixed(2) || 0),
+          avgResolutionTime: Number(item.avgResolutionTime?.toFixed(2) || 0),
+          ticketCount: 0, // API 未返回此字段，设为 0
+          violationCount: 0, // API 未返回此字段，设为 0
         }));
         setChartData(formattedData);
       } else {
@@ -123,12 +123,12 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
 
   // 饼图数据 - SLA合规分布
   const getPieData = () => {
-    const total = chartData.reduce((sum, item) => sum + item.ticket_count, 0);
+    const total = chartData.reduce((sum, item) => sum + item.ticketCount, 0);
     const compliant = chartData.reduce(
-      (sum, item) => sum + Math.floor(item.ticket_count * (item.compliance_rate / 100)),
+      (sum, item) => sum + Math.floor(item.ticketCount * (item.complianceRate / 100)),
       0
     );
-    const violations = chartData.reduce((sum, item) => sum + item.violation_count, 0);
+    const violations = chartData.reduce((sum, item) => sum + item.violationCount, 0);
     const risk = total - compliant - violations;
 
     return [
@@ -142,8 +142,8 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
   const getResponseTimeData = () => {
     return chartData.map(item => ({
       date: item.date,
-      响应时间: item.avg_response_time,
-      解决时间: item.avg_resolution_time,
+      响应时间: item.avgResponseTime,
+      解决时间: item.avgResolutionTime,
     }));
   };
 
@@ -358,7 +358,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
           <Col xs={24} sm={6}>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {chartData.length > 0 ? Math.max(...chartData.map(d => d.compliance_rate)) : 0}%
+                {chartData.length > 0 ? Math.max(...chartData.map(d => d.complianceRate)) : 0}%
               </div>
               <div className="text-gray-600">最高合规率</div>
             </div>
@@ -368,7 +368,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
               <div className="text-2xl font-bold text-blue-600">
                 {chartData.length > 0
                   ? (
-                      chartData.reduce((sum, d) => sum + d.avg_response_time, 0) / chartData.length
+                      chartData.reduce((sum, d) => sum + d.avgResponseTime, 0) / chartData.length
                     ).toFixed(2)
                   : 0}
                 h
@@ -381,7 +381,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
               <div className="text-2xl font-bold text-orange-600">
                 {chartData.length > 0
                   ? (
-                      chartData.reduce((sum, d) => sum + d.avg_resolution_time, 0) /
+                      chartData.reduce((sum, d) => sum + d.avgResolutionTime, 0) /
                       chartData.length
                     ).toFixed(2)
                   : 0}
@@ -393,7 +393,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
           <Col xs={24} sm={6}>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">
-                {chartData.reduce((sum, d) => sum + d.violation_count, 0)}
+                {chartData.reduce((sum, d) => sum + d.violationCount, 0)}
               </div>
               <div className="text-gray-600">总违规数</div>
             </div>

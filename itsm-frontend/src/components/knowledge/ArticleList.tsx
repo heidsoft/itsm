@@ -75,7 +75,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
       const resp = await KnowledgeBaseApi.getArticles({
         ...query,
         ...values,
-        categoryId: (values as unknown as { category?: number }).category || undefined,
+        categoryId: (values as unknown as { category?: number }).category ? String((values as unknown as { category?: number }).category) : undefined,
       });
       // HTTP client already extracts data, so resp is ListKnowledgeArticlesResponse
       const articles = resp?.articles || [];
@@ -143,7 +143,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
     },
     {
       title: '状态',
-      dataIndex: 'is_published',
+      dataIndex:'isPublished',
       width: 100,
       render: (is_published: boolean) => {
         const status = is_published ? KnowledgeStatus.PUBLISHED : KnowledgeStatus.DRAFT;
@@ -152,7 +152,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
     },
     {
       title: '更新时间',
-      dataIndex: 'updated_at',
+      dataIndex: 'updatedAt',
       width: 160,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },

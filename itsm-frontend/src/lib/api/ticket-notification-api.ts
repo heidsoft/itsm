@@ -3,10 +3,8 @@ import { httpClient } from './http-client';
 // 工单通知类型定义
 export interface TicketNotification {
   id: number;
-  ticket_id: number;
-  ticketId?: number;
-  user_id: number;
-  userId?: number;
+  ticketId: number;
+  userId: number;
   type:
     | 'created'
     | 'assigned'
@@ -17,13 +15,10 @@ export interface TicketNotification {
     | 'closed';
   channel: 'email' | 'in_app' | 'sms';
   content: string;
-  sent_at?: string;
   sentAt?: string;
-  read_at?: string;
   readAt?: string;
   status: 'pending' | 'sent' | 'read';
-  created_at: string;
-  createdAt?: string;
+  createdAt: string;
   user?: {
     id: number;
     username: string;
@@ -31,7 +26,6 @@ export interface TicketNotification {
     email: string;
     role?: string;
     department?: string;
-    tenant_id?: number;
     tenantId?: number;
   };
 }
@@ -45,26 +39,26 @@ export interface ListUserNotificationsResponse {
   notifications: TicketNotification[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 export interface SendTicketNotificationRequest {
-  user_ids: number[];
+  userIds: number[];
   type: string;
   channel: 'email' | 'in_app' | 'sms';
   content: string;
 }
 
 export interface NotificationPreferenceItem {
-  event_type: string;
-  email_enabled: boolean;
-  in_app_enabled: boolean;
-  sms_enabled: boolean;
+  eventType: string;
+  emailEnabled: boolean;
+  inAppEnabled: boolean;
+  smsEnabled: boolean;
 }
 
 export interface NotificationPreferencesResponse {
   preferences: NotificationPreferenceItem[];
-  event_types: Array<{
+  eventTypes: Array<{
     type: string;
     name: string;
     description: string;
@@ -94,7 +88,7 @@ export class TicketNotificationApi {
   // 获取用户通知列表
   static async getUserNotifications(params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
     read?: boolean;
   }): Promise<ListUserNotificationsResponse> {
     return httpClient.get<ListUserNotificationsResponse>('/api/v1/notifications', params);

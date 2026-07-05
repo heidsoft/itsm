@@ -44,7 +44,6 @@ const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo
     },
     animation: {
       appear: {
-        animation: 'scale-in-y',
         duration: 1200,
       },
     },

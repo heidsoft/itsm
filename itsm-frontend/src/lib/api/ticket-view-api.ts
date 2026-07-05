@@ -27,10 +27,10 @@ export interface TicketView {
   description?: string;
   filters: FilterConfig;
   columns: string[];
-  sort_config: SortConfig;
-  group_config?: GroupConfig;
-  is_shared: boolean;
-  created_by: number;
+  sortConfig: SortConfig;
+  groupConfig?: GroupConfig;
+  isShared: boolean;
+  createdBy: number;
   creator?: {
     id: number;
     username: string;
@@ -38,9 +38,9 @@ export interface TicketView {
     email: string;
     role: string;
   };
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateTicketViewRequest {
@@ -48,9 +48,9 @@ export interface CreateTicketViewRequest {
   description?: string;
   filters: FilterConfig;
   columns: string[];
-  sort_config: SortConfig;
-  group_config?: GroupConfig;
-  is_shared: boolean;
+  sortConfig: SortConfig;
+  groupConfig?: GroupConfig;
+  isShared: boolean;
 }
 
 export interface UpdateTicketViewRequest {
@@ -58,13 +58,13 @@ export interface UpdateTicketViewRequest {
   description?: string;
   filters?: FilterConfig;
   columns?: string[];
-  sort_config?: SortConfig;
-  group_config?: GroupConfig;
-  is_shared?: boolean;
+  sortConfig?: SortConfig;
+  groupConfig?: GroupConfig;
+  isShared?: boolean;
 }
 
 export interface ShareTicketViewRequest {
-  team_ids: number[];
+  teamIds: number[];
 }
 
 export interface ListTicketViewsResponse {

@@ -89,7 +89,7 @@ export const colors = {
   status: {
     new: '#3b82f6', // Blue
     open: '#06b6d4', // Cyan
-    in_progress: '#f59e0b', // Amber
+    inProgress: '#f59e0b', // Amber
     pending: '#eab308', // Yellow
     resolved: '#22c55e', // Green
     closed: '#6b7280', // Gray

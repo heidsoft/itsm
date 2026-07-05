@@ -17,7 +17,7 @@ export class WorkflowCounterSignApi {
     threshold?: number
   ): Promise<
     Array<{
-      task_id: string;
+      taskId: string;
       assignee: string;
       status: string;
     }>
@@ -26,12 +26,12 @@ export class WorkflowCounterSignApi {
       code: number;
       message: string;
       data: Array<{
-        task_id: string;
+        taskId: string;
         assignee: string;
         status: string;
       }>;
     }>(`/api/v1/bpmn/tasks/${taskId}/counter-sign`, {
-      approval_type: approvalType,
+      approvalType: approvalType,
       approvers,
       threshold: threshold || approvers.length,
     });
@@ -43,7 +43,7 @@ export class WorkflowCounterSignApi {
    * 获取会签状态
    */
   static async getCounterSignStatus(taskId: string): Promise<{
-    parent_task_id: string;
+    parentTaskId: string;
     total: number;
     completed: number;
     approved: number;
@@ -55,7 +55,7 @@ export class WorkflowCounterSignApi {
       code: number;
       message: string;
       data: {
-        parent_task_id: string;
+        parentTaskId: string;
         total: number;
         completed: number;
         approved: number;
@@ -67,7 +67,7 @@ export class WorkflowCounterSignApi {
 
     return (
       res?.data || {
-        parent_task_id: taskId,
+        parentTaskId: taskId,
         total: 0,
         completed: 0,
         approved: 0,

@@ -6,61 +6,48 @@ export interface SLADefinition {
   id: number;
   name: string;
   description: string;
-  service_type: string;
+  serviceType: string;
   priority: string;
-  response_time: number;
-  resolution_time: number;
-  business_hours: Record<string, any>;
-  escalation_rules: Record<string, any>;
+  responseTime: number;
+  resolutionTime: number;
+  businessHours: Record<string, any>;
+  escalationRules: Record<string, any>;
   conditions: Record<string, any>;
-  is_active: boolean;
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
+  isActive: boolean;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SLAViolation {
   id: number;
-  ticket_id: number;
-  ticketId?: number;
-  sla_definition_id: number;
-  slaDefinitionId?: number;
-  violation_type: string;
-  violationType?: string;
-  violation_time: string;
-  violationTime?: string;
+  ticketId: number;
+  slaDefinitionId: number;
+  violationType: string;
+  violationTime: string;
   description: string;
   severity: string;
-  is_resolved: boolean;
-  isResolved?: boolean;
-  resolved_at?: string;
+  isResolved: boolean;
   resolvedAt?: string;
-  resolution_notes: string;
   resolutionNotes?: string;
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
   // 时间相关
-  time_remaining?: number;
   timeRemaining?: number;
-  alert_level?: 'warning' | 'critical' | 'severe';
   alertLevel?: 'warning' | 'critical' | 'severe';
-  sla_definition?: string;
   slaDefinition?: string;
-  ticket_title?: string;
   ticketTitle?: string;
   priority?: string;
 }
 
 export interface SLAAlertRule {
   id: number;
-  sla_definition_id: number;
+  slaDefinitionId: number;
   name: string;
-  threshold_percentage: number;
-  alert_level: string;
-  notification_channels: string[];
-  is_active: boolean;
+  thresholdPercentage: number;
+  alertLevel: string;
+  notificationChannels: string[];
+  isActive: boolean;
 }
 
 export interface SLADefinitionListResponse {

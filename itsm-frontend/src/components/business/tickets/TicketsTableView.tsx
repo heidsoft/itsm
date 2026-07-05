@@ -44,8 +44,8 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
   const statusColorMap: Record<string, string> = {
     new: 'blue',
     open: 'cyan',
-    in_progress: 'processing',
-    pending_approval: 'warning',
+    inProgress: 'processing',
+    pendingApproval: 'warning',
     resolved: 'success',
     closed: 'default',
     cancelled: 'error',
@@ -92,8 +92,8 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
         const statusTextMap: Record<string, string> = {
           new: '新建',
           open: '待处理',
-          in_progress: '处理中',
-          pending_approval: '待审批',
+          inProgress: '处理中',
+          pendingApproval: '待审批',
           resolved: '已解决',
           closed: '已关闭',
           cancelled: '已取消',

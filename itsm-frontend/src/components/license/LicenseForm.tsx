@@ -58,15 +58,15 @@ const LicenseForm: React.FC = () => {
     name: string;
     description?: string;
     vendor?: string;
-    license_type?: LicenseType;
-    total_quantity?: number;
-    asset_id?: number;
-    purchase_date?: Dayjs;
-    purchase_price?: number;
-    expiry_date?: Dayjs;
-    support_vendor?: string;
-    support_contact?: string;
-    renewal_cost?: number;
+    licenseType?: LicenseType;
+    totalQuantity?: number;
+    assetId?: number;
+    purchaseDate?: Dayjs;
+    purchasePrice?: number;
+    expiryDate?: Dayjs;
+    supportVendor?: string;
+    supportContact?: string;
+    renewalCost?: number;
     notes?: string;
     tags?: string[];
   }) => {
@@ -76,15 +76,15 @@ const LicenseForm: React.FC = () => {
         name: values.name,
         description: values.description,
         vendor: values.vendor,
-        license_type: values.license_type,
-        total_quantity: values.total_quantity,
-        asset_id: values.asset_id,
-        purchase_date: values.purchase_date?.toISOString(),
-        purchase_price: values.purchase_price,
-        expiry_date: values.expiry_date?.toISOString(),
-        support_vendor: values.support_vendor,
-        support_contact: values.support_contact,
-        renewal_cost: values.renewal_cost ? String(values.renewal_cost) : undefined,
+        licenseType: values.licenseType,
+        totalQuantity: values.totalQuantity,
+        assetId: values.assetId,
+        purchaseDate: values.purchaseDate?.toISOString(),
+        purchasePrice: values.purchasePrice,
+        expiryDate: values.expiryDate?.toISOString(),
+        supportVendor: values.supportVendor,
+        supportContact: values.supportContact,
+        renewalCost: values.renewalCost ? String(values.renewalCost) : undefined,
         notes: values.notes,
         tags: values.tags,
       };
@@ -111,8 +111,8 @@ const LicenseForm: React.FC = () => {
         layout="vertical"
         onFinish={onFinish}
         initialValues={{
-          license_type: 'subscription',
-          total_quantity: 1,
+          licenseType: 'subscription',
+          totalQuantity: 1,
         }}
       >
         <div style={{ marginBottom: 16 }}>

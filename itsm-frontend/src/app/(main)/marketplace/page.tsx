@@ -42,13 +42,13 @@ interface MarketplaceItem {
   type: 'connector' | 'skill' | 'plugin';
   provider: string;
   description: string;
-  icon_url: string;
+  iconUrl: string;
   rating: number;
-  install_count: number;
+  installCount: number;
   category: string;
   tags: string[];
-  is_official: boolean;
-  latest_version: string;
+  isOfficial: boolean;
+  latestVersion: string;
 }
 
 const MarketplacePage = () => {
@@ -71,8 +71,8 @@ const MarketplacePage = () => {
           items: MarketplaceItem[];
           total: number;
           page: number;
-          page_size: number;
-        }>('/api/v1/marketplace/items', { page: 1, page_size: 100 });
+          pageSize: number;
+        }>('/api/v1/marketplace/items', { page: 1, pageSize: 100 });
         if (cancelled) return;
         // 后端字段是 snake_case，httpClient 已自动转 camelCase。
         // 仅保留对前端有用的字段并对缺失字段做兜底。
@@ -83,13 +83,13 @@ const MarketplacePage = () => {
           type: (it.type || 'plugin') as MarketplaceItem['type'],
           provider: it.provider || '',
           description: it.description || '',
-          icon_url: it.iconUrl || it.icon_url || '',
+          iconUrl: it.iconUrl || it.iconUrl || '',
           rating: typeof it.rating === 'number' ? it.rating : 0,
-          install_count: it.installCount ?? it.install_count ?? 0,
+          installCount: it.installCount ?? it.installCount ?? 0,
           category: it.category || '未分类',
           tags: Array.isArray(it.tags) ? it.tags : [],
-          is_official: Boolean(it.isOfficial ?? it.is_official),
-          latest_version: it.latestVersion || it.latest_version || '1.0.0',
+          isOfficial: Boolean(it.isOfficial ?? it.isOfficial),
+          latestVersion: it.latestVersion || it.latestVersion || '1.0.0',
         }));
         setItems(normalized);
       } catch (error: any) {
@@ -124,8 +124,8 @@ const MarketplacePage = () => {
 
     // 官方过滤
     const matchesOfficial = isOfficial === 'all' || 
-      (isOfficial === 'true' && item.is_official) ||
-      (isOfficial === 'false' && !item.is_official);
+      (isOfficial === 'true' && item.isOfficial) ||
+      (isOfficial === 'false' && !item.isOfficial);
 
     return matchesSearch && matchesType && matchesCategory && matchesOfficial;
   });
@@ -230,8 +230,8 @@ const MarketplacePage = () => {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
-                    {item.icon_url ? (
-                      <img src={item.icon_url} alt={item.title} className="w-full h-full object-cover" />
+                    {item.iconUrl ? (
+                      <img src={item.iconUrl} alt={item.title} className="w-full h-full object-cover" />
                     ) : (
                       typeIcons[item.type]
                     )}
@@ -242,7 +242,7 @@ const MarketplacePage = () => {
                       <Badge variant="secondary" className="text-xs">
                         {typeNames[item.type]}
                       </Badge>
-                      {item.is_official && (
+                      {item.isOfficial && (
                         <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs">
                           官方
                         </Badge>
@@ -275,10 +275,10 @@ const MarketplacePage = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <Download className="h-4 w-4" />
-                  <span>{item.install_count}</span>
+                  <span>{item.installCount}</span>
                 </div>
                 <div className="text-xs text-gray-400">
-                  v{item.latest_version}
+                  v{item.latestVersion}
                 </div>
               </div>
               <Link href={`/marketplace/${item.id}`}>

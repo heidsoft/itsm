@@ -30,7 +30,7 @@ jest.mock('../hooks/useCIDetail', () => ({
       type: 'server',
       status: 'active',
       description: 'Production web server',
-      ci_type_id: 'server',
+      ciTypeId: 'server',
     },
     loading: false,
     error: null,

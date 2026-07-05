@@ -91,8 +91,8 @@ export default function TicketsPage() {
 
       if (filters.keyword) {
         result.keyword = filters.keyword;
-      } else if (filters.ticket_number) {
-        result.keyword = filters.ticket_number;
+      } else if (filters.ticketNumber) {
+        result.keyword = filters.ticketNumber;
       } else if (filters.title) {
         result.keyword = filters.title;
       } else if (filters.description) {
@@ -115,12 +115,12 @@ export default function TicketsPage() {
         result.category = filters.category[0];
       }
 
-      if (typeof filters.assignee_id === 'number') {
-        result.assignee_id = filters.assignee_id;
+      if (typeof filters.assigneeId === 'number') {
+        result.assigneeId = filters.assigneeId;
       }
 
-      if (filters.created_after && filters.created_before) {
-        result.dateRange = [filters.created_after, filters.created_before];
+      if (filters.createdAfter && filters.createdBefore) {
+        result.dateRange = [filters.createdAfter, filters.createdBefore];
       }
 
       return result;

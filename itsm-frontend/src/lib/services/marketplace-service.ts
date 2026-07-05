@@ -78,9 +78,9 @@ class MarketplaceService {
       type: params.type,
       category: params.category,
       search: params.search,
-      is_official: params.isOfficial,
+      isOfficial: params.isOfficial,
       page: params.page ?? 1,
-      page_size: params.pageSize ?? 100,
+      pageSize: params.pageSize ?? 100,
     });
   }
 

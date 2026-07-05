@@ -6,7 +6,7 @@
 import React from 'react';
 import type { MenuProps} from 'antd';
 import { Button, Space, Tag, Breadcrumb, Typography, Dropdown, Tooltip } from 'antd';
-import { Save, Pencil, Download, Settings, History, Bug, Rocket, PlayCircle, CloudUpload } from 'lucide-react';
+import { Save, Pencil, Download, Settings, History, Bug, Rocket, PlayCircle, CloudUpload, Bot } from 'lucide-react';
 import Link from 'next/link';
 import type { WorkflowDefinition } from './WorkflowTypes';
 
@@ -109,7 +109,7 @@ export default function WorkflowToolbar({
     },
     {
       key: 'optimize',
-      icon: <RobotOutlined />,
+      icon: <Bot />,
       label: 'AI优化建议',
       onClick: onAIClick
     },
@@ -149,7 +149,7 @@ export default function WorkflowToolbar({
       <Space>
         <Dropdown menu={{ items: aiMenuItems }} placement="bottomRight">
           <Tooltip title="AI辅助功能">
-            <Button icon={<RobotOutlined />}>
+            <Button icon={<Bot />}>
               AI助手
             </Button>
           </Tooltip>

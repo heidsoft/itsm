@@ -66,23 +66,23 @@ export default function ServiceCatalogRequestPage() {
   const onFinish = async (values: any) => {
     setLoading(true);
     try {
-      const expireAt: Dayjs | undefined = values.expire_at;
+      const expireAt: Dayjs | undefined = values.expireAt;
       const payload: any = {
         serviceId: id,
         formData: {
           title: values.title,
           reason: values.reason,
           quantity: values.quantity || 1,
-          expected_at: values.expected_at ? values.expected_at.toISOString() : undefined,
-          cost_center: values.cost_center,
-          data_classification: values.data_classification || 'internal',
-          needs_public_ip: values.needs_public_ip || false,
-          source_ip_whitelist: values.source_ip_whitelist
-            ? values.source_ip_whitelist.split(',').map((s: string) => s.trim()).filter(Boolean)
+          expectedAt: values.expectedAt ? values.expectedAt.toISOString() : undefined,
+          costCenter: values.costCenter,
+          dataClassification: values.dataClassification || 'internal',
+          needsPublicIp: values.needsPublicIp || false,
+          sourceIpWhitelist: values.sourceIpWhitelist
+            ? values.sourceIpWhitelist.split(',').map((s: string) => s.trim()).filter(Boolean)
             : undefined,
           // B10: 合规确认 + 过期时间
-          compliance_ack: !!values.compliance_ack,
-          expire_at: expireAt ? expireAt.toISOString() : undefined,
+          complianceAck: !!values.complianceAck,
+          expireAt: expireAt ? expireAt.toISOString() : undefined,
         },
       };
 
@@ -131,9 +131,9 @@ export default function ServiceCatalogRequestPage() {
             message={
               <Space>
                 <Text strong>{catalog.name}</Text>
-                {catalog.delivery_time != null && (
+                {catalog.deliveryTime != null && (
                   <Tag icon={<Clock />} color="blue">
-                    交付时长 {catalog.delivery_time} 天
+                    交付时长 {catalog.deliveryTime} 天
                   </Tag>
                 )}
                 {catalog.category && <Tag>{catalog.category}</Tag>}

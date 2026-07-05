@@ -67,12 +67,12 @@ interface Workflow {
   category: string;
   version: string;
   status: 'draft' | 'active' | 'inactive' | 'archived';
-  bpmn_xml?: string;
+  bpmnXml?: string;
   createdAt: string;
   updatedAt: string;
-  instances_count: number;
-  running_instances: number;
-  created_by: string;
+  instancesCount: number;
+  runningInstances: number;
+  createdBy: string;
 }
 
 const WorkflowManagementPage = () => {
@@ -127,12 +127,12 @@ const WorkflowManagementPage = () => {
           category: w.category || 'general',
           version: w.version || '1.0.0',
           status: w.status === 'active' || w.deployed ? 'active' : 'draft',
-          bpmn_xml: w.bpmn_xml || w.bpmnXml || w.xml || '',
-          createdAt: w.createdAt || w.created_at || new Date().toISOString(),
-          updatedAt: w.updatedAt || w.updated_at || new Date().toISOString(),
-          instances_count: w.instances_count || 0,
-          running_instances: w.running_instances || 0,
-          created_by: w.created_by || 'System',
+          bpmnXml: w.bpmnXml || w.bpmnXml || w.xml || '',
+          createdAt: w.createdAt || w.createdAt || new Date().toISOString(),
+          updatedAt: w.updatedAt || w.updatedAt || new Date().toISOString(),
+          instancesCount: w.instancesCount || 0,
+          runningInstances: w.runningInstances || 0,
+          createdBy: w.createdBy || 'System',
         }));
         setWorkflows(adaptedWorkflows);
         // 更新分页信息
@@ -166,8 +166,8 @@ const WorkflowManagementPage = () => {
       const active = workflows.filter(w => w.status === 'active').length;
       const draft = workflows.filter(w => w.status === 'draft').length;
       const inactive = workflows.filter(w => w.status === 'inactive').length;
-      const running = workflows.reduce((sum, w) => sum + (w.running_instances || 0), 0);
-      const completed = workflows.reduce((sum, w) => sum + (w.instances_count || 0), 0) - running;
+      const running = workflows.reduce((sum, w) => sum + (w.runningInstances || 0), 0);
+      const completed = workflows.reduce((sum, w) => sum + (w.instancesCount || 0), 0) - running;
       return {
         ...prev,
         total: pagination.total,
@@ -273,7 +273,7 @@ const WorkflowManagementPage = () => {
   };
 
   const handleViewBPMN = (workflow: Workflow) => {
-    if (!workflow.bpmn_xml) {
+    if (!workflow.bpmnXml) {
       message.warning(t('workflow.noBPMNDefinition'));
       return;
     }
@@ -293,7 +293,7 @@ const WorkflowManagementPage = () => {
               lineHeight: '1.4',
             }}
           >
-            {workflow.bpmn_xml}
+            {workflow.bpmnXml}
           </pre>
         </div>
       ),
@@ -356,9 +356,9 @@ const WorkflowManagementPage = () => {
         version: String(result.version) || '1.0.0',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        instances_count: 0,
-        running_instances: 0,
-        created_by: t('workflow.currentUser'),
+        instancesCount: 0,
+        runningInstances: 0,
+        createdBy: t('workflow.currentUser'),
       };
       setWorkflows(prev => [newWorkflow, ...prev]);
       message.success(t('workflow.copySuccess', { name: workflow.name }));
@@ -412,9 +412,9 @@ const WorkflowManagementPage = () => {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           status: 'draft',
-          instances_count: 0,
-          running_instances: 0,
-          created_by: t('workflow.currentUser'),
+          instancesCount: 0,
+          runningInstances: 0,
+          createdBy: t('workflow.currentUser'),
         };
 
         setWorkflows(prev => [newWorkflow, ...prev]);
@@ -670,11 +670,11 @@ const WorkflowManagementPage = () => {
     },
     {
       title: t('workflow.bpmnStatus'),
-      key: 'bpmn_status',
+      key:'bpmnStatus',
       width: 120,
       render: (record: Workflow) => (
-        <Tag color={record.bpmn_xml ? 'green' : 'orange'}>
-          {record.bpmn_xml ? t('workflow.defined') : t('workflow.undefined')}
+        <Tag color={record.bpmnXml ? 'green' : 'orange'}>
+          {record.bpmnXml ? t('workflow.defined') : t('workflow.undefined')}
         </Tag>
       ),
     },
@@ -685,10 +685,10 @@ const WorkflowManagementPage = () => {
       render: (record: Workflow) => (
         <div className="text-sm">
           <div>
-            {t('workflow.total')}: {record.instances_count}
+            {t('workflow.total')}: {record.instancesCount}
           </div>
           <div>
-            {t('workflow.running')}: {record.running_instances}
+            {t('workflow.running')}: {record.runningInstances}
           </div>
         </div>
       ),
@@ -805,7 +805,7 @@ const WorkflowManagementPage = () => {
                   label: t('workflow.viewBPMN'),
                   icon: <Code className="w-4 h-4" />,
                   onClick: () => handleViewBPMN(record),
-                  disabled: !record.bpmn_xml,
+                  disabled: !record.bpmnXml,
                 },
                 {
                   type: 'divider' as const,
@@ -816,7 +816,7 @@ const WorkflowManagementPage = () => {
                   icon: <Trash2 className="w-4 h-4" />,
                   danger: true,
                   onClick: () => handleDeleteWorkflow(record.id),
-                  disabled: record.status === 'active' && record.running_instances > 0,
+                  disabled: record.status === 'active' && record.runningInstances > 0,
                 },
               ].filter(item => item.style?.display !== 'none'), // 过滤隐藏项目
             }}
@@ -892,7 +892,7 @@ const WorkflowManagementPage = () => {
         menu={{
           items: [
             {
-              key: 'ticket_approval',
+              key:'ticketApproval',
               label: t('workflow.ticketApprovalProcess'),
               icon: <GitBranch className="w-4 h-4" />,
               onClick: () => router.push('/workflow/designer'),
@@ -1233,13 +1233,13 @@ const WorkflowManagementPage = () => {
         destroyOnHidden
       >
         <BPMNDesigner
-          xml={editingWorkflow?.bpmn_xml || ''}
+          xml={editingWorkflow?.bpmnXml || ''}
           onSave={async (xml: string) => {
             try {
               if (editingWorkflow) {
                 // 更新现有工作流
                 const updateData: any = {
-                  bpmn_xml: xml,
+                  bpmnXml: xml,
                 };
                 await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), updateData);
                 message.success(t('workflow.saveSuccess'));
@@ -1250,7 +1250,7 @@ const WorkflowManagementPage = () => {
                   description: t('workflow.bpmnWorkflowDescription'),
                   code: `workflow_${Date.now()}`,
                   type: WorkflowType.APPROVAL,
-                  bpmn_xml: xml,
+                  bpmnXml: xml,
                 };
                 await WorkflowAPI.createWorkflow(createData);
                 message.success(t('workflow.createWorkflowSuccess'));
@@ -1266,7 +1266,7 @@ const WorkflowManagementPage = () => {
               if (editingWorkflow) {
                 // 先保存BPMN XML
                 const updateData: any = {
-                  bpmn_xml: xml,
+                  bpmnXml: xml,
                 };
                 await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), updateData);
                 // 然后部署工作流
@@ -1279,7 +1279,7 @@ const WorkflowManagementPage = () => {
                   description: t('workflow.bpmnWorkflowDescription'),
                   code: `workflow_${Date.now()}`,
                   type: WorkflowType.APPROVAL,
-                  bpmn_xml: xml,
+                  bpmnXml: xml,
                 });
                 await WorkflowAPI.deployWorkflow(String(newWorkflow.id));
                 message.success(t('workflow.createAndDeploySuccess'));
@@ -1321,15 +1321,15 @@ const WorkflowManagementPage = () => {
                 <span className="font-mono">{viewingWorkflow.version}</span>
               </Descriptions.Item>
               <Descriptions.Item label={t('workflow.bpmnStatus')}>
-                <Tag color={viewingWorkflow.bpmn_xml ? 'green' : 'orange'}>
-                  {viewingWorkflow.bpmn_xml ? t('workflow.defined') : t('workflow.undefined')}
+                <Tag color={viewingWorkflow.bpmnXml ? 'green' : 'orange'}>
+                  {viewingWorkflow.bpmnXml ? t('workflow.defined') : t('workflow.undefined')}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label={t('workflow.total')}>
-                {viewingWorkflow.instances_count}
+                {viewingWorkflow.instancesCount}
               </Descriptions.Item>
               <Descriptions.Item label={t('workflow.running')}>
-                {viewingWorkflow.running_instances}
+                {viewingWorkflow.runningInstances}
               </Descriptions.Item>
               <Descriptions.Item label={t('workflow.createdAt')}>
                 {new Date(viewingWorkflow.createdAt).toLocaleString('zh-CN')}
@@ -1338,7 +1338,7 @@ const WorkflowManagementPage = () => {
                 {new Date(viewingWorkflow.updatedAt).toLocaleString('zh-CN')}
               </Descriptions.Item>
               <Descriptions.Item label="创建人" span={2}>
-                {viewingWorkflow.created_by}
+                {viewingWorkflow.createdBy}
               </Descriptions.Item>
             </Descriptions>
 

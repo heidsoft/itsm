@@ -170,7 +170,7 @@ function TicketFilters({
     if (filters?.status && filters.status !== 'all') {
       const statusLabels: Record<string, string> = {
         open: '待处理',
-        in_progress: '处理中',
+        inProgress: '处理中',
         resolved: '已解决',
         closed: '已关闭',
       };
@@ -352,7 +352,7 @@ function TicketFilters({
                 )}
               </Button>
               <Button
-                icon={<ClearOutlined />}
+                icon={<X />}
                 onClick={handleReset}
                 data-testid="filter-reset-btn"
                 disabled={loading || activeFilters.length === 0}

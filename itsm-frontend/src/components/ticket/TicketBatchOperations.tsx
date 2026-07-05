@@ -16,7 +16,7 @@ import {
   Typography,
   Checkbox,
 } from 'antd';
-import { Trash2, Download, User as UserIcon, Bell, CheckCircle, Tag, Flag } from 'lucide-react';
+import { Trash2, Download, User as UserIcon, Bell, CheckCircle, Tag, Flag, MoreHorizontal } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { Ticket, TicketStatus, TicketPriority } from '@/lib/api/types';
 import { TicketAPI } from '@/lib/api/ticket-api';
@@ -77,19 +77,19 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         description: '将选中的工单分配给指定处理人',
       },
       {
-        key: 'update_status',
+        key:'updateStatus',
         label: '批量更新状态',
         icon: <Flag />,
         description: '批量更新工单状态',
       },
       {
-        key: 'add_tags',
+        key:'addTags',
         label: '批量添加标签',
         icon: <Tag />,
         description: '为选中的工单添加标签',
       },
       {
-        key: 'set_priority',
+        key:'setPriority',
         label: '批量设置优先级',
         icon: <Flag />,
         description: '批量设置工单优先级',
@@ -124,7 +124,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
 
   // 定义操作参数类型
   type BatchOperationParams =
-    | { assignee_id: number; comment?: string }
+    | { assigneeId: number; comment?: string }
     | { status: string }
     | { tags: string[] }
     | { priority: string }
@@ -158,9 +158,9 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
           try {
             switch (operation) {
               case 'assign':
-                const assignParams = values as { assignee_id: number; comment?: string };
+                const assignParams = values as { assigneeId: number; comment?: string };
                 await TicketAPI.assignTicket(ticket.id, {
-                  assignee_id: assignParams.assignee_id,
+                  assigneeId: assignParams.assigneeId,
                   comment: assignParams.comment,
                 });
                 break;
@@ -253,7 +253,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       const ticketIds = selectedTickets.map(ticket => ticket.id);
       const blob = await TicketAPI.exportTickets({
         format: 'excel',
-        filters: { ticket_ids: ticketIds },
+        filters: { ticketIds: ticketIds },
       });
 
       const url = window.URL.createObjectURL(blob);
@@ -279,7 +279,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
           <>
             <Form.Item
               label="分配给"
-              name="assignee_id"
+              name="assigneeId"
               rules={[{ required: true, message: '请选择处理人' }]}
             >
               <Select placeholder="选择处理人" showSearch filterOption>
@@ -399,7 +399,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
           </div>
 
           <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} placement="bottomRight">
-            <Button type="primary" icon={<MoreOutlined />} loading={loading}>
+            <Button type="primary" icon={<MoreHorizontal />} loading={loading}>
               批量操作
             </Button>
           </Dropdown>

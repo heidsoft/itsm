@@ -73,11 +73,11 @@ export class TicketApprovalApi {
     // Convert params to snake_case for query string
     const queryParams: Record<string, any> = {};
     if (params) {
-      if (params.ticketType) queryParams.ticket_type = params.ticketType;
+      if (params.ticketType) queryParams.ticketType = params.ticketType;
       if (params.priority) queryParams.priority = params.priority;
-      if (params.isActive !== undefined) queryParams.is_active = params.isActive;
+      if (params.isActive !== undefined) queryParams.isActive = params.isActive;
       if (params.page) queryParams.page = params.page;
-      if (params.pageSize) queryParams.page_size = params.pageSize;
+      if (params.pageSize) queryParams.pageSize = params.pageSize;
     }
     return httpClient.get('/api/tickets/approval/workflows', queryParams);
   }
@@ -116,11 +116,11 @@ export class TicketApprovalApi {
     // Convert params to snake_case
     const queryParams: Record<string, any> = {};
     if (params) {
-      if (params.ticketId) queryParams.ticket_id = params.ticketId;
-      if (params.workflowId) queryParams.workflow_id = params.workflowId;
+      if (params.ticketId) queryParams.ticketId = params.ticketId;
+      if (params.workflowId) queryParams.workflowId = params.workflowId;
       if (params.status) queryParams.status = params.status;
       if (params.page) queryParams.page = params.page;
-      if (params.pageSize) queryParams.page_size = params.pageSize;
+      if (params.pageSize) queryParams.pageSize = params.pageSize;
     }
     return httpClient.get('/api/tickets/approval/records', queryParams);
   }

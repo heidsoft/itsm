@@ -29,7 +29,7 @@ const categoryColors: Record<string, string> = {
   application: 'green',
   security: 'red',
   storage: 'orange',
-  user_access: 'gold',
+  userAccess: 'gold',
   general: 'default',
 };
 
@@ -47,7 +47,7 @@ const categoryLabels: Record<string, string> = {
   application: '应用',
   security: '安全',
   storage: '存储',
-  user_access: '用户访问',
+  userAccess: '用户访问',
   general: '通用',
 };
 

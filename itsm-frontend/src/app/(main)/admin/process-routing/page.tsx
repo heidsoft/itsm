@@ -38,8 +38,8 @@ import { teamService } from '@/lib/services/team-service';
 const { Option } = Select;
 
 type ProcessRoutingRule = ProcessBinding & {
-  department_name?: string;
-  team_name?: string;
+  departmentName?: string;
+  teamName?: string;
 };
 
 export default function ProcessRoutingPage() {
@@ -110,7 +110,7 @@ export default function ProcessRoutingPage() {
         ...values,
         conditions: parseJSONField(values.conditions, 'Conditions'),
         priority: values.priority ?? 0,
-        is_active: values.is_active ?? true,
+        isActive: values.isActive ?? true,
       };
       if (selectedRule) {
         await ProcessBindingApi.update(selectedRule.id, payload);
@@ -148,7 +148,7 @@ export default function ProcessRoutingPage() {
   };
 
   const handleDuplicate = (record: ProcessRoutingRule) => {
-    const { id: _id, tenant_id: _tenantId, created_at: _createdAt, updated_at: _updatedAt, ...rest } = record;
+    const { id: _id, tenantId: _tenantId, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = record;
     form.setFieldsValue({
       ...rest,
       conditions: record.conditions ? JSON.stringify(record.conditions, null, 2) : '',
@@ -196,8 +196,8 @@ export default function ProcessRoutingPage() {
   const columns = [
     {
       title: 'Business Type',
-      dataIndex: 'business_type',
-      key: 'business_type',
+      dataIndex:'businessType',
+      key:'businessType',
       render: (type: string) => (
         <Tag color={
           type === 'incident' ? 'red' :
@@ -211,13 +211,13 @@ export default function ProcessRoutingPage() {
     },
     {
       title: 'Sub Type',
-      dataIndex: 'business_sub_type',
-      key: 'business_sub_type',
+      dataIndex:'businessSubType',
+      key:'businessSubType',
     },
     {
       title: 'Department',
-      dataIndex: 'department_name',
-      key: 'department_name',
+      dataIndex:'departmentName',
+      key:'departmentName',
       render: (name: string) => name || <Tag>Global</Tag>,
     },
     {
@@ -228,8 +228,8 @@ export default function ProcessRoutingPage() {
     },
     {
       title: 'Process',
-      dataIndex: 'process_definition_key',
-      key: 'process_definition_key',
+      dataIndex:'processDefinitionKey',
+      key:'processDefinitionKey',
       render: (key: string) => <Tag color="cyan">{key}</Tag>,
     },
     {
@@ -240,8 +240,8 @@ export default function ProcessRoutingPage() {
     },
     {
       title: 'Status',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       render: (active: boolean) => (
         <Tag color={active ? 'green' : 'red'}>
           {active ? 'Active' : 'Inactive'}
@@ -275,9 +275,9 @@ export default function ProcessRoutingPage() {
   // Statistics
   const stats = {
     total: rules.length,
-    active: rules.filter(r => r.is_active).length,
-    departmentSpecific: rules.filter(r => r.department_id && r.department_id > 0).length,
-    global: rules.filter(r => !r.department_id || r.department_id === 0).length,
+    active: rules.filter(r => r.isActive).length,
+    departmentSpecific: rules.filter(r => r.departmentId && r.departmentId > 0).length,
+    global: rules.filter(r => !r.departmentId || r.departmentId === 0).length,
   };
 
   return (

@@ -50,7 +50,10 @@ export interface WorkflowDefinition {
   createdAt: Date;
   updatedAt: Date;
   departmentId?: number;
-  bpmn_xml?: string;
+  bpmnXml?: string;
+  category?: string;
+  approvalConfig?: Record<string, unknown>;
+  slaConfig?: Record<string, unknown>;
 }
 
 // ==================== 工作流节点 ====================
@@ -482,12 +485,13 @@ export interface CreateWorkflowRequest {
   code: string;
   type: WorkflowType;
   description?: string;
+  category?: string;
   nodes?: WorkflowNode[];
   connections?: WorkflowConnection[];
   variables?: WorkflowVariable[];
   settings?: Partial<WorkflowSettings>;
   departmentId?: number;
-  bpmn_xml?: string;
+  bpmnXml?: string;
 }
 
 /**
@@ -496,6 +500,8 @@ export interface CreateWorkflowRequest {
 export interface UpdateWorkflowRequest {
   name?: string;
   description?: string;
+  category?: string;
+  bpmnXml?: string;
   nodes?: WorkflowNode[];
   connections?: WorkflowConnection[];
   variables?: WorkflowVariable[];

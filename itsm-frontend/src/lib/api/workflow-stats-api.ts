@@ -35,10 +35,10 @@ export class WorkflowStatsApi {
    * 获取实例统计
    */
   static async getInstanceStats(params?: {
-    process_definition_key?: string;
+    processDefinitionKey?: string;
     status?: string;
-    start_date?: string;
-    end_date?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<{
     total: number;
     running: number;
@@ -47,11 +47,11 @@ export class WorkflowStatsApi {
     terminated: number;
   }> {
     const query: Record<string, string> = {};
-    if (params?.process_definition_key)
-      query.process_definition_key = params.process_definition_key;
+    if (params?.processDefinitionKey)
+      query.processDefinitionKey = params.processDefinitionKey;
     if (params?.status) query.status = params.status;
-    if (params?.start_date) query.start_date = params.start_date;
-    if (params?.end_date) query.end_date = params.end_date;
+    if (params?.startDate) query.startDate = params.startDate;
+    if (params?.endDate) query.endDate = params.endDate;
 
     const res = await httpClient.get<
       | {
@@ -88,54 +88,54 @@ export class WorkflowStatsApi {
    * 获取任务统计
    */
   static async getTaskStats(params?: {
-    process_definition_key?: string;
+    processDefinitionKey?: string;
     assignee?: string;
     status?: string;
-    start_date?: string;
-    end_date?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<{
-    total_tasks: number;
-    completed_tasks: number;
-    pending_tasks: number;
-    overdue_tasks: number;
-    average_completion: number;
+    totalTasks: number;
+    completedTasks: number;
+    pendingTasks: number;
+    overdueTasks: number;
+    averageCompletion: number;
   }> {
     const query: Record<string, string> = {};
-    if (params?.process_definition_key)
-      query.process_definition_key = params.process_definition_key;
+    if (params?.processDefinitionKey)
+      query.processDefinitionKey = params.processDefinitionKey;
     if (params?.assignee) query.assignee = params.assignee;
     if (params?.status) query.status = params.status;
-    if (params?.start_date) query.start_date = params.start_date;
-    if (params?.end_date) query.end_date = params.end_date;
+    if (params?.startDate) query.startDate = params.startDate;
+    if (params?.endDate) query.endDate = params.endDate;
 
     const res = await httpClient.get<
       | {
-          total_tasks: number;
-          completed_tasks: number;
-          pending_tasks: number;
-          overdue_tasks: number;
-          average_completion: number;
+          totalTasks: number;
+          completedTasks: number;
+          pendingTasks: number;
+          overdueTasks: number;
+          averageCompletion: number;
         }
       | {
           code: number;
           message: string;
           data: {
-            total_tasks: number;
-            completed_tasks: number;
-            pending_tasks: number;
-            overdue_tasks: number;
-            average_completion: number;
+            totalTasks: number;
+            completedTasks: number;
+            pendingTasks: number;
+            overdueTasks: number;
+            averageCompletion: number;
           };
         }
     >('/api/v1/bpmn/stats/tasks', query);
 
     const data = (res as any)?.data || res;
     return data || {
-      total_tasks: 0,
-      completed_tasks: 0,
-      pending_tasks: 0,
-      overdue_tasks: 0,
-      average_completion: 0,
+      totalTasks: 0,
+      completedTasks: 0,
+      pendingTasks: 0,
+      overdueTasks: 0,
+      averageCompletion: 0,
     };
   }
 

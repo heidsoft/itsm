@@ -20,10 +20,10 @@ export interface AutomationRule {
     type: string;
     [key: string]: unknown;
   }>;
-  is_active: boolean;
-  execution_count: number;
-  last_executed_at?: string;
-  created_by: number;
+  isActive: boolean;
+  executionCount: number;
+  lastExecutedAt?: string;
+  createdBy: number;
   creator?: {
     id: number;
     username: string;
@@ -31,9 +31,9 @@ export interface AutomationRule {
     email: string;
     role: string;
   };
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateAutomationRuleRequest {
@@ -50,7 +50,7 @@ export interface CreateAutomationRuleRequest {
     type: string;
     [key: string]: unknown;
   }>;
-  is_active: boolean;
+  isActive: boolean;
 }
 
 export interface UpdateAutomationRuleRequest {
@@ -67,12 +67,12 @@ export interface UpdateAutomationRuleRequest {
     type: string;
     [key: string]: unknown;
   }>;
-  is_active?: boolean;
+  isActive?: boolean;
 }
 
 export interface TestAutomationRuleRequest {
-  rule_id: number;
-  ticket_id: number;
+  ruleId: number;
+  ticketId: number;
 }
 
 export interface TestAutomationRuleResponse {
@@ -131,9 +131,9 @@ export class TicketAutomationRuleApi {
    */
   static async testRule(data: TestAutomationRuleRequest): Promise<TestAutomationRuleResponse> {
     return httpClient.post<TestAutomationRuleResponse>(
-      `/api/v1/tickets/automation-rules/${data.rule_id}/test`,
+      `/api/v1/tickets/automation-rules/${data.ruleId}/test`,
       {
-        ticket_id: data.ticket_id,
+        ticketId: data.ticketId,
       }
     );
   }

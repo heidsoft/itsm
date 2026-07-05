@@ -25,8 +25,8 @@ export interface FilterPreset {
   id: number;
   name: string;
   filters: Partial<TicketFilterState>;
-  is_favorite?: boolean;
-  created_at?: string;
+  isFavorite?: boolean;
+  createdAt?: string;
 }
 
 // 本地存储的预设（实际应该从API获取）
@@ -92,8 +92,8 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
         id: Date.now(),
         name: values.name,
         filters: { ...filters },
-        is_favorite: values.is_favorite || false,
-        created_at: new Date().toISOString(),
+        isFavorite: values.isFavorite || false,
+        createdAt: new Date().toISOString(),
       };
 
       const updated = [...presets, newPreset];
@@ -115,7 +115,7 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
       const values = await form.validateFields();
       const updated = presets.map(p =>
         p.id === editingPreset.id
-          ? { ...p, name: values.name, is_favorite: values.is_favorite || false }
+          ? { ...p, name: values.name, isFavorite: values.isFavorite || false }
           : p
       );
       setPresets(updated);
@@ -140,7 +140,7 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
   // 切换收藏状态
   const handleToggleFavorite = (presetId: number) => {
     const updated = presets.map(p =>
-      p.id === presetId ? { ...p, is_favorite: !p.is_favorite } : p
+      p.id === presetId ? { ...p, isFavorite: !p.isFavorite } : p
     );
     setPresets(updated);
     savePresetsToStorage(updated);
@@ -151,8 +151,8 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
   const getPresetMenuItems = (preset: FilterPreset): MenuProps['items'] => [
     {
       key: 'favorite',
-      label: preset.is_favorite ? '取消收藏' : '收藏',
-      icon: preset.is_favorite ? <Star /> : <Star />,
+      label: preset.isFavorite ? '取消收藏' : '收藏',
+      icon: preset.isFavorite ? <Star /> : <Star />,
       onClick: () => handleToggleFavorite(preset.id),
     },
     {
@@ -162,7 +162,7 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
       onClick: () => {
         form.setFieldsValue({
           name: preset.name,
-          is_favorite: preset.is_favorite || false,
+          isFavorite: preset.isFavorite || false,
         });
         setEditingPreset(preset);
         setEditModalVisible(true);
@@ -187,9 +187,9 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
   ];
 
   // 收藏的预设
-  const favoritePresets = presets.filter(p => p.is_favorite);
+  const favoritePresets = presets.filter(p => p.isFavorite);
   // 其他预设
-  const otherPresets = presets.filter(p => !p.is_favorite);
+  const otherPresets = presets.filter(p => !p.isFavorite);
 
   return (
     <>

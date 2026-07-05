@@ -52,12 +52,12 @@ describe('API Integration Tests', () => {
                 description: '用户无法正常登录',
                 status: 'open',
                 priority: 'high',
-                created_at: '2024-01-01T10:00:00Z',
+                createdAt: '2024-01-01T10:00:00Z',
               },
             ],
             total: 1,
             page: 1,
-            page_size: 20,
+            pageSize: 20,
           },
         };
 
@@ -112,7 +112,7 @@ describe('API Integration Tests', () => {
         const mockResponse = {
           code: 0,
           message: 'success',
-          data: { tickets: [], total: 0, page: 1, page_size: 10 },
+          data: { tickets: [], total: 0, page: 1, pageSize: 10 },
         };
 
         (fetch as jest.Mock).mockResolvedValueOnce({
@@ -123,7 +123,7 @@ describe('API Integration Tests', () => {
 
         const params = {
           page: 2,
-          page_size: 10,
+          pageSize: 10,
           status: 'open',
           priority: 'high',
         };
@@ -155,7 +155,7 @@ describe('API Integration Tests', () => {
             id: 1,
             ...mockTicketData,
             status: 'open',
-            created_at: '2024-01-01T10:00:00Z',
+            createdAt: '2024-01-01T10:00:00Z',
           },
         };
 
@@ -262,9 +262,9 @@ describe('API Integration Tests', () => {
           data: {
             total: 150,
             open: 45,
-            in_progress: 10,
+            inProgress: 10,
             resolved: 95,
-            by_priority: {
+            byPriority: {
               low: 50,
               medium: 70,
               high: 25,
@@ -448,7 +448,7 @@ describe('API Integration Tests', () => {
           tickets: largeTicketList,
           total: 1000,
           page: 1,
-          page_size: 1000,
+          pageSize: 1000,
         },
       };
 
@@ -458,7 +458,7 @@ describe('API Integration Tests', () => {
         json: async () => mockResponse,
       });
 
-      const result = await TicketApi.getTickets({ page_size: 1000 });
+      const result = await TicketApi.getTickets({ pageSize: 1000 });
 
       expect(result.tickets).toHaveLength(1000);
       expect(result.total).toBe(1000);

@@ -66,8 +66,8 @@ export class TicketApi {
     data: {
       action: 'approve' | 'reject' | 'delegate';
       comment?: string;
-      ticket_id: number;
-      delegate_to_user_id?: number;
+      ticketId: number;
+      delegateToUserId?: number;
     }
   ): Promise<{
     success: boolean;
@@ -82,10 +82,10 @@ export class TicketApi {
     content: string
   ): Promise<{
     id: number;
-    ticket_id: number;
+    ticketId: number;
     content: string;
-    created_by: number;
-    created_at: string;
+    createdBy: number;
+    createdAt: string;
     author?: {
       id: number;
       name: string;
@@ -98,17 +98,17 @@ export class TicketApi {
   // Assign ticket
   static async assignTicket(
     id: number,
-    assigneeIdOrData: number | { assignee_id: number; comment?: string }
+    assigneeIdOrData: number | { assigneeId: number; comment?: string }
   ): Promise<Ticket> {
     const payload =
-      typeof assigneeIdOrData === 'number' ? { assignee_id: assigneeIdOrData } : assigneeIdOrData;
+      typeof assigneeIdOrData === 'number' ? { assigneeId: assigneeIdOrData } : assigneeIdOrData;
     return httpClient.post<Ticket>(`/api/v1/tickets/${id}/assign`, payload);
   }
 
   // Escalate ticket
   static async escalateTicket(
     id: number,
-    reasonOrData: string | { level: string; reason: string; assignee_id?: number }
+    reasonOrData: string | { level: string; reason: string; assigneeId?: number }
   ): Promise<Ticket> {
     const payload = typeof reasonOrData === 'string' ? { reason: reasonOrData } : reasonOrData;
     return httpClient.post<Ticket>(`/api/v1/tickets/${id}/escalate`, payload);
@@ -117,14 +117,14 @@ export class TicketApi {
   // Resolve ticket
   static async resolveTicket(
     id: number,
-    resolutionOrData: string | { solution: string; resolution_code?: string }
+    resolutionOrData: string | { solution: string; resolutionCode?: string }
   ): Promise<Ticket> {
     const payload =
       typeof resolutionOrData === 'string'
         ? { resolution: resolutionOrData }
         : {
             resolution: resolutionOrData.solution,
-            resolution_code: resolutionOrData.resolution_code,
+            resolutionCode: resolutionOrData.resolutionCode,
           };
     return httpClient.post<Ticket>(`/api/v1/tickets/${id}/resolve`, payload);
   }
@@ -132,13 +132,13 @@ export class TicketApi {
   // Close ticket
   static async closeTicket(
     id: number,
-    feedbackOrData?: string | { close_notes?: string }
+    feedbackOrData?: string | { closeNotes?: string }
   ): Promise<Ticket> {
     const payload =
       typeof feedbackOrData === 'string'
         ? { feedback: feedbackOrData }
         : feedbackOrData
-          ? { feedback: feedbackOrData.close_notes }
+          ? { feedback: feedbackOrData.closeNotes }
           : {};
     return httpClient.post<Ticket>(`/api/v1/tickets/${id}/close`, payload);
   }
@@ -166,7 +166,7 @@ export class TicketApi {
   static async createSubtask(parentTicketId: number, data: Partial<Ticket>): Promise<Ticket> {
     return httpClient.post<Ticket>(`/api/v1/tickets/${parentTicketId}/subtasks`, {
       ...data,
-      parent_ticket_id: parentTicketId,
+      parentTicketId: parentTicketId,
     });
   }
 
@@ -197,7 +197,7 @@ export class TicketApi {
     Array<{
       action: string;
       timestamp: string;
-      user_id: number;
+      userId: number;
       details: string;
     }>
   > {
@@ -208,10 +208,10 @@ export class TicketApi {
   static async getTicketComments(id: number): Promise<{
     comments: Array<{
       id: number;
-      ticket_id: number;
-      user_id: number;
+      ticketId: number;
+      userId: number;
       content: string;
-      is_internal: boolean;
+      isInternal: boolean;
       mentions: number[];
       attachments: number[];
       user?: {
@@ -221,10 +221,10 @@ export class TicketApi {
         email: string;
         role?: string;
         department?: string;
-        tenant_id?: number;
+        tenantId?: number;
       };
-      created_at: string;
-      updated_at: string;
+      createdAt: string;
+      updatedAt: string;
     }>;
     total: number;
   }> {
@@ -236,16 +236,16 @@ export class TicketApi {
     id: number,
     data: {
       content: string;
-      is_internal?: boolean;
+      isInternal?: boolean;
       mentions?: number[];
       attachments?: number[];
     }
   ): Promise<{
     id: number;
-    ticket_id: number;
-    user_id: number;
+    ticketId: number;
+    userId: number;
     content: string;
-    is_internal: boolean;
+    isInternal: boolean;
     mentions: number[];
     attachments: number[];
     user?: {
@@ -255,10 +255,10 @@ export class TicketApi {
       email: string;
       role?: string;
       department?: string;
-      tenant_id?: number;
+      tenantId?: number;
     };
-    created_at: string;
-    updated_at: string;
+    createdAt: string;
+    updatedAt: string;
   }> {
     return httpClient.post(`/api/v1/tickets/${id}/comments`, data);
   }
@@ -269,15 +269,15 @@ export class TicketApi {
     commentId: number,
     data: {
       content?: string;
-      is_internal?: boolean;
+      isInternal?: boolean;
       mentions?: number[];
     }
   ): Promise<{
     id: number;
-    ticket_id: number;
-    user_id: number;
+    ticketId: number;
+    userId: number;
     content: string;
-    is_internal: boolean;
+    isInternal: boolean;
     mentions: number[];
     attachments: number[];
     user?: {
@@ -287,10 +287,10 @@ export class TicketApi {
       email: string;
       role?: string;
       department?: string;
-      tenant_id?: number;
+      tenantId?: number;
     };
-    created_at: string;
-    updated_at: string;
+    createdAt: string;
+    updatedAt: string;
   }> {
     return httpClient.put(`/api/v1/tickets/${ticketId}/comments/${commentId}`, data);
   }
@@ -304,14 +304,14 @@ export class TicketApi {
   static async getTicketAttachments(id: number): Promise<{
     attachments: Array<{
       id: number;
-      ticket_id: number;
-      file_name: string;
-      file_path: string;
-      file_url: string;
-      file_size: number;
-      file_type: string;
-      mime_type: string;
-      uploaded_by: number;
+      ticketId: number;
+      fileName: string;
+      filePath: string;
+      fileUrl: string;
+      fileSize: number;
+      fileType: string;
+      mimeType: string;
+      uploadedBy: number;
       uploader?: {
         id: number;
         username: string;
@@ -319,9 +319,9 @@ export class TicketApi {
         email: string;
         role?: string;
         department?: string;
-        tenant_id?: number;
+        tenantId?: number;
       };
-      created_at: string;
+      createdAt: string;
     }>;
     total: number;
   }> {
@@ -335,21 +335,21 @@ export class TicketApi {
     onProgress?: (progress: number) => void
   ): Promise<{
     id: number;
-    ticket_id: number;
-    file_name: string;
-    file_path: string;
-    file_url: string;
-    file_size: number;
-    file_type: string;
-    mime_type: string;
-    uploaded_by: number;
+    ticketId: number;
+    fileName: string;
+    filePath: string;
+    fileUrl: string;
+    fileSize: number;
+    fileType: string;
+    mimeType: string;
+    uploadedBy: number;
     uploader?: {
       id: number;
       username: string;
       name: string;
       email: string;
     };
-    created_at: string;
+    createdAt: string;
   }> {
     const formData = new FormData();
     formData.append('file', file);
@@ -376,19 +376,19 @@ export class TicketApi {
 
   // Get ticket workflow state - 使用后端实际的 workflow/state 端点
   static async getTicketWorkflow(id: number): Promise<{
-    ticket_id: number;
-    current_status: string;
-    available_actions: Array<{
+    ticketId: number;
+    currentStatus: string;
+    availableActions: Array<{
       action: string;
       label: string;
-      requires_comment: boolean;
+      requiresComment: boolean;
     }>;
-    workflow_history: Array<{
-      from_status: string;
-      to_status: string;
+    workflowHistory: Array<{
+      fromStatus: string;
+      toStatus: string;
       action: string;
-      performed_at: string;
-      performed_by: number;
+      performedAt: string;
+      performedBy: number;
       comment?: string;
     }>;
   }> {
@@ -397,17 +397,17 @@ export class TicketApi {
 
   // Accept ticket (接单)
   static async acceptTicket(ticketId: number): Promise<{ message: string }> {
-    return httpClient.post(`/api/v1/tickets/workflow/accept`, { ticket_id: ticketId });
+    return httpClient.post(`/api/v1/tickets/workflow/accept`, { ticketId: ticketId });
   }
 
   // Reject ticket (驳回)
   static async rejectTicket(ticketId: number, reason: string): Promise<{ message: string }> {
-    return httpClient.post(`/api/v1/tickets/workflow/reject`, { ticket_id: ticketId, reason });
+    return httpClient.post(`/api/v1/tickets/workflow/reject`, { ticketId: ticketId, reason });
   }
 
   // Withdraw ticket (撤回)
   static async withdrawTicket(ticketId: number, reason?: string): Promise<{ message: string }> {
-    return httpClient.post(`/api/v1/tickets/workflow/withdraw`, { ticket_id: ticketId, reason });
+    return httpClient.post(`/api/v1/tickets/workflow/withdraw`, { ticketId: ticketId, reason });
   }
 
   // Forward ticket (转发)
@@ -417,8 +417,8 @@ export class TicketApi {
     comment?: string
   ): Promise<{ message: string }> {
     return httpClient.post(`/api/v1/tickets/workflow/forward`, {
-      ticket_id: ticketId,
-      to_user_id: toUserId,
+      ticketId: ticketId,
+      toUserId: toUserId,
       comment,
     });
   }
@@ -430,15 +430,15 @@ export class TicketApi {
     comment?: string
   ): Promise<{ message: string }> {
     return httpClient.post(`/api/v1/tickets/workflow/cc`, {
-      ticket_id: ticketId,
-      cc_user_ids: ccUserIds,
+      ticketId: ticketId,
+      ccUserIds: ccUserIds,
       comment,
     });
   }
 
   // Reopen ticket (重开)
   static async reopenTicket(ticketId: number, reason?: string): Promise<{ message: string }> {
-    return httpClient.post(`/api/v1/tickets/workflow/reopen`, { ticket_id: ticketId, reason });
+    return httpClient.post(`/api/v1/tickets/workflow/reopen`, { ticketId: ticketId, reason });
   }
 
   // Update workflow step
@@ -448,16 +448,16 @@ export class TicketApi {
     data: {
       status: string;
       comments?: string;
-      assignee_id?: number;
+      assigneeId?: number;
     }
   ): Promise<{
     id: number;
-    step_name: string;
-    step_order: number;
+    stepName: string;
+    stepOrder: number;
     status: string;
-    assignee_id?: number;
-    started_at?: string;
-    completed_at?: string;
+    assigneeId?: number;
+    startedAt?: string;
+    completedAt?: string;
     comments?: string;
   }> {
     return httpClient.put(`/api/v1/tickets/${ticketId}/workflow/${stepId}`, data);
@@ -469,7 +469,7 @@ export class TicketApi {
     tags: string[]
   ): Promise<{
     success: boolean;
-    ticket_id: number;
+    ticketId: number;
     tags: string[];
     message: string;
   }> {
@@ -482,9 +482,9 @@ export class TicketApi {
     tags: string[]
   ): Promise<{
     success: boolean;
-    ticket_id: number;
-    removed_tags: string[];
-    remaining_tags: string[];
+    ticketId: number;
+    removedTags: string[];
+    remainingTags: string[];
     message: string;
   }> {
     return httpClient.request({
@@ -498,12 +498,12 @@ export class TicketApi {
   static async getTicketHistory(id: number): Promise<
     Array<{
       id: number;
-      field_name: string;
-      old_value: string;
-      new_value: string;
-      changed_by: number;
-      changed_at: string;
-      change_reason?: string;
+      fieldName: string;
+      oldValue: string;
+      newValue: string;
+      changedBy: number;
+      changedAt: string;
+      changeReason?: string;
       user?: {
         id: number;
         name: string;
@@ -518,7 +518,7 @@ export class TicketApi {
     return httpClient.request({
       method: 'DELETE',
       url: '/api/v1/tickets/batch-delete',
-      data: { ticket_ids: ticketIds },
+      data: { ticketIds: ticketIds },
     });
   }
 
@@ -526,9 +526,9 @@ export class TicketApi {
   static async getTicketStats(): Promise<{
     total: number;
     open: number;
-    in_progress: number;
+    inProgress: number;
     resolved: number;
-    high_priority: number;
+    highPriority: number;
     overdue: number;
   }> {
     return httpClient.get('/api/v1/tickets/stats');
@@ -555,7 +555,7 @@ export class TicketApi {
     data?: Record<string, unknown>
   ): Promise<void> {
     return httpClient.put('/api/v1/tickets/batch-assign', {
-      ticket_ids: ticketIds,
+      ticketIds: ticketIds,
       action,
       data,
     });
@@ -564,7 +564,7 @@ export class TicketApi {
   // Get ticket templates
   static async getTemplates(params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
     category?: string;
   }): Promise<{
     items: Array<{
@@ -573,8 +573,8 @@ export class TicketApi {
       description: string;
       category: string;
       content: Record<string, unknown>;
-      created_at: string;
-      updated_at: string;
+      createdAt: string;
+      updatedAt: string;
     }>;
     total: number;
   }> {
@@ -583,20 +583,20 @@ export class TicketApi {
 
   // Get ticket SLA info
   static async getTicketSLA(id: number): Promise<{
-    ticket_id: number;
-    sla_definition_id: number;
-    sla_name: string;
-    service_type: string;
+    ticketId: number;
+    slaDefinitionId: number;
+    slaName: string;
+    serviceType: string;
     priority: string;
-    response_time: number;
-    resolution_time: number;
-    response_deadline: string | null;
-    resolution_deadline: string | null;
-    first_response_at: string | null;
-    resolved_at: string | null;
-    is_breached: boolean;
-    response_time_remaining: number | null;
-    resolution_time_remaining: number | null;
+    responseTime: number;
+    resolutionTime: number;
+    responseDeadline: string | null;
+    resolutionDeadline: string | null;
+    firstResponseAt: string | null;
+    resolvedAt: string | null;
+    isBreached: boolean;
+    responseTimeRemaining: number | null;
+    resolutionTimeRemaining: number | null;
   }> {
     return httpClient.get(`/api/v1/tickets/${id}/sla`);
   }

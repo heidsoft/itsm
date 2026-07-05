@@ -164,7 +164,7 @@ export default function RoleManagement() {
     description?: string;
     status?: string;
     permissions: string[];
-    created_at?: string;
+    createdAt?: string;
   }
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [loading, setLoading] = useState(false);

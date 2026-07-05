@@ -42,11 +42,9 @@ interface SolutionRecommendation {
   relevance: number;
   category: string;
   tags: string[];
-  view_count: number;
-  viewCount?: number;
+  viewCount: number;
   rating: number;
-  updated_at: string;
-  updatedAt?: string;
+  updatedAt: string;
 }
 
 // 知识库关联接口
@@ -73,27 +71,20 @@ interface KnowledgeArticle {
   title: string;
   content?: string;
   summary?: string;
-  category_id?: number;
   categoryId?: number;
-  category_name?: string;
   categoryName?: string;
   category?: string;
   tags?: string[];
-  author_id?: number;
   authorId?: number;
   author?: {
     id: number;
     username: string;
     name: string;
   };
-  view_count: number;
-  viewCount?: number;
-  helpful_count?: number;
+  viewCount: number;
   helpfulCount?: number;
   status?: 'draft' | 'published' | 'archived';
-  created_at: string;
-  createdAt?: string;
-  updated_at?: string;
+  createdAt: string;
   updatedAt?: string;
   rating?: number;
 }
@@ -159,9 +150,9 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
         relevance: item.relevance || 0,
         category: item.category || 'General',
         tags: item.tags || [],
-        view_count: item.view_count || 0,
+        viewCount: item.viewCount || 0,
         rating: item.rating || 0,
-        updated_at: item.updatedAt || new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString(),
       }));
       setRecommendations(mapped);
     } catch (error) {
@@ -299,8 +290,8 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                       <p className="text-gray-600">{item.summary}</p>
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <span>相关度: {item.relevance}%</span>
-                        <span>浏览量: {item.view_count}</span>
-                        <span>更新: {item.updatedAt || item.updated_at}</span>
+                        <span>浏览量: {item.viewCount}</span>
+                        <span>更新: {item.updatedAt || item.updatedAt}</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {(item.tags || []).map(tag => (
@@ -481,8 +472,8 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                     <div className="space-y-2">
                       <p className="text-gray-600">{item.summary}</p>
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <span>浏览量: {item.view_count}</span>
-                        <span>更新: {item.updatedAt || item.updated_at}</span>
+                        <span>浏览量: {item.viewCount}</span>
+                        <span>更新: {item.updatedAt || item.updatedAt}</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {(item.tags || []).map(tag => (
@@ -564,7 +555,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                         <div className="space-y-2">
                           <p className="text-gray-600">{item.summary}</p>
                           <div className="flex items-center space-x-2 text-sm text-gray-500">
-                            <span>浏览量: {item.view_count}</span>
+                            <span>浏览量: {item.viewCount}</span>
                             <span>评分: {item.rating}</span>
                           </div>
                         </div>

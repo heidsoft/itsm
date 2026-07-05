@@ -15,8 +15,8 @@ export interface PaginatedResponse<T> {
   data: T[];
   total: number;
   page: number;
-  page_size: number;
-  total_pages: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 /**
@@ -58,8 +58,8 @@ export function handlePaginatedResponse<T>(
     data: [],
     total: 0,
     page: 1,
-    page_size: 20,
-    total_pages: 0,
+    pageSize: 20,
+    totalPages: 0,
   };
 
   if (!response) {
@@ -74,8 +74,8 @@ export function handlePaginatedResponse<T>(
         data: Array.isArray(apiResponse.data.data) ? apiResponse.data.data : [],
         total: apiResponse.data.total || 0,
         page: apiResponse.data.page || 1,
-        page_size: apiResponse.data.page_size || 20,
-        total_pages: apiResponse.data.total_pages || 0,
+        pageSize: apiResponse.data.pageSize || 20,
+        totalPages: apiResponse.data.totalPages || 0,
       };
     }
     return defaultValue;
@@ -87,8 +87,8 @@ export function handlePaginatedResponse<T>(
     data: Array.isArray(paginatedData.data) ? paginatedData.data : [],
     total: paginatedData.total || 0,
     page: paginatedData.page || 1,
-    page_size: paginatedData.page_size || 20,
-    total_pages: paginatedData.total_pages || 0,
+    pageSize: paginatedData.pageSize || 20,
+    totalPages: paginatedData.totalPages || 0,
   };
 }
 

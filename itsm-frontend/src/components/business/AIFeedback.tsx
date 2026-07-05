@@ -55,8 +55,8 @@ export const AIFeedback: React.FC<AIFeedbackProps> = ({
       const feedbackData: AIFeedbackRequest = {
         kind,
         query,
-        item_type: itemType,
-        item_id: itemId,
+        itemType: itemType,
+        itemId: itemId,
         useful: isUseful,
         ...(includeScore && score > 0 && { score }),
         ...(includeNotes && notes.trim() && { notes: notes.trim() }),

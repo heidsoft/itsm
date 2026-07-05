@@ -29,18 +29,18 @@ export const useReportData = () => {
       // 调用真实API获取数据
       const [analyticsRes, statsRes] = await Promise.all([
         ticketAnalyticsService.getAnalytics({
-          date_from: timeRange?.[0],
-          date_to: timeRange?.[1],
+          dateFrom: timeRange?.[0],
+          dateTo: timeRange?.[1],
         }),
         ticketService.getTicketStats(),
       ]);
 
       // 使用真实数据设置指标
       const fetchedMetrics: ReportMetrics = {
-        totalTickets: statsRes.total || analyticsRes.total_tickets || 0,
-        resolvedTickets: statsRes.resolved || analyticsRes.resolved_tickets || 0,
-        avgResolutionTime: analyticsRes.processing_time_stats?.avg_resolution_time || 0,
-        slaCompliance: analyticsRes.processing_time_stats?.sla_compliance_rate || 0,
+        totalTickets: statsRes.total || analyticsRes.totalTickets || 0,
+        resolvedTickets: statsRes.resolved || analyticsRes.resolvedTickets || 0,
+        avgResolutionTime: analyticsRes.processingTimeStats?.avgResolutionTime || 0,
+        slaCompliance: analyticsRes.processingTimeStats?.slaComplianceRate || 0,
         satisfactionScore: 0, // 满意度数据可能需要单独API
         activeAgents: 0, // 活跃坐席可能需要单独API
         pendingTickets: statsRes.open || 0,

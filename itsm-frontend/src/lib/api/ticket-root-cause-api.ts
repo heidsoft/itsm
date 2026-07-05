@@ -16,33 +16,33 @@ export interface RootCause {
     timestamp: string;
     relevance: number;
   }>;
-  related_tickets: Array<{
+  relatedTickets: Array<{
     id: number;
     number: string;
     title: string;
     similarity: number;
   }>;
-  impact_scope: {
-    affected_tickets: number;
-    affected_users: number;
-    affected_systems: string[];
+  impactScope: {
+    affectedTickets: number;
+    affectedUsers: number;
+    affectedSystems: string[];
   };
   recommendations: string[];
   status: 'identified' | 'confirmed' | 'resolved' | 'false_positive';
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface RootCauseAnalysisReport {
-  ticket_id: number;
-  ticket_number: string;
-  ticket_title: string;
-  analysis_date: string;
-  root_causes: RootCause[];
-  analysis_summary: string;
-  confidence_score: number;
-  analysis_method: 'automatic' | 'manual' | 'hybrid';
-  generated_at: string;
+  ticketId: number;
+  ticketNumber: string;
+  ticketTitle: string;
+  analysisDate: string;
+  rootCauses: RootCause[];
+  analysisSummary: string;
+  confidenceScore: number;
+  analysisMethod: 'automatic' | 'manual' | 'hybrid';
+  generatedAt: string;
 }
 
 export class TicketRootCauseApi {

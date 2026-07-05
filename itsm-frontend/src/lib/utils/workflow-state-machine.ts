@@ -168,10 +168,10 @@ export const CHANGE_STATUS_TRANSITIONS: Record<string, string[]> = {
   draft: ['pending', 'cancelled'],
   pending: ['approved', 'rejected', 'cancelled'],
   approved: ['in_progress', 'cancelled'],
-  in_progress: ['completed', 'rolled_back', 'cancelled'],
+  inProgress: ['completed', 'rolled_back', 'cancelled'],
   completed: [],
   rejected: ['draft', 'cancelled'],
-  rolled_back: [],
+  rolledBack: [],
   cancelled: [],
 };
 

@@ -5,8 +5,7 @@ import {
   Card, Table, Tag, Button, Space, Modal, Form, Input, Switch, Tabs, message, Drawer,
   Typography, Empty, Alert, Spin, Tooltip,
 } from 'antd';
-import { SendOutlined, PoweroffOutlined } from '@ant-design/icons';
-import { Plus, Settings, RotateCcw, CheckCircle, XCircle, Plug } from 'lucide-react';
+import { Plus, Settings, RotateCcw, CheckCircle, XCircle, Plug, Send, Power } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type {
   ConnectorManifest, ConnectorConfig, SendConnectorMessageRequest,
@@ -196,8 +195,8 @@ export default function ConnectorsAdminPage() {
             <Button size="small" icon={<Plug />} onClick={() => { setDetailTarget(r); setDetailOpen(true); }}>详情</Button>
             {inst ? (
               <>
-                <Button size="small" icon={<SendOutlined />} onClick={() => openSend(inst)} type="primary" ghost>发消息</Button>
-                <Button size="small" icon={<PoweroffOutlined />} danger onClick={() => handleRevoke(inst)}>停用</Button>
+                <Button size="small" icon={<Send />} onClick={() => openSend(inst)} type="primary" ghost>发消息</Button>
+                <Button size="small" icon={<Power />} danger onClick={() => handleRevoke(inst)}>停用</Button>
               </>
             ) : (
               <Button size="small" type="primary" icon={<Plus />} onClick={() => openProvision(r)}>启用</Button>
@@ -228,9 +227,9 @@ export default function ConnectorsAdminPage() {
       title: '操作', key: 'actions', width: 220, fixed: 'right' as const,
       render: (_: unknown, r: ConnectorConfig) => (
         <Space>
-          <Button size="small" icon={<SendOutlined />} onClick={() => openSend(r)} type="primary" ghost>发消息</Button>
-          <Button size="small" icon={<SendOutlined />} onClick={() => handleTest(r)}>测试</Button>
-          <Button size="small" icon={<PoweroffOutlined />} danger onClick={() => handleRevoke(r)}>停用</Button>
+          <Button size="small" icon={<Send />} onClick={() => openSend(r)} type="primary" ghost>发消息</Button>
+          <Button size="small" icon={<Send />} onClick={() => handleTest(r)}>测试</Button>
+          <Button size="small" icon={<Power />} danger onClick={() => handleRevoke(r)}>停用</Button>
         </Space>
       ),
     },

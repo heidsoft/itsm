@@ -187,11 +187,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({
       case 'password':
         return (
           <PasswordInput
-            {...commonProps}
+            {...(commonProps as any)}
           />
         );
       default:
-        return <CustomInput {...commonProps} type={field.type} />;
+        return <CustomInput {...(commonProps as any)} type={field.type} />;
     }
   };
 

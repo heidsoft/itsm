@@ -24,8 +24,8 @@ describe('CIChangeHistoryTab', () => {
         path: '/api/v1/cmdb/ci/ci-001',
         Method: 'PUT',
         StatusCode: 200,
-        created_at: '2024-01-20T15:30:00Z',
-        updated_by: 'admin',
+        createdAt: '2024-01-20T15:30:00Z',
+        updatedBy: 'admin',
         description: 'Updated memory configuration',
       },
       {
@@ -35,8 +35,8 @@ describe('CIChangeHistoryTab', () => {
         path: '/api/v1/cmdb/ci/ci-001',
         Method: 'PUT',
         StatusCode: 200,
-        created_at: '2024-01-19T09:15:00Z',
-        updated_by: 'operator',
+        createdAt: '2024-01-19T09:15:00Z',
+        updatedBy: 'operator',
         description: 'Changed status from standby to active',
       },
       {
@@ -46,14 +46,14 @@ describe('CIChangeHistoryTab', () => {
         path: '/api/v1/cmdb/ci/ci-001',
         Method: 'PUT',
         StatusCode: 200,
-        created_at: '2024-01-18T14:00:00Z',
-        updated_by: 'manager',
+        createdAt: '2024-01-18T14:00:00Z',
+        updatedBy: 'manager',
         description: 'Reassigned to DevOps team',
       },
     ],
     total: 15,
     page: 1,
-    page_size: 10,
+    pageSize: 10,
   };
 
   const defaultProps = {
@@ -140,7 +140,7 @@ describe('CIChangeHistoryTab', () => {
       logs: [],
       total: 0,
       page: 1,
-      page_size: 10,
+      pageSize: 10,
     };
 
     render(<CIChangeHistoryTab {...defaultProps} changeHistory={emptyHistory} />);

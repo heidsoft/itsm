@@ -51,8 +51,8 @@ export default function CloudAccountPage() {
   const filteredData = useCallback(() => {
     return data.filter(item => {
       const matchSearch = !searchText ||
-        (item.account_name?.toLowerCase().includes(searchText.toLowerCase())) ||
-        (item.account_id?.toLowerCase().includes(searchText.toLowerCase()));
+        (item.accountName?.toLowerCase().includes(searchText.toLowerCase())) ||
+        (item.accountId?.toLowerCase().includes(searchText.toLowerCase()));
       const matchProvider = !filterProvider || item.provider === filterProvider;
       return matchSearch && matchProvider;
     });
@@ -104,10 +104,10 @@ export default function CloudAccountPage() {
     setEditingAccount(record);
     editForm.setFieldsValue({
       provider: record.provider,
-      account_id: record.account_id,
-      account_name: record.account_name,
-      credential_ref: record.credential_ref,
-      is_active: record.is_active,
+      accountId: record.accountId,
+      accountName: record.accountName,
+      credentialRef: record.credentialRef,
+      isActive: record.isActive,
     });
     setEditOpen(true);
   };
@@ -148,9 +148,9 @@ export default function CloudAccountPage() {
     try {
       // 调用更新接口切换状态
       await CMDBApi.updateCI(record.id, {
-        is_active: !record.is_active,
+        isActive: !record.isActive,
       });
-      message.success(record.is_active ? '云账号已停用' : '云账号已启用');
+      message.success(record.isActive ? '云账号已停用' : '云账号已启用');
       loadData();
     } catch (error) {
       if (error instanceof Error) {
@@ -171,26 +171,26 @@ export default function CloudAccountPage() {
     },
     {
       title: '账号ID',
-      dataIndex: 'account_id',
+      dataIndex: 'accountId',
       width: 200,
       ellipsis: true,
     },
     {
       title: '账号名称',
-      dataIndex: 'account_name',
+      dataIndex: 'accountName',
       width: 180,
       ellipsis: true,
     },
     {
       title: '凭据引用',
-      dataIndex: 'credential_ref',
+      dataIndex: 'credentialRef',
       width: 180,
       ellipsis: true,
       render: (value?: string) => value || '-',
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
+      dataIndex: 'isActive',
       width: 100,
       render: (value: boolean, record: CloudAccount) => (
         <Switch

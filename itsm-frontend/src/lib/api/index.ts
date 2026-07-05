@@ -188,8 +188,8 @@ export const emptyPagination = <T>(data: T[] = []): PaginationResponse<T> => ({
   data,
   total: 0,
   page: 1,
-  page_size: 10,
-  total_pages: 0,
+  pageSize: 10,
+  totalPages: 0,
 });
 
 /**

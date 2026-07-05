@@ -8,15 +8,15 @@ import { httpClient } from './http-client';
 export interface StandardChangeRequest {
   title: string;
   description?: string;
-  implementation_plan: string;
-  rollback_plan: string;
+  implementationPlan: string;
+  rollbackPlan: string;
   justification?: string;
   category?: string;
-  risk_level?: string;
-  impact_scope?: string;
-  expected_duration?: number;
-  approval_required?: boolean;
-  affected_cis?: string[];
+  riskLevel?: string;
+  impactScope?: string;
+  expectedDuration?: number;
+  approvalRequired?: boolean;
+  affectedCis?: string[];
   prerequisites?: string[];
   remarks?: string;
 }
@@ -48,26 +48,26 @@ export interface StandardChange {
 export interface UpdateStandardChangeRequest {
   title?: string;
   description?: string;
-  implementation_plan?: string;
-  rollback_plan?: string;
+  implementationPlan?: string;
+  rollbackPlan?: string;
   justification?: string;
   category?: string;
-  risk_level?: string;
-  impact_scope?: string;
-  expected_duration?: number;
-  approval_required?: boolean;
-  affected_cis?: string[];
+  riskLevel?: string;
+  impactScope?: string;
+  expectedDuration?: number;
+  approvalRequired?: boolean;
+  affectedCis?: string[];
   prerequisites?: string[];
   remarks?: string;
-  is_active?: boolean;
+  isActive?: boolean;
 }
 
 // 实例化请求
 export interface InstantiateStandardChangeRequest {
   title?: string;
-  planned_start_date?: string;
-  planned_end_date?: string;
-  affected_cis?: string[];
+  plannedStartDate?: string;
+  plannedEndDate?: string;
+  affectedCis?: string[];
 }
 
 // Standard Change 列表响应
@@ -75,7 +75,7 @@ export interface StandardChangeListResponse {
   total: number;
   templates: StandardChange[];
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 // Standard Change API 类
@@ -83,10 +83,10 @@ export class StandardChangeApi {
   // 获取标准变更模板列表
   static async getTemplates(params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
     category?: string;
     search?: string;
-    active_only?: boolean;
+    activeOnly?: boolean;
   }): Promise<StandardChangeListResponse> {
     return httpClient.get<StandardChangeListResponse>('/api/v1/standard-changes', params);
   }
@@ -117,7 +117,7 @@ export class StandardChangeApi {
   }
 
   // 从模板实例化变更
-  static async instantiate(id: number, data?: InstantiateStandardChangeRequest): Promise<{ change_id: number }> {
-    return httpClient.post<{ change_id: number }>(`/api/v1/standard-changes/${id}/instantiate`, data || {});
+  static async instantiate(id: number, data?: InstantiateStandardChangeRequest): Promise<{ changeId: number }> {
+    return httpClient.post<{ changeId: number }>(`/api/v1/standard-changes/${id}/instantiate`, data || {});
   }
 }

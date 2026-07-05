@@ -6,31 +6,31 @@
 import { httpClient } from './http-client';
 
 export interface DashboardMetrics {
-  total_processes: number;
-  active_instances: number;
-  completed_today: number;
-  open_tasks: number;
-  sla_compliance_rate: number;
-  avg_completion_time_minutes: number;
-  process_health: ProcessHealth;
-  top_processes: ProcessStat[];
-  task_distribution: TaskStat[];
-  trend_data: TrendPoint[];
+  totalProcesses: number;
+  activeInstances: number;
+  completedToday: number;
+  openTasks: number;
+  slaComplianceRate: number;
+  avgCompletionTimeMinutes: number;
+  processHealth: ProcessHealth;
+  topProcesses: ProcessStat[];
+  taskDistribution: TaskStat[];
+  trendData: TrendPoint[];
 }
 
 export interface ProcessHealth {
   healthy: number;
   warning: number;
   critical: number;
-  health_score: number;
+  healthScore: number;
 }
 
 export interface ProcessStat {
-  process_definition_key: string;
-  total_instances: number;
-  running_instances: number;
-  completed_instances: number;
-  avg_duration_minutes: number;
+  processDefinitionKey: string;
+  totalInstances: number;
+  runningInstances: number;
+  completedInstances: number;
+  avgDurationMinutes: number;
 }
 
 export interface TaskStat {
@@ -45,93 +45,83 @@ export interface TrendPoint {
 }
 
 export interface ProcessMetrics {
-  total_instances: number;
-  running_instances: number;
-  completed_instances: number;
-  terminated_instances: number;
-  completion_rate: number;
-  sla_compliance_rate: number;
-  avg_completion_time_minutes: number;
+  totalInstances: number;
+  runningInstances: number;
+  completedInstances: number;
+  terminatedInstances: number;
+  completionRate: number;
+  slaComplianceRate: number;
+  avgCompletionTimeMinutes: number;
 }
 
 export interface ProcessAuditLog {
   id: number;
-  process_instance_id: number;
-  process_instance_key: string;
-  process_definition_key: string;
-  process_definition_id: number;
-  activity_id: string;
-  activity_name: string;
-  activity_type: string;
+  processInstanceId: number;
+  processInstanceKey: string;
+  processDefinitionKey: string;
+  processDefinitionId: number;
+  activityId: string;
+  activityName: string;
+  activityType: string;
   action: string;
-  user_id: number;
-  user_name: string;
-  assignee_id: number;
-  assignee_name: string;
-  variables_before: Record<string, any>;
-  variables_after: Record<string, any>;
+  userId: number;
+  userName: string;
+  assigneeId: number;
+  assigneeName: string;
+  variablesBefore: Record<string, any>;
+  variablesAfter: Record<string, any>;
   comment: string;
-  ip_address: string;
-  user_agent: string;
-  tenant_id: number;
+  ipAddress: string;
+  userAgent: string;
+  tenantId: number;
   timestamp: string;
-  duration_ms: number;
+  durationMs: number;
   metadata: Record<string, any>;
 }
 
 export interface QueryAuditLogsRequest {
-  tenant_id?: number;
-  process_instance_id?: number;
-  process_definition_key?: string;
+  tenantId?: number;
+  processInstanceId?: number;
+  processDefinitionKey?: string;
   action?: string;
-  user_id?: number;
-  activity_type?: string;
-  start_time?: string;
-  end_time?: string;
+  userId?: number;
+  activityType?: string;
+  startTime?: string;
+  endTime?: string;
   page?: number;
-  page_size?: number;
+  pageSize?: number;
 }
 
 export interface SLAViolation {
-  resource_type: string;
-  resourceType?: string;
-  resource_id: number;
-  resourceId?: number;
-  resource_key: string;
-  resourceKey?: string;
-  sla_status: string;
-  slaStatus?: string;
-  start_time: string;
-  startTime?: string;
+  resourceType: string;
+  resourceId: number;
+  resourceKey: string;
+  slaStatus: string;
+  startTime: string;
   deadline: string;
-  elapsed_minutes: number;
-  elapsedMinutes?: number;
-  tenant_id: number;
-  tenantId?: number;
+  elapsedMinutes: number;
+  tenantId: number;
   // 额外字段
-  ticket_id?: number;
   ticketId?: number;
-  created_at?: string;
   createdAt?: string;
-  updated_at?: string;
   updatedAt?: string;
 }
 
 export interface TenantBPMNStats {
-  total_definitions: number;
-  total_instances: number;
-  running_instances: number;
-  completed_instances: number;
-  total_tasks: number;
-  open_tasks: number;
+  totalDefinitions: number;
+  totalInstances: number;
+  runningInstances: number;
+  completedInstances: number;
+  totalTasks: number;
+  openTasks: number;
 }
 
 export interface BottleneckInfo {
-  task_name: string;
-  total_count: number;
-  avg_duration_minutes: number;
-  max_duration_minutes: number;
-  min_duration_minutes: number;
+  taskName: string;
+  totalCount: number;
+  avgDurationMinutes: number;
+  maxDurationMinutes: number;
+  minDurationMinutes: number;
 }
 
 export class BPMNDashboardApi {
@@ -140,7 +130,7 @@ export class BPMNDashboardApi {
    * 获取仪表盘指标
    */
   static async getDashboardMetrics(tenantId: number, startTime?: string, endTime?: string): Promise<DashboardMetrics> {
-    const params = new URLSearchParams({ tenant_id: tenantId.toString() });
+    const params = new URLSearchParams({ tenantId: tenantId.toString() });
     if (startTime) params.append('start_time', startTime);
     if (endTime) params.append('end_time', endTime);
 
@@ -153,7 +143,7 @@ export class BPMNDashboardApi {
   static async getProcessMetrics(key: string, tenantId: number, startTime?: string, endTime?: string): Promise<ProcessMetrics> {
     const params = new URLSearchParams({
       key,
-      tenant_id: tenantId.toString()
+      tenantId: tenantId.toString()
     });
     if (startTime) params.append('start_time', startTime);
     if (endTime) params.append('end_time', endTime);
@@ -199,7 +189,7 @@ export class BPMNDashboardApi {
    */
   static async getUserActivity(userId: number, tenantId: number, startTime?: string, endTime?: string): Promise<ProcessAuditLog[]> {
     const params = new URLSearchParams({
-      tenant_id: tenantId.toString()
+      tenantId: tenantId.toString()
     });
     if (startTime) params.append('start_time', startTime);
     if (endTime) params.append('end_time', endTime);
@@ -218,18 +208,18 @@ export class BPMNDashboardApi {
    * 获取SLA合规率
    */
   static async getSLACompliance(key: string, tenantId: number, startTime?: string, endTime?: string): Promise<{
-    compliance_rate: number;
+    complianceRate: number;
     compliant: number;
     total: number;
   }> {
     const params = new URLSearchParams({
       key,
-      tenant_id: tenantId.toString()
+      tenantId: tenantId.toString()
     });
     if (startTime) params.append('start_time', startTime);
     if (endTime) params.append('end_time', endTime);
 
-    return httpClient.get<{ compliance_rate: number; compliant: number; total: number }>(`${this.baseUrl}/sla/compliance?${params}`);
+    return httpClient.get<{ complianceRate: number; compliant: number; total: number }>(`${this.baseUrl}/sla/compliance?${params}`);
   }
 
   /**

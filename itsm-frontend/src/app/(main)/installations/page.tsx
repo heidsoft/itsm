@@ -88,11 +88,11 @@ const makeForm = (installation: TenantInstallation): InstallForm => {
   const credentials = (config.credentials || {}) as Record<string, unknown>;
   const settings = (config.settings || {}) as Record<string, unknown>;
   return {
-    appId: String(credentials.app_id || ''),
-    appSecret: String(credentials.app_secret || ''),
-    verificationToken: String(credentials.verification_token || ''),
-    encryptKey: String(credentials.encrypt_key || ''),
-    debugChannel: String(settings.debug_channel || ''),
+    appId: String(credentials.appId || ''),
+    appSecret: String(credentials.appSecret || ''),
+    verificationToken: String(credentials.verificationToken || ''),
+    encryptKey: String(credentials.encryptKey || ''),
+    debugChannel: String(settings.debugChannel || ''),
     region: String(settings.region || 'cn'),
   };
 };
@@ -180,14 +180,14 @@ const InstallationsPage = () => {
     const nextConfig = {
       ...currentConfig,
       credentials: {
-        app_id: form.appId.trim(),
-        app_secret: form.appSecret.trim(),
-        verification_token: form.verificationToken.trim(),
-        encrypt_key: form.encryptKey.trim(),
+        appId: form.appId.trim(),
+        appSecret: form.appSecret.trim(),
+        verificationToken: form.verificationToken.trim(),
+        encryptKey: form.encryptKey.trim(),
       },
       settings: {
         ...((currentConfig.settings || {}) as Record<string, unknown>),
-        debug_channel: form.debugChannel.trim(),
+        debugChannel: form.debugChannel.trim(),
         region: form.region,
       },
     };

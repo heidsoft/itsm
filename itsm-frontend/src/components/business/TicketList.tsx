@@ -60,16 +60,16 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         priority: filters.priority,
         type: filters.type,
         category: filters.category,
-        assignee_id: filters.assignee_id,
-        requester_id: filters.requester_id,
-        date_from: filters.date_from,
-        date_to: filters.date_to,
+        assigneeId: filters.assigneeId,
+        requesterId: filters.requesterId,
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
         tags: filters.tags,
-        sort_by: filters.sort_by,
-        sort_order: filters.sort_order,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
       };
 
-      const response: TicketListResponse = await TicketApi.getTickets(params);
+      const response: TicketListResponse = await TicketApi.getTickets(params as any);
       setTickets(response.tickets);
       setTotal(response.total);
     } catch (error) {
@@ -147,7 +147,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
   const getStatusText = useCallback((status: string) => {
     const statusMap: Record<string, string> = {
       open: '待处理',
-      in_progress: '处理中',
+      inProgress: '处理中',
       pending: '待确认',
       resolved: '已解决',
       closed: '已关闭',
@@ -429,13 +429,13 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
             onChange={dates => {
               if (dates && dates[0] && dates[1]) {
                 handleFilterChange({
-                  created_after: dates[0].toISOString(),
-                  created_before: dates[1].toISOString(),
+                  createdAfter: dates[0].toISOString(),
+                  createdBefore: dates[1].toISOString(),
                 });
               } else if (!dates) {
                 handleFilterChange({
-                  created_after: undefined,
-                  created_before: undefined,
+                  createdAfter: undefined,
+                  createdBefore: undefined,
                 });
               }
             }}

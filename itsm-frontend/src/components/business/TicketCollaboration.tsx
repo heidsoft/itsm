@@ -14,7 +14,7 @@ import {
   App,
   Tooltip,
 } from 'antd';
-import { User, Eye, MessageSquare } from 'lucide-react';
+import { User, Eye, MessageSquare, Send } from 'lucide-react';
 import type { Ticket } from '@/lib/services/ticket-service';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -32,16 +32,12 @@ interface Collaborator {
 
 interface CollaborationMessage {
   id: string;
-  user_id: number;
-  userId?: number;
-  user_name: string;
-  userName?: string;
-  user_avatar?: string;
+  userId: number;
+  userName: string;
   userAvatar?: string;
   content: string;
   type: 'comment' | 'status_change' | 'assignment' | 'system';
-  created_at: string;
-  createdAt?: string;
+  createdAt: string;
 }
 
 interface TicketCollaborationProps {
@@ -174,13 +170,13 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
             renderItem={message => (
               <List.Item className="!px-0 !py-2 border-b border-gray-100 last:border-0">
                 <div className="flex items-start gap-3 w-full">
-                  <Avatar size="small" src={message.user_avatar} icon={<User />}>
-                    {message.user_name?.[0]}
+                  <Avatar size="small" src={message.userAvatar} icon={<User />}>
+                    {message.userName?.[0]}
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <Text strong className="text-sm">
-                        {message.user_name}
+                        {message.userName}
                       </Text>
                       <Text type="secondary" className="text-xs">
                         {getMessageIcon(message.type)}
@@ -234,7 +230,7 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
               </Text>
               <Button
                 type="primary"
-                icon={<SendOutlined />}
+                icon={<Send />}
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim()}
               >

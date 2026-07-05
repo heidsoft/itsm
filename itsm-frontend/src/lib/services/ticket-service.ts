@@ -39,17 +39,17 @@ export interface TicketFilterParams {
   priority?: string;
   type?: string;
   category?: string;
-  assignee_id?: number;
-  requester_id?: number;
+  assigneeId?: number;
+  requesterId?: number;
   keyword?: string;
   search?: string;
-  date_from?: string;
-  date_to?: string;
-  created_after?: string; // 添加 created_after 字段
-  created_before?: string; // 添加 created_before 字段
+  dateFrom?: string;
+  dateTo?: string;
+  createdAfter?: string; // 添加 created_after 字段
+  createdBefore?: string; // 添加 created_before 字段
   tags?: string[];
-  sort_by?: string;
-  sort_order?: 'asc' | 'desc';
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 // 创建工单请求（匹配后端DTO格式）
@@ -59,13 +59,13 @@ export interface CreateTicketRequest {
   type?: TicketType | string;
   priority: TicketPriority | string; // 支持字符串格式
   category: string;
-  category_id?: number; // 分类ID（优先使用）
-  template_id?: number; // 模板ID
-  assignee_id?: number;
-  parent_ticket_id?: number;
-  tag_ids?: number[]; // 标签ID列表（优先使用）
+  categoryId?: number; // 分类ID（优先使用）
+  templateId?: number; // 模板ID
+  assigneeId?: number;
+  parentTicketId?: number;
+  tagIds?: number[]; // 标签ID列表（优先使用）
   tags?: string[]; // 标签名称列表（兼容旧格式）
-  form_fields?: Record<string, unknown>;
+  formFields?: Record<string, unknown>;
   attachments?: string[];
 }
 
@@ -78,13 +78,13 @@ export interface UpdateTicketRequest {
   type?: TicketType;
   category?: string;
   subcategory?: string;
-  assignee_id?: number;
+  assigneeId?: number;
   tags?: string[];
   source?: string;
   impact?: string;
   urgency?: string;
-  business_value?: string;
-  custom_fields?: Record<string, unknown>;
+  businessValue?: string;
+  customFields?: Record<string, unknown>;
 }
 
 // 工单列表查询参数
@@ -95,14 +95,14 @@ export interface ListTicketsParams {
   priority?: TicketPriority;
   type?: TicketType;
   category?: string;
-  assignee_id?: number;
-  requester_id?: number;
+  assigneeId?: number;
+  requesterId?: number;
   keyword?: string;
-  date_from?: string;
-  date_to?: string;
+  dateFrom?: string;
+  dateTo?: string;
   tags?: string[];
-  sort_by?: string;
-  sort_order?: 'asc' | 'desc';
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 // 移除旧的 ListTicketsResponse 定义
@@ -120,7 +120,7 @@ export interface TicketStatsResponse {
 
 // 工单分配请求
 export interface AssignTicketRequest {
-  assignee_id: number;
+  assigneeId: number;
   reason?: string;
 }
 
@@ -136,39 +136,39 @@ export interface ChangeTicketStatusRequest {
 // 工单评论接口
 export interface TicketComment {
   id: number;
-  ticket_id: number;
-  user_id: number;
-  user_name: string;
+  ticketId: number;
+  userId: number;
+  userName: string;
   content: string;
-  created_at: string;
-  updated_at: string;
-  is_internal: boolean;
+  createdAt: string;
+  updatedAt: string;
+  isInternal: boolean;
 }
 
 // 工单附件接口
 export interface TicketAttachment {
   id: number;
-  ticket_id: number;
+  ticketId: number;
   filename: string;
-  original_name: string;
-  file_size: number;
-  mime_type: string;
-  uploaded_by: number;
-  uploaded_at: string;
+  originalName: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedBy: number;
+  uploadedAt: string;
   url: string;
 }
 
 // 工单活动日志接口
 export interface TicketActivity {
   id: number;
-  ticket_id: number;
-  user_id: number;
-  user_name: string;
+  ticketId: number;
+  userId: number;
+  userName: string;
   action: string;
   details: string;
   timestamp: string;
-  old_value?: string;
-  new_value?: string;
+  oldValue?: string;
+  newValue?: string;
 }
 
 // 工单管理API服务类
@@ -194,13 +194,13 @@ class TicketService {
   async updateTicket(
     id: number,
     data: UpdateTicketRequest
-  ): Promise<{ message: string; ticket_id: number }> {
-    return httpClient.put<{ message: string; ticket_id: number }>(`${this.baseUrl}/${id}`, data);
+  ): Promise<{ message: string; ticketId: number }> {
+    return httpClient.put<{ message: string; ticketId: number }>(`${this.baseUrl}/${id}`, data);
   }
 
   // 删除工单
-  async deleteTicket(id: number): Promise<{ message: string; ticket_id: number }> {
-    return httpClient.delete<{ message: string; ticket_id: number }>(`${this.baseUrl}/${id}`);
+  async deleteTicket(id: number): Promise<{ message: string; ticketId: number }> {
+    return httpClient.delete<{ message: string; ticketId: number }>(`${this.baseUrl}/${id}`);
   }
 
   // 获取工单统计
@@ -208,11 +208,9 @@ class TicketService {
     const response = await httpClient.get<{
       total?: number;
       open?: number;
-      in_progress?: number;
       inProgress?: number;
       resolved?: number;
       pending?: number;
-      high_priority?: number;
       highPriority?: number;
       overdue?: number;
     }>(`${this.baseUrl}/stats`);
@@ -220,10 +218,10 @@ class TicketService {
     return {
       total: response.total ?? 0,
       open: response.open ?? 0,
-      inProgress: response.inProgress ?? response.in_progress ?? 0,
+      inProgress: response.inProgress ?? response.inProgress ?? 0,
       resolved: response.resolved ?? 0,
       pending: response.pending ?? 0,
-      highPriority: response.highPriority ?? response.high_priority ?? 0,
+      highPriority: response.highPriority ?? response.highPriority ?? 0,
       overdue: response.overdue ?? 0,
     };
   }
@@ -232,8 +230,8 @@ class TicketService {
   async assignTicket(
     id: number,
     data: AssignTicketRequest
-  ): Promise<{ message: string; ticket_id: number }> {
-    return httpClient.post<{ message: string; ticket_id: number }>(
+  ): Promise<{ message: string; ticketId: number }> {
+    return httpClient.post<{ message: string; ticketId: number }>(
       `${this.baseUrl}/${id}/assign`,
       data
     );
@@ -243,8 +241,8 @@ class TicketService {
   async changeTicketStatus(
     id: number,
     data: ChangeTicketStatusRequest
-  ): Promise<{ message: string; ticket_id: number }> {
-    return httpClient.post<{ message: string; ticket_id: number }>(
+  ): Promise<{ message: string; ticketId: number }> {
+    return httpClient.post<{ message: string; ticketId: number }>(
       `${this.baseUrl}/${id}/status`,
       data
     );
@@ -260,12 +258,12 @@ class TicketService {
     id: number,
     content: string,
     isInternal: boolean = false
-  ): Promise<{ message: string; comment_id: number }> {
-    return httpClient.post<{ message: string; comment_id: number }>(
+  ): Promise<{ message: string; commentId: number }> {
+    return httpClient.post<{ message: string; commentId: number }>(
       `${this.baseUrl}/${id}/comments`,
       {
         content,
-        is_internal: isInternal,
+        isInternal: isInternal,
       }
     );
   }
@@ -279,10 +277,10 @@ class TicketService {
   async uploadTicketAttachment(
     id: number,
     file: File
-  ): Promise<{ message: string; attachment_id: number }> {
+  ): Promise<{ message: string; attachmentId: number }> {
     const formData = new FormData();
     formData.append('file', file);
-    return httpClient.post<{ message: string; attachment_id: number }>(
+    return httpClient.post<{ message: string; attachmentId: number }>(
       `${this.baseUrl}/${id}/attachments`,
       formData
     );
@@ -292,8 +290,8 @@ class TicketService {
   async deleteTicketAttachment(
     id: number,
     attachmentId: number
-  ): Promise<{ message: string; attachment_id: number }> {
-    return httpClient.delete<{ message: string; attachment_id: number }>(
+  ): Promise<{ message: string; attachmentId: number }> {
+    return httpClient.delete<{ message: string; attachmentId: number }>(
       `${this.baseUrl}/${id}/attachments/${attachmentId}`
     );
   }

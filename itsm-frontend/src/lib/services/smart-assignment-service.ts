@@ -295,7 +295,7 @@ export class SmartAssignmentService {
     page?: number;
     pageSize?: number;
     assignee?: number;
-    ticket_id?: number;
+    ticketId?: number;
   }): Promise<PaginatedResponse<AssignmentHistory>> {
     const response = await fetch(`${this.baseUrl}/history?${new URLSearchParams(params as any)}`);
     if (!response.ok) throw new Error('Failed to get assignment history');
@@ -304,7 +304,7 @@ export class SmartAssignmentService {
 
   // 分配统计
   async getAssignmentStats(params?: {
-    date_range?: string;
+    dateRange?: string;
     assignee?: number;
     team?: string;
   }): Promise<AssignmentStats> {

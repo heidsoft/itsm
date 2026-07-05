@@ -37,7 +37,7 @@ export const useProblemsData = () => {
     try {
       const params: ListProblemsParams = {
         page: pagination.current,
-        page_size: pagination.pageSize,
+        pageSize: pagination.pageSize,
       };
 
       if (filter) {

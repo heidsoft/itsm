@@ -24,7 +24,7 @@ export default function AssetsPage() {
       const assetStats = await AssetApi.getAssetStats();
       setStats({
         totalAssets: assetStats.total || 0,
-        inUse: assetStats.in_use || 0,
+        inUse: assetStats.inUse || 0,
         available: assetStats.available || 0,
         maintenance: assetStats.maintenance || 0,
       });

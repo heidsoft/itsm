@@ -53,8 +53,8 @@ export default function ProblemTrendsPage() {
     setLoading(true);
     try {
       const response = await ProblemApi.getTrends({
-        start_date: dateRange[0].format('YYYY-MM-DD'),
-        end_date: dateRange[1].format('YYYY-MM-DD'),
+        startDate: dateRange[0].format('YYYY-MM-DD'),
+        endDate: dateRange[1].format('YYYY-MM-DD'),
       });
       setTrendData(response);
     } catch (error) {
@@ -79,15 +79,15 @@ export default function ProblemTrendsPage() {
     fetchTrendData();
   };
 
-  const trendConfig = trendData?.trend_direction
-    ? trendDirectionConfig[trendData.trend_direction] || trendDirectionConfig.stable
+  const trendConfig = trendData?.trendDirection
+    ? trendDirectionConfig[trendData.trendDirection] || trendDirectionConfig.stable
     : trendDirectionConfig.stable;
 
   // 获取分类选项
-  const categoryOptions = trendData?.category_breakdown
-    ? Object.keys(trendData.category_breakdown).map(cat => ({
+  const categoryOptions = trendData?.categoryBreakdown
+    ? Object.keys(trendData.categoryBreakdown).map(cat => ({
         value: cat,
-        label: `${cat} (${trendData.category_breakdown[cat]})`,
+        label: `${cat} (${trendData.categoryBreakdown[cat]})`,
       }))
     : [];
 
@@ -182,7 +182,7 @@ export default function ProblemTrendsPage() {
                 <Card className="shadow-sm rounded-lg">
                   <Statistic
                     title="问题总数"
-                    value={trendData.total_problems || 0}
+                    value={trendData.totalProblems || 0}
                     prefix={<BarChart3 className="text-blue-500" />}
                     valueStyle={{ color: '#1890ff' }}
                   />
@@ -192,7 +192,7 @@ export default function ProblemTrendsPage() {
                 <Card className="shadow-sm rounded-lg">
                   <Statistic
                     title="已解决"
-                    value={trendData.resolved_problems || 0}
+                    value={trendData.resolvedProblems || 0}
                     prefix={<LineChart className="text-green-500" />}
                     valueStyle={{ color: '#52c41a' }}
                   />
@@ -202,7 +202,7 @@ export default function ProblemTrendsPage() {
                 <Card className="shadow-sm rounded-lg">
                   <Statistic
                     title="待处理"
-                    value={trendData.open_problems || 0}
+                    value={trendData.openProblems || 0}
                     prefix={<PieChart className="text-orange-500" />}
                     valueStyle={{ color: '#fa8c16' }}
                   />
@@ -212,11 +212,11 @@ export default function ProblemTrendsPage() {
                 <Card className="shadow-sm rounded-lg">
                   <Statistic
                     title="解决率"
-                    value={(trendData.resolution_rate || 0) * 100}
+                    value={(trendData.resolutionRate || 0) * 100}
                     precision={1}
                     suffix="%"
                     prefix={<LineChart className="text-purple-500" />}
-                    valueStyle={{ color: trendData.resolution_rate >= 0.7 ? '#52c41a' : '#fa8c16' }}
+                    valueStyle={{ color: trendData.resolutionRate >= 0.7 ? '#52c41a' : '#fa8c16' }}
                   />
                 </Card>
               </Col>
@@ -243,7 +243,7 @@ export default function ProblemTrendsPage() {
                 <div className="text-right">
                   <Text type="secondary">平均解决时间</Text>
                   <Title level={3} className="mt-1 mb-0">
-                    {trendData.avg_resolution_time_hours?.toFixed(1) || 0}{' '}
+                    {trendData.avgResolutionTimeHours?.toFixed(1) || 0}{' '}
                     <span className="text-sm">小时</span>
                   </Title>
                 </div>
@@ -254,14 +254,14 @@ export default function ProblemTrendsPage() {
             <Row gutter={[16, 16]}>
               <Col xs={24} lg={12}>
                 <Card title="分类分布" className="shadow-sm rounded-lg">
-                  {trendData.category_breakdown &&
-                  Object.keys(trendData.category_breakdown).length > 0 ? (
+                  {trendData.categoryBreakdown &&
+                  Object.keys(trendData.categoryBreakdown).length > 0 ? (
                     <div className="space-y-3">
-                      {Object.entries(trendData.category_breakdown)
+                      {Object.entries(trendData.categoryBreakdown)
                         .sort(([, a], [, b]) => b - a)
                         .slice(0, 10)
                         .map(([category, count]) => {
-                          const total = Object.values(trendData.category_breakdown).reduce(
+                          const total = Object.values(trendData.categoryBreakdown).reduce(
                             (a, b) => a + b,
                             0
                           );
@@ -289,13 +289,13 @@ export default function ProblemTrendsPage() {
               </Col>
               <Col xs={24} lg={12}>
                 <Card title="优先级分布" className="shadow-sm rounded-lg">
-                  {trendData.priority_breakdown &&
-                  Object.keys(trendData.priority_breakdown).length > 0 ? (
+                  {trendData.priorityBreakdown &&
+                  Object.keys(trendData.priorityBreakdown).length > 0 ? (
                     <div className="space-y-3">
-                      {Object.entries(trendData.priority_breakdown)
+                      {Object.entries(trendData.priorityBreakdown)
                         .sort(([, a], [, b]) => b - a)
                         .map(([priority, count]) => {
-                          const total = Object.values(trendData.priority_breakdown).reduce(
+                          const total = Object.values(trendData.priorityBreakdown).reduce(
                             (a, b) => a + b,
                             0
                           );
@@ -339,10 +339,10 @@ export default function ProblemTrendsPage() {
 
             {/* 月度趋势 */}
             <Card title="月度趋势" className="shadow-sm rounded-lg">
-              {trendData.monthly_trend && trendData.monthly_trend.length > 0 ? (
+              {trendData.monthlyTrend && trendData.monthlyTrend.length > 0 ? (
                 <Table
                   columns={monthlyTrendColumns}
-                  dataSource={trendData.monthly_trend.map((item, idx) => ({
+                  dataSource={trendData.monthlyTrend.map((item, idx) => ({
                     ...item,
                     key: idx,
                   }))}

@@ -96,9 +96,9 @@ interface UserProfile {
   phone?: string;
   role?: string;
   avatar?: string;
-  tenant_id?: number;
-  created_at?: string;
-  last_login?: string;
+  tenantId?: number;
+  createdAt?: string;
+  lastLogin?: string;
 }
 
 interface UserStats {
@@ -181,8 +181,8 @@ export default function ProfilePage() {
           department: user.department || '',
           phone: '',
           role: user.role || 'user',
-          created_at: user.createdAt || new Date().toISOString(),
-          last_login: undefined,
+          createdAt: user.createdAt || new Date().toISOString(),
+          lastLogin: undefined,
         };
         setProfile(userData);
         profileForm.setFieldsValue(userData);
@@ -291,9 +291,9 @@ export default function ProfilePage() {
         const emailEnabled = values.emailNotify !== false;
         const inAppEnabled = values.desktopNotify !== false;
         return {
-          event_type: eventType,
-          email_enabled: emailEnabled,
-          in_app_enabled: inAppEnabled,
+          eventType: eventType,
+          emailEnabled: emailEnabled,
+          inAppEnabled: inAppEnabled,
           timezone: values.timezone || 'Asia/Shanghai',
           frequency: 'immediate',
         };
@@ -319,9 +319,9 @@ export default function ProfilePage() {
       if (data.preferences && data.preferences.length > 0) {
         // 从后端偏好中提取语言、时区、通知开关设置
         // 查找 ticket_assigned 事件类型的偏好（综合开关）
-        const assignedPref = data.preferences.find(p => p.event_type === 'ticket_assigned');
-        const emailNotify = data.preferences.some(p => p.email_enabled);
-        const desktopNotify = data.preferences.some(p => p.in_app_enabled);
+        const assignedPref = data.preferences.find(p => p.eventType === 'ticket_assigned');
+        const emailNotify = data.preferences.some(p => p.emailEnabled);
+        const desktopNotify = data.preferences.some(p => p.inAppEnabled);
         const timezone = data.preferences.find(p => p.timezone)?.timezone || 'Asia/Shanghai';
         preferencesForm.setFieldsValue({
           language: 'zh-CN',
@@ -466,7 +466,7 @@ export default function ProfilePage() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Clock size={16} style={{ color: DESIGN.colors.textMuted }} />
-                    <Text>上次登录: {profile?.last_login || '刚刚'}</Text>
+                    <Text>上次登录: {profile?.lastLogin || '刚刚'}</Text>
                   </div>
                 </Space>
               </div>

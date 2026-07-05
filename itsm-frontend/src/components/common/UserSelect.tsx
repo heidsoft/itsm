@@ -37,7 +37,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
       setLoading(true);
       const response = await UserApi.getUsers({
         page: 1,
-        page_size: 100,
+        pageSize: 100,
         search: search || '',
       });
       setUsers(response.users || []);

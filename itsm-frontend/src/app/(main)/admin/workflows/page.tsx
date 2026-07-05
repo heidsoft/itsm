@@ -149,14 +149,14 @@ const WorkflowManagement = () => {
         name: w.name || w.key || '',
         description: w.description || '',
         type: w.category || 'default',
-        status: w.is_deployed ? 'active' : 'draft',
+        status: w.isDeployed ? 'active' : 'draft',
         version: String(w.version || '1.0'),
-        createdBy: w.created_by || '系统',
-        createdAt: w.createdAt || w.created_at || new Date().toISOString(),
-        lastModified: w.updatedAt || w.updated_at || w.createdAt || w.created_at || new Date().toISOString(),
-        stepsCount: w.step_count || 0,
-        activeInstances: w.running_instances || 0,
-        completedInstances: w.completed_instances || 0,
+        createdBy: w.createdBy || '系统',
+        createdAt: w.createdAt || w.createdAt || new Date().toISOString(),
+        lastModified: w.updatedAt || w.updatedAt || w.createdAt || w.createdAt || new Date().toISOString(),
+        stepsCount: w.stepCount || 0,
+        activeInstances: w.runningInstances || 0,
+        completedInstances: w.completedInstances || 0,
       }));
       setWorkflows(workflowList);
     } catch (error) {

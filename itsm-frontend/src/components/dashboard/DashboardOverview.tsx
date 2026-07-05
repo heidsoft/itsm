@@ -80,26 +80,26 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             database?: { connections?: number };
           }>,
           TicketApi.getTickets({ page: 1, size: 5, sort: 'created_at,desc' }),
-          UserApi.getUsers({ page: 1, page_size: 5, status: 'active' }),
+          UserApi.getUsers({ page: 1, pageSize: 5, status: 'active' }),
         ]);
 
       // 转换工单统计数据
       const mappedTicketStats: TicketStats = {
         total: ticketStatsData.total,
         open: ticketStatsData.open,
-        inProgress: ticketStatsData.in_progress,
+        inProgress: ticketStatsData.inProgress,
         resolved: ticketStatsData.resolved,
         closed: 0, // API可能没返回closed
         byPriority: {
           low: 0,
           medium: 0,
-          high: ticketStatsData.high_priority,
+          high: ticketStatsData.highPriority,
           urgent: 0,
           critical: 0,
         },
         byStatus: {
           open: ticketStatsData.open,
-          in_progress: ticketStatsData.in_progress,
+          inProgress: ticketStatsData.inProgress,
           resolved: ticketStatsData.resolved,
           closed: 0,
         },
@@ -117,7 +117,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         total: userStatsData.total,
         active: userStatsData.active,
         online: 0, // 需要在线状态API
-        byRole: { admin: 0, manager: 0, agent: 0, technician: 0, end_user: 0 },
+        byRole: { admin: 0, manager: 0, agent: 0, technician: 0, endUser: 0 },
         byDepartment: {},
         loginToday: 0,
         activeThisWeek: userStatsData.active,
@@ -150,14 +150,14 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           fullName: t.requester.name,
           username: t.requester.username,
           email: t.requester.email,
-          role: t.requester.role || 'user',
+          role: (t.requester as any).role || 'user',
         } : undefined;
         const assignee = t.assignee ? {
           id: t.assignee.id,
           fullName: t.assignee.name,
           username: t.assignee.username,
           email: t.assignee.email,
-          role: t.assignee.role || 'agent',
+          role: (t.assignee as any).role || 'agent',
         } : undefined;
         
         return {
@@ -187,8 +187,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           attachments: undefined,
           relatedTickets: undefined,
           customFields: undefined,
-          tenantId: t.tenantId || 1,
-          isMajorIncident: t.isMajorIncident || false,
+          tenantId: (t as any).tenantId || 1,
+          isMajorIncident: (t as any).isMajorIncident || false,
           tags: undefined,
         } as Ticket;
       });
@@ -196,15 +196,15 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       setRecentTickets(mappedTickets);
 
       // 转换活跃用户
-      const mappedUsers = activeUsersData.users.map((u) => {
+      const mappedUsers = activeUsersData.users.map((u: any) => {
         return {
           ...u,
           fullName: u.name || u.username,
           role: u.role || 'end_user',
           status: u.active ? 'active' : 'inactive',
-          tenantId: u.tenantId || u.tenant_id || 1,
-          createdAt: u.createdAt || u.created_at || new Date().toISOString(),
-          updatedAt: u.updatedAt || u.updated_at || new Date().toISOString(),
+          tenantId: u.tenantId || 1,
+          createdAt: u.createdAt || u.createdAt || new Date().toISOString(),
+          updatedAt: u.updatedAt || u.updatedAt || new Date().toISOString(),
           permissions: [],
           groups: [],
           preferences: {
@@ -271,7 +271,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const renderStatusTag = (status: string) => {
     const statusConfig: Record<string, { color: string; text: string }> = {
       open: { color: 'blue', text: '待处理' },
-      in_progress: { color: 'orange', text: '处理中' },
+      inProgress: { color: 'orange', text: '处理中' },
       resolved: { color: 'green', text: '已解决' },
       closed: { color: 'default', text: '已关闭' },
     };

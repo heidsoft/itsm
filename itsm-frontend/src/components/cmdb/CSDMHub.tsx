@@ -157,25 +157,25 @@ export function CSDMHub() {
         CMDBApi.getReconciliationResults(),
       ]);
 
-      const statsData = (stats as Record<string, unknown>)?.data ?? stats;
-      const reconData = (reconciliation as Record<string, unknown>)?.data ?? reconciliation;
-      const summary = (reconData?.summary ?? {}) as Record<string, unknown>;
-      const unboundResources = normalizeList<Record<string, unknown>>(reconData?.unboundResources ?? reconData?.unbound_resources);
-      const orphanCIs = normalizeList<Record<string, unknown>>(reconData?.orphanCIs ?? reconData?.orphan_cis);
-      const unlinkedCIs = normalizeList<Record<string, unknown>>(reconData?.unlinkedCIs ?? reconData?.unlinked_cis);
+      const statsData = (stats as any)?.data ?? stats;
+      const reconData = (reconciliation as any)?.data ?? reconciliation;
+      const summary = (reconData as any)?.summary ?? {};
+      const unboundResources = normalizeList<Record<string, unknown>>((reconData as any)?.unboundResources ?? (reconData as any)?.unboundResources);
+      const orphanCIs = normalizeList<Record<string, unknown>>((reconData as any)?.orphanCIs ?? (reconData as any)?.orphanCis);
+      const unlinkedCIs = normalizeList<Record<string, unknown>>((reconData as any)?.unlinkedCIs ?? (reconData as any)?.unlinkedCis);
 
       setState({
         loading: false,
         lastSyncedAt: new Date().toISOString(),
         counts: {
           totalCIs:
-            statsData?.totalCount ?? statsData?.total_count ?? statsData?.totalCIs ?? statsData?.total_cis ?? 0,
+            statsData?.totalCount ?? statsData?.totalCount ?? statsData?.totalCIs ?? statsData?.totalCis ?? 0,
           ciTypes: Array.isArray(ciTypes) ? ciTypes.length : normalizeList(ciTypes).length,
           cloudAccounts: normalizeList(cloudAccounts).length,
           cloudServices: normalizeList(cloudServices).length,
           discoverySources: normalizeList(discoverySources).length,
           cloudResources: normalizeList(cloudResources).length,
-          boundResources: Number(summary.boundResourceCount ?? summary.bound_resource_count ?? 0),
+          boundResources: Number(summary.boundResourceCount ?? summary.boundResourceCount ?? 0),
           unboundResources: unboundResources.length,
           orphanCIs: orphanCIs.length,
           unlinkedCIs: unlinkedCIs.length,

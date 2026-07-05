@@ -131,8 +131,8 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
     const statusMap: Record<string, string> = {
       new: '新建',
       open: '待处理',
-      in_progress: '处理中',
-      pending_approval: '待审批',
+      inProgress: '处理中',
+      pendingApproval: '待审批',
       resolved: '已解决',
       closed: '已关闭',
       cancelled: '已取消',
@@ -150,7 +150,7 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
     // 类型映射
     const typeMap: Record<string, string> = {
       incident: '事件',
-      service_request: '服务请求',
+      serviceRequest: '服务请求',
       problem: '问题',
       change: '变更',
     };
@@ -195,8 +195,8 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
       },
       {
         title: '创建时间',
-        dataIndex: 'created_at',
-        key: 'created_at',
+        dataIndex: 'createdAt',
+        key: 'createdAt',
         render: (text: string) => new Date(text).toLocaleString('zh-CN'),
       },
       {

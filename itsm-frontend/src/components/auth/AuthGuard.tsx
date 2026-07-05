@@ -51,7 +51,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
               name: string;
               role: string;
               department: string;
-              tenant_id: number;
+              tenantId: number;
             }>('/api/v1/auth/me');
           } catch (e) {
             console.error('Failed to fetch user info:', e);

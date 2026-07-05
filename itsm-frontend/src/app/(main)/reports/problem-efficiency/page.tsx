@@ -71,7 +71,7 @@ const ProblemEfficiencyPage = () => {
 
       try {
         statsData = await problemService.getProblemStats();
-        const problemsRes = await problemService.listProblems({ page: 1, page_size: 100 });
+        const problemsRes = await problemService.listProblems({ page: 1, pageSize: 100 });
         problemsData = problemsRes.problems;
       } catch (e) {
         console.warn('获取问题数据失败，使用空数据');
@@ -382,7 +382,7 @@ const ProblemEfficiencyPage = () => {
                       </div>
                       <div className="flex items-center justify-between text-sm text-gray-500">
                         <span>处理人: {problem.assignee?.name || '未分配'}</span>
-                        <span>创建时间: {new Date(problem.created_at).toLocaleDateString()}</span>
+                        <span>创建时间: {new Date(problem.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </List.Item>

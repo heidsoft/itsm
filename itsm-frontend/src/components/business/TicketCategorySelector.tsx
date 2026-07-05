@@ -100,10 +100,10 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
             <div className="flex items-center space-x-2">
               <div
                 className={`px-2 py-1 rounded text-xs ${
-                  item.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  item.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}
               >
-                {item.is_active ? '启用' : '禁用'}
+                {item.isActive ? '启用' : '禁用'}
               </div>
             </div>
           </div>

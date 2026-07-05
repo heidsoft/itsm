@@ -23,6 +23,7 @@ import {
   Input,
   Select,
   Spin,
+  Statistic,
   Empty,
   Divider,
   Badge,
@@ -34,7 +35,7 @@ import {
   Col,
   Result,
 } from 'antd';
-import { ArrowLeft, Search, Plus, Pencil, FileText, Clock, History, Link, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Pencil, FileText, Clock, History, Link, AlertTriangle, CheckCircle, XCircle, BookOpen, ClipboardCheck } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -327,7 +328,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
       key: 'solutions',
       label: (
         <span>
-          <SolutionOutlined /> 解决方案 ({solutions.length})
+          <ClipboardCheck /> 解决方案 ({solutions.length})
         </span>
       ),
       children: (
@@ -532,7 +533,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
       key: 'knowledge',
       label: (
         <span>
-          <BookOutlined /> 知识库 ({kbArticles.length})
+          <BookOpen /> 知识库 ({kbArticles.length})
         </span>
       ),
       children: (
@@ -550,7 +551,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
                   ]}
                 >
                   <List.Item.Meta
-                    avatar={<Avatar style={{ backgroundColor: '#52c41a' }}>{<BookOutlined />}</Avatar>}
+                    avatar={<Avatar style={{ backgroundColor: '#52c41a' }}>{<BookOpen />}</Avatar>}
                     title={<Text strong>{article.title}</Text>}
                     description={
                       <Space>
@@ -616,11 +617,15 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
 
         {/* 状态进度条 */}
         <div className="mt-4">
-          <Steps current={getStatusStep().findIndex(s => s.status === 'process')} size="small">
-            {getStatusStep().map((step, idx) => (
-              <Steps.Step key={idx} title={step.title} status={step.status as any} />
-            ))}
-          </Steps>
+          <Steps
+            current={getStatusStep().findIndex(s => s.status === 'process')}
+            size="small"
+            items={getStatusStep().map((step, idx) => ({
+              key: idx,
+              title: step.title,
+              status: step.status as 'wait' | 'process' | 'finish' | 'error',
+            }))}
+          />
         </div>
       </Card>
 
@@ -641,7 +646,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
             <Statistic
               title="解决方案"
               value={solutions.length}
-              prefix={<SolutionOutlined />}
+              prefix={<ClipboardCheck />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -661,7 +666,7 @@ const EnhancedProblemDetail: React.FC<EnhancedProblemDetailProps> = ({ id: propI
             <Statistic
               title="相关知识"
               value={kbArticles.length}
-              prefix={<BookOutlined />}
+              prefix={<BookOpen />}
               valueStyle={{ color: '#fa8c16' }}
             />
           </Card>

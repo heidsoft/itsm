@@ -77,7 +77,7 @@ const BasicInfoCard: React.FC<BasicInfoCardProps> = ({ data }) => {
       identified: '已识别',
       resolved: '已解决',
       closed: '已关闭',
-      in_progress: '处理中',
+      inProgress: '处理中',
     };
     return labels[s] || s;
   };

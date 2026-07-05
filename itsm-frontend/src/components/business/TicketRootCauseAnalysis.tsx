@@ -47,21 +47,21 @@ interface RootCause {
     timestamp: string;
     relevance: number;
   }>;
-  related_tickets: Array<{
+  relatedTickets: Array<{
     id: number;
     number: string;
     title: string;
     similarity: number;
   }>;
-  impact_scope: {
-    affected_tickets: number;
-    affected_users: number;
-    affected_systems: string[];
+  impactScope: {
+    affectedTickets: number;
+    affectedUsers: number;
+    affectedSystems: string[];
   };
   recommendations: string[];
   status: 'identified' | 'confirmed' | 'resolved' | 'false_positive';
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface RootCauseAnalysisReport {
@@ -106,8 +106,8 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
       const report = await TicketRootCauseApi.analyzeTicket(ticketId);
 
       if (report) {
-        setAnalysisReport(report);
-        onAnalysisComplete?.(report);
+        setAnalysisReport(report as unknown as RootCauseAnalysisReport);
+        onAnalysisComplete?.(report as unknown as RootCauseAnalysisReport);
         antMessage.success('根因分析完成');
       } else {
         setAnalysisReport(null);
@@ -159,7 +159,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
       identified: 'orange',
       confirmed: 'blue',
       resolved: 'green',
-      false_positive: 'default',
+      falsePositive: 'default',
     };
     return colorMap[status] || 'default';
   };
@@ -170,7 +170,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
       identified: '已识别',
       confirmed: '已确认',
       resolved: '已解决',
-      false_positive: '误报',
+      falsePositive: '误报',
     };
     return textMap[status] || status;
   };
@@ -212,8 +212,8 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
       render: (_: unknown, record: RootCause) => (
         <div>
           <Text type="secondary" className="text-sm">
-            工单: {record.impact_scope.affected_tickets} | 用户:{' '}
-            {record.impact_scope.affected_users}
+            工单: {record.impactScope.affectedTickets} | 用户:{' '}
+            {record.impactScope.affectedUsers}
           </Text>
         </div>
       ),
@@ -294,35 +294,35 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                   <div>
                     <Progress
                       type="circle"
-                      percent={analysisReport.confidence_score * 100}
+                      percent={analysisReport.confidenceScore * 100}
                       size={80}
-                      format={() => `${(analysisReport.confidence_score * 100).toFixed(0)}%`}
+                      format={() => `${(analysisReport.confidenceScore * 100).toFixed(0)}%`}
                     />
                   </div>
                 </div>
               </div>
               <Divider />
-              <Paragraph>{analysisReport.analysis_summary}</Paragraph>
+              <Paragraph>{analysisReport.analysisSummary}</Paragraph>
               <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span>分析日期: {analysisReport.analysis_date}</span>
+                <span>分析日期: {analysisReport.analysisDate}</span>
                 <span>
                   分析方法:{' '}
-                  {analysisReport.analysis_method === 'automatic'
+                  {analysisReport.analysisMethod === 'automatic'
                     ? '自动分析'
-                    : analysisReport.analysis_method === 'manual'
+                    : analysisReport.analysisMethod === 'manual'
                       ? '人工分析'
                       : '混合分析'}
                 </span>
-                <span>生成时间: {analysisReport.generated_at}</span>
+                <span>生成时间: {analysisReport.generatedAt}</span>
               </div>
             </div>
           </Card>
 
           {/* 根因列表 */}
-          <Card title={`识别的根因 (${analysisReport.root_causes.length})`}>
+          <Card title={`识别的根因 (${analysisReport.rootCauses.length})`}>
             <Table
               columns={rootCauseColumns}
-              dataSource={analysisReport.root_causes}
+              dataSource={analysisReport.rootCauses}
               rowKey="id"
               scroll={{ x: 'max-content' }}
               pagination={false}
@@ -377,7 +377,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                 <div>
                   <Title level={5}>相关工单</Title>
                   <Table
-                    dataSource={selectedRootCause.related_tickets}
+                    dataSource={selectedRootCause.relatedTickets}
                     columns={[
                       {
                         title: '工单编号',
@@ -423,7 +423,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                       <Card>
                         <Statistic
                           title="受影响工单"
-                          value={selectedRootCause.impact_scope.affected_tickets}
+                          value={selectedRootCause.impactScope.affectedTickets}
                           prefix={<FileText />}
                         />
                       </Card>
@@ -432,7 +432,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                       <Card>
                         <Statistic
                           title="受影响用户"
-                          value={selectedRootCause.impact_scope.affected_users}
+                          value={selectedRootCause.impactScope.affectedUsers}
                           prefix={<Link />}
                         />
                       </Card>
@@ -444,7 +444,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                             受影响系统
                           </Text>
                           <div className="mt-2 space-y-1">
-                            {selectedRootCause.impact_scope.affected_systems.map(
+                            {selectedRootCause.impactScope.affectedSystems.map(
                               (system, index) => (
                                 <Tag key={index} color="orange">
                                   {system}

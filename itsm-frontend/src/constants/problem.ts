@@ -8,6 +8,7 @@ export enum ProblemStatus {
   IN_PROGRESS = 'in_progress',
   RESOLVED = 'resolved',
   CLOSED = 'closed',
+  IDENTIFIED = 'identified',
 }
 
 // 状态描述映射
@@ -16,6 +17,7 @@ export const ProblemStatusLabels: Record<ProblemStatus, string> = {
   [ProblemStatus.IN_PROGRESS]: '处理中',
   [ProblemStatus.RESOLVED]: '已解决',
   [ProblemStatus.CLOSED]: '已关闭',
+  [ProblemStatus.IDENTIFIED]: '已识别',
 };
 
 // 优先级

@@ -25,10 +25,10 @@ import { SmartAssignmentModal } from './SmartAssignmentModal';
 
 // Subtask类型定义（与TicketSubtasks组件保持一致）
 interface Subtask extends Ticket {
-  parent_id: number;
-  dependency_type?: 'blocks' | 'blocked_by' | 'depends_on' | 'relates_to';
+  parentId: number;
+  dependencyType?: 'blocks' | 'blocked_by' | 'depends_on' | 'relates_to';
   order?: number;
-  estimated_hours?: number;
+  estimatedHours?: number;
 }
 
 const { Title, Text } = Typography;
@@ -171,10 +171,10 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   // 智能分配成功回调
   const handleSmartAssignSuccess = async (userId: number) => {
     try {
-      await TicketApi.assignTicket(ticket.id, { assignee_id: userId });
+      await TicketApi.assignTicket(ticket.id, { assigneeId: userId });
       antMessage.success('工单分配成功');
       if (onUpdate) {
-        await onUpdate({ assignee_id: userId });
+        await onUpdate({ assigneeId: userId });
       }
       fetchTicketData();
     } catch (error) {
@@ -213,7 +213,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
     }
   };
 
-  const handleViewSubtask = (subtask: Subtask) => {
+  const handleViewSubtask = (subtask: Ticket) => {
     window.open(`/tickets/${subtask.id}`, '_blank');
   };
 

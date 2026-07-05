@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Button, Modal, Space, Tag, message, Input, Empty, Card } from 'antd';
-import { Search, Plus, Trash2, FileText, Link, AlertTriangle, Swap } from 'lucide-react';
+import { Search, Plus, Trash2, FileText, Link, AlertTriangle, ArrowLeftRight } from 'lucide-react';
 import {
   ProblemApi,
   type AssociatedItem,
@@ -27,13 +27,13 @@ type RelatedType = 'ticket' | 'incident' | 'change';
 const TYPE_CONFIG: Record<RelatedType, { label: string; icon: React.ReactNode; color: string }> = {
   ticket: { label: '工单', icon: <FileText />, color: 'blue' },
   incident: { label: '事件', icon: <AlertTriangle />, color: 'orange' },
-  change: { label: '变更', icon: <Swap />, color: 'purple' },
+  change: { label: '变更', icon: <ArrowLeftRight />, color: 'purple' },
 };
 
 const STATUS_COLOR_MAP: Record<string, string> = {
   new: 'default',
   open: 'processing',
-  in_progress: 'processing',
+  inProgress: 'processing',
   investigating: 'processing',
   draft: 'default',
   pending: 'warning',
@@ -136,18 +136,18 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
             id: i.id,
             title: i.title,
             status: i.status,
-            number: i.incidentNumber || i.incident_number,
+            number: i.incidentNumber || i.incidentNumber,
             type: 'incident' as const,
           }));
           break;
         }
         case 'change': {
-          const data = await ChangeApi.getChanges({ search: value, page: 1, page_size: 20 });
+          const data = await ChangeApi.getChanges({ search: value, page: 1, pageSize: 20 });
           results = (data.changes || []).map((c: any) => ({
             id: c.id,
             title: c.title,
             status: c.status,
-            number: c.changeNumber || c.change_number,
+            number: c.changeNumber || c.changeNumber,
             type: 'change' as const,
           }));
           break;

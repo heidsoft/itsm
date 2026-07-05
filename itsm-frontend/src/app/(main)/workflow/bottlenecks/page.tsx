@@ -94,10 +94,10 @@ export default function BottlenecksPage() {
     BPMNDashboardApi.getDashboardMetrics(1)
       .then(metrics => {
         if (!alive) return;
-        const list = metrics.top_processes ?? [];
+        const list = metrics.topProcesses ?? [];
         setProcessList(list);
         if (list.length > 0 && !selectedProcess) {
-          setSelectedProcess(list[0].process_definition_key);
+          setSelectedProcess(list[0].processDefinitionKey);
         }
       })
       .catch(() => {
@@ -143,7 +143,7 @@ export default function BottlenecksPage() {
   const filteredProcesses = useMemo(() => {
     if (!keyword) return processList;
     const k = keyword.toLowerCase();
-    return processList.filter(p => p.process_definition_key.toLowerCase().includes(k));
+    return processList.filter(p => p.processDefinitionKey.toLowerCase().includes(k));
   }, [processList, keyword]);
 
   const totalWait = useMemo(
@@ -258,8 +258,8 @@ export default function BottlenecksPage() {
             value={selectedProcess ?? undefined}
             onChange={v => setSelectedProcess(v ?? null)}
             options={filteredProcesses.map(p => ({
-              label: `${p.process_definition_key} (${p.total_instances} 实例)`,
-              value: p.process_definition_key,
+              label: `${p.processDefinitionKey} (${p.totalInstances} 实例)`,
+              value: p.processDefinitionKey,
             }))}
             filterOption={(input, option) =>
               (option?.label as string)?.toLowerCase().includes(input.toLowerCase())

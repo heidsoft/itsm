@@ -54,7 +54,7 @@ const SLAList: React.FC = () => {
 
   const handleToggleActive = async (record: SLADefinition, checked: boolean) => {
     try {
-      await SLAApi.updateDefinition(record.id, { is_active: checked });
+      await SLAApi.updateDefinition(record.id, { isActive: checked });
       message.success(`${checked ? '激活' : '禁用'}成功`);
       loadData();
     } catch (e) {
@@ -98,17 +98,17 @@ const SLAList: React.FC = () => {
     },
     {
       title: '响应时间(分)',
-      dataIndex: 'response_time',
+      dataIndex:'responseTime',
       width: 120,
     },
     {
       title: '解决时间(分)',
-      dataIndex: 'resolution_time',
+      dataIndex:'resolutionTime',
       width: 120,
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
+      dataIndex: 'isActive',
       width: 100,
       render: (active: boolean, record: SLADefinition) => (
         <Switch
@@ -120,7 +120,7 @@ const SLAList: React.FC = () => {
     },
     {
       title: '更新时间',
-      dataIndex: 'updated_at',
+      dataIndex: 'updatedAt',
       width: 160,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },

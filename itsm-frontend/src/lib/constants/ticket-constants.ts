@@ -19,8 +19,8 @@ export { TicketStatus, TicketPriority, ITSMMainType };
 export const TICKET_STATUS_CONFIG = {
   new: TicketStatusConfig[TicketStatus.NEW],
   open: TicketStatusConfig[TicketStatus.OPEN],
-  in_progress: TicketStatusConfig[TicketStatus.IN_PROGRESS],
-  pending_approval: TicketStatusConfig[TicketStatus.PENDING_APPROVAL],
+  inProgress: TicketStatusConfig[TicketStatus.IN_PROGRESS],
+  pendingApproval: TicketStatusConfig[TicketStatus.PENDING_APPROVAL],
   resolved: TicketStatusConfig[TicketStatus.RESOLVED],
   closed: TicketStatusConfig[TicketStatus.CLOSED],
   cancelled: TicketStatusConfig[TicketStatus.CANCELLED],
@@ -38,7 +38,7 @@ export const TICKET_PRIORITY_CONFIG = {
 // 工单类型配置 (legacy - 转换 label -> text)
 export const TICKET_TYPE_CONFIG = {
   incident: { ...ITSMMainTypeConfig[ITSMMainType.INCIDENT], text: '事件' },
-  service_request: { ...ITSMMainTypeConfig[ITSMMainType.SERVICE_REQUEST], text: '服务请求' },
+  serviceRequest: { ...ITSMMainTypeConfig[ITSMMainType.SERVICE_REQUEST], text: '服务请求' },
   problem: { ...ITSMMainTypeConfig[ITSMMainType.PROBLEM], text: '问题' },
   change: { ...ITSMMainTypeConfig[ITSMMainType.CHANGE], text: '变更' },
 } as const;
@@ -63,6 +63,6 @@ export const getPriorityConfig = (priority: string) => {
 export const getTypeConfig = (type: string) => {
   return (
     TICKET_TYPE_CONFIG[type as keyof typeof TICKET_TYPE_CONFIG] ||
-    TICKET_TYPE_CONFIG.service_request
+    TICKET_TYPE_CONFIG.serviceRequest
   );
 };

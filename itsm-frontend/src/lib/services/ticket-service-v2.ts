@@ -187,7 +187,7 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
    * 分配工单
    */
   async assign(id: number, assigneeId: number, comment?: string): Promise<Ticket> {
-    return this.post<Ticket>(`/${id}/assign`, { assignee_id: assigneeId, comment });
+    return this.post<Ticket>(`/${id}/assign`, { assigneeId: assigneeId, comment });
   }
 
   /**
@@ -196,7 +196,7 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
   async resolve(id: number, resolution: string, resolutionCode?: string): Promise<Ticket> {
     return this.post<Ticket>(`/${id}/resolve`, {
       resolution,
-      resolution_code: resolutionCode,
+      resolutionCode: resolutionCode,
     });
   }
 
@@ -211,7 +211,7 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
    * 重开工单
    */
   async reopen(id: number, reason?: string): Promise<{ message: string }> {
-    return this.post('/workflow/reopen', { ticket_id: id, reason });
+    return this.post('/workflow/reopen', { ticketId: id, reason });
   }
 
   /**
@@ -234,7 +234,7 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
     data: { action: 'approve' | 'reject' | 'delegate'; comment?: string; delegateToUserId?: number }
   ): Promise<{ success: boolean; message: string }> {
     return this.post('/workflow/approve', {
-      ticket_id: id,
+      ticketId: id,
       ...data,
     });
   }
@@ -243,21 +243,21 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
    * 拒绝工单
    */
   async reject(ticketId: number, reason: string): Promise<{ message: string }> {
-    return this.post('/workflow/reject', { ticket_id: ticketId, reason });
+    return this.post('/workflow/reject', { ticketId: ticketId, reason });
   }
 
   /**
    * 接单
    */
   async accept(ticketId: number): Promise<{ message: string }> {
-    return this.post('/workflow/accept', { ticket_id: ticketId });
+    return this.post('/workflow/accept', { ticketId: ticketId });
   }
 
   /**
    * 撤回
    */
   async withdraw(ticketId: number, reason?: string): Promise<{ message: string }> {
-    return this.post('/workflow/withdraw', { ticket_id: ticketId, reason });
+    return this.post('/workflow/withdraw', { ticketId: ticketId, reason });
   }
 
   /**
@@ -269,8 +269,8 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
     comment?: string
   ): Promise<{ message: string }> {
     return this.post('/workflow/forward', {
-      ticket_id: ticketId,
-      to_user_id: toUserId,
+      ticketId: ticketId,
+      toUserId: toUserId,
       comment,
     });
   }
@@ -454,7 +454,7 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
   async createSubtask(parentTicketId: number, data: Partial<Ticket>): Promise<Ticket> {
     return this.post(`/${parentTicketId}/subtasks`, {
       ...data,
-      parent_ticket_id: parentTicketId,
+      parentTicketId: parentTicketId,
     });
   }
 
@@ -501,7 +501,7 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
    * 批量删除工单
    */
   async batchDelete(ticketIds: number[]): Promise<void> {
-    return this.del('/batch', { ticket_ids: ticketIds });
+    return this.del('/batch', { ticketIds: ticketIds });
   }
 
   /**
@@ -512,7 +512,7 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
     action: string,
     data?: Record<string, unknown>
   ): Promise<void> {
-    return this.put('/batch', { ticket_ids: ticketIds, action, data });
+    return this.put('/batch', { ticketIds: ticketIds, action, data });
   }
 
   // ==================== 导出操作 ====================

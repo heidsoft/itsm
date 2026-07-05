@@ -7,17 +7,17 @@ import { httpClient } from './http-client';
 export interface AnalyticsConfig {
   dimensions: string[];
   metrics: string[];
-  chart_type: 'line' | 'bar' | 'pie' | 'area' | 'table';
-  time_range: [string, string];
+  chartType: 'line' | 'bar' | 'pie' | 'area' | 'table';
+  timeRange: [string, string];
   filters: Record<string, unknown>;
-  group_by?: string;
+  groupBy?: string;
 }
 
 export interface AnalyticsDataPoint {
   name: string;
   value: number;
   count?: number;
-  avg_time?: number;
+  avgTime?: number;
   metadata?: Record<string, unknown>;
   [key: string]: unknown;
 }
@@ -25,16 +25,16 @@ export interface AnalyticsDataPoint {
 export interface AnalyticsSummary {
   total: number;
   resolved: number;
-  avg_response_time: number;
-  avg_resolution_time: number;
-  sla_compliance: number;
-  customer_satisfaction: number;
+  avgResponseTime: number;
+  avgResolutionTime: number;
+  slaCompliance: number;
+  customerSatisfaction: number;
 }
 
 export interface AnalyticsResponse {
   data: AnalyticsDataPoint[];
   summary: AnalyticsSummary;
-  generated_at: string;
+  generatedAt: string;
 }
 
 export class TicketAnalyticsApi {

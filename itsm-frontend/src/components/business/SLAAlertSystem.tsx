@@ -35,53 +35,38 @@ const { TextArea } = Input;
 interface AlertRule {
   id: number;
   name: string;
-  sla_definition_id: number;
-  alert_level: 'warning' | 'critical' | 'severe';
-  threshold_percentage: number; // 70, 85, 95
-  notification_channels: string[]; // ['email', 'sms', 'in_app']
-  escalation_enabled: boolean;
-  escalation_levels: Array<{
+  slaDefinitionId: number;
+  alertLevel: 'warning' | 'critical' | 'severe';
+  thresholdPercentage: number; // 70, 85, 95
+  notificationChannels: string[]; // ['email', 'sms', 'in_app']
+  escalationEnabled: boolean;
+  escalationLevels: Array<{
     level: number;
     threshold: number;
-    notify_users: number[];
+    notifyUsers: number[];
   }>;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface AlertHistory {
   id: number;
-  ticket_id: number;
-  ticketId?: number;
-  ticket_number: string;
-  ticketNumber?: string;
-  ticket_title: string;
-  ticketTitle?: string;
-  alert_rule_id: number;
-  alertRuleId?: number;
-  alert_rule_name: string;
-  alertRuleName?: string;
-  alert_level: string;
-  alertLevel?: string;
-  threshold_percentage: number;
-  thresholdPercentage?: number;
-  actual_percentage: number;
-  actualPercentage?: number;
-  notification_sent: boolean;
-  notificationSent?: boolean;
-  escalation_level: number;
-  escalationLevel?: number;
-  created_at: string;
-  createdAt?: string;
-  resolved_at?: string;
+  ticketId: number;
+  ticketNumber: string;
+  ticketTitle: string;
+  alertRuleId: number;
+  alertRuleName: string;
+  alertLevel: string;
+  thresholdPercentage: number;
+  actualPercentage: number;
+  notificationSent: boolean;
+  escalationLevel: number;
+  createdAt: string;
   resolvedAt?: string;
   // 告警抑制（cooldown）字段 —— 对应后端 SLAAlertHistoryResponse
-  cooldown_minutes?: number;
   cooldownMinutes?: number;
-  cooldown_remaining_seconds?: number;
   cooldownRemainingSeconds?: number;
-  suppressed_by_cooldown?: boolean;
   suppressedByCooldown?: boolean;
 }
 
@@ -106,7 +91,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
   const loadAlertRules = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await SLAApi.getAlertRules({ sla_definition_id: slaDefinitionId });
+      const data = await SLAApi.getAlertRules({ slaDefinitionId: slaDefinitionId });
       setAlertRules(data);
     } catch (error) {
       antMessage.error('加载预警规则失败');
@@ -121,7 +106,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
     try {
       // 调用实际API
       const { default: SLAApi } = await import('@/lib/api/sla-api');
-      const data = await SLAApi.getAlertHistory({ sla_definition_id: slaDefinitionId });
+      const data = await SLAApi.getAlertHistory({ slaDefinitionId: slaDefinitionId });
       setAlertHistory((data.items || []) as unknown as AlertHistory[]);
     } catch (error) {
       // 失败时设置为空数组，不使用Mock数据
@@ -140,7 +125,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       const values = await form.validateFields();
       const ruleData: Partial<AlertRule> = {
         ...values,
-        sla_definition_id: slaDefinitionId || values.sla_definition_id,
+        slaDefinitionId: slaDefinitionId || values.slaDefinitionId,
       };
 
       const { default: SLAApi } = await import('@/lib/api/sla-api');
@@ -152,13 +137,13 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
         // 确保必要的字段存在
         const createData = {
           name: ruleData.name!,
-          sla_definition_id: ruleData.sla_definition_id!,
-          alert_level: ruleData.alert_level!,
-          threshold_percentage: Number(ruleData.threshold_percentage),
-          notification_channels: ruleData.notification_channels!,
-          escalation_enabled: ruleData.escalation_enabled,
-          escalation_levels: ruleData.escalation_levels,
-          is_active: ruleData.is_active !== false, // 默认为 true
+          slaDefinitionId: ruleData.slaDefinitionId!,
+          alertLevel: ruleData.alertLevel!,
+          thresholdPercentage: Number(ruleData.thresholdPercentage),
+          notificationChannels: ruleData.notificationChannels!,
+          escalationEnabled: ruleData.escalationEnabled,
+          escalationLevels: ruleData.escalationLevels,
+          isActive: ruleData.isActive !== false, // 默认为 true
         };
         await SLAApi.createAlertRule(createData);
         antMessage.success('预警规则已创建');
@@ -193,7 +178,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
     async (id: number, isActive: boolean) => {
       try {
         const { default: SLAApi } = await import('@/lib/api/sla-api');
-        await SLAApi.updateAlertRule(id, { is_active: !isActive });
+        await SLAApi.updateAlertRule(id, { isActive: !isActive });
         antMessage.success(`预警规则已${!isActive ? '启用' : '禁用'}`);
         loadAlertRules();
       } catch (error) {
@@ -213,10 +198,10 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
         setEditingRule(null);
         form.resetFields();
         form.setFieldsValue({
-          threshold_percentage: 70,
-          notification_channels: ['in_app'],
-          escalation_enabled: false,
-          is_active: true,
+          thresholdPercentage: 70,
+          notificationChannels: ['in_app'],
+          escalationEnabled: false,
+          isActive: true,
         });
       }
       setRuleModalVisible(true);
@@ -254,16 +239,16 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
     },
     {
       title: '预警级别',
-      dataIndex: 'alert_level',
-      key: 'alert_level',
+      dataIndex:'alertLevel',
+      key:'alertLevel',
       render: (level: string) => (
         <Tag color={getAlertLevelColor(level)}>{getAlertLevelText(level)}</Tag>
       ),
     },
     {
       title: '阈值',
-      dataIndex: 'threshold_percentage',
-      key: 'threshold_percentage',
+      dataIndex:'thresholdPercentage',
+      key:'thresholdPercentage',
       render: (percentage: number) => (
         <Text strong style={{ color: '#1890ff' }}>
           {percentage}%
@@ -272,8 +257,8 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
     },
     {
       title: '通知渠道',
-      dataIndex: 'notification_channels',
-      key: 'notification_channels',
+      dataIndex:'notificationChannels',
+      key:'notificationChannels',
       render: (channels: string[]) => (
         <Space>
           {channels.map(channel => (
@@ -286,16 +271,16 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
     },
     {
       title: '升级机制',
-      dataIndex: 'escalation_enabled',
-      key: 'escalation_enabled',
+      dataIndex:'escalationEnabled',
+      key:'escalationEnabled',
       render: (enabled: boolean) => (
         <Tag color={enabled ? 'green' : 'default'}>{enabled ? '已启用' : '未启用'}</Tag>
       ),
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       render: (isActive: boolean, record: AlertRule) => (
         <Switch
           checked={isActive}
@@ -333,8 +318,8 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
   const historyColumns: ColumnsType<AlertHistory> = [
     {
       title: '工单编号',
-      dataIndex: 'ticket_number',
-      key: 'ticket_number',
+      dataIndex:'ticketNumber',
+      key:'ticketNumber',
       render: (text: string) => (
         <Text strong style={{ color: '#1890ff' }}>
           {text}
@@ -343,18 +328,18 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
     },
     {
       title: '工单标题',
-      dataIndex: 'ticket_title',
-      key: 'ticket_title',
+      dataIndex:'ticketTitle',
+      key:'ticketTitle',
     },
     {
       title: '预警规则',
-      dataIndex: 'alert_rule_name',
-      key: 'alert_rule_name',
+      dataIndex:'alertRuleName',
+      key:'alertRuleName',
     },
     {
       title: '预警级别',
-      dataIndex: 'alert_level',
-      key: 'alert_level',
+      dataIndex:'alertLevel',
+      key:'alertLevel',
       render: (level: string) => (
         <Tag color={getAlertLevelColor(level)}>{getAlertLevelText(level)}</Tag>
       ),
@@ -364,31 +349,31 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       key: 'threshold',
       render: (_: unknown, record: AlertHistory) => (
         <div>
-          <Text type="secondary">阈值: {record.threshold_percentage}%</Text>
+          <Text type="secondary">阈值: {record.thresholdPercentage}%</Text>
           <br />
           <Text
             style={{
               color:
-                record.actual_percentage >= record.threshold_percentage ? '#ff4d4f' : '#52c41a',
+                record.actualPercentage >= record.thresholdPercentage ? '#ff4d4f' : '#52c41a',
             }}
           >
-            实际: {record.actual_percentage.toFixed(1)}%
+            实际: {record.actualPercentage.toFixed(1)}%
           </Text>
         </div>
       ),
     },
     {
       title: '通知状态',
-      dataIndex: 'notification_sent',
-      key: 'notification_sent',
+      dataIndex:'notificationSent',
+      key:'notificationSent',
       render: (sent: boolean) => (
         <Badge status={sent ? 'success' : 'default'} text={sent ? '已发送' : '未发送'} />
       ),
     },
     {
       title: '升级级别',
-      dataIndex: 'escalation_level',
-      key: 'escalation_level',
+      dataIndex:'escalationLevel',
+      key:'escalationLevel',
       render: (level: number) => (level > 0 ? `L${level}` : '-'),
     },
     {
@@ -396,9 +381,9 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       key: 'cooldown',
       width: 200,
       render: (_: unknown, record: AlertHistory) => {
-        const remainingSec = record.cooldownRemainingSeconds ?? record.cooldown_remaining_seconds ?? 0;
-        const minutes = record.cooldownMinutes ?? record.cooldown_minutes ?? 0;
-        const suppressed = record.suppressedByCooldown ?? record.suppressed_by_cooldown ?? false;
+        const remainingSec = record.cooldownRemainingSeconds ?? record.cooldownRemainingSeconds ?? 0;
+        const minutes = record.cooldownMinutes ?? record.cooldownMinutes ?? 0;
+        const suppressed = record.suppressedByCooldown ?? record.suppressedByCooldown ?? false;
         if (remainingSec > 0) {
           const mins = Math.floor(remainingSec / 60);
           const secs = remainingSec % 60;
@@ -428,8 +413,8 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
     },
     {
       title: '触发时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       render: (date: string) => format(new Date(date), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN }),
     },
     {
@@ -554,7 +539,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
           <Form.Item
             noStyle
             shouldUpdate={(prevValues, currentValues) =>
-              prevValues.escalation_enabled !== currentValues.escalation_enabled
+              prevValues.escalationEnabled !== currentValues.escalationEnabled
             }
           >
             {({ getFieldValue }) =>

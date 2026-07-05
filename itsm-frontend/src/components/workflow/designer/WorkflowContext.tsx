@@ -15,12 +15,12 @@ import type {
 
 // 初始审批配置
 const defaultApprovalConfig: ApprovalConfig = {
-  require_approval: true,
-  approval_type: 'sequential',
+  requireApproval: true,
+  approvalType: 'sequential',
   approvers: [],
   // 审批组是节点级。详见 WorkflowNodeInspector 节点面板的「候选组」字段。
-  auto_approve_roles: [],
-  escalation_rules: [],
+  autoApproveRoles: [],
+  escalationRules: [],
 };
 
 // 初始状态
@@ -118,14 +118,14 @@ function workflowDesignerReducer(
         workflow: state.workflow
           ? {
               ...state.workflow,
-              sla_config: state.workflow.sla_config
-                ? { ...state.workflow.sla_config, ...action.payload }
+              slaConfig: state.workflow.slaConfig
+                ? { ...state.workflow.slaConfig, ...action.payload }
                 : {
-                    response_time_hours: 24,
-                    resolution_time_hours: 72,
-                    business_hours_only: true,
-                    exclude_weekends: true,
-                    exclude_holidays: true,
+                    responseTimeHours: 24,
+                    resolutionTimeHours: 72,
+                    businessHoursOnly: true,
+                    excludeWeekends: true,
+                    excludeHolidays: true,
                     ...action.payload,
                   },
             }

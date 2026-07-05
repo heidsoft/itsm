@@ -22,30 +22,30 @@ describe('CIBasicInfo', () => {
     type: 'server',
     status: CIStatus.ACTIVE,
     // ConfigurationItem 接口字段
-    ci_type_id: 1,
-    asset_tag: 'WEB-001',
-    serial_number: 'ABC123456',
+    ciTypeId: 1,
+    assetTag: 'WEB-001',
+    serialNumber: 'ABC123456',
     model: 'PowerEdge R740',
     vendor: 'Dell',
     location: 'Data Center A, Rack 12',
     environment: 'production',
     criticality: 'high',
-    assigned_to: 'DevOps Team',
-    owned_by: 'John Doe',
-    discovery_source: 'auto-discovery',
+    assignedTo: 'DevOps Team',
+    ownedBy: 'John Doe',
+    discoverySource: 'auto-discovery',
     source: 'manual',
-    cloud_provider: 'AWS',
-    cloud_account_id: 'aws-123456',
-    cloud_region: 'us-east-1',
-    cloud_zone: 'us-east-1a',
-    cloud_resource_id: 'i-1234567890abcdef0',
-    cloud_resource_type: 'EC2 Instance',
-    cloud_resource_ref_id: 123456,
-    cloud_sync_status: 'success',
-    cloud_sync_time: '2024-01-20T15:30:00Z',
-    tenant_id: 1,
-    created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-01-20T15:30:00Z',
+    cloudProvider: 'AWS',
+    cloudAccountId: 'aws-123456',
+    cloudRegion: 'us-east-1',
+    cloudZone: 'us-east-1a',
+    cloudResourceId: 'i-1234567890abcdef0',
+    cloudResourceType: 'EC2 Instance',
+    cloudResourceRefId: 123456,
+    cloudSyncStatus: 'success',
+    cloudSyncTime: '2024-01-20T15:30:00Z',
+    tenantId: 1,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-20T15:30:00Z',
     description: 'Production web server for customer portal',
   } as ConfigurationItem;
 
@@ -57,22 +57,22 @@ describe('CIBasicInfo', () => {
     render(<CIBasicInfo {...defaultProps} />);
 
     // 验证关键字段存在
-    expect(screen.getByText(mockCI.asset_tag!)).toBeInTheDocument();
-    expect(screen.getByText(mockCI.serial_number!)).toBeInTheDocument();
+    expect(screen.getByText(mockCI.assetTag!)).toBeInTheDocument();
+    expect(screen.getByText(mockCI.serialNumber!)).toBeInTheDocument();
     expect(screen.getByText(mockCI.model!)).toBeInTheDocument();
     expect(screen.getByText(mockCI.vendor!)).toBeInTheDocument();
     expect(screen.getByText(mockCI.location!)).toBeInTheDocument();
     expect(screen.getByText(mockCI.environment!)).toBeInTheDocument();
-    expect(screen.getByText(mockCI.assigned_to!)).toBeInTheDocument();
-    expect(screen.getByText(mockCI.owned_by!)).toBeInTheDocument();
+    expect(screen.getByText(mockCI.assignedTo!)).toBeInTheDocument();
+    expect(screen.getByText(mockCI.ownedBy!)).toBeInTheDocument();
   });
 
   it('应该显示云相关信息', () => {
     render(<CIBasicInfo {...defaultProps} />);
 
-    expect(screen.getByText(mockCI.cloud_provider!)).toBeInTheDocument();
-    expect(screen.getByText(mockCI.cloud_region!)).toBeInTheDocument();
-    expect(screen.getByText(mockCI.cloud_resource_type!)).toBeInTheDocument();
+    expect(screen.getByText(mockCI.cloudProvider!)).toBeInTheDocument();
+    expect(screen.getByText(mockCI.cloudRegion!)).toBeInTheDocument();
+    expect(screen.getByText(mockCI.cloudResourceType!)).toBeInTheDocument();
   });
 
   it('应该显示时间信息', () => {
@@ -91,7 +91,7 @@ describe('CIBasicInfo', () => {
   it('应该显示所属租户', () => {
     render(<CIBasicInfo {...defaultProps} />);
 
-    expect(screen.getByText(String(mockCI.tenant_id))).toBeInTheDocument();
+    expect(screen.getByText(String(mockCI.tenantId))).toBeInTheDocument();
   });
 
   it('应该处理可选字段为空值', () => {
@@ -100,31 +100,31 @@ describe('CIBasicInfo', () => {
       name: 'Minimal CI',
       type: 'server',
       status: CIStatus.ACTIVE,
-      ci_type_id: 1,
-      tenant_id: 1,
-      created_at: '2024-01-15T10:00:00Z',
-      updated_at: '2024-01-20T15:30:00Z',
+      ciTypeId: 1,
+      tenantId: 1,
+      createdAt: '2024-01-15T10:00:00Z',
+      updatedAt: '2024-01-20T15:30:00Z',
       description: 'Minimal CI for testing',
-      asset_tag: undefined,
-      serial_number: undefined,
+      assetTag: undefined,
+      serialNumber: undefined,
       model: undefined,
       vendor: undefined,
       location: undefined,
       environment: undefined,
       criticality: undefined,
-      assigned_to: undefined,
-      owned_by: undefined,
-      discovery_source: undefined,
+      assignedTo: undefined,
+      ownedBy: undefined,
+      discoverySource: undefined,
       source: undefined,
-      cloud_provider: undefined,
-      cloud_account_id: undefined,
-      cloud_region: undefined,
-      cloud_zone: undefined,
-      cloud_resource_id: undefined,
-      cloud_resource_type: undefined,
-      cloud_resource_ref_id: undefined,
-      cloud_sync_status: undefined,
-      cloud_sync_time: undefined,
+      cloudProvider: undefined,
+      cloudAccountId: undefined,
+      cloudRegion: undefined,
+      cloudZone: undefined,
+      cloudResourceId: undefined,
+      cloudResourceType: undefined,
+      cloudResourceRefId: undefined,
+      cloudSyncStatus: undefined,
+      cloudSyncTime: undefined,
     };
 
     render(<CIBasicInfo ci={minimalCI} />);
@@ -149,7 +149,7 @@ describe('CIBasicInfo', () => {
   it('应该显示发现源和数据来源', () => {
     render(<CIBasicInfo {...defaultProps} />);
 
-    expect(screen.getByText(mockCI.discovery_source!)).toBeInTheDocument();
+    expect(screen.getByText(mockCI.discoverySource!)).toBeInTheDocument();
     expect(screen.getByText(mockCI.source!)).toBeInTheDocument();
   });
 });

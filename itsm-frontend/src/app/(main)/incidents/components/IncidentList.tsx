@@ -58,7 +58,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       backgroundColor: '#f9f0ff',
     },
     // 处理中状态
-    in_progress: {
+    inProgress: {
       color: '#1890ff',
       text: t('incidents.statusInProgress'),
       backgroundColor: '#e6f7ff',
@@ -121,7 +121,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
   const columns = [
     {
       title: t('incidents.incidentInfo'),
-      key: 'incident_info',
+      key:'incidentInfo',
       width: 300,
       render: (_: unknown, record: Incident) => (
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -144,7 +144,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
               {record.title}
             </div>
             <div style={{ fontSize: 'small', color: '#666' }}>
-              #{record.incidentNumber || (record as unknown as { incident_number?: string }).incident_number || '-'} • {record.category}
+              #{record.incidentNumber || (record as unknown as { incidentNumber?: string }).incidentNumber || '-'} • {record.category}
             </div>
           </div>
         </div>

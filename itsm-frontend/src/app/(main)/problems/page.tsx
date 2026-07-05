@@ -59,7 +59,7 @@ export default function ProblemListPage() {
     try {
       const response = await ProblemApi.getProblems({
         page: 1,
-        page_size: 100, // 获取足够的数据用于看板
+        pageSize: 100, // 获取足够的数据用于看板
         status: statusFilter,
         priority: priorityFilter,
         search: debouncedSearch,
@@ -271,7 +271,7 @@ export default function ProblemListPage() {
                   getItemNumber={(problem: Problem) => {
                     const data = problem as unknown as Record<string, unknown>;
                     return (
-                      (data.problem_number as string) ||
+                      (data.problemNumber as string) ||
                       (data.problemNumber as string) ||
                       `P-${problem.id}`
                     );
@@ -281,15 +281,15 @@ export default function ProblemListPage() {
                     problem.priority || problem.severity || 'medium'
                   }
                   getItemAssignee={(problem: Problem) => {
-                    const assigneeId = problem.assigneeId || problem.assignee_id;
+                    const assigneeId = problem.assigneeId || problem.assigneeId;
                     if (!assigneeId) return null;
                     const data = problem as unknown as Record<string, unknown>;
                     const assigneeName =
-                      (data.assignee_name as string) || (data.assigneeName as string);
+                      (data.assigneeName as string) || (data.assigneeName as string);
                     return { name: assigneeName || `用户 #${assigneeId}` };
                   }}
-                  getItemCreatedAt={(problem: Problem) => problem.createdAt || problem.created_at}
-                  getItemUpdatedAt={(problem: Problem) => problem.updatedAt || problem.updated_at}
+                  getItemCreatedAt={(problem: Problem) => problem.createdAt || problem.createdAt}
+                  getItemUpdatedAt={(problem: Problem) => problem.updatedAt || problem.updatedAt}
                   onItemClick={(problem: Problem) => router.push(`/problems/${problem.id}`)}
                   onItemEdit={(problem: Problem) => router.push(`/problems/${problem.id}/edit`)}
                   columnConfigs={KANBAN_COLUMNS}

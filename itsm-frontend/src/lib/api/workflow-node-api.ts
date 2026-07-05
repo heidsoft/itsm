@@ -16,26 +16,26 @@ export class WorkflowNodeApi {
       const tasksRes = await httpClient.get<
         Array<{
           id: string;
-          task_id: string;
+          taskId: string;
           name: string;
           status: string;
           assignee?: string;
-          assignee_name?: string;
-          created_time?: string;
-          due_date?: string;
+          assigneeName?: string;
+          createdTime?: string;
+          dueDate?: string;
         }>
       >(`/api/v1/bpmn/tasks?processInstanceId=${instanceId}`);
       const list = tasksRes || [];
       return list.map(item => ({
-        id: item.task_id || item.id || '',
+        id: item.taskId || item.id || '',
         instanceId: instanceId,
-        nodeId: item.task_id || '',
+        nodeId: item.taskId || '',
         nodeName: item.name || '',
         status:
           (item.status as 'pending' | 'running' | 'completed' | 'failed' | 'skipped') || 'pending',
         assignee: item.assignee ? parseInt(item.assignee) : undefined,
-        assigneeName: item.assignee_name,
-        startTime: item.created_time ? new Date(item.created_time) : undefined,
+        assigneeName: item.assigneeName,
+        startTime: item.createdTime ? new Date(item.createdTime) : undefined,
         retryCount: 0,
       }));
     } catch {

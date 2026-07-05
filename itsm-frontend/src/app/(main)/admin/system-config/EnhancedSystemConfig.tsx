@@ -138,22 +138,20 @@ interface BackupRecord {
 // 系统状态兼容接口（兼容 snake_case 和 camelCase）
 interface SystemStatusResponse {
   cpu?: { cores?: number; usage?: number };
-  memory?: { usage_percent?: number; usage?: number };
-  disk?: { usage_percent?: number; usage?: number };
+  memory?: { usagePercent?: number; usage?: number };
+  disk?: { usagePercent?: number; usage?: number };
   startTime?: string;
-  start_time?: string;
   startedAt?: string;
-  started_at?: string;
   uptime?: string;
   upTime?: string;
   goroutines?: number;
-  cpu_cores?: number;
+  cpuCores?: number;
   activeConnections?: number;
 }
 
 // 工具函数：提取兼容字段值
-function getSystemStatusValue<T>(data: SystemStatusResponse, camelKey: keyof SystemStatusResponse, snakeKey: string): T {
-  return (data[camelKey] ?? data[snakeKey as keyof SystemStatusResponse] ?? 0) as T;
+function getSystemStatusValue<T>(data: any, camelKey: string, snakeKey: string): T {
+  return (data[camelKey] ?? data[snakeKey] ?? 0) as T;
 }
 
 export default function EnhancedSystemConfiguration() {
@@ -208,16 +206,16 @@ export default function EnhancedSystemConfiguration() {
         const cpu = status.cpu || {};
         const memory = status.memory || {};
         const disk = status.disk || {};
-        const startTime = status.startTime || status.start_time || status.startedAt || status.started_at;
+        const startTime = status.startTime || status.startTime || status.startedAt || status.startedAt;
         const uptime = status.uptime || status.upTime;
 
         setSystemStats({
           uptime: typeof uptime === 'string' ? uptime : calculateUptime(typeof startTime === 'string' ? parseInt(startTime, 10) : startTime),
-          goroutines: getSystemStatusValue<number>(status, 'goroutines', 'goroutines'),
-          cpuCores: cpu.cores || getSystemStatusValue<number>(status, 'cpu_cores', 'cpu_cores'),
-          memoryUsagePercent: Math.round(memory.usage_percent || memory.usage || 0),
-          diskUsagePercent: Math.round(disk.usage_percent || 0),
-          activeConnections: getSystemStatusValue<number>(status, 'activeConnections', 'activeConnections'),
+          goroutines: getSystemStatusValue<number>(status as any, 'goroutines', 'goroutines'),
+          cpuCores: cpu.cores || getSystemStatusValue<number>(status as any, 'cpu_cores', 'cpu_cores'),
+          memoryUsagePercent: Math.round(memory.usagePercent || memory.usage || 0),
+          diskUsagePercent: Math.round(disk.usagePercent || 0),
+          activeConnections: getSystemStatusValue<number>(status as any, 'activeConnections', 'activeConnections'),
         });
       } catch (error) {
         console.error('Failed to fetch system status:', error);

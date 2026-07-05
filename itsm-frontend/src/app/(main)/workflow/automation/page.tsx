@@ -100,9 +100,9 @@ const WorkflowAutomationPage = () => {
         conditions: rule.conditions,
         actions: rule.actions,
         priority: rule.priority,
-        is_active: !rule.is_active,
+        isActive: !rule.isActive,
       });
-      message.success(rule.is_active ? t('common.ruleDisabled') : t('common.ruleEnabled'));
+      message.success(rule.isActive ? t('common.ruleDisabled') : t('common.ruleEnabled'));
       loadRules();
     } catch (error) {
       message.error(t('common.operationFailed'));
@@ -170,8 +170,8 @@ const WorkflowAutomationPage = () => {
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       width: 100,
       render: (isActive: boolean, record: AutomationRule) => (
         <Switch checked={isActive} onChange={() => handleToggleRule(record)} size="small" />
@@ -298,7 +298,7 @@ const WorkflowAutomationPage = () => {
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
               title="活跃规则"
-              value={rules.filter(r => r.is_active).length}
+              value={rules.filter(r => r.isActive).length}
               prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
             />
@@ -377,7 +377,7 @@ const WorkflowAutomationPage = () => {
             editingRule || {
               type: activeTab,
               priority: 1,
-              is_active: true,
+              isActive: true,
               conditions: {},
               actions: {},
             }

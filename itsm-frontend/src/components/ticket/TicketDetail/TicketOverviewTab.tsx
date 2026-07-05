@@ -136,7 +136,7 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <Typography.Text strong>{step.step_name}</Typography.Text>
+                        <Typography.Text strong>{step.stepName}</Typography.Text>
                         {step.assignee && (
                           <div className="text-sm text-gray-500">负责人: {step.assignee.name}</div>
                         )}
@@ -161,9 +161,9 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
                                 : '待处理'
                           }
                         />
-                        {step.completed_at && (
+                        {step.completedAt && (
                           <div className="text-xs text-gray-500 mt-1">
-                            {formatDateTime(step.completed_at)}
+                            {formatDateTime(step.completedAt)}
                           </div>
                         )}
                       </div>
@@ -239,25 +239,25 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
                   <Typography.Text type="secondary" className="text-sm">
                     SLA名称
                   </Typography.Text>
-                  <div className="font-medium">{slaInfo.sla_name}</div>
+                  <div className="font-medium">{slaInfo.slaName}</div>
                 </div>
                 <div>
                   <Typography.Text type="secondary" className="text-sm">
                     响应时间
                   </Typography.Text>
-                  <div className="font-medium">{slaInfo.response_time} 分钟</div>
+                  <div className="font-medium">{slaInfo.responseTime} 分钟</div>
                 </div>
                 <div>
                   <Typography.Text type="secondary" className="text-sm">
                     解决时间
                   </Typography.Text>
-                  <div className="font-medium">{slaInfo.resolution_time} 分钟</div>
+                  <div className="font-medium">{slaInfo.resolutionTime} 分钟</div>
                 </div>
                 <div>
                   <Typography.Text type="secondary" className="text-sm">
                     到期时间
                   </Typography.Text>
-                  <div className="font-medium">{formatDateTime(slaInfo.due_time)}</div>
+                  <div className="font-medium">{formatDateTime(slaInfo.dueTime)}</div>
                 </div>
                 <div>
                   <Typography.Text type="secondary" className="text-sm">

@@ -17,16 +17,16 @@ export interface PaginationResponse<T = unknown> {
   data: T[];
   total: number;
   page: number;
-  page_size: number;
-  total_pages: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 /** 列表查询参数 */
 export interface ListQueryParams {
   page?: number;
-  page_size?: number;
-  sort_by?: string;
-  sort_order?: 'asc' | 'desc';
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
   keyword?: string;
 }
 
@@ -108,34 +108,34 @@ export interface TicketUpdateRequest {
   description?: string;
   priority?: TicketPriority;
   status?: TicketStatus;
-  category_id?: number;
+  categoryId?: number;
   tags?: string[];
-  assignee_id?: number;
+  assigneeId?: number;
   resolution?: string;
 }
 
 export interface TicketAssignRequest {
-  assignee_id: number;
+  assigneeId: number;
   comment?: string;
 }
 
 export interface TicketWorkflowStep {
   id: number;
-  step_name: string;
-  step_order: number;
+  stepName: string;
+  stepOrder: number;
   status: string;
-  assignee_id?: number;
+  assigneeId?: number;
   assignee?: UserBasicInfo;
-  started_at?: string;
-  completed_at?: string;
+  startedAt?: string;
+  completedAt?: string;
   comments?: string;
 }
 
 export interface SLAInfo {
-  sla_name: string;
-  response_time: number;
-  resolution_time: number;
-  due_time: string;
+  slaName: string;
+  responseTime: number;
+  resolutionTime: number;
+  dueTime: string;
   status: 'active' | 'completed' | 'breached';
 }
 
@@ -153,31 +153,24 @@ export type IncidentStatus =
 export interface Incident {
   id: number;
   // 同时支持 snake_case 和 camelCase
-  incident_number: string;
-  incidentNumber?: string;
+  incidentNumber: string;
   title: string;
   description: string;
   severity: IncidentSeverity;
   status: IncidentStatus;
   category?: string;
   priority?: TicketPriority;
-  reporter_id: number;
+  reporterId: number;
   reporter?: UserBasicInfo;
-  reporterId?: number;
-  assignee_id?: number;
-  assignee?: UserBasicInfo;
-  assignee_name?: string;
   assigneeId?: number;
-  impact_analysis?: Record<string, unknown>;
+  assignee?: UserBasicInfo;
+  assigneeName?: string;
+  impactAnalysis?: Record<string, unknown>;
   impact?: string;
-  detected_at: string;
-  detectedAt?: string;
-  resolved_at?: string;
+  detectedAt: string;
   resolvedAt?: string;
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ==================== 变更相关类型 ====================
@@ -197,24 +190,24 @@ export type ChangeRisk = 'low' | 'medium' | 'high' | 'critical';
 
 export interface Change {
   id: number;
-  change_number: string;
+  changeNumber: string;
   title: string;
   description: string;
   type: ChangeType;
   status: ChangeStatus;
   priority: ChangePriority;
-  risk_level: ChangeRisk;
+  riskLevel: ChangeRisk;
   justification?: string;
-  implementation_plan?: string;
-  rollback_plan?: string;
-  planned_start_date?: string;
-  planned_end_date?: string;
-  assignee_id?: number;
+  implementationPlan?: string;
+  rollbackPlan?: string;
+  plannedStartDate?: string;
+  plannedEndDate?: string;
+  assigneeId?: number;
   assignee?: UserBasicInfo;
-  affected_cis?: string[];
-  related_tickets?: string[];
-  created_at: string;
-  updated_at: string;
+  affectedCis?: string[];
+  relatedTickets?: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ==================== 用户相关类型 ====================
@@ -225,49 +218,44 @@ export interface User extends UserBasicInfo {
   role?: string;
   permissions?: string[];
   status: 'active' | 'inactive' | 'locked';
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ==================== 附件相关类型 ====================
 
 export interface Attachment {
   id: number;
-  ticket_id?: number;
-  file_name: string;
-  file_path: string;
-  file_url: string;
-  file_size: number;
-  mime_type: string;
-  uploaded_by: number;
+  ticketId?: number;
+  fileName: string;
+  filePath: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedBy: number;
   uploader?: UserBasicInfo;
-  created_at: string;
+  createdAt: string;
 }
 
 // ==================== 评论相关类型 ====================
 
 export interface Comment {
   id: number;
-  ticket_id: number;
-  ticketId?: number;
-  user_id: number;
-  userId?: number;
+  ticketId: number;
+  userId: number;
   user?: UserBasicInfo;
   content: string;
-  is_internal: boolean;
-  isInternal?: boolean;
+  isInternal: boolean;
   mentions: number[];
   attachments: number[];
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CommentCreateRequest {
   content: string;
-  is_internal?: boolean;
+  isInternal?: boolean;
   mentions?: number[];
   attachments?: number[];
 }
@@ -276,26 +264,18 @@ export interface CommentCreateRequest {
 
 export interface ServiceRequest {
   id: number;
-  request_number: string;
-  requestNumber?: string;
-  catalog_id: number;
-  catalogId?: number;
-  catalog_name?: string;
+  requestNumber: string;
+  catalogId: number;
   catalogName?: string;
   title: string;
   reason?: string;
   status: 'pending' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'cancelled';
-  requester_id: number;
-  requesterId?: number;
+  requesterId: number;
   requester?: UserBasicInfo;
-  form_data?: Record<string, unknown>;
   formData?: Record<string, unknown>;
-  approval_status?: string;
   approvalStatus?: string;
-  created_at: string;
-  createdAt?: string;
-  updated_at: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ServiceCatalog {
@@ -303,10 +283,10 @@ export interface ServiceCatalog {
   name: string;
   description?: string;
   icon?: string;
-  parent_id?: number;
+  parentId?: number;
   order: number;
-  is_active: boolean;
-  created_at: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
 // ==================== 知识库相关类型 ====================
@@ -316,16 +296,16 @@ export interface KnowledgeArticle {
   title: string;
   content: string;
   summary?: string;
-  category_id?: number;
-  category_name?: string;
+  categoryId?: number;
+  categoryName?: string;
   tags?: string[];
-  author_id: number;
+  authorId: number;
   author?: UserBasicInfo;
-  view_count: number;
-  helpful_count: number;
+  viewCount: number;
+  helpfulCount: number;
   status: 'draft' | 'published' | 'archived';
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ==================== 工作流相关类型 ====================
@@ -334,64 +314,60 @@ export interface WorkflowDefinition {
   id: number;
   name: string;
   description?: string;
-  xml_content: string;
+  xmlContent: string;
   version: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface WorkflowInstance {
   id: number;
-  workflow_id: number;
+  workflowId: number;
   workflow?: WorkflowDefinition;
-  entity_type: string;
-  entity_id: number;
+  entityType: string;
+  entityId: number;
   status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
-  current_node_id?: string;
-  started_at?: string;
-  completed_at?: string;
-  created_at: string;
+  currentNodeId?: string;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt: string;
 }
 
 // ==================== 通知相关类型 ====================
 
 export interface Notification {
   id: number;
-  user_id: number;
-  userId?: number;
+  userId: number;
   title: string;
   content: string;
   type: 'info' | 'warning' | 'success' | 'error';
-  is_read: boolean;
-  isRead?: boolean;
-  read_at?: string;
+  isRead: boolean;
   readAt?: string;
   data?: Record<string, unknown>;
-  created_at: string;
-  createdAt?: string;
+  createdAt: string;
 }
 
 // ==================== 审批相关类型 ====================
 
 export interface ApprovalRequest {
   id: number;
-  entity_type: string;
-  entity_id: number;
-  entity_title: string;
-  requester_id: number;
+  entityType: string;
+  entityId: number;
+  entityTitle: string;
+  requesterId: number;
   requester?: UserBasicInfo;
   status: 'pending' | 'approved' | 'rejected';
-  current_step: number;
-  total_steps: number;
-  created_at: string;
-  updated_at: string;
+  currentStep: number;
+  totalSteps: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ApprovalActionRequest {
   action: 'approve' | 'reject' | 'delegate';
   comment?: string;
-  delegate_to_user_id?: number;
+  delegateToUserId?: number;
 }
 
 // ==================== SLA相关类型 ====================
@@ -400,23 +376,23 @@ export interface SLADefinition {
   id: number;
   name: string;
   description?: string;
-  response_time: number;
-  resolution_time: number;
+  responseTime: number;
+  resolutionTime: number;
   priority: TicketPriority;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ==================== 仪表盘相关类型 ====================
 
 export interface DashboardOverview {
-  kpi_metrics: KPIMetric[];
-  ticket_trend: TicketTrendData[];
-  incident_distribution: IncidentDistributionData[];
-  sla_data: SLAComplianceData[];
-  satisfaction_data: SatisfactionData[];
-  recent_activities: RecentActivity[];
+  kpiMetrics: KPIMetric[];
+  ticketTrend: TicketTrendData[];
+  incidentDistribution: IncidentDistributionData[];
+  slaData: SLAComplianceData[];
+  satisfactionData: SatisfactionData[];
+  recentActivities: RecentActivity[];
 }
 
 export interface KPIMetric {
@@ -427,14 +403,14 @@ export interface KPIMetric {
   color: string;
   trend: 'up' | 'down' | 'stable';
   change: number;
-  change_type: 'increase' | 'decrease' | 'stable';
+  changeType: 'increase' | 'decrease' | 'stable';
   description?: string;
 }
 
 export interface TicketTrendData {
   date: string;
   open: number;
-  in_progress: number;
+  inProgress: number;
   resolved: number;
   closed: number;
 }
@@ -511,14 +487,14 @@ export function normalizePaginationParams(
 ): Record<string, unknown> {
   const normalized: Record<string, unknown> = {};
   if (params.page !== undefined) normalized.page = params.page;
-  if (params.pageSize !== undefined) normalized.page_size = params.pageSize;
+  if (params.pageSize !== undefined) normalized.pageSize = params.pageSize;
   return normalized;
 }
 
 export function normalizeDateRangeParams(params: Record<string, unknown>): Record<string, unknown> {
   const normalized: Record<string, unknown> = {};
-  if (params.date_from !== undefined) normalized.date_from = params.date_from;
-  if (params.date_to !== undefined) normalized.date_to = params.date_to;
+  if (params.dateFrom !== undefined) normalized.dateFrom = params.dateFrom;
+  if (params.dateTo !== undefined) normalized.dateTo = params.dateTo;
   return normalized;
 }
 

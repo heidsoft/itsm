@@ -42,223 +42,223 @@ export type ConfidenceLevel = 'low' | 'medium' | 'high';
 // 问题调查
 export interface ProblemInvestigation {
   id: number;
-  problem_id: number;
-  investigator_id: number;
-  investigator_name?: string;
+  problemId: number;
+  investigatorId: number;
+  investigatorName?: string;
   status: InvestigationStatus;
-  start_date?: string;
-  estimated_completion_date?: string;
-  actual_completion_date?: string;
-  investigation_summary?: string;
-  created_at: string;
-  updated_at: string;
+  startDate?: string;
+  estimatedCompletionDate?: string;
+  actualCompletionDate?: string;
+  investigationSummary?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 调查步骤
 export interface InvestigationStep {
   id: number;
-  investigation_id: number;
-  step_number: number;
-  step_title: string;
-  step_description: string;
+  investigationId: number;
+  stepNumber: number;
+  stepTitle: string;
+  stepDescription: string;
   status: StepStatus;
-  assigned_to?: number;
-  assigned_to_name?: string;
-  start_date?: string;
-  completion_date?: string;
+  assignedTo?: number;
+  assignedToName?: string;
+  startDate?: string;
+  completionDate?: string;
   notes?: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 根本原因分析
 export interface RootCauseAnalysis {
   id: number;
-  problem_id: number;
-  analyst_id: number;
-  analyst_name?: string;
-  analysis_method: string;
-  root_cause_description: string;
-  contributing_factors?: string;
+  problemId: number;
+  analystId: number;
+  analystName?: string;
+  analysisMethod: string;
+  rootCauseDescription: string;
+  contributingFactors?: string;
   evidence?: string;
-  confidence_level: ConfidenceLevel;
-  analysis_date: string;
-  reviewed_by?: number;
-  reviewed_by_name?: string;
-  review_date?: string;
-  created_at: string;
-  updated_at: string;
+  confidenceLevel: ConfidenceLevel;
+  analysisDate: string;
+  reviewedBy?: number;
+  reviewedByName?: string;
+  reviewDate?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 问题解决方案
 export interface ProblemSolution {
   id: number;
-  problem_id: number;
-  solution_type: SolutionType;
-  solution_description: string;
-  proposed_by: number;
-  proposed_by_name?: string;
-  proposed_date: string;
+  problemId: number;
+  solutionType: SolutionType;
+  solutionDescription: string;
+  proposedBy: number;
+  proposedByName?: string;
+  proposedDate: string;
   status: SolutionStatus;
   priority: string;
-  estimated_effort_hours?: number;
-  estimated_cost?: number;
-  risk_assessment?: string;
-  approval_status: string;
-  approved_by?: number;
-  approved_by_name?: string;
-  approval_date?: string;
-  created_at: string;
-  updated_at: string;
+  estimatedEffortHours?: number;
+  estimatedCost?: number;
+  riskAssessment?: string;
+  approvalStatus: string;
+  approvedBy?: number;
+  approvedByName?: string;
+  approvalDate?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 解决方案实施
 export interface SolutionImplementation {
   id: number;
-  solution_id: number;
-  implementer_id: number;
-  implementer_name?: string;
-  implementation_status: ImplementationStatus;
-  start_date?: string;
-  completion_date?: string;
-  actual_effort_hours?: number;
-  actual_cost?: number;
-  implementation_notes?: string;
-  challenges_encountered?: string;
-  lessons_learned?: string;
-  created_at: string;
-  updated_at: string;
+  solutionId: number;
+  implementerId: number;
+  implementerName?: string;
+  implementationStatus: ImplementationStatus;
+  startDate?: string;
+  completionDate?: string;
+  actualEffortHours?: number;
+  actualCost?: number;
+  implementationNotes?: string;
+  challengesEncountered?: string;
+  lessonsLearned?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 问题关联
 export interface ProblemRelationship {
   id: number;
-  problem_id: number;
-  related_type: string; // 'ticket' | 'change' | 'incident'
-  related_id: number;
-  related_title?: string;
-  relationship_type: string;
+  problemId: number;
+  relatedType: string; // 'ticket' | 'change' | 'incident'
+  relatedId: number;
+  relatedTitle?: string;
+  relationshipType: string;
   description?: string;
-  created_at: string;
+  createdAt: string;
 }
 
 // 问题知识库文章
 export interface ProblemKnowledgeArticle {
   id: number;
-  problem_id: number;
-  article_title: string;
-  article_content: string;
-  article_type: string;
-  author_id: number;
-  author_name?: string;
+  problemId: number;
+  articleTitle: string;
+  articleContent: string;
+  articleType: string;
+  authorId: number;
+  authorName?: string;
   status: string;
-  published_date?: string;
+  publishedDate?: string;
   tags: string[];
-  view_count: number;
-  helpful_count: number;
-  created_at: string;
-  updated_at: string;
+  viewCount: number;
+  helpfulCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 问题调查摘要
 export interface ProblemInvestigationSummary {
   investigation?: ProblemInvestigation;
   steps: InvestigationStep[];
-  root_cause_analysis?: RootCauseAnalysis;
+  rootCauseAnalysis?: RootCauseAnalysis;
   solutions: ProblemSolution[];
   implementations: SolutionImplementation[];
   relationships: ProblemRelationship[];
-  knowledge_articles: ProblemKnowledgeArticle[];
+  knowledgeArticles: ProblemKnowledgeArticle[];
 }
 
 // 创建问题调查请求
 export interface CreateInvestigationRequest {
-  problem_id: number;
-  investigator_id?: number;
-  estimated_completion_date?: string;
-  investigation_summary?: string;
+  problemId: number;
+  investigatorId?: number;
+  estimatedCompletionDate?: string;
+  investigationSummary?: string;
 }
 
 // 更新问题调查请求
 export interface UpdateInvestigationRequest {
   status?: InvestigationStatus;
-  estimated_completion_date?: string;
-  actual_completion_date?: string;
-  investigation_summary?: string;
+  estimatedCompletionDate?: string;
+  actualCompletionDate?: string;
+  investigationSummary?: string;
 }
 
 // 创建调查步骤请求
 export interface CreateStepRequest {
-  investigation_id: number;
-  step_number: number;
-  step_title: string;
-  step_description: string;
-  assigned_to?: number;
+  investigationId: number;
+  stepNumber: number;
+  stepTitle: string;
+  stepDescription: string;
+  assignedTo?: number;
   notes?: string;
 }
 
 // 更新调查步骤请求
 export interface UpdateStepRequest {
-  step_title?: string;
-  step_description?: string;
+  stepTitle?: string;
+  stepDescription?: string;
   status?: StepStatus;
-  assigned_to?: number;
-  start_date?: string;
-  completion_date?: string;
+  assignedTo?: number;
+  startDate?: string;
+  completionDate?: string;
   notes?: string;
 }
 
 // 创建根本原因分析请求
 export interface CreateRootCauseRequest {
-  problem_id: number;
-  analyst_id?: number;
-  analysis_method: string;
-  root_cause_description: string;
-  contributing_factors?: string;
+  problemId: number;
+  analystId?: number;
+  analysisMethod: string;
+  rootCauseDescription: string;
+  contributingFactors?: string;
   evidence?: string;
-  confidence_level: ConfidenceLevel;
+  confidenceLevel: ConfidenceLevel;
 }
 
 // 更新根本原因分析请求
 export interface UpdateRootCauseRequest {
-  analysis_method?: string;
-  root_cause_description?: string;
-  contributing_factors?: string;
+  analysisMethod?: string;
+  rootCauseDescription?: string;
+  contributingFactors?: string;
   evidence?: string;
-  confidence_level?: ConfidenceLevel;
-  reviewed_by?: number;
-  review_date?: string;
+  confidenceLevel?: ConfidenceLevel;
+  reviewedBy?: number;
+  reviewDate?: string;
 }
 
 // 创建解决方案请求
 export interface CreateSolutionRequest {
-  problem_id: number;
-  solution_type: SolutionType;
-  solution_description: string;
+  problemId: number;
+  solutionType: SolutionType;
+  solutionDescription: string;
   priority: string;
-  proposed_by?: number;
-  estimated_effort_hours?: number;
-  estimated_cost?: number;
-  risk_assessment?: string;
+  proposedBy?: number;
+  estimatedEffortHours?: number;
+  estimatedCost?: number;
+  riskAssessment?: string;
 }
 
 // 更新解决方案请求
 export interface UpdateSolutionRequest {
-  solution_type?: SolutionType;
-  solution_description?: string;
+  solutionType?: SolutionType;
+  solutionDescription?: string;
   priority?: string;
   status?: SolutionStatus;
-  estimated_effort_hours?: number;
-  estimated_cost?: number;
-  risk_assessment?: string;
+  estimatedEffortHours?: number;
+  estimatedCost?: number;
+  riskAssessment?: string;
 }
 
 // 创建知识库文章请求
 export interface CreateKnowledgeArticleRequest {
-  problem_id: number;
-  article_title: string;
-  article_content: string;
-  article_type: string;
+  problemId: number;
+  articleTitle: string;
+  articleContent: string;
+  articleType: string;
   tags?: string[];
 }
 
@@ -329,10 +329,10 @@ export const ProblemInvestigationAPI = {
 
   // 创建关联
   async createRelationship(data: {
-    problem_id: number;
-    related_type: string;
-    related_id: number;
-    relationship_type: string;
+    problemId: number;
+    relatedType: string;
+    relatedId: number;
+    relationshipType: string;
     description?: string;
   }): Promise<ProblemRelationship> {
     return httpClient.post('/api/v1/problem-relationships', data);

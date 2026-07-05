@@ -2,14 +2,14 @@ import { httpClient } from '@/lib/api/http-client';
 
 // 工单分析响应
 export interface TicketAnalyticsResponse {
-  total_tickets: number;
-  open_tickets: number;
-  resolved_tickets: number;
-  closed_tickets: number;
-  overdue_tickets: number;
+  totalTickets: number;
+  openTickets: number;
+  resolvedTickets: number;
+  closedTickets: number;
+  overdueTickets: number;
 
   // 趋势数据
-  daily_trend: Array<{
+  dailyTrend: Array<{
     date: string;
     created: number;
     resolved: number;
@@ -17,43 +17,43 @@ export interface TicketAnalyticsResponse {
   }>;
 
   // 状态分布
-  status_distribution: Array<{
+  statusDistribution: Array<{
     name: string;
     value: number;
     color: string;
   }>;
 
   // 优先级分布
-  priority_distribution: Array<{
+  priorityDistribution: Array<{
     name: string;
     value: number;
     color: string;
   }>;
 
   // 类型分布
-  type_distribution: Array<{
+  typeDistribution: Array<{
     name: string;
     value: number;
   }>;
 
   // 处理时间统计
-  processing_time_stats: {
-    avg_processing_time: number;
-    avg_resolution_time: number;
-    sla_compliance_rate: number;
+  processingTimeStats: {
+    avgProcessingTime: number;
+    avgResolutionTime: number;
+    slaComplianceRate: number;
   };
 
   // 团队表现
-  team_performance: Array<{
-    assignee_name: string;
-    total_handled: number;
+  teamPerformance: Array<{
+    assigneeName: string;
+    totalHandled: number;
     resolved: number;
-    avg_response_time: number;
-    avg_resolution_time: number;
+    avgResponseTime: number;
+    avgResolutionTime: number;
   }>;
 
   // 热门类别
-  hot_categories: Array<{
+  hotCategories: Array<{
     category: string;
     count: number;
     trend: string;
@@ -63,14 +63,14 @@ export interface TicketAnalyticsResponse {
 // 仪表盘概览响应
 export interface DashboardOverviewResponse {
   overview: {
-    total_tickets: number;
-    pending_tickets: number;
-    in_progress_tickets: number;
-    resolved_today: number;
-    avg_response_time: number;
-    avg_resolution_time: number;
+    totalTickets: number;
+    pendingTickets: number;
+    inProgressTickets: number;
+    resolvedToday: number;
+    avgResponseTime: number;
+    avgResolutionTime: number;
   };
-  recent_activities: Array<{
+  recentActivities: Array<{
     id: number;
     type: string;
     description: string;
@@ -78,32 +78,32 @@ export interface DashboardOverviewResponse {
     timestamp: string;
     ticketId?: number; // 动态字段，用于工单相关活动
   }>;
-  kpi_metrics: Array<{
+  kpiMetrics: Array<{
     id: string;
     title: string;
     value: number;
     unit: string;
     color: string;
     trend: string;
-    change_percent: number;
+    changePercent: number;
   }>;
-  ticket_trend: Array<{
+  ticketTrend: Array<{
     date: string;
     created: number;
     resolved: number;
     pending: number;
   }>;
-  sla_data: {
-    compliance_rate: number;
-    response_time_compliance: number;
-    resolution_time_compliance: number;
-    at_risk_tickets: number;
-    breached_tickets: number;
+  slaData: {
+    complianceRate: number;
+    responseTimeCompliance: number;
+    resolutionTimeCompliance: number;
+    atRiskTickets: number;
+    breachedTickets: number;
   };
-  satisfaction_data: {
-    average_rating: number;
-    total_ratings: number;
-    rating_distribution: Array<{
+  satisfactionData: {
+    averageRating: number;
+    totalRatings: number;
+    ratingDistribution: Array<{
       rating: number;
       count: number;
     }>;
@@ -120,13 +120,13 @@ class DashboardService {
   }
 
   // 获取KPI指标
-  async getKPIMetrics(): Promise<DashboardOverviewResponse['kpi_metrics']> {
-    return httpClient.get<DashboardOverviewResponse['kpi_metrics']>(`${this.baseUrl}/kpi-metrics`);
+  async getKPIMetrics(): Promise<DashboardOverviewResponse['kpiMetrics']> {
+    return httpClient.get<DashboardOverviewResponse['kpiMetrics']>(`${this.baseUrl}/kpi-metrics`);
   }
 
   // 获取工单趋势
-  async getTicketTrend(): Promise<DashboardOverviewResponse['ticket_trend']> {
-    return httpClient.get<DashboardOverviewResponse['ticket_trend']>(
+  async getTicketTrend(): Promise<DashboardOverviewResponse['ticketTrend']> {
+    return httpClient.get<DashboardOverviewResponse['ticketTrend']>(
       `${this.baseUrl}/ticket-trend`
     );
   }
@@ -137,13 +137,13 @@ class DashboardService {
   }
 
   // 获取SLA数据
-  async getSLAData(): Promise<DashboardOverviewResponse['sla_data']> {
-    return httpClient.get<DashboardOverviewResponse['sla_data']>(`${this.baseUrl}/sla-data`);
+  async getSLAData(): Promise<DashboardOverviewResponse['slaData']> {
+    return httpClient.get<DashboardOverviewResponse['slaData']>(`${this.baseUrl}/sla-data`);
   }
 
   // 获取满意度数据
-  async getSatisfactionData(): Promise<DashboardOverviewResponse['satisfaction_data']> {
-    return httpClient.get<DashboardOverviewResponse['satisfaction_data']>(
+  async getSatisfactionData(): Promise<DashboardOverviewResponse['satisfactionData']> {
+    return httpClient.get<DashboardOverviewResponse['satisfactionData']>(
       `${this.baseUrl}/satisfaction-data`
     );
   }
@@ -154,8 +154,8 @@ class DashboardService {
   }
 
   // 获取最近活动
-  async getRecentActivities(): Promise<DashboardOverviewResponse['recent_activities']> {
-    return httpClient.get<DashboardOverviewResponse['recent_activities']>(
+  async getRecentActivities(): Promise<DashboardOverviewResponse['recentActivities']> {
+    return httpClient.get<DashboardOverviewResponse['recentActivities']>(
       `${this.baseUrl}/recent-activities`
     );
   }
@@ -167,9 +167,9 @@ class TicketAnalyticsService {
 
   // 获取工单分析数据
   async getAnalytics(params?: {
-    date_from?: string;
-    date_to?: string;
-    group_by?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    groupBy?: string;
   }): Promise<TicketAnalyticsResponse> {
     return httpClient.get<TicketAnalyticsResponse>(`${this.baseUrl}/analytics`, params);
   }
@@ -178,7 +178,7 @@ class TicketAnalyticsService {
   async getStats(): Promise<{
     total: number;
     open: number;
-    in_progress: number;
+    inProgress: number;
     pending: number;
     resolved: number;
     closed: number;
@@ -188,10 +188,10 @@ class TicketAnalyticsService {
 
   // 导出分析报表
   async exportAnalytics(params: {
-    date_from: string;
-    date_to: string;
+    dateFrom: string;
+    dateTo: string;
     format: 'csv' | 'excel' | 'pdf';
-    group_by?: string;
+    groupBy?: string;
   }): Promise<Blob> {
     const response = await httpClient.request({
       method: 'GET',

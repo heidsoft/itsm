@@ -38,17 +38,17 @@ describe('TicketApprovalApi', () => {
             id: 1,
             name: '技术审批流程',
             description: '技术工单审批流程',
-            ticket_type: 'incident',
+            ticketType: 'incident',
             priority: 'high',
             nodes: [],
-            is_active: true,
-            created_at: '2024-01-01T10:00:00Z',
-            updated_at: '2024-01-01T10:00:00Z',
+            isActive: true,
+            createdAt: '2024-01-01T10:00:00Z',
+            updatedAt: '2024-01-01T10:00:00Z',
           },
         ],
         total: 1,
         page: 1,
-        page_size: 20,
+        pageSize: 20,
       };
 
       (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
@@ -69,7 +69,7 @@ describe('TicketApprovalApi', () => {
         items: [],
         total: 0,
         page: 1,
-        page_size: 20,
+        pageSize: 20,
       };
 
       (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
@@ -94,11 +94,11 @@ describe('TicketApprovalApi', () => {
         id: 1,
         name: '新审批流程',
         description: '测试审批流程',
-        ticket_type: 'incident',
+        ticketType: 'incident',
         nodes: [],
-        is_active: true,
-        created_at: '2024-01-01T10:00:00Z',
-        updated_at: '2024-01-01T10:00:00Z',
+        isActive: true,
+        createdAt: '2024-01-01T10:00:00Z',
+        updatedAt: '2024-01-01T10:00:00Z',
       };
 
       (httpClient.post as jest.Mock).mockResolvedValueOnce(mockData);
@@ -170,15 +170,15 @@ describe('TicketApprovalApi', () => {
         items: [
           {
             id: 1,
-            ticket_id: 100,
-            workflow_id: 1,
-            approver_name: '张三',
+            ticketId: 100,
+            workflowId: 1,
+            approverName: '张三',
             status: 'pending',
           },
         ],
         total: 1,
         page: 1,
-        page_size: 10,
+        pageSize: 10,
       };
 
       (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
@@ -200,7 +200,7 @@ describe('TicketApprovalApi', () => {
         items: [],
         total: 0,
         page: 1,
-        page_size: 20,
+        pageSize: 20,
       };
 
       (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);

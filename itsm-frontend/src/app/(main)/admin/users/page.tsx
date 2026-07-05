@@ -80,7 +80,7 @@ const UserManagement: React.FC = () => {
     try {
       const params = {
         page: pagination.current,
-        page_size: pagination.pageSize,
+        pageSize: pagination.pageSize,
         status: filters.status || undefined,
         department: filters.department || undefined,
         search: filters.search || undefined,
@@ -117,7 +117,7 @@ const UserManagement: React.FC = () => {
         department: values.department,
         phone: values.phone,
         password: values.password,
-        tenant_id: tenantId,
+        tenantId: tenantId,
       });
       message.success('用户创建成功');
       setIsCreateModalVisible(false);

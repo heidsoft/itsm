@@ -26,7 +26,7 @@ const CINode = ({ data }: { data: TopologyNode & { selected?: boolean } }) => {
       <Handle type="target" position={Position.Top} style={{ background: color }} />
       <div style={{ fontSize: 24 }}>{icon}</div>
       <div style={{ fontWeight: 600, marginTop: 4, color: '#333' }}>{data.name}</div>
-      <Tag color={color} style={{ marginTop: 4 }}>{data.type_name || data.type}</Tag>
+      <Tag color={color} style={{ marginTop: 4 }}>{data.typeName || data.type}</Tag>
       {data.status && <Tag color={data.status === 'active' ? 'green' : 'default'} style={{ marginTop: 2 }}>{data.status}</Tag>}
       <Handle type="source" position={Position.Bottom} style={{ background: color }} />
     </div>
@@ -49,7 +49,7 @@ export default function TopologyPage() {
     try {
       const result = await CMDBApi.getCIs({});
       const items = result.items || result.cis || [];
-      setCIList(items.map((ci: any) => ({ id: ci.id, name: ci.name, type: ci.ci_type || ci.type })));
+      setCIList(items.map((ci: any) => ({ id: ci.id, name: ci.name, type: ci.ciType || ci.type })));
     } catch (error) { console.error('Failed to load CI list:', error); }
   }, []);
 
@@ -62,8 +62,8 @@ export default function TopologyPage() {
         id: String(node.id), type: 'ciNode', position: { x: 250 + (index % 4) * 200, y: 100 + Math.floor(index / 4) * 150 }, data: { ...node }
       }));
       const flowEdges: Edge[] = graph.edges.map(edge => ({
-        id: 'e' + edge.id, source: String(edge.source), target: String(edge.target), label: edge.relationship_label, type: 'smoothstep',
-        animated: edge.impact_level === 'critical', style: { stroke: getEdgeColor(edge.strength) },
+        id: 'e' + edge.id, source: String(edge.source), target: String(edge.target), label: edge.relationshipLabel, type: 'smoothstep',
+        animated: edge.impactLevel === 'critical', style: { stroke: getEdgeColor(edge.strength) },
         markerEnd: { type: MarkerType.ArrowClosed, color: getEdgeColor(edge.strength) }
       }));
       setNodes(flowNodes); setEdges(flowEdges);
@@ -96,7 +96,7 @@ export default function TopologyPage() {
       <Drawer title="配置项详情" placement="right" width={400} open={drawerVisible} onClose={() => setDrawerVisible(false)}>
         {selectedNodeData && <Descriptions column={1} bordered size="small">
           <Descriptions.Item label="名称">{selectedNodeData.name}</Descriptions.Item>
-          <Descriptions.Item label="类型">{selectedNodeData.type_name}</Descriptions.Item>
+          <Descriptions.Item label="类型">{selectedNodeData.typeName}</Descriptions.Item>
           <Descriptions.Item label="状态"><Tag color={selectedNodeData.status === 'active' ? 'green' : 'default'}>{selectedNodeData.status}</Tag></Descriptions.Item>
           <Descriptions.Item label="关键程度"><Tag color={selectedNodeData.criticality === 'critical' ? 'red' : 'default'}>{selectedNodeData.criticality}</Tag></Descriptions.Item>
         </Descriptions>}

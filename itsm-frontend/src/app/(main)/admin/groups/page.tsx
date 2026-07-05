@@ -55,7 +55,7 @@ const GroupManagement: React.FC = () => {
     try {
       const response = await GroupAPI.getGroups({
         page: pagination.current,
-        page_size: pagination.pageSize,
+        pageSize: pagination.pageSize,
         search: search || undefined,
       });
       setGroups(response.groups);
@@ -136,7 +136,7 @@ const GroupManagement: React.FC = () => {
   const loadGroupMembers = async (groupId: number) => {
     setLoadingMembers(true);
     try {
-      const response = await GroupAPI.getMembers(groupId, { page: 1, page_size: 100 });
+      const response = await GroupAPI.getMembers(groupId, { page: 1, pageSize: 100 });
       setGroupMembers(response.members || []);
       setSelectedUserIds(response.members?.map(m => String(m.id)) || []);
     } catch (error) {
@@ -150,7 +150,7 @@ const GroupManagement: React.FC = () => {
   // 加载所有用户（用于添加成员）
   const loadAllUsers = async () => {
     try {
-      const response = await UserApi.getUsers({ page: 1, page_size: 500 });
+      const response = await UserApi.getUsers({ page: 1, pageSize: 500 });
       setAllUsers(response.users || []);
     } catch (error) {
       console.error('Failed to load users:', error);

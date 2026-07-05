@@ -15,7 +15,7 @@ export const submitTicket = async (values: TicketFormValues): Promise<any> => {
   const payload = {
     ...values,
     type: values.type,
-    estimated_time: values.estimated_time || undefined,
+    estimatedTime: values.estimatedTime || undefined,
   };
 
   return await ticketService.createTicket(payload);
@@ -30,7 +30,7 @@ export const updateTicket = async (
 ): Promise<any> => {
   const payload = {
     ...values,
-    estimated_time: values.estimated_time || undefined,
+    estimatedTime: values.estimatedTime || undefined,
   };
 
   return await ticketService.updateTicket(ticketId, payload);
@@ -41,7 +41,7 @@ export const updateTicket = async (
  */
 export const fetchUserList = async (): Promise<any[]> => {
   try {
-    const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+    const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
     return response.users || [];
   } catch (error) {
     console.error('Failed to fetch users:', error);

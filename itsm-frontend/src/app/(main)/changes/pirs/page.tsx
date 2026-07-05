@@ -41,7 +41,7 @@ export default function PIRListPage() {
     try {
       const response = await ChangeApi.getPIRs({
         page,
-        page_size: pageSize,
+        pageSize: pageSize,
         result: resultFilter as any,
       });
       setPirs(response.items || []);

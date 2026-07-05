@@ -38,7 +38,7 @@ const statusColors: Record<string, string> = {
   completed: 'success',
   cancelled: 'default',
   failed: 'error',
-  rolled_back: 'warning',
+  rolledBack: 'warning',
 };
 
 // 类型颜色映射
@@ -110,8 +110,8 @@ const ReleaseList: React.FC = () => {
   const columns = [
     {
       title: '发布编号',
-      dataIndex: 'release_number',
-      key: 'release_number',
+      dataIndex:'releaseNumber',
+      key:'releaseNumber',
       width: 140,
       render: (text: string) => (
         <Tooltip title={text}>
@@ -168,15 +168,15 @@ const ReleaseList: React.FC = () => {
     },
     {
       title: '计划发布日期',
-      dataIndex: 'planned_release_date',
-      key: 'planned_release_date',
+      dataIndex:'plannedReleaseDate',
+      key:'plannedReleaseDate',
       width: 150,
       render: (date?: string) => (date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
       title: '创建人',
-      dataIndex: 'created_by_name',
-      key: 'created_by_name',
+      dataIndex:'createdByName',
+      key:'createdByName',
       width: 120,
       render: (text: string) => (
         <Tooltip title={text}>
@@ -188,8 +188,8 @@ const ReleaseList: React.FC = () => {
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 150,
       render: (date?: string) => (date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'),
     },
@@ -204,7 +204,7 @@ const ReleaseList: React.FC = () => {
               type="text"
               icon={<Eye />}
               onClick={() => router.push(`/releases/${record.id}`)}
-              aria-label={`查看发布 ${record.title || record.release_number || '详情'}`}
+              aria-label={`查看发布 ${record.title || record.releaseNumber || '详情'}`}
             />
           </Tooltip>
           <Tooltip title="编辑发布信息">
@@ -212,7 +212,7 @@ const ReleaseList: React.FC = () => {
               type="text"
               icon={<Pencil />}
               onClick={() => router.push(`/releases/${record.id}`)}
-              aria-label={`编辑发布 ${record.title || record.release_number || '详情'}`}
+              aria-label={`编辑发布 ${record.title || record.releaseNumber || '详情'}`}
             />
           </Tooltip>
         </Space>
@@ -232,7 +232,7 @@ const ReleaseList: React.FC = () => {
           <Card>
             <Statistic
               title="进行中"
-              value={stats.in_progress || 0}
+              value={stats.inProgress || 0}
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>

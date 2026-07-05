@@ -25,9 +25,9 @@ const { Title, Text } = Typography;
 function statusTag(status: string) {
   const map: Record<string, { color: string; label: string }> = {
     submitted: { color: 'gold', label: '已提交' },
-    manager_approved: { color: 'blue', label: '主管已批' },
-    it_approved: { color: 'geekblue', label: 'IT已批' },
-    security_approved: { color: 'green', label: '安全已批' },
+    managerApproved: { color: 'blue', label: '主管已批' },
+    itApproved: { color: 'geekblue', label: 'IT已批' },
+    securityApproved: { color: 'green', label: '安全已批' },
     provisioning: { color: 'cyan', label: '交付中' },
     delivered: { color: 'green', label: '已交付' },
     failed: { color: 'red', label: '交付失败' },
@@ -196,12 +196,12 @@ export default function MyRequestDetailPage() {
               {statusTag(String(detail?.status || ''))}
             </Descriptions.Item>
             <Descriptions.Item label="当前级别">
-              {detail?.current_level ?? '-'} / {detail?.total_levels ?? '-'}
+              {detail?.currentLevel ?? '-'} / {detail?.totalLevels ?? '-'}
             </Descriptions.Item>
             <Descriptions.Item label="关联CI">
-              {detail?.ci_id ? (
-                <Button type="link" onClick={() => router.push(`/cmdb/cis/${detail.ci_id}`)}>
-                  CI #{detail.ci_id}
+              {detail?.ciId ? (
+                <Button type="link" onClick={() => router.push(`/cmdb/cis/${detail.ciId}`)}>
+                  CI #{detail.ciId}
                 </Button>
               ) : (
                 '-'
@@ -214,9 +214,9 @@ export default function MyRequestDetailPage() {
               {detail?.reason || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="数据分级">
-              {detail?.data_classification || '-'}
+              {detail?.dataClassification || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="成本中心">{detail?.cost_center || '-'}</Descriptions.Item>
+            <Descriptions.Item label="成本中心">{detail?.costCenter || '-'}</Descriptions.Item>
           </Descriptions>
 
           <Divider />
@@ -230,7 +230,7 @@ export default function MyRequestDetailPage() {
                 <Descriptions.Item key={a.id} label={`L${a.level} · ${a.step}`}>
                   <Space wrap>
                     {statusTag(String(a.status))}
-                    <Text type="secondary">审批人：{a.approver_name || '-'}</Text>
+                    <Text type="secondary">审批人：{a.approverName || '-'}</Text>
                     <Text type="secondary">意见：{a.comment || '-'}</Text>
                   </Space>
                 </Descriptions.Item>
@@ -324,7 +324,7 @@ export default function MyRequestDetailPage() {
                     },
                     {
                       title: '资源类型',
-                      dataIndex: 'resource_type',
+                      dataIndex: 'resourceType',
                       width: 120,
                     },
                     {
@@ -340,7 +340,7 @@ export default function MyRequestDetailPage() {
                     },
                     {
                       title: '错误信息',
-                      dataIndex: 'error_message',
+                      dataIndex:'errorMessage',
                       ellipsis: true,
                       render: (text: string) => text || '-',
                     },

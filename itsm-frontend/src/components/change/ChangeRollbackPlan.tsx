@@ -50,17 +50,17 @@ interface ChangeRollbackPlanProps {
 }
 
 interface RollbackPlanData {
-  rollback_strategy: 'full' | 'partial' | 'data_only' | 'config_only';
-  rollback_triggers: string[];
-  rollback_steps: RollbackStep[];
-  rollback_time_window: {
-    start_time: string;
-    end_time: string;
+  rollbackStrategy: 'full' | 'partial' | 'data_only' | 'config_only';
+  rollbackTriggers: string[];
+  rollbackSteps: RollbackStep[];
+  rollbackTimeWindow: {
+    startTime: string;
+    endTime: string;
   };
-  rollback_team: string[];
-  rollback_test_plan: string;
-  rollback_verification: string;
-  rollback_risk_assessment: string;
+  rollbackTeam: string[];
+  rollbackTestPlan: string;
+  rollbackVerification: string;
+  rollbackRiskAssessment: string;
 }
 
 interface RollbackStep {
@@ -68,12 +68,12 @@ interface RollbackStep {
   title: string;
   description: string;
   type: 'system' | 'data' | 'config' | 'network' | 'service';
-  estimated_time: number;
+  estimatedTime: number;
   dependencies: string[];
-  responsible_person: string;
-  verification_method: string;
-  rollback_command?: string;
-  success_criteria: string;
+  responsiblePerson: string;
+  verificationMethod: string;
+  rollbackCommand?: string;
+  successCriteria: string;
 }
 
 const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
@@ -101,13 +101,13 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       risk: 'medium',
       time: 'medium',
     },
-    data_only: {
+    dataOnly: {
       label: '仅数据回滚',
       description: '只恢复数据变更，保持系统和配置变更',
       risk: 'low',
       time: 'low',
     },
-    config_only: {
+    configOnly: {
       label: '仅配置回滚',
       description: '只恢复配置变更，保持数据和系统变更',
       risk: 'medium',
@@ -141,8 +141,8 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
   useEffect(() => {
     if (initialData) {
       form.setFieldsValue(initialData);
-      if (initialData.rollback_steps) {
-        setRollbackSteps(initialData.rollback_steps);
+      if (initialData.rollbackSteps) {
+        setRollbackSteps(initialData.rollbackSteps);
       }
     }
   }, [initialData, form]);
@@ -153,11 +153,11 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       title: '',
       description: '',
       type: 'system',
-      estimated_time: 10,
+      estimatedTime: 10,
       dependencies: [],
-      responsible_person: '',
-      verification_method: '',
-      success_criteria: '',
+      responsiblePerson: '',
+      verificationMethod: '',
+      successCriteria: '',
     };
     setRollbackSteps([...rollbackSteps, newStep]);
   };
@@ -173,7 +173,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
   };
 
   const getTotalRollbackTime = () => {
-    return rollbackSteps.reduce((total, step) => total + (step.estimated_time || 0), 0);
+    return rollbackSteps.reduce((total, step) => total + (step.estimatedTime || 0), 0);
   };
 
   const handleSubmit = async () => {
@@ -182,7 +182,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       setSubmitting(true);
       const rollbackData: RollbackPlanData = {
         ...values,
-        rollback_steps: rollbackSteps,
+        rollbackSteps: rollbackSteps,
       };
 
       onSave?.(rollbackData);
@@ -241,14 +241,14 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
     },
     {
       title: '预计时间(分钟)',
-      dataIndex: 'estimated_time',
-      key: 'estimated_time',
+      dataIndex:'estimatedTime',
+      key:'estimatedTime',
       width: 130,
       render: (time: number, record: RollbackStep, index: number) => (
         <Input
           type="number"
           value={time}
-          onChange={e => updateRollbackStep(index, 'estimated_time', parseInt(e.target.value) || 0)}
+          onChange={e => updateRollbackStep(index, 'estimated_time' as any, parseInt(e.target.value) || 0)}
           disabled={readOnly}
           min={1}
         />
@@ -256,13 +256,13 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
     },
     {
       title: '负责人',
-      dataIndex: 'responsible_person',
-      key: 'responsible_person',
+      dataIndex:'responsiblePerson',
+      key:'responsiblePerson',
       width: 120,
       render: (person: string, record: RollbackStep, index: number) => (
         <Input
           value={person}
-          onChange={e => updateRollbackStep(index, 'responsible_person', e.target.value)}
+          onChange={e => updateRollbackStep(index, 'responsible_person' as any, e.target.value)}
           placeholder="负责人"
           disabled={readOnly}
         />

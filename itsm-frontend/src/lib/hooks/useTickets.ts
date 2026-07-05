@@ -16,7 +16,7 @@ export interface TicketQueryFilters {
   priority?: TicketPriority;
   type?: TicketType;
   category?: string;
-  assignee_id?: number;
+  assigneeId?: number;
   keyword?: string;
   dateRange?: [string, string];
   tags?: string[];
@@ -111,10 +111,10 @@ export const useTickets = (): UseTicketsReturn => {
         priority: currentFilters.priority,
         type: currentFilters.type,
         category: currentFilters.category,
-        assignee_id: currentFilters.assignee_id,
+        assigneeId: currentFilters.assigneeId,
         keyword: currentFilters.keyword,
-        date_from: dateRange?.[0],
-        date_to: dateRange?.[1],
+        dateFrom: dateRange?.[0],
+        dateTo: dateRange?.[1],
         tags: currentFilters.tags,
       });
 

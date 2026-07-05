@@ -17,7 +17,7 @@ import {
   Avatar,
   Tooltip,
 } from 'antd';
-import { ArrowUp, X, Check, FileText, Clock, Undo, Mail } from 'lucide-react';
+import { ArrowUp, X, Check, FileText, Clock, Undo, Mail, Send, MoreHorizontal } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type {
   TicketWorkflowState} from '@/types/ticket-workflow';
@@ -68,7 +68,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
   const loadUsers = async () => {
     try {
       const { UserApi } = await import('@/lib/api/user-api');
-      const response = await UserApi.getUsers({ page: 1, page_size: 100, status: 'active' });
+      const response = await UserApi.getUsers({ page: 1, pageSize: 100, status: 'active' });
       setUsers(response.users);
     } catch (error) {
       message.error('无法加载用户列表');
@@ -417,7 +417,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
     moreActions.push({
       key: 'forward',
       label: '转发',
-      icon: <SendOutlined />,
+      icon: <Send />,
       onClick: () => openActionModal(TicketWorkflowAction.FORWARD),
     });
   }
@@ -455,7 +455,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
         {mainActions}
         {moreActions.length > 0 && (
           <Dropdown menu={{ items: moreActions }} placement="bottomRight">
-            <Button icon={<MoreOutlined />}>更多操作</Button>
+            <Button icon={<MoreHorizontal />}>更多操作</Button>
           </Dropdown>
         )}
       </div>

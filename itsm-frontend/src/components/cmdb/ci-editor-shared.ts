@@ -47,31 +47,31 @@ export type SchemaField = {
 
 export interface CIFormValues {
   name: string;
-  ci_type_id: number;
+  ciTypeId: number;
   status: CIStatus;
   description?: string;
   attributes?: string;
-  serial_number?: string;
+  serialNumber?: string;
   model?: string;
   vendor?: string;
   location?: string;
-  asset_tag?: string;
-  assigned_to?: string;
-  owned_by?: string;
+  assetTag?: string;
+  assignedTo?: string;
+  ownedBy?: string;
   environment?: string;
   criticality?: string;
-  discovery_source?: string;
+  discoverySource?: string;
   source?: string;
-  cloud_provider?: string;
-  cloud_account_id?: string;
-  cloud_region?: string;
-  cloud_zone?: string;
-  cloud_resource_id?: string;
-  cloud_resource_type?: string;
-  cloud_sync_status?: string;
-  cloud_resource_ref_id?: number;
-  cloud_metadata?: Record<string, {} | undefined>;
-  custom_attributes?: Record<string, {} | undefined>;
+  cloudProvider?: string;
+  cloudAccountId?: string;
+  cloudRegion?: string;
+  cloudZone?: string;
+  cloudResourceId?: string;
+  cloudResourceType?: string;
+  cloudSyncStatus?: string;
+  cloudResourceRefId?: number;
+  cloudMetadata?: Record<string, {} | undefined>;
+  customAttributes?: Record<string, {} | undefined>;
 }
 
 export const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
@@ -145,8 +145,8 @@ export const buildCloudResourceOptions = (
   cloudServiceMap: Map<number, CloudService>
 ) =>
   cloudResources.map(resource => {
-    const service = cloudServiceMap.get(resource.service_id);
-    const label = `${resource.resource_name || resource.resource_id}（${service?.resource_type_name || '未知类型'}）`;
+    const service = cloudServiceMap.get(resource.serviceId);
+    const label = `${resource.resourceName || resource.resourceId}（${service?.resourceTypeName || '未知类型'}）`;
     return {
       label,
       value: resource.id,

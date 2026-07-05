@@ -101,17 +101,17 @@ const SLADetail: React.FC = () => {
       >
         <Descriptions bordered column={2} className="mb-6">
           <Descriptions.Item label="名称">{data.name}</Descriptions.Item>
-          <Descriptions.Item label="服务类型">{data.service_type || '-'}</Descriptions.Item>
+          <Descriptions.Item label="服务类型">{data.serviceType || '-'}</Descriptions.Item>
           <Descriptions.Item label="优先级">
             <Tag color={SLAPriorityColors[data.priority] || 'blue'}>
               {SLAPriorityLabels[data.priority] || data.priority}
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="状态">
-            {data.is_active ? <Tag color="green">激活</Tag> : <Tag color="red">禁用</Tag>}
+            {data.isActive ? <Tag color="green">激活</Tag> : <Tag color="red">禁用</Tag>}
           </Descriptions.Item>
-          <Descriptions.Item label="响应时间设定">{data.response_time} 分钟</Descriptions.Item>
-          <Descriptions.Item label="解决时间设定">{data.resolution_time} 分钟</Descriptions.Item>
+          <Descriptions.Item label="响应时间设定">{data.responseTime} 分钟</Descriptions.Item>
+          <Descriptions.Item label="解决时间设定">{data.resolutionTime} 分钟</Descriptions.Item>
           <Descriptions.Item label="描述" span={2}>
             {data.description || '无'}
           </Descriptions.Item>
@@ -124,7 +124,7 @@ const SLADetail: React.FC = () => {
 
         <Divider>升级规则</Divider>
         <pre className="bg-gray-50 p-3 rounded text-sm overflow-auto">
-          {JSON.stringify(data.escalation_rules, null, 2)}
+          {JSON.stringify(data.escalationRules, null, 2)}
         </pre>
 
         <div className="mt-6">

@@ -19,7 +19,7 @@ import {
   Form,
   App,
 } from 'antd';
-import { Filter, Plus, Pencil, Trash2, User, Calendar, Clock, ArrowUpDown } from 'lucide-react';
+import { Filter, Plus, Pencil, Trash2, User, Calendar, Clock, ArrowUpDown, MoreHorizontal } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -44,7 +44,7 @@ interface TicketKanbanProps {
 const KANBAN_STATUS_CONFIG = [
   { key: 'new', title: '新建', color: '#1890ff' },
   { key: 'open', title: '待处理', color: '#1890ff' },
-  { key: 'in_progress', title: '处理中', color: '#fa8c16' },
+  { key:'inProgress', title: '处理中', color: '#fa8c16' },
   { key: 'pending', title: '等待中', color: '#faad14' },
   { key: 'resolved', title: '已解决', color: '#52c41a' },
   { key: 'closed', title: '已关闭', color: '#d9d9d9' },
@@ -215,7 +215,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
         }}
         actions={[
           <Dropdown key="more" menu={{ items: getTicketMenu(ticket) }} trigger={['click']}>
-            <Button type="text" icon={<MoreOutlined />} size="small" />
+            <Button type="text" icon={<MoreHorizontal />} size="small" />
           </Dropdown>,
         ]}
       >

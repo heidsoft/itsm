@@ -283,7 +283,7 @@ export const LazyBackgroundImage: React.FC<LazyBackgroundImageProps> = ({
 
   useEffect(() => {
     if (isInView && !isLoaded) {
-      const img = new Image();
+      const img = new window.Image();
       img.src = src;
       img.onload = () => setIsLoaded(true);
     }

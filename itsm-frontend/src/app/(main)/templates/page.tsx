@@ -69,18 +69,18 @@ interface WorkflowStep {
   id: string;
   name: string;
   type: 'approval' | 'assignment' | 'notification' | 'automation';
-  assignee_group?: string;
-  assignee_user?: string;
-  due_time?: number;
+  assigneeGroup?: string;
+  assigneeUser?: string;
+  dueTime?: number;
   conditions?: string;
   order: number;
 }
 
 type TicketTemplate = ServiceTicketTemplate & {
   priority?: string;
-  form_fields?: Record<string, any> | TemplateField[];
-  workflow_steps?: WorkflowStep[];
-  tenant_id?: string;
+  formFields?: Record<string, any> | TemplateField[];
+  workflowSteps?: WorkflowStep[];
+  tenantId?: string;
 };
 
 type FormField = TemplateField & {
@@ -91,7 +91,7 @@ type FormField = TemplateField & {
 
 interface TemplateFilters {
   category?: string;
-  is_active?: boolean;
+  isActive?: boolean;
   keyword?: string;
 }
 
@@ -121,7 +121,7 @@ const TicketTemplatePage: React.FC = () => {
       // 调用真实API
       const response = await ticketTemplateService.getTemplates({
         page: 1,
-        page_size: 100,
+        pageSize: 100,
       });
 
       setTemplates(response.templates || []);
@@ -162,10 +162,10 @@ const TicketTemplatePage: React.FC = () => {
           order: index,
         }));
         setFormFields(normalized as FormField[]);
-      } else if (template.form_fields) {
-        const fields = Array.isArray(template.form_fields)
-          ? template.form_fields
-          : Object.values(template.form_fields);
+      } else if (template.formFields) {
+        const fields = Array.isArray(template.formFields)
+          ? template.formFields
+          : Object.values(template.formFields);
         const normalized = fields.map((field, index) => ({
           ...(field as TemplateField),
           id: `field-${template.id}-${index}`,
@@ -174,8 +174,8 @@ const TicketTemplatePage: React.FC = () => {
         setFormFields(normalized as FormField[]);
       }
 
-      if (template.workflow_steps) {
-        setWorkflowSteps(template.workflow_steps);
+      if (template.workflowSteps) {
+        setWorkflowSteps(template.workflowSteps);
       }
     } catch (error) {
       console.error('解析模板数据失败:', error);
@@ -186,11 +186,11 @@ const TicketTemplatePage: React.FC = () => {
       description: template.description,
       category: template.category,
       priority: template.priority,
-      assignee_group:
-        template.form_fields && !Array.isArray(template.form_fields)
-          ? template.form_fields.assignee_group
+      assigneeGroup:
+        template.formFields && !Array.isArray(template.formFields)
+          ? template.formFields.assigneeGroup
           : undefined,
-      is_active: template.is_active,
+      isActive: template.isActive,
     });
     setModalVisible(true);
     setActiveTab('basic');
@@ -238,21 +238,21 @@ const TicketTemplatePage: React.FC = () => {
     const rows = filteredTemplates.map(template => {
       const fieldCount = Array.isArray(template.fields)
         ? template.fields.length
-        : Array.isArray(template.form_fields)
-          ? template.form_fields.length
-          : template.form_fields
-            ? Object.keys(template.form_fields).length
+        : Array.isArray(template.formFields)
+          ? template.formFields.length
+          : template.formFields
+            ? Object.keys(template.formFields).length
             : 0;
       return [
         template.id,
         template.name,
         template.category,
-        template.is_active ? '启用' : '禁用',
+        template.isActive ? '启用' : '禁用',
         template.priority || '',
         fieldCount,
         template.description,
-        template.created_at,
-        template.updated_at,
+        template.createdAt,
+        template.updatedAt,
       ];
     });
     const csv = [header, ...rows].map(row => row.map(escapeCSV).join(',')).join('\n');
@@ -277,8 +277,8 @@ const TicketTemplatePage: React.FC = () => {
         type: field.type,
         required: field.required,
         options: field.options,
-        default_value: field.default_value,
-        validation_rules: field.validation_rules,
+        defaultValue: field.defaultValue,
+        validationRules: field.validationRules,
       }));
 
       if (editingTemplate) {
@@ -288,7 +288,7 @@ const TicketTemplatePage: React.FC = () => {
           description: values.description,
           category: values.category,
           fields,
-          is_active: values.is_active,
+          isActive: values.isActive,
         };
         const updatedTemplate = await ticketTemplateService.updateTemplate(
           editingTemplate.id,
@@ -446,8 +446,8 @@ const TicketTemplatePage: React.FC = () => {
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       width: 100,
       render: (isActive: boolean) => (
         <Badge status={isActive ? 'success' : 'error'} text={isActive ? '启用' : '禁用'} />
@@ -510,7 +510,7 @@ const TicketTemplatePage: React.FC = () => {
   // 过滤模板
   const filteredTemplates = templates.filter(template => {
     if (filters.category && template.category !== filters.category) return false;
-    if (filters.is_active !== undefined && template.is_active !== filters.is_active) return false;
+    if (filters.isActive !== undefined && template.isActive !== filters.isActive) return false;
     if (filters.keyword && !template.name.toLowerCase().includes(filters.keyword.toLowerCase()))
       return false;
     return true;
@@ -519,7 +519,7 @@ const TicketTemplatePage: React.FC = () => {
   // 统计数据
   const stats = {
     total: templates.length,
-    active: templates.filter(t => t.is_active).length,
+    active: templates.filter(t => t.isActive).length,
     categories: new Set(templates.map(t => t.category)).size,
   };
 
@@ -608,8 +608,8 @@ const TicketTemplatePage: React.FC = () => {
                 placeholder="状态筛选"
                 style={{ width: 120 }}
                 allowClear
-                value={filters.is_active}
-                onChange={value => setFilters({ ...filters, is_active: value })}
+                value={filters.isActive}
+                onChange={value => setFilters({ ...filters, isActive: value })}
               >
                 <Option value={true}>启用</Option>
                 <Option value={false}>禁用</Option>
@@ -682,9 +682,9 @@ const TicketTemplatePage: React.FC = () => {
                 priority: 'medium',
                 impact: 'medium',
                 urgency: 'medium',
-                is_active: true,
-                sla_response_time: 60,
-                sla_resolution_time: 240,
+                isActive: true,
+                slaResponseTime: 60,
+                slaResolutionTime: 240,
               }}
             >
               <Row gutter={16}>
@@ -835,10 +835,10 @@ const TicketTemplatePage: React.FC = () => {
                                     </Select>
                                     <Input
                                       placeholder="默认值"
-                                      value={field.default_value || ''}
+                                      value={field.defaultValue || ''}
                                       onChange={e =>
                                         updateFormField(index, {
-                                          default_value: e.target.value,
+                                          defaultValue: e.target.value,
                                         })
                                       }
                                     />
@@ -960,19 +960,19 @@ const TicketTemplatePage: React.FC = () => {
                                     </Select>
                                     <Input
                                       placeholder="处理组"
-                                      value={step.assignee_group || ''}
+                                      value={step.assigneeGroup || ''}
                                       onChange={e =>
                                         updateWorkflowStep(index, {
-                                          assignee_group: e.target.value,
+                                          assigneeGroup: e.target.value,
                                         })
                                       }
                                     />
                                     <InputNumber
                                       placeholder="预计耗时(小时)"
-                                      value={step.due_time || undefined}
+                                      value={step.dueTime || undefined}
                                       onChange={value =>
                                         updateWorkflowStep(index, {
-                                          due_time: value || undefined,
+                                          dueTime: value || undefined,
                                         })
                                       }
                                       min={0}

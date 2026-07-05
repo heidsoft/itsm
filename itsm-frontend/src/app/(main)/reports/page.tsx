@@ -39,29 +39,29 @@ const RealTimeMonitoring = dynamic(() => import('@/components/reports/RealTimeMo
 const { Text } = Typography;
 
 const predefinedReports = {
-  ticket_trends: {
+  ticketTrends: {
     name: '工单趋势分析',
     dimensions: ['created_date'],
     metrics: ['count'],
-    chart_type: 'line' as const,
+    chartType: 'line' as const,
   },
-  sla_performance: {
+  slaPerformance: {
     name: 'SLA 表现分析',
     dimensions: ['sla_status'],
     metrics: ['count', 'avg_response_time'],
-    chart_type: 'bar' as const,
+    chartType: 'bar' as const,
   },
-  priority_distribution: {
+  priorityDistribution: {
     name: '优先级分布',
     dimensions: ['priority'],
     metrics: ['count'],
-    chart_type: 'pie' as const,
+    chartType: 'pie' as const,
   },
-  resolution_time: {
+  resolutionTime: {
     name: '解决时间分析',
     dimensions: ['resolution_category'],
     metrics: ['avg_resolution_time'],
-    chart_type: 'bar' as const,
+    chartType: 'bar' as const,
   },
 };
 
@@ -70,12 +70,12 @@ const emptyAnalytics: AnalyticsResponse = {
   summary: {
     total: 0,
     resolved: 0,
-    avg_response_time: 0,
-    avg_resolution_time: 0,
-    sla_compliance: 0,
-    customer_satisfaction: 0,
+    avgResponseTime: 0,
+    avgResolutionTime: 0,
+    slaCompliance: 0,
+    customerSatisfaction: 0,
   },
-  generated_at: new Date().toISOString(),
+  generatedAt: new Date().toISOString(),
 };
 
 const ReportsPage: React.FC = () => {
@@ -84,7 +84,7 @@ const ReportsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedReportKey, setSelectedReportKey] =
-    useState<keyof typeof predefinedReports>('ticket_trends');
+    useState<keyof typeof predefinedReports>('ticketTrends');
   const [analyticsData, setAnalyticsData] = useState<AnalyticsResponse>(emptyAnalytics);
   const [timeRange, setTimeRange] = useState<[string, string]>([
     format(subDays(new Date(), 30), 'yyyy-MM-dd'),
@@ -100,17 +100,17 @@ const ReportsPage: React.FC = () => {
       const analyticsConfig: AnalyticsConfig = {
         dimensions: config.dimensions || ['created_date'],
         metrics: config.metrics || ['count'],
-        chart_type: config.chart_type || 'bar',
-        time_range: timeRange,
+        chartType: config.chartType || 'bar',
+        timeRange: timeRange,
         filters: config.filters || {},
-        group_by: config.group_by,
+        groupBy: config.groupBy,
       };
 
       const response = await TicketAnalyticsApi.getDeepAnalytics(analyticsConfig);
       setAnalyticsData({
         data: Array.isArray(response?.data) ? response.data : [],
         summary: response?.summary || emptyAnalytics.summary,
-        generated_at: response?.generated_at || new Date().toISOString(),
+        generatedAt: response?.generatedAt || new Date().toISOString(),
       });
     } catch (fetchError) {
       setAnalyticsData(emptyAnalytics);
@@ -127,8 +127,8 @@ const ReportsPage: React.FC = () => {
       const config: AnalyticsConfig = {
         dimensions: selectedReport.dimensions,
         metrics: selectedReport.metrics,
-        chart_type: 'table',
-        time_range: timeRange,
+        chartType: 'table',
+        timeRange: timeRange,
         filters: {},
       };
 
@@ -175,7 +175,7 @@ const ReportsPage: React.FC = () => {
       {
         key: 'response',
         title: '平均响应时间',
-        value: analyticsData.summary.avg_response_time,
+        value: analyticsData.summary.avgResponseTime,
         suffix: '小时',
         prefix: <TrendingUp className="h-5 w-5" />,
         accentColor: '#fa8c16',
@@ -183,10 +183,10 @@ const ReportsPage: React.FC = () => {
       {
         key: 'sla',
         title: 'SLA 合规率',
-        value: analyticsData.summary.sla_compliance,
+        value: analyticsData.summary.slaCompliance,
         suffix: '%',
         prefix: <BarChart3 className="h-5 w-5" />,
-        accentColor: analyticsData.summary.sla_compliance >= 95 ? '#52c41a' : '#faad14',
+        accentColor: analyticsData.summary.slaCompliance >= 95 ? '#52c41a' : '#faad14',
       },
     ],
     [analyticsData]
@@ -218,7 +218,7 @@ const ReportsPage: React.FC = () => {
               <ReportsCharts
                 data={analyticsData.data}
                 loading={loading}
-                chartType={selectedReport.chart_type}
+                chartType={selectedReport.chartType}
               />
             </LoadingEmptyError>
           </Card>

@@ -5,10 +5,10 @@ export interface TicketTag {
   name: string;
   color: string;
   description?: string;
-  is_active: boolean;
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
+  isActive: boolean;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ListTagsResponse {
@@ -18,8 +18,8 @@ export interface ListTagsResponse {
 
 export interface ListTagsParams {
   page?: number;
-  page_size?: number;
-  is_active?: boolean;
+  pageSize?: number;
+  isActive?: boolean;
 }
 
 class TicketTagService {

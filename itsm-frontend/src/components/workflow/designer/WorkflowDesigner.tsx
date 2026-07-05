@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Layout, Tabs, Form, Modal, Tag, Button, Space, Typography, Switch, App } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { History, AlertTriangle, CheckCircle, XCircle, Bug } from 'lucide-react';
+import { History, AlertTriangle, CheckCircle, XCircle, Bug, GitCompare } from 'lucide-react';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { UserApi } from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
@@ -111,12 +111,12 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const [saving, setSaving] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [approvalConfig, setApprovalConfig] = useState<ApprovalConfig>({
-    require_approval: true,
-    approval_type: 'sequential',
+    requireApproval: true,
+    approvalType: 'sequential',
     approvers: [],
     // 审批组是节点级。详见 WorkflowNodeInspector 节点面板的「候选组」字段。
-    auto_approve_roles: [],
-    escalation_rules: [],
+    autoApproveRoles: [],
+    escalationRules: [],
   });
   const [workflowVersions, setWorkflowVersions] = useState<WorkflowVersion[]>([]);
   const [userList, setUserList] = useState<{ id: number; name: string; username: string }[]>([]);
@@ -194,7 +194,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const loadUserList = async () => {
     setLoadingUsers(true);
     try {
-      const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+      const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
       const users = (response.users || []).map((u: any) => ({
         id: u.id,
         name: u.name || u.username || '未知用户',
@@ -231,7 +231,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     setLoadingGroups(true);
     try {
       const tenantId = httpClient.getTenantId() || 1;
-      const response = await GroupAPI.getGroups({ page: 1, page_size: 100, tenant_id: tenantId });
+      const response = await GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId: tenantId });
       const groups = (response.groups || []).map((g: any) => ({
         id: g.id,
         name: g.name || '未命名组',
@@ -284,18 +284,18 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         category: response.category || response.type || 'general',
         status: response.isActive ? 'active' : 'inactive',
         xml: xmlContent,
-        created_at: response.createdAt || response.created_at || new Date().toISOString(),
-        updated_at: response.updatedAt || response.updated_at || new Date().toISOString(),
-        created_by: '系统',
+        createdAt: response.createdAt || response.createdAt || new Date().toISOString(),
+        updatedAt: response.updatedAt || response.updatedAt || new Date().toISOString(),
+        createdBy: '系统',
         tags: [],
-        approval_config: approvalConfig,
+        approvalConfig: approvalConfig,
         variables: [],
-        sla_config: {
-          response_time_hours: 24,
-          resolution_time_hours: 72,
-          business_hours_only: true,
-          exclude_weekends: true,
-          exclude_holidays: true,
+        slaConfig: {
+          responseTimeHours: 24,
+          resolutionTimeHours: 72,
+          businessHoursOnly: true,
+          excludeWeekends: true,
+          excludeHolidays: true,
         },
       };
 
@@ -317,9 +317,9 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         id: version.id || version.key || `version-${index}`,
         version: String(version.version ?? '1.0.0'),
         status: version.status || (version.isActive ? 'active' : 'draft'),
-        created_at: version.createdAt || version.created_at || new Date().toISOString(),
-        created_by: version.createdBy || version.created_by || '系统',
-        change_log: version.changeLog || version.change_log || '',
+        createdAt: version.createdAt || version.createdAt || new Date().toISOString(),
+        createdBy: version.createdBy || version.createdBy || '系统',
+        changeLog: version.changeLog || version.changeLog || '',
         xml: version.bpmnXml || '',
       }));
       setWorkflowVersions(normalized);
@@ -334,18 +334,18 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       const response = (await WorkflowAPI.getProcessDefinition(key)) as any;
       if (response) {
         setApprovalConfig({
-          require_approval: response.requireApproval ?? response.require_approval ?? true,
-          approval_type: response.approvalType || response.approval_type || 'sequential',
+          requireApproval: response.requireApproval ?? response.requireApproval ?? true,
+          approvalType: response.approvalType || response.approvalType || 'sequential',
           approvers: response.approvers || [],
-          auto_approve_roles: response.autoApproveRoles || response.auto_approve_roles || [],
-          escalation_rules: response.escalationRules || response.escalation_rules || [],
+          autoApproveRoles: response.autoApproveRoles || response.autoApproveRoles || [],
+          escalationRules: response.escalationRules || response.escalationRules || [],
         });
 
-        const slaConfig = response.slaConfig || response.sla_config;
+        const slaConfig = response.slaConfig || response.slaConfig;
         if (slaConfig && workflow) {
           setWorkflow({
             ...workflow,
-            sla_config: slaConfig,
+            slaConfig: slaConfig,
           });
         }
       }
@@ -379,19 +379,19 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   };
 
   // 更新 SLA 配置
-  const updateSLAConfig = (config: Partial<NonNullable<WorkflowDefinition['sla_config']>>) => {
+  const updateSLAConfig = (config: Partial<NonNullable<WorkflowDefinition['slaConfig']>>) => {
     setWorkflow(prev =>
       prev
         ? {
             ...prev,
-            sla_config: prev.sla_config
-              ? { ...prev.sla_config, ...config }
+            slaConfig: prev.slaConfig
+              ? { ...prev.slaConfig, ...config }
               : {
-                  response_time_hours: 24,
-                  resolution_time_hours: 72,
-                  business_hours_only: true,
-                  exclude_weekends: true,
-                  exclude_holidays: true,
+                  responseTimeHours: 24,
+                  resolutionTimeHours: 72,
+                  businessHoursOnly: true,
+                  excludeWeekends: true,
+                  excludeHolidays: true,
                   ...config,
                 },
           }
@@ -486,10 +486,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           description: workflow.description,
           category: workflow.category,
           bpmnXml: xml,
-          approval_config: approvalConfig,
-          sla_config: workflow.sla_config,
           tenantId,
-        })) as any;
+        } as any)) as any;
 
         updateWorkflow({
           id: response.key || response.id,
@@ -506,9 +504,9 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
             description: workflow.description,
             category: workflow.category,
             bpmnXml: xml,
-            approval_config: approvalConfig,
-            sla_config: workflow.sla_config,
-          },
+            approvalConfig: approvalConfig,
+            slaConfig: workflow.slaConfig,
+          } as any,
           workflow.version
         )) as any;
 
@@ -583,12 +581,10 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           description: workflow.description || '',
           category: workflow.category || 'general',
           bpmnXml: xml,
-          approval_config: approvalConfig,
-          sla_config: workflow.sla_config,
           tenantId: httpClient.getTenantId() || 1,
         };
 
-        const response = (await WorkflowAPI.createProcessDefinition(createData)) as any;
+        const response = (await WorkflowAPI.createProcessDefinition(createData as any)) as any;
 
         if (!response) {
           throw new Error('创建工作流失败：服务器返回空响应');
@@ -617,8 +613,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           description: workflow.description || '',
           category: workflow.category || 'general',
           bpmnXml: xml,
-          approval_config: approvalConfig,
-          sla_config: workflow.sla_config,
+          approvalConfig: approvalConfig,
+          slaConfig: workflow.slaConfig,
         };
 
         await WorkflowAPI.updateProcessDefinition(workflow.id, updateData, currentVersion);
@@ -668,9 +664,9 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         id: `version-${Date.now()}`,
         version: `${parseFloat(workflow.version) + 0.1}`.slice(0, 3),
         status: 'draft',
-        created_at: new Date().toISOString(),
-        created_by: '当前用户',
-        change_log: '创建新版本',
+        createdAt: new Date().toISOString(),
+        createdBy: '当前用户',
+        changeLog: '创建新版本',
         xml: currentXML,
       };
 
@@ -979,18 +975,18 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
               category: 'custom',
               status: 'draft',
               xml: getDefaultBPMNXML(),
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              created_by: '当前用户',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              createdBy: '当前用户',
               tags: [],
-              approval_config: approvalConfig,
+              approvalConfig: approvalConfig,
               variables: [],
-              sla_config: {
-                response_time_hours: values.sla_response || 24,
-                resolution_time_hours: values.sla_resolution || 72,
-                business_hours_only: true,
-                exclude_weekends: true,
-                exclude_holidays: true,
+              slaConfig: {
+                responseTimeHours: values.slaResponse || 24,
+                resolutionTimeHours: values.slaResolution || 72,
+                businessHoursOnly: true,
+                excludeWeekends: true,
+                excludeHolidays: true,
               },
             };
             setWorkflow(newWorkflow);
@@ -1013,8 +1009,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
             try {
               const values = await form.validateFields();
               updateWorkflow({
-                approval_config: values.approvalConfig,
-                sla_config: values.slaConfig,
+                approvalConfig: values.approvalConfig,
+                slaConfig: values.slaConfig,
               });
               message.success('设置保存成功');
               setShowSettingsModal(false);
@@ -1065,7 +1061,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
             </div>
           ) : (
             <div className="text-center py-12">
-              <DiffOutlined className="text-4xl text-gray-400 mb-2" />
+              <GitCompare className="text-4xl text-gray-400 mb-2" />
               <Text type="secondary">请选择两个版本进行对比</Text>
             </div>
           )}

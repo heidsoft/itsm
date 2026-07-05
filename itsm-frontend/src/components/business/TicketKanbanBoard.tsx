@@ -17,7 +17,7 @@ import {
   message,
   App,
 } from 'antd';
-import { Search, Filter, Plus, Save, Pencil, Eye, Settings, Share2 } from 'lucide-react';
+import { Search as SearchIcon, Filter, Plus, Save, Pencil, Eye, Settings, Share2, MoreHorizontal } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type {
   DragStartEvent,
@@ -108,7 +108,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
         onClick={onClick}
         actions={[
           <Dropdown menu={{ items: menuItems }} trigger={['click']} key="more">
-            <MoreOutlined />
+            <MoreHorizontal />
           </Dropdown>,
         ]}
       >

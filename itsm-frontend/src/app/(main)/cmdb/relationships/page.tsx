@@ -30,7 +30,7 @@ export default function RelationshipsPage() {
         const options = items.map((item) => ({
           id: item.id,
           name: item.name,
-          type: item.ciType ?? item.ci_type ?? (item as any).type ?? '配置项',
+          type: item.ciType ?? item.ciType ?? (item as any).type ?? '配置项',
         }));
         if (!mounted) return;
         setCis(options);

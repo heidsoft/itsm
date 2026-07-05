@@ -110,13 +110,13 @@ export const PredictiveAnalytics: React.FC = () => {
       // 并行请求数据
       const [predictionReport, slaMonitoring] = await Promise.all([
         TicketPredictionApi.getTrendPrediction({
-          time_range: dateRange,
-          prediction_period: rangeDays <= 30 ? 'week' : 'month',
-          model_type: 'arima',
+          timeRange: dateRange,
+          predictionPeriod: rangeDays <= 30 ? 'week' : 'month',
+          modelType: 'arima',
         }),
         SLAApi.getSLAMonitoring({
-          start_time: dateRange[0],
-          end_time: dateRange[1],
+          startTime: dateRange[0],
+          endTime: dateRange[1],
         }),
       ]);
 
@@ -124,7 +124,7 @@ export const PredictiveAnalytics: React.FC = () => {
       const mappedMetrics: PredictiveMetrics = {
         ticketVolume: {
           current: predictionReport.data[predictionReport.data.length - 1]?.actual || 0,
-          predicted: predictionReport.metrics.next_week_prediction || 0,
+          predicted: predictionReport.metrics.nextWeekPrediction || 0,
           trend: predictionReport.metrics.trend || 'stable',
           confidence: (predictionReport.metrics.accuracy || 0) * 100,
         },

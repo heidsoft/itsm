@@ -43,18 +43,18 @@ interface TicketCategory {
   id: number;
   name: string;
   description: string;
-  parent_id: number | null;
+  parentId: number | null;
   level: number;
   path: string;
-  sort_order: number;
-  is_active: boolean;
-  is_default: boolean;
+  sortOrder: number;
+  isActive: boolean;
+  isDefault: boolean;
   color: string;
   icon?: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   children?: TicketCategory[];
-  ticket_count?: number;
+  ticketCount?: number;
 }
 
 type RawTicketCategory = Partial<TicketCategory> & {
@@ -70,11 +70,11 @@ type RawTicketCategory = Partial<TicketCategory> & {
 interface TicketCategoryFormData {
   name: string;
   description: string;
-  parent_id?: number;
+  parentId?: number;
   color: string;
   icon?: string;
-  sort_order: number;
-  is_active: boolean;
+  sortOrder: number;
+  isActive: boolean;
 }
 
 const TicketCategoryManagementPage = () => {
@@ -110,17 +110,17 @@ const TicketCategoryManagementPage = () => {
     id: category.id || 0,
     name: category.name || '',
     description: category.description || '',
-    parent_id: category.parent_id ?? category.parentId ?? null,
+    parentId: category.parentId ?? category.parentId ?? null,
     level: category.level || 1,
     path: category.path || category.name || '',
-    sort_order: category.sort_order ?? category.sortOrder ?? 1,
-    is_active: category.is_active ?? category.isActive ?? true,
-    is_default: category.is_default ?? category.isDefault ?? false,
+    sortOrder: category.sortOrder ?? category.sortOrder ?? 1,
+    isActive: category.isActive ?? category.isActive ?? true,
+    isDefault: category.isDefault ?? category.isDefault ?? false,
     color: category.color || '#1890ff',
     icon: category.icon,
-    created_at: category.created_at || category.createdAt || '',
-    updated_at: category.updated_at || category.updatedAt || '',
-    ticket_count: category.ticket_count ?? category.ticketCount ?? 0,
+    createdAt: category.createdAt || category.createdAt || '',
+    updatedAt: category.updatedAt || category.updatedAt || '',
+    ticketCount: category.ticketCount ?? category.ticketCount ?? 0,
     children: category.children ? normalizeCategories(category.children) : undefined,
   });
 
@@ -137,11 +137,11 @@ const TicketCategoryManagementPage = () => {
     form.setFieldsValue({
       name: category.name,
       description: category.description,
-      parent_id: category.parent_id,
+      parentId: category.parentId,
       color: category.color,
       icon: category.icon,
-      sort_order: category.sort_order,
-      is_active: category.is_active,
+      sortOrder: category.sortOrder,
+      isActive: category.isActive,
     });
     setModalVisible(true);
   };
@@ -151,10 +151,10 @@ const TicketCategoryManagementPage = () => {
       await TicketCategoryApi.createCategory({
         name: `${category.name} - 副本`,
         description: category.description,
-        parent_id: category.parent_id || undefined,
-        sort_order: category.sort_order,
-        is_active: category.is_active,
-        is_default: false,
+        parentId: category.parentId || undefined,
+        sortOrder: category.sortOrder,
+        isActive: category.isActive,
+        isDefault: false,
         color: category.color,
         icon: category.icon,
       });
@@ -201,9 +201,9 @@ const TicketCategoryManagementPage = () => {
 
   const handleToggleStatus = async (category: TicketCategory, checked: boolean) => {
     try {
-      await TicketCategoryApi.updateCategory(category.id, { is_active: checked });
+      await TicketCategoryApi.updateCategory(category.id, { isActive: checked });
       setCategories(prev =>
-        prev.map(c => (c.id === category.id ? { ...c, is_active: checked } : c))
+        prev.map(c => (c.id === category.id ? { ...c, isActive: checked } : c))
       );
       message.success(checked ? '分类已启用' : '分类已停用');
     } catch (error) {
@@ -232,7 +232,7 @@ const TicketCategoryManagementPage = () => {
           </p>
           <p>
             <Text strong>状态：</Text>
-            {category.is_active ? '启用' : '停用'}
+            {category.isActive ? '启用' : '停用'}
           </p>
         </div>
       ),
@@ -274,8 +274,8 @@ const TicketCategoryManagementPage = () => {
     },
     {
       title: '排序',
-      dataIndex: 'sort_order',
-      key: 'sort_order',
+      dataIndex:'sortOrder',
+      key:'sortOrder',
       render: (order: number) => (
         <div className="flex items-center gap-1">
           <GripVertical size={14} className="text-gray-400" />
@@ -285,8 +285,8 @@ const TicketCategoryManagementPage = () => {
     },
     {
       title: '工单数量',
-      dataIndex: 'ticket_count',
-      key: 'ticket_count',
+      dataIndex:'ticketCount',
+      key:'ticketCount',
       render: (count: number) => <Tag color="orange">{count}</Tag>,
     },
     {
@@ -295,11 +295,11 @@ const TicketCategoryManagementPage = () => {
       render: (record: TicketCategory) => (
         <div className="flex items-center gap-2">
           <Switch
-            checked={record.is_active}
+            checked={record.isActive}
             size="small"
             onChange={checked => handleToggleStatus(record, checked)}
           />
-          {record.is_default && <Tag color="green">默认</Tag>}
+          {record.isDefault && <Tag color="green">默认</Tag>}
         </div>
       ),
     },
@@ -345,11 +345,11 @@ const TicketCategoryManagementPage = () => {
         <div className="flex items-center gap-2">
           <span className="text-lg">{category.icon}</span>
           <span className="font-medium">{category.name}</span>
-          <Tag color="orange">{category.ticket_count}</Tag>
+          <Tag color="orange">{category.ticketCount}</Tag>
         </div>
         <div className="flex items-center gap-1">
           <Switch
-            checked={category.is_active}
+            checked={category.isActive}
             size="small"
             onChange={checked => handleToggleStatus(category, checked)}
           />
@@ -372,11 +372,11 @@ const TicketCategoryManagementPage = () => {
             <div className="flex items-center gap-2">
               <span className="text-lg">{child.icon}</span>
               <span>{child.name}</span>
-              <Tag color="orange">{child.ticket_count}</Tag>
+              <Tag color="orange">{child.ticketCount}</Tag>
             </div>
             <div className="flex items-center gap-1">
               <Switch
-                checked={child.is_active}
+                checked={child.isActive}
                 size="small"
                 onChange={checked => handleToggleStatus(child, checked)}
               />
@@ -493,7 +493,7 @@ const TicketCategoryManagementPage = () => {
               <Form.Item name="parent_id" label="父级分类">
                 <Select placeholder="请选择父级分类" allowClear>
                   {categories
-                    .filter(c => !c.parent_id)
+                    .filter(c => !c.parentId)
                     .map(category => (
                       <Option key={category.id} value={category.id}>
                         {category.name}

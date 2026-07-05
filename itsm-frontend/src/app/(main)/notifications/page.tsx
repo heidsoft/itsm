@@ -57,11 +57,11 @@ const { RangePicker } = DatePicker;
 
 const normalizeNotification = (notification: TicketNotification): TicketNotification => ({
   ...notification,
-  createdAt: notification.createdAt || notification.created_at,
-  readAt: notification.readAt || notification.read_at,
-  sentAt: notification.sentAt || notification.sent_at,
-  ticketId: notification.ticketId || notification.ticket_id,
-  userId: notification.userId || notification.user_id,
+  createdAt: notification.createdAt || notification.createdAt,
+  readAt: notification.readAt || notification.readAt,
+  sentAt: notification.sentAt || notification.sentAt,
+  ticketId: notification.ticketId || notification.ticketId,
+  userId: notification.userId || notification.userId,
 });
 
 // 通知事件类型配置
@@ -134,7 +134,7 @@ interface ChannelConfig {
 
 const CHANNELS: ChannelConfig[] = [
   { key: 'email', nameKey: 'notifications.email', icon: Mail, color: 'blue' },
-  { key: 'in_app', nameKey: 'notifications.inApp', icon: MessageSquare, color: 'default' },
+  { key:'inApp', nameKey: 'notifications.inApp', icon: MessageSquare, color: 'default' },
   { key: 'sms', nameKey: 'notifications.sms', icon: Smartphone, color: 'green' },
 ];
 
@@ -165,9 +165,9 @@ export default function NotificationsPage() {
     setLoading(true);
     try {
       const [allRes, unreadRes, readRes] = await Promise.all([
-        TicketNotificationApi.getUserNotifications({ page: 1, page_size: 100 }),
-        TicketNotificationApi.getUserNotifications({ page: 1, page_size: 100, read: false }),
-        TicketNotificationApi.getUserNotifications({ page: 1, page_size: 100, read: true }),
+        TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100 }),
+        TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100, read: false }),
+        TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100, read: true }),
       ]);
 
       const all = (allRes.notifications || []).map(normalizeNotification);
@@ -192,9 +192,9 @@ export default function NotificationsPage() {
       // 设置表单初始值
       const formValues: Record<string, boolean> = {};
       prefs.preferences?.forEach(pref => {
-        formValues[`${pref.event_type}_email`] = pref.email_enabled;
-        formValues[`${pref.event_type}_in_app`] = pref.in_app_enabled;
-        formValues[`${pref.event_type}_sms`] = pref.sms_enabled;
+        formValues[`${pref.eventType}_email`] = pref.emailEnabled;
+        formValues[`${pref.eventType}_in_app`] = pref.inAppEnabled;
+        formValues[`${pref.eventType}_sms`] = pref.smsEnabled;
       });
       form.setFieldsValue(formValues);
     } catch (error) {
@@ -281,10 +281,10 @@ export default function NotificationsPage() {
 
       EVENT_TYPES.forEach(event => {
         prefs.push({
-          event_type: event.type,
-          email_enabled: values[`${event.type}_email`] ?? false,
-          in_app_enabled: values[`${event.type}_in_app`] ?? true,
-          sms_enabled: values[`${event.type}_sms`] ?? false,
+          eventType: event.type,
+          emailEnabled: values[`${event.type}_email`] ?? false,
+          inAppEnabled: values[`${event.type}_in_app`] ?? true,
+          smsEnabled: values[`${event.type}_sms`] ?? false,
         });
       });
 
@@ -379,7 +379,7 @@ export default function NotificationsPage() {
 
   // 获取偏好值
   const getPreferenceValue = (eventType: string, field: 'email' | 'in_app' | 'sms'): boolean => {
-    const pref = preferences.find(p => p.event_type === eventType);
+    const pref = preferences.find(p => p.eventType === eventType);
     if (!pref) return field === 'in_app';
     return pref[`${field}_enabled` as keyof NotificationPreferenceItem] as boolean;
   };
@@ -389,9 +389,9 @@ export default function NotificationsPage() {
     const labels: Record<string, string> = {
       created: t('notifications.ticketCreated'),
       assigned: t('notifications.ticketAssigned'),
-      status_changed: t('notifications.ticketUpdated'),
+      statusChanged: t('notifications.ticketUpdated'),
       commented: t('notifications.ticketCommented'),
-      sla_warning: t('notifications.slaWarning'),
+      slaWarning: t('notifications.slaWarning'),
       resolved: t('notifications.ticketResolved'),
       closed: t('notifications.ticketClosed'),
     };
@@ -491,14 +491,14 @@ export default function NotificationsPage() {
               description={
                 <div className="space-y-1">
                   <Text>{notification.content}</Text>
-                  {notification.sent_at && (
+                  {notification.sentAt && (
                     <div className="text-xs text-gray-500">
-                      {t('notifications.sentAt')}: {formatDateTime(notification.sent_at)}
+                      {t('notifications.sentAt')}: {formatDateTime(notification.sentAt)}
                     </div>
                   )}
-                  {notification.read_at && (
+                  {notification.readAt && (
                     <div className="text-xs text-gray-500">
-                      {t('notifications.readAt')}: {formatDateTime(notification.read_at)}
+                      {t('notifications.readAt')}: {formatDateTime(notification.readAt)}
                     </div>
                   )}
                 </div>

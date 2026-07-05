@@ -119,7 +119,7 @@ const LicenseDetail: React.FC = () => {
   }
 
   const usagePercent =
-    license.total_quantity > 0 ? (license.used_quantity / license.total_quantity) * 100 : 0;
+    license.totalQuantity > 0 ? (license.usedQuantity / license.totalQuantity) * 100 : 0;
 
   return (
     <Space orientation="vertical" style={{ width: '100%' }} size="large">
@@ -139,8 +139,8 @@ const LicenseDetail: React.FC = () => {
               <Title level={3} style={{ marginBottom: 8 }}>
                 {license.name}
               </Title>
-              {license.license_key && (
-                <Text type="secondary">许可证密钥: {license.license_key}</Text>
+              {license.licenseKey && (
+                <Text type="secondary">许可证密钥: {license.licenseKey}</Text>
               )}
             </div>
             <Space>
@@ -150,7 +150,7 @@ const LicenseDetail: React.FC = () => {
               >
                 {statusLabels[license.status]}
               </Tag>
-              <Tag>{typeLabels[license.license_type]}</Tag>
+              <Tag>{typeLabels[license.licenseType]}</Tag>
             </Space>
           </div>
         </div>
@@ -164,11 +164,11 @@ const LicenseDetail: React.FC = () => {
                 status={
                   usagePercent >= 100 ? 'exception' : usagePercent >= 80 ? 'normal' : 'success'
                 }
-                format={() => `${license.used_quantity} / ${license.total_quantity}`}
+                format={() => `${license.usedQuantity} / ${license.totalQuantity}`}
               />
             </div>
             <div style={{ textAlign: 'center', minWidth: 100 }}>
-              <div style={{ fontSize: 24, fontWeight: 'bold' }}>{license.available_quantity}</div>
+              <div style={{ fontSize: 24, fontWeight: 'bold' }}>{license.availableQuantity}</div>
               <div>可用数量</div>
             </div>
           </div>
@@ -177,17 +177,17 @@ const LicenseDetail: React.FC = () => {
         <Descriptions bordered column={2}>
           <Descriptions.Item label="许可证名称">{license.name}</Descriptions.Item>
           <Descriptions.Item label="许可证类型">
-            <Tag>{typeLabels[license.license_type]}</Tag>
+            <Tag>{typeLabels[license.licenseType]}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="状态">
             <Tag color={statusColors[license.status]}>{statusLabels[license.status]}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="供应商">{license.vendor || '-'}</Descriptions.Item>
-          <Descriptions.Item label="总数量">{license.total_quantity}</Descriptions.Item>
-          <Descriptions.Item label="已使用">{license.used_quantity}</Descriptions.Item>
-          <Descriptions.Item label="采购日期">{license.purchase_date || '-'}</Descriptions.Item>
+          <Descriptions.Item label="总数量">{license.totalQuantity}</Descriptions.Item>
+          <Descriptions.Item label="已使用">{license.usedQuantity}</Descriptions.Item>
+          <Descriptions.Item label="采购日期">{license.purchaseDate || '-'}</Descriptions.Item>
           <Descriptions.Item label="采购价格">
-            {license.purchase_price ? `¥${license.purchase_price}` : '-'}
+            {license.purchasePrice ? `¥${license.purchasePrice}` : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="到期日期">
             <Text
@@ -200,13 +200,13 @@ const LicenseDetail: React.FC = () => {
                       : undefined,
               }}
             >
-              {license.expiry_date || '永久'}
+              {license.expiryDate || '永久'}
             </Text>
           </Descriptions.Item>
-          <Descriptions.Item label="续费成本">{license.renewal_cost || '-'}</Descriptions.Item>
-          <Descriptions.Item label="支持供应商">{license.support_vendor || '-'}</Descriptions.Item>
+          <Descriptions.Item label="续费成本">{license.renewalCost || '-'}</Descriptions.Item>
+          <Descriptions.Item label="支持供应商">{license.supportVendor || '-'}</Descriptions.Item>
           <Descriptions.Item label="支持联系方式">
-            {license.support_contact || '-'}
+            {license.supportContact || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="创建时间">
             {dayjs(license.createdAt).format('YYYY-MM-DD HH:mm')}
@@ -234,7 +234,7 @@ const LicenseDetail: React.FC = () => {
           <Space wrap>
             {license.users.map((userId, index) => (
               <Tag key={index} icon={<User />}>
-                {license.user_names?.[index] || `用户 ${userId}`}
+                {license.userNames?.[index] || `用户 ${userId}`}
               </Tag>
             ))}
           </Space>
@@ -256,7 +256,7 @@ const LicenseDetail: React.FC = () => {
           <Button type="primary" onClick={() => router.push(`/licenses/${license.id}`)}>
             编辑
           </Button>
-          {license.status === 'active' && license.available_quantity > 0 && (
+          {license.status === 'active' && license.availableQuantity > 0 && (
             <Button icon={<User />} onClick={() => setAssignModalVisible(true)}>
               分配给用户
             </Button>
@@ -271,7 +271,7 @@ const LicenseDetail: React.FC = () => {
         onCancel={() => setAssignModalVisible(false)}
       >
         <div style={{ marginBottom: 16 }}>
-          <Text>可用数量: {license.available_quantity}</Text>
+          <Text>可用数量: {license.availableQuantity}</Text>
         </div>
         <Select
           mode="multiple"
@@ -279,7 +279,7 @@ const LicenseDetail: React.FC = () => {
           placeholder="选择用户"
           value={selectedUsers}
           onChange={setSelectedUsers}
-          maxCount={license.available_quantity}
+          maxCount={license.availableQuantity}
         >
           {/* 这里需要添加用户列表 */}
           <Option value={1}>用户1</Option>

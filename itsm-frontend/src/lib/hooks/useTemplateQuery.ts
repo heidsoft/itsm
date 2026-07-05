@@ -210,17 +210,17 @@ export function useCreateTemplateMutation(
 
   return useMutation({
     mutationFn: (data: CreateTemplateRequest) => TemplateApi.createTemplate(data),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       // 刷新模板列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
 
       message.success('模板创建成功！');
 
-      options?.onSuccess?.(data, variables, context, undefined as any);
+      options?.onSuccess?.(data, variables, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`创建失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -237,7 +237,7 @@ export function useUpdateTemplateMutation(
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTemplateRequest }) =>
       TemplateApi.updateTemplate(id, data),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       // 更新缓存
       queryClient.setQueryData(templateKeys.detail(variables.id), data);
 
@@ -246,11 +246,11 @@ export function useUpdateTemplateMutation(
 
       message.success('模板更新成功！');
 
-      options?.onSuccess?.(data, variables, context, undefined as any);
+      options?.onSuccess?.(data, variables, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`更新失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -264,7 +264,7 @@ export function useDeleteTemplateMutation(options?: UseMutationOptions<void, Err
 
   return useMutation({
     mutationFn: (templateId: string) => TemplateApi.deleteTemplate(templateId),
-    onSuccess: (data, templateId, context) => {
+    onSuccess: (data, templateId, onMutateResult, context) => {
       // 移除详情缓存
       queryClient.removeQueries({ queryKey: templateKeys.detail(templateId) });
 
@@ -273,11 +273,11 @@ export function useDeleteTemplateMutation(options?: UseMutationOptions<void, Err
 
       message.success('模板删除成功！');
 
-      options?.onSuccess?.(data, templateId, context, undefined as any);
+      options?.onSuccess?.(data, templateId, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`删除失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -293,7 +293,7 @@ export function usePublishTemplateMutation(
 
   return useMutation({
     mutationFn: ({ templateId, changelog }) => TemplateApi.publishTemplate(templateId, changelog),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       // 更新缓存
       queryClient.setQueryData(templateKeys.detail(variables.templateId), data);
 
@@ -304,11 +304,11 @@ export function usePublishTemplateMutation(
 
       message.success('模板发布成功！');
 
-      options?.onSuccess?.(data, variables, context, undefined as any);
+      options?.onSuccess?.(data, variables, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`发布失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -324,17 +324,17 @@ export function useDuplicateTemplateMutation(
 
   return useMutation({
     mutationFn: (data: TemplateDuplicateRequest) => TemplateApi.duplicateTemplate(data),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       // 刷新列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
 
       message.success('模板复制成功！');
 
-      options?.onSuccess?.(data, variables, context, undefined as any);
+      options?.onSuccess?.(data, variables, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`复制失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -351,7 +351,7 @@ export function useCreateTicketFromTemplateMutation(
   return useMutation({
     mutationFn: (data: CreateTicketFromTemplateRequest) =>
       TemplateApi.createTicketFromTemplate(data),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       // 记录模板使用
       TemplateApi.recordTemplateUsage(variables.templateId);
 
@@ -365,11 +365,11 @@ export function useCreateTicketFromTemplateMutation(
 
       message.success('工单创建成功！');
 
-      options?.onSuccess?.(data, variables, context, undefined as any);
+      options?.onSuccess?.(data, variables, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`创建工单失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -386,7 +386,7 @@ export function useRateTemplateMutation(
   return useMutation({
     mutationFn: ({ templateId, rating, comment }) =>
       TemplateApi.rateTemplate(templateId, rating, comment),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       // 刷新模板详情（包含新的评分）
       queryClient.invalidateQueries({
         queryKey: templateKeys.detail(variables.templateId),
@@ -399,11 +399,11 @@ export function useRateTemplateMutation(
 
       message.success('评分成功！感谢您的反馈');
 
-      options?.onSuccess?.(data, variables, context, undefined as any);
+      options?.onSuccess?.(data, variables, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`评分失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -417,17 +417,17 @@ export function useFavoriteTemplateMutation(options?: UseMutationOptions<void, E
 
   return useMutation({
     mutationFn: (templateId: string) => TemplateApi.favoriteTemplate(templateId),
-    onSuccess: (data, templateId, context) => {
+    onSuccess: (data, templateId, onMutateResult, context) => {
       // 刷新收藏列表
       queryClient.invalidateQueries({ queryKey: templateKeys.favorites() });
 
       message.success('已添加到收藏');
 
-      options?.onSuccess?.(data, templateId, context, undefined as any);
+      options?.onSuccess?.(data, templateId, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`收藏失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -441,17 +441,17 @@ export function useUnfavoriteTemplateMutation(options?: UseMutationOptions<void,
 
   return useMutation({
     mutationFn: (templateId: string) => TemplateApi.unfavoriteTemplate(templateId),
-    onSuccess: (data, templateId, context) => {
+    onSuccess: (data, templateId, onMutateResult, context) => {
       // 刷新收藏列表
       queryClient.invalidateQueries({ queryKey: templateKeys.favorites() });
 
       message.success('已取消收藏');
 
-      options?.onSuccess?.(data, templateId, context, undefined as any);
+      options?.onSuccess?.(data, templateId, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`取消收藏失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -467,17 +467,17 @@ export function useImportTemplateMutation(
 
   return useMutation({
     mutationFn: (data: TemplateImportRequest) => TemplateApi.importTemplate(data),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       // 刷新模板列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
 
       message.success('模板导入成功！');
 
-      options?.onSuccess?.(data, variables, context, undefined as any);
+      options?.onSuccess?.(data, variables, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`导入失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -493,7 +493,7 @@ export function useArchiveTemplateMutation(
 
   return useMutation({
     mutationFn: (templateId: string) => TemplateApi.archiveTemplate(templateId),
-    onSuccess: (data, templateId, context) => {
+    onSuccess: (data, templateId, onMutateResult, context) => {
       // 更新缓存
       queryClient.setQueryData(templateKeys.detail(templateId), data);
 
@@ -502,11 +502,11 @@ export function useArchiveTemplateMutation(
 
       message.success('模板已归档');
 
-      options?.onSuccess?.(data, templateId, context, undefined as any);
+      options?.onSuccess?.(data, templateId, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`归档失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -522,7 +522,7 @@ export function useBatchDeleteTemplatesMutation(
 
   return useMutation({
     mutationFn: (templateIds: string[]) => TemplateApi.batchDeleteTemplates(templateIds),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       // 刷新列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
 
@@ -532,11 +532,11 @@ export function useBatchDeleteTemplatesMutation(
         message.warning(`有 ${data.failed} 个模板删除失败`);
       }
 
-      options?.onSuccess?.(data, variables, context, undefined as any);
+      options?.onSuccess?.(data, variables, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`批量删除失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -553,7 +553,7 @@ export function useBatchToggleTemplatesMutation(
   return useMutation({
     mutationFn: ({ templateIds, isActive }) =>
       TemplateApi.batchToggleTemplates(templateIds, isActive),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       // 刷新列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
 
@@ -564,11 +564,11 @@ export function useBatchToggleTemplatesMutation(
         message.warning(`有 ${data.failed} 个模板${action}失败`);
       }
 
-      options?.onSuccess?.(data, variables, context, undefined as any);
+      options?.onSuccess?.(data, variables, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       message.error(`批量操作失败：${error.message}`);
-      options?.onError?.(error, variables, context, undefined as any);
+      options?.onError?.(error, variables, onMutateResult, context);
     },
     ...options,
   });

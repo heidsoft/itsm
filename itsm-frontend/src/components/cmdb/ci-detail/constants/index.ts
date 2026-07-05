@@ -33,6 +33,6 @@ export const ACTION_COLORS: Record<string, string> = {
   create: 'green',
   update: 'blue',
   delete: 'red',
-  relationship_added: 'purple',
-  relationship_removed: 'volcano',
+  relationshipAdded: 'purple',
+  relationshipRemoved: 'volcano',
 };

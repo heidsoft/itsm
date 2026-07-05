@@ -2,27 +2,27 @@ import { httpClient } from './http-client';
 
 export interface DomainConfig {
   id: number;
-  config_key: string;
-  config_type: string;
-  config_value: Record<string, unknown>;
-  inherit_mode: 'inherit' | 'override' | 'extend';
-  tenant_id: number;
-  department_id: number;
-  team_id: number;
+  configKey: string;
+  configType: string;
+  configValue: Record<string, unknown>;
+  inheritMode: 'inherit' | 'override' | 'extend';
+  tenantId: number;
+  departmentId: number;
+  teamId: number;
   version: number;
-  is_active: boolean;
+  isActive: boolean;
   description?: string;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DomainConfigPayload {
-  config_type: string;
-  config_key: string;
-  config_value: Record<string, unknown>;
-  inherit_mode?: 'inherit' | 'override' | 'extend';
-  department_id?: number;
-  team_id?: number;
+  configType: string;
+  configKey: string;
+  configValue: Record<string, unknown>;
+  inheritMode?: 'inherit' | 'override' | 'extend';
+  departmentId?: number;
+  teamId?: number;
   description?: string;
 }
 
@@ -30,15 +30,15 @@ export interface EffectiveConfig {
   key: string;
   value: Record<string, unknown>;
   source: string;
-  inherit_mode: string;
+  inheritMode: string;
   version: number;
 }
 
 export interface EffectiveConfigQuery {
-  config_type: string;
-  config_key: string;
-  department_id?: number;
-  team_id?: number;
+  configType: string;
+  configKey: string;
+  departmentId?: number;
+  teamId?: number;
 }
 
 type RawDomainConfig = Partial<DomainConfig> & {
@@ -61,18 +61,18 @@ type RawEffectiveConfig = Partial<EffectiveConfig> & {
 function normalizeDomainConfig(config: RawDomainConfig): DomainConfig {
   return {
     id: config.id || 0,
-    config_key: config.config_key || config.configKey || '',
-    config_type: config.config_type || config.configType || '',
-    config_value: config.config_value || config.configValue || {},
-    inherit_mode: config.inherit_mode || config.inheritMode || 'inherit',
-    tenant_id: config.tenant_id ?? config.tenantId ?? 0,
-    department_id: config.department_id ?? config.departmentId ?? 0,
-    team_id: config.team_id ?? config.teamId ?? 0,
+    configKey: config.configKey || config.configKey || '',
+    configType: config.configType || config.configType || '',
+    configValue: config.configValue || config.configValue || {},
+    inheritMode: config.inheritMode || config.inheritMode || 'inherit',
+    tenantId: config.tenantId ?? config.tenantId ?? 0,
+    departmentId: config.departmentId ?? config.departmentId ?? 0,
+    teamId: config.teamId ?? config.teamId ?? 0,
     version: config.version ?? 1,
-    is_active: config.is_active ?? config.isActive ?? true,
+    isActive: config.isActive ?? config.isActive ?? true,
     description: config.description,
-    created_at: config.created_at || config.createdAt,
-    updated_at: config.updated_at || config.updatedAt,
+    createdAt: config.createdAt || config.createdAt,
+    updatedAt: config.updatedAt || config.updatedAt,
   };
 }
 
@@ -82,7 +82,7 @@ function normalizeEffectiveConfig(config: RawEffectiveConfig | null | undefined)
     key: config.key || '',
     value: config.value || {},
     source: config.source || '',
-    inherit_mode: config.inherit_mode || config.inheritMode || '',
+    inheritMode: config.inheritMode || config.inheritMode || '',
     version: config.version ?? 0,
   };
 }
@@ -91,7 +91,7 @@ export class DomainConfigApi {
   static async list(configType?: string): Promise<DomainConfig[]> {
     const response = await httpClient.get<RawDomainConfig[]>(
       '/api/v1/domain-configs',
-      configType ? { config_type: configType } : undefined
+      configType ? { configType: configType } : undefined
     );
     return (response || []).map(normalizeDomainConfig);
   }
@@ -102,10 +102,10 @@ export class DomainConfigApi {
 
   static async getEffective(query: EffectiveConfigQuery): Promise<EffectiveConfig | null> {
     const response = await httpClient.get<RawEffectiveConfig>('/api/v1/domain-configs/effective', {
-      config_type: query.config_type,
-      config_key: query.config_key,
-      ...(query.department_id ? { department_id: query.department_id } : {}),
-      ...(query.team_id ? { team_id: query.team_id } : {}),
+      configType: query.configType,
+      configKey: query.configKey,
+      ...(query.departmentId ? { departmentId: query.departmentId } : {}),
+      ...(query.teamId ? { teamId: query.teamId } : {}),
     });
     return normalizeEffectiveConfig(response);
   }

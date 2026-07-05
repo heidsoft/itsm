@@ -61,7 +61,7 @@ export default function ChangesPage() {
     try {
       const response = await ChangeApi.getChanges({
         page: 1,
-        page_size: 100,
+        pageSize: 100,
         status: (statusFilter as any) || undefined,
         search: debouncedSearch,
       });
@@ -273,7 +273,7 @@ export default function ChangesPage() {
                   getItemNumber={(change: Change) => {
                     const data = change as unknown as Record<string, unknown>;
                     return (
-                      (data.change_number as string) ||
+                      (data.changeNumber as string) ||
                       (data.changeNumber as string) ||
                       `C-${change.id}`
                     );

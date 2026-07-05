@@ -6,9 +6,9 @@ export interface Application {
   code: string;
   type?: string;
   status?: string;
-  project_id?: number;
-  created_at?: string;
-  updated_at?: string;
+  projectId?: number;
+  createdAt?: string;
+  updatedAt?: string;
   edges?: {
     microservices?: Microservice[];
   };
@@ -21,14 +21,14 @@ export interface Microservice {
   language?: string;
   framework?: string;
   status?: string;
-  application_id?: number;
+  applicationId?: number;
 }
 
 export interface CreateApplicationRequest {
   name: string;
   code: string;
   type?: string;
-  project_id?: number;
+  projectId?: number;
 }
 
 export interface CreateMicroserviceRequest {
@@ -36,7 +36,7 @@ export interface CreateMicroserviceRequest {
   code: string;
   language?: string;
   framework?: string;
-  application_id: number;
+  applicationId: number;
 }
 
 class ApplicationService {

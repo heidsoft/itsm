@@ -156,7 +156,7 @@ export const changeHandlers = {
   // GET /api/v1/changes - Get change list
   getChanges: (params?: {
     page?: number;
-    page_size?: number;
+    pageSize?: number;
     status?: ChangeStatus;
     type?: ChangeType;
     priority?: ChangePriority;
@@ -185,7 +185,7 @@ export const changeHandlers = {
 
     // Pagination
     const page = params?.page ?? 1;
-    const pageSize = params?.page_size ?? 20;
+    const pageSize = params?.pageSize ?? 20;
     const startIndex = (page - 1) * pageSize;
     const paginatedChanges = changes.slice(startIndex, startIndex + pageSize);
 

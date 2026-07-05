@@ -14,27 +14,27 @@ export class WorkflowInstanceApi {
    */
   static async startWorkflow(request: StartWorkflowRequest): Promise<WorkflowInstance> {
     const payload = {
-      process_definition_key: request.workflowId,
-      business_key: `BIZ-${Date.now()}`,
+      processDefinitionKey: request.workflowId,
+      businessKey: `BIZ-${Date.now()}`,
       variables: request.variables,
     };
     const item = await httpClient.post<{
       id: string;
-      process_instance_id: string;
-      process_definition_key: string;
-      business_key: string;
+      processInstanceId: string;
+      processDefinitionKey: string;
+      businessKey: string;
       status: string;
-      start_time: string;
-      end_time?: string;
+      startTime: string;
+      endTime?: string;
     }>('/api/v1/bpmn/process-instances', payload);
     return {
-      id: item.process_instance_id || item.id || '',
-      workflowId: item.process_definition_key || '',
+      id: item.processInstanceId || item.id || '',
+      workflowId: item.processDefinitionKey || '',
       workflowName: '',
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
       variables: {},
-      startTime: item.start_time ? new Date(item.start_time) : new Date(),
+      startTime: item.startTime ? new Date(item.startTime) : new Date(),
       startedBy: 0,
       startedByName: '',
     };
@@ -54,20 +54,20 @@ export class WorkflowInstanceApi {
     total: number;
   }> {
     const query: Record<string, string | number> = {};
-    if (params?.workflowId) query.process_definition_key = params.workflowId;
+    if (params?.workflowId) query.processDefinitionKey = params.workflowId;
     if (params?.status) query.status = params.status;
     if (params?.page) query.page = params.page;
-    if (params?.pageSize) query.page_size = params.pageSize;
+    if (params?.pageSize) query.pageSize = params.pageSize;
 
     const res = await httpClient.get<{
       data?: Array<{
         id: string;
-        instance_id: string;
-        process_definition_key: string;
-        business_key: string;
+        instanceId: string;
+        processDefinitionKey: string;
+        businessKey: string;
         status: string;
-        start_time: string;
-        end_time?: string;
+        startTime: string;
+        endTime?: string;
       }>;
       pagination?: { total: number };
       total?: number;
@@ -75,14 +75,14 @@ export class WorkflowInstanceApi {
 
     const list = Array.isArray(res) ? res : res?.data || [];
     const instances: WorkflowInstance[] = list.map(item => ({
-      id: item.instance_id || item.id || '',
-      workflowId: item.process_definition_key || '',
+      id: item.instanceId || item.id || '',
+      workflowId: item.processDefinitionKey || '',
       workflowName: '',
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
       variables: {},
-      startTime: item.start_time ? new Date(item.start_time) : new Date(),
-      endTime: item.end_time ? new Date(item.end_time) : undefined,
+      startTime: item.startTime ? new Date(item.startTime) : new Date(),
+      endTime: item.endTime ? new Date(item.endTime) : undefined,
       startedBy: 0,
       startedByName: '',
     }));
@@ -98,22 +98,22 @@ export class WorkflowInstanceApi {
   static async getInstance(instanceId: string): Promise<WorkflowInstance> {
     const item = await httpClient.get<{
       id: string;
-      instance_id: string;
-      process_definition_key: string;
-      business_key: string;
+      instanceId: string;
+      processDefinitionKey: string;
+      businessKey: string;
       status: string;
-      start_time: string;
-      end_time?: string;
+      startTime: string;
+      endTime?: string;
     }>(`/api/v1/bpmn/process-instances/${instanceId}`);
     return {
-      id: item.instance_id || item.id || '',
-      workflowId: item.process_definition_key || '',
+      id: item.instanceId || item.id || '',
+      workflowId: item.processDefinitionKey || '',
       workflowName: '',
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
       variables: {},
-      startTime: item?.start_time ? new Date(item.start_time) : new Date(),
-      endTime: item?.end_time ? new Date(item.end_time) : undefined,
+      startTime: item?.startTime ? new Date(item.startTime) : new Date(),
+      endTime: item?.endTime ? new Date(item.endTime) : undefined,
       startedBy: 0,
       startedByName: '',
     };

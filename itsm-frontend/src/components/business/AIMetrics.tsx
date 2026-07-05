@@ -34,9 +34,9 @@ const AIMetricsComponent: React.FC<AIMetricsProps> = ({ className = '', days = 7
 
   // 缓存排序后的数据
   const sortedKindData = useMemo(() => {
-    if (!metrics?.by_kind) return [];
-    return Object.entries(metrics.by_kind).sort(([, a], [, b]) => b - a);
-  }, [metrics?.by_kind]);
+    if (!metrics?.byKind) return [];
+    return Object.entries(metrics.byKind).sort(([, a], [, b]) => b - a);
+  }, [metrics?.byKind]);
 
   const loadMetrics = useCallback(async () => {
     setLoading(true);
@@ -124,7 +124,7 @@ const AIMetricsComponent: React.FC<AIMetricsProps> = ({ className = '', days = 7
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {/* Total Requests */}
           <div className="text-center p-3 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{metrics.total_requests}</div>
+            <div className="text-2xl font-bold text-blue-600">{metrics.totalRequests}</div>
             <div className="text-sm text-gray-600 flex items-center justify-center">
               <TrendingUp className="w-4 h-4 mr-1" />
               总请求数
@@ -133,7 +133,7 @@ const AIMetricsComponent: React.FC<AIMetricsProps> = ({ className = '', days = 7
 
           {/* Total Feedback */}
           <div className="text-center p-3 bg-green-50 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{metrics.total_feedback}</div>
+            <div className="text-2xl font-bold text-green-600">{metrics.totalFeedback}</div>
             <div className="text-sm text-gray-600 flex items-center justify-center">
               <MessageSquare className="w-4 h-4 mr-1" />
               反馈总数
@@ -143,7 +143,7 @@ const AIMetricsComponent: React.FC<AIMetricsProps> = ({ className = '', days = 7
           {/* Useful Rate */}
           <div className="text-center p-3 bg-yellow-50 rounded-lg">
             <div className="text-2xl font-bold text-yellow-600">
-              {Math.round(metrics.useful_rate * 100)}%
+              {Math.round(metrics.usefulRate * 100)}%
             </div>
             <div className="text-sm text-gray-600 flex items-center justify-center">
               <Star className="w-4 h-4 mr-1" />
@@ -154,7 +154,7 @@ const AIMetricsComponent: React.FC<AIMetricsProps> = ({ className = '', days = 7
           {/* Avg Response Time */}
           <div className="text-center p-3 bg-purple-50 rounded-lg">
             <div className="text-2xl font-bold text-purple-600">
-              {formatResponseTime(metrics.avg_response_time_seconds)}
+              {formatResponseTime(metrics.avgResponseTimeSeconds)}
             </div>
             <div className="text-sm text-gray-600 flex items-center justify-center">
               <Clock className="w-4 h-4 mr-1" />
@@ -169,12 +169,12 @@ const AIMetricsComponent: React.FC<AIMetricsProps> = ({ className = '', days = 7
           <div className="bg-gray-50 rounded-lg p-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">有用反馈</span>
-              <span className="font-semibold text-green-600">{metrics.useful_feedback}</span>
+              <span className="font-semibold text-green-600">{metrics.usefulFeedback}</span>
             </div>
             <div className="flex items-center justify-between text-sm mt-1">
               <span className="text-gray-600">无用反馈</span>
               <span className="font-semibold text-red-600">
-                {metrics.total_feedback - metrics.useful_feedback}
+                {metrics.totalFeedback - metrics.usefulFeedback}
               </span>
             </div>
           </div>

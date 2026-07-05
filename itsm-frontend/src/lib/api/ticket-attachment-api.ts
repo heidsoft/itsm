@@ -8,22 +8,14 @@ import { API_BASE_URL } from '@/lib/api/api-config';
 
 export interface TicketAttachment {
   id: number;
-  ticket_id: number;
-  ticketId?: number;
-  file_name: string;
-  fileName?: string;
-  file_path: string;
-  filePath?: string;
-  file_url: string;
-  fileUrl?: string;
-  file_size: number;
-  fileSize?: number;
-  file_type: string;
-  fileType?: string;
-  mime_type: string;
-  mimeType?: string;
-  uploaded_by: number;
-  uploadedBy?: number;
+  ticketId: number;
+  fileName: string;
+  filePath: string;
+  fileUrl: string;
+  fileSize: number;
+  fileType: string;
+  mimeType: string;
+  uploadedBy: number;
   uploader?: {
     id: number;
     username: string;
@@ -31,11 +23,9 @@ export interface TicketAttachment {
     email: string;
     role?: string;
     department?: string;
-    tenant_id?: number;
     tenantId?: number;
   };
-  created_at: string;
-  createdAt?: string;
+  createdAt: string;
 }
 
 export interface ListTicketAttachmentsResponse {

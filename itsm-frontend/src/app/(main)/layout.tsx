@@ -76,12 +76,12 @@ export default function MainLayout({
           department: userInfo?.department,
           tenantId: userInfo?.tenantId
             ? Number(userInfo.tenantId)
-            : userInfo?.tenant_id
-              ? Number(userInfo.tenant_id)
+            : userInfo?.tenantId
+              ? Number(userInfo.tenantId)
               : undefined,
           permissions: userInfo?.permissions,
-          createdAt: userInfo?.createdAt || userInfo?.created_at,
-          updatedAt: userInfo?.updatedAt || userInfo?.updated_at,
+          createdAt: userInfo?.createdAt || userInfo?.createdAt,
+          updatedAt: userInfo?.updatedAt || userInfo?.updatedAt,
         },
         'authenticated',
         currentTenant

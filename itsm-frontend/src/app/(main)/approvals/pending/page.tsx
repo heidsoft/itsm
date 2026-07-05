@@ -13,9 +13,9 @@ import { useI18n } from '@/lib/i18n';
 function statusTag(status: string, t: (key: string) => string) {
   const cfg: Record<string, { color: string; label: string }> = {
     submitted: { color: 'gold', label: t('serviceRequestStatus.submitted') },
-    manager_approved: { color: 'blue', label: t('serviceRequestStatus.manager_approved') },
-    it_approved: { color: 'geekblue', label: t('serviceRequestStatus.it_approved') },
-    security_approved: { color: 'green', label: t('serviceRequestStatus.security_approved') },
+    managerApproved: { color: 'blue', label: t('serviceRequestStatus.managerApproved') },
+    itApproved: { color: 'geekblue', label: t('serviceRequestStatus.itApproved') },
+    securityApproved: { color: 'green', label: t('serviceRequestStatus.securityApproved') },
     provisioning: { color: 'cyan', label: t('serviceRequestStatus.provisioning') },
     delivered: { color: 'green', label: t('serviceRequestStatus.delivered') },
     failed: { color: 'red', label: t('serviceRequestStatus.failed') },

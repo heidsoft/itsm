@@ -112,8 +112,8 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
   const columns = [
     {
       title: '资产编号',
-      dataIndex: 'asset_number',
-      key: 'asset_number',
+      dataIndex:'assetNumber',
+      key:'assetNumber',
       width: 130,
       render: (text: string) => (
         <Tooltip title={text}>
@@ -182,8 +182,8 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
     },
     {
       title: '分配给',
-      dataIndex: 'assigned_to_name',
-      key: 'assigned_to_name',
+      dataIndex:'assignedToName',
+      key:'assignedToName',
       width: 120,
       render: (name: string) => (
         <Tooltip title={name}>
@@ -209,14 +209,14 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
     },
     {
       title: '采购日期',
-      dataIndex: 'purchase_date',
-      key: 'purchase_date',
+      dataIndex:'purchaseDate',
+      key:'purchaseDate',
       width: 120,
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 150,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },
@@ -231,7 +231,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
               type="text"
               icon={<Eye />}
               onClick={() => router.push(`/assets/${record.id}`)}
-              aria-label={`查看资产 ${record.name || record.asset_number}`}
+              aria-label={`查看资产 ${record.name || record.assetNumber}`}
             />
           </Tooltip>
           <Tooltip title="编辑资产信息">
@@ -239,7 +239,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
               type="text"
               icon={<Pencil />}
               onClick={() => router.push(`/assets/${record.id}`)}
-              aria-label={`编辑资产 ${record.name || record.asset_number}`}
+              aria-label={`编辑资产 ${record.name || record.assetNumber}`}
             />
           </Tooltip>
         </Space>
@@ -266,7 +266,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="使用中" value={stats.in_use || 0} styles={{ content: { color: '#1890ff' } }} />
+            <Statistic title="使用中" value={stats.inUse || 0} styles={{ content: { color: '#1890ff' } }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>

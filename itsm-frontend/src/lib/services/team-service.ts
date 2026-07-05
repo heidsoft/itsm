@@ -6,9 +6,9 @@ export interface Team {
   name: string;
   code: string;
   description?: string;
-  manager_id?: number;
-  created_at?: string;
-  updated_at?: string;
+  managerId?: number;
+  createdAt?: string;
+  updatedAt?: string;
   edges?: {
     users?: User[];
   };
@@ -24,12 +24,12 @@ export interface CreateTeamRequest {
   name: string;
   code: string;
   description?: string;
-  manager_id?: number;
+  managerId?: number;
 }
 
 export interface AddMemberRequest {
-  team_id: number;
-  user_id: number;
+  teamId: number;
+  userId: number;
 }
 
 class TeamService {
@@ -41,9 +41,9 @@ class TeamService {
       name: team.name || '',
       code: team.code || '',
       description: team.description,
-      manager_id: team.manager_id ?? team.managerId,
-      created_at: team.created_at || team.createdAt,
-      updated_at: team.updated_at || team.updatedAt,
+      managerId: team.managerId ?? team.managerId,
+      createdAt: team.createdAt || team.createdAt,
+      updatedAt: team.updatedAt || team.updatedAt,
       edges: team.edges,
     };
   }

@@ -93,29 +93,29 @@ export default function BPMNDashboardPage() {
 
   const topProcessColumns = [
     {
-      title: t('workflow.process_key') || '流程Key',
-      dataIndex: 'process_definition_key',
-      key: 'process_definition_key',
+      title: t('workflow.processKey') || '流程Key',
+      dataIndex:'processDefinitionKey',
+      key:'processDefinitionKey',
     },
     {
-      title: t('workflow.total_instances') || '总实例数',
-      dataIndex: 'total_instances',
-      key: 'total_instances',
+      title: t('workflow.totalInstances') || '总实例数',
+      dataIndex:'totalInstances',
+      key:'totalInstances',
     },
     {
       title: t('workflow.running') || '进行中',
-      dataIndex: 'running_instances',
-      key: 'running_instances',
+      dataIndex:'runningInstances',
+      key:'runningInstances',
     },
     {
       title: t('workflow.completed') || '已完成',
-      dataIndex: 'completed_instances',
-      key: 'completed_instances',
+      dataIndex:'completedInstances',
+      key:'completedInstances',
     },
     {
-      title: t('workflow.avg_duration') || '平均耗时(分钟)',
-      dataIndex: 'avg_duration_minutes',
-      key: 'avg_duration_minutes',
+      title: t('workflow.avgDuration') || '平均耗时(分钟)',
+      dataIndex:'avgDurationMinutes',
+      key:'avgDurationMinutes',
       render: (val: number) => val?.toFixed(1) || '-',
     },
   ];
@@ -176,7 +176,7 @@ export default function BPMNDashboardPage() {
           <Card>
             <Statistic
               title={t('workflow.bpmnDashboard.totalProcesses') || '流程定义'}
-              value={metrics?.total_processes || 0}
+              value={metrics?.totalProcesses || 0}
               prefix={<BarChart3 size={20} />}
             />
           </Card>
@@ -185,7 +185,7 @@ export default function BPMNDashboardPage() {
           <Card>
             <Statistic
               title={t('workflow.bpmnDashboard.activeInstances') || '运行实例'}
-              value={metrics?.active_instances || 0}
+              value={metrics?.activeInstances || 0}
               prefix={<Activity size={20} />}
               styles={{ content: { color: '#1890ff' } }}
             />
@@ -195,7 +195,7 @@ export default function BPMNDashboardPage() {
           <Card>
             <Statistic
               title={t('workflow.bpmnDashboard.completedToday') || '今日完成'}
-              value={metrics?.completed_today || 0}
+              value={metrics?.completedToday || 0}
               prefix={<CheckCircle size={20} />}
               styles={{ content: { color: '#52c41a' } }}
             />
@@ -205,7 +205,7 @@ export default function BPMNDashboardPage() {
           <Card>
             <Statistic
               title={t('workflow.bpmnDashboard.openTasks') || '待处理任务'}
-              value={metrics?.open_tasks || 0}
+              value={metrics?.openTasks || 0}
               prefix={<Clock size={20} />}
               styles={{ content: { color: '#faad14' } }}
             />
@@ -221,7 +221,7 @@ export default function BPMNDashboardPage() {
               <Col span={8}>
                 <Statistic
                   title={t('workflow.bpmnDashboard.healthy') || '健康'}
-                  value={metrics?.process_health?.healthy || 0}
+                  value={metrics?.processHealth?.healthy || 0}
                   prefix={<CheckCircle size={16} />}
                   styles={{ content: { color: '#52c41a' } }}
                 />
@@ -229,7 +229,7 @@ export default function BPMNDashboardPage() {
               <Col span={8}>
                 <Statistic
                   title={t('workflow.bpmnDashboard.warning') || '警告'}
-                  value={metrics?.process_health?.warning || 0}
+                  value={metrics?.processHealth?.warning || 0}
                   prefix={<AlertTriangle size={16} />}
                   styles={{ content: { color: '#faad14' } }}
                 />
@@ -237,7 +237,7 @@ export default function BPMNDashboardPage() {
               <Col span={8}>
                 <Statistic
                   title={t('workflow.bpmnDashboard.critical') || '严重'}
-                  value={metrics?.process_health?.critical || 0}
+                  value={metrics?.processHealth?.critical || 0}
                   prefix={<XCircle size={16} />}
                   styles={{ content: { color: '#ff4d4f' } }}
                 />
@@ -246,10 +246,10 @@ export default function BPMNDashboardPage() {
             <div className="mt-4 text-center">
               <Statistic
                 title={t('workflow.bpmnDashboard.healthScore') || '健康度评分'}
-                value={metrics?.process_health?.health_score || 0}
+                value={metrics?.processHealth?.healthScore || 0}
                 suffix="/100"
                 styles={{
-                  content: { color: getHealthColor(metrics?.process_health?.health_score || 0) },
+                  content: { color: getHealthColor(metrics?.processHealth?.healthScore || 0) },
                 }}
               />
             </div>
@@ -259,15 +259,15 @@ export default function BPMNDashboardPage() {
           <Card title={t('workflow.bpmnDashboard.slaCompliance') || 'SLA合规率'}>
             <div className="text-center py-8">
               <Statistic
-                value={metrics?.sla_compliance_rate || 0}
+                value={metrics?.slaComplianceRate || 0}
                 suffix="%"
                 styles={{
                   content: {
                     fontSize: 48,
                     color:
-                      (metrics?.sla_compliance_rate || 0) >= 90
+                      (metrics?.slaComplianceRate || 0) >= 90
                         ? '#52c41a'
-                        : (metrics?.sla_compliance_rate || 0) >= 70
+                        : (metrics?.slaComplianceRate || 0) >= 70
                           ? '#faad14'
                           : '#ff4d4f',
                   },
@@ -286,9 +286,9 @@ export default function BPMNDashboardPage() {
         <Col xs={24} lg={12}>
           <Card title={t('workflow.bpmnDashboard.topProcesses') || '热门流程'}>
             <Table
-              dataSource={metrics?.top_processes || []}
+              dataSource={metrics?.topProcesses || []}
               columns={topProcessColumns}
-              rowKey="process_definition_key"
+              rowKey="processDefinitionKey"
               size="small"
               pagination={false}
             />
@@ -297,7 +297,7 @@ export default function BPMNDashboardPage() {
         <Col xs={24} lg={12}>
           <Card title={t('workflow.bpmnDashboard.taskDistribution') || '任务分布'}>
             <Table
-              dataSource={metrics?.task_distribution || []}
+              dataSource={metrics?.taskDistribution || []}
               columns={taskDistColumns}
               rowKey="status"
               size="small"
@@ -312,7 +312,7 @@ export default function BPMNDashboardPage() {
         <div className="h-48 flex items-center justify-center text-gray-400">
           <Space>
             <TrendingUp size={24} />
-            <span>{t('workflow.bpmnDashboard.trend_chart') || '趋势图表（待开发）'}</span>
+            <span>{t('workflow.bpmnDashboard.trendChart') || '趋势图表（待开发）'}</span>
           </Space>
         </div>
       </Card>

@@ -45,17 +45,17 @@ interface ChangeImpactAnalysisProps {
 }
 
 interface ImpactAnalysisData {
-  business_impact: string;
-  technical_impact: string;
-  user_impact: string;
-  affected_systems: string[];
-  affected_users: number;
-  estimated_downtime: number;
-  data_risk_level: string;
-  service_dependencies: string[];
-  backup_strategy: string;
-  recovery_plan: string;
-  impact_score?: number;
+  businessImpact: string;
+  technicalImpact: string;
+  userImpact: string;
+  affectedSystems: string[];
+  affectedUsers: number;
+  estimatedDowntime: number;
+  dataRiskLevel: string;
+  serviceDependencies: string[];
+  backupStrategy: string;
+  recoveryPlan: string;
+  impactScore?: number;
 }
 
 interface SystemItem {
@@ -88,7 +88,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
         const result = await CMDBApi.getCIs({ limit: 200, offset: 0 });
         const items = result.items ?? result.cis ?? [];
         const mapped: SystemItem[] = items.map(ci => {
-          const ciType = ci.ci_type ?? ci.ciType ?? '配置项';
+          const ciType = ci.ciType ?? ci.ciType ?? '配置项';
           const criticality =
             ci.criticality === 'high' || ci.criticality === 'medium' || ci.criticality === 'low'
               ? ci.criticality
@@ -146,7 +146,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
     let score = 0;
 
     // 业务影响分数
-    const businessImpact = values.business_impact;
+    const businessImpact = values.businessImpact;
     if (businessImpact) {
       if (businessImpact.includes('关键') || businessImpact.includes('严重')) score += 20;
       else if (businessImpact.includes('中等')) score += 15;
@@ -157,13 +157,13 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
     score += targetKeys.length * 5;
 
     // 受影响用户数
-    const affectedUsers = values.affected_users || 0;
+    const affectedUsers = values.affectedUsers || 0;
     if (affectedUsers > 10000) score += 15;
     else if (affectedUsers > 1000) score += 10;
     else if (affectedUsers > 100) score += 5;
 
     // 预计停机时间
-    const downtime = values.estimated_downtime || 0;
+    const downtime = values.estimatedDowntime || 0;
     if (downtime > 60) score += 20;
     else if (downtime > 10) score += 15;
     else if (downtime > 1) score += 10;
@@ -175,8 +175,8 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
   useEffect(() => {
     if (initialData) {
       form.setFieldsValue(initialData);
-      if (initialData.affected_systems) {
-        setTargetKeys(initialData.affected_systems);
+      if (initialData.affectedSystems) {
+        setTargetKeys(initialData.affectedSystems);
       }
     }
   }, [initialData, form]);
@@ -199,8 +199,8 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
       setSubmitting(true);
       const analysisData: ImpactAnalysisData = {
         ...values,
-        affected_systems: targetKeys,
-        impact_score: impactScore,
+        affectedSystems: targetKeys,
+        impactScore: impactScore,
       };
 
       onSave?.(analysisData);
