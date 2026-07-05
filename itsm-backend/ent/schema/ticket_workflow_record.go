@@ -1,16 +1,22 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/mixin"
 )
 
 // TicketWorkflowRecord holds the schema definition for the TicketWorkflowRecord entity.
 type TicketWorkflowRecord struct {
 	ent.Schema
+}
+
+// Mixin of the TicketWorkflowRecord
+func (TicketWorkflowRecord) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		mixin.Time{},
+	}
 }
 
 // Fields of the TicketWorkflowRecord.
@@ -45,10 +51,6 @@ func (TicketWorkflowRecord) Fields() []ent.Field {
 			Comment("扩展元数据"),
 		field.Int("tenant_id").
 			Comment("租户ID"),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable().
-			Comment("创建时间"),
 	}
 }
 

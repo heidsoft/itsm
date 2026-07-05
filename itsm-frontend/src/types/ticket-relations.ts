@@ -139,8 +139,8 @@ export interface TicketDependency {
   targetTicketNumber: string;
   targetTicketTitle: string;
   relationType: TicketRelationType;
-  dependencyType: 'hard' | 'soft'; // 硬依赖/软依赖
-  isBlocking: boolean; // 是否当前阻塞
+  dependencyType: 'hard' | 'soft';
+  isBlocking: boolean;
   description?: string;
   createdAt: string;
   createdBy: number;
@@ -299,7 +299,6 @@ export interface TicketRelationStats {
 export interface RelationImpactAnalysis {
   ticketId: number;
   affectedTickets: Array<{
-    ticketId: number;
     ticketNumber: string;
     title: string;
     impactType: 'direct' | 'indirect';

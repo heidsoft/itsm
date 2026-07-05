@@ -20,8 +20,7 @@ import {
   Popconfirm,
   Timeline,
 } from 'antd';
-import { Plus, Pencil, Trash2, Clock, Link, CheckCircle, BarChart3, List } from 'lucide-react';
-import { List, GanttChart } from 'lucide-react';
+import { Plus, Pencil, Trash2, Clock, Link, CheckCircle, BarChart3, List, GanttChart } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import type { Ticket } from '@/lib/services/ticket-service';
 import { getStatusConfig, getPriorityConfig } from '@/lib/constants/ticket-constants';
@@ -33,22 +32,22 @@ import type { User } from '@/lib/api/user-api';
 const { TextArea } = Input;
 const { Option } = Select;
 
-interface Subtask extends Ticket {
-  parent_id: number;
-  dependency_type?: 'blocks' | 'blocked_by' | 'depends_on' | 'relates_to';
-  dependency_ticket_id?: number;
-  due_date?: string;
+export interface Subtask extends Ticket {
+  parentId: number;
+  dependencyType?: 'blocks' | 'blocked_by' | 'depends_on' | 'relates_to';
+  dependencyTicketId?: number;
+  dueDate?: string;
   progress?: number;
 }
 
 interface TicketSubtasksProps {
   parentTicket: Ticket;
-  subtasks?: Subtask[];
+  subtasks?: (Ticket & { progress?: number; dueDate?: string })[];
   loading?: boolean;
-  onCreateSubtask?: (subtask: Partial<Subtask>) => Promise<void>;
-  onUpdateSubtask?: (id: number, updates: Partial<Subtask>) => Promise<void>;
+  onCreateSubtask?: (subtask: Partial<Ticket>) => Promise<void>;
+  onUpdateSubtask?: (id: number, updates: Partial<Ticket>) => Promise<void>;
   onDeleteSubtask?: (id: number) => Promise<void>;
-  onViewSubtask?: (subtask: Subtask) => void;
+  onViewSubtask?: (subtask: Ticket) => void;
   canEdit?: boolean;
 }
 
@@ -77,7 +76,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
     const fetchUsers = async () => {
       setLoadingUsers(true);
       try {
-        const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+        const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
         setUsers(response.users || []);
       } catch (error) {
         console.error('Failed to fetch users:', error);
@@ -116,13 +115,13 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
       const values = await form.validateFields();
       const subtaskData: Partial<Subtask> = {
         ...values,
-        parent_id: parentTicket.id,
+        parentId: parentTicket.id,
         title: values.title,
         description: values.description,
         priority: values.priority || 'medium',
         status: values.status || 'open',
         assigneeId: values.assigneeId || values.assignee_id,
-        due_date: values.due_date ? format(values.due_date, 'yyyy-MM-dd') : undefined,
+        dueDate: values.dueDate ? format(values.dueDate, 'yyyy-MM-dd') : undefined,
       };
 
       if (editingSubtask) {
@@ -161,7 +160,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
         setEditingSubtask(subtask);
         form.setFieldsValue({
           ...subtask,
-          due_date: subtask.due_date ? new Date(subtask.due_date) : undefined,
+          dueDate: subtask.dueDate ? new Date(subtask.dueDate) : undefined,
         });
       } else {
         setEditingSubtask(null);
@@ -214,8 +213,8 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
     },
     {
       title: '截止时间',
-      dataIndex: 'due_date',
-      key: 'due_date',
+      dataIndex: 'dueDate',
+      key: 'dueDate',
       width: 120,
       render: (date: string) =>
         date ? format(new Date(date), 'yyyy-MM-dd', { locale: zhCN }) : '-',
@@ -276,10 +275,10 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
 
     return (
       <div className="space-y-4">
-        {subtasks.map(subtask => {
+        {subtasks.map((subtask) => {
           const startDate = subtask.createdAt ? new Date(subtask.createdAt) : new Date();
-          const endDate = subtask.due_date
-            ? new Date(subtask.due_date)
+          const endDate = subtask.dueDate
+            ? new Date(subtask.dueDate)
             : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
           const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
           const statusConfig = getStatusConfig(subtask.status || 'open');
@@ -323,7 +322,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
 
     return (
       <Timeline>
-        {subtasks.map(subtask => {
+        {subtasks.map((subtask) => {
           const statusConfig = getStatusConfig(subtask.status || 'open');
           return (
             <Timeline.Item
@@ -352,9 +351,9 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
                   <div className="text-sm text-gray-500">
                     {subtask.createdAt && format(new Date(subtask.createdAt), 'yyyy-MM-dd HH:mm')}
                   </div>
-                  {subtask.due_date && (
+                  {subtask.dueDate && (
                     <div className="text-xs text-gray-400">
-                      截止: {format(new Date(subtask.due_date), 'MM-dd')}
+                      截止: {format(new Date(subtask.dueDate), 'MM-dd')}
                     </div>
                   )}
                 </div>
@@ -428,7 +427,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
       >
         {viewMode === 'list' && (
           <Table
-            columns={columns}
+            columns={columns as any}
             dataSource={subtasks}
             rowKey="id"
             loading={loading}
@@ -490,7 +489,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="due_date" label="截止时间">
+          <Form.Item name="dueDate" label="截止时间">
             <DatePicker style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item name="progress" label="进度" initialValue={0}>

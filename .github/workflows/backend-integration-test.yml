@@ -27,7 +27,7 @@ jobs:
       - name: 启动测试依赖服务
         run: |
           docker compose -f docker-compose.dev.yml up -d postgres redis
-          until docker exec itsm-postgres-dev pg_isready -U itsm -d itsm; do
+          until docker exec itsm-postgres-dev pg_isready -U itsm_user -d itsm; do
             sleep 2
             echo "等待PostgreSQL启动..."
           done
@@ -40,7 +40,7 @@ jobs:
         run: |
           export DB_HOST=localhost
           export DB_PORT=5432
-          export DB_USER=itsm
+          export DB_USER=itsm_user
           export DB_PASSWORD=dev123
           export DB_NAME=itsm
           export DB_SSLMODE=disable
@@ -55,7 +55,7 @@ jobs:
         run: |
           export DB_HOST=localhost
           export DB_PORT=5432
-          export DB_USER=itsm
+          export DB_USER=itsm_user
           export DB_PASSWORD=dev123
           export DB_NAME=itsm
           export DB_SSLMODE=disable

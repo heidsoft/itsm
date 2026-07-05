@@ -87,20 +87,20 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       // 转换为依赖关系格式
       const deps: TicketDependency[] = relations.map(rel => ({
         id: parseInt(String(rel.id)) || Date.now(),
-        source_ticket_id: ticket.id,
-        source_ticket_number: ticket.ticketNumber || `T-${ticket.id}`,
-        source_ticket_title: ticket.title,
-        target_ticket_id: rel.targetTicket?.id || 0,
-        target_ticket_number: rel.targetTicket?.ticketNumber || `T-${rel.targetTicket?.id || 0}`,
-        target_ticket_title: rel.targetTicket?.title || '',
-        relation_type: rel.relationType as TicketRelationType,
-        dependency_type: rel.metadata?.dependency_type === 'hard' ? 'hard' : 'soft',
-        is_blocking: rel.metadata?.is_blocking === true,
+        sourceTicketId: ticket.id,
+        sourceTicketNumber: ticket.ticketNumber || `T-${ticket.id}`,
+        sourceTicketTitle: ticket.title,
+        targetTicketId: rel.targetTicket?.id || 0,
+        targetTicketNumber: rel.targetTicket?.ticketNumber || `T-${rel.targetTicket?.id || 0}`,
+        targetTicketTitle: rel.targetTicket?.title || '',
+        relationType: rel.relationType as TicketRelationType,
+        dependencyType: rel.metadata?.dependencyType === 'hard' ? 'hard' : 'soft',
+        isBlocking: rel.metadata?.isBlocking === true,
         description: rel.description,
-        created_at:
+        createdAt:
           typeof rel.createdAt === 'string' ? rel.createdAt : new Date(rel.createdAt).toISOString(),
-        created_by: rel.createdBy,
-        created_by_name: rel.createdByName || '系统',
+        createdBy: rel.createdBy,
+        createdByName: rel.createdByName || '系统',
       }));
 
       setDependencies(deps);
@@ -147,11 +147,11 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       if (editingDependency) {
         // 更新依赖关系
         await TicketRelationsApi.updateRelation(String(editingDependency.id), {
-          relationType: values.relation_type as any,
+          relationType: values.relationType as any,
           description: values.description,
           metadata: {
-            dependency_type: values.dependency_type,
-            is_blocking: values.is_blocking,
+            dependencyType: values.dependencyType,
+            isBlocking: values.isBlocking,
           },
         });
         antMessage.success('依赖关系已更新');
@@ -159,12 +159,12 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
         // 创建依赖关系
         await TicketRelationsApi.createRelation({
           sourceTicketId: ticket.id,
-          targetTicketId: values.target_ticket_id,
-          relationType: values.relation_type as any,
+          targetTicketId: values.targetTicketId,
+          relationType: values.relationType as any,
           description: values.description,
           metadata: {
-            dependency_type: values.dependency_type,
-            is_blocking: values.is_blocking,
+            dependencyType: values.dependencyType,
+            isBlocking: values.isBlocking,
           },
         });
         antMessage.success('依赖关系已创建');
@@ -251,31 +251,31 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
   const dependencyColumns: ColumnsType<TicketDependency> = [
     {
       title: '关系类型',
-      dataIndex: 'relation_type',
-      key: 'relation_type',
+      dataIndex: 'relationType',
+      key: 'relationType',
       render: (type: TicketRelationType) => (
         <Tag color={getRelationTypeColor(type)}>{getRelationTypeText(type)}</Tag>
       ),
     },
     {
       title: '目标工单',
-      key: 'target_ticket',
+      key: 'targetTicket',
       render: (_: unknown, record: TicketDependency) => (
         <div>
           <Text strong style={{ color: '#1890ff' }}>
-            {record.target_ticket_number}
+            {record.targetTicketNumber}
           </Text>
           <br />
           <Text type="secondary" className="text-sm">
-            {record.target_ticket_title}
+            {record.targetTicketTitle}
           </Text>
         </div>
       ),
     },
     {
       title: '依赖类型',
-      dataIndex: 'dependency_type',
-      key: 'dependency_type',
+      dataIndex: 'dependencyType',
+      key: 'dependencyType',
       render: (type: string) => (
         <Tag color={type === 'hard' ? 'red' : 'orange'}>
           {type === 'hard' ? '硬依赖' : '软依赖'}
@@ -284,8 +284,8 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
     },
     {
       title: '阻塞状态',
-      dataIndex: 'is_blocking',
-      key: 'is_blocking',
+      dataIndex: 'isBlocking',
+      key: 'isBlocking',
       render: (isBlocking: boolean) => (
         <Badge status={isBlocking ? 'error' : 'success'} text={isBlocking ? '阻塞中' : '未阻塞'} />
       ),
@@ -298,8 +298,8 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       render: (date: string) => format(new Date(date), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN }),
     },
     {
@@ -314,7 +314,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
               icon={<Eye />}
               onClick={() => {
                 // 跳转到工单详情页
-                window.open(`/tickets/${record.target_ticket_id}`, '_blank');
+                window.open(`/tickets/${record.targetTicketId}`, '_blank');
               }}
             >
               查看
@@ -357,19 +357,19 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       render: (_: unknown, record: DependencyImpact) => (
         <div>
           <Text strong style={{ color: '#1890ff' }}>
-            {record.ticket_number}
+            {record.ticketNumber}
           </Text>
           <br />
           <Text type="secondary" className="text-sm">
-            {record.ticket_title}
+            {record.ticketTitle}
           </Text>
         </div>
       ),
     },
     {
       title: '影响级别',
-      dataIndex: 'impact_level',
-      key: 'impact_level',
+      dataIndex: 'impactLevel',
+      key: 'impactLevel',
       render: (level: string) => (
         <Tag color={getImpactLevelColor(level)}>
           {level === 'high' ? '高' : level === 'medium' ? '中' : '低'}
@@ -419,8 +419,8 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
     },
     {
       title: '预计延迟',
-      dataIndex: 'estimated_delay_hours',
-      key: 'estimated_delay_hours',
+      dataIndex: 'estimatedDelayHours',
+      key: 'estimatedDelayHours',
       render: (hours?: number) =>
         hours ? <Text type="warning">{hours} 小时</Text> : <Text type="secondary">-</Text>,
     },
@@ -429,9 +429,9 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
   // 计算统计信息
   const stats = useMemo(() => {
     const total = dependencies.length;
-    const blocking = dependencies.filter(d => d.is_blocking).length;
-    const hardDeps = dependencies.filter(d => d.dependency_type === 'hard').length;
-    const highImpact = impactAnalysis.filter(i => i.impact_level === 'high').length;
+    const blocking = dependencies.filter(d => d.isBlocking).length;
+    const hardDeps = dependencies.filter(d => d.dependencyType === 'hard').length;
+    const highImpact = impactAnalysis.filter(i => i.impactLevel === 'high').length;
     return { total, blocking, hardDeps, highImpact };
   }, [dependencies, impactAnalysis]);
 
@@ -451,14 +451,14 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
         children: dependencies.map(dep => ({
           title: (
             <div className="flex items-center gap-2">
-              <Tag color={getRelationTypeColor(dep.relation_type)}>
-                {getRelationTypeText(dep.relation_type)}
+              <Tag color={getRelationTypeColor(dep.relationType)}>
+                {getRelationTypeText(dep.relationType)}
               </Tag>
-              <Text>{dep.target_ticket_number}</Text>
+              <Text>{dep.targetTicketNumber}</Text>
               <Text type="secondary" className="text-sm">
-                {dep.target_ticket_title}
+                {dep.targetTicketTitle}
               </Text>
-              {dep.is_blocking && <Badge status="error" text="阻塞中" />}
+              {dep.isBlocking && <Badge status="error" text="阻塞中" />}
             </div>
           ),
           key: `dep-${dep.id}`,
@@ -502,9 +502,9 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                           setEditingDependency(null);
                           form.resetFields();
                           form.setFieldsValue({
-                            source_ticket_id: ticket.id,
-                            dependency_type: 'soft',
-                            is_blocking: false,
+                            sourceTicketId: ticket.id,
+                            dependencyType: 'soft',
+                            isBlocking: false,
                           });
                           setDependencyModalVisible(true);
                         }}
@@ -524,9 +524,9 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                             setEditingDependency(null);
                             form.resetFields();
                             form.setFieldsValue({
-                              source_ticket_id: ticket.id,
-                              dependency_type: 'soft',
-                              is_blocking: false,
+                              sourceTicketId: ticket.id,
+                              dependencyType: 'soft',
+                              isBlocking: false,
                             });
                             setDependencyModalVisible(true);
                           }}
@@ -680,7 +680,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="target_ticket_id"
+            name="targetTicketId"
             label="目标工单ID"
             rules={[{ required: true, message: '请输入目标工单ID' }]}
           >
@@ -702,7 +702,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
             />
           </Form.Item>
           <Form.Item
-            name="relation_type"
+            name="relationType"
             label="关系类型"
             rules={[{ required: true, message: '请选择关系类型' }]}
           >
@@ -720,7 +720,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="dependency_type"
+                name="dependencyType"
                 label="依赖类型"
                 rules={[{ required: true, message: '请选择依赖类型' }]}
               >
@@ -731,7 +731,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="is_blocking" label="是否阻塞" valuePropName="checked">
+              <Form.Item name="isBlocking" label="是否阻塞" valuePropName="checked">
                 <Select>
                   <Option value={true}>是</Option>
                   <Option value={false}>否</Option>
