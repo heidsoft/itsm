@@ -393,10 +393,10 @@ export default function AssignmentRulesPage() {
         destroyOnHidden
       >
         <Form form={testForm} layout="vertical">
-          <Form.Item name="rule_id" label="规则 ID" rules={[{ required: true, message: '请选择规则' }]}>
+          <Form.Item name="ruleId" label="规则 ID" rules={[{ required: true, message: '请选择规则' }]}>
             <InputNumber disabled style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="ticket_id" label="工单 ID" rules={[{ required: true, message: '请输入工单 ID' }]}>
+          <Form.Item name="ticketId" label="工单 ID" rules={[{ required: true, message: '请输入工单 ID' }]}>
             <InputNumber min={1} style={{ width: '100%' }} />
           </Form.Item>
         </Form>

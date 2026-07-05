@@ -502,7 +502,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
             <Input placeholder="例如：P1工单-严重预警" />
           </Form.Item>
           <Form.Item
-            name="alert_level"
+            name="alertLevel"
             label="预警级别"
             rules={[{ required: true, message: '请选择预警级别' }]}
           >
@@ -513,7 +513,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
             </Select>
           </Form.Item>
           <Form.Item
-            name="threshold_percentage"
+            name="thresholdPercentage"
             label="阈值百分比"
             rules={[
               { required: true, message: '请输入阈值百分比' },
@@ -523,7 +523,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
             <Input type="number" placeholder="例如：70, 85, 95" addonAfter="%" />
           </Form.Item>
           <Form.Item
-            name="notification_channels"
+            name="notificationChannels"
             label="通知渠道"
             rules={[{ required: true, message: '请至少选择一个通知渠道' }]}
           >
@@ -533,7 +533,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
               <Option value="in_app">站内消息</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="escalation_enabled" label="启用升级机制" valuePropName="checked">
+          <Form.Item name="escalationEnabled" label="启用升级机制" valuePropName="checked">
             <Switch />
           </Form.Item>
           <Form.Item
@@ -543,9 +543,9 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
             }
           >
             {({ getFieldValue }) =>
-              getFieldValue('escalation_enabled') ? (
+              getFieldValue('escalationEnabled') ? (
                 <Form.Item
-                  name="escalation_levels"
+                  name="escalationLevels"
                   label="升级级别配置"
                   tooltip="配置多级升级，当达到更高阈值时自动升级并通知更多人员"
                 >
@@ -557,7 +557,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
               ) : null
             }
           </Form.Item>
-          <Form.Item name="is_active" label="启用状态" valuePropName="checked">
+          <Form.Item name="isActive" label="启用状态" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>

@@ -145,8 +145,8 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
       title: '状态',
       dataIndex:'isPublished',
       width: 100,
-      render: (is_published: boolean) => {
-        const status = is_published ? KnowledgeStatus.PUBLISHED : KnowledgeStatus.DRAFT;
+      render: (isPublished: boolean) => {
+        const status = isPublished ? KnowledgeStatus.PUBLISHED : KnowledgeStatus.DRAFT;
         return <Tag color={KnowledgeStatusColors[status]}>{KnowledgeStatusLabels[status]}</Tag>;
       },
     },
