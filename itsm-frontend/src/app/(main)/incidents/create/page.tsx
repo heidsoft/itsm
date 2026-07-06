@@ -247,7 +247,7 @@ export default function CreateIncidentPage() {
                           </Col>
                           <Col span={12}>
                             <Form.Item
-                              name="assigned_to"
+                              name="assignedTo"
                               label="指派给"
                             >
                               <Select placeholder="选择负责人" allowClear loading={usersLoading} showSearch optionFilterProp="children">
@@ -353,7 +353,7 @@ export default function CreateIncidentPage() {
                         </Row>
 
                         <Form.Item
-                          name="affected_systems"
+                          name="affectedSystems"
                           label="受影响系统"
                         >
                           <Select mode="multiple" placeholder="选择受影响的系统" allowClear>
@@ -366,7 +366,7 @@ export default function CreateIncidentPage() {
                         </Form.Item>
 
                         <Form.Item
-                          name="root_cause"
+                          name="rootCause"
                           label="初步原因分析"
                         >
                           <TextArea
