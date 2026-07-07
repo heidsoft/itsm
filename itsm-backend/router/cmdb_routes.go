@@ -218,5 +218,8 @@ func SetupCMDBRoutes(
 			cloudResources.PUT("/:id", middleware.RequirePermission("cmdb_cloud_resource", "write"), config.CMDBHandler.UpdateCloudResource)
 			cloudResources.DELETE("/:id", middleware.RequirePermission("cmdb_cloud_resource", "delete"), config.CMDBHandler.DeleteCloudResource)
 		}
+
+		// ------------------------------ 对账相关路由 ------------------------------
+		cmdb.GET("/reconciliation", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetReconciliation)
 	}
 }

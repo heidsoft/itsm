@@ -36,6 +36,7 @@ import {
 } from 'antd';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
+import { formatDateTime } from '@/lib/formatters';
 import { SafeTextBlock } from '@/components/common/SafeContent';
 import { AISuggestionPanel } from '@/components/business/AISuggestionPanel';
 import {
@@ -64,6 +65,19 @@ const statusMap: Record<
   cancelled: { text: '已取消', status: 'error' },
   rejected: { text: '已拒绝', status: 'error' },
   approved: { text: '已批准', status: 'success' },
+};
+
+// Bug #9 修复：添加优先级本地化映射
+const priorityMap: Record<string, string> = {
+  critical: '紧急',
+  urgent: '紧急',
+  high: '高优先级',
+  medium: '中优先级',
+  low: '低优先级',
+};
+
+const getPriorityText = (priority: string): string => {
+  return priorityMap[priority] || priority;
 };
 
 const TicketDetailPage: React.FC = () => {
@@ -412,10 +426,10 @@ const TicketDetailPage: React.FC = () => {
           <Descriptions column={2} bordered size="middle">
             <Descriptions.Item label="标题">{ticket.title}</Descriptions.Item>
             <Descriptions.Item label="编号">{ticket.ticketNumber || '-'}</Descriptions.Item>
-            <Descriptions.Item label="状态">{ticket.status}</Descriptions.Item>
-            <Descriptions.Item label="优先级">{ticket.priority}</Descriptions.Item>
-            <Descriptions.Item label="创建时间">{ticket.createdAt}</Descriptions.Item>
-            <Descriptions.Item label="更新时间">{ticket.updatedAt}</Descriptions.Item>
+            <Descriptions.Item label="状态">{statusMap[ticket.status]?.text || ticket.status}</Descriptions.Item>
+            <Descriptions.Item label="优先级">{getPriorityText(ticket.priority)}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">{formatDateTime(ticket.createdAt)}</Descriptions.Item>
+            <Descriptions.Item label="更新时间">{formatDateTime(ticket.updatedAt)}</Descriptions.Item>
             <Descriptions.Item label="描述" span={2}>
               <SafeTextBlock content={ticket.description} fallback="暂无描述" />
             </Descriptions.Item>

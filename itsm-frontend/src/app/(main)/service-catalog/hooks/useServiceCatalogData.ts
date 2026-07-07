@@ -41,11 +41,24 @@ export const useServiceCatalogData = () => {
   }, [loadServiceCatalogs]);
 
   useEffect(() => {
+    // 与页面分类标签保持一致的过滤逻辑（使用部分匹配）
+    const categoryCountMap: Record<string, string[]> = {
+      cloud: ['云资源服务', 'Cloud Service'],
+      account: ['账号与权限', 'Account Service'],
+      security: ['安全服务', 'Security Service'],
+    };
+
+    const countByCategory = (keywords: string[]) => {
+      return catalogs.filter(catalog =>
+        keywords.some(keyword => String(catalog.category).includes(keyword))
+      ).length;
+    };
+
     setStats({
       total: catalogs.length,
-      cloudServices: catalogs.filter(c => String(c.category) === '云资源服务').length,
-      accountServices: catalogs.filter(c => String(c.category) === '账号与权限').length,
-      securityServices: catalogs.filter(c => String(c.category) === '安全服务').length,
+      cloudServices: countByCategory(categoryCountMap.cloud),
+      accountServices: countByCategory(categoryCountMap.account),
+      securityServices: countByCategory(categoryCountMap.security),
     });
   }, [catalogs]);
 

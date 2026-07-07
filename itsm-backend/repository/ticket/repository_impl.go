@@ -2,7 +2,9 @@ package ticket
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
@@ -12,10 +14,28 @@ import (
 	"go.uber.org/zap"
 )
 
+// SequenceProvider 工单号生成接口（避免循环依赖）
+type SequenceProvider interface {
+	GetNextSequenceWithExpiry(ctx context.Context, key string, expiredAt time.Time) (int64, error)
+}
+
+// sequenceServiceAdapter SequenceService 适配器
+type sequenceServiceAdapter struct {
+	logger *zap.SugaredLogger
+	client *ent.Client
+}
+
+// NewSequenceServiceAdapter 创建适配器
+func NewSequenceServiceAdapter(logger *zap.SugaredLogger, client *ent.Client) *sequenceServiceAdapter {
+	return &sequenceServiceAdapter{logger: logger, client: client}
+}
+
 // EntRepository Ent 实现的工单仓储
 type EntRepository struct {
 	*base.EntRepository
-	logger *zap.SugaredLogger
+	logger          *zap.SugaredLogger
+	sequenceService SequenceProvider
+	rawDB          *sql.DB // for transactional SELECT FOR UPDATE
 }
 
 // NewEntRepository 创建 Ent 工单仓储
@@ -24,6 +44,16 @@ func NewEntRepository(client *ent.Client, logger *zap.SugaredLogger) *EntReposit
 		EntRepository: base.NewEntRepository(client),
 		logger:        logger,
 	}
+}
+
+// SetSequenceService 设置序列服务（用于 Redis 工单号生成）
+func (r *EntRepository) SetSequenceService(seqSvc SequenceProvider) {
+	r.sequenceService = seqSvc
+}
+
+// SetRawDB 设置原生数据库连接（用于事务性编号生成）
+func (r *EntRepository) SetRawDB(db *sql.DB) {
+	r.rawDB = db
 }
 
 // Create 创建工单
@@ -360,24 +390,111 @@ func (r *EntRepository) CountByPriority(ctx context.Context, tenantID int) (map[
 
 // GenerateTicketNumber 生成工单编号
 // 格式: TKT-YYYYMM-XXXXXX
+// 优先使用 Redis 序列服务（原子递增，避免并发重复）；否则使用数据库回退
 func (r *EntRepository) GenerateTicketNumber(ctx context.Context, tenantID int) (string, error) {
 	now := time.Now()
 	year := now.Year()
 	month := int(now.Month())
 
-	// 查询当月工单数量
-	count, err := r.Client().Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.CreatedAtGTE(time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)),
-			ticket.CreatedAtLT(time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.UTC)),
-		).
-		Count(ctx)
-	if err != nil {
-		return "", fmt.Errorf("count tickets for number generation: %w", err)
+	// 计算本月最后一天作为过期时间
+	expiredAt := time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.UTC)
+
+	// 优先使用 Redis 序列服务
+	if r.sequenceService != nil {
+		return r.generateTicketNumberWithRedis(ctx, tenantID, year, month, expiredAt)
 	}
 
-	return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, count+1), nil
+	// 备用方案：数据库查询
+	return r.generateTicketNumberWithDB(ctx, tenantID, year, month)
+}
+
+// generateTicketNumberWithRedis 使用 Redis INCR 生成工单编号
+func (r *EntRepository) generateTicketNumberWithRedis(ctx context.Context, tenantID, year, month int, expiredAt time.Time) (string, error) {
+	key := fmt.Sprintf("sequence:ticket:%d:%d%02d", tenantID, year, month)
+
+	// 获取序列号（带过期时间）
+	seq, err := r.sequenceService.GetNextSequenceWithExpiry(ctx, key, expiredAt)
+	if err != nil {
+		r.logger.Warnw("Redis sequence failed for ticket, fallback to DB", "error", err)
+		return r.generateTicketNumberWithDB(ctx, tenantID, year, month)
+	}
+
+	return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq), nil
+}
+
+// generateTicketNumberWithDB 使用数据库事务+SELECT FOR UPDATE 生成工单编号（备用方案）
+func (r *EntRepository) generateTicketNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
+	prefix := fmt.Sprintf("TKT-%04d%02d-", year, month)
+	var candidate string
+
+	// 开启事务，使用 SELECT FOR UPDATE 锁定最大编号行
+	if r.rawDB != nil {
+		tx, err := r.rawDB.BeginTx(ctx, nil)
+		if err != nil {
+			r.logger.Warnw("BeginTx failed, falling back to non-transactional", "error", err)
+		} else {
+			// 使用原生 SQL 查询最大编号（使用 FOR UPDATE SKIP LOCKED 避免阻塞）
+			query := `SELECT ticket_number FROM tickets WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE SKIP LOCKED`
+			var maxTicketNum string
+			err := tx.QueryRowContext(ctx, query, tenantID, prefix+"%").Scan(&maxTicketNum)
+
+			// 计算下一个序列号
+			var seq int = 0
+			// sql.ErrNoRows 意味着当月没有工单，此时 seq 保持 0
+			if err == nil && maxTicketNum != "" {
+				if idx := strings.LastIndex(maxTicketNum, "-"); idx >= 0 {
+					fmt.Sscanf(maxTicketNum[idx+1:], "%d", &seq)
+				}
+			} else if err == sql.ErrNoRows {
+				r.logger.Infow("No existing tickets this month, using seed sequence", "tenant", tenantID, "year", year, "month", month)
+			}
+
+			// 有历史记录则使用递增号；无记录则用随机后缀确保唯一
+			if seq > 0 {
+				candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq+1)
+			} else {
+				candidate = fmt.Sprintf("TKT-%04d%02d-%s", year, month, uniqueFallbackSuffix())
+			}
+			r.logger.Infow("DB transaction generated ticket number",
+				"number", candidate, "tenant", tenantID)
+
+			// 提交事务
+			tx.Commit()
+			return candidate, nil
+		}
+	}
+
+	// Fallback: 非事务方式（仅用于没有 rawDB 的场景）
+	tickets, err := r.Client().Ticket.Query().
+		Where(
+			ticket.TenantID(tenantID),
+			ticket.TicketNumberContains(prefix[:len(prefix)-1]),
+		).
+		Order(ent.Desc(ticket.FieldTicketNumber)).
+		Limit(1).
+		All(ctx)
+
+	var seq int
+	if err != nil || len(tickets) == 0 {
+		seq = 1
+	} else {
+		maxNum := tickets[0].TicketNumber
+		if idx := strings.LastIndex(maxNum, "-"); idx >= 0 {
+			fmt.Sscanf(maxNum[idx+1:], "%d", &seq)
+			seq++
+		} else {
+			seq = 1
+		}
+	}
+
+	return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq), nil
+}
+
+// uniqueFallbackSuffix 生成唯一后缀（用于当月第一条记录的回退）
+func uniqueFallbackSuffix() string {
+	// 使用时间戳+随机数生成唯一后缀
+	n := time.Now().UnixNano()
+	return fmt.Sprintf("%010d", n)[2:]
 }
 
 // UpdateStatus 更新工单状态

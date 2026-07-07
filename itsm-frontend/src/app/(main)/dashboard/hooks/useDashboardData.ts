@@ -41,7 +41,9 @@ export function useDashboardData() {
             case 'total-tickets':
               return { ...metric, value: stats.total, description: '实时工单总数' };
             case 'pending-tickets':
-              return { ...metric, value: stats.pending || 0, description: '实时待处理' };
+              // 使用 open 而非 pending，保持与工单列表页一致
+              // open = new + open（新建 + 处理中）
+              return { ...metric, value: stats.open || 0, description: '实时待处理' };
             case 'in-progress-tickets':
               return { ...metric, value: stats.inProgress || 0, description: '实时处理中' };
             case 'completed-tickets':

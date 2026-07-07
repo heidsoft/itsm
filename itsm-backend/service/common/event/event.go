@@ -1,9 +1,8 @@
-// Package common 提供通用基础设施
-// 按 DDD 思想将共享能力抽取到 common 包
-package common
+// Package event 提供领域事件基础设施
+// 按 DDD 思想将共享能力抽取到 event 包
+package event
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
