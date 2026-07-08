@@ -74,7 +74,7 @@ const MarketplacePage = () => {
           pageSize: number;
         }>('/api/v1/marketplace/items', { page: 1, pageSize: 100 });
         if (cancelled) return;
-        // 后端字段是 snake_case，httpClient 已自动转 camelCase。
+        // 后端响应字段已统一为 camelCase。
         // 仅保留对前端有用的字段并对缺失字段做兜底。
         const normalized: MarketplaceItem[] = (res?.items || []).map((it: any) => ({
           id: it.id,

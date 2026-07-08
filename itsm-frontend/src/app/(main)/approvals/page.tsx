@@ -78,6 +78,14 @@ interface EnhancedPendingItem extends PendingItem {
   detail?: any;
 }
 
+// 审批状态中文映射
+const approvalStatusMap: Record<string, { text: string; color: string }> = {
+  pending: { text: '待审批', color: 'gold' },
+  approved: { text: '已批准', color: 'green' },
+  rejected: { text: '已拒绝', color: 'red' },
+  cancelled: { text: '已取消', color: 'gray' },
+};
+
 export default function ApprovalsCenterPage() {
   const router = useRouter();
   const { user } = useAuthStore();
@@ -683,7 +691,9 @@ export default function ApprovalsCenterPage() {
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="状态">
-              <Tag>{detailDrawer.item.status}</Tag>
+              <Tag color={approvalStatusMap[detailDrawer.item.status]?.color || 'default'}>
+                {approvalStatusMap[detailDrawer.item.status]?.text || detailDrawer.item.status}
+              </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="申请人">{detailDrawer.item.requester || '-'}</Descriptions.Item>
             <Descriptions.Item label="创建时间">

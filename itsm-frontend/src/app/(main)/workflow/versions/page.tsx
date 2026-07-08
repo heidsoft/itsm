@@ -24,6 +24,17 @@ type VersionRow = {
 
 const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-');
 
+// 工作流版本状态映射
+const workflowVersionStatusMap: Record<string, { text: string; color: string }> = {
+  active: { text: '已激活', color: 'green' },
+  draft: { text: '草稿', color: 'default' },
+  inactive: { text: '未激活', color: 'default' },
+};
+
+const getVersionStatusText = (status: string): string => {
+  return workflowVersionStatusMap[status]?.text || status;
+};
+
 export default function WorkflowVersionsPage() {
   const { message } = App.useApp();
   const searchParams = useSearchParams();
@@ -88,7 +99,10 @@ export default function WorkflowVersionsPage() {
         title: '状态',
         dataIndex: 'status',
         key: 'status',
-        render: (value: string) => <Tag color={value === 'active' ? 'green' : 'default'}>{value}</Tag>,
+        render: (value: string) => {
+          const config = workflowVersionStatusMap[value] || { text: value, color: 'default' };
+          return <Tag color={config.color}>{config.text}</Tag>;
+        },
       },
       {
         title: '创建时间',
@@ -245,8 +259,8 @@ export default function WorkflowVersionsPage() {
             <Descriptions.Item label="版本">{selectedVersion.version}</Descriptions.Item>
             <Descriptions.Item label="名称">{selectedVersion.name}</Descriptions.Item>
             <Descriptions.Item label="状态">
-              <Tag color={selectedVersion.status === 'active' ? 'green' : 'default'}>
-                {selectedVersion.status}
+              <Tag color={workflowVersionStatusMap[selectedVersion.status]?.color || 'default'}>
+                {getVersionStatusText(selectedVersion.status)}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="说明">{selectedVersion.description || '-'}</Descriptions.Item>

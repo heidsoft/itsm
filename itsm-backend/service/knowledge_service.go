@@ -21,6 +21,21 @@ type KnowledgeService struct {
 	logger *zap.SugaredLogger
 }
 
+var allowedKnowledgeCategories = map[string]struct{}{
+	"accountManagement": {},
+	"troubleshooting":   {},
+	"network":           {},
+	"processGuide":      {},
+	"systemConfig":      {},
+	"账号管理":              {},
+	"故障排除":              {},
+	"网络连接":              {},
+	"流程指南":              {},
+	"系统配置":              {},
+	"用户指南":              {},
+	"技术文档":              {},
+}
+
 func NewKnowledgeService(client *ent.Client, logger *zap.SugaredLogger) *KnowledgeService {
 	return &KnowledgeService{
 		client: client,
@@ -34,6 +49,10 @@ func (ks *KnowledgeService) CreateArticle(ctx context.Context, req *dto.CreateKn
 
 	if strings.TrimSpace(req.Content) == "" {
 		return nil, fmt.Errorf("内容不能为空")
+	}
+	req.Category = strings.TrimSpace(req.Category)
+	if err := validateKnowledgeCategory(req.Category); err != nil {
+		return nil, err
 	}
 	// 将Tags数组转换为字符串
 	tagsStr := ""
@@ -124,7 +143,8 @@ func (ks *KnowledgeService) ListArticles(ctx context.Context, req *dto.ListKnowl
 
 // UpdateArticle 更新知识库文章
 func (ks *KnowledgeService) UpdateArticle(ctx context.Context, id int, req *dto.UpdateKnowledgeArticleRequest, tenantID int) (*ent.KnowledgeArticle, error) {
-	update := ks.client.KnowledgeArticle.UpdateOneID(id)
+	update := ks.client.KnowledgeArticle.UpdateOneID(id).
+		Where(knowledgearticle.TenantID(tenantID))
 
 	if req.Title != nil {
 		update = update.SetTitle(*req.Title)
@@ -133,7 +153,11 @@ func (ks *KnowledgeService) UpdateArticle(ctx context.Context, id int, req *dto.
 		update = update.SetContent(*req.Content)
 	}
 	if req.Category != nil {
-		update = update.SetCategory(*req.Category)
+		category := strings.TrimSpace(*req.Category)
+		if err := validateKnowledgeCategory(category); err != nil {
+			return nil, err
+		}
+		update = update.SetCategory(category)
 	}
 	if req.Tags != nil {
 		if len(req.Tags) > 0 {
@@ -145,12 +169,25 @@ func (ks *KnowledgeService) UpdateArticle(ctx context.Context, id int, req *dto.
 
 	article, err := update.Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("文章不存在")
+		}
 		ks.logger.Errorw("Failed to update knowledge article", "error", err, "id", id, "tenant_id", tenantID)
 		return nil, fmt.Errorf("更新文章失败: %w", err)
 	}
 
 	ks.logger.Infow("Knowledge article updated successfully", "id", id, "tenant_id", tenantID)
 	return article, nil
+}
+
+func validateKnowledgeCategory(category string) error {
+	if category == "" {
+		return fmt.Errorf("分类不能为空")
+	}
+	if _, ok := allowedKnowledgeCategories[category]; !ok {
+		return fmt.Errorf("无效的知识库分类: %s", category)
+	}
+	return nil
 }
 
 // DeleteArticle 删除知识库文章（级联删除关联数据）

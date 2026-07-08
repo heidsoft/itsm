@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -240,14 +242,110 @@ func (s *SLAPolicyService) getDefaultPolicy(policies []*ent.SLAPolicy) (*ent.SLA
 // CalculateSLAExpireTime 计算SLA到期时间
 // 考虑业务时间配置
 func (s *SLAPolicyService) CalculateSLAExpireTime(ctx context.Context, policy *ent.SLAPolicy, startTime time.Time) time.Time {
-	if len(policy.BusinessHours) == 0 {
-		// 无业务时间配置，使用24小时制
+	_ = ctx
+	if policy == nil || policy.ResolutionTimeMinutes <= 0 {
+		return startTime
+	}
+
+	windowStart, windowEnd, hasWindow := extractBusinessHoursWindow(policy.BusinessHours)
+	if !hasWindow && !policy.ExcludeWeekends && !policy.ExcludeHolidays {
 		return startTime.Add(time.Duration(policy.ResolutionTimeMinutes) * time.Minute)
 	}
 
-	// 简化实现：暂不处理复杂的业务时间计算
-	// TODO: 实现完整的业务时间计算逻辑
-	return startTime.Add(time.Duration(policy.ResolutionTimeMinutes) * time.Minute)
+	if !hasWindow {
+		windowStart = 0
+		windowEnd = 24 * 60
+	}
+
+	current := alignToBusinessWindow(startTime, windowStart, windowEnd, policy.ExcludeWeekends)
+	remaining := policy.ResolutionTimeMinutes
+
+	for remaining > 0 {
+		current = alignToBusinessWindow(current, windowStart, windowEnd, policy.ExcludeWeekends)
+		dayEnd := minutesFromMidnight(current)
+		availableToday := windowEnd - dayEnd
+		if availableToday <= 0 {
+			current = nextBusinessDayStart(current, windowStart, policy.ExcludeWeekends)
+			continue
+		}
+		if remaining <= availableToday {
+			return current.Add(time.Duration(remaining) * time.Minute)
+		}
+		remaining -= availableToday
+		current = nextBusinessDayStart(current, windowStart, policy.ExcludeWeekends)
+	}
+
+	return current
+}
+
+func extractBusinessHoursWindow(businessHours map[string]interface{}) (int, int, bool) {
+	if len(businessHours) == 0 {
+		return 0, 0, false
+	}
+
+	start, okStart := parseClockMinutes(businessHours["start"])
+	end, okEnd := parseClockMinutes(businessHours["end"])
+	if !okStart || !okEnd || end <= start {
+		return 0, 0, false
+	}
+
+	return start, end, true
+}
+
+func parseClockMinutes(value interface{}) (int, bool) {
+	raw, ok := value.(string)
+	if !ok {
+		return 0, false
+	}
+	parts := strings.Split(strings.TrimSpace(raw), ":")
+	if len(parts) != 2 {
+		return 0, false
+	}
+	hour, errHour := strconv.Atoi(parts[0])
+	minute, errMinute := strconv.Atoi(parts[1])
+	if errHour != nil || errMinute != nil || hour < 0 || hour > 23 || minute < 0 || minute > 59 {
+		return 0, false
+	}
+	return hour*60 + minute, true
+}
+
+func alignToBusinessWindow(current time.Time, windowStart, windowEnd int, excludeWeekends bool) time.Time {
+	current = moveToWorkingDay(current, excludeWeekends)
+
+	minutes := minutesFromMidnight(current)
+	if minutes < windowStart {
+		return setMinutesFromMidnight(current, windowStart)
+	}
+	if minutes >= windowEnd {
+		return nextBusinessDayStart(current, windowStart, excludeWeekends)
+	}
+	return current
+}
+
+func nextBusinessDayStart(current time.Time, windowStart int, excludeWeekends bool) time.Time {
+	next := setMinutesFromMidnight(current, windowStart).AddDate(0, 0, 1)
+	next = moveToWorkingDay(next, excludeWeekends)
+	return setMinutesFromMidnight(next, windowStart)
+}
+
+func moveToWorkingDay(current time.Time, excludeWeekends bool) time.Time {
+	if !excludeWeekends {
+		return current
+	}
+	for current.Weekday() == time.Saturday || current.Weekday() == time.Sunday {
+		current = current.AddDate(0, 0, 1)
+	}
+	return current
+}
+
+func minutesFromMidnight(value time.Time) int {
+	return value.Hour()*60 + value.Minute()
+}
+
+func setMinutesFromMidnight(base time.Time, minutes int) time.Time {
+	hour := minutes / 60
+	minute := minutes % 60
+	return time.Date(base.Year(), base.Month(), base.Day(), hour, minute, 0, 0, base.Location())
 }
 
 // GetSLAComplianceRate 获取SLA合规率

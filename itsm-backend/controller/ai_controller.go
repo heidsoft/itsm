@@ -224,7 +224,7 @@ func (a *AIController) Chat(c *gin.Context) {
 			a.logger.Warn("failed to save assistant message", zap.Error(err))
 		}
 	}
-	common.Success(c, gin.H{"answers": items, "conversation_id": convID})
+	common.Success(c, gin.H{"answers": items, "conversationId": convID})
 }
 
 // Tools godoc
@@ -306,7 +306,7 @@ func (a *AIController) ExecuteTool(c *gin.Context) {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
-	common.Success(c, gin.H{"invocation_id": inv.ID, "approval_state": inv.ApprovalState})
+	common.Success(c, gin.H{"invocationId": inv.ID, "approvalState": inv.ApprovalState})
 }
 
 type ApproveRequest struct {
@@ -349,7 +349,7 @@ func (a *AIController) ApproveTool(c *gin.Context) {
 			common.Fail(c, common.InternalErrorCode, "操作失败")
 			return
 		}
-		common.Success(c, gin.H{"invocation_id": inv.ID, "approval_state": "rejected"})
+		common.Success(c, gin.H{"invocationId": inv.ID, "approvalState": "rejected"})
 		return
 	}
 	// approve and enqueue
@@ -360,7 +360,7 @@ func (a *AIController) ApproveTool(c *gin.Context) {
 	if a.queue != nil {
 		a.queue.Enqueue(service.ToolJob{InvocationID: inv.ID, TenantID: c.GetInt("tenant_id"), RequestID: c.GetString("request_id")})
 	}
-	common.Success(c, gin.H{"invocation_id": inv.ID, "approval_state": "approved"})
+	common.Success(c, gin.H{"invocationId": inv.ID, "approvalState": "approved"})
 }
 
 // GetToolInvocation godoc
@@ -381,16 +381,16 @@ func (a *AIController) GetToolInvocation(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{
-		"id":              inv.ID,
-		"status":          inv.Status,
-		"result":          inv.Result,
-		"error":           inv.Error,
-		"needs_approval":  inv.NeedsApproval,
-		"approval_state":  inv.ApprovalState,
-		"request_id":      inv.RequestID,
-		"created_at":      inv.CreatedAt,
-		"conversation_id": inv.ConversationID,
-		"tool_name":       inv.ToolName,
+		"id":             inv.ID,
+		"status":         inv.Status,
+		"result":         inv.Result,
+		"error":          inv.Error,
+		"needsApproval":  inv.NeedsApproval,
+		"approvalState":  inv.ApprovalState,
+		"requestId":      inv.RequestID,
+		"createdAt":      inv.CreatedAt,
+		"conversationId": inv.ConversationID,
+		"toolName":       inv.ToolName,
 	})
 }
 

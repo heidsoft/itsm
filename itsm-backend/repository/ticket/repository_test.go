@@ -2,7 +2,9 @@ package ticket
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"itsm-backend/ent"
@@ -13,6 +15,20 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
+
+type stubSequenceProvider struct {
+	values []int64
+	index  int
+}
+
+func (s *stubSequenceProvider) GetNextSequenceWithExpiry(_ context.Context, _ string, _ time.Time) (int64, error) {
+	if s.index >= len(s.values) {
+		return 0, fmt.Errorf("no more sequence values")
+	}
+	value := s.values[s.index]
+	s.index++
+	return value, nil
+}
 
 // repoFixture sets up an in-memory SQLite repo for testing.
 type repoFixture struct {
@@ -91,6 +107,41 @@ func TestRepository_Create_GeneratesTicketNumber(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, tkt.TicketNumber)
 	assert.Contains(t, tkt.TicketNumber, "TKT-")
+}
+
+func TestRepository_Create_RetriesOnTicketNumberConflict(t *testing.T) {
+	fx := newRepoFixture(t)
+	defer fx.client.Close()
+
+	concreteRepo, ok := fx.repo.(*EntRepository)
+	require.True(t, ok)
+
+	now := time.Now()
+	existingNumber := fmt.Sprintf("TKT-%04d%02d-%06d", now.Year(), int(now.Month()), 1)
+	_, err := fx.client.Ticket.Create().
+		SetTitle("Existing Ticket").
+		SetDescription("Existing").
+		SetType(string(TypeIncident)).
+		SetPriority(string(PriorityLow)).
+		SetTicketNumber(existingNumber).
+		SetRequesterID(fx.user.ID).
+		SetTenantID(fx.tenant.ID).
+		SetStatus(string(StatusNew)).
+		Save(fx.ctx)
+	require.NoError(t, err)
+
+	concreteRepo.SetSequenceService(&stubSequenceProvider{values: []int64{1, 2}})
+
+	tkt, err := fx.repo.Create(fx.ctx, &CreateParams{
+		Title:       "Retry Create",
+		Description: "Conflict then retry",
+		Priority:    PriorityMedium,
+		Type:        TypeIncident,
+		RequesterID: fx.user.ID,
+	}, fx.tenant.ID)
+	require.NoError(t, err)
+	assert.NotEqual(t, existingNumber, tkt.TicketNumber)
+	assert.Equal(t, fmt.Sprintf("TKT-%04d%02d-%06d", now.Year(), int(now.Month()), 2), tkt.TicketNumber)
 }
 
 func TestRepository_Create_DifferentTenants(t *testing.T) {

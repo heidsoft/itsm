@@ -160,6 +160,53 @@ export interface ProblemKnowledgeArticle {
   updatedAt: string;
 }
 
+interface InvestigationMutationResponse {
+  message: string;
+  investigationId?: number;
+  investigation: ProblemInvestigation;
+}
+
+interface StepMutationResponse {
+  message: string;
+  step: InvestigationStep;
+}
+
+interface RootCauseMutationResponse {
+  message: string;
+  analysis: RootCauseAnalysis;
+}
+
+interface SolutionMutationResponse {
+  message: string;
+  solution: ProblemSolution;
+}
+
+interface StepsResponse {
+  investigationId: number;
+  steps: InvestigationStep[];
+}
+
+interface SolutionsResponse {
+  problemId: number;
+  solutions: ProblemSolution[];
+}
+
+interface RelationshipsResponse {
+  problemId: number;
+  relationships: ProblemRelationship[];
+}
+
+interface KnowledgeArticleMutationResponse {
+  message: string;
+  articleId: number;
+  article: ProblemKnowledgeArticle;
+}
+
+interface KnowledgeArticlesResponse {
+  problemId: number;
+  knowledgeArticles: ProblemKnowledgeArticle[];
+}
+
 // 问题调查摘要
 export interface ProblemInvestigationSummary {
   investigation?: ProblemInvestigation;
@@ -271,7 +318,11 @@ export const ProblemInvestigationAPI = {
 
   // 创建问题调查
   async createInvestigation(data: CreateInvestigationRequest): Promise<ProblemInvestigation> {
-    return httpClient.post('/api/v1/problem-investigation/investigations', data);
+    const response = await httpClient.post<InvestigationMutationResponse>(
+      '/api/v1/problem-investigation/investigations',
+      data
+    );
+    return response.investigation;
   },
 
   // 更新问题调查
@@ -279,52 +330,89 @@ export const ProblemInvestigationAPI = {
     id: number,
     data: UpdateInvestigationRequest
   ): Promise<ProblemInvestigation> {
-    return httpClient.put(`/api/v1/problem-investigation/investigations/${id}`, data);
+    const response = await httpClient.put<InvestigationMutationResponse>(
+      `/api/v1/problem-investigation/investigations/${id}`,
+      data
+    );
+    return response.investigation;
   },
 
   // 获取调查步骤列表
   async getSteps(investigationId: number): Promise<InvestigationStep[]> {
-    return httpClient.get(`/api/v1/problem-investigation/investigations/${investigationId}/steps`);
+    const response = await httpClient.get<StepsResponse>(
+      `/api/v1/problem-investigation/investigations/${investigationId}/steps`
+    );
+    return response.steps || [];
   },
 
   // 创建调查步骤
   async createStep(data: CreateStepRequest): Promise<InvestigationStep> {
-    return httpClient.post('/api/v1/problem-investigation/steps', data);
+    const response = await httpClient.post<StepMutationResponse>(
+      '/api/v1/problem-investigation/steps',
+      data
+    );
+    return response.step;
   },
 
   // 更新调查步骤
   async updateStep(id: number, data: UpdateStepRequest): Promise<InvestigationStep> {
-    return httpClient.put(`/api/v1/problem-investigation/steps/${id}`, data);
+    const response = await httpClient.put<StepMutationResponse>(
+      `/api/v1/problem-investigation/steps/${id}`,
+      data
+    );
+    return response.step;
   },
 
   // 创建根本原因分析
   async createRootCause(data: CreateRootCauseRequest): Promise<RootCauseAnalysis> {
-    return httpClient.post('/api/v1/problem-investigation/root-cause-analysis', data);
+    const response = await httpClient.post<RootCauseMutationResponse>(
+      '/api/v1/problem-investigation/root-cause-analysis',
+      data
+    );
+    return response.analysis;
   },
 
   // 更新根本原因分析
   async updateRootCause(id: number, data: UpdateRootCauseRequest): Promise<RootCauseAnalysis> {
-    return httpClient.put(`/api/v1/problem-investigation/root-cause-analysis/${id}`, data);
+    const response = await httpClient.put<RootCauseMutationResponse>(
+      `/api/v1/problem-investigation/root-cause-analysis/${id}`,
+      data
+    );
+    return response.analysis;
   },
 
   // 获取解决方案列表
   async getSolutions(problemId: number): Promise<ProblemSolution[]> {
-    return httpClient.get(`/api/v1/problem-investigation/problems/${problemId}/solutions`);
+    const response = await httpClient.get<SolutionsResponse>(
+      `/api/v1/problem-investigation/problems/${problemId}/solutions`
+    );
+    return response.solutions || [];
   },
 
   // 创建解决方案
   async createSolution(data: CreateSolutionRequest): Promise<ProblemSolution> {
-    return httpClient.post('/api/v1/problem-investigation/solutions', data);
+    const response = await httpClient.post<SolutionMutationResponse>(
+      '/api/v1/problem-investigation/solutions',
+      data
+    );
+    return response.solution;
   },
 
   // 更新解决方案
   async updateSolution(id: number, data: UpdateSolutionRequest): Promise<ProblemSolution> {
-    return httpClient.put(`/api/v1/problem-investigation/solutions/${id}`, data);
+    const response = await httpClient.put<SolutionMutationResponse>(
+      `/api/v1/problem-investigation/solutions/${id}`,
+      data
+    );
+    return response.solution;
   },
 
   // 获取关联列表
   async getRelationships(problemId: number): Promise<ProblemRelationship[]> {
-    return httpClient.get(`/api/v1/problems/${problemId}/relationships`);
+    const response = await httpClient.get<RelationshipsResponse>(
+      `/api/v1/problems/${problemId}/relationships`
+    );
+    return response.relationships || [];
   },
 
   // 创建关联
@@ -342,12 +430,19 @@ export const ProblemInvestigationAPI = {
   async createKnowledgeArticle(
     data: CreateKnowledgeArticleRequest
   ): Promise<ProblemKnowledgeArticle> {
-    return httpClient.post('/api/v1/problem-knowledge-articles', data);
+    const response = await httpClient.post<KnowledgeArticleMutationResponse>(
+      '/api/v1/problem-knowledge-articles',
+      data
+    );
+    return response.article;
   },
 
   // 获取知识库文章列表
   async getKnowledgeArticles(problemId: number): Promise<ProblemKnowledgeArticle[]> {
-    return httpClient.get(`/api/v1/problem-knowledge-articles/problems/${problemId}`);
+    const response = await httpClient.get<KnowledgeArticlesResponse>(
+      `/api/v1/problem-knowledge-articles/problems/${problemId}`
+    );
+    return response.knowledgeArticles || [];
   },
 };
 

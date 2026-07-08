@@ -7,6 +7,13 @@ import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import type { ServiceItem } from '@/types/service-catalog';
 import { useI18n } from '@/lib/i18n';
 
+// 服务目录状态映射
+const serviceStatusMap: Record<string, { text: string; color: string }> = {
+  published: { text: '已发布', color: 'green' },
+  draft: { text: '草稿', color: 'default' },
+  archived: { text: '已归档', color: 'gray' },
+};
+
 export default function ServiceDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -47,7 +54,7 @@ export default function ServiceDetailPage() {
         <Descriptions title={service.name} bordered column={2}>
           <Descriptions.Item label={t('service.category')}>{service.category}</Descriptions.Item>
           <Descriptions.Item label={t('service.status')}>
-            <Tag color={service.status === 'published' ? 'green' : 'default'}>{service.status}</Tag>
+            <Tag color={serviceStatusMap[service.status]?.color || 'default'}>{serviceStatusMap[service.status]?.text || service.status}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label={t('service.description')} span={2}>
             {service.shortDescription || service.fullDescription}

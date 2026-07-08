@@ -98,7 +98,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-4">
               <Link
-                href="https://github.com/heidsoft/tism"
+                href="https://github.com/heidsoft/itsm"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 transition-colors"
@@ -145,7 +145,7 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
               <Link
-                href="https://github.com/heidsoft/tism"
+                href="https://github.com/heidsoft/itsm"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
@@ -241,7 +241,7 @@ export default function HomePage() {
               <div className="p-6 font-mono text-sm">
                 <div className="text-gray-500 mb-1"># 克隆仓库</div>
                 <div className="text-green-400 mb-3">
-                  $ git clone https://github.com/heidsoft/tism.git
+                  $ git clone https://github.com/heidsoft/itsm.git
                 </div>
                 <div className="text-gray-500 mb-1"># 进入项目目录</div>
                 <div className="text-green-400 mb-3">$ cd tism</div>
@@ -299,7 +299,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-6">
               <Link
-                href="https://github.com/heidsoft/tism"
+                href="https://github.com/heidsoft/itsm"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors"
@@ -308,7 +308,7 @@ export default function HomePage() {
                 <span className="text-sm">GitHub</span>
               </Link>
               <Link
-                href="https://github.com/heidsoft/tism/issues"
+                href="https://github.com/heidsoft/itsm/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors text-sm"
@@ -316,7 +316,7 @@ export default function HomePage() {
                 问题反馈
               </Link>
               <Link
-                href="https://github.com/heidsoft/tism/blob/main/LICENSE"
+                href="https://github.com/heidsoft/itsm/blob/main/LICENSE"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors text-sm"

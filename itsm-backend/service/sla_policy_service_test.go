@@ -423,6 +423,7 @@ func TestSLAPolicyService_CalculateExpire_WithoutBusinessHoursUses24h(t *testing
 	tenant := createPolicyTenant(ctx, t, client)
 	req := sampleCreateRequest(tenant.ID)
 	req.BusinessHours = nil
+	req.ExcludeWeekends = false
 	policy, err := svc.CreateSLAPolicy(ctx, req)
 	require.NoError(t, err)
 
@@ -431,6 +432,78 @@ func TestSLAPolicyService_CalculateExpire_WithoutBusinessHoursUses24h(t *testing
 
 	want := start.Add(time.Duration(policy.ResolutionTimeMinutes) * time.Minute)
 	assert.Equal(t, want, got)
+}
+
+func TestSLAPolicyService_CalculateExpire_UsesBusinessHoursWithinSameDay(t *testing.T) {
+	client, svc, ctx := setupSLAPolicyTest(t)
+	defer client.Close()
+
+	tenant := createPolicyTenant(ctx, t, client)
+	req := sampleCreateRequest(tenant.ID)
+	req.ResolutionTimeMinutes = 120
+	req.BusinessHours = map[string]interface{}{"start": "09:00", "end": "18:00"}
+	req.ExcludeWeekends = true
+	policy, err := svc.CreateSLAPolicy(ctx, req)
+	require.NoError(t, err)
+
+	start := time.Date(2026, 6, 22, 10, 0, 0, 0, time.UTC) // Monday
+	got := svc.CalculateSLAExpireTime(ctx, policy, start)
+
+	assert.Equal(t, time.Date(2026, 6, 22, 12, 0, 0, 0, time.UTC), got)
+}
+
+func TestSLAPolicyService_CalculateExpire_CrossesBusinessDayBoundary(t *testing.T) {
+	client, svc, ctx := setupSLAPolicyTest(t)
+	defer client.Close()
+
+	tenant := createPolicyTenant(ctx, t, client)
+	req := sampleCreateRequest(tenant.ID)
+	req.ResolutionTimeMinutes = 120
+	req.BusinessHours = map[string]interface{}{"start": "09:00", "end": "18:00"}
+	req.ExcludeWeekends = true
+	policy, err := svc.CreateSLAPolicy(ctx, req)
+	require.NoError(t, err)
+
+	start := time.Date(2026, 6, 22, 17, 0, 0, 0, time.UTC) // Monday
+	got := svc.CalculateSLAExpireTime(ctx, policy, start)
+
+	assert.Equal(t, time.Date(2026, 6, 23, 10, 0, 0, 0, time.UTC), got)
+}
+
+func TestSLAPolicyService_CalculateExpire_SkipsWeekend(t *testing.T) {
+	client, svc, ctx := setupSLAPolicyTest(t)
+	defer client.Close()
+
+	tenant := createPolicyTenant(ctx, t, client)
+	req := sampleCreateRequest(tenant.ID)
+	req.ResolutionTimeMinutes = 120
+	req.BusinessHours = map[string]interface{}{"start": "09:00", "end": "18:00"}
+	req.ExcludeWeekends = true
+	policy, err := svc.CreateSLAPolicy(ctx, req)
+	require.NoError(t, err)
+
+	start := time.Date(2026, 6, 26, 17, 0, 0, 0, time.UTC) // Friday
+	got := svc.CalculateSLAExpireTime(ctx, policy, start)
+
+	assert.Equal(t, time.Date(2026, 6, 29, 10, 0, 0, 0, time.UTC), got)
+}
+
+func TestSLAPolicyService_CalculateExpire_ExcludeWeekendsWithoutBusinessHours(t *testing.T) {
+	client, svc, ctx := setupSLAPolicyTest(t)
+	defer client.Close()
+
+	tenant := createPolicyTenant(ctx, t, client)
+	req := sampleCreateRequest(tenant.ID)
+	req.ResolutionTimeMinutes = 180
+	req.BusinessHours = nil
+	req.ExcludeWeekends = true
+	policy, err := svc.CreateSLAPolicy(ctx, req)
+	require.NoError(t, err)
+
+	start := time.Date(2026, 6, 26, 23, 0, 0, 0, time.UTC) // Friday
+	got := svc.CalculateSLAExpireTime(ctx, policy, start)
+
+	assert.Equal(t, time.Date(2026, 6, 29, 2, 0, 0, 0, time.UTC), got)
 }
 
 func TestSLAPolicyService_ComplianceRate_NoTicketsReturns100(t *testing.T) {

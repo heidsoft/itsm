@@ -19,7 +19,7 @@ type CreateTicketRequest struct {
 	Description           string                 `json:"description" binding:"required,min=0,max=5000"`
 	Priority              string                 `json:"priority" binding:"required,oneof=low medium high critical urgent"`
 	Type                  string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"` // 工单类型
-	TypeID                string                 `json:"typeId,omitempty"`                                                              // 兼容旧前端预设类型ID
+	TypeID                string                 `json:"typeId,omitempty"`                                                              
 	Category              string                 `json:"category"`                                                                      // 分类名称（可选，前端传入）
 	CategoryID            *int                   `json:"categoryId,omitempty"`                                                          // 分类ID（优先使用）
 	TemplateID            *int                   `json:"templateId,omitempty"`                                                          // 模板ID
@@ -27,7 +27,7 @@ type CreateTicketRequest struct {
 	AssigneeID            int                    `json:"assigneeId"`
 	ParentTicketID        *int                   `json:"parentTicketId,omitempty"`
 	TagIDs                []int                  `json:"tagIds,omitempty"` // 标签ID列表
-	Tags                  []string               `json:"tags"`             // 标签名称列表（兼容旧格式）
+	Tags                  []string               `json:"tags"`             
 	FormFields            map[string]interface{} `json:"formFields"`
 	Attachments           []string               `json:"attachments"`
 	WorkflowDefinitionKey string                 `json:"workflowDefinitionKey"` // 工作流定义Key（可选，优先级高于自动选择）
@@ -241,7 +241,6 @@ type TicketAnalyticsResponse struct {
 }
 
 // AssignTicketRequest 分配工单请求
-// 兼容前端两种字段命名：assigneeId (camelCase) 和 assignee_id (snake_case)
 // 由控制器进行非零校验
 type AssignTicketRequest struct {
 	AssigneeID int `json:"assigneeId"`

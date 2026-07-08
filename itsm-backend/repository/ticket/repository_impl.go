@@ -35,7 +35,7 @@ type EntRepository struct {
 	*base.EntRepository
 	logger          *zap.SugaredLogger
 	sequenceService SequenceProvider
-	rawDB          *sql.DB // for transactional SELECT FOR UPDATE
+	rawDB           *sql.DB // for transactional SELECT FOR UPDATE
 }
 
 // NewEntRepository 创建 Ent 工单仓储
@@ -58,35 +58,47 @@ func (r *EntRepository) SetRawDB(db *sql.DB) {
 
 // Create 创建工单
 func (r *EntRepository) Create(ctx context.Context, params *CreateParams, tenantID int) (*Ticket, error) {
-	// 生成工单编号
-	ticketNumber, err := r.GenerateTicketNumber(ctx, tenantID)
-	if err != nil {
-		return nil, fmt.Errorf("generate ticket number: %w", err)
-	}
+	for attempt := 0; attempt < 3; attempt++ {
+		ticketNumber, err := r.GenerateTicketNumber(ctx, tenantID)
+		if err != nil {
+			return nil, fmt.Errorf("generate ticket number: %w", err)
+		}
 
-	builder := r.Client().Ticket.Create().
-		SetTitle(params.Title).
-		SetDescription(params.Description).
-		SetType(string(params.Type)).
-		SetPriority(string(params.Priority)).
-		SetTicketNumber(ticketNumber).
-		SetRequesterID(params.RequesterID).
-		SetTenantID(tenantID).
-		SetStatus(string(StatusNew))
+		builder := r.Client().Ticket.Create().
+			SetTitle(params.Title).
+			SetDescription(params.Description).
+			SetType(string(params.Type)).
+			SetPriority(string(params.Priority)).
+			SetTicketNumber(ticketNumber).
+			SetRequesterID(params.RequesterID).
+			SetTenantID(tenantID).
+			SetStatus(string(StatusNew))
 
-	if params.AssigneeID != nil {
-		builder.SetAssigneeID(*params.AssigneeID)
-	}
-	if params.CategoryID != nil {
-		builder.SetCategoryID(*params.CategoryID)
-	}
+		if params.AssigneeID != nil {
+			builder.SetAssigneeID(*params.AssigneeID)
+		}
+		if params.CategoryID != nil {
+			builder.SetCategoryID(*params.CategoryID)
+		}
 
-	entity, err := builder.Save(ctx)
-	if err != nil {
+		entity, err := builder.Save(ctx)
+		if err == nil {
+			return toDomainModel(entity), nil
+		}
+
+		if ent.IsConstraintError(err) || strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "23505") {
+			r.logger.Warnw("ticket number collision detected during create, retrying",
+				"ticket_number", ticketNumber,
+				"tenant_id", tenantID,
+				"attempt", attempt+1,
+				"error", err)
+			continue
+		}
+
 		return nil, fmt.Errorf("create ticket: %w", err)
 	}
 
-	return toDomainModel(entity), nil
+	return nil, fmt.Errorf("create ticket: ticket number collision persisted after retries")
 }
 
 // GetByID 根据 ID 获取工单

@@ -81,11 +81,22 @@ func TestKnowledgeService_CreateArticle(t *testing.T) {
 			expectedError: false,
 		},
 		{
+			name: "分类非法",
+			request: &dto.CreateKnowledgeArticleRequest{
+				Title:    "非法分类文章",
+				Content:  "内容有效但分类无效",
+				Category: "invalid_xyz",
+			},
+			authorID:      testUser.ID,
+			tenantID:      testTenant.ID,
+			expectedError: true,
+		},
+		{
 			name: "标题为空",
 			request: &dto.CreateKnowledgeArticleRequest{
 				Title:    "",
 				Content:  "内容",
-				Category: "分类",
+				Category: "故障排除",
 				// Status:   "draft",
 			},
 			authorID:      testUser.ID,
@@ -97,7 +108,7 @@ func TestKnowledgeService_CreateArticle(t *testing.T) {
 			request: &dto.CreateKnowledgeArticleRequest{
 				Title:    "标题",
 				Content:  "",
-				Category: "分类",
+				Category: "故障排除",
 				// Status:   "draft",
 			},
 			authorID:      testUser.ID,
@@ -256,11 +267,19 @@ func TestKnowledgeService_UpdateArticle(t *testing.T) {
 	testArticle, err := client.KnowledgeArticle.Create().
 		SetTitle("原始标题").
 		SetContent("原始内容").
-		SetCategory("原始分类").
+		SetCategory("故障排除").
 		SetTags("原始,标签").
 		SetIsPublished(false).
 		SetAuthorID(testUser.ID).
 		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	otherTenant, err := client.Tenant.Create().
+		SetName("Other Tenant").
+		SetCode("OTHER").
+		SetDomain("other.com").
+		SetStatus("active").
 		Save(ctx)
 	require.NoError(t, err)
 
@@ -277,7 +296,7 @@ func TestKnowledgeService_UpdateArticle(t *testing.T) {
 			request: &dto.UpdateKnowledgeArticleRequest{
 				Title:    testStringPtr("更新后的标题"),
 				Content:  testStringPtr("更新后的内容"),
-				Category: testStringPtr("更新后的分类"),
+				Category: testStringPtr("流程指南"),
 				Tags:     []string{"更新", "标签"},
 			},
 			tenantID:      testTenant.ID,
@@ -299,6 +318,24 @@ func TestKnowledgeService_UpdateArticle(t *testing.T) {
 				Title: testStringPtr("不存在的文章"),
 			},
 			tenantID:      testTenant.ID,
+			expectedError: true,
+		},
+		{
+			name:      "分类非法",
+			articleID: testArticle.ID,
+			request: &dto.UpdateKnowledgeArticleRequest{
+				Category: testStringPtr("not_a_real_category"),
+			},
+			tenantID:      testTenant.ID,
+			expectedError: true,
+		},
+		{
+			name:      "跨租户更新被拒绝",
+			articleID: testArticle.ID,
+			request: &dto.UpdateKnowledgeArticleRequest{
+				Title: testStringPtr("跨租户更新"),
+			},
+			tenantID:      otherTenant.ID,
 			expectedError: true,
 		},
 	}
@@ -588,7 +625,7 @@ func TestKnowledgeService_LikeArticle(t *testing.T) {
 	testArticle, err := client.KnowledgeArticle.Create().
 		SetTitle("测试文章").
 		SetContent("测试文章内容").
-		SetCategory("测试分类").
+		SetCategory("故障排除").
 		SetTags("测试").
 		SetIsPublished(true).
 		SetAuthorID(testUser.ID).
@@ -817,7 +854,7 @@ func BenchmarkKnowledgeService_ListArticles(b *testing.B) {
 		_, err := client.KnowledgeArticle.Create().
 			SetTitle("基准测试文章").
 			SetContent("基准测试文章内容").
-			SetCategory("测试分类").
+			SetCategory("故障排除").
 			SetTags("基准,测试").
 			SetIsPublished(true).
 			SetAuthorID(testUser.ID).

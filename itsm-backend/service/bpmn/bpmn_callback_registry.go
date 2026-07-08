@@ -133,6 +133,8 @@ func (r *CallbackRegistry) registerDefaultHandlers() {
 	// 注册审批处理器
 	r.RegisterHandler(NewApprovalHandler(r.client, r.logger))
 	// 注册Webhook处理器
+	// 注册抄送处理器
+	r.RegisterHandler(NewCCTaskHandler(r.client, r.logger))
 	r.RegisterHandler(NewWebhookHandler(r.client, r.logger))
 }
 

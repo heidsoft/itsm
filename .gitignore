@@ -193,3 +193,4 @@ itsm-backend/.cache/
 
 # Mkdocs build output
 site/
+itsm-backend/itsm-backend-old

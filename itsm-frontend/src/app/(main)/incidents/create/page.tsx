@@ -15,6 +15,14 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
+// CI状态中文映射
+const ciStatusNameMap: Record<string, string> = {
+  active: '活跃',
+  inactive: '未激活',
+  maintenance: '维护中',
+  retired: '已下线',
+};
+
 // 表单值类型定义
 interface IncidentFormValues {
   title: string;
@@ -301,7 +309,7 @@ export default function CreateIncidentPage() {
                                     >
                                       <div>
                                         <div className="font-medium">{ci.name}</div>
-                                        <div className="text-xs text-gray-500">{ci.ciType || ci.ciType || 'CI'} - {ci.status}</div>
+                                        <div className="text-xs text-gray-500">{ci.ciType || 'CI'} - {ciStatusNameMap[ci.status] || ci.status}</div>
                                       </div>
                                       {selectedCIs.find(item => item.id === ci.id) && (
                                         <Tag color="green">已选择</Tag>

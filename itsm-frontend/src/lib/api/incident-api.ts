@@ -18,7 +18,6 @@ export interface Incident {
   severity: string;
   source: string;
   type: string;
-  // 支持 camelCase 和 snake_case 两种格式
   incidentNumber?: string;
   isMajorIncident?: boolean;
   reporter?: {
@@ -51,7 +50,7 @@ export interface Incident {
   securityEventSourceIp?: string;
   securityEventTarget?: string;
   securityEventDetails?: unknown;
-  // 时间字段 - 同时支持两种格式
+  // 时间字段
   detectedAt?: string;
   confirmedAt?: string;
   resolvedAt?: string;
@@ -102,7 +101,6 @@ export interface CreateIncidentRequest {
   source: string;
   type: string;
   isMajorIncident?: boolean;
-  // 同时支持 camelCase 和 snake_case
   assigneeId?: number;
   assignedTo?: number; // Added for compatibility with UI forms
   configurationItemId?: number;

@@ -125,6 +125,10 @@ func NewApplication() *Application {
 
 	// 工单仓储层（V2 Repository 模式）
 	ticketRepoImpl := repository_ticket.NewEntRepository(client, sugar)
+	// 注入序列服务（用于 Redis 工单号生成）
+	ticketRepoImpl.SetSequenceService(sequenceService)
+	// 注入原生数据库连接（用于事务性编号生成）
+	ticketRepoImpl.SetRawDB(database.GetRawDB())
 
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
 	connectorManager := connector.NewManager(connector.Default(), sugar)

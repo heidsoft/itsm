@@ -70,7 +70,6 @@ export class TicketApprovalApi {
     page: number;
     pageSize: number;
   }> {
-    // Convert params to snake_case for query string
     const queryParams: Record<string, any> = {};
     if (params) {
       if (params.ticketType) queryParams.ticketType = params.ticketType;
@@ -113,7 +112,6 @@ export class TicketApprovalApi {
     page: number;
     pageSize: number;
   }> {
-    // Convert params to snake_case
     const queryParams: Record<string, any> = {};
     if (params) {
       if (params.ticketId) queryParams.ticketId = params.ticketId;

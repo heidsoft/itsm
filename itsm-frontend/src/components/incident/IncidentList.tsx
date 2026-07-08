@@ -78,8 +78,7 @@ const IncidentList: React.FC = () => {
         ...values,
       };
       const resp = await IncidentApi.getIncidents(apiQuery);
-      // 支持 snake_case 和 camelCase 格式
-      setData((resp.incidents || resp.items || []) as Incident[]);
+      setData((resp.incidents || []) as Incident[]);
       setTotal(resp.total || 0);
     } catch (error) {
       // console.error(error);

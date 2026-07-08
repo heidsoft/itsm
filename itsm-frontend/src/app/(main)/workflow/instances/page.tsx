@@ -43,6 +43,15 @@ const statusColorMap: Record<string, string> = {
   failed: 'red',
 };
 
+// 工作流实例状态文本映射
+const statusTextMap: Record<string, string> = {
+  running: '运行中',
+  completed: '已完成',
+  suspended: '已暂停',
+  terminated: '已终止',
+  failed: '失败',
+};
+
 const taskStatusColorMap: Record<string, string> = {
   pending: 'gold',
   inProgress: 'blue',
@@ -186,7 +195,7 @@ export default function WorkflowInstancesPage() {
         dataIndex: 'status',
         key: 'status',
         width: 100,
-        render: (value: string) => <Tag color={statusColorMap[value] || 'default'}>{value}</Tag>,
+        render: (value: string) => <Tag color={statusColorMap[value] || 'default'}>{statusTextMap[value] || value}</Tag>,
       },
       {
         title: '启动时间',
@@ -333,7 +342,7 @@ export default function WorkflowInstancesPage() {
           <Descriptions.Item label="业务键">{selectedInstance.businessKey}</Descriptions.Item>
           <Descriptions.Item label="状态">
             <Tag color={statusColorMap[selectedInstance.status] || 'default'}>
-              {selectedInstance.status}
+              {statusTextMap[selectedInstance.status] || selectedInstance.status}
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="启动时间">{formatDateTime(selectedInstance.startTime)}</Descriptions.Item>

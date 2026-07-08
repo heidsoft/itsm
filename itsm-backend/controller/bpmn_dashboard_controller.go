@@ -374,9 +374,9 @@ func (c *BPMNDashboardController) GetSLACompliance(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, gin.H{
-		"compliance_rate": rate,
-		"compliant":       compliant,
-		"total":           total,
+		"complianceRate": rate,
+		"compliant":      compliant,
+		"total":          total,
 	})
 }
 

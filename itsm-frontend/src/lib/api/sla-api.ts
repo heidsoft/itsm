@@ -72,7 +72,6 @@ export class SLAApi {
     page: number;
     pageSize: number;
   }> {
-    // 后端期望参数是 snake_case
     const queryParams: Record<string, string> = {};
     if (params) {
       if (params.page) queryParams.page = String(params.page);
@@ -128,7 +127,6 @@ export class SLAApi {
     page: number;
     pageSize: number;
   }> {
-    // 后端期望参数是 snake_case
     const queryParams: Record<string, string> = {};
     if (params) {
       if (params.page) queryParams.page = String(params.page);
@@ -156,13 +154,11 @@ export class SLAApi {
     startDate: string;
     endDate: string;
   }): Promise<SLAComplianceReport> {
-    // 调用合规报告端点 - 后端期望 snake_case 参数
     const report = await httpClient.get<SLAComplianceReport>('/api/v1/sla/compliance-report', {
       startDate: params.startDate,
       endDate: params.endDate,
     });
 
-    // httpClient 已自动将 snake_case 转换为 camelCase
     return {
       totalTickets: report.totalTickets || 0,
       metSla: report.metSla || 0,
@@ -183,7 +179,6 @@ export class SLAApi {
   }
 
   // 获取SLA统计信息
-  // 注意：httpClient 会自动将 snake_case 转为 camelCase
   static async getSLAStats(): Promise<{
     totalDefinitions: number;
     activeDefinitions: number;
@@ -224,13 +219,11 @@ export class SLAApi {
     }>;
      
   }> {
-    // 转换为后端期望的 snake_case
     const requestBody: Record<string, string> = {};
     if (params?.startTime) requestBody.startTime = params.startTime;
     if (params?.endTime) requestBody.endTime = params.endTime;
     if (params?.slaDefinitionId) requestBody.slaDefinitionId = String(params.slaDefinitionId);
 
-    // httpClient 会自动将 snake_case 转换为 camelCase
     const response = await httpClient.post<{
       totalTickets: number;
       violatedTickets: number;
@@ -297,7 +290,7 @@ export class SLAApi {
       avgResolutionTime: number;
     }>;
   }> {
-    // 使用 monitoring 端点获取指标数据 - httpClient 会自动转换 snake_case 为 camelCase
+    // 使用 monitoring 端点获取指标数据
     const monitoring = await httpClient.post<{
       averageResponseTime?: number;
       averageResolutionTime?: number;

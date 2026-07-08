@@ -110,7 +110,7 @@ func (tnc *TicketNotificationController) ListUserNotifications(c *gin.Context) {
 		"notifications": notifications,
 		"total":         total,
 		"page":          page,
-		"page_size":     pageSize,
+		"pageSize":      pageSize,
 	})
 }
 

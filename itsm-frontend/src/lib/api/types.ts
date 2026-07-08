@@ -64,7 +64,7 @@ export type TicketType = 'incident' | 'problem' | 'change' | 'service_request';
 
 export interface Ticket {
   id: number;
-  ticketNumber: string; // 后端返回 snake_case，前端自动转换为 camelCase
+  ticketNumber: string;
   title: string;
   description: string;
   priority: TicketPriority;
@@ -152,7 +152,6 @@ export type IncidentStatus =
 
 export interface Incident {
   id: number;
-  // 同时支持 snake_case 和 camelCase
   incidentNumber: string;
   title: string;
   description: string;

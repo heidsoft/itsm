@@ -51,9 +51,9 @@ func (pc *ProblemInvestigationController) CreateProblemInvestigation(c *gin.Cont
 	}
 
 	common.Success(c, gin.H{
-		"message":          "问题调查创建成功",
-		"investigation_id": investigation.ID,
-		"investigation":    investigation,
+		"message":         "问题调查创建成功",
+		"investigationId": investigation.ID,
+		"investigation":   investigation,
 	})
 }
 
@@ -263,8 +263,8 @@ func (pc *ProblemInvestigationController) GetInvestigationSteps(c *gin.Context) 
 	}
 
 	common.Success(c, gin.H{
-		"investigation_id": investigationID,
-		"steps":            summary.Steps,
+		"investigationId": investigationID,
+		"steps":           summary.Steps,
 	})
 }
 
@@ -286,8 +286,8 @@ func (pc *ProblemInvestigationController) GetProblemSolutions(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"problem_id": problemID,
-		"solutions":  summary.Solutions,
+		"problemId":  problemID,
+		"solutions": summary.Solutions,
 	})
 }
 
@@ -368,10 +368,10 @@ func (pc *ProblemInvestigationController) CreateProblemRelationship(c *gin.Conte
 		"tenant_id", tenantID)
 
 	common.Success(c, gin.H{
-		"message":      "问题关联创建成功",
-		"problem_id":   req.ProblemID,
-		"related_type": req.RelatedType,
-		"related_id":   req.RelatedID,
+		"message":     "问题关联创建成功",
+		"problemId":   req.ProblemID,
+		"relatedType": req.RelatedType,
+		"relatedId":   req.RelatedID,
 	})
 }
 
@@ -390,7 +390,7 @@ func (pc *ProblemInvestigationController) GetProblemRelationships(c *gin.Context
 	pc.logger.Info("Getting problem relationships", "problem_id", problemID, "tenant_id", tenantID)
 
 	common.Success(c, gin.H{
-		"problem_id":    problemID,
+		"problemId":      problemID,
 		"relationships": []interface{}{},
 	})
 }
@@ -436,15 +436,15 @@ func (pc *ProblemInvestigationController) CreateKnowledgeArticle(c *gin.Context)
 	pc.logger.Info("Created knowledge article from problem", "article_id", article.ID, "tenant_id", tenantID)
 
 	common.Success(c, gin.H{
-		"message":    "知识库文章创建成功",
-		"article_id": article.ID,
+		"message":   "知识库文章创建成功",
+		"articleId": article.ID,
 		"article": gin.H{
-			"id":        article.ID,
-			"title":     article.Title,
-			"content":   article.Content,
-			"category":  article.Category,
-			"tags":      article.Tags,
-			"author_id": article.AuthorID,
+			"id":       article.ID,
+			"title":    article.Title,
+			"content":  article.Content,
+			"category": article.Category,
+			"tags":     article.Tags,
+			"authorId": article.AuthorID,
 		},
 	})
 }
@@ -478,20 +478,20 @@ func (pc *ProblemInvestigationController) GetProblemKnowledgeArticles(c *gin.Con
 	var result []gin.H
 	for _, a := range articles {
 		result = append(result, gin.H{
-			"id":         a.ID,
-			"title":      a.Title,
-			"content":    a.Content,
-			"category":   a.Category,
-			"tags":       a.Tags,
-			"author_id":  a.AuthorID,
-			"view_count": a.ViewCount,
-			"like_count": a.LikeCount,
-			"created_at": a.CreatedAt,
+			"id":        a.ID,
+			"title":     a.Title,
+			"content":   a.Content,
+			"category":  a.Category,
+			"tags":      a.Tags,
+			"authorId":  a.AuthorID,
+			"viewCount": a.ViewCount,
+			"likeCount": a.LikeCount,
+			"createdAt": a.CreatedAt,
 		})
 	}
 
 	common.Success(c, gin.H{
-		"problem_id":         problemID,
-		"knowledge_articles": result,
+		"problemId":          problemID,
+		"knowledgeArticles": result,
 	})
 }

@@ -6,26 +6,12 @@ import { Card, Row, Col, Statistic, Button, Space, Tabs, Spin } from 'antd';
 import { useI18n } from '@/lib/i18n/useI18n';
 import { SLAApi } from '@/lib/api/sla-api';
 
-// 兼容旧前端 snake_case 和新前端 camelCase
-interface SLAStatsResponse {
-  totalDefinitions?: number;
-  activeDefinitions?: number;
-  totalViolations?: number;
-  openViolations?: number;
-  overallComplianceRate?: number;
-}
-
 interface SLAStats {
   totalDefinitions: number;
   activeDefinitions: number;
   totalViolations: number;
   openViolations: number;
   overallComplianceRate: number;
-}
-
-// 工具函数：提取兼容字段值
-function getSLAStatsValue(data: SLAStatsResponse, camelKey: keyof SLAStatsResponse, snakeKey: string): number {
-  return (data[camelKey] ?? data[snakeKey as keyof SLAStatsResponse] ?? 0) as number;
 }
 
 export default function SLAPage() {
@@ -47,16 +33,13 @@ export default function SLAPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const data = await SLAApi.getSLAStats();
-
-      // 映射后端 snake_case 字段到前端 camelCase
-      const response = data as unknown as SLAStatsResponse;
+      const response = await SLAApi.getSLAStats();
       setStats({
-        totalDefinitions: getSLAStatsValue(response, 'totalDefinitions', 'total_definitions'),
-        activeDefinitions: getSLAStatsValue(response, 'activeDefinitions', 'active_definitions'),
-        totalViolations: getSLAStatsValue(response, 'totalViolations', 'total_violations'),
-        openViolations: getSLAStatsValue(response, 'openViolations', 'open_violations'),
-        overallComplianceRate: getSLAStatsValue(response, 'overallComplianceRate', 'overall_compliance_rate'),
+        totalDefinitions: response.totalDefinitions || 0,
+        activeDefinitions: response.activeDefinitions || 0,
+        totalViolations: response.totalViolations || 0,
+        openViolations: response.openViolations || 0,
+        overallComplianceRate: response.overallComplianceRate || 0,
       });
     } catch (error) {
       console.error('Failed to load SLA stats:', error);

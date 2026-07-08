@@ -25,7 +25,7 @@ type ApprovalNodeRequest struct {
 	Level            int                       `json:"level" binding:"required,min=1" example:"1"`
 	Name             string                    `json:"name" binding:"required" example:"直属主管审批"`
 	ApproverType     string                    `json:"approverType" binding:"required,oneof=user role department dynamic dept_manager team_leader project_manager temp_team_leader amount_based" example:"role"`
-	ApproverIDs      []int                     `json:"approverIds,omitempty" example:"[1,2]"`
+	ApproverIDs      []int                     `json:"approverIds,omitempty" example:"1,2"`
 	AssigneeType     string                    `json:"assigneeType,omitempty" example:"dept_manager"`
 	AssigneeValue    string                    `json:"assigneeValue,omitempty" example:"1"`
 	ApprovalMode     string                    `json:"approvalMode" binding:"required,oneof=sequential parallel any all" example:"any"`
@@ -63,7 +63,7 @@ type ApprovalNodeResponse struct {
 	Level            int                       `json:"level" example:"1"`
 	Name             string                    `json:"name" example:"直属主管审批"`
 	ApproverType     string                    `json:"approverType" example:"role"`
-	ApproverIDs      []int                     `json:"approverIds" example:"[1,2]"`
+	ApproverIDs      []int                     `json:"approverIds,omitempty" example:"1,2"`
 	AssigneeType     string                    `json:"assigneeType,omitempty" example:"dept_manager"`
 	AssigneeValue    string                    `json:"assigneeValue,omitempty" example:"1"`
 	ApproverNames    []string                  `json:"approverNames" example:"[\"张三\",\"李四\"]"`

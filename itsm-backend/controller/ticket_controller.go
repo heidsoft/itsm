@@ -323,7 +323,6 @@ func (tc *TicketController) AssignTicket(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
-	// 兼容 snake_case 字段名 assignee_id
 	assigneeID := req.AssigneeID
 	if assigneeID <= 0 {
 		common.Fail(c, common.ParamErrorCode, "assigneeId 必填")

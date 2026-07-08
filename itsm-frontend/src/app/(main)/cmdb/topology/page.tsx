@@ -18,6 +18,32 @@ const ciTypeColors: Record<string, string> = {
   server: '#1890ff', database: '#52c41a', application: '#722ed1', network: '#13c2c2', storage: '#faad14', cloud: '#f5222d', default: '#8c8c8c'
 };
 
+// CMDB类型中文映射
+const ciTypeNameMap: Record<string, string> = {
+  server: '服务器',
+  database: '数据库',
+  application: '应用程序',
+  network: '网络设备',
+  storage: '存储设备',
+  cloud: '云资源',
+};
+
+// CMDB状态中文映射
+const ciStatusNameMap: Record<string, string> = {
+  active: '活跃',
+  inactive: '未激活',
+  maintenance: '维护中',
+  retired: '已下线',
+};
+
+// 关键程度中文映射
+const criticalityNameMap: Record<string, string> = {
+  critical: '关键',
+  high: '高',
+  medium: '中',
+  low: '低',
+};
+
 const CINode = ({ data }: { data: TopologyNode & { selected?: boolean } }) => {
   const icon = ciTypeIcons[data.type?.toLowerCase()] || ciTypeIcons.default;
   const color = ciTypeColors[data.type?.toLowerCase()] || ciTypeColors.default;
@@ -26,8 +52,8 @@ const CINode = ({ data }: { data: TopologyNode & { selected?: boolean } }) => {
       <Handle type="target" position={Position.Top} style={{ background: color }} />
       <div style={{ fontSize: 24 }}>{icon}</div>
       <div style={{ fontWeight: 600, marginTop: 4, color: '#333' }}>{data.name}</div>
-      <Tag color={color} style={{ marginTop: 4 }}>{data.typeName || data.type}</Tag>
-      {data.status && <Tag color={data.status === 'active' ? 'green' : 'default'} style={{ marginTop: 2 }}>{data.status}</Tag>}
+      <Tag color={color} style={{ marginTop: 4 }}>{ciTypeNameMap[data.type?.toLowerCase()] || data.typeName || data.type}</Tag>
+      {data.status && <Tag color={data.status === 'active' ? 'green' : 'default'} style={{ marginTop: 2 }}>{ciStatusNameMap[data.status] || data.status}</Tag>}
       <Handle type="source" position={Position.Bottom} style={{ background: color }} />
     </div>
   );
@@ -96,9 +122,9 @@ export default function TopologyPage() {
       <Drawer title="配置项详情" placement="right" width={400} open={drawerVisible} onClose={() => setDrawerVisible(false)}>
         {selectedNodeData && <Descriptions column={1} bordered size="small">
           <Descriptions.Item label="名称">{selectedNodeData.name}</Descriptions.Item>
-          <Descriptions.Item label="类型">{selectedNodeData.typeName}</Descriptions.Item>
-          <Descriptions.Item label="状态"><Tag color={selectedNodeData.status === 'active' ? 'green' : 'default'}>{selectedNodeData.status}</Tag></Descriptions.Item>
-          <Descriptions.Item label="关键程度"><Tag color={selectedNodeData.criticality === 'critical' ? 'red' : 'default'}>{selectedNodeData.criticality}</Tag></Descriptions.Item>
+          <Descriptions.Item label="类型">{ciTypeNameMap[selectedNodeData.type?.toLowerCase()] || selectedNodeData.typeName}</Descriptions.Item>
+          <Descriptions.Item label="状态"><Tag color={selectedNodeData.status === 'active' ? 'green' : 'default'}>{ciStatusNameMap[selectedNodeData.status] || selectedNodeData.status}</Tag></Descriptions.Item>
+          <Descriptions.Item label="关键程度"><Tag color={selectedNodeData.criticality === 'critical' ? 'red' : 'default'}>{criticalityNameMap[selectedNodeData.criticality] || selectedNodeData.criticality}</Tag></Descriptions.Item>
         </Descriptions>}
       </Drawer>
     </PageContainer>

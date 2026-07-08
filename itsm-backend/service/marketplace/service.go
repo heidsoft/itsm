@@ -2,6 +2,7 @@ package marketplace
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -20,6 +21,13 @@ type Service struct {
 	db     *ent.Client
 	logger *zap.SugaredLogger
 }
+
+var (
+	ErrMarketplaceItemNotFound       = errors.New("marketplace item not found")
+	ErrMarketplaceItemUnavailable    = errors.New("marketplace item unavailable")
+	ErrMarketplaceInstallationAbsent = errors.New("marketplace installation not found")
+	ErrMarketplaceInstalledByMissing = errors.New("marketplace installed_by is required")
+)
 
 // NewService 创建市场服务
 func NewService(db *ent.Client, logger *zap.SugaredLogger) *Service {
@@ -86,7 +94,7 @@ func (s *Service) GetItem(ctx context.Context, itemID int) (*ent.MarketplaceItem
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("item not found")
+			return nil, ErrMarketplaceItemNotFound
 		}
 		return nil, fmt.Errorf("failed to get item: %w", err)
 	}
@@ -112,19 +120,27 @@ func (s *Service) reactivateUninstalledInstallation(
 	if err != nil {
 		if ent.IsNotFound(err) {
 			// 历史记录在并发场景下不存在，说明另一个并发请求已重新激活
-			return nil, fmt.Errorf("item already installed")
+			return s.GetInstallation(ctx, tenantID, itemID)
 		}
 		return nil, fmt.Errorf("failed to locate uninstalled history: %w", err)
 	}
 
 	reactivated, err := s.db.TenantInstallation.UpdateOneID(history.ID).
 		SetInstalledVersion(item.LatestVersion).
-		SetStatus(tenantinstallation.StatusInstalling).
+		SetStatus(tenantinstallation.StatusActive).
 		SetInstalledBy(installedBy).
 		SetErrorMessage("").
+		SetLastUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to reactivate installation: %w", err)
+	}
+
+	_, err = s.db.MarketplaceItem.UpdateOneID(itemID).
+		AddInstallCount(1).
+		Save(ctx)
+	if err != nil {
+		s.logger.Warnw("Failed to increment install count during reactivation", "item_id", itemID, "error", err)
 	}
 
 	s.logger.Infow(
@@ -142,29 +158,34 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 	// 1) 商品必须存在
 	item, err := s.db.MarketplaceItem.Get(ctx, itemID)
 	if err != nil {
-		return nil, fmt.Errorf("item not found: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, ErrMarketplaceItemNotFound
+		}
+		return nil, fmt.Errorf("failed to get item: %w", err)
 	}
 	// 2) 仅允许安装已发布的商品，禁止安装草稿/已下架
 	if item.Status != marketplaceitem.StatusPublished {
-		return nil, fmt.Errorf("item is not available for installation (status=%s)", item.Status)
+		return nil, fmt.Errorf("%w (status=%s)", ErrMarketplaceItemUnavailable, item.Status)
 	}
 	// 3) 安装人记录不可为空
 	if installedBy == "" {
-		return nil, fmt.Errorf("installed_by is required")
+		return nil, ErrMarketplaceInstalledByMissing
 	}
-	// 4) 已存在有效安装则返回错误，避免重复安装
-	exists, err := s.db.TenantInstallation.Query().
+	// 4) 已存在有效安装则幂等返回当前安装，避免重复安装报错
+	existingInstallation, err := s.db.TenantInstallation.Query().
 		Where(
 			tenantinstallation.TenantID(tenantID),
 			tenantinstallation.ItemID(itemID),
 			tenantinstallation.StatusNEQ(tenantinstallation.StatusUninstalled),
 		).
-		Exist(ctx)
+		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to check installation: %w", err)
-	}
-	if exists {
-		return nil, fmt.Errorf("item already installed")
+		if !ent.IsNotFound(err) {
+			return nil, fmt.Errorf("failed to check installation: %w", err)
+		}
+	} else {
+		s.logger.Infow("Item already installed, returning existing installation", "tenant_id", tenantID, "item_id", itemID, "installation_id", existingInstallation.ID)
+		return existingInstallation, nil
 	}
 
 	// 5) 尝试创建安装记录（处理 UNIQUE(tenant_id, item_id) 冲突场景：存在历史卸载记录）
@@ -218,7 +239,7 @@ func (s *Service) UninstallItem(ctx context.Context, tenantID, itemID int) error
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("installation not found")
+			return ErrMarketplaceInstallationAbsent
 		}
 		return fmt.Errorf("failed to find installation: %w", err)
 	}
@@ -257,7 +278,7 @@ func (s *Service) GetInstallation(ctx context.Context, tenantID, itemID int) (*e
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("installation not found")
+			return nil, ErrMarketplaceInstallationAbsent
 		}
 		return nil, fmt.Errorf("failed to get installation: %w", err)
 	}

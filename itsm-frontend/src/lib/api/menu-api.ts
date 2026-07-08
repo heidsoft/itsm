@@ -37,7 +37,7 @@ export interface MenuTreeResponse {
 
 /**
  * 创建/更新请求载荷
- * http-client 会自动将 camelCase 转为 snake_case，因此 parentId → parent_id
+ * HTTP 接口统一使用 camelCase
  */
 export interface MenuRequest {
   name: string;

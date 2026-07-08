@@ -215,7 +215,8 @@ threshold_percent
 notify_owners
 
 // ✅ 正确：与API响应类型一致
-threshold_percentage
+thresholdPercentage
+notifyOwners
 ```
 
 ### 类型检查
@@ -241,6 +242,27 @@ cd itsm-frontend && npm run type-check
 2. **前端 → 后端**：API 请求 payload 使用 camelCase
 3. **数据库**：Ent Schema 使用 snake_case
 4. **Mapper 转换**：DTO 层负责 snake_case → camelCase 转换
+
+### API 字段契约（单一事实来源）
+
+- 所有 HTTP/JSON 交互字段统一使用 `camelCase`，包括请求体、响应体、查询参数约定、前端类型定义
+- `snake_case` 仅允许出现在 Ent Schema、数据库字段、SQL、内部持久化模型中
+- Controller 不直接暴露 Ent 模型；进入接口边界前必须通过 DTO/Mapper 完成字段转换
+- 新增接口时，先定义前端期望的 `camelCase` DTO，再在后端 Mapper 中完成 `snake_case` 到 `camelCase` 的映射
+- 如历史接口仍返回 `snake_case`，应视为待修复兼容问题，不应继续沿用
+
+### 请求体与响应体示例
+
+```json
+{
+  "serviceCatalogId": "svc_123",
+  "assigneeId": "user_001",
+  "notifyOwners": true,
+  "thresholdPercentage": 85
+}
+```
+
+对应数据库/Schema 字段可为：`service_catalog_id`、`assignee_id`、`notify_owners`、`threshold_percentage`。
 
 ### 响应类型驼峰约定
 
@@ -291,6 +313,13 @@ func GetTicket(c echo.Context) error {
 
 ## 文件命名规范
 
+### 命名边界原则
+
+- 接口字段命名与文件命名是两套规则：JSON/API 字段使用 `camelCase`，文件名按语言与框架约定执行
+- 不要因为接口字段是 `camelCase`，就把 Go 后端文件命名成 `ticketService.go`
+- 不要因为数据库字段是 `snake_case`，就把前端 TypeScript 文件命名成 `ticket_service.ts`
+- 优先保持“看文件名就知道它属于哪一层、承担什么职责”
+
 ### 后端 (Go)
 
 | 类型 | 命名风格 | 示例 |
@@ -300,6 +329,15 @@ func GetTicket(c echo.Context) error {
 | DTO | `*_dto.go` | `ticket_dto.go` |
 | Schema | `*.go` (ent) | `ticket.go` |
 | Middleware | `*_middleware.go` | `auth_middleware.go` |
+| Repository | `*_repository.go` / `repository_impl.go` | `ticket_repository.go` |
+| Router | `*_router.go` / `router.go` | `ticket_router.go` |
+
+后端补充规则：
+
+- Go 文件统一使用 `snake_case`
+- 同一资源尽量使用统一前缀：`ticket_controller.go`、`ticket_service.go`、`ticket_dto.go`
+- 避免无语义后缀：`ticket_handler_new.go`、`ticket_final.go`、`ticket_temp.go`
+- 若文件承载的是实现细分，可使用职责后缀：`ticket_query_service.go`、`ticket_mapper.go`
 
 ### 前端 (TypeScript/Next.js)
 
@@ -311,6 +349,15 @@ func GetTicket(c echo.Context) error {
 | API 客户端 | `*Api.ts` | `TicketApi.ts` |
 | 类型定义 | `*.ts` | `types/ticket.ts` |
 | Hooks | `use*.ts` | `useTicket.ts` |
+| Store | `*Store.ts` / `use*Store.ts` | `ticketStore.ts` |
+
+前端补充规则：
+
+- React 组件文件使用 `PascalCase`
+- Hook、工具函数、store、API client 文件使用 `camelCase`
+- Next.js 路由目录使用 `kebab-case`，动态路由使用 `[id]` 形式
+- 同一模块的页面、组件、API、类型命名尽量围绕同一个业务词根，例如 `ticket` / `Ticket`
+- 避免混用风格：不要同时出现 `TicketList.tsx`、`ticket-list.tsx`、`ticket_list.tsx`
 
 ### 目录结构命名
 
@@ -338,3 +385,6 @@ src/
 - ❌ `ticket_service.ts` → ✅ `ticketService.ts`
 - ❌ `get_tickets.go` → ✅ `ticket_service.go`
 - ❌ `APIUtils.ts` → ✅ `apiUtils.ts`
+- ❌ `ticketService.go` → ✅ `ticket_service.go`
+- ❌ `ticket_list.tsx` → ✅ `TicketList.tsx`
+- ❌ `ticket-list-api.ts` → ✅ `ticketApi.ts` 或 `TicketApi.ts`

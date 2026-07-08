@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
+	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/ticketassignmentrule"
@@ -1444,7 +1445,23 @@ func (s *bpmnProcessInstanceService) SetProcessInstanceVariables(ctx context.Con
 }
 
 func (s *bpmnProcessInstanceService) GetProcessInstanceHistory(ctx context.Context, processInstanceID string) ([]*ent.ProcessExecutionHistory, error) {
-	return []*ent.ProcessExecutionHistory{}, nil
+	id, err := strconv.Atoi(processInstanceID)
+	if err != nil {
+		return nil, fmt.Errorf("无效的流程实例ID: %w", err)
+	}
+
+	query := s.client.ProcessExecutionHistory.Query().
+		Where(processexecutionhistory.ProcessInstanceID(id))
+	if tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int); tenantID > 0 {
+		query = query.Where(processexecutionhistory.TenantID(tenantID))
+	}
+
+	history, err := query.Order(ent.Asc(processexecutionhistory.FieldTimestamp)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取流程实例历史失败: %w", err)
+	}
+
+	return history, nil
 }
 
 // GetInstanceStatistics 获取实例统计

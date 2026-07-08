@@ -1,6 +1,7 @@
 package marketplace
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -176,7 +177,14 @@ func (c *Controller) InstallItem(ctx *gin.Context) {
 
 	installation, err := c.service.InstallItem(ctx, tenantID, itemID, strconv.Itoa(userID))
 	if err != nil {
-		common.Fail(ctx, http.StatusInternalServerError, err.Error())
+		switch {
+		case errors.Is(err, marketplace.ErrMarketplaceItemNotFound):
+			common.Fail(ctx, http.StatusNotFound, err.Error())
+		case errors.Is(err, marketplace.ErrMarketplaceItemUnavailable), errors.Is(err, marketplace.ErrMarketplaceInstalledByMissing):
+			common.Fail(ctx, http.StatusBadRequest, err.Error())
+		default:
+			common.Fail(ctx, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 
@@ -208,6 +216,10 @@ func (c *Controller) UninstallItem(ctx *gin.Context) {
 
 	err = c.service.UninstallItem(ctx, tenantID, itemID)
 	if err != nil {
+		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
+			common.Fail(ctx, http.StatusNotFound, err.Error())
+			return
+		}
 		common.Fail(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -266,7 +278,11 @@ func (c *Controller) GetInstallation(ctx *gin.Context) {
 
 	installation, err := c.service.GetInstallation(ctx, tenantID, itemID)
 	if err != nil {
-		common.Fail(ctx, http.StatusNotFound, err.Error())
+		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
+			common.Fail(ctx, http.StatusNotFound, err.Error())
+			return
+		}
+		common.Fail(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 

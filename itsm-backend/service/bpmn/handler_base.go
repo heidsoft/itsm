@@ -52,6 +52,27 @@ func GetIntFromVars(variables map[string]interface{}, key string) int {
 	return 0
 }
 
+// GetIntSliceFromVars 从变量中提取整数切片
+func GetIntSliceFromVars(variables map[string]interface{}, key string) []int {
+	if v, ok := variables[key]; ok {
+		if val, ok := v.([]interface{}); ok {
+			res := make([]int, 0, len(val))
+			for _, item := range val {
+				switch i := item.(type) {
+				case float64:
+					res = append(res, int(i))
+				case int:
+					res = append(res, i)
+				case int64:
+					res = append(res, int(i))
+				}
+			}
+			return res
+		}
+	}
+	return []int{}
+}
+
 // GetStringFromVars 从变量中提取字符串
 func GetStringFromVars(variables map[string]interface{}, key string) string {
 	if v, ok := variables[key]; ok {

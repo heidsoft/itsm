@@ -1977,7 +1977,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "default": 10,
-                        "description": "每页数量（兼容旧参数）",
+                        "description": "每页数量",
                         "name": "size",
                         "in": "query"
                     },
@@ -8921,7 +8921,7 @@ const docTemplate = `{
                     }
                 },
                 "tags": {
-                    "description": "标签名称列表（兼容旧格式）",
+                    "description": "标签名称列表",
                     "type": "array",
                     "items": {
                         "type": "string"

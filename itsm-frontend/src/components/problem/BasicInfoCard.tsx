@@ -14,7 +14,7 @@ interface BasicInfoCardProps {
 
 /**
  * 基本信息卡片组件
- * 正确处理API返回的snake_case和camelCase字段
+ * 使用统一的 camelCase API 字段
  */
 const BasicInfoCard: React.FC<BasicInfoCardProps> = ({ data }) => {
   if (!data) {
@@ -25,26 +25,16 @@ const BasicInfoCard: React.FC<BasicInfoCardProps> = ({ data }) => {
     );
   }
 
-  // 提取字段值，兼容 snake_case 和 camelCase
-  const getField = (keys: string[]): string | number | undefined => {
-    for (const key of keys) {
-      if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
-        return data[key];
-      }
-    }
-    return undefined;
-  };
-
-  const reporterId = getField(['reporterId', 'reporter_id', 'createdBy']) ?? '-';
-  const assigneeId = getField(['assigneeId', 'assignee_id']) ?? '-';
-  const createdAt = getField(['createdAt', 'created_at']) ?? '';
-  const updatedAt = getField(['updatedAt', 'updated_at']) ?? '';
-  const rootCause = getField(['rootCause', 'root_cause']) ?? '暂无分析';
-  const impact = getField(['impact']) ?? '暂无描述';
-  const priority = (getField(['priority', 'severity']) ?? '') as string;
-  const category = getField(['category']) ?? '-';
-  const description = getField(['description']) ?? '-';
-  const status = (getField(['status']) ?? '') as string;
+  const reporterId = data.reporterId ?? data.createdBy ?? '-';
+  const assigneeId = data.assigneeId ?? '-';
+  const createdAt = data.createdAt ?? '';
+  const updatedAt = data.updatedAt ?? '';
+  const rootCause = data.rootCause ?? '暂无分析';
+  const impact = data.impact ?? '暂无描述';
+  const priority = (data.priority ?? data.severity ?? '') as string;
+  const category = data.category ?? '-';
+  const description = data.description ?? '-';
+  const status = (data.status ?? '') as string;
 
   // 格式化时间
   const formatDate = (dateStr: string | number | undefined): string => {

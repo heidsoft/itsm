@@ -336,7 +336,7 @@ export interface CommentListQuery {
   type?: CommentType;
   includeDeleted?: boolean;
   includeInternal?: boolean;
-  sortBy?: 'created_at' | 'updated_at' | 'like_count';
+  sortBy?: 'createdAt' | 'updatedAt' | 'likeCount';
   sortOrder?: 'asc' | 'desc';
   page?: number;
   pageSize?: number;

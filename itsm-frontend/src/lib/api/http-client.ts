@@ -47,9 +47,6 @@ const toCamelCase = (obj: unknown): unknown => {
   return obj;
 };
 
-// 将 camelCase key 转换为 snake_case（用于查询参数，后端 form tag 为 snake_case）
-const toSnakeCase = (s: string): string => s.replace(/([A-Z])/g, g => '_' + g.toLowerCase());
-
 // Request configuration interface
 export interface RequestConfig {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -242,9 +239,7 @@ class HttpClient {
         ...headers,
         ...config.headers,
       },
-      // Normalize request body keys to camelCase to match backend camelCase json tags.
-      // Legacy frontend code may still emit snake_case keys; this safety net can be
-      // removed once all API clients are migrated to native camelCase (Phase 3).
+      // Normalize request body keys to camelCase to keep the HTTP contract consistent.
       body:
         config.body && typeof config.body === 'string' && config.body.startsWith('{')
           ? JSON.stringify(toCamelCase(JSON.parse(config.body as string)))
@@ -443,8 +438,7 @@ class HttpClient {
       const searchParams = new URLSearchParams();
       Object.entries(params as Record<string, unknown>).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          // 查询参数 key 转为 snake_case 以匹配后端 form tag
-          searchParams.append(toSnakeCase(key), String(value));
+          searchParams.append(key, String(value));
         }
       });
       url += `?${searchParams.toString()}`;

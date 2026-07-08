@@ -133,7 +133,7 @@ func (c *IncidentController) GetIncident(ctx *gin.Context) {
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param page_size query int false "每页数量" default(10)
-// @Param size query int false "每页数量（兼容旧参数）" default(10)
+// @Param size query int false "每页数量" default(10)
 // @Param status query string false "状态筛选"
 // @Param priority query string false "优先级筛选"
 // @Param severity query string false "严重程度筛选"

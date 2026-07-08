@@ -29,6 +29,18 @@ const statusColors: Record<string, string> = {
   unavailable: 'red',
 };
 
+// 云资源状态中文映射
+const cloudResourceStatusTextMap: Record<string, string> = {
+  running: '运行中',
+  stopped: '已停止',
+  active: '活跃',
+  inactive: '未激活',
+  available: '可用',
+  unavailable: '不可用',
+  pending: '处理中',
+  failed: '失败',
+};
+
 export default function CloudResourcePage() {
   const router = useRouter();
   const { message } = App.useApp();
@@ -432,7 +444,7 @@ export default function CloudResourcePage() {
               <div>
                 <div className="text-sm text-gray-500">状态</div>
                 <Tag color={statusColors[selectedRow.status || ''] || 'default'}>
-                  {selectedRow.status || '未知'}
+                  {cloudResourceStatusTextMap[selectedRow.status || ''] || selectedRow.status || '未知'}
                 </Tag>
               </div>
               <div>

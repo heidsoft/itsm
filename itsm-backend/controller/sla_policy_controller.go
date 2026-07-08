@@ -252,5 +252,5 @@ func (c *SLAPolicyController) GetSLAComplianceRate(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, gin.H{"compliance_rate": rate})
+	common.Success(ctx, gin.H{"complianceRate": rate})
 }
