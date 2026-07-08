@@ -512,7 +512,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 			tickets.POST("/:id/escalate", middleware.RequirePermission("ticket", "escalate"), config.TicketController.EscalateTicket)
 			tickets.GET("/:id/history", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicketActivity)
-			tickets.GET("/:id", config.TicketController.GetTicket)
+			tickets.GET("/types", func(c *gin.Context) {
+			common.Success(c, gin.H{"types": []gin.H{
+				{"id": 1, "name": " Incident", "code": "incident"},
+				{"id": 2, "name": "Problem", "code": "problem"},
+				{"id": 3, "name": "Change", "code": "change"},
+				{"id": 4, "name": "Request", "code": "request"},
+			}, "total": 4})
+		})
+		tickets.GET("/:id", config.TicketController.GetTicket)
 			tickets.PUT("/:id", config.TicketController.UpdateTicket)
 			tickets.PUT("/:id/status", config.TicketController.UpdateTicketStatus)
 			tickets.DELETE("/:id", config.TicketController.DeleteTicket)
@@ -1125,6 +1133,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				{
 					users.GET("", middleware.RequirePermission("user", "read"), config.UserController.ListUsers)
 					users.POST("", middleware.RequirePermission("user", "write"), config.UserController.CreateUser)
+					users.GET("/profile", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe) // 获取当前用户信息（需认证）
 					users.GET("/:id", middleware.RequirePermission("user", "read"), config.UserController.GetUser)
 					users.PUT("/:id", middleware.RequirePermission("user", "write"), config.UserController.UpdateUser)
 					users.DELETE("/:id", middleware.RequirePermission("user", "delete"), config.UserController.DeleteUser)

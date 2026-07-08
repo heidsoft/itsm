@@ -422,72 +422,107 @@ func (r *EntRepository) generateTicketNumberWithRedis(ctx context.Context, tenan
 	return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq), nil
 }
 
-// generateTicketNumberWithDB 使用数据库事务+SELECT FOR UPDATE 生成工单编号（备用方案）
+// generateTicketNumberWithDB 使用数据库事务+SELECT FOR UPDATE NOWAIT 生成工单编号（备用方案）
+// 重试机制（最多3次）解决并发竞态：当编号已存在时重新查询并生成
 func (r *EntRepository) generateTicketNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
 	prefix := fmt.Sprintf("TKT-%04d%02d-", year, month)
-	var candidate string
 
-	// 开启事务，使用 SELECT FOR UPDATE 锁定最大编号行
-	if r.rawDB != nil {
-		tx, err := r.rawDB.BeginTx(ctx, nil)
-		if err != nil {
-			r.logger.Warnw("BeginTx failed, falling back to non-transactional", "error", err)
-		} else {
-			// 使用原生 SQL 查询最大编号（使用 FOR UPDATE SKIP LOCKED 避免阻塞）
-			query := `SELECT ticket_number FROM tickets WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE SKIP LOCKED`
-			var maxTicketNum string
-			err := tx.QueryRowContext(ctx, query, tenantID, prefix+"%").Scan(&maxTicketNum)
+	for attempt := 0; attempt < 3; attempt++ {
+		var candidate string
 
-			// 计算下一个序列号
-			var seq int = 0
-			// sql.ErrNoRows 意味着当月没有工单，此时 seq 保持 0
-			if err == nil && maxTicketNum != "" {
-				if idx := strings.LastIndex(maxTicketNum, "-"); idx >= 0 {
-					fmt.Sscanf(maxTicketNum[idx+1:], "%d", &seq)
-				}
-			} else if err == sql.ErrNoRows {
-				r.logger.Infow("No existing tickets this month, using seed sequence", "tenant", tenantID, "year", year, "month", month)
-			}
-
-			// 有历史记录则使用递增号；无记录则用随机后缀确保唯一
-			if seq > 0 {
-				candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq+1)
+		// 路径1：有 rawDB，优先使用事务 + NOWAIT
+		if r.rawDB != nil {
+			tx, err := r.rawDB.BeginTx(ctx, nil)
+			if err != nil {
+				r.logger.Warnw("BeginTx failed, trying Ent fallback", "error", err, "attempt", attempt+1)
+				// fall through to Ent fallback below
 			} else {
-				candidate = fmt.Sprintf("TKT-%04d%02d-%s", year, month, uniqueFallbackSuffix())
+				// FOR UPDATE NOWAIT：立即失败而非跳过锁（快速感知冲突）
+				query := `SELECT ticket_number FROM tickets WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE NOWAIT`
+				var maxTicketNum string
+				err = tx.QueryRowContext(ctx, query, tenantID, prefix+"%").Scan(&maxTicketNum)
+
+				var seq int = 0
+				if err == nil && maxTicketNum != "" {
+					if idx := strings.LastIndex(maxTicketNum, "-"); idx >= 0 {
+						fmt.Sscanf(maxTicketNum[idx+1:], "%d", &seq)
+					}
+				} else if err == sql.ErrNoRows {
+					r.logger.Infow("No existing tickets this month, starting from seed", "tenant", tenantID, "year", year, "month", month)
+				} else if err != nil {
+					tx.Rollback()
+					r.logger.Warnw("NOWAIT query failed, trying Ent fallback", "error", err, "attempt", attempt+1)
+					// fall through to Ent fallback
+				}
+
+				if seq > 0 {
+					candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq+1)
+				} else {
+					candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, 1)
+				}
+
+				r.logger.Infow("DB transaction generated ticket number",
+					"number", candidate, "tenant", tenantID, "attempt", attempt+1)
+
+				// 提交事务释放锁
+				if err := tx.Commit(); err != nil {
+					r.logger.Warnw("tx commit failed, retrying", "error", err, "attempt", attempt+1)
+					continue
+				}
+
+				// 双重保险：验证编号是否真的唯一
+				checkQuery := `SELECT COUNT(*) FROM tickets WHERE ticket_number = $1 AND tenant_id = $2`
+				var count int
+				if checkErr := r.rawDB.QueryRowContext(ctx, checkQuery, candidate, tenantID).Scan(&count); checkErr == nil && count > 0 {
+					r.logger.Warnw("Ticket number collision detected, retrying", "number", candidate, "attempt", attempt+1)
+					continue
+				}
+
+				return candidate, nil
 			}
-			r.logger.Infow("DB transaction generated ticket number",
-				"number", candidate, "tenant", tenantID)
-
-			// 提交事务
-			tx.Commit()
-			return candidate, nil
 		}
-	}
 
-	// Fallback: 非事务方式（仅用于没有 rawDB 的场景）
-	tickets, err := r.Client().Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.TicketNumberContains(prefix[:len(prefix)-1]),
-		).
-		Order(ent.Desc(ticket.FieldTicketNumber)).
-		Limit(1).
-		All(ctx)
+		// 路径2：Ent ORM fallback（没有 rawDB 或 rawDB 路径失败）
+		tickets, err := r.Client().Ticket.Query().
+			Where(
+				ticket.TenantID(tenantID),
+				ticket.TicketNumberContains(prefix[:len(prefix)-1]),
+			).
+			Order(ent.Desc(ticket.FieldTicketNumber)).
+			Limit(1).
+			All(ctx)
 
-	var seq int
-	if err != nil || len(tickets) == 0 {
-		seq = 1
-	} else {
-		maxNum := tickets[0].TicketNumber
-		if idx := strings.LastIndex(maxNum, "-"); idx >= 0 {
-			fmt.Sscanf(maxNum[idx+1:], "%d", &seq)
-			seq++
-		} else {
+		var seq int
+		if err != nil || len(tickets) == 0 {
 			seq = 1
+		} else {
+			maxNum := tickets[0].TicketNumber
+			if idx := strings.LastIndex(maxNum, "-"); idx >= 0 {
+				fmt.Sscanf(maxNum[idx+1:], "%d", &seq)
+				seq++
+			} else {
+				seq = 1
+			}
 		}
+
+		candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq)
+		r.logger.Infow("Ent fallback generated ticket number",
+			"number", candidate, "tenant", tenantID, "attempt", attempt+1)
+
+		// 如果有 rawDB，再验证一次（双重保险）
+		if r.rawDB != nil {
+			checkQuery := `SELECT COUNT(*) FROM tickets WHERE ticket_number = $1 AND tenant_id = $2`
+			var count int
+			if checkErr := r.rawDB.QueryRowContext(ctx, checkQuery, candidate, tenantID).Scan(&count); checkErr == nil && count > 0 {
+				r.logger.Warnw("Ent fallback ticket number collision, retrying", "number", candidate, "attempt", attempt+1)
+				continue
+			}
+		}
+
+		return candidate, nil
 	}
 
-	return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq), nil
+	return "", fmt.Errorf("failed to generate unique ticket number after 3 attempts")
 }
 
 // uniqueFallbackSuffix 生成唯一后缀（用于当月第一条记录的回退）
