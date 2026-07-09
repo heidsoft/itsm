@@ -12,11 +12,13 @@ import {
   AlertCircle,
   XCircle,
   UserCheck,
+  Users,
   Edit,
   Save,
   X,
   Trash2,
   Check,
+  Users,
   XIcon,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -67,6 +69,26 @@ const statusMap: Record<
   approved: { text: '已批准', status: 'success' },
 };
 
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
+    }
+  };
+
 // Bug #9 修复：添加优先级本地化映射
 const priorityMap: Record<string, string> = {
   critical: '紧急',
@@ -76,9 +98,49 @@ const priorityMap: Record<string, string> = {
   low: '低优先级',
 };
 
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
+    }
+  };
+
 const getPriorityText = (priority: string): string => {
   return priorityMap[priority] || priority;
 };
+
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
+    }
+  };
 
 const TicketDetailPage: React.FC = () => {
   const params = useParams();
@@ -91,6 +153,9 @@ const TicketDetailPage: React.FC = () => {
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [ccModalVisible, setCCModalVisible] = useState(false);
+  const [ccing, setCCing] = useState(false);
+  const [ccForm] = Form.useForm();
   const [deleting, setDeleting] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [approving, setApproving] = useState(false);
@@ -195,6 +260,26 @@ const TicketDetailPage: React.FC = () => {
     }
   };
 
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
+    }
+  };
+
   // Handle rejection (轻量版：仅改状态)
   const handleReject = async () => {
     try {
@@ -209,9 +294,49 @@ const TicketDetailPage: React.FC = () => {
     }
   };
 
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
+    }
+  };
+
   // Handle assignment
   const handleAssign = () => {
     setAssignModalVisible(true);
+  };
+
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
+    }
   };
 
   // Handle assignment submit
@@ -230,6 +355,26 @@ const TicketDetailPage: React.FC = () => {
     }
   };
 
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
+    }
+  };
+
   // Handle edit
   const handleUpdate = () => {
     if (ticket) {
@@ -240,6 +385,26 @@ const TicketDetailPage: React.FC = () => {
         status: ticket.status,
       });
       setEditModalVisible(true);
+    }
+  };
+
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
     }
   };
 
@@ -262,6 +427,26 @@ const TicketDetailPage: React.FC = () => {
         version: ticket?.version,
       };
 
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
+    }
+  };
+
       await TicketApi.updateTicket(ticketId, updatePayload);
       antMessage.success('工单更新成功');
       setEditModalVisible(false);
@@ -271,9 +456,49 @@ const TicketDetailPage: React.FC = () => {
     }
   };
 
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
+    }
+  };
+
   // Handle delete click
   const handleDeleteClick = () => {
     setDeleteModalVisible(true);
+  };
+
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
+    }
   };
 
   // Handle delete confirm
@@ -289,6 +514,26 @@ const TicketDetailPage: React.FC = () => {
       handleError(error, 'deleteTicket', '删除失败');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
     }
   };
 
@@ -524,6 +769,14 @@ const TicketDetailPage: React.FC = () => {
               disabled={isTicketFinal}
               title={isTicketFinal ? '工单已结束，无法编辑' : ''}
             >
+            <Button
+              icon={<Users size={16} />}
+              onClick={() => setCCModalVisible(true)}
+              disabled={isTicketFinal}
+              title={isTicketFinal ? '工单已结束，无法抄送' : ''}
+            >
+              抄送
+            </Button>
               编辑
             </Button>
             <Button danger icon={<Trash2 size={16} />} onClick={handleDeleteClick}>
@@ -611,6 +864,64 @@ const TicketDetailPage: React.FC = () => {
               </Space>
             </Form.Item>
           </Form>
+
+        {/* 抄送模态框 */}
+        <Modal
+          title="工单抄送"
+          open={ccModalVisible}
+          onCancel={() => setCCModalVisible(false)}
+          footer={null}
+          destroyOnClose
+        >
+          <Form
+            form={ccForm}
+            layout="vertical"
+            onFinish={handleCCSubmit}
+          >
+            <Form.Item
+              name="userIds"
+              label="抄送人"
+              rules={[{ required: true, message: "请选择抄送人" }]}
+            >
+              <Select
+                mode="multiple"
+                placeholder="请选择要抄送的用户"
+                style={{ width: "100%" }}
+                loading={loadingUsers}
+              >
+                {users.map(user => (
+                  <Select.Option key={user.id} value={user.id}>
+                    {user.name} ({user.email})
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="comment"
+              label="抄送备注"
+            >
+              <Input.TextArea
+                rows={3}
+                placeholder="请输入抄送备注（可选）"
+              />
+            </Form.Item>
+            <Form.Item className="mb-0">
+              <Space className="w-full justify-end">
+                <Button onClick={() => setCCModalVisible(false)} disabled={ccing}>
+                  取消
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={ccing}
+                  icon={<Users size={14} />}
+                >
+                  确认抄送
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
         </Modal>
 
         {/* Edit Modal */}
@@ -721,6 +1032,64 @@ const TicketDetailPage: React.FC = () => {
               </Space>
             </Form.Item>
           </Form>
+
+        {/* 抄送模态框 */}
+        <Modal
+          title="工单抄送"
+          open={ccModalVisible}
+          onCancel={() => setCCModalVisible(false)}
+          footer={null}
+          destroyOnClose
+        >
+          <Form
+            form={ccForm}
+            layout="vertical"
+            onFinish={handleCCSubmit}
+          >
+            <Form.Item
+              name="userIds"
+              label="抄送人"
+              rules={[{ required: true, message: "请选择抄送人" }]}
+            >
+              <Select
+                mode="multiple"
+                placeholder="请选择要抄送的用户"
+                style={{ width: "100%" }}
+                loading={loadingUsers}
+              >
+                {users.map(user => (
+                  <Select.Option key={user.id} value={user.id}>
+                    {user.name} ({user.email})
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="comment"
+              label="抄送备注"
+            >
+              <Input.TextArea
+                rows={3}
+                placeholder="请输入抄送备注（可选）"
+              />
+            </Form.Item>
+            <Form.Item className="mb-0">
+              <Space className="w-full justify-end">
+                <Button onClick={() => setCCModalVisible(false)} disabled={ccing}>
+                  取消
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={ccing}
+                  icon={<Users size={14} />}
+                >
+                  确认抄送
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
         </Modal>
 
         {/* Delete Confirmation Modal */}
@@ -771,10 +1140,88 @@ const TicketDetailPage: React.FC = () => {
               确认删除
             </Button>
           </Space>
+
+        {/* 抄送模态框 */}
+        <Modal
+          title="工单抄送"
+          open={ccModalVisible}
+          onCancel={() => setCCModalVisible(false)}
+          footer={null}
+          destroyOnClose
+        >
+          <Form
+            form={ccForm}
+            layout="vertical"
+            onFinish={handleCCSubmit}
+          >
+            <Form.Item
+              name="userIds"
+              label="抄送人"
+              rules={[{ required: true, message: "请选择抄送人" }]}
+            >
+              <Select
+                mode="multiple"
+                placeholder="请选择要抄送的用户"
+                style={{ width: "100%" }}
+                loading={loadingUsers}
+              >
+                {users.map(user => (
+                  <Select.Option key={user.id} value={user.id}>
+                    {user.name} ({user.email})
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="comment"
+              label="抄送备注"
+            >
+              <Input.TextArea
+                rows={3}
+                placeholder="请输入抄送备注（可选）"
+              />
+            </Form.Item>
+            <Form.Item className="mb-0">
+              <Space className="w-full justify-end">
+                <Button onClick={() => setCCModalVisible(false)} disabled={ccing}>
+                  取消
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={ccing}
+                  icon={<Users size={14} />}
+                >
+                  确认抄送
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
         </Modal>
       </Card>
     </div>
   );
 };
+
+  // 抄送工单
+  const handleCCSubmit = async (values: any) => {
+    try {
+      setCCing(true);
+      await TicketApi.ccTicket(ticketId, {
+        userIds: values.userIds,
+        comment: values.comment || ""
+      });
+      antMessage.success(抄送成功);
+      setCCModalVisible(false);
+      ccForm.resetFields();
+      // 刷新工单信息
+      fetchTicket();
+    } catch (error) {
+      handleError(error, ccTicket, 抄送失败);
+    } finally {
+      setCCing(false);
+    }
+  };
 
 export default TicketDetailPage;

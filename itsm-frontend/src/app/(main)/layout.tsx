@@ -11,6 +11,7 @@ import { LAYOUT_CONFIG } from '@/config/layout.config';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { NetworkStatus } from '@/components/common/NetworkStatus';
 import { useLayoutStore } from '@/lib/store/layout-store';
+import PageTransition from '@/components/common/PageTransition';
 import { useAuthStore } from '@/lib/store/auth-store';
 import type { Tenant } from '@/lib/api/api-config';
 
@@ -202,7 +203,7 @@ export default function MainLayout({
                   padding: isMobile ? `${LAYOUT_CONFIG.content.paddingMobile}px` : '16px',
                 }}
               >
-                {children}
+                <PageTransition>{children}</PageTransition>
               </div>
             </Content>
 
@@ -211,7 +212,6 @@ export default function MainLayout({
               AI-Native ITSM ©{new Date().getFullYear()} - AI驱动的IT服务管理系统
             </footer>
           </Layout>
-        </Layout>
 
         {/* 移动端遮罩层 */}
         {!collapsed && isMobile && (
@@ -223,6 +223,7 @@ export default function MainLayout({
             }}
           />
         )}
+        </Layout>
       </App>
     </ConfigProvider>
   );

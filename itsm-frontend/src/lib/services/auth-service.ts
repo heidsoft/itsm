@@ -3,6 +3,28 @@ import { API_BASE_URL } from '@/lib/api/api-config';
 import { useAuthStore } from '@/lib/store/auth-store';
 
 export class AuthService {
+  /**
+   * 第三方登录
+   */
+  static async thirdPartyLogin(provider: string, code: string, state?: string | null): Promise<void> {
+    const response = await fetch(`/api/auth/${provider}/callback`, {
+      method: POST,
+      headers: {
+        Content-Type: application/json,
+      },
+      body: JSON.stringify({ code, state }),
+    });
+
+    if (!response.ok) {
+      throw new Error(登录失败);
+    }
+
+    const data = await response.json();
+    // 保存token到本地存储
+    localStorage.setItem(token, data.token);
+    localStorage.setItem(user, JSON.stringify(data.user));
+  }
+
   private static getCookie(name: string): string | null {
     if (typeof document === 'undefined') return null;
     const cookies = document.cookie.split(';');

@@ -262,10 +262,6 @@ interface ThemeConfigProps {
 }
 
 export const ThemeConfig: React.FC<ThemeConfigProps> = ({ children }) => {
-  const { isDark } = useTheme();
-  const antdTheme = getAntdTheme(isDark);
-
-  return <ConfigProvider theme={antdTheme}>{children}</ConfigProvider>;
 };
 
 // CSS 变量生成器

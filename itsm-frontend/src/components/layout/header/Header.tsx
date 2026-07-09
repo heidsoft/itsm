@@ -15,6 +15,7 @@ import { notificationWS } from '@/lib/services/notification-ws';
 import { UserMenuDropdown } from './UserMenuDropdown';
 import { NotificationDrawer } from './NotificationDrawer';
 import { GlobalSearch, SearchInput } from './GlobalSearch';
+import { RecentVisitDropdown } from './RecentVisitDropdown';
 import styles from './Header.module.css';
 
 const { Header: AntHeader } = Layout;

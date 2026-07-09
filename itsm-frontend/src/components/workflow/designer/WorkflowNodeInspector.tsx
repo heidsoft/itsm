@@ -175,6 +175,7 @@ export default function WorkflowNodeInspector({
   const isSendTask = nodeType === 'SendTask';
   const isReceiveTask = nodeType === 'ReceiveTask';
   const isMailTask = nodeType === 'ServiceTask' && (selection.businessObject?.type as string) === 'mail';
+  const isCCTask = nodeType === 'ServiceTask' && (selection.businessObject?.type as string) === 'cc' || (selection.businessObject?.implementation as string) === 'cc' || (selection.businessObject?.operationRef as string) === 'cc_handler';
   const isExclusiveGateway = nodeType === 'ExclusiveGateway';
   const isInclusiveGateway = nodeType === 'InclusiveGateway';
   const isParallelGateway = nodeType === 'ParallelGateway';
@@ -245,6 +246,15 @@ export default function WorkflowNodeInspector({
   const currentMailSubject = (bo.mailSubject as string) || '';
   const currentMailTemplate = (bo.mailTemplate as string) || '';
 
+  // 抄送任务属性
+  const currentCCType = (bo.ccType as string) || 'user'; // user, group, role, variable
+  const currentCCUserIds = (bo.ccUserIds as string) || '';
+  const currentCCGroupIds = (bo.ccGroupIds as string) || '';
+  const currentCCRoleIds = (bo.ccRoleIds as string) || '';
+  const currentCCVariable = (bo.ccVariable as string) || '';
+  const currentCCNotify = (bo.ccNotify as boolean) ?? true;
+
+
   // 网关/序列流属性
   const currentConditionExpression = (bo.conditionExpression && typeof bo.conditionExpression === 'object' 
     ? (bo.conditionExpression as unknown as { body?: string })?.body || '' 
@@ -306,6 +316,7 @@ export default function WorkflowNodeInspector({
     { label: 'Webhook', value: 'webhook' },
     { label: '系统内置服务', value: 'internal' },
     { label: '邮件发送', value: 'mail' }
+    { label: '自动抄送', value: 'cc' }
   ];
 
   // 定时类型选项
@@ -685,6 +696,106 @@ export default function WorkflowNodeInspector({
         )}
 
         {/* 邮件任务配置 */}
+        {/* 抄送任务配置 */}
+        {isCCTask && (
+          <>
+            <Divider className="my-2" />
+
+            <div>
+              <Text strong className="text-sm flex items-center mb-2">
+                <Users className="w-3.5 h-3.5 mr-1" />
+                抄送类型
+              </Text>
+              <Select
+                value={currentCCType}
+                onChange={value => apply({ ccType: value })}
+                placeholder="选择抄送类型"
+                className="w-full"
+                size="small"
+                options={[
+                  { label: '单个用户', value: 'user' },
+                  { label: '用户组', value: 'group' },
+                  { label: '角色', value: 'role' },
+                  { label: '动态变量', value: 'variable' }
+                ]}
+              />
+            </div>
+
+            {currentCCType === 'user' && (
+              <div className="mt-2">
+                <Text strong className="text-sm flex items-center mb-2">
+                  <User className="w-3.5 h-3.5 mr-1" />
+                  抄送人ID
+                </Text>
+                <Input
+                  value={currentCCUserIds}
+                  onChange={e => apply({ ccUserIds: e.target.value })}
+                  placeholder="多个用户ID用逗号分隔，支持变量如 ${applyUserId}"
+                  size="small"
+                />
+              </div>
+            )}
+
+            {currentCCType === 'group' && (
+              <div className="mt-2">
+                <Text strong className="text-sm flex items-center mb-2">
+                  <Users className="w-3.5 h-3.5 mr-1" />
+                  用户组ID
+                </Text>
+                <Input
+                  value={currentCCGroupIds}
+                  onChange={e => apply({ ccGroupIds: e.target.value })}
+                  placeholder="多个用户组ID用逗号分隔，支持变量如 ${deptId}"
+                  size="small"
+                />
+              </div>
+            )}
+
+            {currentCCType === 'role' && (
+              <div className="mt-2">
+                <Text strong className="text-sm flex items-center mb-2">
+                  <Shield className="w-3.5 h-3.5 mr-1" />
+                  角色ID
+                </Text>
+                <Input
+                  value={currentCCRoleIds}
+                  onChange={e => apply({ ccRoleIds: e.target.value })}
+                  placeholder="多个角色ID用逗号分隔，支持变量如 ${roleId}"
+                  size="small"
+                />
+              </div>
+            )}
+
+            {currentCCType === 'variable' && (
+              <div className="mt-2">
+                <Text strong className="text-sm flex items-center mb-2">
+                  <Hash className="w-3.5 h-3.5 mr-1" />
+                  动态变量名
+                </Text>
+                <Input
+                  value={currentCCVariable}
+                  onChange={e => apply({ ccVariable: e.target.value })}
+                  placeholder="变量名，如 ccUserIds，变量值应为用户ID数组"
+                  size="small"
+                />
+              </div>
+            )}
+
+            <div className="mt-2">
+              <Text strong className="text-sm flex items-center mb-2">
+                <Bell className="w-3.5 h-3.5 mr-1" />
+                发送通知
+              </Text>
+              <Switch
+                checked={currentCCNotify}
+                onChange={checked => apply({ ccNotify: checked })}
+                checkedChildren="开启"
+                unCheckedChildren="关闭"
+              />
+            </div>
+          </>
+        )}
+
         {isMailTask && (
           <>
             <Divider className="my-2" />

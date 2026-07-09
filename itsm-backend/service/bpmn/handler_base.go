@@ -73,6 +73,23 @@ func GetIntSliceFromVars(variables map[string]interface{}, key string) []int {
 	return []int{}
 }
 
+// GetBoolFromVars 从变量中提取布尔值
+func GetBoolFromVars(variables map[string]interface{}, key string, defaultValue bool) bool {
+	if v, ok := variables[key]; ok {
+		switch val := v.(type) {
+		case bool:
+			return val
+		case int:
+			return val != 0
+		case float64:
+			return val != 0
+		case string:
+			return val == "true" || val == "1" || val == "yes"
+		}
+	}
+	return defaultValue
+}
+
 // GetStringFromVars 从变量中提取字符串
 func GetStringFromVars(variables map[string]interface{}, key string) string {
 	if v, ok := variables[key]; ok {

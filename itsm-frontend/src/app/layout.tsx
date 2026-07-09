@@ -8,10 +8,12 @@ import 'dayjs/locale/zh-cn';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { AntdProvider } from '@/lib/providers/AntdProvider';
 import { ThemeProvider, ThemeConfig } from '@/lib/design-system/theme';
+import { RecentVisitTracker } from '@/components/layout/RecentVisitTracker';
 
 dayjs.locale('zh-cn');
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { QueryProvider } from '@/lib/providers/QueryProvider';
+import GlobalShortcutProvider from '@/components/common/GlobalShortcutProvider';
 
 // 使用系统字体代替 Google Fonts
 const inter = { variable: '--font-inter' };
@@ -92,10 +94,11 @@ export default function RootLayout({
         }}
       >
         <ThemeProvider>
+          <RecentVisitTracker />
           <ThemeConfig>
             <AntdProvider>
               <QueryProvider>
-                <ErrorBoundary>{children}</ErrorBoundary>
+                <GlobalShortcutProvider><ErrorBoundary>{children}</ErrorBoundary></GlobalShortcutProvider>
               </QueryProvider>
             </AntdProvider>
           </ThemeConfig>

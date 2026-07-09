@@ -2,6 +2,22 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+
+  // 图片优化配置
+  images: {
+    formats: ['image/webp', 'image/avif'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
+    ],
+    minimumCacheTTL: 86400, // 缓存 1 天
+  },
   output: 'standalone',
   outputFileTracingRoot: process.cwd(),
 
